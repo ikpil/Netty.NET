@@ -39,7 +39,9 @@ public class LinuxStreamSocketConfigSourceTest
                 Assert.Equal(expected, Get(channel.Config, ChannelOption.TCP_NOTSENT_LOWAT));
             }
             catch (SocketException error) when (error.SocketErrorCode is SocketError.ProtocolOption or SocketError.OperationNotSupported)
-            { Assert.Skip("The kernel does not support TCP_NOTSENT_LOWAT."); }
+            {
+                Assert.Skip("The kernel does not support TCP_NOTSENT_LOWAT.");
+            }
             return Task.CompletedTask;
         });
     }
@@ -126,7 +128,10 @@ public class LinuxStreamSocketConfigSourceTest
 
     private static async Task WithChannel(Func<IChannel, Task> assert)
     {
-        if (!OperatingSystem.IsLinux()) Assert.Skip("Linux socket options require Linux.");
+        if (!OperatingSystem.IsLinux())
+        {
+            Assert.Skip("Linux socket options require Linux.");
+        }
         var loop = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         try
         {
@@ -135,6 +140,9 @@ public class LinuxStreamSocketConfigSourceTest
                     TestContext.Current.CancellationToken);
             await assert(channel);
         }
-        finally { await loop.StopAsync(); }
+        finally
+        {
+            await loop.StopAsync();
+        }
     }
 }

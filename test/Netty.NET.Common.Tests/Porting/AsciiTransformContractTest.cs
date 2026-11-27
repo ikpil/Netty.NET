@@ -72,7 +72,10 @@ public class AsciiTransformContractTest
             AsciiString trimmed = source.Trim();
             Assert.Equal(code <= 32 ? Array.Empty<byte>() : new[] { (byte)code }, trimmed.AsSpan().ToArray());
             Assert.Same(storage, trimmed.Array());
-            if (code > 32) Assert.Equal(3, trimmed.ArrayOffset());
+            if (code > 32)
+            {
+                Assert.Equal(3, trimmed.ArrayOffset());
+            }
         }
     }
 
@@ -94,7 +97,10 @@ public class AsciiTransformContractTest
             Assert.Equal((byte)'i', lower.AsSpan()[0]);
             Assert.Equal((byte)'I', upper.AsSpan()[0]);
         }
-        finally { CultureInfo.CurrentCulture = previous; }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
     }
 
     [Fact]

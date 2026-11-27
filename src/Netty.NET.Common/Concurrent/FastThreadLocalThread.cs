@@ -66,14 +66,20 @@ public class FastThreadLocalThread
         _target = cleanup ? FastThreadLocalRunnable.Wrap(target) : target;
         Thread = new Thread(Entry, maxStackSize);
         ThreadGroup.Assign(Thread, group);
-        if (name != null) Thread.Name = name;
+        if (name != null)
+        {
+            Thread.Name = name;
+        }
         OwnedThreads.Add(Thread, this);
     }
 
     private void Entry()
     {
         _current = this;
-        try { Run(); }
+        try
+        {
+            Run();
+        }
         finally
         {
             // Native Thread ownership metadata may outlive execution. Release captured work on termination.
@@ -164,10 +170,19 @@ public class FastThreadLocalThread
     public static void RunWithFastThreadLocal(Action runnable)
     {
         ArgumentNullException.ThrowIfNull(runnable);
-        if (_current != null) throw new InvalidOperationException("Caller is a real FastThreadLocalThread");
-        if (_fallbackScope) throw new InvalidOperationException("Reentrant call to run()");
+        if (_current != null)
+        {
+            throw new InvalidOperationException("Caller is a real FastThreadLocalThread");
+        }
+        if (_fallbackScope)
+        {
+            throw new InvalidOperationException("Reentrant call to run()");
+        }
         _fallbackScope = true;
-        try { runnable(); }
+        try
+        {
+            runnable();
+        }
         finally
         {
             _fallbackScope = false;

@@ -114,7 +114,11 @@ public class IndexedPriorityQueueContractTest
                 alive.Add(node);
                 queue.Offer(node);
             }
-            else { node.Priority = -10000 - step; queue.PriorityChanged(node); }
+            else
+            {
+                node.Priority = -10000 - step;
+                queue.PriorityChanged(node);
+            }
             Node expected = alive.MinBy(item => item.Priority);
             Assert.Same(expected, queue.Peek());
             Node[] snapshot = queue.ToArray();

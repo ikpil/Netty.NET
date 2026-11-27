@@ -62,20 +62,44 @@ public class PooledAllocatorBindingQueryTest
                     Assert.Equal(topology != 1, allocator.ReleaseCurrentThreadBinding());
                     Assert.False(allocator.HasCurrentThreadBinding);
                 }
-                catch (Exception failure) { workerFailure = failure; }
-                finally { allocation?.Release(); allocator.ReleaseCurrentThreadBinding(); }
+                catch (Exception failure)
+                {
+                    workerFailure = failure;
+                }
+                finally
+                {
+                    allocation?.Release();
+                    allocator.ReleaseCurrentThreadBinding();
+                }
             }) { IsBackground = true };
-            worker.Start(); Assert.True(worker.Join(TimeSpan.FromSeconds(10)));
-            if (workerFailure != null) ExceptionDispatchInfo.Capture(workerFailure).Throw();
+            worker.Start();
+            Assert.True(worker.Join(TimeSpan.FromSeconds(10)));
+            if (workerFailure != null)
+            {
+                ExceptionDispatchInfo.Capture(workerFailure).Throw();
+            }
             for (int i = 0; i < 3; ++i) Assert.Equal(expected, allocator.HasCurrentThreadBinding);
             Assert.Equal(expected ? 1 : 0, allocator.Metric.NumThreadLocalCaches);
-            Assert.Equal(pinnedHeap, allocator.PinnedHeapMemory); Assert.Equal(pinnedDirect, allocator.PinnedDirectMemory);
-            Assert.Equal(expected, allocator.ReleaseCurrentThreadBinding()); Assert.False(allocator.HasCurrentThreadBinding);
-            if (trigger == 0) { owner.SetByte(0, 0x5A); Assert.Equal(0x5A, owner.GetByte(0)); }
-            owner.Release(); owner = null;
-            allocator.Dispose(); Assert.False(allocator.HasCurrentThreadBinding);
+            Assert.Equal(pinnedHeap, allocator.PinnedHeapMemory);
+            Assert.Equal(pinnedDirect, allocator.PinnedDirectMemory);
+            Assert.Equal(expected, allocator.ReleaseCurrentThreadBinding());
+            Assert.False(allocator.HasCurrentThreadBinding);
+            if (trigger == 0)
+            {
+                owner.SetByte(0, 0x5A);
+                Assert.Equal(0x5A, owner.GetByte(0));
+            }
+            owner.Release();
+            owner = null;
+            allocator.Dispose();
+            Assert.False(allocator.HasCurrentThreadBinding);
             Assert.Equal(0, allocator.Metric.NumThreadLocalCaches);
         }
-        finally { owner?.Release(); allocator.Dispose(); Assert.Equal(0, native.ReservedBytes); }
+        finally
+        {
+            owner?.Release();
+            allocator.Dispose();
+            Assert.Equal(0, native.ReservedBytes);
+        }
     }
 }

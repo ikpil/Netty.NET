@@ -39,7 +39,10 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
     public DefaultPriorityQueue(IComparer<T> comparator, int initialSize)
     {
         _comparator = ObjectUtil.CheckNotNull(comparator, "comparator");
-        if (initialSize < 0) throw new ArgumentOutOfRangeException(nameof(initialSize));
+        if (initialSize < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(initialSize));
+        }
         _queue = initialSize != 0
             ? new T[initialSize]
             : Array.Empty<T>();
@@ -72,7 +75,11 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
 
     public bool TryDequeue(out T item)
     {
-        if (_size == 0) { item = default; return false; }
+        if (_size == 0)
+        {
+            item = default;
+            return false;
+        }
         item = Poll();
         return true;
     }
@@ -115,7 +122,10 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
 
     public bool Offer(T e)
     {
-        if (e == null) throw new ArgumentNullException(nameof(e));
+        if (e == null)
+        {
+            throw new ArgumentNullException(nameof(e));
+        }
         if (e is not IPriorityQueueNode<T> node)
             throw new ArgumentException("Element must provide indexed queue membership.", nameof(e));
         if (node.PriorityQueueIndex(this) != -1)
@@ -143,7 +153,8 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
         T last = _queue[--_size];
         _queue[_size] = default;
         if (_size != 0)
-        { // Make sure we don't add the last element back.
+        {
+            // Make sure we don't add the last element back.
             BubbleDown(0, last);
         }
 
@@ -223,7 +234,10 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
         int oldCapacity = _queue.Length;
         // Use a policy which allows for a 0 initial capacity. Same policy as JDK's priority queue, double when
         // "small", then grow by 50% when "large".
-        if (oldCapacity == Array.MaxLength) throw new OutOfMemoryException();
+        if (oldCapacity == Array.MaxLength)
+        {
+            throw new OutOfMemoryException();
+        }
         long newCapacity = (long)oldCapacity + (oldCapacity < 64 ? oldCapacity + 2 : (oldCapacity >> 1));
         // Keep capacity owned by the array, so failed allocation cannot leave
         // a second capacity field inconsistent with the actual storage.
@@ -301,7 +315,10 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
 
     private void SetIndex(T item, int index)
     {
-        if (item is IPriorityQueueNode<T> node) node.PriorityQueueIndex(this, index);
+        if (item is IPriorityQueueNode<T> node)
+        {
+            node.PriorityQueueIndex(this, index);
+        }
     }
 
     /**

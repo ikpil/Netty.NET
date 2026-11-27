@@ -81,7 +81,10 @@ public sealed class DefaultMockTicker : MockTicker
                 {
                     while (pendingTicks.First != sleeper.Tick) Monitor.Wait(_lock);
                     pendingTicks.RemoveFirst();
-                    if (unchecked(NanoTime() - startTimeNanos) >= delayNanos) return;
+                    if (unchecked(NanoTime() - startTimeNanos) >= delayNanos)
+                    {
+                        return;
+                    }
                     Monitor.PulseAll(_lock);
                 }
             }
@@ -89,7 +92,10 @@ public sealed class DefaultMockTicker : MockTicker
             {
                 sleepers.Remove(Thread.CurrentThread);
                 registered.Remove(registration);
-                if (sleeper.Tick.List != null) pendingTicks.Remove(sleeper.Tick);
+                if (sleeper.Tick.List != null)
+                {
+                    pendingTicks.Remove(sleeper.Tick);
+                }
                 Monitor.PulseAll(_lock);
             }
         }
@@ -127,8 +133,14 @@ public sealed class DefaultMockTicker : MockTicker
             {
                 while (pendingTicks.Count != 0)
                 {
-                    try { Monitor.Wait(_lock); }
-                    catch (ThreadInterruptedException) { interrupted = true; }
+                    try
+                    {
+                        Monitor.Wait(_lock);
+                    }
+                    catch (ThreadInterruptedException)
+                    {
+                        interrupted = true;
+                    }
                 }
                 Interlocked.Add(ref _nanoTime, amountNanos);
                 foreach (var sleeper in registered) pendingTicks.AddLast(sleeper.Tick);
@@ -137,7 +149,10 @@ public sealed class DefaultMockTicker : MockTicker
         }
         finally
         {
-            if (interrupted) Thread.CurrentThread.Interrupt();
+            if (interrupted)
+            {
+                Thread.CurrentThread.Interrupt();
+            }
         }
     }
 }

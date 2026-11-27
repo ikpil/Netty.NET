@@ -51,7 +51,10 @@ internal sealed partial class AdaptivePoolingAllocator
         internal ByteBuf Copy(int index, int length)
         {
             ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
-            if (index < 0 || length < 0 || index > Length - length) throw new ArgumentOutOfRangeException(nameof(index));
+            if (index < 0 || length < 0 || index > Length - length)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
             return _chunk.Copy(Offset + index, length);
         }
 
@@ -89,7 +92,10 @@ internal sealed partial class AdaptivePoolingAllocator
             ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
             ReferenceCountUpdater.Retain(ref _references);
             claim.Activate(this);
-            if (Volatile.Read(ref _disposed) == 0) return claim;
+            if (Volatile.Read(ref _disposed) == 0)
+            {
+                return claim;
+            }
             claim.Dispose();
             throw new ObjectDisposedException(nameof(AdaptiveChunkAllocation));
         }
@@ -121,13 +127,19 @@ internal sealed partial class AdaptivePoolingAllocator
 
         protected override void Dispose(bool disposing)
         {
-            if (Interlocked.Exchange(ref _disposed, 1) == 0) ReleaseClaim();
+            if (Interlocked.Exchange(ref _disposed, 1) == 0)
+            {
+                ReleaseClaim();
+            }
         }
 
         private void ReleaseClaim()
         {
             using var events = BufferAllocatorEventSource.Log.BeginOperation();
-            if (!ReferenceCountUpdater.Release(ref _references)) return;
+            if (!ReferenceCountUpdater.Release(ref _references))
+            {
+                return;
+            }
             Chunk chunk = _chunk;
             _chunk = null;
             _memory = default;

@@ -131,7 +131,10 @@ public class FixedChannelPoolMapDeadlockTest
                     .WaitAsync(TimeSpan.FromSeconds(5));
                 await map.CloseAsync();
             }
-            finally { await Shutdown(groups); }
+            finally
+            {
+                await Shutdown(groups);
+            }
         }
     }
 
@@ -171,7 +174,10 @@ public class FixedChannelPoolMapDeadlockTest
                 await Task.WhenAll(pool1.CloseAsync(), pool2.CloseAsync()).WaitAsync(TimeSpan.FromSeconds(5));
                 await map.CloseAsync();
             }
-            finally { await Shutdown(groups); }
+            finally
+            {
+                await Shutdown(groups);
+            }
         }
     }
 

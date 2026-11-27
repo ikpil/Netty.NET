@@ -1171,7 +1171,10 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
             long elapsed = Stopwatch.GetElapsedTime(started).Ticks;
             long left = elapsed >= ticks ? 0 : ticks - elapsed;
             int millis = left == 0 ? 0 : (int)Math.Min(int.MaxValue, 1 + (left - 1) / TimeSpan.TicksPerMillisecond);
-            if (_threadLock.Wait(millis) || Stopwatch.GetElapsedTime(started).Ticks >= ticks) break;
+            if (_threadLock.Wait(millis) || Stopwatch.GetElapsedTime(started).Ticks >= ticks)
+            {
+                break;
+            }
         }
 
         return IsTerminated();
@@ -1304,13 +1307,25 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         {
             for (;;)
             {
-                try { started.GetAwaiter().GetResult(); return; }
+                try
+                {
+                    started.GetAwaiter().GetResult();
+                    return;
+                }
                 catch (ThreadInterruptedException error)
                     when (!started.IsFaulted || !ReferenceEquals(started.Exception.InnerException, error))
-                { interrupted = true; }
+                {
+                    interrupted = true;
+                }
             }
         }
-        finally { if (interrupted) Thread.CurrentThread.Interrupt(); }
+        finally
+        {
+            if (interrupted)
+            {
+                Thread.CurrentThread.Interrupt();
+            }
+        }
     }
 
     /**
@@ -1623,10 +1638,21 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         {
             this.t = t;
             // CLR: the worker may already be terminating when its properties are first published.
-            try { lastPriority = t.Priority; }
-            catch (ThreadStateException) { lastPriority = ThreadPriority.Normal; }
-            try { lastDaemon = t.IsBackground; }
-            catch (ThreadStateException) { }
+            try
+            {
+                lastPriority = t.Priority;
+            }
+            catch (ThreadStateException)
+            {
+                lastPriority = ThreadPriority.Normal;
+            }
+            try
+            {
+                lastDaemon = t.IsBackground;
+            }
+            catch (ThreadStateException)
+            {
+            }
         }
 
         // CLR: Thread.State maps to the ThreadState flags.
@@ -1637,8 +1663,13 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
 
         public ThreadPriority Priority()
         {
-            try { lastPriority = t.Priority; }
-            catch (ThreadStateException) { }
+            try
+            {
+                lastPriority = t.Priority;
+            }
+            catch (ThreadStateException)
+            {
+            }
             return lastPriority;
         }
 
@@ -1651,8 +1682,13 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
         // CLR: Thread.isDaemon() maps to Thread.IsBackground.
         public bool IsDaemon()
         {
-            try { lastDaemon = t.IsBackground; }
-            catch (ThreadStateException) { }
+            try
+            {
+                lastDaemon = t.IsBackground;
+            }
+            catch (ThreadStateException)
+            {
+            }
             return lastDaemon;
         }
 

@@ -50,12 +50,27 @@ public class BoundedPoolQueueContractTest
         {
             try
             {
-                if (enqueue) items[32].Handle.Recycle(items[32]);
-                else claimed = pool.Get();
-                try { Thread.Sleep(0); }
-                catch (ThreadInterruptedException) { pendingInterrupt = true; }
+                if (enqueue)
+                {
+                    items[32].Handle.Recycle(items[32]);
+                }
+                else
+                {
+                    claimed = pool.Get();
+                }
+                try
+                {
+                    Thread.Sleep(0);
+                }
+                catch (ThreadInterruptedException)
+                {
+                    pendingInterrupt = true;
+                }
             }
-            catch (Exception error) { failure = error; }
+            catch (Exception error)
+            {
+                failure = error;
+            }
         }) { IsBackground = true };
         bool started = false;
         bool waited = false;
@@ -65,12 +80,18 @@ public class BoundedPoolQueueContractTest
             worker.Start();
             started = true;
             waited = SpinWait.SpinUntil(() => (worker.ThreadState & ThreadState.WaitSleepJoin) != 0, TimeSpan.FromSeconds(5));
-            if (waited) worker.Interrupt();
+            if (waited)
+            {
+                worker.Interrupt();
+            }
         }
         finally
         {
             Monitor.Exit(segmentGate);
-            if (started) Assert.True(worker.Join(TimeSpan.FromSeconds(5)));
+            if (started)
+            {
+                Assert.True(worker.Join(TimeSpan.FromSeconds(5)));
+            }
         }
         Assert.True(waited);
         Assert.Null(failure);
@@ -80,7 +101,10 @@ public class BoundedPoolQueueContractTest
         {
             for (int index = 0; index < 33; index++) Assert.Same(items[index], pool.Get());
         }
-        else Assert.Same(items[32], claimed);
+        else
+        {
+            Assert.Same(items[32], claimed);
+        }
     }
 
     [Theory]
@@ -151,7 +175,10 @@ public class BoundedPoolQueueContractTest
         for (Type type = instance.GetType(); type != null; type = type.BaseType)
         {
             FieldInfo field = type.GetField(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
-            if (field != null) return field.GetValue(instance);
+            if (field != null)
+            {
+                return field.GetValue(instance);
+            }
         }
         throw new InvalidOperationException($"Missing schedule-control field {name} on {instance.GetType()}.");
     }

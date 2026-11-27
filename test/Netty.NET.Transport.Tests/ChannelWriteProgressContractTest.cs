@@ -258,7 +258,12 @@ public class ChannelWriteProgressContractTest
                 synchronousFile ? FileOptions.None : FileOptions.Asynchronous);
             var reports = new ConcurrentQueue<ChannelWriteProgress>();
             bool wrongOwner = false;
-            connection.Channel.Config.WriteProgress = new Observer(value => { if (!connection.Channel.EventLoop.InEventLoop()) wrongOwner = true; reports.Enqueue(value); });
+            connection.Channel.Config.WriteProgress = new Observer(value => {
+                if (!connection.Channel.EventLoop.InEventLoop())
+                {
+                    wrongOwner = true;
+                }
+                reports.Enqueue(value); });
             var region = new DefaultFileRegion(file, 7, bytes.Length - 7);
             Task write = connection.Channel.WriteAndFlushAsync(region, TestContext.Current.CancellationToken);
             var actual = new byte[bytes.Length - 7];
@@ -272,7 +277,10 @@ public class ChannelWriteProgressContractTest
             _ = Assert.Single(reports.Select(r => r.Operation).Distinct());
             Assert.Equal(0, region.RefCnt);
         }
-        finally { File.Delete(path); }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     [Fact(Timeout = 10000)]
@@ -292,7 +300,10 @@ public class ChannelWriteProgressContractTest
             // AbstractNioMessageChannel.doWrite removes whole messages without progress(): a datagram reports nothing.
             Assert.Empty(reports);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Fact(Timeout = 10000)]
@@ -313,13 +324,20 @@ public class ChannelWriteProgressContractTest
                 observation.Report(value.Progress);
             });
             Task outer = connection.Channel.WriteAndFlushAsync("abc", TestContext.Current.CancellationToken);
-            var actual = new byte[8]; await connection.Peer.GetStream().ReadExactlyAsync(actual, TestContext.Current.CancellationToken);
-            await outer; Assert.Equal("wire:abc"u8.ToArray(), actual);
+            var actual = new byte[8];
+            await connection.Peer.GetStream().ReadExactlyAsync(actual, TestContext.Current.CancellationToken);
+            await outer;
+            Assert.Equal("wire:abc"u8.ToArray(), actual);
             Assert.NotNull(observation);
             await observation.NotificationsCompleted.WaitAsync(TestContext.Current.CancellationToken);
             Assert.Equal(new[] { "progress:8", "success" }, notifications);
         }
-        finally { observation?.Dispose(); await connection.DisposeAsync(); await extra.StopAsync(); }
+        finally
+        {
+            observation?.Dispose();
+            await connection.DisposeAsync();
+            await extra.StopAsync();
+        }
     }
     private sealed class Encode : ChannelOutboundHandlerAdapter
     {
@@ -372,7 +390,11 @@ public class ChannelWriteProgressContractTest
                 result.Peer = await result._listener.AcceptTcpClientAsync(TestContext.Current.CancellationToken);
                 return result;
             }
-            catch { await result.DisposeAsync(); throw; }
+            catch
+            {
+                await result.DisposeAsync();
+                throw;
+            }
         }
 
         public async ValueTask DisposeAsync()

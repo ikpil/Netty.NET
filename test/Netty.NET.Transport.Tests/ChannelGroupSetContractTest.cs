@@ -126,16 +126,36 @@ public class ChannelGroupSetContractTest
         {
             switch (operation)
             {
-                case "union": group.UnionWith(null); break;
-                case "except": group.ExceptWith(null); break;
-                case "intersect": group.IntersectWith(null); break;
-                case "symmetric": group.SymmetricExceptWith(null); break;
-                case "subset": group.IsSubsetOf(null); break;
-                case "superset": group.IsSupersetOf(null); break;
-                case "properSubset": group.IsProperSubsetOf(null); break;
-                case "properSuperset": group.IsProperSupersetOf(null); break;
-                case "overlaps": group.Overlaps(null); break;
-                default: group.SetEquals(null); break;
+                case "union":
+                    group.UnionWith(null);
+                    break;
+                case "except":
+                    group.ExceptWith(null);
+                    break;
+                case "intersect":
+                    group.IntersectWith(null);
+                    break;
+                case "symmetric":
+                    group.SymmetricExceptWith(null);
+                    break;
+                case "subset":
+                    group.IsSubsetOf(null);
+                    break;
+                case "superset":
+                    group.IsSupersetOf(null);
+                    break;
+                case "properSubset":
+                    group.IsProperSubsetOf(null);
+                    break;
+                case "properSuperset":
+                    group.IsProperSupersetOf(null);
+                    break;
+                case "overlaps":
+                    group.Overlaps(null);
+                    break;
+                default:
+                    group.SetEquals(null);
+                    break;
             }
         });
     }
@@ -213,14 +233,21 @@ public class ChannelGroupSetContractTest
         try
         {
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("tr-TR");
-            var first = new DefaultChannelGroup("I"); var second = new DefaultChannelGroup("i");
+            var first = new DefaultChannelGroup("I");
+            var second = new DefaultChannelGroup("i");
             Assert.Equal(Math.Sign(string.CompareOrdinal(first.Name, second.Name)), Math.Sign(first.CompareTo(second)));
             var sameName = new DefaultChannelGroup("I");
             Assert.Equal(RuntimeHelpers.GetHashCode(first).CompareTo(RuntimeHelpers.GetHashCode(sameName)), first.CompareTo(sameName));
-            Assert.Equal(0, first.CompareTo(first)); Assert.True(first.CompareTo(null) > 0);
-            int hash = first.GetHashCode(); first.Add(NewChannel()); Assert.Equal(hash, first.GetHashCode());
+            Assert.Equal(0, first.CompareTo(first));
+            Assert.True(first.CompareTo(null) > 0);
+            int hash = first.GetHashCode();
+            first.Add(NewChannel());
+            Assert.Equal(hash, first.GetHashCode());
         }
-        finally { CultureInfo.CurrentCulture = saved; }
+        finally
+        {
+            CultureInfo.CurrentCulture = saved;
+        }
     }
 
     [Fact(Timeout = 10000)]

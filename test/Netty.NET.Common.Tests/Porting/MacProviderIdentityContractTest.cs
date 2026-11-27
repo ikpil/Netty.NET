@@ -114,21 +114,30 @@ public class MacProviderIdentityContractTest
         public override PhysicalAddress GetPhysicalAddress()
         {
             HardwareCalls++;
-            if (FailHardware) throw new NetworkInformationException(1);
+            if (FailHardware)
+            {
+                throw new NetworkInformationException(1);
+            }
             return physical;
         }
 
         public override bool Equals(object obj)
         {
             EqualityCalls++;
-            if (ThrowEquality) throw new InvalidOperationException("provider equality must not run");
+            if (ThrowEquality)
+            {
+                throw new InvalidOperationException("provider equality must not run");
+            }
             return obj is ProviderInterface;
         }
 
         public override int GetHashCode()
         {
             HashCalls++;
-            if (ThrowHash) throw new InvalidOperationException("provider hashing must not run");
+            if (ThrowHash)
+            {
+                throw new InvalidOperationException("provider hashing must not run");
+            }
             return ChangingHash ? HashCalls : 0;
         }
 

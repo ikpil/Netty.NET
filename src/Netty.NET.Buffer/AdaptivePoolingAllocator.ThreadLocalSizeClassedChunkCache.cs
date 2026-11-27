@@ -156,7 +156,10 @@ internal sealed partial class AdaptivePoolingAllocator
         public override SizeClassedChunk PollChunk(int size)
         {
             using var events = BufferAllocatorEventSource.Log.BeginOperation();
-            if (_disposed) return null;
+            if (_disposed)
+            {
+                return null;
+            }
             if (--_purgeBudget == 0)
             {
                 RunPurgeScan();
@@ -341,8 +344,14 @@ internal sealed partial class AdaptivePoolingAllocator
                 .Append(", length=").Append(_chunks.Length.ToString(CultureInfo.InvariantCulture)).Append("]\n  ");
             for (int i = 0; i < _count; i++)
             {
-                if (i > 0) sb.Append(", ");
-                if (i == _notEmptyCount) sb.Append("| ");
+                if (i > 0)
+                {
+                    sb.Append(", ");
+                }
+                if (i == _notEmptyCount)
+                {
+                    sb.Append("| ");
+                }
                 SizeClassedChunk c = _chunks[(_head + i) & mask];
                 string region = i < _notEmptyCount ? "notEmpty" : "empty";
                 string actual = c == null ? "null" : c.HasRemainingCapacity ? "hasCap" : "noCap";

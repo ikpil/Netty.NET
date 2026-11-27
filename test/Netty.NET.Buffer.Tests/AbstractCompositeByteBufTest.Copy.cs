@@ -42,6 +42,10 @@ public abstract partial class AbstractCompositeByteBufTest
             Assert.Equal(buffer.IsDirect, copy.IsDirect);
             Assert.Same(buffer.Alloc(), copy.Alloc());
         }
-        finally { buffer.Release(); copy?.Release(); }
+        finally
+        {
+            buffer.Release();
+            copy?.Release();
+        }
     }
 }

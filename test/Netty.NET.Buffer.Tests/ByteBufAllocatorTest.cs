@@ -31,7 +31,10 @@ public abstract class ByteBufAllocatorTest : IDisposable
 
     protected TAllocator Track<TAllocator>(TAllocator allocator)
     {
-        if (allocator is IDisposable disposable) _allocators.Add(disposable);
+        if (allocator is IDisposable disposable)
+        {
+            _allocators.Add(disposable);
+        }
         return allocator;
     }
 
@@ -332,16 +335,32 @@ public class ByteBufAllocatorClrContractTest
             try
             {
                 Assert.Equal(kind == 0 ? preferDirect : kind >= 2, b.IsDirect);
-                Assert.Equal(1, b.Capacity); Assert.Equal(max, b.MaxCapacity); Assert.Same(a, b.Alloc());
-                Assert.Equal(0, b.ReaderIndex); Assert.Equal(0, b.WriterIndex); Assert.Equal(1, b.RefCnt);
-                b.WriteByte(255); Assert.Equal(255, b.ReadByte());
+                Assert.Equal(1, b.Capacity);
+                    Assert.Equal(max, b.MaxCapacity);
+                    Assert.Same(a, b.Alloc());
+                Assert.Equal(0, b.ReaderIndex);
+                    Assert.Equal(0, b.WriterIndex);
+                    Assert.Equal(1, b.RefCnt);
+                b.WriteByte(255);
+                    Assert.Equal(255, b.ReadByte());
             }
-            finally { b.Release(); }
+            finally
+            {
+                b.Release();
+            }
         }
         foreach (var (b, initial) in new[] { (a.Buffer(), 256), (a.HeapBuffer(), 256), (a.DirectBuffer(), 256), (a.IoBuffer(), 256), (a.Buffer(17), 17), (a.HeapBuffer(17), 17), (a.DirectBuffer(17), 17), (a.IoBuffer(17), 17) })
         {
-            try { Assert.Equal(initial, b.Capacity); Assert.Equal(int.MaxValue, b.MaxCapacity); Assert.Same(a, b.Alloc()); }
-            finally { b.Release(); }
+            try
+            {
+                Assert.Equal(initial, b.Capacity);
+                Assert.Equal(int.MaxValue, b.MaxCapacity);
+                Assert.Same(a, b.Alloc());
+            }
+            finally
+            {
+                b.Release();
+            }
         }
         Assert.False(a.IsDirectBufferPooled);
     }
@@ -359,16 +378,32 @@ public class ByteBufAllocatorClrContractTest
             CompositeByteBuf b = kind switch { 0 => a.CompositeBuffer(max), 1 => a.CompositeHeapBuffer(max), _ => a.CompositeDirectBuffer(max) };
             try
             {
-                Assert.Same(a, b.Alloc()); Assert.Equal(max, b.MaxNumComponents); Assert.Equal(0, b.NumComponents);
-                Assert.False(b.IsDirect); Assert.Equal(0, b.Capacity); Assert.Equal(int.MaxValue, b.MaxCapacity);
+                Assert.Same(a, b.Alloc());
+                    Assert.Equal(max, b.MaxNumComponents);
+                    Assert.Equal(0, b.NumComponents);
+                Assert.False(b.IsDirect);
+                    Assert.Equal(0, b.Capacity);
+                    Assert.Equal(int.MaxValue, b.MaxCapacity);
                 b.Capacity = 9;
                 Assert.Equal(kind == 0 ? preferDirect : kind == 2, b.IsDirect);
-                Assert.Same(a, b.Component(0).Alloc()); b.WriteLong(0x0102030405060708);
+                Assert.Same(a, b.Component(0).Alloc());
+                    b.WriteLong(0x0102030405060708);
                 ByteBuf copy = b.Copy();
-                try { Assert.Same(a, copy.Alloc()); Assert.Equal(b.IsDirect, copy.IsDirect); Assert.Equal(ByteBufUtil.GetBytes(b), ByteBufUtil.GetBytes(copy)); }
-                finally { copy.Release(); }
+                try
+                    {
+                        Assert.Same(a, copy.Alloc());
+                        Assert.Equal(b.IsDirect, copy.IsDirect);
+                        Assert.Equal(ByteBufUtil.GetBytes(b), ByteBufUtil.GetBytes(copy));
+                    }
+                finally
+                {
+                    copy.Release();
+                }
             }
-            finally { b.Release(); }
+            finally
+            {
+                b.Release();
+            }
         }
     }
 
@@ -419,7 +454,10 @@ public class ByteBufAllocatorClrContractTest
             growable.WriteByte(4);
             Assert.Equal(1, growable.Capacity);
         }
-        finally { growable.Release(); }
+        finally
+        {
+            growable.Release();
+        }
         Assert.Same(Unpooled.EmptyBuffer, UnpooledByteBufAllocator.Default.DirectBuffer(0, 0));
         Assert.Same(IByteBufAllocator.Default, ByteBufUtil.DefaultAllocator);
     }
@@ -446,7 +484,10 @@ public class ByteBufAllocatorClrContractTest
                     Assert.Equal(64, copy.MaxCapacity);
                     Assert.Equal(ByteBufUtil.GetBytes(view), ByteBufUtil.GetBytes(copy));
                 }
-                finally { copy.Release(); }
+                finally
+                {
+                    copy.Release();
+                }
                 Assert.Equal(calls + 1, direct ? a.DirectCalls : a.HeapCalls);
             }
             root.EnsureWritable(1);
@@ -461,7 +502,10 @@ public class ByteBufAllocatorClrContractTest
             Assert.Equal(4, root.WriterIndex);
             Assert.Equal(1, root.RefCnt);
         }
-        finally { root.Release(); }
+        finally
+        {
+            root.Release();
+        }
     }
 
     [Theory]
@@ -489,9 +533,15 @@ public class ByteBufAllocatorClrContractTest
                 Assert.Equal(direct, copy.IsDirect);
                 Assert.Equal(new byte[] { 2, 3, 4, 5 }, ByteBufUtil.GetBytes(copy));
             }
-            finally { copy.Release(); }
+            finally
+            {
+                copy.Release();
+            }
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -511,7 +561,10 @@ public class ByteBufAllocatorClrContractTest
                 Assert.Same(policy, copy.Alloc());
                 Assert.Equal(8, native.ReservedBytes);
             }
-            finally { copy.Release(); }
+            finally
+            {
+                copy.Release();
+            }
             b.Capacity = 8;
             Assert.Equal(8, native.ReservedBytes);
             ByteBuf full = policy.DirectBuffer(8, 8);
@@ -522,9 +575,15 @@ public class ByteBufAllocatorClrContractTest
                 Assert.Equal(8, b.Capacity);
                 Assert.Equal(4, b.WriterIndex);
             }
-            finally { full.Release(); }
+            finally
+            {
+                full.Release();
+            }
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
         Assert.Equal(0, native.ReservedBytes);
         CompositeByteBuf composite = useLegacyConstructor ? new CompositeByteBuf(16, true, native) : a.CompositeDirectBuffer();
         try
@@ -533,7 +592,10 @@ public class ByteBufAllocatorClrContractTest
             Assert.Equal(8, native.ReservedBytes);
             Assert.Same(composite.Alloc(), composite.Component(0).Alloc());
         }
-        finally { composite.Release(); }
+        finally
+        {
+            composite.Release();
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -555,7 +617,14 @@ public class ByteBufAllocatorClrContractTest
             b.Release();
             Assert.Equal(4, native.ReservedBytes);
         }
-        finally { if (b.RefCnt > 0) b.Release(); lease.Dispose(); }
+        finally
+        {
+            if (b.RefCnt > 0)
+            {
+                b.Release();
+            }
+            lease.Dispose();
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -575,7 +644,10 @@ public class ByteBufAllocatorClrContractTest
                     Assert.Equal(i, b.ReadLong());
                     Assert.Same(a, b.Alloc());
                 }
-                finally { b.Release(); }
+                finally
+                {
+                    b.Release();
+                }
             }
         }, TestContext.Current.CancellationToken)));
         Assert.Equal(0, native.ReservedBytes);

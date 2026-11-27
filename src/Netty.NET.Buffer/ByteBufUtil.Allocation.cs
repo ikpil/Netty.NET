@@ -44,11 +44,21 @@ public static partial class ByteBufUtil
         ByteBuf result = allocator.Buffer(length);
         try
         {
-            if (result.WritableBytes == length) buffer.ReadBytes(result);
-            else buffer.ReadBytes(result, length);
+            if (result.WritableBytes == length)
+            {
+                buffer.ReadBytes(result);
+            }
+            else
+            {
+                buffer.ReadBytes(result, length);
+            }
             return result;
         }
-        catch { result.Release(); throw; }
+        catch
+        {
+            result.Release();
+            throw;
+        }
     }
 
     /**
@@ -66,8 +76,16 @@ public static partial class ByteBufUtil
         ArgumentNullException.ThrowIfNull(allocator);
         // UTF-8 uses max. 3 bytes per char, so calculate the worst case.
         ByteBuf result = allocator.Buffer(Utf8MaxBytes(text));
-        try { WriteUtf8(result, text); return result; }
-        catch { result.Release(); throw; }
+        try
+        {
+            WriteUtf8(result, text);
+            return result;
+        }
+        catch
+        {
+            result.Release();
+            throw;
+        }
     }
 
     /**
@@ -86,8 +104,16 @@ public static partial class ByteBufUtil
         ArgumentNullException.ThrowIfNull(allocator);
         ArgumentNullException.ThrowIfNull(text);
         ByteBuf result = allocator.Buffer(Utf8MaxBytes(text));
-        try { WriteUtf8(result, text); return result; }
-        catch { result.Release(); throw; }
+        try
+        {
+            WriteUtf8(result, text);
+            return result;
+        }
+        catch
+        {
+            result.Release();
+            throw;
+        }
     }
 
     /**
@@ -105,8 +131,16 @@ public static partial class ByteBufUtil
         ArgumentNullException.ThrowIfNull(allocator);
         // ASCII uses 1 byte per char
         ByteBuf result = allocator.Buffer(text.Length);
-        try { WriteAscii(result, text); return result; }
-        catch { result.Release(); throw; }
+        try
+        {
+            WriteAscii(result, text);
+            return result;
+        }
+        catch
+        {
+            result.Release();
+            throw;
+        }
     }
 
     /**
@@ -124,8 +158,16 @@ public static partial class ByteBufUtil
         ArgumentNullException.ThrowIfNull(allocator);
         ArgumentNullException.ThrowIfNull(text);
         ByteBuf result = allocator.Buffer(text.Length());
-        try { WriteAscii(result, text); return result; }
-        catch { result.Release(); throw; }
+        try
+        {
+            WriteAscii(result, text);
+            return result;
+        }
+        catch
+        {
+            result.Release();
+            throw;
+        }
     }
 
     /**
@@ -155,7 +197,15 @@ public static partial class ByteBufUtil
         ArgumentOutOfRangeException.ThrowIfNegative(extraCapacity);
         int capacity = checked(encoding.GetByteCount(text) + extraCapacity);
         ByteBuf result = allocator.Buffer(capacity);
-        try { result.WriteCharSequence(text, encoding); return result; }
-        catch { result.Release(); throw; }
+        try
+        {
+            result.WriteCharSequence(text, encoding);
+            return result;
+        }
+        catch
+        {
+            result.Release();
+            throw;
+        }
     }
 }

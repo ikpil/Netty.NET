@@ -21,8 +21,15 @@ public class PipelineMaskAndTaskContractTest
         var handler = new ActiveOverride();
         var channel = new EmbeddedChannel(handler);
         try
-        { Assert.True(channel.WriteInbound("message")); Assert.Equal(1, handler.Reads); Assert.Equal("message", channel.ReadInbound()); }
-        finally { channel.FinishAndReleaseAll(); }
+        {
+            Assert.True(channel.WriteInbound("message"));
+            Assert.Equal(1, handler.Reads);
+            Assert.Equal("message", channel.ReadInbound());
+        }
+        finally
+        {
+            channel.FinishAndReleaseAll();
+        }
     }
 
     [Fact]
@@ -31,8 +38,15 @@ public class PipelineMaskAndTaskContractTest
         var handler = new ExplicitSkippedRead();
         var channel = new EmbeddedChannel(handler);
         try
-        { Assert.True(channel.WriteInbound("message")); Assert.Equal(0, handler.Reads); Assert.Equal("message", channel.ReadInbound()); }
-        finally { channel.FinishAndReleaseAll(); }
+        {
+            Assert.True(channel.WriteInbound("message"));
+            Assert.Equal(0, handler.Reads);
+            Assert.Equal("message", channel.ReadInbound());
+        }
+        finally
+        {
+            channel.FinishAndReleaseAll();
+        }
     }
 
     [Fact]
@@ -117,7 +131,10 @@ public class PipelineMaskAndTaskContractTest
             Assert.Same(error, observed);
             Assert.Equal(0, handler.PipelineErrors);
         }
-        finally { channel.FinishAndReleaseAll(); }
+        finally
+        {
+            channel.FinishAndReleaseAll();
+        }
     }
     private class SkippedRead : ChannelInboundHandlerAdapter
     {

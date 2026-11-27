@@ -52,7 +52,11 @@ public class DirectByteBufTest : HeapByteBufTest
             Assert.Equal(0, direct.ReaderIndex);
             Assert.Equal(2, duplicate.ReaderIndex);
         }
-        finally { direct.Release(); heap.Release(); }
+        finally
+        {
+            direct.Release();
+            heap.Release();
+        }
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -76,7 +80,10 @@ public class DirectByteBufTest : HeapByteBufTest
             Assert.Equal(new byte[12], buffer.AsMemory(4, 12).ToArray());
             Assert.Equal(16, allocator.ReservedBytes);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -97,7 +104,10 @@ public class DirectByteBufTest : HeapByteBufTest
             Assert.Equal(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 }, existing.ToArray());
             Assert.Equal(8, allocator.ReservedBytes);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -134,7 +144,10 @@ public class DirectByteBufTest : HeapByteBufTest
             Assert.Throws<IllegalReferenceCountException>(() => buffer.GetByte(2));
             Assert.Throws<ObjectDisposedException>(() => borrowed.ToArray());
         }
-        finally { pin.Dispose(); }
+        finally
+        {
+            pin.Dispose();
+        }
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -155,7 +168,10 @@ public class DirectByteBufTest : HeapByteBufTest
             Assert.Equal(1, captured[0]);
             Assert.Equal(9, buffer.GetByte(0));
         }
-        finally { pin.Dispose(); }
+        finally
+        {
+            pin.Dispose();
+        }
         Assert.Equal(12, allocator.ReservedBytes);
         Assert.True(buffer.Release());
         Assert.Equal(0, allocator.ReservedBytes);
@@ -178,7 +194,10 @@ public class DirectByteBufTest : HeapByteBufTest
             Assert.Equal(8, writer.WriterIndex);
             Assert.Equal(8, allocator.ReservedBytes);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -195,7 +214,10 @@ public class DirectByteBufTest : HeapByteBufTest
             Assert.Equal(8, buffer.WriterIndex);
             Assert.Equal(new byte[] { 1, 2, 3, 4 }, buffer.ReadableMemory.ToArray());
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -216,7 +238,10 @@ public class DirectByteBufTest : HeapByteBufTest
             Assert.True(buffer.Release());
             Assert.Equal(3, allocator.ReservedBytes);
         }
-        finally { copy.Release(); }
+        finally
+        {
+            copy.Release();
+        }
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -233,7 +258,10 @@ public class DirectByteBufTest : HeapByteBufTest
             Assert.Equal(long.MaxValue, buffer.ReadLong());
             Assert.Equal(8, allocator.ReservedBytes);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
         Assert.Equal(0, allocator.ReservedBytes);
     }
 

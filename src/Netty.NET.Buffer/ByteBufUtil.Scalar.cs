@@ -42,7 +42,10 @@ public static partial class ByteBufUtil
     {
         ArgumentNullException.ThrowIfNull(buffer);
         int count = buffer.RefCnt;
-        if (count == 0) throw new IllegalReferenceCountException(count);
+        if (count == 0)
+        {
+            throw new IllegalReferenceCountException(count);
+        }
         return buffer;
     }
 

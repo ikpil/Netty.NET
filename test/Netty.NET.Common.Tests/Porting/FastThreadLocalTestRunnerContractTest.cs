@@ -13,7 +13,10 @@ public class FastThreadLocalTestRunnerContractTest
         protected override void OnRemoval(object value)
         {
             Interlocked.Increment(ref Removals);
-            if (removalFailure != null) throw removalFailure;
+            if (removalFailure != null)
+            {
+                throw removalFailure;
+            }
         }
     }
 
@@ -33,7 +36,10 @@ public class FastThreadLocalTestRunnerContractTest
             Assert.True(FastThreadLocalThread.CurrentThreadWillCleanupFastThreadLocals());
             local.Set(new object());
             Assert.Equal(0, local.Removals);
-            if (fail) throw cause;
+            if (fail)
+            {
+                throw cause;
+            }
         };
         if (fail)
         {
@@ -41,7 +47,10 @@ public class FastThreadLocalTestRunnerContractTest
                 RunInFastThreadLocalThreadExtension.Run(invocation)));
             Assert.Contains(nameof(WorkerOwnsIndexedMapAndCleansUpBeforeFailureIsRethrown), cause.StackTrace);
         }
-        else RunInFastThreadLocalThreadExtension.Run(invocation);
+        else
+        {
+            RunInFastThreadLocalThreadExtension.Run(invocation);
+        }
         Assert.Equal(1, local.Removals);
         Assert.False(worker.IsAlive);
         Assert.False(local.IsSet());
@@ -58,7 +67,10 @@ public class FastThreadLocalTestRunnerContractTest
         var error = Assert.Throws<InvalidOperationException>(() => RunInFastThreadLocalThreadExtension.Run(() =>
         {
             local.Set(new object());
-            if (failInvocation) throw invocationFailure;
+            if (failInvocation)
+            {
+                throw invocationFailure;
+            }
         }));
         Assert.Same(failInvocation ? invocationFailure : cleanupFailure, error);
         Assert.Equal(1, local.Removals);

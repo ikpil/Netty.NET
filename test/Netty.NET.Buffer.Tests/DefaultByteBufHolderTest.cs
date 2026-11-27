@@ -41,7 +41,11 @@ public class DefaultByteBufHolderTest
             Assert.Equal(holder, copy);
             Assert.Equal(holder.GetHashCode(), copy.GetHashCode());
         }
-        finally { holder.Release(); copy.Release(); }
+        finally
+        {
+            holder.Release();
+            copy.Release();
+        }
     }
 
     [Fact]
@@ -62,7 +66,13 @@ public class DefaultByteBufHolderTest
             Assert.False(constant1.Equals(other));
             Assert.False(constant1.Equals(constant2));
         }
-        finally { dflt.Release(); other.Release(); constant1.Release(); constant2.Release(); }
+        finally
+        {
+            dflt.Release();
+            other.Release();
+            constant1.Release();
+            constant2.Release();
+        }
     }
 
     private sealed class FirstConstantHolder(ByteBuf data) : DefaultByteBufHolder(data)
@@ -81,9 +91,18 @@ public class DefaultByteBufHolderTest
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj is null || GetType() != obj.GetType()) return false;
-            if (!base.Equals(obj)) return false;
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+            if (obj is null || GetType() != obj.GetType())
+            {
+                return false;
+            }
+            if (!base.Equals(obj))
+            {
+                return false;
+            }
             return _extraField == ((OtherByteBufHolder)obj)._extraField;
         }
 
@@ -145,7 +164,10 @@ public class DefaultByteBufHolderTest
         }
         finally
         {
-            if (holder.RefCnt > 0) holder.Release();
+            if (holder.RefCnt > 0)
+            {
+                holder.Release();
+            }
             copy.Release();
         }
     }
@@ -183,7 +205,13 @@ public class DefaultByteBufHolderTest
             Assert.False(holder.Equals(new DefaultByteBufHolder(Unpooled.EmptyBuffer)));
             Assert.NotNull(holder.ToString());
         }
-        finally { if (holder.RefCnt > 0) holder.Release(); }
+        finally
+        {
+            if (holder.RefCnt > 0)
+            {
+                holder.Release();
+            }
+        }
     }
 
     [Theory]
@@ -206,7 +234,13 @@ public class DefaultByteBufHolderTest
             Assert.True(retained.Release());
             Assert.Equal(0, data.RefCnt);
         }
-        finally { if (data.RefCnt > 0) data.Release(data.RefCnt); }
+        finally
+        {
+            if (data.RefCnt > 0)
+            {
+                data.Release(data.RefCnt);
+            }
+        }
     }
 
     [Fact]
@@ -226,7 +260,14 @@ public class DefaultByteBufHolderTest
             Assert.Same(Unpooled.EmptyBuffer, afterRelease.Content);
             Assert.False(afterRelease.Release());
         }
-        finally { if (holder.RefCnt > 0) holder.Release(); replacement.Release(); }
+        finally
+        {
+            if (holder.RefCnt > 0)
+            {
+                holder.Release();
+            }
+            replacement.Release();
+        }
     }
 
     [Fact]
@@ -242,7 +283,10 @@ public class DefaultByteBufHolderTest
             Assert.Throws<ArgumentNullException>(() => holder.Replace(null));
             Assert.Equal(1, data.RefCnt);
         }
-        finally { holder.Release(); }
+        finally
+        {
+            holder.Release();
+        }
         Assert.Throws<IllegalReferenceCountException>(() => holder.Content);
         Assert.Throws<IllegalReferenceCountException>(() => holder.Retain());
         Assert.Throws<IllegalReferenceCountException>(() => holder.Release());
@@ -284,7 +328,13 @@ public class DefaultByteBufHolderTest
             Assert.True(counted.Release());
             Assert.Equal(0, data.RefCnt);
         }
-        finally { if (data.RefCnt > 0) data.Release(data.RefCnt); }
+        finally
+        {
+            if (data.RefCnt > 0)
+            {
+                data.Release(data.RefCnt);
+            }
+        }
     }
 
     [Fact]
@@ -297,17 +347,27 @@ public class DefaultByteBufHolderTest
         try
         {
             b.Content.ReaderIndex = 1;
-            Assert.True(a.Equals(b)); Assert.True(b.Equals(a));
+            Assert.True(a.Equals(b));
+            Assert.True(b.Equals(a));
             Assert.Equal(a.GetHashCode(), b.GetHashCode());
-            Assert.False(a.Equals(c)); Assert.False(c.Equals(a));
-            Assert.False(a.Equals(plain)); Assert.False(plain.Equals(a));
-            Assert.False(plain.Equals(null)); Assert.False(plain.Equals(new object()));
+            Assert.False(a.Equals(c));
+            Assert.False(c.Equals(a));
+            Assert.False(a.Equals(plain));
+            Assert.False(plain.Equals(a));
+            Assert.False(plain.Equals(null));
+            Assert.False(plain.Equals(new object()));
             Assert.Equal(plain.Content.GetHashCode(), plain.GetHashCode());
             b.Content.SetByte(2, 4);
             Assert.False(a.Equals(b));
             Assert.NotEqual(a.GetHashCode(), b.GetHashCode());
         }
-        finally { a.Release(); b.Release(); c.Release(); plain.Release(); }
+        finally
+        {
+            a.Release();
+            b.Release();
+            c.Release();
+            plain.Release();
+        }
     }
 
     [Fact]
@@ -331,7 +391,10 @@ public class DefaultByteBufHolderTest
         finally
         {
             copy.Release();
-            if (holder.RefCnt > 0) holder.Release(holder.RefCnt);
+            if (holder.RefCnt > 0)
+            {
+                holder.Release(holder.RefCnt);
+            }
         }
     }
 
@@ -381,7 +444,13 @@ public class DefaultByteBufHolderTest
             Assert.Same(data, convertible.AsByteBuf());
             Assert.Equal(0, data.RefCnt);
         }
-        finally { if (data.RefCnt > 0) data.Release(); }
+        finally
+        {
+            if (data.RefCnt > 0)
+            {
+                data.Release();
+            }
+        }
     }
 
     [Fact]
@@ -403,6 +472,9 @@ public class DefaultByteBufHolderTest
             Assert.False(holder.Release());
             Assert.Equal(1, root.RefCnt);
         }
-        finally { root.Release(); }
+        finally
+        {
+            root.Release();
+        }
     }
 }

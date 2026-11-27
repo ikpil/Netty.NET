@@ -38,8 +38,16 @@ public class PooledByteBufAllocatorThreadBindingTest
     private static void AllocateAndRelease(PooledByteBufAllocator a, bool direct)
     {
         ByteBuf b = direct ? a.DirectBuffer(48) : a.HeapBuffer(48);
-        try { b.WriteInt(42); Assert.Equal(42, b.ReadInt()); Assert.Same(a, b.Alloc()); }
-        finally { b.Release(); }
+        try
+        {
+            b.WriteInt(42);
+            Assert.Equal(42, b.ReadInt());
+            Assert.Same(a, b.Alloc());
+        }
+        finally
+        {
+            b.Release();
+        }
     }
 
     private static IReadOnlyList<IPoolArenaMetric> Arenas(PooledByteBufAllocator a, bool direct)
@@ -110,7 +118,11 @@ public class PooledByteBufAllocatorThreadBindingTest
                         Assert.Equal(expected % heap, ArenaIndex(a, h));
                         Assert.Equal(expected % direct, ArenaIndex(a, d));
                     }
-                    finally { h.Release(); d.Release(); }
+                    finally
+                    {
+                        h.Release();
+                        d.Release();
+                    }
                 });
                 Assert.Equal(i + 1, a.Metric.NumThreadLocalCaches);
             }
@@ -124,7 +136,10 @@ public class PooledByteBufAllocatorThreadBindingTest
             Assert.Equal(0, a.PinnedHeapMemory);
             Assert.Equal(0, a.PinnedDirectMemory);
         }
-        finally { foreach (Worker w in workers) w.Dispose(); }
+        finally
+        {
+            foreach (Worker w in workers) w.Dispose();
+        }
         Assert.Equal(7, a.ReleaseTerminatedThreadBindings());
         Assert.Equal(0, a.ReleaseTerminatedThreadBindings());
         Assert.Equal(0, a.Metric.NumThreadLocalCaches);
@@ -164,11 +179,17 @@ public class PooledByteBufAllocatorThreadBindingTest
                     Assert.Equal(1, ArenaIndex(a, copy));
                     Assert.Equal(42, copy.GetInt(0));
                 }
-                finally { copy.Release(); }
+                finally
+                {
+                    copy.Release();
+                }
             });
             Assert.Equal(new[] { 1, 1 }, Arenas(a, direct).Select(m => m.NumThreadCaches));
         }
-        finally { original?.Release(); }
+        finally
+        {
+            original?.Release();
+        }
     }
 
     [Theory]
@@ -180,9 +201,18 @@ public class PooledByteBufAllocatorThreadBindingTest
         Assert.Equal(1, a.Metric.HeapArenas[0].NumThreadCaches);
         Assert.Equal(1, a.Metric.DirectArenas[0].NumThreadCaches);
         using var live = new Worker();
-        if (trigger == 0) Assert.Equal(1, a.ReleaseTerminatedThreadBindings());
-        else if (trigger == 1) Assert.Equal(0, a.Metric.NumThreadLocalCaches);
-        else await live.InvokeAsync(() => AllocateAndRelease(a, true));
+        if (trigger == 0)
+        {
+            Assert.Equal(1, a.ReleaseTerminatedThreadBindings());
+        }
+        else if (trigger == 1)
+        {
+            Assert.Equal(0, a.Metric.NumThreadLocalCaches);
+        }
+        else
+        {
+            await live.InvokeAsync(() => AllocateAndRelease(a, true));
+        }
         Assert.Equal(trigger == 2 ? 1 : 0, a.Metric.NumThreadLocalCaches);
         Assert.Equal(0, a.Metric.HeapArenas[1].NumThreadCaches);
         Assert.Equal(0, a.Metric.DirectArenas[1].NumThreadCaches);
@@ -200,14 +230,19 @@ public class PooledByteBufAllocatorThreadBindingTest
             using (var exiting = new Worker()) await exiting.InvokeAsync(() =>
                 b = (direct ? a.DirectBuffer(500) : a.HeapBuffer(500)).WriteInt(42));
             Assert.Equal(1, a.ReleaseTerminatedThreadBindings());
-            b.Capacity = 510; Assert.Equal(42, b.GetInt(0));
+            b.Capacity = 510;
+            Assert.Equal(42, b.GetInt(0));
             Assert.Equal(0, ArenaIndex(a, b));
             Assert.Equal(0, a.Metric.NumThreadLocalCaches);
             Assert.Equal(1, Arenas(a, direct)[0].NumAllocations);
-            b.Capacity = 509; Assert.Equal(0, a.Metric.NumThreadLocalCaches);
+            b.Capacity = 509;
+            Assert.Equal(0, a.Metric.NumThreadLocalCaches);
             Assert.Equal(1, Arenas(a, direct)[0].NumAllocations);
         }
-        finally { b?.Release(); }
+        finally
+        {
+            b?.Release();
+        }
     }
 
     [Theory]
@@ -236,7 +271,10 @@ public class PooledByteBufAllocatorThreadBindingTest
             Assert.Equal(1, Arenas(a, direct)[1].NumActiveAllocations);
             Assert.Equal(65536, direct ? a.PinnedDirectMemory : a.PinnedHeapMemory);
         }
-        finally { orphan?.Release(); }
+        finally
+        {
+            orphan?.Release();
+        }
         a.Dispose();
         Assert.Equal(0, native.ReservedBytes);
     }
@@ -264,7 +302,10 @@ public class PooledByteBufAllocatorThreadBindingTest
             {
                 Assert.Equal(1, ArenaIndex(a, b));
             }
-            finally { b.Release(); }
+            finally
+            {
+                b.Release();
+            }
         }, null));
         Assert.Equal(2, a.Metric.NumThreadLocalCaches);
         Assert.Equal(new[] { 1, 1 }, a.Metric.HeapArenas.Select(m => m.NumThreadCaches));
@@ -303,11 +344,17 @@ public class PooledByteBufAllocatorThreadBindingTest
                 {
                     Assert.Equal(1, ArenaIndex(a, b));
                 }
-                finally { b.Release(); }
+                finally
+                {
+                    b.Release();
+                }
             });
             Assert.Equal(1, a.Metric.DirectArenas[1].NumAllocations);
         }
-        finally { held?.Release(); }
+        finally
+        {
+            held?.Release();
+        }
         a.Dispose();
         Assert.Equal(0, native.ReservedBytes);
     }
@@ -385,19 +432,36 @@ public class PooledByteBufAllocatorThreadBindingTest
                 for (int i = 0; i < 512; ++i)
                 {
                     ByteBuf b;
-                    try { b = direct ? a.DirectBuffer(48) : a.HeapBuffer(48); }
-                    catch (ObjectDisposedException) { break; }
                     try
                     {
-                        b.WriteInt(k); Assert.Equal(k, b.GetInt(0));
-                        if (i == 0 && Interlocked.Increment(ref startedCount) == 8) started.SetResult();
+                        b = direct ? a.DirectBuffer(48) : a.HeapBuffer(48);
                     }
-                    finally { b.Release(); }
-                    if (i % 3 == 0) a.ReleaseCurrentThreadBinding();
+                    catch (ObjectDisposedException)
+                    {
+                        break;
+                    }
+                    try
+                    {
+                        b.WriteInt(k);
+                        Assert.Equal(k, b.GetInt(0));
+                        if (i == 0 && Interlocked.Increment(ref startedCount) == 8)
+                        {
+                            started.SetResult();
+                        }
+                    }
+                    finally
+                    {
+                        b.Release();
+                    }
+                    if (i % 3 == 0)
+                    {
+                        a.ReleaseCurrentThreadBinding();
+                    }
                 }
             })).ToArray();
             await started.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
-            a.Dispose(); await Task.WhenAll(actions);
+            a.Dispose();
+            await Task.WhenAll(actions);
             Assert.Equal(0, a.Metric.NumThreadLocalCaches);
             foreach (var m in a.Metric.HeapArenas.Concat(a.Metric.DirectArenas))
             {
@@ -405,7 +469,10 @@ public class PooledByteBufAllocatorThreadBindingTest
                 Assert.Equal(m.NumAllocations, m.NumDeallocations); Assert.Equal(0, m.NumActiveBytes);
             }
         }
-        finally { foreach (Worker w in workers) w.Dispose(); }
+        finally
+        {
+            foreach (Worker w in workers) w.Dispose();
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -443,8 +510,15 @@ public class PooledByteBufAllocatorThreadBindingTest
             {
                 foreach (var command in _queue.GetConsumingEnumerable())
                 {
-                    try { command.Action(); command.Completion.SetResult(); }
-                    catch (Exception error) { command.Completion.SetException(error); }
+                    try
+                    {
+                        command.Action();
+                        command.Completion.SetResult();
+                    }
+                    catch (Exception error)
+                    {
+                        command.Completion.SetException(error);
+                    }
                 }
             }) { IsBackground = true };
             _thread.Start();

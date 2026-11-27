@@ -163,7 +163,10 @@ public class ConcurrentSkipListIntObjMultimapContractTest
             for (int i = 0; i < 250; i++)
             {
                 map.Put(i % 17, p * 250 + i);
-                if ((i & 15) == 0) await Task.Yield();
+                if ((i & 15) == 0)
+                {
+                    await Task.Yield();
+                }
             }
         }, TestContext.Current.CancellationToken)).ToArray();
         Task publishing = Task.WhenAll(producers);

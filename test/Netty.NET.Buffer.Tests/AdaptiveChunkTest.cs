@@ -97,7 +97,10 @@ public class AdaptiveChunkTest
             Assert.Equal(0, registry.TotalCapacity);
             Assert.Equal(0, native.ReservedBytes);
         }
-        finally { foreach (var allocation in live) allocation.Release(); }
+        finally
+        {
+            foreach (var allocation in live) allocation.Release();
+        }
     }
 
     [Theory]
@@ -139,7 +142,10 @@ public class AdaptiveChunkTest
             live.Add(reused);
             Assert.Equal(held.Offset, reused.Offset);
         }
-        finally { foreach (var allocation in live) allocation.Release(); }
+        finally
+        {
+            foreach (var allocation in live) allocation.Release();
+        }
         chunk.Dispose();
         Assert.Equal(0, registry.TotalCapacity);
         Assert.Equal(0, native.ReservedBytes);
@@ -235,7 +241,10 @@ public class AdaptiveChunkTest
             while ((a = chunk.TryAllocate(size)) != null)
                 live.Add(a);
         }
-        finally { foreach (var a in live) a.Release(); }
+        finally
+        {
+            foreach (var a in live) a.Release();
+        }
         Assert.Equal(kind == 1 ? 7 : 4, live.Count);
         chunk.Dispose();
         Assert.Equal(0, registry.TotalCapacity);
@@ -269,7 +278,10 @@ public class AdaptiveChunkTest
                 Assert.Throws<InvalidOperationException>(() => chunk.TryAllocate(1));
                 live[0].Release();
             }
-            catch (Exception e) { error = e; }
+            catch (Exception e)
+            {
+                error = e;
+            }
         });
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(10)));
@@ -320,7 +332,10 @@ public class AdaptiveChunkTest
                         for (int j = worker; j < live.Count; j += threads.Length)
                             live[j].Release();
                     }
-                    catch (Exception e) { Interlocked.CompareExchange(ref error, e, null); }
+                    catch (Exception e)
+                    {
+                        Interlocked.CompareExchange(ref error, e, null);
+                    }
                 });
                 threads[i].Start();
             }
@@ -348,7 +363,10 @@ public class AdaptiveChunkTest
             Assert.Equal(0, registry.TotalCapacity);
             Assert.Equal(1, storage.RefCnt);
         }
-        finally { storage.Release(); }
+        finally
+        {
+            storage.Release();
+        }
     }
 
     [Theory]

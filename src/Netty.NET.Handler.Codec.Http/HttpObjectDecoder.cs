@@ -665,7 +665,8 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
 
             switch (code)
             {
-            case 204: case 304:
+            case 204:
+                case 304:
                 return true;
             default:
                 return false;
@@ -1129,7 +1130,8 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
     private static int GetChunkSize(byte[] hex, int start, int length)
     {
         if (length == 0)
-        { // Empty case - not allowed
+        {
+            // Empty case - not allowed
             throw new FormatException("Empty chunk size");
         }
         long result = 0;
@@ -1155,7 +1157,8 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                 if (b == ';')
                 {
                     if (i == 0)
-                    { // Empty case - not allowed
+                    {
+                        // Empty case - not allowed
                         throw new FormatException("Empty chunk size");
                     }
                     return (int) result;

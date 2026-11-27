@@ -84,8 +84,14 @@ public class CompositeByteBufDiscardTest
         }
         finally
         {
-            if (composite.RefCnt > 0) composite.Release();
-            if (buffer.RefCnt > 0) buffer.Release(buffer.RefCnt);
+            if (composite.RefCnt > 0)
+            {
+                composite.Release();
+            }
+            if (buffer.RefCnt > 0)
+            {
+                buffer.Release(buffer.RefCnt);
+            }
         }
     }
 
@@ -128,8 +134,14 @@ public class CompositeByteBufDiscardTest
         }
         finally
         {
-            if (composite.RefCnt > 0) composite.Release();
-            if (buffer.RefCnt > 0) buffer.Release(buffer.RefCnt);
+            if (composite.RefCnt > 0)
+            {
+                composite.Release();
+            }
+            if (buffer.RefCnt > 0)
+            {
+                buffer.Release(buffer.RefCnt);
+            }
         }
     }
 
@@ -158,7 +170,13 @@ public class CompositeByteBufDiscardTest
             Assert.Equal(0, b1.RefCnt);
             Assert.Equal(0, b2.RefCnt);
         }
-        finally { if (composite.RefCnt > 0) composite.Release(); }
+        finally
+        {
+            if (composite.RefCnt > 0)
+            {
+                composite.Release();
+            }
+        }
     }
 
     [Theory]
@@ -199,8 +217,14 @@ public class CompositeByteBufDiscardTest
         }
         finally
         {
-            if (composite.RefCnt > 0) composite.Release();
-            if (buffer.RefCnt > 0) buffer.Release(buffer.RefCnt);
+            if (composite.RefCnt > 0)
+            {
+                composite.Release();
+            }
+            if (buffer.RefCnt > 0)
+            {
+                buffer.Release(buffer.RefCnt);
+            }
         }
     }
 
@@ -242,22 +266,26 @@ public class CompositeByteBufDiscardTest
             }
             // Skip the first 2 bytes which means even if we call discard*ReadBytes() later we can no drop the first
             // component as it is still used.
-            composite.SkipBytes(2); Discard();
+            composite.SkipBytes(2);
+            Discard();
             Assert.Equal(4, composite.NumComponents);
             Assert.Equal(some ? 2 : 0, composite.ReaderIndex);
             Assert.Equal(some ? 16 : 14, composite.Capacity);
             // Now skip 3 bytes which means we should be able to drop the first component on the next discard*ReadBytes()
             // call.
-            composite.SkipBytes(3); Discard();
+            composite.SkipBytes(3);
+            Discard();
             Assert.Equal(3, composite.NumComponents);
             Assert.Equal(0, sources[0].RefCnt);
             // Now skip again 3 bytes which should bring our readerIndex == start of the 3 component.
             composite.SkipBytes(3);
             // Read one int (4 bytes) which should bring our readerIndex == start of the 4 component.
-            Assert.Equal(2, composite.ReadInt()); Discard();
+            Assert.Equal(2, composite.ReadInt());
+            Discard();
             // Now all except the last component should have been dropped / released.
             Assert.Equal(1, composite.NumComponents);
-            Assert.Equal(3, composite.ReadInt()); Discard();
+            Assert.Equal(3, composite.ReadInt());
+            Discard();
             Assert.Equal(0, composite.NumComponents);
             Assert.Equal(0, composite.Capacity);
             Assert.Equal(0, composite.ReaderIndex);
@@ -266,7 +294,13 @@ public class CompositeByteBufDiscardTest
             Assert.All(sources, source => Assert.Equal(0, source.RefCnt));
             Assert.True(composite.Release());
         }
-        finally { if (composite.RefCnt > 0) composite.Release(); }
+        finally
+        {
+            if (composite.RefCnt > 0)
+            {
+                composite.Release();
+            }
+        }
     }
 
     [Theory]
@@ -284,16 +318,21 @@ public class CompositeByteBufDiscardTest
             contiguous.SkipBytes(6).MarkReaderIndex();
             composite.SkipBytes(6).MarkReaderIndex();
             Assert.Equal(contiguous.ReaderIndex, composite.ReaderIndex);
-            contiguous.ReaderIndex--; composite.ReaderIndex--;
+            contiguous.ReaderIndex--;
+            composite.ReaderIndex--;
             Assert.Equal(contiguous.ReaderIndex, composite.ReaderIndex);
-            contiguous.WriterIndex--; contiguous.MarkWriterIndex();
-            composite.WriterIndex--; composite.MarkWriterIndex();
+            contiguous.WriterIndex--;
+            contiguous.MarkWriterIndex();
+            composite.WriterIndex--;
+            composite.MarkWriterIndex();
             Assert.Equal(contiguous.WriterIndex, composite.WriterIndex);
-            contiguous.WriterIndex++; composite.WriterIndex++;
+            contiguous.WriterIndex++;
+            composite.WriterIndex++;
             Assert.Equal(contiguous.WriterIndex, composite.WriterIndex);
             Assert.True(ByteBufUtil.Equals(contiguous, composite));
             // now discard
-            contiguous.DiscardReadBytes(); composite.DiscardReadBytes();
+            contiguous.DiscardReadBytes();
+            composite.DiscardReadBytes();
             Assert.Equal(contiguous.ReaderIndex, composite.ReaderIndex);
             Assert.Equal(contiguous.WriterIndex, composite.WriterIndex);
             Assert.True(ByteBufUtil.Equals(contiguous, composite));
@@ -302,16 +341,22 @@ public class CompositeByteBufDiscardTest
             Assert.Equal(1, second.RefCnt);
             Assert.Equal(10, contiguous.Capacity);
             Assert.Equal(5, composite.Capacity);
-            contiguous.ResetReaderIndex(); composite.ResetReaderIndex();
+            contiguous.ResetReaderIndex();
+            composite.ResetReaderIndex();
             Assert.Equal(contiguous.ReaderIndex, composite.ReaderIndex);
             Assert.Equal(1, composite.ReaderIndex);
-            contiguous.ResetWriterIndex(); composite.ResetWriterIndex();
+            contiguous.ResetWriterIndex();
+            composite.ResetWriterIndex();
             Assert.Equal(contiguous.WriterIndex, composite.WriterIndex);
             Assert.Equal(4, composite.WriterIndex);
             Assert.True(ByteBufUtil.Equals(contiguous, composite));
             Assert.Equal(new byte[] { 7, 8, 9 }, composite.ReadableSequence.ToArray());
         }
-        finally { contiguous.Release(); composite.Release(); }
+        finally
+        {
+            contiguous.Release();
+            composite.Release();
+        }
         Assert.Equal(0, first.RefCnt);
         Assert.Equal(0, second.RefCnt);
     }
@@ -332,7 +377,14 @@ public class CompositeByteBufDiscardTest
             {
                 ByteBuf source = storage.Allocator.Buffer();
                 sources.Add(source);
-                if (littleEndian) source.WriteIntLE(i); else source.WriteInt(i);
+                if (littleEndian)
+                {
+                    source.WriteIntLE(i);
+                }
+                else
+                {
+                    source.WriteInt(i);
+                }
                 composite.Capacity = composite.WriterIndex;
                 composite.AddComponent(source);
                 composite.WriterIndex = i + 4;
@@ -354,7 +406,10 @@ public class CompositeByteBufDiscardTest
             Assert.Equal(0, composite.ReadableBytes);
             Assert.All(sources, source => Assert.Equal(0, source.RefCnt));
         }
-        finally { composite.Release(); }
+        finally
+        {
+            composite.Release();
+        }
     }
 
     [Theory]
@@ -377,7 +432,10 @@ public class CompositeByteBufDiscardTest
             Assert.Equal(1, first.RefCnt);
             Assert.Equal(1, second.RefCnt);
         }
-        finally { composite.Release(); }
+        finally
+        {
+            composite.Release();
+        }
         Assert.Equal(0, first.RefCnt);
         Assert.Equal(0, second.RefCnt);
     }
@@ -404,6 +462,9 @@ public class CompositeByteBufDiscardTest
             Assert.Equal(128, composite.Capacity);
             Assert.Equal(2, composite.NumComponents);
         }
-        finally { Assert.True(composite.Release()); }
+        finally
+        {
+            Assert.True(composite.Release());
+        }
     }
 }

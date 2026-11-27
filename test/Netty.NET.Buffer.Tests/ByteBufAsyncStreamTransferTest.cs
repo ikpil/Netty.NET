@@ -28,8 +28,14 @@ public class ByteBufAsyncStreamTransferTest
 {
     private static ByteBuf Owner(int kind)
     {
-        if (kind == 0) return Unpooled.Buffer(8, 128).SetZero(0, 8);
-        if (kind == 1) return Unpooled.DirectBuffer(8, 128).SetZero(0, 8);
+        if (kind == 0)
+        {
+            return Unpooled.Buffer(8, 128).SetZero(0, 8);
+        }
+        if (kind == 1)
+        {
+            return Unpooled.DirectBuffer(8, 128).SetZero(0, 8);
+        }
         return Unpooled.CompositeBuffer(2).AddComponent(Unpooled.WrappedBuffer(new byte[3]))
             .AddComponent(Unpooled.DirectBuffer(5, 5).WriteZero(5));
     }
@@ -70,7 +76,10 @@ public class ByteBufAsyncStreamTransferTest
             Assert.Equal(10, input.RequestedLength);
             Assert.False(input.Disposed);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -94,7 +103,10 @@ public class ByteBufAsyncStreamTransferTest
             Assert.Equal(1, output.Calls);
             Assert.False(output.Disposed);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -121,7 +133,10 @@ public class ByteBufAsyncStreamTransferTest
             Assert.Equal(1, b.ReaderIndex);
             Assert.Equal(2, b.WriterIndex);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -143,7 +158,10 @@ public class ByteBufAsyncStreamTransferTest
             Assert.Equal(0, b.ReaderIndex);
             Assert.Equal(2, b.WriterIndex);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -169,7 +187,10 @@ public class ByteBufAsyncStreamTransferTest
             Assert.Equal(new byte[6], Bytes(b, 2, 6));
             Assert.False(stream.Disposed);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -195,7 +216,10 @@ public class ByteBufAsyncStreamTransferTest
             Assert.Equal(5, b.WriterIndex);
             Assert.False(stream.Disposed);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -219,7 +243,10 @@ public class ByteBufAsyncStreamTransferTest
             Assert.Equal(new byte[8], Bytes(b, 0, 8));
             Assert.Equal(1, b.WriterIndex);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -233,12 +260,24 @@ public class ByteBufAsyncStreamTransferTest
         {
             Task pending = input ? b.WriteBytesAsync(stream, 4, cts.Token).AsTask()
                 : b.ReadBytesAsync(stream, 4, cts.Token).AsTask();
-            cts.Cancel(); stream.Complete(); await Finish(pending);
-            Assert.Equal(input ? 8 : 4, b.WriterIndex); Assert.Equal(input ? 0 : 4, b.ReaderIndex);
-            if (input) Assert.Equal(new byte[] { 1, 2, 3, 4 }, Bytes(b, 4, 4));
-            else Assert.Equal(new byte[] { 1, 2, 3, 4 }, stream.Accepted);
+            cts.Cancel();
+            stream.Complete();
+            await Finish(pending);
+            Assert.Equal(input ? 8 : 4, b.WriterIndex);
+            Assert.Equal(input ? 0 : 4, b.ReaderIndex);
+            if (input)
+            {
+                Assert.Equal(new byte[] { 1, 2, 3, 4 }, Bytes(b, 4, 4));
+            }
+            else
+            {
+                Assert.Equal(new byte[] { 1, 2, 3, 4 }, stream.Accepted);
+            }
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -257,7 +296,10 @@ public class ByteBufAsyncStreamTransferTest
             Assert.True(b.Capacity >= 30);
             Assert.Equal(1, stream.Calls);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -274,7 +316,10 @@ public class ByteBufAsyncStreamTransferTest
             Assert.Equal(0, b.WriterIndex);
             Assert.Equal(new byte[8], Bytes(b, 0, 8));
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Fact]
@@ -300,7 +345,10 @@ public class ByteBufAsyncStreamTransferTest
             Assert.Equal(0, stream.Calls);
             Assert.Equal(8, b.Capacity);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -317,10 +365,16 @@ public class ByteBufAsyncStreamTransferTest
             await Assert.ThrowsAsync<NotSupportedException>(() => b.SetBytesAsync(0, stream, 0, TestContext.Current.CancellationToken).AsTask());
             await Assert.ThrowsAsync<NotSupportedException>(() => b.WriteBytesAsync(stream, 0, TestContext.Current.CancellationToken).AsTask());
             Assert.Equal(0, stream.Calls);
-            Task pending = b.ReadBytesAsync(stream, 4, TestContext.Current.CancellationToken).AsTask(); stream.Complete(); await Finish(pending);
-            Assert.Equal(new byte[] { 1, 2, 3, 4 }, stream.Accepted); Assert.Equal(4, b.ReaderIndex);
+            Task pending = b.ReadBytesAsync(stream, 4, TestContext.Current.CancellationToken).AsTask();
+            stream.Complete();
+            await Finish(pending);
+            Assert.Equal(new byte[] { 1, 2, 3, 4 }, stream.Accepted);
+            Assert.Equal(4, b.ReaderIndex);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Fact]
@@ -345,14 +399,19 @@ public class ByteBufAsyncStreamTransferTest
         try
         {
             await b.ReadBytesAsync(output, 8, TestContext.Current.CancellationToken);
-            Assert.Equal(8, b.ReaderIndex); Assert.Equal(16, b.WriterIndex);
+            Assert.Equal(8, b.ReaderIndex);
+            Assert.Equal(16, b.WriterIndex);
             Assert.Equal(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 }, Bytes(b, 8, 8));
             using var input = new ByteBufInputStream(b);
             Assert.Equal(8, await b.WriteBytesAsync(input, 8, TestContext.Current.CancellationToken));
-            Assert.Equal(16, b.ReaderIndex); Assert.Equal(24, b.WriterIndex);
+            Assert.Equal(16, b.ReaderIndex);
+            Assert.Equal(24, b.WriterIndex);
             Assert.Equal(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 }, Bytes(b, 16, 8));
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Fact]
@@ -378,7 +437,10 @@ public class ByteBufAsyncStreamTransferTest
             Assert.Equal(4, b.WriterIndex);
             Assert.Equal(4, wrapper.WriterIndex);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Fact]
@@ -389,11 +451,16 @@ public class ByteBufAsyncStreamTransferTest
         using var stream = new DelayedStream();
         try
         {
-            Task<int> pending = b.WriteBytesAsync(stream, 4, TestContext.Current.CancellationToken).AsTask(); stream.Complete();
+            Task<int> pending = b.WriteBytesAsync(stream, 4, TestContext.Current.CancellationToken).AsTask();
+            stream.Complete();
             await Assert.ThrowsAsync<NotSupportedException>(() => pending.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
-            Assert.Equal(0, b.WriterIndex); Assert.Equal(new byte[] { 1, 2, 0, 0 }, Bytes(b, 0, 4));
+            Assert.Equal(0, b.WriterIndex);
+            Assert.Equal(new byte[] { 1, 2, 0, 0 }, Bytes(b, 0, 4));
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -405,18 +472,30 @@ public class ByteBufAsyncStreamTransferTest
         {
             Callback = () =>
             {
-                if (b is CompositeByteBuf c) c.Consolidate();
-                else b.Capacity = 64;
+                if (b is CompositeByteBuf c)
+                {
+                    c.Consolidate();
+                }
+                else
+                {
+                    b.Capacity = 64;
+                }
             }
         };
         try
         {
             Task pending = b.ReadBytesAsync(stream, 8, TestContext.Current.CancellationToken).AsTask();
-            Assert.False(pending.IsCompleted); stream.Complete(); await Finish(pending);
+            Assert.False(pending.IsCompleted);
+            stream.Complete();
+            await Finish(pending);
             Assert.Equal(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 }, stream.Accepted);
-            Assert.Equal(8, b.ReaderIndex); Assert.Equal(8, b.WriterIndex);
+            Assert.Equal(8, b.ReaderIndex);
+            Assert.Equal(8, b.WriterIndex);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -427,7 +506,8 @@ public class ByteBufAsyncStreamTransferTest
         using var stream = new DelayedStream { Callback = () => b.Capacity = shrink ? 4 : 64 };
         try
         {
-            Task<int> pending = b.SetBytesAsync(2, stream, 6, TestContext.Current.CancellationToken).AsTask(); stream.Complete();
+            Task<int> pending = b.SetBytesAsync(2, stream, 6, TestContext.Current.CancellationToken).AsTask();
+            stream.Complete();
             if (shrink)
             {
                 await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => pending.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
@@ -435,12 +515,16 @@ public class ByteBufAsyncStreamTransferTest
             }
             else
             {
-                await Finish(pending); Assert.Equal(4, await pending);
+                await Finish(pending);
+                Assert.Equal(4, await pending);
                 Assert.Equal(new byte[] { 1, 2, 3, 4 }, Bytes(b, 2, 4));
             }
             Assert.Equal(0, b.WriterIndex);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Fact]
@@ -480,7 +564,10 @@ public class ByteBufAsyncStreamTransferTest
             Assert.Equal(8, b.Capacity);
             Assert.Equal(0, stream.Calls);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     private sealed class DelayedStream : Stream
@@ -525,8 +612,15 @@ public class ByteBufAsyncStreamTransferTest
 
         private void FailAfterCopy(CancellationToken token)
         {
-            if (Fail) throw new IOException("Failure after staging or accepting bytes.");
-            if (CancelAfterCopy) { Cancellation.Cancel(); token.ThrowIfCancellationRequested(); }
+            if (Fail)
+            {
+                throw new IOException("Failure after staging or accepting bytes.");
+            }
+            if (CancelAfterCopy)
+            {
+                Cancellation.Cancel();
+                token.ThrowIfCancellationRequested();
+            }
         }
 
         protected override void Dispose(bool disposing)

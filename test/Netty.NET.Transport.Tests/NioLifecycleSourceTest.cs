@@ -38,9 +38,13 @@ public class NioEventLoopSourceTest
         {
             var future = group.Next().ScheduleAsync(() => { /* NOOP */ }, TimeSpan.MaxValue, cancel.Token);
             Assert.NotSame(future, await Task.WhenAny(future, Task.Delay(1000, TestContext.Current.CancellationToken)));
-            cancel.Cancel(); Assert.True(future.IsCanceled);
+            cancel.Cancel();
+            Assert.True(future.IsCanceled);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Fact(Timeout = 60000)]
@@ -56,18 +60,29 @@ public class NioEventLoopSourceTest
             using var started = new ManualResetEventSlim();
             var thread = new Thread(() =>
             {
-                try { for (;;) { loop.Execute(task); started.Set(); } }
-                catch (Exception cause) { Interlocked.Exchange(ref error, cause); }
+                try
+                {
+                    for (;;) { loop.Execute(task); started.Set(); }
+                }
+                catch (Exception cause)
+                {
+                    Interlocked.Exchange(ref error, cause);
+                }
             }) { IsBackground = true };
             try
             {
-                thread.Start(); started.Wait(TestContext.Current.CancellationToken);
+                thread.Start();
+                started.Wait(TestContext.Current.CancellationToken);
                 await group.StopAsync().WaitAsync(TestContext.Current.CancellationToken);
                 Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
                 Assert.IsType<RejectedExecutionException>(Volatile.Read(ref error));
                 error = null;
             }
-            finally { await group.StopAsync(); thread.Join(TimeSpan.FromSeconds(5)); }
+            finally
+            {
+                await group.StopAsync();
+                thread.Join(TimeSpan.FromSeconds(5));
+            }
         }
     }
 
@@ -93,7 +108,12 @@ public class NioEventLoopSourceTest
                 await Task.Delay(50, TestContext.Current.CancellationToken);
             Assert.Equal(1, registered);
         }
-        finally { await ch1.CloseAsync(); await ch2.CloseAsync(); await group.StopAsync(); }
+        finally
+        {
+            await ch1.CloseAsync();
+            await ch2.CloseAsync();
+            await group.StopAsync();
+        }
     }
 
     // Only reliable if run from event loop
@@ -120,8 +140,13 @@ public class NioEventLoopSourceTest
 
             Socket selectableChannel = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             selectableChannel.Blocking = false;
-            try { selectableChannel.Connect(channel.LocalAddress); }
-            catch (SocketException e) when (e.SocketErrorCode == SocketError.WouldBlock) { }
+            try
+            {
+                selectableChannel.Connect(channel.LocalAddress);
+            }
+            catch (SocketException e) when (e.SocketErrorCode == SocketError.WouldBlock)
+            {
+            }
 
             using CountdownEvent latch = new CountdownEvent(1);
 
@@ -146,7 +171,10 @@ public class NioEventLoopSourceTest
     {
         protected override void Handle(Socket channel, NioIoOps key)
         {
-            if (!latch.IsSet) latch.Signal();
+            if (!latch.IsSet)
+            {
+                latch.Signal();
+            }
         }
     }
 }
@@ -161,12 +189,17 @@ public class TcpServerSocketSourceTest
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         try
         {
-            await group.RegisterAsync(channel); await channel.BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
+            await group.RegisterAsync(channel);
+            await channel.BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
             Assert.False(channel.ShouldClose(new IOException()));
             Assert.True(channel.ShouldClose(new ArgumentException()));
             await channel.CloseAsync();
         }
-        finally { await channel.CloseAsync(); await group.StopAsync(); }
+        finally
+        {
+            await channel.CloseAsync();
+            await group.StopAsync();
+        }
     }
 
     [Fact]
@@ -184,7 +217,11 @@ public class TcpServerSocketSourceTest
             Assert.False(channel.IsOpen);
             Assert.False(channel.IsActive);
         }
-        finally { await channel.CloseAsync(); await group.StopAsync(); }
+        finally
+        {
+            await channel.CloseAsync();
+            await group.StopAsync();
+        }
     }
     private sealed class ProbeServer(Socket socket) : NioServerSocketChannel(socket)
     {
@@ -213,9 +250,15 @@ public class AbstractSocketChannelOptionsSourceTest
             channel.Config.SetOption(ChannelOption.SO_REUSEADDR, !value2);
             bool value3 = (int)socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress) != 0;
             Assert.True(channel.Config.TryGetOption(ChannelOption.SO_REUSEADDR, out bool value4));
-            Assert.Equal(value3, value4); Assert.NotEqual(value1, value4);
+            Assert.Equal(value3, value4);
+            Assert.NotEqual(value1, value4);
         }
-        finally { await group.RegisterAsync(channel); await channel.CloseAsync(); await group.StopAsync(); }
+        finally
+        {
+            await group.RegisterAsync(channel);
+            await channel.CloseAsync();
+            await group.StopAsync();
+        }
     }
 
     [Theory]
@@ -226,7 +269,15 @@ public class AbstractSocketChannelOptionsSourceTest
         var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         IChannel channel = server ? new NioServerSocketChannel(socket) : new NioSocketChannel(socket);
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
-        try { channel.Config.GetOptions(); }
-        finally { await group.RegisterAsync(channel); await channel.CloseAsync(); await group.StopAsync(); }
+        try
+        {
+            channel.Config.GetOptions();
+        }
+        finally
+        {
+            await group.RegisterAsync(channel);
+            await channel.CloseAsync();
+            await group.StopAsync();
+        }
     }
 }

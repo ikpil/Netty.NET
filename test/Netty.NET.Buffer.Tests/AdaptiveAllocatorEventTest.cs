@@ -57,7 +57,10 @@ public class AdaptiveAllocatorEventTest
                 else
                     action();
             }
-            catch (Exception error) { failure = error; }
+            catch (Exception error)
+            {
+                failure = error;
+            }
         });
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(15)));
@@ -298,7 +301,16 @@ public class AdaptiveAllocatorEventTest
         bool held = false;
         Exception failure = null;
         Listener listener = null;
-        var worker = new Thread(() => { try { Allocate(allocator, true, 128).Release(); } catch (Exception e) { failure = e; } });
+        var worker = new Thread(() => {
+            try
+            {
+                Allocate(allocator, true, 128).Release();
+            }
+            catch (Exception e)
+            {
+                failure = e;
+            }
+        });
         gate.EnterWriteLock();
         try
         {
@@ -308,7 +320,10 @@ public class AdaptiveAllocatorEventTest
             listener.Callback = _ => held |= gate.IsReadLockHeld || gate.IsWriteLockHeld || Monitor.IsEntered(dispose)
                 || allocator.DirectPool.SizeClassedMagazineGroups[2].Magazines.Any(m => Monitor.IsEntered(m.AllocationLock));
         }
-        finally { gate.ExitWriteLock(); }
+        finally
+        {
+            gate.ExitWriteLock();
+        }
         worker.Join();
         using (listener)
         {
@@ -327,7 +342,13 @@ public class AdaptiveAllocatorEventTest
         using var allocator = NewAllocator(native);
         using var listener = Listen();
         bool entered = false;
-        listener.Callback = e => { if (e.Id == 4 && !entered) { entered = true; Allocate(allocator, true, 7).Release(); } };
+        listener.Callback = e => {
+            if (e.Id == 4 && !entered)
+            {
+                entered = true;
+                Allocate(allocator, true, 7).Release();
+            }
+        };
         Allocate(allocator, true, 128).Release();
         Assert.True(entered);
         listener.Callback = _ => throw new InvalidOperationException("observer failure");

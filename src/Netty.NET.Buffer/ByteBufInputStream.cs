@@ -112,7 +112,10 @@ public sealed class ByteBufInputStream : Stream
         if (length < 0 || length > buffer.ReadableBytes)
         {
             // Match ownership transfer on invalid length: return the supplied reference.
-            if (releaseOnDispose) buffer.Release();
+            if (releaseOnDispose)
+            {
+                buffer.Release();
+            }
             throw new ArgumentOutOfRangeException(nameof(length));
         }
         // Reject dead owners before publishing the adapter or altering marks.
@@ -162,10 +165,16 @@ public sealed class ByteBufInputStream : Stream
             if (!_closed)
             {
                 _closed = true;
-                if (disposing && _releaseOnDispose) _buffer.Release();
+                if (disposing && _releaseOnDispose)
+                {
+                    _buffer.Release();
+                }
             }
         }
-        finally { base.Dispose(disposing); }
+        finally
+        {
+            base.Dispose(disposing);
+        }
     }
 
     // Suppress a warning since the class is not thread-safe
@@ -184,7 +193,10 @@ public sealed class ByteBufInputStream : Stream
 
     public override int ReadByte()
     {
-        if (Available == 0) return -1;
+        if (Available == 0)
+        {
+            return -1;
+        }
         return _buffer.ReadByte();
     }
 
@@ -198,15 +210,27 @@ public sealed class ByteBufInputStream : Stream
     {
         int count = Math.Min(Available, destination.Length);
         // CLR Stream.Read returns zero at EOF and for empty destinations.
-        if (count != 0) _buffer.ReadBytes(destination[..count]);
+        if (count != 0)
+        {
+            _buffer.ReadBytes(destination[..count]);
+        }
         return count;
     }
 
     public override ValueTask<int> ReadAsync(Memory<byte> destination, CancellationToken cancellationToken = default)
     {
-        if (cancellationToken.IsCancellationRequested) return ValueTask.FromCanceled<int>(cancellationToken);
-        try { return ValueTask.FromResult(Read(destination.Span)); }
-        catch (Exception exception) { return ValueTask.FromException<int>(exception); }
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return ValueTask.FromCanceled<int>(cancellationToken);
+        }
+        try
+        {
+            return ValueTask.FromResult(Read(destination.Span));
+        }
+        catch (Exception exception)
+        {
+            return ValueTask.FromException<int>(exception);
+        }
     }
 
     public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
@@ -223,7 +247,10 @@ public sealed class ByteBufInputStream : Stream
     public int SkipBytes(int count)
     {
         int available = Available;
-        if (count <= 0) return 0;
+        if (count <= 0)
+        {
+            return 0;
+        }
         count = Math.Min(available, count);
         _buffer.SkipBytes(count);
         return count;
@@ -305,16 +332,25 @@ public sealed class ByteBufInputStream : Stream
     public string ReadLine()
     {
         int available = Available;
-        if (available == 0) return null;
+        if (available == 0)
+        {
+            return null;
+        }
         _lineBuffer?.Clear();
         do
         {
             byte value = _buffer.ReadByte();
             --available;
-            if (value == '\n') break;
+            if (value == '\n')
+            {
+                break;
+            }
             if (value == '\r')
             {
-                if (available > 0 && _buffer.GetByte(_buffer.ReaderIndex) == '\n') _buffer.SkipBytes(1);
+                if (available > 0 && _buffer.GetByte(_buffer.ReaderIndex) == '\n')
+                {
+                    _buffer.SkipBytes(1);
+                }
                 break;
             }
             (_lineBuffer ??= new StringBuilder()).Append((char)value);
@@ -334,10 +370,17 @@ public sealed class ByteBufInputStream : Stream
         for (int i = 0; i < length;)
         {
             int first = bytes[i++];
-            if (first < 0x80) { characters[written++] = (char)first; continue; }
+            if (first < 0x80)
+            {
+                characters[written++] = (char)first;
+                continue;
+            }
             if ((first & 0xE0) == 0xC0)
             {
-                if (i >= length || (bytes[i] & 0xC0) != 0x80) throw new InvalidDataException("Malformed modified UTF-8.");
+                if (i >= length || (bytes[i] & 0xC0) != 0x80)
+                {
+                    throw new InvalidDataException("Malformed modified UTF-8.");
+                }
                 characters[written++] = (char)((first & 0x1F) << 6 | bytes[i++] & 0x3F);
             }
             else if ((first & 0xF0) == 0xE0)
@@ -347,7 +390,10 @@ public sealed class ByteBufInputStream : Stream
                 characters[written++] = (char)((first & 0x0F) << 12 | (bytes[i] & 0x3F) << 6 | bytes[i + 1] & 0x3F);
                 i += 2;
             }
-            else throw new InvalidDataException("Malformed modified UTF-8.");
+            else
+            {
+                throw new InvalidDataException("Malformed modified UTF-8.");
+            }
         }
         return new string(characters, 0, written);
     }
@@ -356,7 +402,10 @@ public sealed class ByteBufInputStream : Stream
     {
         ArgumentOutOfRangeException.ThrowIfNegative(fieldSize);
         int available = Available;
-        if (fieldSize > available) throw new EndOfStreamException(string.Create(CultureInfo.InvariantCulture, $"Needs {fieldSize} bytes, but only {available} remain."));
+        if (fieldSize > available)
+        {
+            throw new EndOfStreamException(string.Create(CultureInfo.InvariantCulture, $"Needs {fieldSize} bytes, but only {available} remain."));
+        }
     }
 
     private void ThrowIfClosed()

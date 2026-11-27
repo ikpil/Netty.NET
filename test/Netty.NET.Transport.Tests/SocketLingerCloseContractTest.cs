@@ -49,8 +49,14 @@ public class SocketLingerCloseContractTest
         // doClose0 completes the Tasks on the close executor; the owner then fails queued writes and runs the
         // deferred deregistration (AbstractUnsafe.close/deregister).
         fixture.PumpUntil(() => promise.IsCompleted && repeat.IsCompleted && write.IsCompleted && fixture.Events.Contains("removed"));
-        if (fail) Assert.Same(cause, Assert.Throws<IOException>(() => promise.GetAwaiter().GetResult()));
-        else Assert.True(promise.IsCompletedSuccessfully);
+        if (fail)
+        {
+            Assert.Same(cause, Assert.Throws<IOException>(() => promise.GetAwaiter().GetResult()));
+        }
+        else
+        {
+            Assert.True(promise.IsCompletedSuccessfully);
+        }
         Assert.True(repeat.IsCompletedSuccessfully);
         Assert.True(fixture.Channel.CloseFuture.IsCompletedSuccessfully);
         Assert.ThrowsAny<ClosedChannelException>(() => write.GetAwaiter().GetResult());
@@ -72,7 +78,10 @@ public class SocketLingerCloseContractTest
         Assert.False(termination.IsCompleted);
         Assert.False(fixture.Channel.CloseFuture.IsCompleted);
         Assert.Empty(fixture.Events);
-        if (immediate) Assert.Throws<Netty.NET.Common.Concurrent.RejectedExecutionException>(() => fixture.Loop.Execute(() => { }));
+        if (immediate)
+        {
+            Assert.Throws<Netty.NET.Common.Concurrent.RejectedExecutionException>(() => fixture.Loop.Execute(() => { }));
+        }
         fixture.Channel.AllowClose.Set();
         fixture.PumpUntil(() => termination.IsCompleted);
         Assert.True(termination.IsCompletedSuccessfully);
@@ -88,10 +97,16 @@ public class SocketLingerCloseContractTest
     {
         using var fixture = new Fixture();
         // AbstractUnsafe.deregister runs later on the owner (#4435), so pump until its Task completes.
-        if (beforeClose) Deregister(fixture);
+        if (beforeClose)
+        {
+            Deregister(fixture);
+        }
         Task promise = fixture.Channel.CloseAsync(TestContext.Current.CancellationToken);
         fixture.WaitForClose();
-        if (!beforeClose) Deregister(fixture);
+        if (!beforeClose)
+        {
+            Deregister(fixture);
+        }
         Assert.Equal(new[] { "unregistered" }, fixture.Events);
         fixture.Channel.AllowClose.Set();
         fixture.PumpUntil(() => promise.IsCompleted);
@@ -170,7 +185,10 @@ public class SocketLingerCloseContractTest
         {
             await channel.RegisterAsync(loop, cancellation);
             Thread owner = await loop.SubmitAsync(() => Thread.CurrentThread, cancellation);
-            if (deregister) await channel.DeregisterAsync(cancellation);
+            if (deregister)
+            {
+                await channel.DeregisterAsync(cancellation);
+            }
             Task promise = closeFirst ? channel.CloseAsync(cancellation) : channel.CloseFuture;
             Task termination = shutdownMode == 0 ? Task.CompletedTask : !closeFirst ? Shutdown() : null;
             Assert.True(channel.CloseEntered.Wait(TimeSpan.FromSeconds(3), cancellation));
@@ -185,9 +203,15 @@ public class SocketLingerCloseContractTest
                     Assert.True(await loop.SubmitAsync(loop.TrySuspend, cancellation));
                     Assert.False(owner.Join(TimeSpan.FromMilliseconds(100)));
                 }
-                if (shutdownMode != 0) termination = Shutdown();
+                if (shutdownMode != 0)
+                {
+                    termination = Shutdown();
+                }
             }
-            if (shutdownMode != 0) Assert.False(termination.IsCompleted);
+            if (shutdownMode != 0)
+            {
+                Assert.False(termination.IsCompleted);
+            }
             channel.AllowClose.Set();
             await promise.WaitAsync(TimeSpan.FromSeconds(5), cancellation);
             await termination.WaitAsync(TimeSpan.FromSeconds(5), cancellation);
@@ -298,10 +322,19 @@ public class SocketLingerCloseContractTest
             CloseEntered.Set();
             try
             {
-                if (!AllowClose.Wait(TimeSpan.FromSeconds(5))) throw new TimeoutException("Test did not release native close.");
-                if (Failure != null) throw Failure;
+                if (!AllowClose.Wait(TimeSpan.FromSeconds(5)))
+                {
+                    throw new TimeoutException("Test did not release native close.");
+                }
+                if (Failure != null)
+                {
+                    throw Failure;
+                }
             }
-            finally { base.DoClose(); }
+            finally
+            {
+                base.DoClose();
+            }
         }
     }
 

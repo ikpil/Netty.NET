@@ -44,7 +44,10 @@ public class AbstractChannelTest
             Assert.Equal(1, handler.Registered);
             Assert.Equal(1, handler.Active);
         }
-        finally { await channel.CloseAsync(); }
+        finally
+        {
+            await channel.CloseAsync();
+        }
     }
 
     [Fact]
@@ -66,7 +69,10 @@ public class AbstractChannelTest
             Assert.Equal(1, handler.Active);
             Assert.Equal(1, handler.Unregistered);
         }
-        finally { await channel.CloseAsync(); }
+        finally
+        {
+            await channel.CloseAsync();
+        }
     }
 
     [Fact]
@@ -143,7 +149,10 @@ public class AbstractChannelTest
             Assert.Equal(SocketError.NotConnected, error.SocketErrorCode);
             Assert.Equal(0, message.RefCnt);
         }
-        finally { await channel.CloseAsync(); }
+        finally
+        {
+            await channel.CloseAsync();
+        }
     }
 
     [Fact]
@@ -166,7 +175,10 @@ public class AbstractChannelTest
             await Assert.ThrowsAnyAsync<ClosedChannelException>(() => write);
             Assert.Equal(0, message.RefCnt);
         }
-        finally { await channel.CloseAsync(); }
+        finally
+        {
+            await channel.CloseAsync();
+        }
     }
 
     private static async Task AssertClosedChannelException(Task operation, IOException expected)

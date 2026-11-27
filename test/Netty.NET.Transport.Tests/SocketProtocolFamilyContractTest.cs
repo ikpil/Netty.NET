@@ -113,7 +113,10 @@ public class SocketProtocolFamilyContractTest
     [Fact(Timeout = 10000)]
     public async Task Inet6DatagramChannelReceivesIPv4MappedTraffic()
     {
-        if (!Socket.OSSupportsIPv6 || !Socket.OSSupportsIPv4) Assert.Skip("A dual-stack host is required.");
+        if (!Socket.OSSupportsIPv6 || !Socket.OSSupportsIPv4)
+        {
+            Assert.Skip("A dual-stack host is required.");
+        }
         var cancellation = TestContext.Current.CancellationToken;
         var received = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());

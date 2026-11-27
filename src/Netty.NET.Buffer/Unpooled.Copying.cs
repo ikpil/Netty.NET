@@ -65,7 +65,10 @@ public static partial class Unpooled
     {
         ArgumentNullException.ThrowIfNull(buffer);
         int readable = buffer.ReadableBytes;
-        if (readable <= 0) return EmptyBuffer;
+        if (readable <= 0)
+        {
+            return EmptyBuffer;
+        }
         ByteBuf copy = Buffer(readable);
         try
         {
@@ -91,7 +94,10 @@ public static partial class Unpooled
     public static ByteBuf CopiedBuffer(params byte[][] arrays)
     {
         ArgumentNullException.ThrowIfNull(arrays);
-        if (arrays.Length == 1) return CopiedBuffer(arrays[0]);
+        if (arrays.Length == 1)
+        {
+            return CopiedBuffer(arrays[0]);
+        }
         // Merge the specified arrays into one array.
         int length = 0;
         foreach (byte[] array in arrays)
@@ -101,7 +107,10 @@ public static partial class Unpooled
                 throw new ArgumentException("The total length of the specified arrays is too big.", nameof(arrays));
             length += array.Length;
         }
-        if (length == 0) return EmptyBuffer;
+        if (length == 0)
+        {
+            return EmptyBuffer;
+        }
         byte[] merged = new byte[length];
         int offset = 0;
         foreach (byte[] array in arrays)
@@ -128,19 +137,28 @@ public static partial class Unpooled
     public static ByteBuf CopiedBuffer(params ByteBuf[] buffers)
     {
         ArgumentNullException.ThrowIfNull(buffers);
-        if (buffers.Length == 1) return CopiedBuffer(buffers[0]);
+        if (buffers.Length == 1)
+        {
+            return CopiedBuffer(buffers[0]);
+        }
         // Merge the specified buffers into one buffer.
         int length = 0;
         foreach (ByteBuf buffer in buffers)
         {
             ArgumentNullException.ThrowIfNull(buffer);
             int readable = buffer.ReadableBytes;
-            if (readable <= 0) continue;
+            if (readable <= 0)
+            {
+                continue;
+            }
             if (readable > int.MaxValue - length)
                 throw new ArgumentException("The total length of the specified buffers is too big.", nameof(buffers));
             length += readable;
         }
-        if (length == 0) return EmptyBuffer;
+        if (length == 0)
+        {
+            return EmptyBuffer;
+        }
         byte[] merged = new byte[length];
         int offset = 0;
         foreach (ByteBuf buffer in buffers)

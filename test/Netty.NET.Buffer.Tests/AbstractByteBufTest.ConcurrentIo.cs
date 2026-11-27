@@ -52,7 +52,10 @@ public abstract partial class AbstractByteBufTest
                     while (errors.IsEmpty && counter-- > 0)
                         Assert.Equal(expected, buffer.ToString(Encoding.Latin1));
                 }
-                catch (Exception cause) { errors.Enqueue(cause); }
+                catch (Exception cause)
+                {
+                    errors.Enqueue(cause);
+                }
             });
             threads.Add(thread);
         }
@@ -78,14 +81,20 @@ public abstract partial class AbstractByteBufTest
             errors.Enqueue(cause);
             // CLR: interruption wakes managed waits; publishing the error also stops the read loops.
             foreach (Thread thread in threads)
-                if (thread.IsAlive) thread.Interrupt();
+                if (thread.IsAlive)
+                {
+                    thread.Interrupt();
+                }
         }
         finally
         {
             // Workers must relinquish borrowed storage before fixture cleanup releases its owner.
             foreach (Thread thread in threads) thread.Join();
         }
-        if (!errors.IsEmpty) throw new AggregateException(errors);
+        if (!errors.IsEmpty)
+        {
+            throw new AggregateException(errors);
+        }
     }
 
     [Fact]
@@ -117,18 +126,30 @@ public abstract partial class AbstractByteBufTest
                         while (errors.IsEmpty && counter-- > 0)
                         {
                             ByteBuf copy = buffer.Copy();
-                            try { Assert.Equal(expected, copy); }
-                            finally { copy.Release(); }
+                            try
+                            {
+                                Assert.Equal(expected, copy);
+                            }
+                            finally
+                            {
+                                copy.Release();
+                            }
                         }
                     }
-                    catch (Exception cause) { errors.Enqueue(cause); }
+                    catch (Exception cause)
+                    {
+                        errors.Enqueue(cause);
+                    }
                 });
                 threads.Add(thread);
             }
             foreach (Thread thread in threads) thread.Start();
             JoinAllAndReportErrors(threads, errors, TimeSpan.FromSeconds(60));
         }
-        finally { expected.Release(); }
+        finally
+        {
+            expected.Release();
+        }
     }
 
     [Fact]
@@ -138,8 +159,14 @@ public abstract partial class AbstractByteBufTest
         random.NextBytes(bytes);
         ByteBuf buffer = NewBuffer(8);
         buffer.WriteBytes(bytes);
-        try { AssertReadOutputStreamMultipleThreads(buffer, bytes, false); }
-        finally { buffer.Release(); }
+        try
+        {
+            AssertReadOutputStreamMultipleThreads(buffer, bytes, false);
+        }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Fact]
@@ -149,8 +176,14 @@ public abstract partial class AbstractByteBufTest
         random.NextBytes(bytes);
         ByteBuf buffer = NewBuffer(8);
         buffer.WriteBytes(bytes);
-        try { AssertReadOutputStreamMultipleThreads(buffer, bytes, true); }
-        finally { buffer.Release(); }
+        try
+        {
+            AssertReadOutputStreamMultipleThreads(buffer, bytes, true);
+        }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     private static void AssertReadOutputStreamMultipleThreads(ByteBuf buffer, byte[] expectedBytes, bool slice)
@@ -169,8 +202,14 @@ public abstract partial class AbstractByteBufTest
                     while (Volatile.Read(ref remaining) > 0)
                     {
                         ByteBuf buf;
-                        if (slice) buf = buffer.Slice();
-                        else buf = buffer.Duplicate();
+                        if (slice)
+                        {
+                            buf = buffer.Slice();
+                        }
+                        else
+                        {
+                            buf = buffer.Duplicate();
+                        }
                         using var output = new MemoryStream();
                         while (buf.IsReadable())
                         {
@@ -180,7 +219,10 @@ public abstract partial class AbstractByteBufTest
                         }
                         Assert.Equal(expectedBytes, output.ToArray());
                         // CountDownLatch saturates at zero; at most nine already-started iterations may finish later.
-                        if (Interlocked.Decrement(ref remaining) <= 0) completed.Set();
+                        if (Interlocked.Decrement(ref remaining) <= 0)
+                        {
+                            completed.Set();
+                        }
                     }
                 }
                 catch (Exception cause)
@@ -192,7 +234,10 @@ public abstract partial class AbstractByteBufTest
                 }
                 finally
                 {
-                    try { Assert.True(barrier.SignalAndWait(TimeSpan.FromSeconds(30))); }
+                    try
+                    {
+                        Assert.True(barrier.SignalAndWait(TimeSpan.FromSeconds(30)));
+                    }
                     catch (Exception cause)
                     {
                         // ignore
@@ -219,7 +264,10 @@ public abstract partial class AbstractByteBufTest
             foreach (Thread thread in threads) thread.Join();
         }
         // Ensure failures in worker threads are propagated to the test thread.
-        if (!errors.IsEmpty) throw new AggregateException("Worker thread failed", errors);
+        if (!errors.IsEmpty)
+        {
+            throw new AggregateException("Worker thread failed", errors);
+        }
     }
 
     [Fact]
@@ -229,8 +277,14 @@ public abstract partial class AbstractByteBufTest
         random.NextBytes(bytes);
         ByteBuf buffer = NewBuffer(8);
         buffer.WriteBytes(bytes);
-        try { await AssertBytesInArrayMultipleThreads(buffer, bytes, false); }
-        finally { buffer.Release(); }
+        try
+        {
+            await AssertBytesInArrayMultipleThreads(buffer, bytes, false);
+        }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Fact]
@@ -240,8 +294,14 @@ public abstract partial class AbstractByteBufTest
         random.NextBytes(bytes);
         ByteBuf buffer = NewBuffer(8);
         buffer.WriteBytes(bytes);
-        try { await AssertBytesInArrayMultipleThreads(buffer, bytes, true); }
-        finally { buffer.Release(); }
+        try
+        {
+            await AssertBytesInArrayMultipleThreads(buffer, bytes, true);
+        }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     private static async Task AssertBytesInArrayMultipleThreads(ByteBuf buffer, byte[] expectedBytes, bool slice)
@@ -256,8 +316,14 @@ public abstract partial class AbstractByteBufTest
                 for (int i = 0; i < 6000; i++)
                 {
                     ByteBuf buf;
-                    if (slice) buf = buffer.Slice();
-                    else buf = buffer.Duplicate();
+                    if (slice)
+                    {
+                        buf = buffer.Slice();
+                    }
+                    else
+                    {
+                        buf = buffer.Duplicate();
+                    }
                     byte[] array = new byte[8];
                     buf.ReadBytes(array);
                     Assert.Equal(expectedBytes, array);
@@ -266,7 +332,10 @@ public abstract partial class AbstractByteBufTest
                     Assert.Equal(expectedBytes, array);
                 }
             }
-            finally { endBarrier.SignalAndWait(); }
+            finally
+            {
+                endBarrier.SignalAndWait();
+            }
         };
         var tasks = new List<Task>();
         for (int i = 0; i < 10; i++)
@@ -322,9 +391,16 @@ public abstract partial class AbstractByteBufTest
                 Assert.Equal((byte)'c', buffer2.GetByte(2));
                 Assert.Equal((byte)'d', buffer2.GetByte(3));
             }
-            finally { buffer.Release(); buffer2?.Release(); }
+            finally
+            {
+                buffer.Release();
+                buffer2?.Release();
+            }
         }
-        finally { File.Delete(file); }
+        finally
+        {
+            File.Delete(file);
+        }
     }
 
     [Fact]
@@ -361,8 +437,15 @@ public abstract partial class AbstractByteBufTest
                 Assert.Equal((byte)'c', buffer2.GetByte(oldWriterIndex + 2));
                 Assert.Equal((byte)'d', buffer2.GetByte(oldWriterIndex + 3));
             }
-            finally { buffer.Release(); buffer2?.Release(); }
+            finally
+            {
+                buffer.Release();
+                buffer2?.Release();
+            }
         }
-        finally { File.Delete(file); }
+        finally
+        {
+            File.Delete(file);
+        }
     }
 }

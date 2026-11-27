@@ -118,7 +118,10 @@ internal sealed class AdaptiveBufferTestAllocator : AbstractByteBufAllocator, ID
                 foreach (var candidate in _chunks)
                     if (candidate.Direct == direct && candidate.Class == index &&
                         candidate.Chunk.RemainingCapacity >= fast &&
-                        (allocation = candidate.Chunk.TryAllocate(fast)) != null) break;
+                        (allocation = candidate.Chunk.TryAllocate(fast)) != null)
+                    {
+                        break;
+                    }
             if (allocation == null)
             {
                 Chunk chunk;
@@ -129,19 +132,45 @@ internal sealed class AdaptiveBufferTestAllocator : AbstractByteBufAllocator, ID
                 else
                 {
                     ByteBuf raw = Raw(direct, size, maxCapacity);
-                    try { chunk = new Chunk(raw, _registries[direct ? 1 : 0]); }
-                    catch { raw.Release(); throw; }
+                    try
+                    {
+                        chunk = new Chunk(raw, _registries[direct ? 1 : 0]);
+                    }
+                    catch
+                    {
+                        raw.Release();
+                        throw;
+                    }
                 }
                 try
                 {
                     allocation = chunk.TryAllocate(fast) ?? throw new InvalidOperationException("A fresh chunk was exhausted.");
-                    if (pooled) _chunks.Add((chunk, direct, index));
+                    if (pooled)
+                    {
+                        _chunks.Add((chunk, direct, index));
+                    }
                 }
-                catch { allocation?.Release(); chunk.Dispose(); throw; }
-                if (!pooled) chunk.Dispose();
+                catch
+                {
+                    allocation?.Release();
+                    chunk.Dispose();
+                    throw;
+                }
+                if (!pooled)
+                {
+                    chunk.Dispose();
+                }
             }
-            try { AfterReservation?.Invoke(size, allocation); return allocation; }
-            catch { allocation.Release(); throw; }
+            try
+            {
+                AfterReservation?.Invoke(size, allocation);
+                return allocation;
+            }
+            catch
+            {
+                allocation.Release();
+                throw;
+            }
         }
     }
 
@@ -149,7 +178,10 @@ internal sealed class AdaptiveBufferTestAllocator : AbstractByteBufAllocator, ID
     {
         lock (_sync)
         {
-            if (_disposed) return;
+            if (_disposed)
+            {
+                return;
+            }
             _disposed = true;
             foreach (var entry in _chunks) entry.Chunk.Dispose();
             _chunks.Clear();

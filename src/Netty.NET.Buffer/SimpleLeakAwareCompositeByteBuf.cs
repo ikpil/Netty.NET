@@ -35,7 +35,10 @@ internal class SimpleLeakAwareCompositeByteBuf : WrappedCompositeByteBuf
         // Call unwrap() before just in case that super.release() will change the ByteBuf instance that is returned
         // by unwrap().
         ByteBuf unwrapped = Unwrap();
-        if (!base.Release(decrement)) return false;
+        if (!base.Release(decrement))
+        {
+            return false;
+        }
         CloseLeak(unwrapped);
         return true;
     }

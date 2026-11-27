@@ -39,7 +39,10 @@ public class EnvironmentSettingsContractTest : IDisposable
             Assert.Equal(17, SystemPropertyUtil.GetInt(key, 17));
             Assert.Equal(19L, SystemPropertyUtil.GetLong(key, 19));
         }
-        finally { CultureInfo.CurrentCulture = previous; }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
     }
 
     [Fact]

@@ -40,8 +40,12 @@ public static class ClassInitializerUtil
             {
                 RuntimeHelpers.RunClassConstructor(type.TypeHandle);
             }
-            catch (TypeLoadException) { }
-            catch (SecurityException) { }
+            catch (TypeLoadException)
+            {
+            }
+            catch (SecurityException)
+            {
+            }
         }
     }
 }

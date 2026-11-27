@@ -179,7 +179,10 @@ public class CompositeByteBufIoEmptyComponentTest
             s.Owner.ResetWriterIndex().ResetReaderIndex();
             Assert.Equal((s.Index, s.Index), (s.Owner.ReaderIndex, s.Owner.WriterIndex));
         }
-        finally { File.Delete(path); }
+        finally
+        {
+            File.Delete(path);
+        }
         s.Dispose();
         Assert.Equal(facade is 2 or 3 or 8 or 12 ? 1 : 0, s.Tracker.Closes);
     }
@@ -195,13 +198,25 @@ public class CompositeByteBufIoEmptyComponentTest
         ByteBuf input = new UnpooledHeapByteBuf(8).WriteBytes(new byte[] { 91, 92, 93, 94, 95, 96, 97, 98 });
         try
         {
-            Assert.Throws<NotSupportedException>(() => { if (typed) s.Root.SetBytes(2, input, 0, 8); else s.Root.SetBytes(2, new byte[] { 91, 92, 93, 94, 95, 96, 97, 98 }.AsSpan()); });
+            Assert.Throws<NotSupportedException>(() => {
+                if (typed)
+                {
+                    s.Root.SetBytes(2, input, 0, 8);
+                }
+                else
+                {
+                    s.Root.SetBytes(2, new byte[] { 91, 92, 93, 94, 95, 96, 97, 98 }.AsSpan());
+                }
+            });
             Assert.Equal(1, s.FirstEmpty.Writes);
             Assert.Equal(0, s.SecondEmpty.Writes);
             Assert.Equal(new byte[] { 1, 2, 91, 92, 5, 6, 7, 8, 9, 10, 11, 12 }, ByteBufUtil.GetBytes(s.Root, 0, 12));
             Assert.Equal((2, 2), (s.Root.ReaderIndex, s.Root.WriterIndex));
         }
-        finally { input.Release(); }
+        finally
+        {
+            input.Release();
+        }
     }
     private sealed class Pair : IDisposable
     {

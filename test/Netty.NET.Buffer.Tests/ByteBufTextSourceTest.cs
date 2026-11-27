@@ -52,7 +52,10 @@ public class ByteBufTextSourceTest
 
         public void Dispose()
         {
-            if (Root.RefCnt > 0) Root.Release();
+            if (Root.RefCnt > 0)
+            {
+                Root.Release();
+            }
             Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);

@@ -51,7 +51,10 @@ public class RecyclerFactoryContractTest
                 second.Handle.Recycle(second);
                 Assert.Equal(0, pool.ThreadLocalSize());
             }
-            catch (Exception error) { failure = error; }
+            catch (Exception error)
+            {
+                failure = error;
+            }
         });
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
@@ -74,12 +77,24 @@ public class RecyclerFactoryContractTest
             if (externalReturn)
             {
                 Exception failure = null;
-                var thread = new Thread(() => { try { first.Handle.Recycle(first); } catch (Exception error) { failure = error; } });
+                var thread = new Thread(() => {
+                    try
+                    {
+                        first.Handle.Recycle(first);
+                    }
+                    catch (Exception error)
+                    {
+                        failure = error;
+                    }
+                });
                 thread.Start();
                 Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
                 Assert.Null(failure);
             }
-            else first.Handle.Recycle(first);
+            else
+            {
+                first.Handle.Recycle(first);
+            }
             Assert.Throws<InvalidOperationException>(() => first.Handle.Recycle(first));
             Assert.Equal(1, pool.ThreadLocalSize());
             Item next = pool.Get();

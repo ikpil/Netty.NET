@@ -92,10 +92,17 @@ public sealed class ReadOnlyMemoryByteBuf : AbstractReferenceCountedByteBuf
         try
         {
             // The native provider does not touch either range for an empty copy.
-            if (!IsDirect || length != 0) result.WriteBytes(source.Span);
+            if (!IsDirect || length != 0)
+            {
+                result.WriteBytes(source.Span);
+            }
             return result;
         }
-        catch { result.Release(); throw; }
+        catch
+        {
+            result.Release();
+            throw;
+        }
     }
 
     protected override void Deallocate()

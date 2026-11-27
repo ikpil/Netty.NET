@@ -235,7 +235,10 @@ internal sealed class ByteBufView : ByteBuf
         set
         {
             EnsureCanWrite();
-            if (_fixedCapacity) throw new NotSupportedException("A slice has fixed capacity.");
+            if (_fixedCapacity)
+            {
+                throw new NotSupportedException("A slice has fixed capacity.");
+            }
             _parent.Capacity = value;
         }
     }
@@ -249,7 +252,10 @@ internal sealed class ByteBufView : ByteBuf
     // source. CLR: duplicates (no fixed capacity) are not sliced views and keep the base implementation.
     public override ICharSequence GetCharSequence(int index, int length, Encoding charset)
     {
-        if (!_fixedCapacity) return base.GetCharSequence(index, length, charset);
+        if (!_fixedCapacity)
+        {
+            return base.GetCharSequence(index, length, charset);
+        }
         ArgumentNullException.ThrowIfNull(charset);
         CheckIndex(index, length);
         return _parent.GetCharSequence(_offset + index, length, charset);
@@ -268,14 +274,28 @@ internal sealed class ByteBufView : ByteBuf
 
     public override int ForEachByte(int index, int length, Func<byte, bool> processor)
     {
-        if (_fixedCapacity) CheckIndex(index, length); else EnsureAccessible();
+        if (_fixedCapacity)
+        {
+            CheckIndex(index, length);
+        }
+        else
+        {
+            EnsureAccessible();
+        }
         int result = _parent.ForEachByte(_offset + index, length, processor);
         return _fixedCapacity ? result < _offset ? -1 : result - _offset : result;
     }
 
     public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
     {
-        if (_fixedCapacity) CheckIndex(index, length); else EnsureAccessible();
+        if (_fixedCapacity)
+        {
+            CheckIndex(index, length);
+        }
+        else
+        {
+            EnsureAccessible();
+        }
         int result = _parent.ForEachByteDesc(_offset + index, length, processor);
         return _fixedCapacity ? result < _offset ? -1 : result - _offset : result;
     }
@@ -449,7 +469,10 @@ internal sealed class ByteBufView : ByteBuf
     public override byte GetByte(int index)
     {
         CheckIndex(index, 1);
-        if (_fixedCapacity) return base.GetByte(index);
+        if (_fixedCapacity)
+        {
+            return base.GetByte(index);
+        }
         return _parent.GetByte(_offset + index);
     }
 
@@ -457,7 +480,10 @@ internal sealed class ByteBufView : ByteBuf
     {
         EnsureCanWrite();
         CheckIndex(index, 1);
-        if (_fixedCapacity) return base.SetByte(index, value);
+        if (_fixedCapacity)
+        {
+            return base.SetByte(index, value);
+        }
         _parent.SetByte(_offset + index, value);
         return this;
     }
@@ -465,7 +491,10 @@ internal sealed class ByteBufView : ByteBuf
     public override short GetShort(int index)
     {
         CheckIndex(index, 2);
-        if (_fixedCapacity) return base.GetShort(index);
+        if (_fixedCapacity)
+        {
+            return base.GetShort(index);
+        }
         return _parent.GetShort(_offset + index);
     }
 
@@ -473,7 +502,10 @@ internal sealed class ByteBufView : ByteBuf
     {
         EnsureCanWrite();
         CheckIndex(index, 2);
-        if (_fixedCapacity) return base.SetShort(index, value);
+        if (_fixedCapacity)
+        {
+            return base.SetShort(index, value);
+        }
         _parent.SetShort(_offset + index, value);
         return this;
     }
@@ -481,7 +513,10 @@ internal sealed class ByteBufView : ByteBuf
     public override short GetShortLE(int index)
     {
         CheckIndex(index, 2);
-        if (_fixedCapacity) return base.GetShortLE(index);
+        if (_fixedCapacity)
+        {
+            return base.GetShortLE(index);
+        }
         return _parent.GetShortLE(_offset + index);
     }
 
@@ -489,7 +524,10 @@ internal sealed class ByteBufView : ByteBuf
     {
         EnsureCanWrite();
         CheckIndex(index, 2);
-        if (_fixedCapacity) return base.SetShortLE(index, value);
+        if (_fixedCapacity)
+        {
+            return base.SetShortLE(index, value);
+        }
         _parent.SetShortLE(_offset + index, value);
         return this;
     }
@@ -497,7 +535,10 @@ internal sealed class ByteBufView : ByteBuf
     public override int GetUnsignedMedium(int index)
     {
         CheckIndex(index, 3);
-        if (_fixedCapacity) return base.GetUnsignedMedium(index);
+        if (_fixedCapacity)
+        {
+            return base.GetUnsignedMedium(index);
+        }
         return _parent.GetUnsignedMedium(_offset + index);
     }
 
@@ -505,7 +546,10 @@ internal sealed class ByteBufView : ByteBuf
     {
         EnsureCanWrite();
         CheckIndex(index, 3);
-        if (_fixedCapacity) return base.SetMedium(index, value);
+        if (_fixedCapacity)
+        {
+            return base.SetMedium(index, value);
+        }
         _parent.SetMedium(_offset + index, value);
         return this;
     }
@@ -513,7 +557,10 @@ internal sealed class ByteBufView : ByteBuf
     public override int GetUnsignedMediumLE(int index)
     {
         CheckIndex(index, 3);
-        if (_fixedCapacity) return base.GetUnsignedMediumLE(index);
+        if (_fixedCapacity)
+        {
+            return base.GetUnsignedMediumLE(index);
+        }
         return _parent.GetUnsignedMediumLE(_offset + index);
     }
 
@@ -521,7 +568,10 @@ internal sealed class ByteBufView : ByteBuf
     {
         EnsureCanWrite();
         CheckIndex(index, 3);
-        if (_fixedCapacity) return base.SetMediumLE(index, value);
+        if (_fixedCapacity)
+        {
+            return base.SetMediumLE(index, value);
+        }
         _parent.SetMediumLE(_offset + index, value);
         return this;
     }
@@ -529,7 +579,10 @@ internal sealed class ByteBufView : ByteBuf
     public override int GetInt(int index)
     {
         CheckIndex(index, 4);
-        if (_fixedCapacity) return base.GetInt(index);
+        if (_fixedCapacity)
+        {
+            return base.GetInt(index);
+        }
         return _parent.GetInt(_offset + index);
     }
 
@@ -537,7 +590,10 @@ internal sealed class ByteBufView : ByteBuf
     {
         EnsureCanWrite();
         CheckIndex(index, 4);
-        if (_fixedCapacity) return base.SetInt(index, value);
+        if (_fixedCapacity)
+        {
+            return base.SetInt(index, value);
+        }
         _parent.SetInt(_offset + index, value);
         return this;
     }
@@ -545,7 +601,10 @@ internal sealed class ByteBufView : ByteBuf
     public override int GetIntLE(int index)
     {
         CheckIndex(index, 4);
-        if (_fixedCapacity) return base.GetIntLE(index);
+        if (_fixedCapacity)
+        {
+            return base.GetIntLE(index);
+        }
         return _parent.GetIntLE(_offset + index);
     }
 
@@ -553,7 +612,10 @@ internal sealed class ByteBufView : ByteBuf
     {
         EnsureCanWrite();
         CheckIndex(index, 4);
-        if (_fixedCapacity) return base.SetIntLE(index, value);
+        if (_fixedCapacity)
+        {
+            return base.SetIntLE(index, value);
+        }
         _parent.SetIntLE(_offset + index, value);
         return this;
     }
@@ -561,7 +623,10 @@ internal sealed class ByteBufView : ByteBuf
     public override long GetLong(int index)
     {
         CheckIndex(index, 8);
-        if (_fixedCapacity) return base.GetLong(index);
+        if (_fixedCapacity)
+        {
+            return base.GetLong(index);
+        }
         return _parent.GetLong(_offset + index);
     }
 
@@ -569,7 +634,10 @@ internal sealed class ByteBufView : ByteBuf
     {
         EnsureCanWrite();
         CheckIndex(index, 8);
-        if (_fixedCapacity) return base.SetLong(index, value);
+        if (_fixedCapacity)
+        {
+            return base.SetLong(index, value);
+        }
         _parent.SetLong(_offset + index, value);
         return this;
     }
@@ -577,7 +645,10 @@ internal sealed class ByteBufView : ByteBuf
     public override long GetLongLE(int index)
     {
         CheckIndex(index, 8);
-        if (_fixedCapacity) return base.GetLongLE(index);
+        if (_fixedCapacity)
+        {
+            return base.GetLongLE(index);
+        }
         return _parent.GetLongLE(_offset + index);
     }
 
@@ -585,7 +656,10 @@ internal sealed class ByteBufView : ByteBuf
     {
         EnsureCanWrite();
         CheckIndex(index, 8);
-        if (_fixedCapacity) return base.SetLongLE(index, value);
+        if (_fixedCapacity)
+        {
+            return base.SetLongLE(index, value);
+        }
         _parent.SetLongLE(_offset + index, value);
         return this;
     }

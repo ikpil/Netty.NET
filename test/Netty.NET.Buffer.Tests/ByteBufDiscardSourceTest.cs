@@ -47,7 +47,10 @@ public class ByteBufDiscardSourceTest
 
         public void Dispose()
         {
-            if (Root.RefCnt > 0) Root.Release();
+            if (Root.RefCnt > 0)
+            {
+                Root.Release();
+            }
             Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
@@ -79,8 +82,14 @@ public class ByteBufDiscardSourceTest
             // This is important as we may return a slice from newBuffer(...).
             buffer.Clear();
             Assert.True(buffer.Release());
-            if (scenario == DiscardCase.ReadBytesAfterRelease) Assert.Throws<IllegalReferenceCountException>(() => buffer.DiscardReadBytes());
-            else Assert.Throws<IllegalReferenceCountException>(() => buffer.DiscardSomeReadBytes());
+            if (scenario == DiscardCase.ReadBytesAfterRelease)
+            {
+                Assert.Throws<IllegalReferenceCountException>(() => buffer.DiscardReadBytes());
+            }
+            else
+            {
+                Assert.Throws<IllegalReferenceCountException>(() => buffer.DiscardSomeReadBytes());
+            }
             return;
         }
         if (scenario == DiscardCase.AllReadable)
@@ -89,7 +98,8 @@ public class ByteBufDiscardSourceTest
             buffer.WriterIndex = buffer.Capacity;
             buffer.ReaderIndex = buffer.WriterIndex;
             Assert.Same(buffer, buffer.DiscardReadBytes());
-            Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(0, buffer.WriterIndex);
+            Assert.Equal(0, buffer.ReaderIndex);
+            Assert.Equal(0, buffer.WriterIndex);
             return;
         }
         buffer.WriterIndex = 0;
@@ -106,19 +116,27 @@ public class ByteBufDiscardSourceTest
         if (scenario == DiscardCase.SmallPrefix)
         {
             // Make sure there's no effect if called when readerIndex is 0.
-            buffer.ReaderIndex = capacity / 4; buffer.MarkReaderIndex();
-            buffer.WriterIndex = capacity / 3; buffer.MarkWriterIndex();
-            buffer.ReaderIndex = 0; buffer.WriterIndex = capacity / 2;
+            buffer.ReaderIndex = capacity / 4;
+            buffer.MarkReaderIndex();
+            buffer.WriterIndex = capacity / 3;
+            buffer.MarkWriterIndex();
+            buffer.ReaderIndex = 0;
+            buffer.WriterIndex = capacity / 2;
             Assert.Same(buffer, buffer.DiscardReadBytes());
-            Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(capacity / 2, buffer.WriterIndex);
+            Assert.Equal(0, buffer.ReaderIndex);
+            Assert.Equal(capacity / 2, buffer.WriterIndex);
             Assert.Equal(copy[..(capacity / 2)], ByteBufUtil.GetBytes(buffer, 0, capacity / 2));
-            buffer.ResetReaderIndex(); Assert.Equal(capacity / 4, buffer.ReaderIndex);
-            buffer.ResetWriterIndex(); Assert.Equal(capacity / 3, buffer.WriterIndex);
+            buffer.ResetReaderIndex();
+            Assert.Equal(capacity / 4, buffer.ReaderIndex);
+            buffer.ResetWriterIndex();
+            Assert.Equal(capacity / 3, buffer.WriterIndex);
 
             // Make sure bytes after writerIndex is not copied.
-            buffer.ReaderIndex = 1; buffer.WriterIndex = capacity / 2;
+            buffer.ReaderIndex = 1;
+            buffer.WriterIndex = capacity / 2;
             buffer.DiscardReadBytes();
-            Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(capacity / 2 - 1, buffer.WriterIndex);
+            Assert.Equal(0, buffer.ReaderIndex);
+            Assert.Equal(capacity / 2 - 1, buffer.WriterIndex);
             Assert.Equal(copy[1..(capacity / 2)], ByteBufUtil.GetBytes(buffer, 0, capacity / 2 - 1));
             byte[] writable = ByteBufUtil.GetBytes(buffer, capacity / 2 - 1, capacity / 2);
             if (provider != 2)
@@ -133,15 +151,18 @@ public class ByteBufDiscardSourceTest
                 Assert.Equal(copy[(capacity / 2)..], writable);
             }
             // Marks also should be relocated.
-            buffer.ResetReaderIndex(); Assert.Equal(capacity / 4 - 1, buffer.ReaderIndex);
-            buffer.ResetWriterIndex(); Assert.Equal(capacity / 3 - 1, buffer.WriterIndex);
+            buffer.ResetReaderIndex();
+            Assert.Equal(capacity / 4 - 1, buffer.ReaderIndex);
+            buffer.ResetWriterIndex();
+            Assert.Equal(capacity / 3 - 1, buffer.WriterIndex);
         }
         else
         {
             // Discard the first (CAPACITY / 2 - 1) bytes.
             buffer.SetIndex(capacity / 2 - 1, capacity - 1);
             buffer.DiscardReadBytes();
-            Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(capacity / 2, buffer.WriterIndex);
+            Assert.Equal(0, buffer.ReaderIndex);
+            Assert.Equal(capacity / 2, buffer.WriterIndex);
             for (int i = 0; i < capacity / 2; ++i)
                 Assert.Equal(copy[(capacity / 2 - 1 + i)..(capacity - 1)],
                     ByteBufUtil.GetBytes(buffer, i, capacity / 2 - i));
@@ -248,17 +269,29 @@ public class ByteBufDiscardSourceTest
         {
             byte[] bytes = [13, 29, 47, 61, 83, 101, 127, 139];
             buffer.SetBytes(0, bytes).SetIndex(5, 7).MarkReaderIndex().MarkWriterIndex().SetIndex(4, 8);
-            if (fail) Assert.Same(calls.Error, Assert.Throws<Failure>(() => buffer.DiscardReadBytes()));
-            else Assert.Same(buffer, buffer.DiscardReadBytes());
-            Assert.Equal(1, calls.Count); Assert.Equal(fail ? 4 : 0, buffer.ReaderIndex);
+            if (fail)
+            {
+                Assert.Same(calls.Error, Assert.Throws<Failure>(() => buffer.DiscardReadBytes()));
+            }
+            else
+            {
+                Assert.Same(buffer, buffer.DiscardReadBytes());
+            }
+            Assert.Equal(1, calls.Count);
+            Assert.Equal(fail ? 4 : 0, buffer.ReaderIndex);
             Assert.Equal(fail ? 8 : 4, buffer.WriterIndex);
             Assert.Equal(fail ? bytes : new byte[] { 83, 101, 127, 139, 83, 101, 127, 139 },
                 ByteBufUtil.GetBytes(buffer, 0, 8));
-            buffer.ResetReaderIndex(); Assert.Equal(fail ? 5 : 1, buffer.ReaderIndex);
-            buffer.ResetWriterIndex(); Assert.Equal(fail ? 7 : 3, buffer.WriterIndex);
+            buffer.ResetReaderIndex();
+            Assert.Equal(fail ? 5 : 1, buffer.ReaderIndex);
+            buffer.ResetWriterIndex();
+            Assert.Equal(fail ? 7 : 3, buffer.WriterIndex);
             Assert.Equal(1, buffer.RefCnt);
         }
-        finally { Assert.True(buffer.Release()); }
+        finally
+        {
+            Assert.True(buffer.Release());
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 }

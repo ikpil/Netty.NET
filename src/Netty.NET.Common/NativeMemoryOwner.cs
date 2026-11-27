@@ -90,12 +90,18 @@ public sealed class NativeMemoryOwner : IMemoryOwner<byte>
     {
         if (alignment <= 0 || (alignment & (alignment - 1)) != 0)
             throw new ArgumentOutOfRangeException(nameof(alignment));
-        if (alignment == 1) return Memory;
+        if (alignment == 1)
+        {
+            return Memory;
+        }
         lock (Sync)
         {
             nuint mask = (nuint)alignment - 1;
             nuint padding = unchecked(0 - (nuint)GetAddress()) & mask;
-            if (padding > (nuint)Length) return Memory.Slice(0, 0);
+            if (padding > (nuint)Length)
+            {
+                return Memory.Slice(0, 0);
+            }
             int start = (int)padding;
             int count = (Length - start) & ~(alignment - 1);
             return Memory.Slice(start, count);
@@ -145,7 +151,10 @@ public sealed class NativeMemoryOwner : IMemoryOwner<byte>
     internal void EnsureReallocatable()
     {
         ThrowIfDisposed();
-        if (_leases != 0) throw new InvalidOperationException("Release storage leases before reallocating.");
+        if (_leases != 0)
+        {
+            throw new InvalidOperationException("Release storage leases before reallocating.");
+        }
     }
 
     // Called under Sync. The replacement takes over the active reservation.
@@ -157,10 +166,19 @@ public sealed class NativeMemoryOwner : IMemoryOwner<byte>
 
     private void ReleaseStorageIfUnused()
     {
-        if (!_disposed || _leases != 0) return;
-        if (_stablePin.IsAllocated) _stablePin.Free();
+        if (!_disposed || _leases != 0)
+        {
+            return;
+        }
+        if (_stablePin.IsAllocated)
+        {
+            _stablePin.Free();
+        }
         _storage = null;
-        if (!_hasReservation) return;
+        if (!_hasReservation)
+        {
+            return;
+        }
         _hasReservation = false;
         Allocator.Release(Math.Max(1, Length));
     }
@@ -172,7 +190,10 @@ public sealed class NativeMemoryOwner : IMemoryOwner<byte>
         public void Dispose()
         {
             NativeMemoryOwner current = Interlocked.Exchange(ref _owner, null);
-            if (current == null) return;
+            if (current == null)
+            {
+                return;
+            }
             lock (current.Sync)
             {
                 current._leases--;
@@ -205,7 +226,10 @@ public sealed class NativeMemoryOwner : IMemoryOwner<byte>
 
         public override Span<byte> GetSpan()
         {
-            lock (owner.Sync) return owner.GetSpan();
+            lock (owner.Sync)
+            {
+                return owner.GetSpan();
+            }
         }
 
         public override MemoryHandle Pin(int elementIndex = 0)

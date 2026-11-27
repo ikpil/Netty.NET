@@ -95,7 +95,10 @@ public class SocketConfigurationContractTest
     [InlineData(true)]
     public void BacklogUsesThePlatformDefaultAndPreservesTheValidatedValue(bool domain)
     {
-        if (domain) DomainSocketSourceTest.RequireDomainSockets();
+        if (domain)
+        {
+            DomainSocketSourceTest.RequireDomainSockets();
+        }
         using var socket = domain ? new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified)
             : NewSocket(AddressFamily.InterNetwork);
         IChannel channel = domain ? new NioServerDomainSocketChannel(socket) : new NioServerSocketChannel(socket);
@@ -157,7 +160,10 @@ public class SocketConfigurationContractTest
             Assert.Equal(noDelay, child.Config.GetOptions()[ChannelOption.TCP_NODELAY]);
             AssertUnsupported(child.Config, ChannelOption.SO_BACKLOG, 16);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Theory(Timeout = 10000)]
@@ -182,7 +188,10 @@ public class SocketConfigurationContractTest
             Assert.Same(server, child.Parent);
             Assert.True(Get(child.Config, ChannelOption.TCP_NODELAY));
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Theory(Timeout = 10000)]
@@ -202,7 +211,10 @@ public class SocketConfigurationContractTest
             var child = await accepted.Task.WaitAsync(token);
             Assert.Equal(noDelay, Get(child.Config, ChannelOption.TCP_NODELAY));
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Theory]
@@ -265,9 +277,15 @@ public class SocketConfigurationContractTest
     [InlineData(AddressFamily.InterNetworkV6, true)]
     public void LinuxTrafficClassTargetsTheActualProtocolFamily(AddressFamily family, bool dualMode)
     {
-        if (!OperatingSystem.IsLinux()) Assert.Skip("Linux native IPv6 traffic-class verification requires Linux.");
+        if (!OperatingSystem.IsLinux())
+        {
+            Assert.Skip("Linux native IPv6 traffic-class verification requires Linux.");
+        }
         using var socket = NewSocket(family);
-        if (family == AddressFamily.InterNetworkV6) socket.DualMode = dualMode;
+        if (family == AddressFamily.InterNetworkV6)
+        {
+            socket.DualMode = dualMode;
+        }
         var config = new NioSocketChannel(socket).Config;
         foreach (int value in new[] { 0x28, 0xb8, 0 })
         {
@@ -279,11 +297,17 @@ public class SocketConfigurationContractTest
                 Assert.Equal(sizeof(int), socket.GetRawSocketOption((int)SocketOptionLevel.IPv6, 67, native));
                 actual = BitConverter.ToInt32(native);
             }
-            else actual = (int)socket.GetSocketOption(SocketOptionLevel.IP, SocketOptionName.TypeOfService);
+            else
+            {
+                actual = (int)socket.GetSocketOption(SocketOptionLevel.IP, SocketOptionName.TypeOfService);
+            }
             Assert.Equal(value, actual);
             Assert.Equal(actual, Get(config, ChannelOption.IP_TOS));
             Assert.Equal(actual, config.GetOptions()[ChannelOption.IP_TOS]);
-            if (dualMode) Assert.Equal(value, (int)socket.GetSocketOption(SocketOptionLevel.IP, SocketOptionName.TypeOfService));
+            if (dualMode)
+            {
+                Assert.Equal(value, (int)socket.GetSocketOption(SocketOptionLevel.IP, SocketOptionName.TypeOfService));
+            }
         }
     }
 

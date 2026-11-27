@@ -47,7 +47,10 @@ public class ByteBufScalarSourceTest
 
         public void Dispose()
         {
-            if (Root.RefCnt > 0) Root.Release();
+            if (Root.RefCnt > 0)
+            {
+                Root.Release();
+            }
             Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
@@ -145,12 +148,24 @@ public class ByteBufScalarSourceTest
     {
         switch (operation)
         {
-            case 0: buffer.GetBoolean(index); break;
-            case 1: buffer.GetByte(index); break;
-            case 2: buffer.GetShort(index); break;
-            case 3: buffer.GetMedium(index); break;
-            case 4: buffer.GetInt(index); break;
-            default: buffer.GetLong(index); break;
+            case 0:
+                buffer.GetBoolean(index);
+                break;
+            case 1:
+                buffer.GetByte(index);
+                break;
+            case 2:
+                buffer.GetShort(index);
+                break;
+            case 3:
+                buffer.GetMedium(index);
+                break;
+            case 4:
+                buffer.GetInt(index);
+                break;
+            default:
+                buffer.GetLong(index);
+                break;
         }
     }
 
@@ -208,15 +223,33 @@ public class ByteBufScalarSourceTest
         int value = unchecked((int)bits);
         switch (operation)
         {
-            case 0: b.SetByte(15, value); break;
-            case 1: b.SetShort(15, value); break;
-            case 2: b.SetShortLE(15, value); break;
-            case 3: b.SetMedium(15, value); break;
-            case 4: b.SetMediumLE(15, value); break;
-            case 5: b.SetInt(15, value); break;
-            case 6: b.SetIntLE(15, value); break;
-            case 7: b.SetLong(15, unchecked((long)bits)); break;
-            default: b.SetLongLE(15, unchecked((long)bits)); break;
+            case 0:
+                b.SetByte(15, value);
+                break;
+            case 1:
+                b.SetShort(15, value);
+                break;
+            case 2:
+                b.SetShortLE(15, value);
+                break;
+            case 3:
+                b.SetMedium(15, value);
+                break;
+            case 4:
+                b.SetMediumLE(15, value);
+                break;
+            case 5:
+                b.SetInt(15, value);
+                break;
+            case 6:
+                b.SetIntLE(15, value);
+                break;
+            case 7:
+                b.SetLong(15, unchecked((long)bits));
+                break;
+            default:
+                b.SetLongLE(15, unchecked((long)bits));
+                break;
         }
     }
 

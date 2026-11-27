@@ -44,7 +44,10 @@ public class BootstrapSourceTest
             await Assert.ThrowsAsync<NotSupportedException>(() => future);
             Assert.False(created.IsActive);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Fact]
@@ -84,7 +87,10 @@ public class BootstrapSourceTest
                     Assert.Equal("value", channel.Attr(key).Get());
                 })).BindAsync(LocalAddress.ANY);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Fact(Timeout = 10000)]
@@ -121,10 +127,19 @@ public class BootstrapSourceTest
         }
         finally
         {
-            await groupA.StopAsync(); await groupB.StopAsync();
+            await groupA.StopAsync();
+            await groupB.StopAsync();
             // Original only waits for owner submissions. Observe detached native failures during teardown.
             foreach (var operation in operations)
-            { try { await operation; } catch { } }
+            {
+                try
+                {
+                    await operation;
+                }
+                catch
+                {
+                }
+            }
         }
     }
 
@@ -141,10 +156,15 @@ public class BootstrapSourceTest
                 .Option(ChannelOption.WRITE_BUFFER_LOW_WATER_MARK, 1).Option(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK, 2).RegisterAsync();
             await initialized.Task.WaitAsync(TestContext.Current.CancellationToken);
             // Check the order is the same as what we defined before.
-            Assert.True(options.TryDequeue(out var low)); Assert.Same(ChannelOption.WRITE_BUFFER_LOW_WATER_MARK, low);
-            Assert.True(options.TryDequeue(out var high)); Assert.Same(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK, high);
+            Assert.True(options.TryDequeue(out var low));
+            Assert.Same(ChannelOption.WRITE_BUFFER_LOW_WATER_MARK, low);
+            Assert.True(options.TryDequeue(out var high));
+            Assert.Same(ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK, high);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Fact]
@@ -162,7 +182,10 @@ public class BootstrapSourceTest
             Assert.Null(extension.LastSeenListener.Value);
             expected.CloseAsync().GetAwaiter().GetResult();
         }
-        finally { group.StopAsync().GetAwaiter().GetResult(); }
+        finally
+        {
+            group.StopAsync().GetAwaiter().GetResult();
+        }
     }
     [Sharable]
     private sealed class DummyHandler : ChannelInboundHandlerAdapter { }

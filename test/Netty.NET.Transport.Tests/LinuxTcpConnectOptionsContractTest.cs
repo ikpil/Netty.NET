@@ -28,7 +28,10 @@ public class LinuxTcpConnectOptionsContractTest
             await Assert.ThrowsAsync<PlatformNotSupportedException>(() => bootstrap.RegisterAsync(token));
             Assert.False(channel.IsOpen);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Fact]
@@ -77,8 +80,14 @@ public class LinuxTcpConnectOptionsContractTest
     [InlineData(true)]
     public async Task BindAddressNoPortAssignsThePortWhenConnecting(bool ipv6)
     {
-        if (!OperatingSystem.IsLinux()) Assert.Skip("IP_BIND_ADDRESS_NO_PORT requires Linux.");
-        if (ipv6 && !Socket.OSSupportsIPv6) Assert.Skip("IPv6 unavailable.");
+        if (!OperatingSystem.IsLinux())
+        {
+            Assert.Skip("IP_BIND_ADDRESS_NO_PORT requires Linux.");
+        }
+        if (ipv6 && !Socket.OSSupportsIPv6)
+        {
+            Assert.Skip("IPv6 unavailable.");
+        }
         var token = TestContext.Current.CancellationToken;
         var address = ipv6 ? IPAddress.IPv6Loopback : IPAddress.Loopback;
         var local = new IPEndPoint(address, 0);
@@ -102,6 +111,9 @@ public class LinuxTcpConnectOptionsContractTest
             Assert.True(assigned.Port > 0);
             Assert.Equal(accepted.RemoteEndPoint, assigned);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 }

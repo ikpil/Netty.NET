@@ -57,7 +57,11 @@ public class ByteBufLifetimeFixtureTest
                 result.AddComponent(Part(capacity - first).WriteZero(capacity - first));
                 return result;
             }
-            catch { result.Release(); throw; }
+            catch
+            {
+                result.Release();
+                throw;
+            }
         }
 
         public void Dispose()

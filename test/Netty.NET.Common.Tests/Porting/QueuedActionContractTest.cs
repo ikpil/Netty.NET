@@ -51,7 +51,10 @@ public class QueuedActionContractTest
             depth++;
             maximumDepth = Math.Max(maximumDepth, depth);
             callerOnly &= ReferenceEquals(caller, Thread.CurrentThread);
-            if (++runs < 100000) executor.Execute(next);
+            if (++runs < 100000)
+            {
+                executor.Execute(next);
+            }
             depth--;
         };
         executor.Execute(next);
@@ -96,7 +99,10 @@ public class QueuedActionContractTest
             Assert.Equal("raw", restoredValue);
             Assert.Equal("raw", ambient.Value);
         }
-        finally { ambient.Value = null; }
+        finally
+        {
+            ambient.Value = null;
+        }
     }
 
     private sealed class HookLoop : SingleThreadEventExecutor
@@ -132,8 +138,15 @@ public class QueuedActionContractTest
             for (;;)
             {
                 var task = TakeTask();
-                if (task != null) { RunTask(task); UpdateLastExecutionTime(); }
-                if (ConfirmShutdown()) return;
+                if (task != null)
+                {
+                    RunTask(task);
+                    UpdateLastExecutionTime();
+                }
+                if (ConfirmShutdown())
+                {
+                    return;
+                }
             }
         }
     }
@@ -294,7 +307,10 @@ public class QueuedActionContractTest
             policyThread = Thread.CurrentThread;
             task();
             task();
-            if (throwPolicy) throw policyFailure;
+            if (throwPolicy)
+            {
+                throw policyFailure;
+            }
         });
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
@@ -307,8 +323,14 @@ public class QueuedActionContractTest
             Action callback = () => calls++;
             callback += () => throw new InvalidOperationException("raw multicast failure");
             callback += () => tailCalls++;
-            if (throwPolicy) Assert.Same(policyFailure, Assert.Throws<InvalidOperationException>(() => owner.Execute(callback)));
-            else owner.Execute(callback);
+            if (throwPolicy)
+            {
+                Assert.Same(policyFailure, Assert.Throws<InvalidOperationException>(() => owner.Execute(callback)));
+            }
+            else
+            {
+                owner.Execute(callback);
+            }
             Assert.Same(Thread.CurrentThread, policyThread);
             Assert.NotNull(rejected);
             Action replay = (Action)rejected.Clone();
@@ -362,8 +384,14 @@ public class QueuedActionContractTest
         try
         {
             Action command = () => completion.SetResult(Thread.CurrentThread);
-            if (lazy) executor.LazyExecute(command);
-            else executor.Execute(command);
+            if (lazy)
+            {
+                executor.LazyExecute(command);
+            }
+            else
+            {
+                executor.Execute(command);
+            }
             Thread worker = await completion.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             Assert.True(executor.InEventLoop(worker));
             Assert.Equal(lazy ? 0 : 1, executor.Executions);

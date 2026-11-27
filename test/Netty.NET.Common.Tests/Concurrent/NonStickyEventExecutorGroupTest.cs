@@ -117,7 +117,10 @@ public class NonStickyEventExecutorGroupTest
                 {
                     executor.Execute(() =>
                     {
-                        if (!firstCompleted.IsSet) firstCompleted.Signal();
+                        if (!firstCompleted.IsSet)
+                        {
+                            firstCompleted.Signal();
+                        }
                         latch.Signal();
                     });
 
@@ -136,7 +139,10 @@ public class NonStickyEventExecutorGroupTest
     private static void Stop(IEventExecutorGroup group)
     {
         group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
-        if (!group.AwaitTermination(TimeSpan.FromSeconds(5))) _ = group.StopAsync();
+        if (!group.AwaitTermination(TimeSpan.FromSeconds(5)))
+        {
+            _ = group.StopAsync();
+        }
         Assert.True(group.AwaitTermination(TimeSpan.FromSeconds(5)));
     }
 
@@ -284,7 +290,11 @@ public class NonStickyEventExecutorGroupTest
                 "inEventLoop() should return true even after failed reschedule attempt. " +
                 "This indicates executingThread was properly restored in the exception handler.");
         }
-        finally { Stop(nonStickyGroup); Stop(underlying); }
+        finally
+        {
+            Stop(nonStickyGroup);
+            Stop(underlying);
+        }
     }
 
     private static void Execute(IEventExecutorGroup group, CountdownEvent startLatch)

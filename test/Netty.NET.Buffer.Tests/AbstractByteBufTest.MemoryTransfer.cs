@@ -159,7 +159,10 @@ public abstract partial class AbstractByteBufTest
             for (int i = 1; reader.TryRead(out byte actual); i++)
                 Assert.Equal(data[i], actual);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Fact]
@@ -175,7 +178,10 @@ public abstract partial class AbstractByteBufTest
             Assert.True(sequence.IsSingleSegment);
             Assert.True(sequence.First.IsEmpty);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Fact]
@@ -197,8 +203,14 @@ public abstract partial class AbstractByteBufTest
         }
         finally
         {
-            if (buffer.RefCnt > 0) buffer.Release();
-            if (buffer2?.RefCnt > 0) buffer2.Release();
+            if (buffer.RefCnt > 0)
+            {
+                buffer.Release();
+            }
+            if (buffer2?.RefCnt > 0)
+            {
+                buffer2.Release();
+            }
         }
     }
 
@@ -214,6 +226,9 @@ public abstract partial class AbstractByteBufTest
             buffer.WriteBytes(bytes);
             Assert.Throws<ArgumentOutOfRangeException>(() => buffer.GetBytes(buffer.ReaderIndex, nioBuffer));
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 }

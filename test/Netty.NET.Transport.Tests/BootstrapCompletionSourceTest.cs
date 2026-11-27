@@ -59,8 +59,15 @@ public class BootstrapCompletionSourceTest
             Assert.False(channel.BoundOnOwner);
             group.Producer.SetResult();
             bool success;
-            try { await future; success = true; }
-            catch (SocketException) { success = false; }
+            try
+            {
+                await future;
+                success = true;
+            }
+            catch (SocketException)
+            {
+                success = false;
+            }
             var queue = new Queue<bool>();
             // Task consumers explicitly regain their owner; Tasks do not inherit Netty Future listener affinity.
             await channel.EventLoop.SubmitAsync(() =>
@@ -72,7 +79,11 @@ public class BootstrapCompletionSourceTest
             Assert.Equal(!fail, queue.Dequeue());
             Assert.True(channel.BoundOnOwner);
         }
-        finally { group.Producer.TrySetResult(); await group.StopAsync(); }
+        finally
+        {
+            group.Producer.TrySetResult();
+            await group.StopAsync();
+        }
     }
 
     [Fact(Timeout = 10000)]
@@ -84,7 +95,10 @@ public class BootstrapCompletionSourceTest
             var bootstrap = new Bootstrap().Group(group).Channel<LocalChannel>().Handler(new ChannelInboundHandlerAdapter());
             await Assert.ThrowsAsync<SocketException>(() => bootstrap.ConnectAsync(LocalAddress.ANY).WaitAsync(TestContext.Current.CancellationToken));
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Fact]
@@ -120,7 +134,11 @@ public class BootstrapCompletionSourceTest
             // Connect to the server using the asynchronous resolver.
             await bootstrapA.ConnectAsync(local);
         }
-        finally { await groupA.StopAsync(); await groupB.StopAsync(); }
+        finally
+        {
+            await groupA.StopAsync();
+            await groupB.StopAsync();
+        }
     }
 
     [Fact]
@@ -142,7 +160,11 @@ public class BootstrapCompletionSourceTest
             await channel.CloseFuture.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
             Assert.False(channel.IsOpen);
         }
-        finally { await groupA.StopAsync(); await groupB.StopAsync(); }
+        finally
+        {
+            await groupA.StopAsync();
+            await groupB.StopAsync();
+        }
     }
     private sealed class HeldRegistrationGroup : MultiThreadIoEventLoopGroup
     {
@@ -169,9 +191,19 @@ public class BootstrapCompletionSourceTest
             // Delay registration
             Next().Execute(async () =>
             {
-                try { await base.RegisterAsync(channel, token); producer.SetResult(); }
-                catch (OperationCanceledException error) { producer.TrySetCanceled(error.CancellationToken); }
-                catch (Exception error) { producer.SetException(error); }
+                try
+                {
+                    await base.RegisterAsync(channel, token);
+                    producer.SetResult();
+                }
+                catch (OperationCanceledException error)
+                {
+                    producer.TrySetCanceled(error.CancellationToken);
+                }
+                catch (Exception error)
+                {
+                    producer.SetException(error);
+                }
             });
             return producer.Task;
         }
@@ -182,7 +214,10 @@ public class BootstrapCompletionSourceTest
         protected override Task DoBindAsync(EndPoint address, CancellationToken token)
         {
             BoundOnOwner = EventLoop.InEventLoop();
-            if (!fail) return base.DoBindAsync(address, token);
+            if (!fail)
+            {
+                return base.DoBindAsync(address, token);
+            }
             // Close the Channel to emulate what NIO and others impl do on bind failure
             // See https://github.com/netty/netty/issues/2586
             _ = CloseAsync();
@@ -205,14 +240,32 @@ public class BootstrapCompletionSourceTest
             protected override Task<EndPoint> DoResolveAsync(EndPoint address, CancellationToken token)
             {
                 var producer = new TaskCompletionSource<EndPoint>(TaskCreationOptions.RunContinuationsAsynchronously);
-                Executor.Execute(() => { if (success) producer.SetResult(address); else producer.SetException(new UnknownHostException(address.ToString())); });
+                Executor.Execute(() => {
+                    if (success)
+                    {
+                        producer.SetResult(address);
+                    }
+                    else
+                    {
+                        producer.SetException(new UnknownHostException(address.ToString()));
+                    }
+                });
                 return producer.Task;
             }
 
             protected override Task<IReadOnlyList<EndPoint>> DoResolveAllAsync(EndPoint address, CancellationToken token)
             {
                 var producer = new TaskCompletionSource<IReadOnlyList<EndPoint>>(TaskCreationOptions.RunContinuationsAsynchronously);
-                Executor.Execute(() => { if (success) producer.SetResult(new[] { address }); else producer.SetException(new UnknownHostException(address.ToString())); });
+                Executor.Execute(() => {
+                    if (success)
+                    {
+                        producer.SetResult(new[] { address });
+                    }
+                    else
+                    {
+                        producer.SetException(new UnknownHostException(address.ToString()));
+                    }
+                });
                 return producer.Task;
             }
         }

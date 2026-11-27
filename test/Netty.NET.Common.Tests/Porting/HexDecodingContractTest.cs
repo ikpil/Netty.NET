@@ -15,7 +15,10 @@ public class HexDecodingContractTest
             char value = (char)codeUnit;
             int expected = Math.Max(digits.IndexOf(value), upperDigits.IndexOf(value));
             Assert.Equal(expected, StringUtil.DecodeHexNibble(value));
-            if (codeUnit <= byte.MaxValue) Assert.Equal(expected, StringUtil.DecodeHexNibble((byte)codeUnit));
+            if (codeUnit <= byte.MaxValue)
+            {
+                Assert.Equal(expected, StringUtil.DecodeHexNibble((byte)codeUnit));
+            }
         }
         for (int value = 0; value <= byte.MaxValue; value++)
         {

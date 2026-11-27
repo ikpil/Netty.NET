@@ -99,11 +99,17 @@ public abstract partial class AbstractByteBufTest
                 reader.Advance(1);
                 // Preserve every original byte comparison and first-failure order;
                 // avoid generic assertion dispatch for hundreds of millions of equal bytes.
-                if (data[i] != actual) Assert.Equal(data[i], actual);
+                if (data[i] != actual)
+                {
+                    Assert.Equal(data[i], actual);
+                }
             }
             Assert.True(reader.End);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Fact]
@@ -134,7 +140,10 @@ public abstract partial class AbstractByteBufTest
             Assert.Equal(0, readOnlyDst.WriterIndex);
             Assert.Equal(new byte[bytes.Length], ByteBufUtil.GetBytes(dst, 0, bytes.Length));
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Fact]
@@ -259,6 +268,9 @@ public abstract partial class AbstractByteBufTest
             Assert.Equal(0, reader.Consumed);
             Assert.True(reader.Remaining >= 8);
         }
-        finally { buf.Release(); }
+        finally
+        {
+            buf.Release();
+        }
     }
 }

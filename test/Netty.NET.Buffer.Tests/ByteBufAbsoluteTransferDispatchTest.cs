@@ -42,7 +42,10 @@ public class ByteBufAbsoluteTransferDispatchTest
 
         public ByteBuf After(ByteBuf result)
         {
-            if (FailureMode == 2) throw Error;
+            if (FailureMode == 2)
+            {
+                throw Error;
+            }
             return result;
         }
     }
@@ -139,33 +142,54 @@ public class ByteBufAbsoluteTransferDispatchTest
             {
                 return set ? owner.SetBytes(index, peer, length) : owner.GetBytes(index, peer, length);
             }
-            if (scenario is 2 or 3) Assert.Same(calls.Error, Assert.Throws<Failure>(() => Invoke()));
-            else if (scenario is >= 4 and <= 9) Assert.Throws<ArgumentOutOfRangeException>(() => Invoke());
-            else Assert.Same(owner, Invoke());
+            if (scenario is 2 or 3)
+            {
+                Assert.Same(calls.Error, Assert.Throws<Failure>(() => Invoke()));
+            }
+            else if (scenario is >= 4 and <= 9)
+            {
+                Assert.Throws<ArgumentOutOfRangeException>(() => Invoke());
+            }
+            else
+            {
+                Assert.Same(owner, Invoke());
+            }
 
             bool dispatched = !set || scenario is not (>= 4 and <= 9);
             Assert.Equal(dispatched ? 1 : 0, calls.Count);
             if (dispatched)
             {
-                Assert.Same(peer, calls.Peer); Assert.Equal(index, calls.Index);
-                Assert.Equal(set ? 2 : 3, calls.PeerIndex); Assert.Equal(length, calls.Length);
+                Assert.Same(peer, calls.Peer);
+                Assert.Equal(index, calls.Index);
+                Assert.Equal(set ? 2 : 3, calls.PeerIndex);
+                Assert.Equal(length, calls.Length);
             }
             bool succeeded = scenario is 0 or 1 or 10;
             Assert.Equal(2 + (set && succeeded ? length : 0), source.ReaderIndex);
-            Assert.Equal(7, source.WriterIndex); Assert.Equal(1, destination.ReaderIndex);
+            Assert.Equal(7, source.WriterIndex);
+            Assert.Equal(1, destination.ReaderIndex);
             Assert.Equal(3 + (!set && succeeded ? length : 0), destination.WriterIndex);
             byte[] expected = [90, 91, 92, 93, 94, 95, 96, 97];
             if (scenario is 1 or 3)
                 Array.Copy(new byte[] { 10, 11, 12, 13, 14, 15, 16, 17 }, set ? 2 : 1, expected, set ? 1 : 3, 2);
             Assert.Equal(expected, ByteBufUtil.GetBytes(destination, 0, 8));
             Assert.Equal(new byte[] { 10, 11, 12, 13, 14, 15, 16, 17 }, ByteBufUtil.GetBytes(source, 0, 8));
-            Assert.Equal(8, owner.Capacity); Assert.Equal(8, peer.Capacity);
-            source.ResetReaderIndex().ResetWriterIndex(); destination.ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(2, source.ReaderIndex); Assert.Equal(7, source.WriterIndex);
-            Assert.Equal(1, destination.ReaderIndex); Assert.Equal(3, destination.WriterIndex);
-            Assert.Equal(1, source.RefCnt); Assert.Equal(1, destination.RefCnt);
+            Assert.Equal(8, owner.Capacity);
+            Assert.Equal(8, peer.Capacity);
+            source.ResetReaderIndex().ResetWriterIndex();
+            destination.ResetReaderIndex().ResetWriterIndex();
+            Assert.Equal(2, source.ReaderIndex);
+            Assert.Equal(7, source.WriterIndex);
+            Assert.Equal(1, destination.ReaderIndex);
+            Assert.Equal(3, destination.WriterIndex);
+            Assert.Equal(1, source.RefCnt);
+            Assert.Equal(1, destination.RefCnt);
         }
-        finally { Assert.True(owner.Release()); Assert.True(peer.Release()); }
+        finally
+        {
+            Assert.True(owner.Release());
+            Assert.True(peer.Release());
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -182,20 +206,37 @@ public class ByteBufAbsoluteTransferDispatchTest
         ByteBuf peer = new UnpooledHeapByteBuf(8, 16);
         try
         {
-            owner.SetIndex(2, 7); peer.SetIndex(1, 3);
+            owner.SetIndex(2, 7);
+            peer.SetIndex(1, 3);
             ByteBuf Invoke()
             {
                 return set ? owner.SetBytes(2, peer) : owner.GetBytes(2, peer);
             }
-            if (failure) Assert.Same(calls.Error, Assert.Throws<Failure>(() => Invoke()));
-            else Assert.Same(owner, Invoke());
-            Assert.Equal(1, calls.Count); Assert.Same(peer, calls.Peer);
-            Assert.Equal(2, calls.Index); Assert.Equal(-1, calls.PeerIndex); Assert.Equal(set ? 2 : 5, calls.Length);
-            Assert.Equal(2, owner.ReaderIndex); Assert.Equal(7, owner.WriterIndex);
-            Assert.Equal(1, peer.ReaderIndex); Assert.Equal(3, peer.WriterIndex);
-            Assert.Equal(1, owner.RefCnt); Assert.Equal(1, peer.RefCnt);
+            if (failure)
+            {
+                Assert.Same(calls.Error, Assert.Throws<Failure>(() => Invoke()));
+            }
+            else
+            {
+                Assert.Same(owner, Invoke());
+            }
+            Assert.Equal(1, calls.Count);
+            Assert.Same(peer, calls.Peer);
+            Assert.Equal(2, calls.Index);
+            Assert.Equal(-1, calls.PeerIndex);
+            Assert.Equal(set ? 2 : 5, calls.Length);
+            Assert.Equal(2, owner.ReaderIndex);
+            Assert.Equal(7, owner.WriterIndex);
+            Assert.Equal(1, peer.ReaderIndex);
+            Assert.Equal(3, peer.WriterIndex);
+            Assert.Equal(1, owner.RefCnt);
+            Assert.Equal(1, peer.RefCnt);
         }
-        finally { Assert.True(owner.Release()); Assert.True(peer.Release()); }
+        finally
+        {
+            Assert.True(owner.Release());
+            Assert.True(peer.Release());
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -211,10 +252,15 @@ public class ByteBufAbsoluteTransferDispatchTest
         try
         {
             Assert.Throws<IllegalReferenceCountException>(() => owner.SetBytes(1, source, 2));
-            Assert.Equal(0, calls.Count); Assert.Equal(2, source.ReaderIndex);
-            Assert.Equal(7, source.WriterIndex); Assert.Equal(1, source.RefCnt);
+            Assert.Equal(0, calls.Count);
+            Assert.Equal(2, source.ReaderIndex);
+            Assert.Equal(7, source.WriterIndex);
+            Assert.Equal(1, source.RefCnt);
         }
-        finally { Assert.True(source.Release()); }
+        finally
+        {
+            Assert.True(source.Release());
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 }

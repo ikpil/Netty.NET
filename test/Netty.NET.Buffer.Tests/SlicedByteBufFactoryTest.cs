@@ -64,14 +64,20 @@ public class SlicedByteBufFactoryTest
             };
             Root.SetBytes(0, new byte[16]).SetIndex(2, 14).MarkReaderIndex().MarkWriterIndex();
             View = retained ? Root.RetainedSlice(offset, 8) : Root.Slice(offset, 8);
-            if (retained) Assert.False(Root.Release());
+            if (retained)
+            {
+                Assert.False(Root.Release());
+            }
             Assert.Equal(1, View.RefCnt);
             Assert.Equal(Root.RefCnt, View.RefCnt);
         }
 
         public void Dispose()
         {
-            if (View.RefCnt > 0) View.Release(View.RefCnt);
+            if (View.RefCnt > 0)
+            {
+                View.Release(View.RefCnt);
+            }
             Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, _native.ReservedBytes);
@@ -315,8 +321,14 @@ public class SlicedByteBufFactoryTest
             Assert.Equal(expected, ByteBufUtil.GetBytes(slice));
             Assert.Equal(0, slice.CompareTo(slice.Duplicate()));
             ByteBuf b = slice.RetainedDuplicate();
-            try { Assert.Equal(0, slice.CompareTo(b)); }
-            finally { b.Release(); }
+            try
+            {
+                Assert.Equal(0, slice.CompareTo(b));
+            }
+            finally
+            {
+                b.Release();
+            }
             Assert.Equal(0, slice.CompareTo(slice.Slice(0, slice.Capacity)));
             // CLR: mutations are shared while the parent indices stay independent.
             slice.SetByte(1, 42);

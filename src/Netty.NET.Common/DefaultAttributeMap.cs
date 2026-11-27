@@ -47,18 +47,30 @@ public class DefaultAttributeMap : IAttributeMap
                     // has no user callback or side effect. Always inspect the published result.
                     var attribute = (DefaultAttribute<T>)attributes.GetOrAdd(key,
                         static (key, map) => new DefaultAttribute<T>(map, (AttributeKey<T>)key), this);
-                    if (!attribute.IsRemoved) return attribute;
+                    if (!attribute.IsRemoved)
+                    {
+                        return attribute;
+                    }
                     replacement ??= new DefaultAttribute<T>(this, key);
-                    if (attributes.TryUpdate(key, replacement, attribute)) return replacement;
+                    if (attributes.TryUpdate(key, replacement, attribute))
+                    {
+                        return replacement;
+                    }
                 }
-                catch (ThreadInterruptedException) { interrupted = true; }
+                catch (ThreadInterruptedException)
+                {
+                    interrupted = true;
+                }
             }
         }
         finally
         {
             // Native dictionary writes can wait on monitors. Retry from the
             // published state, then retain the interrupt for a later blocking wait.
-            if (interrupted) Thread.CurrentThread.Interrupt();
+            if (interrupted)
+            {
+                Thread.CurrentThread.Interrupt();
+            }
         }
     }
 
@@ -82,14 +94,20 @@ public class DefaultAttributeMap : IAttributeMap
                     attributes.TryRemove(new KeyValuePair<IAttributeKey, object>(key, attribute));
                     return;
                 }
-                catch (ThreadInterruptedException) { interrupted = true; }
+                catch (ThreadInterruptedException)
+                {
+                    interrupted = true;
+                }
             }
         }
         finally
         {
             // Detachment and value clearing already happened. Finish the
             // conditional deletion before restoring any consumed interrupt.
-            if (interrupted) Thread.CurrentThread.Interrupt();
+            if (interrupted)
+            {
+                Thread.CurrentThread.Interrupt();
+            }
         }
     }
 

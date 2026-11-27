@@ -184,7 +184,12 @@ internal sealed partial class AdaptivePoolingAllocator : IDisposable
     internal MagazineGroup[] SizeClassedMagazineGroups => _sizeClassedMagazineGroups;
     internal MagazineGroup LargeBufferMagazineGroup => _largeBufferMagazineGroup;
     internal LocalGroups ThreadLocalGroup => _threadLocalGroup;
-    internal int LocalBindingCount { get { lock (_localBindings) return _localBindings.Count; } }
+    internal int LocalBindingCount { get {
+            lock (_localBindings)
+            {
+                return _localBindings.Count;
+            }
+        } }
 
     // CLR: lowMemory and the remaining settings are the per-instance replacements listed above.
     internal AdaptivePoolingAllocator(IChunkAllocator chunkAllocator, bool lowMemory,
@@ -194,7 +199,10 @@ internal sealed partial class AdaptivePoolingAllocator : IDisposable
     {
         ArgumentNullException.ThrowIfNull(chunkAllocator);
         _chunkAllocator = chunkAllocator;
-        if (chunkReuseQueue < 2 || chunkReuseQueue > 1 << 28) throw new ArgumentOutOfRangeException(nameof(chunkReuseQueue));
+        if (chunkReuseQueue < 2 || chunkReuseQueue > 1 << 28)
+        {
+            throw new ArgumentOutOfRangeException(nameof(chunkReuseQueue));
+        }
         ArgumentOutOfRangeException.ThrowIfLessThan(chunkPurgePollsShared, 1);
         ArgumentOutOfRangeException.ThrowIfLessThan(chunkPurgeThreshold, 1);
         ArgumentOutOfRangeException.ThrowIfLessThan(maxStripes, 1);
@@ -278,7 +286,10 @@ internal sealed partial class AdaptivePoolingAllocator : IDisposable
             }
             return allocated;
         }
-        finally { _lifetime.ExitReadLock(); }
+        finally
+        {
+            _lifetime.ExitReadLock();
+        }
     }
 
     private static int SizeIndexOf(int size)
@@ -321,8 +332,15 @@ internal sealed partial class AdaptivePoolingAllocator : IDisposable
             chunk.FallbackThreadLocal = threadLocal;
             chunk.TrackAllocation(threadLocal);
         }
-        catch { innerChunk.Release(); throw; }
-        try { return chunk.TryAllocate(size) ?? throw new InvalidOperationException("A dedicated chunk was exhausted."); }
+        catch
+        {
+            innerChunk.Release();
+            throw;
+        }
+        try
+        {
+            return chunk.TryAllocate(size) ?? throw new InvalidOperationException("A dedicated chunk was exhausted.");
+        }
         finally
         {
             // As the chunk is an one-off we need to always call release explicitly as readInitInto(...)
@@ -353,7 +371,10 @@ internal sealed partial class AdaptivePoolingAllocator : IDisposable
         _lifetime.EnterWriteLock();
         try
         {
-            if (_disposed) return;
+            if (_disposed)
+            {
+                return;
+            }
             _disposed = true;
             lock (_localBindings)
             {
@@ -365,7 +386,10 @@ internal sealed partial class AdaptivePoolingAllocator : IDisposable
             foreach (var group in _sizeClassedMagazineGroups) group.Dispose();
             _largeBufferMagazineGroup.Dispose();
         }
-        finally { _lifetime.ExitWriteLock(); }
+        finally
+        {
+            _lifetime.ExitWriteLock();
+        }
     }
 
     // CLR: a named FastThreadLocal subclass replaces the source's anonymous threadLocalGroup class.
@@ -377,7 +401,10 @@ internal sealed partial class AdaptivePoolingAllocator : IDisposable
             if (useCacheForNonEventLoopThreads || ThreadExecutorMap.CurrentExecutor() != null)
             {
                 MagazineGroup[] groups = CreateMagazineGroupSizeClasses(allocator, true);
-                lock (allocator._localBindings) allocator._localBindings.Add(groups);
+                lock (allocator._localBindings)
+                {
+                    allocator._localBindings.Add(groups);
+                }
                 return groups;
             }
             return null;
@@ -386,16 +413,25 @@ internal sealed partial class AdaptivePoolingAllocator : IDisposable
         protected override void OnRemoval(MagazineGroup[] groups)
         {
             using var events = BufferAllocatorEventSource.Log.BeginOperation();
-            if (groups == null) return;
+            if (groups == null)
+            {
+                return;
+            }
             // CLR: cleanup and allocator Dispose may run on different physical threads.
             // The write gate quiesces allocations/inspection before owner handoff.
             allocator._lifetime.EnterWriteLock();
             try
             {
-                lock (allocator._localBindings) allocator._localBindings.Remove(groups);
+                lock (allocator._localBindings)
+                {
+                    allocator._localBindings.Remove(groups);
+                }
                 foreach (MagazineGroup group in groups) group.Dispose();
             }
-            finally { allocator._lifetime.ExitWriteLock(); }
+            finally
+            {
+                allocator._lifetime.ExitWriteLock();
+            }
         }
     }
 

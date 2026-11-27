@@ -20,7 +20,10 @@ public class TimerQueuePublicationContractTest
         int cancelled = 0, runs = 0;
         ITimerTask task = TimerTask.Create(_ => Interlocked.Increment(ref runs), _ =>
         {
-            if (Interlocked.Increment(ref cancelled) == 33) cancellationsProcessed.Set();
+            if (Interlocked.Increment(ref cancelled) == 33)
+            {
+                cancellationsProcessed.Set();
+            }
         });
         var timeouts = new ITimeout[33];
         Exception failure = null;
@@ -48,12 +51,27 @@ public class TimerQueuePublicationContractTest
             {
                 try
                 {
-                    if (cancellation) cancelResult = timeouts[32].Cancel();
-                    else timeouts[32] = timer.NewTimeout(task, TimeSpan.FromDays(1));
-                    try { Thread.Sleep(0); }
-                    catch (ThreadInterruptedException) { pendingInterrupt = true; }
+                    if (cancellation)
+                    {
+                        cancelResult = timeouts[32].Cancel();
+                    }
+                    else
+                    {
+                        timeouts[32] = timer.NewTimeout(task, TimeSpan.FromDays(1));
+                    }
+                    try
+                    {
+                        Thread.Sleep(0);
+                    }
+                    catch (ThreadInterruptedException)
+                    {
+                        pendingInterrupt = true;
+                    }
                 }
-                catch (Exception error) { failure = error; }
+                catch (Exception error)
+                {
+                    failure = error;
+                }
             }) { IsBackground = true };
             bool waited = false;
             Monitor.Enter(gate);
@@ -61,7 +79,10 @@ public class TimerQueuePublicationContractTest
             {
                 publisher.Start();
                 waited = SpinWait.SpinUntil(() => (publisher.ThreadState & ThreadState.WaitSleepJoin) != 0, TimeSpan.FromSeconds(5));
-                if (waited) publisher.Interrupt();
+                if (waited)
+                {
+                    publisher.Interrupt();
+                }
             }
             finally
             {
@@ -72,8 +93,14 @@ public class TimerQueuePublicationContractTest
             Assert.Null(failure);
             Assert.True(pendingInterrupt);
             Assert.Equal(33, timer.PendingTimeouts());
-            if (cancellation) Assert.True(cancelResult);
-            else Assert.NotNull(timeouts[32]);
+            if (cancellation)
+            {
+                Assert.True(cancelResult);
+            }
+            else
+            {
+                Assert.NotNull(timeouts[32]);
+            }
             foreach (ITimeout timeout in timeouts) timeout.Cancel();
             proceed.Set();
             Assert.True(cancellationsProcessed.Wait(TimeSpan.FromSeconds(5)));

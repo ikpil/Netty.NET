@@ -112,11 +112,22 @@ public class ByteVisitorContractTest
         var text = new AsciiString(new byte[] { 1, 2, 3, 4 }, false);
         var failure = new InvalidOperationException("visitor failure");
         int visits = 0;
-        Func<byte, bool> visitor = value => { if (++visits == 2) throw failure; return true; };
+        Func<byte, bool> visitor = value => {
+            if (++visits == 2)
+            {
+                throw failure;
+            }
+            return true; };
         var observed = Assert.Throws<InvalidOperationException>(() =>
         {
-            if (descending) text.ForEachByteDesc(visitor);
-            else text.ForEachByte(visitor);
+            if (descending)
+            {
+                text.ForEachByteDesc(visitor);
+            }
+            else
+            {
+                text.ForEachByte(visitor);
+            }
         });
         Assert.Same(failure, observed);
         Assert.Equal(2, visits);
@@ -152,13 +163,25 @@ public class ByteVisitorContractTest
         {
             if (descending)
             {
-                if (window) text.ForEachByteDesc(0, text.Length(), null);
-                else text.ForEachByteDesc(null);
+                if (window)
+                {
+                    text.ForEachByteDesc(0, text.Length(), null);
+                }
+                else
+                {
+                    text.ForEachByteDesc(null);
+                }
             }
             else
             {
-                if (window) text.ForEachByte(0, text.Length(), null);
-                else text.ForEachByte(null);
+                if (window)
+                {
+                    text.ForEachByte(0, text.Length(), null);
+                }
+                else
+                {
+                    text.ForEachByte(null);
+                }
             }
         });
         Assert.Equal("visitor", error.ParamName);
@@ -172,8 +195,14 @@ public class ByteVisitorContractTest
         var text = new AsciiString(new byte[] { 1, 2 }, false);
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
-            if (descending) text.ForEachByteDesc(int.MaxValue, 1, null);
-            else text.ForEachByte(int.MaxValue, 1, null);
+            if (descending)
+            {
+                text.ForEachByteDesc(int.MaxValue, 1, null);
+            }
+            else
+            {
+                text.ForEachByte(int.MaxValue, 1, null);
+            }
         });
     }
 
@@ -215,7 +244,10 @@ public class ByteVisitorContractTest
         Assert.Equal(-1, text.ForEachByte(value =>
         {
             visited.Add(value);
-            if (visited.Count == 1) bytes[2] = 128;
+            if (visited.Count == 1)
+            {
+                bytes[2] = 128;
+            }
             return true;
         }));
         Assert.Equal(new byte[] { 10, 128, 255 }, visited);

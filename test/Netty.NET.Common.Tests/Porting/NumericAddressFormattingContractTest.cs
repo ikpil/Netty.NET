@@ -101,7 +101,10 @@ public class NumericAddressFormattingContractTest
         public override string ToString()
         {
             DisplayCalls++;
-            if (throws) throw new InvalidOperationException("Display override must not format a numeric address.");
+            if (throws)
+            {
+                throw new InvalidOperationException("Display override must not format a numeric address.");
+            }
             return "display.example.invalid";
         }
     }

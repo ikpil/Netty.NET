@@ -699,7 +699,8 @@ internal sealed class Bzip2DivSufSort
                         {
                             SA[i++] = buf[j]; buf[j++] = SA[i];
                         }
-                        SA[i] = buf[j]; buf[j] = t;
+                        SA[i] = buf[j];
+                        buf[j] = t;
                         return;
                     }
                 } while (SA[k] < 0);
@@ -729,7 +730,8 @@ internal sealed class Bzip2DivSufSort
                             SA[i++] = buf[j];
                             buf[j++] = SA[i];
                         }
-                        SA[i] = buf[j]; buf[j] = t;
+                        SA[i] = buf[j];
+                        buf[j] = t;
                         return;
                     }
                 } while (SA[k] < 0);
@@ -1844,11 +1846,13 @@ internal sealed class Bzip2DivSufSort
                             if (1 < a - first)
                             {
                                 stack[ssize++] = new StackEntry(isaD, b, last, TrLog(last - b));
-                                last = a; limit = TrLog(a - first);
+                                last = a;
+                                limit = TrLog(a - first);
                             }
                             else if (1 < last - b)
                             {
-                                first = b; limit = TrLog(last - b);
+                                first = b;
+                                limit = TrLog(last - b);
                             }
                             else
                             {
@@ -1952,18 +1956,23 @@ internal sealed class Bzip2DivSufSort
                         if (a - first <= last - a)
                         {
                             stack[ssize++] = new StackEntry(isaD, a, last, -3);
-                            isaD += 1; last = a; limit = next;
+                            isaD += 1;
+                            last = a;
+                            limit = next;
                         }
                         else
                         {
                             if (1 < last - a)
                             {
                                 stack[ssize++] = new StackEntry(isaD + 1, first, a, next);
-                                first = a; limit = -3;
+                                first = a;
+                                limit = -3;
                             }
                             else
                             {
-                                isaD += 1; last = a; limit = next;
+                                isaD += 1;
+                                last = a;
+                                limit = next;
                             }
                         }
                     }
@@ -2257,7 +2266,8 @@ internal sealed class Bzip2DivSufSort
                 {
                     break; // BUGFIX : Added to prevent an infinite loop in the original code
                 }
-                limit += 1; isaD += 1;
+                limit += 1;
+                isaD += 1;
             }
         }
 

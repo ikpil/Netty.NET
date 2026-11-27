@@ -51,7 +51,10 @@ public class CompositeByteBufReferenceTest
     private static void ReleaseAll(params ByteBuf[] buffers)
     {
         foreach (ByteBuf buffer in buffers)
-            if (buffer?.RefCnt > 0) buffer.Release(buffer.RefCnt);
+            if (buffer?.RefCnt > 0)
+            {
+                buffer.Release(buffer.RefCnt);
+            }
     }
 
     [Theory]
@@ -89,7 +92,10 @@ public class CompositeByteBufReferenceTest
             Assert.True(buf.Release());
             Assert.All(new[] { c1, c2, c3 }, c => Assert.Equal(0, c.RefCnt));
         }
-        finally { ReleaseAll(buf, c1, c2, c3); }
+        finally
+        {
+            ReleaseAll(buf, c1, c2, c3);
+        }
     }
 
     [Theory]
@@ -138,7 +144,10 @@ public class CompositeByteBufReferenceTest
             // CLR: every claim is gone.
             Assert.All(new[] { c1, c2, c3 }, c => Assert.Equal(0, c.RefCnt));
         }
-        finally { ReleaseAll(bufB, bufA, c1, c2, c3); }
+        finally
+        {
+            ReleaseAll(bufB, bufA, c1, c2, c3);
+        }
     }
 
     [Theory]
@@ -178,7 +187,10 @@ public class CompositeByteBufReferenceTest
             Assert.True(buf.Release());
             Assert.All(new[] { c1, c2, c3 }, c => Assert.Equal(0, c.RefCnt));
         }
-        finally { ReleaseAll(buf, c1, c2, c3); }
+        finally
+        {
+            ReleaseAll(buf, c1, c2, c3);
+        }
     }
 
     [Theory]
@@ -208,7 +220,10 @@ public class CompositeByteBufReferenceTest
             Assert.Equal(2, source.RefCnt);
             Assert.False(view.Release());
         }
-        finally { composite.Release(); }
+        finally
+        {
+            composite.Release();
+        }
         Assert.Equal(0, source.RefCnt);
         Assert.Equal(0, view.RefCnt);
     }
@@ -233,7 +248,10 @@ public class CompositeByteBufReferenceTest
             cbuf.Release();
             Assert.Equal(0, buf.RefCnt);
         }
-        finally { ReleaseAll(cbuf, buf); }
+        finally
+        {
+            ReleaseAll(cbuf, buf);
+        }
     }
 
     [Theory]
@@ -266,7 +284,10 @@ public class CompositeByteBufReferenceTest
             Assert.Equal(0, buf2.RefCnt);
             Assert.Equal(0, buf3.RefCnt);
         }
-        finally { ReleaseAll(cbuf, buf, buf2, buf3); }
+        finally
+        {
+            ReleaseAll(cbuf, buf, buf2, buf3);
+        }
     }
 
     [Theory]
@@ -302,7 +323,10 @@ public class CompositeByteBufReferenceTest
             Assert.Equal(0, buf3.RefCnt);
             Assert.Equal(1, Unpooled.EmptyBuffer.RefCnt);
         }
-        finally { ReleaseAll(cbuf, buf1, buf3); }
+        finally
+        {
+            ReleaseAll(cbuf, buf1, buf3);
+        }
     }
 
     [Theory]
@@ -344,6 +368,9 @@ public class CompositeByteBufReferenceTest
             Assert.Equal(0, buf2.RefCnt);
             Assert.Equal(1, Unpooled.EmptyBuffer.RefCnt);
         }
-        finally { ReleaseAll(cbuf, buf1, buf2); }
+        finally
+        {
+            ReleaseAll(cbuf, buf1, buf2);
+        }
     }
 }

@@ -132,7 +132,10 @@ public class ConstantPoolNativeContractTest
         Assert.NotNull(id.GetMethod);
         Assert.Null(id.SetMethod);
         Assert.Null(type.GetMethod("Id"));
-        if (type == typeof(IAttributeKey)) return;
+        if (type == typeof(IAttributeKey))
+        {
+            return;
+        }
         var name = type.GetProperty("Name");
         Assert.NotNull(name);
         Assert.Equal(typeof(string), name.PropertyType);

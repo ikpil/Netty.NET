@@ -72,7 +72,10 @@ public class IpScopeParsingContractTest
             Assert.Null(NetUtil.CreateInetAddressFromIpAddressString("fe80::1%NEG42"));
             Assert.Null(NetUtil.CreateInetAddressFromIpAddressString("fe80::1% 42"));
         }
-        finally { CultureInfo.CurrentCulture = previous; }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
     }
 
     [Theory]

@@ -24,7 +24,10 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
 
     public LinkedBlockingQueue(int boundedCapacity, IEqualityComparer<T> comparer)
     {
-        if (boundedCapacity <= 0) throw new ArgumentException("capacity must be positive", nameof(boundedCapacity));
+        if (boundedCapacity <= 0)
+        {
+            throw new ArgumentException("capacity must be positive", nameof(boundedCapacity));
+        }
         ArgumentNullException.ThrowIfNull(comparer);
         capacity = boundedCapacity;
         this.comparer = comparer;
@@ -47,10 +50,16 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
 
     public bool TryEnqueue(T item)
     {
-        if (item is null) throw new ArgumentNullException(nameof(item));
+        if (item is null)
+        {
+            throw new ArgumentNullException(nameof(item));
+        }
         using (UninterruptibleMonitor.Enter(gate))
         {
-            if (queue.Count >= capacity) return false;
+            if (queue.Count >= capacity)
+            {
+                return false;
+            }
             queue.AddLast(item);
             Volatile.Write(ref count, queue.Count);
             Monitor.PulseAll(gate);
@@ -60,7 +69,10 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
 
     public void Add(T item)
     {
-        if (!TryEnqueue(item)) throw new InvalidOperationException("Queue full");
+        if (!TryEnqueue(item))
+        {
+            throw new InvalidOperationException("Queue full");
+        }
     }
 
     public bool TryDequeue(out T item)
@@ -76,7 +88,11 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
     private bool Poll(out T item)
     {
         var head = queue.First;
-        if (head == null) { item = default; return false; }
+        if (head == null)
+        {
+            item = default;
+            return false;
+        }
         item = head.Value;
         queue.RemoveFirst();
         Volatile.Write(ref count, queue.Count);
@@ -88,7 +104,11 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
         using (UninterruptibleMonitor.Enter(gate))
         {
             var head = queue.First;
-            if (head == null) { item = default; return false; }
+            if (head == null)
+            {
+                item = default;
+                return false;
+            }
             item = head.Value;
             return true;
         }
@@ -96,12 +116,18 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
 
     public virtual bool TryRemove(T item)
     {
-        if (item is null) return false;
+        if (item is null)
+        {
+            return false;
+        }
         using (UninterruptibleMonitor.Enter(gate))
         {
             var node = queue.First;
             while (node != null && !comparer.Equals(node.Value, item)) node = node.Next;
-            if (node == null) return false;
+            if (node == null)
+            {
+                return false;
+            }
             queue.Remove(node);
             Volatile.Write(ref count, queue.Count);
             return true;
@@ -130,7 +156,11 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
             while (queue.Count == 0)
             {
                 long elapsed = Stopwatch.GetElapsedTime(started).Ticks;
-                if (timeout.Ticks <= elapsed) { item = default; return false; }
+                if (timeout.Ticks <= elapsed)
+                {
+                    item = default;
+                    return false;
+                }
                 long remaining = timeout.Ticks - elapsed;
                 int millis = (int)Math.Min(int.MaxValue, 1 + (remaining - 1) / TimeSpan.TicksPerMillisecond);
                 Monitor.Wait(gate, millis);

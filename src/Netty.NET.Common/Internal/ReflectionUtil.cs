@@ -49,10 +49,19 @@ public static class ReflectionUtil
         for (Type currentClass = thisClass; currentClass != null; currentClass = currentClass.BaseType)
         {
             Type genericSuperType = currentClass.BaseType;
-            if (genericSuperType == null) continue;
+            if (genericSuperType == null)
+            {
+                continue;
+            }
             Type definition = genericSuperType.IsGenericType ? genericSuperType.GetGenericTypeDefinition() : genericSuperType;
-            if (definition != superclassDefinition) continue;
-            if (parametrizedSuperclass.IsConstructedGenericType && genericSuperType != parametrizedSuperclass) continue;
+            if (definition != superclassDefinition)
+            {
+                continue;
+            }
+            if (parametrizedSuperclass.IsConstructedGenericType && genericSuperType != parametrizedSuperclass)
+            {
+                continue;
+            }
             Type[] parameters = definition.GetGenericArguments();
             int index = Array.FindIndex(parameters, parameter => parameter.Name == typeParamName);
             if (index < 0)
@@ -63,7 +72,10 @@ public static class ReflectionUtil
                 // Resolved type parameter points to another type parameter.
                 return Fail(thisClass, typeParamName);
             }
-            if (actualType.ContainsGenericParameters) return Fail(thisClass, typeParamName);
+            if (actualType.ContainsGenericParameters)
+            {
+                return Fail(thisClass, typeParamName);
+            }
             return actualType;
         }
         return Fail(thisClass, typeParamName);

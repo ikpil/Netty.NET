@@ -48,7 +48,10 @@ public class ByteBufScalarRoundTripSourceTest
 
         public void Dispose()
         {
-            if (Root.RefCnt > 0) Root.Release();
+            if (Root.RefCnt > 0)
+            {
+                Root.Release();
+            }
             Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
@@ -68,7 +71,10 @@ public class ByteBufScalarRoundTripSourceTest
         foreach (ScalarKind kind in Enum.GetValues<ScalarKind>())
         foreach (bool sequential in new[] { false, true })
         {
-            if (sequential && kind is ScalarKind.Float or ScalarKind.Double) continue;
+            if (sequential && kind is ScalarKind.Float or ScalarKind.Double)
+                    {
+                        continue;
+                    }
             yield return [provider, kind, false, sequential];
             if (kind is not (ScalarKind.SignedByte or ScalarKind.UnsignedByte))
                 yield return [provider, kind, true, sequential];
@@ -83,11 +89,20 @@ public class ByteBufScalarRoundTripSourceTest
 
     private static long NextBits(Random random, int kind, bool sequential)
     {
-        if (kind == 9) return BitConverter.SingleToInt32Bits(random.NextSingle());
-        if (kind == 10) return BitConverter.DoubleToInt64Bits(random.NextDouble());
+        if (kind == 9)
+        {
+            return BitConverter.SingleToInt32Bits(random.NextSingle());
+        }
+        if (kind == 10)
+        {
+            return BitConverter.DoubleToInt64Bits(random.NextDouble());
+        }
         Span<byte> bytes = stackalloc byte[8];
         random.NextBytes(bytes[..(kind == 8 ? 8 : 4)]);
-        if (kind == 8) return BinaryPrimitives.ReadInt64BigEndian(bytes);
+        if (kind == 8)
+        {
+            return BinaryPrimitives.ReadInt64BigEndian(bytes);
+        }
         int value = BinaryPrimitives.ReadInt32BigEndian(bytes);
         return kind switch
         {
@@ -109,26 +124,53 @@ public class ByteBufScalarRoundTripSourceTest
     private static void Model(Span<byte> destination, long bits, int kind, bool little)
     {
         int value = unchecked((int)bits);
-        if (destination.Length == 1) destination[0] = unchecked((byte)bits);
+        if (destination.Length == 1)
+        {
+            destination[0] = unchecked((byte)bits);
+        }
         else if (destination.Length == 2)
         {
-            if (little) BinaryPrimitives.WriteInt16LittleEndian(destination, unchecked((short)bits));
-            else BinaryPrimitives.WriteInt16BigEndian(destination, unchecked((short)bits));
+            if (little)
+            {
+                BinaryPrimitives.WriteInt16LittleEndian(destination, unchecked((short)bits));
+            }
+            else
+            {
+                BinaryPrimitives.WriteInt16BigEndian(destination, unchecked((short)bits));
+            }
         }
         else if (destination.Length == 3)
         {
             Span<byte> word = stackalloc byte[4];
-            if (little) BinaryPrimitives.WriteInt32LittleEndian(word, value);
-            else BinaryPrimitives.WriteInt32BigEndian(word, value);
+            if (little)
+            {
+                BinaryPrimitives.WriteInt32LittleEndian(word, value);
+            }
+            else
+            {
+                BinaryPrimitives.WriteInt32BigEndian(word, value);
+            }
             (little ? word[..3] : word[1..]).CopyTo(destination);
         }
         else if (destination.Length == 4)
         {
-            if (little) BinaryPrimitives.WriteInt32LittleEndian(destination, value);
-            else BinaryPrimitives.WriteInt32BigEndian(destination, value);
+            if (little)
+            {
+                BinaryPrimitives.WriteInt32LittleEndian(destination, value);
+            }
+            else
+            {
+                BinaryPrimitives.WriteInt32BigEndian(destination, value);
+            }
         }
-        else if (little) BinaryPrimitives.WriteInt64LittleEndian(destination, bits);
-        else BinaryPrimitives.WriteInt64BigEndian(destination, bits);
+        else if (little)
+        {
+            BinaryPrimitives.WriteInt64LittleEndian(destination, bits);
+        }
+        else
+        {
+            BinaryPrimitives.WriteInt64BigEndian(destination, bits);
+        }
     }
 
     private static void Store(ByteBuf b, int index, long bits, int kind, bool little, bool sequential)
@@ -138,33 +180,125 @@ public class ByteBufScalarRoundTripSourceTest
         {
             switch (kind)
             {
-                case 0 or 1: b.WriteByte(unchecked((byte)bits)); break;
-                case 2 or 3: if (little) b.WriteShortLE(value); else b.WriteShort(value); break;
-                case 4 or 5: if (little) b.WriteMediumLE(value); else b.WriteMedium(value); break;
-                case 6 or 7: if (little) b.WriteIntLE(value); else b.WriteInt(value); break;
-                default: if (little) b.WriteLongLE(bits); else b.WriteLong(bits); break;
+                case 0 or 1:
+                    b.WriteByte(unchecked((byte)bits));
+                    break;
+                case 2 or 3:
+                    if (little)
+                    {
+                        b.WriteShortLE(value);
+                    }
+                    else
+                    {
+                        b.WriteShort(value);
+                    }
+                    break;
+                case 4 or 5:
+                    if (little)
+                    {
+                        b.WriteMediumLE(value);
+                    }
+                    else
+                    {
+                        b.WriteMedium(value);
+                    }
+                    break;
+                case 6 or 7:
+                    if (little)
+                    {
+                        b.WriteIntLE(value);
+                    }
+                    else
+                    {
+                        b.WriteInt(value);
+                    }
+                    break;
+                default:
+                    if (little)
+                    {
+                        b.WriteLongLE(bits);
+                    }
+                    else
+                    {
+                        b.WriteLong(bits);
+                    }
+                    break;
             }
             return;
         }
         switch (kind)
         {
-            case 0 or 1: b.SetByte(index, unchecked((byte)bits)); break;
-            case 2 or 3: if (little) b.SetShortLE(index, value); else b.SetShort(index, value); break;
-            case 4 or 5: if (little) b.SetMediumLE(index, value); else b.SetMedium(index, value); break;
-            case 6 or 7: if (little) b.SetIntLE(index, value); else b.SetInt(index, value); break;
-            case 8: if (little) b.SetLongLE(index, bits); else b.SetLong(index, bits); break;
+            case 0 or 1:
+                b.SetByte(index, unchecked((byte)bits));
+                break;
+            case 2 or 3:
+                if (little)
+                {
+                    b.SetShortLE(index, value);
+                }
+                else
+                {
+                    b.SetShort(index, value);
+                }
+                break;
+            case 4 or 5:
+                if (little)
+                {
+                    b.SetMediumLE(index, value);
+                }
+                else
+                {
+                    b.SetMedium(index, value);
+                }
+                break;
+            case 6 or 7:
+                if (little)
+                {
+                    b.SetIntLE(index, value);
+                }
+                else
+                {
+                    b.SetInt(index, value);
+                }
+                break;
+            case 8:
+                if (little)
+                {
+                    b.SetLongLE(index, bits);
+                }
+                else
+                {
+                    b.SetLong(index, bits);
+                }
+                break;
             case 9:
-                if (little) b.SetFloatLE(index, BitConverter.Int32BitsToSingle(value));
-                else b.SetFloat(index, BitConverter.Int32BitsToSingle(value)); break;
+                if (little)
+                {
+                    b.SetFloatLE(index, BitConverter.Int32BitsToSingle(value));
+                }
+                else
+                {
+                    b.SetFloat(index, BitConverter.Int32BitsToSingle(value));
+                }
+                break;
             default:
-                if (little) b.SetDoubleLE(index, BitConverter.Int64BitsToDouble(bits));
-                else b.SetDouble(index, BitConverter.Int64BitsToDouble(bits)); break;
+                if (little)
+                {
+                    b.SetDoubleLE(index, BitConverter.Int64BitsToDouble(bits));
+                }
+                else
+                {
+                    b.SetDouble(index, BitConverter.Int64BitsToDouble(bits));
+                }
+                break;
         }
     }
 
     private static long Load(ByteBuf b, int index, int kind, bool little, bool sequential)
     {
-        if (sequential) return kind switch
+        if (sequential)
+        {
+            return kind switch
         {
             0 => unchecked((sbyte)b.ReadByte()), 1 => b.ReadByte(),
             2 => little ? b.ReadShortLE() : b.ReadShort(),
@@ -175,6 +309,7 @@ public class ByteBufScalarRoundTripSourceTest
             7 => little ? b.ReadUnsignedIntLE() : b.ReadUnsignedInt(),
             _ => little ? b.ReadLongLE() : b.ReadLong()
         };
+        }
         return kind switch
         {
             0 => unchecked((sbyte)b.GetByte(index)), 1 => b.GetByte(index),

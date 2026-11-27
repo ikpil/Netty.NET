@@ -36,7 +36,10 @@ public class TransportFoundationContractTest
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("ar-SA");
             Assert.Equal("WriteBufferWaterMark(low: 123, high: 456)", new WriteBufferWaterMark(123, 456).ToString());
         }
-        finally { CultureInfo.CurrentCulture = previous; }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
     }
 
     [Fact]
@@ -90,7 +93,11 @@ public class TransportFoundationContractTest
             Assert.Equal(12, new DefaultMessageSizeEstimator(12).NewHandle().Size("unknown"));
             Assert.Throws<ArgumentOutOfRangeException>(() => new DefaultMessageSizeEstimator(-1));
         }
-        finally { holder.Release(); file.Release(); }
+        finally
+        {
+            holder.Release();
+            file.Release();
+        }
     }
 
     [Theory]
@@ -118,11 +125,17 @@ public class TransportFoundationContractTest
                 Assert.Equal(start, region.Position());
                 Assert.Equal(count, region.Count());
             }
-            finally { region.Release(); }
+            finally
+            {
+                region.Release();
+            }
             Assert.False(region.IsOpen());
             Assert.Throws<ObjectDisposedException>(() => source.ReadByte());
         }
-        finally { File.Delete(path); }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     [Fact]
@@ -177,9 +190,15 @@ public class TransportFoundationContractTest
                 Assert.Throws<IOException>(() => region.TransferTo(target, 0));
                 Assert.Equal(0, region.Transferred());
             }
-            finally { region.Release(); }
+            finally
+            {
+                region.Release();
+            }
         }
-        finally { File.Delete(path); }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     [Fact]
@@ -196,9 +215,15 @@ public class TransportFoundationContractTest
                 Assert.Throws<IOException>(() => region.TransferTo(target, 0));
                 Assert.Equal(0, region.Transferred());
             }
-            finally { region.Release(); }
+            finally
+            {
+                region.Release();
+            }
         }
-        finally { File.Delete(path); }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     private sealed class ThrowingStream : MemoryStream

@@ -39,8 +39,14 @@ public class NativeThreadFactoryContractTest
         internal Exception Error;
         public override void Run()
         {
-            try { base.Run(); }
-            catch (Exception error) { Error = error; }
+            try
+            {
+                base.Run();
+            }
+            catch (Exception error)
+            {
+                Error = error;
+            }
         }
     }
 
@@ -99,7 +105,10 @@ public class NativeThreadFactoryContractTest
                 local.Set(new object());
                 calls++;
             }
-            catch (Exception error) { failure = error; }
+            catch (Exception error)
+            {
+                failure = error;
+            }
         });
         Assert.Equal(ThreadState.Unstarted | ThreadState.Background, thread.ThreadState);
         Assert.StartsWith("nativeThreadFactoryContractTest-", thread.Name);
@@ -125,8 +134,14 @@ public class NativeThreadFactoryContractTest
         {
             return new(() =>
             {
-                try { action(); }
-                catch (Exception error) { Error = error; }
+                try
+                {
+                    action();
+                }
+                catch (Exception error)
+                {
+                    Error = error;
+                }
             }) { Name = name };
         }
     }
@@ -177,13 +192,19 @@ public class NativeThreadFactoryContractTest
             {
                 using (ExecutionContext.SuppressFlow()) thread.Start();
             }
-            else thread.Start();
+            else
+            {
+                thread.Start();
+            }
             Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
             Assert.Equal(suppressed ? null : "at start", observed);
             Assert.Equal("at start", logical.Value);
             Assert.False(ExecutionContext.IsFlowSuppressed());
         }
-        finally { logical.Value = null; }
+        finally
+        {
+            logical.Value = null;
+        }
     }
 
     [Fact]

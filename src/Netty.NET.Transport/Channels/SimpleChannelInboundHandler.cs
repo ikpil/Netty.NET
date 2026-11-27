@@ -103,11 +103,22 @@ public abstract class SimpleChannelInboundHandler<T> : ChannelInboundHandlerAdap
         try
         {
             if (AcceptInboundMessage(msg))
+            {
                 ChannelRead0(ctx, (T)msg);
+            }
             else
-            { release = false; ctx.FireChannelRead(msg); }
+            {
+                release = false;
+                ctx.FireChannelRead(msg);
+            }
         }
-        finally { if (_autoRelease && release) ReferenceCountUtil.Release(msg); }
+        finally
+        {
+            if (_autoRelease && release)
+            {
+                ReferenceCountUtil.Release(msg);
+            }
+        }
     }
 
     /**

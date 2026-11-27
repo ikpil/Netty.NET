@@ -25,9 +25,15 @@ public class ManualOutboundIoContractTest
         var loop = new ManualIoEventLoop(Thread.CurrentThread, NioIoHandler.NewFactory());
         using var listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         listener.Bind(new IPEndPoint(IPAddress.Loopback, 0));
-        if (!refused) listener.Listen(1);
+        if (!refused)
+        {
+            listener.Listen(1);
+        }
         var target = listener.LocalEndPoint;
-        if (refused) listener.Close();
+        if (refused)
+        {
+            listener.Close();
+        }
         var channel = new NioSocketChannel(AddressFamily.InterNetwork);
         try
         {
@@ -50,7 +56,10 @@ public class ManualOutboundIoContractTest
             Assert.Equal(1, loop.RunNonBlockingTasks(0));
             Assert.True(ordinary);
         }
-        finally { Terminate(loop); }
+        finally
+        {
+            Terminate(loop);
+        }
     }
 
     [Fact]
@@ -73,7 +82,10 @@ public class ManualOutboundIoContractTest
             PumpUntil(loop, () => first.IsCompleted && close.IsCompleted, TimeSpan.FromSeconds(5));
             Assert.ThrowsAny<ClosedChannelException>(() => first.GetAwaiter().GetResult());
         }
-        finally { Terminate(loop); }
+        finally
+        {
+            Terminate(loop);
+        }
     }
 
     [Fact]
@@ -94,7 +106,10 @@ public class ManualOutboundIoContractTest
             PumpUntil(loop, () => connect.IsCompleted && !channel.IsOpen, TimeSpan.FromSeconds(5), tasks: true);
             Assert.True(connect.IsCanceled);
         }
-        finally { Terminate(loop); }
+        finally
+        {
+            Terminate(loop);
+        }
     }
 
     [Fact]
@@ -130,7 +145,10 @@ public class ManualOutboundIoContractTest
             Assert.True(write.IsCompletedSuccessfully);
             Assert.Equal(Length, received);
         }
-        finally { Terminate(loop); }
+        finally
+        {
+            Terminate(loop);
+        }
     }
 
     private static void PumpUntil(ManualIoEventLoop loop, Func<bool> condition, TimeSpan timeout, bool tasks = false)

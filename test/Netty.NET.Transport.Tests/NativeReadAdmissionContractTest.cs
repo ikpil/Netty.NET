@@ -42,7 +42,14 @@ public class NativeReadAdmissionContractTest
             channel.Read();
             Assert.Equal(new byte[] { 1, 2, 3 }, await received.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
         }
-        finally { if (channel != null) await channel.CloseAsync(TestContext.Current.CancellationToken); await Stop(group); }
+        finally
+        {
+            if (channel != null)
+            {
+                await channel.CloseAsync(TestContext.Current.CancellationToken);
+            }
+            await Stop(group);
+        }
     }
 
     [Fact]
@@ -64,7 +71,14 @@ public class NativeReadAdmissionContractTest
             channel.Read();
             Assert.Equal(new byte[] { 4, 5, 6 }, await received.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
         }
-        finally { if (channel != null) await channel.CloseAsync(TestContext.Current.CancellationToken); await Stop(group); }
+        finally
+        {
+            if (channel != null)
+            {
+                await channel.CloseAsync(TestContext.Current.CancellationToken);
+            }
+            await Stop(group);
+        }
     }
 
     [Fact]
@@ -126,7 +140,14 @@ public class NativeReadAdmissionContractTest
             Assert.Same(next, channel.EventLoop);
             Assert.Equal(new byte[] { 7, 8, 9 }, await received.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
         }
-        finally { if (channel != null) await channel.CloseAsync(TestContext.Current.CancellationToken); await Stop(group); }
+        finally
+        {
+            if (channel != null)
+            {
+                await channel.CloseAsync(TestContext.Current.CancellationToken);
+            }
+            await Stop(group);
+        }
     }
 
     private static Task Stop(MultiThreadIoEventLoopGroup group)

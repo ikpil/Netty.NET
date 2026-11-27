@@ -110,7 +110,14 @@ public class SocketChannelNotYetConnectedSourceTest : AbstractClientSocketTest
             client = await fixture.Client.Option(ChannelOption.AUTO_READ, autoRead).Handler(new ReadFortyTwo(read)).ConnectAsync(server.LocalAddress);
             await read.Task.WaitAsync(TimeSpan.FromSeconds(5));
         }
-        finally { if (client != null) await client.CloseAsync(); await server.CloseAsync(); }
+        finally
+        {
+            if (client != null)
+            {
+                await client.CloseAsync();
+            }
+            await server.CloseAsync();
+        }
     }
 
     // CLR: the source's anonymous server handler as a named class; C# anonymous types "can't add methods, events, or

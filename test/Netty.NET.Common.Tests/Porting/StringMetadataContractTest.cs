@@ -79,9 +79,20 @@ public class StringMetadataContractTest
         IEnumerable<string> Values()
         {
             enumerations++;
-            if (enumerations != 1) throw new InvalidOperationException("The input can only be enumerated once.");
-            try { yield return "gzip"; yield return "br"; yield return "identity"; }
-            finally { disposals++; }
+            if (enumerations != 1)
+            {
+                throw new InvalidOperationException("The input can only be enumerated once.");
+            }
+            try
+            {
+                yield return "gzip";
+                yield return "br";
+                yield return "identity";
+            }
+            finally
+            {
+                disposals++;
+            }
         }
         Assert.Equal("gzip,br,identity", string.Join(",", Values()));
         Assert.Equal(1, enumerations);

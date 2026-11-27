@@ -32,7 +32,10 @@ public class DerivedByteBufBulkTest
         public void Record(string method, int index, int length, ByteBuf peer = null, int peerIndex = 0)
         {
             Visits.Add(new(method, index, length, peer, peerIndex));
-            if (Fail) throw new IOException("parent policy");
+            if (Fail)
+            {
+                throw new IOException("parent policy");
+            }
         }
     }
     private sealed class ObservedHeap(Observation o) : UnpooledHeapByteBuf(16, 64)
@@ -120,8 +123,14 @@ public class DerivedByteBufBulkTest
 
         public void Dispose()
         {
-            if (Owner?.RefCnt > 0) Assert.True(Owner.Release());
-            if (Root.RefCnt > 0) Assert.True(Root.Release());
+            if (Owner?.RefCnt > 0)
+            {
+                Assert.True(Owner.Release());
+            }
+            if (Root.RefCnt > 0)
+            {
+                Assert.True(Root.Release());
+            }
             Assert.Equal(0, Native.ReservedBytes);
         }
     }
@@ -143,7 +152,10 @@ public class DerivedByteBufBulkTest
                     .AddComponent(new UnpooledHeapByteBuf(5, 5).WriteBytes(Bytes.AsSpan(0, 5)), true)
                     .AddComponent(new UnpooledHeapByteBuf(7, 7).WriteBytes(Bytes.AsSpan(5)), true)
             };
-            if (_owner == null) return;
+            if (_owner == null)
+            {
+                return;
+            }
             _owner.SetBytes(0, Bytes);
             Buffer = storage == 2 && input ? _owner.AsReadOnly() : _owner;
             Buffer.SetIndex(2, 9).MarkReaderIndex().MarkWriterIndex();
@@ -169,10 +181,16 @@ public class DerivedByteBufBulkTest
     {
         if (p.Buffer == null)
         {
-            if (input) return relative ? b.WriteBytes(p.Bytes.AsSpan(peerIndex, length)) : b.SetBytes(index, p.Bytes.AsSpan(peerIndex, length));
+            if (input)
+            {
+                return relative ? b.WriteBytes(p.Bytes.AsSpan(peerIndex, length)) : b.SetBytes(index, p.Bytes.AsSpan(peerIndex, length));
+            }
             return relative ? b.ReadBytes(p.Bytes.AsSpan(peerIndex, length)) : b.GetBytes(index, p.Bytes.AsSpan(peerIndex, length));
         }
-        if (input) return relative ? b.WriteBytes(p.Buffer, length) : b.SetBytes(index, p.Buffer, peerIndex, length);
+        if (input)
+        {
+            return relative ? b.WriteBytes(p.Buffer, length) : b.SetBytes(index, p.Buffer, peerIndex, length);
+        }
         return relative ? b.ReadBytes(p.Buffer, length) : b.GetBytes(index, p.Buffer, peerIndex, length);
     }
 

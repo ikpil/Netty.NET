@@ -52,7 +52,10 @@ public class EmptyByteBufTest
             Assert.Equal(1, nonEmpty.WriterIndex);
             Assert.Equal(0, empty.WriterIndex);
         }
-        finally { Assert.True(nonEmpty.Release()); }
+        finally
+        {
+            Assert.True(nonEmpty.Release());
+        }
     }
 
     [Fact]
@@ -126,7 +129,10 @@ public class EmptyByteBufTest
             Assert.Equal(0, metric.UsedDirectMemory);
             Assert.Equal(0, native.ReservedBytes);
         }
-        finally { (allocator as IDisposable)?.Dispose(); }
+        finally
+        {
+            (allocator as IDisposable)?.Dispose();
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -158,7 +164,10 @@ public class EmptyByteBufTest
             Assert.Equal(emptyAbstract.GetHashCode(), empty.GetHashCode());
             Assert.Equal(1, empty.GetHashCode());
         }
-        finally { Assert.True(emptyAbstract.Release()); }
+        finally
+        {
+            Assert.True(emptyAbstract.Release());
+        }
         Assert.False(empty.Release());
     }
 
@@ -268,7 +277,10 @@ public class EmptyByteBufTest
             Assert.Equal(0, buffer.ReaderIndex);
             Assert.False(Unpooled.EmptyBuffer.Release());
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Theory]

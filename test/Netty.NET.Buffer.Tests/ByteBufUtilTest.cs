@@ -465,7 +465,10 @@ public class ByteBufUtilTest
             Assert.Equal(59999, completed);
             Assert.Equal((0, 13, 1), (b.ReaderIndex, b.WriterIndex, b.RefCnt));
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Fact]
@@ -570,7 +573,14 @@ public class ByteBufUtilTest
             needle.Release();
 
         }
-        finally { foreach (ByteBuf copy in copies) if (copy.RefCnt > 0) copy.Release(); }
+        finally
+        {
+            foreach (ByteBuf copy in copies)
+        if (copy.RefCnt > 0)
+        {
+            copy.Release();
+        }
+        }
     }
 
     [Fact]
@@ -608,7 +618,11 @@ public class ByteBufUtilTest
             Assert.True(ByteBufUtil.Equals(first, iB1, second, iB2, length));
 
         }
-        finally { first.Release(); second.Release(); }
+        finally
+        {
+            first.Release();
+            second.Release();
+        }
     }
 
     [Fact]
@@ -632,7 +646,11 @@ public class ByteBufUtilTest
             Assert.False(ByteBufUtil.Equals(first, iB1, second, iB2, length));
 
         }
-        finally { first.Release(); second.Release(); }
+        finally
+        {
+            first.Release();
+            second.Release();
+        }
     }
 
     [Fact]
@@ -653,7 +671,11 @@ public class ByteBufUtilTest
                     Math.Max(b1.Length, b2.Length) * 2));
 
         }
-        finally { first.Release(); second.Release(); }
+        finally
+        {
+            first.Release();
+            second.Release();
+        }
     }
 
     [Fact]
@@ -676,7 +698,11 @@ public class ByteBufUtilTest
             });
 
         }
-        finally { first.Release(); second.Release(); }
+        finally
+        {
+            first.Release();
+            second.Release();
+        }
     }
 
     [Fact]

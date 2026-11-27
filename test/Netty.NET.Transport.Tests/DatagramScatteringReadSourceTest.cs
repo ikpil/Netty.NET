@@ -82,7 +82,10 @@ public class DatagramScatteringReadSourceTest
                 .Option(ChannelOption.RECVBUF_ALLOCATOR, receiveAllocator)
                 .Option(ChannelOption.AUTO_READ, false)
                 .BindAsync(new IPEndPoint(IPAddress.Loopback, 0), token);
-            if (connected) await receiver.ConnectAsync(sender.LocalAddress, cancellationToken: token);
+            if (connected)
+            {
+                await receiver.ConnectAsync(sender.LocalAddress, cancellationToken: token);
+            }
 
             var writes = new Task[numPackets];
             for (int i = 0; i < writes.Length; i++)
@@ -95,7 +98,10 @@ public class DatagramScatteringReadSourceTest
 
             await capture.Completed.Task.WaitAsync(TimeSpan.FromSeconds(10), token);
         }
-        finally { await loop.StopAsync(); }
+        finally
+        {
+            await loop.StopAsync();
+        }
     }
 
     [Theory]
@@ -130,14 +136,20 @@ public class DatagramScatteringReadSourceTest
             var receiver = await NewBootstrap(loop, allocator, capture)
                 .Option(ChannelOption.RECVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator(1400, 1400, 64 * 1024))
                 .BindAsync(new IPEndPoint(IPAddress.Loopback, 0), token);
-            if (connected) await receiver.ConnectAsync(sender.LocalAddress, cancellationToken: token);
+            if (connected)
+            {
+                await receiver.ConnectAsync(sender.LocalAddress, cancellationToken: token);
+            }
 
             await sender.WriteAndFlushAsync(new DatagramPacket(allocator.DirectBuffer().WriteBytes(bytes),
                 (IPEndPoint)receiver.LocalAddress), token);
 
             await capture.Completed.Task.WaitAsync(TimeSpan.FromSeconds(10), token);
         }
-        finally { await loop.StopAsync(); }
+        finally
+        {
+            await loop.StopAsync();
+        }
     }
 
     private static Bootstrap NewBootstrap(MultiThreadIoEventLoopGroup loop, IByteBufAllocator allocator, IChannelHandler handler)
@@ -188,7 +200,10 @@ public class DatagramScatteringReadSourceTest
                 _batch = 0;
                 ctx.Read();
             }
-            if (_received == expected) Completed.TrySetResult();
+            if (_received == expected)
+            {
+                Completed.TrySetResult();
+            }
         }
 
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)

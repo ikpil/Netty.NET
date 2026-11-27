@@ -71,12 +71,17 @@ public static class HttpHeaderValidationUtil
         int len = name.Length();
         switch (len)
         {
-            case 2: return ignoreTeHeader? false : ContentEqualsIgnoreCase(name, HttpHeaderNames.TE);
-            case 7: return ContentEqualsIgnoreCase(name, HttpHeaderNames.UPGRADE);
-            case 10: return ContentEqualsIgnoreCase(name, HttpHeaderNames.CONNECTION) ||
+            case 2:
+                return ignoreTeHeader? false : ContentEqualsIgnoreCase(name, HttpHeaderNames.TE);
+            case 7:
+                return ContentEqualsIgnoreCase(name, HttpHeaderNames.UPGRADE);
+            case 10:
+                return ContentEqualsIgnoreCase(name, HttpHeaderNames.CONNECTION) ||
                     ContentEqualsIgnoreCase(name, KEEP_ALIVE);
-            case 16: return ContentEqualsIgnoreCase(name, PROXY_CONNECTION);
-            case 17: return ContentEqualsIgnoreCase(name, HttpHeaderNames.TRANSFER_ENCODING);
+            case 16:
+                return ContentEqualsIgnoreCase(name, PROXY_CONNECTION);
+            case 17:
+                return ContentEqualsIgnoreCase(name, HttpHeaderNames.TRANSFER_ENCODING);
             default:
                 return false;
         }

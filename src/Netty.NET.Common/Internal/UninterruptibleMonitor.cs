@@ -13,10 +13,20 @@ internal static class UninterruptibleMonitor
         bool interrupted = false;
         for (;;)
         {
-            try { Monitor.Enter(monitor); break; }
-            catch (ThreadInterruptedException) { interrupted = true; }
+            try
+            {
+                Monitor.Enter(monitor);
+                break;
+            }
+            catch (ThreadInterruptedException)
+            {
+                interrupted = true;
+            }
         }
-        if (interrupted) Thread.CurrentThread.Interrupt();
+        if (interrupted)
+        {
+            Thread.CurrentThread.Interrupt();
+        }
         return new Lease(monitor);
     }
 

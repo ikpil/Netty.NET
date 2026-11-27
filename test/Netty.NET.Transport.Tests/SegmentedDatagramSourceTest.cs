@@ -73,7 +73,10 @@ public class SegmentedDatagramSourceTest
         // Enable GRO and also ensure we can read everything with one read as otherwise
         // we will drop things on the floor.
         // Room for two batches, so the batch is read with recvmmsg instead of recvmsg.
-        if (gro) Assert.Skip("Kernel UDP GRO and scattering are unavailable on the managed transport.");
+        if (gro)
+        {
+            Assert.Skip("Kernel UDP GRO and scattering are unavailable on the managed transport.");
+        }
         var token = TestContext.Current.CancellationToken;
         using var adaptiveAllocator = adaptive ? new AdaptiveByteBufAllocator() : null;
         IByteBufAllocator allocator = adaptiveAllocator ?? (IByteBufAllocator)PooledByteBufAllocator.Default;
@@ -105,7 +108,10 @@ public class SegmentedDatagramSourceTest
             await sender.WriteAndFlushAsync(new SegmentedDatagramPacket(buffer, segmentSize, (IPEndPoint)receiver.LocalAddress), token);
             await capture.Completed.Task.WaitAsync(TimeSpan.FromSeconds(10), token);
         }
-        finally { await loop.StopAsync(); }
+        finally
+        {
+            await loop.StopAsync();
+        }
     }
 
     private static Bootstrap NewBootstrap(MultiThreadIoEventLoopGroup loop, IByteBufAllocator allocator, IChannelHandler handler)
@@ -130,7 +136,10 @@ public class SegmentedDatagramSourceTest
         protected override void ChannelRead0(IChannelHandlerContext ctx, DatagramPacket packet)
         {
             Assert.Equal(segmentSize, packet.Content.ReadableBytes);
-            if (++_received == expected) Completed.TrySetResult();
+            if (++_received == expected)
+            {
+                Completed.TrySetResult();
+            }
         }
 
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)

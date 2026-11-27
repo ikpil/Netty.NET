@@ -132,13 +132,22 @@ public class ChannelGroupContractTest
                 Assert.Equal(2, content.RefCnt);
                 Assert.Null(excluded.ReadOutbound());
             }
-            finally { ReferenceCountUtil.Release(firstMessage); ReferenceCountUtil.Release(secondMessage); }
+            finally
+            {
+                ReferenceCountUtil.Release(firstMessage);
+                ReferenceCountUtil.Release(secondMessage);
+            }
             Assert.Equal(0, content.RefCnt);
             server.Verify(channel => channel.WriteAsync(It.IsAny<object>(), It.IsAny<CancellationToken>()), Times.Never);
             server.Verify(channel => channel.WriteAndFlushAsync(It.IsAny<object>(), It.IsAny<CancellationToken>()), Times.Never);
             server.Verify(channel => channel.Flush(), Times.Never);
         }
-        finally { first.FinishAndReleaseAll(); second.FinishAndReleaseAll(); excluded.FinishAndReleaseAll(); }
+        finally
+        {
+            first.FinishAndReleaseAll();
+            second.FinishAndReleaseAll();
+            excluded.FinishAndReleaseAll();
+        }
     }
 
     [Theory]
@@ -148,7 +157,10 @@ public class ChannelGroupContractTest
     {
         var group = new DefaultChannelGroup();
         var channel = new EmbeddedChannel();
-        if (!empty) group.Add(channel);
+        if (!empty)
+        {
+            group.Add(channel);
+        }
         var buffer = Unpooled.Buffer(1).WriteByte(1);
         try
         {
@@ -158,7 +170,10 @@ public class ChannelGroupContractTest
             Assert.Equal(0, buffer.RefCnt);
             Assert.Null(channel.ReadOutbound());
         }
-        finally { channel.FinishAndReleaseAll(); }
+        finally
+        {
+            channel.FinishAndReleaseAll();
+        }
     }
 
     [Theory]
@@ -177,12 +192,23 @@ public class ChannelGroupContractTest
         group.Add(server.Object);
         switch (operation)
         {
-            case "close": server.Setup(channel => channel.CloseAsync(It.IsAny<CancellationToken>())).Callback(() => order.Add(server.Object)).Returns(Task.CompletedTask); break;
-            case "disconnect": server.Setup(channel => channel.DisconnectAsync(It.IsAny<CancellationToken>())).Callback(() => order.Add(server.Object)).Returns(Task.CompletedTask); break;
-            case "deregister": server.Setup(channel => channel.DeregisterAsync(It.IsAny<CancellationToken>())).Callback(() => order.Add(server.Object)).Returns(Task.CompletedTask); break;
+            case "close":
+                server.Setup(channel => channel.CloseAsync(It.IsAny<CancellationToken>())).Callback(() => order.Add(server.Object)).Returns(Task.CompletedTask);
+                break;
+            case "disconnect":
+                server.Setup(channel => channel.DisconnectAsync(It.IsAny<CancellationToken>())).Callback(() => order.Add(server.Object)).Returns(Task.CompletedTask);
+                break;
+            case "deregister":
+                server.Setup(channel => channel.DeregisterAsync(It.IsAny<CancellationToken>())).Callback(() => order.Add(server.Object)).Returns(Task.CompletedTask);
+                break;
         }
         Assert.Same(server.Object, group.First());
-        await Operate(group, operation, channel => { if (ReferenceEquals(channel, child.Object)) order.Add(channel); return true; });
+        await Operate(group, operation, channel => {
+            if (ReferenceEquals(channel, child.Object))
+            {
+                order.Add(channel);
+            }
+            return true; });
         Assert.Equal(2, order.Count);
         Assert.Same(server.Object, order[0]);
         Assert.Same(child.Object, order[1]);
@@ -209,7 +235,12 @@ public class ChannelGroupContractTest
             await snapshot.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.True(later.IsOpen);
         }
-        finally { first.FinishAndReleaseAll(); removed.FinishAndReleaseAll(); later.FinishAndReleaseAll(); }
+        finally
+        {
+            first.FinishAndReleaseAll();
+            removed.FinishAndReleaseAll();
+            later.FinishAndReleaseAll();
+        }
     }
 
     [Fact]
@@ -251,7 +282,10 @@ public class ChannelGroupContractTest
             Assert.Throws<ArgumentException>(() => new ChannelGroupException(input));
             Assert.Throws<ArgumentNullException>(() => new ChannelGroupException(null));
         }
-        finally { child.FinishAndReleaseAll(); }
+        finally
+        {
+            child.FinishAndReleaseAll();
+        }
     }
 
     [Theory]

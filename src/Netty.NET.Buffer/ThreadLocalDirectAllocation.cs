@@ -71,7 +71,10 @@ internal sealed class ThreadLocalDirectAllocation : MemoryManager<byte>
         ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
         ReferenceCountUpdater.Retain(ref _references);
         claim.Activate(this);
-        if (Volatile.Read(ref _disposed) == 0) return claim;
+        if (Volatile.Read(ref _disposed) == 0)
+        {
+            return claim;
+        }
         claim.Dispose();
         throw new ObjectDisposedException(nameof(ThreadLocalDirectAllocation));
     }
@@ -103,19 +106,31 @@ internal sealed class ThreadLocalDirectAllocation : MemoryManager<byte>
 
     protected override void Dispose(bool disposing)
     {
-        if (Interlocked.Exchange(ref _disposed, 1) == 0) ReleaseClaim();
+        if (Interlocked.Exchange(ref _disposed, 1) == 0)
+        {
+            ReleaseClaim();
+        }
     }
 
     private void ReleaseClaim()
     {
-        if (!ReferenceCountUpdater.Release(ref _references)) return;
+        if (!ReferenceCountUpdater.Release(ref _references))
+        {
+            return;
+        }
         NativeMemoryOwner owner = _owner;
         ThreadLocalDirectBufferCache cache = _cache;
         _owner = null;
         _cache = null;
         _memory = default;
-        if (cache == null) owner.Dispose();
-        else cache.Return(owner);
+        if (cache == null)
+        {
+            owner.Dispose();
+        }
+        else
+        {
+            cache.Return(owner);
+        }
     }
 
     private sealed class Claim : IDisposable

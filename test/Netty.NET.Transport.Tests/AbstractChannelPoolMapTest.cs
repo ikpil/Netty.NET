@@ -50,7 +50,10 @@ public class AbstractChannelPoolMapTest
             var error = await Assert.ThrowsAsync<SocketException>(() => pool.AcquireAsync(TestContext.Current.CancellationToken));
             Assert.Equal(SocketError.ConnectionRefused, error.SocketErrorCode);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Fact]
@@ -69,7 +72,10 @@ public class AbstractChannelPoolMapTest
             await pool.Closed.Task.WaitAsync(TimeSpan.FromSeconds(1), TestContext.Current.CancellationToken);
             Assert.True(pool.Closed.Task.IsCompleted);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Fact]
@@ -87,7 +93,10 @@ public class AbstractChannelPoolMapTest
             map.Close();
             Assert.True(pool.Closed.Task.IsCompleted);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     private sealed class TestHandler : AbstractChannelPoolHandler
@@ -103,8 +112,15 @@ public class AbstractChannelPoolMapTest
         public override async Task CloseAsync()
         {
             try
-            { await base.CloseAsync(); Closed.TrySetResult(); }
-            catch (Exception error) { Closed.TrySetException(error); throw; }
+            {
+                await base.CloseAsync();
+                Closed.TrySetResult();
+            }
+            catch (Exception error)
+            {
+                Closed.TrySetException(error);
+                throw;
+            }
         }
     }
     private sealed class PoolMap<TPool>(Func<IEventLoop, TPool> create) : AbstractChannelPoolMap<IEventLoop, TPool>

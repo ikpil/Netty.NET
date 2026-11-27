@@ -77,7 +77,10 @@ public class NetworkInterfaceSnapshotContractTest
                 try
                 {
                     yield return new NamedInterface("first");
-                    if (fail) throw new NetworkInformationException(1);
+                    if (fail)
+                    {
+                        throw new NetworkInformationException(1);
+                    }
                 }
                 finally
                 {

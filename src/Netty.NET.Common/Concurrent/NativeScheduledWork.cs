@@ -74,7 +74,10 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
         _registration = token.UnsafeRegister(static state => ((NativeScheduledWork<T>)state).Cancel(), this);
         // The callback can run before UnsafeRegister returns. The constructor and
         // published paths alone access the immutable registration handle.
-        if (Completion.IsCompleted) _registration.Unregister();
+        if (Completion.IsCompleted)
+        {
+            _registration.Unregister();
+        }
     }
 
     internal Task<T> ResultTask => _completion.Task;
@@ -111,7 +114,10 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
     {
         // Optimization to avoid checking system clock again
         // after deadline has passed and task has been dequeued
-        if (PeriodNanos == 0) _deadlineNanos = 0;
+        if (PeriodNanos == 0)
+        {
+            _deadlineNanos = 0;
+        }
     }
 
     internal void Publish()
@@ -120,7 +126,10 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
         if (Completion.IsCompleted)
         {
             _registration.Unregister();
-            if (IsCanceled) RemoveCanceled();
+            if (IsCanceled)
+            {
+                RemoveCanceled();
+            }
         }
     }
 
@@ -128,7 +137,10 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
     {
         lock (_gate)
         {
-            if (_invocation == 2 || (_invocation == 1 && PeriodNanos == 0)) return;
+            if (_invocation == 2 || (_invocation == 1 && PeriodNanos == 0))
+            {
+                return;
+            }
             _invocation = 2;
             ReleaseInvocation();
             _completion.TrySetCanceled(_token);
@@ -151,7 +163,10 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
     {
         lock (_gate)
         {
-            if (_invocation == 2 || (_invocation == 1 && PeriodNanos == 0)) return;
+            if (_invocation == 2 || (_invocation == 1 && PeriodNanos == 0))
+            {
+                return;
+            }
             _invocation = 2;
             ReleaseInvocation();
             _completion.TrySetCanceled();
@@ -163,7 +178,10 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
     {
         lock (_gate)
         {
-            if (_invocation == 2) return;
+            if (_invocation == 2)
+            {
+                return;
+            }
             _invocation = 2;
             ReleaseInvocation();
             _completion.TrySetException(error);
@@ -173,7 +191,14 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
 
     private void Run()
     {
-        if (Completion.IsCompleted) { if (IsCanceled) RemoveCanceled(); return; }
+        if (Completion.IsCompleted)
+        {
+            if (IsCanceled)
+            {
+                RemoveCanceled();
+            }
+            return;
+        }
         if (DelayNanos() > 0)
         {
             // Not yet expired, need to add or remove from queue
@@ -185,38 +210,69 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
         lock (_gate)
         {
             // check if is done as it may was cancelled
-            if (_invocation != 0) return;
+            if (_invocation != 0)
+            {
+                return;
+            }
             _invocation = 1;
             invocation = new Invocation(_function, _token);
             context = _context;
         }
-        if (PeriodNanos == 0) _registration.Unregister();
+        if (PeriodNanos == 0)
+        {
+            _registration.Unregister();
+        }
         try
         {
-            if (!_canRun()) { FinishCanceled(); return; }
+            if (!_canRun())
+            {
+                FinishCanceled();
+                return;
+            }
             ExecutionContext.Run(context ?? CaptureExecutorContext(), static state => ((Invocation)state).Run(), invocation);
             lock (_gate)
             {
-                if (_invocation == 2) return;
+                if (_invocation == 2)
+                {
+                    return;
+                }
                 if (PeriodNanos == 0)
                 {
                     _invocation = 2;
                     ReleaseInvocation();
                     _completion.TrySetResult(invocation.Result);
                 }
-                else _invocation = 0;
+                else
+                {
+                    _invocation = 0;
+                }
             }
             if (PeriodNanos != 0 && !Completion.IsCompleted)
             {
-                if (!_canReschedule()) { CancelWithoutRemove(); return; }
+                if (!_canReschedule())
+                {
+                    CancelWithoutRemove();
+                    return;
+                }
                 _deadlineNanos = PeriodNanos > 0 ? unchecked(_deadlineNanos + PeriodNanos) : unchecked(_clock() - PeriodNanos);
                 _enqueue(this);
             }
         }
         catch (OperationCanceledException error) when (_token.IsCancellationRequested && error.CancellationToken == _token)
-        { FinishCanceled(_token); }
-        catch (Exception error) { Reject(error); }
-        finally { if (Completion.IsCompleted) _registration.Unregister(); }
+        {
+            FinishCanceled(_token);
+        }
+        catch (Exception error)
+        {
+            Reject(error);
+        }
+        finally
+        {
+            if (Completion.IsCompleted)
+            {
+                _registration.Unregister();
+            }
+        }
     }
 
     private void FinishCanceled(CancellationToken token = default)
@@ -247,10 +303,19 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
     internal static ExecutionContext CaptureExecutorContext()
     {
         bool suppressed = ExecutionContext.IsFlowSuppressed();
-        if (!suppressed) return ExecutionContext.Capture();
+        if (!suppressed)
+        {
+            return ExecutionContext.Capture();
+        }
         ExecutionContext.RestoreFlow();
-        try { return ExecutionContext.Capture(); }
-        finally { ExecutionContext.SuppressFlow(); }
+        try
+        {
+            return ExecutionContext.Capture();
+        }
+        finally
+        {
+            ExecutionContext.SuppressFlow();
+        }
     }
 
     public int PriorityQueueIndex(DefaultPriorityQueue<IScheduledWork> queue)

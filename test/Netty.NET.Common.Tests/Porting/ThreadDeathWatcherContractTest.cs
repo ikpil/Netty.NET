@@ -144,7 +144,10 @@ public class ThreadDeathWatcherContractTest : IDisposable
                 });
                 Assert.Same(marker, ambient.Value);
             }
-            finally { ambient.Value = null; }
+            finally
+            {
+                ambient.Value = null;
+            }
             owner.End();
             Assert.True(firstDone.Wait(TimeSpan.FromSeconds(5)));
         }
@@ -187,7 +190,10 @@ public class ThreadDeathWatcherContractTest : IDisposable
             {
                 ThreadDeathWatcher.AwaitInactivity(TimeSpan.MaxValue);
             }
-            catch (Exception caught) { failure = caught; }
+            catch (Exception caught)
+            {
+                failure = caught;
+            }
         })
         {
             IsBackground = true
@@ -218,8 +224,14 @@ public class ThreadDeathWatcherContractTest : IDisposable
         bool stopped = false;
         var waiter = new Thread(() =>
         {
-            try { stopped = ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromTicks(ticks)); }
-            catch (Exception error) { failure = error; }
+            try
+            {
+                stopped = ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromTicks(ticks));
+            }
+            catch (Exception error)
+            {
+                failure = error;
+            }
         }) { IsBackground = true };
         waiter.Start();
         try
@@ -228,7 +240,10 @@ public class ThreadDeathWatcherContractTest : IDisposable
             Assert.Null(failure);
             Assert.False(stopped);
         }
-        finally { owner.End(); }
+        finally
+        {
+            owner.End();
+        }
         Assert.True(waiter.Join(TimeSpan.FromSeconds(5)));
     }
 
@@ -243,8 +258,14 @@ public class ThreadDeathWatcherContractTest : IDisposable
         bool stopped = false;
         var waiter = new Thread(() =>
         {
-            try { stopped = ThreadDeathWatcher.AwaitInactivity(Timeout.InfiniteTimeSpan); }
-            catch (Exception error) { failure = error; }
+            try
+            {
+                stopped = ThreadDeathWatcher.AwaitInactivity(Timeout.InfiniteTimeSpan);
+            }
+            catch (Exception error)
+            {
+                failure = error;
+            }
         }) { IsBackground = true };
         waiter.Start();
         try
@@ -261,8 +282,15 @@ public class ThreadDeathWatcherContractTest : IDisposable
             owner.End();
             Assert.True(waiter.Join(TimeSpan.FromSeconds(5)));
         }
-        if (interrupt) Assert.IsType<ThreadInterruptedException>(failure);
-        else { Assert.Null(failure); Assert.True(stopped); }
+        if (interrupt)
+        {
+            Assert.IsType<ThreadInterruptedException>(failure);
+        }
+        else
+        {
+            Assert.Null(failure);
+            Assert.True(stopped);
+        }
     }
 
     [Fact]
@@ -324,7 +352,10 @@ public class ThreadDeathWatcherContractTest : IDisposable
                 Action task = cancel ? () => Interlocked.Increment(ref cancelled) :
                     () => { Interlocked.Increment(ref fired); completed.Signal(); };
                 ThreadDeathWatcher.Watch(owner.Thread, task);
-                if (cancel) ThreadDeathWatcher.Unwatch(owner.Thread, task);
+                if (cancel)
+                {
+                    ThreadDeathWatcher.Unwatch(owner.Thread, task);
+                }
             }
         });
         owner.End();

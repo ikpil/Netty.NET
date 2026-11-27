@@ -20,7 +20,10 @@ public class DuplexChannelContractTest
     public async Task BothSocketFamiliesExposeIndependentShutdownThroughTheCommonInterface(bool domain)
     {
         var cancellation = TestContext.Current.CancellationToken;
-        if (domain) DomainSocketSourceTest.RequireDomainSockets();
+        if (domain)
+        {
+            DomainSocketSourceTest.RequireDomainSockets();
+        }
         await using var fixture = new ShutdownFixture(false, domain);
         var received = new TaskCompletionSource<byte>(TaskCreationOptions.RunContinuationsAsynchronously);
         var accepted = new TaskCompletionSource<IChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -36,20 +39,33 @@ public class DuplexChannelContractTest
             await client.ConnectAsync(server.LocalAddress, cancellationToken: cancellation);
             var child = await accepted.Task.WaitAsync(cancellation);
             Assert.IsAssignableFrom<IDuplexChannel>(child);
-            Assert.False(duplex.IsInputShutdown); Assert.False(duplex.IsOutputShutdown); Assert.False(duplex.IsShutdown);
+            Assert.False(duplex.IsInputShutdown);
+            Assert.False(duplex.IsOutputShutdown);
+            Assert.False(duplex.IsShutdown);
             await duplex.ShutdownOutputAsync();
-            Assert.False(duplex.IsInputShutdown); Assert.True(duplex.IsOutputShutdown); Assert.False(duplex.IsShutdown);
+            Assert.False(duplex.IsInputShutdown);
+            Assert.True(duplex.IsOutputShutdown);
+            Assert.False(duplex.IsShutdown);
             await child.WriteAndFlushAsync(child.Alloc().Buffer(1).WriteByte(42), cancellation);
             client.Read();
             Assert.Equal(42, await received.Task.WaitAsync(cancellation));
             // The source reports the already-shut output failure, but still shuts down the input.
             await Assert.ThrowsAnyAsync<ClosedChannelException>(() => duplex.ShutdownAsync());
-            Assert.True(duplex.IsInputShutdown); Assert.True(duplex.IsOutputShutdown); Assert.True(duplex.IsShutdown);
+            Assert.True(duplex.IsInputShutdown);
+            Assert.True(duplex.IsOutputShutdown);
+            Assert.True(duplex.IsShutdown);
             Assert.True(duplex.IsOpen);
             await duplex.CloseAsync();
             Assert.True(duplex.IsShutdown);
         }
-        finally { if (client != null) await client.CloseAsync(); await server.CloseAsync(); }
+        finally
+        {
+            if (client != null)
+            {
+                await client.CloseAsync();
+            }
+            await server.CloseAsync();
+        }
     }
     private sealed class Signal(TaskCompletionSource<byte> received) : SimpleChannelInboundHandler<ByteBuf>
     {

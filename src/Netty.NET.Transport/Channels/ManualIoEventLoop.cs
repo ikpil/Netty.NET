@@ -624,14 +624,23 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
     // CLR-only native-close admission; public task submission remains closed after StopAsync.
     internal Action<Action> ReserveCloseCompletion()
     {
-        if (!InEventLoop()) throw new InvalidOperationException("Native close must be reserved by the event-loop owner.");
+        if (!InEventLoop())
+        {
+            throw new InvalidOperationException("Native close must be reserved by the event-loop owner.");
+        }
         _pendingCloseCompletions++;
         return completion =>
         {
             _taskQueue.TryEnqueue(() =>
             {
-                try { completion(); }
-                finally { _pendingCloseCompletions--; }
+                try
+                {
+                    completion();
+                }
+                finally
+                {
+                    _pendingCloseCompletions--;
+                }
             });
             _handler.Wakeup();
         };

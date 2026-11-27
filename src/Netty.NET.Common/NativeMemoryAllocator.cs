@@ -84,7 +84,10 @@ public sealed class NativeMemoryAllocator
             owner.EnsureReallocatable();
             Span<byte> previous = owner.GetSpan();
             long delta = (long)Math.Max(1, length) - Math.Max(1, owner.Length);
-            if (delta > 0) Reserve(delta);
+            if (delta > 0)
+            {
+                Reserve(delta);
+            }
             NativeMemoryOwner replacement;
             try
             {
@@ -93,12 +96,18 @@ public sealed class NativeMemoryAllocator
             }
             catch
             {
-                if (delta > 0) Release(delta);
+                if (delta > 0)
+                {
+                    Release(delta);
+                }
                 throw;
             }
             owner.TransferReservation();
             replacement.TakeReservation();
-            if (delta < 0) Release(-delta);
+            if (delta < 0)
+            {
+                Release(-delta);
+            }
             return replacement;
         }
     }
@@ -114,7 +123,10 @@ public sealed class NativeMemoryAllocator
                 throw new OutOfDirectMemoryError(string.Create(CultureInfo.InvariantCulture,
                     $"failed to allocate {bytes} byte(s) of direct memory (used: {current}, max: {MaximumBytes})"));
             }
-            if (Interlocked.CompareExchange(ref _reservedBytes, current + bytes, current) == current) return;
+            if (Interlocked.CompareExchange(ref _reservedBytes, current + bytes, current) == current)
+            {
+                return;
+            }
         }
     }
 

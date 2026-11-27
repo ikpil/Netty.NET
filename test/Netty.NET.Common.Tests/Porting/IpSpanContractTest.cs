@@ -113,8 +113,14 @@ public class IpSpanContractTest
         long before = GC.GetAllocatedBytesForCurrentThread();
         for (int i = 0; i < 1000; i++)
         {
-            if (NetUtil.IsValidIpV4Address(four)) valid++;
-            if (NetUtil.IsValidIpV6Address(six)) valid++;
+            if (NetUtil.IsValidIpV4Address(four))
+            {
+                valid++;
+            }
+            if (NetUtil.IsValidIpV6Address(six))
+            {
+                valid++;
+            }
         }
         long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
         Assert.Equal(2000, valid);

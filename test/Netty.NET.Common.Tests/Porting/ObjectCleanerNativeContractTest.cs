@@ -99,7 +99,10 @@ public class ObjectCleanerNativeContractTest
             await CollectUntil(() => observed.Task.IsCompleted && ObjectCleaner.PendingCount == before);
             Assert.Null(await observed.Task);
         }
-        finally { ambient.Value = null; }
+        finally
+        {
+            ambient.Value = null;
+        }
     }
 
     [Fact(Timeout = 10000)]
@@ -121,7 +124,10 @@ public class ObjectCleanerNativeContractTest
             await CollectUntil(() => second.Task.IsCompleted);
             Assert.False(release.IsSet);
         }
-        finally { release.Set(); }
+        finally
+        {
+            release.Set();
+        }
         await CollectUntil(() => ObjectCleaner.PendingCount == before);
     }
 

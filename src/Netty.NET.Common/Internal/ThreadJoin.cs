@@ -12,7 +12,10 @@ internal static class ThreadJoin
         {
             throw new ArgumentOutOfRangeException(nameof(timeout));
         }
-        if (thread == null) return true;
+        if (thread == null)
+        {
+            return true;
+        }
         if (timeout == Timeout.InfiniteTimeSpan)
         {
             thread.Join();
@@ -29,7 +32,10 @@ internal static class ThreadJoin
             long remaining = elapsed >= ticks ? 0 : ticks - elapsed;
             int milliseconds = remaining == 0 ? 0 :
                 (int)Math.Min(int.MaxValue, 1 + (remaining - 1) / TimeSpan.TicksPerMillisecond);
-            if (thread.Join(milliseconds)) return true;
+            if (thread.Join(milliseconds))
+            {
+                return true;
+            }
             if (remaining == 0 || Stopwatch.GetElapsedTime(started).Ticks >= ticks)
             {
                 return !thread.IsAlive;

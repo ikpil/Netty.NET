@@ -142,7 +142,10 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
         _linuxDualMode = OperatingSystem.IsLinux() && dualMode;
         try
         {
-            if (dualMode) JavaChannel().DualMode = true;
+            if (dualMode)
+            {
+                JavaChannel().DualMode = true;
+            }
             if (OperatingSystem.IsLinux())
             {
                 if (Socket.OSSupportsIPv4 && (family == AddressFamily.InterNetwork || dualMode))
@@ -151,7 +154,11 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
                     DisableMulticastAll(SocketOptionLevel.IPv6, 29); // IPV6_MULTICAST_ALL
             }
         }
-        catch { JavaChannel().Dispose(); throw; }
+        catch
+        {
+            JavaChannel().Dispose();
+            throw;
+        }
     }
 
     private static Socket NewSocket(AddressFamily family, bool dualMode)
@@ -174,8 +181,13 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
         // https://github.com/openjdk/jdk/blob/master/src/java.base/unix/native/libnio/ch/Net.c
         Span<byte> disabled = stackalloc byte[sizeof(int)];
         disabled.Clear();
-        try { JavaChannel().SetRawSocketOption((int)level, option, disabled); }
-        catch (SocketException error) when (error.SocketErrorCode == SocketError.ProtocolOption) { }
+        try
+        {
+            JavaChannel().SetRawSocketOption((int)level, option, disabled);
+        }
+        catch (SocketException error) when (error.SocketErrorCode == SocketError.ProtocolOption)
+        {
+        }
     }
 
     protected override EndPoint LocalAddress0()
@@ -305,13 +317,19 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
 
     internal void SetUdpGro(bool enabled)
     {
-        if (enabled) throw new PlatformNotSupportedException("UDP_GRO is unavailable on the managed transport.");
+        if (enabled)
+        {
+            throw new PlatformNotSupportedException("UDP_GRO is unavailable on the managed transport.");
+        }
     }
 
     internal void SetUdpSlotSize(int size)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(size);
-        if (size != 0) throw new PlatformNotSupportedException("UDP scattering is unavailable on the managed transport.");
+        if (size != 0)
+        {
+            throw new PlatformNotSupportedException("UDP scattering is unavailable on the managed transport.");
+        }
     }
 
     /**
@@ -320,7 +338,10 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
      */
     internal void SetReceiveOriginalDestination(bool enabled)
     {
-        if (enabled) throw new PlatformNotSupportedException("IP_RECVORIGDSTADDR is unavailable on the managed transport.");
+        if (enabled)
+        {
+            throw new PlatformNotSupportedException("IP_RECVORIGDSTADDR is unavailable on the managed transport.");
+        }
     }
 
     protected override void DoDeregister()
@@ -489,7 +510,13 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
                 return 0;
             }
         }
-        finally { if (staging != null) ArrayPool<byte>.Shared.Return(staging); }
+        finally
+        {
+            if (staging != null)
+            {
+                ArrayPool<byte>.Shared.Return(staging);
+            }
+        }
     }
 
     protected override int DoReadMessages(List<object> buf)
@@ -546,7 +573,10 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
                 staging.AsMemory(0, count).CopyTo(memory);
                 return new SocketReceiveFromResult { ReceivedBytes = count, RemoteEndPoint = remote };
             }
-            finally { ArrayPool<byte>.Shared.Return(staging); }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(staging);
+            }
         }
         int length = JavaChannel().ReceiveFrom(memory.Span, SocketFlags.None, ref remote);
         return new SocketReceiveFromResult { ReceivedBytes = length, RemoteEndPoint = remote };
@@ -699,7 +729,10 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
     {
         ArgumentNullException.ThrowIfNull(group);
         ArgumentNullException.ThrowIfNull(networkInterface);
-        if (source == null) return ChangeMembershipAsync(group, networkInterface, join);
+        if (source == null)
+        {
+            return ChangeMembershipAsync(group, networkInterface, join);
+        }
         return OnLoopAsync(() =>
         {
             ValidateSource(group, source);
@@ -709,11 +742,21 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
             var key = (group, (long)index, source);
             if (join && _memberships.ContainsKey((group, index, null)))
                 throw new InvalidOperationException("Cannot join a source while an all-sources membership exists.");
-            if (join ? _memberships.ContainsKey(key) : !_memberships.ContainsKey(key)) return;
+            if (join ? _memberships.ContainsKey(key) : !_memberships.ContainsKey(key))
+            {
+                return;
+            }
             var address = group.AddressFamily == AddressFamily.InterNetwork
                 ? (join ? InterfaceAddress(networkInterface, group.AddressFamily) : _memberships[key].Address) : null;
             SetSourceOption(join ? SocketOptionName.AddSourceMembership : SocketOptionName.DropSourceMembership, group, index, address, source);
-            if (join) _memberships.Add(key, new Membership(address)); else _memberships.Remove(key);
+            if (join)
+            {
+                _memberships.Add(key, new Membership(address));
+            }
+            else
+            {
+                _memberships.Remove(key);
+            }
         });
     }
 

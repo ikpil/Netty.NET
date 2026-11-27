@@ -44,6 +44,9 @@ public class NativeAddressByteBufTest
             buffer.SetByte(2, 8);
             Assert.Equal(new byte[] { 0, 1, 9, 8, 4 }, storage);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 }

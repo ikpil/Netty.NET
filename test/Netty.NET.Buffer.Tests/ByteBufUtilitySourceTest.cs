@@ -47,7 +47,10 @@ public class ByteBufUtilitySourceTest
                 var c = direct ? Allocator.CompositeDirectBuffer(16) : Allocator.CompositeHeapBuffer(16);
                 Root = c.AddComponent(Buffer(8)).AddComponent(Buffer(24));
             }
-            else Root = Buffer(16);
+            else
+            {
+                Root = Buffer(16);
+            }
         }
 
         public void Dispose()
@@ -134,7 +137,11 @@ public class ByteBufUtilitySourceTest
             for (int i = 0; i <= data.Length - input.Length; ++i)
             {
                 int j = 0; while (j < input.Length && input[j] == data[i + j]) ++j;
-                if (j == input.Length) { expected = i; break; }
+                if (j == input.Length)
+                {
+                    expected = i;
+                    break;
+                }
             }
             ByteBuf needle = allocator.HeapBuffer(256).WriteBytes(prefix).WriteBytes(input);
             needle.ReaderIndex = prefix.Length;
@@ -142,9 +149,14 @@ public class ByteBufUtilitySourceTest
             try
             {
                 Assert.Equal(expected, ByteBufUtil.IndexOf(needle, haystack));
-                Assert.Equal(prefix.Length, needle.ReaderIndex); Assert.Equal(0, haystack.ReaderIndex);
+                Assert.Equal(prefix.Length, needle.ReaderIndex);
+                Assert.Equal(0, haystack.ReaderIndex);
             }
-            finally { needle.Release(); haystack.Release(); }
+            finally
+            {
+                needle.Release();
+                haystack.Release();
+            }
         }
     }
 

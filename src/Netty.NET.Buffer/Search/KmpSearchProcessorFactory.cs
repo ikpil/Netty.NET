@@ -34,14 +34,20 @@ public class KmpSearchProcessorFactory : AbstractSearchProcessorFactory
 
     internal KmpSearchProcessorFactory(ReadOnlySpan<byte> needle)
     {
-        if (needle.IsEmpty) throw new ArgumentException("Search pattern must not be empty.", nameof(needle));
+        if (needle.IsEmpty)
+        {
+            throw new ArgumentException("Search pattern must not be empty.", nameof(needle));
+        }
         _needle = needle.ToArray();
         _jumpTable = new int[checked(needle.Length + 1)];
         int j = 0;
         for (int i = 1; i < needle.Length; i++)
         {
             while (j > 0 && needle[j] != needle[i]) j = _jumpTable[j];
-            if (needle[j] == needle[i]) j++;
+            if (needle[j] == needle[i])
+            {
+                j++;
+            }
             _jumpTable[i + 1] = j;
         }
     }
@@ -70,7 +76,10 @@ public class KmpSearchProcessorFactory : AbstractSearchProcessorFactory
         {
             while (_currentPosition > 0 && _needle[_currentPosition] != value)
                 _currentPosition = _jumpTable[_currentPosition];
-            if (_needle[_currentPosition] == value) _currentPosition++;
+            if (_needle[_currentPosition] == value)
+            {
+                _currentPosition++;
+            }
             if (_currentPosition == _needle.Length)
             {
                 _currentPosition = _jumpTable[_currentPosition];

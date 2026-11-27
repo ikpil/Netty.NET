@@ -85,7 +85,10 @@ public static partial class ByteBufUtil
     {
         ArgumentNullException.ThrowIfNull(buffer);
         ArgumentOutOfRangeException.ThrowIfNegative(reserveBytes);
-        if (reserveBytes < bytes.Length) throw new ArgumentOutOfRangeException(nameof(reserveBytes));
+        if (reserveBytes < bytes.Length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(reserveBytes));
+        }
         using var lease = buffer.PinMemoryForWrite();
         buffer.EnsureWritable(reserveBytes);
         buffer.SetBytes(buffer.WriterIndex, bytes);
@@ -96,8 +99,14 @@ public static partial class ByteBufUtil
     // Validate endpoints before subtraction, including when overflow checking is enabled.
     private static void CheckUtf8Range(int length, int start, int end)
     {
-        if (start < 0 || start > length) throw new ArgumentOutOfRangeException(nameof(start));
-        if (end < start || end > length) throw new ArgumentOutOfRangeException(nameof(end));
+        if (start < 0 || start > length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(start));
+        }
+        if (end < start || end > length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(end));
+        }
     }
 
     private static ReadOnlySpan<char> Utf8Range(ReadOnlySpan<char> text, int start, int end)

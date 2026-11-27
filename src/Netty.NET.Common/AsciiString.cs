@@ -1366,7 +1366,8 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         }
 
         if (start == 0)
-        { // If no delimiter was found in the value
+        {
+            // If no delimiter was found in the value
             res.Add(this);
         }
         else
@@ -1769,7 +1770,10 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
 
     private static T ParseFloatingPoint<T>(ReadOnlySpan<byte> bytes) where T : IFloatingPointIeee754<T>
     {
-        if (TryParseFloatingPoint(bytes, out T result)) return result;
+        if (TryParseFloatingPoint(bytes, out T result))
+        {
+            return result;
+        }
         throw new FormatException("Input is not a valid floating-point number.");
     }
 
@@ -1783,12 +1787,18 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         while (start < end && bytes[start] <= 0x20) start++;
         while (end > start && bytes[end - 1] <= 0x20) end--;
         bytes = bytes.Slice(start, end - start);
-        if (bytes.IsEmpty) return false;
+        if (bytes.IsEmpty)
+        {
+            return false;
+        }
 
         bool negative = bytes[0] == '-';
         int signLength = negative || bytes[0] == '+' ? 1 : 0;
         ReadOnlySpan<byte> unsigned = bytes[signLength..];
-        if (unsigned.IsEmpty) return false;
+        if (unsigned.IsEmpty)
+        {
+            return false;
+        }
         if (unsigned.SequenceEqual("NaN"u8))
         {
             // Use the native canonical NaN; NaN payload/sign is not a text contract.
@@ -1805,7 +1815,10 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         {
             bytes = bytes[..^1];
             unsigned = bytes[signLength..];
-            if (unsigned.IsEmpty) return false;
+            if (unsigned.IsEmpty)
+            {
+                return false;
+            }
         }
 
         if (unsigned.Length >= 2 && unsigned[0] == '0' && unsigned[1] is (byte)'x' or (byte)'X')
@@ -1813,7 +1826,10 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
             return TryParseHexFloatingPoint(unsigned, negative, out result);
         }
 
-        if (!IsDecimalFloatingPoint(unsigned)) return false;
+        if (!IsDecimalFloatingPoint(unsigned))
+        {
+            return false;
+        }
         const NumberStyles styles = NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint |
                                     NumberStyles.AllowExponent;
         if (T.TryParse(bytes, styles, CultureInfo.InvariantCulture, out T parsed))
@@ -1834,14 +1850,23 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
             i++;
             while (i < bytes.Length && bytes[i] is >= (byte)'0' and <= (byte)'9') { i++; digits++; }
         }
-        if (digits == 0) return false;
+        if (digits == 0)
+        {
+            return false;
+        }
         if (i < bytes.Length && bytes[i] is (byte)'e' or (byte)'E')
         {
             i++;
-            if (i < bytes.Length && bytes[i] is (byte)'+' or (byte)'-') i++;
+            if (i < bytes.Length && bytes[i] is (byte)'+' or (byte)'-')
+            {
+                i++;
+            }
             int exponentStart = i;
             while (i < bytes.Length && bytes[i] is >= (byte)'0' and <= (byte)'9') i++;
-            if (i == exponentStart) return false;
+            if (i == exponentStart)
+            {
+                return false;
+            }
         }
         return i == bytes.Length;
     }
@@ -1869,7 +1894,10 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
             byte b = bytes[i];
             if (b == '.')
             {
-                if (point) return false;
+                if (point)
+                {
+                    return false;
+                }
                 point = true;
                 continue;
             }
@@ -1880,35 +1908,62 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
                 >= (byte)'A' and <= (byte)'F' => b - 'A' + 10,
                 _ => -1
             };
-            if (digit < 0) return false;
+            if (digit < 0)
+            {
+                return false;
+            }
             digits++;
-            if (point) fractionalDigits++;
-            if (significantBits == 0 && digit == 0) continue;
+            if (point)
+            {
+                fractionalDigits++;
+            }
+            if (significantBits == 0 && digit == 0)
+            {
+                continue;
+            }
             int width = significantBits == 0 ? BitOperations.Log2((uint)digit) + 1 : 4;
             significantBits += width;
             // Only precision+1 leading bits and a sticky tail are needed. Storage
             // stays bounded even for arbitrarily long mantissas.
             int take = Math.Min(width, precision + 1 - captured);
             leading = (leading << take) | (ulong)(digit >> (width - take));
-            if ((digit & ((1 << (width - take)) - 1)) != 0) sticky = true;
+            if ((digit & ((1 << (width - take)) - 1)) != 0)
+            {
+                sticky = true;
+            }
             captured += take;
         }
-        if (digits == 0 || i == bytes.Length) return false;
+        if (digits == 0 || i == bytes.Length)
+        {
+            return false;
+        }
         i++; // A hexadecimal literal requires a binary exponent.
         bool exponentNegative = i < bytes.Length && bytes[i] == '-';
-        if (i < bytes.Length && bytes[i] is (byte)'+' or (byte)'-') i++;
-        if (i == bytes.Length) return false;
+        if (i < bytes.Length && bytes[i] is (byte)'+' or (byte)'-')
+        {
+            i++;
+        }
+        if (i == bytes.Length)
+        {
+            return false;
+        }
         long exponent = 0;
         const long exponentLimit = 1L << 60;
         for (; i < bytes.Length; i++)
         {
             int digit = bytes[i] - '0';
-            if (digit < 0 || digit > 9) return false;
+            if (digit < 0 || digit > 9)
+            {
+                return false;
+            }
             // Saturation is far beyond any offset possible in an Int32-sized span;
             // it avoids exponent overflow without imposing an input length limit.
             exponent = exponent <= (exponentLimit - digit) / 10 ? exponent * 10 + digit : exponentLimit;
         }
-        if (exponentNegative) exponent = -exponent;
+        if (exponentNegative)
+        {
+            exponent = -exponent;
+        }
         long binaryExponent = significantBits - 1 + exponent - 4L * fractionalDigits;
         if (significantBits == 0 || binaryExponent < minSubnormal - 1)
         {
@@ -1934,7 +1989,10 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
             bool guard = ((leading >> (shift - 1)) & 1) != 0;
             bool tail = sticky || (leading & ((1UL << (shift - 1)) - 1)) != 0;
             // Round once to nearest, ties to even, including subnormal/zero ties.
-            if (guard && (tail || (rounded & 1) != 0)) rounded++;
+            if (guard && (tail || (rounded & 1) != 0))
+            {
+                rounded++;
+            }
         }
         ulong bits;
         if (binaryExponent < minNormal)

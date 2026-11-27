@@ -36,7 +36,11 @@ public class ReadOnlyNativeProviderTest
             copy.Capacity = 8;
             Assert.Throws<ArgumentOutOfRangeException>(() => copy.Capacity = 9);
         }
-        finally { source.Release(); copy.Release(); }
+        finally
+        {
+            source.Release();
+            copy.Release();
+        }
     }
 
     [Theory]
@@ -92,7 +96,10 @@ public class ReadOnlyNativeProviderTest
                         Assert.NotEqual(200, view.GetByte(index));
                     }
                 }
-                finally { copy.Release(); }
+                finally
+                {
+                    copy.Release();
+                }
                 Assert.Equal(reader, view.ReaderIndex);
                 Assert.Equal(writer, view.WriterIndex);
                 Assert.Equal(1, source.RefCnt);
@@ -101,7 +108,11 @@ public class ReadOnlyNativeProviderTest
             Assert.Equal(reader, view.ReaderIndex);
             Assert.Equal(writer, view.WriterIndex);
         }
-        finally { source.Release(); (allocator as IDisposable)?.Dispose(); }
+        finally
+        {
+            source.Release();
+            (allocator as IDisposable)?.Dispose();
+        }
         Assert.Equal(0, targetNative.ReservedBytes);
         Assert.Equal(48, sourceNative.ReservedBytes);
     }
@@ -154,7 +165,13 @@ public class ReadOnlyNativeProviderTest
             owner.Memory.Span[offset] = 99;
             Assert.Equal(99, source.GetByte(0));
         }
-        finally { source.Release(); heap.Release(); direct.Release(); composite.Release(); }
+        finally
+        {
+            source.Release();
+            heap.Release();
+            direct.Release();
+            composite.Release();
+        }
     }
 
     [Fact]
@@ -176,7 +193,10 @@ public class ReadOnlyNativeProviderTest
             Assert.Equal(Enumerable.Repeat((byte)71, 5), ByteBufUtil.GetBytes(copy));
             copy.WriteByte(72);
         }
-        finally { copy.Release(); }
+        finally
+        {
+            copy.Release();
+        }
         Assert.Equal(0, target.ReservedBytes);
     }
 
@@ -202,7 +222,11 @@ public class ReadOnlyNativeProviderTest
             Assert.Equal(0, source.ReaderIndex);
             Assert.Equal(12, source.WriterIndex);
         }
-        finally { source.Release(); target.Release(); }
+        finally
+        {
+            source.Release();
+            target.Release();
+        }
     }
 
     [Fact]
@@ -222,7 +246,10 @@ public class ReadOnlyNativeProviderTest
             Assert.Equal(71, source.GetByte(1));
             Assert.Equal(1, source.RefCnt);
         }
-        finally { source.Release(); }
+        finally
+        {
+            source.Release();
+        }
     }
 
     private sealed class ReadOnlyTargetAllocator(NativeMemoryAllocator native) : AbstractByteBufAllocator
@@ -258,7 +285,11 @@ public class ReadOnlyNativeProviderTest
             Assert.Equal(0, copy.WriterIndex);
             Assert.Equal(1, source.RefCnt);
         }
-        finally { source.Release(); copy.Release(); }
+        finally
+        {
+            source.Release();
+            copy.Release();
+        }
         Assert.Equal(8, native.ReservedBytes);
     }
 }

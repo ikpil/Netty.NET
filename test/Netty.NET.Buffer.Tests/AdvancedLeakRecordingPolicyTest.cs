@@ -90,7 +90,10 @@ public class AdvancedLeakRecordingPolicyTest
         }
         finally
         {
-            if (started && !process.HasExited) process.Kill(entireProcessTree: true);
+            if (started && !process.HasExited)
+            {
+                process.Kill(entireProcessTree: true);
+            }
             File.Delete(report);
         }
     }
@@ -160,7 +163,10 @@ public class AdvancedLeakRecordingPolicyTest
                     {
                         Assert.Equal(4, copy.ReadableBytes);
                     }
-                    finally { copy.Release(); }
+                    finally
+                    {
+                        copy.Release();
+                    }
                     break;
                 case 8:
                     Assert.Equal(4, b.Slice(3, 4).Capacity);
@@ -214,7 +220,14 @@ public class AdvancedLeakRecordingPolicyTest
             Assert.Equal((operation == 3 ? 3 : 2, operation == 4 ? 33 : 32, operation == 9 ? 2 : 1),
                 (root.ReaderIndex, root.WriterIndex, root.RefCnt));
         }
-        finally { if (root.RefCnt > 0) b.Release(root.RefCnt); Assert.Equal(0, native.ReservedBytes); }
+        finally
+        {
+            if (root.RefCnt > 0)
+            {
+                b.Release(root.RefCnt);
+            }
+            Assert.Equal(0, native.ReservedBytes);
+        }
         Assert.All(trackers, t => Assert.Equal(1, t.Closes));
     }
 }

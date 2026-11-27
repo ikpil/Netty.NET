@@ -125,7 +125,10 @@ public class DomainNameMappingBuilder<T> where T : class
             {
                 hostname = NormalizeHostname(hostname);
                 foreach (var entry in entries)
-                    if (Matches(entry.Key, hostname)) return entry.Value;
+                    if (Matches(entry.Key, hostname))
+                    {
+                        return entry.Value;
+                    }
             }
             return _defaultValue;
         }
@@ -142,7 +145,10 @@ public class DomainNameMappingBuilder<T> where T : class
             bool first = true;
             foreach (var entry in entries)
             {
-                if (!first) text.Append(", ");
+                if (!first)
+                {
+                    text.Append(", ");
+                }
                 first = false;
                 text.Append(entry.Key).Append('=').Append(entry.Value);
             }

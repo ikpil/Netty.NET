@@ -170,7 +170,10 @@ public class ReentrantChannelSourceTest
             await client.CloseAsync();
             await server.CloseAsync();
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Theory(Timeout = 10000)]
@@ -256,9 +259,15 @@ public class ReentrantChannelSourceTest
         internal void AssertLog(string firstExpected, params string[] otherExpected)
         {
             string actual = _log.Text;
-            if (firstExpected == actual) return;
+            if (firstExpected == actual)
+            {
+                return;
+            }
             foreach (string expected in otherExpected)
-                if (expected == actual) return;
+                if (expected == actual)
+                {
+                    return;
+                }
 
             // Let the comparison fail with the first expectation.
             Assert.Equal(firstExpected, actual);
@@ -301,7 +310,10 @@ public class ReentrantChannelSourceTest
 
         public override void ChannelWritabilityChanged(IChannelHandlerContext ctx)
         {
-            if (writability) _log.Append(ctx.Channel.IsWritable ? "WRITABILITY: writable=true\n" : "WRITABILITY: writable=false\n");
+            if (writability)
+            {
+                _log.Append(ctx.Channel.IsWritable ? "WRITABILITY: writable=true\n" : "WRITABILITY: writable=false\n");
+            }
             ctx.FireChannelWritabilityChanged();
         }
     }
@@ -310,7 +322,10 @@ public class ReentrantChannelSourceTest
     {
         public override void ChannelWritabilityChanged(IChannelHandlerContext ctx)
         {
-            if (!ctx.Channel.IsWritable) ctx.Channel.Flush();
+            if (!ctx.Channel.IsWritable)
+            {
+                ctx.Channel.Flush();
+            }
             ctx.FireChannelWritabilityChanged();
         }
     }
@@ -329,13 +344,19 @@ public class ReentrantChannelSourceTest
         private int _flushes;
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
         {
-            if (_writes++ < 5) ctx.Channel.Flush();
+            if (_writes++ < 5)
+            {
+                ctx.Channel.Flush();
+            }
             return ctx.WriteAsync(msg, token);
         }
 
         public override void Flush(IChannelHandlerContext ctx)
         {
-            if (_flushes++ < 5) _ = ctx.Channel.WriteAsync(CreateTestBuffer(2000));
+            if (_flushes++ < 5)
+            {
+                _ = ctx.Channel.WriteAsync(CreateTestBuffer(2000));
+            }
             ctx.Flush();
         }
     }
@@ -352,8 +373,14 @@ public class ReentrantChannelSourceTest
 
         private static async Task CloseOnCompletionAsync(IChannel channel, Task write)
         {
-            try { await write.ConfigureAwait(false); }
-            finally { await channel.CloseAsync().ConfigureAwait(false); }
+            try
+            {
+                await write.ConfigureAwait(false);
+            }
+            finally
+            {
+                await channel.CloseAsync().ConfigureAwait(false);
+            }
         }
     }
 
@@ -376,8 +403,14 @@ public class ReentrantChannelSourceTest
         {
             var buffer = (ByteBuf)msg;
             string text;
-            try { text = buffer.ToString(Encoding.UTF8); }
-            finally { buffer.Release(); }
+            try
+            {
+                text = buffer.ToString(Encoding.UTF8);
+            }
+            finally
+            {
+                buffer.Release();
+            }
             foreach (string line in text.Split('\n')) ctx.FireChannelRead(line);
         }
     }
@@ -408,7 +441,10 @@ public class ReentrantChannelSourceTest
 
         public override void Read(IChannelHandlerContext ctx)
         {
-            if (_queue.TryDequeue(out var item)) ctx.FireChannelRead(item);
+            if (_queue.TryDequeue(out var item))
+            {
+                ctx.FireChannelRead(item);
+            }
             else
             {
                 _demand = true;

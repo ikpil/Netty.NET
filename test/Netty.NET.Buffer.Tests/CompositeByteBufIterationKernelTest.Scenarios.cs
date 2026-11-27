@@ -48,35 +48,57 @@ public partial class CompositeByteBufIterationKernelTest
         };
         int adjustment = form is 1 or 4 ? 4 : 0;
         source.SetIndex(6 - adjustment, 26 - adjustment);
-        if (form is not 4 and not 5) source.Retain();
+        if (form is not 4 and not 5)
+        {
+            source.Retain();
+        }
         var outer = new CompositeByteBuf();
         outer.AddComponent(new UnpooledHeapByteBuf(0), true).AddComponent(source, true)
             .AddComponent(new UnpooledHeapByteBuf(0), true);
         try
         {
             outer.SetIndex(2, 18).MarkReaderIndex().MarkWriterIndex();
-            var seen = new List<byte>(); var failure = new InvalidOperationException("processor failure");
+            var seen = new List<byte>();
+            var failure = new InvalidOperationException("processor failure");
             Func<byte, bool> processor = value =>
             {
                 seen.Add(value);
-                if (mode == 2 && seen.Count == 4) throw failure;
+                if (mode == 2 && seen.Count == 4)
+                {
+                    throw failure;
+                }
                 return mode != 1 || seen.Count < 4;
             };
             int Visit()
             {
                 return descending ? outer.ForEachByteDesc(processor) : outer.ForEachByte(processor);
             }
-            if (mode == 2) Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => Visit()));
-            else Assert.Equal(mode == 0 ? -1 : descending ? 14 : 5, Visit());
+            if (mode == 2)
+            {
+                Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => Visit()));
+            }
+            else
+            {
+                Assert.Equal(mode == 0 ? -1 : descending ? 14 : 5, Visit());
+            }
             IEnumerable<byte> expected = s.Expected(8, 16, form == 3);
-            if (descending) expected = expected.Reverse();
+            if (descending)
+            {
+                expected = expected.Reverse();
+            }
             Assert.Equal(expected.Take(mode == 0 ? 16 : 4), seen);
-            Assert.Equal(form == 3 ? seen.Count : 0, s.Observation.Gets); Assert.Equal(0, s.Observation.Iterations);
-            Assert.Equal(2, outer.ReaderIndex); Assert.Equal(18, outer.WriterIndex);
-            Assert.Equal(6 - adjustment, source.ReaderIndex); Assert.Equal(26 - adjustment, source.WriterIndex);
+            Assert.Equal(form == 3 ? seen.Count : 0, s.Observation.Gets);
+            Assert.Equal(0, s.Observation.Iterations);
+            Assert.Equal(2, outer.ReaderIndex);
+            Assert.Equal(18, outer.WriterIndex);
+            Assert.Equal(6 - adjustment, source.ReaderIndex);
+            Assert.Equal(26 - adjustment, source.WriterIndex);
             Assert.Equal(2, s.Owner.RefCnt);
         }
-        finally { outer.Release(); }
+        finally
+        {
+            outer.Release();
+        }
         Assert.Equal(1, s.Owner.RefCnt);
     }
 
@@ -192,31 +214,53 @@ public partial class CompositeByteBufIterationKernelTest
             {
                 switch (operation)
                 {
-                    case 0: Assert.False(view.TryGetReadOnlyMemory(index, 4, out _)); break;
-                    case 1: Assert.False(view.TryGetMemory(index, 4, out _)); break;
-                    case 2: view.SetBytes(index, input.AsSpan()); break;
-                    case 3: view.SetZero(index, 4); break;
-                    case 4: view.WriteBytes(input.AsSpan()); break;
-                    case 5: view.WriteZero(4); break;
+                    case 0:
+                        Assert.False(view.TryGetReadOnlyMemory(index, 4, out _));
+                        break;
+                    case 1:
+                        Assert.False(view.TryGetMemory(index, 4, out _));
+                        break;
+                    case 2:
+                        view.SetBytes(index, input.AsSpan());
+                        break;
+                    case 3:
+                        view.SetZero(index, 4);
+                        break;
+                    case 4:
+                        view.WriteBytes(input.AsSpan());
+                        break;
+                    case 5:
+                        view.WriteZero(4);
+                        break;
                 }
             }
-            if (fixedComposite && operation != 0) Assert.Throws<NotSupportedException>(() => Request());
+            if (fixedComposite && operation != 0)
+            {
+                Assert.Throws<NotSupportedException>(() => Request());
+            }
             else
             {
                 Request();
                 if (operation >= 2)
                 {
                     bool zero = operation is 3 or 5;
-                    first[19] = zero ? (byte)0 : input[0]; first[20] = zero ? (byte)0 : input[1];
-                    second[3] = zero ? (byte)0 : input[2]; second[4] = zero ? (byte)0 : input[3];
+                    first[19] = zero ? (byte)0 : input[0];
+                    first[20] = zero ? (byte)0 : input[1];
+                    second[3] = zero ? (byte)0 : input[2];
+                    second[4] = zero ? (byte)0 : input[3];
                 }
             }
-            Assert.Equal(first, s.First.AsReadOnlyMemory(0, 32).ToArray()); Assert.Equal(second, s.Second.AsReadOnlyMemory(0, 32).ToArray());
+            Assert.Equal(first, s.First.AsReadOnlyMemory(0, 32).ToArray());
+            Assert.Equal(second, s.Second.AsReadOnlyMemory(0, 32).ToArray());
             Assert.Equal(1, view.ReaderIndex);
             Assert.Equal(operation >= 4 ? index + (fixedComposite ? 0 : 4) : 2, view.WriterIndex);
-            Assert.Equal(2, s.Owner.RefCnt); Assert.Equal(1, view.RefCnt);
+            Assert.Equal(2, s.Owner.RefCnt);
+            Assert.Equal(1, view.RefCnt);
         }
-        finally { view.Release(); }
+        finally
+        {
+            view.Release();
+        }
         Assert.Equal(1, s.Owner.RefCnt);
     }
 
@@ -291,10 +335,15 @@ public partial class CompositeByteBufIterationKernelTest
             int result = descending ? composite.ForEachByteDesc(32, 8, value => value != stop)
                 : composite.ForEachByte(32, 8, value => value != stop);
             Assert.Equal(32 + stop - 1, result);
-            Assert.Equal(HighCoordinateStorage.Start, source.ReaderIndex); Assert.Equal(int.MaxValue, source.WriterIndex);
-            Assert.Equal(0, composite.ReaderIndex); Assert.Equal(40, composite.WriterIndex);
+            Assert.Equal(HighCoordinateStorage.Start, source.ReaderIndex);
+            Assert.Equal(int.MaxValue, source.WriterIndex);
+            Assert.Equal(0, composite.ReaderIndex);
+            Assert.Equal(40, composite.WriterIndex);
         }
-        finally { composite.Release(); }
+        finally
+        {
+            composite.Release();
+        }
         Assert.Equal(0, source.RefCnt);
     }
 
@@ -312,7 +361,12 @@ public partial class CompositeByteBufIterationKernelTest
         using var s = new Storage(direct, 0);
         s.First.Retain();
         int calls = 0;
-        Func<byte, bool> processor = _ => { if (++calls == (last ? 4 : 1)) s.Owner.Release(); return true; };
+        Func<byte, bool> processor = _ => {
+            if (++calls == (last ? 4 : 1))
+            {
+                s.Owner.Release();
+            }
+            return true; };
         int Visit()
         {
             return descending ? s.Owner.ForEachByteDesc(2, 4, processor) : s.Owner.ForEachByte(2, 4, processor);
@@ -393,7 +447,10 @@ public partial class CompositeByteBufIterationKernelTest
                     {
                         Assert.Equal(expected, copy.AsReadOnlyMemory(0, 8).ToArray());
                     }
-                    finally { copy.Release(); }
+                    finally
+                    {
+                        copy.Release();
+                    }
                     break;
                 case 12:
                     Assert.Equal(expected, composite.Decompose(32, 8)[0].AsReadOnlyMemory(0, 8).ToArray());
@@ -416,7 +473,11 @@ public partial class CompositeByteBufIterationKernelTest
                         flat.AddFlattenedComponents(composite.Retain(), true);
                         Assert.Equal(expected, flat.AsReadOnlyMemory(0, 8).ToArray());
                     }
-                    finally { flat.Release(); composite.ReaderIndex = 0; }
+                    finally
+                    {
+                        flat.Release();
+                        composite.ReaderIndex = 0;
+                    }
                     break;
             }
             Assert.Equal(expected, source.AsReadOnlyMemory(HighCoordinateStorage.Start, 8).ToArray());
@@ -425,7 +486,11 @@ public partial class CompositeByteBufIterationKernelTest
             Assert.Equal(0, composite.ReaderIndex);
             Assert.Equal(40, composite.WriterIndex);
         }
-        finally { peer.Release(); composite.Release(); }
+        finally
+        {
+            peer.Release();
+            composite.Release();
+        }
         Assert.Equal(0, source.RefCnt);
     }
 

@@ -91,14 +91,21 @@ public class NativeByteBufProviderTest
 
         private void BorrowedGuards()
         {
-            if (_borrowed == null) return;
+            if (_borrowed == null)
+            {
+                return;
+            }
             Assert.Equal(Filled(11, 0x7e), _borrowed.Memory[..11].ToArray());
             Assert.Equal(Filled(21, 0x7e), _borrowed.Memory[139..].ToArray());
         }
 
         public void Dispose()
         {
-            foreach (ByteBuf b in new[] { Left, Target, Right }) if (b.RefCnt > 0) Assert.True(b.Release());
+            foreach (ByteBuf b in new[] { Left, Target, Right })
+            if (b.RefCnt > 0)
+            {
+                Assert.True(b.Release());
+            }
             // Release/detach never disposes the caller's borrowed owner.
             BorrowedGuards();
             _borrowed?.Dispose();
@@ -254,18 +261,31 @@ public class NativeByteBufProviderTest
         ByteBuf copy = s.Target.Copy(s.Initial - length, length);
         try
         {
-            Assert.Same(s.Allocator, copy.Alloc()); Assert.True(copy.IsDirect);
-            Assert.Equal(length, copy.Capacity); Assert.Equal(32768, copy.MaxCapacity);
-            Assert.Equal(0, copy.ReaderIndex); Assert.Equal(length, copy.WriterIndex);
+            Assert.Same(s.Allocator, copy.Alloc());
+            Assert.True(copy.IsDirect);
+            Assert.Equal(length, copy.Capacity);
+            Assert.Equal(32768, copy.MaxCapacity);
+            Assert.Equal(0, copy.ReaderIndex);
+            Assert.Equal(length, copy.WriterIndex);
             Assert.Equal(Filled(length, 0x42), ByteBufUtil.GetBytes(copy));
-            if (length > 0) copy.SetByte(0, 99);
+            if (length > 0)
+            {
+                copy.SetByte(0, 99);
+            }
             Assert.Equal(0x42, s.Target.GetByte(s.Initial - 1));
-            IndicesAndMarks(s.Target); s.Neighbors();
+            IndicesAndMarks(s.Target);
+            s.Neighbors();
             Assert.True(s.Target.Release());
             Assert.Equal(1, copy.RefCnt);
-            if (length > 0) Assert.Equal(99, copy.GetByte(0));
+            if (length > 0)
+            {
+                Assert.Equal(99, copy.GetByte(0));
+            }
         }
-        finally { copy.Release(); }
+        finally
+        {
+            copy.Release();
+        }
     }
 
     public static IEnumerable<object[]> TransferCases()
@@ -290,18 +310,32 @@ public class NativeByteBufProviderTest
             s.Target.SetBytes(0, root).SetIndex(3, 100).MarkReaderIndex().MarkWriterIndex();
             peer.SetBytes(0, other).SetIndex(2, 20).MarkReaderIndex().MarkWriterIndex();
             int index = s.Initial - 23;
-            if (output) { Assert.Same(s.Target, s.Target.GetBytes(index, peer, 5, 17)); Array.Fill(other, (byte)0xcc, 5, 17); }
-            else { Assert.Same(s.Target, s.Target.SetBytes(index, peer, 5, 17)); other.AsSpan(5, 17).CopyTo(root.AsSpan(index)); }
+            if (output)
+            {
+                Assert.Same(s.Target, s.Target.GetBytes(index, peer, 5, 17));
+                Array.Fill(other, (byte)0xcc, 5, 17);
+            }
+            else
+            {
+                Assert.Same(s.Target, s.Target.SetBytes(index, peer, 5, 17));
+                other.AsSpan(5, 17).CopyTo(root.AsSpan(index));
+            }
             Assert.Equal(root, ByteBufUtil.GetBytes(s.Target, 0, s.Initial));
             Assert.Equal(other, ByteBufUtil.GetBytes(peer, 0, 32));
-            IndicesAndMarks(s.Target); IndicesAndMarks(peer, 2, 20); s.Neighbors();
+            IndicesAndMarks(s.Target);
+            IndicesAndMarks(peer, 2, 20);
+            s.Neighbors();
             ByteBuf readOnly = peer.AsReadOnly();
             Assert.Throws<NotSupportedException>(() => s.Target.GetBytes(0, readOnly, 0, 1));
             Assert.Throws<ArgumentOutOfRangeException>(() => s.Target.GetBytes(s.Initial, peer, 0, 1));
             Assert.Throws<ArgumentOutOfRangeException>(() => s.Target.SetBytes(0, peer, 32, 1));
-            Assert.Equal(root, ByteBufUtil.GetBytes(s.Target, 0, s.Initial)); s.Neighbors();
+            Assert.Equal(root, ByteBufUtil.GetBytes(s.Target, 0, s.Initial));
+            s.Neighbors();
         }
-        finally { peer.Release(); }
+        finally
+        {
+            peer.Release();
+        }
     }
 
     [Theory]
@@ -337,7 +371,11 @@ public class NativeByteBufProviderTest
         public override int Read(Span<byte> destination)
         {
             Calls++;
-            if (mode == 2) { destination.Fill(0x99); throw new IOException("input failure"); }
+            if (mode == 2)
+            {
+                destination.Fill(0x99);
+                throw new IOException("input failure");
+            }
             return mode == 1 ? 0 : base.Read(destination[..Math.Min(3, destination.Length)]);
         }
     }
@@ -397,11 +435,17 @@ public class NativeByteBufProviderTest
         ByteBuf next = s.Allocator.DirectBuffer(s.Initial, 32768);
         try
         {
-            Assert.NotSame(old, Owner(next)); Assert.Equal(0, old.RefCnt);
+            Assert.NotSame(old, Owner(next));
+            Assert.Equal(0, old.RefCnt);
             Assert.Throws<IllegalReferenceCountException>(() => old.GetByte(0));
             Assert.Throws<IllegalReferenceCountException>(() => old.Retain());
-            next.SetByte(0, 42); Assert.Equal(42, next.GetByte(0)); s.Neighbors();
+            next.SetByte(0, 42);
+            Assert.Equal(42, next.GetByte(0));
+            s.Neighbors();
         }
-        finally { next.Release(); }
+        finally
+        {
+            next.Release();
+        }
     }
 }

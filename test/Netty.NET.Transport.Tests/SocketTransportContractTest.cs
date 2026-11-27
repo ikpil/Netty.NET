@@ -100,7 +100,10 @@ public class SocketTransportContractTest
             Assert.False(channel.IsOpen);
             Assert.True(channel.CloseFuture.IsCompletedSuccessfully);
         }
-        finally { await group.StopAsync().WaitAsync(TimeSpan.FromSeconds(10)); }
+        finally
+        {
+            await group.StopAsync().WaitAsync(TimeSpan.FromSeconds(10));
+        }
     }
     private sealed class EchoHandler : SimpleChannelInboundHandler<ByteBuf>
     {

@@ -657,7 +657,10 @@ public class CompositeByteBufGatheringTest : IDisposable
             buf.GetBytes(1, data);
             Assert.Equal(data, channel.WrittenBytes(2));
         }
-        finally { buf.Release(); }
+        finally
+        {
+            buf.Release();
+        }
     }
 
     private void TestGatheringWritesPartial(ByteBuf buf1, ByteBuf buf2, bool slice)
@@ -699,7 +702,10 @@ public class CompositeByteBufGatheringTest : IDisposable
                 buf.GetBytes(1, data);
             Assert.Equal(data, channel.WrittenBytes(6));
         }
-        finally { buf.Release(); }
+        finally
+        {
+            buf.Release();
+        }
     }
 
     private void TestGatheringWritesSingleBuf(ByteBuf buf1)
@@ -716,6 +722,9 @@ public class CompositeByteBufGatheringTest : IDisposable
             buf.GetBytes(1, data);
             Assert.Equal(data, channel.WrittenBytes(2));
         }
-        finally { buf.Release(); }
+        finally
+        {
+            buf.Release();
+        }
     }
 }

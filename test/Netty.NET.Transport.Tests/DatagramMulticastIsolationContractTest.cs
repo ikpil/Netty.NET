@@ -23,18 +23,30 @@ public class DatagramMulticastIsolationContractTest
     [InlineData(false, true, true)]
     public async Task SharedPortReceivesOnlyOnTheSocketWithTheMembership(bool ipv6Group, bool dualMode, bool sourceSpecific)
     {
-        if (!OperatingSystem.IsLinux()) Assert.Skip("Exercises the Linux multicast membership options.");
-        if ((ipv6Group || dualMode) && !Socket.OSSupportsIPv6) Assert.Skip("IPv6 is not supported.");
+        if (!OperatingSystem.IsLinux())
+        {
+            Assert.Skip("Exercises the Linux multicast membership options.");
+        }
+        if ((ipv6Group || dualMode) && !Socket.OSSupportsIPv6)
+        {
+            Assert.Skip("IPv6 is not supported.");
+        }
         var groupFamily = ipv6Group ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork;
         var socketFamily = dualMode ? AddressFamily.InterNetworkV6 : groupFamily;
         var iface = NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(network =>
             network.OperationalStatus == OperationalStatus.Up && network.SupportsMulticast &&
             HasAddress(network, groupFamily) && (!dualMode || HasAddress(network, socketFamily)));
-        if (iface == null) Assert.Skip("An active multicast interface with the socket and group address families is required.");
+        if (iface == null)
+        {
+            Assert.Skip("An active multicast interface with the socket and group address families is required.");
+        }
 
         var source = iface.GetIPProperties().UnicastAddresses.First(address => address.Address.AddressFamily == groupFamily).Address;
         var multicast = IPAddress.Parse(ipv6Group ? "ff12::17c" : "239.192.41.97");
-        if (ipv6Group) multicast.ScopeId = iface.GetIPProperties().GetIPv6Properties().Index;
+        if (ipv6Group)
+        {
+            multicast.ScopeId = iface.GetIPProperties().GetIPv6Properties().Index;
+        }
         var any = socketFamily == AddressFamily.InterNetworkV6 ? IPAddress.IPv6Any : IPAddress.Any;
         var cancellation = TestContext.Current.CancellationToken;
         var memberPackets = Channel.CreateUnbounded<int>();
@@ -83,7 +95,10 @@ public class DatagramMulticastIsolationContractTest
                 return sender.WriteAndFlushAsync(new DatagramPacket(Unpooled.Buffer(4).WriteInt(value), target), cancellation);
             }
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     private static bool HasAddress(NetworkInterface network, AddressFamily family)

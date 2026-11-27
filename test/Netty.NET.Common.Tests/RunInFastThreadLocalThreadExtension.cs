@@ -33,8 +33,14 @@ public static class RunInFastThreadLocalThreadExtension
     {
         public override void Run()
         {
-            try { base.Run(); }
-            catch (Exception error) { cleanupFailure(error); }
+            try
+            {
+                base.Run();
+            }
+            catch (Exception error)
+            {
+                cleanupFailure(error);
+            }
         }
     }
 
@@ -46,8 +52,14 @@ public static class RunInFastThreadLocalThreadExtension
         ExceptionDispatchInfo failure = null;
         var thread = new Worker(() =>
         {
-            try { invocation(); }
-            catch (Exception error) { failure = ExceptionDispatchInfo.Capture(error); }
+            try
+            {
+                invocation();
+            }
+            catch (Exception error)
+            {
+                failure = ExceptionDispatchInfo.Capture(error);
+            }
         }, error => failure ??= ExceptionDispatchInfo.Capture(error));
         thread.Thread.Start();
         thread.Thread.Join();

@@ -91,7 +91,8 @@ public static class PlatformDependent
     internal static bool ProcessOsReleaseFile(string osReleaseFileName, ICollection<string> availableClassifiers)
     {
         string file = osReleaseFileName;
-        try {
+        try
+        {
             if (File.Exists(file))
             {
                 try
@@ -115,11 +116,17 @@ public static class PlatformDependent
                             AddClassifier(availableClassifiers, line.Split(" "));
                         }
                     }
-                } catch (SecurityException e) {
+                }
+                catch (SecurityException e)
+                {
                     logger.Debug("Unable to read {}", osReleaseFileName, e);
-                } catch (IOException e) {
+                }
+                catch (IOException e)
+                {
                     logger.Debug("Error while reading content of {}", osReleaseFileName, e);
-                } catch (UnauthorizedAccessException e) {
+                }
+                catch (UnauthorizedAccessException e)
+                {
                     // Java AccessDeniedException is an IOException; CLR access denial is separate.
                     logger.Debug("Unable to read {}", osReleaseFileName, e);
                 }
@@ -127,7 +134,9 @@ public static class PlatformDependent
                 return true;
             }
 
-        } catch (SecurityException e) {
+        }
+        catch (SecurityException e)
+        {
             logger.Debug("Unable to check if {} exists", osReleaseFileName, e);
         }
         return false;
@@ -435,33 +444,45 @@ public static class PlatformDependent
         // Benchmarking shows that by just naively looping for inputs 8~31 bytes long we incur a relatively large
         // performance penalty (only achieve about 60% performance of loop which iterates over each char). So because
         // of this we take special provisions to unroll the looping for these conditions.
-        if (length >= 32) {
+        if (length >= 32)
+        {
             for (int i = length - 8; i >= remainingBytes; i -= 8) {
                 hash = HashCodeAsciiCompute(bytes, i, hash);
             }
-        } else if (length >= 8) {
+        }
+        else if (length >= 8)
+        {
             hash = HashCodeAsciiCompute(bytes, length - 8, hash);
-            if (length >= 16) {
+            if (length >= 16)
+            {
                 hash = HashCodeAsciiCompute(bytes, length - 16, hash);
-                if (length >= 24) {
+                if (length >= 24)
+                {
                     hash = HashCodeAsciiCompute(bytes, length - 24, hash);
                 }
             }
         }
-        if (remainingBytes == 0) {
+        if (remainingBytes == 0)
+        {
             return hash;
         }
         int offset = 0;
-        if (remainingBytes != 2 & remainingBytes != 4 & remainingBytes != 6) { // 1, 3, 5, 7
+        if (remainingBytes != 2 & remainingBytes != 4 & remainingBytes != 6)
+        {
+            // 1, 3, 5, 7
             hash = unchecked(hash * HASH_CODE_C1 + HashCodeAsciiSanitizeByte(bytes.CharAt(0)));
             offset = 1;
         }
-        if (remainingBytes != 1 & remainingBytes != 4 & remainingBytes != 5) { // 2, 3, 6, 7
+        if (remainingBytes != 1 & remainingBytes != 4 & remainingBytes != 5)
+        {
+            // 2, 3, 6, 7
             hash = unchecked(hash * (offset == 0 ? HASH_CODE_C1 : HASH_CODE_C2)
                     + HashCodeAsciiSanitize(HashCodeAsciiSanitizeShort(bytes, offset)));
             offset += 2;
         }
-        if (remainingBytes >= 4) { // 4, 5, 6, 7
+        if (remainingBytes >= 4)
+        {
+            // 4, 5, 6, 7
             return unchecked(hash * ((offset == 0 | offset == 3) ? HASH_CODE_C1 : HASH_CODE_C2)
                     + HashCodeAsciiSanitizeInt(bytes, offset));
         }
@@ -589,7 +610,10 @@ public static class PlatformDependent
         // Native library candidates must retain ID/ID_LIKE priority, unique entries
         // and an immutable cached result. No mutable builder escapes publication.
         var available = new List<string>(3);
-        if (!AddPropertyOsClassifiers(available)) AddFilesystemOsClassifiers(available);
+        if (!AddPropertyOsClassifiers(available))
+        {
+            AddFilesystemOsClassifiers(available);
+        }
         return Array.AsReadOnly(available.ToArray());
     }
 

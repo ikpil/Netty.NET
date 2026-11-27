@@ -179,12 +179,18 @@ public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBuf
         if (directMemoryCacheAlignment < 0 ||
             directMemoryCacheAlignment != 0 && !BitOperations.IsPow2(directMemoryCacheAlignment))
             throw new ArgumentOutOfRangeException(nameof(directMemoryCacheAlignment));
-        if (pageSize <= 0) throw new ArgumentOutOfRangeException(nameof(pageSize));
+        if (pageSize <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(pageSize));
+        }
         if (directMemoryCacheAlignment > 0)
         {
             // Ensure page size is a whole multiple of the alignment, or bump it to the next whole multiple.
             long aligned = ((long)pageSize + directMemoryCacheAlignment - 1) & -(long)directMemoryCacheAlignment;
-            if (aligned > int.MaxValue) throw new ArgumentOutOfRangeException(nameof(pageSize));
+            if (aligned > int.MaxValue)
+            {
+                throw new ArgumentOutOfRangeException(nameof(pageSize));
+            }
             pageSize = (int)aligned;
         }
         if (pageSize < 4096 || !BitOperations.IsPow2(pageSize))
@@ -194,7 +200,10 @@ public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBuf
                 "maxOrder: " + maxOrder.ToString(System.Globalization.CultureInfo.InvariantCulture) + " (expected: 0-14)");
         // Ensure the resulting chunkSize does not overflow.
         long chunkSize = (long)pageSize << maxOrder;
-        if (chunkSize > 1 << 30) throw new ArgumentOutOfRangeException(nameof(maxOrder));
+        if (chunkSize > 1 << 30)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxOrder));
+        }
         ArgumentOutOfRangeException.ThrowIfNegative(nHeapArena);
         ArgumentOutOfRangeException.ThrowIfNegative(nDirectArena);
         // The source passes cache sizes to PoolThreadCache unchecked: nonpositive sizes disable that cache, and the
@@ -204,7 +213,10 @@ public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBuf
             ArgumentOutOfRangeException.ThrowIfNegative(capacity, nameof(maxCachedBufferCapacity));
         if (cacheTrimInterval is int interval)
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(interval, nameof(cacheTrimInterval));
-        if (cacheTrimPeriod < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(cacheTrimPeriod));
+        if (cacheTrimPeriod < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(cacheTrimPeriod));
+        }
         SmallCacheSize = smallCacheSize;
         NormalCacheSize = normalCacheSize;
         _maxCachedBufferCapacity = maxCachedBufferCapacity ?? Configuration.Value.MaxCachedCapacity;
@@ -313,12 +325,18 @@ public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBuf
 
     private static long SumMemory(PoolArena[] arenas, bool pinned)
     {
-        if (arenas.Length == 0) return -1;
+        if (arenas.Length == 0)
+        {
+            return -1;
+        }
         long total = 0;
         foreach (PoolArena arena in arenas)
         {
             total = unchecked(total + (pinned ? arena.NumPinnedBytes : arena.NumActiveBytes));
-            if (total < 0) return long.MaxValue;
+            if (total < 0)
+            {
+                return long.MaxValue;
+            }
         }
         return total;
     }
@@ -333,7 +351,10 @@ public partial class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBuf
         using var events = BufferAllocatorEventSource.Log.BeginOperation();
         lock (_sync)
         {
-            if (_disposed) return;
+            if (_disposed)
+            {
+                return;
+            }
             _disposed = true;
             foreach (ThreadBinding binding in _threadBindings.Values) binding.Detach();
             _threadBindings.Clear();

@@ -119,7 +119,10 @@ public partial class AdaptiveByteBufKernelTest
             Assert.Equal(first, bytes[0]);
             Assert.Throws<IllegalReferenceCountException>(() => b.GetBytes(0, new byte[1].AsSpan()));
         }
-        finally { lease.Dispose(); }
+        finally
+        {
+            lease.Dispose();
+        }
         Assert.Equal(0, s.Allocator.UsedHeapMemory + s.Allocator.UsedDirectMemory);
         Assert.Equal(0, s.Allocator.Native.ReservedBytes);
     }
@@ -173,7 +176,10 @@ public partial class AdaptiveByteBufKernelTest
                 : new byte[] { (byte)((offset + 3) % 251), (byte)((offset + 4) % 251) }, seen);
             Assert.Equal(resize ? 1 : 0, b.RefCnt);
         }
-        finally { replacement?.Release(); }
+        finally
+        {
+            replacement?.Release();
+        }
     }
 
     public static IEnumerable<object[]> Aliases()
@@ -225,7 +231,10 @@ public partial class AdaptiveByteBufKernelTest
             b.GetBytes(3, peer, 1, 4);
             Assert.Equal(bytes, peer.AsReadOnlyMemory(1, 4).ToArray());
         }
-        finally { peer.Release(); }
+        finally
+        {
+            peer.Release();
+        }
         b.SetIndex(1, 3);
         b.WriteZero(4);
         Assert.Equal(7, b.WriterIndex);

@@ -249,7 +249,16 @@ public class PoolThreadCacheSchedulingTest
         executor.Advance(Period);
         Action due = executor.Poll();
         Exception error = null;
-        var thread = new Thread(() => { try { due(); } catch (Exception failure) { error = failure; } });
+        var thread = new Thread(() => {
+            try
+            {
+                due();
+            }
+            catch (Exception failure)
+            {
+                error = failure;
+            }
+        });
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(10)));
         Assert.Null(error);
@@ -270,7 +279,10 @@ public class PoolThreadCacheSchedulingTest
             {
                 Mapped(executor, () => Allocate(a, false, 48).Release());
             }
-            catch (Exception failure) { error = failure; }
+            catch (Exception failure)
+            {
+                error = failure;
+            }
         });
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(10)));
@@ -426,7 +438,10 @@ public class PoolThreadCacheSchedulingTest
             Assert.Equal(0, native.ReservedBytes);
             Assert.Equal(0, a.Metric.DirectArenas[0].NumActiveAllocations);
         }
-        finally { await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken); }
+        finally
+        {
+            await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+        }
     }
 
     [Fact]

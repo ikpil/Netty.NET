@@ -223,12 +223,21 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
         List<Exception> failures = null;
         foreach (IEventExecutor child in children)
         {
-            try { child.StopAsync(); }
-            catch (Exception error) { (failures ??= new List<Exception>()).Add(error); }
+            try
+            {
+                child.StopAsync();
+            }
+            catch (Exception error)
+            {
+                (failures ??= new List<Exception>()).Add(error);
+            }
         }
         // Request failures are distinct from the existing all-child completion
         // signal. Do not strand later children or invent a second termination Task.
-        if (failures != null) throw new AggregateException("Executor stop requests failed.", failures);
+        if (failures != null)
+        {
+            throw new AggregateException("Executor stop requests failed.", failures);
+        }
         return TerminationFuture;
     }
 

@@ -242,7 +242,11 @@ public class UnpooledTest
         }
         finally
         {
-            foreach (ByteBuf source in sources) if (source.RefCnt > 0) source.Release();
+            foreach (ByteBuf source in sources)
+            if (source.RefCnt > 0)
+            {
+                source.Release();
+            }
         }
     }
 

@@ -46,7 +46,10 @@ public partial class PooledByteBufAllocator
     private ThreadBinding GetThreadBinding()
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        if (_heapArenas.Length == 0 && _directArenas.Length == 0) return null;
+        if (_heapArenas.Length == 0 && _directArenas.Length == 0)
+        {
+            return null;
+        }
         Thread thread = Thread.CurrentThread;
         if (_threadBindings.TryGetValue(thread.ManagedThreadId, out ThreadBinding binding) && binding.IsOwner(thread))
             return binding;
@@ -62,7 +65,10 @@ public partial class PooledByteBufAllocator
     {
         Debug.Assert(Monitor.IsEntered(_sync));
         int id = thread.ManagedThreadId;
-        if (_threadBindings.TryGetValue(id, out ThreadBinding binding) && binding.IsOwner(thread)) return binding;
+        if (_threadBindings.TryGetValue(id, out ThreadBinding binding) && binding.IsOwner(thread))
+        {
+            return binding;
+        }
         ReleaseTerminatedThreadBindingsCore();
         IEventExecutor executor = ThreadExecutorMap.CurrentExecutor();
         bool useCache = _useCacheForAllThreads ||
@@ -104,11 +110,17 @@ public partial class PooledByteBufAllocator
         protected override void OnRemoval(WeakReference<ThreadBinding> value)
         {
             using var events = BufferAllocatorEventSource.Log.BeginOperation();
-            if (value == null || !value.TryGetTarget(out var binding) || !_allocator.TryGetTarget(out var owner)) return;
+            if (value == null || !value.TryGetTarget(out var binding) || !_allocator.TryGetTarget(out var owner))
+            {
+                return;
+            }
             lock (owner._sync)
             {
                 int id = Environment.CurrentManagedThreadId;
-                if (!owner._threadBindings.TryGetValue(id, out var current) || !ReferenceEquals(current, binding)) return;
+                if (!owner._threadBindings.TryGetValue(id, out var current) || !ReferenceEquals(current, binding))
+                {
+                    return;
+                }
                 owner._threadBindings.TryRemove(id, out _);
                 binding.Detach();
             }
@@ -117,13 +129,22 @@ public partial class PooledByteBufAllocator
 
     private static PoolArena LeastUsedArena(PoolArena[] arenas)
     {
-        if (arenas.Length == 0) return null;
+        if (arenas.Length == 0)
+        {
+            return null;
+        }
         PoolArena minArena = arenas[0];
         //optimized
         //If it is the first execution, directly return minarena and reduce the number of for loop comparisons below
-        if (minArena.NumThreadCaches == 0) return minArena;
+        if (minArena.NumThreadCaches == 0)
+        {
+            return minArena;
+        }
         for (int i = 1; i < arenas.Length; ++i)
-            if (arenas[i].NumThreadCaches < minArena.NumThreadCaches) minArena = arenas[i];
+            if (arenas[i].NumThreadCaches < minArena.NumThreadCaches)
+            {
+                minArena = arenas[i];
+            }
         return minArena;
     }
 
@@ -192,7 +213,10 @@ public partial class PooledByteBufAllocator
     public int ReleaseTerminatedThreadBindings()
     {
         using var events = BufferAllocatorEventSource.Log.BeginOperation();
-        lock (_sync) return ReleaseTerminatedThreadBindingsCore();
+        lock (_sync)
+        {
+            return ReleaseTerminatedThreadBindingsCore();
+        }
     }
 
     private int ReleaseTerminatedThreadBindingsCore()
@@ -200,8 +224,14 @@ public partial class PooledByteBufAllocator
         Debug.Assert(Monitor.IsEntered(_sync));
         List<int> removed = null;
         foreach (var pair in _threadBindings)
-            if (!pair.Value.IsAlive) (removed ??= new List<int>()).Add(pair.Key);
-        if (removed == null) return 0;
+            if (!pair.Value.IsAlive)
+            {
+                (removed ??= new List<int>()).Add(pair.Key);
+            }
+        if (removed == null)
+        {
+            return 0;
+        }
         foreach (int id in removed)
         {
             _threadBindings.TryRemove(id, out ThreadBinding binding);
@@ -250,9 +280,14 @@ public partial class PooledByteBufAllocator
         internal void StartTrimming(IEventExecutor executor, TimeSpan period)
         {
             // Housekeeping must not retain the caller's AsyncLocal payload/context.
-            if (ExecutionContext.IsFlowSuppressed()) StartTrimmingCore(executor, period);
+            if (ExecutionContext.IsFlowSuppressed())
+            {
+                StartTrimmingCore(executor, period);
+            }
             else
+            {
                 using (ExecutionContext.SuppressFlow()) StartTrimmingCore(executor, period);
+            }
         }
 
         private void StartTrimmingCore(IEventExecutor executor, TimeSpan period)
@@ -262,7 +297,10 @@ public partial class PooledByteBufAllocator
             // Cache's Monitor permits unordered executors and prevents an old
             // reservation from trimming a later binding after release/reassignment.
             Task task = executor.ScheduleAtFixedRateAsync(Cache.Trim, period, period, _trimCancellation.Token);
-            if (task.IsCompleted) task.GetAwaiter().GetResult();
+            if (task.IsCompleted)
+            {
+                task.GetAwaiter().GetResult();
+            }
             // Immediate rejection is propagated to the factory; later scheduler
             // faults are observed without retaining the binding in a continuation.
             _ = task.ContinueWith(static failed => { _ = failed.Exception; }, CancellationToken.None,
@@ -281,7 +319,10 @@ public partial class PooledByteBufAllocator
             // CLR: cancellation removes queued housekeeping and releases captured
             // cache/allocator references. A callback already transferred to a ready
             // queue cannot revive the closed cache or initialize another binding.
-            try { _trimCancellation?.Cancel(); }
+            try
+            {
+                _trimCancellation?.Cancel();
+            }
             finally
             {
                 _trimCancellation?.Dispose();

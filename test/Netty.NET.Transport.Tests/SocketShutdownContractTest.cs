@@ -125,8 +125,16 @@ public class SocketShutdownContractTest
         public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
         {
             AllOnOwner &= ctx.Executor.InEventLoop();
-            if (evt is ChannelInputShutdownEvent) { Events.Add("half"); Half.TrySetResult(); }
-            else if (evt is ChannelInputShutdownReadComplete) { Events.Add("final"); Final.TrySetResult(); }
+            if (evt is ChannelInputShutdownEvent)
+            {
+                Events.Add("half");
+                Half.TrySetResult();
+            }
+            else if (evt is ChannelInputShutdownReadComplete)
+            {
+                Events.Add("final");
+                Final.TrySetResult();
+            }
         }
     }
 }

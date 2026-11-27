@@ -89,7 +89,10 @@ public class TickerContractTest
                 Ticker.SystemTicker().Sleep(TimeSpan.FromTicks(delay));
                 Assert.Throws<ThreadInterruptedException>(() => Thread.Sleep(1));
             }
-            catch (Exception error) { failure = error; }
+            catch (Exception error)
+            {
+                failure = error;
+            }
         }) { IsBackground = true };
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
@@ -110,11 +113,23 @@ public class TickerContractTest
             entered.Set();
             try
             {
-                if (delay == -1) Ticker.SystemTicker().SleepMillis(long.MaxValue);
-                else if (delay == -2) Ticker.SystemTicker().Sleep(TimeSpan.MaxValue);
-                else Ticker.SystemTicker().Sleep(delay);
+                if (delay == -1)
+                {
+                    Ticker.SystemTicker().SleepMillis(long.MaxValue);
+                }
+                else if (delay == -2)
+                {
+                    Ticker.SystemTicker().Sleep(TimeSpan.MaxValue);
+                }
+                else
+                {
+                    Ticker.SystemTicker().Sleep(delay);
+                }
             }
-            catch (Exception error) { outcome = error; }
+            catch (Exception error)
+            {
+                outcome = error;
+            }
         }) { IsBackground = true };
         thread.Start();
         try
@@ -129,7 +144,10 @@ public class TickerContractTest
         }
         finally
         {
-            if (thread.IsAlive) thread.Interrupt();
+            if (thread.IsAlive)
+            {
+                thread.Interrupt();
+            }
             Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
         }
     }

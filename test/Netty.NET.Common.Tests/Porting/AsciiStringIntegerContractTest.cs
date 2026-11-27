@@ -108,8 +108,14 @@ public class AsciiStringIntegerContractTest
                 {
                     Assert.Equal(valid, TryParse(value, width, 0, 1, out long result, radix));
                     Assert.Equal(valid ? expected : 0L, result);
-                    if (valid) Assert.Equal(expected, Parse(value, width, 0, 1, radix));
-                    else Assert.Throws<FormatException>(() => Parse(value, width, 0, 1, radix));
+                    if (valid)
+                    {
+                        Assert.Equal(expected, Parse(value, width, 0, 1, radix));
+                    }
+                    else
+                    {
+                        Assert.Throws<FormatException>(() => Parse(value, width, 0, 1, radix));
+                    }
                 }
             }
         }
@@ -180,7 +186,10 @@ public class AsciiStringIntegerContractTest
             Assert.Equal(long.MinValue, new AsciiString("-9223372036854775808").ParseLong());
             Assert.Equal(255L, new AsciiString("ff").ParseLong(16));
         }
-        finally { CultureInfo.CurrentCulture = previous; }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
     }
 
     [Fact]
@@ -208,7 +217,10 @@ public class AsciiStringIntegerContractTest
     // BigInteger is only a test reference; production uses fixed-width generic math.
     private static string Format(BigInteger value, int radix)
     {
-        if (value.IsZero) return "0";
+        if (value.IsZero)
+        {
+            return "0";
+        }
         bool negative = value.Sign < 0;
         value = BigInteger.Abs(value);
         string result = "";

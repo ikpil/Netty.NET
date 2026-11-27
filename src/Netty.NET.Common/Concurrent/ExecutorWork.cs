@@ -32,7 +32,10 @@ internal sealed class ExecutorWork
         ArgumentNullException.ThrowIfNull(command);
         // A multicast or newly composed delegate is ordinary caller work. Never
         // infer queue ownership from an arbitrary Action target or method name.
-        if (command.Target is ExecutorWork entry && ReferenceEquals(command, entry._entry)) return entry._work;
+        if (command.Target is ExecutorWork entry && ReferenceEquals(command, entry._entry))
+        {
+            return entry._work;
+        }
         return null;
     }
 

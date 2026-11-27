@@ -31,7 +31,10 @@ public class ThreadConstructionContractTest
                 Assert.True(FastThreadLocalThread.CurrentThreadWillCleanupFastThreadLocals());
                 local.Set(new object());
             }
-            catch (Exception error) { failure = error; }
+            catch (Exception error)
+            {
+                failure = error;
+            }
         }, group: group, maxStackSize: maxStackSize, name: "native entry");
         Assert.True(owner.CleansFastThreadLocals);
         Assert.Same(group, ThreadGroup.GetThreadGroup(owner.Thread));
@@ -84,9 +87,21 @@ public class ThreadConstructionContractTest
         public override bool CleansFastThreadLocals => cleanup;
         public override void Run()
         {
-            try { work(); }
-            catch (Exception error) { Failure = error; }
-            finally { if (cleanup) FastThreadLocal.RemoveAll(); }
+            try
+            {
+                work();
+            }
+            catch (Exception error)
+            {
+                Failure = error;
+            }
+            finally
+            {
+                if (cleanup)
+                {
+                    FastThreadLocal.RemoveAll();
+                }
+            }
         }
     }
 
@@ -105,8 +120,14 @@ public class ThreadConstructionContractTest
             Item first = pool.Get();
             first.Handle.Recycle(first);
             Item second = pool.Get();
-            if (cleanup) Assert.Same(first, second);
-            else Assert.NotSame(first, second);
+            if (cleanup)
+            {
+                Assert.Same(first, second);
+            }
+            else
+            {
+                Assert.NotSame(first, second);
+            }
             second.Handle.Recycle(second);
         }, cleanup);
         Assert.Equal(cleanup, FastThreadLocalThread.WillCleanupFastThreadLocals(worker.Thread));
@@ -139,7 +160,10 @@ public class ThreadConstructionContractTest
                 first.Handle.Recycle(first);
                 Assert.NotSame(first, pool.Get());
             }
-            catch (Exception error) { failure = error; }
+            catch (Exception error)
+            {
+                failure = error;
+            }
         });
         Assert.False(FastThreadLocalThread.WillCleanupFastThreadLocals(worker.Thread));
         worker.Thread.IsBackground = true;

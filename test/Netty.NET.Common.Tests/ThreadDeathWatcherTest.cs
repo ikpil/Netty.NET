@@ -30,8 +30,13 @@ public class ThreadDeathWatcherTest
     {
         return new(() =>
         {
-            try { for (;;) Thread.Sleep(1000); }
-            catch (ThreadInterruptedException) { }
+            try
+            {
+                for (;;) Thread.Sleep(1000);
+            }
+            catch (ThreadInterruptedException)
+            {
+            }
         }) { IsBackground = true };
     }
 
@@ -40,7 +45,12 @@ public class ThreadDeathWatcherTest
     {
         using var latch = new CountdownEvent(1);
         Thread thread = CreateThread();
-        Action task = () => { if (!thread.IsAlive) latch.Signal(); };
+        Action task = () => {
+            if (!thread.IsAlive)
+            {
+                latch.Signal();
+            }
+        };
         Assert.Throws<ArgumentException>(() => ThreadDeathWatcher.Watch(thread, task));
         thread.Start();
         try
@@ -55,7 +65,10 @@ public class ThreadDeathWatcherTest
         }
         finally
         {
-            if (thread.IsAlive) thread.Interrupt();
+            if (thread.IsAlive)
+            {
+                thread.Interrupt();
+            }
             Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
             Assert.True(ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromSeconds(5)));
         }
@@ -84,7 +97,10 @@ public class ThreadDeathWatcherTest
         }
         finally
         {
-            if (thread.IsAlive) thread.Interrupt();
+            if (thread.IsAlive)
+            {
+                thread.Interrupt();
+            }
             Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
         }
     }

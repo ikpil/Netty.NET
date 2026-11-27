@@ -68,7 +68,10 @@ public class ResolverJdkSemanticsContractTest
             File.WriteAllBytes(path, Bytes("127.0.0.1 host\n", new UnicodeEncoding(false, false)));
             Assert.Empty(Parse(path, HostsFileEntriesProvider.UTF_16).Ipv4Entries());
         }
-        finally { File.Delete(path); }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     [Fact]
@@ -83,7 +86,10 @@ public class ResolverJdkSemanticsContractTest
             Assert.False(entries.ContainsKey("first"));
             Assert.Single(entries["second"]);
         }
-        finally { File.Delete(path); }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     [Fact]
@@ -108,7 +114,10 @@ public class ResolverJdkSemanticsContractTest
             File.WriteAllText(path, "127.0.0.1 host\n");
             Assert.Single(HostsFileEntriesProvider.Parser().Parse(file).Ipv4Entries()["host"]);
         }
-        finally { File.Delete(path); }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     private static HostsFileEntriesProvider Parse(string path, Encoding charset)

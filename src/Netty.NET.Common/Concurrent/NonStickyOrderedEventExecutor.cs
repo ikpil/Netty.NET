@@ -49,7 +49,10 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
             {
                 lock (_gate)
                 {
-                    if (_stopped || !ReferenceEquals(_reservation, reservation)) return;
+                    if (_stopped || !ReferenceEquals(_reservation, reservation))
+                    {
+                        return;
+                    }
                     _executingReservation = reservation;
                     Volatile.Write(ref _executingThread, current);
                 }
@@ -64,8 +67,14 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
                     Action task;
                     lock (_gate)
                     {
-                        if (_stopped || !ReferenceEquals(_reservation, reservation)) return;
-                        if (!tasks.TryDequeue(out task)) break;
+                        if (_stopped || !ReferenceEquals(_reservation, reservation))
+                        {
+                            return;
+                        }
+                        if (!tasks.TryDequeue(out task))
+                        {
+                            break;
+                        }
                     }
                     SafeExecute(task);
                 }
@@ -73,7 +82,10 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
                 RunnerReservation next;
                 lock (_gate)
                 {
-                    if (_stopped || !ReferenceEquals(_reservation, reservation)) return;
+                    if (_stopped || !ReferenceEquals(_reservation, reservation))
+                    {
+                        return;
+                    }
                     // CLR adaptation: queue emptiness and runner ownership change
                     // under one gate. The original CAS scenarios below explain the
                     // producer-versus-empty-drain race this atomic change resolves.
@@ -99,7 +111,10 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
                         ClearExecuting(reservation);
                         return; // done
                     }
-                    if (i < _maxTaskExecutePerRun) continue;
+                    if (i < _maxTaskExecutePerRun)
+                    {
+                        continue;
+                    }
                     next = new RunnerReservation(this);
                     _reservation = next;
                     // Only set executingThread to null if no other thread did update it yet.
@@ -123,10 +138,16 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
                         next.CancelForShutdown();
                         return;
                     }
-                    if (!next.Invalidate()) return;
+                    if (!next.Invalidate())
+                    {
+                        return;
+                    }
                     lock (_gate)
                     {
-                        if (_stopped || !ReferenceEquals(_reservation, next)) return;
+                        if (_stopped || !ReferenceEquals(_reservation, next))
+                        {
+                            return;
+                        }
                         // Restore executingThread since we're continuing to execute tasks.
                         Volatile.Write(ref _executingThread, current);
                         _executingReservation = reservation;
@@ -144,7 +165,13 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
             FinishPending(reservation, error, false);
             throw;
         }
-        finally { lock (_gate) ClearExecuting(reservation); }
+        finally
+        {
+            lock (_gate)
+            {
+                ClearExecuting(reservation);
+            }
+        }
     }
 
     public override bool InEventLoop(Thread thread)
@@ -233,13 +260,19 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
             // A native reservation owns only admission, never a result Task.
             _executor.Execute(reservation);
         }
-        finally { _inlineDispatchOwner = previous; }
+        finally
+        {
+            _inlineDispatchOwner = previous;
+        }
         return reservation.Inline;
     }
 
     private void ClearExecuting(RunnerReservation reservation)
     {
-        if (!ReferenceEquals(_executingReservation, reservation)) return;
+        if (!ReferenceEquals(_executingReservation, reservation))
+        {
+            return;
+        }
         _executingReservation = null;
         Volatile.Write(ref _executingThread, null);
     }
@@ -249,7 +282,10 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
         Action[] pending;
         lock (_gate)
         {
-            if (!ReferenceEquals(_reservation, reservation)) return;
+            if (!ReferenceEquals(_reservation, reservation))
+            {
+                return;
+            }
             _stopped |= stopped;
             pending = tasks.ToArray();
             tasks.Clear();
@@ -261,8 +297,14 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
         {
             if (ExecutorWork.GetNativeSubmission(command) is { } native)
             {
-                if (error == null) native.CancelForShutdown();
-                else native.Reject(error);
+                if (error == null)
+                {
+                    native.CancelForShutdown();
+                }
+                else
+                {
+                    native.Reject(error);
+                }
             }
         }
     }
@@ -286,19 +328,34 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
 
         public void CancelForShutdown()
         {
-            if (Invalidate()) owner.FinishPending(this, null, true);
+            if (Invalidate())
+            {
+                owner.FinishPending(this, null, true);
+            }
         }
 
         public void Reject(Exception error)
         {
-            if (Invalidate()) owner.FinishPending(this, error, false);
+            if (Invalidate())
+            {
+                owner.FinishPending(this, error, false);
+            }
         }
 
         public void Run()
         {
-            if (Interlocked.CompareExchange(ref _claim, 1, 0) != 0) return;
-            if (ReferenceEquals(_inlineDispatchOwner, owner)) Inline = true;
-            else owner.Run(this);
+            if (Interlocked.CompareExchange(ref _claim, 1, 0) != 0)
+            {
+                return;
+            }
+            if (ReferenceEquals(_inlineDispatchOwner, owner))
+            {
+                Inline = true;
+            }
+            else
+            {
+                owner.Run(this);
+            }
         }
     }
 }

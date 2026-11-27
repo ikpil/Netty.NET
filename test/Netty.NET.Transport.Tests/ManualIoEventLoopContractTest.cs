@@ -33,7 +33,10 @@ public class ManualIoEventLoopContractTest
                 while (!loop.IsTerminated()) loop.Run(0);
                 finished.SetResult();
             }
-            catch (Exception error) { finished.SetException(error); }
+            catch (Exception error)
+            {
+                finished.SetException(error);
+            }
         }) { IsBackground = true };
         owner.Start();
 
@@ -90,7 +93,10 @@ public class ManualIoEventLoopContractTest
             Assert.True(rejected.IsFaulted);
             Assert.Throws<RejectedExecutionException>(() => rejected.GetAwaiter().GetResult());
         }
-        finally { Terminate(loop); }
+        finally
+        {
+            Terminate(loop);
+        }
     }
 
     [Fact]
@@ -105,7 +111,10 @@ public class ManualIoEventLoopContractTest
             Assert.Equal(42, scheduled.GetAwaiter().GetResult());
             Assert.InRange(watch.Elapsed, TimeSpan.FromMilliseconds(50), TimeSpan.FromSeconds(2));
         }
-        finally { Terminate(loop); }
+        finally
+        {
+            Terminate(loop);
+        }
     }
 
     [Fact]

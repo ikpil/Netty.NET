@@ -35,18 +35,41 @@ internal static class NativeAotContractScenarios
     {
         switch (scenario)
         {
-            case 0: InheritedSkipDoesNotHideAnOverride(); break;
-            case 1: ExplicitSkipUsesTheActualInterfaceTarget(); break;
-            case 2: ExplicitActiveInterfaceTargetIsInvoked(); break;
-            case 3: OutboundOverridesKeepWriteAndFlush(); break;
-            case 4: AHiddenNewSlotDoesNotReplaceTheInterfaceTarget(); break;
-            case 5: CachedMasksDoNotCaptureTheFirstInstance(); break;
-            case 6: DefaultForwardersAndActiveMasksStayPrecise(); break;
-            case 7: ExclusionsKeepUnusedPublicAndPrivateMethods(); break;
-            case 8: ExceptionOnlyHandlersStillReceiveTheirCause(); break;
-            case 9: StreamWriteOwnershipSurvivesNativeCompilation(); break;
-            case 10: DirectImplementationsKeepTheirMetadata(); break;
-            default: throw new ArgumentOutOfRangeException(nameof(scenario));
+            case 0:
+                InheritedSkipDoesNotHideAnOverride();
+                break;
+            case 1:
+                ExplicitSkipUsesTheActualInterfaceTarget();
+                break;
+            case 2:
+                ExplicitActiveInterfaceTargetIsInvoked();
+                break;
+            case 3:
+                OutboundOverridesKeepWriteAndFlush();
+                break;
+            case 4:
+                AHiddenNewSlotDoesNotReplaceTheInterfaceTarget();
+                break;
+            case 5:
+                CachedMasksDoNotCaptureTheFirstInstance();
+                break;
+            case 6:
+                DefaultForwardersAndActiveMasksStayPrecise();
+                break;
+            case 7:
+                ExclusionsKeepUnusedPublicAndPrivateMethods();
+                break;
+            case 8:
+                ExceptionOnlyHandlersStillReceiveTheirCause();
+                break;
+            case 9:
+                StreamWriteOwnershipSurvivesNativeCompilation();
+                break;
+            case 10:
+                DirectImplementationsKeepTheirMetadata();
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(scenario));
         }
     }
 
@@ -65,7 +88,10 @@ internal static class NativeAotContractScenarios
             Check(reads() == expected, "The wrong inbound implementation was selected.");
             Check(channel.ReadInbound<string>() == "message", "Inbound data changed.");
         }
-        finally { channel.FinishAndReleaseAll(); }
+        finally
+        {
+            channel.FinishAndReleaseAll();
+        }
     }
 
     private static void InheritedSkipDoesNotHideAnOverride()
@@ -103,7 +129,10 @@ internal static class NativeAotContractScenarios
             Check(handler.Writes == 1 && handler.Flushes == 1, "Outbound overrides were lost.");
             Check(channel.ReadOutbound<string>() == "message", "Outbound data changed.");
         }
-        finally { channel.FinishAndReleaseAll(); }
+        finally
+        {
+            channel.FinishAndReleaseAll();
+        }
     }
 
     private static void CachedMasksDoNotCaptureTheFirstInstance()
@@ -127,8 +156,14 @@ internal static class NativeAotContractScenarios
     private static void ExclusionsKeepUnusedPublicAndPrivateMethods()
     {
         ResourceLeakDetector.AddExclusions(typeof(Exclusions), "UnusedPublic", "UnusedPrivate");
-        try { ResourceLeakDetector.AddExclusions(typeof(Exclusions), "MissingMethod"); }
-        catch (ArgumentException) { return; }
+        try
+        {
+            ResourceLeakDetector.AddExclusions(typeof(Exclusions), "MissingMethod");
+        }
+        catch (ArgumentException)
+        {
+            return;
+        }
         throw new InvalidOperationException("Missing exclusion methods must still be rejected.");
     }
 
@@ -142,7 +177,10 @@ internal static class NativeAotContractScenarios
             channel.Pipeline.FireExceptionCaught(cause);
             Check(ReferenceEquals(cause, handler.Cause), "Exception callback was lost.");
         }
-        finally { channel.FinishAndReleaseAll(); }
+        finally
+        {
+            channel.FinishAndReleaseAll();
+        }
     }
 
     private static void StreamWriteOwnershipSurvivesNativeCompilation()
@@ -155,7 +193,11 @@ internal static class NativeAotContractScenarios
             overridden.InvokeDoWrite();
             Check(overridden.HasDoWriteLoop && overridden.Called, "A doWrite(ChannelOutboundBuffer) override lost ownership.");
         }
-        finally { inherited.CloseForcibly(); overridden.CloseForcibly(); }
+        finally
+        {
+            inherited.CloseForcibly();
+            overridden.CloseForcibly();
+        }
     }
 
     private static void DirectImplementationsKeepTheirMetadata()

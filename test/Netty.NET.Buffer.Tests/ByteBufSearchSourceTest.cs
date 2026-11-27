@@ -23,8 +23,14 @@ public class ByteBufSearchSourceTest
 {
     private static ByteBuf NewBuffer(int provider, int length, NativeMemoryAllocator native)
     {
-        if (provider == 0) return new UnpooledHeapByteBuf(length, 64);
-        if (provider == 1) return new UnpooledDirectByteBuf(length, 64, native);
+        if (provider == 0)
+        {
+            return new UnpooledHeapByteBuf(length, 64);
+        }
+        if (provider == 1)
+        {
+            return new UnpooledDirectByteBuf(length, 64, native);
+        }
         var result = new CompositeByteBuf(16, false, native);
         for (int index = 0; index < length; index += 5)
         {
@@ -81,7 +87,10 @@ public class ByteBufSearchSourceTest
         }
         finally
         {
-            if (buffer.RefCnt > 0) buffer.Release();
+            if (buffer.RefCnt > 0)
+            {
+                buffer.Release();
+            }
             Assert.Equal(0, native.ReservedBytes);
         }
     }
@@ -128,7 +137,10 @@ public class ByteBufSearchSourceTest
         }
         finally
         {
-            if (buffer.RefCnt > 0) buffer.Release();
+            if (buffer.RefCnt > 0)
+            {
+                buffer.Release();
+            }
             Assert.Equal(0, native.ReservedBytes);
         }
     }
@@ -169,7 +181,10 @@ public class ByteBufSearchSourceTest
         }
         finally
         {
-            if (buffer.RefCnt > 0) buffer.Release();
+            if (buffer.RefCnt > 0)
+            {
+                buffer.Release();
+            }
             Assert.Equal(0, native.ReservedBytes);
         }
     }
@@ -186,16 +201,22 @@ public class ByteBufSearchSourceTest
         try
         {
             buffer.Release();
-            if (buffer.Capacity != 0) {
+            if (buffer.Capacity != 0)
+            {
                 Assert.Throws<IllegalReferenceCountException>(() => buffer.IndexOf(0, 1, (byte) 1));
-            } else {
+            }
+            else
+            {
                 Assert.Equal(-1, buffer.IndexOf(0, 1, (byte) 1));
             }
 
         }
         finally
         {
-            if (buffer.RefCnt > 0) buffer.Release();
+            if (buffer.RefCnt > 0)
+            {
+                buffer.Release();
+            }
             Assert.Equal(0, native.ReservedBytes);
         }
     }
@@ -224,7 +245,10 @@ public class ByteBufSearchSourceTest
         }
         finally
         {
-            if (buffer.RefCnt > 0) buffer.Release();
+            if (buffer.RefCnt > 0)
+            {
+                buffer.Release();
+            }
             Assert.Equal(0, native.ReservedBytes);
         }
     }
@@ -270,13 +294,20 @@ public class ByteBufSearchSourceTest
             3 => root.Slice(1, 14).Slice(1, 12),
             _ => root
         };
-        if (form != 0) view.SetIndex(1, view.Capacity - 1).MarkReaderIndex().MarkWriterIndex();
+        if (form != 0)
+        {
+            view.SetIndex(1, view.Capacity - 1).MarkReaderIndex().MarkWriterIndex();
+        }
         int offset = form == 2 ? 1 : form == 3 ? 2 : 0;
         int expected = -1;
         for (int i = 0; i < view.Capacity; ++i)
         {
             int index = descending ? view.Capacity - i - 1 : i;
-            if (bytes[offset + index] == value) { expected = index; break; }
+            if (bytes[offset + index] == value)
+            {
+                expected = index;
+                break;
+            }
         }
         try
         {
@@ -284,13 +315,20 @@ public class ByteBufSearchSourceTest
             Assert.Equal(0, root.Gets);
             Assert.Equal(bytes.AsSpan(offset, view.Capacity).ToArray(), ByteBufUtil.GetBytes(view, 0, view.Capacity));
             int reader = form == 0 ? 2 : 1, writer = form == 0 ? 14 : view.Capacity - 1;
-            Assert.Equal(reader, view.ReaderIndex); Assert.Equal(writer, view.WriterIndex);
+            Assert.Equal(reader, view.ReaderIndex);
+            Assert.Equal(writer, view.WriterIndex);
             view.SetIndex(0, view.Capacity).ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(reader, view.ReaderIndex); Assert.Equal(writer, view.WriterIndex);
-            Assert.Equal(2, root.ReaderIndex); Assert.Equal(14, root.WriterIndex);
+            Assert.Equal(reader, view.ReaderIndex);
+            Assert.Equal(writer, view.WriterIndex);
+            Assert.Equal(2, root.ReaderIndex);
+            Assert.Equal(14, root.WriterIndex);
             Assert.Equal(1, root.RefCnt);
         }
-        finally { root.Release(); Assert.Equal(0, native.ReservedBytes); }
+        finally
+        {
+            root.Release();
+            Assert.Equal(0, native.ReservedBytes);
+        }
     }
 
     private sealed class SearchCalls(int outcome)
@@ -345,15 +383,29 @@ public class ByteBufSearchSourceTest
         }
         try
         {
-            if (outcome == 2) Assert.Same(calls.Error, Assert.Throws<Failure>(() => Invoke()));
-            else Assert.Equal(outcome == 1 ? -1 : overload == 2 ? 3 : 4, Invoke());
-            Assert.Equal(1, calls.Count); Assert.Equal(overload == 2 ? 3 : 2, calls.From);
-            Assert.Equal(overload == 0 ? 12 : overload == 1 ? 7 : 11, calls.To); Assert.Equal(128, calls.Value);
-            Assert.Equal(2, buffer.ReaderIndex); Assert.Equal(12, buffer.WriterIndex);
+            if (outcome == 2)
+            {
+                Assert.Same(calls.Error, Assert.Throws<Failure>(() => Invoke()));
+            }
+            else
+            {
+                Assert.Equal(outcome == 1 ? -1 : overload == 2 ? 3 : 4, Invoke());
+            }
+            Assert.Equal(1, calls.Count);
+            Assert.Equal(overload == 2 ? 3 : 2, calls.From);
+            Assert.Equal(overload == 0 ? 12 : overload == 1 ? 7 : 11, calls.To);
+            Assert.Equal(128, calls.Value);
+            Assert.Equal(2, buffer.ReaderIndex);
+            Assert.Equal(12, buffer.WriterIndex);
             buffer.SetIndex(0, 16).ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(2, buffer.ReaderIndex); Assert.Equal(12, buffer.WriterIndex);
+            Assert.Equal(2, buffer.ReaderIndex);
+            Assert.Equal(12, buffer.WriterIndex);
             Assert.Equal(1, buffer.RefCnt);
         }
-        finally { buffer.Release(); Assert.Equal(0, native.ReservedBytes); }
+        finally
+        {
+            buffer.Release();
+            Assert.Equal(0, native.ReservedBytes);
+        }
     }
 }

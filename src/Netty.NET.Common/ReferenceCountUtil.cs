@@ -98,8 +98,14 @@ public static class ReferenceCountUtil
      */
     public static void SafeRelease(object msg)
     {
-        try { Release(msg); }
-        catch (Exception failure) { logger.Warn("Failed to release a message: {}", msg, failure); }
+        try
+        {
+            Release(msg);
+        }
+        catch (Exception failure)
+        {
+            logger.Warn("Failed to release a message: {}", msg, failure);
+        }
     }
 
     /**
@@ -118,7 +124,10 @@ public static class ReferenceCountUtil
         }
         catch (Exception failure)
         {
-            if (logger.IsWarnEnabled()) logger.Warn("Failed to release a message: {} (decrement: {})", msg, decrement, failure);
+            if (logger.IsWarnEnabled())
+            {
+                logger.Warn("Failed to release a message: {} (decrement: {})", msg, decrement, failure);
+            }
         }
     }
 
@@ -146,7 +155,10 @@ public static class ReferenceCountUtil
     public static T ReleaseLater<T>(T msg, int decrement)
     {
         ObjectUtil.CheckPositive(decrement, "decrement");
-        if (msg is IReferenceCounted reference) ThreadDeathWatcher.Watch(Thread.CurrentThread, new ReleasingTask(reference, decrement).Run);
+        if (msg is IReferenceCounted reference)
+        {
+            ThreadDeathWatcher.Watch(Thread.CurrentThread, new ReleasingTask(reference, decrement).Run);
+        }
         return msg;
     }
 
@@ -167,10 +179,19 @@ public static class ReferenceCountUtil
         {
             try
             {
-                if (!obj.Release(decrement)) logger.Warn("Non-zero refCnt: {}", this);
-                else logger.Debug("Released: {}", this);
+                if (!obj.Release(decrement))
+                {
+                    logger.Warn("Non-zero refCnt: {}", this);
+                }
+                else
+                {
+                    logger.Debug("Released: {}", this);
+                }
             }
-            catch (Exception failure) { logger.Warn("Failed to release an object: {}", obj, failure); }
+            catch (Exception failure)
+            {
+                logger.Warn("Failed to release an object: {}", obj, failure);
+            }
         }
 
         public override string ToString()

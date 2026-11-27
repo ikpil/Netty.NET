@@ -94,7 +94,10 @@ public partial class LocalTransportThreadModelSourceTest
         while (handlers.Any(handler => (inbound ? handler.InboundCount : handler.OutboundCount) < total))
         {
             foreach (var handler in handlers)
-                if (handler.Error is { } error) throw error;
+                if (handler.Error is { } error)
+                {
+                    throw error;
+                }
             await Task.Delay(10, token);
         }
     }
@@ -146,14 +149,23 @@ public partial class LocalTransportThreadModelSourceTest
                         ctx.FireChannelRead(value);
                     }
                 }
-                finally { input.Release(); }
+                finally
+                {
+                    input.Release();
+                }
                 return;
             }
 
             int number = (int)msg;
             Assert.Equal(_inboundCount++, number);
-            if (conversion == Conversion.Encode) ctx.FireChannelRead(ctx.Alloc().Buffer(4).WriteInt(number));
-            else if (conversion == Conversion.Forward) ctx.FireChannelRead(msg);
+            if (conversion == Conversion.Encode)
+            {
+                ctx.FireChannelRead(ctx.Alloc().Buffer(4).WriteInt(number));
+            }
+            else if (conversion == Conversion.Forward)
+            {
+                ctx.FireChannelRead(msg);
+            }
         }
 
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
@@ -171,11 +183,17 @@ public partial class LocalTransportThreadModelSourceTest
                     {
                         int value = input.ReadInt();
                         Assert.Equal(_outboundCount++, value);
-                        if (!swallow) _ = ctx.WriteAsync(value, token);
+                        if (!swallow)
+                        {
+                            _ = ctx.WriteAsync(value, token);
+                        }
                     }
                     return ctx.WriteAndFlushAsync(Unpooled.EmptyBuffer, token);
                 }
-                finally { input.Release(); }
+                finally
+                {
+                    input.Release();
+                }
             }
 
             int number = (int)msg;
@@ -188,7 +206,10 @@ public partial class LocalTransportThreadModelSourceTest
             Interlocked.CompareExchange(ref _error, cause, null);
             //System.err.print("[" + Thread.currentThread().getName() + "] ");
             //cause.printStackTrace();
-            if (conversion == Conversion.Forward) Console.Error.WriteLine($"[{Thread.CurrentThread.Name}] {cause}");
+            if (conversion == Conversion.Forward)
+            {
+                Console.Error.WriteLine($"[{Thread.CurrentThread.Name}] {cause}");
+            }
             ctx.FireExceptionCaught(cause);
         }
     }

@@ -1036,7 +1036,8 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                 }
             }
             outer_break: ;
-        }  finally
+        }
+        finally
         {
             if (@out != null)
             {

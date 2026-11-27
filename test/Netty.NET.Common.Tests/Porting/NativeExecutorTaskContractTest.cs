@@ -36,8 +36,14 @@ public class NativeExecutorTaskContractTest
         {
             Action command = _queue.Dequeue();
             _executingThread = Thread.CurrentThread;
-            try { command(); }
-            finally { _executingThread = null; }
+            try
+            {
+                command();
+            }
+            finally
+            {
+                _executingThread = null;
+            }
         }
 
         public override bool InEventLoop(Thread thread)
@@ -90,7 +96,10 @@ public class NativeExecutorTaskContractTest
         public override IEventExecutor Next()
         {
             int selection = Selections++;
-            if (SelectionFailure != null) throw SelectionFailure;
+            if (SelectionFailure != null)
+            {
+                throw SelectionFailure;
+            }
             return _children[selection % _children.Length];
         }
 
@@ -279,8 +288,13 @@ public class NativeExecutorTaskContractTest
         Task running = executor.SubmitAsync(() =>
         {
             started.SetResult();
-            try { release.Wait(TimeSpan.FromSeconds(5)); }
-            catch (ThreadInterruptedException) { }
+            try
+            {
+                release.Wait(TimeSpan.FromSeconds(5));
+            }
+            catch (ThreadInterruptedException)
+            {
+            }
         });
         try
         {
@@ -342,7 +356,11 @@ public class NativeExecutorTaskContractTest
             Assert.Same(original, await Assert.ThrowsAsync<RejectedExecutionException>(async () => await first));
             Assert.Same(original, await Assert.ThrowsAsync<RejectedExecutionException>(async () => await second));
         }
-        finally { release.Set(); await firstAdmission.WaitAsync(TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            release.Set();
+            await firstAdmission.WaitAsync(TimeSpan.FromSeconds(5));
+        }
     }
 
     [Fact]
@@ -414,8 +432,13 @@ public class NativeExecutorTaskContractTest
         Task running = executor.SubmitAsync(() =>
         {
             started.SetResult();
-            try { release.Wait(TimeSpan.FromSeconds(5)); }
-            catch (ThreadInterruptedException) { }
+            try
+            {
+                release.Wait(TimeSpan.FromSeconds(5));
+            }
+            catch (ThreadInterruptedException)
+            {
+            }
         });
         try
         {
@@ -458,8 +481,13 @@ public class NativeExecutorTaskContractTest
         {
             Assert.True(child.InEventLoop());
             started.SetResult();
-            try { Assert.True(release.Wait(TimeSpan.FromSeconds(5))); }
-            catch (ThreadInterruptedException) { }
+            try
+            {
+                Assert.True(release.Wait(TimeSpan.FromSeconds(5)));
+            }
+            catch (ThreadInterruptedException)
+            {
+            }
             Assert.True(child.InEventLoop());
             return 42;
         });
@@ -468,8 +496,14 @@ public class NativeExecutorTaskContractTest
             await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
             Task first = child.SubmitAsync(() => { Assert.True(child.InEventLoop()); calls.Add(1); });
             Task second = child.SubmitAsync(() => { Assert.True(child.InEventLoop()); calls.Add(2); });
-            if (immediate) _ = executor.StopAsync();
-            else executor.Shutdown();
+            if (immediate)
+            {
+                _ = executor.StopAsync();
+            }
+            else
+            {
+                executor.Shutdown();
+            }
             release.Set();
             Assert.Equal(42, await running.WaitAsync(TimeSpan.FromSeconds(5)));
             if (immediate)
@@ -507,7 +541,10 @@ public class NativeExecutorTaskContractTest
             ++depth;
             maximumDepth = Math.Max(maximumDepth, depth);
             Assert.True(child.InEventLoop());
-            if (++count < 10001) operations.Add(child.SubmitAsync(invoke));
+            if (++count < 10001)
+            {
+                operations.Add(child.SubmitAsync(invoke));
+            }
             --depth;
         };
         operations.Add(child.SubmitAsync(invoke));
@@ -666,7 +703,10 @@ public class NativeExecutorTaskContractTest
         var original = new OperationCanceledException(matching ? cancellation.Token : unrelated.Token);
         Func<CancellationToken, int> function = token =>
         {
-            if (requested) cancellation.Cancel();
+            if (requested)
+            {
+                cancellation.Cancel();
+            }
             throw original;
         };
         Task<int> result = executor.SubmitAsync(function, cancellation.Token);

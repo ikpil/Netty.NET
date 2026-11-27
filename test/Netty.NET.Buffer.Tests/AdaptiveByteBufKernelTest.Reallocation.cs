@@ -43,7 +43,10 @@ public partial class AdaptiveByteBufKernelTest
         s.Allocator.AfterReservation = (_, allocation) => replacement = allocation;
         s.Observation.Enabled = true;
         s.Observation.Fail = mode == 0;
-        if (mode == 1) s.Observation.ReadFill = 0xA5;
+        if (mode == 1)
+        {
+            s.Observation.ReadFill = 0xA5;
+        }
         try
         {
             if (mode == 0)
@@ -62,7 +65,10 @@ public partial class AdaptiveByteBufKernelTest
                 Assert.NotSame(old, b.Allocation);
                 Assert.Equal(target, b.Capacity);
                 byte[] expected = mode == 1 ? new byte[capacity] : original;
-                if (mode == 1) Array.Fill(expected, (byte)0xA5);
+                if (mode == 1)
+                {
+                    Array.Fill(expected, (byte)0xA5);
+                }
                 Assert.Equal(expected, b.AsSpan(0, capacity).ToArray());
                 Assert.Throws<ObjectDisposedException>(() => { _ = old.GetSpan().Length; });
             }
@@ -82,6 +88,9 @@ public partial class AdaptiveByteBufKernelTest
                 Assert.Equal(original, b.AsSpan(0, capacity).ToArray());
             }
         }
-        finally { s.Observation.Enabled = false; }
+        finally
+        {
+            s.Observation.Enabled = false;
+        }
     }
 }

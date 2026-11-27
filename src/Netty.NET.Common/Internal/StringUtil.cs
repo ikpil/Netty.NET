@@ -237,7 +237,10 @@ public static class StringUtil
     public static string ToHexString(byte[] src, int offset, int length)
     {
         ReadOnlySpan<byte> bytes = SkipLeadingZeroBytes(HexSlice(src, offset, length));
-        if (bytes.IsEmpty) return EMPTY_STRING;
+        if (bytes.IsEmpty)
+        {
+            return EMPTY_STRING;
+        }
         int firstDigits = bytes[0] < 16 ? 1 : 2;
         int outputLength = checked((bytes.Length - 1) * 2 + firstDigits);
         // Populate only the final immutable string, including the first byte's optional high nibble.
@@ -271,7 +274,10 @@ public static class StringUtil
     {
         ArgumentNullException.ThrowIfNull(dst);
         ReadOnlySpan<byte> bytes = SkipLeadingZeroBytes(HexSlice(src, offset, length));
-        if (bytes.IsEmpty) return dst;
+        if (bytes.IsEmpty)
+        {
+            return dst;
+        }
         ByteToHexString(dst, bytes[0]);
         foreach (byte value in bytes[1..])
         {
@@ -283,14 +289,23 @@ public static class StringUtil
     private static ReadOnlySpan<byte> HexSlice(byte[] src, int offset, int length)
     {
         ArgumentNullException.ThrowIfNull(src);
-        if (offset < 0 || offset > src.Length) throw new ArgumentOutOfRangeException(nameof(offset));
-        if (length < 0 || length > src.Length - offset) throw new ArgumentOutOfRangeException(nameof(length));
+        if (offset < 0 || offset > src.Length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(offset));
+        }
+        if (length < 0 || length > src.Length - offset)
+        {
+            throw new ArgumentOutOfRangeException(nameof(length));
+        }
         return src.AsSpan(offset, length);
     }
 
     private static ReadOnlySpan<byte> SkipLeadingZeroBytes(ReadOnlySpan<byte> bytes)
     {
-        if (bytes.IsEmpty) return bytes;
+        if (bytes.IsEmpty)
+        {
+            return bytes;
+        }
         // Skip preceding zeroes.
         int first = bytes.IndexOfAnyExcept((byte)0);
         return bytes[(first < 0 ? bytes.Length - 1 : first)..];
@@ -330,7 +345,10 @@ public static class StringUtil
     public static byte DecodeHexByte(ICharSequence s, int pos)
     {
         ArgumentNullException.ThrowIfNull(s);
-        if (pos < 0 || pos > s.Length() - 2) throw new ArgumentOutOfRangeException(nameof(pos));
+        if (pos < 0 || pos > s.Length() - 2)
+        {
+            throw new ArgumentOutOfRangeException(nameof(pos));
+        }
         int hi = DecodeHexNibble(s.CharAt(pos));
         int lo = DecodeHexNibble(s.CharAt(pos + 1));
         if (hi == -1 || lo == -1)
@@ -345,7 +363,10 @@ public static class StringUtil
     public static byte DecodeHexByte(string str, int index)
     {
         ArgumentNullException.ThrowIfNull(str);
-        if (index < 0 || index > str.Length - 2) throw new ArgumentOutOfRangeException(nameof(index));
+        if (index < 0 || index > str.Length - 2)
+        {
+            throw new ArgumentOutOfRangeException(nameof(index));
+        }
         // HexNumber permits surrounding whitespace; the wire format requires exactly two ASCII hex digits.
         int hi = DecodeHexNibble(str[index]);
         int lo = DecodeHexNibble(str[index + 1]);
@@ -378,8 +399,14 @@ public static class StringUtil
 
         ArgumentNullException.ThrowIfNull(hexDump);
         int inputLength = hexDump.Length();
-        if (fromIndex < 0 || fromIndex > inputLength) throw new ArgumentOutOfRangeException(nameof(fromIndex));
-        if (length > inputLength - fromIndex) throw new ArgumentOutOfRangeException(nameof(length));
+        if (fromIndex < 0 || fromIndex > inputLength)
+        {
+            throw new ArgumentOutOfRangeException(nameof(fromIndex));
+        }
+        if (length > inputLength - fromIndex)
+        {
+            throw new ArgumentOutOfRangeException(nameof(length));
+        }
         byte[] bytes = new byte[length >>> 1];
         for (int i = 0; i < length; i += 2)
         {
@@ -402,8 +429,14 @@ public static class StringUtil
     {
         ArgumentNullException.ThrowIfNull(hexDump);
         int length = hexDump.Length;
-        if ((length & 1) != 0) throw new ArgumentException("length: " + length.ToString(CultureInfo.InvariantCulture));
-        if (length == 0) return EmptyArrays.EMPTY_BYTES;
+        if ((length & 1) != 0)
+        {
+            throw new ArgumentException("length: " + length.ToString(CultureInfo.InvariantCulture));
+        }
+        if (length == 0)
+        {
+            return EmptyArrays.EMPTY_BYTES;
+        }
         // Read the native immutable string directly; only the owned byte result is allocated on success.
         byte[] bytes = new byte[length / 2];
         for (int i = 0; i < length; i += 2) bytes[i / 2] = DecodeHexByte(hexDump, i);
@@ -415,7 +448,10 @@ public static class StringUtil
      */
     public static string ClassName(object o)
     {
-        if (o == null) return "null_object";
+        if (o == null)
+        {
+            return "null_object";
+        }
         Type type = o.GetType();
         return type.FullName ?? type.Name;
     }
@@ -447,8 +483,14 @@ public static class StringUtil
     public static string SimpleClassName(Type t)
     {
         ArgumentNullException.ThrowIfNull(t);
-        if (t.IsGenericParameter) return t.Name;
-        if (t.IsFunctionPointer) return t.ToString();
+        if (t.IsGenericParameter)
+        {
+            return t.Name;
+        }
+        if (t.IsFunctionPointer)
+        {
+            return t.ToString();
+        }
         // Type.Name keeps assembly-qualified generic arguments out of diagnostics. Element suffixes are CLR metadata.
         if (t.HasElementType)
         {
@@ -740,7 +782,10 @@ public static class StringUtil
 
     private static string UnescapeCsvField(string value, int start, int length, int escapedQuotes)
     {
-        if (escapedQuotes == 0) return value.Substring(start, length);
+        if (escapedQuotes == 0)
+        {
+            return value.Substring(start, length);
+        }
         // Validation counted each doubled quote; allocate and populate only the final immutable string.
         return string.Create(length - escapedQuotes, (value, start, length), static (destination, state) =>
         {
@@ -750,7 +795,10 @@ public static class StringUtil
             {
                 char current = source[index];
                 destination[written++] = current;
-                if (current == DOUBLE_QUOTE) index++;
+                if (current == DOUBLE_QUOTE)
+                {
+                    index++;
+                }
             }
         });
     }
@@ -811,7 +859,10 @@ public static class StringUtil
     {
         ArgumentNullException.ThrowIfNull(seq);
         ArgumentOutOfRangeException.ThrowIfNegative(offset);
-        if (offset >= seq.Length) return -1;
+        if (offset >= seq.Length)
+        {
+            return -1;
+        }
         int relative = seq.AsSpan(offset).IndexOfAnyExcept(TOKEN_WHITESPACE);
         return relative < 0 ? -1 : offset + relative;
     }
@@ -827,7 +878,10 @@ public static class StringUtil
     {
         ArgumentNullException.ThrowIfNull(seq);
         ArgumentOutOfRangeException.ThrowIfNegative(offset);
-        if (offset >= seq.Length) return -1;
+        if (offset >= seq.Length)
+        {
+            return -1;
+        }
         int relative = seq.AsSpan(offset).IndexOfAny(TOKEN_WHITESPACE);
         return relative < 0 ? -1 : offset + relative;
     }

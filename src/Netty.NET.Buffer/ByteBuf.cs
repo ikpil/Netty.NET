@@ -627,7 +627,10 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
     public virtual ByteBuf DiscardReadBytes()
     {
         EnsureCanWrite();
-        if (_readerIndex == 0) return this;
+        if (_readerIndex == 0)
+        {
+            return this;
+        }
         int consumed = _readerIndex;
         if (_readerIndex != _writerIndex)
             SetBytes(0, this, _readerIndex, ReadableBytes);
@@ -670,14 +673,21 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
             _markedReaderIndex = 0;
             _markedWriterIndex = Math.Max(0, _markedWriterIndex - decrement);
         }
-        else { _markedReaderIndex -= decrement; _markedWriterIndex -= decrement; }
+        else
+        {
+            _markedReaderIndex -= decrement;
+            _markedWriterIndex -= decrement;
+        }
     }
 
     // Called after a capacity reduction
     protected void TrimIndicesToCapacity(int newCapacity)
     {
         if (_writerIndex > newCapacity)
-        { _readerIndex = Math.Min(_readerIndex, newCapacity); _writerIndex = newCapacity; }
+        {
+            _readerIndex = Math.Min(_readerIndex, newCapacity);
+            _writerIndex = newCapacity;
+        }
     }
 
     /**
@@ -705,7 +715,10 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
         EnsureCanWrite();
         // using non-short-circuit & to reduce branching - this is a hot path and targetCapacity should rarely overflow
         // CLR: subtraction-based bounds avoid overflowing targetCapacity, including in checked builds.
-        if (minimumWritableBytes <= WritableBytes) return;
+        if (minimumWritableBytes <= WritableBytes)
+        {
+            return;
+        }
         if (minimumWritableBytes > MaxCapacity - _writerIndex)
             throw new ArgumentOutOfRangeException(nameof(minimumWritableBytes));
         // Normalize the target capacity to the power of 2.
@@ -739,11 +752,20 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
     {
         EnsureAccessible();
         ArgumentOutOfRangeException.ThrowIfNegative(minimumWritableBytes);
-        if (IsReadOnly) return 1;
-        if (minimumWritableBytes <= WritableBytes) return 0;
+        if (IsReadOnly)
+        {
+            return 1;
+        }
+        if (minimumWritableBytes <= WritableBytes)
+        {
+            return 0;
+        }
         if (minimumWritableBytes > MaxCapacity - _writerIndex)
         {
-            if (!force || Capacity == MaxCapacity) return 1;
+            if (!force || Capacity == MaxCapacity)
+            {
+                return 1;
+            }
             Capacity = MaxCapacity;
             return 3;
         }
@@ -759,9 +781,15 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
     internal static int CalculateNewCapacity(int minimum, int maximum)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(minimum);
-        if (minimum > maximum) throw new ArgumentOutOfRangeException(nameof(minimum));
+        if (minimum > maximum)
+        {
+            throw new ArgumentOutOfRangeException(nameof(minimum));
+        }
         const int threshold = 4 * 1024 * 1024; // 4 MiB page
-        if (minimum == threshold) return threshold;
+        if (minimum == threshold)
+        {
+            return threshold;
+        }
         // If over threshold, do not double but just increase by threshold.
         if (minimum > threshold)
         {
@@ -781,7 +809,10 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
     // CLR range/lifetime checks stay enabled; JVM opt-out properties are not applied.
     protected void EnsureAccessible()
     {
-        if (RefCnt == 0) throw new IllegalReferenceCountException(0);
+        if (RefCnt == 0)
+        {
+            throw new IllegalReferenceCountException(0);
+        }
     }
 
     protected void CheckNewCapacity(int capacity)
@@ -800,7 +831,10 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
     {
         ArgumentOutOfRangeException.ThrowIfNegative(length);
         EnsureAccessible();
-        if (length > ReadableBytes) throw new ArgumentOutOfRangeException(nameof(length));
+        if (length > ReadableBytes)
+        {
+            throw new ArgumentOutOfRangeException(nameof(length));
+        }
     }
 
     protected internal void CheckIndex(int index, int length)
@@ -1945,12 +1979,16 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
         // Copy to array
         // CLR: Span<byte> represents a writable destination of either storage kind;
         // ByteBuf destinations separately enforce their read-only guard in SetBytes.
-        if (TryGetReadOnlyMemoryCore(index, destination.Length, out var memory)) memory.Span.CopyTo(destination);
+        if (TryGetReadOnlyMemoryCore(index, destination.Length, out var memory))
+        {
+            memory.Span.CopyTo(destination);
+        }
         else
         {
             // Snapshot segmented input before a possibly aliased destination is modified.
             byte[] bytes = new byte[destination.Length];
-            GetBytesCore(index, bytes); bytes.AsSpan().CopyTo(destination);
+            GetBytesCore(index, bytes);
+            bytes.AsSpan().CopyTo(destination);
         }
         return this;
     }
@@ -2139,7 +2177,10 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
     public virtual ByteBuf ReadBytes(ByteBuf destination, int length)
     {
         ArgumentNullException.ThrowIfNull(destination);
-        if (length > destination.WritableBytes) throw new ArgumentOutOfRangeException(nameof(length));
+        if (length > destination.WritableBytes)
+        {
+            throw new ArgumentOutOfRangeException(nameof(length));
+        }
         // The indexed overload owns source validation/copying and advances this reader.
         ReadBytes(destination, destination.WriterIndex, length);
         destination.WriterIndex += length;
@@ -2232,8 +2273,17 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
     {
         CheckIndex(index, length);
         ByteBuf result = Alloc().HeapBuffer(length, MaxCapacity);
-        try { result.SetBytes(0, this, index, length); result.WriterIndex = length; return result; }
-        catch { result.Release(); throw; }
+        try
+        {
+            result.SetBytes(0, this, index, length);
+            result.WriterIndex = length;
+            return result;
+        }
+        catch
+        {
+            result.Release();
+            throw;
+        }
     }
 
     /**
@@ -2253,10 +2303,20 @@ public abstract partial class ByteBuf : IReferenceCounted, IByteBufConvertible
     public virtual ByteBuf ReadBytes(int length)
     {
         CheckReadableBytes(length);
-        if (length == 0) return Unpooled.EmptyBuffer;
+        if (length == 0)
+        {
+            return Unpooled.EmptyBuffer;
+        }
         ByteBuf result = Alloc().Buffer(length, MaxCapacity);
-        try { result.WriteBytes(this, _readerIndex, length); }
-        catch { result.Release(); throw; }
+        try
+        {
+            result.WriteBytes(this, _readerIndex, length);
+        }
+        catch
+        {
+            result.Release();
+            throw;
+        }
         _readerIndex += length;
         return result;
     }

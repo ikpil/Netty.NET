@@ -48,8 +48,14 @@ public class MapOwnershipContractTest : IDisposable
             Assert.Equal(3, map.Size()); // Binding, cache presence, nonzero reader depth.
 
             FastThreadLocal.Destroy();
-            if (mode == 2) Assert.Same(map, InternalThreadLocalMap.GetIfSet());
-            else Assert.Null(InternalThreadLocalMap.GetIfSet());
+            if (mode == 2)
+            {
+                Assert.Same(map, InternalThreadLocalMap.GetIfSet());
+            }
+            else
+            {
+                Assert.Null(InternalThreadLocalMap.GetIfSet());
+            }
             InternalThreadLocalMap.Remove();
             Assert.Null(InternalThreadLocalMap.GetIfSet());
             Assert.True(local.IsSet(map));
@@ -73,19 +79,34 @@ public class MapOwnershipContractTest : IDisposable
             {
                 ExecutionContext.Run(context.CreateCopy(), _ =>
                 {
-                    if (mode == 1) FastThreadLocalThread.RunWithFastThreadLocal(Body);
-                    else Body();
+                    if (mode == 1)
+                    {
+                        FastThreadLocalThread.RunWithFastThreadLocal(Body);
+                    }
+                    else
+                    {
+                        Body();
+                    }
                 }, null);
             }
-            catch (Exception error) { failure = error; }
-            finally { FastThreadLocal.RemoveAll(); }
+            catch (Exception error)
+            {
+                failure = error;
+            }
+            finally
+            {
+                FastThreadLocal.RemoveAll();
+            }
         }
         Thread worker = mode == 2
             ? new DefaultThreadFactory(typeof(MapOwnershipContractTest), true).NewThread(Execute)
             : new Thread(Execute) { IsBackground = true };
         worker.Start();
         Assert.True(worker.Join(TimeSpan.FromSeconds(5)));
-        if (failure != null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
+        if (failure != null)
+        {
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
+        }
         Assert.Equal("parent context", marker.Value);
         Assert.Same(parentMap, InternalThreadLocalMap.GetIfSet());
         Assert.Same(parentCache, parentMap.HandlerSharableCache());

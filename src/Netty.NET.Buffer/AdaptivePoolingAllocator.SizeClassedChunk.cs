@@ -347,12 +347,18 @@ internal sealed partial class AdaptivePoolingAllocator
                     Retire();
                 }
             }
-            else Retire();
+            else
+            {
+                Retire();
+            }
         }
 
         private void Retire()
         {
-            if (!TryRetire()) return;
+            if (!TryRetire())
+            {
+                return;
+            }
             IntStack localFreeList = _localFreeList;
             int localSize = localFreeList != null ? localFreeList.Size() : 0;
             // Exchange publishes retirement with the StoreLoad ordering used by the Java volatile write.

@@ -120,9 +120,13 @@ public sealed class AdaptiveByteBufAllocator : AbstractByteBufAllocator, IByteBu
         using var events = BufferAllocatorEventSource.Log.BeginOperation();
         lock (_disposeLock)
         {
-            if (_disposed) return;
+            if (_disposed)
+            {
+                return;
+            }
             Volatile.Write(ref _disposed, true);
-            HeapPool.Dispose(); DirectPool.Dispose();
+            HeapPool.Dispose();
+            DirectPool.Dispose();
         }
     }
 

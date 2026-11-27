@@ -35,7 +35,23 @@ public class AdaptiveThreadLocalAllocatorTest
     private static void OnThread(Action action, bool fast = false)
     {
         Exception error = null;
-        Action run = () => { try { if (fast) FastThreadLocalThread.RunWithFastThreadLocal(action); else action(); } catch (Exception e) { error = e; } };
+        Action run = () => {
+            try
+            {
+                if (fast)
+                {
+                    FastThreadLocalThread.RunWithFastThreadLocal(action);
+                }
+                else
+                {
+                    action();
+                }
+            }
+            catch (Exception e)
+            {
+                error = e;
+            }
+        };
         var thread = new Thread(() => run());
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(15)));
@@ -61,9 +77,19 @@ public class AdaptiveThreadLocalAllocatorTest
                     Assert.Equal(local ? 1 : 0, a.HeapPool.LocalBindingCount);
                     Assert.Equal(local, a.HeapPool.ThreadLocalGroup.GetIfExists()?[0] != null);
                 }
-                finally { b.Release(); }
+                finally
+                {
+                    b.Release();
+                }
             };
-            if (mapping) ThreadExecutorMap.Apply(allocate, ImmediateEventExecutor.INSTANCE)(); else allocate();
+            if (mapping)
+            {
+                ThreadExecutorMap.Apply(allocate, ImmediateEventExecutor.INSTANCE)();
+            }
+            else
+            {
+                allocate();
+            }
         }, fast);
         Assert.Equal(0, a.HeapPool.LocalBindingCount);
         Assert.Equal(fast && (mapping || nonEventLoop) ? 0 : 131072, a.UsedHeapMemory);
@@ -84,7 +110,11 @@ public class AdaptiveThreadLocalAllocatorTest
                 Assert.NotNull(normal.HeapPool.ThreadLocalGroup.GetIfExists()?[0]);
                 Assert.Equal(262144, normal.UsedHeapMemory);
             }
-            finally { small.Release(); large.Release(); }
+            finally
+            {
+                small.Release();
+                large.Release();
+            }
         }, true);
         Assert.Equal(131072, low.UsedHeapMemory);
         Assert.Equal(262144, normal.UsedHeapMemory);
@@ -114,7 +144,10 @@ public class AdaptiveThreadLocalAllocatorTest
                     b.Release();
                 }
             }
-            catch (Exception e) { error = e; }
+            catch (Exception e)
+            {
+                error = e;
+            }
         });
         thread.Thread.Start();
         Assert.True(thread.Thread.Join(TimeSpan.FromSeconds(15)));
@@ -169,12 +202,22 @@ public class AdaptiveThreadLocalAllocatorTest
                 {
                     Assert.False(FastThreadLocalThread.CurrentThreadWillCleanupFastThreadLocals());
                     Assert.Null(ThreadExecutorMap.CurrentExecutor()); var other = a.HeapBuffer(7);
-                    try { Assert.Null(a.HeapPool.ThreadLocalGroup.GetIfExists()?[0]); Assert.Equal(262144, a.UsedHeapMemory); }
-                    finally { other.Release(); }
+                    try
+                    {
+                        Assert.Null(a.HeapPool.ThreadLocalGroup.GetIfExists()?[0]);
+                        Assert.Equal(262144, a.UsedHeapMemory);
+                    }
+                    finally
+                    {
+                        other.Release();
+                    }
                 }, TestContext.Current.CancellationToken).GetAwaiter().GetResult();
                 Assert.Same(owner, a.HeapPool.ThreadLocalGroup.GetIfExists()?[0]);
             }
-            finally { b.Release(); }
+            finally
+            {
+                b.Release();
+            }
         }, ImmediateEventExecutor.INSTANCE)(), true);
         Assert.Equal(131072, a.UsedHeapMemory);
     }
@@ -201,11 +244,23 @@ public class AdaptiveThreadLocalAllocatorTest
                         for (int i = 1; i < live.Count; i++) live[i].Release();
                     });
                 }
-                catch (Exception e) { error = e; ready.Set(); }
+                catch (Exception e)
+                {
+                    error = e;
+                    ready.Set();
+                }
             });
             owner.Start(); Assert.True(ready.Wait(TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken));
-            try { release.Set(); a.Dispose(); }
-            finally { release.Set(); Assert.True(owner.Join(TimeSpan.FromSeconds(15))); }
+            try
+            {
+                release.Set();
+                a.Dispose();
+            }
+            finally
+            {
+                release.Set();
+                Assert.True(owner.Join(TimeSpan.FromSeconds(15)));
+            }
             Assert.Null(error); Assert.Equal(54321, held.GetInt(0));
             Assert.Equal(131072, a.UsedHeapMemory + a.UsedDirectMemory);
             held.Release(); lease.Dispose(); Assert.Equal(0, a.UsedHeapMemory + a.UsedDirectMemory);

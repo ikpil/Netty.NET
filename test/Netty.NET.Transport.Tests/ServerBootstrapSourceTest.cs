@@ -42,7 +42,10 @@ public class ServerBootstrapSourceTest
             await Assert.ThrowsAsync<NotSupportedException>(() => registered);
             Assert.False(created.IsActive);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Fact(Timeout = 5000)]
@@ -56,14 +59,26 @@ public class ServerBootstrapSourceTest
                 .ChildHandler(new ChannelInboundHandlerAdapter()).Handler(new ParentHandler(ctx =>
                 {
                     Exception error = null;
-                    try { Assert.True(ctx.Executor.InEventLoop()); }
-                    catch (Exception cause) { error = cause; }
-                    finally { added.TrySetResult(error); }
+                    try
+                    {
+                        Assert.True(ctx.Executor.InEventLoop());
+                    }
+                    catch (Exception cause)
+                    {
+                        error = cause;
+                    }
+                    finally
+                    {
+                        added.TrySetResult(error);
+                    }
                 }));
             await bootstrap.RegisterAsync();
             Assert.Null(await added.Task.WaitAsync(TestContext.Current.CancellationToken));
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Fact(Timeout = 3000)]
@@ -98,8 +113,14 @@ public class ServerBootstrapSourceTest
         }
         finally
         {
-            if (server != null) await server.CloseAsync();
-            if (client != null) await client.CloseAsync();
+            if (server != null)
+            {
+                await server.CloseAsync();
+            }
+            if (client != null)
+            {
+                await client.CloseAsync();
+            }
             await group.StopAsync();
         }
     }
@@ -128,8 +149,14 @@ public class ServerBootstrapSourceTest
         }
         finally
         {
-            if (server != null) await server.CloseAsync();
-            if (client != null) await client.CloseAsync();
+            if (server != null)
+            {
+                await server.CloseAsync();
+            }
+            if (client != null)
+            {
+                await client.CloseAsync();
+            }
             await group.StopAsync();
         }
         Assert.True(Volatile.Read(ref requestServed));
@@ -176,8 +203,14 @@ public class ServerBootstrapSourceTest
         }
         finally
         {
-            if (server != null) server.CloseAsync().GetAwaiter().GetResult();
-            if (client != null) client.CloseAsync().GetAwaiter().GetResult();
+            if (server != null)
+            {
+                server.CloseAsync().GetAwaiter().GetResult();
+            }
+            if (client != null)
+            {
+                client.CloseAsync().GetAwaiter().GetResult();
+            }
             group.StopAsync().GetAwaiter().GetResult();
         }
     }

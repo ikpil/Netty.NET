@@ -50,7 +50,10 @@ public class ByteBufCapacitySourceTest
 
         public void Dispose()
         {
-            if (Root.RefCnt > 0) Root.Release();
+            if (Root.RefCnt > 0)
+            {
+                Root.Release();
+            }
             Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
@@ -70,9 +73,15 @@ public class ByteBufCapacitySourceTest
         foreach (CapacityCase scenario in Enum.GetValues<CapacityCase>())
         {
             // The original composite fixture requires an unlimited maximum.
-            if (provider == 2 && (scenario is CapacityCase.AboveMaximum or CapacityCase.NegativeCapacity or CapacityCase.Decrease or CapacityCase.Increase || scenario is CapacityCase.DefaultFastWritable or CapacityCase.FastWritableAfterWrite)) continue;
+            if (provider == 2 && (scenario is CapacityCase.AboveMaximum or CapacityCase.NegativeCapacity or CapacityCase.Decrease or CapacityCase.Increase || scenario is CapacityCase.DefaultFastWritable or CapacityCase.FastWritableAfterWrite))
+                {
+                    continue;
+                }
             // The pooled fixture overrides the default fast-writable test.
-            if (provider >= 3 && scenario == CapacityCase.DefaultFastWritable) continue;
+            if (provider >= 3 && scenario == CapacityCase.DefaultFastWritable)
+                {
+                    continue;
+                }
             yield return [provider, scenario];
         }
     }
@@ -89,17 +98,27 @@ public class ByteBufCapacitySourceTest
         ByteBuf buffer = s.Root;
         if (scenario is CapacityCase.AboveMaximum or CapacityCase.NegativeCapacity or CapacityCase.Decrease or CapacityCase.Increase)
         {
-            Assert.Equal(13, buffer.MaxCapacity); Assert.Equal(3, buffer.Capacity);
+            Assert.Equal(13, buffer.MaxCapacity);
+            Assert.Equal(3, buffer.Capacity);
             switch (scenario)
             {
-                case CapacityCase.AboveMaximum: Assert.Throws<ArgumentOutOfRangeException>(() => buffer.Capacity = 14); break;
-                case CapacityCase.NegativeCapacity: Assert.Throws<ArgumentOutOfRangeException>(() => buffer.Capacity = -1); break;
-                case CapacityCase.Decrease: buffer.Capacity = 2; break;
-                default: buffer.Capacity = 4; break;
+                case CapacityCase.AboveMaximum:
+                    Assert.Throws<ArgumentOutOfRangeException>(() => buffer.Capacity = 14);
+                    break;
+                case CapacityCase.NegativeCapacity:
+                    Assert.Throws<ArgumentOutOfRangeException>(() => buffer.Capacity = -1);
+                    break;
+                case CapacityCase.Decrease:
+                    buffer.Capacity = 2;
+                    break;
+                default:
+                    buffer.Capacity = 4;
+                    break;
             }
             Assert.Equal(scenario is CapacityCase.AboveMaximum or CapacityCase.NegativeCapacity ? 3 : scenario == CapacityCase.Decrease ? 2 : 4, buffer.Capacity);
             Assert.Equal(13, buffer.MaxCapacity);
-            Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(0, buffer.WriterIndex);
+            Assert.Equal(0, buffer.ReaderIndex);
+            Assert.Equal(0, buffer.WriterIndex);
         }
         else if (scenario is CapacityCase.Slice or CapacityCase.RetainedSlice)
         {
@@ -110,17 +129,27 @@ public class ByteBufCapacitySourceTest
             try
             {
                 Assert.Throws<NotSupportedException>(() => slice.Capacity = 10);
-                Assert.Equal(3, slice.Capacity); Assert.Equal(3, slice.MaxCapacity);
+                Assert.Equal(3, slice.Capacity);
+                Assert.Equal(3, slice.MaxCapacity);
                 Assert.Equal(8, buffer.Capacity);
-                Assert.Equal(rootCount, buffer.RefCnt); Assert.Equal(sliceCount, slice.RefCnt);
+                Assert.Equal(rootCount, buffer.RefCnt);
+                Assert.Equal(sliceCount, slice.RefCnt);
             }
-            finally { if (retained) slice.Release(); }
+            finally
+            {
+                if (retained)
+                {
+                    slice.Release();
+                }
+            }
         }
         else if (scenario == CapacityCase.DefaultFastWritable)
         {
             buffer.WriterIndex = 100;
-            Assert.Equal(50, buffer.WritableBytes); Assert.Equal(150, buffer.Capacity);
-            Assert.Equal(500, buffer.MaxCapacity); Assert.Equal(400, buffer.MaxWritableBytes);
+            Assert.Equal(50, buffer.WritableBytes);
+            Assert.Equal(150, buffer.Capacity);
+            Assert.Equal(500, buffer.MaxCapacity);
+            Assert.Equal(400, buffer.MaxWritableBytes);
             // Default implementation has fast writable == writable
             Assert.Equal(50, buffer.MaxFastWritableBytes);
         }
@@ -129,7 +158,8 @@ public class ByteBufCapacitySourceTest
             int max = buffer.MaxFastWritableBytes;
             buffer.WriteByte(1);
             Assert.Equal(max - 1, buffer.MaxFastWritableBytes);
-            Assert.Equal(4, buffer.Capacity); Assert.Equal(10, buffer.MaxCapacity);
+            Assert.Equal(4, buffer.Capacity);
+            Assert.Equal(10, buffer.MaxCapacity);
         }
         else
         {
@@ -142,7 +172,8 @@ public class ByteBufCapacitySourceTest
             buffer.SkipBytes(content2.Length);
             Assert.True(buffer.ReaderIndex <= buffer.WriterIndex);
             Assert.Throws<ArgumentOutOfRangeException>(() => buffer.ResetWriterIndex());
-            Assert.Equal(10, buffer.ReaderIndex); Assert.Equal(10, buffer.WriterIndex);
+            Assert.Equal(10, buffer.ReaderIndex);
+            Assert.Equal(10, buffer.WriterIndex);
             Assert.Equal(Encoding.ASCII.GetBytes(content1 + content2), ByteBufUtil.GetBytes(buffer, 0, 10));
         }
         Assert.Equal(1, buffer.RefCnt);

@@ -243,11 +243,23 @@ public class MpscIntQueueContractTest
             {
                 pollEntered.Set();
                 result = queue.Poll();
-                try { Thread.Sleep(0); }
-                catch (ThreadInterruptedException) { interruptPreserved = true; }
+                try
+                {
+                    Thread.Sleep(0);
+                }
+                catch (ThreadInterruptedException)
+                {
+                    interruptPreserved = true;
+                }
             }
-            catch (Exception error) { failure = error; }
-            finally { pollFinished.Set(); }
+            catch (Exception error)
+            {
+                failure = error;
+            }
+            finally
+            {
+                pollFinished.Set();
+            }
         }) { IsBackground = true };
         try
         {

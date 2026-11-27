@@ -62,7 +62,10 @@ public class ScalableEventLoopGroupContractTest
             WaitForSuspension(group, 2, 2000);
             await WaitUntil(() => !resumedThread.IsAlive, cancellation);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Fact(Timeout = 10000)]
@@ -93,7 +96,10 @@ public class ScalableEventLoopGroupContractTest
             Assert.False(listener.IsOpen);
             Assert.False(accepted.IsOpen);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     private static async Task WaitUntil(Func<bool> condition, CancellationToken cancellation)

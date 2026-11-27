@@ -23,14 +23,19 @@ internal sealed partial class FixedCompositeByteBuf
     public override ByteBuf GetBytes(int index, Span<byte> destination)
     {
         CheckIndex(index, destination.Length);
-        if (destination.IsEmpty) return this;
+        if (destination.IsEmpty)
+        {
+            return this;
+        }
         Component component = _components[FindComponent(index)];
         if (destination.Length <= component.EndOffset - index)
             component.Source.GetBytes(index - component.Offset, destination);
         else
         {
             // CLR snapshots preserve memmove semantics across aliased components.
-            byte[] bytes = new byte[destination.Length]; GetBytesCore(index, bytes); bytes.AsSpan().CopyTo(destination);
+            byte[] bytes = new byte[destination.Length];
+            GetBytesCore(index, bytes);
+            bytes.AsSpan().CopyTo(destination);
         }
         return this;
     }
@@ -51,7 +56,10 @@ internal sealed partial class FixedCompositeByteBuf
                 GetBufferComponents(index, snapshot, 0, length);
                 destination.SetBytes(destinationIndex, snapshot, 0, length);
             }
-            finally { snapshot.Release(); }
+            finally
+            {
+                snapshot.Release();
+            }
         }
         else
             GetBufferComponents(index, destination, destinationIndex, length);

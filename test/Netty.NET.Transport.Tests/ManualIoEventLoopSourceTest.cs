@@ -145,7 +145,10 @@ public class ManualIoEventLoopSourceTest
                     eventLoop.RunNow();
                 }
             }
-            catch (Exception e) { failure = e; }
+            catch (Exception e)
+            {
+                failure = e;
+            }
         });
         Assert.False(eventLoop.InEventLoop());
         TaskCompletionSource cf = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);

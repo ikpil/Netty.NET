@@ -79,6 +79,9 @@ public class AsciiStringRegexConsumerContractTest
             // Native dot excludes LF; Java also excludes other line terminators.
             Assert.True(new Regex("\\A.*\\z").IsMatch(new AsciiString("a\r").ToString()));
         }
-        finally { CultureInfo.CurrentCulture = previous; }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
     }
 }

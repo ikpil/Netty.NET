@@ -192,7 +192,10 @@ internal sealed class PoolChunkList : IPoolChunkListMetric
         chunk.Parent = this;
         chunk.Prev = null;
         chunk.Next = _head;
-        if (_head != null) _head.Prev = chunk;
+        if (_head != null)
+        {
+            _head.Prev = chunk;
+        }
         _head = chunk;
     }
 
@@ -201,13 +204,19 @@ internal sealed class PoolChunkList : IPoolChunkListMetric
         if (cur == _head)
         {
             _head = cur.Next;
-            if (_head != null) _head.Prev = null;
+            if (_head != null)
+            {
+                _head.Prev = null;
+            }
         }
         else
         {
             PoolChunk next = cur.Next;
             cur.Prev.Next = next;
-            if (next != null) next.Prev = cur.Prev;
+            if (next != null)
+            {
+                next.Prev = cur.Prev;
+            }
         }
         // CLR: detached chunks do not retain stale list/neighbor references.
         cur.Parent = null;

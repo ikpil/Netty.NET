@@ -58,7 +58,11 @@ public class ThreadLocalDirectBufferTest
             next.ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(0, next.WriterIndex);
         }
-        finally { next.Release(); cache.Dispose(); }
+        finally
+        {
+            next.Release();
+            cache.Dispose();
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -183,7 +187,10 @@ public class ThreadLocalDirectBufferTest
                 Assert.Throws<InvalidOperationException>(() => cache.Rent());
                 b.Release();
             }
-            catch (Exception e) { error = e; }
+            catch (Exception e)
+            {
+                error = e;
+            }
         });
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(10)));
@@ -210,7 +217,15 @@ public class ThreadLocalDirectBufferTest
             retained.Release();
             Assert.Equal(256, native.ReservedBytes);
         }
-        finally { if (b.RefCnt != 0) b.Release(b.RefCnt); copy.Release(); cache.Dispose(); }
+        finally
+        {
+            if (b.RefCnt != 0)
+            {
+                b.Release(b.RefCnt);
+            }
+            copy.Release();
+            cache.Dispose();
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 

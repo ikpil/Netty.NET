@@ -107,7 +107,9 @@ public abstract class ChannelInitializer<T> : ChannelInboundHandlerAdapter where
             if (!_initializing.Add(ctx))
                 return false;
         try
-        { InitChannel((T)ctx.Channel); }
+        {
+            InitChannel((T)ctx.Channel);
+        }
         catch (Exception error)
         {
             // Explicitly route the failure into the pipeline. Re-entrance is guarded by
@@ -132,12 +134,22 @@ public abstract class ChannelInitializer<T> : ChannelInboundHandlerAdapter where
     {
         // The removal may happen in an async fashion if the EventExecutor we use does something funky.
         if (ctx.IsRemoved)
-        { lock (_initializing) _initializing.Remove(ctx); }
+        {
+            lock (_initializing)
+            {
+                _initializing.Remove(ctx);
+            }
+        }
         else
         {
             // The context is not removed yet which is most likely the case because a custom EventExecutor is used.
             // Let's schedule it on the EventExecutor to give it some more time to be completed in case it is offloaded.
-            ctx.Executor.Execute(() => { lock (_initializing) _initializing.Remove(ctx); });
+            ctx.Executor.Execute(() => {
+                lock (_initializing)
+                {
+                    _initializing.Remove(ctx);
+                }
+            });
         }
     }
 

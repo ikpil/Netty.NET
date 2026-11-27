@@ -60,10 +60,19 @@ public class AdaptivePoolingAllocatorTest
         try
         {
             Assert.Equal(pooled, buffer.Allocation.IsPooled);
-            if (!pooled) Assert.Equal(size, buffer.Allocation.Length);
+            if (!pooled)
+            {
+                Assert.Equal(size, buffer.Allocation.Length);
+            }
         }
-        finally { buffer.Release(); }
-        if (!pooled) Assert.Equal(before, pool.UsedMemory);
+        finally
+        {
+            buffer.Release();
+        }
+        if (!pooled)
+        {
+            Assert.Equal(before, pool.UsedMemory);
+        }
     }
 
     [Theory]
@@ -88,7 +97,10 @@ public class AdaptivePoolingAllocatorTest
             Assert.Equal(ChunkSizes[index], chunk.Capacity);
             Assert.Equal(ChunkSizes[index], pool.UsedMemory);
         }
-        finally { chunk.Dispose(); }
+        finally
+        {
+            chunk.Dispose();
+        }
         Assert.Equal(0, pool.UsedMemory);
         Assert.True(ChunkSizes[index] / Segments[index] >= 32);
     }
@@ -138,15 +150,26 @@ public class AdaptivePoolingAllocatorTest
                 var buffer = (AdaptiveByteBuf)pool.Allocate(requests[i], requests[i]);
                 try
                 {
-                    Assert.False(buffer.Allocation.IsPooled); Assert.Equal(reservations[i], buffer.Allocation.Length);
+                    Assert.False(buffer.Allocation.IsPooled);
+                    Assert.Equal(reservations[i], buffer.Allocation.Length);
                     Assert.Equal(chunks[i], pool.UsedMemory);
                 }
-                finally { buffer.Release(); }
+                finally
+                {
+                    buffer.Release();
+                }
                 continue;
             }
             Chunk chunk = controller.NewChunkAllocation(requests[i], magazine);
-            try { Assert.IsType<BuddyChunk>(chunk); Assert.Equal(chunks[i], chunk.Capacity); }
-            finally { chunk.Dispose(); }
+            try
+            {
+                Assert.IsType<BuddyChunk>(chunk);
+                Assert.Equal(chunks[i], chunk.Capacity);
+            }
+            finally
+            {
+                chunk.Dispose();
+            }
             Assert.Equal(reservations[i], controller.ComputeBufferCapacity(requests[i], requests[i], false));
         }
         Assert.Equal(0, pool.UsedMemory);
@@ -163,21 +186,30 @@ public class AdaptivePoolingAllocatorTest
             Assert.False(buffer.Allocation.IsPooled);
             Assert.Equal(32769, buffer.Allocation.Length);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
         Assert.Equal(0, low.UsedMemory);
         Chunk chunk = TestChunkAllocator.BuddyController(normal).NewChunkAllocation(32769, normal.LargeBufferMagazineGroup.Magazines[0]);
         try
         {
             Assert.Equal(524288, chunk.Capacity);
         }
-        finally { chunk.Dispose(); }
+        finally
+        {
+            chunk.Dispose();
+        }
         using var separate = TestChunkAllocator.Pool(false);
         chunk = TestChunkAllocator.BuddyController(separate).NewChunkAllocation(16897, separate.LargeBufferMagazineGroup.Magazines[0]);
         try
         {
             Assert.Equal(262144, chunk.Capacity);
         }
-        finally { chunk.Dispose(); }
+        finally
+        {
+            chunk.Dispose();
+        }
     }
 
     [Fact]
@@ -192,8 +224,14 @@ public class AdaptivePoolingAllocatorTest
         Assert.Throws<ArgumentOutOfRangeException>(() => controller.ComputeBufferCapacity(0, -1, false));
         Assert.Equal(0, p.UsedMemory);
         Chunk chunk = controller.NewChunkAllocation(16897, magazine);
-        try { Assert.Equal(262144, chunk.Capacity); }
-        finally { chunk.Dispose(); }
+        try
+        {
+            Assert.Equal(262144, chunk.Capacity);
+        }
+        finally
+        {
+            chunk.Dispose();
+        }
     }
 
     private sealed class RecordedChunkSize(int size) : Exception

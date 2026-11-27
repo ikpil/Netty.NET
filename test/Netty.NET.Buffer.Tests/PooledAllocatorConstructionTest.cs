@@ -30,7 +30,10 @@ public class PooledAllocatorConstructionTest
         for (int direct = 0; direct < 3; ++direct)
         {
             yield return [preferDirect, alignment, heap, direct, false];
-            if (heap < 2 && direct < 2) yield return [preferDirect, alignment, heap, direct, true];
+            if (heap < 2 && direct < 2)
+                        {
+                            yield return [preferDirect, alignment, heap, direct, true];
+                        }
         }
     }
 
@@ -58,7 +61,8 @@ public class PooledAllocatorConstructionTest
         try
         {
             Assert.Equal(preferDirect, selected.IsDirect);
-            Assert.False(h.IsDirect); Assert.True(d.IsDirect);
+            Assert.False(h.IsDirect);
+            Assert.True(d.IsDirect);
             foreach (ByteBuf buffer in new[] { selected, h, d })
             {
                 Assert.Same(allocator, buffer.Alloc());
@@ -73,7 +77,12 @@ public class PooledAllocatorConstructionTest
             }
             Assert.Equal(heap + direct == 0 ? 0 : 1, allocator.Metric.NumThreadLocalCaches);
         }
-        finally { selected.Release(); h.Release(); d.Release(); }
+        finally
+        {
+            selected.Release();
+            h.Release();
+            d.Release();
+        }
         allocator.Dispose();
         Assert.Equal(0, native.ReservedBytes);
     }

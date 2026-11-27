@@ -76,8 +76,15 @@ public class DefaultMockTickerTest
                 var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
                 var thread = new Thread(() =>
                 {
-                    try { ticker.Sleep(TimeSpan.FromMilliseconds(1)); completion.SetResult(); }
-                    catch (Exception cause) { completion.TrySetException(cause); }
+                    try
+                    {
+                        ticker.Sleep(TimeSpan.FromMilliseconds(1));
+                        completion.SetResult();
+                    }
+                    catch (Exception cause)
+                    {
+                        completion.TrySetException(cause);
+                    }
                 }) { IsBackground = true };
                 threads.Add(thread);
                 futures.Add(completion.Task);
@@ -101,7 +108,10 @@ public class DefaultMockTickerTest
         {
             foreach (Thread thread in threads)
             {
-                if (thread.IsAlive) thread.Interrupt();
+                if (thread.IsAlive)
+                {
+                    thread.Interrupt();
+                }
                 Assert.True(thread.Join(TimeSpan.FromSeconds(5)), "Ticker waiter did not stop");
             }
         }

@@ -132,7 +132,10 @@ public class FastThreadLocalTest : IDisposable
                 Assert.False(FastThreadLocalThread.CurrentThreadHasFastThreadLocal());
                 Completion.SetResult();
             }
-            catch (Exception cause) { Completion.TrySetException(cause); }
+            catch (Exception cause)
+            {
+                Completion.TrySetException(cause);
+            }
         }
     }
 
@@ -277,8 +280,14 @@ public class FastThreadLocalTest : IDisposable
         RunThread(() =>
         {
             int expand_threshold = 1 << 30;
-            try { InternalThreadLocalMap.Get().SetIndexedVariable(expand_threshold, null); }
-            catch (Exception cause) { throwable = cause; }
+            try
+            {
+                InternalThreadLocalMap.Get().SetIndexedVariable(expand_threshold, null);
+            }
+            catch (Exception cause)
+            {
+                throwable = cause;
+            }
         }, true);
         // assert the expanded size is not overflowed to negative value
         Assert.False(throwable is OverflowException);
@@ -324,8 +333,14 @@ public class FastThreadLocalTest : IDisposable
         var fst = new UnsetLocal();
         RunThread(() =>
         {
-            try { fst.Get(); }
-            catch (Exception cause) { throwable = cause; }
+            try
+            {
+                fst.Get();
+            }
+            catch (Exception cause)
+            {
+                throwable = cause;
+            }
         }, true);
         Assert.IsType<ArgumentException>(throwable);
     }
@@ -335,15 +350,24 @@ public class FastThreadLocalTest : IDisposable
         Exception failure = null;
         Action target = () =>
         {
-            try { runnable(); }
-            catch (Exception cause) { failure = cause; }
+            try
+            {
+                runnable();
+            }
+            catch (Exception cause)
+            {
+                failure = cause;
+            }
         };
         Thread thread = fast ? new FastThreadLocalThread(target).Thread : new Thread(() => target());
         thread.IsBackground = true;
         thread.Name = "test-local-" + Guid.NewGuid();
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(10)), "Thread did not terminate");
-        if (failure != null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
+        if (failure != null)
+        {
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
+        }
         return thread;
     }
 }

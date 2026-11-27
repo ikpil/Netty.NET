@@ -109,7 +109,10 @@ public class DomainSnapshotContractTest
             foreach (string input in corpus)
             {
                 string expected;
-                try { expected = (input.Any(value => value > 127) ? policy.GetAscii(input) : input).ToLowerInvariant(); }
+                try
+                {
+                    expected = (input.Any(value => value > 127) ? policy.GetAscii(input) : input).ToLowerInvariant();
+                }
                 catch (ArgumentException)
                 {
                     Assert.Throws<ArgumentException>(() => DomainNameMapping<object>.NormalizeHostname(input));
@@ -118,7 +121,10 @@ public class DomainSnapshotContractTest
                 Assert.Equal(expected, DomainNameMapping<object>.NormalizeHostname(input));
             }
         }
-        finally { CultureInfo.CurrentCulture = previous; }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
     }
 
     [Fact]

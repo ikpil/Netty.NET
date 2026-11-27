@@ -14,8 +14,15 @@ internal static class ConcurrentQueueOperations
         {
             for (;;)
             {
-                try { queue.Enqueue(value); return; }
-                catch (ThreadInterruptedException) { interrupted = true; }
+                try
+                {
+                    queue.Enqueue(value);
+                    return;
+                }
+                catch (ThreadInterruptedException)
+                {
+                    interrupted = true;
+                }
             }
         }
         finally
@@ -23,7 +30,10 @@ internal static class ConcurrentQueueOperations
             // ConcurrentQueue segment transitions can wait on a CLR monitor.
             // An interrupted transition has not published this value. Keep its
             // one capacity reservation and restore the interrupt after publication.
-            if (interrupted) Thread.CurrentThread.Interrupt();
+            if (interrupted)
+            {
+                Thread.CurrentThread.Interrupt();
+            }
         }
     }
 
@@ -34,15 +44,24 @@ internal static class ConcurrentQueueOperations
         {
             for (;;)
             {
-                try { return queue.TryDequeue(out value); }
-                catch (ThreadInterruptedException) { interrupted = true; }
+                try
+                {
+                    return queue.TryDequeue(out value);
+                }
+                catch (ThreadInterruptedException)
+                {
+                    interrupted = true;
+                }
             }
         }
         finally
         {
             // The CLR can interrupt before an empty segment is advanced, but
             // never after the returned item is claimed. Retry without a second claim.
-            if (interrupted) Thread.CurrentThread.Interrupt();
+            if (interrupted)
+            {
+                Thread.CurrentThread.Interrupt();
+            }
         }
     }
 }

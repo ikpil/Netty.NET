@@ -102,8 +102,14 @@ public class DerivedByteBufIterationTest
 
         public void Dispose()
         {
-            if (Owner?.RefCnt > 0) Assert.True(Owner.Release());
-            if (Root.RefCnt > 0) Assert.True(Root.Release());
+            if (Owner?.RefCnt > 0)
+            {
+                Assert.True(Owner.Release());
+            }
+            if (Root.RefCnt > 0)
+            {
+                Assert.True(Root.Release());
+            }
             Assert.Equal(0, Native.ReservedBytes);
         }
     }

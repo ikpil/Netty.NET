@@ -279,12 +279,23 @@ public class SocketConnectionAttemptSourceTest : AbstractClientSocketTest
                 {
                     loop.Execute(() =>
                     {
-                        if (!IsOpen) return;
-                        try { BaseConnect(socket, remoteAddress); }
-                        catch (SocketException) { _ = CloseAsync(); }
+                        if (!IsOpen)
+                        {
+                            return;
+                        }
+                        try
+                        {
+                            BaseConnect(socket, remoteAddress);
+                        }
+                        catch (SocketException)
+                        {
+                            _ = CloseAsync();
+                        }
                     });
                 }
-                catch (RejectedExecutionException) { }
+                catch (RejectedExecutionException)
+                {
+                }
             }, TaskScheduler.Default);
             return false;
         }

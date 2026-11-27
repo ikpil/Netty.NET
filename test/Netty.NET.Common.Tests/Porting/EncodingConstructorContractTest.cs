@@ -95,7 +95,10 @@ public class EncodingConstructorContractTest
                     _ = new AsciiString("Aé😀", CreateEncoding(i));
                 Assert.Null(InternalThreadLocalMap.GetIfSet());
             }
-            catch (Exception exception) { failure = exception; }
+            catch (Exception exception)
+            {
+                failure = exception;
+            }
         }) { IsBackground = true };
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(10)));

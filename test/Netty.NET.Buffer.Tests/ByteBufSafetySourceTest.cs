@@ -43,28 +43,82 @@ public class ByteBufSafetySourceTest
         ByteBuf root = storage.Root.SetIndex(2, 4);
         ByteBuf b = form switch { 1 => root.Slice(0, 16), 2 => new ByteBufUtilitySourceTest.Wrapper(root), 3 => root.AsReadOnly(), _ => root };
         b.SetIndex(2, 4).MarkReaderIndex().MarkWriterIndex();
-        if (operation is >= 12 and <= 14) Assert.True(root.Release());
+        if (operation is >= 12 and <= 14)
+        {
+            Assert.True(root.Release());
+        }
         void Access()
         {
             switch (operation)
             {
-                case 0: b.GetByte(-1); break; case 1: b.GetInt(int.MaxValue); break;
-                case 2: b.AsReadOnlyMemory(17, 0); break; case 3: b.AsReadOnlyMemory(1, int.MaxValue); break;
-                case 4: b.GetBytes(-1, Span<byte>.Empty); break; case 5: b.SetIndex(9, 8); break;
-                case 6: b.ReadLong(); break; case 7: b.ReadBytes(int.MaxValue); break;
-                case 8: b.SkipBytes(-1); break; case 9: b.SkipBytes(int.MaxValue); break;
-                case 10: b.ToString(1, int.MaxValue, Encoding.UTF8); break;
-                case 11: b.ForEachByte(0, int.MaxValue, _ => true); break;
-                case 12: b.GetByte(0); break; case 13: b.AsReadOnlyMemory(0, 0); break;
-                case 14: b.ReadBytes(0); break;
-                default: b.AsReadOnly().SetBytes(0, ReadOnlySpan<byte>.Empty); break;
+                case 0:
+                    b.GetByte(-1);
+                    break;
+                case 1:
+                    b.GetInt(int.MaxValue);
+                    break;
+                case 2:
+                    b.AsReadOnlyMemory(17, 0);
+                    break;
+                case 3:
+                    b.AsReadOnlyMemory(1, int.MaxValue);
+                    break;
+                case 4:
+                    b.GetBytes(-1, Span<byte>.Empty);
+                    break;
+                case 5:
+                    b.SetIndex(9, 8);
+                    break;
+                case 6:
+                    b.ReadLong();
+                    break;
+                case 7:
+                    b.ReadBytes(int.MaxValue);
+                    break;
+                case 8:
+                    b.SkipBytes(-1);
+                    break;
+                case 9:
+                    b.SkipBytes(int.MaxValue);
+                    break;
+                case 10:
+                    b.ToString(1, int.MaxValue, Encoding.UTF8);
+                    break;
+                case 11:
+                    b.ForEachByte(0, int.MaxValue, _ => true);
+                    break;
+                case 12:
+                    b.GetByte(0);
+                    break;
+                case 13:
+                    b.AsReadOnlyMemory(0, 0);
+                    break;
+                case 14:
+                    b.ReadBytes(0);
+                    break;
+                default:
+                    b.AsReadOnly().SetBytes(0, ReadOnlySpan<byte>.Empty);
+                    break;
             }
         }
-        if (operation is >= 12 and <= 14) Assert.Throws<IllegalReferenceCountException>(Access);
-        else if (operation == 15) Assert.Throws<NotSupportedException>(Access);
-        else Assert.Throws<ArgumentOutOfRangeException>(Access);
+        if (operation is >= 12 and <= 14)
+        {
+            Assert.Throws<IllegalReferenceCountException>(Access);
+        }
+        else if (operation == 15)
+        {
+            Assert.Throws<NotSupportedException>(Access);
+        }
+        else
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(Access);
+        }
         Assert.Equal((2, 4), (b.ReaderIndex, b.WriterIndex));
-        if (root.RefCnt > 0) { b.ResetReaderIndex().ResetWriterIndex(); Assert.Equal((2, 4), (b.ReaderIndex, b.WriterIndex)); }
+        if (root.RefCnt > 0)
+        {
+            b.ResetReaderIndex().ResetWriterIndex();
+            Assert.Equal((2, 4), (b.ReaderIndex, b.WriterIndex));
+        }
     }
 
     [Theory]
@@ -106,6 +160,13 @@ public class ByteBufSafetySourceTest
             Assert.Equal("0", assembly.Attribute("skipped")?.Value);
             Assert.Equal(before, properties.Select(Environment.GetEnvironmentVariable).ToArray());
         }
-        finally { if (started && !process.HasExited) process.Kill(entireProcessTree: true); File.Delete(report); }
+        finally
+        {
+            if (started && !process.HasExited)
+            {
+                process.Kill(entireProcessTree: true);
+            }
+            File.Delete(report);
+        }
     }
 }

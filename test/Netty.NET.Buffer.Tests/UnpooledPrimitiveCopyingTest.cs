@@ -39,7 +39,10 @@ public class UnpooledPrimitiveCopyingTest
             Assert.Equal(expected, buffer.AsMemory(0, expected.Length).ToArray());
             Assert.Equal(0x7f, buffer.GetByte(expected.Length));
         }
-        finally { Assert.True(buffer.Release()); }
+        finally
+        {
+            Assert.True(buffer.Release());
+        }
         Assert.Equal(0, buffer.RefCnt);
     }
 
@@ -55,7 +58,10 @@ public class UnpooledPrimitiveCopyingTest
             Assert.True(copy.ReadBoolean());
             Assert.False(copy.IsReadable());
         }
-        finally { copy.Release(); }
+        finally
+        {
+            copy.Release();
+        }
     }
 
     [Theory]
@@ -174,7 +180,11 @@ public class UnpooledPrimitiveCopyingTest
             spanCopy = null;
             CheckOwnedCopy(second, hex);
         }
-        finally { arrayCopy?.Release(); spanCopy?.Release(); }
+        finally
+        {
+            arrayCopy?.Release();
+            spanCopy?.Release();
+        }
     }
 
     [Theory]

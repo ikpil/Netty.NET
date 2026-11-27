@@ -34,7 +34,10 @@ public abstract class AbstractChannelPoolMap<TKey, TPool> : IChannelPoolMap<TKey
     public TPool Get(TKey key)
     {
         ArgumentNullException.ThrowIfNull(key);
-        if (_pools.TryGetValue(key, out var pool)) return pool;
+        if (_pools.TryGetValue(key, out var pool))
+        {
+            return pool;
+        }
         pool = NewPool(key);
         var winner = _pools.GetOrAdd(key, pool);
         if (!ReferenceEquals(pool, winner))
@@ -57,7 +60,10 @@ public abstract class AbstractChannelPoolMap<TKey, TPool> : IChannelPoolMap<TKey
     public bool Remove(TKey key)
     {
         ArgumentNullException.ThrowIfNull(key);
-        if (!_pools.TryRemove(key, out var pool)) return false;
+        if (!_pools.TryRemove(key, out var pool))
+        {
+            return false;
+        }
         _ = ObserveCloseAsync(pool);
         return true;
     }
@@ -72,7 +78,10 @@ public abstract class AbstractChannelPoolMap<TKey, TPool> : IChannelPoolMap<TKey
     public async Task<bool> RemoveAsync(TKey key)
     {
         ArgumentNullException.ThrowIfNull(key);
-        if (!_pools.TryRemove(key, out var pool)) return false;
+        if (!_pools.TryRemove(key, out var pool))
+        {
+            return false;
+        }
         await pool.CloseAsync().ConfigureAwait(false);
         return true;
     }
@@ -86,8 +95,14 @@ public abstract class AbstractChannelPoolMap<TKey, TPool> : IChannelPoolMap<TKey
      */
     private static async Task ObserveCloseAsync(TPool pool)
     {
-        try { await pool.CloseAsync().ConfigureAwait(false); }
-        catch { /* Source Remove/Get do not expose their asynchronous close result. */ }
+        try
+        {
+            await pool.CloseAsync().ConfigureAwait(false);
+        }
+        catch
+        {
+            /* Source Remove/Get do not expose their asynchronous close result. */
+        }
     }
 
     /**

@@ -65,7 +65,10 @@ public class NativeTimerDispatchContractTest
             {
                 using (ExecutionContext.SuppressFlow()) timer.NewTimeout(callback, TimeSpan.Zero);
             }
-            else timer.NewTimeout(callback, TimeSpan.Zero);
+            else
+            {
+                timer.NewTimeout(callback, TimeSpan.Zero);
+            }
             Assert.True(observations.TryTake(out var first, 5000, TestContext.Current.CancellationToken));
             Assert.Same(worker, first.Thread);
             Assert.Equal(suppressFlow ? null : "start", first.Context);

@@ -93,7 +93,10 @@ public sealed class PendingWrite
             ReferenceCountUtil.Release(_msg);
             _completion?.TrySetException(cause);
         }
-        finally { ClearAndRecycle(); }
+        finally
+        {
+            ClearAndRecycle();
+        }
         return true;
     }
 
@@ -104,8 +107,14 @@ public sealed class PendingWrite
     public bool SucceedAndRecycle()
     {
         Claim();
-        try { _completion?.TrySetResult(); }
-        finally { ClearAndRecycle(); }
+        try
+        {
+            _completion?.TrySetResult();
+        }
+        finally
+        {
+            ClearAndRecycle();
+        }
         return true;
     }
 

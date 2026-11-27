@@ -42,7 +42,10 @@ public class DefaultChannelGroupTest
             allChannels.Add(server);
             await allChannels.CloseAsync().WaitAsync(TestContext.Current.CancellationToken);
         }
-        finally { await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
+        }
     }
     private sealed class ActiveHandler(DefaultChannelGroup channels) : ChannelInboundHandlerAdapter
     {

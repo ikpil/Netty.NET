@@ -61,14 +61,26 @@ public class PoolChunkListTest
             {
                 Assert.Equal(-1, buffers[i].AsSpan(0, quarter).IndexOfAnyExcept((byte)(i + 1)));
                 buffers[i].Release();
-                if (i < 3) Assert.Equal(demoted[i], ListIndex(a.Arena, chunk));
+                if (i < 3)
+                {
+                    Assert.Equal(demoted[i], ListIndex(a.Arena, chunk));
+                }
             }
             Assert.All(a.Arena.ChunkLists, list => Assert.Empty(list));
-            Assert.Null(chunk.Parent); Assert.Null(chunk.Next); Assert.Null(chunk.Prev);
+            Assert.Null(chunk.Parent);
+            Assert.Null(chunk.Next);
+            Assert.Null(chunk.Prev);
             Assert.Equal(chunk.ChunkSize, chunk.FreeBytes);
             Assert.Equal(0, a.Native.ReservedBytes);
         }
-        finally { foreach (var b in buffers) if (b.RefCnt != 0) b.Release(); }
+        finally
+        {
+            foreach (var b in buffers)
+        if (b.RefCnt != 0)
+        {
+            b.Release();
+        }
+        }
     }
 
     [Theory]
@@ -88,7 +100,10 @@ public class PoolChunkListTest
             Assert.NotSame(initial, whole.Allocation.Chunk);
             Assert.Equal(5, ListIndex(a.Arena, whole.Allocation.Chunk));
         }
-        finally { whole.Release(); }
+        finally
+        {
+            whole.Release();
+        }
         Assert.Single(a.Arena.ChunkLists[0]);
         Assert.Equal(direct ? initial.ChunkSize : 0, a.Native.ReservedBytes);
         a.Dispose();
@@ -117,15 +132,27 @@ public class PoolChunkListTest
             Assert.Equal(chunks.Reverse(), a.Arena.ChunkLists[3]);
             first[1].Release();
             Assert.Equal(new[] { chunks[2], chunks[0] }, a.Arena.ChunkLists[3]);
-            first[0].Release(); Assert.Equal(new[] { chunks[2] }, a.Arena.ChunkLists[3]);
+            first[0].Release();
+            Assert.Equal(new[] { chunks[2] }, a.Arena.ChunkLists[3]);
             var reused = (PooledByteBuf)a.Buffer(half);
-            try { Assert.Same(chunks[2], reused.Allocation.Chunk); Assert.Empty(a.Arena.ChunkLists[3]); }
-            finally { reused.Release(); }
+            try
+            {
+                Assert.Same(chunks[2], reused.Allocation.Chunk);
+                Assert.Empty(a.Arena.ChunkLists[3]);
+            }
+            finally
+            {
+                reused.Release();
+            }
             Assert.Equal(new[] { chunks[2] }, a.Arena.ChunkLists[3]);
         }
         finally
         {
-            foreach (var b in first.Concat(second)) if (b.RefCnt != 0) b.Release();
+            foreach (var b in first.Concat(second))
+            if (b.RefCnt != 0)
+            {
+                b.Release();
+            }
         }
         Assert.All(a.Arena.ChunkLists, list => Assert.Empty(list));
     }
@@ -144,10 +171,24 @@ public class PoolChunkListTest
             buffers[7].Release();
             Assert.Equal(0, chunk.FreeBytes); // The last empty subpage of its class is retained.
             var reused = (PooledByteBuf)a.Buffer(8192);
-            try { Assert.Same(chunk, reused.Allocation.Chunk); Assert.Equal(5, ListIndex(a.Arena, chunk)); }
-            finally { reused.Release(); }
+            try
+            {
+                Assert.Same(chunk, reused.Allocation.Chunk);
+                Assert.Equal(5, ListIndex(a.Arena, chunk));
+            }
+            finally
+            {
+                reused.Release();
+            }
         }
-        finally { foreach (var b in buffers) if (b.RefCnt != 0) b.Release(); }
+        finally
+        {
+            foreach (var b in buffers)
+        if (b.RefCnt != 0)
+        {
+            b.Release();
+        }
+        }
         Assert.Equal(8192, chunk.ChunkSize - chunk.FreeBytes);
     }
 
@@ -187,8 +228,14 @@ public class PoolChunkListTest
         Assert.Throws<NotSupportedException>(() => ((IList<PoolChunkList>)a.Arena.ChunkLists).Clear());
         Assert.All(a.Arena.ChunkLists, l => Assert.Equal("none", l.ToString()));
         ByteBuf b = a.Buffer(65536);
-        try { Assert.Matches(@"^Chunk\([0-9a-f]+: 50%, 65536/131072\)$", a.Arena.ChunkLists[2].ToString()); }
-        finally { b.Release(); }
+        try
+        {
+            Assert.Matches(@"^Chunk\([0-9a-f]+: 50%, 65536/131072\)$", a.Arena.ChunkLists[2].ToString());
+        }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Fact]
@@ -207,7 +254,11 @@ public class PoolChunkListTest
             Assert.DoesNotContain(another.Allocation.Storage, storage);
             Assert.Equal(0, reused.Allocation.Offset);
         }
-        finally { reused.Release(); another.Release(); }
+        finally
+        {
+            reused.Release();
+            another.Release();
+        }
     }
 
     [Fact]
@@ -232,7 +283,10 @@ public class PoolChunkListTest
             Assert.Equal(131072, a.Native.ReservedBytes);
             Assert.Equal(42, captured[0]);
         }
-        finally { fresh.Release(); }
+        finally
+        {
+            fresh.Release();
+        }
         Assert.Equal(0, a.Native.ReservedBytes);
     }
 
@@ -252,7 +306,10 @@ public class PoolChunkListTest
         }
         Assert.All(a.Arena.ChunkLists, list => Assert.Empty(list));
         Assert.Equal(0, a.Native.ReservedBytes);
-        if (direct) Assert.Throws<ObjectDisposedException>(() => memory.Span.ToArray());
+        if (direct)
+        {
+            Assert.Throws<ObjectDisposedException>(() => memory.Span.ToArray());
+        }
     }
 
     [Theory]
@@ -282,7 +339,10 @@ public class PoolChunkListTest
                         b.AsSpan(0, b.Capacity).Fill((byte)worker);
                         Assert.Equal(-1, b.AsSpan(0, b.Capacity).IndexOfAnyExcept((byte)worker));
                     }
-                    finally { b.Release(); }
+                    finally
+                    {
+                        b.Release();
+                    }
                 }
             }
         }, token)));

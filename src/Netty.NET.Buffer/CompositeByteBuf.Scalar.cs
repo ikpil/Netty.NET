@@ -81,24 +81,51 @@ public partial class CompositeByteBuf
             ByteBuf source = component.Source;
             switch (width)
             {
-                case 1: source.SetByte(local, unchecked((int)value)); break;
+                case 1:
+                    source.SetByte(local, unchecked((int)value));
+                    break;
                 case 2:
-                    if (littleEndian) source.SetShortLE(local, unchecked((int)value));
-                    else source.SetShort(local, unchecked((int)value));
+                    if (littleEndian)
+                    {
+                        source.SetShortLE(local, unchecked((int)value));
+                    }
+                    else
+                    {
+                        source.SetShort(local, unchecked((int)value));
+                    }
                     break;
                 case 3:
-                    if (littleEndian) source.SetMediumLE(local, unchecked((int)value));
-                    else source.SetMedium(local, unchecked((int)value));
+                    if (littleEndian)
+                    {
+                        source.SetMediumLE(local, unchecked((int)value));
+                    }
+                    else
+                    {
+                        source.SetMedium(local, unchecked((int)value));
+                    }
                     break;
                 case 4:
-                    if (littleEndian) source.SetIntLE(local, unchecked((int)value));
-                    else source.SetInt(local, unchecked((int)value));
+                    if (littleEndian)
+                    {
+                        source.SetIntLE(local, unchecked((int)value));
+                    }
+                    else
+                    {
+                        source.SetInt(local, unchecked((int)value));
+                    }
                     break;
                 case 8:
-                    if (littleEndian) source.SetLongLE(local, unchecked((long)value));
-                    else source.SetLong(local, unchecked((long)value));
+                    if (littleEndian)
+                    {
+                        source.SetLongLE(local, unchecked((long)value));
+                    }
+                    else
+                    {
+                        source.SetLong(local, unchecked((long)value));
+                    }
                     break;
-                default: throw new ArgumentOutOfRangeException(nameof(width));
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(width));
             }
             return;
         }

@@ -83,7 +83,10 @@ public partial class CompositeByteBuf
         for (int i = offset; i < buffers.Length; ++i)
         {
             ByteBuf buffer = buffers[i];
-            if (buffer == null) break;
+            if (buffer == null)
+            {
+                break;
+            }
             int length = buffer.ReadableBytes;
             // Check if we would overflow.
             // See https://github.com/netty/netty/issues/10194
@@ -109,7 +112,10 @@ public partial class CompositeByteBuf
             while (next < buffers.Length)
             {
                 ByteBuf buffer = buffers[next++];
-                if (buffer == null) break;
+                if (buffer == null)
+                {
+                    break;
+                }
                 // will increase componentCount
                 addedBytes += AddComponentCore(componentIndex++, buffer, false);
             }
@@ -121,7 +127,10 @@ public partial class CompositeByteBuf
             for (; next < buffers.Length; ++next) ReferenceCountUtil.SafeRelease(buffers[next]);
             // only need to do this here for components after the added ones
             // CLR: each List insertion has already updated offsets; only indices remain.
-            if (increaseWriterIndex && addedBytes != 0) WriterIndex += addedBytes;
+            if (increaseWriterIndex && addedBytes != 0)
+            {
+                WriterIndex += addedBytes;
+            }
         }
         ConsolidateIfNeeded();
         return this;
@@ -142,8 +151,14 @@ public partial class CompositeByteBuf
         for (int i = offset; i < arrays.Length; ++i)
         {
             byte[] array = arrays[i];
-            if (array == null) break;
-            if (array.Length != 0) AddComponentCore(_components.Count, Unpooled.WrappedBuffer(array), false);
+            if (array == null)
+            {
+                break;
+            }
+            if (array.Length != 0)
+            {
+                AddComponentCore(_components.Count, Unpooled.WrappedBuffer(array), false);
+            }
         }
         ConsolidateIfNeeded();
         WriterIndex = Capacity;
@@ -158,7 +173,10 @@ public partial class CompositeByteBuf
         // No need for consolidation
         // CLR: preserve the original batch boundary, rather than consolidating each insertion.
         for (int i = offset; i < buffers.Length; ++i)
-            if (!isEmpty(buffers[i])) AddComponentCore(_components.Count, wrap(buffers[i]), false);
+            if (!isEmpty(buffers[i]))
+            {
+                AddComponentCore(_components.Count, wrap(buffers[i]), false);
+            }
         ConsolidateIfNeeded();
         WriterIndex = Capacity;
         return this;
@@ -231,7 +249,10 @@ public partial class CompositeByteBuf
             while (iterator.MoveNext())
             {
                 ByteBuf next = iterator.Current;
-                if (next == null) break;
+                if (next == null)
+                {
+                    break;
+                }
                 AddComponentCore(componentIndex++, next, increaseWriterIndex);
             }
         }
@@ -241,7 +262,10 @@ public partial class CompositeByteBuf
             {
                 ByteBuf next = iterator.Current;
                 // CLR: rejected cyclic references remain caller-owned, including in cleanup.
-                if (next != null && !ContainsBuffer(next, this)) ReferenceCountUtil.SafeRelease(next);
+                if (next != null && !ContainsBuffer(next, this))
+                {
+                    ReferenceCountUtil.SafeRelease(next);
+                }
             }
         }
         ConsolidateIfNeeded();
@@ -265,10 +289,17 @@ public partial class CompositeByteBuf
     public virtual CompositeByteBuf AddFlattenedComponents(ByteBuf buffer, bool increaseWriterIndex = false)
     {
         ArgumentNullException.ThrowIfNull(buffer);
-        if (ContainsBuffer(buffer, this)) throw new ArgumentException("Component ownership must be acyclic.", nameof(buffer));
+        if (ContainsBuffer(buffer, this))
+        {
+            throw new ArgumentException("Component ownership must be acyclic.", nameof(buffer));
+        }
         EnsureAccessible();
         int readerIndex = buffer.ReaderIndex, writerIndex = buffer.WriterIndex;
-        if (readerIndex == writerIndex) { buffer.Release(); return this; }
+        if (readerIndex == writerIndex)
+        {
+            buffer.Release();
+            return this;
+        }
         if (buffer is not CompositeByteBuf source)
         {
             AddComponentCore(_components.Count, buffer, increaseWriterIndex);
@@ -279,7 +310,10 @@ public partial class CompositeByteBuf
         source.CheckIndex(readerIndex, writerIndex - readerIndex);
         // CLR: checked capacity prevents the original unchecked flatten-offset overflow.
         int length = writerIndex - readerIndex;
-        if (length > MaxCapacity - Capacity) throw new ArgumentOutOfRangeException(nameof(buffer));
+        if (length > MaxCapacity - Capacity)
+        {
+            throw new ArgumentOutOfRangeException(nameof(buffer));
+        }
         int countBefore = _components.Count, writerBefore = WriterIndex;
         int first = source.FindComponentIndex(readerIndex);
         var additions = new List<ComponentEntry>(source._components.Count - first);
@@ -300,12 +334,18 @@ public partial class CompositeByteBuf
                     component.Source.Retain();
                     additions.Add(addition); // capacity is reserved before any retain
                 }
-                if (writerIndex == toIndex) break;
+                if (writerIndex == toIndex)
+                {
+                    break;
+                }
             }
             _components.EnsureCapacity(checked(countBefore + additions.Count));
             _components.AddRange(additions);
             UpdateOffsets();
-            if (increaseWriterIndex) WriterIndex = writerBefore + length;
+            if (increaseWriterIndex)
+            {
+                WriterIndex = writerBefore + length;
+            }
             ConsolidateIfNeeded();
             committed = true;
         }
@@ -314,9 +354,15 @@ public partial class CompositeByteBuf
             if (!committed)
             {
                 // if we did not succeed, attempt to rollback any components that were added
-                if (_components.Count > countBefore) _components.RemoveRange(countBefore, _components.Count - countBefore);
+                if (_components.Count > countBefore)
+                {
+                    _components.RemoveRange(countBefore, _components.Count - countBefore);
+                }
                 UpdateOffsets();
-                if (increaseWriterIndex) WriterIndex = writerBefore;
+                if (increaseWriterIndex)
+                {
+                    WriterIndex = writerBefore;
+                }
                 foreach (ComponentEntry addition in additions) addition.Free();
             }
         }
@@ -332,6 +378,9 @@ public partial class CompositeByteBuf
     {
         // Consolidate if the number of components will exceed the allowed maximum by the current
         // operation.
-        if (_components.Count > MaxNumComponents) ConsolidateCore(0, _components.Count);
+        if (_components.Count > MaxNumComponents)
+        {
+            ConsolidateCore(0, _components.Count);
+        }
     }
 }

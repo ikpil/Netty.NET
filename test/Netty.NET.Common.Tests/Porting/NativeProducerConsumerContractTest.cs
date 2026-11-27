@@ -17,8 +17,14 @@ public class NativeProducerConsumerContractTest
         internal Task<object> Resolve(Action<TaskCompletionSource<object>> start)
         {
             _source = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-            try { start(_source); }
-            catch (Exception error) { _source.TrySetException(error); }
+            try
+            {
+                start(_source);
+            }
+            catch (Exception error)
+            {
+                _source.TrySetException(error);
+            }
             return _source.Task;
         }
 
@@ -45,8 +51,14 @@ public class NativeProducerConsumerContractTest
         var provider = new ResolverProducer();
         Task<object> result = provider.Resolve(source =>
         {
-            if (outcome == 0) source.SetResult(value);
-            else if (outcome >= 2) throw error;
+            if (outcome == 0)
+            {
+                source.SetResult(value);
+            }
+            else if (outcome >= 2)
+            {
+                throw error;
+            }
         });
         try
         {
@@ -70,18 +82,30 @@ public class NativeProducerConsumerContractTest
             await registration.NotificationCompleted.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.Same(result, observed);
             Assert.True(onLoop);
-            if (outcome < 2) Assert.Same(value, await result);
+            if (outcome < 2)
+            {
+                Assert.Same(value, await result);
+            }
             else
             {
                 Exception caught = null;
-                try { await result; }
-                catch (Exception failure) { caught = failure; }
+                try
+                {
+                    await result;
+                }
+                catch (Exception failure)
+                {
+                    caught = failure;
+                }
                 Assert.Same(error, caught);
                 Assert.True(result.IsFaulted);
                 Assert.False(result.IsCanceled);
             }
         }
-        finally { await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero); }
+        finally
+        {
+            await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
+        }
     }
 
     [Fact]
@@ -125,6 +149,9 @@ public class NativeProducerConsumerContractTest
             Assert.Equal(0, callerPending);
             Assert.Equal(new[] { "release slot", "admit pending acquire", "caller completed" }, events);
         }
-        finally { await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero); }
+        finally
+        {
+            await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
+        }
     }
 }

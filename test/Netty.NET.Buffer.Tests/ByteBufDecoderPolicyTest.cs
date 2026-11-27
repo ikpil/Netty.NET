@@ -32,20 +32,27 @@ public class ByteBufDecoderPolicyTest
         try
         {
             buffer.WriterIndex = 100;
-            Assert.Equal(50, buffer.WritableBytes); Assert.Equal(150, buffer.Capacity);
-            Assert.Equal(500, buffer.MaxCapacity); Assert.Equal(400, buffer.MaxWritableBytes);
+            Assert.Equal(50, buffer.WritableBytes);
+            Assert.Equal(150, buffer.Capacity);
+            Assert.Equal(500, buffer.MaxCapacity);
+            Assert.Equal(400, buffer.MaxWritableBytes);
             // Default implementation has fast writable == writable
             Assert.Equal(50, buffer.MaxFastWritableBytes);
             Assert.True(buffer.IsContiguous);
-            buffer.WriteByte(1); Assert.Equal(49, buffer.MaxFastWritableBytes);
+            buffer.WriteByte(1);
+            Assert.Equal(49, buffer.MaxFastWritableBytes);
             buffer.SetZero(0, buffer.Capacity).SetIndex(20, 101).MarkReaderIndex().MarkWriterIndex();
             int previous = buffer.MaxFastWritableBytes;
             buffer.DiscardReadBytes();
             Assert.Equal(previous + 20, buffer.MaxFastWritableBytes);
-            Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(81, buffer.WriterIndex);
+            Assert.Equal(0, buffer.ReaderIndex);
+            Assert.Equal(81, buffer.WriterIndex);
             Assert.Equal(1, buffer.RefCnt);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Theory]
@@ -85,14 +92,19 @@ public class ByteBufDecoderPolicyTest
             {
                 Assert.True(owner.TryGetReadOnlyMemory(0, capacity, out _));
                 Assert.True(owner.ReadableSequence.IsSingleSegment);
-                Assert.False(owner.IsContiguous); Assert.False(owner.Slice(0, 4).IsContiguous);
+                Assert.False(owner.IsContiguous);
+                Assert.False(owner.Slice(0, 4).IsContiguous);
             }
             ByteBuf readOnly = owner.AsReadOnly();
             Assert.Equal(capacity - writer, readOnly.MaxFastWritableBytes);
             Assert.False(readOnly.IsWritable(0));
-            Assert.Equal(reader, owner.ReaderIndex); Assert.Equal(writer, owner.WriterIndex);
+            Assert.Equal(reader, owner.ReaderIndex);
+            Assert.Equal(writer, owner.WriterIndex);
         }
-        finally { owner.Release(); }
+        finally
+        {
+            owner.Release();
+        }
     }
 
     [Theory]
@@ -102,20 +114,30 @@ public class ByteBufDecoderPolicyTest
         CompositeByteBuf buffer = new(16, direct);
         try
         {
-            Assert.False(buffer.IsContiguous); Assert.Equal(0, buffer.MaxFastWritableBytes);
+            Assert.False(buffer.IsContiguous);
+            Assert.Equal(0, buffer.MaxFastWritableBytes);
             buffer.AddComponent(Unpooled.WrappedBuffer(new byte[4]), true);
-            Assert.False(buffer.IsContiguous); Assert.True(buffer.TryGetReadOnlyMemory(0, 4, out _));
+            Assert.False(buffer.IsContiguous);
+            Assert.True(buffer.TryGetReadOnlyMemory(0, 4, out _));
             buffer.AddComponent(Unpooled.WrappedBuffer(new byte[4]), true).SetIndex(2, 6);
             ByteBuf view = buffer.Duplicate();
-            Assert.False(view.IsContiguous); Assert.Equal(2, view.MaxFastWritableBytes);
-            buffer.Consolidate(); Assert.Equal(1, buffer.NumComponents);
-            Assert.False(buffer.IsContiguous); Assert.False(view.IsContiguous);
+            Assert.False(view.IsContiguous);
+            Assert.Equal(2, view.MaxFastWritableBytes);
+            buffer.Consolidate();
+            Assert.Equal(1, buffer.NumComponents);
+            Assert.False(buffer.IsContiguous);
+            Assert.False(view.IsContiguous);
             Assert.Equal(2, buffer.MaxFastWritableBytes);
-            buffer.Capacity = 12; Assert.Equal(6, buffer.MaxFastWritableBytes);
+            buffer.Capacity = 12;
+            Assert.Equal(6, buffer.MaxFastWritableBytes);
             buffer.RemoveComponents(0, buffer.NumComponents).Clear();
-            Assert.False(buffer.IsContiguous); Assert.Equal(0, buffer.MaxFastWritableBytes);
+            Assert.False(buffer.IsContiguous);
+            Assert.Equal(0, buffer.MaxFastWritableBytes);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Fact]
@@ -126,20 +148,28 @@ public class ByteBufDecoderPolicyTest
         {
             ByteBuf wrapped = new SimpleLeakAwareByteBuf(owner, new Tracker());
             ByteBuf unreleasable = Unpooled.UnreleasableBuffer(owner);
-            Assert.True(wrapped.IsContiguous); Assert.True(unreleasable.IsContiguous);
-            Assert.Equal(10, wrapped.MaxFastWritableBytes); Assert.Equal(10, unreleasable.MaxFastWritableBytes);
+            Assert.True(wrapped.IsContiguous);
+            Assert.True(unreleasable.IsContiguous);
+            Assert.Equal(10, wrapped.MaxFastWritableBytes);
+            Assert.Equal(10, unreleasable.MaxFastWritableBytes);
             Assert.Equal(2, owner.WritableBytes);
             Assert.Equal(2, owner.Duplicate().MaxFastWritableBytes);
             Assert.Equal(2, owner.AsReadOnly().MaxFastWritableBytes);
             Assert.Equal(0, wrapped.Slice(2, 3).MaxFastWritableBytes);
             wrapped.WriteByte(9);
-            Assert.Equal(9, owner.MaxFastWritableBytes); Assert.Equal(9, unreleasable.MaxFastWritableBytes);
+            Assert.Equal(9, owner.MaxFastWritableBytes);
+            Assert.Equal(9, unreleasable.MaxFastWritableBytes);
             owner.EnsureWritable(4);
-            Assert.Equal(16, owner.Capacity); Assert.Equal(9, wrapped.MaxFastWritableBytes);
-            Assert.Equal(9, wrapped.WritableBytes); Assert.Equal(9, owner.GetByte(6));
+            Assert.Equal(16, owner.Capacity);
+            Assert.Equal(9, wrapped.MaxFastWritableBytes);
+            Assert.Equal(9, wrapped.WritableBytes);
+            Assert.Equal(9, owner.GetByte(6));
             Assert.Equal(1, owner.RefCnt);
         }
-        finally { owner.Release(); }
+        finally
+        {
+            owner.Release();
+        }
     }
 
     public static IEnumerable<object[]> AllocatorCases()
@@ -210,7 +240,14 @@ public class ByteBufDecoderPolicyTest
             Assert.Equal(0, allocator.Metric.UsedDirectMemory);
             Assert.Equal(0, native.ReservedBytes);
         }
-        finally { read?.Release(); if (owner.RefCnt > 0) owner.Release(); }
+        finally
+        {
+            read?.Release();
+            if (owner.RefCnt > 0)
+            {
+                owner.Release();
+            }
+        }
     }
 
     [Theory]
@@ -224,12 +261,19 @@ public class ByteBufDecoderPolicyTest
             Assert.Same(Unpooled.EmptyBuffer, source.ReadBytes(0));
             Assert.Throws<ArgumentOutOfRangeException>(() => source.ReadBytes(-1));
             Assert.Throws<ArgumentOutOfRangeException>(() => source.ReadBytes(4));
-            Assert.Equal(0, allocator.Calls); Assert.Equal(2, source.ReaderIndex);
+            Assert.Equal(0, allocator.Calls);
+            Assert.Equal(2, source.ReaderIndex);
             source.Release();
             Assert.Throws<IllegalReferenceCountException>(() => source.ReadBytes(0));
             Assert.Equal(0, allocator.Calls);
         }
-        finally { if (source.RefCnt > 0) source.Release(); }
+        finally
+        {
+            if (source.RefCnt > 0)
+            {
+                source.Release();
+            }
+        }
     }
 
     [Theory]
@@ -242,13 +286,21 @@ public class ByteBufDecoderPolicyTest
         try
         {
             read = source.ReadBytes(3);
-            Assert.Equal((3, 32), allocator.Requested); Assert.Equal(1, allocator.Calls);
-            Assert.Same(allocator, read.Alloc()); Assert.Equal(preferDirect, read.IsDirect);
-            Assert.Equal(8, read.Capacity); Assert.Equal(3, read.WriterIndex); Assert.Equal(5, source.ReaderIndex);
+            Assert.Equal((3, 32), allocator.Requested);
+            Assert.Equal(1, allocator.Calls);
+            Assert.Same(allocator, read.Alloc());
+            Assert.Equal(preferDirect, read.IsDirect);
+            Assert.Equal(8, read.Capacity);
+            Assert.Equal(3, read.WriterIndex);
+            Assert.Equal(5, source.ReaderIndex);
             Assert.Equal(new byte[] { 3, 4, 5 }, ByteBufUtil.GetBytes(read));
             Assert.Equal(new byte[5], ByteBufUtil.GetBytes(read, 3, 5));
         }
-        finally { read?.Release(); source.Release(); }
+        finally
+        {
+            read?.Release();
+            source.Release();
+        }
         Assert.Equal(0, allocator.Native.ReservedBytes);
     }
 
@@ -262,15 +314,33 @@ public class ByteBufDecoderPolicyTest
         source.WriteZero(8).SetIndex(2, 7);
         try
         {
-            if (failure == 1) Assert.Throws<NotSupportedException>(() => source.ReadBytes(3));
-            else Assert.Throws<InvalidOperationException>(() => source.ReadBytes(3));
-            Assert.Equal(1, allocator.Calls); Assert.Equal((3, 32), allocator.Requested);
-            Assert.Equal(2, source.ReaderIndex); Assert.Equal(7, source.WriterIndex); Assert.Equal(1, source.RefCnt);
-            if (failure == 0) Assert.Null(allocator.Last);
-            else Assert.Equal(0, allocator.Last.RefCnt);
+            if (failure == 1)
+            {
+                Assert.Throws<NotSupportedException>(() => source.ReadBytes(3));
+            }
+            else
+            {
+                Assert.Throws<InvalidOperationException>(() => source.ReadBytes(3));
+            }
+            Assert.Equal(1, allocator.Calls);
+            Assert.Equal((3, 32), allocator.Requested);
+            Assert.Equal(2, source.ReaderIndex);
+            Assert.Equal(7, source.WriterIndex);
+            Assert.Equal(1, source.RefCnt);
+            if (failure == 0)
+            {
+                Assert.Null(allocator.Last);
+            }
+            else
+            {
+                Assert.Equal(0, allocator.Last.RefCnt);
+            }
             Assert.Equal(0, allocator.Native.ReservedBytes);
         }
-        finally { source.Release(); }
+        finally
+        {
+            source.Release();
+        }
     }
 
     [Fact]
@@ -290,7 +360,11 @@ public class ByteBufDecoderPolicyTest
             writable.SetByte(2, 77);
             Assert.Equal(77, readOnly.GetByte(2));
         }
-        finally { writable.Release(); readOnly.Release(); }
+        finally
+        {
+            writable.Release();
+            readOnly.Release();
+        }
         Assert.Equal(77, manager.GetSpan()[2]);
         Assert.False(manager.Disposed);
     }

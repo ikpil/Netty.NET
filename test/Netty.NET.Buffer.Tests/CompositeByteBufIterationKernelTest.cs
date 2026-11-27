@@ -185,7 +185,10 @@ public partial class CompositeByteBufIterationKernelTest
             Assert.Equal(1, needle.ReaderIndex);
             Assert.Equal(3, needle.WriterIndex);
         }
-        finally { needle.Release(); }
+        finally
+        {
+            needle.Release();
+        }
         Assert.Equal(index, s.View.ReaderIndex);
         Assert.Equal(index + 5, s.View.WriterIndex);
         Assert.True(s.Observation.Gets > 0);

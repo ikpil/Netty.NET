@@ -73,6 +73,9 @@ public class NativeStringConsumerContractTest
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture);
             Assert.False(DomainNameMapping<object>.Matches("*\u00ad.example", "a.example"));
         }
-        finally { CultureInfo.CurrentCulture = previous; }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
     }
 }

@@ -64,8 +64,14 @@ public static partial class ByteBufUtil
         ReadOnlySequence<byte> bytes = buffer.AsReadOnlySequence(index, length);
         // Only canonical CLR instances use shortcuts. Custom encodings, even with the
         // same code page, retain their own GetDecoder implementation and byte semantics.
-        if (ReferenceEquals(encoding, Encoding.UTF8)) return IsUtf8Text(bytes);
-        if (ReferenceEquals(encoding, Encoding.ASCII)) return IsAsciiText(bytes);
+        if (ReferenceEquals(encoding, Encoding.UTF8))
+        {
+            return IsUtf8Text(bytes);
+        }
+        if (ReferenceEquals(encoding, Encoding.ASCII))
+        {
+            return IsAsciiText(bytes);
+        }
         return IsEncodedText(bytes, encoding.GetDecoder());
     }
 
@@ -84,7 +90,10 @@ public static partial class ByteBufUtil
     private static bool IsAsciiText(ReadOnlySequence<byte> bytes)
     {
         foreach (ReadOnlyMemory<byte> segment in bytes)
-            if (!Ascii.IsValid(segment.Span)) return false;
+            if (!Ascii.IsValid(segment.Span))
+            {
+                return false;
+            }
         return true;
     }
 
@@ -168,7 +177,10 @@ public static partial class ByteBufUtil
         // b1 invalid
         // b2 out of lower bound
         // b2 out of upper bound
-        if (bytes.IsSingleSegment) return Utf8.IsValid(bytes.FirstSpan);
+        if (bytes.IsSingleSegment)
+        {
+            return Utf8.IsValid(bytes.FirstSpan);
+        }
         return IsEncodedText(bytes, StrictTextUtf8.GetDecoder());
     }
 
@@ -186,7 +198,10 @@ public static partial class ByteBufUtil
             ValidateTextChunk(decoder, ReadOnlySpan<byte>.Empty, scratch, true);
             return true;
         }
-        catch (DecoderFallbackException) { return false; }
+        catch (DecoderFallbackException)
+        {
+            return false;
+        }
     }
 
     private static void ValidateTextChunk(Decoder decoder, ReadOnlySpan<byte> bytes, Span<char> scratch, bool flush)

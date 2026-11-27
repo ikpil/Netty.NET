@@ -87,7 +87,10 @@ public class CompositeByteBufConstructionTest
                 Assert.Equal("63020304", ByteBufUtil.HexDump(composite));
             }
         }
-        finally { composite.Release(); }
+        finally
+        {
+            composite.Release();
+        }
         Assert.Equal(0, first.RefCnt);
         Assert.Equal(0, empty.RefCnt);
         Assert.Equal(0, second.RefCnt);
@@ -132,9 +135,13 @@ public class CompositeByteBufConstructionTest
         {
             Assert.Equal(1, composite.NumComponents);
             Assert.Equal("0102", ByteBufUtil.HexDump(composite));
-            Assert.Equal(1, prefix.RefCnt); Assert.Equal(0, tail.RefCnt);
+            Assert.Equal(1, prefix.RefCnt);
+            Assert.Equal(0, tail.RefCnt);
         }
-        finally { composite.Release(); }
+        finally
+        {
+            composite.Release();
+        }
         Assert.Equal(0, prefix.RefCnt);
     }
 
@@ -151,7 +158,10 @@ public class CompositeByteBufConstructionTest
             Assert.Equal(1, input.RefCnt);
             Assert.Throws<ArgumentNullException>(() => Construct(UnpooledByteBufAllocator.Default, false, 8, null, enumerable));
         }
-        finally { input.Release(); }
+        finally
+        {
+            input.Release();
+        }
     }
 
     [Fact]
@@ -170,7 +180,10 @@ public class CompositeByteBufConstructionTest
             Assert.Equal(1, a.RefCnt);
             Assert.Equal(1, b.RefCnt);
         }
-        finally { outer.Release(); }
+        finally
+        {
+            outer.Release();
+        }
         Assert.Equal(0, inner.RefCnt);
         Assert.Equal(0, a.RefCnt);
         Assert.Equal(0, b.RefCnt);
@@ -214,7 +227,10 @@ public class CompositeByteBufConstructionTest
         {
             Assert.Equal("010203", ByteBufUtil.HexDump(retry));
         }
-        finally { retry.Release(); }
+        finally
+        {
+            retry.Release();
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -259,8 +275,14 @@ public class CompositeByteBufConstructionTest
         }
         finally
         {
-            if (first.RefCnt > 0) first.Release();
-            if (second.RefCnt > 0) second.Release();
+            if (first.RefCnt > 0)
+            {
+                first.Release();
+            }
+            if (second.RefCnt > 0)
+            {
+                second.Release();
+            }
         }
     }
 
@@ -290,9 +312,13 @@ public class CompositeByteBufConstructionTest
         {
             Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => new CompositeByteBuf(allocator, false, 8, stream)));
             Assert.Equal(1, stream.Disposals);
-            Assert.Equal(0, first.RefCnt); Assert.Equal(1, tail.RefCnt);
+            Assert.Equal(0, first.RefCnt);
+            Assert.Equal(1, tail.RefCnt);
         }
-        finally { tail.Release(); }
+        finally
+        {
+            tail.Release();
+        }
         Assert.Equal(0, allocator.Metric.UsedHeapMemory);
     }
 
@@ -368,7 +394,11 @@ public class CompositeByteBufConstructionTest
 
         protected override Memory<byte> GetMemoryCore(int index, int length)
         {
-            if (!_observed) { _observed = true; _action(); }
+            if (!_observed)
+            {
+                _observed = true;
+                _action();
+            }
             return _source.AsMemory(index, length);
         }
     }
@@ -408,7 +438,11 @@ public class CompositeByteBufConstructionTest
             object IEnumerator.Current => Current;
             public bool MoveNext()
             {
-                if (_position == 1 && (persistent || !_failed)) { _failed = true; throw failure; }
+                if (_position == 1 && (persistent || !_failed))
+                {
+                    _failed = true;
+                    throw failure;
+                }
                 return ++_position <= 2;
             }
 

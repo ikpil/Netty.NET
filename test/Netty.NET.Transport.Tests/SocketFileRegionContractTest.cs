@@ -35,7 +35,10 @@ public class SocketFileRegionContractTest
         await using var socket = await Connected.Open();
         var region = new Region(4, 2, (self, target, position) =>
         {
-            if (position != 2) throw new IOException("incorrect resume offset");
+            if (position != 2)
+            {
+                throw new IOException("incorrect resume offset");
+            }
             target.Write(new byte[] { 3, 4 }); self.TransferredBytes = 4; return 2;
         });
         await socket.Channel.WriteAndFlushAsync(region, TestContext.Current.CancellationToken);
@@ -64,7 +67,10 @@ public class SocketFileRegionContractTest
         int attempts = 0;
         var region = new Region(1, 0, (_, _, _) =>
         {
-            if (Interlocked.Increment(ref attempts) == 2) retried.TrySetResult();
+            if (Interlocked.Increment(ref attempts) == 2)
+            {
+                retried.TrySetResult();
+            }
             return 0;
         });
         Task write = socket.Channel.WriteAndFlushAsync(region, TestContext.Current.CancellationToken);
@@ -75,7 +81,10 @@ public class SocketFileRegionContractTest
             Assert.False(write.IsCompleted);
             Assert.True(socket.Channel.IsOpen);
         }
-        finally { await socket.Channel.CloseAsync(); }
+        finally
+        {
+            await socket.Channel.CloseAsync();
+        }
         await Assert.ThrowsAnyAsync<ClosedChannelException>(() => write);
         await region.Deallocated.Task.WaitAsync(TestContext.Current.CancellationToken);
         Assert.True(region.Positions.Count >= 2);
@@ -116,7 +125,10 @@ public class SocketFileRegionContractTest
             Assert.Equal(0, region.RefCnt);
             Assert.False(socket.OwnedSocket.Blocking);
         }
-        finally { File.Delete(path); }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     [Fact(Timeout = 10000)]
@@ -200,7 +212,10 @@ public class SocketFileRegionContractTest
         internal static async Task<Connected> Open(bool nonblocking = false, bool limitedReceiveBuffer = false)
         {
             var connected = new Connected();
-            if (limitedReceiveBuffer) connected._listener.Server.ReceiveBufferSize = 1024;
+            if (limitedReceiveBuffer)
+            {
+                connected._listener.Server.ReceiveBufferSize = 1024;
+            }
             connected._listener.Start();
             try
             {
@@ -217,7 +232,11 @@ public class SocketFileRegionContractTest
                 connected.Peer = await connected._listener.AcceptTcpClientAsync(TestContext.Current.CancellationToken);
                 return connected;
             }
-            catch { await connected.DisposeAsync(); throw; }
+            catch
+            {
+                await connected.DisposeAsync();
+                throw;
+            }
         }
 
         public async ValueTask DisposeAsync()

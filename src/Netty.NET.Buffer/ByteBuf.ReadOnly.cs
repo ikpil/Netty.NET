@@ -92,6 +92,9 @@ public abstract partial class ByteBuf
     protected internal void EnsureCanWrite()
     {
         EnsureAccessible();
-        if (IsReadOnly) throw new NotSupportedException("The buffer is read-only.");
+        if (IsReadOnly)
+        {
+            throw new NotSupportedException("The buffer is read-only.");
+        }
     }
 }

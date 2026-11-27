@@ -45,15 +45,24 @@ public class SimpleLeakAwareCompositeByteBufContractTest
         {
             Exception expectedFailure = Record.Exception(() => expectedResult = Execute(expected, operation, out expectedView));
             Exception failure = Record.Exception(() => result = Execute(buffer, operation, out view));
-            Assert.Equal(expectedFailure?.GetType(), failure?.GetType()); Assert.Equal(expectedResult, result);
-            Assert.Equal(Snapshot(expected), Snapshot(origin)); Assert.Equal(origin.NumComponents, buffer.NumComponents);
-            Assert.Same(origin, buffer.Unwrap()); Assert.Equal(0, tracker.Records); Assert.Equal(0, tracker.Closes);
-            if (leakAware && view != null && operation is >= 84 and <= 92) Assert.IsType<SimpleLeakAwareByteBuf>(view);
+            Assert.Equal(expectedFailure?.GetType(), failure?.GetType());
+            Assert.Equal(expectedResult, result);
+            Assert.Equal(Snapshot(expected), Snapshot(origin));
+            Assert.Equal(origin.NumComponents, buffer.NumComponents);
+            Assert.Same(origin, buffer.Unwrap());
+            Assert.Equal(0, tracker.Records);
+            Assert.Equal(0, tracker.Closes);
+            if (leakAware && view != null && operation is >= 84 and <= 92)
+            {
+                Assert.IsType<SimpleLeakAwareByteBuf>(view);
+            }
         }
         finally
         {
-            CleanupView(expectedView, operation); CleanupView(view, operation);
-            expected.Release(expected.RefCnt); buffer.Release(origin.RefCnt);
+            CleanupView(expectedView, operation);
+            CleanupView(view, operation);
+            expected.Release(expected.RefCnt);
+            buffer.Release(origin.RefCnt);
         }
         Assert.Equal(leakAware ? 1 : 0, tracker.Closes);
     }
@@ -70,7 +79,10 @@ public class SimpleLeakAwareCompositeByteBufContractTest
             ByteBuf component = kind == 1 || kind == 2 && i % 2 == 1
                 ? allocator.DirectBuffer(length, Math.Max(1, length)) : allocator.HeapBuffer(length, Math.Max(1, length));
             for (int j = 0; j < length; ++j) component.WriteByte(offset++);
-            if (kind == 2 && i == 2) component = component.AsReadOnly();
+            if (kind == 2 && i == 2)
+            {
+                component = component.AsReadOnly();
+            }
             b.AddComponent(component, true);
         }
         return (CompositeByteBuf)b.SetIndex(2, 32);
@@ -89,7 +101,10 @@ public class SimpleLeakAwareCompositeByteBufContractTest
 
     internal static void CleanupView(ByteBuf view, int op)
     {
-        if (view != null && (op is >= 89 and <= 95)) view.Release();
+        if (view != null && (op is >= 89 and <= 95))
+        {
+            view.Release();
+        }
     }
 
     internal static string Execute(ByteBuf b, int operation, out ByteBuf view)
@@ -622,7 +637,10 @@ public class SimpleLeakAwareCompositeByteBufContractTest
                         b.GetBytes(3,other);
                         result=other.ReaderIndex+","+other.WriterIndex+","+ByteBufUtil.HexDump(other,0,8);
                     }
-                    finally { other.Release(); }
+                    finally
+                    {
+                        other.Release();
+                    }
                     break;
                 }
             case 101: // GetBytes1
@@ -633,7 +651,10 @@ public class SimpleLeakAwareCompositeByteBufContractTest
                         b.GetBytes(3,other,4);
                         result=other.ReaderIndex+","+other.WriterIndex+","+ByteBufUtil.HexDump(other,0,8);
                     }
-                    finally { other.Release(); }
+                    finally
+                    {
+                        other.Release();
+                    }
                     break;
                 }
             case 102: // GetBytes2
@@ -644,7 +665,10 @@ public class SimpleLeakAwareCompositeByteBufContractTest
                         b.GetBytes(3,other,2,4);
                         result=other.ReaderIndex+","+other.WriterIndex+","+ByteBufUtil.HexDump(other,0,8);
                     }
-                    finally { other.Release(); }
+                    finally
+                    {
+                        other.Release();
+                    }
                     break;
                 }
             case 103: // ReadBytes0
@@ -655,7 +679,10 @@ public class SimpleLeakAwareCompositeByteBufContractTest
                         b.ReadBytes(other);
                         result=other.ReaderIndex+","+other.WriterIndex+","+ByteBufUtil.HexDump(other,0,8);
                     }
-                    finally { other.Release(); }
+                    finally
+                    {
+                        other.Release();
+                    }
                     break;
                 }
             case 104: // ReadBytes1
@@ -666,7 +693,10 @@ public class SimpleLeakAwareCompositeByteBufContractTest
                         b.ReadBytes(other,4);
                         result=other.ReaderIndex+","+other.WriterIndex+","+ByteBufUtil.HexDump(other,0,8);
                     }
-                    finally { other.Release(); }
+                    finally
+                    {
+                        other.Release();
+                    }
                     break;
                 }
             case 105: // ReadBytes2
@@ -677,7 +707,10 @@ public class SimpleLeakAwareCompositeByteBufContractTest
                         b.ReadBytes(other,2,4);
                         result=other.ReaderIndex+","+other.WriterIndex+","+ByteBufUtil.HexDump(other,0,8);
                     }
-                    finally { other.Release(); }
+                    finally
+                    {
+                        other.Release();
+                    }
                     break;
                 }
             case 106: // SetBytes0
@@ -688,7 +721,10 @@ public class SimpleLeakAwareCompositeByteBufContractTest
                         b.SetBytes(3,other);
                         result=other.ReaderIndex+","+other.WriterIndex+","+ByteBufUtil.HexDump(other,0,8);
                     }
-                    finally { other.Release(); }
+                    finally
+                    {
+                        other.Release();
+                    }
                     break;
                 }
             case 107: // SetBytes1
@@ -699,7 +735,10 @@ public class SimpleLeakAwareCompositeByteBufContractTest
                         b.SetBytes(3,other,4);
                         result=other.ReaderIndex+","+other.WriterIndex+","+ByteBufUtil.HexDump(other,0,8);
                     }
-                    finally { other.Release(); }
+                    finally
+                    {
+                        other.Release();
+                    }
                     break;
                 }
             case 108: // SetBytes2
@@ -710,7 +749,10 @@ public class SimpleLeakAwareCompositeByteBufContractTest
                         b.SetBytes(3,other,2,4);
                         result=other.ReaderIndex+","+other.WriterIndex+","+ByteBufUtil.HexDump(other,0,8);
                     }
-                    finally { other.Release(); }
+                    finally
+                    {
+                        other.Release();
+                    }
                     break;
                 }
             case 109: // WriteBytes0
@@ -721,7 +763,10 @@ public class SimpleLeakAwareCompositeByteBufContractTest
                         b.WriteBytes(other);
                         result=other.ReaderIndex+","+other.WriterIndex+","+ByteBufUtil.HexDump(other,0,8);
                     }
-                    finally { other.Release(); }
+                    finally
+                    {
+                        other.Release();
+                    }
                     break;
                 }
             case 110: // WriteBytes1
@@ -732,7 +777,10 @@ public class SimpleLeakAwareCompositeByteBufContractTest
                         b.WriteBytes(other,4);
                         result=other.ReaderIndex+","+other.WriterIndex+","+ByteBufUtil.HexDump(other,0,8);
                     }
-                    finally { other.Release(); }
+                    finally
+                    {
+                        other.Release();
+                    }
                     break;
                 }
             case 111: // WriteBytes2
@@ -743,7 +791,10 @@ public class SimpleLeakAwareCompositeByteBufContractTest
                         b.WriteBytes(other,2,4);
                         result=other.ReaderIndex+","+other.WriterIndex+","+ByteBufUtil.HexDump(other,0,8);
                     }
-                    finally { other.Release(); }
+                    finally
+                    {
+                        other.Release();
+                    }
                     break;
                 }
             case 112: // Capacity
@@ -867,7 +918,10 @@ public class SimpleLeakAwareCompositeByteBufContractTest
             Assert.Equal(0, second.RefCnt);
             Assert.Equal(0, tracker.Records);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
         Assert.Equal(leakAware ? 1 : 0, tracker.Closes);
     }
 
@@ -897,7 +951,14 @@ public class SimpleLeakAwareCompositeByteBufContractTest
             for (int i = 0; i < 25; ++i)
                 Assert.Equal(i + 5, destination.GetByte(i));
         }
-        finally { destination.Release(); if (outer.RefCnt > 0) outer.Release(); }
+        finally
+        {
+            destination.Release();
+            if (outer.RefCnt > 0)
+            {
+                outer.Release();
+            }
+        }
     }
 
     [Theory]
@@ -920,7 +981,10 @@ public class SimpleLeakAwareCompositeByteBufContractTest
             Assert.Equal(1, first.RefCnt);
             Assert.Equal(1, sibling.RefCnt);
         }
-        finally { first.Release(); }
+        finally
+        {
+            first.Release();
+        }
     }
 
     [Fact]
@@ -995,7 +1059,11 @@ public class SimpleLeakAwareCompositeByteBufContractTest
             Assert.Equal(0, component.RefCnt);
             Assert.Equal(internalLease ? 8 : 0, native.ReservedBytes);
         }
-        finally { lease.Dispose(); pin.Dispose(); }
+        finally
+        {
+            lease.Dispose();
+            pin.Dispose();
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -1017,7 +1085,10 @@ public class SimpleLeakAwareCompositeByteBufContractTest
             Assert.Equal(0, tracker.Records);
             Assert.Equal(0, tracker.Closes);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
         Assert.Equal(1, tracker.Closes);
     }
 
@@ -1026,8 +1097,15 @@ public class SimpleLeakAwareCompositeByteBufContractTest
     {
         Assert.Throws<ArgumentNullException>(() => new WrappedCompositeByteBuf(null));
         var origin = new CompositeByteBuf();
-        try { Assert.Throws<ArgumentNullException>(() => new SimpleLeakAwareCompositeByteBuf(origin, null)); Assert.Equal(1, origin.RefCnt); }
-        finally { origin.Release(); }
+        try
+        {
+            Assert.Throws<ArgumentNullException>(() => new SimpleLeakAwareCompositeByteBuf(origin, null));
+            Assert.Equal(1, origin.RefCnt);
+        }
+        finally
+        {
+            origin.Release();
+        }
     }
 
     private sealed class AdvancedViews(CompositeByteBuf wrapped, IResourceLeakTracker<ByteBuf> tracker)

@@ -62,7 +62,10 @@ public class BootstrapResolutionSourceTest
         {
             cancellation.Cancel();
             resolver.Producer.TrySetException(new UnknownHostException("late resolver failure"));
-            if (channel != null) await channel.CloseAsync();
+            if (channel != null)
+            {
+                await channel.CloseAsync();
+            }
             await group.StopAsync();
         }
     }
@@ -91,7 +94,15 @@ public class BootstrapResolutionSourceTest
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => connecting);
             Assert.True(connecting.IsCanceled);
         }
-        finally { release.Set(); if (channel != null) await channel.CloseAsync(); await group.StopAsync(); }
+        finally
+        {
+            release.Set();
+            if (channel != null)
+            {
+                await channel.CloseAsync();
+            }
+            await group.StopAsync();
+        }
     }
 
     [Fact]
@@ -118,9 +129,16 @@ public class BootstrapResolutionSourceTest
         }
         finally
         {
-            if (channel != null) await channel.CloseAsync();
-            if (server != null) await server.CloseAsync();
-            await groupA.StopAsync(); await groupB.StopAsync();
+            if (channel != null)
+            {
+                await channel.CloseAsync();
+            }
+            if (server != null)
+            {
+                await server.CloseAsync();
+            }
+            await groupA.StopAsync();
+            await groupB.StopAsync();
         }
     }
     private sealed class TestException : Exception { }

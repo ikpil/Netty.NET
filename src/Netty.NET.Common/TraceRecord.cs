@@ -58,7 +58,10 @@ internal sealed class TraceRecord : Exception
     public override string ToString()
     {
         var buffer = new StringBuilder(2048);
-        if (hintString != null) buffer.Append("\tHint: ").Append(hintString).Append(StringUtil.NEWLINE);
+        if (hintString != null)
+        {
+            buffer.Append("\tHint: ").Append(hintString).Append(StringUtil.NEWLINE);
+        }
         // Append the stack trace.
         StackFrame[] frames = trace?.GetFrames() ?? Array.Empty<StackFrame>();
         // Skip the first three elements.
@@ -76,9 +79,16 @@ internal sealed class TraceRecord : Exception
             {
                 // Suppress a warning about out of bounds access
                 // since the length of excludedMethods is always even, see addExclusions()
-                if (exclusions[k] == className && exclusions[k + 1] == methodName) { excluded = true; break; }
+                if (exclusions[k] == className && exclusions[k + 1] == methodName)
+                {
+                    excluded = true;
+                    break;
+                }
             }
-            if (!excluded) buffer.Append('\t').Append(new StackTrace(frames[i]).ToString().TrimEnd('\r', '\n')).Append(StringUtil.NEWLINE);
+            if (!excluded)
+            {
+                buffer.Append('\t').Append(new StackTrace(frames[i]).ToString().TrimEnd('\r', '\n')).Append(StringUtil.NEWLINE);
+            }
         }
         return buffer.ToString();
     }
@@ -94,8 +104,14 @@ internal sealed class TraceRecord : Exception
     {
         var method = frame.GetMethod();
         Type type = method?.DeclaringType;
-        if (type == typeof(TraceRecord)) return true;
-        if (type?.IsGenericType != true) return false;
+        if (type == typeof(TraceRecord))
+        {
+            return true;
+        }
+        if (type?.IsGenericType != true)
+        {
+            return false;
+        }
         Type definition = type.GetGenericTypeDefinition();
         return definition == typeof(DefaultResourceLeak<>) ||
             definition == typeof(ResourceLeakDetector<>) && method.Name == "Track0";

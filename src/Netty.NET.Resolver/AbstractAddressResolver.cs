@@ -85,10 +85,17 @@ public abstract class AbstractAddressResolver<T> : IAddressResolver<T> where T :
             return Task.FromResult((T)address);
         }
         try
-        { return DoResolveAsync(address, cancellationToken); }
+        {
+            return DoResolveAsync(address, cancellationToken);
+        }
         catch (OperationCanceledException error) when (cancellationToken.IsCancellationRequested && error.CancellationToken == cancellationToken)
-        { return Task.FromCanceled<T>(cancellationToken); }
-        catch (Exception e) { return Task.FromException<T>(e); }
+        {
+            return Task.FromCanceled<T>(cancellationToken);
+        }
+        catch (Exception e)
+        {
+            return Task.FromException<T>(e);
+        }
     }
 
     public Task<IReadOnlyList<T>> ResolveAllAsync(EndPoint address, CancellationToken cancellationToken = default)
@@ -107,10 +114,17 @@ public abstract class AbstractAddressResolver<T> : IAddressResolver<T> where T :
             return Task.FromResult<IReadOnlyList<T>>(new[] { (T)address });
         }
         try
-        { return DoResolveAllAsync(address, cancellationToken); }
+        {
+            return DoResolveAllAsync(address, cancellationToken);
+        }
         catch (OperationCanceledException error) when (cancellationToken.IsCancellationRequested && error.CancellationToken == cancellationToken)
-        { return Task.FromCanceled<IReadOnlyList<T>>(cancellationToken); }
-        catch (Exception e) { return Task.FromException<IReadOnlyList<T>>(e); }
+        {
+            return Task.FromCanceled<IReadOnlyList<T>>(cancellationToken);
+        }
+        catch (Exception e)
+        {
+            return Task.FromException<IReadOnlyList<T>>(e);
+        }
     }
 
     /**

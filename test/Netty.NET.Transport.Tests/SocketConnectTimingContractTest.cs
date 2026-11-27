@@ -31,7 +31,10 @@ public class SocketConnectTimingContractTest
                     .WaitAsync(TimeSpan.FromMilliseconds(3000), cancellation));
             Assert.False(channel.IsOpen);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Theory(Timeout = 30000)]

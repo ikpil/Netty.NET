@@ -83,7 +83,10 @@ public class CompositeByteBufConsolidationTest
         {
             Assert.NotNull(array.Array);
             Assert.Equal(6, array.Count);
-            if (!pooled) Assert.Equal(0, array.Offset);
+            if (!pooled)
+            {
+                Assert.Equal(0, array.Offset);
+            }
         }
     }
 
@@ -109,7 +112,10 @@ public class CompositeByteBufConsolidationTest
             // CLR: the replaced sources are released.
             Assert.All(sources, source => Assert.Equal(0, source.RefCnt));
         }
-        finally { buf.Release(); }
+        finally
+        {
+            buf.Release();
+        }
         Assert.All(sources, source => Assert.Equal(0, source.RefCnt));
     }
 
@@ -134,7 +140,10 @@ public class CompositeByteBufConsolidationTest
             // CLR: the replaced sources are released.
             Assert.All(sources, source => Assert.Equal(0, source.RefCnt));
         }
-        finally { buf.Release(); }
+        finally
+        {
+            buf.Release();
+        }
         Assert.All(sources, source => Assert.Equal(0, source.RefCnt));
     }
 
@@ -173,7 +182,10 @@ public class CompositeByteBufConsolidationTest
             Assert.Equal(0, sources[2].RefCnt);
             Assert.Equal(1, sources[3].RefCnt);
         }
-        finally { buf.Release(); }
+        finally
+        {
+            buf.Release();
+        }
         Assert.All(sources, source => Assert.Equal(0, source.RefCnt));
     }
 
@@ -207,7 +219,11 @@ public class CompositeByteBufConsolidationTest
             copy.SetByte(0, 99);
             Assert.Equal(1, composite.GetByte(0));
         }
-        finally { copy?.Release(); composite.Release(); }
+        finally
+        {
+            copy?.Release();
+            composite.Release();
+        }
         Assert.All(sources, source => Assert.Equal(0, source.RefCnt));
     }
 
@@ -241,7 +257,10 @@ public class CompositeByteBufConsolidationTest
         finally
         {
             copy?.Release();
-            if (composite.RefCnt > 0) composite.Release();
+            if (composite.RefCnt > 0)
+            {
+                composite.Release();
+            }
         }
     }
 
@@ -270,7 +289,10 @@ public class CompositeByteBufConsolidationTest
         finally
         {
             copy?.Release();
-            if (composite.RefCnt > 0) composite.Release();
+            if (composite.RefCnt > 0)
+            {
+                composite.Release();
+            }
         }
     }
 
@@ -286,7 +308,11 @@ public class CompositeByteBufConsolidationTest
             copy = buf.Copy();
             Assert.Equal(0, copy.ReadableBytes);
         }
-        finally { buf.Release(); copy?.Release(); }
+        finally
+        {
+            buf.Release();
+            copy?.Release();
+        }
     }
 
     [Fact]
@@ -299,6 +325,9 @@ public class CompositeByteBufConsolidationTest
             Assert.Equal(0, buf.NumComponents);
             Assert.Equal(0, buf.Duplicate().ReadableBytes);
         }
-        finally { buf.Release(); }
+        finally
+        {
+            buf.Release();
+        }
     }
 }

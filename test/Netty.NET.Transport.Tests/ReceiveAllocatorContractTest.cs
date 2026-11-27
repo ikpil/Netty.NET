@@ -109,7 +109,10 @@ public class ReceiveAllocatorContractTest
             Assert.Same(buffer, first.Allocate(alloc.Object));
             alloc.Verify(a => a.IoBuffer(513, int.MaxValue), Times.Once());
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Theory]
@@ -240,7 +243,10 @@ public class ReceiveAllocatorContractTest
             wrapper.ReadComplete();
             handle.VerifyAll();
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
         Assert.Throws<ArgumentNullException>(() => new IRecvByteBufAllocator.DelegatingHandle(null));
     }
 

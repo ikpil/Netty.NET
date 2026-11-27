@@ -58,7 +58,10 @@ internal sealed partial class AdaptivePoolingAllocator
             AdaptiveChunkAllocation allocation = (_allocation != null && _reallocate != null
                 ? _reallocate(capacity, MaxCapacity, _allocation) : _allocate(capacity, MaxCapacity))
                 ?? throw new InvalidOperationException("The adaptive storage binding did not supply an allocation.");
-            if (allocation.Length >= capacity) return allocation;
+            if (allocation.Length >= capacity)
+            {
+                return allocation;
+            }
             allocation.Release();
             throw new InvalidOperationException("The adaptive reservation is smaller than the requested capacity.");
         }

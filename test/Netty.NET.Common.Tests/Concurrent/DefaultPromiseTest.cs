@@ -165,7 +165,10 @@ public class DefaultPromiseTest
             TestStackOverFlowChainedFutures(StackOverflowTestDepth(), executor, true, false);
             TestStackOverFlowChainedFutures(StackOverflowTestDepth(), executor, false, false);
         }
-        finally { Shutdown(executor); }
+        finally
+        {
+            Shutdown(executor);
+        }
     }
 
     [Fact]
@@ -185,7 +188,10 @@ public class DefaultPromiseTest
             TestStackOverFlowChainedFutures(StackOverflowTestDepth(), executor, true, true);
             TestStackOverFlowChainedFutures(StackOverflowTestDepth(), executor, false, true);
         }
-        finally { Shutdown(executor); }
+        finally
+        {
+            Shutdown(executor);
+        }
     }
 
     [Fact]
@@ -224,7 +230,10 @@ public class DefaultPromiseTest
                 fourth.Dispose();
             }
         }
-        finally { Shutdown(executor); }
+        finally
+        {
+            Shutdown(executor);
+        }
     }
 
     [Fact]
@@ -284,7 +293,10 @@ public class DefaultPromiseTest
                 Assert.True(pair.Key.Join(wait));
             }
         }
-        finally { Shutdown(executor); }
+        finally
+        {
+            Shutdown(executor);
+        }
     }
 
     [Fact]
@@ -334,7 +346,11 @@ public class DefaultPromiseTest
             Assert.Equal("success", await operation.WaitAsync(TimeSpan.FromSeconds(5)));
             Assert.True(operation.IsCompletedSuccessfully);
         }
-        finally { release.Set(); Shutdown(executor); }
+        finally
+        {
+            release.Set();
+            Shutdown(executor);
+        }
     }
 
     private static void TestStackOverFlowChainedFutures(int promiseChainLength, IEventExecutor executor, bool runTestInExecutorThread, bool lateListener)
@@ -355,7 +371,10 @@ public class DefaultPromiseTest
                 observations[i] = new ExecutorCompletion(executor, sources[i].Task);
                 Action<Task> completeNext = _ =>
                 {
-                    if (index + 1 < sources.Length) sources[index + 1].SetResult(null);
+                    if (index + 1 < sources.Length)
+                    {
+                        sources[index + 1].SetResult(null);
+                    }
                     latch.Signal();
                 };
                 observations[i].Register(lateListener
@@ -366,12 +385,21 @@ public class DefaultPromiseTest
         }
         try
         {
-            if (runTestInExecutorThread) executor.Execute(Initialize);
-            else Initialize();
+            if (runTestInExecutorThread)
+            {
+                executor.Execute(Initialize);
+            }
+            else
+            {
+                Initialize();
+            }
             Assert.True(latch.Wait(TimeSpan.FromSeconds(2)));
             foreach (var source in sources) Assert.True(source.Task.IsCompletedSuccessfully);
         }
-        finally { foreach (var observation in observations) observation?.Dispose(); }
+        finally
+        {
+            foreach (var observation in observations) observation?.Dispose();
+        }
     }
 
     /**
@@ -397,8 +425,14 @@ public class DefaultPromiseTest
             // Add a listener before completion so "lateListener" is used next time we add a listener.
             observer.Register(_ => Assert.Equal(0, Interlocked.CompareExchange(ref state, 1, 0)));
             // Simulate write operation completing, which will execute listeners in another thread.
-            if (cause == null) source.SetResult(null);
-            else source.SetException(cause);
+            if (cause == null)
+            {
+                source.SetResult(null);
+            }
+            else
+            {
+                source.SetException(cause);
+            }
             // Add a "late listener"
             observer.Register(_ => { Assert.Equal(1, Interlocked.CompareExchange(ref state, 2, 1)); latch1.Signal(); });
             // Wait for the listeners and late listeners to be completed.
@@ -420,7 +454,10 @@ public class DefaultPromiseTest
             });
             Assert.True(latch2.Wait(TimeSpan.FromSeconds(2)));
         }
-        finally { Shutdown(executor); }
+        finally
+        {
+            Shutdown(executor);
+        }
     }
 
     private static void TestPromiseListenerAddWhenComplete(Exception cause)
@@ -429,8 +466,14 @@ public class DefaultPromiseTest
         var source = Source<object>();
         using var observer = new ExecutorCompletion(ImmediateEventExecutor.INSTANCE, source.Task);
         observer.Register(_ => observer.Register(_ => latch.Signal()));
-        if (cause == null) source.SetResult(null);
-        else source.SetException(cause);
+        if (cause == null)
+        {
+            source.SetResult(null);
+        }
+        else
+        {
+            source.SetException(cause);
+        }
         Assert.True(latch.Wait(TimeSpan.FromSeconds(2)));
     }
 
@@ -453,7 +496,10 @@ public class DefaultPromiseTest
             });
             Assert.True(latch.Wait(TimeSpan.FromSeconds(5)), "Should have notified " + expectedCount + " listeners");
         }
-        finally { Shutdown(executor); }
+        finally
+        {
+            Shutdown(executor);
+        }
     }
     private sealed class TestEventExecutor : SingleThreadEventExecutor
     {
@@ -466,8 +512,15 @@ public class DefaultPromiseTest
             for (;;)
             {
                 Action task = TakeTask();
-                if (task != null) { task(); UpdateLastExecutionTime(); }
-                if (ConfirmShutdown()) break;
+                if (task != null)
+                {
+                    task();
+                    UpdateLastExecutionTime();
+                }
+                if (ConfirmShutdown())
+                {
+                    break;
+                }
             }
         }
     }

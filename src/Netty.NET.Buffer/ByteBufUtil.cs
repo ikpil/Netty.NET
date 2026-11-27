@@ -36,8 +36,14 @@ public static partial class ByteBufUtil
          */
     public static int IndexOf(ByteBuf needle, ByteBuf haystack)
     {
-        if (needle == null || haystack == null || needle.ReadableBytes > haystack.ReadableBytes) return -1;
-        if (needle.ReadableBytes == 0) return 0;
+        if (needle == null || haystack == null || needle.ReadableBytes > haystack.ReadableBytes)
+        {
+            return -1;
+        }
+        if (needle.ReadableBytes == 0)
+        {
+            return 0;
+        }
         // CLR: materialize logical scalar bytes for aggregates; keep the contiguous storage Span search path.
         ReadOnlySpan<byte> input = needle.SupportsDirectSearch && needle.TryGetReadOnlyMemory(needle.ReaderIndex, needle.ReadableBytes, out var needleMemory)
             ? needleMemory.Span : SearchBytes(needle);
@@ -141,7 +147,10 @@ public static partial class ByteBufUtil
                 // See https://www.unicode.org/versions/Unicode7.0.0/ch03.pdf#G2630.
                 length = checked(length + 4);
             }
-            else length = checked(length + 3);
+            else
+            {
+                length = checked(length + 3);
+            }
         }
         return length;
     }
@@ -184,14 +193,21 @@ public static partial class ByteBufUtil
         ArgumentOutOfRangeException.ThrowIfNegative(reserveBytes);
         // CLR: reject an undersized reservation before modifying storage; Java's unchecked path can overrun it.
         int length = Utf8Bytes(text);
-        if (reserveBytes < length) throw new ArgumentOutOfRangeException(nameof(reserveBytes));
+        if (reserveBytes < length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(reserveBytes));
+        }
         using var lease = buffer.PinMemoryForWrite();
         buffer.EnsureWritable(reserveBytes);
         int written;
-        if (buffer.TryGetMemory(buffer.WriterIndex, length, out var memory)) written = EncodeUtf8(text, memory.Span);
+        if (buffer.TryGetMemory(buffer.WriterIndex, length, out var memory))
+        {
+            written = EncodeUtf8(text, memory.Span);
+        }
         else
         {
-            byte[] bytes = new byte[length]; written = EncodeUtf8(text, bytes);
+            byte[] bytes = new byte[length];
+            written = EncodeUtf8(text, bytes);
             buffer.SetBytes(buffer.WriterIndex, bytes.AsSpan(0, written));
         }
         buffer.WriterIndex += written;
@@ -225,7 +241,10 @@ public static partial class ByteBufUtil
         for (int i = 0; i < text.Length; ++i)
         {
             char c = text[i];
-            if (c < 0x80) destination[written++] = (byte)c;
+            if (c < 0x80)
+            {
+                destination[written++] = (byte)c;
+            }
             else if (c < 0x800)
             {
                 destination[written++] = (byte)(0xc0 | (c >> 6));
@@ -233,9 +252,17 @@ public static partial class ByteBufUtil
             }
             else if (char.IsSurrogate(c))
             {
-                if (!char.IsHighSurrogate(c)) { destination[written++] = (byte)'?'; continue; }
+                if (!char.IsHighSurrogate(c))
+                {
+                    destination[written++] = (byte)'?';
+                    continue;
+                }
                 // Surrogate Pair consumes 2 characters.
-                if (++i == text.Length) { destination[written++] = (byte)'?'; break; }
+                if (++i == text.Length)
+                {
+                    destination[written++] = (byte)'?';
+                    break;
+                }
                 // Extra method is copied here to NOT allow inlining of writeUtf8
                 // and increase the chance to inline CharSequence::charAt instead
                 // CLR: no JVM inlining strategy is reproduced; the original comment records the source rationale.
@@ -280,7 +307,10 @@ public static partial class ByteBufUtil
         bool contiguous = buffer.TryGetMemory(buffer.WriterIndex, text.Length, out var memory);
         Span<byte> destination = contiguous ? memory.Span : new byte[text.Length];
         for (int i = 0; i < text.Length; ++i) destination[i] = AsciiString.C2b(text[i]);
-        if (!contiguous) buffer.SetBytes(buffer.WriterIndex, destination);
+        if (!contiguous)
+        {
+            buffer.SetBytes(buffer.WriterIndex, destination);
+        }
         buffer.WriterIndex += text.Length;
         return text.Length;
     }

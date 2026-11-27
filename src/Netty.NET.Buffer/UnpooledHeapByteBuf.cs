@@ -93,7 +93,10 @@ public class UnpooledHeapByteBuf : AbstractReferenceCountedByteBuf
         set
         {
             CheckNewCapacity(value);
-            if (value == _array.Length) return;
+            if (value == _array.Length)
+            {
+                return;
+            }
             byte[] replacement = new byte[value];
             _array.AsSpan(0, Math.Min(value, _array.Length)).CopyTo(replacement);
             // Publish only after successful allocation/copy; failure retains old data and indices.
@@ -108,8 +111,15 @@ public class UnpooledHeapByteBuf : AbstractReferenceCountedByteBuf
         CheckIndex(index, length);
         ByteBuf result = Alloc().HeapBuffer(length, MaxCapacity);
         // CLR spans preserve the original array-write extension point without exposing the backing array.
-        try { return result.WriteBytes(_array.AsSpan(index, length)); }
-        catch { result.Release(); throw; }
+        try
+        {
+            return result.WriteBytes(_array.AsSpan(index, length));
+        }
+        catch
+        {
+            result.Release();
+            throw;
+        }
     }
 
     protected override void Deallocate()

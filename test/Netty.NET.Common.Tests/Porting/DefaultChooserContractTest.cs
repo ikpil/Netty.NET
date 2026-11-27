@@ -65,9 +65,18 @@ public class DefaultChooserContractTest
     {
         FieldInfo field = chooser.GetType().GetField("idx", BindingFlags.Instance | BindingFlags.NonPublic);
         object counter = field.GetValue(chooser);
-        if (counter is AtomicInteger integer) integer.Set(checked((int)value));
-        else if (counter is AtomicLong wide) wide.Set(value);
-        else field.SetValue(chooser, field.FieldType == typeof(int) ? (object)checked((int)value) : value);
+        if (counter is AtomicInteger integer)
+        {
+            integer.Set(checked((int)value));
+        }
+        else if (counter is AtomicLong wide)
+        {
+            wide.Set(value);
+        }
+        else
+        {
+            field.SetValue(chooser, field.FieldType == typeof(int) ? (object)checked((int)value) : value);
+        }
     }
 
     [Theory]

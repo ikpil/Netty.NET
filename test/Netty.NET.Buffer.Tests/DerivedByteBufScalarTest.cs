@@ -32,7 +32,10 @@ public class DerivedByteBufScalarTest
         public void Record(string method, int index, ulong value = 0)
         {
             Visits.Add(new(method, index, value));
-            if (Fail) throw new IOException("parent scalar policy");
+            if (Fail)
+            {
+                throw new IOException("parent scalar policy");
+            }
         }
     }
     private sealed class ObservedHeap(Observation o) : UnpooledHeapByteBuf(64, 128)
@@ -283,8 +286,14 @@ public class DerivedByteBufScalarTest
 
         public void Dispose()
         {
-            if (Owner?.RefCnt > 0) Assert.True(Owner.Release());
-            if (Root.RefCnt > 0) Assert.True(Root.Release());
+            if (Owner?.RefCnt > 0)
+            {
+                Assert.True(Owner.Release());
+            }
+            if (Root.RefCnt > 0)
+            {
+                Assert.True(Root.Release());
+            }
             Assert.Equal(0, Native.ReservedBytes);
         }
     }
@@ -309,10 +318,22 @@ public class DerivedByteBufScalarTest
 
     private static ulong Result(ulong bits, int type)
     {
-        if (type == 9) return bits == 0 ? 0UL : 1UL;
-        if (type is 1 or 2) return unchecked((ulong)(short)bits);
-        if (type is 5 or 6) return unchecked((ulong)(int)bits);
-        if (type is 10 or 11) return unchecked((ulong)((int)(bits << 8) >> 8));
+        if (type == 9)
+        {
+            return bits == 0 ? 0UL : 1UL;
+        }
+        if (type is 1 or 2)
+        {
+            return unchecked((ulong)(short)bits);
+        }
+        if (type is 5 or 6)
+        {
+            return unchecked((ulong)(int)bits);
+        }
+        if (type is 10 or 11)
+        {
+            return unchecked((ulong)((int)(bits << 8) >> 8));
+        }
         return bits;
     }
 
@@ -648,8 +669,13 @@ public class DerivedByteBufScalarTest
                 Assert.Equal(written, policy.Bits);
                 Assert.Equal(2, policy.Calls);
             }
-            Assert.Equal(1, policy.ReaderIndex); Assert.Equal(10, policy.WriterIndex);
+            Assert.Equal(1, policy.ReaderIndex);
+            Assert.Equal(10, policy.WriterIndex);
         }
-        finally { Assert.True(other.Release()); Assert.True(policy.Release()); }
+        finally
+        {
+            Assert.True(other.Release());
+            Assert.True(policy.Release());
+        }
     }
 }

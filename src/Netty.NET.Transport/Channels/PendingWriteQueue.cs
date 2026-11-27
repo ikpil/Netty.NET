@@ -112,9 +112,14 @@ public sealed class PendingWriteQueue
         }
         var entry = new Entry(msg, (long)estimate + PendingWriteOverhead, producer, cancellationToken);
         if (_tail == null)
+        {
             _head = _tail = entry;
+        }
         else
-        { _tail.Next = entry; _tail = entry; }
+        {
+            _tail.Next = entry;
+            _tail = entry;
+        }
         Size++;
         Bytes += entry.Size;
         _tracker.IncrementPendingOutboundBytes(entry.Size);
@@ -139,8 +144,13 @@ public sealed class PendingWriteQueue
                 else
                 {
                     try
-                    { _executor.Execute(Cancel); }
-                    catch (RejectedExecutionException) { Cancel(); }
+                    {
+                        _executor.Execute(Cancel);
+                    }
+                    catch (RejectedExecutionException)
+                    {
+                        Cancel();
+                    }
                 }
             }, null);
             if (Volatile.Read(ref entry.Claim) == 1)
@@ -288,7 +298,12 @@ public sealed class PendingWriteQueue
             Bytes = 0;
         }
         else
-        { _head = next; Size--; Bytes -= entry.Size; Debug.Assert(Size > 0 && Bytes >= 0); }
+        {
+            _head = next;
+            Size--;
+            Bytes -= entry.Size;
+            Debug.Assert(Size > 0 && Bytes >= 0);
+        }
         _tracker.DecrementPendingOutboundBytes(entry.Size);
     }
 
@@ -302,11 +317,22 @@ public sealed class PendingWriteQueue
     private Task Write(Entry entry, bool cancelled)
     {
         if (cancelled)
-        { ReferenceCountUtil.SafeRelease(entry.Message); entry.Producer.TrySetCanceled(entry.Token); return entry.Producer.Task; }
+        {
+            ReferenceCountUtil.SafeRelease(entry.Message);
+            entry.Producer.TrySetCanceled(entry.Token);
+            return entry.Producer.Task;
+        }
         Task operation;
         try
-        { operation = _invoker.WriteAsync(entry.Message, entry.Token); }
-        catch (Exception error) { ReferenceCountUtil.SafeRelease(entry.Message); SafeFail(entry.Producer, error); return entry.Producer.Task; }
+        {
+            operation = _invoker.WriteAsync(entry.Message, entry.Token);
+        }
+        catch (Exception error)
+        {
+            ReferenceCountUtil.SafeRelease(entry.Message);
+            SafeFail(entry.Producer, error);
+            return entry.Producer.Task;
+        }
         if (operation.IsCompleted)
             Complete(operation, entry.Producer);
         else
@@ -317,9 +343,18 @@ public sealed class PendingWriteQueue
     private static void Complete(Task operation, TaskCompletionSource producer)
     {
         try
-        { operation.GetAwaiter().GetResult(); producer.TrySetResult(); }
-        catch (OperationCanceledException error) when (operation.IsCanceled) { producer.TrySetCanceled(error.CancellationToken); }
-        catch (Exception error) { SafeFail(producer, error); }
+        {
+            operation.GetAwaiter().GetResult();
+            producer.TrySetResult();
+        }
+        catch (OperationCanceledException error) when (operation.IsCanceled)
+        {
+            producer.TrySetCanceled(error.CancellationToken);
+        }
+        catch (Exception error)
+        {
+            SafeFail(producer, error);
+        }
     }
 
     // CLR: Java hands the ChannelPromise itself to write(msg, promise), so it completes when the write does. A write

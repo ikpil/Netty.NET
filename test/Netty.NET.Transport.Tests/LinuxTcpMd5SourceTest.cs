@@ -55,7 +55,10 @@ public class LinuxTcpMd5SourceTest
                 SetServerKeys(server, Keys(IPAddress.Loopback, ServerKey));
                 SetServerKeys(server, NoKeys);
             }
-            finally { await server.CloseAsync(); }
+            finally
+            {
+                await server.CloseAsync();
+            }
         });
     }
 
@@ -88,7 +91,10 @@ public class LinuxTcpMd5SourceTest
 
     internal static void SetServerKeys(IChannel server, IReadOnlyDictionary<IPAddress, byte[]> keys)
     {
-        try { Assert.True(server.Config.SetOption(ChannelOption.TCP_MD5SIG, keys)); }
+        try
+        {
+            Assert.True(server.Config.SetOption(ChannelOption.TCP_MD5SIG, keys));
+        }
         catch (SocketException error) when (error.SocketErrorCode is SocketError.ProtocolOption or SocketError.OperationNotSupported)
         {
             // Some operating systems don't allow or support the TCP_MD5SIG option.
@@ -99,8 +105,14 @@ public class LinuxTcpMd5SourceTest
 
     internal static async Task WithServer(Func<MultiThreadIoEventLoopGroup, IChannel, CancellationToken, Task> scenario, bool ipv6 = false)
     {
-        if (!OperatingSystem.IsLinux()) Assert.Skip("TCP_MD5SIG requires Linux.");
-        if (ipv6 && !Socket.OSSupportsIPv6) Assert.Skip("IPv6 unavailable.");
+        if (!OperatingSystem.IsLinux())
+        {
+            Assert.Skip("TCP_MD5SIG requires Linux.");
+        }
+        if (ipv6 && !Socket.OSSupportsIPv6)
+        {
+            Assert.Skip("IPv6 unavailable.");
+        }
         var token = TestContext.Current.CancellationToken;
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         try
@@ -109,7 +121,10 @@ public class LinuxTcpMd5SourceTest
                 new IPEndPoint(ipv6 ? IPAddress.IPv6Loopback : IPAddress.Loopback, 0), token);
             await scenario(group, server, token);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     private static ServerBootstrap NewServer(MultiThreadIoEventLoopGroup group)

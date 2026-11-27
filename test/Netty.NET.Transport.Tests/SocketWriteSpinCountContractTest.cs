@@ -187,14 +187,20 @@ public class SocketWriteSpinCountContractTest
         internal override int WriteSocket(ReadOnlyMemory<byte> buffer)
         {
             Calls++;
-            if (Failure != null) throw Failure;
+            if (Failure != null)
+            {
+                throw Failure;
+            }
             return JavaChannel().Send(buffer[..1].Span, SocketFlags.None);
         }
 
         internal override long WriteSocket(ReadOnlyMemory<byte>[] buffers, int offset, int length)
         {
             Calls++;
-            if (Failure != null) throw Failure;
+            if (Failure != null)
+            {
+                throw Failure;
+            }
             if (Gather)
             {
                 Gather = false;

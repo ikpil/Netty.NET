@@ -64,7 +64,10 @@ public static partial class ByteBufUtil
     {
         ArgumentNullException.ThrowIfNull(buffer);
         ReadOnlySequence<byte> bytes = buffer.AsReadOnlySequence(start, length);
-        if (length == 0) return Array.Empty<byte>();
+        if (length == 0)
+        {
+            return Array.Empty<byte>();
+        }
         if (!copy && start == 0 && length == buffer.Capacity && !buffer.IsReadOnly)
         {
             try

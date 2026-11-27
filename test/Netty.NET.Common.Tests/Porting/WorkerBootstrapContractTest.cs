@@ -69,7 +69,10 @@ public class WorkerBootstrapContractTest
         {
             release.Set();
             foreach (Thread thread in threads)
-                if (thread != null) Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
+                if (thread != null)
+                {
+                    Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
+                }
         }
     }
 
@@ -107,7 +110,10 @@ public class WorkerBootstrapContractTest
         dispatch(() =>
         {
             Assert.Same(mapped, ThreadExecutorMap.CurrentExecutor());
-            if (fail) throw failure;
+            if (fail)
+            {
+                throw failure;
+            }
         });
         Assert.Same(callerBinding, ThreadExecutorMap.CurrentExecutor());
         Exception workerFailure = null;
@@ -116,11 +122,20 @@ public class WorkerBootstrapContractTest
             try
             {
                 ThreadExecutorMap.SetCurrentExecutor(previous);
-                if (fail) Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => entry()));
-                else entry();
+                if (fail)
+                {
+                    Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => entry()));
+                }
+                else
+                {
+                    entry();
+                }
                 Assert.Same(previous, ThreadExecutorMap.CurrentExecutor());
             }
-            catch (Exception error) { workerFailure = error; }
+            catch (Exception error)
+            {
+                workerFailure = error;
+            }
         });
         worker.Thread.IsBackground = true;
         worker.Thread.Start();
@@ -158,7 +173,10 @@ public class WorkerBootstrapContractTest
                 {
                     Assert.Same(executor, ThreadExecutorMap.CurrentExecutor());
                     Assert.True(executor.InEventLoop());
-                    if (worker == null) worker = Thread.CurrentThread;
+                    if (worker == null)
+                    {
+                        worker = Thread.CurrentThread;
+                    }
                     Assert.Same(worker, Thread.CurrentThread);
                     return ++counter;
                 }, TestContext.Current.CancellationToken);

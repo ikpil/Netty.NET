@@ -110,17 +110,28 @@ public class HttpMethod : IComparable<HttpMethod>
     {
         switch (name)
         {
-            case "OPTIONS": return HttpMethod.OPTIONS;
-            case "GET":     return HttpMethod.GET;
-            case "HEAD":    return HttpMethod.HEAD;
-            case "POST":    return HttpMethod.POST;
-            case "PUT":     return HttpMethod.PUT;
-            case "PATCH":   return HttpMethod.PATCH;
-            case "DELETE":  return HttpMethod.DELETE;
-            case "TRACE":   return HttpMethod.TRACE;
-            case "CONNECT": return HttpMethod.CONNECT;
-            case "QUERY":   return HttpMethod.QUERY;
-            default:        return new HttpMethod(name);
+            case "OPTIONS":
+                return HttpMethod.OPTIONS;
+            case "GET":
+                return HttpMethod.GET;
+            case "HEAD":
+                return HttpMethod.HEAD;
+            case "POST":
+                return HttpMethod.POST;
+            case "PUT":
+                return HttpMethod.PUT;
+            case "PATCH":
+                return HttpMethod.PATCH;
+            case "DELETE":
+                return HttpMethod.DELETE;
+            case "TRACE":
+                return HttpMethod.TRACE;
+            case "CONNECT":
+                return HttpMethod.CONNECT;
+            case "QUERY":
+                return HttpMethod.QUERY;
+            default:
+                return new HttpMethod(name);
         }
     }
 

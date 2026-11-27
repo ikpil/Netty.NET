@@ -49,7 +49,10 @@ public abstract partial class ByteBuf
     {
         ArgumentNullException.ThrowIfNull(destination);
         CheckIndex(index, length);
-        if (length == 0) return 0;
+        if (length == 0)
+        {
+            return 0;
+        }
         byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
         try
         {
@@ -57,7 +60,10 @@ public abstract partial class ByteBuf
             int count = destination.Send(bytes.AsSpan(0, length), SocketFlags.None, out SocketError error);
             return SocketTransferCount(count, error);
         }
-        finally { ArrayPool<byte>.Shared.Return(bytes); }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(bytes);
+        }
     }
 
     /**
@@ -88,16 +94,25 @@ public abstract partial class ByteBuf
         EnsureCanWrite();
         ArgumentNullException.ThrowIfNull(source);
         CheckIndex(index, length);
-        if (length == 0) return 0;
+        if (length == 0)
+        {
+            return 0;
+        }
         byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
         try
         {
             int count = source.Receive(bytes.AsSpan(0, length), SocketFlags.None, out SocketError error);
             count = SocketTransferCount(count, error);
-            if (count != 0) SetBytesFromIoCore(index, bytes.AsSpan(0, count));
+            if (count != 0)
+            {
+                SetBytesFromIoCore(index, bytes.AsSpan(0, count));
+            }
             return count;
         }
-        finally { ArrayPool<byte>.Shared.Return(bytes); }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(bytes);
+        }
     }
 
     /**
@@ -161,7 +176,10 @@ public abstract partial class ByteBuf
         ArgumentNullException.ThrowIfNull(destination);
         CheckIndex(index, length);
         cancellationToken.ThrowIfCancellationRequested();
-        if (length == 0) return 0;
+        if (length == 0)
+        {
+            return 0;
+        }
         byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
         try
         {
@@ -169,7 +187,10 @@ public abstract partial class ByteBuf
             return await destination.SendAsync(bytes.AsMemory(0, length), SocketFlags.None, cancellationToken)
                 .ConfigureAwait(false);
         }
-        finally { ArrayPool<byte>.Shared.Return(bytes); }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(bytes);
+        }
     }
 
     /// <summary>Asynchronously receives once into an absolute range without changing indices.</summary>
@@ -185,7 +206,10 @@ public abstract partial class ByteBuf
         ArgumentNullException.ThrowIfNull(source);
         CheckIndex(index, length);
         cancellationToken.ThrowIfCancellationRequested();
-        if (length == 0) return 0;
+        if (length == 0)
+        {
+            return 0;
+        }
         byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
         try
         {
@@ -199,7 +223,10 @@ public abstract partial class ByteBuf
             }
             return count;
         }
-        finally { ArrayPool<byte>.Shared.Return(bytes); }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(bytes);
+        }
     }
 
     /// <summary>Asynchronously sends readable bytes once, advancing the reader by the returned count.</summary>
@@ -224,7 +251,10 @@ public abstract partial class ByteBuf
         EnsureCanWrite();
         ArgumentNullException.ThrowIfNull(source);
         ArgumentOutOfRangeException.ThrowIfNegative(length);
-        if (length > MaxWritableBytes) throw new ArgumentOutOfRangeException(nameof(length));
+        if (length > MaxWritableBytes)
+        {
+            throw new ArgumentOutOfRangeException(nameof(length));
+        }
         cancellationToken.ThrowIfCancellationRequested();
         EnsureWritable(length);
         int count = await SetBytesAsync(_writerIndex, source, length, cancellationToken).ConfigureAwait(false);
@@ -234,8 +264,14 @@ public abstract partial class ByteBuf
 
     private static int SocketTransferCount(int count, SocketError error)
     {
-        if (error == SocketError.WouldBlock) return 0;
-        if (error != SocketError.Success) throw new SocketException((int)error);
+        if (error == SocketError.WouldBlock)
+        {
+            return 0;
+        }
+        if (error != SocketError.Success)
+        {
+            throw new SocketException((int)error);
+        }
         return count;
     }
 }

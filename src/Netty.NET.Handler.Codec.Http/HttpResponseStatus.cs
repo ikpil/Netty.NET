@@ -586,7 +586,8 @@ public class HttpResponseStatus : IComparable<HttpResponseStatus>
             // Check prohibited characters.
             switch (c)
             {
-                case '\n': case '\r':
+                case '\n':
+                case '\r':
                     throw new ArgumentException(
                             "reasonPhrase contains one of the following prohibited characters: " +
                                     "\\r\\n: " + reasonPhrase);

@@ -23,7 +23,10 @@ public class RecyclableArrayListContractTest
             Assert.Empty(list);
             Assert.False(list.InsertSinceRecycled);
         }
-        finally { list.Recycle(); }
+        finally
+        {
+            list.Recycle();
+        }
     }
 
     [Theory]
@@ -36,13 +39,26 @@ public class RecyclableArrayListContractTest
         var list = RecyclableArrayList.NewInstance();
         try
         {
-            if (previouslyInserted) { list.Add(new object()); list.Clear(); }
-            if (indexed) list.InsertRange(0, Array.Empty<object>());
-            else list.AddRange(Array.Empty<object>());
+            if (previouslyInserted)
+            {
+                list.Add(new object());
+                list.Clear();
+            }
+            if (indexed)
+            {
+                list.InsertRange(0, Array.Empty<object>());
+            }
+            else
+            {
+                list.AddRange(Array.Empty<object>());
+            }
             Assert.Empty(list);
             Assert.Equal(previouslyInserted, list.InsertSinceRecycled);
         }
-        finally { list.Recycle(); }
+        finally
+        {
+            list.Recycle();
+        }
     }
 
     [Theory]
@@ -56,17 +72,30 @@ public class RecyclableArrayListContractTest
         object original = new object();
         try
         {
-            if (previouslyInserted) list.Add(original);
+            if (previouslyInserted)
+            {
+                list.Add(original);
+            }
             object[] invalid = { new object(), null, new object() };
             var error = Assert.Throws<ArgumentException>(() =>
             {
-                if (indexed) list.InsertRange(0, invalid); else list.AddRange(invalid);
+                if (indexed)
+                {
+                    list.InsertRange(0, invalid);
+                }
+                else
+                {
+                    list.AddRange(invalid);
+                }
             });
             Assert.Equal("items", error.ParamName);
             Assert.Equal(previouslyInserted ? new[] { original } : Array.Empty<object>(), list.ToArray());
             Assert.Equal(previouslyInserted, list.InsertSinceRecycled);
         }
-        finally { list.Recycle(); }
+        finally
+        {
+            list.Recycle();
+        }
     }
 
     [Theory]
@@ -79,13 +108,23 @@ public class RecyclableArrayListContractTest
         {
             var error = Assert.Throws<ArgumentNullException>(() =>
             {
-                if (indexed) list.InsertRange(0, null); else list.AddRange(null);
+                if (indexed)
+                {
+                    list.InsertRange(0, null);
+                }
+                else
+                {
+                    list.AddRange(null);
+                }
             });
             Assert.Equal("items", error.ParamName);
             Assert.Empty(list);
             Assert.False(list.InsertSinceRecycled);
         }
-        finally { list.Recycle(); }
+        finally
+        {
+            list.Recycle();
+        }
     }
 
     [Theory]
@@ -123,7 +162,10 @@ public class RecyclableArrayListContractTest
             ((IList)list)[0] = replacement;
             Assert.Same(replacement, list[0]);
         }
-        finally { list.Recycle(); }
+        finally
+        {
+            list.Recycle();
+        }
     }
 
     [Fact]
@@ -147,7 +189,10 @@ public class RecyclableArrayListContractTest
             Assert.Empty(list);
             Assert.True(list.InsertSinceRecycled);
         }
-        finally { list.Recycle(); }
+        finally
+        {
+            list.Recycle();
+        }
     }
 
     [Theory]
@@ -160,18 +205,31 @@ public class RecyclableArrayListContractTest
         int enumerations = 0;
         IEnumerable<object> Values()
         {
-            if (++enumerations != 1) throw new InvalidOperationException("enumerated twice");
+            if (++enumerations != 1)
+            {
+                throw new InvalidOperationException("enumerated twice");
+            }
             yield return first;
             yield return second;
         }
         try
         {
-            if (indexed) list.InsertRange(0, Values()); else list.AddRange(Values());
+            if (indexed)
+            {
+                list.InsertRange(0, Values());
+            }
+            else
+            {
+                list.AddRange(Values());
+            }
             Assert.Equal(1, enumerations);
             Assert.Equal(new[] { first, second }, list.ToArray());
             Assert.True(list.InsertSinceRecycled);
         }
-        finally { list.Recycle(); }
+        finally
+        {
+            list.Recycle();
+        }
     }
 
     [Theory]
@@ -189,12 +247,22 @@ public class RecyclableArrayListContractTest
         {
             Assert.Throws<InvalidOperationException>(() =>
             {
-                if (indexed) list.InsertRange(0, Values()); else list.AddRange(Values());
+                if (indexed)
+                {
+                    list.InsertRange(0, Values());
+                }
+                else
+                {
+                    list.AddRange(Values());
+                }
             });
             Assert.Empty(list);
             Assert.False(list.InsertSinceRecycled);
         }
-        finally { list.Recycle(); }
+        finally
+        {
+            list.Recycle();
+        }
     }
 
     [Theory]
@@ -207,10 +275,20 @@ public class RecyclableArrayListContractTest
         try
         {
             list.AddRange(new[] { first, second });
-            if (indexed) list.InsertRange(1, list); else list.AddRange(list);
+            if (indexed)
+            {
+                list.InsertRange(1, list);
+            }
+            else
+            {
+                list.AddRange(list);
+            }
             Assert.Equal(indexed ? new[] { first, first, second, second } : new[] { first, second, first, second }, list.ToArray());
         }
-        finally { list.Recycle(); }
+        finally
+        {
+            list.Recycle();
+        }
     }
 
     [Theory]
@@ -227,7 +305,10 @@ public class RecyclableArrayListContractTest
             Assert.Empty(list);
             Assert.False(list.InsertSinceRecycled);
         }
-        finally { list.Recycle(); }
+        finally
+        {
+            list.Recycle();
+        }
     }
 
     private sealed class Payload : IDisposable
@@ -253,12 +334,24 @@ public class RecyclableArrayListContractTest
             if (externalReturn)
             {
                 Exception failure = null;
-                var thread = new Thread(() => { try { list.Recycle(); } catch (Exception e) { failure = e; } });
+                var thread = new Thread(() => {
+                    try
+                    {
+                        list.Recycle();
+                    }
+                    catch (Exception e)
+                    {
+                        failure = e;
+                    }
+                });
                 thread.Start();
                 Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
                 Assert.Null(failure);
             }
-            else list.Recycle();
+            else
+            {
+                list.Recycle();
+            }
             Assert.Throws<InvalidOperationException>(() => list.Recycle());
             var next = RecyclableArrayList.NewInstance();
             try
@@ -271,7 +364,10 @@ public class RecyclableArrayListContractTest
                 next.Add(new object());
                 Assert.True(next.InsertSinceRecycled);
             }
-            finally { next.Recycle(); }
+            finally
+            {
+                next.Recycle();
+            }
         });
     }
 

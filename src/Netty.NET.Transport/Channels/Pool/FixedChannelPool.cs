@@ -187,7 +187,10 @@ public class FixedChannelPool : SimpleChannelPool
             else
                 _executor.Execute(() => Acquire0(request));
         }
-        catch (Exception error) { request.Fail(error); }
+        catch (Exception error)
+        {
+            request.Fail(error);
+        }
         return request.Producer.Task;
     }
 
@@ -197,7 +200,10 @@ public class FixedChannelPool : SimpleChannelPool
         try
         {
             if (_closed)
-            { request.Fail(ClosedException()); return; }
+            {
+                request.Fail(ClosedException());
+                return;
+            }
             if (_acquiredChannelCount < _maxConnections)
             {
                 StartAcquire(request);
@@ -220,7 +226,10 @@ public class FixedChannelPool : SimpleChannelPool
         catch (Exception error)
         {
             if (request.Node != null)
-            { _pending.Remove(request.Node); request.Node = null; }
+            {
+                _pending.Remove(request.Node);
+                request.Node = null;
+            }
             request.Fail(error);
         }
     }
@@ -238,8 +247,13 @@ public class FixedChannelPool : SimpleChannelPool
         // CLR: base AcquireAsync owns a separate native producer. Consumer cancellation never abandons it.
         Task<IChannel> acquisition;
         try
-        { acquisition = base.AcquireAsync(); }
-        catch (Exception error) { acquisition = Task.FromException<IChannel>(error); }
+        {
+            acquisition = base.AcquireAsync();
+        }
+        catch (Exception error)
+        {
+            acquisition = Task.FromException<IChannel>(error);
+        }
         _ = ObserveAcquireAsync(request, acquisition);
     }
 
@@ -248,8 +262,13 @@ public class FixedChannelPool : SimpleChannelPool
         IChannel channel = null;
         Exception failure = null;
         try
-        { channel = await acquisition.ConfigureAwait(false); }
-        catch (Exception error) { failure = error; }
+        {
+            channel = await acquisition.ConfigureAwait(false);
+        }
+        catch (Exception error)
+        {
+            failure = error;
+        }
         try
         {
             // Always queue native completion. This supplies the source promise listener's bounded
@@ -297,8 +316,13 @@ public class FixedChannelPool : SimpleChannelPool
     private async Task ReleaseCancelledAcquireAsync(IChannel channel)
     {
         try
-        { await ReleaseAsync(channel).ConfigureAwait(false); }
-        catch { /* ReleaseAsync closes the channel and reconciles the slot even on failure. */ }
+        {
+            await ReleaseAsync(channel).ConfigureAwait(false);
+        }
+        catch
+        {
+            /* ReleaseAsync closes the channel and reconciles the slot even on failure. */
+        }
     }
 
     public override async Task ReleaseAsync(IChannel channel)
@@ -306,8 +330,13 @@ public class FixedChannelPool : SimpleChannelPool
         ArgumentNullException.ThrowIfNull(channel);
         Exception failure = null;
         try
-        { await base.ReleaseAsync(channel).ConfigureAwait(false); }
-        catch (Exception error) { failure = error; }
+        {
+            await base.ReleaseAsync(channel).ConfigureAwait(false);
+        }
+        catch (Exception error)
+        {
+            failure = error;
+        }
         try
         {
             await OnExecutorAsync(() =>
@@ -339,8 +368,14 @@ public class FixedChannelPool : SimpleChannelPool
         if (!_executor.InEventLoop())
             return _executor.SubmitAsync(action);
         try
-        { action(); return Task.CompletedTask; }
-        catch (Exception error) { return Task.FromException(error); }
+        {
+            action();
+            return Task.CompletedTask;
+        }
+        catch (Exception error)
+        {
+            return Task.FromException(error);
+        }
     }
 
     private void DecrementAndRunTaskQueue()
@@ -403,8 +438,12 @@ public class FixedChannelPool : SimpleChannelPool
     private async Task ObserveTimeoutAsync(AcquireRequest request, Task scheduled)
     {
         try
-        { await scheduled.ConfigureAwait(false); }
-        catch (OperationCanceledException) when (scheduled.IsCanceled) { }
+        {
+            await scheduled.ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (scheduled.IsCanceled)
+        {
+        }
         catch (Exception error)
         {
             try
@@ -418,7 +457,10 @@ public class FixedChannelPool : SimpleChannelPool
                     FinishAcquire(request, null, error);
                 }).ConfigureAwait(false);
             }
-            catch (Exception rejection) { request.Fail(rejection); }
+            catch (Exception rejection)
+            {
+                request.Fail(rejection);
+            }
         }
     }
 

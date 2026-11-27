@@ -27,12 +27,23 @@ public class NotificationRecursionContractTest
             {
                 ++calls;
                 delivered.Add(index);
-                if (index + 1 == count) return;
+                if (index + 1 == count)
+                {
+                    return;
+                }
                 if (throughCompletion)
+                {
                     completions[index].Register(_ => reporters[index + 1].Report(new TransferProgress(1, 2)));
-                else reporters[index + 1].Report(new TransferProgress(1, 2));
+                }
+                else
+                {
+                    reporters[index + 1].Report(new TransferProgress(1, 2));
+                }
             }
-            finally { --depth; }
+            finally
+            {
+                --depth;
+            }
         }
         try
         {

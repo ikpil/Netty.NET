@@ -263,7 +263,10 @@ public class DefaultChannelPipelineMutationSourceTest
             Assert.NotNull(executor3);
             Assert.NotSame(executor3, executor2);
         }
-        finally { await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero); }
+        finally
+        {
+            await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
+        }
     }
 
     [Fact]
@@ -281,7 +284,10 @@ public class DefaultChannelPipelineMutationSourceTest
             Assert.NotNull(executor2);
             Assert.NotSame(executor1, executor2);
         }
-        finally { await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero); }
+        finally
+        {
+            await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
+        }
     }
 
     [Fact(Timeout = 10000)]
@@ -428,7 +434,11 @@ public class DefaultChannelPipelineMutationSourceTest
             channel.Pipeline.Remove(handler);
             await handler.Removed.Task.WaitAsync(TestContext.Current.CancellationToken);
         }
-        finally { await channel.CloseAsync(); await group.StopAsync(); }
+        finally
+        {
+            await channel.CloseAsync();
+            await group.StopAsync();
+        }
     }
 
     [Fact(Timeout = 3000)]
@@ -449,7 +459,11 @@ public class DefaultChannelPipelineMutationSourceTest
             await handler.Removed.Task.WaitAsync(TestContext.Current.CancellationToken);
             await latch.Task;
         }
-        finally { await channel.CloseAsync(); await group.StopAsync(); }
+        finally
+        {
+            await channel.CloseAsync();
+            await group.StopAsync();
+        }
     }
 
     [Fact]
@@ -494,7 +508,11 @@ public class DefaultChannelPipelineMutationSourceTest
             Assert.True(await handler.Added.Task);
             Assert.True(await handler.Removed.Task);
         }
-        finally { await channel.CloseAsync(); await group.StopAsync(); }
+        finally
+        {
+            await channel.CloseAsync();
+            await group.StopAsync();
+        }
     }
 
     [Fact(Timeout = 3000)]
@@ -523,7 +541,11 @@ public class DefaultChannelPipelineMutationSourceTest
             pipeline.Remove(handler2);
             Assert.True(await handler2.Removed.Task);
         }
-        finally { await channel.CloseAsync(); await group.StopAsync(); }
+        finally
+        {
+            await channel.CloseAsync();
+            await group.StopAsync();
+        }
     }
 
     [Fact(Timeout = 3000)]
@@ -559,7 +581,11 @@ public class DefaultChannelPipelineMutationSourceTest
             AssertHandler(await removed.Reader.ReadAsync(TestContext.Current.CancellationToken), handler1);
             Assert.False(removed.Reader.TryPeek(out _));
         }
-        finally { await channel.CloseAsync(); await Task.WhenAll(group.StopAsync(), group1.StopAsync(), group2.StopAsync()); }
+        finally
+        {
+            await channel.CloseAsync();
+            await Task.WhenAll(group.StopAsync(), group1.StopAsync(), group2.StopAsync());
+        }
     }
 
     [Fact(Timeout = 3000)]
@@ -582,7 +608,12 @@ public class DefaultChannelPipelineMutationSourceTest
             }
             await Task.WhenAll(tasks).WaitAsync(TestContext.Current.CancellationToken);
         }
-        finally { await channel1.CloseAsync(); await channel2.CloseAsync(); await defaultGroup.StopAsync(); }
+        finally
+        {
+            await channel1.CloseAsync();
+            await channel2.CloseAsync();
+            await defaultGroup.StopAsync();
+        }
     }
 
     private static void VerifyContextNumber(IChannelPipeline pipeline, int expectedNumber)
@@ -635,9 +666,15 @@ public class DefaultChannelPipelineMutationSourceTest
         public override void HandlerRemoved(IChannelHandlerContext ctx)
         {
             if (InboundBuffer.Count != 0)
-            { foreach (var value in InboundBuffer) ctx.FireChannelRead(value); ctx.FireChannelReadComplete(); }
+            {
+                foreach (var value in InboundBuffer) ctx.FireChannelRead(value);
+                ctx.FireChannelReadComplete();
+            }
             if (OutboundBuffer.Count != 0)
-            { foreach (var value in OutboundBuffer) _ = ctx.WriteAsync(value); ctx.Flush(); }
+            {
+                foreach (var value in OutboundBuffer) _ = ctx.WriteAsync(value);
+                ctx.Flush();
+            }
         }
     }
     /** Test handler to validate life-cycle aware behavior. */
@@ -797,7 +834,11 @@ public class DefaultChannelPipelineMutationSourceTest
                 await connection._server.CloseAsync();
                 return connection;
             }
-            catch { await connection.DisposeAsync(); throw; }
+            catch
+            {
+                await connection.DisposeAsync();
+                throw;
+            }
         }
 
         public async ValueTask DisposeAsync()

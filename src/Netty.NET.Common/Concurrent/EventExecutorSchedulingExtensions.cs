@@ -109,8 +109,14 @@ public static class EventExecutorSchedulingExtensions
         TimeSpan initialDelay, TimeSpan interval, bool fixedDelay, CancellationToken token)
     {
         ArgumentNullException.ThrowIfNull(action);
-        if (initialDelay < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(initialDelay));
-        if (interval <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(interval));
+        if (initialDelay < TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(initialDelay));
+        }
+        if (interval <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(interval));
+        }
         long period = AbstractScheduledEventExecutor.ToNanos(interval);
         return ScheduleCore<object>(executor, ct => { action(ct); return null; }, initialDelay,
             fixedDelay ? -period : period, token);
@@ -121,7 +127,10 @@ public static class EventExecutorSchedulingExtensions
     {
         ArgumentNullException.ThrowIfNull(group);
         ArgumentNullException.ThrowIfNull(function);
-        if (delay < TimeSpan.Zero) delay = TimeSpan.Zero;
+        if (delay < TimeSpan.Zero)
+        {
+            delay = TimeSpan.Zero;
+        }
         // A NonSticky group directly delegates scheduling to its underlying group;
         // its ordered child wrapper deliberately does not support scheduling.
         while (group is NonStickyEventExecutorGroup wrapper) group = wrapper.DelegatedGroup;

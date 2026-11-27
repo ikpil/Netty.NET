@@ -49,10 +49,17 @@ public abstract class SimpleNameResolver<T> : INameResolver<T>
         if (cancellationToken.IsCancellationRequested)
             return Task.FromCanceled<T>(cancellationToken);
         try
-        { return DoResolveAsync(inetHost, cancellationToken); }
+        {
+            return DoResolveAsync(inetHost, cancellationToken);
+        }
         catch (OperationCanceledException error) when (cancellationToken.IsCancellationRequested && error.CancellationToken == cancellationToken)
-        { return Task.FromCanceled<T>(cancellationToken); }
-        catch (Exception e) { return Task.FromException<T>(e); }
+        {
+            return Task.FromCanceled<T>(cancellationToken);
+        }
+        catch (Exception e)
+        {
+            return Task.FromException<T>(e);
+        }
     }
 
     public Task<IReadOnlyList<T>> ResolveAllAsync(string inetHost, CancellationToken cancellationToken = default)
@@ -60,10 +67,17 @@ public abstract class SimpleNameResolver<T> : INameResolver<T>
         if (cancellationToken.IsCancellationRequested)
             return Task.FromCanceled<IReadOnlyList<T>>(cancellationToken);
         try
-        { return DoResolveAllAsync(inetHost, cancellationToken); }
+        {
+            return DoResolveAllAsync(inetHost, cancellationToken);
+        }
         catch (OperationCanceledException error) when (cancellationToken.IsCancellationRequested && error.CancellationToken == cancellationToken)
-        { return Task.FromCanceled<IReadOnlyList<T>>(cancellationToken); }
-        catch (Exception e) { return Task.FromException<IReadOnlyList<T>>(e); }
+        {
+            return Task.FromCanceled<IReadOnlyList<T>>(cancellationToken);
+        }
+        catch (Exception e)
+        {
+            return Task.FromException<IReadOnlyList<T>>(e);
+        }
     }
 
     /**

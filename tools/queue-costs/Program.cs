@@ -26,22 +26,37 @@ foreach (int count in new[] { 64, 1024, 16384 })
         foreach (Entry entry in entries) verified.Add(entry);
         foreach (Entry entry in withdrawn)
         {
-            if (!verified.Remove(entry) || verified.Remove(entry)) throw new Exception("Removal identity failed");
+            if (!verified.Remove(entry) || verified.Remove(entry))
+            {
+                throw new Exception("Removal identity failed");
+            }
         }
         // Equality is deliberately hostile: a distinct equal-valued reference must
         // never remove a reservation, including equal-deadline members.
-        if (verified.Remove(new Entry(expected[0].Id, expected[0].Offset))) throw new Exception("Alien removal");
+        if (verified.Remove(new Entry(expected[0].Id, expected[0].Offset)))
+        {
+            throw new Exception("Alien removal");
+        }
         if (indexedOnly)
         {
             IQueue other = Create(candidate);
             var foreign = new Entry(expected[0].Id, expected[0].Offset);
             other.Add(foreign);
-            if (verified.Remove(foreign)) throw new Exception("Foreign indexed owner removal");
+            if (verified.Remove(foreign))
+            {
+                throw new Exception("Foreign indexed owner removal");
+            }
             other.Pop();
         }
         foreach (Entry entry in expected)
-            if (!ReferenceEquals(verified.Pop(), entry)) throw new Exception("Remaining deadline order failed");
-        if (verified.Count != 0) throw new Exception("Drain failed");
+            if (!ReferenceEquals(verified.Pop(), entry))
+            {
+                throw new Exception("Remaining deadline order failed");
+            }
+        if (verified.Count != 0)
+        {
+            throw new Exception("Drain failed");
+        }
 
         Measure(candidate, "fill-drain", count, count * 2,
             () => Create(candidate), q =>
@@ -96,7 +111,10 @@ foreach (int count in indexedOnly ? Array.Empty<int>() : new[] { 64, 1024, 4096 
             long allocated = GC.GetAllocatedBytesForCurrentThread() - bytes;
             if (pool.PendingTaskCount != count - cancelCount || indices.Take(cancelCount).Any(i => !tasks[i].IsCanceled))
                 throw new Exception("Public cancellation ownership failed");
-            if (round >= 0) values.Add((ticks * 1e9 / Stopwatch.Frequency / cancelCount, (double)allocated / cancelCount));
+            if (round >= 0)
+            {
+                values.Add((ticks * 1e9 / Stopwatch.Frequency / cancelCount, (double)allocated / cancelCount));
+            }
         }
         finally
         {
@@ -133,7 +151,10 @@ void Measure(string candidate, string phase, int count, int operations, Func<IQu
         action(queue);
         long ticks = Stopwatch.GetTimestamp() - start;
         long allocated = GC.GetAllocatedBytesForCurrentThread() - bytes;
-        if (round >= 0) values.Add((ticks * 1e9 / Stopwatch.Frequency / operations, (double)allocated / operations));
+        if (round >= 0)
+        {
+            values.Add((ticks * 1e9 / Stopwatch.Frequency / operations, (double)allocated / operations));
+        }
         // Indexed nodes are reused in the next setup. Release memberships after
         // recording the interval; cleanup is outside measured work/allocation.
         while (queue.Count != 0) queue.Pop();
@@ -218,10 +239,16 @@ sealed class Heap(bool rebuild) : IQueue
     private bool RemoveByRebuilding(Entry entry)
     {
         var items = queue.UnorderedItems.ToArray();
-        if (!items.Any(item => ReferenceEquals(item.Element, entry))) return false;
+        if (!items.Any(item => ReferenceEquals(item.Element, entry)))
+        {
+            return false;
+        }
         queue.Clear();
         foreach (var item in items)
-            if (!ReferenceEquals(item.Element, entry)) queue.Enqueue(item.Element, item.Priority);
+            if (!ReferenceEquals(item.Element, entry))
+            {
+                queue.Enqueue(item.Element, item.Priority);
+            }
         return true;
     }
 }

@@ -95,7 +95,13 @@ public static class ThreadExecutorMap
     private static void RunWithExecutor(Action command, IEventExecutor eventExecutor)
     {
         IEventExecutor old = SetCurrentExecutor(eventExecutor);
-        try { command(); }
-        finally { SetCurrentExecutor(old); }
+        try
+        {
+            command();
+        }
+        finally
+        {
+            SetCurrentExecutor(old);
+        }
     }
 }

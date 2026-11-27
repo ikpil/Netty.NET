@@ -28,8 +28,14 @@ public class ByteBufStreamTransferTest
 {
     private static ByteBuf Owner(int kind)
     {
-        if (kind == 0) return Unpooled.Buffer(32, 4096).SetZero(0, 32);
-        if (kind == 1) return Unpooled.DirectBuffer(32, 4096).SetZero(0, 32);
+        if (kind == 0)
+        {
+            return Unpooled.Buffer(32, 4096).SetZero(0, 32);
+        }
+        if (kind == 1)
+        {
+            return Unpooled.DirectBuffer(32, 4096).SetZero(0, 32);
+        }
         return Unpooled.CompositeBuffer().AddComponent(Unpooled.WrappedBuffer(new byte[7]))
             .AddComponent(Unpooled.WrappedBuffer(Array.Empty<byte>()))
             .AddComponent(Unpooled.WrappedBuffer(new byte[25]));
@@ -57,9 +63,13 @@ public class ByteBufStreamTransferTest
                 Assert.Same(b, b.GetBytes(i, output, 8));
             }
             Assert.Equal(expected, output.ToArray());
-            Assert.Equal(0, b.ReaderIndex); Assert.Equal(0, b.WriterIndex);
+            Assert.Equal(0, b.ReaderIndex);
+            Assert.Equal(0, b.WriterIndex);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -80,9 +90,13 @@ public class ByteBufStreamTransferTest
             {
                 Assert.Same(b, b.ReadBytes(output, 8)); Assert.Equal(i + 8, b.ReaderIndex);
             }
-            Assert.Equal(expected, output.ToArray()); Assert.Equal(1, b.RefCnt);
+            Assert.Equal(expected, output.ToArray());
+            Assert.Equal(1, b.RefCnt);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -106,7 +120,10 @@ public class ByteBufStreamTransferTest
             Assert.Equal(2, input.Calls);
             Assert.False(input.Disposed);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -124,7 +141,10 @@ public class ByteBufStreamTransferTest
             Assert.Equal(1, input.Calls);
             Assert.False(input.Disposed);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -143,7 +163,10 @@ public class ByteBufStreamTransferTest
             Assert.Equal(1, output.Calls);
             Assert.False(output.Disposed);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -168,7 +191,10 @@ public class ByteBufStreamTransferTest
             Assert.Throws<ArgumentNullException>(() => b.WriteBytes((Stream)null, 0));
             Assert.Equal(0, stream.Calls);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -179,12 +205,16 @@ public class ByteBufStreamTransferTest
         using var input = new ProbeStream { ReadCount = 0 };
         try
         {
-            Assert.Equal(0, b.WriteBytes(input, 40)); Assert.Equal(64, b.Capacity);
+            Assert.Equal(0, b.WriteBytes(input, 40));
+            Assert.Equal(64, b.Capacity);
             Assert.Equal(0, b.WriterIndex);
             Assert.Throws<ArgumentOutOfRangeException>(() => b.WriteBytes(input, 65));
             Assert.Equal(1, input.Calls);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -199,7 +229,10 @@ public class ByteBufStreamTransferTest
             Assert.Equal(0, b.WriterIndex);
             Assert.Equal(new byte[32], Bytes(b, 0, 32));
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -254,7 +287,10 @@ public class ByteBufStreamTransferTest
             Assert.Equal(1, wrapper.WriteBytes(more, 1));
             Assert.Equal(1, b.WriterIndex);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -269,15 +305,22 @@ public class ByteBufStreamTransferTest
             c.AddComponent(Unpooled.DirectBuffer(2, 2).WriteBytes(new byte[] { 3, 4 }), true);
             b = c;
         }
-        else b = Unpooled.DirectBuffer(4, 64).WriteBytes(new byte[] { 1, 2, 3, 4 });
+        else
+        {
+            b = Unpooled.DirectBuffer(4, 64).WriteBytes(new byte[] { 1, 2, 3, 4 });
+        }
         using var output = new ByteBufOutputStream(b);
         try
         {
             b.ReadBytes(output, 4);
             Assert.Equal(new byte[] { 1, 2, 3, 4, 1, 2, 3, 4 }, Bytes(b, 0, 8));
-            Assert.Equal(4, b.ReaderIndex); Assert.Equal(8, b.WriterIndex);
+            Assert.Equal(4, b.ReaderIndex);
+            Assert.Equal(8, b.WriterIndex);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Fact]
@@ -287,10 +330,15 @@ public class ByteBufStreamTransferTest
         using var input = new ProbeStream { ReadCount = 3, Callback = () => b.Capacity = 64 };
         try
         {
-            Assert.Equal(3, b.WriteBytes(input, 4)); Assert.Equal(64, b.Capacity);
-            Assert.Equal(new byte[] { 1, 2, 3 }, Bytes(b, 0, 3)); Assert.Equal(3, b.WriterIndex);
+            Assert.Equal(3, b.WriteBytes(input, 4));
+            Assert.Equal(64, b.Capacity);
+            Assert.Equal(new byte[] { 1, 2, 3 }, Bytes(b, 0, 3));
+            Assert.Equal(3, b.WriterIndex);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Fact]
@@ -312,7 +360,10 @@ public class ByteBufStreamTransferTest
             Assert.Throws<NotSupportedException>(() => b.WriteBytes(input, 0));
             Assert.Equal(0, input.Calls);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -326,10 +377,15 @@ public class ByteBufStreamTransferTest
         {
             Assert.Equal(4, b.WriteBytes(input, 4));
             Assert.Equal(new byte[] { 1, 2, 3, 4, 1, 2, 3, 4 }, Bytes(b, 0, 8));
-            Assert.Equal(4, b.ReaderIndex); Assert.Equal(8, b.WriterIndex);
-            Assert.Equal(0, input.Available); Assert.Equal(1, b.RefCnt);
+            Assert.Equal(4, b.ReaderIndex);
+            Assert.Equal(8, b.WriterIndex);
+            Assert.Equal(0, input.Available);
+            Assert.Equal(1, b.RefCnt);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Fact]
@@ -342,10 +398,14 @@ public class ByteBufStreamTransferTest
         try
         {
             Assert.Throws<NotSupportedException>(() => b.WriteBytes(input, 4));
-            Assert.Equal(0, b.WriterIndex); Assert.Equal(4, input.Position);
+            Assert.Equal(0, b.WriterIndex);
+            Assert.Equal(4, input.Position);
             Assert.Equal(new byte[] { 1, 2, 0, 0 }, Bytes(b, 0, 4));
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -361,9 +421,13 @@ public class ByteBufStreamTransferTest
                 using var output = new MemoryStream(); view.ReadBytes(output, 20);
                 Assert.Equal(Enumerable.Range(3, 20).Select(i => (byte)i).ToArray(), output.ToArray());
             });
-            Assert.Equal(0, b.ReaderIndex); Assert.Equal(32, b.WriterIndex);
+            Assert.Equal(0, b.ReaderIndex);
+            Assert.Equal(32, b.WriterIndex);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     private sealed class ProbeStream : Stream
@@ -385,7 +449,10 @@ public class ByteBufStreamTransferTest
             for (int i = 0; i < Math.Min(destination.Length, Math.Max(0, ReadCount)); i++)
                 destination[i] = (byte)(i + 1);
             Callback?.Invoke();
-            if (Fail) throw new IOException("Input failure after touching staging.");
+            if (Fail)
+            {
+                throw new IOException("Input failure after touching staging.");
+            }
             return ReadCount;
         }
 

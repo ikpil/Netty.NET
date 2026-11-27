@@ -94,7 +94,10 @@ public class ByteBufScalarUtilTest
                 b.ResetReaderIndex().ResetWriterIndex(); Assert.Equal(0, b.ReaderIndex); Assert.Equal(1, b.WriterIndex);
             }
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -125,7 +128,10 @@ public class ByteBufScalarUtilTest
                 Assert.Equal(value, ByteBufUtil.ReadIntBE(readOnly)); Assert.Equal(0, b.ReaderIndex);
             }
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -143,14 +149,19 @@ public class ByteBufScalarUtilTest
             b.ReaderIndex = 3;
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.ReadUnsignedShortBE(b));
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.ReadIntBE(b));
-            Assert.Equal(3, b.ReaderIndex); Assert.Equal(4, b.WriterIndex); Assert.Equal(1, b.RefCnt);
+            Assert.Equal(3, b.ReaderIndex);
+            Assert.Equal(4, b.WriterIndex);
+            Assert.Equal(1, b.RefCnt);
             ByteBuf readOnly = b.AsReadOnly();
             Assert.Throws<NotSupportedException>(() => ByteBufUtil.SetShortBE(readOnly, 0, 7));
             Assert.Throws<NotSupportedException>(() => ByteBufUtil.WriteShortBE(readOnly, 7));
             Assert.Throws<NotSupportedException>(() => ByteBufUtil.WriteMediumBE(readOnly, 7));
             Assert.Equal(new byte[] { 1, 2, 3, 4 }, ByteBufUtil.GetBytes(b, 0, 4));
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
         Assert.Throws<IllegalReferenceCountException>(() => ByteBufUtil.SetShortBE(b, 0, 1));
         Assert.Throws<IllegalReferenceCountException>(() => ByteBufUtil.ReadIntBE(b));
     }
@@ -194,7 +205,10 @@ public class ByteBufScalarUtilTest
             Assert.Equal(2, b.EnsureWritable(3, false));
             Assert.True(ByteBufUtil.EnsureWritableSuccess(2));
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
         b = a.HeapBuffer(2, 8);
         try
         {
@@ -203,7 +217,10 @@ public class ByteBufScalarUtilTest
             Assert.Equal(8, b.Capacity);
             Assert.Equal(0, b.WriterIndex);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
         foreach (int code in new[] { int.MinValue, -1, 4, int.MaxValue })
             Assert.False(ByteBufUtil.EnsureWritableSuccess(code));
     }
@@ -214,10 +231,14 @@ public class ByteBufScalarUtilTest
         ByteBuf b = Storage(2, 8);
         try
         {
-            ByteBufUtil.WriteShortBE(b, 0x0d0a); ByteBufUtil.WriteMediumBE(b, 0x300d0a);
+            ByteBufUtil.WriteShortBE(b, 0x0d0a);
+            ByteBufUtil.WriteMediumBE(b, 0x300d0a);
             Assert.Equal(Encoding.ASCII.GetBytes("\r\n0\r\n"), ByteBufUtil.GetBytes(b));
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Fact]

@@ -42,7 +42,10 @@ public class GlobalEventExecutorTest
         var wait = Stopwatch.StartNew();
         for (;;)
         {
-            if (e._thread == null || !e._thread.IsAlive) break;
+            if (e._thread == null || !e._thread.IsAlive)
+            {
+                break;
+            }
             Assert.True(wait.Elapsed < TimeSpan.FromSeconds(5), "Global executor did not become inactive.");
             Thread.Sleep(50);
         }
@@ -138,7 +141,10 @@ public class GlobalEventExecutorTest
         Action repeat = null;
         repeat = () =>
         {
-            if (!f.IsCompleted) e.Execute(repeat);
+            if (!f.IsCompleted)
+            {
+                e.Execute(repeat);
+            }
         };
         e.Execute(repeat);
         Sync(f);

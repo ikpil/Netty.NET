@@ -149,7 +149,10 @@ internal sealed partial class AdaptivePoolingAllocator
         internal virtual void MarkToDeallocate()
         {
             using var events = BufferAllocatorEventSource.Log.BeginOperation();
-            if (TryRetire()) Release();
+            if (TryRetire())
+            {
+                Release();
+            }
         }
 
         // CLR: IDisposable scopes a chunk; disposing it is markToDeallocate().
@@ -175,14 +178,20 @@ internal sealed partial class AdaptivePoolingAllocator
 
         private protected void Release()
         {
-            if (ReferenceCountUpdater.Release(ref _refCnt)) Deallocate();
+            if (ReferenceCountUpdater.Release(ref _refCnt))
+            {
+                Deallocate();
+            }
         }
 
         private protected void Deallocate()
         {
             using var events = BufferAllocatorEventSource.Log.BeginOperation();
             ByteBuf @delegate = Interlocked.Exchange(ref _delegate, null);
-            if (@delegate == null) return;
+            if (@delegate == null)
+            {
+                return;
+            }
             OnRelease(@delegate);
             _chunkRegistry.Remove(this);
             @delegate.Release();
@@ -190,7 +199,10 @@ internal sealed partial class AdaptivePoolingAllocator
 
         private void OnRelease(ByteBuf @delegate)
         {
-            if (_eventsTracked) BufferAllocatorEventSource.Log.AdaptiveChunkChanged(@delegate, Pooled, false, allocated: false);
+            if (_eventsTracked)
+            {
+                BufferAllocatorEventSource.Log.AdaptiveChunkChanged(@delegate, Pooled, false, allocated: false);
+            }
         }
 
         // CLR: the Memory-based counterpart of readInitInto(buf, size, startingCapacity, maxCapacity).
@@ -200,7 +212,10 @@ internal sealed partial class AdaptivePoolingAllocator
         {
             ThrowIfRetired();
             ArgumentOutOfRangeException.ThrowIfNegative(startingCapacity);
-            if (startingCapacity > Capacity - AllocatedBytes) return null;
+            if (startingCapacity > Capacity - AllocatedBytes)
+            {
+                return null;
+            }
             int startIndex = AllocatedBytes;
             AllocatedBytes = startIndex + startingCapacity;
             Retain();

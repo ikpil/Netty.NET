@@ -84,7 +84,11 @@ public class ByteBufZeroDispatchTest
 
         protected override void SetZeroCore(int index, int length)
         {
-            if (calls.ThrowCore) { base.SetZeroCore(index, 2); throw calls.Error; }
+            if (calls.ThrowCore)
+            {
+                base.SetZeroCore(index, 2);
+                throw calls.Error;
+            }
             base.SetZeroCore(index, length);
         }
     }
@@ -111,7 +115,11 @@ public class ByteBufZeroDispatchTest
 
         protected override void SetZeroCore(int index, int length)
         {
-            if (calls.ThrowCore) { base.SetZeroCore(index, 2); throw calls.Error; }
+            if (calls.ThrowCore)
+            {
+                base.SetZeroCore(index, 2);
+                throw calls.Error;
+            }
             base.SetZeroCore(index, length);
         }
     }
@@ -138,7 +146,11 @@ public class ByteBufZeroDispatchTest
 
         protected override void SetZeroCore(int index, int length)
         {
-            if (calls.ThrowCore) { base.SetZeroCore(index, 2); throw calls.Error; }
+            if (calls.ThrowCore)
+            {
+                base.SetZeroCore(index, 2);
+                throw calls.Error;
+            }
             base.SetZeroCore(index, length);
         }
     }
@@ -173,18 +185,39 @@ public class ByteBufZeroDispatchTest
         ByteBuf owner = Create(direct ? 1 : 0, calls, native);
         try
         {
-            if (length is < 0 or > 61) Assert.Throws<ArgumentOutOfRangeException>(() => owner.WriteZero(length));
-            else Assert.Same(owner, owner.WriteZero(length));
-            Assert.Equal(1, calls.Write); Assert.Equal(0, calls.Set); Assert.Equal(1, calls.Ensure);
-            Assert.Equal(1, owner.ReaderIndex); Assert.Equal(length is < 0 or > 61 ? 3 : 3 + length, owner.WriterIndex);
-            Assert.Equal(10, owner.GetByte(0)); Assert.Equal(11, owner.GetByte(1)); Assert.Equal(12, owner.GetByte(2));
+            if (length is < 0 or > 61)
+            {
+                Assert.Throws<ArgumentOutOfRangeException>(() => owner.WriteZero(length));
+            }
+            else
+            {
+                Assert.Same(owner, owner.WriteZero(length));
+            }
+            Assert.Equal(1, calls.Write);
+            Assert.Equal(0, calls.Set);
+            Assert.Equal(1, calls.Ensure);
+            Assert.Equal(1, owner.ReaderIndex);
+            Assert.Equal(length is < 0 or > 61 ? 3 : 3 + length, owner.WriterIndex);
+            Assert.Equal(10, owner.GetByte(0));
+            Assert.Equal(11, owner.GetByte(1));
+            Assert.Equal(12, owner.GetByte(2));
             if (length is >= 0 and <= 61)
+            {
                 for (int i = 0; i < length; ++i) Assert.Equal(0, owner.GetByte(3 + i));
-            else Assert.Equal(new byte[] { 10, 11, 12, 13, 14, 15, 16, 17 }, ByteBufUtil.GetBytes(owner, 0, 8));
+            }
+            else
+            {
+                Assert.Equal(new byte[] { 10, 11, 12, 13, 14, 15, 16, 17 }, ByteBufUtil.GetBytes(owner, 0, 8));
+            }
             owner.ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(1, owner.ReaderIndex); Assert.Equal(3, owner.WriterIndex); Assert.Equal(1, owner.RefCnt);
+            Assert.Equal(1, owner.ReaderIndex);
+            Assert.Equal(3, owner.WriterIndex);
+            Assert.Equal(1, owner.RefCnt);
         }
-        finally { Assert.True(owner.Release()); }
+        finally
+        {
+            Assert.True(owner.Release());
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -198,13 +231,20 @@ public class ByteBufZeroDispatchTest
         try
         {
             Assert.Same(calls.Error, Assert.Throws<Failure>(() => owner.WriteZero(3)));
-            Assert.Equal(0, calls.Set); Assert.Equal(1, calls.Write); Assert.Equal(1, calls.Ensure);
+            Assert.Equal(0, calls.Set);
+            Assert.Equal(1, calls.Write);
+            Assert.Equal(1, calls.Ensure);
             Assert.Equal(new byte[] { 10, 11, 12, 0, 0, 15, 16, 17 }, ByteBufUtil.GetBytes(owner, 0, 8));
-            Assert.Equal(1, owner.ReaderIndex); Assert.Equal(3, owner.WriterIndex);
+            Assert.Equal(1, owner.ReaderIndex);
+            Assert.Equal(3, owner.WriterIndex);
             owner.SetIndex(0, 4).ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(1, owner.ReaderIndex); Assert.Equal(3, owner.WriterIndex);
+            Assert.Equal(1, owner.ReaderIndex);
+            Assert.Equal(3, owner.WriterIndex);
         }
-        finally { Assert.True(owner.Release()); }
+        finally
+        {
+            Assert.True(owner.Release());
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -265,7 +305,10 @@ public class ByteBufZeroDispatchTest
             Assert.Equal(3, buffer.WriterIndex);
             Assert.Equal(1, owner.RefCnt);
         }
-        finally { Assert.True(facade == 2 ? tracked.Release() : buffer.Release()); }
+        finally
+        {
+            Assert.True(facade == 2 ? tracked.Release() : buffer.Release());
+        }
         Assert.Equal(1, inner.Closes);
         Assert.Equal(facade is 1 or 4 ? 1 : 0, outer.Closes);
         Assert.Equal(0, native.ReservedBytes);
@@ -280,14 +323,22 @@ public class ByteBufZeroDispatchTest
         try
         {
             Assert.Throws<OutOfDirectMemoryError>(() => owner.WriteZero(17));
-            Assert.Equal(1, calls.Write); Assert.Equal(1, calls.Ensure); Assert.Equal(0, calls.Set);
-            Assert.Equal(8, owner.Capacity); Assert.Equal(8, native.ReservedBytes);
+            Assert.Equal(1, calls.Write);
+            Assert.Equal(1, calls.Ensure);
+            Assert.Equal(0, calls.Set);
+            Assert.Equal(8, owner.Capacity);
+            Assert.Equal(8, native.ReservedBytes);
             Assert.Equal(new byte[] { 10, 11, 12, 13, 14, 15, 16, 17 }, ByteBufUtil.GetBytes(owner, 0, 8));
-            Assert.Equal(1, owner.ReaderIndex); Assert.Equal(3, owner.WriterIndex);
+            Assert.Equal(1, owner.ReaderIndex);
+            Assert.Equal(3, owner.WriterIndex);
             owner.SetIndex(0, 4).ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(1, owner.ReaderIndex); Assert.Equal(3, owner.WriterIndex);
+            Assert.Equal(1, owner.ReaderIndex);
+            Assert.Equal(3, owner.WriterIndex);
         }
-        finally { Assert.True(owner.Release()); }
+        finally
+        {
+            Assert.True(owner.Release());
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 }

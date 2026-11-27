@@ -74,8 +74,14 @@ public class DatagramLifecycleContractTest
         }
         finally
         {
-            if (channel.IsRegistered) await channel.CloseAsync();
-            else socket.Dispose();
+            if (channel.IsRegistered)
+            {
+                await channel.CloseAsync();
+            }
+            else
+            {
+                socket.Dispose();
+            }
             await group.StopAsync();
         }
     }
@@ -112,7 +118,14 @@ public class DatagramLifecycleContractTest
                 await channel.LeaveGroupAsync(multicast, iface);
             }
         }
-        finally { if (channel != null) await channel.CloseAsync(); await group.StopAsync(); }
+        finally
+        {
+            if (channel != null)
+            {
+                await channel.CloseAsync();
+            }
+            await group.StopAsync();
+        }
     }
 
     [Theory(Timeout = 10000)]
@@ -144,10 +157,19 @@ public class DatagramLifecycleContractTest
             for (int i = 0; i < 5; i++)
             {
                 bool connected = i % 2 == 0;
-                if (connected) await channel.ConnectAsync(peer.LocalEndPoint, cancellationToken: cancellation);
-                else await channel.DisconnectAsync(cancellation);
+                if (connected)
+                {
+                    await channel.ConnectAsync(peer.LocalEndPoint, cancellationToken: cancellation);
+                }
+                else
+                {
+                    await channel.DisconnectAsync(cancellation);
+                }
                 var local = Assert.IsType<IPEndPoint>(channel.LocalAddress);
-                if (port == 0) port = local.Port;
+                if (port == 0)
+                {
+                    port = local.Port;
+                }
                 Assert.NotEqual(0, port);
                 Assert.Equal(port, local.Port);
                 if (!wildcard || OperatingSystem.IsLinux())
@@ -161,13 +183,23 @@ public class DatagramLifecycleContractTest
                 Assert.Equal(i, await messages.Reader.ReadAsync(cancellation));
             }
         }
-        finally { if (channel != null) await channel.CloseAsync(); await group.StopAsync(); }
+        finally
+        {
+            if (channel != null)
+            {
+                await channel.CloseAsync();
+            }
+            await group.StopAsync();
+        }
     }
 
     [Fact(Timeout = 10000)]
     public async Task NativeConnectFailureClosesTheDatagramChannel()
     {
-        if (!OperatingSystem.IsLinux()) Assert.Skip("Linux rejects UDP connect to broadcast without SO_BROADCAST.");
+        if (!OperatingSystem.IsLinux())
+        {
+            Assert.Skip("Linux rejects UDP connect to broadcast without SO_BROADCAST.");
+        }
         var cancellation = TestContext.Current.CancellationToken;
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         try
@@ -179,7 +211,10 @@ public class DatagramLifecycleContractTest
             await channel.CloseFuture.WaitAsync(cancellation);
             Assert.False(channel.IsOpen);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     // DefaultDatagramChannelConfig accessors read and write the native UDP socket; getOption/setOption
@@ -256,7 +291,10 @@ public class DatagramLifecycleContractTest
             Assert.Equal(address, config.GetInterface());
             Assert.Equal(address, Get(config, ChannelOption.IP_MULTICAST_ADDR));
         }
-        finally { socket.Dispose(); }
+        finally
+        {
+            socket.Dispose();
+        }
     }
 
     // DefaultDatagramChannelConfig wraps java.net.SocketException/IOException in ChannelException.
@@ -275,7 +313,10 @@ public class DatagramLifecycleContractTest
             error = Assert.Throws<ChannelException>(() => config.SetOption(ChannelOption.IP_MULTICAST_TTL, 3));
             Assert.IsType<SocketException>(error.InnerException);
         }
-        finally { socket.Dispose(); }
+        finally
+        {
+            socket.Dispose();
+        }
     }
 
     private static T Get<T>(IChannelConfig config, ChannelOption<T> option)

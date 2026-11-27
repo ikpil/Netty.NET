@@ -50,7 +50,10 @@ public class CombinedChannelDuplexHandlerContractTest
             Assert.True(outbound.Context.IsRemoved);
             Assert.True(parent.IsRemoved);
         }
-        finally { channel.FinishAndReleaseAll(); }
+        finally
+        {
+            channel.FinishAndReleaseAll();
+        }
     }
 
     [Fact]
@@ -84,7 +87,10 @@ public class CombinedChannelDuplexHandlerContractTest
             Assert.Single(reads);
             Assert.Single(writes);
         }
-        finally { channel.FinishAndReleaseAll(); }
+        finally
+        {
+            channel.FinishAndReleaseAll();
+        }
     }
 
     [Fact]
@@ -146,7 +152,10 @@ public class CombinedChannelDuplexHandlerContractTest
             Assert.True(inbound.Context.IsRemoved);
             Assert.True(outbound.Context.IsRemoved);
         }
-        finally { channel.FinishAndReleaseAll(); }
+        finally
+        {
+            channel.FinishAndReleaseAll();
+        }
     }
 
     [Fact]
@@ -175,7 +184,10 @@ public class CombinedChannelDuplexHandlerContractTest
             Assert.Equal(1, inbound.Removals);
             Assert.Equal(1, outbound.Removals);
         }
-        finally { channel.FinishAndReleaseAll(); }
+        finally
+        {
+            channel.FinishAndReleaseAll();
+        }
     }
 
     // Additional CLR pending/fault/cancellation checks behind the original completion-plumbing test.
@@ -204,7 +216,11 @@ public class CombinedChannelDuplexHandlerContractTest
                     Assert.Equal(cancellation.Token, terminal.Token);
                     Assert.False(observed.IsCompleted);
                     var failure = new InvalidOperationException("outbound failure");
-                    if (result == "success") { terminal.Producer.SetResult(); await observed; }
+                    if (result == "success")
+                    {
+                        terminal.Producer.SetResult();
+                        await observed;
+                    }
                     else if (result == "failure")
                     {
                         terminal.Producer.SetException(failure);

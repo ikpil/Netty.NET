@@ -21,7 +21,10 @@ public class ResourceLeakDetectorFactoryContractTest
             Environment.SetEnvironmentVariable(Property, typeName);
             return new DefaultResourceLeakDetectorFactory();
         }
-        finally { Environment.SetEnvironmentVariable(Property, previous); }
+        finally
+        {
+            Environment.SetEnvironmentVariable(Property, previous);
+        }
     }
 
     public class Custom<T> : ResourceLeakDetector<T> where T : class
@@ -201,6 +204,9 @@ public class ResourceLeakDetectorFactoryContractTest
             Assert.Throws<ArgumentNullException>(() => ResourceLeakDetectorFactory.SetResourceLeakDetectorFactory(null));
             Assert.Same(replacement, ResourceLeakDetectorFactory.Instance());
         }
-        finally { ResourceLeakDetectorFactory.SetResourceLeakDetectorFactory(previous); }
+        finally
+        {
+            ResourceLeakDetectorFactory.SetResourceLeakDetectorFactory(previous);
+        }
     }
 }

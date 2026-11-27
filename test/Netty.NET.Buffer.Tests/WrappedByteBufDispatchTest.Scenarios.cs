@@ -149,7 +149,11 @@ public partial class WrappedByteBufDispatchTest
             Assert.Equal(4, data.GetByte(3));
             Assert.Equal(0, tracker.Records);
         }
-        finally { owner.Release(); Assert.Equal(0, native.ReservedBytes); }
+        finally
+        {
+            owner.Release();
+            Assert.Equal(0, native.ReservedBytes);
+        }
         Assert.Equal(form is 1 or 3 or 4 or 7 or 8 ? 1 : 0, tracker.Closes);
     }
 
@@ -312,7 +316,11 @@ public partial class WrappedByteBufDispatchTest
             Assert.Equal(form is 4 or 7 or 8 ? 1 : 0, tracker.Records);
             Assert.Equal(0, tracker.Closes);
         }
-        finally { owner.Release(); Assert.Equal(0, native.ReservedBytes); }
+        finally
+        {
+            owner.Release();
+            Assert.Equal(0, native.ReservedBytes);
+        }
         Assert.Equal(form is 1 or 3 or 4 or 7 or 8 ? 1 : 0, tracker.Closes);
     }
 
@@ -382,7 +390,11 @@ public partial class WrappedByteBufDispatchTest
             Assert.Equal(0, innerTracker.Closes);
             Assert.Equal(0, outerTracker.Closes);
         }
-        finally { owner.Release(); Assert.Equal(0, native.ReservedBytes); }
+        finally
+        {
+            owner.Release();
+            Assert.Equal(0, native.ReservedBytes);
+        }
         Assert.Equal(1, innerTracker.Closes);
         Assert.Equal(form == 1 ? 1 : 0, outerTracker.Closes);
     }

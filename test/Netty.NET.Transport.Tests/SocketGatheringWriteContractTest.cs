@@ -57,7 +57,10 @@ public class SocketGatheringWriteContractTest
             Assert.All(new[] { a, b, c }, task => Assert.True(task.IsCompletedSuccessfully));
             Assert.Equal(new byte[] { 1, 2, 11, 12, 3 }, fixture.Receive(5));
         }
-        finally { File.Delete(path); }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     // Accepts at most Budget bytes in total, as a socket whose send buffer fills up would.

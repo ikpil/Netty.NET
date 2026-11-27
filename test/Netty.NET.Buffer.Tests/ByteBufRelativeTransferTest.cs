@@ -78,21 +78,32 @@ public class ByteBufRelativeTransferTest
                 int length = operation is 2 or 6 ? 7 : 3;
                 int from = operation is 0 or 1 or 7 ? 12 : 2;
                 int to = operation is 2 or 3 or 5 ? 3 : writer;
-                byte[] expected = (byte[])output.Clone(); Array.Copy(input, from, expected, to, length);
+                byte[] expected = (byte[])output.Clone();
+                Array.Copy(input, from, expected, to, length);
                 ByteBuf result = Invoke(operation, source, destination);
                 Assert.Same(operation is 0 or 1 or 4 or 5 ? source : destination, result);
                 Assert.Equal(input, ByteBufUtil.GetBytes(source, 0, 24));
                 Assert.Equal(expected, ByteBufUtil.GetBytes(destination, 0, 24));
                 Assert.Equal(operation is 2 or 3 or 4 or 5 or 6 ? 2 + length : 2, source.ReaderIndex);
-                Assert.Equal(9, source.WriterIndex); Assert.Equal(1, destination.ReaderIndex);
+                Assert.Equal(9, source.WriterIndex);
+                Assert.Equal(1, destination.ReaderIndex);
                 Assert.Equal(operation is 0 or 1 or 4 or 6 or 7 ? writer + length : writer, destination.WriterIndex);
-                Assert.Equal(24, source.Capacity); Assert.Equal(24, destination.Capacity);
-                Assert.Equal(1, source.RefCnt); Assert.Equal(1, destination.RefCnt);
-                source.ResetReaderIndex().ResetWriterIndex(); destination.ResetReaderIndex().ResetWriterIndex();
-                Assert.Equal(2, source.ReaderIndex); Assert.Equal(9, source.WriterIndex);
-                Assert.Equal(1, destination.ReaderIndex); Assert.Equal(writer, destination.WriterIndex);
+                Assert.Equal(24, source.Capacity);
+                Assert.Equal(24, destination.Capacity);
+                Assert.Equal(1, source.RefCnt);
+                Assert.Equal(1, destination.RefCnt);
+                source.ResetReaderIndex().ResetWriterIndex();
+                destination.ResetReaderIndex().ResetWriterIndex();
+                Assert.Equal(2, source.ReaderIndex);
+                Assert.Equal(9, source.WriterIndex);
+                Assert.Equal(1, destination.ReaderIndex);
+                Assert.Equal(writer, destination.WriterIndex);
             }
-            finally { source.Release(); destination.Release(); }
+            finally
+            {
+                source.Release();
+                destination.Release();
+            }
             Assert.Equal(0, sourceOwner.RefCnt); Assert.Equal(0, destinationOwner.RefCnt);
         }
     }
@@ -114,18 +125,28 @@ public class ByteBufRelativeTransferTest
             Assert.Throws<ArgumentOutOfRangeException>(() => source.GetBytes(0, destination, 3));
             Assert.Throws<ArgumentOutOfRangeException>(() => destination.SetBytes(0, source));
             Assert.Throws<ArgumentOutOfRangeException>(() => source.ReadBytes(destination, 0, 3));
-            Assert.Equal(2, source.ReaderIndex); Assert.Equal(2, destination.Capacity); Assert.Equal(2, destination.WriterIndex);
+            Assert.Equal(2, source.ReaderIndex);
+            Assert.Equal(2, destination.Capacity);
+            Assert.Equal(2, destination.WriterIndex);
             Assert.Same(destination, destination.WriteBytes(source));
-            Assert.Equal(5, source.ReaderIndex); Assert.Equal(5, source.WriterIndex);
-            Assert.True(destination.Capacity >= 5); Assert.Equal(5, destination.WriterIndex);
+            Assert.Equal(5, source.ReaderIndex);
+            Assert.Equal(5, source.WriterIndex);
+            Assert.True(destination.Capacity >= 5);
+            Assert.Equal(5, destination.WriterIndex);
             Assert.Equal(new byte[] { 3, 4, 5 }, ByteBufUtil.GetBytes(destination, 2, 3));
             destination.ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(1, destination.ReaderIndex); Assert.Equal(2, destination.WriterIndex);
+            Assert.Equal(1, destination.ReaderIndex);
+            Assert.Equal(2, destination.WriterIndex);
             Assert.Same(destination, destination.WriteBytes(source, 0, 6));
-            Assert.Equal(5, source.ReaderIndex); Assert.Equal(8, destination.WriterIndex);
+            Assert.Equal(5, source.ReaderIndex);
+            Assert.Equal(8, destination.WriterIndex);
             Assert.Equal(new byte[] { 1, 2, 3, 4, 5, 6 }, ByteBufUtil.GetBytes(destination, 2, 6));
         }
-        finally { source.Release(); destination.Release(); }
+        finally
+        {
+            source.Release();
+            destination.Release();
+        }
     }
 
     [Theory]
@@ -140,17 +161,30 @@ public class ByteBufRelativeTransferTest
             {
                 source.GetBytes(1, destination);
                 Assert.Equal(new byte[] { 99, 2, 3, 4 }, ByteBufUtil.GetBytes(destination));
-                Assert.Equal(1, source.ReaderIndex); Assert.Equal(2, source.WriterIndex);
+                Assert.Equal(1, source.ReaderIndex);
+                Assert.Equal(2, source.WriterIndex);
             }
             else
             {
-                if (operation == 1) Assert.Throws<ArgumentOutOfRangeException>(() => source.ReadBytes(destination));
-                else Assert.Throws<ArgumentOutOfRangeException>(() => source.GetBytes(2, destination));
-                Assert.Equal(1, destination.WriterIndex); Assert.Equal(99, destination.GetByte(0));
+                if (operation == 1)
+                {
+                    Assert.Throws<ArgumentOutOfRangeException>(() => source.ReadBytes(destination));
+                }
+                else
+                {
+                    Assert.Throws<ArgumentOutOfRangeException>(() => source.GetBytes(2, destination));
+                }
+                Assert.Equal(1, destination.WriterIndex);
+                Assert.Equal(99, destination.GetByte(0));
             }
-            Assert.Equal(4, destination.Capacity); Assert.Equal(1, source.ReaderIndex);
+            Assert.Equal(4, destination.Capacity);
+            Assert.Equal(1, source.ReaderIndex);
         }
-        finally { source.Release(); destination.Release(); }
+        finally
+        {
+            source.Release();
+            destination.Release();
+        }
     }
 
     [Theory]
@@ -167,15 +201,29 @@ public class ByteBufRelativeTransferTest
             ByteBuf readOnly = destination.AsReadOnly();
             Assert.Throws<NotSupportedException>(() => Invoke(operation, source, readOnly, 0));
             if (operation is 0 or 1 or 4 or 5)
+            {
                 Assert.Throws<ArgumentNullException>(() => Invoke(operation, source, null));
-            else Assert.Throws<ArgumentNullException>(() => Invoke(operation, null, destination));
-            Assert.Equal(2, source.ReaderIndex); Assert.Equal(9, source.WriterIndex);
-            Assert.Equal(1, destination.ReaderIndex); Assert.Equal(24, destination.WriterIndex);
+            }
+            else
+            {
+                Assert.Throws<ArgumentNullException>(() => Invoke(operation, null, destination));
+            }
+            Assert.Equal(2, source.ReaderIndex);
+            Assert.Equal(9, source.WriterIndex);
+            Assert.Equal(1, destination.ReaderIndex);
+            Assert.Equal(24, destination.WriterIndex);
             source.Release();
             Assert.Throws<IllegalReferenceCountException>(() => Invoke(operation, source, destination, 0));
             Assert.Equal(24, destination.WriterIndex);
         }
-        finally { if (source.RefCnt > 0) source.Release(); destination.Release(); }
+        finally
+        {
+            if (source.RefCnt > 0)
+            {
+                source.Release();
+            }
+            destination.Release();
+        }
     }
 
     public static IEnumerable<object[]> SelfPairs()
@@ -204,7 +252,10 @@ public class ByteBufRelativeTransferTest
             Assert.Equal(operation is 2 or 3 or 4 or 5 or 6 ? 2 + length : 2, buffer.ReaderIndex);
             Assert.Equal(operation is 0 or 1 or 4 or 6 or 7 ? writer + length : writer, buffer.WriterIndex);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
         Assert.Equal(0, owner.RefCnt);
     }
 
@@ -223,15 +274,25 @@ public class ByteBufRelativeTransferTest
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => destination.WriteBytes(source, int.MaxValue, 4));
-            Assert.True(destination.Capacity >= 5); Assert.Equal(1, destination.WriterIndex); Assert.Equal(0, source.ReaderIndex);
+            Assert.True(destination.Capacity >= 5);
+            Assert.Equal(1, destination.WriterIndex);
+            Assert.Equal(0, source.ReaderIndex);
             int capacity = destination.Capacity;
             Assert.Throws<ArgumentOutOfRangeException>(() => destination.WriteBytes(source, 0, int.MaxValue));
-            Assert.Equal(capacity, destination.Capacity); Assert.Equal(1, destination.WriterIndex);
+            Assert.Equal(capacity, destination.Capacity);
+            Assert.Equal(1, destination.WriterIndex);
             source.Release();
             Assert.Throws<IllegalReferenceCountException>(() => destination.WriteBytes(source, 0, 0));
             Assert.Equal(1, destination.WriterIndex);
         }
-        finally { if (source.RefCnt > 0) source.Release(); destination.Release(); }
+        finally
+        {
+            if (source.RefCnt > 0)
+            {
+                source.Release();
+            }
+            destination.Release();
+        }
     }
 
     [Theory]
@@ -244,13 +305,22 @@ public class ByteBufRelativeTransferTest
         try
         {
             Assert.Same(operation is 0 or 1 or 4 or 5 ? source : destination, Invoke(operation, source, destination, 0));
-            Assert.Equal(2, source.ReaderIndex); Assert.Equal(2, source.WriterIndex);
-            Assert.Equal(1, destination.ReaderIndex); Assert.Equal(24, destination.WriterIndex);
+            Assert.Equal(2, source.ReaderIndex);
+            Assert.Equal(2, source.WriterIndex);
+            Assert.Equal(1, destination.ReaderIndex);
+            Assert.Equal(24, destination.WriterIndex);
             destination.Release();
             Assert.Throws<IllegalReferenceCountException>(() => Invoke(operation, source, destination, 0));
             Assert.Equal(2, source.ReaderIndex);
         }
-        finally { source.Release(); if (destination.RefCnt > 0) destination.Release(); }
+        finally
+        {
+            source.Release();
+            if (destination.RefCnt > 0)
+            {
+                destination.Release();
+            }
+        }
     }
 
     [Theory]
@@ -283,7 +353,11 @@ public class ByteBufRelativeTransferTest
             int from = operation is 0 or 1 or 7 ? 12 : 2;
             Assert.Equal(source.GetByte(from), destination.GetByte(copied));
         }
-        finally { source.Release(); destination.Release(); }
+        finally
+        {
+            source.Release();
+            destination.Release();
+        }
         Assert.Equal(0, first.RefCnt);
         Assert.Equal(0, last.RefCnt);
     }
@@ -297,14 +371,21 @@ public class ByteBufRelativeTransferTest
         {
             ByteBuf source = owner.Duplicate().SetIndex(1, 3);
             owner.WriteBytes(source, 0, 4);
-            Assert.Equal(1, source.ReaderIndex); Assert.Equal(3, source.WriterIndex);
+            Assert.Equal(1, source.ReaderIndex);
+            Assert.Equal(3, source.WriterIndex);
             Assert.Equal(new byte[] { 1, 2, 3, 4 }, ByteBufUtil.GetBytes(owner, 8, 4));
-            source.SetIndex(2, 4); owner.WriteBytes(source);
-            Assert.Equal(4, source.ReaderIndex); Assert.Equal(14, owner.WriterIndex);
+            source.SetIndex(2, 4);
+            owner.WriteBytes(source);
+            Assert.Equal(4, source.ReaderIndex);
+            Assert.Equal(14, owner.WriterIndex);
             Assert.Equal(new byte[] { 3, 4 }, ByteBufUtil.GetBytes(owner, 12, 2));
-            Assert.Equal(owner.Capacity, allocator.ReservedBytes); Assert.Equal(1, owner.RefCnt);
+            Assert.Equal(owner.Capacity, allocator.ReservedBytes);
+            Assert.Equal(1, owner.RefCnt);
         }
-        finally { owner.Release(); }
+        finally
+        {
+            owner.Release();
+        }
         Assert.Equal(0, allocator.ReservedBytes);
     }
 

@@ -63,7 +63,10 @@ public class PooledBufferEventTest
             Assert.Single(listener.Events);
             buffer.SetIndex(7, 99).MarkReaderIndex().MarkWriterIndex();
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
         Record release = listener.Events[1];
         Check(release, 2, 128, 128, int.MaxValue, direct);
         Assert.True(release.Number("address") == listener.Events[0].Number("address"));
@@ -115,7 +118,10 @@ public class PooledBufferEventTest
             Assert.Equal(15, buffer.WriterIndex);
             buffer.ResetReaderIndex().ResetWriterIndex();
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
         Check(listener.Events[3], 2, 16, 16, 40000, direct);
         Assert.True(listener.Events[2].Number("address") == listener.Events[3].Number("address"));
         allocator.Dispose();
@@ -215,7 +221,10 @@ public class PooledBufferEventTest
             Assert.Equal(0x12345678, buffer.GetInt(0));
             Assert.Equal(16384, native.ReservedBytes);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
         allocator.Dispose();
         Assert.Equal(0, native.ReservedBytes);
     }
@@ -306,7 +315,10 @@ public class PooledBufferEventTest
             Assert.Equal(3, listener.Events.Length);
             Assert.True(listener.Events[1].Number("address") == listener.Events[2].Number("address"));
         }
-        finally { first.Release(); }
+        finally
+        {
+            first.Release();
+        }
         Assert.Equal(new[] { 1, 1, 2, 2 }, listener.Events.Select(e => e.Id));
         allocator.Dispose();
         Assert.Equal(0, native.ReservedBytes);
@@ -327,7 +339,10 @@ public class PooledBufferEventTest
             Assert.Equal(new[] { 1, 2 }, listener.Events.Select(e => e.Id));
             Assert.True(native.ReservedBytes > 0);
         }
-        finally { lease.Dispose(); }
+        finally
+        {
+            lease.Dispose();
+        }
         Assert.Equal(0, native.ReservedBytes);
         Assert.Equal(2, listener.Events.Length);
     }
@@ -357,11 +372,17 @@ public class PooledBufferEventTest
                 Assert.Equal(new[] { 1, 2 }, listener.Events.Select(e => e.Id));
             }
             Assert.Equal(3, sources.Select(s => s.Name).Distinct().Count());
-            Assert.Equal(3, sources.Select(s => s.Guid).Distinct().Count()); Assert.Empty(mainListener.Events);
-            var native = new NativeMemoryAllocator(); using var ordinary = NewAllocator(native);
-            Allocate(ordinary, false, 17).Release(); Assert.Equal(new[] { 1, 2 }, mainListener.Events.Select(e => e.Id));
+            Assert.Equal(3, sources.Select(s => s.Guid).Distinct().Count());
+            Assert.Empty(mainListener.Events);
+            var native = new NativeMemoryAllocator();
+            using var ordinary = NewAllocator(native);
+            Allocate(ordinary, false, 17).Release();
+            Assert.Equal(new[] { 1, 2 }, mainListener.Events.Select(e => e.Id));
         }
-        finally { foreach (var context in contexts) context.Unload(); }
+        finally
+        {
+            foreach (var context in contexts) context.Unload();
+        }
     }
 
     [Fact]

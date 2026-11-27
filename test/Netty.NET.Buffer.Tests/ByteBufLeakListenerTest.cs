@@ -109,7 +109,10 @@ public class ByteBufLeakListenerTest : IDisposable
             {
                 Assert.Equal(0, listener.Calls);
             }
-            finally { next.Release(); }
+            finally
+            {
+                next.Release();
+            }
         }
         finally
         {
@@ -132,8 +135,14 @@ public class ByteBufLeakListenerTest : IDisposable
     private static void Drain()
     {
         ByteBuf b = new UnpooledHeapByteBuf(UnpooledByteBufAllocator.Default, 1, 1);
-        try { Assert.True(ByteBuf.LeakDetector.TrackForcibly(b).Close(b)); }
-        finally { b.Release(); }
+        try
+        {
+            Assert.True(ByteBuf.LeakDetector.TrackForcibly(b).Close(b));
+        }
+        finally
+        {
+            b.Release();
+        }
     }
 
     private static void CollectUntil(Func<bool> done)
@@ -142,7 +151,10 @@ public class ByteBufLeakListenerTest : IDisposable
         do
         {
             GC.Collect(); GC.WaitForPendingFinalizers();
-            if (done()) return;
+            if (done())
+            {
+                return;
+            }
             Thread.Sleep(10);
         } while (timer.Elapsed < TimeSpan.FromSeconds(5));
         Assert.True(done());

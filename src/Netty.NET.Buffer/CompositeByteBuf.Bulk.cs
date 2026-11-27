@@ -23,14 +23,19 @@ public partial class CompositeByteBuf
     public override ByteBuf GetBytes(int index, Span<byte> destination)
     {
         CheckIndex(index, destination.Length);
-        if (destination.IsEmpty) return this;
+        if (destination.IsEmpty)
+        {
+            return this;
+        }
         ComponentEntry component = _components[FindComponentIndex(index)];
         if (destination.Length <= component.EndOffset - index)
             component.Source.GetBytes(component.SourceIndex + (index - component.Offset), destination);
         else
         {
             // CLR snapshots preserve memmove semantics across aliased components.
-            byte[] bytes = new byte[destination.Length]; GetBytesCore(index, bytes); bytes.AsSpan().CopyTo(destination);
+            byte[] bytes = new byte[destination.Length];
+            GetBytesCore(index, bytes);
+            bytes.AsSpan().CopyTo(destination);
         }
         return this;
     }
@@ -51,7 +56,10 @@ public partial class CompositeByteBuf
                 GetBufferComponents(index, snapshot, 0, length);
                 destination.SetBytes(destinationIndex, snapshot, 0, length);
             }
-            finally { snapshot.Release(); }
+            finally
+            {
+                snapshot.Release();
+            }
         }
         else
             GetBufferComponents(index, destination, destinationIndex, length);
@@ -87,7 +95,10 @@ public partial class CompositeByteBuf
                 snapshot.SetBytes(0, source, sourceIndex, length);
                 SetBufferComponents(index, snapshot, 0, length);
             }
-            finally { snapshot.Release(); }
+            finally
+            {
+                snapshot.Release();
+            }
         }
         else
             SetBufferComponents(index, source, sourceIndex, length);

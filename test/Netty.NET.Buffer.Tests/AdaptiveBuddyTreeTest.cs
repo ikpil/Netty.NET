@@ -229,7 +229,10 @@ public class AdaptiveBuddyTreeTest
                 Assert.Equal(1, storage.RefCnt);
                 Assert.Equal(0, registry.TotalCapacity);
             }
-            finally { storage.Release(); }
+            finally
+            {
+                storage.Release();
+            }
         }
         using var t = new Tree(131072);
         // Sizes that are not a claimable power of two find no buddy, as the source's search does.

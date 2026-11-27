@@ -15,8 +15,14 @@ public class MockTickerPhaseContractTest
         Exception failure = null;
         var sleeper = new Thread(() =>
         {
-            try { ticker.Sleep(100); }
-            catch (Exception cause) { failure = cause; }
+            try
+            {
+                ticker.Sleep(100);
+            }
+            catch (Exception cause)
+            {
+                failure = cause;
+            }
         }) { IsBackground = true };
         sleeper.Start();
         try
@@ -32,7 +38,10 @@ public class MockTickerPhaseContractTest
         }
         finally
         {
-            if (sleeper.IsAlive) sleeper.Interrupt();
+            if (sleeper.IsAlive)
+            {
+                sleeper.Interrupt();
+            }
             Assert.True(sleeper.Join(TimeSpan.FromSeconds(5)));
         }
     }
@@ -44,20 +53,38 @@ public class MockTickerPhaseContractTest
         Exception interrupted = null;
         var first = new Thread(() =>
         {
-            try { ticker.Sleep(100); }
-            catch (Exception cause) { interrupted = cause; }
+            try
+            {
+                ticker.Sleep(100);
+            }
+            catch (Exception cause)
+            {
+                interrupted = cause;
+            }
         }) { IsBackground = true };
         using var observed = new ManualResetEventSlim();
         Exception failure = null;
         var next = new Thread(() =>
         {
-            try { ticker.Sleep(1); }
-            catch (Exception cause) { failure = cause; }
+            try
+            {
+                ticker.Sleep(1);
+            }
+            catch (Exception cause)
+            {
+                failure = cause;
+            }
         }) { IsBackground = true };
         var observer = new Thread(() =>
         {
-            try { ticker.AwaitSleepingThread(next); observed.Set(); }
-            catch (ThreadInterruptedException) { }
+            try
+            {
+                ticker.AwaitSleepingThread(next);
+                observed.Set();
+            }
+            catch (ThreadInterruptedException)
+            {
+            }
         }) { IsBackground = true };
         first.Start();
         try
@@ -79,8 +106,14 @@ public class MockTickerPhaseContractTest
         {
             foreach (var thread in new[] { first, next, observer })
             {
-                if ((thread.ThreadState & ThreadState.Unstarted) != 0) continue;
-                if (thread.IsAlive) thread.Interrupt();
+                if ((thread.ThreadState & ThreadState.Unstarted) != 0)
+                {
+                    continue;
+                }
+                if (thread.IsAlive)
+                {
+                    thread.Interrupt();
+                }
                 Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
             }
         }
@@ -102,11 +135,23 @@ public class MockTickerPhaseContractTest
             try
             {
                 ticker.Advance(7);
-                try { Thread.Sleep(1); }
-                catch (ThreadInterruptedException) { preserved = true; }
+                try
+                {
+                    Thread.Sleep(1);
+                }
+                catch (ThreadInterruptedException)
+                {
+                    preserved = true;
+                }
             }
-            catch (Exception cause) { failure = cause; }
-            finally { done.Set(); }
+            catch (Exception cause)
+            {
+                failure = cause;
+            }
+            finally
+            {
+                done.Set();
+            }
         }) { IsBackground = true };
         try
         {
@@ -125,7 +170,10 @@ public class MockTickerPhaseContractTest
         }
         finally
         {
-            if (advancer.IsAlive) advancer.Interrupt();
+            if (advancer.IsAlive)
+            {
+                advancer.Interrupt();
+            }
             Assert.True(advancer.Join(TimeSpan.FromSeconds(5)));
         }
     }
@@ -147,7 +195,10 @@ public class MockTickerPhaseContractTest
                     Interlocked.Increment(ref completed);
                 }
             }
-            catch (Exception cause) { failure = cause; }
+            catch (Exception cause)
+            {
+                failure = cause;
+            }
         }) { IsBackground = true };
         sleeper.Start();
         try
@@ -164,7 +215,10 @@ public class MockTickerPhaseContractTest
         }
         finally
         {
-            if (sleeper.IsAlive) sleeper.Interrupt();
+            if (sleeper.IsAlive)
+            {
+                sleeper.Interrupt();
+            }
             Assert.True(sleeper.Join(TimeSpan.FromSeconds(5)));
         }
     }

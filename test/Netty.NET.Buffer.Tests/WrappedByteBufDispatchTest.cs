@@ -1201,125 +1201,362 @@ public partial class WrappedByteBufDispatchTest
     {
         switch (operation)
         {
-            case 0: c.Buffer.AsMemory(3, 4); break;
-            case 1: c.Buffer.AsSpan(3, 4); break;
-            case 2: c.Buffer.GetByte(3); break;
-            case 3: c.Buffer.GetBoolean(3); break;
-            case 4: c.Buffer.SetByte(3, 305419896); break;
-            case 5: c.Buffer.SetBoolean(3, true); break;
-            case 6: c.Buffer.GetShort(3); break;
-            case 7: c.Buffer.SetShort(3, 305419896); break;
-            case 8: c.Buffer.GetShortLE(3); break;
-            case 9: c.Buffer.SetShortLE(3, 305419896); break;
-            case 10: c.Buffer.GetInt(3); break;
-            case 11: c.Buffer.SetInt(3, 305419896); break;
-            case 12: c.Buffer.GetIntLE(3); break;
-            case 13: c.Buffer.SetIntLE(3, 305419896); break;
-            case 14: c.Buffer.GetLong(3); break;
-            case 15: c.Buffer.SetLong(3, 81985529216486895L); break;
-            case 16: c.Buffer.GetLongLE(3); break;
-            case 17: c.Buffer.SetLongLE(3, 81985529216486895L); break;
-            case 18: c.Buffer.GetUnsignedMedium(3); break;
-            case 19: c.Buffer.GetUnsignedMediumLE(3); break;
-            case 20: c.Buffer.GetMedium(3); break;
-            case 21: c.Buffer.GetMediumLE(3); break;
-            case 22: c.Buffer.SetMedium(3, 305419896); break;
-            case 23: c.Buffer.SetMediumLE(3, 305419896); break;
-            case 24: c.Buffer.GetUnsignedShort(3); break;
-            case 25: c.Buffer.GetUnsignedShortLE(3); break;
-            case 26: c.Buffer.GetUnsignedInt(3); break;
-            case 27: c.Buffer.GetUnsignedIntLE(3); break;
-            case 28: c.Buffer.GetChar(3); break;
-            case 29: c.Buffer.SetChar(3, '\u00E9'); break;
-            case 30: c.Buffer.GetFloat(3); break;
-            case 31: c.Buffer.GetFloatLE(3); break;
-            case 32: c.Buffer.GetDouble(3); break;
-            case 33: c.Buffer.GetDoubleLE(3); break;
-            case 34: c.Buffer.SetFloat(3, 1.25f); break;
-            case 35: c.Buffer.SetFloatLE(3, 1.25f); break;
-            case 36: c.Buffer.SetDouble(3, 1.25d); break;
-            case 37: c.Buffer.SetDoubleLE(3, 1.25d); break;
-            case 38: c.Buffer.ReadByte(); break;
-            case 39: c.Buffer.WriteByte(305419896); break;
-            case 40: c.Buffer.ReadBoolean(); break;
-            case 41: c.Buffer.WriteBoolean(true); break;
-            case 42: c.Buffer.ReadShort(); break;
-            case 43: c.Buffer.WriteShort(305419896); break;
-            case 44: c.Buffer.ReadShortLE(); break;
-            case 45: c.Buffer.WriteShortLE(305419896); break;
-            case 46: c.Buffer.ReadMedium(); break;
-            case 47: c.Buffer.WriteMedium(305419896); break;
-            case 48: c.Buffer.ReadMediumLE(); break;
-            case 49: c.Buffer.WriteMediumLE(305419896); break;
-            case 50: c.Buffer.ReadInt(); break;
-            case 51: c.Buffer.WriteInt(305419896); break;
-            case 52: c.Buffer.ReadIntLE(); break;
-            case 53: c.Buffer.WriteIntLE(305419896); break;
-            case 54: c.Buffer.ReadLong(); break;
-            case 55: c.Buffer.WriteLong(81985529216486895L); break;
-            case 56: c.Buffer.ReadLongLE(); break;
-            case 57: c.Buffer.WriteLongLE(81985529216486895L); break;
-            case 58: c.Buffer.ReadFloat(); break;
-            case 59: c.Buffer.WriteFloat(1.25f); break;
-            case 60: c.Buffer.ReadFloatLE(); break;
-            case 61: c.Buffer.WriteFloatLE(1.25f); break;
-            case 62: c.Buffer.ReadDouble(); break;
-            case 63: c.Buffer.WriteDouble(1.25d); break;
-            case 64: c.Buffer.ReadDoubleLE(); break;
-            case 65: c.Buffer.WriteDoubleLE(1.25d); break;
-            case 66: c.Buffer.ReadUnsignedShort(); break;
-            case 67: c.Buffer.ReadUnsignedShortLE(); break;
-            case 68: c.Buffer.ReadUnsignedInt(); break;
-            case 69: c.Buffer.ReadUnsignedIntLE(); break;
-            case 70: c.Buffer.ReadUnsignedMedium(); break;
-            case 71: c.Buffer.ReadUnsignedMediumLE(); break;
-            case 72: c.Buffer.ReadChar(); break;
-            case 73: c.Buffer.WriteChar('\u00E9'); break;
-            case 74: c.Buffer.SkipBytes(4); break;
-            case 75: c.Buffer.GetBytes(3, c.Bytes.AsSpan(2, 4)); break;
-            case 76: c.Buffer.SetBytes(3, c.Bytes.AsSpan(2, 4)); break;
-            case 77: c.Buffer.ReadBytes(c.Bytes.AsSpan(2, 4)); break;
-            case 78: c.Buffer.WriteBytes(c.Bytes.AsSpan(2, 4)); break;
-            case 79: c.Buffer.GetBytes(3, c.Peer, 5, 4); break;
-            case 80: c.Buffer.SetBytes(3, c.Peer, 2, 4); break;
-            case 81: c.Buffer.ReadBytes(c.Peer, 4); break;
-            case 82: c.Buffer.WriteBytes(c.Peer, 4); break;
-            case 83: c.Buffer.GetBytes(3, c.File, 11L, 4); break;
-            case 84: c.Buffer.SetBytes(3, c.File, 11L, 4); break;
-            case 85: c.Buffer.ReadBytes(c.File, 11L, 4); break;
-            case 86: c.Buffer.WriteBytes(c.File, 11L, 4); break;
-            case 87: c.Buffer.GetBytesAsync(3, c.File, 11L, 4, c.Cancellation.Token).GetAwaiter().GetResult(); break;
-            case 88: c.Buffer.SetBytesAsync(3, c.File, 11L, 4, c.Cancellation.Token).GetAwaiter().GetResult(); break;
-            case 89: c.Buffer.ReadBytesAsync(c.File, 11L, 4, c.Cancellation.Token).GetAwaiter().GetResult(); break;
-            case 90: c.Buffer.WriteBytesAsync(c.File, 11L, 4, c.Cancellation.Token).GetAwaiter().GetResult(); break;
-            case 91: c.Buffer.AsReadOnlyMemory(3, 4); break;
-            case 92: c.Buffer.AsReadOnlySpan(3, 4); break;
-            case 93: c.Buffer.AsReadOnlySequence(3, 4); break;
-            case 94: c.Buffer.GetBytes(3, c.Socket, 4); break;
-            case 95: c.Buffer.SetBytes(3, c.Socket, 4); break;
-            case 96: c.Buffer.ReadBytes(c.Socket, 4); break;
-            case 97: c.Buffer.WriteBytes(c.Socket, 4); break;
-            case 98: c.Buffer.GetBytesAsync(3, c.Socket, 4, c.Cancellation.Token).GetAwaiter().GetResult(); break;
-            case 99: c.Buffer.SetBytesAsync(3, c.Socket, 4, c.Cancellation.Token).GetAwaiter().GetResult(); break;
-            case 100: c.Buffer.ReadBytesAsync(c.Socket, 4, c.Cancellation.Token).GetAwaiter().GetResult(); break;
-            case 101: c.Buffer.WriteBytesAsync(c.Socket, 4, c.Cancellation.Token).GetAwaiter().GetResult(); break;
-            case 102: c.Buffer.GetBytes(3, c.Stream, 4); break;
-            case 103: c.Buffer.SetBytes(3, c.Stream, 4); break;
-            case 104: c.Buffer.ReadBytes(c.Stream, 4); break;
-            case 105: c.Buffer.WriteBytes(c.Stream, 4); break;
-            case 106: c.Buffer.GetBytesAsync(3, c.Stream, 4, c.Cancellation.Token).GetAwaiter().GetResult(); break;
-            case 107: c.Buffer.SetBytesAsync(3, c.Stream, 4, c.Cancellation.Token).GetAwaiter().GetResult(); break;
-            case 108: c.Buffer.ReadBytesAsync(c.Stream, 4, c.Cancellation.Token).GetAwaiter().GetResult(); break;
-            case 109: c.Buffer.WriteBytesAsync(c.Stream, 4, c.Cancellation.Token).GetAwaiter().GetResult(); break;
-            case 110: c.Buffer.GetBytes(3, c.Peer); break;
-            case 111: c.Buffer.GetBytes(3, c.Peer, 4); break;
-            case 112: c.Buffer.SetBytes(3, c.Peer); break;
-            case 113: c.Buffer.SetBytes(3, c.Peer, 4); break;
-            case 114: c.Buffer.ReadBytes(c.Peer); break;
-            case 115: c.Buffer.ReadBytes(c.Peer, 5, 4); break;
-            case 116: c.Buffer.WriteBytes(c.Peer); break;
-            case 117: c.Buffer.WriteBytes(c.Peer, 2, 4); break;
-            default: throw new ArgumentOutOfRangeException(nameof(operation));
+            case 0:
+                c.Buffer.AsMemory(3, 4);
+                break;
+            case 1:
+                c.Buffer.AsSpan(3, 4);
+                break;
+            case 2:
+                c.Buffer.GetByte(3);
+                break;
+            case 3:
+                c.Buffer.GetBoolean(3);
+                break;
+            case 4:
+                c.Buffer.SetByte(3, 305419896);
+                break;
+            case 5:
+                c.Buffer.SetBoolean(3, true);
+                break;
+            case 6:
+                c.Buffer.GetShort(3);
+                break;
+            case 7:
+                c.Buffer.SetShort(3, 305419896);
+                break;
+            case 8:
+                c.Buffer.GetShortLE(3);
+                break;
+            case 9:
+                c.Buffer.SetShortLE(3, 305419896);
+                break;
+            case 10:
+                c.Buffer.GetInt(3);
+                break;
+            case 11:
+                c.Buffer.SetInt(3, 305419896);
+                break;
+            case 12:
+                c.Buffer.GetIntLE(3);
+                break;
+            case 13:
+                c.Buffer.SetIntLE(3, 305419896);
+                break;
+            case 14:
+                c.Buffer.GetLong(3);
+                break;
+            case 15:
+                c.Buffer.SetLong(3, 81985529216486895L);
+                break;
+            case 16:
+                c.Buffer.GetLongLE(3);
+                break;
+            case 17:
+                c.Buffer.SetLongLE(3, 81985529216486895L);
+                break;
+            case 18:
+                c.Buffer.GetUnsignedMedium(3);
+                break;
+            case 19:
+                c.Buffer.GetUnsignedMediumLE(3);
+                break;
+            case 20:
+                c.Buffer.GetMedium(3);
+                break;
+            case 21:
+                c.Buffer.GetMediumLE(3);
+                break;
+            case 22:
+                c.Buffer.SetMedium(3, 305419896);
+                break;
+            case 23:
+                c.Buffer.SetMediumLE(3, 305419896);
+                break;
+            case 24:
+                c.Buffer.GetUnsignedShort(3);
+                break;
+            case 25:
+                c.Buffer.GetUnsignedShortLE(3);
+                break;
+            case 26:
+                c.Buffer.GetUnsignedInt(3);
+                break;
+            case 27:
+                c.Buffer.GetUnsignedIntLE(3);
+                break;
+            case 28:
+                c.Buffer.GetChar(3);
+                break;
+            case 29:
+                c.Buffer.SetChar(3, '\u00E9');
+                break;
+            case 30:
+                c.Buffer.GetFloat(3);
+                break;
+            case 31:
+                c.Buffer.GetFloatLE(3);
+                break;
+            case 32:
+                c.Buffer.GetDouble(3);
+                break;
+            case 33:
+                c.Buffer.GetDoubleLE(3);
+                break;
+            case 34:
+                c.Buffer.SetFloat(3, 1.25f);
+                break;
+            case 35:
+                c.Buffer.SetFloatLE(3, 1.25f);
+                break;
+            case 36:
+                c.Buffer.SetDouble(3, 1.25d);
+                break;
+            case 37:
+                c.Buffer.SetDoubleLE(3, 1.25d);
+                break;
+            case 38:
+                c.Buffer.ReadByte();
+                break;
+            case 39:
+                c.Buffer.WriteByte(305419896);
+                break;
+            case 40:
+                c.Buffer.ReadBoolean();
+                break;
+            case 41:
+                c.Buffer.WriteBoolean(true);
+                break;
+            case 42:
+                c.Buffer.ReadShort();
+                break;
+            case 43:
+                c.Buffer.WriteShort(305419896);
+                break;
+            case 44:
+                c.Buffer.ReadShortLE();
+                break;
+            case 45:
+                c.Buffer.WriteShortLE(305419896);
+                break;
+            case 46:
+                c.Buffer.ReadMedium();
+                break;
+            case 47:
+                c.Buffer.WriteMedium(305419896);
+                break;
+            case 48:
+                c.Buffer.ReadMediumLE();
+                break;
+            case 49:
+                c.Buffer.WriteMediumLE(305419896);
+                break;
+            case 50:
+                c.Buffer.ReadInt();
+                break;
+            case 51:
+                c.Buffer.WriteInt(305419896);
+                break;
+            case 52:
+                c.Buffer.ReadIntLE();
+                break;
+            case 53:
+                c.Buffer.WriteIntLE(305419896);
+                break;
+            case 54:
+                c.Buffer.ReadLong();
+                break;
+            case 55:
+                c.Buffer.WriteLong(81985529216486895L);
+                break;
+            case 56:
+                c.Buffer.ReadLongLE();
+                break;
+            case 57:
+                c.Buffer.WriteLongLE(81985529216486895L);
+                break;
+            case 58:
+                c.Buffer.ReadFloat();
+                break;
+            case 59:
+                c.Buffer.WriteFloat(1.25f);
+                break;
+            case 60:
+                c.Buffer.ReadFloatLE();
+                break;
+            case 61:
+                c.Buffer.WriteFloatLE(1.25f);
+                break;
+            case 62:
+                c.Buffer.ReadDouble();
+                break;
+            case 63:
+                c.Buffer.WriteDouble(1.25d);
+                break;
+            case 64:
+                c.Buffer.ReadDoubleLE();
+                break;
+            case 65:
+                c.Buffer.WriteDoubleLE(1.25d);
+                break;
+            case 66:
+                c.Buffer.ReadUnsignedShort();
+                break;
+            case 67:
+                c.Buffer.ReadUnsignedShortLE();
+                break;
+            case 68:
+                c.Buffer.ReadUnsignedInt();
+                break;
+            case 69:
+                c.Buffer.ReadUnsignedIntLE();
+                break;
+            case 70:
+                c.Buffer.ReadUnsignedMedium();
+                break;
+            case 71:
+                c.Buffer.ReadUnsignedMediumLE();
+                break;
+            case 72:
+                c.Buffer.ReadChar();
+                break;
+            case 73:
+                c.Buffer.WriteChar('\u00E9');
+                break;
+            case 74:
+                c.Buffer.SkipBytes(4);
+                break;
+            case 75:
+                c.Buffer.GetBytes(3, c.Bytes.AsSpan(2, 4));
+                break;
+            case 76:
+                c.Buffer.SetBytes(3, c.Bytes.AsSpan(2, 4));
+                break;
+            case 77:
+                c.Buffer.ReadBytes(c.Bytes.AsSpan(2, 4));
+                break;
+            case 78:
+                c.Buffer.WriteBytes(c.Bytes.AsSpan(2, 4));
+                break;
+            case 79:
+                c.Buffer.GetBytes(3, c.Peer, 5, 4);
+                break;
+            case 80:
+                c.Buffer.SetBytes(3, c.Peer, 2, 4);
+                break;
+            case 81:
+                c.Buffer.ReadBytes(c.Peer, 4);
+                break;
+            case 82:
+                c.Buffer.WriteBytes(c.Peer, 4);
+                break;
+            case 83:
+                c.Buffer.GetBytes(3, c.File, 11L, 4);
+                break;
+            case 84:
+                c.Buffer.SetBytes(3, c.File, 11L, 4);
+                break;
+            case 85:
+                c.Buffer.ReadBytes(c.File, 11L, 4);
+                break;
+            case 86:
+                c.Buffer.WriteBytes(c.File, 11L, 4);
+                break;
+            case 87:
+                c.Buffer.GetBytesAsync(3, c.File, 11L, 4, c.Cancellation.Token).GetAwaiter().GetResult();
+                break;
+            case 88:
+                c.Buffer.SetBytesAsync(3, c.File, 11L, 4, c.Cancellation.Token).GetAwaiter().GetResult();
+                break;
+            case 89:
+                c.Buffer.ReadBytesAsync(c.File, 11L, 4, c.Cancellation.Token).GetAwaiter().GetResult();
+                break;
+            case 90:
+                c.Buffer.WriteBytesAsync(c.File, 11L, 4, c.Cancellation.Token).GetAwaiter().GetResult();
+                break;
+            case 91:
+                c.Buffer.AsReadOnlyMemory(3, 4);
+                break;
+            case 92:
+                c.Buffer.AsReadOnlySpan(3, 4);
+                break;
+            case 93:
+                c.Buffer.AsReadOnlySequence(3, 4);
+                break;
+            case 94:
+                c.Buffer.GetBytes(3, c.Socket, 4);
+                break;
+            case 95:
+                c.Buffer.SetBytes(3, c.Socket, 4);
+                break;
+            case 96:
+                c.Buffer.ReadBytes(c.Socket, 4);
+                break;
+            case 97:
+                c.Buffer.WriteBytes(c.Socket, 4);
+                break;
+            case 98:
+                c.Buffer.GetBytesAsync(3, c.Socket, 4, c.Cancellation.Token).GetAwaiter().GetResult();
+                break;
+            case 99:
+                c.Buffer.SetBytesAsync(3, c.Socket, 4, c.Cancellation.Token).GetAwaiter().GetResult();
+                break;
+            case 100:
+                c.Buffer.ReadBytesAsync(c.Socket, 4, c.Cancellation.Token).GetAwaiter().GetResult();
+                break;
+            case 101:
+                c.Buffer.WriteBytesAsync(c.Socket, 4, c.Cancellation.Token).GetAwaiter().GetResult();
+                break;
+            case 102:
+                c.Buffer.GetBytes(3, c.Stream, 4);
+                break;
+            case 103:
+                c.Buffer.SetBytes(3, c.Stream, 4);
+                break;
+            case 104:
+                c.Buffer.ReadBytes(c.Stream, 4);
+                break;
+            case 105:
+                c.Buffer.WriteBytes(c.Stream, 4);
+                break;
+            case 106:
+                c.Buffer.GetBytesAsync(3, c.Stream, 4, c.Cancellation.Token).GetAwaiter().GetResult();
+                break;
+            case 107:
+                c.Buffer.SetBytesAsync(3, c.Stream, 4, c.Cancellation.Token).GetAwaiter().GetResult();
+                break;
+            case 108:
+                c.Buffer.ReadBytesAsync(c.Stream, 4, c.Cancellation.Token).GetAwaiter().GetResult();
+                break;
+            case 109:
+                c.Buffer.WriteBytesAsync(c.Stream, 4, c.Cancellation.Token).GetAwaiter().GetResult();
+                break;
+            case 110:
+                c.Buffer.GetBytes(3, c.Peer);
+                break;
+            case 111:
+                c.Buffer.GetBytes(3, c.Peer, 4);
+                break;
+            case 112:
+                c.Buffer.SetBytes(3, c.Peer);
+                break;
+            case 113:
+                c.Buffer.SetBytes(3, c.Peer, 4);
+                break;
+            case 114:
+                c.Buffer.ReadBytes(c.Peer);
+                break;
+            case 115:
+                c.Buffer.ReadBytes(c.Peer, 5, 4);
+                break;
+            case 116:
+                c.Buffer.WriteBytes(c.Peer);
+                break;
+            case 117:
+                c.Buffer.WriteBytes(c.Peer, 2, 4);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(operation));
         }
     }
 }

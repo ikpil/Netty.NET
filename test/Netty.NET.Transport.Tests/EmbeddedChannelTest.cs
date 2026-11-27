@@ -122,9 +122,17 @@ public class EmbeddedChannelTest
         var handler = new AddedHandler(ctx =>
         {
             try
-            { Assert.True(ctx.Executor.InEventLoop()); }
-            catch (Exception cause) { error = cause; }
-            finally { latch.Signal(); }
+            {
+                Assert.True(ctx.Executor.InEventLoop());
+            }
+            catch (Exception cause)
+            {
+                error = cause;
+            }
+            finally
+            {
+                latch.Signal();
+            }
         });
         var channel = new EmbeddedChannel(handler);
         Assert.False(channel.Finish());
@@ -240,7 +248,10 @@ public class EmbeddedChannelTest
             Assert.Null(channel.ReadInbound());
             Assert.Null(channel.ReadOutbound());
         }
-        finally { Release(input, output); }
+        finally
+        {
+            Release(input, output);
+        }
     }
 
     [Fact]
@@ -265,7 +276,10 @@ public class EmbeddedChannelTest
             buffer.Release();
             Assert.Null(channel.ReadOutbound());
         }
-        finally { Release(input, output); }
+        finally
+        {
+            Release(input, output);
+        }
     }
 
     [Fact]
@@ -290,7 +304,10 @@ public class EmbeddedChannelTest
             buffer.Release();
             Assert.Null(channel.ReadInbound());
         }
-        finally { Release(input, output); }
+        finally
+        {
+            Release(input, output);
+        }
     }
 
     [Fact]
@@ -632,8 +649,21 @@ public class EmbeddedChannelTest
             async Task WriteLater()
             {
                 try
-                { if (delayMillis == 0) await ctx.WriteAsync(msg, token); else await ctx.WriteAndFlushAsync(msg, token); completion.TrySetResult(); }
-                catch (Exception error) { completion.TrySetException(error); }
+                {
+                    if (delayMillis == 0)
+                    {
+                        await ctx.WriteAsync(msg, token);
+                    }
+                    else
+                    {
+                        await ctx.WriteAndFlushAsync(msg, token);
+                    }
+                    completion.TrySetResult();
+                }
+                catch (Exception error)
+                {
+                    completion.TrySetException(error);
+                }
             }
             if (delayMillis == 0)
                 ctx.Executor.Execute(() => _ = WriteLater());
@@ -698,7 +728,10 @@ public class EmbeddedChannelTest
             {
                 _ = ctx.Channel.CloseAsync();
             }
-            finally { _runningRead = false; }
+            finally
+            {
+                _runningRead = false;
+            }
         }
 
         public override void HandlerRemoved(IChannelHandlerContext ctx)

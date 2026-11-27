@@ -129,15 +129,26 @@ public class ChannelPipelineSourceTest
             {
                 AwaitOtherThread(ref ready);
                 try
-                { pipeline.Remove(handler); removed = true; }
-                catch (Exception cause) { removeResult = cause; }
+                {
+                    pipeline.Remove(handler);
+                    removed = true;
+                }
+                catch (Exception cause)
+                {
+                    removeResult = cause;
+                }
             });
             remover.Start();
             AwaitOtherThread(ref ready);
             Exception replaceResult = null;
             try
-            { pipeline.Replace(handler, "replacement", replacement); }
-            catch (Exception cause) { replaceResult = cause; }
+            {
+                pipeline.Replace(handler, "replacement", replacement);
+            }
+            catch (Exception cause)
+            {
+                replaceResult = cause;
+            }
             remover.Join();
             // Exactly one of remove(...) and replace(...) wins, the other one fails as if the handler was never
             // part of the pipeline.

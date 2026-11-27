@@ -90,7 +90,10 @@ public class DefaultChannelConfig : IChannelConfig
     {
         ArgumentNullException.ThrowIfNull(option);
         if (TryGetValue(option, out var result))
-        { value = (T)result; return true; }
+        {
+            value = (T)result;
+            return true;
+        }
         value = default;
         return false;
     }
@@ -98,33 +101,62 @@ public class DefaultChannelConfig : IChannelConfig
     protected virtual bool TryGetValue(ChannelOption option, out object value)
     {
         if (ReferenceEquals(option, ChannelOption.CONNECT_TIMEOUT_MILLIS))
+        {
             value = GetConnectTimeoutMillis();
+        }
         else if (ReferenceEquals(option, ChannelOption.MAX_MESSAGES_PER_READ))
+        {
             value = GetMaxMessagesPerRead();
+        }
         else if (ReferenceEquals(option, ChannelOption.WRITE_SPIN_COUNT))
+        {
             value = GetWriteSpinCount();
+        }
         else if (ReferenceEquals(option, ChannelOption.ALLOCATOR))
+        {
             value = GetAllocator();
+        }
         else if (ReferenceEquals(option, ChannelOption.RECVBUF_ALLOCATOR))
+        {
             value = GetRecvByteBufAllocator();
+        }
         else if (ReferenceEquals(option, ChannelOption.AUTO_READ))
+        {
             value = IsAutoRead();
+        }
         else if (ReferenceEquals(option, ChannelOption.AUTO_CLOSE))
+        {
             value = IsAutoClose();
+        }
         else if (ReferenceEquals(option, ChannelOption.WRITE_BUFFER_HIGH_WATER_MARK))
+        {
             value = GetWriteBufferHighWaterMark();
+        }
         else if (ReferenceEquals(option, ChannelOption.WRITE_BUFFER_LOW_WATER_MARK))
+        {
             value = GetWriteBufferLowWaterMark();
+        }
         else if (ReferenceEquals(option, ChannelOption.WRITE_BUFFER_WATER_MARK))
+        {
             value = GetWriteBufferWaterMark();
+        }
         else if (ReferenceEquals(option, ChannelOption.MESSAGE_SIZE_ESTIMATOR))
+        {
             value = GetMessageSizeEstimator();
+        }
         else if (ReferenceEquals(option, ChannelOption.SINGLE_EVENTEXECUTOR_PER_GROUP))
+        {
             value = _pinExecutor;
+        }
         else if (ReferenceEquals(option, ChannelOption.MAX_MESSAGES_PER_WRITE))
+        {
             value = GetMaxMessagesPerWrite();
+        }
         else
-        { value = null; return false; }
+        {
+            value = null;
+            return false;
+        }
         return true;
     }
 

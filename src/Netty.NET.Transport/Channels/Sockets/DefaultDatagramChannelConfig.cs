@@ -71,7 +71,10 @@ public class DefaultDatagramChannelConfig : DefaultChannelConfig, IDatagramChann
             ChannelOption.IP_TOS, ChannelOption.DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION, ChannelOption.UDP_GRO,
             ChannelOption.UDP_MAX_DATAGRAM_PAYLOAD_SIZE, ChannelOption.IP_RECVORIGDSTADDR, ChannelOption.IP_FREEBIND,
             ChannelOption.SO_REUSEPORT })
-            if (TryGetValue(option, out var value)) options[option] = value;
+            if (TryGetValue(option, out var value))
+            {
+                options[option] = value;
+            }
         return options;
     }
 
@@ -491,7 +494,10 @@ public class DefaultDatagramChannelConfig : DefaultChannelConfig, IDatagramChann
 
     private void SetMappedIPv4Option(SocketOptionName option, int value)
     {
-        if (_linuxDualMode) _javaSocket.SetSocketOption(SocketOptionLevel.IP, option, value);
+        if (_linuxDualMode)
+        {
+            _javaSocket.SetSocketOption(SocketOptionLevel.IP, option, value);
+        }
     }
 
     private SocketOptionLevel MulticastOptionLevel => _javaSocket.AddressFamily == AddressFamily.InterNetworkV6

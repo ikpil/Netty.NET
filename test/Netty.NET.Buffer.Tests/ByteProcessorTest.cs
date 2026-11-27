@@ -53,8 +53,14 @@ public class ByteProcessorTest
             6 => Direct(bytes).AsReadOnly(),
             _ => throw new ArgumentOutOfRangeException(nameof(kind))
         };
-        try { test(buffer); }
-        finally { buffer.Release(); }
+        try
+        {
+            test(buffer);
+        }
+        finally
+        {
+            buffer.Release();
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -129,7 +135,14 @@ public class ByteProcessorTest
                     int length = Math.Min(37, bytes.Length - start);
                     int first = -1, last = -1;
                     for (int index = start; index < start + length; index++)
-                        if (Stops(predicate, bytes[index])) { if (first == -1) first = index; last = index; }
+                        if (Stops(predicate, bytes[index]))
+                        {
+                            if (first == -1)
+                            {
+                                first = index;
+                            }
+                            last = index;
+                        }
                     Assert.Equal(first, buf.ForEachByte(start, length, Processors[predicate]));
                     Assert.Equal(last, buf.ForEachByteDesc(start, length, Processors[predicate]));
                 }
@@ -155,7 +168,14 @@ public class ByteProcessorTest
                 var failure = new InvalidOperationException("processor failure");
                 Assert.Same(failure, Assert.Throws<InvalidOperationException>(() =>
                 {
-                    if (reverse) buf.ForEachByteDesc(_ => throw failure); else buf.ForEachByte(_ => throw failure);
+                    if (reverse)
+                    {
+                        buf.ForEachByteDesc(_ => throw failure);
+                    }
+                    else
+                    {
+                        buf.ForEachByte(_ => throw failure);
+                    }
                 }));
                 Assert.Equal(1, buf.ReaderIndex); Assert.Equal(7, buf.WriterIndex); Assert.Equal(1, buf.RefCnt);
             }

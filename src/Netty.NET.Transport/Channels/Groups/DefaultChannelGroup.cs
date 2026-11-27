@@ -327,8 +327,14 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
                 _ => ReferenceCountUtil.Retain(message)
             };
             try
-            { tasks.Add(new(channel, flush ? channel.WriteAndFlushAsync(copy) : channel.WriteAsync(copy))); }
-            catch (Exception error) { ReferenceCountUtil.Release(copy); tasks.Add(new(channel, Task.FromException(error))); }
+            {
+                tasks.Add(new(channel, flush ? channel.WriteAndFlushAsync(copy) : channel.WriteAsync(copy)));
+            }
+            catch (Exception error)
+            {
+                ReferenceCountUtil.Release(copy);
+                tasks.Add(new(channel, Task.FromException(error)));
+            }
         }
         ReferenceCountUtil.Release(message);
         operations = Snapshot(tasks);
@@ -377,8 +383,13 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
             if ((!includeServers && channel is IServerChannel) || matcher != null && !matcher(channel))
                 continue;
             try
-            { tasks.Add(new(channel, operation(channel))); }
-            catch (Exception error) { tasks.Add(new(channel, Task.FromException(error))); }
+            {
+                tasks.Add(new(channel, operation(channel)));
+            }
+            catch (Exception error)
+            {
+                tasks.Add(new(channel, Task.FromException(error)));
+            }
         }
         operations = Snapshot(tasks);
         return CompleteAsync(tasks);

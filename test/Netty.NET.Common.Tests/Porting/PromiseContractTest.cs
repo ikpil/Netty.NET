@@ -76,8 +76,14 @@ public class PromiseContractTest
                 Task<object> operation = executor.SubmitAsync(_ =>
                 {
                     entered.Set();
-                    if (!release.Wait(TimeSpan.FromSeconds(5))) throw new TimeoutException("producer was not released");
-                    if (fail) throw error;
+                    if (!release.Wait(TimeSpan.FromSeconds(5)))
+                    {
+                        throw new TimeoutException("producer was not released");
+                    }
+                    if (fail)
+                    {
+                        throw error;
+                    }
                     return value;
                 }, cancellation.Token);
                 try
@@ -86,15 +92,26 @@ public class PromiseContractTest
                     cancellation.Cancel();
                     Assert.False(operation.IsCompleted);
                 }
-                finally { release.Set(); }
+                finally
+                {
+                    release.Set();
+                }
                 if (fail)
+                {
                     Assert.Same(error, await Assert.ThrowsAsync<InvalidOperationException>(async () =>
                         await operation.WaitAsync(TimeSpan.FromSeconds(5))));
-                else Assert.Same(value, await operation.WaitAsync(TimeSpan.FromSeconds(5)));
+                }
+                else
+                {
+                    Assert.Same(value, await operation.WaitAsync(TimeSpan.FromSeconds(5)));
+                }
                 Assert.False(operation.IsCanceled);
             }
         }
-        finally { await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero); }
+        finally
+        {
+            await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
+        }
     }
 
     [Fact]
@@ -222,17 +239,40 @@ public class PromiseContractTest
             var error = new InvalidOperationException("race");
             int wins = 0;
             Parallel.Invoke(
-                () => { if (source.TrySetResult(value)) Interlocked.Increment(ref wins); },
-                () => { if (source.TrySetException(error)) Interlocked.Increment(ref wins); },
-                () => { if (source.TrySetCanceled()) Interlocked.Increment(ref wins); });
+                () => {
+                    if (source.TrySetResult(value))
+                    {
+                        Interlocked.Increment(ref wins);
+                    }
+                },
+                () => {
+                    if (source.TrySetException(error))
+                    {
+                        Interlocked.Increment(ref wins);
+                    }
+                },
+                () => {
+                    if (source.TrySetCanceled())
+                    {
+                        Interlocked.Increment(ref wins);
+                    }
+                });
             await listener.NotificationCompleted.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.Equal(1, wins);
             Assert.Equal(1, notifications);
             Assert.True(source.Task.IsCompleted);
-            if (source.Task.IsCompletedSuccessfully) Assert.Same(value, await source.Task);
+            if (source.Task.IsCompletedSuccessfully)
+            {
+                Assert.Same(value, await source.Task);
+            }
             else if (source.Task.IsCanceled)
+            {
                 await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await source.Task);
-            else Assert.Same(error, await Assert.ThrowsAsync<InvalidOperationException>(async () => await source.Task));
+            }
+            else
+            {
+                Assert.Same(error, await Assert.ThrowsAsync<InvalidOperationException>(async () => await source.Task));
+            }
         }
     }
 
@@ -299,12 +339,21 @@ public class PromiseContractTest
                 Thread.CurrentThread.Interrupt();
                 Assert.Throws<ThreadInterruptedException>(() =>
                 {
-                    if (timed) source.Task.Wait(TimeSpan.FromSeconds(5));
-                    else source.Task.GetAwaiter().GetResult();
+                    if (timed)
+                    {
+                        source.Task.Wait(TimeSpan.FromSeconds(5));
+                    }
+                    else
+                    {
+                        source.Task.GetAwaiter().GetResult();
+                    }
                 });
                 Thread.Sleep(0);
             }
-            catch (Exception error) { failure = error; }
+            catch (Exception error)
+            {
+                failure = error;
+            }
         }) { IsBackground = true };
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
@@ -330,12 +379,18 @@ public class PromiseContractTest
                     producer.SetResult(null);
                     result = producer.Task;
                 }
-                else result = Task.FromResult<object>(null);
+                else
+                {
+                    result = Task.FromResult<object>(null);
+                }
                 Thread.CurrentThread.Interrupt();
                 Assert.Null(result.GetAwaiter().GetResult());
                 Assert.Throws<ThreadInterruptedException>(() => Thread.Sleep(0));
             }
-            catch (Exception error) { failure = error; }
+            catch (Exception error)
+            {
+                failure = error;
+            }
         }) { IsBackground = true };
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
@@ -399,14 +454,22 @@ public class PromiseContractTest
             var source = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             using var observation = new ExecutorCompletion(executor, source.Task);
             int correctThread = 0;
-            Action<Task> callback = _ => { if (executor.InEventLoop()) Interlocked.Increment(ref correctThread); };
+            Action<Task> callback = _ => {
+                if (executor.InEventLoop())
+                {
+                    Interlocked.Increment(ref correctThread);
+                }
+            };
             using var early = observation.Register(callback);
             source.SetResult(null);
             using var late = observation.Register(callback);
             await Task.WhenAll(early.NotificationCompleted, late.NotificationCompleted).WaitAsync(TimeSpan.FromSeconds(5));
             Assert.Equal(2, correctThread);
         }
-        finally { await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero); }
+        finally
+        {
+            await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
+        }
     }
 
     [Fact]

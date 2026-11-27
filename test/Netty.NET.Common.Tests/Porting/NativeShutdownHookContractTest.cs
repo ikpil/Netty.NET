@@ -49,7 +49,10 @@ public class NativeShutdownHookContractTest
             Assert.Same(first.Thread, second.Thread);
             Assert.NotSame(Thread.CurrentThread, first.Thread);
         }
-        finally { await Stop(executor); }
+        finally
+        {
+            await Stop(executor);
+        }
     }
 
     [Fact]
@@ -75,7 +78,10 @@ public class NativeShutdownHookContractTest
             await Stop(executor);
             Assert.Equal(new[] { "first", "second", "third" }, trace);
         }
-        finally { await Stop(executor); }
+        finally
+        {
+            await Stop(executor);
+        }
     }
 
     [Fact]
@@ -93,7 +99,10 @@ public class NativeShutdownHookContractTest
             Assert.Equal(new[] { "throw", "after" }, trace);
             Assert.True(executor.TerminationFuture.IsCompletedSuccessfully);
         }
-        finally { await Stop(executor); }
+        finally
+        {
+            await Stop(executor);
+        }
     }
 
     private sealed class NativeHookLoop : SingleThreadEventExecutor
@@ -114,8 +123,15 @@ public class NativeShutdownHookContractTest
             for (;;)
             {
                 var task = TakeTask();
-                if (task != null) { RunTask(task); UpdateLastExecutionTime(); }
-                if (ConfirmShutdown()) return;
+                if (task != null)
+                {
+                    RunTask(task);
+                    UpdateLastExecutionTime();
+                }
+                if (ConfirmShutdown())
+                {
+                    return;
+                }
             }
         }
     }
@@ -143,7 +159,10 @@ public class NativeShutdownHookContractTest
             await Stop(executor);
             Assert.Equal(1, runs);
         }
-        finally { await Stop(executor); }
+        finally
+        {
+            await Stop(executor);
+        }
     }
 
     [Fact]
@@ -165,7 +184,10 @@ public class NativeShutdownHookContractTest
             Assert.Throws<RejectedExecutionException>(() => executor.AddShutdownHook(hook));
             Assert.Throws<RejectedExecutionException>(() => executor.RemoveShutdownHook(hook));
         }
-        finally { await Stop(executor); }
+        finally
+        {
+            await Stop(executor);
+        }
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -175,7 +197,10 @@ public class NativeShutdownHookContractTest
         var weak = new WeakReference(payload);
         Action hook = () => GC.KeepAlive(payload);
         executor.AddShutdownHook(hook);
-        if (remove) executor.RemoveShutdownHook(hook);
+        if (remove)
+        {
+            executor.RemoveShutdownHook(hook);
+        }
         return weak;
     }
 
@@ -202,10 +227,16 @@ public class NativeShutdownHookContractTest
             WeakReference weak = RegisterPayload(executor, remove);
             await executor.SubmitAsync(() => { }, TestContext.Current.CancellationToken)
                 .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
-            if (!remove) await Stop(executor);
+            if (!remove)
+            {
+                await Stop(executor);
+            }
             AssertCollected(weak);
             GC.KeepAlive(executor);
         }
-        finally { await Stop(executor); }
+        finally
+        {
+            await Stop(executor);
+        }
     }
 }

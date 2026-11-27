@@ -40,8 +40,14 @@ public class NativeLibraryUtilContractTest
             Assert.True(Path.IsPathFullyQualified(name));
         }
         IntPtr handle = NativeLibraryUtil.LoadLibrary(name, absolute);
-        try { VerifyExport(handle); }
-        finally { NativeLibrary.Free(handle); }
+        try
+        {
+            VerifyExport(handle);
+        }
+        finally
+        {
+            NativeLibrary.Free(handle);
+        }
     }
 
     [Fact]
@@ -60,9 +66,21 @@ public class NativeLibraryUtilContractTest
     {
         IntPtr first = NativeLibraryUtil.LoadLibrary(library, false);
         IntPtr second;
-        try { second = NativeLibraryUtil.LoadLibrary(library, false); }
-        finally { NativeLibrary.Free(first); }
-        try { VerifyExport(second); }
-        finally { NativeLibrary.Free(second); }
+        try
+        {
+            second = NativeLibraryUtil.LoadLibrary(library, false);
+        }
+        finally
+        {
+            NativeLibrary.Free(first);
+        }
+        try
+        {
+            VerifyExport(second);
+        }
+        finally
+        {
+            NativeLibrary.Free(second);
+        }
     }
 }

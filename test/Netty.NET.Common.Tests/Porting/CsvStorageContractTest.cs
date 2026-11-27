@@ -52,8 +52,14 @@ public class CsvStorageContractTest : IDisposable
     {
         var error = Assert.Throws<ArgumentNullException>(() =>
         {
-            if (multiple) StringUtil.UnescapeCsvFields(null);
-            else StringUtil.UnescapeCsv(null);
+            if (multiple)
+            {
+                StringUtil.UnescapeCsvFields(null);
+            }
+            else
+            {
+                StringUtil.UnescapeCsv(null);
+            }
         });
         Assert.Equal("value", error.ParamName);
         Assert.Null(InternalThreadLocalMap.GetIfSet());

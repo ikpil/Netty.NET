@@ -68,18 +68,59 @@ public class ByteBufWireContractTest
                 Assert.Throws<ArgumentOutOfRangeException>(() => Get(buffer, int.MaxValue, width, littleEndian));
             }
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     private static void Set(ByteBuf b, int index, int width, bool le, long value)
     {
         switch (width)
         {
-            case 1: b.SetByte(index, unchecked((int)value)); break;
-            case 2: if (le) b.SetShortLE(index, unchecked((int)value)); else b.SetShort(index, unchecked((int)value)); break;
-            case 3: if (le) b.SetMediumLE(index, unchecked((int)value)); else b.SetMedium(index, unchecked((int)value)); break;
-            case 4: if (le) b.SetIntLE(index, unchecked((int)value)); else b.SetInt(index, unchecked((int)value)); break;
-            case 8: if (le) b.SetLongLE(index, value); else b.SetLong(index, value); break;
+            case 1:
+                b.SetByte(index, unchecked((int)value));
+                break;
+            case 2:
+                if (le)
+                {
+                    b.SetShortLE(index, unchecked((int)value));
+                }
+                else
+                {
+                    b.SetShort(index, unchecked((int)value));
+                }
+                break;
+            case 3:
+                if (le)
+                {
+                    b.SetMediumLE(index, unchecked((int)value));
+                }
+                else
+                {
+                    b.SetMedium(index, unchecked((int)value));
+                }
+                break;
+            case 4:
+                if (le)
+                {
+                    b.SetIntLE(index, unchecked((int)value));
+                }
+                else
+                {
+                    b.SetInt(index, unchecked((int)value));
+                }
+                break;
+            case 8:
+                if (le)
+                {
+                    b.SetLongLE(index, value);
+                }
+                else
+                {
+                    b.SetLong(index, value);
+                }
+                break;
         }
     }
 
@@ -103,12 +144,24 @@ public class ByteBufWireContractTest
         ByteBuf buffer = Unpooled.Buffer(0, 64);
         try
         {
-            if (le) buffer.WriteShortLE(0xFEDC).WriteMediumLE(0xFEDCBA).WriteIntLE(unchecked((int)0xFEDCBA98)).WriteLongLE(long.MinValue);
-            else buffer.WriteShort(0xFEDC).WriteMedium(0xFEDCBA).WriteInt(unchecked((int)0xFEDCBA98)).WriteLong(long.MinValue);
+            if (le)
+            {
+                buffer.WriteShortLE(0xFEDC).WriteMediumLE(0xFEDCBA).WriteIntLE(unchecked((int)0xFEDCBA98)).WriteLongLE(long.MinValue);
+            }
+            else
+            {
+                buffer.WriteShort(0xFEDC).WriteMedium(0xFEDCBA).WriteInt(unchecked((int)0xFEDCBA98)).WriteLong(long.MinValue);
+            }
             int floatBits = unchecked((int)0xFFC01234);
             long doubleBits = unchecked((long)0xFFF8000012345678UL);
-            if (le) buffer.WriteFloatLE(BitConverter.Int32BitsToSingle(floatBits)).WriteDoubleLE(BitConverter.Int64BitsToDouble(doubleBits));
-            else buffer.WriteFloat(BitConverter.Int32BitsToSingle(floatBits)).WriteDouble(BitConverter.Int64BitsToDouble(doubleBits));
+            if (le)
+            {
+                buffer.WriteFloatLE(BitConverter.Int32BitsToSingle(floatBits)).WriteDoubleLE(BitConverter.Int64BitsToDouble(doubleBits));
+            }
+            else
+            {
+                buffer.WriteFloat(BitConverter.Int32BitsToSingle(floatBits)).WriteDouble(BitConverter.Int64BitsToDouble(doubleBits));
+            }
             Assert.Equal((ushort)0xFEDC, le ? buffer.ReadUnsignedShortLE() : buffer.ReadUnsignedShort());
             Assert.Equal(0xFEDCBA, le ? buffer.ReadUnsignedMediumLE() : buffer.ReadUnsignedMedium());
             Assert.Equal(0xFEDCBA98u, le ? buffer.ReadUnsignedIntLE() : buffer.ReadUnsignedInt());
@@ -118,7 +171,10 @@ public class ByteBufWireContractTest
             Assert.Equal(buffer.WriterIndex, buffer.ReaderIndex);
             Assert.Throws<ArgumentOutOfRangeException>(() => buffer.ReadByte());
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Fact]
@@ -137,7 +193,10 @@ public class ByteBufWireContractTest
             Assert.True(buffer.ReadBoolean());
             Assert.Equal('\uFEDC', buffer.ReadChar());
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Fact]
@@ -165,7 +224,11 @@ public class ByteBufWireContractTest
             Assert.Equal(8, destination.ReaderIndex);
             Assert.Equal(new byte[] { 0, 0, 1, 2, 3, 0, 0, 0 }, output);
         }
-        finally { buffer.Release(); destination.Release(); }
+        finally
+        {
+            buffer.Release();
+            destination.Release();
+        }
     }
 
     [Fact]
@@ -180,7 +243,10 @@ public class ByteBufWireContractTest
             buffer.WriterIndex = 8;
             Assert.Equal(long.MaxValue, buffer.ReadLong());
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Fact]

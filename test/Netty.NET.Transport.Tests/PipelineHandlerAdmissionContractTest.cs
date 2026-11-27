@@ -25,7 +25,10 @@ public class PipelineHandlerAdmissionContractTest
             Assert.Equal(0, removing.Errors);
             Assert.Same(failure, following.Cause);
         }
-        finally { channel.FinishAndReleaseAll(); }
+        finally
+        {
+            channel.FinishAndReleaseAll();
+        }
     }
 
     [Fact]

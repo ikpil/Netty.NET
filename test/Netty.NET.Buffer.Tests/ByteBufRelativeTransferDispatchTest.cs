@@ -42,7 +42,10 @@ public class ByteBufRelativeTransferDispatchTest
 
         public ByteBuf After(ByteBuf result)
         {
-            if (Mode == 2) throw Error;
+            if (Mode == 2)
+            {
+                throw Error;
+            }
             return result;
         }
     }
@@ -139,10 +142,17 @@ public class ByteBufRelativeTransferDispatchTest
                 return write ? owner.WriteBytes(peer, length) : owner.ReadBytes(peer, length);
             }
             if (scenario is 2 or 3)
+            {
                 Assert.Same(calls.Error, Assert.Throws<Failure>(() => Invoke()));
+            }
             else if (scenario is 4 or 5 or 7)
+            {
                 Assert.Throws<ArgumentOutOfRangeException>(() => Invoke());
-            else Assert.Same(owner, Invoke());
+            }
+            else
+            {
+                Assert.Same(owner, Invoke());
+            }
 
             bool dispatched = write ? scenario is not (4 or 5 or 7) : scenario != 5;
             Assert.Equal(dispatched ? 1 : 0, calls.Count);
@@ -165,11 +175,18 @@ public class ByteBufRelativeTransferDispatchTest
             for (int i = 0; i < copiedLength; ++i) Assert.Equal(12 + i, destination.GetByte(1 + i));
             source.ResetReaderIndex().ResetWriterIndex();
             destination.ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(2, source.ReaderIndex); Assert.Equal(7, source.WriterIndex);
-            Assert.Equal(0, destination.ReaderIndex); Assert.Equal(1, destination.WriterIndex);
-            Assert.Equal(1, source.RefCnt); Assert.Equal(1, destination.RefCnt);
+            Assert.Equal(2, source.ReaderIndex);
+            Assert.Equal(7, source.WriterIndex);
+            Assert.Equal(0, destination.ReaderIndex);
+            Assert.Equal(1, destination.WriterIndex);
+            Assert.Equal(1, source.RefCnt);
+            Assert.Equal(1, destination.RefCnt);
         }
-        finally { Assert.True(owner.Release()); Assert.True(peer.Release()); }
+        finally
+        {
+            Assert.True(owner.Release());
+            Assert.True(peer.Release());
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -186,20 +203,36 @@ public class ByteBufRelativeTransferDispatchTest
         ByteBuf peer = new UnpooledHeapByteBuf(8, 16);
         try
         {
-            owner.SetIndex(2, 7); peer.SetIndex(1, 3);
+            owner.SetIndex(2, 7);
+            peer.SetIndex(1, 3);
             ByteBuf Invoke()
             {
                 return write ? owner.WriteBytes(peer) : owner.ReadBytes(peer);
             }
-            if (failure) Assert.Same(calls.Error, Assert.Throws<Failure>(() => Invoke()));
-            else Assert.Same(owner, Invoke());
-            Assert.Equal(1, calls.Count); Assert.Same(peer, calls.Peer);
-            Assert.Equal(-1, calls.Index); Assert.Equal(write ? 2 : 5, calls.Length);
-            Assert.Equal(2, owner.ReaderIndex); Assert.Equal(7, owner.WriterIndex);
-            Assert.Equal(1, peer.ReaderIndex); Assert.Equal(3, peer.WriterIndex);
-            Assert.Equal(1, owner.RefCnt); Assert.Equal(1, peer.RefCnt);
+            if (failure)
+            {
+                Assert.Same(calls.Error, Assert.Throws<Failure>(() => Invoke()));
+            }
+            else
+            {
+                Assert.Same(owner, Invoke());
+            }
+            Assert.Equal(1, calls.Count);
+            Assert.Same(peer, calls.Peer);
+            Assert.Equal(-1, calls.Index);
+            Assert.Equal(write ? 2 : 5, calls.Length);
+            Assert.Equal(2, owner.ReaderIndex);
+            Assert.Equal(7, owner.WriterIndex);
+            Assert.Equal(1, peer.ReaderIndex);
+            Assert.Equal(3, peer.WriterIndex);
+            Assert.Equal(1, owner.RefCnt);
+            Assert.Equal(1, peer.RefCnt);
         }
-        finally { Assert.True(owner.Release()); Assert.True(peer.Release()); }
+        finally
+        {
+            Assert.True(owner.Release());
+            Assert.True(peer.Release());
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 }

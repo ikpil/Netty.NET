@@ -110,7 +110,13 @@ public class SimpleChannelPoolTest
             await channel.CloseFuture.WaitAsync(TimeSpan.FromSeconds(1), TestContext.Current.CancellationToken);
             Assert.False(channel.IsActive);
         }
-        finally { if (channel != null) await channel.CloseAsync(); }
+        finally
+        {
+            if (channel != null)
+            {
+                await channel.CloseAsync();
+            }
+        }
     }
 
     [Fact]
@@ -249,7 +255,13 @@ public class SimpleChannelPoolTest
             secondHealth.SetResult(true);
             Assert.Same(channel, await secondAcquire.WaitAsync(Timeout, TestContext.Current.CancellationToken));
         }
-        finally { if (channel != null) await channel.CloseAsync(); }
+        finally
+        {
+            if (channel != null)
+            {
+                await channel.CloseAsync();
+            }
+        }
     }
 
     private sealed class BoundedPool(Bootstrap bootstrap, IChannelPoolHandler handler)

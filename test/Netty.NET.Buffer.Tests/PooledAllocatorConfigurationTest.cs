@@ -120,7 +120,16 @@ public partial class DefaultByteBufAllocatorTest
             Call(b, "Release", 1);
             Assert.Equal(fast || mapping || all ? 0L : 1L, Property<long>(arena, "NumSmallDeallocations"));
         };
-        Action run = () => { if (mapping) MappedScope(scope, allocate); else allocate(); };
+        Action run = () => {
+            if (mapping)
+            {
+                MappedScope(scope, allocate);
+            }
+            else
+            {
+                allocate();
+            }
+        };
         if (fast)
             FastScope(scope, run);
         else

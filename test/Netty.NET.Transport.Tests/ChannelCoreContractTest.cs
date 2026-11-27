@@ -253,7 +253,10 @@ public class ChannelCoreContractTest
             var message = new ReleaseObserver(Unpooled.Buffer(1).WriteByte(1), () =>
             {
                 maximumDepth = Math.Max(maximumDepth, ++depth);
-                if (--remaining != 0) Enqueue();
+                if (--remaining != 0)
+                {
+                    Enqueue();
+                }
                 depth--;
             });
             writes.Add(channel.WriteAndFlushAsync(message));
@@ -269,7 +272,10 @@ public class ChannelCoreContractTest
             Assert.Equal(0, channel.OutboundBuffer.TotalPendingWriteBytes);
             Assert.Equal(0, channel.OutboundBuffer.Size);
         }
-        finally { await channel.CloseAsync(); }
+        finally
+        {
+            await channel.CloseAsync();
+        }
     }
     private sealed class FailureChannel : AbstractChannel
     {
@@ -318,7 +324,10 @@ public class ChannelCoreContractTest
         public override bool Release()
         {
             bool result = base.Release();
-            if (result) released();
+            if (result)
+            {
+                released();
+            }
             return result;
         }
     }

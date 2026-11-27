@@ -61,9 +61,18 @@ public class AsciiStringSequenceContractTest
                 int first = -1, last = -1;
                 for (int candidate = 0; candidate <= source.Length - pattern.Length; candidate++)
                 {
-                    if (source[candidate] != pattern[0] || source[candidate + 1] != pattern[1]) continue;
-                    if (candidate >= start && first < 0) first = candidate;
-                    if (candidate <= start) last = candidate;
+                    if (source[candidate] != pattern[0] || source[candidate + 1] != pattern[1])
+                    {
+                        continue;
+                    }
+                    if (candidate >= start && first < 0)
+                    {
+                        first = candidate;
+                    }
+                    if (candidate <= start)
+                    {
+                        last = candidate;
+                    }
                 }
                 int relative = value.AsSpan().Slice(start).IndexOf(pattern);
                 Assert.Equal(first, relative < 0 ? -1 : start + relative);
@@ -89,7 +98,10 @@ public class AsciiStringSequenceContractTest
             Assert.Equal(-1, text.AsSpan().IndexOf("ı".AsSpan(), StringComparison.Ordinal));
             Assert.Equal(3, text.AsSpan().IndexOf("I".AsSpan(), StringComparison.Ordinal));
         }
-        finally { CultureInfo.CurrentCulture = previous; }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
     }
 
     [Fact]

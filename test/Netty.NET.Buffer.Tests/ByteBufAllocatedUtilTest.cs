@@ -73,10 +73,16 @@ public class ByteBufAllocatedUtilTest
                 Assert.Equal(9, source.WriterIndex);
                 Assert.Equal(1, owner.RefCnt);
             }
-            finally { result.Release(); }
+            finally
+            {
+                result.Release();
+            }
             Assert.Equal(0, a.Native.ReservedBytes);
         }
-        finally { owner.Release(); }
+        finally
+        {
+            owner.Release();
+        }
     }
 
     [Theory]
@@ -99,13 +105,22 @@ public class ByteBufAllocatedUtilTest
                 Assert.Equal(1, empty.RefCnt);
                 Assert.Same(a, empty.Alloc());
             }
-            finally { empty.Release(); }
+            finally
+            {
+                empty.Release();
+            }
             source.Release();
             Assert.Throws<IllegalReferenceCountException>(() => ByteBufUtil.ReadBytes(a, source, 0));
             Assert.Equal(0, a.Last.RefCnt);
             Assert.Equal(0, a.Native.ReservedBytes);
         }
-        finally { if (source.RefCnt > 0) source.Release(); }
+        finally
+        {
+            if (source.RefCnt > 0)
+            {
+                source.Release();
+            }
+        }
     }
 
     [Fact]
@@ -121,7 +136,10 @@ public class ByteBufAllocatedUtilTest
             Assert.Equal(0, a.Last.RefCnt);
             Assert.Equal(0, a.Native.ReservedBytes);
         }
-        finally { source.Release(); }
+        finally
+        {
+            source.Release();
+        }
     }
 
     [Fact]
@@ -139,9 +157,15 @@ public class ByteBufAllocatedUtilTest
                 Assert.Equal(3, source.ReaderIndex);
                 Assert.Equal(new byte[] { 1, 2, 3 }, ByteBufUtil.GetBytes(result));
             }
-            finally { result.Release(); }
+            finally
+            {
+                result.Release();
+            }
         }
-        finally { source.Release(); }
+        finally
+        {
+            source.Release();
+        }
     }
 
     [Theory]
@@ -159,21 +183,54 @@ public class ByteBufAllocatedUtilTest
         })
         {
             ByteBuf u = ByteBufUtil.WriteUtf8(a, text);
-            try { Assert.Equal(text.Length * 3, a.RequestedCapacity); Assert.Equal(text.Length * 3, u.Capacity); Assert.Equal(utf8, ByteBufUtil.GetBytes(u)); Assert.Same(a, u.Alloc()); }
-            finally { u.Release(); }
+            try
+            {
+                Assert.Equal(text.Length * 3, a.RequestedCapacity);
+                Assert.Equal(text.Length * 3, u.Capacity);
+                Assert.Equal(utf8, ByteBufUtil.GetBytes(u));
+                Assert.Same(a, u.Alloc());
+            }
+            finally
+            {
+                u.Release();
+            }
             ByteBuf s = ByteBufUtil.WriteAscii(a, text);
-            try { Assert.Equal(text.Length, a.RequestedCapacity); Assert.Equal(text.Length, s.Capacity); Assert.Equal(ascii, ByteBufUtil.GetBytes(s)); }
-            finally { s.Release(); }
+            try
+            {
+                Assert.Equal(text.Length, a.RequestedCapacity);
+                Assert.Equal(text.Length, s.Capacity);
+                Assert.Equal(ascii, ByteBufUtil.GetBytes(s));
+            }
+            finally
+            {
+                s.Release();
+            }
         }
         byte[] padded = new byte[] { 7 }.Concat(Enumerable.Range(0, 256).Select(i => (byte)i)).Append((byte)9).ToArray();
         AsciiString raw = new(padded, 1, 256, false);
         ByteBuf asciiBytes = ByteBufUtil.WriteAscii(a, raw);
-        try { Assert.Equal(256, a.RequestedCapacity); Assert.Equal(256, asciiBytes.Capacity); Assert.Equal(padded[1..257], ByteBufUtil.GetBytes(asciiBytes)); }
-        finally { asciiBytes.Release(); }
+        try
+        {
+            Assert.Equal(256, a.RequestedCapacity);
+            Assert.Equal(256, asciiBytes.Capacity);
+            Assert.Equal(padded[1..257], ByteBufUtil.GetBytes(asciiBytes));
+        }
+        finally
+        {
+            asciiBytes.Release();
+        }
         int callsBeforeGrowth = a.Calls;
         ByteBuf utf8Bytes = ByteBufUtil.WriteUtf8(a, raw);
-        try { Assert.Equal(256, a.RequestedCapacities[callsBeforeGrowth]); Assert.Equal(1024, utf8Bytes.Capacity); Assert.Equal(padded[1..257], ByteBufUtil.GetBytes(utf8Bytes)); }
-        finally { utf8Bytes.Release(); }
+        try
+        {
+            Assert.Equal(256, a.RequestedCapacities[callsBeforeGrowth]);
+            Assert.Equal(1024, utf8Bytes.Capacity);
+            Assert.Equal(padded[1..257], ByteBufUtil.GetBytes(utf8Bytes));
+        }
+        finally
+        {
+            utf8Bytes.Release();
+        }
         Assert.Equal(0, a.Native.ReservedBytes);
     }
 
@@ -221,12 +278,20 @@ public class ByteBufAllocatedUtilTest
             byte[] expected = encoding.GetBytes(text); ByteBuf b = ByteBufUtil.EncodeString(a, text, encoding, 3);
             try
             {
-                Assert.Equal(expected.Length + 3, a.RequestedCapacity); Assert.Equal(expected.Length + 3, b.Capacity);
-                Assert.Equal(expected, ByteBufUtil.GetBytes(b)); Assert.Equal(3, b.WritableBytes);
-                Assert.Equal(0, b.ReaderIndex); Assert.Equal(expected.Length, b.WriterIndex); Assert.Same(a, b.Alloc());
-                b.WriteBytes(new byte[] { 13, 10, 0 }); Assert.Equal(expected.Concat(new byte[] { 13, 10, 0 }), ByteBufUtil.GetBytes(b));
+                Assert.Equal(expected.Length + 3, a.RequestedCapacity);
+                    Assert.Equal(expected.Length + 3, b.Capacity);
+                Assert.Equal(expected, ByteBufUtil.GetBytes(b));
+                    Assert.Equal(3, b.WritableBytes);
+                Assert.Equal(0, b.ReaderIndex);
+                    Assert.Equal(expected.Length, b.WriterIndex);
+                    Assert.Same(a, b.Alloc());
+                b.WriteBytes(new byte[] { 13, 10, 0 });
+                    Assert.Equal(expected.Concat(new byte[] { 13, 10, 0 }), ByteBufUtil.GetBytes(b));
             }
-            finally { b.Release(); }
+            finally
+            {
+                b.Release();
+            }
         }
         Assert.Equal(0, a.Native.ReservedBytes);
     }
@@ -247,7 +312,10 @@ public class ByteBufAllocatedUtilTest
             b.WriteBytes(new byte[] { 13, 10 });
             Assert.Equal(new byte[] { 97, 195, 169, 240, 159, 152, 128, 13, 10 }, ByteBufUtil.GetBytes(b));
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
         ByteBuf empty = ByteBufUtil.EncodeString(a, ReadOnlySpan<char>.Empty, Encoding.UTF8);
         try
         {
@@ -255,7 +323,10 @@ public class ByteBufAllocatedUtilTest
             Assert.Equal(int.MaxValue, empty.MaxCapacity);
             Assert.Equal(1, empty.RefCnt);
         }
-        finally { empty.Release(); }
+        finally
+        {
+            empty.Release();
+        }
     }
 
     [Theory]
@@ -299,7 +370,10 @@ public class ByteBufAllocatedUtilTest
             Assert.Equal(0, source.ReaderIndex);
             Assert.Equal(1, source.RefCnt);
         }
-        finally { source.Release(); }
+        finally
+        {
+            source.Release();
+        }
     }
 
     private sealed class FailingEncoding : UTF8Encoding

@@ -1311,7 +1311,10 @@ public static class NetUtil
     private static string FormatNativeAddress(IPAddress address)
     {
         // The exact base type's cached string is numeric; derived types can override display text.
-        if (address.GetType() == typeof(IPAddress)) return address.ToString();
+        if (address.GetType() == typeof(IPAddress))
+        {
+            return address.ToString();
+        }
         // The non-virtual formatter reads the native value without a derived display callback.
         // Match .NET 10's buffer bound, including embedded IPv4 text and an unsigned scope ID.
         Span<char> text = stackalloc char[65];

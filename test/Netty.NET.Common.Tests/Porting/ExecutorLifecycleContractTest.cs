@@ -59,8 +59,14 @@ public class ExecutorLifecycleContractTest
         internal void Run(Action command)
         {
             running = true;
-            try { command(); }
-            finally { running = false; }
+            try
+            {
+                command();
+            }
+            finally
+            {
+                running = false;
+            }
         }
         public override Task TerminationFuture => termination.Task;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
@@ -68,7 +74,10 @@ public class ExecutorLifecycleContractTest
             shuttingDown = true;
             this.quietPeriod = quietPeriod;
             this.timeout = timeout;
-            if (completeOnShutdown) termination.TrySetResult();
+            if (completeOnShutdown)
+            {
+                termination.TrySetResult();
+            }
             return termination.Task;
         }
 
@@ -81,7 +90,10 @@ public class ExecutorLifecycleContractTest
         {
             ++stopRequests;
             Shutdown();
-            if (stopFailure != null) throw stopFailure;
+            if (stopFailure != null)
+            {
+                throw stopFailure;
+            }
             return TerminationFuture;
         }
 
@@ -213,7 +225,10 @@ public class ExecutorLifecycleContractTest
         protected override IEventExecutor NewChild(Action<Action> executor, params object[] args)
         {
             var created = (List<Child>)args[0];
-            if (created.Count == 2) throw (Exception)args[1];
+            if (created.Count == 2)
+            {
+                throw (Exception)args[1];
+            }
             var child = new Child(this) { completeOnShutdown = true };
             created.Add(child);
             return child;
@@ -375,7 +390,10 @@ public class ExecutorLifecycleContractTest
             SynchronizationContext.SetSynchronizationContext(context);
             group = new ManualGroup(first, second);
         }
-        finally { SynchronizationContext.SetSynchronizationContext(previous); }
+        finally
+        {
+            SynchronizationContext.SetSynchronizationContext(previous);
+        }
         first.termination.SetResult();
         second.termination.SetResult();
         await group.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5));
@@ -430,7 +448,10 @@ public class ExecutorLifecycleContractTest
             Assert.False(executor.IsShuttingDown());
             Assert.False(executor.TerminationFuture.IsCompleted);
         }
-        finally { await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5));
+        }
     }
 
     [Fact]
@@ -551,7 +572,11 @@ public class ExecutorLifecycleContractTest
             await stopping.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.True(delayed.IsCanceled);
         }
-        finally { release.Set(); await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            release.Set();
+            await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        }
     }
 
     [Theory]
@@ -579,7 +604,11 @@ public class ExecutorLifecycleContractTest
             await running.WaitAsync(TimeSpan.FromSeconds(5));
             await stopping.WaitAsync(TimeSpan.FromSeconds(5));
         }
-        finally { release.Set(); await group.StopAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            release.Set();
+            await group.StopAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        }
     }
 
     [Fact]
@@ -624,7 +653,10 @@ public class ExecutorLifecycleContractTest
             await executor.SubmitAsync(async () => await executor.StopAsync()).WaitAsync(TimeSpan.FromSeconds(5));
             Assert.True(executor.TerminationFuture.IsCompletedSuccessfully);
         }
-        finally { await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        }
     }
 
     [Fact]
@@ -735,7 +767,10 @@ public class ExecutorLifecycleContractTest
             Assert.True(group.AwaitTermination(TimeSpan.FromSeconds(5)));
             await group.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5));
         }
-        finally { await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5));
+        }
     }
 
     [Fact]
@@ -871,8 +906,14 @@ public class ExecutorLifecycleContractTest
         bool inactive = false;
         var waiter = new Thread(() =>
         {
-            try { inactive = executor.AwaitInactivity(TimeSpan.FromTicks(ticks)); }
-            catch (Exception e) { failure = e; }
+            try
+            {
+                inactive = executor.AwaitInactivity(TimeSpan.FromTicks(ticks));
+            }
+            catch (Exception e)
+            {
+                failure = e;
+            }
         }) { IsBackground = true };
         waiter.Start();
         try
@@ -881,7 +922,10 @@ public class ExecutorLifecycleContractTest
             Assert.Null(failure);
             Assert.False(inactive);
         }
-        finally { release.Signal(); }
+        finally
+        {
+            release.Signal();
+        }
         Assert.True(waiter.Join(TimeSpan.FromSeconds(5)));
         Assert.True(executor.AwaitInactivity(TimeSpan.FromSeconds(5)));
     }
@@ -897,8 +941,14 @@ public class ExecutorLifecycleContractTest
         Exception failure = null;
         var waiter = new Thread(() =>
         {
-            try { executor.AwaitInactivity(TimeSpan.MaxValue); }
-            catch (Exception e) { failure = e; }
+            try
+            {
+                executor.AwaitInactivity(TimeSpan.MaxValue);
+            }
+            catch (Exception e)
+            {
+                failure = e;
+            }
         }) { IsBackground = true };
         waiter.Start();
         try
@@ -910,7 +960,10 @@ public class ExecutorLifecycleContractTest
             Assert.Throws<ArgumentOutOfRangeException>(() => executor.AwaitInactivity(TimeSpan.FromMilliseconds(-2)));
             Assert.Throws<ArgumentOutOfRangeException>(() => executor.AwaitInactivity(TimeSpan.FromTicks(-1)));
         }
-        finally { release.Signal(); }
+        finally
+        {
+            release.Signal();
+        }
         Assert.True(executor.AwaitInactivity(TimeSpan.FromSeconds(5)));
     }
 
@@ -928,8 +981,14 @@ public class ExecutorLifecycleContractTest
         bool inactive = false;
         var waiter = new Thread(() =>
         {
-            try { inactive = executor.AwaitInactivity(Timeout.InfiniteTimeSpan); }
-            catch (Exception error) { failure = error; }
+            try
+            {
+                inactive = executor.AwaitInactivity(Timeout.InfiniteTimeSpan);
+            }
+            catch (Exception error)
+            {
+                failure = error;
+            }
         }) { IsBackground = true };
         waiter.Start();
         try
@@ -947,8 +1006,15 @@ public class ExecutorLifecycleContractTest
             Assert.True(waiter.Join(TimeSpan.FromSeconds(5)));
             Assert.True(executor.AwaitInactivity(TimeSpan.FromSeconds(5)));
         }
-        if (interrupt) Assert.IsType<ThreadInterruptedException>(failure);
-        else { Assert.Null(failure); Assert.True(inactive); }
+        if (interrupt)
+        {
+            Assert.IsType<ThreadInterruptedException>(failure);
+        }
+        else
+        {
+            Assert.Null(failure);
+            Assert.True(inactive);
+        }
     }
 
     [Theory]
@@ -986,6 +1052,9 @@ public class ExecutorLifecycleContractTest
             Assert.Same(executor.TerminationFuture, observedEarly);
             Assert.Same(executor.TerminationFuture, observedLate);
         }
-        finally { await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5));
+        }
     }
 }

@@ -110,7 +110,11 @@ internal sealed partial class AdaptivePoolingAllocator
                 }
                 return allocated;
             }
-            catch { allocated?.Release(); throw; }
+            catch
+            {
+                allocated?.Release();
+                throw;
+            }
             finally
             {
                 // CLR: restore ownership even if reservation initialization throws.

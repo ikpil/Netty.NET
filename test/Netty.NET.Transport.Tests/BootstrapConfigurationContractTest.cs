@@ -32,7 +32,10 @@ public class BootstrapConfigurationContractTest
             Assert.True(future.IsFaulted);
             Assert.True(future.IsCompleted);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Fact]
@@ -51,26 +54,41 @@ public class BootstrapConfigurationContractTest
         {
             var config = bootstrap.Config;
             Assert.Same(config, bootstrap.Config);
-            Assert.Same(group, config.Group); Assert.Same(factory, config.ChannelFactory); Assert.Same(handler, config.Handler);
-            Assert.Same(local, config.LocalAddress); Assert.Same(remote, config.RemoteAddress);
-            var options = config.Options; var attributes = config.Attributes;
+            Assert.Same(group, config.Group);
+            Assert.Same(factory, config.ChannelFactory);
+            Assert.Same(handler, config.Handler);
+            Assert.Same(local, config.LocalAddress);
+            Assert.Same(remote, config.RemoteAddress);
+            var options = config.Options;
+            var attributes = config.Attributes;
             Assert.Throws<NotSupportedException>(() => ((IDictionary<ChannelOption, object>)options)[ChannelOption.AUTO_READ] = false);
             Assert.Throws<NotSupportedException>(() => ((IDictionary<IAttributeKey, object>)attributes)[key] = "overwrite");
             var clone = bootstrap.Clone(owner);
             bootstrap.Option(ChannelOption.AUTO_READ, false).Attr(key, "new");
-            Assert.Equal(true, options[ChannelOption.AUTO_READ]); Assert.Equal("old", attributes[key]);
-            Assert.Equal(false, config.Options[ChannelOption.AUTO_READ]); Assert.Equal("new", config.Attributes[key]);
-            Assert.Equal(true, clone.Config.Options[ChannelOption.AUTO_READ]); Assert.Equal("old", clone.Config.Attributes[key]);
+            Assert.Equal(true, options[ChannelOption.AUTO_READ]);
+            Assert.Equal("old", attributes[key]);
+            Assert.Equal(false, config.Options[ChannelOption.AUTO_READ]);
+            Assert.Equal("new", config.Attributes[key]);
+            Assert.Equal(true, clone.Config.Options[ChannelOption.AUTO_READ]);
+            Assert.Equal("old", clone.Config.Attributes[key]);
             Assert.Same(owner, clone.Config.RegistrationEventLoop);
             Assert.Equal(new ChannelOption[] { ChannelOption.AUTO_READ, ChannelOption.CONNECT_TIMEOUT_MILLIS }, options.Keys);
-            Assert.Contains("resolver:", config.ToString()); Assert.Contains("localAddress:", config.ToString());
-            Assert.Contains("remoteAddress:", config.ToString()); Assert.Contains("options:", config.ToString()); Assert.Contains("attrs:", config.ToString());
-            bootstrap.DisableResolver(); Assert.Null(config.Resolver); Assert.DoesNotContain("resolver:", config.ToString());
+            Assert.Contains("resolver:", config.ToString());
+            Assert.Contains("localAddress:", config.ToString());
+            Assert.Contains("remoteAddress:", config.ToString());
+            Assert.Contains("options:", config.ToString());
+            Assert.Contains("attrs:", config.ToString());
+            bootstrap.DisableResolver();
+            Assert.Null(config.Resolver);
+            Assert.DoesNotContain("resolver:", config.ToString());
             bootstrap.Resolver<IPEndPoint>(null);
             Assert.Same(DefaultAddressResolverGroup.INSTANCE, config.Resolver);
             Assert.Contains("resolver:", config.ToString());
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Fact]
@@ -85,22 +103,36 @@ public class BootstrapConfigurationContractTest
             .Option(ChannelOption.AUTO_READ, true).ChildOption(ChannelOption.AUTO_READ, false).Attr(key, "parent").ChildAttr(key, "child");
         try
         {
-            var config = bootstrap.Config; var clone = bootstrap.Clone();
-            Assert.Same(config, bootstrap.Config); Assert.Same(parent, config.Group); Assert.Same(child, config.ChildGroup);
-            Assert.Same(handler, config.Handler); Assert.Same(childHandler, config.ChildHandler);
-            var options = config.ChildOptions; var attributes = config.ChildAttributes;
+            var config = bootstrap.Config;
+            var clone = bootstrap.Clone();
+            Assert.Same(config, bootstrap.Config);
+            Assert.Same(parent, config.Group);
+            Assert.Same(child, config.ChildGroup);
+            Assert.Same(handler, config.Handler);
+            Assert.Same(childHandler, config.ChildHandler);
+            var options = config.ChildOptions;
+            var attributes = config.ChildAttributes;
             Assert.Throws<NotSupportedException>(() => ((IDictionary<ChannelOption, object>)options).Clear());
             Assert.Throws<NotSupportedException>(() => ((IDictionary<IAttributeKey, object>)attributes).Clear());
             bootstrap.ChildOption(ChannelOption.AUTO_READ, true).ChildAttr(key, null).Attr(key, "updated");
-            Assert.Equal(false, options[ChannelOption.AUTO_READ]); Assert.Equal("child", attributes[key]);
-            Assert.Equal(true, config.ChildOptions[ChannelOption.AUTO_READ]); Assert.Empty(config.ChildAttributes);
-            Assert.Equal(false, clone.Config.ChildOptions[ChannelOption.AUTO_READ]); Assert.Equal("child", clone.Config.ChildAttributes[key]);
-            Assert.Equal("parent", clone.Config.Attributes[key]); Assert.Equal("updated", config.Attributes[key]);
-            Assert.Contains("childGroup:", config.ToString()); Assert.Contains("childOptions:", config.ToString());
+            Assert.Equal(false, options[ChannelOption.AUTO_READ]);
+            Assert.Equal("child", attributes[key]);
+            Assert.Equal(true, config.ChildOptions[ChannelOption.AUTO_READ]);
+            Assert.Empty(config.ChildAttributes);
+            Assert.Equal(false, clone.Config.ChildOptions[ChannelOption.AUTO_READ]);
+            Assert.Equal("child", clone.Config.ChildAttributes[key]);
+            Assert.Equal("parent", clone.Config.Attributes[key]);
+            Assert.Equal("updated", config.Attributes[key]);
+            Assert.Contains("childGroup:", config.ToString());
+            Assert.Contains("childOptions:", config.ToString());
             Assert.Contains("childHandler:", config.ToString());
             Assert.Equal("ServerBootstrapConfig()", new ServerBootstrap().Config.ToString());
         }
-        finally { await parent.StopAsync(); await child.StopAsync(); }
+        finally
+        {
+            await parent.StopAsync();
+            await child.StopAsync();
+        }
     }
 
     // CLR: the (InetAddress, int) overloads build new InetSocketAddress(inetHost, inetPort), whose null address is the

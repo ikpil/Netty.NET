@@ -58,8 +58,13 @@ public class AbstractEventLoopSourceTest
         }
         finally
         {
-            if (server != null) await server.CloseAsync();
-            await group.StopAsync(); await group2.StopAsync(); await executors.StopAsync();
+            if (server != null)
+            {
+                await server.CloseAsync();
+            }
+            await group.StopAsync();
+            await group2.StopAsync();
+            await executors.StopAsync();
         }
     }
 
@@ -91,8 +96,14 @@ public class AbstractEventLoopSourceTest
         }
         finally
         {
-            if (client != null) await client.CloseAsync();
-            if (server != null) await server.CloseAsync();
+            if (client != null)
+            {
+                await client.CloseAsync();
+            }
+            if (server != null)
+            {
+                await server.CloseAsync();
+            }
             await group.StopAsync();
         }
     }
@@ -116,9 +127,17 @@ public class AbstractEventLoopSourceTest
             try
             {
                 var oldLoop = outCtx.Channel.EventLoop;
-                IEventLoop next; do { next = group.Next(); } while (ReferenceEquals(next, oldLoop));
+                IEventLoop next;
+                do { next = group.Next(); } while (ReferenceEquals(next, oldLoop));
                 // Source listener callbacks run on their owner; Task continuations regain that owner explicitly.
-                if (throughChannel) await outCtx.Channel.DeregisterAsync(); else await outCtx.DeregisterAsync();
+                if (throughChannel)
+                {
+                    await outCtx.Channel.DeregisterAsync();
+                }
+                else
+                {
+                    await outCtx.DeregisterAsync();
+                }
                 await oldLoop.SubmitAsync(() => outCtx.Channel.Pipeline.FireUserEventTriggered("Unregistered user event"));
                 await next.RegisterAsync(outCtx.Channel);
                 await next.SubmitAsync(() =>
@@ -129,8 +148,12 @@ public class AbstractEventLoopSourceTest
             }
             catch (Exception error)
             {
-                if (!handedOff) ((ByteBuf)msg).Release();
-                failed(error); await outCtx.CloseAsync();
+                if (!handedOff)
+                {
+                    ((ByteBuf)msg).Release();
+                }
+                failed(error);
+                await outCtx.CloseAsync();
             }
         }
 
@@ -175,9 +198,14 @@ public class AbstractEventLoopSourceTest
                 .BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
             var shutdown = group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromMinutes(1));
             await shutdown.WaitAsync(TimeSpan.FromMilliseconds(600), TestContext.Current.CancellationToken);
-            Assert.True(shutdown.IsCompletedSuccessfully); Assert.True(group.IsShutdown()); Assert.True(group.IsTerminated());
+            Assert.True(shutdown.IsCompletedSuccessfully);
+            Assert.True(group.IsShutdown());
+            Assert.True(group.IsTerminated());
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
     private sealed class TestChannelHandler : ChannelDuplexHandler { }
     private sealed class TestChannelHandler2 : ChannelDuplexHandler

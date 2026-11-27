@@ -33,16 +33,31 @@ internal static class ChannelIdContractScenarios
                         Check(channel.Id.GetHashCode() == 0, "Embedded hash changed.");
                     }
                 }
-                finally { foreach (var channel in channels) { if (!channel.IsRegistered) channel.Register(); channel.FinishAndReleaseAll(); } }
+                finally
+                {
+                    foreach (var channel in channels) {
+                        if (!channel.IsRegistered)
+                        {
+                            channel.Register();
+                        }
+                        channel.FinishAndReleaseAll(); }
+                }
                 break;
             case 1:
                 IChannelId id = DefaultChannelId.NewInstance();
                 var custom = new EmbeddedChannel(id);
-                try { Check(ReferenceEquals(id, custom.Id), "An explicit ID was replaced."); }
-                finally { custom.FinishAndReleaseAll(); }
+                try
+                {
+                    Check(ReferenceEquals(id, custom.Id), "An explicit ID was replaced.");
+                }
+                finally
+                {
+                    custom.FinishAndReleaseAll();
+                }
                 break;
             case 2:
-                var first = new EmbeddedChannel(); var second = new EmbeddedChannel();
+                var first = new EmbeddedChannel();
+                var second = new EmbeddedChannel();
                 var group = new DefaultChannelGroup();
                 try
                 {
@@ -50,7 +65,11 @@ internal static class ChannelIdContractScenarios
                     Check(!group.Add(second), "Equal embedded IDs became separate group members.");
                     Check(group.Count == 1 && ReferenceEquals(first, group.Find(EmbeddedChannelId.Instance)), "Group ID admission changed.");
                 }
-                finally { first.FinishAndReleaseAll(); second.FinishAndReleaseAll(); }
+                finally
+                {
+                    first.FinishAndReleaseAll();
+                    second.FinishAndReleaseAll();
+                }
                 break;
             case 3:
                 var normalInstance = (EmbeddedChannelId)EmbeddedChannelId.Instance;
@@ -96,21 +115,34 @@ internal static class ChannelIdContractScenarios
                 RejectNull(() => new EmbeddedChannel((IChannelId)null).FinishAndReleaseAll());
                 RejectNull(() => new EmbeddedChannel(null, null, true, false).FinishAndReleaseAll());
                 break;
-            default: throw new ArgumentOutOfRangeException(nameof(scenario));
+            default:
+                throw new ArgumentOutOfRangeException(nameof(scenario));
         }
     }
 
     private static void RejectNull(Action action)
     {
-        try { action(); }
-        catch (ArgumentNullException) { return; }
+        try
+        {
+            action();
+        }
+        catch (ArgumentNullException)
+        {
+            return;
+        }
         throw new InvalidOperationException("An explicitly null channelId was accepted.");
     }
 
     private static void Reject(Action action)
     {
-        try { action(); }
-        catch (JsonException) { return; }
+        try
+        {
+            action();
+        }
+        catch (JsonException)
+        {
+            return;
+        }
         throw new InvalidOperationException("An invalid identity payload was accepted.");
     }
 }

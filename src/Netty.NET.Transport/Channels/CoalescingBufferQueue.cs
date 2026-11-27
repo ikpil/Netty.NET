@@ -58,7 +58,10 @@ public sealed class CoalescingBufferQueue : AbstractCoalescingBufferQueue
     protected override ByteBuf Compose(IByteBufAllocator allocator, ByteBuf cumulation, ByteBuf next)
     {
         if (cumulation is CompositeByteBuf composite)
-        { composite.AddComponent(next, true); return composite; }
+        {
+            composite.AddComponent(next, true);
+            return composite;
+        }
         return ComposeIntoComposite(allocator, cumulation, next);
     }
 

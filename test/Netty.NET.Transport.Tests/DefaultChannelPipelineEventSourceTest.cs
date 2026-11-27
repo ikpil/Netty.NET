@@ -184,8 +184,14 @@ public class DefaultChannelPipelineEventSourceTest
         var error = new TaskCompletionSource<Exception>(TaskCreationOptions.RunContinuationsAsynchronously);
         var channel = new EmbeddedChannel(new FailingInitializer(exception, error));
         try
-        { Assert.Same(exception, await error.Task.WaitAsync(TestContext.Current.CancellationToken)); Assert.False(channel.IsActive); }
-        finally { channel.FinishAndReleaseAll(); }
+        {
+            Assert.Same(exception, await error.Task.WaitAsync(TestContext.Current.CancellationToken));
+            Assert.False(channel.IsActive);
+        }
+        finally
+        {
+            channel.FinishAndReleaseAll();
+        }
     }
 
     [Fact]
@@ -205,7 +211,10 @@ public class DefaultChannelPipelineEventSourceTest
             await removed.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
             await Task.WhenAll(registration, close, deregister);
         }
-        finally { await executor.StopAsync(); }
+        finally
+        {
+            await executor.StopAsync();
+        }
     }
 
     [Fact(Timeout = 3000)]
@@ -225,7 +234,11 @@ public class DefaultChannelPipelineEventSourceTest
             await completed.Task.WaitAsync(TestContext.Current.CancellationToken);
             await registration;
         }
-        finally { await fixture.Channel.CloseAsync(); await group1.StopAsync(); }
+        finally
+        {
+            await fixture.Channel.CloseAsync();
+            await group1.StopAsync();
+        }
     }
 
     [Fact(Timeout = 3000)]
@@ -243,7 +256,11 @@ public class DefaultChannelPipelineEventSourceTest
             fixture.Channel.Pipeline.Remove("foo");
             await completed.Task.WaitAsync(TestContext.Current.CancellationToken);
         }
-        finally { await fixture.Channel.CloseAsync(); await group1.StopAsync(); }
+        finally
+        {
+            await fixture.Channel.CloseAsync();
+            await group1.StopAsync();
+        }
     }
 
     [Fact(Timeout = 3000)]
@@ -264,7 +281,11 @@ public class DefaultChannelPipelineEventSourceTest
             Assert.Null(fixture.Channel.Pipeline.Context("foo"));
             await completed.Task.WaitAsync(TestContext.Current.CancellationToken);
         }
-        finally { await fixture.Channel.CloseAsync(); await group1.StopAsync(); }
+        finally
+        {
+            await fixture.Channel.CloseAsync();
+            await group1.StopAsync();
+        }
     }
 
     [Fact(Timeout = 3000)]
@@ -324,7 +345,10 @@ public class DefaultChannelPipelineEventSourceTest
                     System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(error).Throw();
             }
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Fact(Timeout = 5000)]
@@ -366,7 +390,11 @@ public class DefaultChannelPipelineEventSourceTest
                 Assert.Null(fixture.Channel.Pipeline.Get("h" + i));
             }
         }
-        finally { await fixture.Channel.CloseAsync(); await executors.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            await fixture.Channel.CloseAsync();
+            await executors.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
+        }
     }
 
     [Fact(Timeout = 5000)]
@@ -485,7 +513,10 @@ public class DefaultChannelPipelineEventSourceTest
         {
             // A test may already have closed the channel and stopped a handler's executor. Closing again would
             // travel the not yet destroyed pipeline (destruction follows the deferred deregistration).
-            if (Channel.IsOpen) await Channel.CloseAsync();
+            if (Channel.IsOpen)
+            {
+                await Channel.CloseAsync();
+            }
             await _group.StopAsync();
         }
     }

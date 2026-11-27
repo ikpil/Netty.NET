@@ -148,7 +148,10 @@ public class NetworkDefaultsContractTest
     {
         public IInternalLogger NewInstance(string name)
         {
-            if (name == typeof(NetUtil).FullName) readDefaults();
+            if (name == typeof(NetUtil).FullName)
+            {
+                readDefaults();
+            }
             return original.NewInstance(name);
         }
     }

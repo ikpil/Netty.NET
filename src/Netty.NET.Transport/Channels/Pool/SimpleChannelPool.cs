@@ -165,8 +165,14 @@ public class SimpleChannelPool : IChannelPool
                 Task<bool> healthCheck = null;
                 await OnLoopAsync(channel, () => healthCheck = HealthChecker(channel)).ConfigureAwait(false);
                 bool healthy;
-                try { healthy = await healthCheck.ConfigureAwait(false); }
-                catch { healthy = false; }
+                try
+                {
+                    healthy = await healthCheck.ConfigureAwait(false);
+                }
+                catch
+                {
+                    healthy = false;
+                }
                 if (healthy)
                 {
                     await NotifyAcquiredAsync(channel, producer).ConfigureAwait(false);
@@ -178,10 +184,16 @@ public class SimpleChannelPool : IChannelPool
         }
         catch (Exception error)
         {
-            if (channel != null) await CloseChannelAsync(channel).ConfigureAwait(false);
+            if (channel != null)
+            {
+                await CloseChannelAsync(channel).ConfigureAwait(false);
+            }
             producer.TrySetException(error);
         }
-        finally { registration.Unregister(); }
+        finally
+        {
+            registration.Unregister();
+        }
     }
 
     private async Task NotifyAcquiredAsync(IChannel channel, TaskCompletionSource<IChannel> producer)
@@ -197,8 +209,14 @@ public class SimpleChannelPool : IChannelPool
         {
             // Promise was completed in the meantime (like cancelled), just release the channel again
             // Cleanup is observed even though the cancelled consumer no longer awaits it.
-            try { await ReleaseAsync(channel).ConfigureAwait(false); }
-            catch { /* ReleaseAsync closes the channel on failure. */ }
+            try
+            {
+                await ReleaseAsync(channel).ConfigureAwait(false);
+            }
+            catch
+            {
+                /* ReleaseAsync closes the channel on failure. */
+            }
         }
     }
 
@@ -248,7 +266,10 @@ public class SimpleChannelPool : IChannelPool
                 if (healthy)
                 {
                     //channel turns out to be healthy, offering and releasing it.
-                    if (!OfferChannel(channel)) throw new ChannelPoolFullException();
+                    if (!OfferChannel(channel))
+                    {
+                        throw new ChannelPoolFullException();
+                    }
                     Handler.ChannelReleased(channel);
                 }
                 else
@@ -269,8 +290,14 @@ public class SimpleChannelPool : IChannelPool
 
     private static Task OnLoopAsync(IChannel channel, Action action)
     {
-        if (channel is AbstractChannel native) return native.OnLoopAsync(action);
-        if (!channel.EventLoop.InEventLoop()) return channel.EventLoop.SubmitAsync(action);
+        if (channel is AbstractChannel native)
+        {
+            return native.OnLoopAsync(action);
+        }
+        if (!channel.EventLoop.InEventLoop())
+        {
+            return channel.EventLoop.SubmitAsync(action);
+        }
         action();
         return Task.CompletedTask;
     }
@@ -293,7 +320,10 @@ public class SimpleChannelPool : IChannelPool
         lock (_storageLock)
         {
             var node = _lastRecentUsed ? _channels.Last : _channels.First;
-            if (node == null) return null;
+            if (node == null)
+            {
+                return null;
+            }
             _channels.Remove(node);
             return node.Value;
         }
@@ -308,7 +338,10 @@ public class SimpleChannelPool : IChannelPool
      */
     protected virtual bool OfferChannel(IChannel channel)
     {
-        lock (_storageLock) _channels.AddLast(channel);
+        lock (_storageLock)
+        {
+            _channels.AddLast(channel);
+        }
         return true;
     }
 
@@ -323,7 +356,10 @@ public class SimpleChannelPool : IChannelPool
         for (;;)
         {
             var channel = PollChannel();
-            if (channel == null) return;
+            if (channel == null)
+            {
+                return;
+            }
             // Just ignore any errors that are reported back from close().
             await CloseChannelAsync(channel).ConfigureAwait(false);
         }

@@ -46,12 +46,21 @@ public class BlockingQueueContractTest
         Exception failure = null;
         var waiter = new Thread(() =>
         {
-            try { queue.TryTake(out _, TimeSpan.MaxValue); }
-            catch (Exception error) { failure = error; }
+            try
+            {
+                queue.TryTake(out _, TimeSpan.MaxValue);
+            }
+            catch (Exception error)
+            {
+                failure = error;
+            }
         }) { IsBackground = true };
         waiter.Start();
         if (SpinWait.SpinUntil(() => !waiter.IsAlive || (waiter.ThreadState & System.Threading.ThreadState.WaitSleepJoin) != 0,
-            TimeSpan.FromSeconds(5)) && waiter.IsAlive) waiter.Interrupt();
+            TimeSpan.FromSeconds(5)) && waiter.IsAlive)
+        {
+            waiter.Interrupt();
+        }
         Assert.True(waiter.Join(TimeSpan.FromSeconds(5)));
         Assert.IsType<ThreadInterruptedException>(failure);
     }
@@ -93,10 +102,19 @@ public class BlockingQueueContractTest
             try
             {
                 Assert.True(queue.TryPeek(out head));
-                try { Thread.Sleep(0); }
-                catch (ThreadInterruptedException) { restored = true; }
+                try
+                {
+                    Thread.Sleep(0);
+                }
+                catch (ThreadInterruptedException)
+                {
+                    restored = true;
+                }
             }
-            catch (Exception error) { failure = error; }
+            catch (Exception error)
+            {
+                failure = error;
+            }
         }) { IsBackground = true };
         lock (gate)
         {

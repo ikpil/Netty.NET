@@ -48,7 +48,10 @@ public class ManualIoPhaseContractTest
             Assert.Equal(1, loop.RunNonBlockingTasks(0));
             Assert.True(ran);
         }
-        finally { Terminate(loop); }
+        finally
+        {
+            Terminate(loop);
+        }
     }
 
     private sealed class ObservedDatagramAllocator : DefaultMaxMessagesRecvByteBufAllocator
@@ -79,7 +82,10 @@ public class ManualIoPhaseContractTest
     [InlineData(true)]
     public void ConnectedStreamCanReadWithoutPumpingOrdinaryWork(bool domain)
     {
-        if (domain) DomainSocketSourceTest.RequireDomainSockets();
+        if (domain)
+        {
+            DomainSocketSourceTest.RequireDomainSockets();
+        }
         var cancellation = TestContext.Current.CancellationToken;
         var family = domain ? AddressFamily.Unix : AddressFamily.InterNetwork;
         var protocol = domain ? ProtocolType.Unspecified : ProtocolType.Tcp;
@@ -108,7 +114,10 @@ public class ManualIoPhaseContractTest
             Assert.Equal(1, loop.RunNonBlockingTasks(0));
             Assert.True(ran);
         }
-        finally { Terminate(loop); }
+        finally
+        {
+            Terminate(loop);
+        }
     }
 
     private static int PumpUntil(ManualIoEventLoop loop, Func<bool> done)
@@ -137,7 +146,10 @@ public class ManualIoPhaseContractTest
                 ByteBuf data = msg is DatagramPacket packet ? packet.Content : (ByteBuf)msg;
                 Values.Add(data.ReadByte());
             }
-            finally { ReferenceCountUtil.Release(msg); }
+            finally
+            {
+                ReferenceCountUtil.Release(msg);
+            }
         }
     }
 }

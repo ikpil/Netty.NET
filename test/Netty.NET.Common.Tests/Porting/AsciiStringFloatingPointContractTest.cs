@@ -56,7 +56,10 @@ public class AsciiStringFloatingPointContractTest
             Assert.Equal(1.25, twice);
             Assert.False(new AsciiString("1,25").TryParseDouble(out _));
         }
-        finally { CultureInfo.CurrentCulture = previous; }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
     }
 
     [Theory]

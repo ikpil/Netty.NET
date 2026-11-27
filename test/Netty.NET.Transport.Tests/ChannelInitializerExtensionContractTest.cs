@@ -52,7 +52,10 @@ public class ChannelInitializerExtensionContractTest
         }
         finally
         {
-            if (channel != null) await channel.CloseAsync();
+            if (channel != null)
+            {
+                await channel.CloseAsync();
+            }
             await group.StopAsync();
             foreach (var registration in registrations) registration.Dispose();
         }
@@ -78,8 +81,14 @@ public class ChannelInitializerExtensionContractTest
         finally
         {
             registration.Dispose();
-            if (client != null) await client.CloseAsync();
-            if (server != null) await server.CloseAsync();
+            if (client != null)
+            {
+                await client.CloseAsync();
+            }
+            if (server != null)
+            {
+                await server.CloseAsync();
+            }
             await group.StopAsync();
         }
     }
@@ -109,9 +118,18 @@ public class ChannelInitializerExtensionContractTest
         }
         finally
         {
-            if (channel != null) await channel.CloseAsync();
-            if (client != null) await client.CloseAsync();
-            if (listener != null) await listener.CloseAsync();
+            if (channel != null)
+            {
+                await channel.CloseAsync();
+            }
+            if (client != null)
+            {
+                await client.CloseAsync();
+            }
+            if (listener != null)
+            {
+                await listener.CloseAsync();
+            }
             await group.StopAsync();
         }
     }

@@ -135,9 +135,18 @@ public class CompositeByteBufFlatteningTest
         finally
         {
             copy?.Release(); // CLR: the original temporary copy must also release its owned storage.
-            if (target.RefCnt > 0) target.Release();
-            if (source?.RefCnt > 0) source.Release();
-            if (rootOwned) root.Release();
+            if (target.RefCnt > 0)
+            {
+                target.Release();
+            }
+            if (source?.RefCnt > 0)
+            {
+                source.Release();
+            }
+            if (rootOwned)
+            {
+                root.Release();
+            }
         }
     }
 
@@ -171,7 +180,10 @@ public class CompositeByteBufFlatteningTest
         finally
         {
             outer.Release();
-            if (inner.RefCnt > 0) inner.Release();
+            if (inner.RefCnt > 0)
+            {
+                inner.Release();
+            }
         }
         Assert.Equal(0, first.RefCnt);
         Assert.Equal(0, second.RefCnt);
@@ -209,7 +221,10 @@ public class CompositeByteBufFlatteningTest
         finally
         {
             outer.Release();
-            if (inner.RefCnt > 0) inner.Release();
+            if (inner.RefCnt > 0)
+            {
+                inner.Release();
+            }
         }
         Assert.Equal(0, inner.RefCnt);
     }

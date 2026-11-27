@@ -51,7 +51,10 @@ public partial class DefaultByteBufAllocatorTest
 
         internal void Set(string key, string value)
         {
-            if (!_previous.ContainsKey(key)) _previous.Add(key, Environment.GetEnvironmentVariable(key));
+            if (!_previous.ContainsKey(key))
+            {
+                _previous.Add(key, Environment.GetEnvironmentVariable(key));
+            }
             Environment.SetEnvironmentVariable(key, value);
         }
 
@@ -99,7 +102,11 @@ public partial class DefaultByteBufAllocatorTest
 
         public void Dispose()
         {
-            try { CloseAllocators(); Assert.Equal(0, NativeBytes); }
+            try
+            {
+                CloseAllocators();
+                Assert.Equal(0, NativeBytes);
+            }
             finally
             {
                 _context.Unload();
@@ -125,13 +132,25 @@ public partial class DefaultByteBufAllocatorTest
         object b = Call(allocator, factory, 9, 64);
         try
         {
-            Assert.Equal(direct, Property<bool>(b, "IsDirect")); Assert.Equal(9, Property<int>(b, "Capacity"));
-            Assert.Same(allocator, Call(b, "Alloc")); Call(b, "WriteInt", 123456789);
+            Assert.Equal(direct, Property<bool>(b, "IsDirect"));
+            Assert.Equal(9, Property<int>(b, "Capacity"));
+            Assert.Same(allocator, Call(b, "Alloc"));
+            Call(b, "WriteInt", 123456789);
             object copy = Call(b, "Copy");
-            try { Assert.Same(allocator, Call(copy, "Alloc")); Assert.Equal(123456789, Call(copy, "GetInt", 0)); }
-            finally { Call(copy, "Release", 1); }
+            try
+            {
+                Assert.Same(allocator, Call(copy, "Alloc"));
+                Assert.Equal(123456789, Call(copy, "GetInt", 0));
+            }
+            finally
+            {
+                Call(copy, "Release", 1);
+            }
         }
-        finally { Call(b, "Release", 1); }
+        finally
+        {
+            Call(b, "Release", 1);
+        }
     }
 
     public static IEnumerable<object[]> SelectionCases()
@@ -243,7 +262,10 @@ public partial class DefaultByteBufAllocatorTest
             {
                 Assert.Equal(lowMemory ? 32768L : 262144L, Property<long>(allocator, "UsedHeapMemory"));
             }
-            finally { Call(b, "Release", 1); }
+            finally
+            {
+                Call(b, "Release", 1);
+            }
             Assert.Equal(lowMemory ? 0L : 262144L, Property<long>(allocator, "UsedHeapMemory"));
         }
     }
@@ -265,8 +287,15 @@ public partial class DefaultByteBufAllocatorTest
     {
         using var scope = new Scope("adaptive", noPreferDirect.ToString());
         object b = scope.Type("Unpooled").GetMethod("Buffer").Invoke(null, new object[] { 9, 64 });
-        try { Assert.False(Property<bool>(b, "IsDirect")); Assert.Same(scope.Singleton("UnpooledByteBufAllocator"), Call(b, "Alloc")); }
-        finally { Call(b, "Release", 1); }
+        try
+        {
+            Assert.False(Property<bool>(b, "IsDirect"));
+            Assert.Same(scope.Singleton("UnpooledByteBufAllocator"), Call(b, "Alloc"));
+        }
+        finally
+        {
+            Call(b, "Release", 1);
+        }
         Assert.Equal("AdaptiveByteBufAllocator", scope.Default.GetType().Name);
     }
 }

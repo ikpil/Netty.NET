@@ -31,13 +31,22 @@ public abstract partial class ByteBuf
     public override string ToString()
     {
         string name = StringUtil.SimpleClassName(this);
-        if (RefCnt == 0) return name + "(freed)";
+        if (RefCnt == 0)
+        {
+            return name + "(freed)";
+        }
         // CLR: invariant formatting preserves Java's decimal metadata across caller cultures.
         string result = FormattableString.Invariant($"{name}(ridx: {_readerIndex}, widx: {_writerIndex}, cap: {Capacity}");
         int maximum = DiagnosticMaxCapacity;
-        if (maximum != int.MaxValue) result += FormattableString.Invariant($"/{maximum}");
+        if (maximum != int.MaxValue)
+        {
+            result += FormattableString.Invariant($"/{maximum}");
+        }
         ByteBuf unwrapped = Unwrap();
-        if (unwrapped != null) result += ", unwrapped: " + unwrapped;
+        if (unwrapped != null)
+        {
+            result += ", unwrapped: " + unwrapped;
+        }
         return result + ')';
     }
 }

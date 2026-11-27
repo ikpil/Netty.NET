@@ -76,12 +76,21 @@ public static partial class Unpooled
         Func<T, bool> isEmpty, Func<T, ByteBuf> wrap) where T : struct
     {
         ArgumentNullException.ThrowIfNull(buffers);
-        if (buffers.Length == 1) return wrap(buffers[0]);
+        if (buffers.Length == 1)
+        {
+            return wrap(buffers[0]);
+        }
         for (int i = 0; i < buffers.Length; ++i)
         {
-            if (isEmpty(buffers[i])) continue;
+            if (isEmpty(buffers[i]))
+            {
+                continue;
+            }
             var composite = new CompositeByteBuf(maxNumComponents);
-            try { return composite.AddWrappedMemory(buffers, i, isEmpty, wrap); }
+            try
+            {
+                return composite.AddWrappedMemory(buffers, i, isEmpty, wrap);
+            }
             catch
             {
                 // CLR: only temporary wrapper references were acquired. External

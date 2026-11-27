@@ -188,8 +188,13 @@ public class ChannelEventOrderContractTest
                 .BindAsync(address);
             Task<IChannel> connect = new Bootstrap().Group(group).Channel<LocalChannel>()
                 .Handler(new ChannelInboundHandlerAdapter()).ConnectAsync(address);
-            try { (await connect).CloseAsync().GetAwaiter().GetResult(); }
-            catch (Exception) { } // The accepted peer was closed; the source reports a refused connection.
+            try
+            {
+                (await connect).CloseAsync().GetAwaiter().GetResult();
+            }
+            catch (Exception)
+            {
+            } // The accepted peer was closed; the source reports a refused connection.
             await Task.Delay(300, TestContext.Current.CancellationToken);
             await server.EventLoop.SubmitAsync(() => { });
             Assert.Empty(Snapshot(events));
@@ -243,7 +248,10 @@ public class ChannelEventOrderContractTest
     {
         public override void ChannelRegistered(IChannelHandlerContext ctx)
         {
-            if (recordRegistration) Record(events, "registered");
+            if (recordRegistration)
+            {
+                Record(events, "registered");
+            }
             ctx.FireChannelRegistered();
         }
 

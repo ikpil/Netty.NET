@@ -66,9 +66,15 @@ public sealed class InternalThreadLocalMap
     public static InternalThreadLocalMap Get()
     {
         var thread = FastThreadLocalThread.CurrentFastThreadLocalThread();
-        if (thread == null) return SlowGet();
+        if (thread == null)
+        {
+            return SlowGet();
+        }
         var map = thread.ThreadLocalMap();
-        if (map == null) thread.SetThreadLocalMap(map = new InternalThreadLocalMap());
+        if (map == null)
+        {
+            thread.SetThreadLocalMap(map = new InternalThreadLocalMap());
+        }
         return map;
     }
 
@@ -87,8 +93,14 @@ public sealed class InternalThreadLocalMap
     public static void Remove()
     {
         var thread = FastThreadLocalThread.CurrentFastThreadLocalThread();
-        if (thread == null) _slowThreadLocalMap = null;
-        else thread.SetThreadLocalMap(null);
+        if (thread == null)
+        {
+            _slowThreadLocalMap = null;
+        }
+        else
+        {
+            thread.SetThreadLocalMap(null);
+        }
     }
 
     public static void Destroy()

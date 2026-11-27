@@ -95,7 +95,10 @@ public partial class DefaultByteBufAllocatorTest
                 Call(live, "WriteByte", 71);
                 Assert.Equal(512, scope.NativeBytes);
             }
-            catch (Exception e) { failure = e; }
+            catch (Exception e)
+            {
+                failure = e;
+            }
         };
         Type type = scope._common.GetType("Netty.NET.Common.Concurrent.FastThreadLocalThread", true);
         object fast = Activator.CreateInstance(type, work, null, 0, null);

@@ -27,15 +27,24 @@ public class UnreleasableByteBufTest
 {
     private static ByteBuf NewOwner(int kind)
     {
-        if (kind == 0) return Unpooled.Buffer(8, 64);
-        if (kind == 1) return Unpooled.DirectBuffer(8, 64);
+        if (kind == 0)
+        {
+            return Unpooled.Buffer(8, 64);
+        }
+        if (kind == 1)
+        {
+            return Unpooled.DirectBuffer(8, 64);
+        }
         return new CompositeByteBuf().AddComponent(Unpooled.Buffer(4).WriteZero(4), true)
             .AddComponent(Unpooled.Buffer(4).WriteZero(4), true).Clear();
     }
 
     private static void Free(ByteBuf owner)
     {
-        if (owner.RefCnt > 0) owner.Release(owner.RefCnt);
+        if (owner.RefCnt > 0)
+        {
+            owner.Release(owner.RefCnt);
+        }
     }
 
     [Fact]
@@ -57,7 +66,10 @@ public class UnreleasableByteBufTest
             Assert.True(buffer.Unwrap().Release());
             Assert.Equal(0, buffer.RefCnt);
         }
-        finally { Free(owner); }
+        finally
+        {
+            Free(owner);
+        }
     }
 
     [Fact]
@@ -70,7 +82,10 @@ public class UnreleasableByteBufTest
             Assert.Same(buffer, buffer.AsReadOnly());
             Assert.True(buffer.Unwrap().Release());
         }
-        finally { Free(owner); }
+        finally
+        {
+            Free(owner);
+        }
     }
 
     public static IEnumerable<object[]> RetainedViews()
@@ -108,7 +123,10 @@ public class UnreleasableByteBufTest
             Assert.Equal(0, owner.RefCnt);
             Assert.Throws<IllegalReferenceCountException>(() => third.AsReadOnlyMemory(0, 0));
         }
-        finally { Free(owner); }
+        finally
+        {
+            Free(owner);
+        }
     }
 
     [Theory]
@@ -146,7 +164,10 @@ public class UnreleasableByteBufTest
             Assert.Equal(0x12345678, owner.ReadInt());
             Assert.Equal(4, buffer.ReaderIndex);
         }
-        finally { Free(owner); }
+        finally
+        {
+            Free(owner);
+        }
     }
 
     [Theory]
@@ -184,7 +205,10 @@ public class UnreleasableByteBufTest
                 Assert.Throws<IllegalReferenceCountException>(() => view.AsReadOnlyMemory(0, 0));
             }
         }
-        finally { Free(owner); }
+        finally
+        {
+            Free(owner);
+        }
     }
 
     [Theory]
@@ -217,7 +241,10 @@ public class UnreleasableByteBufTest
             Assert.False(second.Release());
             Assert.Equal(0, second.RefCnt);
         }
-        finally { Free(owner); }
+        finally
+        {
+            Free(owner);
+        }
     }
 
     [Theory]
@@ -239,10 +266,17 @@ public class UnreleasableByteBufTest
             Assert.True(owner.Release());
             Assert.Equal(new byte[] { 2, 3 }, copy.ReadableSequence.ToArray());
             Assert.Equal(new byte[] { 1, 2 }, read.ReadableSequence.ToArray());
-            Assert.True(copy.Release()); copy = null;
-            Assert.True(read.Release()); read = null;
+            Assert.True(copy.Release());
+            copy = null;
+            Assert.True(read.Release());
+            read = null;
         }
-        finally { copy?.Release(); read?.Release(); Free(owner); }
+        finally
+        {
+            copy?.Release();
+            read?.Release();
+            Free(owner);
+        }
     }
 
     [Fact]
@@ -264,7 +298,10 @@ public class UnreleasableByteBufTest
             Assert.Equal(0, owner.ReaderIndex);
             Assert.Equal(new byte[] { 4, 5, 6 }, buffer.ReadableSequence.ToArray());
         }
-        finally { Free(owner); }
+        finally
+        {
+            Free(owner);
+        }
         Assert.Equal(0, second.RefCnt);
         Assert.Equal(0, third.RefCnt);
     }
@@ -289,7 +326,10 @@ public class UnreleasableByteBufTest
             Assert.False(buffer.Release());
             Assert.Equal(3, allocator.ReservedBytes);
         }
-        finally { Free(owner); }
+        finally
+        {
+            Free(owner);
+        }
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -306,7 +346,11 @@ public class UnreleasableByteBufTest
             Assert.Equal(1, owner.RefCnt);
             Assert.Equal(0x01020304, owner.GetInt(0));
         }
-        finally { Free(composite); Free(owner); }
+        finally
+        {
+            Free(composite);
+            Free(owner);
+        }
     }
 
     [Fact]
@@ -345,7 +389,10 @@ public class UnreleasableByteBufTest
             Assert.Equal(0, owner.TouchCalls);
             Assert.Equal(1, owner.RefCnt);
         }
-        finally { Free(owner); }
+        finally
+        {
+            Free(owner);
+        }
     }
 
     [Theory]
@@ -366,7 +413,10 @@ public class UnreleasableByteBufTest
             Assert.Equal(4, owner.WriterIndex);
             Assert.Equal(1, owner.RefCnt);
         }
-        finally { Free(owner); }
+        finally
+        {
+            Free(owner);
+        }
     }
 
     [Theory]
@@ -392,7 +442,11 @@ public class UnreleasableByteBufTest
             Assert.Equal(1, owner.RefCnt);
             Assert.Equal(1, destination.RefCnt);
         }
-        finally { Free(owner); Free(destination); }
+        finally
+        {
+            Free(owner);
+            Free(destination);
+        }
     }
 
     private sealed class ObservedHeapByteBuf : UnpooledHeapByteBuf
@@ -439,9 +493,15 @@ public class UnreleasableByteBufTest
                     Assert.Equal(4, source.WriterIndex);
                     Assert.Equal(1, owner.RefCnt);
                 }
-                finally { Assert.True(copy.Release()); }
+                finally
+                {
+                    Assert.True(copy.Release());
+                }
             }
         }
-        finally { Free(owner); }
+        finally
+        {
+            Free(owner);
+        }
     }
 }

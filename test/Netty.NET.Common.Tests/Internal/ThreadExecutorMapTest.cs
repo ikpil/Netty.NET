@@ -115,8 +115,14 @@ public class ThreadExecutorMapTest
         Exception failure = null;
         Thread thread = threadFactory.NewThread(() =>
         {
-            try { Assert.Same(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.CurrentExecutor()); }
-            catch (Exception exception) { failure = exception; }
+            try
+            {
+                Assert.Same(ImmediateEventExecutor.INSTANCE, ThreadExecutorMap.CurrentExecutor());
+            }
+            catch (Exception exception)
+            {
+                failure = exception;
+            }
         });
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(5)));

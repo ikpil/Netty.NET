@@ -33,9 +33,15 @@ public partial class AdaptiveByteBufKernelTest
         public readonly List<(string Method, int Index, int Width, object Peer)> Calls = [];
         public void Visit(string method, int index, int width, object peer = null)
         {
-            if (!Enabled) return;
+            if (!Enabled)
+            {
+                return;
+            }
             Calls.Add((method, index, width, peer));
-            if (Fail) throw Failure;
+            if (Fail)
+            {
+                throw Failure;
+            }
         }
     }
     private sealed class HeapProbe(Observation o, int size, int max) : UnpooledHeapByteBuf(size, max)
@@ -311,6 +317,10 @@ public partial class AdaptiveByteBufKernelTest
             Assert.Equal(1, s.Guard.RefCnt);
             Assert.Equal(1, s.Raw[^1].RefCnt);
         }
-        finally { s.Observation.Enabled = false; peer.Release(); }
+        finally
+        {
+            s.Observation.Enabled = false;
+            peer.Release();
+        }
     }
 }

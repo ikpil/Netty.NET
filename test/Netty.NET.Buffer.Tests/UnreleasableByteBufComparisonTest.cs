@@ -77,7 +77,10 @@ public class UnreleasableByteBufComparisonTest
 
         public void Dispose()
         {
-            if (Root.RefCnt > 0) Assert.True(_tracked.Release());
+            if (Root.RefCnt > 0)
+            {
+                Assert.True(_tracked.Release());
+            }
             Assert.Equal(0, Root.RefCnt);
             Assert.Equal(_expectedCloses, Tracker.Closes);
             Assert.Equal(0, Native.ReservedBytes);
@@ -112,14 +115,17 @@ public class UnreleasableByteBufComparisonTest
             Assert.False(facade.Equals((object)null));
             Assert.False(facade.Equals(new object()));
             Assert.Equal(1, facade.CompareTo(null));
-            peer.SetByte(1, 9); Assert.True(facade.CompareTo(peer) < 0);
-            peer.SetByte(1, 0); Assert.True(facade.CompareTo(peer) > 0);
+            peer.SetByte(1, 9);
+            Assert.True(facade.CompareTo(peer) < 0);
+            peer.SetByte(1, 0);
+            Assert.True(facade.CompareTo(peer) > 0);
             peer.SetByte(1, 1);
             var set = new HashSet<ByteBuf> { facade };
             var dictionary = new Dictionary<ByteBuf, string> { [facade] = "value" };
             Assert.Contains(peer, set);
             Assert.Equal("value", dictionary[peer]);
-            set.Clear(); dictionary.Clear();
+            set.Clear();
+            dictionary.Clear();
             Assert.Equal(0, storage.Tracker.Records);
             Assert.Equal(0, storage.Tracker.Closes);
             Assert.Equal(1, storage.Root.RefCnt);
@@ -130,7 +136,10 @@ public class UnreleasableByteBufComparisonTest
             Assert.Equal(1, storage.Root.ReaderIndex);
             Assert.Equal(9, storage.Root.WriterIndex);
         }
-        finally { peer.Release(); }
+        finally
+        {
+            peer.Release();
+        }
     }
 
     [Theory]
@@ -158,7 +167,10 @@ public class UnreleasableByteBufComparisonTest
             Assert.Equal(0, facade.RefCnt);
             Assert.False(facade.Release());
         }
-        finally { peer.Release(); }
+        finally
+        {
+            peer.Release();
+        }
     }
 
     private sealed class ObservedHeap : UnpooledHeapByteBuf
@@ -205,16 +217,28 @@ public class UnreleasableByteBufComparisonTest
         {
             switch (operation)
             {
-                case 0: Assert.Equal(608462917, facade.GetHashCode()); break;
-                case 1: Assert.True(facade.Equals(peer)); break;
-                case 2: Assert.True(facade.Equals((object)peer)); break;
-                case 3: Assert.Equal(0, facade.CompareTo(peer)); break;
+                case 0:
+                    Assert.Equal(608462917, facade.GetHashCode());
+                    break;
+                case 1:
+                    Assert.True(facade.Equals(peer));
+                    break;
+                case 2:
+                    Assert.True(facade.Equals((object)peer));
+                    break;
+                case 3:
+                    Assert.Equal(0, facade.CompareTo(peer));
+                    break;
             }
             Assert.Equal(operation == 0 ? 1 : 0, root.HashCalls);
             Assert.Equal(operation == 2 ? 1 : 0, root.ObjectCalls);
             Assert.Equal(operation is 1 or 2 ? 1 : 0, root.TypedCalls);
             Assert.Equal(operation == 3 ? 1 : 0, root.CompareCalls);
         }
-        finally { root.Release(); peer.Release(); }
+        finally
+        {
+            root.Release();
+            peer.Release();
+        }
     }
 }

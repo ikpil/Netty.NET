@@ -30,6 +30,9 @@ public class JdkLoggerFactoryTest
             Assert.IsType<InternalDefaultLogger>(logger);
             Assert.Equal("foo", logger.Name());
         }
-        finally { factory.Dispose(); }
+        finally
+        {
+            factory.Dispose();
+        }
     }
 }

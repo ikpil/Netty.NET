@@ -54,7 +54,10 @@ public sealed class ExecutorCompletion : IDisposable
         if (!operation.IsCompleted)
             operation.ConfigureAwait(false).GetAwaiter().UnsafeOnCompleted(() =>
             {
-                if (weak.TryGetTarget(out var observation)) observation.OperationCompleted();
+                if (weak.TryGetTarget(out var observation))
+                {
+                    observation.OperationCompleted();
+                }
             });
     }
 
@@ -85,21 +88,33 @@ public sealed class ExecutorCompletion : IDisposable
             registration.Node = _pending.AddLast(registration);
             schedule = PrepareDrain();
         }
-        if (schedule != null) ScheduleDrain(schedule);
+        if (schedule != null)
+        {
+            ScheduleDrain(schedule);
+        }
         return registration;
     }
 
     private DrainReservation PrepareDrain()
     {
-        if (_closed || _drain != null || _pending.Count == 0 || !_operation.IsCompleted) return null;
+        if (_closed || _drain != null || _pending.Count == 0 || !_operation.IsCompleted)
+        {
+            return null;
+        }
         return _drain = new DrainReservation(this);
     }
 
     private void OperationCompleted()
     {
         DrainReservation schedule;
-        lock (_gate) schedule = PrepareDrain();
-        if (schedule != null) ScheduleDrain(schedule);
+        lock (_gate)
+        {
+            schedule = PrepareDrain();
+        }
+        if (schedule != null)
+        {
+            ScheduleDrain(schedule);
+        }
     }
 
     private void ScheduleDrain(DrainReservation reservation)
@@ -107,17 +122,29 @@ public sealed class ExecutorCompletion : IDisposable
         IEventExecutor executor;
         lock (_gate)
         {
-            if (_closed || _drain != reservation) return;
+            if (_closed || _drain != reservation)
+            {
+                return;
+            }
             executor = _executor;
         }
         try
         {
             // The shared CLR thread counter also bounds chains between different observations.
             // Like DefaultPromise, an executor must bound reentrant execute() at the dispatch boundary.
-            if (executor.InEventLoop() && ExecutorNotificationScope.CanInline) reservation.Run();
-            else executor.Execute(reservation);
+            if (executor.InEventLoop() && ExecutorNotificationScope.CanInline)
+            {
+                reservation.Run();
+            }
+            else
+            {
+                executor.Execute(reservation);
+            }
         }
-        catch (Exception error) { reservation.Reject(error); }
+        catch (Exception error)
+        {
+            reservation.Reject(error);
+        }
     }
 
     private void Drain(DrainReservation reservation)
@@ -133,7 +160,10 @@ public sealed class ExecutorCompletion : IDisposable
                 // CLR: the unique reservation and gate serialize snapshots on every executor.
                 if (_closed || _drain != reservation || _pending.Count == 0)
                 {
-                    if (_drain == reservation) _drain = null;
+                    if (_drain == reservation)
+                    {
+                        _drain = null;
+                    }
                     return;
                 }
                 batch = new CompletionRegistration[_pending.Count];
@@ -157,7 +187,10 @@ public sealed class ExecutorCompletion : IDisposable
                         ExecutionContext.Run(NativeScheduledWork<object>.CaptureExecutorContext(),
                             _ => callback(operation), null);
                     }
-                    catch (Exception error) { Logger.Warn("An exception was thrown by a completion observer.", error); }
+                    catch (Exception error)
+                    {
+                        Logger.Warn("An exception was thrown by a completion observer.", error);
+                    }
                 }
                 registration.Finish(null, false);
             }
@@ -171,7 +204,10 @@ public sealed class ExecutorCompletion : IDisposable
     {
         lock (_gate)
         {
-            if (registration.Node == null) return; // Claimed snapshots retain their invocation right.
+            if (registration.Node == null)
+            {
+                return; // Claimed snapshots retain their invocation right.
+            }
             _pending.Remove(registration.Node);
             registration.Node = null;
             registration.Finish(null, true);
@@ -182,19 +218,28 @@ public sealed class ExecutorCompletion : IDisposable
     {
         lock (_gate)
         {
-            if (_drain != reservation) return;
+            if (_drain != reservation)
+            {
+                return;
+            }
             Close(error);
         }
     }
 
     public void Dispose()
     {
-        lock (_gate) Close(null);
+        lock (_gate)
+        {
+            Close(null);
+        }
     }
 
     private void Close(Exception error)
     {
-        if (_closed) return;
+        if (_closed)
+        {
+            return;
+        }
         _closed = true;
         _drain = null;
         foreach (var registration in _pending)
@@ -264,8 +309,17 @@ public sealed class CompletionRegistration : IDisposable
     {
         Callback = null;
         Volatile.Write(ref _owner, null);
-        if (error != null) _notification.TrySetException(error);
-        else if (canceled) _notification.TrySetCanceled();
-        else _notification.TrySetResult();
+        if (error != null)
+        {
+            _notification.TrySetException(error);
+        }
+        else if (canceled)
+        {
+            _notification.TrySetCanceled();
+        }
+        else
+        {
+            _notification.TrySetResult();
+        }
     }
 }

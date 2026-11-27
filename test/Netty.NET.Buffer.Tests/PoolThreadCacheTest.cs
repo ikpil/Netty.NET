@@ -404,8 +404,15 @@ public class PoolThreadCacheTest
             {
                 foreach (var command in _queue.GetConsumingEnumerable())
                 {
-                    try { command.Action(); command.Completion.SetResult(); }
-                    catch (Exception error) { command.Completion.SetException(error); }
+                    try
+                    {
+                        command.Action();
+                        command.Completion.SetResult();
+                    }
+                    catch (Exception error)
+                    {
+                        command.Completion.SetException(error);
+                    }
                 }
             }) { IsBackground = true };
             _thread.Start();

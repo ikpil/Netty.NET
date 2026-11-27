@@ -30,8 +30,14 @@ public class ByteBufDerivationTest
         var native = new NativeMemoryAllocator();
         ByteBuf root = direct ? new UnpooledDirectByteBuf(capacity, capacity * 2, native) : new UnpooledHeapByteBuf(capacity, capacity * 2);
         root.WriteBytes(Enumerable.Range(0, capacity).Select(i => unchecked((byte)i)).ToArray());
-        try { test(root); }
-        finally { root.Release(); }
+        try
+        {
+            test(root);
+        }
+        finally
+        {
+            root.Release();
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -132,7 +138,12 @@ public class ByteBufDerivationTest
     private static int Depth(ByteBuf buffer)
     {
         int depth = 0;
-        while (buffer.Unwrap() is { } parent) { if (++depth > 4) break; buffer = parent; }
+        while (buffer.Unwrap() is { } parent) {
+            if (++depth > 4)
+            {
+                break;
+            }
+            buffer = parent; }
         return depth;
     }
 
@@ -160,10 +171,19 @@ public class ByteBufDerivationTest
                 random = unchecked(random * 1664525 + 1013904223);
                 switch ((random >> 16) % 4)
                 {
-                    case 0: derived = derived.Slice(1, derived.Capacity - 1); offset++; break;
-                    case 1: derived = derived.Duplicate(); break;
-                    case 2: little = !little; break;
-                    case 3: derived = new ReadOnlyByteBuf(derived); break;
+                    case 0:
+                        derived = derived.Slice(1, derived.Capacity - 1);
+                        offset++;
+                        break;
+                    case 1:
+                        derived = derived.Duplicate();
+                        break;
+                    case 2:
+                        little = !little;
+                        break;
+                    case 3:
+                        derived = new ReadOnlyByteBuf(derived);
+                        break;
                 }
                 byte[] bytes = Enumerable.Range(offset, 4).Select(value => unchecked((byte)value)).ToArray();
                 long expected = 0; foreach (byte value in little ? bytes.Reverse() : bytes) expected = (expected << 8) | value;
@@ -257,7 +277,15 @@ public class ByteBufDerivationTest
             Assert.Throws<IllegalReferenceCountException>(() => borrowed.GetByte(0));
             Assert.Equal(1, root.GetByte(0));
         }
-        finally { if (owner.RefCnt > 0) owner.Release(owner.RefCnt); root.Release(); allocator.Dispose(); }
+        finally
+        {
+            if (owner.RefCnt > 0)
+            {
+                owner.Release(owner.RefCnt);
+            }
+            root.Release();
+            allocator.Dispose();
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -284,7 +312,13 @@ public class ByteBufDerivationTest
             Assert.Equal(0, root.RefCnt);
             Assert.Throws<IllegalReferenceCountException>(() => derived.GetByte(0));
         }
-        finally { if (root.RefCnt > 0) root.Release(root.RefCnt); }
+        finally
+        {
+            if (root.RefCnt > 0)
+            {
+                root.Release(root.RefCnt);
+            }
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 

@@ -48,7 +48,10 @@ public class UnorderedWorkerIdentityContractTest
         var factory = new Factory(task => worker = new Thread(() =>
         {
             prefixAffinity = executor.InEventLoop();
-            try { task.Invoke(); }
+            try
+            {
+                task.Invoke();
+            }
             finally
             {
                 suffixAffinity = executor.InEventLoop();
@@ -77,7 +80,10 @@ public class UnorderedWorkerIdentityContractTest
         {
             _ = executor.StopAsync();
             Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
-            if (worker != null) Assert.True(worker.Join(TimeSpan.FromSeconds(5)));
+            if (worker != null)
+            {
+                Assert.True(worker.Join(TimeSpan.FromSeconds(5)));
+            }
         }
     }
 

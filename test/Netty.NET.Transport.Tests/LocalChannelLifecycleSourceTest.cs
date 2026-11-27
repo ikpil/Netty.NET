@@ -57,7 +57,11 @@ public partial class LocalChannelSourceTest
             // CLR: also observe the transport override itself.
             Assert.Equal(0, client.WriteAttempts);
         }
-        finally { await CloseChannel(client); await CloseChannel(server); }
+        finally
+        {
+            await CloseChannel(client);
+            await CloseChannel(server);
+        }
     }
 
     [Fact]
@@ -76,7 +80,11 @@ public partial class LocalChannelSourceTest
             _ = client.WriteAndFlushAsync(new object());
             await latch.Task.WaitAsync(TimeSpan.FromSeconds(5));
         }
-        finally { await CloseChannel(client); await CloseChannel(server); }
+        finally
+        {
+            await CloseChannel(client);
+            await CloseChannel(server);
+        }
     }
 
     [Fact]
@@ -126,7 +134,11 @@ public partial class LocalChannelSourceTest
             client = await cb.ConnectAsync(server.LocalAddress);
             await client.DeregisterAsync();
         }
-        finally { await CloseChannel(client); await CloseChannel(server); }
+        finally
+        {
+            await CloseChannel(client);
+            await CloseChannel(server);
+        }
     }
 
     [Fact(Timeout = 3000)]
@@ -155,7 +167,11 @@ public partial class LocalChannelSourceTest
             await connect;
             Assert.True(connect.IsCompletedSuccessfully);
         }
-        finally { await CloseChannel(client); await CloseChannel(server); }
+        finally
+        {
+            await CloseChannel(client);
+            await CloseChannel(server);
+        }
     }
 
     [Fact]
@@ -180,7 +196,12 @@ public partial class LocalChannelSourceTest
             await close;
             Assert.True(close.IsCompletedSuccessfully);
         }
-        finally { await CloseChannel(client); await CloseChannel(server); await ObserveCompletion(connection, TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            await CloseChannel(client);
+            await CloseChannel(server);
+            await ObserveCompletion(connection, TimeSpan.FromSeconds(5));
+        }
     }
 
     [Fact]
@@ -202,7 +223,12 @@ public partial class LocalChannelSourceTest
             await Assert.ThrowsAnyAsync<ClosedChannelException>(() => connection.WaitAsync(TimeSpan.FromSeconds(5)));
             Assert.True(connection.IsCompleted);
         }
-        finally { await CloseChannel(client); await CloseChannel(server); await ObserveCompletion(connection, TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            await CloseChannel(client);
+            await CloseChannel(server);
+            await ObserveCompletion(connection, TimeSpan.FromSeconds(5));
+        }
     }
 
     [Fact]
@@ -228,7 +254,12 @@ public partial class LocalChannelSourceTest
             Assert.False(client.IsOpen);
             Assert.False(client.IsActive);
         }
-        finally { await CloseChannel(client); await CloseChannel(server); await ObserveCompletion(connection, TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            await CloseChannel(client);
+            await CloseChannel(server);
+            await ObserveCompletion(connection, TimeSpan.FromSeconds(5));
+        }
     }
 
     [Fact]
@@ -291,7 +322,12 @@ public partial class LocalChannelSourceTest
             await close;
             Assert.True(close.IsCompletedSuccessfully);
         }
-        finally { await CloseChannel(client); await CloseChannel(server); await ObserveCompletion(connection, TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            await CloseChannel(client);
+            await CloseChannel(server);
+            await ObserveCompletion(connection, TimeSpan.FromSeconds(5));
+        }
     }
 
     // Client and server share the single event loop of sharedGroup, so the connection is queued by the time
@@ -312,8 +348,13 @@ public partial class LocalChannelSourceTest
     private static async Task ObserveCompletion(Task task, TimeSpan timeout)
     {
         try
-        { await task.WaitAsync(timeout); }
-        catch when (task.IsCompleted) { /* Source Future.await() observes completion without requiring success. */ }
+        {
+            await task.WaitAsync(timeout);
+        }
+        catch when (task.IsCompleted)
+        {
+            /* Source Future.await() observes completion without requiring success. */
+        }
     }
     private sealed class CountingWriteLocalChannel : LocalChannel
     {

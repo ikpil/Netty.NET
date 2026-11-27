@@ -43,8 +43,14 @@ public class ByteBufOutputStreamTest : IDisposable
 
     private ByteBuf Owner(int kind, int maximum = 100000)
     {
-        if (kind == 0) return Unpooled.Buffer(0, maximum);
-        if (kind == 1) return Unpooled.DirectBuffer(0, maximum);
+        if (kind == 0)
+        {
+            return Unpooled.Buffer(0, maximum);
+        }
+        if (kind == 1)
+        {
+            return Unpooled.DirectBuffer(0, maximum);
+        }
         if (kind is 3 or 4)
         {
             _pooled ??= new PooledByteBufAllocator(nativeAllocator: _native, maxOrder: 1,
@@ -144,7 +150,10 @@ public class ByteBufOutputStreamTest : IDisposable
             Assert.Equal(count, input.BytesRead);
             Assert.Equal(1, buffer.RefCnt);
         }
-        finally { Assert.True(buffer.Release()); }
+        finally
+        {
+            Assert.True(buffer.Release());
+        }
     }
 
     [Theory]
@@ -260,7 +269,10 @@ public class ByteBufOutputStreamTest : IDisposable
             Assert.Same(buffer, output.Buffer);
             Assert.Throws<ObjectDisposedException>(() => output.Flush());
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Theory]

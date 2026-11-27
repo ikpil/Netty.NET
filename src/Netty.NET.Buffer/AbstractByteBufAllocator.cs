@@ -37,7 +37,10 @@ public abstract class AbstractByteBufAllocator : IByteBufAllocator
         try
         {
             leak = ByteBuf.LeakDetector.Track(buffer);
-            if (leak == null) return buffer;
+            if (leak == null)
+            {
+                return buffer;
+            }
             return ByteBuf.LeakDetector.IsRecordEnabled()
                 ? new AdvancedLeakAwareByteBuf(buffer, leak) : new SimpleLeakAwareByteBuf(buffer, leak);
         }
@@ -54,7 +57,10 @@ public abstract class AbstractByteBufAllocator : IByteBufAllocator
         try
         {
             leak = ByteBuf.LeakDetector.Track(buffer);
-            if (leak == null) return buffer;
+            if (leak == null)
+            {
+                return buffer;
+            }
             return ByteBuf.LeakDetector.IsRecordEnabled()
                 ? new AdvancedLeakAwareCompositeByteBuf(buffer, leak) : new SimpleLeakAwareCompositeByteBuf(buffer, leak);
         }
@@ -69,7 +75,13 @@ public abstract class AbstractByteBufAllocator : IByteBufAllocator
     {
         // CLR: a failed factory result cannot reach the caller. Close any tracker and
         // return the owned reservation without replacing the original detector failure.
-        try { leak?.Close(buffer); } catch { }
+        try
+        {
+            leak?.Close(buffer);
+        }
+        catch
+        {
+        }
         ReferenceCountUtil.SafeRelease(buffer);
     }
 
@@ -140,7 +152,10 @@ public abstract class AbstractByteBufAllocator : IByteBufAllocator
     private static void Validate(int initialCapacity, int maxCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(initialCapacity);
-        if (initialCapacity > maxCapacity) throw new ArgumentOutOfRangeException(nameof(initialCapacity));
+        if (initialCapacity > maxCapacity)
+        {
+            throw new ArgumentOutOfRangeException(nameof(initialCapacity));
+        }
     }
 
     /**

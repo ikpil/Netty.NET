@@ -610,9 +610,15 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
                 int written = JavaChannel().Send(staging, 0, position, SocketFlags.None, out SocketError error);
                 return SocketWriteResult(written, error);
             }
-            finally { ArrayPool<byte>.Shared.Return(staging); }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(staging);
+            }
         }
-        finally { segments.Clear(); }
+        finally
+        {
+            segments.Clear();
+        }
     }
 
     // Non-blocking send of FileRegion bytes; WouldBlock writes zero bytes.
@@ -728,10 +734,17 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
         try
         {
             // SO_LINGER=0 is an abortive close. Sending FIN first would change the peer's reset semantics.
-            if (JavaChannel().Connected && (JavaChannel().AddressFamily == AddressFamily.Unix || JavaChannel().LingerState is not { Enabled: true, LingerTime: 0 })) JavaChannel().Shutdown(SocketShutdown.Both);
+            if (JavaChannel().Connected && (JavaChannel().AddressFamily == AddressFamily.Unix || JavaChannel().LingerState is not { Enabled: true, LingerTime: 0 }))
+            {
+                JavaChannel().Shutdown(SocketShutdown.Both);
+            }
         }
-        catch (SocketException) { }
-        catch (ObjectDisposedException) { }
+        catch (SocketException)
+        {
+        }
+        catch (ObjectDisposedException)
+        {
+        }
         finally
         {
             JavaChannel().Dispose();
@@ -760,11 +773,25 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
     public async Task ShutdownAsync()
     {
         Exception outputFailure = null;
-        try { await ShutdownOutputAsync().ConfigureAwait(false); }
-        catch (Exception error) { outputFailure = error; }
-        try { await ShutdownInputAsync().ConfigureAwait(false); }
-        catch (Exception) when (outputFailure != null) { }
-        if (outputFailure != null) ExceptionDispatchInfo.Capture(outputFailure).Throw();
+        try
+        {
+            await ShutdownOutputAsync().ConfigureAwait(false);
+        }
+        catch (Exception error)
+        {
+            outputFailure = error;
+        }
+        try
+        {
+            await ShutdownInputAsync().ConfigureAwait(false);
+        }
+        catch (Exception) when (outputFailure != null)
+        {
+        }
+        if (outputFailure != null)
+        {
+            ExceptionDispatchInfo.Capture(outputFailure).Throw();
+        }
     }
 
     // CLR: the Stream target of a non-DefaultFileRegion. Each write is offered to the non-blocking socket; what the

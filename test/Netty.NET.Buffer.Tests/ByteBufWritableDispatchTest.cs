@@ -126,7 +126,10 @@ public class ByteBufWritableDispatchTest
         public int Calls => Owner switch { Heap h => h.Calls, Direct d => d.Calls, Composite c => c.Calls, _ => -1 };
         public void Dispose()
         {
-            if (Owner.RefCnt > 0) Assert.True(_tracked.Release());
+            if (Owner.RefCnt > 0)
+            {
+                Assert.True(_tracked.Release());
+            }
             Assert.Equal(0, Owner.RefCnt);
             Assert.Equal(1, Tracker.Closes);
             Assert.Equal(0, Native.ReservedBytes);
@@ -153,11 +156,20 @@ public class ByteBufWritableDispatchTest
         {
             Assert.Throws<ArgumentOutOfRangeException>(() =>
             {
-                if (operation <= 3) storage.Facade.EnsureWritable(minimum);
-                else storage.Facade.EnsureWritable(minimum, true);
+                if (operation <= 3)
+                {
+                    storage.Facade.EnsureWritable(minimum);
+                }
+                else
+                {
+                    storage.Facade.EnsureWritable(minimum, true);
+                }
             });
         }
-        else if (operation <= 3) Assert.Same(storage.Facade, storage.Facade.EnsureWritable(minimum));
+        else if (operation <= 3)
+        {
+            Assert.Same(storage.Facade, storage.Facade.EnsureWritable(minimum));
+        }
         else
         {
             int expectedCode = operation == 4 ? 0 : operation == 6 && backing != 2 ? 1
@@ -185,8 +197,14 @@ public class ByteBufWritableDispatchTest
         Assert.Equal(8, storage.Native.ReservedBytes);
         Assert.Throws<OutOfDirectMemoryError>(() =>
         {
-            if (mode == 0) storage.Facade.EnsureWritable(6);
-            else storage.Facade.EnsureWritable(6, mode == 2);
+            if (mode == 0)
+            {
+                storage.Facade.EnsureWritable(6);
+            }
+            else
+            {
+                storage.Facade.EnsureWritable(6, mode == 2);
+            }
         });
         Assert.Equal(1, storage.Calls);
         Assert.Equal(1, storage.Tracker.Records);

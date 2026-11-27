@@ -15,7 +15,11 @@ public class NativeRejectionContractTest
         protected internal override void Wakeup(bool inEventLoop)
         {
             base.Wakeup(inEventLoop);
-            if (!inEventLoop && OnWake != null) { WakeCalls++; OnWake(); }
+            if (!inEventLoop && OnWake != null)
+            {
+                WakeCalls++;
+                OnWake();
+            }
         }
 
         protected override void Run()
@@ -23,8 +27,15 @@ public class NativeRejectionContractTest
             for (;;)
             {
                 var task = TakeTask();
-                if (task != null) { SafeExecute(task); UpdateLastExecutionTime(); }
-                if (ConfirmShutdown()) return;
+                if (task != null)
+                {
+                    SafeExecute(task);
+                    UpdateLastExecutionTime();
+                }
+                if (ConfirmShutdown())
+                {
+                    return;
+                }
             }
         }
     }
@@ -70,7 +81,11 @@ public class NativeRejectionContractTest
             Assert.Equal(16, executor.PendingTasks());
             Assert.Equal(0, calls);
         }
-        finally { release.Set(); await Stop(executor); }
+        finally
+        {
+            release.Set();
+            await Stop(executor);
+        }
     }
 
     [Fact]
@@ -87,7 +102,13 @@ public class NativeRejectionContractTest
             Wait(entered);
             executor.Execute(() => { slotEntered.Set(); Wait(slotRelease); });
             for (int index = 1; index < 16; index++) executor.Execute(static () => { });
-            executor.OnWake = () => { if (executor.WakeCalls == 2) { release.Set(); Wait(slotEntered); } };
+            executor.OnWake = () => {
+                if (executor.WakeCalls == 2)
+                {
+                    release.Set();
+                    Wait(slotEntered);
+                }
+            };
             int calls = 0;
             Task<int> result = executor.SubmitAsync(() => { calls++; return 42; }, TestContext.Current.CancellationToken);
             Assert.Equal(2, executor.WakeCalls);
@@ -97,7 +118,12 @@ public class NativeRejectionContractTest
             Assert.Equal(42, await result.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
             Assert.Equal(1, calls);
         }
-        finally { release.Set(); slotRelease.Set(); await Stop(executor); }
+        finally
+        {
+            release.Set();
+            slotRelease.Set();
+            await Stop(executor);
+        }
     }
 
     [Fact]
@@ -114,7 +140,10 @@ public class NativeRejectionContractTest
                 Assert.Equal(0, executor.WakeCalls);
             }, TestContext.Current.CancellationToken).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         }
-        finally { await Stop(executor); }
+        finally
+        {
+            await Stop(executor);
+        }
     }
 
     [Theory]
@@ -145,7 +174,11 @@ public class NativeRejectionContractTest
                 Assert.Same(caller, observed);
             }
         }
-        finally { release.Set(); await Stop(executor); }
+        finally
+        {
+            release.Set();
+            await Stop(executor);
+        }
     }
 
     [Fact]
@@ -177,7 +210,12 @@ public class NativeRejectionContractTest
             await termination.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             Assert.Equal(0, calls);
         }
-        finally { release.Set(); slotRelease.Set(); await Stop(executor); }
+        finally
+        {
+            release.Set();
+            slotRelease.Set();
+            await Stop(executor);
+        }
     }
 
     [Theory]
@@ -201,25 +239,44 @@ public class NativeRejectionContractTest
                 {
                     Thread.CurrentThread.Interrupt();
                     Exception rejection = null;
-                    try { executor.Execute(static () => { }); }
-                    catch (Exception error) { rejection = error; }
+                    try
+                    {
+                        executor.Execute(static () => { });
+                    }
+                    catch (Exception error)
+                    {
+                        rejection = error;
+                    }
                     // xUnit may acquire a resource lock while reading an exception
                     // message. Consume the expected pending interrupt before assertions.
                     bool interrupted = false;
-                    try { Thread.Sleep(0); }
-                    catch (ThreadInterruptedException) { interrupted = true; }
+                    try
+                    {
+                        Thread.Sleep(0);
+                    }
+                    catch (ThreadInterruptedException)
+                    {
+                        interrupted = true;
+                    }
                     Assert.IsType<RejectedExecutionException>(rejection);
                     Assert.Equal(1, executor.WakeCalls);
                     Assert.True(interrupted);
                     completion.SetResult(null);
                 }
-                catch (Exception error) { completion.SetResult(error); }
+                catch (Exception error)
+                {
+                    completion.SetResult(error);
+                }
             }) { IsBackground = true };
             caller.Start();
             Exception failure = await completion.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             Assert.Null(failure);
         }
-        finally { release.Set(); await Stop(executor); }
+        finally
+        {
+            release.Set();
+            await Stop(executor);
+        }
     }
 
     [Fact]
@@ -238,6 +295,9 @@ public class NativeRejectionContractTest
             Assert.Throws<RejectedExecutionException>(() => executor.Execute(static () => { }));
             Assert.Equal(0, policies);
         }
-        finally { await Stop(executor); }
+        finally
+        {
+            await Stop(executor);
+        }
     }
 }

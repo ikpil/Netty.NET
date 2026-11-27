@@ -115,7 +115,10 @@ public class HashedWheelTimerTest
             base.Start();
             // Stop the timer after newTimeout() started it but before it added the timeout to the queue. This
             // lets the worker terminate before the timeout is added.
-            if (Unprocessed == null) Unprocessed = Stop();
+            if (Unprocessed == null)
+            {
+                Unprocessed = Stop();
+            }
         }
     }
 
@@ -139,7 +142,10 @@ public class HashedWheelTimerTest
         repeated = TimerTask.Create(timeout =>
         {
             timer.NewTimeout(repeated, TimeSpan.FromMilliseconds(100));
-            if (!latch.IsSet) latch.Signal();
+            if (!latch.IsSet)
+            {
+                latch.Signal();
+            }
         });
         timer.NewTimeout(repeated, TimeSpan.FromMilliseconds(100));
 

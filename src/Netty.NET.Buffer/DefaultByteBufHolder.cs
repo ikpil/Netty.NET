@@ -161,7 +161,10 @@ public class DefaultByteBufHolder : IByteBufHolder
      */
     public override bool Equals(object obj)
     {
-        if (ReferenceEquals(this, obj)) return true;
+        if (ReferenceEquals(this, obj))
+        {
+            return true;
+        }
         return obj is not null && GetType() == obj.GetType() && _data.Equals(((DefaultByteBufHolder)obj)._data);
     }
 

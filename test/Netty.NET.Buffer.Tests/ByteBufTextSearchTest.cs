@@ -62,8 +62,14 @@ public class ByteBufTextSearchTest
         Assert.Equal(0, empty.WriteCharSequence("", Encoding.UTF8));
         Assert.Equal("", empty.ReadString(0, Encoding.UTF8));
         ByteBuf owned = Unpooled.Buffer(0, 1);
-        try { Assert.Equal(-1, owned.IndexOf(0, 1, 1)); }
-        finally { owned.Release(); }
+        try
+        {
+            Assert.Equal(-1, owned.IndexOf(0, 1, 1));
+        }
+        finally
+        {
+            owned.Release();
+        }
     }
 
     [Theory]
@@ -91,7 +97,10 @@ public class ByteBufTextSearchTest
             Assert.Equal(0, buffer.ReaderIndex);
             Assert.Equal(5, buffer.WriterIndex);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Theory]
@@ -111,12 +120,22 @@ public class ByteBufTextSearchTest
                     int end = Math.Min(start + 123, bytes.Length);
                     int first = -1, last = -1;
                     for (int i = start; i < end; ++i)
-                        if (bytes[i] == value) { if (first < 0) first = i; last = i; }
+                        if (bytes[i] == value)
+                        {
+                            if (first < 0)
+                            {
+                                first = i;
+                            }
+                            last = i;
+                        }
                     Assert.Equal(first, buffer.IndexOf(start, end, (byte)value));
                     Assert.Equal(last, buffer.IndexOf(end, start, (byte)value));
                 }
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Theory]
@@ -143,7 +162,10 @@ public class ByteBufTextSearchTest
             Assert.Equal(1, buffer.ReaderIndex);
             Assert.Equal(5, buffer.WriterIndex);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Theory]
@@ -182,7 +204,10 @@ public class ByteBufTextSearchTest
             Assert.Throws<ArgumentNullException>(() => buffer.ForEachByte(null));
             Assert.Throws<ArgumentOutOfRangeException>(() => buffer.ForEachByte(1, int.MaxValue, _ => true));
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Theory]
@@ -197,7 +222,10 @@ public class ByteBufTextSearchTest
         Func<byte, bool> visitor = value =>
         {
             seen.Add(value);
-            if (seen.Count == 1) buffer.Capacity = 64;
+            if (seen.Count == 1)
+            {
+                buffer.Capacity = 64;
+            }
             return true;
         };
         Assert.Equal(-1, reverse ? buffer.ForEachByteDesc(visitor) : buffer.ForEachByte(visitor));
@@ -205,7 +233,14 @@ public class ByteBufTextSearchTest
         visitor = _ => { buffer.Release(); return true; };
         Assert.Throws<IllegalReferenceCountException>(() =>
         {
-            if (reverse) buffer.ForEachByteDesc(visitor); else buffer.ForEachByte(visitor);
+            if (reverse)
+            {
+                buffer.ForEachByteDesc(visitor);
+            }
+            else
+            {
+                buffer.ForEachByte(visitor);
+            }
         });
         Assert.Equal(0, allocator.ReservedBytes);
     }
@@ -255,7 +290,10 @@ public class ByteBufTextSearchTest
             Assert.Equal(buffer.WriterIndex, buffer.ReaderIndex);
             Assert.Equal(text, buffer.ToString(1, expected.Length, encoding));
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Theory]
@@ -278,7 +316,10 @@ public class ByteBufTextSearchTest
             Assert.Equal(65, buffer.GetByte(0));
             Assert.Equal(1, buffer.WriteCharSequence("A", strict));
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
 
         buffer = NewBuffer(direct);
         try
@@ -301,7 +342,10 @@ public class ByteBufTextSearchTest
             Assert.Equal(1, slice.SetCharSequence(1, "Z", Encoding.ASCII));
             Assert.Equal(90, buffer.GetByte(3));
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
         Assert.Throws<IllegalReferenceCountException>(() => buffer.ToString(0, 0, strict));
         Assert.Throws<IllegalReferenceCountException>(() => buffer.SetCharSequence(0, "", strict));
         Assert.Throws<IllegalReferenceCountException>(() => buffer.ForEachByte(_ => true));
@@ -343,7 +387,10 @@ public class ByteBufTextSearchTest
             Assert.Equal(expected, buffer.AsMemory(1, expected.Length).ToArray());
             Assert.Equal(0x7f, buffer.GetByte(0));
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Theory]
@@ -358,7 +405,10 @@ public class ByteBufTextSearchTest
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.WriteUtf8(buffer, new AsciiString("A")));
             Assert.Equal(1, ByteBufUtil.ReserveAndWriteUtf8(buffer, "A", 1));
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
         buffer = NewBuffer(direct);
         try
         {
@@ -373,7 +423,10 @@ public class ByteBufTextSearchTest
             Assert.Equal(new byte[] { 0, 0xff, 0x80 }, buffer.AsMemory(6, 3).ToArray());
             Assert.Throws<OverflowException>(() => ByteBufUtil.Utf8MaxBytes(int.MaxValue));
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Theory]
@@ -400,7 +453,10 @@ public class ByteBufTextSearchTest
             Assert.Equal(3, duplicate.WriterIndex);
             Assert.Equal(2, buffer.WriterIndex);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -429,6 +485,10 @@ public class ByteBufTextSearchTest
             Assert.Equal(7, haystack.WriterIndex);
             Assert.Equal(1, needle.ReaderIndex);
         }
-        finally { needle.Release(); haystack.Release(); }
+        finally
+        {
+            needle.Release();
+            haystack.Release();
+        }
     }
 }

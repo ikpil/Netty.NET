@@ -19,13 +19,19 @@ public class InternalDefaultLogger : AbstractInternalLogger
 
     private void Write(TraceEventType level, string message, Exception cause = null)
     {
-        if (!_source.Switch.ShouldTrace(level)) return;
+        if (!_source.Switch.ShouldTrace(level))
+        {
+            return;
+        }
         _source.TraceEvent(level, 0, cause == null ? message : message + Environment.NewLine + cause);
     }
 
     private void Formatted(TraceEventType level, string format, params object[] args)
     {
-        if (!_source.Switch.ShouldTrace(level)) return;
+        if (!_source.Switch.ShouldTrace(level))
+        {
+            return;
+        }
         FormattingTuple tuple = MessageFormatter.ArrayFormat(format, args);
         Write(level, tuple.GetMessage(), tuple.GetThrowable());
     }

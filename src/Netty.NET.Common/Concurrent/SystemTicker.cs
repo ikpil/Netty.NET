@@ -36,7 +36,10 @@ sealed class SystemTicker : Ticker
 
     public override void Sleep(long delayNanos)
     {
-        if (delayNanos <= 0) return;
+        if (delayNanos <= 0)
+        {
+            return;
+        }
         // Thread.Sleep has millisecond resolution. Round a positive remainder up;
         // adding 999999 before division would overflow for long.MaxValue.
         SleepMilliseconds(delayNanos / 1_000_000 + (delayNanos % 1_000_000 == 0 ? 0 : 1));
@@ -49,7 +52,10 @@ sealed class SystemTicker : Ticker
 
     public override void Sleep(TimeSpan delay)
     {
-        if (delay.Ticks <= 0) return;
+        if (delay.Ticks <= 0)
+        {
+            return;
+        }
         // Keep the complete CLR duration rather than saturating it to 292 years.
         SleepMilliseconds(delay.Ticks / TimeSpan.TicksPerMillisecond +
             (delay.Ticks % TimeSpan.TicksPerMillisecond == 0 ? 0 : 1));

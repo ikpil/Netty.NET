@@ -231,7 +231,10 @@ public static class MacAddressUtil
     public static string FormatAddress(byte[] addr)
     {
         ArgumentNullException.ThrowIfNull(addr);
-        if (addr.Length == 0) return string.Empty;
+        if (addr.Length == 0)
+        {
+            return string.Empty;
+        }
 
         return string.Create(checked(addr.Length * 3 - 1), addr, static (chars, bytes) =>
         {
@@ -239,7 +242,10 @@ public static class MacAddressUtil
             int position = 0;
             foreach (byte value in bytes)
             {
-                if (position != 0) chars[position++] = ':';
+                if (position != 0)
+                {
+                    chars[position++] = ':';
+                }
                 chars[position++] = digits[value >> 4];
                 chars[position++] = digits[value & 15];
             }
@@ -324,26 +330,56 @@ public static class MacAddressUtil
         if (written == 4 || addr.IsIPv4MappedToIPv6)
         {
             ReadOnlySpan<byte> bytes = buffer.Slice(written - 4, 4);
-            if ((bytes[0] | bytes[1] | bytes[2] | bytes[3]) == 0 || bytes[0] == 127) return 0;
+            if ((bytes[0] | bytes[1] | bytes[2] | bytes[3]) == 0 || bytes[0] == 127)
+            {
+                return 0;
+            }
 
             // IPv4 Multicast: 224.0.0.0 ~ 239.255.255.255
-            if (bytes[0] >= 224 && bytes[0] <= 239) return 1;
+            if (bytes[0] >= 224 && bytes[0] <= 239)
+            {
+                return 1;
+            }
             // IPv4 Link-local: 169.254.0.0/16
-            if (bytes[0] == 169 && bytes[1] == 254) return 2;
+            if (bytes[0] == 169 && bytes[1] == 254)
+            {
+                return 2;
+            }
             // 10.0.0.0/8
-            if (bytes[0] == 10) return 3;
+            if (bytes[0] == 10)
+            {
+                return 3;
+            }
             // 172.16.0.0/12
-            if (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31) return 3;
+            if (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31)
+            {
+                return 3;
+            }
             // 192.168.0.0/16
-            if (bytes[0] == 192 && bytes[1] == 168) return 3;
+            if (bytes[0] == 192 && bytes[1] == 168)
+            {
+                return 3;
+            }
             return 4;
         }
 
         // Scope IDs do not change the address category.
-        if (buffer[..15].IndexOfAnyExcept((byte)0) < 0 && buffer[15] <= 1) return 0;
-        if (addr.IsIPv6Multicast) return 1;
-        if (addr.IsIPv6LinkLocal) return 2;
-        if (addr.IsIPv6SiteLocal) return 3; // obsolete, but available
+        if (buffer[..15].IndexOfAnyExcept((byte)0) < 0 && buffer[15] <= 1)
+        {
+            return 0;
+        }
+        if (addr.IsIPv6Multicast)
+        {
+            return 1;
+        }
+        if (addr.IsIPv6LinkLocal)
+        {
+            return 2;
+        }
+        if (addr.IsIPv6SiteLocal)
+        {
+            return 3; // obsolete, but available
+        }
         return 4;
     }
 }

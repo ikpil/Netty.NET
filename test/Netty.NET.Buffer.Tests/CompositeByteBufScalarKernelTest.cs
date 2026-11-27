@@ -257,7 +257,8 @@ public class CompositeByteBufScalarKernelTest
         {
             byte[] a = new byte[32], b = new byte[32];
             for (int i = 0; i < 32; ++i) { a[i] = (byte)(i + 1); b[i] = (byte)(i + 33); }
-            first.SetBytes(0, a).SetIndex(5, 21); second.SetBytes(0, b).SetIndex(3, 19);
+            first.SetBytes(0, a).SetIndex(5, 21);
+            second.SetBytes(0, b).SetIndex(3, 19);
             owner = form == 4 ? Unpooled.WrappedUnmodifiableBuffer(first, second)
                 : new CompositeByteBuf().AddComponent(first, true).AddComponent(second, true);
             ByteBuf caller = form switch
@@ -266,21 +267,37 @@ public class CompositeByteBufScalarKernelTest
                 5 => PooledDerivedByteBuf.NewSlice(owner, owner, 4, 24),
                 6 => PooledDerivedByteBuf.NewDuplicate(owner, owner, 0, 32), _ => owner
             };
-            if (form >= 5) retained = caller;
+            if (form >= 5)
+            {
+                retained = caller;
+            }
             int rootIndex = boundary ? 15 : 8, index = rootIndex - (form is 1 or 5 ? 4 : 0);
             int width = Widths[operation];
-            if (relative) caller.SetIndex(index, write ? index : index + width);
-            else caller.SetIndex(1, 2);
+            if (relative)
+            {
+                caller.SetIndex(index, write ? index : index + width);
+            }
+            else
+            {
+                caller.SetIndex(1, 2);
+            }
             caller.MarkReaderIndex().MarkWriterIndex();
             int reader = caller.ReaderIndex, writer = caller.WriterIndex;
             Action request = () =>
             {
-                if (write) Write(caller, operation, index, relative);
-                else Read(caller, operation, index, relative);
+                if (write)
+                {
+                    Write(caller, operation, index, relative);
+                }
+                else
+                {
+                    Read(caller, operation, index, relative);
+                }
             };
             if (write && caller.IsReadOnly)
             {
-                Assert.Throws<NotSupportedException>(request); Assert.Empty(observation.Visits);
+                Assert.Throws<NotSupportedException>(request);
+                Assert.Empty(observation.Visits);
             }
             else
             {
@@ -289,22 +306,39 @@ public class CompositeByteBufScalarKernelTest
                 Assert.Equal((method, rootIndex + (form == 4 ? 0 : 5)), Assert.Single(observation.Visits));
             }
             // CLR keeps relative cursors unchanged when a child callback fails; Java WriteByte increments first.
-            Assert.Equal(reader, caller.ReaderIndex); Assert.Equal(writer, caller.WriterIndex);
+            Assert.Equal(reader, caller.ReaderIndex);
+            Assert.Equal(writer, caller.WriterIndex);
             caller.SetIndex(0, caller.Capacity).ResetWriterIndex().ResetReaderIndex();
-            Assert.Equal(reader, caller.ReaderIndex); Assert.Equal(writer, caller.WriterIndex);
+            Assert.Equal(reader, caller.ReaderIndex);
+            Assert.Equal(writer, caller.WriterIndex);
             Assert.Equal(a, first.AsReadOnlyMemory(0, 32).ToArray());
             Assert.Equal(b, second.AsReadOnlyMemory(0, 32).ToArray());
-            Assert.Equal(5, first.ReaderIndex); Assert.Equal(21, first.WriterIndex);
-            Assert.Equal(3, second.ReaderIndex); Assert.Equal(19, second.WriterIndex);
+            Assert.Equal(5, first.ReaderIndex);
+            Assert.Equal(21, first.WriterIndex);
+            Assert.Equal(3, second.ReaderIndex);
+            Assert.Equal(19, second.WriterIndex);
             Assert.Equal(form >= 5 ? 2 : 1, owner.RefCnt);
-            Assert.Equal(1, first.RefCnt); Assert.Equal(1, second.RefCnt);
+            Assert.Equal(1, first.RefCnt);
+            Assert.Equal(1, second.RefCnt);
         }
         finally
         {
-            if (retained?.RefCnt > 0) retained.Release();
-            if (owner?.RefCnt > 0) owner.Release();
-            if (first.RefCnt > 0) first.Release();
-            if (second.RefCnt > 0) second.Release();
+            if (retained?.RefCnt > 0)
+            {
+                retained.Release();
+            }
+            if (owner?.RefCnt > 0)
+            {
+                owner.Release();
+            }
+            if (first.RefCnt > 0)
+            {
+                first.Release();
+            }
+            if (second.RefCnt > 0)
+            {
+                second.Release();
+            }
             Assert.Equal(0, native.ReservedBytes);
         }
     }

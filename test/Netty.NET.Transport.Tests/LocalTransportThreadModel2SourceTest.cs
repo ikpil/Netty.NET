@@ -58,7 +58,10 @@ public class LocalTransportThreadModel2SourceTest
             }
             Assert.Equal(count * 2 * MessagesPerConnection, serverHandler.Count + clientHandler.Count);
         }
-        finally { await Task.WhenAll(clients.StopAsync(), servers.StopAsync()); }
+        finally
+        {
+            await Task.WhenAll(clients.StopAsync(), servers.StopAsync());
+        }
     }
 
     private static async Task CloseAsync(IChannel channel, LocalHandler handler, CancellationToken token)
@@ -67,7 +70,10 @@ public class LocalTransportThreadModel2SourceTest
         await channel.EventLoop.SubmitAsync(async () =>
         {
             // Wait until all messages are flushed before closing the channel.
-            if (handler.LastWrite is { } write) await write.WaitAsync(token);
+            if (handler.LastWrite is { } write)
+            {
+                await write.WaitAsync(token);
+            }
             await channel.CloseAsync(token);
         }, token);
         // Wait until the connection is closed or the connection attempt fails.
@@ -108,7 +114,10 @@ public class LocalTransportThreadModel2SourceTest
             await replacement.BindAsync(local, token);
             Assert.Equal(local, replacement.LocalAddress);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Sharable]

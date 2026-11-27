@@ -64,7 +64,14 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override CompositeByteBuf Touch(object hint = null)
     {
         // CLR's optional hint combines Java's two overloads; null has the same no-hint record semantics.
-        if (hint == null) Leak.Record(); else Leak.Record(hint);
+        if (hint == null)
+        {
+            Leak.Record();
+        }
+        else
+        {
+            Leak.Record(hint);
+        }
         return this;
     }
 

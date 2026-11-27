@@ -52,14 +52,20 @@ public abstract partial class ByteBuf
     {
         ArgumentNullException.ThrowIfNull(destination);
         CheckIndex(index, length);
-        if (length == 0) return this;
+        if (length == 0)
+        {
+            return this;
+        }
         byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
         try
         {
             GetBytesCore(index, bytes.AsSpan(0, length));
             destination.Write(bytes.AsSpan(0, length));
         }
-        finally { ArrayPool<byte>.Shared.Return(bytes); }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(bytes);
+        }
         return this;
     }
 
@@ -91,7 +97,10 @@ public abstract partial class ByteBuf
         EnsureCanWrite();
         ArgumentNullException.ThrowIfNull(source);
         CheckIndex(index, length);
-        if (length == 0) return 0;
+        if (length == 0)
+        {
+            return 0;
+        }
         byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
         try
         {
@@ -108,7 +117,10 @@ public abstract partial class ByteBuf
             }
             return count;
         }
-        finally { ArrayPool<byte>.Shared.Return(bytes); }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(bytes);
+        }
     }
 
 /**
@@ -173,14 +185,20 @@ public abstract partial class ByteBuf
         ArgumentNullException.ThrowIfNull(destination);
         CheckIndex(index, length);
         cancellationToken.ThrowIfCancellationRequested();
-        if (length == 0) return;
+        if (length == 0)
+        {
+            return;
+        }
         byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
         try
         {
             GetBytesCore(index, bytes.AsSpan(0, length));
             await destination.WriteAsync(bytes.AsMemory(0, length), cancellationToken).ConfigureAwait(false);
         }
-        finally { ArrayPool<byte>.Shared.Return(bytes); }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(bytes);
+        }
     }
 
     /// <summary>Performs one asynchronous bounded read into an absolute range without changing indices.</summary>
@@ -197,7 +215,10 @@ public abstract partial class ByteBuf
         ArgumentNullException.ThrowIfNull(source);
         CheckIndex(index, length);
         cancellationToken.ThrowIfCancellationRequested();
-        if (length == 0) return 0;
+        if (length == 0)
+        {
+            return 0;
+        }
         byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
         try
         {
@@ -213,7 +234,10 @@ public abstract partial class ByteBuf
             }
             return count;
         }
-        finally { ArrayPool<byte>.Shared.Return(bytes); }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(bytes);
+        }
     }
 
     /// <summary>Asynchronously writes readable bytes, then advances the reader after success.</summary>
@@ -239,7 +263,10 @@ public abstract partial class ByteBuf
         EnsureCanWrite();
         ArgumentNullException.ThrowIfNull(source);
         ArgumentOutOfRangeException.ThrowIfNegative(length);
-        if (length > MaxWritableBytes) throw new ArgumentOutOfRangeException(nameof(length));
+        if (length > MaxWritableBytes)
+        {
+            throw new ArgumentOutOfRangeException(nameof(length));
+        }
         cancellationToken.ThrowIfCancellationRequested();
         EnsureWritable(length);
         int count = await SetBytesAsync(_writerIndex, source, length, cancellationToken).ConfigureAwait(false);

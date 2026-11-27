@@ -116,14 +116,26 @@ public class CombinedChannelDuplexHandler<TInbound, TOutbound> : ChannelDuplexHa
         // The inboundCtx and outboundCtx were created and set now it's safe to call removeInboundHandler() and
         // removeOutboundHandler().
         _handlerAdded = true;
-        try { _inboundHandler.HandlerAdded(_inboundCtx); }
-        finally { _outboundHandler.HandlerAdded(_outboundCtx); }
+        try
+        {
+            _inboundHandler.HandlerAdded(_inboundCtx);
+        }
+        finally
+        {
+            _outboundHandler.HandlerAdded(_outboundCtx);
+        }
     }
 
     public override void HandlerRemoved(IChannelHandlerContext ctx)
     {
-        try { _inboundCtx.Remove(); }
-        finally { _outboundCtx.Remove(); }
+        try
+        {
+            _inboundCtx.Remove();
+        }
+        finally
+        {
+            _outboundCtx.Remove();
+        }
     }
 
     private void ForwardInboundException(Exception cause)
@@ -462,7 +474,10 @@ public class CombinedChannelDuplexHandler<TInbound, TOutbound> : ChannelDuplexHa
             if (Removed)
                 return;
             Removed = true;
-            try { _handler.HandlerRemoved(this); }
+            try
+            {
+                _handler.HandlerRemoved(this);
+            }
             catch (Exception cause)
             {
                 FireExceptionCaught(new ChannelPipelineException(_handler.GetType().FullName + ".HandlerRemoved() has thrown an exception.", cause));

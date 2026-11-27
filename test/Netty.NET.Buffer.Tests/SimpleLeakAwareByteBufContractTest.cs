@@ -84,19 +84,29 @@ public class SimpleLeakAwareByteBufContractTest
             Assert.Equal(expected, ByteBufUtil.HexDump(view));
             Assert.Equal(origin.IsReadOnly || operation == 4, view.IsReadOnly);
             Assert.Same(view, view.Touch(new object()));
-            Assert.Equal(0, tracker.Records); Assert.Equal(0, tracker.Closes);
+            Assert.Equal(0, tracker.Records);
+            Assert.Equal(0, tracker.Closes);
             if (retained)
             {
                 Assert.False(kind % 2 == 0 ? buffer.Release() : view.Release());
                 Assert.Equal(0, tracker.Closes);
                 Assert.True(kind % 2 == 0 ? view.Release() : buffer.Release());
             }
-            else Assert.True(view.Release());
+            else
+            {
+                Assert.True(view.Release());
+            }
             Assert.Equal(1, tracker.Closes);
             Assert.Equal(0, origin.RefCnt);
             Assert.Same(origin, tracker.ClosedObject);
         }
-        finally { if (origin.RefCnt > 0) buffer.Release(origin.RefCnt); }
+        finally
+        {
+            if (origin.RefCnt > 0)
+            {
+                buffer.Release(origin.RefCnt);
+            }
+        }
     }
 
     [Theory]
@@ -116,13 +126,21 @@ public class SimpleLeakAwareByteBufContractTest
             Assert.True(buffer.Equals(copy));
             Assert.Equal(buffer.GetHashCode(), copy.GetHashCode());
             Assert.True(copy.Release());
-            Assert.Equal(0, tracker.Closes); Assert.Equal(1, buffer.RefCnt);
-            Assert.True(buffer.Release()); Assert.Equal(1, tracker.Closes);
+            Assert.Equal(0, tracker.Closes);
+            Assert.Equal(1, buffer.RefCnt);
+            Assert.True(buffer.Release());
+            Assert.Equal(1, tracker.Closes);
         }
         finally
         {
-            if (copy.RefCnt > 0) copy.Release();
-            if (origin.RefCnt > 0) buffer.Release();
+            if (copy.RefCnt > 0)
+            {
+                copy.Release();
+            }
+            if (origin.RefCnt > 0)
+            {
+                buffer.Release();
+            }
         }
     }
 
@@ -145,8 +163,14 @@ public class SimpleLeakAwareByteBufContractTest
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void OriginalCloseCall(ByteBuf buffer, int mechanism)
     {
-        if (mechanism == 0) buffer.Release();
-        else ((IReferenceCounted)buffer).Release(1);
+        if (mechanism == 0)
+        {
+            buffer.Release();
+        }
+        else
+        {
+            ((IReferenceCounted)buffer).Release(1);
+        }
     }
 
     [Theory]
@@ -162,14 +186,30 @@ public class SimpleLeakAwareByteBufContractTest
         {
             switch (operation)
             {
-                case 0: buffer.Retain(); break;
-                case 1: ((IReferenceCounted)buffer).Retain(2); break;
-                case 2: buffer.Release(); break;
-                case 3: ((IReferenceCounted)buffer).Release(2); break;
-                case 4: buffer.RetainedSlice(); break;
-                case 5: buffer.RetainedSlice(0, 1); break;
-                case 6: buffer.RetainedDuplicate(); break;
-                case 7: buffer.ReadRetainedSlice(1); break;
+                case 0:
+                    buffer.Retain();
+                    break;
+                case 1:
+                    ((IReferenceCounted)buffer).Retain(2);
+                    break;
+                case 2:
+                    buffer.Release();
+                    break;
+                case 3:
+                    ((IReferenceCounted)buffer).Release(2);
+                    break;
+                case 4:
+                    buffer.RetainedSlice();
+                    break;
+                case 5:
+                    buffer.RetainedSlice(0, 1);
+                    break;
+                case 6:
+                    buffer.RetainedDuplicate();
+                    break;
+                case 7:
+                    buffer.ReadRetainedSlice(1);
+                    break;
             }
         });
         Assert.Same(tracker.Trace, Assert.Single(ThrowableUtil.GetSuppressed(failure)));
@@ -188,12 +228,17 @@ public class SimpleLeakAwareByteBufContractTest
         {
             Assert.Same(failure, Assert.Throws<IllegalReferenceCountException>(() => buffer.Retain()));
             Assert.Empty(ThrowableUtil.GetSuppressed(failure));
-            Assert.Equal(0, tracker.Closes); Assert.Equal(1, origin.RefCnt);
+            Assert.Equal(0, tracker.Closes);
+            Assert.Equal(1, origin.RefCnt);
             Assert.Throws<ArgumentException>(() => buffer.Release(0));
             Assert.Throws<IllegalReferenceCountException>(() => buffer.Release(2));
-            Assert.Equal(0, tracker.Closes); Assert.Equal(1, origin.RefCnt);
+            Assert.Equal(0, tracker.Closes);
+            Assert.Equal(1, origin.RefCnt);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
         Assert.Equal(1, tracker.Closes);
     }
 
@@ -206,11 +251,20 @@ public class SimpleLeakAwareByteBufContractTest
         ByteBuf first = buffer.RetainedDuplicate(), second = first.Slice().AsReadOnly();
         try
         {
-            Assert.IsType<DerivedLeakAware>(first); Assert.IsType<DerivedLeakAware>(second);
-            Assert.False(buffer.Release()); Assert.Equal(0, tracker.Closes);
-            Assert.True(second.Release()); Assert.Same(origin, tracker.ClosedObject);
+            Assert.IsType<DerivedLeakAware>(first);
+            Assert.IsType<DerivedLeakAware>(second);
+            Assert.False(buffer.Release());
+            Assert.Equal(0, tracker.Closes);
+            Assert.True(second.Release());
+            Assert.Same(origin, tracker.ClosedObject);
         }
-        finally { if (origin.RefCnt > 0) buffer.Release(origin.RefCnt); }
+        finally
+        {
+            if (origin.RefCnt > 0)
+            {
+                buffer.Release(origin.RefCnt);
+            }
+        }
     }
 
     [Fact]
@@ -223,12 +277,17 @@ public class SimpleLeakAwareByteBufContractTest
         {
             Assert.Same(buffer, buffer.Touch());
             Assert.Same(buffer, ReferenceCountUtil.Touch(buffer, new object()));
-            Assert.Equal(0, tracker.Records); Assert.Equal(0, origin.Touches);
+            Assert.Equal(0, tracker.Records);
+            Assert.Equal(0, origin.Touches);
             Assert.Same(buffer, ReferenceCountUtil.Retain(buffer, 3));
             Assert.Equal(4, origin.RefCnt);
-            Assert.False(buffer.Release(3)); Assert.Equal(0, tracker.Closes);
+            Assert.False(buffer.Release(3));
+            Assert.Equal(0, tracker.Closes);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
         Assert.Equal(1, tracker.Closes);
     }
 
@@ -242,9 +301,13 @@ public class SimpleLeakAwareByteBufContractTest
             Assert.Throws<ArgumentNullException>(() => new SimpleLeakAwareByteBuf(null, tracker));
             Assert.Throws<ArgumentNullException>(() => new SimpleLeakAwareByteBuf(origin, null));
             Assert.Throws<ArgumentNullException>(() => new SimpleLeakAwareByteBuf(origin, null, tracker));
-            Assert.Equal(1, origin.RefCnt); Assert.Equal(0, tracker.Closes);
+            Assert.Equal(1, origin.RefCnt);
+            Assert.Equal(0, tracker.Closes);
         }
-        finally { origin.Release(); }
+        finally
+        {
+            origin.Release();
+        }
     }
 
     [Fact]
@@ -267,7 +330,10 @@ public class SimpleLeakAwareByteBufContractTest
             Assert.Equal(1, origin.RefCnt);
             Assert.Equal(0, tracker.Closes);
         }
-        finally { origin.Release(); }
+        finally
+        {
+            origin.Release();
+        }
     }
 
     [Fact]
@@ -289,7 +355,13 @@ public class SimpleLeakAwareByteBufContractTest
             }
             Assert.Equal(0, native.ReservedBytes);
         }
-        finally { if (origin.RefCnt > 0) wrapper.Release(); }
+        finally
+        {
+            if (origin.RefCnt > 0)
+            {
+                wrapper.Release();
+            }
+        }
     }
 
     [Fact]
@@ -313,7 +385,10 @@ public class SimpleLeakAwareByteBufContractTest
             Assert.Equal(0, tracker.Closes);
             Assert.Equal(0, tracker.Records);
         }
-        finally { wrapper.Release(); }
+        finally
+        {
+            wrapper.Release();
+        }
         Assert.Equal(1, tracker.Closes);
         Assert.Equal(0, native.ReservedBytes);
     }
@@ -334,9 +409,11 @@ public class SimpleLeakAwareByteBufContractTest
             Assert.Same(origin.Alloc(), buffer.Alloc());
             Assert.Equal(0x01020304, buffer.GetInt(1));
             buffer.SetIndex(1, 7).MarkReaderIndex().MarkWriterIndex();
-            Assert.Equal(1, origin.ReaderIndex); Assert.Equal(7, origin.WriterIndex);
+            Assert.Equal(1, origin.ReaderIndex);
+            Assert.Equal(7, origin.WriterIndex);
             origin.SetIndex(2, 6).ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(1, buffer.ReaderIndex); Assert.Equal(7, buffer.WriterIndex);
+            Assert.Equal(1, buffer.ReaderIndex);
+            Assert.Equal(7, buffer.WriterIndex);
             Assert.Equal("010203040506", ByteBufUtil.HexDump(buffer));
             Assert.Equal(4, buffer.IndexOf(1, 7, 4));
             Assert.Equal(0, buffer.CompareTo(origin));
@@ -344,7 +421,10 @@ public class SimpleLeakAwareByteBufContractTest
             Assert.IsNotType<PlainWrapper>(buffer.Duplicate());
             Assert.Equal(1, buffer.ReadByte());
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     private sealed class PlainWrapper(ByteBuf buffer) : WrappedByteBuf(buffer);

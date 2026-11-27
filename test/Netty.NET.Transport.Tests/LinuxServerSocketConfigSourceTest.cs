@@ -83,7 +83,10 @@ public class LinuxServerSocketConfigSourceTest
 
     private static async Task WithListener(Action<IChannelConfig> assert)
     {
-        if (!OperatingSystem.IsLinux()) Assert.Skip("Linux socket options require Linux.");
+        if (!OperatingSystem.IsLinux())
+        {
+            Assert.Skip("Linux socket options require Linux.");
+        }
         var loop = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         try
         {
@@ -92,7 +95,10 @@ public class LinuxServerSocketConfigSourceTest
                     TestContext.Current.CancellationToken);
             assert(channel.Config);
         }
-        finally { await loop.StopAsync(); }
+        finally
+        {
+            await loop.StopAsync();
+        }
     }
 
     internal static T Get<T>(IChannelConfig config, ChannelOption<T> option)

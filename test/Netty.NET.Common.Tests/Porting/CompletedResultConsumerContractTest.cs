@@ -40,8 +40,14 @@ public class CompletedResultConsumerContractTest
             onLoop = executor.InEventLoop();
             ++calls;
             Assert.Same(operation, task);
-            try { selected = ((Task<IPEndPoint>)task).GetAwaiter().GetResult(); }
-            catch (Exception failure) { observedError = failure; }
+            try
+            {
+                selected = ((Task<IPEndPoint>)task).GetAwaiter().GetResult();
+            }
+            catch (Exception failure)
+            {
+                observedError = failure;
+            }
         };
         try
         {
@@ -65,8 +71,16 @@ public class CompletedResultConsumerContractTest
             await registration.NotificationCompleted.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.True(onLoop);
             Assert.Equal(1, calls);
-            if (failed) { Assert.Same(error, observedError); Assert.Null(selected); }
-            else { Assert.Same(address, selected); Assert.Null(observedError); }
+            if (failed)
+            {
+                Assert.Same(error, observedError);
+                Assert.Null(selected);
+            }
+            else
+            {
+                Assert.Same(address, selected);
+                Assert.Null(observedError);
+            }
         }
         finally
         {

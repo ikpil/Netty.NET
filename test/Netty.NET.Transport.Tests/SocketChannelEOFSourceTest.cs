@@ -291,7 +291,8 @@ public class SocketChannelEOFSourceTest : AbstractClientSocketTest
                         Fail(failure);
                     }
                     Assert.Equal(PAYLOAD_BYTES, sent);
-                }  catch (Exception error)
+                }
+                catch (Exception error)
                 {
                     result.SetException(error);
                     return;

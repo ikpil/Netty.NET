@@ -14,7 +14,10 @@ public class LinuxListenerOptionsContractTest
     [Fact]
     public async Task ListenerAppliesFastOpenQueueAndWaitsForDataWithDeferAccept()
     {
-        if (!OperatingSystem.IsLinux()) Assert.Skip("Linux socket options require Linux.");
+        if (!OperatingSystem.IsLinux())
+        {
+            Assert.Skip("Linux socket options require Linux.");
+        }
         var token = TestContext.Current.CancellationToken;
         using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         var group = new MultiThreadIoEventLoopGroup(2, NioIoHandler.NewFactory());
@@ -34,7 +37,10 @@ public class LinuxListenerOptionsContractTest
             Assert.Equal(1, await peer.SendAsync(new byte[] { 1 }, SocketFlags.None, token));
             await child.Accepted.Task.WaitAsync(TimeSpan.FromSeconds(3), token);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     private sealed class AcceptedChild : ChannelInboundHandlerAdapter

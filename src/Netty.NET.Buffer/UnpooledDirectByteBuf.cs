@@ -138,14 +138,24 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
         set
         {
             CheckNewCapacity(value);
-            if (value == _capacity) return;
+            if (value == _capacity)
+            {
+                return;
+            }
             // CLR replacement for the JVM NoCleaner reallocation specialization:
             // allocate/copy before publishing preserves old pins and failure state.
             // The reservation limit must cover both allocations, even when shrinking.
             NativeMemoryOwner previous = _owner;
             NativeMemoryOwner replacement = _allocator.Allocate(value, clear: true);
-            try { _memory.Span.Slice(0, Math.Min(value, _capacity)).CopyTo(replacement.Memory.Span); }
-            catch { replacement.Dispose(); throw; }
+            try
+            {
+                _memory.Span.Slice(0, Math.Min(value, _capacity)).CopyTo(replacement.Memory.Span);
+            }
+            catch
+            {
+                replacement.Dispose();
+                throw;
+            }
             int previousCapacity = _capacity;
             _owner = replacement;
             _memory = replacement.Memory;
@@ -162,8 +172,15 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
         using BufferMemoryLease lease = AcquireReadLease();
         ReadOnlySpan<byte> source = AsReadOnlySpan(index, length);
         ByteBuf result = Alloc().DirectBuffer(length, MaxCapacity);
-        try { return result.WriteBytes(source); }
-        catch { result.Release(); throw; }
+        try
+        {
+            return result.WriteBytes(source);
+        }
+        catch
+        {
+            result.Release();
+            throw;
+        }
     }
 
     /**

@@ -76,7 +76,10 @@ public sealed class BufferAllocatorEventSource : EventSource
     internal Snapshot? Capture(ByteBuf buffer, EventKeywords keyword, ReadOnlyMemory<byte> memory,
         bool chunkPooled, bool chunkThreadLocal)
     {
-        if (!Enabled(keyword)) return null;
+        if (!Enabled(keyword))
+        {
+            return null;
+        }
         long address = buffer.IsDirect ? StorageAddress(memory) : 0;
         return new Snapshot(buffer.Capacity, buffer.MaxFastWritableBytes + buffer.WriterIndex,
             buffer.MaxCapacity, buffer.IsDirect, address, chunkPooled, chunkThreadLocal);
@@ -85,7 +88,10 @@ public sealed class BufferAllocatorEventSource : EventSource
     [NonEvent]
     internal void Allocated(ByteBuf buffer)
     {
-        if (!Enabled(Keywords.AllocateBuffer)) return;
+        if (!Enabled(Keywords.AllocateBuffer))
+        {
+            return;
+        }
         var pooled = buffer as PooledByteBuf;
         Snapshot? snapshot = Capture(buffer, Keywords.AllocateBuffer,
             buffer.IsDirect ? buffer.AsReadOnlyMemory(0, buffer.Capacity) : default,
@@ -97,7 +103,10 @@ public sealed class BufferAllocatorEventSource : EventSource
     internal Snapshot? CaptureAdaptive(AdaptivePoolingAllocator.AdaptiveByteBuf buffer,
         AdaptivePoolingAllocator.AdaptiveChunkAllocation allocation, EventKeywords keyword)
     {
-        if (!Enabled(keyword)) return null;
+        if (!Enabled(keyword))
+        {
+            return null;
+        }
         bool direct = allocation.IsDirect;
         long address = direct && allocation.TryGetAddress(0, out nint start) ? (long)start : 0;
         // Final release has already made ByteBuf inaccessible. The live allocation
@@ -109,7 +118,10 @@ public sealed class BufferAllocatorEventSource : EventSource
     [NonEvent]
     internal void AdaptiveChunkChanged(ByteBuf storage, bool pooled, bool threadLocal, bool allocated)
     {
-        if (!Enabled(allocated ? Keywords.AllocateChunk : Keywords.FreeChunk)) return;
+        if (!Enabled(allocated ? Keywords.AllocateChunk : Keywords.FreeChunk))
+        {
+            return;
+        }
         bool direct = storage.IsDirect;
         long address = direct ? StorageAddress(storage.AsReadOnlyMemory(0, storage.Capacity)) : 0;
         Record(new PendingEvent(allocated ? 4 : 5, default,
@@ -135,10 +147,16 @@ public sealed class BufferAllocatorEventSource : EventSource
     {
         public void Dispose()
         {
-            if (--_operationDepth != 0) return;
+            if (--_operationDepth != 0)
+            {
+                return;
+            }
             List<PendingEvent> entries = _pendingEvents;
             _pendingEvents = null;
-            if (entries == null) return;
+            if (entries == null)
+            {
+                return;
+            }
             // A callback can start an independent operation; it cannot append to
             // the completed batch or keep that operation's ambient state alive.
             foreach (PendingEvent entry in entries) Log.Publish(entry);
@@ -166,32 +184,50 @@ public sealed class BufferAllocatorEventSource : EventSource
     [NonEvent]
     private void Record(PendingEvent entry)
     {
-        if (_operationDepth != 0) (_pendingEvents ??= new List<PendingEvent>()).Add(entry);
-        else Publish(entry);
+        if (_operationDepth != 0)
+        {
+            (_pendingEvents ??= new List<PendingEvent>()).Add(entry);
+        }
+        else
+        {
+            Publish(entry);
+        }
     }
 
     [NonEvent]
     internal void Allocated(Snapshot? snapshot)
     {
-        if (snapshot is { } value) Record(new PendingEvent(1, value, default, 0));
+        if (snapshot is { } value)
+        {
+            Record(new PendingEvent(1, value, default, 0));
+        }
     }
 
     [NonEvent]
     internal void Freed(Snapshot? snapshot)
     {
-        if (snapshot is { } value) Record(new PendingEvent(2, value, default, 0));
+        if (snapshot is { } value)
+        {
+            Record(new PendingEvent(2, value, default, 0));
+        }
     }
 
     [NonEvent]
     internal void Reallocated(Snapshot? snapshot, int newCapacity)
     {
-        if (snapshot is { } value) Record(new PendingEvent(3, value, default, newCapacity));
+        if (snapshot is { } value)
+        {
+            Record(new PendingEvent(3, value, default, newCapacity));
+        }
     }
 
     [NonEvent]
     internal void ChunkChanged(PoolArena.ChunkStorage storage, bool direct, bool allocated)
     {
-        if (!Enabled(allocated ? Keywords.AllocateChunk : Keywords.FreeChunk)) return;
+        if (!Enabled(allocated ? Keywords.AllocateChunk : Keywords.FreeChunk))
+        {
+            return;
+        }
         long address = direct ? StorageAddress(storage.Memory) : 0;
         Record(new PendingEvent(allocated ? 4 : 5, default,
             new ChunkSnapshot(storage.Memory.Length, direct, address, storage.Chunk != null), 0));

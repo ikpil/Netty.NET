@@ -249,7 +249,10 @@ public class AllocatorLeakDetectionTest : IDisposable
             Assert.IsType<AdvancedLeakAwareCompositeByteBuf>(buffers[5]);
             Assert.IsType<AdvancedLeakAwareCompositeByteBuf>(buffers[6]);
         }
-        finally { foreach (ByteBuf b in buffers) b.Release(); }
+        finally
+        {
+            foreach (ByteBuf b in buffers) b.Release();
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -345,7 +348,15 @@ public class AllocatorLeakDetectionTest : IDisposable
             if (allocator is UnpooledByteBufAllocator unpooled)
                 Assert.Equal(0, unpooled.Metric.UsedDirectMemory);
         }
-        finally { if (b.RefCnt > 0) b.Release(); (allocator as IDisposable)?.Dispose(); lease.Dispose(); }
+        finally
+        {
+            if (b.RefCnt > 0)
+            {
+                b.Release();
+            }
+            (allocator as IDisposable)?.Dispose();
+            lease.Dispose();
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 }

@@ -157,7 +157,10 @@ public partial class DefaultChannelGroup
         // Done on arrival?
         if (operations.Count == 0)
             return;
-        try { await Task.WhenAll(operations.Select(pair => pair.Value)).ConfigureAwait(false); }
+        try
+        {
+            await Task.WhenAll(operations.Select(pair => pair.Value)).ConfigureAwait(false);
+        }
         catch
         {
             // WhenAll waits for every selected channel. Keep the complete set of channel/cause pairs,
@@ -165,8 +168,14 @@ public partial class DefaultChannelGroup
             var failures = new List<KeyValuePair<IChannel, Exception>>();
             foreach (var pair in operations)
             {
-                if (pair.Value.IsCompletedSuccessfully) continue;
-                try { pair.Value.GetAwaiter().GetResult(); }
+                if (pair.Value.IsCompletedSuccessfully)
+                {
+                    continue;
+                }
+                try
+                {
+                    pair.Value.GetAwaiter().GetResult();
+                }
                 catch (Exception error)
                 {
                     failures.Add(new(pair.Key, pair.Value.Exception is { InnerExceptions.Count: > 1 } multiple ? multiple : error));

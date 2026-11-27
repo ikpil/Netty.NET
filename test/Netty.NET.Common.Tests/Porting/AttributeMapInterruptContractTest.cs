@@ -34,12 +34,27 @@ public class AttributeMapInterruptContractTest
         {
             try
             {
-                if (operation == 2) removed = old.GetAndRemove();
-                else current = map.Attr(key);
-                try { Thread.Sleep(0); }
-                catch (ThreadInterruptedException) { pendingInterrupt = true; }
+                if (operation == 2)
+                {
+                    removed = old.GetAndRemove();
+                }
+                else
+                {
+                    current = map.Attr(key);
+                }
+                try
+                {
+                    Thread.Sleep(0);
+                }
+                catch (ThreadInterruptedException)
+                {
+                    pendingInterrupt = true;
+                }
             }
-            catch (Exception error) { failure = error; }
+            catch (Exception error)
+            {
+                failure = error;
+            }
         }) { IsBackground = true };
         int acquired = 0;
         bool started = false;
@@ -52,12 +67,18 @@ public class AttributeMapInterruptContractTest
             started = true;
             waited = SpinWait.SpinUntil(() => (worker.ThreadState & ThreadState.WaitSleepJoin) != 0,
                 TimeSpan.FromSeconds(5));
-            if (waited) worker.Interrupt();
+            if (waited)
+            {
+                worker.Interrupt();
+            }
         }
         finally
         {
             while (acquired > 0) Monitor.Exit(locks[--acquired]);
-            if (started) Assert.True(worker.Join(TimeSpan.FromSeconds(5)));
+            if (started)
+            {
+                Assert.True(worker.Join(TimeSpan.FromSeconds(5)));
+            }
         }
         Assert.True(waited);
         Assert.Null(failure);
@@ -74,7 +95,10 @@ public class AttributeMapInterruptContractTest
             Assert.Same(current, map.Attr(key));
             Assert.Null(current.Get());
             Assert.True(map.HasAttr(key));
-            if (operation == 1) Assert.NotSame(old, current);
+            if (operation == 1)
+            {
+                Assert.NotSame(old, current);
+            }
         }
     }
 

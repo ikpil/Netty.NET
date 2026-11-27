@@ -56,7 +56,8 @@ public class ChannelOutputShutdownContractTest
             bool autoClosed = autoClose && kind != 2;
             if (autoClosed)
             {
-                Assert.Same(cause, firstCause); Assert.Same(cause, secondCause);
+                Assert.Same(cause, firstCause);
+                Assert.Same(cause, secondCause);
                 Assert.Same(cause, Assert.IsAssignableFrom<ClosedChannelException>(thirdCause).InnerException);
                 Assert.Equal(0, channel.OutputAttempts);
                 Assert.Equal(0, events.Count);
@@ -76,7 +77,12 @@ public class ChannelOutputShutdownContractTest
             Assert.Equal(0, channel.OutboundBuffer.TotalPendingWriteBytes);
             Assert.Equal(autoClosed || !halfClose ? 1 : 0, channel.NativeCloses);
         }
-        finally { channel.Write.TrySetResult(); await channel.CloseAsync(); await loop.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            channel.Write.TrySetResult();
+            await channel.CloseAsync();
+            await loop.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
+        }
     }
 
     [Fact]
@@ -96,7 +102,11 @@ public class ChannelOutputShutdownContractTest
             Assert.True(channel.IsActive);
             Assert.False(channel.IsWritable);
         }
-        finally { await channel.CloseAsync(); await loop.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            await channel.CloseAsync();
+            await loop.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
+        }
     }
 
     [Fact]
@@ -119,7 +129,11 @@ public class ChannelOutputShutdownContractTest
             Assert.True(channel.IsOpen);
             Assert.False(channel.IsWritable);
         }
-        finally { await channel.CloseAsync(); await loop.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            await channel.CloseAsync();
+            await loop.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
+        }
     }
 
     [Theory(Timeout = 10000)]
@@ -189,8 +203,14 @@ public class ChannelOutputShutdownContractTest
             AllOnOwner &= EventLoop.InEventLoop();
             OutputAttempts++;
             DuringShutdown?.Invoke();
-            if (ShutdownFailure != null) throw ShutdownFailure;
-            if (!_halfClose) base.DoShutdownOutput();
+            if (ShutdownFailure != null)
+            {
+                throw ShutdownFailure;
+            }
+            if (!_halfClose)
+            {
+                base.DoShutdownOutput();
+            }
         }
     }
     private sealed class OutputEvents : ChannelInboundHandlerAdapter

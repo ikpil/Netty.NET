@@ -72,7 +72,10 @@ public static class RejectedExecutionHandlers
         // Java parkNanos does not wait for non-positive amounts. CLR Sleep throws
         // for negative durations and consumes interrupts; restore an interrupt
         // and return early, preserving the original retry policy and pending flag.
-        if (delay <= TimeSpan.Zero) return;
+        if (delay <= TimeSpan.Zero)
+        {
+            return;
+        }
         long started = Stopwatch.GetTimestamp();
         TimeSpan remaining = delay;
         while (remaining > TimeSpan.Zero)
@@ -80,7 +83,10 @@ public static class RejectedExecutionHandlers
             // Round up without overflowing TimeSpan.MaxValue, and chunk waits
             // to CLR Sleep's millisecond limit. No nanosecond floating conversion.
             int milliseconds = (int)Math.Min(int.MaxValue, 1 + (remaining.Ticks - 1) / TimeSpan.TicksPerMillisecond);
-            try { Thread.Sleep(milliseconds); }
+            try
+            {
+                Thread.Sleep(milliseconds);
+            }
             catch (ThreadInterruptedException)
             {
                 Thread.CurrentThread.Interrupt();

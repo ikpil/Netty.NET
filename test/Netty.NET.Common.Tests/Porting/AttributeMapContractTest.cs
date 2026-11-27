@@ -17,8 +17,14 @@ public class AttributeMapContractTest
         var map = new DefaultAttributeMap();
         var error = Assert.Throws<ArgumentNullException>(() =>
         {
-            if (lookup) map.Attr<object>(null);
-            else map.HasAttr<object>(null);
+            if (lookup)
+            {
+                map.Attr<object>(null);
+            }
+            else
+            {
+                map.HasAttr<object>(null);
+            }
         });
         Assert.Equal("key", error.ParamName);
     }
@@ -75,8 +81,14 @@ public class AttributeMapContractTest
         var old = map.Attr(key);
         var initial = new object();
         old.Set(initial);
-        if (returnOld) Assert.Same(initial, old.GetAndRemove());
-        else old.Remove();
+        if (returnOld)
+        {
+            Assert.Same(initial, old.GetAndRemove());
+        }
+        else
+        {
+            old.Remove();
+        }
         Assert.Null(old.Get());
         Assert.False(map.HasAttr(key));
         var current = map.Attr(key);
@@ -110,8 +122,15 @@ public class AttributeMapContractTest
         for (int index = 0; index < slots.Length; index++)
         {
             Assert.Same(slots[0], slots[index]);
-            if (previous[index] == null) { winners++; Assert.Same(values[index], winner); }
-            else Assert.Same(winner, previous[index]);
+            if (previous[index] == null)
+            {
+                winners++;
+                Assert.Same(values[index], winner);
+            }
+            else
+            {
+                Assert.Same(winner, previous[index]);
+            }
         }
         Assert.Equal(1, winners);
     }
@@ -177,7 +196,10 @@ public class AttributeMapContractTest
         // Pause after the original removal CAS detaches its owner, before the
         // conditional map deletion. Reflection controls that otherwise tiny window.
         FieldInfo owner = old.GetType().GetField("attributeMap", BindingFlags.Instance | BindingFlags.NonPublic);
-        if (owner != null) owner.SetValue(old, null);
+        if (owner != null)
+        {
+            owner.SetValue(old, null);
+        }
         else
         {
             object wrapper = old.GetType().GetField("_attributeMap", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(old);
@@ -207,14 +229,23 @@ public class AttributeMapContractTest
                 try
                 {
                     ready.Signal();
-                    if (!start.Wait(TimeSpan.FromSeconds(5))) throw new TimeoutException();
+                    if (!start.Wait(TimeSpan.FromSeconds(5)))
+                    {
+                        throw new TimeoutException();
+                    }
                     action(worker);
                 }
-                catch (Exception error) { errors[worker] = error; }
+                catch (Exception error)
+                {
+                    errors[worker] = error;
+                }
             }) { IsBackground = true };
             threads[index].Start();
         }
-        try { Assert.True(ready.Wait(TimeSpan.FromSeconds(5))); }
+        try
+        {
+            Assert.True(ready.Wait(TimeSpan.FromSeconds(5)));
+        }
         finally
         {
             start.Set();

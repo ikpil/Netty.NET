@@ -48,7 +48,10 @@ public class ByteBufSnapshotSourceTest
 
         public void Dispose()
         {
-            if (Root.RefCnt > 0) Root.Release();
+            if (Root.RefCnt > 0)
+            {
+                Root.Release();
+            }
             Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
@@ -132,7 +135,11 @@ public class ByteBufSnapshotSourceTest
                 copy.SetByte(1, unchecked((byte)(copy.GetByte(1) + 1)));
                 Assert.NotEqual(buffer.GetByte(reader + 1), copy.GetByte(1));
             }
-            finally { Assert.True(copy.Release()); Assert.Equal(0, copy.RefCnt); }
+            finally
+            {
+                Assert.True(copy.Release());
+                Assert.Equal(0, copy.RefCnt);
+            }
         }
         else
         {
@@ -248,7 +255,11 @@ public class ByteBufSnapshotSourceTest
             Assert.Equal(5, s.Root.ReaderIndex);
             Assert.Equal(9, s.Root.WriterIndex);
         }
-        finally { Assert.True(copy.Release()); Assert.Equal(0, copy.RefCnt); }
+        finally
+        {
+            Assert.True(copy.Release());
+            Assert.Equal(0, copy.RefCnt);
+        }
         Assert.Equal(1, s.Root.RefCnt);
     }
 

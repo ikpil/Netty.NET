@@ -85,7 +85,9 @@ public abstract partial class AbstractByteBufTest : IDisposable
                 Assert.True(buffer.Release());
                 Assert.Equal(0, buffer.RefCnt);
                 try
-                { buffer.Release(); }
+                {
+                    buffer.Release();
+                }
                 catch (Exception)
                 {
                     // Ignore.

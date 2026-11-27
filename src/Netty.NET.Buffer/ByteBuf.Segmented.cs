@@ -209,8 +209,14 @@ public abstract partial class ByteBuf
         switch (bytes.Length)
         {
             case 2:
-                if (littleEndian) BinaryPrimitives.WriteUInt16LittleEndian(bytes, unchecked((ushort)value));
-                else BinaryPrimitives.WriteUInt16BigEndian(bytes, unchecked((ushort)value));
+                if (littleEndian)
+                {
+                    BinaryPrimitives.WriteUInt16LittleEndian(bytes, unchecked((ushort)value));
+                }
+                else
+                {
+                    BinaryPrimitives.WriteUInt16BigEndian(bytes, unchecked((ushort)value));
+                }
                 break;
             case 3:
                 bytes[littleEndian ? 2 : 0] = unchecked((byte)(value >> 16));
@@ -218,14 +224,27 @@ public abstract partial class ByteBuf
                 bytes[littleEndian ? 0 : 2] = unchecked((byte)value);
                 break;
             case 4:
-                if (littleEndian) BinaryPrimitives.WriteUInt32LittleEndian(bytes, unchecked((uint)value));
-                else BinaryPrimitives.WriteUInt32BigEndian(bytes, unchecked((uint)value));
+                if (littleEndian)
+                {
+                    BinaryPrimitives.WriteUInt32LittleEndian(bytes, unchecked((uint)value));
+                }
+                else
+                {
+                    BinaryPrimitives.WriteUInt32BigEndian(bytes, unchecked((uint)value));
+                }
                 break;
             case 8:
-                if (littleEndian) BinaryPrimitives.WriteUInt64LittleEndian(bytes, value);
-                else BinaryPrimitives.WriteUInt64BigEndian(bytes, value);
+                if (littleEndian)
+                {
+                    BinaryPrimitives.WriteUInt64LittleEndian(bytes, value);
+                }
+                else
+                {
+                    BinaryPrimitives.WriteUInt64BigEndian(bytes, value);
+                }
                 break;
-            default: throw new ArgumentOutOfRangeException(nameof(bytes));
+            default:
+                throw new ArgumentOutOfRangeException(nameof(bytes));
         }
     }
 }

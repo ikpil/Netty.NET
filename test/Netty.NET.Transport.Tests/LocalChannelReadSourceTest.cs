@@ -51,7 +51,11 @@ public partial class LocalChannelSourceTest
             Assert.True(client.inboundBuffer.IsEmpty);
             await CloseChannel(server);
         }
-        finally { await CloseChannel(client); await CloseChannel(server); }
+        finally
+        {
+            await CloseChannel(client);
+            await CloseChannel(server);
+        }
     }
 
     [Fact(Timeout = 5000)]
@@ -85,7 +89,11 @@ public partial class LocalChannelSourceTest
             client = await cb.ConnectAsync(TestAddress);
             await completed.Task.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken);
         }
-        finally { await CloseChannel(client); await CloseChannel(server); }
+        finally
+        {
+            await CloseChannel(client);
+            await CloseChannel(server);
+        }
     }
 
     [Fact(Timeout = 5000)]
@@ -132,7 +140,11 @@ public partial class LocalChannelSourceTest
             client = await cb.ConnectAsync(TestAddress);
             await completed.Task.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken);
         }
-        finally { await CloseChannel(client); await CloseChannel(server); }
+        finally
+        {
+            await CloseChannel(client);
+            await CloseChannel(server);
+        }
     }
 
     [Fact(Timeout = 5000)]
@@ -178,12 +190,20 @@ public partial class LocalChannelSourceTest
             for (int i = 0; i < 5; i++)
             {
                 try
-                { client = await cb.ConnectAsync(TestAddress); }
-                finally { await CloseChannel(client); }
+                {
+                    client = await cb.ConnectAsync(TestAddress);
+                }
+                finally
+                {
+                    await CloseChannel(client);
+                }
             }
             await completed.Task.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken);
         }
-        finally { await CloseChannel(server); }
+        finally
+        {
+            await CloseChannel(server);
+        }
     }
 
     [Fact(Timeout = 5000)]
@@ -252,10 +272,16 @@ public partial class LocalChannelSourceTest
                 client = await cb.ConnectAsync(TestAddress);
                 await client.WriteAndFlushAsync("msg");
             }
-            finally { await CloseChannel(client); }
+            finally
+            {
+                await CloseChannel(client);
+            }
             await Task.WhenAll(serverCompleted.Task, childCompleted.Task).WaitAsync(TimeSpan.FromSeconds(5));
         }
-        finally { await CloseChannel(server); }
+        finally
+        {
+            await CloseChannel(server);
+        }
     }
 
     private sealed class DropEchoClient : SimpleChannelInboundHandler<ByteBuf>
@@ -296,8 +322,13 @@ public partial class LocalChannelSourceTest
         async Task ReadAfterWriteAsync()
         {
             try
-            { await write.ConfigureAwait(false); }
-            catch { return; }
+            {
+                await write.ConfigureAwait(false);
+            }
+            catch
+            {
+                return;
+            }
             // CLR: a Task continuation does not confer ownership of the original executor.
             await ctx.Executor.SubmitAsync(() => ctx.Read()).ConfigureAwait(false);
         }

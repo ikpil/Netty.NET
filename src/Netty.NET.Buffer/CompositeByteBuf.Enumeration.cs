@@ -85,12 +85,18 @@ public partial class CompositeByteBuf : IEnumerable<ByteBuf>
         public bool MoveNext()
         {
             _current = null;
-            if (_disposed) return false;
+            if (_disposed)
+            {
+                return false;
+            }
             // CLR: MoveNext combines Java hasNext/next. Count changes map to
             // InvalidOperationException, while ordinary exhaustion returns false.
             if (_size != _buffer.NumComponents)
                 throw new InvalidOperationException("The component count changed during enumeration.");
-            if (_index == _size) return false;
+            if (_index == _size)
+            {
+                return false;
+            }
             _current = _buffer._components[_index++].Slice();
             return true;
         }

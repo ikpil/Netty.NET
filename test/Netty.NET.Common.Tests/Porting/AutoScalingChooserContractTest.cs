@@ -78,10 +78,23 @@ public class AutoScalingChooserContractTest
                 {
                     start.SignalAndWait();
                     for (int i = 0; i < reports; ++i)
-                        if (taskTime) executor.ReportTask(1); else executor.Report(1);
+                        if (taskTime)
+                        {
+                            executor.ReportTask(1);
+                        }
+                        else
+                        {
+                            executor.Report(1);
+                        }
                 }
-                catch (Exception error) { reportingFailure = error; }
-                finally { Volatile.Write(ref done, 1); }
+                catch (Exception error)
+                {
+                    reportingFailure = error;
+                }
+                finally
+                {
+                    Volatile.Write(ref done, 1);
+                }
             }) { IsBackground = true };
             reporter.Start();
             start.SignalAndWait();
@@ -136,7 +149,10 @@ public class AutoScalingChooserContractTest
         public override bool TrySuspend()
         {
             ++suspensionAttempts;
-            if (!suspendAllowed) return false;
+            if (!suspendAllowed)
+            {
+                return false;
+            }
             return suspended = true;
         }
 
@@ -189,7 +205,10 @@ public class AutoScalingChooserContractTest
         private readonly Action monitor;
         internal Harness(int min, int max, int rampUp = 1, int rampDown = 1, int patience = 0, long initialTime = 0)
         {
-            if (initialTime > 0) clock.Advance(initialTime);
+            if (initialTime > 0)
+            {
+                clock.Advance(initialTime);
+            }
             else if (initialTime < 0)
             {
                 clock.Advance(long.MaxValue);

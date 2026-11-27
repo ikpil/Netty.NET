@@ -21,7 +21,10 @@ public class ClrExceptionOriginContractTest
             Assert.True(local.IsSet());
             Assert.Equal(2, local.Initializations);
         }
-        finally { local.Remove(); }
+        finally
+        {
+            local.Remove();
+        }
     }
 
     [Fact]
@@ -76,7 +79,10 @@ public class ClrExceptionOriginContractTest
         protected override void OnRemoval(string value)
         {
             Removals++;
-            if (failRemoval) ThrowAtOrigin(original);
+            if (failRemoval)
+            {
+                ThrowAtOrigin(original);
+            }
         }
     }
 

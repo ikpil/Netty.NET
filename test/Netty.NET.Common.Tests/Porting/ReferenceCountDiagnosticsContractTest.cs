@@ -21,7 +21,10 @@ public class ReferenceCountDiagnosticsContractTest
             Assert.Equal("refCnt: -1", new IllegalReferenceCountException(-1).Message);
             Assert.Equal("refCnt: -2147483648", new IllegalReferenceCountException(int.MinValue).Message);
         }
-        finally { CultureInfo.CurrentCulture = previous; }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
     }
 
     [Theory]
@@ -40,7 +43,10 @@ public class ReferenceCountDiagnosticsContractTest
             Assert.Equal("refCnt: -1, decrement: 2", new IllegalReferenceCountException(-1, -2).Message);
             Assert.Equal("refCnt: 0, decrement: -2147483648", new IllegalReferenceCountException(0, int.MinValue).Message);
         }
-        finally { CultureInfo.CurrentCulture = previous; }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
     }
 
     [Theory]

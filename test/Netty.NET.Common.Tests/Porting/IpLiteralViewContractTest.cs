@@ -86,7 +86,10 @@ public class IpLiteralViewContractTest
         Assert.NotNull(address);
         Assert.Equal(expected, address.GetAddressBytes());
         Assert.Equal(expected.Length == 4 ? AddressFamily.InterNetwork : AddressFamily.InterNetworkV6, address.AddressFamily);
-        if (expected.Length == 16) Assert.Equal(scope, address.ScopeId);
+        if (expected.Length == 16)
+        {
+            Assert.Equal(scope, address.ScopeId);
+        }
         Array.Fill(bytes, (byte)0xCC);
         Assert.Equal(expected, address.GetAddressBytes());
     }

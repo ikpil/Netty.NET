@@ -82,7 +82,10 @@ public class CompositeByteBufLookupTest
             Assert.Equal(0, composite.ReaderIndex);
             Assert.Equal(12, composite.WriterIndex);
         }
-        finally { composite.Release(); }
+        finally
+        {
+            composite.Release();
+        }
         Assert.Equal(0, first.RefCnt);
         Assert.Equal(0, second.RefCnt);
     }
@@ -100,7 +103,11 @@ public class CompositeByteBufLookupTest
                 composite.AddComponent(storage.Allocator.Buffer(data.Length, data.Length).WriteBytes(data), true);
             return composite;
         }
-        catch { composite.Release(); throw; }
+        catch
+        {
+            composite.Release();
+            throw;
+        }
     }
 
     [Theory]
@@ -133,7 +140,10 @@ public class CompositeByteBufLookupTest
             Assert.Throws<ArgumentOutOfRangeException>(() => buf.ToComponentIndex(-1));
             Assert.Throws<ArgumentOutOfRangeException>(() => buf.ToComponentIndex(19));
         }
-        finally { buf.Release(); }
+        finally
+        {
+            buf.Release();
+        }
     }
 
     [Theory]
@@ -155,7 +165,10 @@ public class CompositeByteBufLookupTest
             // CLR rejects the missing component explicitly; pinned Java dereferences a null slot here.
             Assert.Throws<ArgumentOutOfRangeException>(() => buf.ToByteIndex(3));
         }
-        finally { buf.Release(); }
+        finally
+        {
+            buf.Release();
+        }
     }
 
     private static CompositeByteBuf NewFragmentedBuffer(IByteBufAllocator allocator, int length)
@@ -181,7 +194,11 @@ public class CompositeByteBufLookupTest
             composite.WriterIndex = 0;
             return composite;
         }
-        catch { composite.Release(); throw; }
+        catch
+        {
+            composite.Release();
+            throw;
+        }
     }
 
     [Theory]
@@ -190,8 +207,14 @@ public class CompositeByteBufLookupTest
     {
         using var storage = new Storage(pooled, direct);
         CompositeByteBuf composite = NewFragmentedBuffer(storage.Allocator, 4);
-        try { Assert.False(composite.IsContiguous); }
-        finally { Assert.True(composite.Release()); }
+        try
+        {
+            Assert.False(composite.IsContiguous);
+        }
+        finally
+        {
+            Assert.True(composite.Release());
+        }
     }
 
     [Theory]
@@ -217,7 +240,10 @@ public class CompositeByteBufLookupTest
             Assert.Equal(3, composite.WriterIndex);
             Assert.Equal(3, composite.Capacity);
         }
-        finally { composite.Release(); }
+        finally
+        {
+            composite.Release();
+        }
         Assert.All(sources, source => Assert.Equal(0, source.RefCnt));
     }
 
@@ -256,7 +282,13 @@ public class CompositeByteBufLookupTest
         using var storage = new Storage(pooled, direct);
         CompositeByteBuf buf = new(storage.Allocator, direct, expectedMaxComponents);
 
-        try { Assert.Equal(expectedMaxComponents, buf.MaxNumComponents); }
-        finally { Assert.True(buf.Release()); }
+        try
+        {
+            Assert.Equal(expectedMaxComponents, buf.MaxNumComponents);
+        }
+        finally
+        {
+            Assert.True(buf.Release());
+        }
     }
 }

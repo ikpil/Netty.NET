@@ -106,11 +106,22 @@ public abstract class SimpleUserEventChannelHandler<T> : ChannelInboundHandlerAd
         try
         {
             if (AcceptEvent(evt))
+            {
                 EventReceived(ctx, (T)evt);
+            }
             else
-            { release = false; ctx.FireUserEventTriggered(evt); }
+            {
+                release = false;
+                ctx.FireUserEventTriggered(evt);
+            }
         }
-        finally { if (_autoRelease && release) ReferenceCountUtil.Release(evt); }
+        finally
+        {
+            if (_autoRelease && release)
+            {
+                ReferenceCountUtil.Release(evt);
+            }
+        }
     }
 
     /**

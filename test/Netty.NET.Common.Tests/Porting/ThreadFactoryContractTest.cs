@@ -12,7 +12,10 @@ public class ThreadFactoryContractTest
     public void GlobalWorkerDoesNotInheritCallerExecutionContext()
     {
         var executor = GlobalEventExecutor.INSTANCE;
-        if (executor._thread != null) Assert.True(executor.AwaitInactivity(TimeSpan.FromSeconds(5)));
+        if (executor._thread != null)
+        {
+            Assert.True(executor.AwaitInactivity(TimeSpan.FromSeconds(5)));
+        }
         var local = new AsyncLocal<object>();
         var marker = new object();
         object observed = marker;
@@ -25,7 +28,10 @@ public class ThreadFactoryContractTest
             Assert.Null(observed);
             Assert.Same(marker, local.Value);
         }
-        finally { local.Value = null; }
+        finally
+        {
+            local.Value = null;
+        }
     }
 
     [Fact]

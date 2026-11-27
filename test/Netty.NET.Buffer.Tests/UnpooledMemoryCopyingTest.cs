@@ -61,7 +61,11 @@ public class UnpooledMemoryCopyingTest
             Assert.Equal(15, source.WriterIndex);
             Assert.Throws<ArgumentOutOfRangeException>(() => copy.Capacity = 9);
         }
-        finally { copy.Release(); source.Release(); }
+        finally
+        {
+            copy.Release();
+            source.Release();
+        }
         Assert.Equal(99, storage.Memory.Span[2]);
     }
 
@@ -97,7 +101,10 @@ public class UnpooledMemoryCopyingTest
             Assert.Equal(3, inputs[3].Length);
             Assert.Equal(1, inputs[4].Length);
         }
-        finally { copy.Release(); }
+        finally
+        {
+            copy.Release();
+        }
     }
 
     [Fact]
@@ -113,7 +120,12 @@ public class UnpooledMemoryCopyingTest
             Assert.True(ByteBufUtil.Equals(expected, one));
             Assert.True(ByteBufUtil.Equals(expected, many));
         }
-        finally { expected.Release(); one.Release(); many.Release(); }
+        finally
+        {
+            expected.Release();
+            one.Release();
+            many.Release();
+        }
     }
 
     [Theory]
@@ -139,8 +151,14 @@ public class UnpooledMemoryCopyingTest
         Assert.Same(Unpooled.EmptyBuffer, Unpooled.CopiedBuffer(empty, empty));
         ReadOnlyMemory<byte> bytes = new byte[] { 1, 2 };
         ByteBuf copy = Unpooled.CopiedBuffer(empty, bytes, empty);
-        try { Assert.Equal(new byte[] { 1, 2 }, ByteBufUtil.GetBytes(copy)); }
-        finally { copy.Release(); }
+        try
+        {
+            Assert.Equal(new byte[] { 1, 2 }, ByteBufUtil.GetBytes(copy));
+        }
+        finally
+        {
+            copy.Release();
+        }
         Assert.Equal(0, manager.SpanCalls);
     }
 
@@ -184,7 +202,10 @@ public class UnpooledMemoryCopyingTest
         {
             Assert.Equal(new byte[] { 7, 7, 7, 7 }, ByteBufUtil.GetBytes(recovered));
         }
-        finally { recovered.Release(); }
+        finally
+        {
+            recovered.Release();
+        }
     }
 
     [Fact]
@@ -207,7 +228,10 @@ public class UnpooledMemoryCopyingTest
         {
             Assert.Equal(new byte[] { 1, 1, 1, 1, 2, 2, 2, 2 }, ByteBufUtil.GetBytes(recovered));
         }
-        finally { recovered.Release(); }
+        finally
+        {
+            recovered.Release();
+        }
     }
 
     [Theory]
@@ -230,7 +254,14 @@ public class UnpooledMemoryCopyingTest
             Assert.Equal(0x0102030405060708L, copy.ReadLong());
             Assert.Equal(0x0102030405060708L, copy.ReadLong());
         }
-        finally { if (source.RefCnt > 0) source.Release(); copy.Release(); }
+        finally
+        {
+            if (source.RefCnt > 0)
+            {
+                source.Release();
+            }
+            copy.Release();
+        }
     }
 
     [Theory]
@@ -241,12 +272,19 @@ public class UnpooledMemoryCopyingTest
         ByteBuf copy = multiple ? Unpooled.CopiedBuffer(a, b) : Unpooled.CopiedBuffer((ReadOnlyMemory<byte>)new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
         try
         {
-            copy.SetIndex(6, 8); copy.Capacity = 4;
-            Assert.Equal(4, copy.ReaderIndex); Assert.Equal(4, copy.WriterIndex);
-            copy.Capacity = 8; Assert.Equal(new byte[] { 1, 2, 3, 4, 0, 0, 0, 0 }, copy.AsMemory(0, 8).ToArray());
-            Assert.Equal(8, copy.MaxCapacity); Assert.Throws<ArgumentOutOfRangeException>(() => copy.Capacity = 9);
+            copy.SetIndex(6, 8);
+            copy.Capacity = 4;
+            Assert.Equal(4, copy.ReaderIndex);
+            Assert.Equal(4, copy.WriterIndex);
+            copy.Capacity = 8;
+            Assert.Equal(new byte[] { 1, 2, 3, 4, 0, 0, 0, 0 }, copy.AsMemory(0, 8).ToArray());
+            Assert.Equal(8, copy.MaxCapacity);
+            Assert.Throws<ArgumentOutOfRangeException>(() => copy.Capacity = 9);
         }
-        finally { copy.Release(); }
+        finally
+        {
+            copy.Release();
+        }
     }
 
     [Fact]
@@ -254,8 +292,15 @@ public class UnpooledMemoryCopyingTest
     {
         ReadOnlyMemory<byte> bytes = new byte[] { 1, 2, 3, 4 };
         ByteBuf copy = Unpooled.CopiedBuffer(bytes, bytes);
-        try { Assert.Equal(0x01020304, copy.GetInt(0)); Assert.Equal(0x04030201, copy.GetIntLE(0)); }
-        finally { copy.Release(); }
+        try
+        {
+            Assert.Equal(0x01020304, copy.GetInt(0));
+            Assert.Equal(0x04030201, copy.GetIntLE(0));
+        }
+        finally
+        {
+            copy.Release();
+        }
     }
 
     private sealed class ExternalStorage : IDisposable
@@ -265,9 +310,20 @@ public class UnpooledMemoryCopyingTest
         public Memory<byte> Memory { get; }
         public ExternalStorage(int kind, int length)
         {
-            if (kind == 1) { _native = new NativeMemoryAllocator(1024).Allocate(length, clear: true); Memory = _native.Memory; }
-            else if (kind == 2) { _manager = new ArrayMemoryManager(length); Memory = _manager.Range; }
-            else Memory = new byte[length];
+            if (kind == 1)
+            {
+                _native = new NativeMemoryAllocator(1024).Allocate(length, clear: true);
+                Memory = _native.Memory;
+            }
+            else if (kind == 2)
+            {
+                _manager = new ArrayMemoryManager(length);
+                Memory = _manager.Range;
+            }
+            else
+            {
+                Memory = new byte[length];
+            }
         }
 
         public void Dispose()
@@ -291,7 +347,10 @@ public class UnpooledMemoryCopyingTest
 
         public override Span<byte> GetSpan()
         {
-            if (FailAccess) throw new InvalidOperationException("Source access failed.");
+            if (FailAccess)
+            {
+                throw new InvalidOperationException("Source access failed.");
+            }
             return _array ?? throw new ObjectDisposedException(nameof(ArrayMemoryManager));
         }
 

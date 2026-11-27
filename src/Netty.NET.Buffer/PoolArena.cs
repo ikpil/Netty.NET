@@ -130,8 +130,15 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
             }
             _lastDestroyedChunk = null;
             storage ??= NewStorage(chunk, SizeClass.ChunkSize);
-            try { _chunks.Add(chunk, storage); }
-            catch { storage.Owner?.Dispose(); throw; }
+            try
+            {
+                _chunks.Add(chunk, storage);
+            }
+            catch
+            {
+                storage.Owner?.Dispose();
+                throw;
+            }
             BufferAllocatorEventSource.Log.ChunkChanged(storage, _direct, allocated: true);
             // Publish storage before a subpage can join a shared head. Allocation
             // failures then leave either no chunk or a reusable registered chunk.
@@ -183,20 +190,32 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
         try
         {
             int offset = PoolChunk.RunOffset(handle) << SizeClass.PageShifts;
-            if (PoolChunk.IsSubpage(handle)) offset += PoolChunk.BitmapIdx(handle) * normalized;
+            if (PoolChunk.IsSubpage(handle))
+            {
+                offset += PoolChunk.BitmapIdx(handle) * normalized;
+            }
             var allocation = new Allocation(this, storage, handle, offset, normalized, cache);
             ++storage.ActiveAllocations;
             unchecked
             {
-                if (PoolChunk.IsSubpage(handle)) ++_smallAllocations;
-                else ++_normalAllocations;
+                if (PoolChunk.IsSubpage(handle))
+                {
+                    ++_smallAllocations;
+                }
+                else
+                {
+                    ++_normalAllocations;
+                }
                 _pinnedBytes += normalized;
             }
             return allocation;
         }
         catch
         {
-            if (!storage.Chunk.Parent.Free(storage.Chunk, handle)) DestroyChunk(storage.Chunk);
+            if (!storage.Chunk.Parent.Free(storage.Chunk, handle))
+            {
+                DestroyChunk(storage.Chunk);
+            }
             throw;
         }
     }
@@ -207,7 +226,10 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
             int offset = PoolChunk.RunOffset(handle) << SizeClass.PageShifts;
-            if (PoolChunk.IsSubpage(handle)) offset += PoolChunk.BitmapIdx(handle) * normalized;
+            if (PoolChunk.IsSubpage(handle))
+            {
+                offset += PoolChunk.BitmapIdx(handle) * normalized;
+            }
             var allocation = new Allocation(this, storage, handle, offset, normalized, cache, fromThreadCache: true);
             unchecked { _pinnedBytes += normalized; }
             // Cached handles already count as active arena allocations. A hit
@@ -220,8 +242,15 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
     private ChunkStorage NewStorage(PoolChunk chunk, int length)
     {
         Memory<byte> memory = AllocateBacking(length, out NativeMemoryOwner owner);
-        try { return new ChunkStorage(chunk, memory, owner); }
-        catch { owner?.Dispose(); throw; }
+        try
+        {
+            return new ChunkStorage(chunk, memory, owner);
+        }
+        catch
+        {
+            owner?.Dispose();
+            throw;
+        }
     }
 
     /** Creates a special chunk that is not pooled. */
@@ -242,13 +271,23 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
             }
             return allocation;
         }
-        catch { storage.Owner?.Dispose(); throw; }
+        catch
+        {
+            storage.Owner?.Dispose();
+            throw;
+        }
     }
 
     internal static void FreeHandle(PoolChunk chunk, long handle)
     {
-        if (PoolChunk.IsSubpage(handle)) chunk.FreeSmall(handle);
-        else chunk.FreeRun(handle);
+        if (PoolChunk.IsSubpage(handle))
+        {
+            chunk.FreeSmall(handle);
+        }
+        else
+        {
+            chunk.FreeRun(handle);
+        }
     }
 
     private void Free(Allocation allocation)
@@ -288,13 +327,22 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
         {
             unchecked
             {
-                if (PoolChunk.IsSubpage(handle)) ++_smallDeallocations;
-                else ++_normalDeallocations;
+                if (PoolChunk.IsSubpage(handle))
+                {
+                    ++_smallDeallocations;
+                }
+                else
+                {
+                    ++_normalDeallocations;
+                }
             }
             --storage.ActiveAllocations;
             if (_disposed)
             {
-                if (storage.ActiveAllocations == 0) DestroyChunk(storage.Chunk);
+                if (storage.ActiveAllocations == 0)
+                {
+                    DestroyChunk(storage.Chunk);
+                }
             }
             else if (!storage.Chunk.Parent.Free(storage.Chunk, handle))
                 DestroyChunk(storage.Chunk);
@@ -307,13 +355,19 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
         ChunkStorage storage = _chunks[chunk];
         // CLR: after explicit shutdown, active storage stays in the metric registry
         // until its last region lease returns, even though it has left the lists.
-        if (_disposed && storage.ActiveAllocations != 0) return;
+        if (_disposed && storage.ActiveAllocations != 0)
+        {
+            return;
+        }
         BufferAllocatorEventSource.Log.ChunkChanged(storage, _direct, allocated: false);
         _chunks.Remove(chunk);
         unchecked { ++_chunkDeallocations; }
         if (_disposed)
         {
-            if (storage.ActiveAllocations == 0) storage.Owner?.Dispose();
+            if (storage.ActiveAllocations == 0)
+            {
+                storage.Owner?.Dispose();
+            }
             return;
         }
         Debug.Assert(storage.ActiveAllocations == 0 && chunk.FreeBytes == chunk.ChunkSize);
@@ -339,7 +393,10 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
         using var events = BufferAllocatorEventSource.Log.BeginOperation();
         lock (_sync)
         {
-            if (_disposed) return;
+            if (_disposed)
+            {
+                return;
+            }
             _disposed = true;
             foreach (PoolChunkList list in _chunkLists) list.Destroy();
             _lastDestroyedChunk = null;
@@ -401,7 +458,10 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
 
         public void Dispose()
         {
-            if (ReferenceCountUpdater.Release(ref _references, 1)) _arena.Free(this);
+            if (ReferenceCountUpdater.Release(ref _references, 1))
+            {
+                _arena.Free(this);
+            }
         }
     }
 }

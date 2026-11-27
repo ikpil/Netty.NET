@@ -35,8 +35,14 @@ public class MacSelectionContractTest
     {
         var failure = new InvalidOperationException("provider defect");
         var iface = Interface("00:12:34:56:78:90", "192.0.2.1");
-        if (hardware) iface.Setup(x => x.GetPhysicalAddress()).Throws(failure);
-        else iface.Setup(x => x.GetIPProperties()).Throws(failure);
+        if (hardware)
+        {
+            iface.Setup(x => x.GetPhysicalAddress()).Throws(failure);
+        }
+        else
+        {
+            iface.Setup(x => x.GetIPProperties()).Throws(failure);
+        }
         Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => Select(iface)));
     }
 

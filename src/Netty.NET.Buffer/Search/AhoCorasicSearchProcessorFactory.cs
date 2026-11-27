@@ -40,7 +40,10 @@ public class AhoCorasicSearchProcessorFactory : AbstractMultiSearchProcessorFact
         foreach (byte[] needle in needles)
         {
             ArgumentNullException.ThrowIfNull(needle, nameof(needles));
-            if (needle.Length == 0) throw new ArgumentException("Needle must be non empty.", nameof(needles));
+            if (needle.Length == 0)
+            {
+                throw new ArgumentException("Needle must be non empty.", nameof(needles));
+            }
         }
         (_jumpTable, _matchForNeedleId) = BuildTrie(needles);
         LinkSuffixes();

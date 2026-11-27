@@ -52,7 +52,10 @@ public class NativeMemoryContractTest
         // MemoryMarshal canonically represents any empty memory as an empty array
         // segment; that does not change the owner's native pin address.
         Assert.Equal(length == 0, hasArray);
-        if (hasArray) Assert.Equal(0, array.Count);
+        if (hasArray)
+        {
+            Assert.Equal(0, array.Count);
+        }
         Assert.True(memory.Span.IndexOfAnyExcept((byte)0) < 0);
         owner.Dispose();
         owner.Dispose();
@@ -176,8 +179,13 @@ public class NativeMemoryContractTest
             Parallel.Invoke(() =>
             {
                 barrier.SignalAndWait();
-                try { replacement = allocator.Reallocate(original, 16); }
-                catch (ObjectDisposedException) { }
+                try
+                {
+                    replacement = allocator.Reallocate(original, 16);
+                }
+                catch (ObjectDisposedException)
+                {
+                }
             }, () => { barrier.SignalAndWait(); original.Dispose(); });
             try
             {
@@ -185,7 +193,11 @@ public class NativeMemoryContractTest
                 if (replacement != null)
                     Assert.True(replacement.Memory.Span.Slice(0, 8).IndexOfAnyExcept((byte)0xa3) < 0);
             }
-            finally { replacement?.Dispose(); original.Dispose(); }
+            finally
+            {
+                replacement?.Dispose();
+                original.Dispose();
+            }
             Assert.Equal(0, allocator.ReservedBytes);
         }
     }
@@ -203,20 +215,35 @@ public class NativeMemoryContractTest
             Parallel.Invoke(() =>
             {
                 barrier.SignalAndWait();
-                try { first = allocator.Reallocate(original, 16); }
-                catch (ObjectDisposedException) { }
+                try
+                {
+                    first = allocator.Reallocate(original, 16);
+                }
+                catch (ObjectDisposedException)
+                {
+                }
             }, () =>
             {
                 barrier.SignalAndWait();
-                try { second = allocator.Reallocate(original, 32); }
-                catch (ObjectDisposedException) { }
+                try
+                {
+                    second = allocator.Reallocate(original, 32);
+                }
+                catch (ObjectDisposedException)
+                {
+                }
             });
             try
             {
                 Assert.True((first != null) != (second != null));
                 Assert.Equal(first != null ? 16 : 32, allocator.ReservedBytes);
             }
-            finally { first?.Dispose(); second?.Dispose(); original.Dispose(); }
+            finally
+            {
+                first?.Dispose();
+                second?.Dispose();
+                original.Dispose();
+            }
             Assert.Equal(0, allocator.ReservedBytes);
         }
     }
@@ -356,12 +383,30 @@ public class NativeMemoryContractTest
                 NativeMemoryOwner owner = null;
                 try
                 {
-                    try { owner = allocator.Allocate(8); Interlocked.Increment(ref accepted); }
-                    catch (OutOfMemoryException) { }
-                    finally { if (Interlocked.Increment(ref attempts) == work.Length) ready.TrySetResult(); }
-                    if (owner != null) await release.Task;
+                    try
+                    {
+                        owner = allocator.Allocate(8);
+                        Interlocked.Increment(ref accepted);
+                    }
+                    catch (OutOfMemoryException)
+                    {
+                    }
+                    finally
+                    {
+                        if (Interlocked.Increment(ref attempts) == work.Length)
+                        {
+                            ready.TrySetResult();
+                        }
+                    }
+                    if (owner != null)
+                    {
+                        await release.Task;
+                    }
                 }
-                finally { owner?.Dispose(); }
+                finally
+                {
+                    owner?.Dispose();
+                }
             });
         }
         try
@@ -370,7 +415,11 @@ public class NativeMemoryContractTest
             Assert.Equal(8, accepted);
             Assert.Equal(64, allocator.ReservedBytes);
         }
-        finally { release.TrySetResult(); await Task.WhenAll(work); }
+        finally
+        {
+            release.TrySetResult();
+            await Task.WhenAll(work);
+        }
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -387,14 +436,23 @@ public class NativeMemoryContractTest
             Parallel.Invoke(() =>
             {
                 barrier.SignalAndWait();
-                try { pin = memory.Pin(); }
-                catch (ObjectDisposedException) { }
+                try
+                {
+                    pin = memory.Pin();
+                }
+                catch (ObjectDisposedException)
+                {
+                }
             }, () => { barrier.SignalAndWait(); owner.Dispose(); });
             try
             {
                 Assert.Equal(0, allocator.ReservedBytes);
             }
-            finally { pin.Dispose(); owner.Dispose(); }
+            finally
+            {
+                pin.Dispose();
+                owner.Dispose();
+            }
             Assert.Equal(0, allocator.ReservedBytes);
         }
     }

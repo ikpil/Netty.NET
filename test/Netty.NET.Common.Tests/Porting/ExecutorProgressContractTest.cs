@@ -20,8 +20,14 @@ public class ExecutorProgressContractTest
         internal void RunAll()
         {
             _running = Thread.CurrentThread;
-            try { while (_queue.TryDequeue(out var work)) work(); }
-            finally { _running = null; }
+            try
+            {
+                while (_queue.TryDequeue(out var work)) work();
+            }
+            finally
+            {
+                _running = null;
+            }
         }
 
         public override bool InEventLoop(Thread thread)
@@ -73,7 +79,10 @@ public class ExecutorProgressContractTest
         while (!completion.IsCompleted && elapsed.Elapsed < TimeSpan.FromSeconds(5))
         {
             executor.RunAll();
-            if (!completion.IsCompleted) await Task.Delay(1);
+            if (!completion.IsCompleted)
+            {
+                await Task.Delay(1);
+            }
         }
         await completion.WaitAsync(TimeSpan.FromSeconds(5));
     }
@@ -143,22 +152,37 @@ public class ExecutorProgressContractTest
         var error = new InvalidOperationException("transfer failed");
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
-        if (outcome == 0) operation.SetResult();
-        else if (outcome == 1) operation.SetException(error);
-        else operation.SetCanceled(cancellation.Token);
+        if (outcome == 0)
+        {
+            operation.SetResult();
+        }
+        else if (outcome == 1)
+        {
+            operation.SetException(error);
+        }
+        else
+        {
+            operation.SetCanceled(cancellation.Token);
+        }
         int completions = 0;
         var reporter = new ExecutorProgress(executor, operation.Task, _ => throw new InvalidOperationException("unexpected progress"),
             task => { Assert.Same(operation.Task, task); ++completions; });
         Assert.False(reporter.TryReport(1, 2));
         await Drain(executor, reporter.NotificationsCompleted);
         Assert.Equal(1, completions);
-        if (outcome == 1) Assert.Same(error, await Assert.ThrowsAsync<InvalidOperationException>(async () => await operation.Task));
+        if (outcome == 1)
+        {
+            Assert.Same(error, await Assert.ThrowsAsync<InvalidOperationException>(async () => await operation.Task));
+        }
         else if (outcome == 2)
         {
             var canceled = await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await operation.Task);
             Assert.Equal(cancellation.Token, canceled.CancellationToken);
         }
-        else await operation.Task;
+        else
+        {
+            await operation.Task;
+        }
     }
 
     [Fact]
@@ -189,7 +213,10 @@ public class ExecutorProgressContractTest
         {
             ++depth; maxDepth = Math.Max(maxDepth, depth);
             events.Add(value.Completed * 2);
-            if (value.Completed < 10_000) reporter.Report(new TransferProgress(value.Completed + 1));
+            if (value.Completed < 10_000)
+            {
+                reporter.Report(new TransferProgress(value.Completed + 1));
+            }
             --depth;
         };
         progress += value => events.Add(value.Completed * 2 + 1);
@@ -312,7 +339,10 @@ public class ExecutorProgressContractTest
         Array.Fill(last, -1);
         var reporter = new ExecutorProgress(executor, operation.Task, value =>
         {
-            if (Interlocked.Increment(ref active) != 1) Interlocked.Increment(ref overlap);
+            if (Interlocked.Increment(ref active) != 1)
+            {
+                Interlocked.Increment(ref overlap);
+            }
             int producer = (int)(value.Completed / 1000);
             int index = (int)(value.Completed % 1000);
             Assert.Equal(last[producer] + 1, index);
@@ -336,7 +366,10 @@ public class ExecutorProgressContractTest
         {
             reporter.Dispose();
             await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
-            if (unordered) Assert.True(await Task.Run(() => executor.AwaitTermination(TimeSpan.FromSeconds(5))));
+            if (unordered)
+            {
+                Assert.True(await Task.Run(() => executor.AwaitTermination(TimeSpan.FromSeconds(5))));
+            }
         }
     }
 
@@ -392,15 +425,27 @@ public class ExecutorProgressContractTest
         var active = pool.SubmitAsync(() =>
         {
             started.Set();
-            try { release.Wait(); } catch (ThreadInterruptedException) { }
+            try
+            {
+                release.Wait();
+            }
+            catch (ThreadInterruptedException)
+            {
+            }
         });
         Assert.True(started.Wait(TimeSpan.FromSeconds(5)));
         IEventExecutor executor = orderedChild ? new NonStickyEventExecutorGroup(pool, 1).Next() : pool;
         var source = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        if (completedSource) source.SetResult();
+        if (completedSource)
+        {
+            source.SetResult();
+        }
         int callbacks = 0;
         using var reporter = new ExecutorProgress(executor, source.Task, _ => ++callbacks, _ => ++callbacks);
-        if (!completedSource) Assert.True(reporter.TryReport(1, 10));
+        if (!completedSource)
+        {
+            Assert.True(reporter.TryReport(1, 10));
+        }
         try
         {
             Assert.Equal(1, pool.PendingTaskCount);
@@ -409,7 +454,10 @@ public class ExecutorProgressContractTest
                 await reporter.NotificationsCompleted.WaitAsync(TimeSpan.FromSeconds(2)));
             Assert.Equal(0, callbacks);
             Assert.Equal(completedSource, source.Task.IsCompleted);
-            if (!completedSource) source.SetResult();
+            if (!completedSource)
+            {
+                source.SetResult();
+            }
         }
         finally
         {

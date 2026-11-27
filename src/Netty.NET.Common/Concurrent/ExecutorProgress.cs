@@ -66,23 +66,41 @@ public sealed class ExecutorProgress : IProgress<TransferProgress>, IDisposable
     {
         ArgumentNullException.ThrowIfNull(executor);
         ArgumentNullException.ThrowIfNull(operation);
-        if (!empty) ArgumentNullException.ThrowIfNull(progress);
-        if (maxPendingReports <= 0) throw new ArgumentOutOfRangeException(nameof(maxPendingReports));
+        if (!empty)
+        {
+            ArgumentNullException.ThrowIfNull(progress);
+        }
+        if (maxPendingReports <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxPendingReports));
+        }
         _executor = executor;
         _operation = operation;
         _maxPendingReports = maxPendingReports;
         // A retained notification Task keeps its pending dispatcher alive. Without
         // that Task or reporter, the weak operation continuation permits collection.
         _notificationsCompleted = new TaskCompletionSource(this, TaskCreationOptions.RunContinuationsAsynchronously);
-        if (!empty) AddObserver(progress, completed);
+        if (!empty)
+        {
+            AddObserver(progress, completed);
+        }
         // Task has no detachable completion registration. A weak continuation
         // lets an abandoned reporter and its observers be collected independently.
         var weak = new WeakReference<ExecutorProgress>(this);
-        if (operation.IsCompleted) OperationCompleted();
-        else operation.ConfigureAwait(false).GetAwaiter().UnsafeOnCompleted(() =>
+        if (operation.IsCompleted)
         {
-            if (weak.TryGetTarget(out var reporter)) reporter.OperationCompleted();
+            OperationCompleted();
+        }
+        else
+        {
+            operation.ConfigureAwait(false).GetAwaiter().UnsafeOnCompleted(() =>
+        {
+            if (weak.TryGetTarget(out var reporter))
+            {
+                reporter.OperationCompleted();
+            }
         });
+        }
     }
 
     /// <summary>Completes after terminal observer dispatch; executor rejection faults it and disposal or queued shutdown removal cancels it.</summary>
@@ -100,7 +118,10 @@ public sealed class ExecutorProgress : IProgress<TransferProgress>, IDisposable
     /// </remarks>
     public ProgressRegistration Register(Action<TransferProgress> progress, Action<Task> completed = null)
     {
-        if (progress == null && completed == null) throw new ArgumentNullException(nameof(progress));
+        if (progress == null && completed == null)
+        {
+            throw new ArgumentNullException(nameof(progress));
+        }
         lock (_gate)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
@@ -121,16 +142,25 @@ public sealed class ExecutorProgress : IProgress<TransferProgress>, IDisposable
     {
         lock (_gate)
         {
-            if (registration.Owner != this) return;
+            if (registration.Owner != this)
+            {
+                return;
+            }
             _observers.Remove(registration.Node);
             registration.Release();
-            if (!registration.TerminalClaimed) registration.Cancel();
+            if (!registration.TerminalClaimed)
+            {
+                registration.Cancel();
+            }
         }
     }
 
     public void Report(TransferProgress value)
     {
-        if (!TryReport(value)) throw new InvalidOperationException("The progress observation is closed or its pending report capacity is exhausted.");
+        if (!TryReport(value))
+        {
+            throw new InvalidOperationException("The progress observation is closed or its pending report capacity is exhausted.");
+        }
     }
 
     /// <summary>Admits a report while the operation and observation are open.</summary>
@@ -140,19 +170,28 @@ public sealed class ExecutorProgress : IProgress<TransferProgress>, IDisposable
         bool schedule;
         lock (_gate)
         {
-            if (_closed || _operation.IsCompleted || _notifications.Count >= _maxPendingReports) return false;
+            if (_closed || _operation.IsCompleted || _notifications.Count >= _maxPendingReports)
+            {
+                return false;
+            }
             _notifications.Enqueue(new Notification(value, false, _observers.ToArray()));
             schedule = !_drainScheduled;
             _drainScheduled = true;
         }
-        if (schedule) ScheduleDrain();
+        if (schedule)
+        {
+            ScheduleDrain();
+        }
         return true;
     }
 
     /// <summary>Tries to report raw counts, including a negative total to denote unknown length.</summary>
     public bool TryReport(long completed, long total)
     {
-        if (completed < 0 || (total >= 0 && completed > total)) return false;
+        if (completed < 0 || (total >= 0 && completed > total))
+        {
+            return false;
+        }
         return TryReport(new TransferProgress(completed, total));
     }
 
@@ -161,13 +200,19 @@ public sealed class ExecutorProgress : IProgress<TransferProgress>, IDisposable
         bool schedule;
         lock (_gate)
         {
-            if (_closed) return;
+            if (_closed)
+            {
+                return;
+            }
             _closed = true;
             _notifications.Enqueue(new Notification(default, true, _observers.ToArray()));
             schedule = !_drainScheduled;
             _drainScheduled = true;
         }
-        if (schedule) ScheduleDrain();
+        if (schedule)
+        {
+            ScheduleDrain();
+        }
     }
 
     private void ScheduleDrain()
@@ -175,29 +220,50 @@ public sealed class ExecutorProgress : IProgress<TransferProgress>, IDisposable
         IEventExecutor executor;
         lock (_gate)
         {
-            if (_disposed) return;
+            if (_disposed)
+            {
+                return;
+            }
             executor = _executor;
         }
         var reservation = new DrainReservation(this);
         try
         {
-            if (executor.InEventLoop() && ExecutorNotificationScope.CanInline) reservation.Run();
-            else executor.Execute(reservation);
+            if (executor.InEventLoop() && ExecutorNotificationScope.CanInline)
+            {
+                reservation.Run();
+            }
+            else
+            {
+                executor.Execute(reservation);
+            }
         }
-        catch (Exception error) { reservation.Reject(error); }
+        catch (Exception error)
+        {
+            reservation.Reject(error);
+        }
     }
 
     private void DispatchFailed(Exception error)
     {
         lock (_gate)
         {
-            if (_disposed) return;
+            if (_disposed)
+            {
+                return;
+            }
             _disposed = _closed = true;
             ReleaseObservers(error, false);
             _notifications.Clear();
             _drainScheduled = false;
-            if (error != null) _notificationsCompleted.TrySetException(error);
-            else _notificationsCompleted.TrySetCanceled();
+            if (error != null)
+            {
+                _notificationsCompleted.TrySetException(error);
+            }
+            else
+            {
+                _notificationsCompleted.TrySetCanceled();
+            }
         }
     }
 
@@ -219,7 +285,10 @@ public sealed class ExecutorProgress : IProgress<TransferProgress>, IDisposable
                 observers = notification.Observers.Where(observer => observer.Owner == this)
                     .Select(observer =>
                     {
-                        if (notification.Terminal) observer.TerminalClaimed = true;
+                        if (notification.Terminal)
+                        {
+                            observer.TerminalClaimed = true;
+                        }
                         return new ObserverSnapshot(observer, observer.Progress, observer.Completed);
                     }).ToArray();
                 operation = _operation;
@@ -230,12 +299,21 @@ public sealed class ExecutorProgress : IProgress<TransferProgress>, IDisposable
                 {
                     foreach (Action<Task> callback in observer.Completed)
                     {
-                        lock (_gate) { if (StopDisposedBatch(observers)) return; }
+                        lock (_gate)
+                        {
+                            if (StopDisposedBatch(observers))
+                            {
+                                return;
+                            }
+                        }
                         InvokeIsolated(() => callback(operation));
                     }
                     lock (_gate)
                     {
-                        if (StopDisposedBatch(observers)) return;
+                        if (StopDisposedBatch(observers))
+                        {
+                            return;
+                        }
                         if (observer.Registration.Owner == this)
                         {
                             _observers.Remove(observer.Registration.Node);
@@ -256,7 +334,13 @@ public sealed class ExecutorProgress : IProgress<TransferProgress>, IDisposable
             {
                 foreach (Action<TransferProgress> callback in observer.Progress)
                 {
-                    lock (_gate) { if (StopDisposedBatch(observers)) return; }
+                    lock (_gate)
+                    {
+                        if (StopDisposedBatch(observers))
+                        {
+                            return;
+                        }
+                    }
                     InvokeIsolated(() => callback(notification.Progress));
                 }
             }
@@ -268,7 +352,10 @@ public sealed class ExecutorProgress : IProgress<TransferProgress>, IDisposable
     // as well as those still in the registry. All calls hold _gate.
     private bool StopDisposedBatch(ObserverSnapshot[] observers)
     {
-        if (!_disposed) return false;
+        if (!_disposed)
+        {
+            return false;
+        }
         foreach (var observer in observers)
         {
             observer.Registration.Release();
@@ -284,14 +371,20 @@ public sealed class ExecutorProgress : IProgress<TransferProgress>, IDisposable
             ExecutionContext.Run(NativeScheduledWork<object>.CaptureExecutorContext(),
                 static state => ((Action)state)(), callback);
         }
-        catch (Exception error) { Logger.Warn("An exception was thrown by a progress observer.", error); }
+        catch (Exception error)
+        {
+            Logger.Warn("An exception was thrown by a progress observer.", error);
+        }
     }
 
     public void Dispose()
     {
         lock (_gate)
         {
-            if (_disposed) return;
+            if (_disposed)
+            {
+                return;
+            }
             _disposed = _closed = true;
             ReleaseObservers(null, false);
             _notifications.Clear();
@@ -304,9 +397,18 @@ public sealed class ExecutorProgress : IProgress<TransferProgress>, IDisposable
         foreach (var observer in _observers)
         {
             observer.Release();
-            if (completed) observer.Complete();
-            else if (error != null) observer.Reject(error);
-            else observer.Cancel();
+            if (completed)
+            {
+                observer.Complete();
+            }
+            else if (error != null)
+            {
+                observer.Reject(error);
+            }
+            else
+            {
+                observer.Cancel();
+            }
         }
         _observers.Clear();
         _operation = null;

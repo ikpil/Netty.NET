@@ -100,7 +100,10 @@ public static class ConstantTimeUtils
     {
         ArgumentNullException.ThrowIfNull(bytes1);
         ArgumentNullException.ThrowIfNull(bytes2);
-        if (length <= 0) return 1;
+        if (length <= 0)
+        {
+            return 1;
+        }
         // CLR adaptation: validate equal-length slices before calling the BCL's
         // fixed-time primitive. Its timing contract depends on length, not bytes.
         return CryptographicOperations.FixedTimeEquals(

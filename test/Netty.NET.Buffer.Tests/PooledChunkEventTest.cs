@@ -330,7 +330,10 @@ public class PooledChunkEventTest
             {
                 Allocate(allocator, true, 128).Release();
             }
-            catch (Exception error) { failure = error; }
+            catch (Exception error)
+            {
+                failure = error;
+            }
         });
         Listener listener = null;
         Monitor.Enter(arena.SyncRoot);
@@ -345,7 +348,10 @@ public class PooledChunkEventTest
             listener = Listen();
             listener.Callback = _ => held |= Monitor.IsEntered(allocatorLock) || Monitor.IsEntered(arena.SyncRoot);
         }
-        finally { Monitor.Exit(arena.SyncRoot); }
+        finally
+        {
+            Monitor.Exit(arena.SyncRoot);
+        }
         worker.Join();
         using (listener)
         {

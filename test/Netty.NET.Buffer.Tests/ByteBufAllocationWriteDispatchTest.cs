@@ -52,7 +52,10 @@ public class ByteBufAllocationWriteDispatchTest
 
         public ByteBuf After(ByteBuf receiver)
         {
-            if (Mode == 2) throw Error;
+            if (Mode == 2)
+            {
+                throw Error;
+            }
             return Mode == 3 ? Unpooled.EmptyBuffer : receiver;
         }
     }
@@ -62,14 +65,20 @@ public class ByteBufAllocationWriteDispatchTest
         public override ByteBuf WriteBytes(ByteBuf source, int sourceIndex, int length)
         {
             allocator.Observation.Before(source, sourceIndex, length);
-            if (allocator.Observation.Mode != 4) base.WriteBytes(source, sourceIndex, length);
+            if (allocator.Observation.Mode != 4)
+            {
+                base.WriteBytes(source, sourceIndex, length);
+            }
             return allocator.Observation.After(this);
         }
 
         public override ByteBuf WriteBytes(ReadOnlySpan<byte> source)
         {
             allocator.Observation.Before(source);
-            if (allocator.Observation.Mode != 4) base.WriteBytes(source);
+            if (allocator.Observation.Mode != 4)
+            {
+                base.WriteBytes(source);
+            }
             return allocator.Observation.After(this);
         }
     }
@@ -79,14 +88,20 @@ public class ByteBufAllocationWriteDispatchTest
         public override ByteBuf WriteBytes(ByteBuf source, int sourceIndex, int length)
         {
             allocator.Observation.Before(source, sourceIndex, length);
-            if (allocator.Observation.Mode != 4) base.WriteBytes(source, sourceIndex, length);
+            if (allocator.Observation.Mode != 4)
+            {
+                base.WriteBytes(source, sourceIndex, length);
+            }
             return allocator.Observation.After(this);
         }
 
         public override ByteBuf WriteBytes(ReadOnlySpan<byte> source)
         {
             allocator.Observation.Before(source);
-            if (allocator.Observation.Mode != 4) base.WriteBytes(source);
+            if (allocator.Observation.Mode != 4)
+            {
+                base.WriteBytes(source);
+            }
             return allocator.Observation.After(this);
         }
     }
@@ -136,7 +151,10 @@ public class ByteBufAllocationWriteDispatchTest
         public ByteBuf Invoke()
         {
             ++Whole;
-            if (Fail) throw Error;
+            if (Fail)
+            {
+                throw Error;
+            }
             return Result;
         }
     }
@@ -209,13 +227,23 @@ public class ByteBufAllocationWriteDispatchTest
         };
         try
         {
-            if (failure) Assert.Same(calls.Error, Assert.Throws<Failure>(() => buffer.Copy()));
-            else Assert.Same(calls.Result, buffer.Copy());
-            Assert.Equal(1, calls.Whole); Assert.Equal(0, calls.Indexed);
-            Assert.Equal(2, owner.ReaderIndex); Assert.Equal(7, owner.WriterIndex);
+            if (failure)
+            {
+                Assert.Same(calls.Error, Assert.Throws<Failure>(() => buffer.Copy()));
+            }
+            else
+            {
+                Assert.Same(calls.Result, buffer.Copy());
+            }
+            Assert.Equal(1, calls.Whole);
+            Assert.Equal(0, calls.Indexed);
+            Assert.Equal(2, owner.ReaderIndex);
+            Assert.Equal(7, owner.WriterIndex);
             owner.SetIndex(0, 8).ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(2, buffer.ReaderIndex); Assert.Equal(7, buffer.WriterIndex);
-            Assert.Equal(1, owner.RefCnt); Assert.Equal(1, calls.Result.RefCnt);
+            Assert.Equal(2, buffer.ReaderIndex);
+            Assert.Equal(7, buffer.WriterIndex);
+            Assert.Equal(1, owner.RefCnt);
+            Assert.Equal(1, calls.Result.RefCnt);
             Assert.Equal(201, calls.Result.GetByte(0));
         }
         finally
@@ -257,9 +285,18 @@ public class ByteBufAllocationWriteDispatchTest
             {
                 return copy ? source.Copy(2, length) : source.ReadBytes(length);
             }
-            if (invalid) Assert.Throws<ArgumentOutOfRangeException>(() => Invoke());
-            else if (failure) Assert.Same(observation.Error, Assert.Throws<Failure>(() => Invoke()));
-            else result = Invoke();
+            if (invalid)
+            {
+                Assert.Throws<ArgumentOutOfRangeException>(() => Invoke());
+            }
+            else if (failure)
+            {
+                Assert.Same(observation.Error, Assert.Throws<Failure>(() => Invoke()));
+            }
+            else
+            {
+                result = Invoke();
+            }
 
             Assert.Equal(allocate ? 1 : 0, allocator.Calls);
             Assert.Equal(allocate && !copy ? 1 : 0, allocator.BufferCalls);
@@ -268,44 +305,69 @@ public class ByteBufAllocationWriteDispatchTest
             Assert.Equal(wrote && copy ? 1 : 0, observation.SpanWrites);
             if (allocate)
             {
-                Assert.Equal(length, allocator.Initial); Assert.Equal(16, allocator.Maximum);
+                Assert.Equal(length, allocator.Initial);
+                Assert.Equal(16, allocator.Maximum);
                 Assert.Equal(copy ? direct : !direct, allocator.DirectAllocation);
             }
             if (wrote)
             {
                 Assert.Equal(length, observation.Length);
                 Assert.Equal(new byte[] { 12, 13, 14, 15, 16, 17 }[..length], observation.Input);
-                if (!copy) { Assert.Same(source, observation.Source); Assert.Equal(2, observation.Index); }
+                if (!copy)
+                {
+                    Assert.Same(source, observation.Source);
+                    Assert.Equal(2, observation.Index);
+                }
                 Assert.Equal(mode is 1 or 4 ? 0 : length, allocator.Last.WriterIndex);
                 Assert.Equal(failure ? 0 : 1, allocator.Last.RefCnt);
             }
             if (!invalid && !failure)
             {
-                if (!allocate || copy && mode == 3) Assert.Same(Unpooled.EmptyBuffer, result);
-                else Assert.Same(allocator.Last, result);
+                if (!allocate || copy && mode == 3)
+                {
+                    Assert.Same(Unpooled.EmptyBuffer, result);
+                }
+                else
+                {
+                    Assert.Same(allocator.Last, result);
+                }
                 if (allocate)
                 {
-                    Assert.Equal(length, allocator.Last.Capacity); Assert.Equal(16, allocator.Last.MaxCapacity);
+                    Assert.Equal(length, allocator.Last.Capacity);
+                    Assert.Equal(16, allocator.Last.MaxCapacity);
                     Assert.Equal(copy ? direct : !direct, allocator.Last.IsDirect);
                     Assert.Same(allocator, allocator.Last.Alloc());
                     if (mode != 4)
                     {
                         Assert.Equal(new byte[] { 12, 13, 14, 15, 16, 17 }[..length], ByteBufUtil.GetBytes(allocator.Last));
-                        if (length > 0) { allocator.Last.SetByte(0, 201); Assert.Equal(12, source.GetByte(2)); }
+                        if (length > 0)
+                        {
+                            allocator.Last.SetByte(0, 201);
+                            Assert.Equal(12, source.GetByte(2));
+                        }
                     }
                 }
             }
             Assert.Equal(!copy && !invalid && !failure ? 2 + length : 2, source.ReaderIndex);
-            Assert.Equal(7, source.WriterIndex); Assert.Equal(8, source.Capacity); Assert.Equal(1, source.RefCnt);
+            Assert.Equal(7, source.WriterIndex);
+            Assert.Equal(8, source.Capacity);
+            Assert.Equal(1, source.RefCnt);
             Assert.Equal(new byte[] { 10, 11, 12, 13, 14, 15, 16, 17 }, ByteBufUtil.GetBytes(source, 0, 8));
             source.SetIndex(0, 8).ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(2, source.ReaderIndex); Assert.Equal(7, source.WriterIndex);
-            if (failure) Assert.Equal(direct ? 8 : 0, allocator.Native.ReservedBytes);
+            Assert.Equal(2, source.ReaderIndex);
+            Assert.Equal(7, source.WriterIndex);
+            if (failure)
+            {
+                Assert.Equal(direct ? 8 : 0, allocator.Native.ReservedBytes);
+            }
         }
         finally
         {
             // A deliberately redirected copy result leaves ownership with the custom allocator probe.
-            if (allocator.Last is { RefCnt: > 0 }) Assert.True(allocator.Last.Release());
+            if (allocator.Last is { RefCnt: > 0 })
+            {
+                Assert.True(allocator.Last.Release());
+            }
             Assert.True(source.Release());
         }
         Assert.Equal(0, allocator.Native.ReservedBytes);

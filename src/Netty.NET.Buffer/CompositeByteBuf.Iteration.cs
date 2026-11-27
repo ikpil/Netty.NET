@@ -22,13 +22,19 @@ public partial class CompositeByteBuf
 {
     internal override int ForEachByteAscending(int start, int end, Func<byte, bool> processor)
     {
-        if (end <= start) return -1;
+        if (end <= start)
+        {
+            return -1;
+        }
         int componentIndex = FindComponentIndex(start);
         while (start < end)
         {
             CheckIndex(start, end - start);
             ComponentEntry component = _components[componentIndex++];
-            if (component.Length == 0) continue; // empty
+            if (component.Length == 0)
+            {
+                continue; // empty
+            }
             int count = Math.Min(end - start, component.EndOffset - start);
             int local = component.SourceIndex + (start - component.Offset);
             component.Source.CheckIndex(local, count);
@@ -38,12 +44,22 @@ public partial class CompositeByteBuf
             int remaining = count;
             bool Process(byte value)
             {
-                if (!processor(value)) return false;
-                if (--remaining > 0) { EnsureAccessible(); component.Source.CheckIndex(0, 0); }
+                if (!processor(value))
+                {
+                    return false;
+                }
+                if (--remaining > 0)
+                {
+                    EnsureAccessible();
+                    component.Source.CheckIndex(0, 0);
+                }
                 return true;
             }
             int result = storage.ForEachByteAscending(local, local + count, Process);
-            if (result != -1) return start + (result - local);
+            if (result != -1)
+            {
+                return start + (result - local);
+            }
             start += count;
         }
         return -1;
@@ -52,13 +68,19 @@ public partial class CompositeByteBuf
     internal override int ForEachByteDescending(int start, int end, Func<byte, bool> processor)
     {
         // rStart *and* rEnd are inclusive
-        if (end > start) return -1;
+        if (end > start)
+        {
+            return -1;
+        }
         int componentIndex = FindComponentIndex(start);
         while (start >= end)
         {
             CheckIndex(end, start - end + 1);
             ComponentEntry component = _components[componentIndex--];
-            if (component.Length == 0) continue; // empty
+            if (component.Length == 0)
+            {
+                continue; // empty
+            }
             // CLR: clamp at the captured component boundary. The original localRStart-based
             // length can include bytes before a component's captured readable start.
             int count = Math.Min(start - end + 1, start - component.Offset + 1);
@@ -70,12 +92,22 @@ public partial class CompositeByteBuf
             int remaining = count;
             bool Process(byte value)
             {
-                if (!processor(value)) return false;
-                if (--remaining > 0) { EnsureAccessible(); component.Source.CheckIndex(0, 0); }
+                if (!processor(value))
+                {
+                    return false;
+                }
+                if (--remaining > 0)
+                {
+                    EnsureAccessible();
+                    component.Source.CheckIndex(0, 0);
+                }
                 return true;
             }
             int result = storage.ForEachByteDescending(local + count - 1, local, Process);
-            if (result != -1) return componentStart + (result - local);
+            if (result != -1)
+            {
+                return componentStart + (result - local);
+            }
             start -= count;
         }
         return -1;

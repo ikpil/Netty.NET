@@ -54,7 +54,10 @@ public class HeapByteBufTest
             Assert.Equal(1, buffer.RefCnt);
             Assert.Equal(UsesDirectMemory, buffer.IsDirect);
         }
-        finally { Assert.True(buffer.Release()); }
+        finally
+        {
+            Assert.True(buffer.Release());
+        }
     }
 
     [Theory]
@@ -73,7 +76,10 @@ public class HeapByteBufTest
             Assert.Equal(0, buffer.ReaderIndex);
             Assert.Equal(0, buffer.WriterIndex);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Fact]
@@ -91,7 +97,10 @@ public class HeapByteBufTest
             Assert.Equal(4, buffer.ReaderIndex);
             Assert.Equal(8, buffer.WriterIndex);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Fact]
@@ -117,7 +126,10 @@ public class HeapByteBufTest
             Assert.Equal(0, buffer.ReaderIndex);
             Assert.Equal(0, buffer.WriterIndex);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Theory]
@@ -134,7 +146,10 @@ public class HeapByteBufTest
             Assert.Equal(capacity, buffer.Capacity);
             Assert.Equal(0, buffer.WriterIndex);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Fact]
@@ -152,7 +167,10 @@ public class HeapByteBufTest
             Assert.Throws<ArgumentOutOfRangeException>(() => buffer.EnsureWritable(int.MaxValue));
             Assert.Equal(8, buffer.WriterIndex);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Fact]
@@ -192,7 +210,11 @@ public class HeapByteBufTest
             buffer.ResetWriterIndex();
             Assert.Equal(Capacity / 3 - Capacity / 4, buffer.WriterIndex);
         }
-        finally { copy?.Release(); buffer.Release(); }
+        finally
+        {
+            copy?.Release();
+            buffer.Release();
+        }
     }
 
     [Fact]
@@ -212,7 +234,10 @@ public class HeapByteBufTest
             Assert.Equal(0, buffer.ReaderIndex);
             Assert.Equal(0, buffer.WriterIndex);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Fact]
@@ -231,7 +256,10 @@ public class HeapByteBufTest
             Assert.Equal(2, buffer.ReaderIndex);
             Assert.Equal(4, buffer.WriterIndex);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Fact]
@@ -255,7 +283,11 @@ public class HeapByteBufTest
             duplicate.ResetReaderIndex();
             Assert.Equal(1, duplicate.ReaderIndex);
         }
-        finally { copy?.Release(); buffer.Release(); }
+        finally
+        {
+            copy?.Release();
+            buffer.Release();
+        }
     }
 
     [Theory]
@@ -270,11 +302,17 @@ public class HeapByteBufTest
             {
                 ByteBuf duplicate = retain ? slice.RetainedDuplicate() : slice.Duplicate();
                 Assert.Equal(slice.Capacity, duplicate.Capacity);
-                if (retain) Assert.False(duplicate.Release());
+                if (retain)
+                {
+                    Assert.False(duplicate.Release());
+                }
             }
             Assert.Equal(1, buffer.RefCnt);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Fact]
@@ -300,11 +338,18 @@ public class HeapByteBufTest
                             AssertRetainedReadableSlice(view);
                         }
                 }
-                finally { retainedDuplicate.Release(); retainedSlice.Release(); }
+                finally
+                {
+                    retainedDuplicate.Release();
+                    retainedSlice.Release();
+                }
                 Assert.Equal(1, buffer.RefCnt);
             }
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     private static void AssertRetainedReadableSlice(ByteBuf buffer)
@@ -315,7 +360,10 @@ public class HeapByteBufTest
             Assert.Equal(buffer.ReadableBytes, slice.ReadableBytes);
             Assert.Equal(buffer.ReadableMemory.ToArray(), slice.ReadableMemory.ToArray());
         }
-        finally { slice.Release(); }
+        finally
+        {
+            slice.Release();
+        }
     }
 
     [Fact]
@@ -349,9 +397,15 @@ public class HeapByteBufTest
                 Assert.Throws<ArgumentOutOfRangeException>(() => buffer.ReadSlice(1));
                 Assert.Equal(4, buffer.ReaderIndex);
             }
-            finally { retained.Release(); }
+            finally
+            {
+                retained.Release();
+            }
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Fact]
@@ -370,7 +424,10 @@ public class HeapByteBufTest
             Assert.Throws<ArgumentOutOfRangeException>(() => slice.GetInt(0));
             Assert.Throws<NotSupportedException>(() => slice.Capacity = 4);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Fact]
@@ -390,6 +447,10 @@ public class HeapByteBufTest
             Assert.Equal(3, wrapped.MaxCapacity);
             Assert.Throws<ArgumentNullException>(() => Unpooled.WrappedBuffer((byte[])null));
         }
-        finally { wrapped.Release(); copied.Release(); }
+        finally
+        {
+            wrapped.Release();
+            copied.Release();
+        }
     }
 }

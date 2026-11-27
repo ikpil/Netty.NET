@@ -238,7 +238,11 @@ public abstract class Recycler<T> where T : class
     private Recycler(int maxCapacityPerThread, int ratio, int chunkSize, bool useThreadLocalStorage, Thread owner, bool unguarded)
     {
         int interval = Math.Max(0, ratio);
-        if (maxCapacityPerThread <= 0) { maxCapacityPerThread = 0; chunkSize = 0; }
+        if (maxCapacityPerThread <= 0)
+        {
+            maxCapacityPerThread = 0;
+            chunkSize = 0;
+        }
         else
         {
             maxCapacityPerThread = Math.Max(4, maxCapacityPerThread);
@@ -248,7 +252,10 @@ public abstract class Recycler<T> where T : class
             threadLocalPool = new PoolThreadLocal(maxCapacityPerThread, interval, chunkSize, unguarded);
         else
         {
-            if (maxCapacityPerThread == 0) localPool = NOOP_LOCAL_POOL;
+            if (maxCapacityPerThread == 0)
+            {
+                localPool = NOOP_LOCAL_POOL;
+            }
             else
             {
                 ArgumentNullException.ThrowIfNull(owner);
@@ -269,8 +276,14 @@ public abstract class Recycler<T> where T : class
 
     public T Get()
     {
-        if (localPool != null) return localPool.GetWith(this);
-        if (!FastThreadLocalThread.CurrentThreadWillCleanupFastThreadLocals()) return NewObject(NOOP_HANDLE);
+        if (localPool != null)
+        {
+            return localPool.GetWith(this);
+        }
+        if (!FastThreadLocalThread.CurrentThreadWillCleanupFastThreadLocals())
+        {
+            return NewObject(NOOP_HANDLE);
+        }
         return threadLocalPool.Get().GetWith(this);
     }
 
@@ -286,15 +299,24 @@ public abstract class Recycler<T> where T : class
     [Obsolete]
     public bool Recycle(T value, IRecyclerHandle<T> handle)
     {
-        if (ReferenceEquals(handle, NOOP_HANDLE)) return false;
+        if (ReferenceEquals(handle, NOOP_HANDLE))
+        {
+            return false;
+        }
         handle.Recycle(value);
         return true;
     }
 
     public int ThreadLocalSize()
     {
-        if (localPool != null) return localPool.Size();
-        if (!FastThreadLocalThread.CurrentThreadWillCleanupFastThreadLocals()) return 0;
+        if (localPool != null)
+        {
+            return localPool.Size();
+        }
+        if (!FastThreadLocalThread.CurrentThreadWillCleanupFastThreadLocals())
+        {
+            return 0;
+        }
         return threadLocalPool.GetIfExists()?.Size() ?? 0;
     }
 
@@ -345,7 +367,10 @@ public abstract class Recycler<T> where T : class
         private T value;
         public override void Recycle(T item)
         {
-            if (!ReferenceEquals(item, value)) throw new ArgumentException("object does not belong to handle");
+            if (!ReferenceEquals(item, value))
+            {
+                throw new ArgumentException("object does not belong to handle");
+            }
             if (Interlocked.Exchange(ref state, STATE_AVAILABLE) == STATE_AVAILABLE)
                 throw new InvalidOperationException("Object has been recycled already.");
             pool.Release(this);
@@ -353,7 +378,10 @@ public abstract class Recycler<T> where T : class
 
         public override void UnguardedRecycle(object item)
         {
-            if (!ReferenceEquals(item, value)) throw new ArgumentException("object does not belong to handle");
+            if (!ReferenceEquals(item, value))
+            {
+                throw new ArgumentException("object does not belong to handle");
+            }
             if (Volatile.Read(ref state) == STATE_AVAILABLE)
                 throw new InvalidOperationException("Object has been recycled already.");
             Volatile.Write(ref state, STATE_AVAILABLE);
@@ -387,8 +415,14 @@ public abstract class Recycler<T> where T : class
         internal override T GetWith(Recycler<T> recycler)
         {
             DefaultHandle handle = Acquire();
-            if (handle != null) return handle.Claim();
-            if (!CanAllocatePooled()) return recycler.NewObject(NOOP_HANDLE);
+            if (handle != null)
+            {
+                return handle.Claim();
+            }
+            if (!CanAllocatePooled())
+            {
+                return recycler.NewObject(NOOP_HANDLE);
+            }
             handle = new DefaultHandle(this);
             T value = recycler.NewObject(handle);
             handle.Set(value);
@@ -471,13 +505,18 @@ public abstract class Recycler<T> where T : class
         {
             Thread currentOwner = Volatile.Read(ref owner);
             if (currentOwner != null && Thread.CurrentThread == currentOwner && batchSize < batch.Length)
+            {
                 batch[batchSize++] = value;
+            }
             else if (currentOwner != null && IsTerminated(currentOwner))
             {
                 Volatile.Write(ref pooledHandles, null);
                 Volatile.Write(ref owner, null);
             }
-            else Volatile.Read(ref pooledHandles)?.Offer(value);
+            else
+            {
+                Volatile.Read(ref pooledHandles)?.Offer(value);
+            }
         }
 
         private static bool IsTerminated(Thread owner)
@@ -490,9 +529,18 @@ public abstract class Recycler<T> where T : class
 
         protected bool CanAllocatePooled()
         {
-            if (ratioInterval < 0) return false;
-            if (ratioInterval == 0) return true;
-            if (++ratioCounter < ratioInterval) return false;
+            if (ratioInterval < 0)
+            {
+                return false;
+            }
+            if (ratioInterval == 0)
+            {
+                return true;
+            }
+            if (++ratioCounter < ratioInterval)
+            {
+                return false;
+            }
             ratioCounter = 0;
             return true;
         }
@@ -544,10 +592,20 @@ public abstract class Recycler<T> where T : class
             do
             {
                 before = Volatile.Read(ref count);
-                if (before >= capacity) return false;
+                if (before >= capacity)
+                {
+                    return false;
+                }
             } while (Interlocked.CompareExchange(ref count, before + 1, before) != before);
-            try { ConcurrentQueueOperations.EnqueueUninterruptibly(queue, value); }
-            catch { Interlocked.Decrement(ref count); throw; }
+            try
+            {
+                ConcurrentQueueOperations.EnqueueUninterruptibly(queue, value);
+            }
+            catch
+            {
+                Interlocked.Decrement(ref count);
+                throw;
+            }
             return true;
         }
 
@@ -558,7 +616,10 @@ public abstract class Recycler<T> where T : class
 
         private bool TryPoll(out H value)
         {
-            if (!ConcurrentQueueOperations.TryDequeueUninterruptibly(queue, out value)) return false;
+            if (!ConcurrentQueueOperations.TryDequeueUninterruptibly(queue, out value))
+            {
+                return false;
+            }
             Interlocked.Decrement(ref count);
             return true;
         }
@@ -604,7 +665,10 @@ public abstract class Recycler<T> where T : class
         public bool Offer(H value)
         {
             using var held = UninterruptibleMonitor.Enter(this);
-            if (deque.Count == capacity) return false;
+            if (deque.Count == capacity)
+            {
+                return false;
+            }
             deque.Enqueue(value);
             return true;
         }

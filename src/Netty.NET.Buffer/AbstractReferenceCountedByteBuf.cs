@@ -63,7 +63,10 @@ public abstract class AbstractReferenceCountedByteBuf : ByteBuf
     public override bool Release(int decrement = 1)
     {
         bool final = ReferenceCountUpdater.Release(ref _refCnt, decrement);
-        if (final) Deallocate();
+        if (final)
+        {
+            Deallocate();
+        }
         return final;
     }
 

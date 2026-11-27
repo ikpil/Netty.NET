@@ -272,24 +272,42 @@ public static class RtspResponseStatuses
     {
         switch (code)
         {
-        case 250: return LOW_STORAGE_SPACE;
-        case 302: return MOVED_TEMPORARILY;
-        case 451: return PARAMETER_NOT_UNDERSTOOD;
-        case 452: return CONFERENCE_NOT_FOUND;
-        case 453: return NOT_ENOUGH_BANDWIDTH;
-        case 454: return SESSION_NOT_FOUND;
-        case 455: return METHOD_NOT_VALID;
-        case 456: return HEADER_FIELD_NOT_VALID;
-        case 457: return INVALID_RANGE;
-        case 458: return PARAMETER_IS_READONLY;
-        case 459: return AGGREGATE_OPERATION_NOT_ALLOWED;
-        case 460: return ONLY_AGGREGATE_OPERATION_ALLOWED;
-        case 461: return UNSUPPORTED_TRANSPORT;
-        case 462: return DESTINATION_UNREACHABLE;
-        case 463: return KEY_MANAGEMENT_FAILURE;
-        case 505: return RTSP_VERSION_NOT_SUPPORTED;
-        case 551: return OPTION_NOT_SUPPORTED;
-        default:  return HttpResponseStatus.ValueOf(code);
+        case 250:
+                return LOW_STORAGE_SPACE;
+        case 302:
+                return MOVED_TEMPORARILY;
+        case 451:
+                return PARAMETER_NOT_UNDERSTOOD;
+        case 452:
+                return CONFERENCE_NOT_FOUND;
+        case 453:
+                return NOT_ENOUGH_BANDWIDTH;
+        case 454:
+                return SESSION_NOT_FOUND;
+        case 455:
+                return METHOD_NOT_VALID;
+        case 456:
+                return HEADER_FIELD_NOT_VALID;
+        case 457:
+                return INVALID_RANGE;
+        case 458:
+                return PARAMETER_IS_READONLY;
+        case 459:
+                return AGGREGATE_OPERATION_NOT_ALLOWED;
+        case 460:
+                return ONLY_AGGREGATE_OPERATION_ALLOWED;
+        case 461:
+                return UNSUPPORTED_TRANSPORT;
+        case 462:
+                return DESTINATION_UNREACHABLE;
+        case 463:
+                return KEY_MANAGEMENT_FAILURE;
+        case 505:
+                return RTSP_VERSION_NOT_SUPPORTED;
+        case 551:
+                return OPTION_NOT_SUPPORTED;
+        default:
+                return HttpResponseStatus.ValueOf(code);
         }
     }
 }

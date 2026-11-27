@@ -183,7 +183,10 @@ public class NativeSchedulingContractTest
             using (ExecutionContext.SuppressFlow())
                 task = executor.ScheduleAtFixedRateAsync(action, TimeSpan.Zero, TimeSpan.FromTicks(1), cancellation.Token);
         }
-        else task = executor.ScheduleAtFixedRateAsync(action, TimeSpan.Zero, TimeSpan.FromTicks(1), cancellation.Token);
+        else
+        {
+            task = executor.ScheduleAtFixedRateAsync(action, TimeSpan.Zero, TimeSpan.FromTicks(1), cancellation.Token);
+        }
         ambient.Value = "executor";
         executor.Poll().Invoke();
         Assert.Equal("executor", ambient.Value);
@@ -244,8 +247,14 @@ public class NativeSchedulingContractTest
         finally
         {
             release.Set();
-            try { await blocker.WaitAsync(TimeSpan.FromSeconds(5)); }
-            finally { await Stop(executor); }
+            try
+            {
+                await blocker.WaitAsync(TimeSpan.FromSeconds(5));
+            }
+            finally
+            {
+                await Stop(executor);
+            }
         }
     }
 
@@ -270,7 +279,10 @@ public class NativeSchedulingContractTest
             }), TimeSpan.Zero, cancellation.Token);
             Assert.Equal(23, await executor.ScheduleAsync((Func<CancellationToken, Task<int>>)(token => Task.FromResult(token == cancellation.Token ? 23 : 0)), TimeSpan.Zero, cancellation.Token));
         }
-        finally { await Stop(executor); }
+        finally
+        {
+            await Stop(executor);
+        }
     }
 
     private sealed class FailingFactory(Exception error) : IThreadFactory
@@ -303,7 +315,10 @@ public class NativeSchedulingContractTest
             Task task = executor.ScheduleWithFixedDelayAsync(() =>
             {
                 started.SetResult();
-                if (!release.Wait(TimeSpan.FromSeconds(5))) throw new TimeoutException();
+                if (!release.Wait(TimeSpan.FromSeconds(5)))
+                {
+                    throw new TimeoutException();
+                }
             }, TimeSpan.Zero, TimeSpan.FromDays(1));
             await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
             executor.Shutdown();
@@ -311,7 +326,11 @@ public class NativeSchedulingContractTest
             await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await task.WaitAsync(TimeSpan.FromSeconds(5)));
             Assert.True(task.IsCanceled);
         }
-        finally { release.Set(); await Stop(executor); }
+        finally
+        {
+            release.Set();
+            await Stop(executor);
+        }
     }
 
     private sealed class InspectableExecutor : SingleThreadEventExecutor
@@ -326,7 +345,11 @@ public class NativeSchedulingContractTest
             while (!ConfirmShutdown())
             {
                 Action task = TakeTask();
-                if (task != null) { RunTask(task); UpdateLastExecutionTime(); }
+                if (task != null)
+                {
+                    RunTask(task);
+                    UpdateLastExecutionTime();
+                }
             }
         }
     }
@@ -349,7 +372,10 @@ public class NativeSchedulingContractTest
             Assert.Equal(0, await executor.SubmitAsync(() => executor.ScheduledCount));
             Assert.Equal(0, calls);
         }
-        finally { await Stop(executor); }
+        finally
+        {
+            await Stop(executor);
+        }
     }
 
     private static async Task Stop(IEventExecutor executor)
@@ -376,7 +402,10 @@ public class NativeSchedulingContractTest
             await executor.ScheduleAsync(() => { }, TimeSpan.Zero);
             Assert.Equal(1, calls);
         }
-        finally { await Stop(executor); }
+        finally
+        {
+            await Stop(executor);
+        }
     }
 
     [Theory]
@@ -395,8 +424,14 @@ public class NativeSchedulingContractTest
             Task<int> task = executor.ScheduleAsync(token =>
             {
                 started.SetResult();
-                if (!release.Wait(TimeSpan.FromSeconds(5))) throw new TimeoutException();
-                if (cooperate) token.ThrowIfCancellationRequested();
+                if (!release.Wait(TimeSpan.FromSeconds(5)))
+                {
+                    throw new TimeoutException();
+                }
+                if (cooperate)
+                {
+                    token.ThrowIfCancellationRequested();
+                }
                 return 42;
             }, TimeSpan.Zero, cancellation.Token);
             await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
@@ -409,9 +444,16 @@ public class NativeSchedulingContractTest
                 Assert.Equal(cancellation.Token, error.CancellationToken);
                 Assert.True(task.IsCanceled);
             }
-            else Assert.Equal(42, await task.WaitAsync(TimeSpan.FromSeconds(5)));
+            else
+            {
+                Assert.Equal(42, await task.WaitAsync(TimeSpan.FromSeconds(5)));
+            }
         }
-        finally { release.Set(); await Stop(executor); }
+        finally
+        {
+            release.Set();
+            await Stop(executor);
+        }
     }
 
     [Theory]
@@ -431,7 +473,11 @@ public class NativeSchedulingContractTest
             inner.SetResult(73);
             Assert.Equal(73, await task.WaitAsync(TimeSpan.FromSeconds(5)));
         }
-        finally { inner.TrySetResult(0); await Stop(executor); }
+        finally
+        {
+            inner.TrySetResult(0);
+            await Stop(executor);
+        }
     }
 
     [Theory]
@@ -449,7 +495,10 @@ public class NativeSchedulingContractTest
             Task nullTask = executor.ScheduleAsync((Func<Task>)(() => null), TimeSpan.Zero);
             await Assert.ThrowsAsync<InvalidOperationException>(async () => await nullTask);
         }
-        finally { await Stop(executor); }
+        finally
+        {
+            await Stop(executor);
+        }
     }
 
     [Theory]
@@ -468,7 +517,10 @@ public class NativeSchedulingContractTest
             {
                 Interlocked.Increment(ref calls);
                 started.TrySetResult();
-                if (!release.Wait(TimeSpan.FromSeconds(5))) throw new TimeoutException();
+                if (!release.Wait(TimeSpan.FromSeconds(5)))
+                {
+                    throw new TimeoutException();
+                }
             }, TimeSpan.Zero, TimeSpan.FromTicks(1), cancellation.Token);
             await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
             cancellation.Cancel();
@@ -477,7 +529,11 @@ public class NativeSchedulingContractTest
             await executor.ScheduleAsync(() => { }, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5));
             Assert.Equal(1, calls);
         }
-        finally { release.Set(); await Stop(executor); }
+        finally
+        {
+            release.Set();
+            await Stop(executor);
+        }
     }
 
     [Fact]
@@ -501,7 +557,10 @@ public class NativeSchedulingContractTest
             Assert.Equal(29, await group.ScheduleAsync(() => 29, TimeSpan.Zero));
             await Assert.ThrowsAsync<NotSupportedException>(async () => await group.Next().ScheduleAsync(() => { }, TimeSpan.Zero));
         }
-        finally { await Stop(pool); }
+        finally
+        {
+            await Stop(pool);
+        }
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -532,11 +591,16 @@ public class NativeSchedulingContractTest
             Assert.True(scheduled.Work.IsAlive);
             await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5));
             Assert.True(scheduled.Result.IsCanceled);
-            GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
             Assert.False(scheduled.Work.IsAlive);
             GC.KeepAlive(executor);
         }
-        finally { await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        }
     }
 
     [Fact]

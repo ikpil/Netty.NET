@@ -146,8 +146,14 @@ public class CompositeByteBufOwnershipTest
             {
                 Assert.True(composite.Release());
                 Assert.Equal(1, root.RefCnt);
-                if (pooled) Assert.All(parts, part => Assert.Equal(0, part.RefCnt));
-                else Assert.All(parts, part => Assert.Equal(1, part.RefCnt));
+                if (pooled)
+                {
+                    Assert.All(parts, part => Assert.Equal(0, part.RefCnt));
+                }
+                else
+                {
+                    Assert.All(parts, part => Assert.Equal(1, part.RefCnt));
+                }
                 Assert.True(root.Release());
             }
             Assert.Equal(0, root.RefCnt);
@@ -156,8 +162,14 @@ public class CompositeByteBufOwnershipTest
         }
         finally
         {
-            if (composite.RefCnt > 0) composite.Release();
-            if (root.RefCnt > 0) root.Release(root.RefCnt);
+            if (composite.RefCnt > 0)
+            {
+                composite.Release();
+            }
+            if (root.RefCnt > 0)
+            {
+                root.Release(root.RefCnt);
+            }
         }
     }
 
@@ -209,19 +221,33 @@ public class CompositeByteBufOwnershipTest
             Assert.True(composite.Release());
             Assert.Equal(1, root.RefCnt);
             if (pooled)
+            {
                 foreach (ByteBuf part in parts)
                     Assert.Throws<IllegalReferenceCountException>(() => part.GetByte(0));
-            else Assert.All(parts, part => Assert.Equal(0, part.GetByte(0)));
+            }
+            else
+            {
+                Assert.All(parts, part => Assert.Equal(0, part.GetByte(0)));
+            }
             Assert.True(root.Release());
             Assert.All(parts, part => Assert.Equal(0, part.RefCnt));
             Assert.All(components, component => Assert.Equal(0, component.RefCnt));
         }
         finally
         {
-            if (composite.RefCnt > 0) composite.Release();
+            if (composite.RefCnt > 0)
+            {
+                composite.Release();
+            }
             foreach (ByteBuf component in components)
-                if (pooled && component.RefCnt > 0) component.Release(component.RefCnt);
-            if (root.RefCnt > 0) root.Release(root.RefCnt);
+                if (pooled && component.RefCnt > 0)
+                {
+                    component.Release(component.RefCnt);
+                }
+            if (root.RefCnt > 0)
+            {
+                root.Release(root.RefCnt);
+            }
         }
     }
 
@@ -246,8 +272,14 @@ public class CompositeByteBufOwnershipTest
             composite.SetIndex(1, count * 2);
             Assert.Equal(count, composite.NumComponents);
             Assert.Equal(count * 2, composite.Capacity);
-            if (removeCount == 1) Assert.Same(composite, composite.RemoveComponent(removeAt));
-            else Assert.Same(composite, composite.RemoveComponents(removeAt, removeCount));
+            if (removeCount == 1)
+            {
+                Assert.Same(composite, composite.RemoveComponent(removeAt));
+            }
+            else
+            {
+                Assert.Same(composite, composite.RemoveComponents(removeAt, removeCount));
+            }
             Assert.Equal(count - removeCount, composite.NumComponents);
             Assert.Equal((count - removeCount) * 2, composite.Capacity);
             Assert.Equal(1, composite.ReaderIndex);
@@ -258,7 +290,10 @@ public class CompositeByteBufOwnershipTest
             {
                 bool removed = i >= removeAt && i < removeAt + removeCount;
                 Assert.Equal(removed ? 0 : 1, sources[i].RefCnt);
-                if (removed) continue;
+                if (removed)
+                {
+                    continue;
+                }
                 Assert.Equal(remainingIndex * 2, composite.ToByteIndex(remainingIndex));
                 Assert.Equal(remainingIndex, composite.ToComponentIndex(remainingIndex * 2));
                 Assert.Equal(1, sources[i].ReaderIndex);
@@ -269,7 +304,10 @@ public class CompositeByteBufOwnershipTest
             Assert.Equal(expected.ToArray(), Read(composite, 0, composite.Capacity));
             Assert.Same(composite, composite.RemoveComponents(composite.NumComponents, 0));
         }
-        finally { composite.Release(); }
+        finally
+        {
+            composite.Release();
+        }
         Assert.All(sources, source => Assert.Equal(0, source.RefCnt));
     }
 
@@ -285,7 +323,10 @@ public class CompositeByteBufOwnershipTest
             buf.RemoveComponent(0);
             Assert.Equal(0, buf.NumComponents);
         }
-        finally { buf.Release(); }
+        finally
+        {
+            buf.Release();
+        }
     }
 
     [Fact]
@@ -301,7 +342,10 @@ public class CompositeByteBufOwnershipTest
             buf.RemoveComponent(1);
             Assert.Equal(1, buf.NumComponents);
         }
-        finally { buf.Release(); }
+        finally
+        {
+            buf.Release();
+        }
     }
 
     [Fact]
@@ -318,6 +362,9 @@ public class CompositeByteBufOwnershipTest
             Assert.Equal(7, buf.NumComponents);
             Assert.Equal(14, buf.Capacity);
         }
-        finally { buf.Release(); }
+        finally
+        {
+            buf.Release();
+        }
     }
 }

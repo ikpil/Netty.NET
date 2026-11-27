@@ -333,7 +333,10 @@ public class HashedWheelTimer : ITimer, IDisposable
 
     private void DecrementInstanceCount()
     {
-        if (Interlocked.Exchange(ref _instanceCounted, 0) != 0) Interlocked.Decrement(ref INSTANCE_COUNTER);
+        if (Interlocked.Exchange(ref _instanceCounted, 0) != 0)
+        {
+            Interlocked.Decrement(ref INSTANCE_COUNTER);
+        }
     }
 
     // CLR callers can give the timer an explicit using/IDisposable lifetime.
@@ -430,8 +433,13 @@ public class HashedWheelTimer : ITimer, IDisposable
             {
                 // Java interrupt on a terminated thread is harmless. CLR can
                 // throw when termination races with this call.
-                try { _workerThread.Interrupt(); }
-                catch (ThreadStateException) { }
+                try
+                {
+                    _workerThread.Interrupt();
+                }
+                catch (ThreadStateException)
+                {
+                }
                 try
                 {
                     _workerThread.Join(100);
@@ -484,7 +492,10 @@ public class HashedWheelTimer : ITimer, IDisposable
                                                  + "timeouts (" + _maxPendingTimeouts.ToString(CultureInfo.InvariantCulture) + ")");
         }
 
-        try { Start(); }
+        try
+        {
+            Start();
+        }
         catch
         {
             Interlocked.Decrement(ref _pendingTimeouts);

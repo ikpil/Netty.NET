@@ -658,7 +658,9 @@ public class Bootstrap : AbstractBootstrap
             else
                 await channel.CloseAsync().ConfigureAwait(false);
         }
-        catch { }
+        catch
+        {
+        }
     }
 
     // Holder to avoid NoClassDefFoundError in case netty-resolver dependency is excluded (e.g. some address families do not need name resolution)

@@ -40,7 +40,10 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
     public async ValueTask DisposeAsync()
     {
         foreach (var loop in new SingleThreadEventLoop[] { _a, _b, _c })
-            if (!loop.IsShuttingDown()) _ = loop.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
+            if (!loop.IsShuttingDown())
+            {
+                _ = loop.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
+            }
         foreach (var loop in new SingleThreadEventLoop[] { _a, _b, _c })
             await loop.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(10));
         Assert.Equal(1, _a.CleanedUp);
@@ -126,7 +129,10 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
         {
             bool empty = timestamps.IsEmpty;
             timestamps.Enqueue(Stopwatch.GetTimestamp());
-            if (!laggy || empty) SleepIgnoringInterrupt(laggy ? 401 : 50);
+            if (!laggy || empty)
+            {
+                SleepIgnoringInterrupt(laggy ? 401 : 50);
+            }
             CountDown(latch);
         }, TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(100), cancel.Token);
         // CLR: the test thread waits for the latch as the source does. A Task.Run wait added a thread-pool hop between
@@ -143,8 +149,14 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
             for (int i = 1; i < values.Length; i++)
             {
                 var diff = Stopwatch.GetElapsedTime(values[i - 1], values[i]);
-                if (i == 1) Assert.True(diff >= TimeSpan.FromMilliseconds(400), diff.ToString());
-                else Assert.True(diff <= TimeSpan.FromMilliseconds(10), diff.ToString());
+                if (i == 1)
+                {
+                    Assert.True(diff >= TimeSpan.FromMilliseconds(400), diff.ToString());
+                }
+                else
+                {
+                    Assert.True(diff <= TimeSpan.FromMilliseconds(10), diff.ToString());
+                }
             }
         }
         else
@@ -164,13 +176,22 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
     // it was not canceled (measured 2026-11-27). Only the event loop thread counts down, so the check cannot race.
     private static void CountDown(CountdownEvent latch)
     {
-        if (!latch.IsSet) latch.Signal();
+        if (!latch.IsSet)
+        {
+            latch.Signal();
+        }
     }
 
     private static void SleepIgnoringInterrupt(int milliseconds)
     {
-        try { Thread.Sleep(milliseconds); }
-        catch (ThreadInterruptedException) { /* Ignore */ }
+        try
+        {
+            Thread.Sleep(milliseconds);
+        }
+        catch (ThreadInterruptedException)
+        {
+            /* Ignore */
+        }
     }
 
     [Fact(Timeout = 5000)] public Task ScheduleTaskWithFixedDelayA()
@@ -219,8 +240,14 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
             Interlocked.Increment(ref ranTasks);
             while (!latch.IsSet)
             {
-                try { latch.Wait(TestContext.Current.CancellationToken); }
-                catch (ThreadInterruptedException) { /* Ignored */ }
+                try
+                {
+                    latch.Wait(TestContext.Current.CancellationToken);
+                }
+                catch (ThreadInterruptedException)
+                {
+                    /* Ignored */
+                }
             }
         };
         try
@@ -238,7 +265,10 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
             // Make sure loop.shutdown() above triggered wakeup().
             Assert.Equal(numTasks, Volatile.Read(ref ranTasks));
         }
-        finally { latch.Set(); }
+        finally
+        {
+            latch.Set();
+        }
     }
 
     [Fact(Timeout = 10000)]
@@ -344,8 +374,15 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
             for (;;)
             {
                 var task = TakeTask();
-                if (task != null) { task(); UpdateLastExecutionTime(); }
-                if (ConfirmShutdown()) break;
+                if (task != null)
+                {
+                    task();
+                    UpdateLastExecutionTime();
+                }
+                if (ConfirmShutdown())
+                {
+                    break;
+                }
             }
         }
 
@@ -372,7 +409,10 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
                 // Java interrupt only signals the source sleep here. A CLR signal avoids interrupting Monitor/Trace locks in callbacks.
                 _wakeup.WaitOne(TimeSpan.FromMilliseconds(DelayNanos(unchecked(GetCurrentTimeNanos() + Ticker().InitialNanoTime())) / 1000000));
                 RunTasks0();
-                if (ConfirmShutdown()) break;
+                if (ConfirmShutdown())
+                {
+                    break;
+                }
             }
         }
 
@@ -385,7 +425,10 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
         {
             lock (_wakeupGate)
             {
-                if (!_stopped) _wakeup.Set();
+                if (!_stopped)
+                {
+                    _wakeup.Set();
+                }
             }
         }
 

@@ -52,7 +52,10 @@ public static class ThreadDeathWatcher
     {
         string poolName = "threadDeathWatcher";
         string prefix = SystemPropertyUtil.Get("io.netty.serviceThreadPrefix");
-        if (!string.IsNullOrEmpty(prefix)) poolName = prefix + poolName;
+        if (!string.IsNullOrEmpty(prefix))
+        {
+            poolName = prefix + poolName;
+        }
         // because the ThreadDeathWatcher is a singleton, tasks submitted to it can come from arbitrary threads and
         // this can trigger the creation of a thread from arbitrary thread groups; for this reason, the thread factory
         // must not be sticky about its thread group
@@ -76,7 +79,10 @@ public static class ThreadDeathWatcher
     {
         ArgumentNullException.ThrowIfNull(thread);
         ArgumentNullException.ThrowIfNull(task);
-        if (!thread.IsAlive) throw new ArgumentException("thread must be alive.", nameof(thread));
+        if (!thread.IsAlive)
+        {
+            throw new ArgumentException("thread must be alive.", nameof(thread));
+        }
         Schedule(thread, task, true);
     }
 
@@ -97,7 +103,10 @@ public static class ThreadDeathWatcher
     private static void Schedule(Thread thread, Action task, bool isWatch)
     {
         pendingEntries.Enqueue(new Entry(thread, task, isWatch));
-        if (Interlocked.CompareExchange(ref started, 1, 0) != 0) return;
+        if (Interlocked.CompareExchange(ref started, 1, 0) != 0)
+        {
+            return;
+        }
         Thread worker = threadFactory.NewThread(watcher.Run);
         // Set to null to ensure we not create classloader leaks by holds a strong reference to the inherited
         // classloader.
@@ -106,7 +115,10 @@ public static class ThreadDeathWatcher
         // - https://bugs.openjdk.java.net/browse/JDK-7008595
         // CLR has no context ClassLoader. Do not retain the submitting caller's
         // ExecutionContext/AsyncLocal state in this singleton service thread.
-        if (ExecutionContext.IsFlowSuppressed()) worker.Start();
+        if (ExecutionContext.IsFlowSuppressed())
+        {
+            worker.Start();
+        }
         else
         {
             using var suppressed = ExecutionContext.SuppressFlow();
@@ -147,7 +159,10 @@ public static class ThreadDeathWatcher
                 // Try once again just in case notifyWatchees() triggered watch() or unwatch().
                 FetchWatchees();
                 NotifyWatchees();
-                try { Thread.Sleep(1000); }
+                try
+                {
+                    Thread.Sleep(1000);
+                }
                 catch (ThreadInterruptedException)
                 {
                     // Ignore the interrupt; do not terminate until all tasks are run.
@@ -185,8 +200,14 @@ public static class ThreadDeathWatcher
         private void FetchWatchees()
         {
             while (pendingEntries.TryDequeue(out Entry entry))
-                if (entry.isWatch) watchees.Add(entry);
-                else watchees.Remove(entry);
+                if (entry.isWatch)
+                {
+                    watchees.Add(entry);
+                }
+                else
+                {
+                    watchees.Remove(entry);
+                }
         }
 
         private void NotifyWatchees()
@@ -194,10 +215,20 @@ public static class ThreadDeathWatcher
             for (int index = 0; index < watchees.Count;)
             {
                 Entry entry = watchees[index];
-                if (entry.thread.IsAlive) { index++; continue; }
+                if (entry.thread.IsAlive)
+                {
+                    index++;
+                    continue;
+                }
                 watchees.RemoveAt(index);
-                try { entry.task(); }
-                catch (Exception failure) { logger.Warn("Thread death watcher task raised an exception:", failure); }
+                try
+                {
+                    entry.task();
+                }
+                catch (Exception failure)
+                {
+                    logger.Warn("Thread death watcher task raised an exception:", failure);
+                }
             }
         }
     }

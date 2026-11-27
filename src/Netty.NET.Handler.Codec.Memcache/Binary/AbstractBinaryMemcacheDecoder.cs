@@ -75,7 +75,8 @@ public abstract class AbstractBinaryMemcacheDecoder<M>
     {
         switch (state)
         {
-            case State.READ_HEADER: try
+            case State.READ_HEADER:
+                try
             {
                 if (@in.ReadableBytes < 24)
                 {
@@ -94,7 +95,8 @@ public abstract class AbstractBinaryMemcacheDecoder<M>
                 return;
             }
                 goto case State.READ_EXTRAS;
-            case State.READ_EXTRAS: try
+            case State.READ_EXTRAS:
+                try
             {
                 int extrasLength = currentMessage.ExtrasLength() & 0xFF;
                 if (extrasLength > 0)
@@ -116,7 +118,8 @@ public abstract class AbstractBinaryMemcacheDecoder<M>
                 return;
             }
                 goto case State.READ_KEY;
-            case State.READ_KEY: try
+            case State.READ_KEY:
+                try
             {
                 int keyLength = currentMessage.KeyLength() & 0xFFFF;
                 if (keyLength > 0)
@@ -138,7 +141,8 @@ public abstract class AbstractBinaryMemcacheDecoder<M>
                 return;
             }
                 goto case State.READ_CONTENT;
-            case State.READ_CONTENT: try
+            case State.READ_CONTENT:
+                try
             {
                 int valueLength = currentMessage.TotalBodyLength()
                     - (currentMessage.KeyLength() & 0xFFFF)

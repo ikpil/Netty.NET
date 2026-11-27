@@ -56,7 +56,11 @@ public class ByteBufComparisonTest
             Assert.False(ByteBufUtil.Equals(a, 64, b, 192, 512));
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.Equals(a, 0, b, 0, -1));
         }
-        finally { a.Release(); b.Release(); }
+        finally
+        {
+            a.Release();
+            b.Release();
+        }
 
         first = new byte[50];
         second = new byte[256];
@@ -72,7 +76,11 @@ public class ByteBufComparisonTest
         {
             Assert.False(ByteBufUtil.Equals(a, 25, b, 75, 25));
         }
-        finally { a.Release(); b.Release(); }
+        finally
+        {
+            a.Release();
+            b.Release();
+        }
     }
 
     [Theory]
@@ -91,21 +99,36 @@ public class ByteBufComparisonTest
                 try
                 {
                     b.SetIndex(3, 35).MarkReaderIndex().MarkWriterIndex();
-                    Assert.True(ByteBufUtil.Equals(a, b)); Assert.True(a.Equals(b)); Assert.True(b.Equals((object)a));
+                    Assert.True(ByteBufUtil.Equals(a, b));
+                    Assert.True(a.Equals(b));
+                    Assert.True(b.Equals((object)a));
                     Assert.True(EqualityComparer<ByteBuf>.Default.Equals(a, b));
-                    Assert.Equal(a.GetHashCode(), b.GetHashCode()); Assert.Equal(0, a.CompareTo(b));
+                    Assert.Equal(a.GetHashCode(), b.GetHashCode());
+                    Assert.Equal(0, a.CompareTo(b));
                     Assert.Equal(0, ByteBufUtil.Compare(b, a));
                     Assert.False(a == b); // C# reference identity remains available separately from content equality.
                     b.SetIndex(4, 34).ResetReaderIndex().ResetWriterIndex();
-                    Assert.Equal(3, b.ReaderIndex); Assert.Equal(35, b.WriterIndex); Assert.Equal(1, b.RefCnt);
+                    Assert.Equal(3, b.ReaderIndex);
+                    Assert.Equal(35, b.WriterIndex);
+                    Assert.Equal(1, b.RefCnt);
                 }
-                finally { b.Release(); }
+                finally
+                {
+                    b.Release();
+                }
             }
             a.SetIndex(2, 34).ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(1, a.ReaderIndex); Assert.Equal(33, a.WriterIndex); Assert.Equal(1, a.RefCnt);
-            Assert.False(a.Equals((object)null)); Assert.False(a.Equals(new object())); Assert.False(a.Equals((ByteBuf)null));
+            Assert.Equal(1, a.ReaderIndex);
+            Assert.Equal(33, a.WriterIndex);
+            Assert.Equal(1, a.RefCnt);
+            Assert.False(a.Equals((object)null));
+            Assert.False(a.Equals(new object()));
+            Assert.False(a.Equals((ByteBuf)null));
         }
-        finally { a.Release(); }
+        finally
+        {
+            a.Release();
+        }
     }
 
     [Theory]
@@ -142,11 +165,22 @@ public class ByteBufComparisonTest
                 {
                     Assert.True(retained.CompareTo(a) < 0);
                 }
-                finally { retained.Release(); }
+                finally
+                {
+                    retained.Release();
+                }
             }
-            finally { higher.Release(); lower.Release(); prefix.Release(); }
+            finally
+            {
+                higher.Release();
+                lower.Release();
+                prefix.Release();
+            }
         }
-        finally { a.Release(); }
+        finally
+        {
+            a.Release();
+        }
 
         a = Owner(kind, new byte[] { 1, 2, 3, 4 });
         ByteBuf b = Owner(kind, new byte[] { 4, 3, 2, 1 });
@@ -155,7 +189,11 @@ public class ByteBufComparisonTest
             Assert.Equal(-50396925, a.CompareTo(b));
             Assert.Equal(50396925, b.CompareTo(a));
         }
-        finally { a.Release(); b.Release(); }
+        finally
+        {
+            a.Release();
+            b.Release();
+        }
     }
 
     [Theory]
@@ -177,9 +215,13 @@ public class ByteBufComparisonTest
             try
             {
                 b.SetIndex(1, 1 + vector.Bytes.Length);
-                Assert.Equal(vector.Hash, ByteBufUtil.HashCode(b)); Assert.Equal(vector.Hash, b.GetHashCode());
+                Assert.Equal(vector.Hash, ByteBufUtil.HashCode(b));
+                Assert.Equal(vector.Hash, b.GetHashCode());
             }
-            finally { b.Release(); }
+            finally
+            {
+                b.Release();
+            }
         }
     }
 
@@ -204,8 +246,16 @@ public class ByteBufComparisonTest
         foreach (var vector in vectors)
         {
             ByteBuf a = Owner(kind, vector.A), b = Owner(kind, vector.B);
-            try { Assert.Equal(vector.Difference, ByteBufUtil.Compare(a, b)); Assert.Equal(vector.Difference, a.CompareTo(b)); }
-            finally { a.Release(); b.Release(); }
+            try
+            {
+                Assert.Equal(vector.Difference, ByteBufUtil.Compare(a, b));
+                Assert.Equal(vector.Difference, a.CompareTo(b));
+            }
+            finally
+            {
+                a.Release();
+                b.Release();
+            }
         }
     }
 
@@ -217,7 +267,8 @@ public class ByteBufComparisonTest
         ByteBuf a = Owner(kind, new byte[32]), b = Owner(kind, new byte[32]);
         try
         {
-            a.SetIndex(8, 16); b.SetIndex(9, 17);
+            a.SetIndex(8, 16);
+            b.SetIndex(9, 17);
             Assert.True(ByteBufUtil.Equals(a, 0, b, 1, 16));
             Assert.True(ByteBufUtil.Equals(a, 16, b, 17, 0));
             Assert.False(ByteBufUtil.Equals(a, 17, b, 17, 0));
@@ -228,7 +279,11 @@ public class ByteBufComparisonTest
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.Equals(a, -1, b, 0, 0));
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.Equals(a, 0, b, -1, 0));
         }
-        finally { a.Release(); b.Release(); }
+        finally
+        {
+            a.Release();
+            b.Release();
+        }
     }
 
     [Fact]
@@ -240,14 +295,33 @@ public class ByteBufComparisonTest
         try
         {
             var set = new HashSet<ByteBuf> { a, b };
-            Assert.Equal(2, set.Count); Assert.Contains(aCopy, set); Assert.Contains(bCopy, set);
-            probe.WriteBytes(a.Duplicate(), a.ReadableBytes); Assert.True(set.Remove(probe)); Assert.DoesNotContain(a, set); Assert.Single(set);
-            probe.Clear().WriteBytes(b.Duplicate(), b.ReadableBytes); Assert.True(set.Remove(probe)); Assert.DoesNotContain(b, set); Assert.Empty(set);
-            var list = new List<ByteBuf> { b, a, null }; list.Sort();
-            Assert.Null(list[0]); Assert.Same(a, list[1]); Assert.Same(b, list[2]); Assert.Equal(1, a.CompareTo(null));
+            Assert.Equal(2, set.Count);
+            Assert.Contains(aCopy, set);
+            Assert.Contains(bCopy, set);
+            probe.WriteBytes(a.Duplicate(), a.ReadableBytes);
+            Assert.True(set.Remove(probe));
+            Assert.DoesNotContain(a, set);
+            Assert.Single(set);
+            probe.Clear().WriteBytes(b.Duplicate(), b.ReadableBytes);
+            Assert.True(set.Remove(probe));
+            Assert.DoesNotContain(b, set);
+            Assert.Empty(set);
+            var list = new List<ByteBuf> { b, a, null };
+            list.Sort();
+            Assert.Null(list[0]);
+            Assert.Same(a, list[1]);
+            Assert.Same(b, list[2]);
+            Assert.Equal(1, a.CompareTo(null));
             Assert.Equal(1, Unpooled.EmptyBuffer.GetHashCode());
         }
-        finally { a.Release(); b.Release(); aCopy.Release(); bCopy.Release(); probe.Release(); }
+        finally
+        {
+            a.Release();
+            b.Release();
+            aCopy.Release();
+            bCopy.Release();
+            probe.Release();
+        }
     }
 
     [Theory]

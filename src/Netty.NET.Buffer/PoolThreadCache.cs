@@ -77,7 +77,10 @@ internal sealed class PoolThreadCache : IDisposable
 
     private static RegionCache[] CreateSubPageCaches(int size, int count)
     {
-        if (size <= 0 || count <= 0) return null;
+        if (size <= 0 || count <= 0)
+        {
+            return null;
+        }
         var caches = new RegionCache[count];
         for (int i = 0; i < count; ++i)
             // TODO: maybe use cacheSize / cache.length
@@ -87,7 +90,10 @@ internal sealed class PoolThreadCache : IDisposable
 
     private static RegionCache[] CreateNormalCaches(int size, int maxCapacity, PoolArena arena)
     {
-        if (size <= 0 || maxCapacity <= 0) return null;
+        if (size <= 0 || maxCapacity <= 0)
+        {
+            return null;
+        }
         int max = Math.Min(arena.SizeClass.ChunkSize, maxCapacity);
         // Create as many normal caches as we support based on how many sizeIdx we have and what the upper
         // bound is that we want to cache in general.
@@ -126,7 +132,10 @@ internal sealed class PoolThreadCache : IDisposable
         {
             RegionCache cache = Cache(arena, sizeIdx);
             // no cache found so just return false here
-            if (_freed || cache == null) return null;
+            if (_freed || cache == null)
+            {
+                return null;
+            }
             PoolArena.Allocation allocation = cache.Allocate(this);
             if (++_allocations >= _freeSweepAllocationThreshold)
             {
@@ -145,7 +154,10 @@ internal sealed class PoolThreadCache : IDisposable
     {
         lock (_sync)
         {
-            if (_freed) return false;
+            if (_freed)
+            {
+                return false;
+            }
             return Cache(allocation.Arena, allocation.Arena.SizeClass.Size2SizeIdx(allocation.ReservedLength))
                 ?.Add(new Entry(allocation.Arena, allocation.Storage, allocation.Handle, allocation.ReservedLength)) == true;
         }
@@ -154,7 +166,13 @@ internal sealed class PoolThreadCache : IDisposable
     internal void Trim()
     {
         using var events = BufferAllocatorEventSource.Log.BeginOperation();
-        lock (_sync) { if (!_freed) TrimCore(); }
+        lock (_sync)
+        {
+            if (!_freed)
+            {
+                TrimCore();
+            }
+        }
     }
 
     private void TrimCore()
@@ -167,7 +185,10 @@ internal sealed class PoolThreadCache : IDisposable
 
     private static void Trim(RegionCache[] caches)
     {
-        if (caches == null) return;
+        if (caches == null)
+        {
+            return;
+        }
         foreach (RegionCache cache in caches) cache.Trim();
     }
 
@@ -182,15 +203,24 @@ internal sealed class PoolThreadCache : IDisposable
             // As free() may be called either by the finalizer or by FastThreadLocal.onRemoval(...) we need to ensure
             // we only call this one time.
             // CLR: explicit allocator/thread-binding cleanup replaces JVM finalizers.
-            if (_freed) return;
+            if (_freed)
+            {
+                return;
+            }
             _freed = true;
-            Free(_smallDirect); Free(_normalDirect); Free(_smallHeap); Free(_normalHeap);
+            Free(_smallDirect);
+            Free(_normalDirect);
+            Free(_smallHeap);
+            Free(_normalHeap);
         }
     }
 
     private static void Free(RegionCache[] caches)
     {
-        if (caches == null) return;
+        if (caches == null)
+        {
+            return;
+        }
         foreach (RegionCache cache in caches) cache.Free(int.MaxValue);
     }
 
@@ -219,10 +249,20 @@ internal sealed class PoolThreadCache : IDisposable
          */
         internal bool Add(Entry entry)
         {
-            if (_queue.Count >= _size) return false;
-            try { _queue.Enqueue(entry); return true; }
+            if (_queue.Count >= _size)
+            {
+                return false;
+            }
+            try
+            {
+                _queue.Enqueue(entry);
+                return true;
+            }
             // CLR: lazy BCL queue growth must not lose a reservation on return.
-            catch (OutOfMemoryException) { return false; }
+            catch (OutOfMemoryException)
+            {
+                return false;
+            }
         }
 
         /**
@@ -233,7 +273,10 @@ internal sealed class PoolThreadCache : IDisposable
          */
         internal PoolArena.Allocation Allocate(PoolThreadCache threadCache)
         {
-            if (!_queue.TryPeek(out Entry entry)) return null;
+            if (!_queue.TryPeek(out Entry entry))
+            {
+                return null;
+            }
             // Init the buffer before removing the entry: a failed CLR wrapper allocation
             // leaves the cached handle reachable for the next request or shutdown.
             PoolArena.Allocation allocation = entry.Arena.BindCached(entry.Storage, entry.Handle, entry.Length, threadCache);
@@ -268,7 +311,10 @@ internal sealed class PoolThreadCache : IDisposable
             int free = unchecked(_size - _allocations);
             _allocations = 0;
             // We not even allocated all the number that are
-            if (free > 0) Free(free);
+            if (free > 0)
+            {
+                Free(free);
+            }
         }
     }
 }

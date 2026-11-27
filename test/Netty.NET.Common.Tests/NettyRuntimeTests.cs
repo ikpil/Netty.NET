@@ -82,11 +82,20 @@ public class NettyRuntimeTests
         try
         {
             AwaitBarrier(barrier);
-            try { holder.AvailableProcessors(); }
-            catch (InvalidOperationException e) { reference.Set(e); }
+            try
+            {
+                holder.AvailableProcessors();
+            }
+            catch (InvalidOperationException e)
+            {
+                reference.Set(e);
+            }
             AwaitBarrier(barrier);
         }
-        catch (Exception e) { reference.Set(e); }
+        catch (Exception e)
+        {
+            reference.Set(e);
+        }
     };
     }
 
@@ -104,7 +113,10 @@ public class NettyRuntimeTests
                 holder.AvailableProcessors();
                 AwaitBarrier(barrier);
             }
-            catch (Exception e) { getFailure = e; }
+            catch (Exception e)
+            {
+                getFailure = e;
+            }
         }) { IsBackground = true };
         get.Start();
         var setException = new AtomicReference<InvalidOperationException>();
@@ -113,11 +125,20 @@ public class NettyRuntimeTests
             try
             {
                 AwaitBarrier(barrier);
-                try { holder.SetAvailableProcessors(2048); }
-                catch (InvalidOperationException e) { setException.Set(e); }
+                try
+                {
+                    holder.SetAvailableProcessors(2048);
+                }
+                catch (InvalidOperationException e)
+                {
+                    setException.Set(e);
+                }
                 AwaitBarrier(barrier);
             }
-            catch (Exception e) { setFailure = e; }
+            catch (Exception e)
+            {
+                setFailure = e;
+            }
         }) { IsBackground = true };
         set.Start();
         // release the hounds
@@ -128,8 +149,14 @@ public class NettyRuntimeTests
         Assert.True(set.Join(TimeSpan.FromSeconds(5)));
         Assert.Null(getFailure);
         Assert.Null(setFailure);
-        if (setException.Get() == null) Assert.Equal(2048, holder.AvailableProcessors());
-        else Assert.NotNull(setException.Get());
+        if (setException.Get() == null)
+        {
+            Assert.Equal(2048, holder.AvailableProcessors());
+        }
+        else
+        {
+            Assert.NotNull(setException.Get());
+        }
     }
 
     [Fact]
@@ -142,7 +169,10 @@ public class NettyRuntimeTests
             var holder = new AvailableProcessorsHolder();
             Assert.Equal(2048, holder.AvailableProcessors());
         }
-        finally { Environment.SetEnvironmentVariable("io.netty.availableProcessors", previous); }
+        finally
+        {
+            Environment.SetEnvironmentVariable("io.netty.availableProcessors", previous);
+        }
     }
 
     [Fact]
@@ -156,7 +186,10 @@ public class NettyRuntimeTests
             var holder = new AvailableProcessorsHolder();
             Assert.Equal(Environment.ProcessorCount, holder.AvailableProcessors());
         }
-        finally { Environment.SetEnvironmentVariable("io.netty.availableProcessors", previous); }
+        finally
+        {
+            Environment.SetEnvironmentVariable("io.netty.availableProcessors", previous);
+        }
     }
 
     private static void AwaitBarrier(Barrier barrier)

@@ -81,7 +81,10 @@ public static class ResourceLeakDetector
         string text = levelStr.Trim();
         foreach (ResourceLeakDetectorLevel candidate in Enum.GetValues<ResourceLeakDetectorLevel>())
             if (string.Equals(text, candidate.ToString(), StringComparison.OrdinalIgnoreCase) ||
-                text == ((int)candidate).ToString(CultureInfo.InvariantCulture)) return candidate;
+                text == ((int)candidate).ToString(CultureInfo.InvariantCulture))
+            {
+                return candidate;
+            }
         return DEFAULT_LEVEL;
     }
 
@@ -107,7 +110,10 @@ public static class ResourceLeakDetector
      */
     public static void SetLevel(ResourceLeakDetectorLevel value)
     {
-        if (!Enum.IsDefined(value)) throw new ArgumentOutOfRangeException(nameof(value));
+        if (!Enum.IsDefined(value))
+        {
+            throw new ArgumentOutOfRangeException(nameof(value));
+        }
         Volatile.Write(ref level, (int)value);
     }
 
@@ -130,8 +136,14 @@ public static class ResourceLeakDetector
         // NoSuchMethodException.
         foreach (MethodInfo method in clz.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public |
                      BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
-            if (nameSet.Remove(method.Name) && nameSet.Count == 0) break;
-        if (nameSet.Count != 0) throw new ArgumentException("Can't find '[" + string.Join(", ", nameSet) + "]' in " + clz.FullName);
+            if (nameSet.Remove(method.Name) && nameSet.Count == 0)
+            {
+                break;
+            }
+        if (nameSet.Count != 0)
+        {
+            throw new ArgumentException("Can't find '[" + string.Join(", ", nameSet) + "]' in " + clz.FullName);
+        }
         string[] oldMethods, newMethods;
         do
         {
@@ -278,9 +290,18 @@ public class ResourceLeakDetector<T> where T : class
         ResourceLeakDetectorLevel level = ResourceLeakDetector.GetLevel();
         if (!force && level != ResourceLeakDetectorLevel.PARANOID)
         {
-            if (level == ResourceLeakDetectorLevel.DISABLED) return null;
-            if (samplingInterval <= 0) throw new ArgumentOutOfRangeException(nameof(samplingInterval));
-            if (Random.Shared.Next(samplingInterval) != 0) return null;
+            if (level == ResourceLeakDetectorLevel.DISABLED)
+            {
+                return null;
+            }
+            if (samplingInterval <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(samplingInterval));
+            }
+            if (Random.Shared.Next(samplingInterval) != 0)
+            {
+                return null;
+            }
         }
         ReportLeak();
         return new DefaultResourceLeak<T>(obj, refQueue, allLeaks, GetInitialHint(resourceType));
@@ -307,11 +328,23 @@ public class ResourceLeakDetector<T> where T : class
         // Detect and report previous leaks.
         while (refQueue.TryDequeue(out var leak))
         {
-            if (!leak.Dispose()) continue;
+            if (!leak.Dispose())
+            {
+                continue;
+            }
             string records = leak.GetReportAndClearRecords();
-            if (!reportedLeaks.TryAdd(records, 0)) continue;
-            if (records.Length == 0) ReportUntracedLeak(resourceType);
-            else ReportTracedLeak(resourceType, records);
+            if (!reportedLeaks.TryAdd(records, 0))
+            {
+                continue;
+            }
+            if (records.Length == 0)
+            {
+                ReportUntracedLeak(resourceType);
+            }
+            else
+            {
+                ReportTracedLeak(resourceType, records);
+            }
             Volatile.Read(ref leakListener)?.OnLeak(resourceType, records);
         }
     }

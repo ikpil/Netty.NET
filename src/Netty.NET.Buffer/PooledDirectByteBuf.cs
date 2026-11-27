@@ -32,7 +32,15 @@ internal sealed class PooledDirectByteBuf : PooledByteBuf
     {
         CheckIndex(index, length);
         ByteBuf copy = Alloc().DirectBuffer(length, MaxCapacity);
-        try { copy.WriteBytes(this, index, length); return copy; }
-        catch { copy.Release(); throw; }
+        try
+        {
+            copy.WriteBytes(this, index, length);
+            return copy;
+        }
+        catch
+        {
+            copy.Release();
+            throw;
+        }
     }
 }

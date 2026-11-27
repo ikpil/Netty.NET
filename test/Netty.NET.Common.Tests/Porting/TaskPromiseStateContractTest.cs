@@ -40,12 +40,19 @@ public class TaskPromiseStateContractTest
                 Assert.Equal(outcome == 0, result.IsCompletedSuccessfully);
                 Assert.Equal(outcome == 1, result.IsFaulted);
                 Assert.Equal(outcome == 2, result.IsCanceled);
-                if (outcome == 0) Assert.Same(value, result.GetAwaiter().GetResult());
+                if (outcome == 0)
+                {
+                    Assert.Same(value, result.GetAwaiter().GetResult());
+                }
                 else if (outcome == 1)
+                {
                     Assert.Same(error, Assert.Throws<InvalidOperationException>(() => result.GetAwaiter().GetResult()));
+                }
                 else
+                {
                     Assert.Equal(cancellation.Token,
                         Assert.ThrowsAny<OperationCanceledException>(() => result.GetAwaiter().GetResult()).CancellationToken);
+                }
                 Meet();
             }
         });
@@ -59,9 +66,18 @@ public class TaskPromiseStateContractTest
                 using var observer = new ExecutorCompletion(ImmediateEventExecutor.INSTANCE, source.Task);
                 using var registration = observer.Register(result => notification.SetResult(result));
                 Meet();
-                if (outcome == 0) source.SetResult(value);
-                else if (outcome == 1) source.SetException(error);
-                else source.SetCanceled(cancellation.Token);
+                if (outcome == 0)
+                {
+                    source.SetResult(value);
+                }
+                else if (outcome == 1)
+                {
+                    source.SetException(error);
+                }
+                else
+                {
+                    source.SetCanceled(cancellation.Token);
+                }
                 Meet();
             }
         });

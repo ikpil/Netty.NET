@@ -42,7 +42,10 @@ public class EventLoopLifecycleContractTest
             Assert.True(await observed.WaitAsync(TestContext.Current.CancellationToken));
             Assert.False(channel.IsOpen);
         }
-        finally { await loop.StopAsync(); }
+        finally
+        {
+            await loop.StopAsync();
+        }
     }
     private sealed class IncompatibleLocalChannel : LocalChannel
     {
@@ -70,7 +73,10 @@ public class EventLoopLifecycleContractTest
             Assert.False(incompatible.IsRegistered);
             await channel.CloseAsync();
         }
-        finally { await loop.StopAsync(); }
+        finally
+        {
+            await loop.StopAsync();
+        }
     }
 
     [Fact(Timeout = 10000)]
@@ -85,17 +91,28 @@ public class EventLoopLifecycleContractTest
             {
                 started.TrySetResult();
                 while (!release.IsSet)
-                    try { release.Wait(); } catch (ThreadInterruptedException) { }
+                    try
+                    {
+                        release.Wait();
+                    }
+                    catch (ThreadInterruptedException)
+                    {
+                    }
             });
             await started.Task.WaitAsync(TestContext.Current.CancellationToken);
             Action tail = () => { };
-            loop.Execute(() => { }); loop.ExecuteAfterEventLoopIteration(tail);
+            loop.Execute(() => { });
+            loop.ExecuteAfterEventLoopIteration(tail);
             SingleThreadEventExecutor parent = loop;
             Assert.Equal(2, parent.PendingTasks());
             Assert.True(loop.RemoveAfterEventLoopIterationTask(tail));
             Assert.Equal(1, parent.PendingTasks());
         }
-        finally { release.Set(); await loop.StopAsync(); }
+        finally
+        {
+            release.Set();
+            await loop.StopAsync();
+        }
     }
 
     [Fact(Timeout = 10000)]
@@ -107,9 +124,13 @@ public class EventLoopLifecycleContractTest
         try
         {
             await loop.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TestContext.Current.CancellationToken);
-            Assert.True(await ran.Task); Assert.Equal(0, loop.PendingTasks());
+            Assert.True(await ran.Task);
+            Assert.Equal(0, loop.PendingTasks());
         }
-        finally { await loop.StopAsync(); }
+        finally
+        {
+            await loop.StopAsync();
+        }
     }
 
     [Fact(Timeout = 10000)]
@@ -142,6 +163,9 @@ public class EventLoopLifecycleContractTest
             loop.Execute(() => { });
             Assert.True(await ran.Task.WaitAsync(TestContext.Current.CancellationToken));
         }
-        finally { await loop.StopAsync(); }
+        finally
+        {
+            await loop.StopAsync();
+        }
     }
 }

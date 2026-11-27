@@ -35,19 +35,37 @@ public class UnpooledMemoryWrappingTest
         try
         {
             var composite = Assert.IsType<CompositeByteBuf>(result);
-            Assert.Equal(2, composite.NumComponents); Assert.Equal(5, composite.MaxNumComponents);
-            Assert.Equal(7, result.Capacity); Assert.Equal(int.MaxValue, result.MaxCapacity);
-            Assert.Equal(0, result.ReaderIndex); Assert.Equal(7, result.WriterIndex); Assert.Equal(1, result.RefCnt);
-            Assert.False(result.IsReadOnly); Assert.Equal(kind == 1, result.IsDirect);
+            Assert.Equal(2, composite.NumComponents);
+            Assert.Equal(5, composite.MaxNumComponents);
+            Assert.Equal(7, result.Capacity);
+            Assert.Equal(int.MaxValue, result.MaxCapacity);
+            Assert.Equal(0, result.ReaderIndex);
+            Assert.Equal(7, result.WriterIndex);
+            Assert.Equal(1, result.RefCnt);
+            Assert.False(result.IsReadOnly);
+            Assert.Equal(kind == 1, result.IsDirect);
             Assert.Equal(new byte[] { 2, 3, 4, 8, 9, 10, 11 }, ByteBufUtil.GetBytes(result));
-            storage.Memory.Span[2] = 99; Assert.Equal(99, result.GetByte(0));
+            storage.Memory.Span[2] = 99;
+            Assert.Equal(99, result.GetByte(0));
             Assert.Equal(readOnly, composite.Component(0).IsReadOnly);
-            if (readOnly) Assert.Throws<NotSupportedException>(() => result.SetByte(0, 42));
-            else { result.SetByte(0, 42); Assert.Equal(42, storage.Memory.Span[2]); }
-            Assert.Equal(3, ranges[1].Length); Assert.Equal(4, ranges[3].Length);
-            Assert.Equal(1, storage.Memory.Span[1]); Assert.Equal(12, storage.Memory.Span[12]);
+            if (readOnly)
+            {
+                Assert.Throws<NotSupportedException>(() => result.SetByte(0, 42));
+            }
+            else
+            {
+                result.SetByte(0, 42);
+                Assert.Equal(42, storage.Memory.Span[2]);
+            }
+            Assert.Equal(3, ranges[1].Length);
+            Assert.Equal(4, ranges[3].Length);
+            Assert.Equal(1, storage.Memory.Span[1]);
+            Assert.Equal(12, storage.Memory.Span[12]);
         }
-        finally { result.Release(); }
+        finally
+        {
+            result.Release();
+        }
         Assert.Equal(readOnly ? 99 : 42, storage.Memory.Span[2]);
     }
 
@@ -64,14 +82,21 @@ public class UnpooledMemoryWrappingTest
         try
         {
             var composite = Assert.IsType<CompositeByteBuf>(result);
-            Assert.Equal(1, composite.NumComponents); Assert.Equal(2, composite.MaxNumComponents);
-            Assert.False(result.IsDirect); Assert.False(composite.Component(0).IsReadOnly);
+            Assert.Equal(1, composite.NumComponents);
+            Assert.Equal(2, composite.MaxNumComponents);
+            Assert.False(result.IsDirect);
+            Assert.False(composite.Component(0).IsReadOnly);
             Assert.Equal(new byte[] { 1, 2, 3, 4, 5, 6 }, ByteBufUtil.GetBytes(result));
-            storage.Memory.Span[0] = 99; Assert.Equal(1, result.GetByte(0));
-            result.SetByte(1, 42); Assert.Equal(2, storage.Memory.Span[1]);
+            storage.Memory.Span[0] = 99;
+            Assert.Equal(1, result.GetByte(0));
+            result.SetByte(1, 42);
+            Assert.Equal(2, storage.Memory.Span[1]);
             Assert.Equal(6, result.WriterIndex);
         }
-        finally { result.Release(); }
+        finally
+        {
+            result.Release();
+        }
         Assert.Equal(99, storage.Memory.Span[0]);
     }
 
@@ -85,13 +110,22 @@ public class UnpooledMemoryWrappingTest
         ByteBuf multiple = Wrap(new[] { Memory<byte>.Empty, range }, readOnly, 1);
         try
         {
-            Assert.IsNotType<CompositeByteBuf>(single); Assert.Equal(4, single.MaxCapacity); Assert.Equal(readOnly, single.IsReadOnly);
+            Assert.IsNotType<CompositeByteBuf>(single);
+            Assert.Equal(4, single.MaxCapacity);
+            Assert.Equal(readOnly, single.IsReadOnly);
             var composite = Assert.IsType<CompositeByteBuf>(multiple);
-            Assert.Equal(1, composite.NumComponents); Assert.Equal(int.MaxValue, multiple.MaxCapacity);
-            Assert.False(multiple.IsReadOnly); Assert.Equal(readOnly, composite.Component(0).IsReadOnly);
-            Assert.True(single.IsDirect); Assert.True(multiple.IsDirect);
+            Assert.Equal(1, composite.NumComponents);
+            Assert.Equal(int.MaxValue, multiple.MaxCapacity);
+            Assert.False(multiple.IsReadOnly);
+            Assert.Equal(readOnly, composite.Component(0).IsReadOnly);
+            Assert.True(single.IsDirect);
+            Assert.True(multiple.IsDirect);
         }
-        finally { single.Release(); multiple.Release(); }
+        finally
+        {
+            single.Release();
+            multiple.Release();
+        }
         storage.Memory.Span[0] = 42;
     }
 
@@ -114,8 +148,16 @@ public class UnpooledMemoryWrappingTest
         Memory<byte> a = new byte[] { 1 }, b = new byte[] { 2 }, c = new byte[] { 3 };
         ByteBuf one = Unpooled.WrappedBuffer(new Memory<byte>[] { new byte[] { 1, 2, 3 } });
         ByteBuf many = Unpooled.WrappedBuffer(a, b, c);
-        try { Assert.True(ByteBufUtil.Equals(one, many)); Assert.Equal(3, Assert.IsType<CompositeByteBuf>(many).NumComponents); }
-        finally { one.Release(); many.Release(); }
+        try
+        {
+            Assert.True(ByteBufUtil.Equals(one, many));
+            Assert.Equal(3, Assert.IsType<CompositeByteBuf>(many).NumComponents);
+        }
+        finally
+        {
+            one.Release();
+            many.Release();
+        }
     }
 
     [Theory]
@@ -180,7 +222,10 @@ public class UnpooledMemoryWrappingTest
         {
             Assert.Equal(new byte[] { 1, 1, 1, 1, 2, 2, 2, 2 }, ByteBufUtil.GetBytes(recovered));
         }
-        finally { recovered.Release(); }
+        finally
+        {
+            recovered.Release();
+        }
         Assert.Equal(0, first.DisposeCalls);
         Assert.Equal(0, second.DisposeCalls);
     }
@@ -211,12 +256,18 @@ public class UnpooledMemoryWrappingTest
             Assert.Throws<NotSupportedException>(() => result.SetByte(2, 42));
             Assert.Equal(3, result.GetByte(2));
         }
-        finally { result.Release(); }
+        finally
+        {
+            result.Release();
+        }
     }
 
     private static ByteBuf Wrap(Memory<byte>[] buffers, bool readOnly, int? maximum = null)
     {
-        if (!readOnly) return maximum.HasValue ? Unpooled.WrappedBuffer(maximum.Value, buffers) : Unpooled.WrappedBuffer(buffers);
+        if (!readOnly)
+        {
+            return maximum.HasValue ? Unpooled.WrappedBuffer(maximum.Value, buffers) : Unpooled.WrappedBuffer(buffers);
+        }
         ReadOnlyMemory<byte>[] ranges = Array.ConvertAll(buffers, static memory => (ReadOnlyMemory<byte>)memory);
         return maximum.HasValue ? Unpooled.WrappedBuffer(maximum.Value, ranges) : Unpooled.WrappedBuffer(ranges);
     }
@@ -228,9 +279,20 @@ public class UnpooledMemoryWrappingTest
         public Memory<byte> Memory { get; }
         public ExternalStorage(int kind, int length)
         {
-            if (kind == 1) { _native = new NativeMemoryAllocator(1024).Allocate(length, clear: true); Memory = _native.Memory; }
-            else if (kind == 2) { _manager = new ArrayMemoryManager(length); Memory = _manager.Range; }
-            else Memory = new byte[length];
+            if (kind == 1)
+            {
+                _native = new NativeMemoryAllocator(1024).Allocate(length, clear: true);
+                Memory = _native.Memory;
+            }
+            else if (kind == 2)
+            {
+                _manager = new ArrayMemoryManager(length);
+                Memory = _manager.Range;
+            }
+            else
+            {
+                Memory = new byte[length];
+            }
         }
 
         public void Dispose()
@@ -253,7 +315,10 @@ public class UnpooledMemoryWrappingTest
 
         public override Span<byte> GetSpan()
         {
-            if (FailAccess) throw new InvalidOperationException("Source access failed.");
+            if (FailAccess)
+            {
+                throw new InvalidOperationException("Source access failed.");
+            }
             return _array ?? throw new ObjectDisposedException(nameof(ArrayMemoryManager));
         }
 

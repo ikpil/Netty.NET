@@ -28,8 +28,14 @@ public class FixedCompositeByteBufTest
 {
     private static ByteBuf Owner(int kind, byte[] bytes)
     {
-        if (kind == 0) return Unpooled.WrappedBuffer(bytes);
-        if (kind == 1) return Unpooled.DirectBuffer(bytes.Length).WriteBytes(bytes);
+        if (kind == 0)
+        {
+            return Unpooled.WrappedBuffer(bytes);
+        }
+        if (kind == 1)
+        {
+            return Unpooled.DirectBuffer(bytes.Length).WriteBytes(bytes);
+        }
         int split = bytes.Length / 2;
         return Unpooled.CompositeBuffer().AddComponents(new[]
         {
@@ -83,7 +89,10 @@ public class FixedCompositeByteBufTest
             Assert.Equal(0, first.ReaderIndex);
             Assert.Equal(0, second.ReaderIndex);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
         Assert.Equal(0, first.RefCnt);
         Assert.Equal(0, second.RefCnt);
     }
@@ -113,11 +122,17 @@ public class FixedCompositeByteBufTest
         try
         {
             Assert.Throws<NotSupportedException>(writes[operation]);
-            Assert.False(buffer.IsWritable()); Assert.False(buffer.IsWritable(0)); Assert.False(buffer.IsWritable(-1));
+            Assert.False(buffer.IsWritable());
+            Assert.False(buffer.IsWritable(0));
+            Assert.False(buffer.IsWritable(-1));
             Assert.Equal(new byte[8], buffer.ReadableSequence.ToArray());
-            Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(8, buffer.WriterIndex);
+            Assert.Equal(0, buffer.ReaderIndex);
+            Assert.Equal(8, buffer.WriterIndex);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Fact]
@@ -147,7 +162,10 @@ public class FixedCompositeByteBufTest
             Assert.Equal(new byte[] { 9, 1, 3, 4 }, buffer.ReadableSequence.ToArray());
             Assert.Equal(1, first.ReaderIndex);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
         first = Unpooled.WrappedBuffer(new byte[] { 9, 1, 2 });
         first.ReaderIndex = 1;
         buffer = Unpooled.WrappedUnmodifiableBuffer(first.Slice(), Unpooled.CopyShort(0x0304));
@@ -155,7 +173,10 @@ public class FixedCompositeByteBufTest
         {
             Assert.Equal(new byte[] { 1, 2, 3, 4 }, buffer.ReadableSequence.ToArray());
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
         Assert.Equal(0, first.RefCnt);
     }
 
@@ -176,7 +197,10 @@ public class FixedCompositeByteBufTest
             Assert.Equal(new byte[] { 9, 2, 3, 4 }, buffer.ReadableSequence.ToArray());
             Assert.Equal(4, buffer.Capacity);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
         Assert.Equal(0, first.RefCnt);
         Assert.Equal(0, second.RefCnt);
         Assert.Equal(1, replacement.RefCnt);
@@ -263,7 +287,10 @@ public class FixedCompositeByteBufTest
             Assert.Throws<ArgumentOutOfRangeException>(() => buffer.Copy(1, int.MaxValue));
             Assert.True(buffer.AsReadOnlySequence(2, 0).IsEmpty);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Fact]
@@ -282,10 +309,14 @@ public class FixedCompositeByteBufTest
             target.WriteBytes(source);
             Assert.Equal(new byte[] { 1, 2, 3, 4, 1, 2 }, target.ReadableSequence.ToArray());
             Assert.Equal(0, fixedBuffer.RefCnt);
-            Assert.Equal(0, first.RefCnt); Assert.Equal(0, second.RefCnt);
+            Assert.Equal(0, first.RefCnt);
+            Assert.Equal(0, second.RefCnt);
             Assert.Equal(0, allocator.ReservedBytes);
         }
-        finally { target.Release(); }
+        finally
+        {
+            target.Release();
+        }
         Assert.Equal(0, allocator.ReservedBytes);
     }
 

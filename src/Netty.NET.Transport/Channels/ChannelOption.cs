@@ -212,7 +212,10 @@ public class ChannelOption<T> : ChannelOption
     internal override void ValidateValue(object value)
     {
         ArgumentNullException.ThrowIfNull(value);
-        if (value is not T typed) throw new ArgumentException("Invalid option value type.", nameof(value));
+        if (value is not T typed)
+        {
+            throw new ArgumentException("Invalid option value type.", nameof(value));
+        }
         Validate(typed);
     }
 

@@ -94,8 +94,14 @@ public class ByteBufEndianTest
         internal readonly ByteBuf Buffer;
         internal Storage(int kind)
         {
-            if (kind is 2 or 3) _pooled = new PooledByteBufAllocator(nativeAllocator: Native, maxOrder: 1);
-            if (kind is 4 or 5) _adaptive = new AdaptiveByteBufAllocator(false, lowMemory: false, nativeAllocator: Native);
+            if (kind is 2 or 3)
+            {
+                _pooled = new PooledByteBufAllocator(nativeAllocator: Native, maxOrder: 1);
+            }
+            if (kind is 4 or 5)
+            {
+                _adaptive = new AdaptiveByteBufAllocator(false, lowMemory: false, nativeAllocator: Native);
+            }
             Buffer = kind switch
             {
                 0 => new UnpooledHeapByteBuf(64, 512),
@@ -136,10 +142,50 @@ public class ByteBufEndianTest
 
     private static void Set(ByteBuf b, int index, int width, ulong value, bool little)
     {
-        if (width == 2) { if (little) b.SetShortLE(index, unchecked((int)value)); else b.SetShort(index, unchecked((int)value)); }
-        else if (width == 3) { if (little) b.SetMediumLE(index, unchecked((int)value)); else b.SetMedium(index, unchecked((int)value)); }
-        else if (width == 4) { if (little) b.SetIntLE(index, unchecked((int)value)); else b.SetInt(index, unchecked((int)value)); }
-        else { if (little) b.SetLongLE(index, unchecked((long)value)); else b.SetLong(index, unchecked((long)value)); }
+        if (width == 2)
+        {
+            if (little)
+            {
+                b.SetShortLE(index, unchecked((int)value));
+            }
+            else
+            {
+                b.SetShort(index, unchecked((int)value));
+            }
+        }
+        else if (width == 3)
+        {
+            if (little)
+            {
+                b.SetMediumLE(index, unchecked((int)value));
+            }
+            else
+            {
+                b.SetMedium(index, unchecked((int)value));
+            }
+        }
+        else if (width == 4)
+        {
+            if (little)
+            {
+                b.SetIntLE(index, unchecked((int)value));
+            }
+            else
+            {
+                b.SetInt(index, unchecked((int)value));
+            }
+        }
+        else
+        {
+            if (little)
+            {
+                b.SetLongLE(index, unchecked((long)value));
+            }
+            else
+            {
+                b.SetLong(index, unchecked((long)value));
+            }
+        }
     }
 
     private static long Get(ByteBuf b, int index, int width, bool little)
@@ -153,10 +199,50 @@ public class ByteBufEndianTest
 
     private static void Write(ByteBuf b, int width, ulong value, bool little)
     {
-        if (width == 2) { if (little) b.WriteShortLE(unchecked((int)value)); else b.WriteShort(unchecked((int)value)); }
-        else if (width == 3) { if (little) b.WriteMediumLE(unchecked((int)value)); else b.WriteMedium(unchecked((int)value)); }
-        else if (width == 4) { if (little) b.WriteIntLE(unchecked((int)value)); else b.WriteInt(unchecked((int)value)); }
-        else { if (little) b.WriteLongLE(unchecked((long)value)); else b.WriteLong(unchecked((long)value)); }
+        if (width == 2)
+        {
+            if (little)
+            {
+                b.WriteShortLE(unchecked((int)value));
+            }
+            else
+            {
+                b.WriteShort(unchecked((int)value));
+            }
+        }
+        else if (width == 3)
+        {
+            if (little)
+            {
+                b.WriteMediumLE(unchecked((int)value));
+            }
+            else
+            {
+                b.WriteMedium(unchecked((int)value));
+            }
+        }
+        else if (width == 4)
+        {
+            if (little)
+            {
+                b.WriteIntLE(unchecked((int)value));
+            }
+            else
+            {
+                b.WriteInt(unchecked((int)value));
+            }
+        }
+        else
+        {
+            if (little)
+            {
+                b.WriteLongLE(unchecked((long)value));
+            }
+            else
+            {
+                b.WriteLong(unchecked((long)value));
+            }
+        }
     }
 
     private static long Read(ByteBuf b, int width, bool little)
@@ -287,7 +373,10 @@ public class ByteBufEndianTest
                 Assert.Equal(Get(root, 1, 4, little), Get(allocated, 0, 4, little));
                 Assert.Equal(5, root.ReaderIndex);
             }
-            finally { allocated.Release(); }
+            finally
+            {
+                allocated.Release();
+            }
             root.SetIndex(1, 15);
             ByteBuf borrowed = root.ReadSlice(4);
             Assert.Equal(Get(root, 1, 4, little), Get(borrowed, 0, 4, little));
@@ -299,7 +388,10 @@ public class ByteBufEndianTest
             Assert.Equal(0, ByteBufUtil.Compare(root, duplicate));
             Assert.Equal(ByteBufUtil.HashCode(root), ByteBufUtil.HashCode(duplicate));
         }
-        finally { copy.Release(); }
+        finally
+        {
+            copy.Release();
+        }
     }
 
     [Theory]

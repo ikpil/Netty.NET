@@ -99,10 +99,12 @@ public class UnorderedActionBoundaryContractTest
             Assert.NotNull(beforeDrain);
             release.Set();
             await termination.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
-            beforeDrain(); beforeDrain();
+            beforeDrain();
+            beforeDrain();
             executor.Execute(() => calls++);
             Assert.NotSame(beforeDrain, replay);
-            replay(); replay();
+            replay();
+            replay();
             Assert.Equal(0, calls);
             Assert.Equal(0, executor.PendingTaskCount);
         }
@@ -129,7 +131,8 @@ public class UnorderedActionBoundaryContractTest
             int calls = 0;
             Assert.Same(error, Assert.Throws<InvalidOperationException>(() => executor.Execute(() => calls++)));
             Assert.NotNull(replay);
-            replay(); replay();
+            replay();
+            replay();
             Assert.Equal(0, calls);
             Assert.Equal(0, executor.PendingTaskCount);
         }
@@ -195,10 +198,17 @@ public class UnorderedActionBoundaryContractTest
         Task result = Task.CompletedTask;
         switch (kind)
         {
-            case "raw": owner.Execute(() => GC.KeepAlive(payload)); break;
-            case "submit": result = owner.SubmitAsync(() => GC.KeepAlive(payload)); break;
-            case "schedule": result = owner.ScheduleAsync(() => GC.KeepAlive(payload), TimeSpan.FromDays(1)); break;
-            default: throw new ArgumentException(nameof(kind));
+            case "raw":
+                owner.Execute(() => GC.KeepAlive(payload));
+                break;
+            case "submit":
+                result = owner.SubmitAsync(() => GC.KeepAlive(payload));
+                break;
+            case "schedule":
+                result = owner.ScheduleAsync(() => GC.KeepAlive(payload), TimeSpan.FromDays(1));
+                break;
+            default:
+                throw new ArgumentException(nameof(kind));
         }
         return (owner, owner.StopAsync(), result, weak);
     }

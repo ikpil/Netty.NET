@@ -34,8 +34,13 @@ public class UnorderedTerminationContractTest
                 // code which deliberately defers cancellation to finish.
                 while (!release.IsSet)
                 {
-                    try { release.Wait(); }
-                    catch (ThreadInterruptedException) { }
+                    try
+                    {
+                        release.Wait();
+                    }
+                    catch (ThreadInterruptedException)
+                    {
+                    }
                 }
             });
         }
@@ -44,8 +49,14 @@ public class UnorderedTerminationContractTest
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             Task termination = executor.TerminationFuture;
-            if (immediate) Assert.Same(executor.TerminationFuture, executor.StopAsync());
-            else Assert.Same(termination, executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero));
+            if (immediate)
+            {
+                Assert.Same(executor.TerminationFuture, executor.StopAsync());
+            }
+            else
+            {
+                Assert.Same(termination, executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero));
+            }
             Assert.True(executor.IsShutdown());
             Assert.False(termination.IsCompleted);
             firstRelease.Set();
@@ -90,7 +101,10 @@ public class UnorderedTerminationContractTest
             await termination.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.True(executor.IsTerminated());
         }
-        finally { _ = executor.StopAsync(); }
+        finally
+        {
+            _ = executor.StopAsync();
+        }
     }
 
     [Fact]
@@ -125,7 +139,10 @@ public class UnorderedTerminationContractTest
             await termination.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.True(executor.IsTerminated());
         }
-        finally { _ = executor.StopAsync(); }
+        finally
+        {
+            _ = executor.StopAsync();
+        }
     }
 
     [Fact]
@@ -145,7 +162,10 @@ public class UnorderedTerminationContractTest
             Assert.True(scheduled.IsCanceled);
             Assert.True(executor.IsTerminated());
         }
-        finally { _ = executor.StopAsync(); }
+        finally
+        {
+            _ = executor.StopAsync();
+        }
     }
 
     [Fact]

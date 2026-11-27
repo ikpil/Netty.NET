@@ -332,7 +332,10 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig, ISocketChannelCo
         try
         {
             JavaSocket.SendBufferSize = sendBufferSize;
-            if (Channel is AbstractNioByteChannel stream) stream.CalculateMaxBytesPerGatheringWrite();
+            if (Channel is AbstractNioByteChannel stream)
+            {
+                stream.CalculateMaxBytesPerGatheringWrite();
+            }
         }
         catch (SocketException e)
         {

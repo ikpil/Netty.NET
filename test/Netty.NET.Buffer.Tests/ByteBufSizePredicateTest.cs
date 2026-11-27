@@ -53,12 +53,14 @@ public class ByteBufSizePredicateTest
             int references = owner.RefCnt;
             view.MarkReaderIndex().MarkWriterIndex();
             Check(view, slice ? 8 : 10, slice ? 0 : 3, backing == 5 || viewKind == 3);
-            Assert.Equal(reader, view.ReaderIndex); Assert.Equal(writer, view.WriterIndex);
+            Assert.Equal(reader, view.ReaderIndex);
+            Assert.Equal(writer, view.WriterIndex);
             Assert.Equal(references, owner.RefCnt);
             view.SetIndex(1, 7);
             Check(view, 6, slice ? 1 : 9, backing == 5 || viewKind == 3);
             view.ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(reader, view.ReaderIndex); Assert.Equal(writer, view.WriterIndex);
+            Assert.Equal(reader, view.ReaderIndex);
+            Assert.Equal(writer, view.WriterIndex);
             if (viewKind != 0 && !(backing == 5 && viewKind == 3))
             {
                 owner.SetIndex(0, 16);
@@ -67,8 +69,12 @@ public class ByteBufSizePredicateTest
         }
         finally
         {
-            if (retained && view != null) view.Release();
-            owner.Release(); allocator?.Dispose();
+            if (retained && view != null)
+            {
+                view.Release();
+            }
+            owner.Release();
+            allocator?.Dispose();
         }
         Assert.Equal(0, native.ReservedBytes);
     }
@@ -88,8 +94,14 @@ public class ByteBufSizePredicateTest
     {
         disposable = null;
         var a = new UnpooledByteBufAllocator(false, true, native);
-        if (kind == 0) return a.HeapBuffer(16, 64);
-        if (kind == 1) return a.DirectBuffer(16, 64);
+        if (kind == 0)
+        {
+            return a.HeapBuffer(16, 64);
+        }
+        if (kind == 1)
+        {
+            return a.DirectBuffer(16, 64);
+        }
         if (kind is 2 or 3)
         {
             var pooled = new PooledByteBufAllocator(false, maxOrder: 1, nativeAllocator: native);
@@ -134,8 +146,14 @@ public class ByteBufSizePredicateTest
     {
         ByteBuf owner = new UnpooledHeapByteBuf(0, 64);
         ByteBuf b = readOnly ? owner.AsReadOnly() : owner;
-        try { Check(b, 0, 0, readOnly); }
-        finally { owner.Release(); }
+        try
+        {
+            Check(b, 0, 0, readOnly);
+        }
+        finally
+        {
+            owner.Release();
+        }
         ByteBuf sentinelReadOnly = Unpooled.EmptyBuffer.AsReadOnly();
         Check(sentinelReadOnly, 0, 0, true);
     }
@@ -183,7 +201,10 @@ public class ByteBufSizePredicateTest
             Assert.Equal(0, tracker.Records);
             Assert.Equal(0, tracker.Closes);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Fact]

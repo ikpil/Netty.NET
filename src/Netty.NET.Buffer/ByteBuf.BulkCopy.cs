@@ -31,14 +31,23 @@ public abstract partial class ByteBuf
 
     internal static bool BulkRangesOverlap(ByteBuf source, int sourceIndex, ByteBuf destination, int destinationIndex, int length)
     {
-        if (length == 0) return false;
-        if (ReferenceEquals(source, destination)) return true;
+        if (length == 0)
+        {
+            return false;
+        }
+        if (ReferenceEquals(source, destination))
+        {
+            return true;
+        }
         // Inspect storage without public access records. No span survives a component callback.
         ReadOnlySequence<byte> input = source.BorrowCopySequence(sourceIndex, length);
         ReadOnlySequence<byte> output = destination.BorrowCopySequence(destinationIndex, length);
         foreach (ReadOnlyMemory<byte> a in input)
         foreach (ReadOnlyMemory<byte> b in output)
-            if (a.Span.Overlaps(b.Span)) return true;
+            if (a.Span.Overlaps(b.Span))
+                {
+                    return true;
+                }
         return false;
     }
 }

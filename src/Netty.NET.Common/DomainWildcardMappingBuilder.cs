@@ -151,9 +151,15 @@ public class DomainWildcardMappingBuilder<T> where T : class
             bool first = true;
             foreach (var entry in map)
             {
-                if (!first) text.Append(", ");
+                if (!first)
+                {
+                    text.Append(", ");
+                }
                 first = false;
-                if (entry.Key[0] == '.') text.Append('*');
+                if (entry.Key[0] == '.')
+                {
+                    text.Append('*');
+                }
                 text.Append(entry.Key).Append('=').Append(entry.Value);
             }
 

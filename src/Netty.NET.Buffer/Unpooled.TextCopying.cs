@@ -114,8 +114,15 @@ public static partial class Unpooled
 
         // Mimic the same behavior as other copiedBuffer implementations.
         ByteBuf copy = Buffer(text.Length());
-        try { return copy.WriteBytes(text.AsSpan()); }
-        catch { copy.Release(); throw; }
+        try
+        {
+            return copy.WriteBytes(text.AsSpan());
+        }
+        catch
+        {
+            copy.Release();
+            throw;
+        }
     }
 
     /// <summary>Encodes a logical AsciiString subregion as unsigned-octet characters.</summary>

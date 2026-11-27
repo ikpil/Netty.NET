@@ -92,7 +92,10 @@ internal sealed partial class AdaptivePoolingAllocator
         {
             // CLR: argument guards; magazines only ask for valid pooled requests.
             ArgumentOutOfRangeException.ThrowIfNegative(requestedSize);
-            if (maxCapacity < requestedSize) throw new ArgumentOutOfRangeException(nameof(maxCapacity));
+            if (maxCapacity < requestedSize)
+            {
+                throw new ArgumentOutOfRangeException(nameof(maxCapacity));
+            }
             return Math.Min(SegmentSize, maxCapacity);
         }
 
@@ -108,7 +111,11 @@ internal sealed partial class AdaptivePoolingAllocator
                 chunk = new SizeClassedChunk(chunkBuffer, _chunkRegistry, SegmentSize, threadLocal);
                 chunk.TrackAllocation(threadLocal);
             }
-            catch { chunkBuffer.Release(); throw; }
+            catch
+            {
+                chunkBuffer.Release();
+                throw;
+            }
             chunk.AttachToMagazine(magazine);
             return chunk;
         }
@@ -156,7 +163,10 @@ internal sealed partial class AdaptivePoolingAllocator
         {
             // CLR: argument guards; magazines only ask for valid pooled requests.
             ArgumentOutOfRangeException.ThrowIfNegative(requestedSize);
-            if (maxCapacity < requestedSize) throw new ArgumentOutOfRangeException(nameof(maxCapacity));
+            if (maxCapacity < requestedSize)
+            {
+                throw new ArgumentOutOfRangeException(nameof(maxCapacity));
+            }
             // Buddy reservations stay powers of two even when the buffer maximum is smaller.
             // The public MaxFastWritableBytes contract clamps that reservation to maxCapacity.
             return MathUtil.SafeFindNextPositivePowerOfTwo(requestedSize);
@@ -183,7 +193,11 @@ internal sealed partial class AdaptivePoolingAllocator
                 chunk = new BuddyChunk(chunkBuffer, _chunkRegistry);
                 chunk.TrackAllocation(threadLocal);
             }
-            catch { chunkBuffer.Release(); throw; }
+            catch
+            {
+                chunkBuffer.Release();
+                throw;
+            }
             chunk.AttachToMagazine(magazine);
             return chunk;
         }

@@ -94,7 +94,10 @@ public class ResourceLeakDetectorContractTest : IDisposable
         do
         {
             GC.Collect(); GC.WaitForPendingFinalizers(); visit();
-            if (done()) return;
+            if (done())
+            {
+                return;
+            }
             Thread.Sleep(10);
         } while (elapsed.Elapsed < TimeSpan.FromSeconds(5));
         Assert.True(done());
@@ -214,7 +217,13 @@ public class ResourceLeakDetectorContractTest : IDisposable
         var tracker = detector.TrackForcibly(resource);
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
-        var holder = new Thread(() => { lock (resource) { entered.Set(); release.Wait(); } }) { IsBackground = true };
+        var holder = new Thread(() => {
+            lock (resource)
+            {
+                entered.Set();
+                release.Wait();
+            }
+        }) { IsBackground = true };
         holder.Start();
         try
         {
@@ -223,7 +232,11 @@ public class ResourceLeakDetectorContractTest : IDisposable
             Assert.True(close.Wait(TimeSpan.FromSeconds(5)));
             Assert.True(close.Result);
         }
-        finally { release.Set(); Assert.True(holder.Join(TimeSpan.FromSeconds(5))); }
+        finally
+        {
+            release.Set();
+            Assert.True(holder.Join(TimeSpan.FromSeconds(5)));
+        }
     }
 
     [Fact]
@@ -233,7 +246,12 @@ public class ResourceLeakDetectorContractTest : IDisposable
         object resource = new();
         var tracker = detector.TrackForcibly(resource);
         int successes = 0;
-        Parallel.For(0, 32, _ => { if (tracker.Close(resource)) Interlocked.Increment(ref successes); });
+        Parallel.For(0, 32, _ => {
+            if (tracker.Close(resource))
+            {
+                Interlocked.Increment(ref successes);
+            }
+        });
         Assert.Equal(1, successes);
         Assert.Equal(ResourceLeakDetector.TRACK_CLOSE, tracker.GetCloseStackTraceIfAny() != null);
     }
@@ -263,7 +281,11 @@ public class ResourceLeakDetectorContractTest : IDisposable
             tracker.Close(resource);
             close = tracker.GetCloseStackTraceIfAny();
         }
-        finally { release.Set(); Assert.True(record.Wait(TimeSpan.FromSeconds(5))); }
+        finally
+        {
+            release.Set();
+            Assert.True(record.Wait(TimeSpan.FromSeconds(5)));
+        }
         Assert.Same(close, tracker.GetCloseStackTraceIfAny());
     }
 

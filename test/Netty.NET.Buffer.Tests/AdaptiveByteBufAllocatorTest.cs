@@ -222,7 +222,12 @@ public class AdaptiveByteBufAllocatorTest : AbstractByteBufAllocatorTest<Adaptiv
                 Socket.Connect(listener.LocalEndPoint!);
                 _peer = listener.Accept();
             }
-            catch { _peer?.Dispose(); Socket.Dispose(); throw; }
+            catch
+            {
+                _peer?.Dispose();
+                Socket.Dispose();
+                throw;
+            }
         }
 
         internal void Close()
@@ -521,7 +526,12 @@ public class AdaptiveByteBufAllocatorClrContractTest
             Assert.Null(AdaptiveByteBufAllocatorTest.Root(normal).Unwrap());
             Assert.Equal(7, normal.Capacity);
         }
-        finally { normal.Release(); heap.Release(); direct.Release(); }
+        finally
+        {
+            normal.Release();
+            heap.Release();
+            direct.Release();
+        }
         allocator.Dispose();
         Assert.Equal(0, allocator.UsedHeapMemory + allocator.UsedDirectMemory);
         Assert.Equal(0, native.ReservedBytes);
@@ -541,7 +551,10 @@ public class AdaptiveByteBufAllocatorClrContractTest
             // This is a new size class, and a new magazine with a new chunk
             Assert.Equal(262144, direct ? allocator.UsedDirectMemory : allocator.UsedHeapMemory);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
         // Memory is still held by the magazines
         Assert.Equal(262144, direct ? allocator.UsedDirectMemory : allocator.UsedHeapMemory);
     }
@@ -568,7 +581,10 @@ public class AdaptiveByteBufAllocatorClrContractTest
                 live.Add(NewBuffer());
             Assert.Equal(262144, direct ? allocator.UsedDirectMemory : allocator.UsedHeapMemory);
         }
-        finally { foreach (var b in live) b.Release(); }
+        finally
+        {
+            foreach (var b in live) b.Release();
+        }
     }
 
     [Theory]
@@ -584,7 +600,8 @@ public class AdaptiveByteBufAllocatorClrContractTest
         try
         {
             for (int i = 0; i < 10 * 512; i++) live.Add(NewBuffer());
-            foreach (var b in live) b.Release(); live.Clear();
+            foreach (var b in live) b.Release();
+            live.Clear();
             long before = direct ? allocator.UsedDirectMemory : allocator.UsedHeapMemory;
             for (int poll = 0; poll < 128; poll++)
             {
@@ -595,7 +612,10 @@ public class AdaptiveByteBufAllocatorClrContractTest
             Assert.True(after < before, $"before={before}, after={after}");
             Assert.True(after >= 2 * 131072);
         }
-        finally { foreach (var b in live) b.Release(); }
+        finally
+        {
+            foreach (var b in live) b.Release();
+        }
     }
 
     [Theory]
@@ -657,7 +677,10 @@ public class AdaptiveByteBufAllocatorClrContractTest
                 for (int i = 0; i < buffers.Length; i++)
                     Assert.True(buffers[i].AsSpan(0, buffers[i].Capacity).IndexOfAnyExcept((byte)(i + 1)) < 0);
             }
-            finally { foreach (var buffer in buffers) buffer?.Release(); }
+            finally
+            {
+                foreach (var buffer in buffers) buffer?.Release();
+            }
         }
     }
 
@@ -682,7 +705,10 @@ public class AdaptiveByteBufAllocatorClrContractTest
                     Assert.Equal(2, b.RefCnt);
                     retained.Release();
                 }
-                finally { b.Release(); }
+                finally
+                {
+                    b.Release();
+                }
             }
         }, TestContext.Current.CancellationToken)));
         allocator.Dispose();
@@ -698,7 +724,13 @@ public class AdaptiveByteBufAllocatorClrContractTest
         Magazine magazine = allocator.HeapPool.SizeClassedMagazineGroups[0].Magazines[0];
         using var locked = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
-        var holder = new Thread(() => { lock (magazine.AllocationLock) { locked.Set(); release.Wait(); } });
+        var holder = new Thread(() => {
+            lock (magazine.AllocationLock)
+            {
+                locked.Set();
+                release.Wait();
+            }
+        });
         holder.Start();
         locked.Wait(TestContext.Current.CancellationToken);
         try
@@ -715,9 +747,16 @@ public class AdaptiveByteBufAllocatorClrContractTest
                 Assert.Equal(stripes == 1 ? 7 : 32, AdaptiveByteBufAllocatorTest.Root(b).Allocation.Length);
                 Assert.Equal(stripes == 1 ? 7 : 131072, allocator.UsedHeapMemory);
             }
-            finally { b.Release(); }
+            finally
+            {
+                b.Release();
+            }
         }
-        finally { release.Set(); Assert.True(holder.Join(TimeSpan.FromSeconds(10))); }
+        finally
+        {
+            release.Set();
+            Assert.True(holder.Join(TimeSpan.FromSeconds(10)));
+        }
         allocator.Dispose();
         Assert.Equal(0, allocator.UsedHeapMemory);
     }
@@ -761,7 +800,10 @@ public class AdaptiveByteBufAllocatorClrContractTest
             Assert.Equal(12345, b.GetInt(0));
             Assert.Equal(131072, allocator.UsedDirectMemory);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
         allocator.Dispose();
         Assert.Equal(0, native.ReservedBytes);
     }
@@ -785,7 +827,10 @@ public class AdaptiveByteBufAllocatorClrContractTest
             Assert.Same(allocator, composite.Alloc());
             Assert.Equal(direct, composite.IsDirect);
         }
-        finally { composite.Release(); }
+        finally
+        {
+            composite.Release();
+        }
         allocator.Dispose();
         Assert.Equal(0, allocator.UsedHeapMemory + allocator.UsedDirectMemory);
         Assert.Equal(0, native.ReservedBytes);

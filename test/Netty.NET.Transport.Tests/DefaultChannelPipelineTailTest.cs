@@ -54,8 +54,13 @@ public class DefaultChannelPipelineTailTest : IAsyncLifetime
         using var latch = new CountdownEvent(1);
         IChannel channel = await Connect(new MyChannel { Active = () => latch.Signal() });
         try
-        { Assert.True(latch.Wait(TimeSpan.FromSeconds(1))); }
-        finally { await channel.CloseAsync(TestContext.Current.CancellationToken); }
+        {
+            Assert.True(latch.Wait(TimeSpan.FromSeconds(1)));
+        }
+        finally
+        {
+            await channel.CloseAsync(TestContext.Current.CancellationToken);
+        }
     }
 
     [Fact]
@@ -80,7 +85,10 @@ public class DefaultChannelPipelineTailTest : IAsyncLifetime
             Assert.True(latch.Wait(TimeSpan.FromSeconds(1)));
             Assert.Same(error, cause);
         }
-        finally { await channel.CloseAsync(TestContext.Current.CancellationToken); }
+        finally
+        {
+            await channel.CloseAsync(TestContext.Current.CancellationToken);
+        }
     }
 
     [Fact]
@@ -89,8 +97,14 @@ public class DefaultChannelPipelineTailTest : IAsyncLifetime
         using var latch = new CountdownEvent(1);
         IChannel channel = await Connect(new MyChannel { Message = _ => latch.Signal() });
         try
-        { channel.Pipeline.FireChannelRead("testOnUnhandledInboundMessage"); Assert.True(latch.Wait(TimeSpan.FromSeconds(1))); }
-        finally { await channel.CloseAsync(TestContext.Current.CancellationToken); }
+        {
+            channel.Pipeline.FireChannelRead("testOnUnhandledInboundMessage");
+            Assert.True(latch.Wait(TimeSpan.FromSeconds(1)));
+        }
+        finally
+        {
+            await channel.CloseAsync(TestContext.Current.CancellationToken);
+        }
     }
 
     [Fact]
@@ -99,8 +113,14 @@ public class DefaultChannelPipelineTailTest : IAsyncLifetime
         using var latch = new CountdownEvent(1);
         IChannel channel = await Connect(new MyChannel { ReadComplete = () => latch.Signal() });
         try
-        { channel.Pipeline.FireChannelReadComplete(); Assert.True(latch.Wait(TimeSpan.FromSeconds(1))); }
-        finally { await channel.CloseAsync(TestContext.Current.CancellationToken); }
+        {
+            channel.Pipeline.FireChannelReadComplete();
+            Assert.True(latch.Wait(TimeSpan.FromSeconds(1)));
+        }
+        finally
+        {
+            await channel.CloseAsync(TestContext.Current.CancellationToken);
+        }
     }
 
     [Fact]
@@ -109,8 +129,14 @@ public class DefaultChannelPipelineTailTest : IAsyncLifetime
         using var latch = new CountdownEvent(1);
         IChannel channel = await Connect(new MyChannel { UserEvent = _ => latch.Signal() });
         try
-        { channel.Pipeline.FireUserEventTriggered("testOnUnhandledInboundUserEventTriggered"); Assert.True(latch.Wait(TimeSpan.FromSeconds(1))); }
-        finally { await channel.CloseAsync(TestContext.Current.CancellationToken); }
+        {
+            channel.Pipeline.FireUserEventTriggered("testOnUnhandledInboundUserEventTriggered");
+            Assert.True(latch.Wait(TimeSpan.FromSeconds(1)));
+        }
+        finally
+        {
+            await channel.CloseAsync(TestContext.Current.CancellationToken);
+        }
     }
 
     [Fact]
@@ -119,8 +145,14 @@ public class DefaultChannelPipelineTailTest : IAsyncLifetime
         using var latch = new CountdownEvent(1);
         IChannel channel = await Connect(new MyChannel { Writability = () => latch.Signal() });
         try
-        { channel.Pipeline.FireChannelWritabilityChanged(); Assert.True(latch.Wait(TimeSpan.FromSeconds(1))); }
-        finally { await channel.CloseAsync(TestContext.Current.CancellationToken); }
+        {
+            channel.Pipeline.FireChannelWritabilityChanged();
+            Assert.True(latch.Wait(TimeSpan.FromSeconds(1)));
+        }
+        finally
+        {
+            await channel.CloseAsync(TestContext.Current.CancellationToken);
+        }
     }
     private sealed class MyChannel : AbstractChannel
     {

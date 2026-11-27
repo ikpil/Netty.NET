@@ -84,7 +84,10 @@ public class UnpooledTextCopyingTest
             Assert.Equal(expected, copy.AsMemory(0, expected.Length).ToArray());
             Assert.Equal(0x7f, copy.GetByte(expected.Length));
         }
-        finally { Assert.True(copy.Release()); }
+        finally
+        {
+            Assert.True(copy.Release());
+        }
         Assert.Equal(0, copy.RefCnt);
     }
 
@@ -115,7 +118,12 @@ public class UnpooledTextCopyingTest
             Assert.Equal("Aé😀", nativeCopy.ToString(Encoding.UTF8));
             Assert.All(input, c => Assert.Equal('X', c));
         }
-        finally { owner?.Release(); nativeCopy?.Release(); arrayCopy.Release(); }
+        finally
+        {
+            owner?.Release();
+            nativeCopy?.Release();
+            arrayCopy.Release();
+        }
     }
 
     [Theory]
@@ -151,7 +159,12 @@ public class UnpooledTextCopyingTest
             Assert.Throws<EncoderFallbackException>(() =>
                 Unpooled.CopiedBuffer(text, offset, 1, new UTF8Encoding(false, true)));
         }
-        finally { stringCopy.Release(); arrayCopy.Release(); spanCopy.Release(); }
+        finally
+        {
+            stringCopy.Release();
+            arrayCopy.Release();
+            spanCopy.Release();
+        }
     }
 
     [Theory]
@@ -165,8 +178,14 @@ public class UnpooledTextCopyingTest
         {
             Assert.Throws<EncoderFallbackException>(() => Copy(text, strict, shape));
             ByteBuf copy = Copy(text, Encoding.UTF8, shape);
-            try { Assert.Equal(new byte[] { 0xef, 0xbf, 0xbd }, copy.ReadableMemory.ToArray()); }
-            finally { copy.Release(); }
+            try
+            {
+                Assert.Equal(new byte[] { 0xef, 0xbf, 0xbd }, copy.ReadableMemory.ToArray());
+            }
+            finally
+            {
+                copy.Release();
+            }
         }
     }
 
@@ -189,7 +208,12 @@ public class UnpooledTextCopyingTest
                 Assert.Equal(expected, b.ReadableMemory.ToArray());
                 Assert.Equal(new byte[] { 63 }, c.ReadableMemory.ToArray());
             }
-            finally { a.Release(); b.Release(); c.Release(); }
+            finally
+            {
+                a.Release();
+                b.Release();
+                c.Release();
+            }
         }
         Assert.Equal("[bad]", ((EncoderReplacementFallback)utf8.EncoderFallback).DefaultString);
         Assert.Equal("[bad]", ((EncoderReplacementFallback)ascii.EncoderFallback).DefaultString);
@@ -212,8 +236,14 @@ public class UnpooledTextCopyingTest
         for (int shape = 0; shape < 5; ++shape)
         {
             ByteBuf copy = Copy(text, encoding, shape);
-            try { Assert.Equal(Convert.FromHexString(hex), copy.ReadableMemory.ToArray()); }
-            finally { copy.Release(); }
+            try
+            {
+                Assert.Equal(Convert.FromHexString(hex), copy.ReadableMemory.ToArray());
+            }
+            finally
+            {
+                copy.Release();
+            }
         }
     }
 
@@ -234,7 +264,10 @@ public class UnpooledTextCopyingTest
                 copy.WriteByte(7);
                 Assert.Equal(7, copy.ReadByte());
             }
-            finally { Assert.True(copy.Release()); }
+            finally
+            {
+                Assert.True(copy.Release());
+            }
         }
     }
 
@@ -261,7 +294,11 @@ public class UnpooledTextCopyingTest
                 Assert.Same(Unpooled.EmptyBuffer, Unpooled.CopiedBuffer(new[] { 'A' }, 1, 0, encoding));
                 Assert.Same(Unpooled.EmptyBuffer, Unpooled.CopiedBuffer(ReadOnlySpan<char>.Empty, encoding));
             }
-            finally { Assert.True(whole.Release()); Assert.True(other.Release()); }
+            finally
+            {
+                Assert.True(whole.Release());
+                Assert.True(other.Release());
+            }
         }
     }
 
@@ -286,8 +323,14 @@ public class UnpooledTextCopyingTest
         Assert.Throws<InvalidOperationException>(() => Unpooled.CopiedBuffer(input, 1, 1, new FailingEncoding()));
         Assert.Equal(new[] { '<', 'A', '>' }, input);
         ByteBuf retry = Unpooled.CopiedBuffer(input, 1, 1, Encoding.UTF8);
-        try { Assert.Equal(new byte[] { 65 }, retry.ReadableMemory.ToArray()); }
-        finally { retry.Release(); }
+        try
+        {
+            Assert.Equal(new byte[] { 65 }, retry.ReadableMemory.ToArray());
+        }
+        finally
+        {
+            retry.Release();
+        }
     }
 
     private sealed class FailingEncoding : UTF8Encoding

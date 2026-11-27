@@ -42,7 +42,10 @@ public class SchedulingContractTest
             Assert.True(ranOnExecutor);
             Assert.True(task.IsCompletedSuccessfully);
         }
-        finally { Shutdown(executor); }
+        finally
+        {
+            Shutdown(executor);
+        }
     }
 
     [Fact]
@@ -56,7 +59,10 @@ public class SchedulingContractTest
             var error = Assert.Throws<InvalidOperationException>(() => task.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             Assert.Same(cause, error);
         }
-        finally { Shutdown(executor); }
+        finally
+        {
+            Shutdown(executor);
+        }
     }
 
     [Fact]
@@ -75,7 +81,10 @@ public class SchedulingContractTest
             Assert.True(drained.Wait(TimeSpan.FromSeconds(5)));
             Assert.Equal(0, calls);
         }
-        finally { Shutdown(executor); }
+        finally
+        {
+            Shutdown(executor);
+        }
     }
 
     [Theory]
@@ -89,7 +98,12 @@ public class SchedulingContractTest
             int calls = 0;
             using var repeated = new CountdownEvent(1);
             using var cancellation = new CancellationTokenSource();
-            Action action = () => { if (Interlocked.Increment(ref calls) == 3) repeated.Signal(); };
+            Action action = () => {
+                if (Interlocked.Increment(ref calls) == 3)
+                {
+                    repeated.Signal();
+                }
+            };
             var task = fixedRate ? executor.ScheduleAtFixedRateAsync(action, TimeSpan.Zero, TimeSpan.FromMilliseconds(2), cancellation.Token) :
                 executor.ScheduleWithFixedDelayAsync(action, TimeSpan.Zero, TimeSpan.FromMilliseconds(2), cancellation.Token);
             Assert.True(repeated.Wait(TimeSpan.FromSeconds(5)));
@@ -102,7 +116,10 @@ public class SchedulingContractTest
             Assert.Equal(completedCalls, Volatile.Read(ref calls));
             Assert.True(task.IsCanceled);
         }
-        finally { Shutdown(executor); }
+        finally
+        {
+            Shutdown(executor);
+        }
     }
 
     [Fact]
@@ -116,7 +133,10 @@ public class SchedulingContractTest
             Assert.Equal("text", first.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
             Assert.Equal(42, second.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
         }
-        finally { Shutdown(executor); }
+        finally
+        {
+            Shutdown(executor);
+        }
     }
     private class ManualExecutor : AbstractScheduledEventExecutor
     {
@@ -139,8 +159,14 @@ public class SchedulingContractTest
         internal readonly List<Action> removals = new();
         protected override void ScheduleRemoveScheduled(IScheduledWork task)
         {
-            if (holdRemoval) removals.Add(task.QueueCallback);
-            else base.ScheduleRemoveScheduled(task);
+            if (holdRemoval)
+            {
+                removals.Add(task.QueueCallback);
+            }
+            else
+            {
+                base.ScheduleRemoveScheduled(task);
+            }
         }
 
         public Action PollDue()
@@ -211,7 +237,10 @@ public class SchedulingContractTest
         executor.PollDue()?.Invoke();
         Assert.Equal(cancel ? 0 : 1, calls);
         Assert.True(task.IsCompleted);
-        if (!cancel) Assert.True(task.IsCompletedSuccessfully);
+        if (!cancel)
+        {
+            Assert.True(task.IsCompletedSuccessfully);
+        }
     }
 
     private static void Shutdown(IEventExecutor executor)
@@ -308,8 +337,14 @@ public class SchedulingContractTest
         internal void RunQueued(Action task)
         {
             running = true;
-            try { task(); }
-            finally { running = false; }
+            try
+            {
+                task();
+            }
+            finally
+            {
+                running = false;
+            }
         }
 
         public override void Execute(Action command)
@@ -336,7 +371,10 @@ public class SchedulingContractTest
 
         protected override void ValidateScheduled(TimeSpan amount)
         {
-            if (amount > TimeSpan.FromTicks(1)) throw new ArgumentException("test scheduling limit");
+            if (amount > TimeSpan.FromTicks(1))
+            {
+                throw new ArgumentException("test scheduling limit");
+            }
         }
     }
 
@@ -357,7 +395,10 @@ public class SchedulingContractTest
         Assert.Equal(before ? 0 : 1, executor.lazyCalls);
         Assert.Equal(before ? 0 : 1, executor.afterCalls);
         Assert.Equal(!before && after ? 2 : 1, executor.submissions.Count);
-        if (!before && after) Assert.NotSame(issued, executor.submissions[1]);
+        if (!before && after)
+        {
+            Assert.NotSame(issued, executor.submissions[1]);
+        }
     }
 
     [Fact]

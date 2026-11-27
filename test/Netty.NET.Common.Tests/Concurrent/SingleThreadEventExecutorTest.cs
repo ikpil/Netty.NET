@@ -201,7 +201,10 @@ public class SingleThreadEventExecutorTest
             // Guarantee that al tasks were able to die...
             factory.Drain();
         }
-        finally { Shutdown(executor); }
+        finally
+        {
+            Shutdown(executor);
+        }
     }
 
     [Fact]
@@ -230,7 +233,10 @@ public class SingleThreadEventExecutorTest
             // Guarantee that all threads were able to die...
             factory.Drain();
         }
-        finally { Shutdown(executor); }
+        finally
+        {
+            Shutdown(executor);
+        }
     }
 
     [Fact]
@@ -247,8 +253,15 @@ public class SingleThreadEventExecutorTest
             while (!Volatile.Read(ref done))
             {
                 var executor = Interlocked.Exchange(ref executorRef, null);
-                if (executor == null) Thread.Yield();
-                else { executor.TrySuspend(); Interlocked.Increment(ref suspended); }
+                if (executor == null)
+                {
+                    Thread.Yield();
+                }
+                else
+                {
+                    executor.TrySuspend();
+                    Interlocked.Increment(ref suspended);
+                }
             }
         }) { IsBackground = true };
         suspender.Start();
@@ -307,7 +320,10 @@ public class SingleThreadEventExecutorTest
             // Guarantee that al tasks were able to die...
             factory.Drain();
         }
-        finally { Shutdown(executor); }
+        finally
+        {
+            Shutdown(executor);
+        }
     }
 
     [Fact]
@@ -345,7 +361,10 @@ public class SingleThreadEventExecutorTest
                 Shutdown(executor);
                 factory.Drain();
             }
-            finally { Shutdown(executor); }
+            finally
+            {
+                Shutdown(executor);
+            }
         }
     }
 
@@ -360,8 +379,14 @@ public class SingleThreadEventExecutorTest
             // Schedule a task which is so far in the future that we are sure it will not run at all.
             var future = executor.ScheduleAsync(() =>
             {
-                try { latch.Wait(); }
-                catch (ThreadInterruptedException) { /* ignore */ }
+                try
+                {
+                    latch.Wait();
+                }
+                catch (ThreadInterruptedException)
+                {
+                    /* ignore */
+                }
                 // ignore
             }, TimeSpan.FromMilliseconds(100));
             var currentThread = factory.Take();
@@ -388,7 +413,10 @@ public class SingleThreadEventExecutorTest
         }
         finally
         {
-            if (!latch.IsSet) latch.Signal();
+            if (!latch.IsSet)
+            {
+                latch.Signal();
+            }
             Shutdown(executor);
         }
     }
@@ -440,7 +468,10 @@ public class SingleThreadEventExecutorTest
             var trace = executor.SubmitAsync<StackFrame[]>(properties.StackTrace);
             Assert.NotEmpty(trace.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
         }
-        finally { Shutdown(executor); }
+        finally
+        {
+            Shutdown(executor);
+        }
     }
 
     // The pinned four JDK blocking-guard tests have no retained bulk method.
@@ -481,8 +512,14 @@ public class SingleThreadEventExecutorTest
                     executor.SubmitAsync(() => { Assert.True(executor.InEventLoop()); return ++calls; })
                 };
                 Task composition = any ? Task.WhenAny(children) : Task.WhenAll(children);
-                if (timeout) await composition.WaitAsync(TimeSpan.FromSeconds(3)).ConfigureAwait(false);
-                else await composition.ConfigureAwait(false);
+                if (timeout)
+                {
+                    await composition.WaitAsync(TimeSpan.FromSeconds(3)).ConfigureAwait(false);
+                }
+                else
+                {
+                    await composition.ConfigureAwait(false);
+                }
                 await executor.SubmitAsync(() =>
                 {
                     Assert.True(executor.InEventLoop());
@@ -492,7 +529,10 @@ public class SingleThreadEventExecutorTest
             });
             await operation.WaitAsync(TimeSpan.FromSeconds(5));
         }
-        finally { Shutdown(executor); }
+        finally
+        {
+            Shutdown(executor);
+        }
     }
     private sealed class LazyExecutor : LoopExecutor
     {
@@ -509,14 +549,26 @@ public class SingleThreadEventExecutorTest
         {
             while (!ConfirmShutdown())
             {
-                lock (this) { if (!HasTasks()) Monitor.Wait(this); }
+                lock (this)
+                {
+                    if (!HasTasks())
+                    {
+                        Monitor.Wait(this);
+                    }
+                }
                 RunAllTasks();
             }
         }
 
         protected internal override void Wakeup(bool inEventLoop)
         {
-            if (!inEventLoop) { lock (this) Monitor.PulseAll(this); }
+            if (!inEventLoop)
+            {
+                lock (this)
+                {
+                    Monitor.PulseAll(this);
+                }
+            }
         }
     }
     [Fact]
@@ -552,7 +604,10 @@ public class SingleThreadEventExecutorTest
             Assert.Equal(0, latch1.latch.CurrentCount);
             Assert.Equal(0, latch2.latch.CurrentCount);
         }
-        finally { Shutdown(executor); }
+        finally
+        {
+            Shutdown(executor);
+        }
     }
 
     private sealed class NoRemoveQueue : LinkedBlockingQueue<Action>
@@ -589,7 +644,10 @@ public class SingleThreadEventExecutorTest
                     // ignore, tasks are either accepted or rejected
                     ++rejects;
                 }
-                else submittedTasks.Enqueue(submission);
+                else
+                {
+                    submittedTasks.Enqueue(submission);
+                }
             }
             return result;
         }
@@ -615,7 +673,10 @@ public class SingleThreadEventExecutorTest
             Assert.Equal(executor.attempts, executor.submittedTasks.Count + executor.rejects);
             foreach (Task future in executor.submittedTasks) Assert.True(future.IsCompletedSuccessfully);
         }
-        finally { Shutdown(executor); }
+        finally
+        {
+            Shutdown(executor);
+        }
     }
 
     private sealed class TestRunnable
@@ -646,7 +707,10 @@ public class SingleThreadEventExecutorTest
             Assert.True(scheduledTask.ran);
             Assert.True(afterTask.ran);
         }
-        finally { Shutdown(executor); }
+        finally
+        {
+            Shutdown(executor);
+        }
     }
 
     [Fact]
@@ -662,12 +726,20 @@ public class SingleThreadEventExecutorTest
             //ensure always has at least one task in taskQueue
             //check if scheduled tasks are triggered
             Action repeat = null;
-            repeat = () => { if (!f.IsCompleted) executor.Execute(repeat); };
+            repeat = () => {
+                if (!f.IsCompleted)
+                {
+                    executor.Execute(repeat);
+                }
+            };
             executor.Execute(repeat);
             Sync(f);
             Assert.True(t.ran);
         }
-        finally { Shutdown(executor); }
+        finally
+        {
+            Shutdown(executor);
+        }
     }
     private sealed class ThrowingExecutor : LoopExecutor
     {

@@ -35,14 +35,23 @@ internal static class CollectedObjectWatch
         internal void Cancel()
         {
             Interlocked.Exchange(ref notification, null);
-            if (owner.TryGetTarget(out Watch watch)) watch.Remove(this);
+            if (owner.TryGetTarget(out Watch watch))
+            {
+                watch.Remove(this);
+            }
         }
 
         internal void Signal()
         {
             Action action = Interlocked.Exchange(ref notification, null);
-            try { action?.Invoke(); }
-            catch (Exception) { /* A finalizer must not terminate the CLR process. */ }
+            try
+            {
+                action?.Invoke();
+            }
+            catch (Exception)
+            {
+                /* A finalizer must not terminate the CLR process. */
+            }
         }
     }
 
@@ -53,7 +62,11 @@ internal static class CollectedObjectWatch
         internal void Add(Registration registration)
         {
             using var held = UninterruptibleMonitor.Enter(this);
-            if (suppressed) { GC.ReRegisterForFinalize(this); suppressed = false; }
+            if (suppressed)
+            {
+                GC.ReRegisterForFinalize(this);
+                suppressed = false;
+            }
             registration.Next = head;
             head = registration;
         }
@@ -66,20 +79,34 @@ internal static class CollectedObjectWatch
             {
                 if (ReferenceEquals(current, registration))
                 {
-                    if (previous == null) head = current.Next;
-                    else previous.Next = current.Next;
+                    if (previous == null)
+                    {
+                        head = current.Next;
+                    }
+                    else
+                    {
+                        previous.Next = current.Next;
+                    }
                     current.Next = null;
                     break;
                 }
                 previous = current;
             }
-            if (head == null && !suppressed) { GC.SuppressFinalize(this); suppressed = true; }
+            if (head == null && !suppressed)
+            {
+                GC.SuppressFinalize(this);
+                suppressed = true;
+            }
         }
 
         ~Watch()
         {
             Registration registrations;
-            lock (this) { registrations = head; head = null; }
+            lock (this)
+            {
+                registrations = head;
+                head = null;
+            }
             while (registrations != null)
             {
                 Registration next = registrations.Next;

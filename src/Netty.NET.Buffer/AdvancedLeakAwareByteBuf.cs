@@ -41,7 +41,10 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     {
         AcquireAndReleaseOnly = SystemPropertyUtil.GetBoolean(AcquireAndReleaseOnlyProperty, false);
         IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(AdvancedLeakAwareByteBuf));
-        if (logger.IsDebugEnabled()) logger.Debug("-D{}: {}", AcquireAndReleaseOnlyProperty, AcquireAndReleaseOnly);
+        if (logger.IsDebugEnabled())
+        {
+            logger.Debug("-D{}: {}", AcquireAndReleaseOnlyProperty, AcquireAndReleaseOnly);
+        }
         ResourceLeakDetector.AddExclusions(typeof(AdvancedLeakAwareByteBuf), nameof(Touch), nameof(RecordLeakNonRefCountingOperation));
     }
 
@@ -56,7 +59,10 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
 
     internal static void RecordLeakNonRefCountingOperation(IResourceLeakTracker<ByteBuf> leak)
     {
-        if (!AcquireAndReleaseOnly) leak.Record();
+        if (!AcquireAndReleaseOnly)
+        {
+            leak.Record();
+        }
     }
 
     public override int Capacity
@@ -80,7 +86,14 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override ByteBuf Touch(object hint = null)
     {
         // CLR's optional hint combines Java's two overloads; null has the same no-hint record semantics.
-        if (hint == null) _leak.Record(); else _leak.Record(hint);
+        if (hint == null)
+        {
+            _leak.Record();
+        }
+        else
+        {
+            _leak.Record(hint);
+        }
         return this;
     }
 

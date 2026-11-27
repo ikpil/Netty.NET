@@ -104,39 +104,67 @@ public partial class DefaultChannelGroup
     {
         ArgumentNullException.ThrowIfNull(array);
         ArgumentOutOfRangeException.ThrowIfNegative(arrayIndex);
-        if (arrayIndex > array.Length) throw new ArgumentOutOfRangeException(nameof(arrayIndex));
+        if (arrayIndex > array.Length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(arrayIndex));
+        }
         var snapshot = ToArray();
-        if (snapshot.Length > array.Length - arrayIndex) throw new ArgumentException("Destination array is too small.", nameof(array));
+        if (snapshot.Length > array.Length - arrayIndex)
+        {
+            throw new ArgumentException("Destination array is too small.", nameof(array));
+        }
         snapshot.CopyTo(array, arrayIndex);
     }
 
     public void UnionWith(IEnumerable<IChannel> other)
     {
         ArgumentNullException.ThrowIfNull(other);
-        if (ReferenceEquals(other, this)) return;
+        if (ReferenceEquals(other, this))
+        {
+            return;
+        }
         foreach (var channel in other) Add(channel);
     }
 
     public void ExceptWith(IEnumerable<IChannel> other)
     {
         ArgumentNullException.ThrowIfNull(other);
-        if (ReferenceEquals(other, this)) { Clear(); return; }
+        if (ReferenceEquals(other, this))
+        {
+            Clear();
+            return;
+        }
         foreach (var channel in other) Remove(channel);
     }
 
     public void IntersectWith(IEnumerable<IChannel> other)
     {
         ArgumentNullException.ThrowIfNull(other);
-        if (ReferenceEquals(other, this)) return;
+        if (ReferenceEquals(other, this))
+        {
+            return;
+        }
         var keep = Members(other);
-        foreach (var channel in ToArray()) if (!keep.Contains(channel)) Remove(channel);
+        foreach (var channel in ToArray())
+        if (!keep.Contains(channel))
+        {
+            Remove(channel);
+        }
     }
 
     public void SymmetricExceptWith(IEnumerable<IChannel> other)
     {
         ArgumentNullException.ThrowIfNull(other);
-        if (ReferenceEquals(other, this)) { Clear(); return; }
-        foreach (var channel in Members(other)) if (!Remove(channel)) Add(channel);
+        if (ReferenceEquals(other, this))
+        {
+            Clear();
+            return;
+        }
+        foreach (var channel in Members(other))
+        if (!Remove(channel))
+        {
+            Add(channel);
+        }
     }
 
     public bool IsSubsetOf(IEnumerable<IChannel> other)
@@ -184,7 +212,10 @@ public partial class DefaultChannelGroup
     // group membership does not turn group equality/hash into mutable set-value equality.
     public int CompareTo(DefaultChannelGroup other)
     {
-        if (other == null) return 1;
+        if (other == null)
+        {
+            return 1;
+        }
         int byName = string.CompareOrdinal(Name, other.Name);
         return byName != 0 ? byName : RuntimeHelpers.GetHashCode(this).CompareTo(RuntimeHelpers.GetHashCode(other));
     }

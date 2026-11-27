@@ -33,7 +33,10 @@ public static partial class ByteBufUtil
     /// are freed. This raw transport helper does not add automatic leak wrapping.</remarks>
     public static ByteBuf ThreadLocalDirectBuffer()
     {
-        if (ThreadLocalDirectSettings.Size <= 0) return null;
+        if (ThreadLocalDirectSettings.Size <= 0)
+        {
+            return null;
+        }
         return FastThreadLocalThread.CurrentThreadWillCleanupFastThreadLocals()
             ? ThreadLocalDirectCaches.Local.Get().Rent()
             : ThreadLocalDirectByteBuf.Create(null);

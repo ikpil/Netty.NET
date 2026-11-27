@@ -83,7 +83,10 @@ internal sealed partial class AdaptivePoolingAllocator
             // A magazine may offer the residual capacity, which need not be a power of
             // two. The Java search returns no matching buddy in that case; return that
             // outcome before walking the tree.
-            if (startingCapacity < MIN_BUDDY_SIZE || !BitOperations.IsPow2(startingCapacity)) return null;
+            if (startingCapacity < MIN_BUDDY_SIZE || !BitOperations.IsPow2(startingCapacity))
+            {
+                return null;
+            }
             int startIndex = ChooseFirstFreeBuddy(1, startingCapacity, 0);
             if (startIndex == -1)
             {

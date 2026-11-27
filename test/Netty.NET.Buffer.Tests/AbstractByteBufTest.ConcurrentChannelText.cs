@@ -36,8 +36,14 @@ public abstract partial class AbstractByteBufTest
         random.NextBytes(bytes);
         ByteBuf buffer = NewBuffer(8);
         buffer.WriteBytes(bytes);
-        try { AssertReadGatheringByteChannelMultipleThreads(buffer, bytes, false); }
-        finally { buffer.Release(); }
+        try
+        {
+            AssertReadGatheringByteChannelMultipleThreads(buffer, bytes, false);
+        }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Fact]
@@ -47,8 +53,14 @@ public abstract partial class AbstractByteBufTest
         random.NextBytes(bytes);
         ByteBuf buffer = NewBuffer(8);
         buffer.WriteBytes(bytes);
-        try { AssertReadGatheringByteChannelMultipleThreads(buffer, bytes, true); }
-        finally { buffer.Release(); }
+        try
+        {
+            AssertReadGatheringByteChannelMultipleThreads(buffer, bytes, true);
+        }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     private static void AssertReadGatheringByteChannelMultipleThreads(ByteBuf buffer, byte[] expectedBytes, bool slice)
@@ -72,8 +84,14 @@ public abstract partial class AbstractByteBufTest
                     while (Volatile.Read(ref remaining) > 0)
                     {
                         ByteBuf buf;
-                        if (slice) buf = buffer.Slice();
-                        else buf = buffer.Duplicate();
+                        if (slice)
+                        {
+                            buf = buffer.Slice();
+                        }
+                        else
+                        {
+                            buf = buffer.Duplicate();
+                        }
                         while (buf.IsReadable())
                         {
                             if (clock.Elapsed >= TimeSpan.FromSeconds(30))
@@ -83,7 +101,10 @@ public abstract partial class AbstractByteBufTest
                             buf.ReadBytes(channel.Socket, buf.ReadableBytes);
                         }
                         Assert.Equal(expectedBytes, channel.WrittenBytes(expectedBytes.Length));
-                        if (Interlocked.Decrement(ref remaining) <= 0) completed.Set();
+                        if (Interlocked.Decrement(ref remaining) <= 0)
+                        {
+                            completed.Set();
+                        }
                     }
                     channel.AssertNoTrailingBytes();
                 }
@@ -96,7 +117,10 @@ public abstract partial class AbstractByteBufTest
                 }
                 finally
                 {
-                    try { Assert.True(barrier.SignalAndWait(TimeSpan.FromSeconds(30))); }
+                    try
+                    {
+                        Assert.True(barrier.SignalAndWait(TimeSpan.FromSeconds(30)));
+                    }
                     catch (Exception cause)
                     {
                         // ignore
@@ -123,7 +147,10 @@ public abstract partial class AbstractByteBufTest
             foreach (Thread thread in threads) thread.Join();
         }
         // Ensure failures in worker threads are propagated to the test thread.
-        if (!errors.IsEmpty) throw new AggregateException("Worker thread failed", errors);
+        if (!errors.IsEmpty)
+        {
+            throw new AggregateException("Worker thread failed", errors);
+        }
     }
 
     private sealed class ConcurrentGatheringChannel : IDisposable
@@ -145,7 +172,12 @@ public abstract partial class AbstractByteBufTest
                 _peer = listener.Accept();
                 _peer.ReceiveTimeout = 5000;
             }
-            catch { _peer?.Dispose(); Socket.Dispose(); throw; }
+            catch
+            {
+                _peer?.Dispose();
+                Socket.Dispose();
+                throw;
+            }
         }
 
         internal byte[] WrittenBytes(int length)
@@ -238,14 +270,20 @@ public abstract partial class AbstractByteBufTest
             for (int i = 0; i < bufs.Length; i++) await finish.WaitAsync(token);
             start.Release(bufs.Length);
             Task all = Task.WhenAll(tasks);
-            try { await all.WaitAsync(token); }
+            try
+            {
+                await all.WaitAsync(token);
+            }
             catch (OperationCanceledException)
             {
                 // Propagate interrupted exceptions immediately.
                 // CLR cancellation propagates after the finally block safely drains borrowed workers.
                 throw;
             }
-            catch { throw new AggregateException("Worker threads failed", all.Exception.InnerExceptions); }
+            catch
+            {
+                throw new AggregateException("Worker threads failed", all.Exception.InnerExceptions);
+            }
 
             // Original success means all Futures completed. Also verify actual bytes and absolute indices.
             byte[] expected = new byte[cs.Length];
@@ -258,12 +296,21 @@ public abstract partial class AbstractByteBufTest
                 Assert.Equal(writerIndices[i], buf.WriterIndex);
             }
         }
-        catch (Exception cause) { failure = cause; throw; }
+        catch (Exception cause)
+        {
+            failure = cause;
+            throw;
+        }
         finally
         {
             start.Release(bufs.Length);
-            try { await Task.WhenAll(tasks); }
-            catch when (failure != null) { }
+            try
+            {
+                await Task.WhenAll(tasks);
+            }
+            catch when (failure != null)
+            {
+            }
             finally
             {
                 foreach (ByteBuf buf in bufs) buf?.Release();

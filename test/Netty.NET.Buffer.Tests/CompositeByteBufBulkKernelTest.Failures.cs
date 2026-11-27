@@ -27,7 +27,10 @@ public partial class CompositeByteBufBulkKernelTest
         foreach (bool fixedComposite in new[] { false, true })
         foreach (bool relative in new[] { false, true })
         for (int operation = 0; operation < 3; ++operation)
-            if (!fixedComposite || operation != 1) yield return [direct, fixedComposite, relative, operation];
+            if (!fixedComposite || operation != 1)
+                        {
+                            yield return [direct, fixedComposite, relative, operation];
+                        }
     }
 
     [Theory]
@@ -148,7 +151,16 @@ public partial class CompositeByteBufBulkKernelTest
                 : new CompositeByteBuf().AddComponent(first, true).AddComponent(second, true);
             owner.SetIndex(relative ? 14 : 1, relative ? 18 : 2);
             int destination = fixedComposite ? 13 : 18;
-            Assert.Throws<ProbeFailure>(() => { if (relative) owner.ReadBytes(first, destination, 4); else owner.GetBytes(14, first, destination, 4); });
+            Assert.Throws<ProbeFailure>(() => {
+                if (relative)
+                {
+                    owner.ReadBytes(first, destination, 4);
+                }
+                else
+                {
+                    owner.GetBytes(14, first, destination, 4);
+                }
+            });
             Assert.Equal(2, observation.Visits.Count);
             Assert.All(observation.Visits, visit => { Assert.NotSame(first, visit.Other); Assert.Equal(0, visit.Other.RefCnt); });
             Assert.Equal(relative ? 14 : 1, owner.ReaderIndex);

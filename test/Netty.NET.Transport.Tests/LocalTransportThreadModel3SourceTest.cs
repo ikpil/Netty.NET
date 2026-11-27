@@ -70,7 +70,10 @@ public class LocalTransportThreadModel3SourceTest
             var server = await new ServerBootstrap().Group(servers).Channel<LocalServerChannel>()
                 .ChildHandler(new DiscardInput()).BindAsync(LocalAddress.ANY, token);
             var channel = new LocalChannel();
-            if (!inbound) channel.Config.SetAutoRead(false);
+            if (!inbound)
+            {
+                channel.Config.SetAutoRead(false);
+            }
             for (int i = 0; i < 5; i++)
                 channel.Pipeline.AddLast(executors[0], $"h{i + 1}", new EventForwarder());
             var recorder = new EventRecorder(inbound);
@@ -88,7 +91,10 @@ public class LocalTransportThreadModel3SourceTest
                 while (true)
                 {
                     await Task.Delay(100, stopModifier.Token);
-                    if (!channel.IsRegistered) continue;
+                    if (!channel.IsRegistered)
+                    {
+                        continue;
+                    }
                     //EventForwardHandler forwardHandler = forwarders[random.nextInt(forwarders.length)];
                     var handler = channel.Pipeline.RemoveFirst();
                     channel.Pipeline.AddBefore(executors[Random.Shared.Next(executors.Length)], "recorder", Guid.NewGuid().ToString(), handler);
@@ -99,12 +105,24 @@ public class LocalTransportThreadModel3SourceTest
             {
                 switch (evt)
                 {
-                    case EventType.ExceptionCaught: channel.Pipeline.FireExceptionCaught(cause); break;
-                    case EventType.MessageReceived: channel.Pipeline.FireChannelRead(""); break;
-                    case EventType.MessageReceivedLast: channel.Pipeline.FireChannelReadComplete(); break;
-                    case EventType.UserEvent: channel.Pipeline.FireUserEventTriggered(""); break;
-                    case EventType.Write: _ = channel.Pipeline.WriteAsync(""); break;
-                    case EventType.Read: channel.Pipeline.Read(); break;
+                    case EventType.ExceptionCaught:
+                        channel.Pipeline.FireExceptionCaught(cause);
+                        break;
+                    case EventType.MessageReceived:
+                        channel.Pipeline.FireChannelRead("");
+                        break;
+                    case EventType.MessageReceivedLast:
+                        channel.Pipeline.FireChannelReadComplete();
+                        break;
+                    case EventType.UserEvent:
+                        channel.Pipeline.FireUserEventTriggered("");
+                        break;
+                    case EventType.Write:
+                        _ = channel.Pipeline.WriteAsync("");
+                        break;
+                    case EventType.Read:
+                        channel.Pipeline.Read();
+                        break;
                 }
             }
 
@@ -116,8 +134,13 @@ public class LocalTransportThreadModel3SourceTest
         finally
         {
             stopModifier.Cancel();
-            try { await modifier; }
-            catch (OperationCanceledException) when (stopModifier.IsCancellationRequested) { }
+            try
+            {
+                await modifier;
+            }
+            catch (OperationCanceledException) when (stopModifier.IsCancellationRequested)
+            {
+            }
             finally
             {
                 await clients.StopAsync();
@@ -196,7 +219,10 @@ public class LocalTransportThreadModel3SourceTest
 
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
         {
-            if (!inbound) Events.Enqueue(EventType.Write);
+            if (!inbound)
+            {
+                Events.Enqueue(EventType.Write);
+            }
             return Task.CompletedTask;
         }
 

@@ -49,10 +49,16 @@ public class SegmentedDatagramContractTest
                 }
                 Assert.Equal(1, duplicate.Content.ReaderIndex);
             }
-            finally { duplicate.Release(); }
+            finally
+            {
+                duplicate.Release();
+            }
             Assert.Equal(0, content.RefCnt);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Theory]
@@ -60,7 +66,10 @@ public class SegmentedDatagramContractTest
     [InlineData(true)]
     public async Task SegmentsAndTheFollowingDatagramArriveInOrder(bool ipv6)
     {
-        if (ipv6) Assert.SkipUnless(Socket.OSSupportsIPv6, "IPv6 unavailable.");
+        if (ipv6)
+        {
+            Assert.SkipUnless(Socket.OSSupportsIPv6, "IPv6 unavailable.");
+        }
         var family = ipv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork;
         var token = TestContext.Current.CancellationToken;
         using var receiver = new Socket(family, SocketType.Dgram, ProtocolType.Udp);
@@ -86,7 +95,10 @@ public class SegmentedDatagramContractTest
                 Assert.Equal(expected, actual[..received.ReceivedBytes]);
             }
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     private static Bootstrap NewSender(MultiThreadIoEventLoopGroup loop, AddressFamily family)

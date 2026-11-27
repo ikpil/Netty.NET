@@ -82,7 +82,10 @@ public class ByteBufIterationDispatchTest
 
         public void Dispose()
         {
-            if (Root.RefCnt > 0) Assert.True(_owner.Release());
+            if (Root.RefCnt > 0)
+            {
+                Assert.True(_owner.Release());
+            }
             Assert.Equal(0, Root.RefCnt);
             Assert.Equal(1, Inner.Closes);
             Assert.Equal(_outerTracked ? 1 : 0, Outer.Closes);
@@ -250,7 +253,10 @@ public class ByteBufIterationDispatchTest
             Assert.Equal((operation & 1) == 0 ? -1 : 4, observation.Length);
             for (int i = 0; i < 4; ++i) Assert.Equal(i == operation ? 1 : 0, observation.Calls[i]);
         }
-        finally { root.Release(); }
+        finally
+        {
+            root.Release();
+        }
     }
 
     [Theory]

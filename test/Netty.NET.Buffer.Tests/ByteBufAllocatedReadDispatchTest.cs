@@ -156,7 +156,10 @@ public class ByteBufAllocatedReadDispatchTest
             owner = new Composite(allocator).AddComponent(
                 new UnpooledHeapByteBuf(allocator, 4, 16).WriteBytes(new byte[] { 17, 34, 51, 68 }), true);
         }
-        else owner = new Heap(allocator).WriteBytes(new byte[] { 17, 34, 51, 68 });
+        else
+        {
+            owner = new Heap(allocator).WriteBytes(new byte[] { 17, 34, 51, 68 });
+        }
         owner.ReaderIndex = 1;
         var tracker = new Tracker();
         ByteBuf facade = Wrap(owner, tracker, kind);
@@ -164,15 +167,23 @@ public class ByteBufAllocatedReadDispatchTest
         try
         {
             if (length is < 0 or > 3)
+            {
                 Assert.Throws<ArgumentOutOfRangeException>(() => facade.ReadBytes(length));
-            else result = facade.ReadBytes(length);
+            }
+            else
+            {
+                result = facade.ReadBytes(length);
+            }
             Assert.Equal(1, composite ? ((Composite)owner).Calls : ((Heap)owner).Calls);
             Assert.Equal(1 + (length == 2 ? 2 : 0), owner.ReaderIndex);
             Assert.Equal(owner.ReaderIndex, facade.ReaderIndex);
             Assert.Equal(4, owner.WriterIndex);
             Assert.Equal(1, owner.RefCnt);
             Assert.Equal(kind is 2 or 7 ? 1 : 0, tracker.Records);
-            if (length == 0) Assert.Same(Unpooled.EmptyBuffer, result);
+            if (length == 0)
+            {
+                Assert.Same(Unpooled.EmptyBuffer, result);
+            }
             if (length == 2)
             {
                 Assert.Same(allocator, result.Alloc());
@@ -198,8 +209,14 @@ public class ByteBufAllocatedReadDispatchTest
         }
         finally
         {
-            if (result != null) result.Release();
-            if (owner.RefCnt > 0) owner.Release();
+            if (result != null)
+            {
+                result.Release();
+            }
+            if (owner.RefCnt > 0)
+            {
+                owner.Release();
+            }
         }
     }
 }

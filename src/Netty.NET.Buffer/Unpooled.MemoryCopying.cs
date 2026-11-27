@@ -30,7 +30,10 @@ public static partial class Unpooled
     /// has a maximum equal to its length and does not borrow the source owner.</remarks>
     public static ByteBuf CopiedBuffer(ReadOnlyMemory<byte> buffer)
     {
-        if (buffer.IsEmpty) return EmptyBuffer;
+        if (buffer.IsEmpty)
+        {
+            return EmptyBuffer;
+        }
         // Duplicate the buffer so we not adjust the position during our get operation.
         // See https://github.com/netty/netty/issues/3896
         // CLR: ReadOnlyMemory has immutable range metadata and no mutable cursor.
@@ -64,7 +67,10 @@ public static partial class Unpooled
     public static ByteBuf CopiedBuffer(params ReadOnlyMemory<byte>[] buffers)
     {
         ArgumentNullException.ThrowIfNull(buffers);
-        if (buffers.Length == 1) return CopiedBuffer(buffers[0]);
+        if (buffers.Length == 1)
+        {
+            return CopiedBuffer(buffers[0]);
+        }
         // Merge the specified buffers into one buffer.
         int length = 0;
         foreach (ReadOnlyMemory<byte> buffer in buffers)
@@ -73,13 +79,19 @@ public static partial class Unpooled
                 throw new ArgumentException("The total length of the specified buffers is too big.", nameof(buffers));
             length += buffer.Length;
         }
-        if (length == 0) return EmptyBuffer;
+        if (length == 0)
+        {
+            return EmptyBuffer;
+        }
 
         byte[] merged = new byte[length];
         int offset = 0;
         foreach (ReadOnlyMemory<byte> buffer in buffers)
         {
-            if (buffer.IsEmpty) continue;
+            if (buffer.IsEmpty)
+            {
+                continue;
+            }
             // Duplicate the buffer so we not adjust the position during our get operation.
             // See https://github.com/netty/netty/issues/3896
             // CLR: no cursor or source owner is changed, including when Span access fails.

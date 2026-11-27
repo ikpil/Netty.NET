@@ -32,7 +32,10 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     private static readonly IComparer<IScheduledWork> SCHEDULED_FUTURE_TASK_COMPARATOR =
         Comparer<IScheduledWork>.Create((o1, o2) =>
         {
-            if (ReferenceEquals(o1, o2)) return 0;
+            if (ReferenceEquals(o1, o2))
+            {
+                return 0;
+            }
             long delta = unchecked(o1.DeadlineNanos() - o2.DeadlineNanos());
             return delta == 0 ? o1.GetId().CompareTo(o2.GetId()) : delta < 0 ? -1 : 1;
         });
@@ -360,29 +363,61 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         CancellationToken token, bool captureContext = true)
     {
         ValidateScheduled0(delay);
-        if (period != 0) ValidateScheduled0(TimeSpan.FromTicks(Math.Abs(period) / 100));
-        if (token.IsCancellationRequested) return Task.FromCanceled<T>(token);
+        if (period != 0)
+        {
+            ValidateScheduled0(TimeSpan.FromTicks(Math.Abs(period) / 100));
+        }
+        if (token.IsCancellationRequested)
+        {
+            return Task.FromCanceled<T>(token);
+        }
         var task = new NativeScheduledWork<T>(function, token,
             DeadlineNanos(GetCurrentTimeNanos(), ToNanos(delay)), period, nativeClock,
             nativeCanExecute, nativeEnqueue, nativeRemove, captureContext, nativeCanRun);
-        try { if (!task.Completion.IsCompleted) SubmitScheduled(task); }
-        catch (Exception error) { task.Reject(error); }
+        try
+        {
+            if (!task.Completion.IsCompleted)
+            {
+                SubmitScheduled(task);
+            }
+        }
+        catch (Exception error)
+        {
+            task.Reject(error);
+        }
         task.Publish();
         return task.ResultTask;
     }
 
     private void EnqueueNative(ITaskScheduledWork task)
     {
-        if (task.Completion.IsCompleted) return;
-        if (IsShutdown()) task.CancelWithoutRemove();
-        else ScheduleFromEventLoop(task);
+        if (task.Completion.IsCompleted)
+        {
+            return;
+        }
+        if (IsShutdown())
+        {
+            task.CancelWithoutRemove();
+        }
+        else
+        {
+            ScheduleFromEventLoop(task);
+        }
     }
 
     private void RemoveNative(ITaskScheduledWork task)
     {
-        if (IsTerminated()) return;
-        try { RemoveScheduled(task); }
-        catch (RejectedExecutionException) when (IsShuttingDown()) { }
+        if (IsTerminated())
+        {
+            return;
+        }
+        try
+        {
+            RemoveScheduled(task);
+        }
+        catch (RejectedExecutionException) when (IsShuttingDown())
+        {
+        }
     }
 
     private void SubmitScheduled(IScheduledWork task)

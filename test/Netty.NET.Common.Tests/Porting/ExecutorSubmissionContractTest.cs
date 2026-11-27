@@ -35,8 +35,14 @@ public class ExecutorSubmissionContractTest
         internal void Run(Action task)
         {
             running = true;
-            try { task(); }
-            finally { running = false; }
+            try
+            {
+                task();
+            }
+            finally
+            {
+                running = false;
+            }
         }
 
         public override void Shutdown()
@@ -215,7 +221,10 @@ public class ExecutorSubmissionContractTest
             await Assert.ThrowsAsync<TimeoutException>(() => Task.WhenAll(operations).WaitAsync(TimeSpan.FromMilliseconds(10)));
             Assert.All(operations, task => Assert.False(task.IsCompleted));
         }
-        finally { owner.Cancel(); }
+        finally
+        {
+            owner.Cancel();
+        }
         Assert.All(operations, task => Assert.True(task.IsCanceled));
         while (executor.tasks.TryTake(out var task)) executor.Run(task);
         Assert.Equal(0, calls);
@@ -227,8 +236,14 @@ public class ExecutorSubmissionContractTest
         var executor = new ManualExecutor();
         using var owner = new CancellationTokenSource();
         Task<int> first = executor.SubmitAsync(int () => throw new InvalidOperationException("Canceled invocation ran"), owner.Token);
-        try { Assert.Throws<ArgumentNullException>(() => executor.SubmitAsync((Func<int>)null, owner.Token)); }
-        finally { owner.Cancel(); }
+        try
+        {
+            Assert.Throws<ArgumentNullException>(() => executor.SubmitAsync((Func<int>)null, owner.Token));
+        }
+        finally
+        {
+            owner.Cancel();
+        }
         Assert.True(first.IsCanceled);
         executor.Run(executor.Take());
     }
@@ -252,12 +267,21 @@ public class ExecutorSubmissionContractTest
                 {
                     Task<int> candidate = await Task.WhenAny(remaining).ConfigureAwait(false);
                     remaining.Remove(candidate);
-                    try { return await candidate.ConfigureAwait(false); }
-                    catch (Exception failure) { failures.Add(failure); }
+                    try
+                    {
+                        return await candidate.ConfigureAwait(false);
+                    }
+                    catch (Exception failure)
+                    {
+                        failures.Add(failure);
+                    }
                 }
                 throw new AggregateException(failures);
             }
-            finally { owner.Cancel(); }
+            finally
+            {
+                owner.Cancel();
+            }
         }
         Task<int> result = FindSuccessAsync();
         executor.Run(executor.Take());
@@ -296,7 +320,10 @@ public class ExecutorSubmissionContractTest
             await Assert.ThrowsAsync<TimeoutException>(() => Task.WhenAny(operation).WaitAsync(TimeSpan.FromMilliseconds(10)));
             Assert.False(operation.IsCompleted);
         }
-        finally { owner.Cancel(); }
+        finally
+        {
+            owner.Cancel();
+        }
         executor.Run(executor.Take());
         Assert.True(operation.IsCanceled);
         Assert.Equal(0, calls);

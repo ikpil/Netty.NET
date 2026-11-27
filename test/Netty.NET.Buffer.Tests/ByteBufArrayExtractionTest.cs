@@ -45,8 +45,14 @@ public class ByteBufArrayExtractionTest
     public void OriginalGetBytesScenarios(int kind)
     {
         ByteBuf b = Owner(kind, new byte[] { 1, 2, 3, 4 });
-        try { CheckOriginalRanges(b); }
-        finally { b.Release(); }
+        try
+        {
+            CheckOriginalRanges(b);
+        }
+        finally
+        {
+            b.Release();
+        }
     }
 
     private static void CheckOriginalRanges(ByteBuf b)
@@ -83,7 +89,10 @@ public class ByteBufArrayExtractionTest
             Assert.Equal(1, slice.GetByte(0));
             Assert.Equal(5, storage[offset == 0 ? 4 : 0]);
         }
-        finally { owner.Release(); }
+        finally
+        {
+            owner.Release();
+        }
     }
 
     [Theory]
@@ -96,18 +105,30 @@ public class ByteBufArrayExtractionTest
         try
         {
             b.SetIndex(3, 20).MarkReaderIndex().MarkWriterIndex();
-            byte[] readable = ByteBufUtil.GetBytes(b); Assert.Equal(data[3..20], readable);
-            readable[0] ^= 128; Assert.Equal(data[3], b.GetByte(3));
-            byte[] copy = ByteBufUtil.GetBytes(b, 0, 32); Assert.Equal(data, copy); Assert.NotSame(data, copy);
-            copy[0] ^= 128; Assert.Equal(data[0], b.GetByte(0));
-            byte[] partial = ByteBufUtil.GetBytes(b, 1, 30, false); Assert.Equal(data[1..31], partial);
-            partial[0] ^= 128; Assert.Equal(data[1], b.GetByte(1));
+            byte[] readable = ByteBufUtil.GetBytes(b);
+            Assert.Equal(data[3..20], readable);
+            readable[0] ^= 128;
+            Assert.Equal(data[3], b.GetByte(3));
+            byte[] copy = ByteBufUtil.GetBytes(b, 0, 32);
+            Assert.Equal(data, copy);
+            Assert.NotSame(data, copy);
+            copy[0] ^= 128;
+            Assert.Equal(data[0], b.GetByte(0));
+            byte[] partial = ByteBufUtil.GetBytes(b, 1, 30, false);
+            Assert.Equal(data[1..31], partial);
+            partial[0] ^= 128;
+            Assert.Equal(data[1], b.GetByte(1));
             Assert.Equal(data[20..], ByteBufUtil.GetBytes(b, 20, 12));
             Assert.Equal(data[20..], ByteBufUtil.GetBytes(b, 20, 12, false));
             b.SetIndex(4, 21).ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(3, b.ReaderIndex); Assert.Equal(20, b.WriterIndex); Assert.Equal(1, b.RefCnt);
+            Assert.Equal(3, b.ReaderIndex);
+            Assert.Equal(20, b.WriterIndex);
+            Assert.Equal(1, b.RefCnt);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -123,36 +144,73 @@ public class ByteBufArrayExtractionTest
         ByteBuf owner = root, b = root;
         switch (kind)
         {
-            case 1: b = root.Duplicate(); break;
-            case 2: b = root.Slice(0, 8); break;
-            case 3: b = root.Slice(1, 7); break;
-            case 4: b = root.Slice(0, 7); break;
-            case 5: b = Unpooled.UnreleasableBuffer(root); break;
-            case 6: b = root.AsReadOnly(); break;
-            case 7: owner = b = Unpooled.CompositeBuffer().AddComponent(root, true); break;
-            case 8: owner = b = Unpooled.CompositeBuffer().AddComponent(root.AsReadOnly(), true); break;
+            case 1:
+                b = root.Duplicate();
+                break;
+            case 2:
+                b = root.Slice(0, 8);
+                break;
+            case 3:
+                b = root.Slice(1, 7);
+                break;
+            case 4:
+                b = root.Slice(0, 7);
+                break;
+            case 5:
+                b = Unpooled.UnreleasableBuffer(root);
+                break;
+            case 6:
+                b = root.AsReadOnly();
+                break;
+            case 7:
+                owner = b = Unpooled.CompositeBuffer().AddComponent(root, true);
+                break;
+            case 8:
+                owner = b = Unpooled.CompositeBuffer().AddComponent(root.AsReadOnly(), true);
+                break;
             case 9:
                 owner = Unpooled.CompositeBuffer().AddComponent(root, true).AddComponent(Unpooled.WrappedBuffer(new byte[2]), true);
-                b = owner.Slice(0, 8); break;
-            case 10: owner = b = Unpooled.CompositeBuffer().AddComponent(root, true).AddComponent(Unpooled.EmptyBuffer); break;
-            case 11: owner = b = Unpooled.WrappedUnmodifiableBuffer(root, Unpooled.WrappedBuffer(new byte[2])); break;
-            case 13: b = Unpooled.UnreleasableBuffer(root.AsReadOnly()); break;
+                b = owner.Slice(0, 8);
+                break;
+            case 10:
+                owner = b = Unpooled.CompositeBuffer().AddComponent(root, true).AddComponent(Unpooled.EmptyBuffer);
+                break;
+            case 11:
+                owner = b = Unpooled.WrappedUnmodifiableBuffer(root, Unpooled.WrappedBuffer(new byte[2]));
+                break;
+            case 13:
+                b = Unpooled.UnreleasableBuffer(root.AsReadOnly());
+                break;
         }
         try
         {
-            byte first = b.GetByte(0); byte[] extracted = ByteBufUtil.GetBytes(b, 0, b.Capacity, false);
-            Assert.Equal(shared, ReferenceEquals(storage, extracted)); Assert.Equal(b.Capacity, extracted.Length);
+            byte first = b.GetByte(0);
+            byte[] extracted = ByteBufUtil.GetBytes(b, 0, b.Capacity, false);
+            Assert.Equal(shared, ReferenceEquals(storage, extracted));
+            Assert.Equal(b.Capacity, extracted.Length);
             extracted[0] ^= 128;
             Assert.Equal(shared ? extracted[0] : first, b.GetByte(0));
-            if (shared) { b.SetByte(0, 42); Assert.Equal(42, extracted[0]); }
+            if (shared)
+            {
+                b.SetByte(0, 42);
+                Assert.Equal(42, extracted[0]);
+            }
             byte[] copy = ByteBufUtil.GetBytes(b, 0, b.Capacity, true);
-            Assert.NotSame(extracted, copy); Assert.Equal(extracted.Length, copy.Length);
-            byte before = b.GetByte(0); copy[0] ^= 64; Assert.Equal(before, b.GetByte(0));
+            Assert.NotSame(extracted, copy);
+            Assert.Equal(extracted.Length, copy.Length);
+            byte before = b.GetByte(0);
+            copy[0] ^= 64;
+            Assert.Equal(before, b.GetByte(0));
             byte[] defaultCopy = ByteBufUtil.GetBytes(b);
-            Assert.NotSame(extracted, defaultCopy); defaultCopy[0] ^= 32; Assert.Equal(before, b.GetByte(0));
+            Assert.NotSame(extracted, defaultCopy);
+            defaultCopy[0] ^= 32;
+            Assert.Equal(before, b.GetByte(0));
             Assert.Equal(1, owner.RefCnt);
         }
-        finally { owner.Release(); }
+        finally
+        {
+            owner.Release();
+        }
     }
 
     [Theory]

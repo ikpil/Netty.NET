@@ -38,7 +38,10 @@ public static class LeakPresenceDetector
             var method = frame.GetMethod();
             // CLR static constructors are .cctor, corresponding to Java <clinit>.
             // MethodBase.IsConstructor excludes static constructors on the CLR.
-            if (method?.IsStatic == true && method.Name == ".cctor") return true;
+            if (method?.IsStatic == true && method.Name == ".cctor")
+            {
+                return true;
+            }
         }
         return false;
     }
@@ -68,10 +71,19 @@ public static class LeakPresenceDetector
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static R StaticInitializer<R>(Func<R> supplier)
     {
-        if (!InStaticInitializerSlow(new StackTrace())) throw new InvalidOperationException("Not in static initializer.");
+        if (!InStaticInitializerSlow(new StackTrace()))
+        {
+            throw new InvalidOperationException("Not in static initializer.");
+        }
         Interlocked.Increment(ref staticInitializerCount);
-        try { return supplier(); }
-        finally { Interlocked.Decrement(ref staticInitializerCount); }
+        try
+        {
+            return supplier();
+        }
+        finally
+        {
+            Interlocked.Decrement(ref staticInitializerCount);
+        }
     }
 
     /**
@@ -120,13 +132,19 @@ public static class LeakPresenceDetector
         {
             CheckOpen();
             Interlocked.Increment(ref openResourceCounter);
-            if (TRACK_CREATION_STACK) creationStacks.TryAdd(tracker, new LeakCreation());
+            if (TRACK_CREATION_STACK)
+            {
+                creationStacks.TryAdd(tracker, new LeakCreation());
+            }
         }
 
         internal void Release(object tracker)
         {
             Interlocked.Decrement(ref openResourceCounter);
-            if (TRACK_CREATION_STACK) creationStacks.TryRemove(tracker, out _);
+            if (TRACK_CREATION_STACK)
+            {
+                creationStacks.TryRemove(tracker, out _);
+            }
             CheckOpen();
         }
 
@@ -134,7 +152,10 @@ public static class LeakPresenceDetector
         {
             // Interlocked replaces LongAdder; checks still require quiescent producers.
             long count = Interlocked.Exchange(ref openResourceCounter, 0);
-            if (count == 0) return;
+            if (count == 0)
+            {
+                return;
+            }
             string message = "Possible memory leak detected for resource scope '" + (name ?? "null") + "'. ";
             if (count < 0)
                 throw new InvalidOperationException(message + "Resource count was negative: A resource previously reported as a leak was released " +
@@ -146,7 +167,10 @@ public static class LeakPresenceDetector
                 foreach (Exception creation in creationStacks.Values)
                 {
                     ThrowableUtil.AddSuppressed(failure, creation);
-                    if (index++ > 5) break;
+                    if (index++ > 5)
+                    {
+                        break;
+                    }
                 }
                 creationStacks.Clear();
                 throw failure;
@@ -173,7 +197,10 @@ public static class LeakPresenceDetector
         {
             // CLR IDisposable repeats must leave the scope closed. The pinned
             // Java decrement can become negative and accidentally allow reuse.
-            if (Interlocked.Exchange(ref open, 0) != 0) Check();
+            if (Interlocked.Exchange(ref open, 0) != 0)
+            {
+                Check();
+            }
         }
 
         public void Dispose()
@@ -357,7 +384,10 @@ public class LeakPresenceDetector<T> : ResourceLeakDetector<T> where T : class
 
         public bool Close(T trackedObject)
         {
-            if (Interlocked.CompareExchange(ref closed, 1, 0) != 0) return false;
+            if (Interlocked.CompareExchange(ref closed, 1, 0) != 0)
+            {
+                return false;
+            }
             scope.Release(this);
             return true;
         }

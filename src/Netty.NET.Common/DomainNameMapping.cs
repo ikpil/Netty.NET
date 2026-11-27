@@ -160,7 +160,10 @@ public class DomainNameMapping<T> where T : class
         bool first = true;
         foreach (var entry in _map)
         {
-            if (!first) text.Append(", ");
+            if (!first)
+            {
+                text.Append(", ");
+            }
             first = false;
             text.Append(entry.Key).Append('=').Append(entry.Value);
         }

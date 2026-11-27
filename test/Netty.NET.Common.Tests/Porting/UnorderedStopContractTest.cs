@@ -33,7 +33,10 @@ public class UnorderedStopContractTest
 
         public void CancelForShutdown()
         {
-            if (!_completion.TrySetCanceled()) return;
+            if (!_completion.TrySetCanceled())
+            {
+                return;
+            }
             ++Cancellations;
             Interlocked.Exchange(ref _remove, null)?.Invoke();
             observe();
@@ -164,7 +167,10 @@ public class UnorderedStopContractTest
             Task queued = executor.SubmitAsync(() => Assert.Fail("Removed work ran"));
             Task scheduled = executor.ScheduleAsync(() => Assert.Fail("Removed deadline ran"), TimeSpan.FromDays(1));
             Assert.Equal(2, executor.PendingTaskCount);
-            if (repeatRequest) Assert.Same(executor.TerminationFuture, executor.StopAsync());
+            if (repeatRequest)
+            {
+                Assert.Same(executor.TerminationFuture, executor.StopAsync());
+            }
             Task stopping = executor.StopAsync();
             Assert.Same(executor.TerminationFuture, stopping);
             Assert.Same(stopping, executor.StopAsync());
@@ -177,7 +183,11 @@ public class UnorderedStopContractTest
             Assert.Equal(1, notifications);
             Assert.True(executor.IsTerminated());
         }
-        finally { release.Set(); await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            release.Set();
+            await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        }
     }
 
     [Fact]
@@ -203,7 +213,11 @@ public class UnorderedStopContractTest
             Assert.Equal(7, await running.WaitAsync(TimeSpan.FromSeconds(5)));
             await stopping.WaitAsync(TimeSpan.FromSeconds(5));
         }
-        finally { release.Set(); await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            release.Set();
+            await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        }
     }
 
     [Fact]
@@ -234,7 +248,11 @@ public class UnorderedStopContractTest
             Assert.True(executor.IsTerminated());
             Assert.Equal(executor.StopToken, executor.StopToken);
         }
-        finally { release.Set(); await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            release.Set();
+            await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        }
     }
 
     [Fact]
@@ -272,7 +290,11 @@ public class UnorderedStopContractTest
             Assert.Equal(linked.Token, error.CancellationToken);
             Assert.False(owner.IsCancellationRequested);
         }
-        finally { release.Set(); await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            release.Set();
+            await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        }
     }
 
     [Fact]
@@ -299,8 +321,14 @@ public class UnorderedStopContractTest
         var executor = new UnorderedThreadPoolEventExecutor(1, new Factory(task => worker = new Thread(() =>
         {
             task.Invoke();
-            try { Thread.Sleep(1); }
-            catch (ThreadInterruptedException) { suffixInterrupted = true; }
+            try
+            {
+                Thread.Sleep(1);
+            }
+            catch (ThreadInterruptedException)
+            {
+                suffixInterrupted = true;
+            }
         }) { IsBackground = true }));
         Task running = executor.SubmitAsync(() => { entered.Set(); while (!release.IsSet) Thread.SpinWait(64); });
         try
@@ -313,7 +341,11 @@ public class UnorderedStopContractTest
             Assert.True(worker.Join(TimeSpan.FromSeconds(5)));
             Assert.False(suffixInterrupted);
         }
-        finally { release.Set(); await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            release.Set();
+            await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        }
     }
 
     [Fact]
@@ -346,7 +378,11 @@ public class UnorderedStopContractTest
             OperationCanceledException error = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => running.WaitAsync(TimeSpan.FromSeconds(5)));
             Assert.Equal(executor.StopToken, error.CancellationToken);
         }
-        finally { release.TrySetResult(); await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            release.TrySetResult();
+            await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        }
     }
 
     [Theory]
@@ -369,7 +405,11 @@ public class UnorderedStopContractTest
             Assert.Equal(executor.StopToken, error.CancellationToken);
             Assert.Equal(0, executor.ActiveWorkerCount);
         }
-        finally { release.Set(); await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            release.Set();
+            await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        }
     }
 
     [Fact]
@@ -386,7 +426,11 @@ public class UnorderedStopContractTest
             Assert.Null(seen);
             Assert.Equal("stop caller", Ambient.Value);
         }
-        finally { Ambient.Value = previous; await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            Ambient.Value = previous;
+            await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        }
     }
 
     [Fact]

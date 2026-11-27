@@ -42,6 +42,10 @@ public class DatagramMulticastConfigContractTest
             Assert.True(channel.Config.TryGetOption(ChannelOption.IP_MULTICAST_TTL, out configured));
             Assert.Equal(255, configured);
         }
-        finally { await channel.CloseAsync(); await group.StopAsync(); }
+        finally
+        {
+            await channel.CloseAsync();
+            await group.StopAsync();
+        }
     }
 }

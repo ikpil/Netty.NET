@@ -94,7 +94,10 @@ internal abstract class PooledByteBuf : AbstractReferenceCountedByteBuf
             lock (_resizeLock)
             {
                 CheckNewCapacity(value);
-                if (value == _length) return;
+                if (value == _length)
+                {
+                    return;
+                }
                 PoolArena.Allocation previous = _allocation;
                 int maxLength = previous.ReservedLength;
                 if (previous.IsPooled)

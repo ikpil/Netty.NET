@@ -198,13 +198,20 @@ public abstract partial class ByteBuf
         if (fromIndex <= toIndex)
         {
             fromIndex = Math.Max(fromIndex, 0);
-            if (fromIndex >= toIndex || Capacity == 0) return -1;
+            if (fromIndex >= toIndex || Capacity == 0)
+            {
+                return -1;
+            }
             int length = checked(toIndex - fromIndex);
             CheckIndex(fromIndex, length);
             if (!SupportsDirectSearch || !TryGetReadOnlyMemory(fromIndex, length, out var memory))
             {
                 // Match the original low-level search reads, independently of public GetByte overrides.
-                for (int i = fromIndex; i < toIndex; ++i) if (ReadByteCore(i) == value) return i;
+                for (int i = fromIndex; i < toIndex; ++i)
+                if (ReadByteCore(i) == value)
+                {
+                    return i;
+                }
                 return -1;
             }
             int found = memory.Span.IndexOf(value);
@@ -212,13 +219,20 @@ public abstract partial class ByteBuf
         }
 
         fromIndex = Math.Min(fromIndex, Capacity);
-        if (fromIndex <= 0) return -1; // fromIndex is the exclusive upper bound.
+        if (fromIndex <= 0)
+        {
+            return -1; // fromIndex is the exclusive upper bound.
+        }
         CheckIndex(toIndex, 0);
         int reverseLength = checked(fromIndex - toIndex);
         CheckIndex(toIndex, reverseLength);
         if (!SupportsDirectSearch || !TryGetReadOnlyMemory(toIndex, reverseLength, out var reverseMemory))
         {
-            for (int i = fromIndex - 1; i >= toIndex; --i) if (ReadByteCore(i) == value) return i;
+            for (int i = fromIndex - 1; i >= toIndex; --i)
+            if (ReadByteCore(i) == value)
+            {
+                return i;
+            }
             return -1;
         }
         int reverseFound = reverseMemory.Span.LastIndexOf(value);
@@ -324,7 +338,10 @@ public abstract partial class ByteBuf
         // Use the storage kernel independently of public GetByte/indexed iteration overrides.
         // Reacquire each byte: a callback can resize or release native storage. Never retain a span across callbacks.
         for (int i = start; i < end; ++i)
-            if (!processor(ReadByteCore(i))) return i;
+            if (!processor(ReadByteCore(i)))
+            {
+                return i;
+            }
         return -1;
     }
 
@@ -359,7 +376,10 @@ public abstract partial class ByteBuf
     internal virtual int ForEachByteDescending(int start, int end, Func<byte, bool> processor)
     {
         for (int i = start; i >= end; --i)
-            if (!processor(ReadByteCore(i))) return i;
+            if (!processor(ReadByteCore(i)))
+            {
+                return i;
+            }
         return -1;
     }
 }

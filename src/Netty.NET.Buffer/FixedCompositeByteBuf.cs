@@ -60,7 +60,10 @@ internal sealed partial class FixedCompositeByteBuf : AbstractReferenceCountedBy
         for (int i = 0; i < buffers.Length; ++i)
         {
             ByteBuf source = buffers[i] ?? throw new ArgumentException("A component is null.", nameof(buffers));
-            if (source.RefCnt <= 0) throw new IllegalReferenceCountException(source.RefCnt);
+            if (source.RefCnt <= 0)
+            {
+                throw new IllegalReferenceCountException(source.RefCnt);
+            }
             int length = source.ReadableBytes;
             if (length > int.MaxValue - offset)
                 throw new ArgumentException("The combined capacity exceeds Int32.MaxValue.", nameof(buffers));
@@ -105,7 +108,11 @@ internal sealed partial class FixedCompositeByteBuf : AbstractReferenceCountedBy
 
     protected override bool TryGetReadOnlyMemoryCore(int index, int length, out ReadOnlyMemory<byte> memory)
     {
-        if (length == 0) { memory = ReadOnlyMemory<byte>.Empty; return true; }
+        if (length == 0)
+        {
+            memory = ReadOnlyMemory<byte>.Empty;
+            return true;
+        }
         Component component = _components[FindComponent(index)];
         if (length <= component.EndOffset - index)
             return component.Source.TryGetReadOnlyMemory(index - component.Offset, length, out memory);
@@ -151,7 +158,10 @@ internal sealed partial class FixedCompositeByteBuf : AbstractReferenceCountedBy
 
     protected override void GetBytesCore(int index, Span<byte> destination)
     {
-        if (destination.IsEmpty) return;
+        if (destination.IsEmpty)
+        {
+            return;
+        }
         int componentIndex = FindComponent(index);
         while (!destination.IsEmpty)
         {
@@ -177,7 +187,10 @@ internal sealed partial class FixedCompositeByteBuf : AbstractReferenceCountedBy
 
     private ReadOnlySequence<byte> CreateReadOnlySequence(int index, int length, bool copying)
     {
-        if (length == 0) return ReadOnlySequence<byte>.Empty;
+        if (length == 0)
+        {
+            return ReadOnlySequence<byte>.Empty;
+        }
         SequenceSegment first = null, last = null;
         int componentIndex = FindComponent(index);
         //noinspection ForLoopReplaceableByForEach
@@ -190,10 +203,19 @@ internal sealed partial class FixedCompositeByteBuf : AbstractReferenceCountedBy
                 : component.Source.AsReadOnlySequence(index - component.Offset, count);
             foreach (ReadOnlyMemory<byte> memory in sequence)
             {
-                if (memory.IsEmpty) continue;
+                if (memory.IsEmpty)
+                {
+                    continue;
+                }
                 var next = new SequenceSegment(memory);
-                if (last == null) first = next;
-                else last.Append(next);
+                if (last == null)
+                {
+                    first = next;
+                }
+                else
+                {
+                    last.Append(next);
+                }
                 last = next;
             }
             index += count;
@@ -207,8 +229,17 @@ internal sealed partial class FixedCompositeByteBuf : AbstractReferenceCountedBy
         CheckIndex(index, length);
         // CLR: Unpooled's heap allocation policy, with the original allocator's default maximum.
         ByteBuf result = Unpooled.Buffer(length);
-        try { result.SetBytes(0, this, index, length); result.WriterIndex = length; return result; }
-        catch { result.Release(); throw; }
+        try
+        {
+            result.SetBytes(0, this, index, length);
+            result.WriterIndex = length;
+            return result;
+        }
+        catch
+        {
+            result.Release();
+            throw;
+        }
     }
 
     internal override BufferMemoryLease AcquireReadLease()
@@ -249,9 +280,18 @@ internal sealed partial class FixedCompositeByteBuf : AbstractReferenceCountedBy
         {
             int mid = low + ((high - low) >>> 1);
             Component component = _components[mid];
-            if (index >= component.EndOffset) low = mid + 1;
-            else if (index < component.Offset) high = mid - 1;
-            else return mid;
+            if (index >= component.EndOffset)
+            {
+                low = mid + 1;
+            }
+            else if (index < component.Offset)
+            {
+                high = mid - 1;
+            }
+            else
+            {
+                return mid;
+            }
         }
         throw new ArgumentOutOfRangeException(nameof(index));
     }

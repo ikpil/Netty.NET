@@ -65,7 +65,10 @@ public class SocketHalfClosedContractTest
         internal int ShutdownEvents, FinalEvents;
         public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
         {
-            if (ReferenceEquals(evt, ChannelInputShutdownEvent.INSTANCE)) Interlocked.Increment(ref ShutdownEvents);
+            if (ReferenceEquals(evt, ChannelInputShutdownEvent.INSTANCE))
+            {
+                Interlocked.Increment(ref ShutdownEvents);
+            }
             else if (ReferenceEquals(evt, ChannelInputShutdownReadComplete.INSTANCE))
             {
                 Interlocked.Increment(ref FinalEvents);
@@ -164,7 +167,10 @@ public class SocketHalfClosedContractTest
         private void Fail()
         {
             Started.TrySetResult();
-            if (Failure.Task.IsCompleted) Failure.Task.GetAwaiter().GetResult();
+            if (Failure.Task.IsCompleted)
+            {
+                Failure.Task.GetAwaiter().GetResult();
+            }
         }
     }
 
@@ -246,7 +252,14 @@ public class SocketHalfClosedContractTest
 
         public override void ChannelReadComplete(IChannelHandlerContext ctx)
         {
-            if (_sinceComplete == 0) Interlocked.Increment(ref EmptyReadCompletes); else _sinceComplete = 0;
+            if (_sinceComplete == 0)
+            {
+                Interlocked.Increment(ref EmptyReadCompletes);
+            }
+            else
+            {
+                _sinceComplete = 0;
+            }
             Interlocked.Increment(ref ReadCompletes);
             if (_bytesRead == 1)
             {
@@ -254,13 +267,23 @@ public class SocketHalfClosedContractTest
                 // with the read operation.
                 ctx.Executor.Execute(() => AllData.TrySetResult());
             }
-            else ctx.Read();
+            else
+            {
+                ctx.Read();
+            }
         }
 
         public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
         {
-            if (evt is ChannelInputShutdownEvent) Half.TrySetResult();
-            else if (evt is ChannelInputShutdownReadComplete) { Final.TrySetResult(); _ = ctx.CloseAsync(); }
+            if (evt is ChannelInputShutdownEvent)
+            {
+                Half.TrySetResult();
+            }
+            else if (evt is ChannelInputShutdownReadComplete)
+            {
+                Final.TrySetResult();
+                _ = ctx.CloseAsync();
+            }
         }
 
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)

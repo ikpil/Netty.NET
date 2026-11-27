@@ -170,8 +170,14 @@ public class RecyclerContractTest
                 Assert.NotSame(first, pool.Get());
                 Assert.Equal(0, pool.ThreadLocalSize());
             }
-            catch (Exception error) { failure = error; }
-            finally { FastThreadLocal.RemoveAll(); }
+            catch (Exception error)
+            {
+                failure = error;
+            }
+            finally
+            {
+                FastThreadLocal.RemoveAll();
+            }
         });
         thread.Thread.Start();
         Assert.True(thread.Thread.Join(TimeSpan.FromSeconds(5)));

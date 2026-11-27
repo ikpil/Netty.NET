@@ -10,10 +10,19 @@ public readonly record struct TransferProgress
 
     public TransferProgress(long completed, long? total = null)
     {
-        if (completed < 0) throw new ArgumentOutOfRangeException(nameof(completed));
+        if (completed < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(completed));
+        }
         // total unknown
-        if (total < 0) total = null; // normalize
-        if (total.HasValue && completed > total.Value) throw new ArgumentOutOfRangeException(nameof(completed));
+        if (total < 0)
+        {
+            total = null; // normalize
+        }
+        if (total.HasValue && completed > total.Value)
+        {
+            throw new ArgumentOutOfRangeException(nameof(completed));
+        }
         Completed = completed;
         Total = total;
     }

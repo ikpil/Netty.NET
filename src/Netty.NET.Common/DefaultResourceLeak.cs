@@ -34,8 +34,14 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
         allLeaks.TryAdd(this, 0);
         registration = CollectedObjectWatch.Register(referent, () => refQueue.Enqueue(this));
         // Create a new Record so we always have the creation stacktrace included.
-        try { head = initialHint == null ? new TraceRecord(TraceRecord.BOTTOM) : new TraceRecord(TraceRecord.BOTTOM, initialHint); }
-        finally { GC.KeepAlive(referent); }
+        try
+        {
+            head = initialHint == null ? new TraceRecord(TraceRecord.BOTTOM) : new TraceRecord(TraceRecord.BOTTOM, initialHint);
+        }
+        finally
+        {
+            GC.KeepAlive(referent);
+        }
     }
 
     public void Record()
@@ -77,7 +83,10 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
     private void Record0(object hint)
     {
         // Check TARGET_RECORDS > 0 here to avoid similar check before remove from and add to lastRecords
-        if (TARGET_RECORDS <= 0) return;
+        if (TARGET_RECORDS <= 0)
+        {
+            return;
+        }
         TraceRecord previous, next;
         bool dropped;
         do
@@ -91,10 +100,16 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
             TraceRecord prior = previous;
             int count = previous.Pos() + 1;
             dropped = count >= TARGET_RECORDS && Random.Shared.Next(1 << Math.Min(count - TARGET_RECORDS, 30)) != 0;
-            if (dropped) prior = previous.Next();
+            if (dropped)
+            {
+                prior = previous.Next();
+            }
             next = hint == null ? new TraceRecord(prior) : new TraceRecord(prior, hint);
         } while (!ReferenceEquals(Interlocked.CompareExchange(ref head, next, previous), previous));
-        if (dropped) Interlocked.Increment(ref droppedRecords);
+        if (dropped)
+        {
+            Interlocked.Increment(ref droppedRecords);
+        }
     }
 
     internal bool Dispose()
@@ -105,7 +120,10 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
 
     public bool Close()
     {
-        if (!allLeaks.TryRemove(this, out _)) return false;
+        if (!allLeaks.TryRemove(this, out _))
+        {
+            return false;
+        }
         // Call clear so the reference is not even enqueued.
         registration.Cancel();
         Volatile.Write(ref head, TRACK_CLOSE ? new TraceRecord(true) : null);
@@ -116,7 +134,10 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
     {
         // Ensure that the object that was tracked is the same as the one that was passed to close(...).
         Debug.Assert(trackedHash == RuntimeHelpers.GetHashCode(trackedObject));
-        try { return Close(); }
+        try
+        {
+            return Close();
+        }
         finally
         {
             // This method will do `synchronized(trackedObject)` and we should be sure this will not cause deadlock.
@@ -187,13 +208,29 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
         for (; current != TraceRecord.BOTTOM; current = current.Next())
         {
             string record = current.ToString();
-            if (!seen.Add(record)) { duped++; continue; }
-            if (current.Next() == TraceRecord.BOTTOM) buffer.Append("Created at:").Append(StringUtil.NEWLINE).Append(record);
-            else buffer.Append('#').Append((index++).ToString(CultureInfo.InvariantCulture)).Append(':').Append(StringUtil.NEWLINE).Append(record);
+            if (!seen.Add(record))
+            {
+                duped++;
+                continue;
+            }
+            if (current.Next() == TraceRecord.BOTTOM)
+            {
+                buffer.Append("Created at:").Append(StringUtil.NEWLINE).Append(record);
+            }
+            else
+            {
+                buffer.Append('#').Append((index++).ToString(CultureInfo.InvariantCulture)).Append(':').Append(StringUtil.NEWLINE).Append(record);
+            }
         }
-        if (duped > 0) buffer.Append(": ").Append(duped.ToString(CultureInfo.InvariantCulture)).Append(" leak records were discarded because they were duplicates").Append(StringUtil.NEWLINE);
-        if (dropped > 0) buffer.Append(": ").Append(dropped.ToString(CultureInfo.InvariantCulture)).Append(" leak records were discarded because the leak record count is targeted to ")
+        if (duped > 0)
+        {
+            buffer.Append(": ").Append(duped.ToString(CultureInfo.InvariantCulture)).Append(" leak records were discarded because they were duplicates").Append(StringUtil.NEWLINE);
+        }
+        if (dropped > 0)
+        {
+            buffer.Append(": ").Append(dropped.ToString(CultureInfo.InvariantCulture)).Append(" leak records were discarded because the leak record count is targeted to ")
             .Append(TARGET_RECORDS.ToString(CultureInfo.InvariantCulture)).Append(". Use system property ").Append(PROP_TARGET_RECORDS).Append(" to increase the limit.").Append(StringUtil.NEWLINE);
+        }
         buffer.Length -= StringUtil.NEWLINE.Length;
         return buffer.ToString();
     }

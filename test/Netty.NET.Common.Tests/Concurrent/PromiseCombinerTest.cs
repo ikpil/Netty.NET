@@ -172,8 +172,14 @@ public class TaskWhenAllPortTest
             Assert.True(executor.InEventLoop());
             Task all = Task.WhenAll(new Task[] { first.Task, second.Task });
             ready.SetResult();
-            try { await all.ConfigureAwait(false); }
-            catch (Exception) { /* Transfer the complete native status, not the await exception alone. */ }
+            try
+            {
+                await all.ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                /* Transfer the complete native status, not the await exception alone. */
+            }
             await executor.SubmitAsync(() =>
             {
                 Assert.True(executor.InEventLoop());
@@ -224,9 +230,15 @@ public class TaskWhenAllPortTest
         var failed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var error = new InvalidOperationException("write failed");
         Task result = Task.WhenAll(canceled.Task, failed.Task);
-        if (cancelFirst) canceled.SetCanceled(cancellation.Token);
+        if (cancelFirst)
+        {
+            canceled.SetCanceled(cancellation.Token);
+        }
         failed.SetException(error);
-        if (!cancelFirst) canceled.SetCanceled(cancellation.Token);
+        if (!cancelFirst)
+        {
+            canceled.SetCanceled(cancellation.Token);
+        }
         Assert.Same(error, await Assert.ThrowsAsync<InvalidOperationException>(async () => await result));
         Assert.True(result.IsFaulted);
     }

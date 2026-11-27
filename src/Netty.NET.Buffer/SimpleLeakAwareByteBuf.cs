@@ -74,43 +74,86 @@ internal class SimpleLeakAwareByteBuf : WrappedByteBuf
 
     public override ByteBuf RetainedSlice()
     {
-        try { return UnwrappedDerived(base.RetainedSlice()); }
-        catch (IllegalReferenceCountException failure) { AddCloseTrace(failure); throw; }
+        try
+        {
+            return UnwrappedDerived(base.RetainedSlice());
+        }
+        catch (IllegalReferenceCountException failure)
+        {
+            AddCloseTrace(failure);
+            throw;
+        }
     }
 
     public override ByteBuf RetainedSlice(int index, int length)
     {
-        try { return UnwrappedDerived(base.RetainedSlice(index, length)); }
-        catch (IllegalReferenceCountException failure) { AddCloseTrace(failure); throw; }
+        try
+        {
+            return UnwrappedDerived(base.RetainedSlice(index, length));
+        }
+        catch (IllegalReferenceCountException failure)
+        {
+            AddCloseTrace(failure);
+            throw;
+        }
     }
 
     public override ByteBuf RetainedDuplicate()
     {
-        try { return UnwrappedDerived(base.RetainedDuplicate()); }
-        catch (IllegalReferenceCountException failure) { AddCloseTrace(failure); throw; }
+        try
+        {
+            return UnwrappedDerived(base.RetainedDuplicate());
+        }
+        catch (IllegalReferenceCountException failure)
+        {
+            AddCloseTrace(failure);
+            throw;
+        }
     }
 
     public override ByteBuf ReadRetainedSlice(int length)
     {
-        try { return UnwrappedDerived(base.ReadRetainedSlice(length)); }
-        catch (IllegalReferenceCountException failure) { AddCloseTrace(failure); throw; }
+        try
+        {
+            return UnwrappedDerived(base.ReadRetainedSlice(length));
+        }
+        catch (IllegalReferenceCountException failure)
+        {
+            AddCloseTrace(failure);
+            throw;
+        }
     }
 
     public override ByteBuf Retain(int increment = 1)
     {
-        try { base.Retain(increment); return this; }
-        catch (IllegalReferenceCountException failure) { AddCloseTrace(failure); throw; }
+        try
+        {
+            base.Retain(increment);
+            return this;
+        }
+        catch (IllegalReferenceCountException failure)
+        {
+            AddCloseTrace(failure);
+            throw;
+        }
     }
 
     public override bool Release(int decrement = 1)
     {
         try
         {
-            if (!base.Release(decrement)) return false;
+            if (!base.Release(decrement))
+            {
+                return false;
+            }
             CloseLeak();
             return true;
         }
-        catch (IllegalReferenceCountException failure) { AddCloseTrace(failure); throw; }
+        catch (IllegalReferenceCountException failure)
+        {
+            AddCloseTrace(failure);
+            throw;
+        }
     }
 
     public override ByteBuf Touch(object hint = null)
@@ -161,8 +204,14 @@ internal class SimpleLeakAwareByteBuf : WrappedByteBuf
         catch
         {
             // CLR virtual wrapper factories may throw; return the acquired parent reference.
-            try { derived.Release(); }
-            finally { tracker?.Close(derived); }
+            try
+            {
+                derived.Release();
+            }
+            finally
+            {
+                tracker?.Close(derived);
+            }
             throw;
         }
     }

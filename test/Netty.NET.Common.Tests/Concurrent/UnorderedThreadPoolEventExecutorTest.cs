@@ -39,8 +39,14 @@ public class UnorderedThreadPoolEventExecutorTest
             using var latch = new CountdownEvent(3);
             executor.Execute(() =>
             {
-                try { Assert.True(exchanger.SignalAndWait(TimeSpan.FromSeconds(5))); }
-                catch (ThreadInterruptedException e) { throw new InvalidOperationException("interrupted", e); }
+                try
+                {
+                    Assert.True(exchanger.SignalAndWait(TimeSpan.FromSeconds(5)));
+                }
+                catch (ThreadInterruptedException e)
+                {
+                    throw new InvalidOperationException("interrupted", e);
+                }
                 latch.Signal();
             });
             var future = executor.SubmitAsync(() => latch.Signal());
@@ -55,7 +61,10 @@ public class UnorderedThreadPoolEventExecutorTest
             // by DefaultPromise may happen in an async fashion
             for (int i = 0; i < 10000; i++) Assert.Equal(0, executor.PendingTaskCount);
         }
-        finally { Stop(executor); }
+        finally
+        {
+            Stop(executor);
+        }
     }
 
     [Fact(Timeout = 10000)]
@@ -67,10 +76,20 @@ public class UnorderedThreadPoolEventExecutorTest
         var future = executor.ScheduleAtFixedRateAsync(() =>
         {
             // CLR CountdownEvent throws if already zero; Java CountDownLatch ignores further decrements.
-            if (!latch.IsSet) latch.Signal();
+            if (!latch.IsSet)
+            {
+                latch.Signal();
+            }
         }, TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(1), cancellation.Token);
-        try { Assert.True(latch.Wait(TimeSpan.FromSeconds(5))); }
-        finally { cancellation.Cancel(); Stop(executor); }
+        try
+        {
+            Assert.True(latch.Wait(TimeSpan.FromSeconds(5)));
+        }
+        finally
+        {
+            cancellation.Cancel();
+            Stop(executor);
+        }
     }
 
     [Fact]
@@ -83,7 +102,10 @@ public class UnorderedThreadPoolEventExecutorTest
             var f = executor.SubmitAsync<string>(() => expected);
             Assert.Equal(expected, f.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
         }
-        finally { Stop(executor); }
+        finally
+        {
+            Stop(executor);
+        }
     }
 
     [Fact]
@@ -97,7 +119,10 @@ public class UnorderedThreadPoolEventExecutorTest
             Assert.Same(cause, Assert.Throws<InvalidOperationException>(() =>
                 f.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult()));
         }
-        finally { Stop(executor); }
+        finally
+        {
+            Stop(executor);
+        }
     }
 
     [Fact]
@@ -109,13 +134,19 @@ public class UnorderedThreadPoolEventExecutorTest
             var future = executor.SubmitAsync<bool>(() => executor.InEventLoop());
             Assert.True(future.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
         }
-        finally { Stop(executor); }
+        finally
+        {
+            Stop(executor);
+        }
     }
 
     private static void Stop(UnorderedThreadPoolEventExecutor executor)
     {
         executor.ShutdownGracefullyAsync();
-        if (!executor.AwaitTermination(TimeSpan.FromSeconds(5))) _ = executor.StopAsync();
+        if (!executor.AwaitTermination(TimeSpan.FromSeconds(5)))
+        {
+            _ = executor.StopAsync();
+        }
         Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
     }
 }

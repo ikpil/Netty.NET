@@ -16,13 +16,19 @@ public class DefaultResourceLeakDetectorFactory : ResourceLeakDetectorFactory
     public DefaultResourceLeakDetectorFactory()
     {
         string customLeakDetector;
-        try { customLeakDetector = SystemPropertyUtil.Get("io.netty.customResourceLeakDetector"); }
+        try
+        {
+            customLeakDetector = SystemPropertyUtil.Get("io.netty.customResourceLeakDetector");
+        }
         catch (Exception cause)
         {
             logger.Error("Could not access System property: io.netty.customResourceLeakDetector", cause);
             customLeakDetector = null;
         }
-        if (customLeakDetector == null) return;
+        if (customLeakDetector == null)
+        {
+            return;
+        }
         obsoleteCustomClassConstructor = LoadConstructor(customLeakDetector, [typeof(Type), typeof(int), typeof(long)]);
         customClassConstructor = LoadConstructor(customLeakDetector, [typeof(Type), typeof(int)]);
     }
@@ -50,7 +56,10 @@ public class DefaultResourceLeakDetectorFactory : ResourceLeakDetectorFactory
                 throw new ArgumentException("A custom detector must be closed or have exactly one generic parameter.", nameof(name));
             // Generic definitions have no single initializer; initialize their closed
             // construction when a resource type is requested instead.
-            if (!type.ContainsGenericParameters) RuntimeHelpers.RunClassConstructor(type.TypeHandle);
+            if (!type.ContainsGenericParameters)
+            {
+                RuntimeHelpers.RunClassConstructor(type.TypeHandle);
+            }
             return type.GetConstructor(parameters) ?? throw new MissingMethodException(type.FullName, ".ctor");
         }
         catch (Exception cause)

@@ -44,7 +44,11 @@ public class AbstractNioChannelSourceTest
             // CLR: ClearReadPending clears the socket backend demand without a SelectionKey/Unsafe facade.
             Assert.Null(Record.Exception(channel.ClearReadPending));
         }
-        finally { await Bootstrap.CleanupAsync(channel); await group.StopAsync(); }
+        finally
+        {
+            await Bootstrap.CleanupAsync(channel);
+            await group.StopAsync();
+        }
     }
 }
 #pragma warning restore xUnit1051

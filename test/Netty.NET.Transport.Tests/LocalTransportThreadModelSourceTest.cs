@@ -83,7 +83,10 @@ public partial class LocalTransportThreadModelSourceTest
             // Wait until all events are handled completely.
             while (h1.Outbound.Count < 3 || h3.Inbound.Count < 3 || h1.Removed.Count < 1)
             {
-                if ((h1.Error ?? h2.Error ?? h3.Error) is { } error) throw error;
+                if ((h1.Error ?? h2.Error ?? h3.Error) is { } error)
+                {
+                    throw error;
+                }
                 await Task.Delay(10, token);
             }
 
@@ -139,7 +142,10 @@ public partial class LocalTransportThreadModelSourceTest
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             Inbound.Enqueue(Thread.CurrentThread);
-            if (!discard) ctx.FireChannelRead(msg);
+            if (!discard)
+            {
+                ctx.FireChannelRead(msg);
+            }
         }
 
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)

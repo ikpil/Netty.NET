@@ -65,7 +65,8 @@ public partial class CompositeByteBufBulkKernelTest
         ByteBuf owner = null;
         try
         {
-            byte[] original = new byte[32]; for (int i = 0; i < 32; ++i) original[i] = (byte)(i + 1);
+            byte[] original = new byte[32];
+            for (int i = 0; i < 32; ++i) original[i] = (byte)(i + 1);
             backing.WriteBytes(original);
             ByteBuf first = backing.RetainedSlice(0, 16), second = backing.RetainedSlice(16, 16);
             owner = operation >= 4 ? Unpooled.WrappedUnmodifiableBuffer(first, second)
@@ -73,20 +74,42 @@ public partial class CompositeByteBufBulkKernelTest
             ByteBuf aggregate = wrapped ? new Wrapper(new MetadataTrap(owner)) : owner;
             ByteBuf peer = wrapped ? new Wrapper(new MetadataTrap(backing)) : backing;
             (int source, int destination, int length) = range switch { 0 => (0, 4, 20), 1 => (4, 0, 20), _ => (4, 6, 16) };
-            byte[] expected = (byte[])original.Clone(); Array.Copy(original, source, expected, destination, length);
-            if (operation is 0 or 4) aggregate.GetBytes(source, peer, destination, length);
-            else if (operation == 1) aggregate.SetBytes(destination, peer, source, length);
+            byte[] expected = (byte[])original.Clone();
+            Array.Copy(original, source, expected, destination, length);
+            if (operation is 0 or 4)
+            {
+                aggregate.GetBytes(source, peer, destination, length);
+            }
+            else if (operation == 1)
+            {
+                aggregate.SetBytes(destination, peer, source, length);
+            }
             else if (operation is 2 or 5)
-            { aggregate.SetIndex(source, source + length); aggregate.ReadBytes(peer, destination, length); Assert.Equal(source + length, aggregate.ReaderIndex); }
+            {
+                aggregate.SetIndex(source, source + length);
+                aggregate.ReadBytes(peer, destination, length);
+                Assert.Equal(source + length, aggregate.ReaderIndex);
+            }
             else
-            { aggregate.SetIndex(0, destination); aggregate.WriteBytes(peer, source, length); Assert.Equal(destination + length, aggregate.WriterIndex); }
+            {
+                aggregate.SetIndex(0, destination);
+                aggregate.WriteBytes(peer, source, length);
+                Assert.Equal(destination + length, aggregate.WriterIndex);
+            }
             Assert.Equal(expected, backing.AsReadOnlyMemory(0, 32).ToArray());
-            Assert.Equal(1, owner.RefCnt); Assert.Equal(3, backing.RefCnt);
+            Assert.Equal(1, owner.RefCnt);
+            Assert.Equal(3, backing.RefCnt);
         }
         finally
         {
-            if (owner?.RefCnt > 0) owner.Release();
-            if (backing.RefCnt > 0) backing.Release();
+            if (owner?.RefCnt > 0)
+            {
+                owner.Release();
+            }
+            if (backing.RefCnt > 0)
+            {
+                backing.Release();
+            }
             Assert.Equal(0, native.ReservedBytes);
         }
     }
@@ -167,7 +190,10 @@ public partial class CompositeByteBufBulkKernelTest
                     }
                     Assert.Equal(expected[..count], actual);
                 }
-                finally { listener.Stop(); }
+                finally
+                {
+                    listener.Stop();
+                }
             }
             Assert.Equal(2, observation.Visits.Count);
             Assert.All(observation.Visits, visit => { Assert.Equal("GetSpan", visit.Method); Assert.Equal(2, visit.Length); });

@@ -50,9 +50,15 @@ public class DefaultThreadFactoryTest
                 Thread t = factory.NewThread(task);
                 firstCaptured = ThreadGroup.GetThreadGroup(t);
                 t.Start();
-                if (!t.Join(TimeSpan.FromSeconds(2))) throw new TimeoutException();
+                if (!t.Join(TimeSpan.FromSeconds(2)))
+                {
+                    throw new TimeoutException();
+                }
             }
-            catch (Exception error) { interrupted = error; }
+            catch (Exception error)
+            {
+                interrupted = error;
+            }
         });
         first.Start();
         Assert.True(first.Join(TimeSpan.FromSeconds(2)));
@@ -71,9 +77,15 @@ public class DefaultThreadFactoryTest
                 Thread t = factory.NewThread(task);
                 secondCaptured = ThreadGroup.GetThreadGroup(t);
                 t.Start();
-                if (!t.Join(TimeSpan.FromSeconds(2))) throw new TimeoutException();
+                if (!t.Join(TimeSpan.FromSeconds(2)))
+                {
+                    throw new TimeoutException();
+                }
             }
-            catch (Exception error) { interrupted = error; }
+            catch (Exception error)
+            {
+                interrupted = error;
+            }
         });
         second.Start();
         Assert.True(second.Join(TimeSpan.FromSeconds(2)));
@@ -114,7 +126,10 @@ public class DefaultThreadFactoryTest
                 Thread t = factory.NewThread(() => { });
                 captured = ThreadGroup.GetThreadGroup(t);
             }
-            catch (Exception error) { exception = error; }
+            catch (Exception error)
+            {
+                exception = error;
+            }
         });
         first.Start();
         Assert.True(first.Join(TimeSpan.FromSeconds(2)));

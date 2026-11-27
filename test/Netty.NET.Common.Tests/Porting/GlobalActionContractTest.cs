@@ -15,7 +15,10 @@ public class GlobalActionContractTest
     public async Task NativeCallbacksKeepQueueIdentityAndFifoAfterMulticastFailure()
     {
         var executor = GlobalEventExecutor.INSTANCE;
-        if (executor._thread != null) Assert.True(executor.AwaitInactivity(TimeSpan.FromSeconds(5)));
+        if (executor._thread != null)
+        {
+            Assert.True(executor.AwaitInactivity(TimeSpan.FromSeconds(5)));
+        }
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
         var order = new List<int>();
@@ -51,7 +54,10 @@ public class GlobalActionContractTest
             Assert.Null(typeof(GlobalEventExecutor).GetMethod("TakeTask", BindingFlags.Instance | BindingFlags.Public));
             Assert.Equal("task", Assert.Throws<ArgumentNullException>(() => executor.Execute((Action)null)).ParamName);
         }
-        finally { release.Set(); }
+        finally
+        {
+            release.Set();
+        }
         await finished.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         Assert.Equal(new[] { 1, 2, 3, 4 }, order);
         Assert.True(ownedThread);
@@ -61,7 +67,10 @@ public class GlobalActionContractTest
     public async Task ScheduledNativeContextAndCancellationSurviveIdleRestart()
     {
         var executor = GlobalEventExecutor.INSTANCE;
-        if (executor._thread != null) Assert.True(executor.AwaitInactivity(TimeSpan.FromSeconds(5)));
+        if (executor._thread != null)
+        {
+            Assert.True(executor.AwaitInactivity(TimeSpan.FromSeconds(5)));
+        }
         var ambient = new AsyncLocal<string>();
         using var cancellation = new CancellationTokenSource();
         int canceledRuns = 0;
@@ -93,6 +102,9 @@ public class GlobalActionContractTest
             Assert.Equal("caller", ambient.Value);
             Assert.True(executor.AwaitInactivity(TimeSpan.FromSeconds(5)));
         }
-        finally { ambient.Value = null; }
+        finally
+        {
+            ambient.Value = null;
+        }
     }
 }

@@ -53,7 +53,10 @@ public abstract partial class ByteBuf
     {
         CheckIndex(index, length);
         CheckFileTransfer(destination, position, length);
-        if (length == 0) return 0;
+        if (length == 0)
+        {
+            return 0;
+        }
         byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
         try
         {
@@ -61,7 +64,10 @@ public abstract partial class ByteBuf
             RandomAccess.Write(destination, bytes.AsSpan(0, length), position);
             return length;
         }
-        finally { ArrayPool<byte>.Shared.Return(bytes); }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(bytes);
+        }
     }
 
 /**
@@ -92,15 +98,24 @@ public abstract partial class ByteBuf
         EnsureCanWrite();
         CheckIndex(index, length);
         CheckFileTransfer(source, position, length);
-        if (length == 0) return 0;
+        if (length == 0)
+        {
+            return 0;
+        }
         byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
         try
         {
             int count = RandomAccess.Read(source, bytes.AsSpan(0, length), position);
-            if (count != 0) SetBytesFromIoCore(index, bytes.AsSpan(0, count));
+            if (count != 0)
+            {
+                SetBytesFromIoCore(index, bytes.AsSpan(0, count));
+            }
             return count;
         }
-        finally { ArrayPool<byte>.Shared.Return(bytes); }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(bytes);
+        }
     }
 
 /**
@@ -169,7 +184,10 @@ public abstract partial class ByteBuf
         CheckIndex(index, length);
         CheckFileTransfer(destination, position, length);
         cancellationToken.ThrowIfCancellationRequested();
-        if (length == 0) return 0;
+        if (length == 0)
+        {
+            return 0;
+        }
         byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
         try
         {
@@ -178,7 +196,10 @@ public abstract partial class ByteBuf
                 .ConfigureAwait(false);
             return length;
         }
-        finally { ArrayPool<byte>.Shared.Return(bytes); }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(bytes);
+        }
     }
 
     /// <summary>Asynchronously reads once at a file offset into an absolute range without moving either cursor.</summary>
@@ -193,7 +214,10 @@ public abstract partial class ByteBuf
         CheckIndex(index, length);
         CheckFileTransfer(source, position, length);
         cancellationToken.ThrowIfCancellationRequested();
-        if (length == 0) return 0;
+        if (length == 0)
+        {
+            return 0;
+        }
         byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
         try
         {
@@ -207,7 +231,10 @@ public abstract partial class ByteBuf
             }
             return count;
         }
-        finally { ArrayPool<byte>.Shared.Return(bytes); }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(bytes);
+        }
     }
 
     /// <summary>Asynchronously writes readable bytes at a file offset, advancing the reader after success.</summary>
@@ -232,7 +259,10 @@ public abstract partial class ByteBuf
     {
         EnsureCanWrite();
         CheckFileTransfer(source, position, length);
-        if (length > MaxWritableBytes) throw new ArgumentOutOfRangeException(nameof(length));
+        if (length > MaxWritableBytes)
+        {
+            throw new ArgumentOutOfRangeException(nameof(length));
+        }
         cancellationToken.ThrowIfCancellationRequested();
         EnsureWritable(length);
         int count = await SetBytesAsync(_writerIndex, source, position, length, cancellationToken)
@@ -244,11 +274,20 @@ public abstract partial class ByteBuf
     private protected static void CheckFileTransfer(SafeFileHandle handle, long position, int length)
     {
         ArgumentNullException.ThrowIfNull(handle);
-        if (handle.IsClosed) throw new ObjectDisposedException(nameof(handle));
-        if (handle.IsInvalid) throw new ArgumentException("The file handle is invalid.", nameof(handle));
+        if (handle.IsClosed)
+        {
+            throw new ObjectDisposedException(nameof(handle));
+        }
+        if (handle.IsInvalid)
+        {
+            throw new ArgumentException("The file handle is invalid.", nameof(handle));
+        }
         ArgumentOutOfRangeException.ThrowIfNegative(position);
         ArgumentOutOfRangeException.ThrowIfNegative(length);
         // Validate the complete file range without signed overflow, before any I/O or growth.
-        if (length > long.MaxValue - position) throw new ArgumentOutOfRangeException(nameof(length));
+        if (length > long.MaxValue - position)
+        {
+            throw new ArgumentOutOfRangeException(nameof(length));
+        }
     }
 }

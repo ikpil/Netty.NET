@@ -65,9 +65,15 @@ public class LinkedHashMap<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyD
 
         if (_dictionary.TryGetValue(key, out var existingNode))
         {
-            if (_accessOrder) _linkedList.Remove(existingNode);
+            if (_accessOrder)
+            {
+                _linkedList.Remove(existingNode);
+            }
             existingNode.Value = new KeyValuePair<TKey, TValue>(key, value);
-            if (_accessOrder) _linkedList.AddLast(existingNode);
+            if (_accessOrder)
+            {
+                _linkedList.AddLast(existingNode);
+            }
         }
         else
         {

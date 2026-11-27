@@ -166,7 +166,10 @@ public abstract class AbstractCoalescingBufferQueue
         ArgumentNullException.ThrowIfNull(aggregateProducer);
         // Use isEmpty rather than readableBytes==0 as we may have a promise associated with an empty buffer.
         if (_pairs.Count == 0)
-        { ReconcileReadableBytes(); return RemoveEmptyValue(); }
+        {
+            ReconcileReadableBytes();
+            return RemoveEmptyValue();
+        }
         bytes = Math.Min(bytes, _readableBytes);
         ByteBuf result = null, entryBuffer = null;
         int originalBytes = bytes;
@@ -232,12 +235,24 @@ public abstract class AbstractCoalescingBufferQueue
     private static void Notify(object completion, Task operation)
     {
         if (completion is Action<Task> callback)
-        { callback(operation); return; }
+        {
+            callback(operation);
+            return;
+        }
         var producer = (TaskCompletionSource)completion;
         try
-        { operation.GetAwaiter().GetResult(); producer.TrySetResult(); }
-        catch (OperationCanceledException error) when (operation.IsCanceled) { producer.TrySetCanceled(error.CancellationToken); }
-        catch (Exception error) { producer.TrySetException(error); }
+        {
+            operation.GetAwaiter().GetResult();
+            producer.TrySetResult();
+        }
+        catch (OperationCanceledException error) when (operation.IsCanceled)
+        {
+            producer.TrySetCanceled(error.CancellationToken);
+        }
+        catch (Exception error)
+        {
+            producer.TrySetException(error);
+        }
     }
 
     private static void NotifySafely(object completion, Task operation)
@@ -245,8 +260,13 @@ public abstract class AbstractCoalescingBufferQueue
         if (completion == null)
             return;
         try
-        { Notify(completion, operation); }
-        catch (Exception error) { Logger.Warn("A buffer completion callback threw an exception.", error); }
+        {
+            Notify(completion, operation);
+        }
+        catch (Exception error)
+        {
+            Logger.Warn("A buffer completion callback threw an exception.", error);
+        }
     }
 
     private static void Attach(TaskCompletionSource aggregate, object completion)
@@ -273,9 +293,14 @@ public abstract class AbstractCoalescingBufferQueue
             try
             {
                 if (entry is ByteBuf buffer)
-                { DecrementReadableBytes(buffer.ReadableBytes); ReferenceCountUtil.SafeRelease(buffer); }
+                {
+                    DecrementReadableBytes(buffer.ReadableBytes);
+                    ReferenceCountUtil.SafeRelease(buffer);
+                }
                 else
+                {
                     Notify(entry, failed);
+                }
             }
             catch (Exception error)
             {
@@ -321,13 +346,19 @@ public abstract class AbstractCoalescingBufferQueue
                 if (entry == null)
                 {
                     if (previous != null)
-                    { DecrementReadableBytes(previous.ReadableBytes); writes.Add(Write(ctx, previous, null)); }
+                    {
+                        DecrementReadableBytes(previous.ReadableBytes);
+                        writes.Add(Write(ctx, previous, null));
+                    }
                     break;
                 }
                 if (entry is ByteBuf buffer)
                 {
                     if (previous != null)
-                    { DecrementReadableBytes(previous.ReadableBytes); writes.Add(Write(ctx, previous, null)); }
+                    {
+                        DecrementReadableBytes(previous.ReadableBytes);
+                        writes.Add(Write(ctx, previous, null));
+                    }
                     previous = buffer;
                 }
                 else
@@ -354,16 +385,27 @@ public abstract class AbstractCoalescingBufferQueue
     private static Task Write(IChannelHandlerContext ctx, ByteBuf buffer, object completion)
     {
         if (completion is TaskCompletionSource producer && producer.Task.IsCanceled)
-        { ReferenceCountUtil.SafeRelease(buffer); return producer.Task; }
+        {
+            ReferenceCountUtil.SafeRelease(buffer);
+            return producer.Task;
+        }
         Task operation = ctx.WriteAsync(buffer);
         if (operation.IsCompleted)
-        { NotifySafely(completion, operation); return operation; }
+        {
+            NotifySafely(completion, operation);
+            return operation;
+        }
         return CompleteWriteAsync();
         async Task CompleteWriteAsync()
         {
             try
-            { await operation.ConfigureAwait(false); }
-            catch { /* Relay the original result below. */ }
+            {
+                await operation.ConfigureAwait(false);
+            }
+            catch
+            {
+                /* Relay the original result below. */
+            }
             if (completion != null)
             {
                 if (ctx.Executor.InEventLoop())
@@ -371,7 +413,9 @@ public abstract class AbstractCoalescingBufferQueue
                 else
                 {
                     try
-                    { await ctx.Executor.SubmitAsync(() => NotifySafely(completion, operation)).ConfigureAwait(false); }
+                    {
+                        await ctx.Executor.SubmitAsync(() => NotifySafely(completion, operation)).ConfigureAwait(false);
+                    }
                     catch (Exception error)
                     {
                         // A completion bridge must never leave a native producer pending if its executor
@@ -400,8 +444,16 @@ public abstract class AbstractCoalescingBufferQueue
         // in the queue. Using +2 as we have already dequeued current and next.
         var composite = allocator.CompositeBuffer(Size + 2);
         try
-        { composite.AddComponent(cumulation, true); composite.AddComponent(next, true); }
-        catch { composite.Release(); ReferenceCountUtil.SafeRelease(next); throw; }
+        {
+            composite.AddComponent(cumulation, true);
+            composite.AddComponent(next, true);
+        }
+        catch
+        {
+            composite.Release();
+            ReferenceCountUtil.SafeRelease(next);
+            throw;
+        }
         return composite;
     }
 
@@ -416,8 +468,15 @@ public abstract class AbstractCoalescingBufferQueue
     {
         var result = allocator.IoBuffer(checked(cumulation.ReadableBytes + next.ReadableBytes));
         try
-        { result.WriteBytes(cumulation).WriteBytes(next); }
-        catch { result.Release(); ReferenceCountUtil.SafeRelease(next); throw; }
+        {
+            result.WriteBytes(cumulation).WriteBytes(next);
+        }
+        catch
+        {
+            result.Release();
+            ReferenceCountUtil.SafeRelease(next);
+            throw;
+        }
         cumulation.Release();
         next.Release();
         return result;

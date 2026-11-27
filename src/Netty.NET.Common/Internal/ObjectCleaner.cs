@@ -70,15 +70,24 @@ public static class ObjectCleaner
         {
             bool queued = ThreadPool.UnsafeQueueUserWorkItem(static action =>
             {
-                try { action(); }
+                try
+                {
+                    action();
+                }
                 catch (Exception)
                 {
                     // ignore exceptions, and don't log in case the logger throws an exception, blocks, or has
                     // other unexpected side effects.
                 }
-                finally { Interlocked.Decrement(ref _pending); }
+                finally
+                {
+                    Interlocked.Decrement(ref _pending);
+                }
             }, cleanup, preferLocal: false);
-            if (!queued) throw new InvalidOperationException("The CLR thread pool rejected GC cleanup work.");
+            if (!queued)
+            {
+                throw new InvalidOperationException("The CLR thread pool rejected GC cleanup work.");
+            }
         }
         catch
         {

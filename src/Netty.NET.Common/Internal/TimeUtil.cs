@@ -18,8 +18,14 @@ internal static class TimeUtil
 
     private static long SaturatingMultiply(long value, long multiplier)
     {
-        if (value > long.MaxValue / multiplier) return long.MaxValue;
-        if (value < long.MinValue / multiplier) return long.MinValue;
+        if (value > long.MaxValue / multiplier)
+        {
+            return long.MaxValue;
+        }
+        if (value < long.MinValue / multiplier)
+        {
+            return long.MinValue;
+        }
         return value * multiplier;
     }
 }

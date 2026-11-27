@@ -45,7 +45,10 @@ public class AllocatorChunkReuseTest(ITestOutputHelper output)
                 allocator.HeapBuffer(BufferSize, BufferSize).Release();
             return GC.GetAllocatedBytesForCurrentThread() - before;
         }
-        finally { ResourceLeakDetector.SetLevel(previous); }
+        finally
+        {
+            ResourceLeakDetector.SetLevel(previous);
+        }
     }
 
     [Theory]
@@ -68,7 +71,10 @@ public class AllocatorChunkReuseTest(ITestOutputHelper output)
             Assert.InRange(allocated, 0, AllocationLimit - 1);
             Assert.Equal(0, native.ReservedBytes);
         }
-        finally { ((IDisposable)allocator).Dispose(); }
+        finally
+        {
+            ((IDisposable)allocator).Dispose();
+        }
         Assert.Equal(0, metric.UsedHeapMemory);
         Assert.Equal(0, native.ReservedBytes);
     }

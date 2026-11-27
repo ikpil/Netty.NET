@@ -67,7 +67,10 @@ public class NativeLazySchedulingContractTest
         executor.EnqueueWakeup();
         executor.Enqueue(copy);
         executor.Enqueue(command);
-        if (blocking) Assert.Null(executor.Take());
+        if (blocking)
+        {
+            Assert.Null(executor.Take());
+        }
         Assert.Same(copy, blocking ? executor.Take() : executor.Poll());
         Assert.Same(command, blocking ? executor.Take() : executor.Poll());
         command();
@@ -120,8 +123,15 @@ public class NativeLazySchedulingContractTest
         internal void Drain()
         {
             _inLoop = true;
-            try { foreach (Action task in Ready) task(); Ready.Clear(); }
-            finally { _inLoop = false; }
+            try
+            {
+                foreach (Action task in Ready) task();
+                Ready.Clear();
+            }
+            finally
+            {
+                _inLoop = false;
+            }
         }
 
         internal void RunDue()
@@ -132,7 +142,10 @@ public class NativeLazySchedulingContractTest
                 _clock.Advance(TimeSpan.FromTicks(1));
                 PollScheduledTask().Invoke();
             }
-            finally { _inLoop = false; }
+            finally
+            {
+                _inLoop = false;
+            }
         }
         public override Task TerminationFuture => Task.CompletedTask;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
@@ -188,7 +201,10 @@ public class NativeLazySchedulingContractTest
         hooks.AddRange(expected);
         Assert.Equal(hooks, executor.Hooks);
         Assert.Equal(wakeup ? 4 : 2, executor.Ready.Count);
-        if (wakeup) Assert.Same(executor.Ready[1], executor.Ready[3]);
+        if (wakeup)
+        {
+            Assert.Same(executor.Ready[1], executor.Ready[3]);
+        }
         Assert.False(first.IsCompleted);
         Assert.Null(executor.Head);
 

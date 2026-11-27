@@ -58,13 +58,20 @@ public class DefaultChannelPipelineCompletionSourceTest
                 var handler = new ListenerAdded(captured);
                 channel.Pipeline.AddLast(handler);
                 if (!handler.Added)
-                { captured.TrySetException(new InvalidOperationException("handlerAdded(...) should have been called")); return; }
+                {
+                    captured.TrySetException(new InvalidOperationException("handlerAdded(...) should have been called"));
+                    return;
+                }
                 // This event must be captured by the added handler.
                 channel.Pipeline.FireUserEventTriggered(value);
             }), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default).Unwrap();
             Assert.Same(value, await captured.Task.WaitAsync(token));
         }
-        finally { await channel.CloseAsync(); await group.StopAsync(); }
+        finally
+        {
+            await channel.CloseAsync();
+            await group.StopAsync();
+        }
     }
 
     [Fact]
@@ -103,7 +110,10 @@ public class DefaultChannelPipelineCompletionSourceTest
             inbound.AssertCalled();
             skip.AssertSkipped();
         }
-        finally { channel.FinishAndReleaseAll(); }
+        finally
+        {
+            channel.FinishAndReleaseAll();
+        }
     }
     private sealed class ListenerAdded(TaskCompletionSource<object> captured) : ChannelInboundHandlerAdapter
     {

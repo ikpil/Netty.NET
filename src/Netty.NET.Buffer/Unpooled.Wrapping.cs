@@ -45,7 +45,10 @@ public static partial class Unpooled
         ArgumentNullException.ThrowIfNull(bytes);
         if (offset < 0 || length < 0 || offset > bytes.Length - length)
             throw new ArgumentOutOfRangeException(nameof(offset));
-        if (length == 0) return EmptyBuffer;
+        if (length == 0)
+        {
+            return EmptyBuffer;
+        }
         return offset == 0 && length == bytes.Length ? WrappedBuffer(bytes) : WrappedBuffer(bytes).Slice(offset, length);
     }
 
@@ -60,7 +63,10 @@ public static partial class Unpooled
     public static ByteBuf WrappedBuffer(ByteBuf buffer)
     {
         ArgumentNullException.ThrowIfNull(buffer);
-        if (buffer.IsReadable()) return buffer.Slice();
+        if (buffer.IsReadable())
+        {
+            return buffer.Slice();
+        }
         buffer.Release();
         return EmptyBuffer;
     }
@@ -107,10 +113,19 @@ public static partial class Unpooled
         for (int i = 0; i < arrays.Length; ++i)
         {
             byte[] array = arrays[i];
-            if (array == null) return EmptyBuffer;
-            if (array.Length == 0) continue;
+            if (array == null)
+            {
+                return EmptyBuffer;
+            }
+            if (array.Length == 0)
+            {
+                continue;
+            }
             var composite = new CompositeByteBuf(maxNumComponents);
-            try { return composite.AddWrappedArrays(arrays, i); }
+            try
+            {
+                return composite.AddWrappedArrays(arrays, i);
+            }
             catch
             {
                 // CLR: a failing factory cannot return its partially built owner.
@@ -139,14 +154,24 @@ public static partial class Unpooled
     public static ByteBuf WrappedBuffer(int maxNumComponents, params ByteBuf[] buffers)
     {
         ArgumentNullException.ThrowIfNull(buffers);
-        if (buffers.Length == 1) return WrappedBuffer(buffers[0]);
+        if (buffers.Length == 1)
+        {
+            return WrappedBuffer(buffers[0]);
+        }
         for (int i = 0; i < buffers.Length; ++i)
         {
             ByteBuf buffer = buffers[i];
             ArgumentNullException.ThrowIfNull(buffer);
-            if (!buffer.IsReadable()) { buffer.Release(); continue; }
+            if (!buffer.IsReadable())
+            {
+                buffer.Release();
+                continue;
+            }
             var composite = new CompositeByteBuf(maxNumComponents);
-            try { return composite.AddWrappedComponents(buffers, i); }
+            try
+            {
+                return composite.AddWrappedComponents(buffers, i);
+            }
             catch
             {
                 // CLR: release only transferred ownership. Array preflight may

@@ -34,7 +34,10 @@ public static partial class Unpooled
     /// identify their storage kind. Use explicit LE operations for little-endian data.</remarks>
     public static ByteBuf WrappedBuffer(Memory<byte> memory)
     {
-        if (memory.IsEmpty) return EmptyBuffer;
+        if (memory.IsEmpty)
+        {
+            return EmptyBuffer;
+        }
         if (MemoryMarshal.TryGetArray((ReadOnlyMemory<byte>)memory, out ArraySegment<byte> array))
             return WrappedBuffer(array.Array, array.Offset, array.Count);
         if (NativeMemoryOwner.TryGetOwner(memory, out _))

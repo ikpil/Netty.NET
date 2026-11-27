@@ -65,8 +65,14 @@ internal static class ChannelInitializerExtensions
     private static int ComparePriority(double left, double right)
     {
         // Java Double.compare places NaN last and -0.0 before +0.0.
-        if (double.IsNaN(left)) return double.IsNaN(right) ? 0 : 1;
-        if (double.IsNaN(right)) return -1;
+        if (double.IsNaN(left))
+        {
+            return double.IsNaN(right) ? 0 : 1;
+        }
+        if (double.IsNaN(right))
+        {
+            return -1;
+        }
         int compare = left.CompareTo(right);
         return compare != 0 ? compare : BitConverter.DoubleToInt64Bits(left).CompareTo(BitConverter.DoubleToInt64Bits(right));
     }
@@ -77,7 +83,10 @@ internal static class ChannelInitializerExtensions
         public void Dispose()
         {
             var removed = Interlocked.Exchange(ref _entry, null);
-            if (removed == null) return;
+            if (removed == null)
+            {
+                return;
+            }
             lock (Gate)
                 Volatile.Write(ref _entries, _entries.Where(e => !ReferenceEquals(e, removed)).ToArray());
         }

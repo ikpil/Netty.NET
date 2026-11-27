@@ -41,7 +41,10 @@ public class IoHandlerEventCountSourceTest
         {
             Assert.Equal(0, loop.Run(100_000_000, -1));
         }
-        finally { Terminate(loop); }
+        finally
+        {
+            Terminate(loop);
+        }
     }
 
     [Fact(Timeout = 5000)]
@@ -65,7 +68,10 @@ public class IoHandlerEventCountSourceTest
             cancellation.ThrowIfCancellationRequested();
             Assert.True(waker.Join(TimeSpan.FromSeconds(1)));
         }
-        finally { Terminate(loop); }
+        finally
+        {
+            Terminate(loop);
+        }
     }
 
     [Fact(Timeout = 5000)]
@@ -91,6 +97,9 @@ public class IoHandlerEventCountSourceTest
             Assert.True(task.IsCompletedSuccessfully);
             Assert.Equal(1, result);
         }
-        finally { Terminate(loop); }
+        finally
+        {
+            Terminate(loop);
+        }
     }
 }

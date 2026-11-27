@@ -35,8 +35,15 @@ internal sealed class ThreadLocalDirectByteBuf : AbstractReferenceCountedByteBuf
     {
         NativeMemoryAllocator native = cache?.NativeAllocator ?? NativeMemoryAllocator.Shared;
         owner ??= native.Allocate(256, clear: true);
-        try { return new ThreadLocalDirectByteBuf(cache, native, owner); }
-        catch { owner.Dispose(); throw; }
+        try
+        {
+            return new ThreadLocalDirectByteBuf(cache, native, owner);
+        }
+        catch
+        {
+            owner.Dispose();
+            throw;
+        }
     }
 
     private ThreadLocalDirectByteBuf(ThreadLocalDirectBufferCache cache, NativeMemoryAllocator native, NativeMemoryOwner owner)
@@ -64,13 +71,31 @@ internal sealed class ThreadLocalDirectByteBuf : AbstractReferenceCountedByteBuf
         set
         {
             CheckNewCapacity(value);
-            if (value == _capacity) return;
+            if (value == _capacity)
+            {
+                return;
+            }
             NativeMemoryOwner owner = _native.Allocate(value, clear: true);
             ThreadLocalDirectAllocation replacement;
-            try { replacement = new ThreadLocalDirectAllocation(owner, _cache); }
-            catch { owner.Dispose(); throw; }
-            try { _allocation.Memory.Span.Slice(0, Math.Min(value, _capacity)).CopyTo(replacement.Memory.Span); }
-            catch { replacement.DisableCaching(); replacement.Release(); throw; }
+            try
+            {
+                replacement = new ThreadLocalDirectAllocation(owner, _cache);
+            }
+            catch
+            {
+                owner.Dispose();
+                throw;
+            }
+            try
+            {
+                _allocation.Memory.Span.Slice(0, Math.Min(value, _capacity)).CopyTo(replacement.Memory.Span);
+            }
+            catch
+            {
+                replacement.DisableCaching();
+                replacement.Release();
+                throw;
+            }
             ThreadLocalDirectAllocation previous = _allocation;
             _allocation = replacement;
             _capacity = value;
@@ -84,8 +109,15 @@ internal sealed class ThreadLocalDirectByteBuf : AbstractReferenceCountedByteBuf
     {
         CheckIndex(index, length);
         ByteBuf result = Alloc().DirectBuffer(length, MaxCapacity);
-        try { return result.WriteBytes(this, index, length); }
-        catch { result.Release(); throw; }
+        try
+        {
+            return result.WriteBytes(this, index, length);
+        }
+        catch
+        {
+            result.Release();
+            throw;
+        }
     }
 
     protected override void Deallocate()

@@ -35,7 +35,10 @@ public class ObjectCleanerTest
         using var latch = new CountdownEvent(1);
         temporaryThread = new Thread(() =>
         {
-            try { latch.Wait(); }
+            try
+            {
+                latch.Wait();
+            }
             catch (ThreadInterruptedException)
             {
                 // just ignore
@@ -60,7 +63,10 @@ public class ObjectCleanerTest
         using var latch = new CountdownEvent(1);
         temporaryThread = new Thread(() =>
         {
-            try { latch.Wait(); }
+            try
+            {
+                latch.Wait();
+            }
             catch (ThreadInterruptedException)
             {
                 // just ignore

@@ -75,9 +75,14 @@ public class SearchProcessorTest
                 ISearchProcessor processor = Factory(algorithm, Encoding.UTF8.GetBytes(patterns[i])).NewSearchProcessor();
                 Assert.Equal(expected[i], buffer.ForEachByte(processor.Process));
             }
-            Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(6, buffer.WriterIndex); Assert.Equal(1, owner.RefCnt);
+            Assert.Equal(0, buffer.ReaderIndex);
+            Assert.Equal(6, buffer.WriterIndex);
+            Assert.Equal(1, owner.RefCnt);
         }
-        finally { owner.Release(); }
+        finally
+        {
+            owner.Release();
+        }
     }
 
     [Theory]
@@ -109,9 +114,13 @@ public class SearchProcessorTest
                 start = end + 1;
             }
             Assert.Equal(-1, buffer.ForEachByte(start, buffer.ReadableBytes - start, processor.Process));
-            Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(haystack.Length, buffer.WriterIndex);
+            Assert.Equal(0, buffer.ReaderIndex);
+            Assert.Equal(haystack.Length, buffer.WriterIndex);
         }
-        finally { owner.Release(); }
+        finally
+        {
+            owner.Release();
+        }
     }
 
     [Theory]
@@ -133,7 +142,10 @@ public class SearchProcessorTest
             needleBytes[0] = 1; // 100...000
             Assert.Equal(-1, haystack.ForEachByte(Factory(algorithm, needleBytes).NewSearchProcessor().Process));
         }
-        finally { haystack.Release(); }
+        finally
+        {
+            haystack.Release();
+        }
     }
 
     [Theory]
@@ -150,7 +162,10 @@ public class SearchProcessorTest
             for (int start = 0; start < haystackBytes.Length - 64; start++)
                 Assert.Equal(start + 63, haystack.ForEachByte(Factory(algorithm, haystackBytes.AsSpan(start, 64).ToArray()).NewSearchProcessor().Process));
         }
-        finally { haystack.Release(); }
+        finally
+        {
+            haystack.Release();
+        }
     }
 
     [Theory]
@@ -181,7 +196,10 @@ public class SearchProcessorTest
                     Assert.Equal(chunk.Length, buffer.WriterIndex);
                     Assert.Equal(1, owner.RefCnt);
                 }
-                finally { owner.Release(); }
+                finally
+                {
+                    owner.Release();
+                }
                 consumed += chunk.Length;
             }
             Assert.Equal(new[] { 4, 9 }, matches);
@@ -227,7 +245,11 @@ public class SearchProcessorTest
             ISearchProcessor processor = Factory(algorithm, pattern).NewSearchProcessor(); int resetStart = 0;
             for (int index = 0; index < data.Length; index++)
             {
-                if (index == 257 || index == 81 && seed % 2 == 0) { processor.Reset(); resetStart = index; }
+                if (index == 257 || index == 81 && seed % 2 == 0)
+                {
+                    processor.Reset();
+                    resetStart = index;
+                }
                 bool match = index - resetStart + 1 >= pattern.Length && data.AsSpan(index - pattern.Length + 1, pattern.Length).SequenceEqual(pattern);
                 Assert.Equal(!match, processor.Process(data[index]));
             }
@@ -267,8 +289,14 @@ public class SearchProcessorTest
 
     private static void EmptySpanFactory(int algorithm)
     {
-        if (algorithm == 0) AbstractSearchProcessorFactory.NewKmpSearchProcessorFactory(ReadOnlySpan<byte>.Empty);
-        else AbstractSearchProcessorFactory.NewBitapSearchProcessorFactory(ReadOnlySpan<byte>.Empty);
+        if (algorithm == 0)
+        {
+            AbstractSearchProcessorFactory.NewKmpSearchProcessorFactory(ReadOnlySpan<byte>.Empty);
+        }
+        else
+        {
+            AbstractSearchProcessorFactory.NewBitapSearchProcessorFactory(ReadOnlySpan<byte>.Empty);
+        }
     }
 
     [Fact]

@@ -124,7 +124,8 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
     {
         switch (State())
         {
-            case DecoderState.READ_FIXED_HEADER: try
+            case DecoderState.READ_FIXED_HEADER:
+                try
             {
                 maxAllowedRemainingBytes = maxBytesInMessage;
                 int startOfFixed = buffer.ReaderIndex;
@@ -141,7 +142,8 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
             }
             goto case DecoderState.READ_VARIABLE_HEADER;
 
-            case DecoderState.READ_VARIABLE_HEADER:  try
+            case DecoderState.READ_VARIABLE_HEADER:
+                try
             {
                 int bytesRemainingBeforeVariableHeader = bytesRemainingInVariablePart;
                 bool bailOut = false;
@@ -182,7 +184,8 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
             }
             goto case DecoderState.READ_PAYLOAD;
 
-            case DecoderState.READ_PAYLOAD: try
+            case DecoderState.READ_PAYLOAD:
+                try
             {
                 object decodedPayload =
                     DecodePayload(

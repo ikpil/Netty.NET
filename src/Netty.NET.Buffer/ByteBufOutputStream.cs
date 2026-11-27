@@ -91,10 +91,16 @@ public sealed class ByteBufOutputStream : Stream
             if (!_closed)
             {
                 _closed = true;
-                if (disposing && _releaseOnDispose) _buffer.Release();
+                if (disposing && _releaseOnDispose)
+                {
+                    _buffer.Release();
+                }
             }
         }
-        finally { base.Dispose(disposing); }
+        finally
+        {
+            base.Dispose(disposing);
+        }
     }
 
     public override void Write(byte[] buffer, int offset, int count)
@@ -214,7 +220,10 @@ public sealed class ByteBufOutputStream : Stream
         int offset = 2;
         foreach (char character in value)
         {
-            if (character is > '\0' and < '\u0080') bytes[offset++] = (byte)character;
+            if (character is > '\0' and < '\u0080')
+            {
+                bytes[offset++] = (byte)character;
+            }
             else if (character <= '\u07FF')
             {
                 bytes[offset++] = (byte)(0xC0 | character >> 6);
@@ -232,9 +241,19 @@ public sealed class ByteBufOutputStream : Stream
 
     public override ValueTask WriteAsync(ReadOnlyMemory<byte> source, CancellationToken cancellationToken = default)
     {
-        if (cancellationToken.IsCancellationRequested) return ValueTask.FromCanceled(cancellationToken);
-        try { Write(source.Span); return ValueTask.CompletedTask; }
-        catch (Exception exception) { return ValueTask.FromException(exception); }
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return ValueTask.FromCanceled(cancellationToken);
+        }
+        try
+        {
+            Write(source.Span);
+            return ValueTask.CompletedTask;
+        }
+        catch (Exception exception)
+        {
+            return ValueTask.FromException(exception);
+        }
     }
 
     public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)

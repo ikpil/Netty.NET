@@ -71,13 +71,19 @@ public class ThreadLocalContractTest : IDisposable
                 Assert.Throws<InvalidOperationException>(() => FastThreadLocalThread.RunWithFastThreadLocal(() => { }));
                 local.Set(Thread.CurrentThread.Name);
             }
-            catch (Exception cause) { failure = cause; }
+            catch (Exception cause)
+            {
+                failure = cause;
+            }
         });
         Assert.True(FastThreadLocalThread.WillCleanupFastThreadLocals(thread));
         Assert.True(thread.IsBackground);
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
-        if (failure != null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
+        if (failure != null)
+        {
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
+        }
         Assert.Equal(thread.Name, local.Removed);
     }
 
@@ -183,10 +189,19 @@ public class ThreadLocalContractTest : IDisposable
         {
             for (int index = 0; index < locals.Length; index++) locals[index].Set(index.ToString());
             Assert.Equal(3, FastThreadLocal.Size());
-            if (!scoped) FastThreadLocal.RemoveAll();
+            if (!scoped)
+            {
+                FastThreadLocal.RemoveAll();
+            }
         }
-        if (scoped) FastThreadLocalThread.RunWithFastThreadLocal(Work);
-        else Work();
+        if (scoped)
+        {
+            FastThreadLocalThread.RunWithFastThreadLocal(Work);
+        }
+        else
+        {
+            Work();
+        }
         for (int index = 0; index < locals.Length; index++)
         {
             Assert.Equal(1, locals[index].RemovalCount);

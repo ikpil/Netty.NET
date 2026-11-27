@@ -31,7 +31,10 @@ public class EndpointFormattingContractTest
                 Assert.Equal("[2001:DB8::1]:" + port.Text, NetUtil.ToSocketAddressString("2001:DB8::1", port.Value));
             }
         }
-        finally { CultureInfo.CurrentCulture = previous; }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
     }
 
     [Fact]

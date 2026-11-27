@@ -275,7 +275,12 @@ public class ChannelOutboundBufferTest
     {
         var writes = new List<Task>();
         var channel = new EmbeddedChannel(new WritabilityHandler(ctx =>
-        { if (ctx.Channel.IsWritable && writes.Count == 0) writes.Add(ctx.WriteAndFlushAsync(Unpooled.WrappedBuffer(new byte[] { 2 }))); ctx.FireChannelWritabilityChanged(); }));
+        {
+            if (ctx.Channel.IsWritable && writes.Count == 0)
+            {
+                writes.Add(ctx.WriteAndFlushAsync(Unpooled.WrappedBuffer(new byte[] { 2 })));
+            }
+            ctx.FireChannelWritabilityChanged(); }));
         channel.Config.SetWriteBufferWaterMark(new WriteBufferWaterMark(256, 512));
         var cancelledBuffer = Unpooled.Buffer().WriteZero(512);
         using var cancellation = new CancellationTokenSource();
@@ -309,7 +314,12 @@ public class ChannelOutboundBufferTest
     {
         int inactive = 0;
         var channel = new EmbeddedChannel(new WritabilityHandler(ctx =>
-        { if (ctx.Channel.IsWritable) _ = ctx.CloseAsync(); ctx.FireChannelWritabilityChanged(); }, () => Interlocked.Increment(ref inactive)));
+        {
+            if (ctx.Channel.IsWritable)
+            {
+                _ = ctx.CloseAsync();
+            }
+            ctx.FireChannelWritabilityChanged(); }, () => Interlocked.Increment(ref inactive)));
         channel.Config.SetWriteBufferWaterMark(new WriteBufferWaterMark(256, 512));
         var cancelledBuffer = Unpooled.Buffer().WriteZero(512);
         using var cancellation = new CancellationTokenSource();
@@ -346,7 +356,12 @@ public class ChannelOutboundBufferTest
         channel.Pipeline.AddLast(new WritabilityHandler(ctx =>
         {
             if (ctx.Channel.IsWritable)
-            { writable++; sizeAtEvent = buffer.Size; pendingAtEvent = buffer.TotalPendingWriteBytes; currentAtEvent = buffer.Current; }
+            {
+                writable++;
+                sizeAtEvent = buffer.Size;
+                pendingAtEvent = buffer.TotalPendingWriteBytes;
+                currentAtEvent = buffer.Current;
+            }
             ctx.FireChannelWritabilityChanged();
         }));
         channel.Config.SetWriteBufferWaterMark(new WriteBufferWaterMark(400, 800));
@@ -366,7 +381,10 @@ public class ChannelOutboundBufferTest
             cancellations[i] = new CancellationTokenSource();
             buffer.AddMessage(cancelledBuffers[i], 300, cancellations[i].Token);
             if (i < 2)
-            { liveBuffers[i] = Unpooled.WrappedBuffer(new byte[] { (byte)(i + 1) }); buffer.AddMessage(liveBuffers[i], 1); }
+            {
+                liveBuffers[i] = Unpooled.WrappedBuffer(new byte[] { (byte)(i + 1) });
+                buffer.AddMessage(liveBuffers[i], 1);
+            }
         }
         Assert.False(channel.IsWritable);
         foreach (var cancellation in cancellations)
@@ -464,7 +482,11 @@ public class ChannelOutboundBufferTest
             Assert.True(removed.Wait(TimeSpan.FromSeconds(5)));
             SafeClose(channel);
         }
-        finally { execute.Set(); await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            execute.Set();
+            await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
+        }
     }
 
     private static EmbeddedChannel NewRecordingChannel(StringBuilder text)
@@ -492,8 +514,21 @@ public class ChannelOutboundBufferTest
         var buffer = channel.ReadOutbound<ByteBuf>();
         Assert.NotNull(buffer);
         try
-        { if (expected == 0) Assert.Equal(0, buffer.ReadableBytes); else { Assert.Equal(1, buffer.ReadableBytes); Assert.Equal(expected, buffer.ReadByte()); } }
-        finally { buffer.Release(); }
+        {
+            if (expected == 0)
+            {
+                Assert.Equal(0, buffer.ReadableBytes);
+            }
+            else
+            {
+                Assert.Equal(1, buffer.ReadableBytes);
+                Assert.Equal(expected, buffer.ReadByte());
+            }
+        }
+        finally
+        {
+            buffer.Release();
+        }
     }
     private sealed class WritabilityHandler(Action<IChannelHandlerContext> callback, Action inactive = null) : ChannelInboundHandlerAdapter
     {
@@ -547,7 +582,13 @@ public class ChannelOutboundBufferTest
         protected override void Run()
         {
             do
-            { var task = TakeTask(); if (task != null) { task(); UpdateLastExecutionTime(); } } while (!ConfirmShutdown());
+            { var task = TakeTask();
+                if (task != null)
+                {
+                    task();
+                    UpdateLastExecutionTime();
+                }
+            } while (!ConfirmShutdown());
         }
     }
     private sealed class TestChannel : AbstractChannel

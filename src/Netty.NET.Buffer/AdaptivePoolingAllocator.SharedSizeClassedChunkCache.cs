@@ -72,7 +72,10 @@ internal sealed partial class AdaptivePoolingAllocator
 
         internal SharedSizeClassedChunkCache(int chunkReuseQueue, long chunkPurgePollsShared, int chunkPurgeThreshold)
         {
-            if (chunkReuseQueue < 2 || chunkReuseQueue > 1 << 28) throw new ArgumentOutOfRangeException(nameof(chunkReuseQueue));
+            if (chunkReuseQueue < 2 || chunkReuseQueue > 1 << 28)
+            {
+                throw new ArgumentOutOfRangeException(nameof(chunkReuseQueue));
+            }
             ArgumentOutOfRangeException.ThrowIfLessThan(chunkPurgePollsShared, 1);
             ArgumentOutOfRangeException.ThrowIfLessThan(chunkPurgeThreshold, 1);
             _chunkReuseQueue = chunkReuseQueue;
@@ -84,8 +87,18 @@ internal sealed partial class AdaptivePoolingAllocator
             _chunkPurgeThreshold = chunkPurgeThreshold;
         }
 
-        public override bool IsEmpty { get { lock (_sync) return _queue.Count == 0; } }
-        internal int Count { get { lock (_sync) return _queue.Count; } }
+        public override bool IsEmpty { get {
+                lock (_sync)
+                {
+                    return _queue.Count == 0;
+                }
+            } }
+        internal int Count { get {
+                lock (_sync)
+                {
+                    return _queue.Count;
+                }
+            } }
 
         internal override SizeClassedChunk ForcePurge()
         {
@@ -101,7 +114,10 @@ internal sealed partial class AdaptivePoolingAllocator
             using var events = BufferAllocatorEventSource.Log.BeginOperation();
             lock (_sync)
             {
-                if (_disposed) return null;
+                if (_disposed)
+                {
+                    return null;
+                }
                 long budget = --_purgeBudget;
                 if (budget == 0)
                 {
@@ -248,7 +264,10 @@ internal sealed partial class AdaptivePoolingAllocator
             using var events = BufferAllocatorEventSource.Log.BeginOperation();
             lock (_sync)
             {
-                if (_disposed || _queue.Count == _sharedCacheCapacity) return false;
+                if (_disposed || _queue.Count == _sharedCacheCapacity)
+                {
+                    return false;
+                }
                 _queue.Enqueue((SizeClassedChunk)chunk);
                 return true;
             }

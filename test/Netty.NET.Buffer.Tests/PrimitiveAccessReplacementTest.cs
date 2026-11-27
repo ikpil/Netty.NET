@@ -137,15 +137,19 @@ public class PrimitiveAccessReplacementTest
         {
             if (kind is 4 or 5)
             {
-                var a = new PooledByteBufAllocator(nativeAllocator: _native, maxOrder: 1); _allocator = a;
+                var a = new PooledByteBufAllocator(nativeAllocator: _native, maxOrder: 1);
+                _allocator = a;
                 Buffer = kind == 4 ? a.HeapBuffer(64, 64) : a.DirectBuffer(64, 64);
             }
             else if (kind == 6)
             {
-                var a = new AdaptiveByteBufAllocator(nativeAllocator: _native, lowMemory: false); _allocator = a;
+                var a = new AdaptiveByteBufAllocator(nativeAllocator: _native, lowMemory: false);
+                _allocator = a;
                 Buffer = a.DirectBuffer(64, 64);
             }
-            else Buffer = kind switch
+            else
+            {
+                Buffer = kind switch
             {
                 0 => Unpooled.Buffer(64, 64),
                 1 => new UnpooledDirectByteBuf(64, 64, _native),
@@ -155,6 +159,7 @@ public class PrimitiveAccessReplacementTest
                 3 => Unpooled.Buffer(68, 68).Slice(2, 64),
                 _ => Unpooled.WrappedBuffer(new byte[68].AsMemory(2, 64))
             };
+            }
         }
 
         public void Dispose()

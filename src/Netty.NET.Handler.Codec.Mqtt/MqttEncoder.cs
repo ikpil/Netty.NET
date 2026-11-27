@@ -868,10 +868,14 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
         {
             return 1;
         }
-        if (num < 16_384) { // 128 * 128
+        if (num < 16_384)
+        {
+            // 128 * 128
             return 2;
         }
-        if (num < 2_097_152) { // 128 * 128 * 128
+        if (num < 2_097_152)
+        {
+            // 128 * 128 * 128
             return 3;
         }
         return 4;

@@ -133,14 +133,23 @@ public abstract class SingleThreadEventLoop : SingleThreadEventExecutor, IEventL
     // CLR-only native-close admission. A reserved callback survives public task rejection during shutdown.
     internal Action<Action> ReserveCloseCompletion()
     {
-        if (!InEventLoop()) throw new InvalidOperationException("Native close must be reserved by the event-loop owner.");
+        if (!InEventLoop())
+        {
+            throw new InvalidOperationException("Native close must be reserved by the event-loop owner.");
+        }
         _pendingCloseCompletions++;
         return completion =>
         {
             _closeCompletions.Enqueue(() =>
             {
-                try { completion(); }
-                finally { _pendingCloseCompletions--; }
+                try
+                {
+                    completion();
+                }
+                finally
+                {
+                    _pendingCloseCompletions--;
+                }
             });
             Wakeup(false);
         };

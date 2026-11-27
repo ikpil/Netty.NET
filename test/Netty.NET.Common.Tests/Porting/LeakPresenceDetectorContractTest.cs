@@ -29,8 +29,15 @@ public class LeakPresenceDetectorContractTest
     private static void WithFactory(ResourceLeakDetectorFactory factory, Action action)
     {
         var previous = ResourceLeakDetectorFactory.Instance();
-        try { ResourceLeakDetectorFactory.SetResourceLeakDetectorFactory(factory); action(); }
-        finally { ResourceLeakDetectorFactory.SetResourceLeakDetectorFactory(previous); }
+        try
+        {
+            ResourceLeakDetectorFactory.SetResourceLeakDetectorFactory(factory);
+            action();
+        }
+        finally
+        {
+            ResourceLeakDetectorFactory.SetResourceLeakDetectorFactory(previous);
+        }
     }
     private sealed class ThrowingHint : IResourceLeakHint
     {
@@ -67,7 +74,8 @@ public class LeakPresenceDetectorContractTest
             Assert.NotNull(tracker);
             Assert.True(scope.HasOpenResources());
             Assert.False(detector.IsRecordEnabled());
-            tracker.Record(); tracker.Record(new ThrowingHint());
+            tracker.Record();
+            tracker.Record(new ThrowingHint());
             Assert.Null(tracker.GetCloseStackTraceIfAny());
             Assert.True(tracker.Close(null));
             Assert.False(tracker.Close(resource));
@@ -76,7 +84,10 @@ public class LeakPresenceDetectorContractTest
             Assert.True(nullTracker.Close(null));
             scope.Check();
         }
-        finally { ResourceLeakDetector.SetLevel(previous); }
+        finally
+        {
+            ResourceLeakDetector.SetLevel(previous);
+        }
     }
 
     [Fact]
@@ -151,7 +162,10 @@ public class LeakPresenceDetectorContractTest
             Assert.IsType<LeakPresenceDetector<string>>(factory.NewResourceLeakDetector<string>(typeof(string), 0, -1));
             WithFactory(factory, LeakPresenceDetector.Check);
         }
-        finally { Environment.SetEnvironmentVariable(key, previous); }
+        finally
+        {
+            Environment.SetEnvironmentVariable(key, previous);
+        }
     }
 
     [Fact]
@@ -170,7 +184,12 @@ public class LeakPresenceDetectorContractTest
         object shared = new();
         var tracker = detector.Track(shared);
         int successes = 0;
-        Parallel.For(0, 32, _ => { if (tracker.Close(shared)) Interlocked.Increment(ref successes); });
+        Parallel.For(0, 32, _ => {
+            if (tracker.Close(shared))
+            {
+                Interlocked.Increment(ref successes);
+            }
+        });
         Assert.Equal(1, successes);
         scope.Check();
         Assert.False(scope.HasOpenResources());
@@ -252,7 +271,10 @@ public class LeakPresenceDetectorContractTest
             Assert.Contains("Resource created in static initializer", creation[0].Message);
             Assert.Contains("LeakPresenceDetector.staticInitializer", creation[0].Message);
         }
-        else Assert.Empty(creation);
+        else
+        {
+            Assert.Empty(creation);
+        }
         Assert.True(tracker.Close(null));
         Assert.Throws<InvalidOperationException>(scope.Check);
         diagnosticInitializerScope = null;

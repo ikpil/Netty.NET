@@ -55,7 +55,10 @@ public class DatagramReadBatchContractTest
             Assert.Equal(new int?[] { 1, null, 2, 3, 4 }, capture.Messages);
             Assert.Equal(autoRead ? new[] { 2, 2, 1 } : new[] { 1, 1, 1, 1, 1 }, capture.Batches);
         }
-        finally { Terminate(loop); }
+        finally
+        {
+            Terminate(loop);
+        }
     }
 
     [Theory]
@@ -86,7 +89,10 @@ public class DatagramReadBatchContractTest
                 Assert.Equal(new[] { "read", "complete", "error", "read", "complete" }, capture.Events);
             }
         }
-        finally { Terminate(loop); }
+        finally
+        {
+            Terminate(loop);
+        }
     }
 
     private static void Bind(ManualIoEventLoop loop, NioDatagramChannel channel, Capture capture, CancellationToken cancellation)

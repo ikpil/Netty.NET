@@ -48,7 +48,10 @@ public static partial class Unpooled
     /// before allocation; a nonempty result can grow up to int.MaxValue.</remarks>
     public static ByteBuf CopyInt(ReadOnlySpan<int> values)
     {
-        if (values.IsEmpty) return EmptyBuffer;
+        if (values.IsEmpty)
+        {
+            return EmptyBuffer;
+        }
         ByteBuf buffer = Buffer(checked(values.Length * 4));
         foreach (int value in values) buffer.WriteInt(value);
         return buffer;
@@ -76,7 +79,10 @@ public static partial class Unpooled
     /// before allocation; a nonempty result can grow up to int.MaxValue.</remarks>
     public static ByteBuf CopyShort(ReadOnlySpan<short> values)
     {
-        if (values.IsEmpty) return EmptyBuffer;
+        if (values.IsEmpty)
+        {
+            return EmptyBuffer;
+        }
         ByteBuf buffer = Buffer(checked(values.Length * 2));
         foreach (short value in values) buffer.WriteShort(value);
         return buffer;
@@ -96,7 +102,10 @@ public static partial class Unpooled
     /// before allocation; a nonempty result can grow up to int.MaxValue.</remarks>
     public static ByteBuf CopyShort(ReadOnlySpan<int> values)
     {
-        if (values.IsEmpty) return EmptyBuffer;
+        if (values.IsEmpty)
+        {
+            return EmptyBuffer;
+        }
         ByteBuf buffer = Buffer(checked(values.Length * 2));
         foreach (int value in values) buffer.WriteShort(value);
         return buffer;
@@ -124,7 +133,10 @@ public static partial class Unpooled
     /// before allocation; a nonempty result can grow up to int.MaxValue.</remarks>
     public static ByteBuf CopyMedium(ReadOnlySpan<int> values)
     {
-        if (values.IsEmpty) return EmptyBuffer;
+        if (values.IsEmpty)
+        {
+            return EmptyBuffer;
+        }
         ByteBuf buffer = Buffer(checked(values.Length * 3));
         foreach (int value in values) buffer.WriteMedium(value);
         return buffer;
@@ -152,7 +164,10 @@ public static partial class Unpooled
     /// before allocation; a nonempty result can grow up to int.MaxValue.</remarks>
     public static ByteBuf CopyLong(ReadOnlySpan<long> values)
     {
-        if (values.IsEmpty) return EmptyBuffer;
+        if (values.IsEmpty)
+        {
+            return EmptyBuffer;
+        }
         ByteBuf buffer = Buffer(checked(values.Length * 8));
         foreach (long value in values) buffer.WriteLong(value);
         return buffer;
@@ -180,7 +195,10 @@ public static partial class Unpooled
     /// before allocation; a nonempty result can grow up to int.MaxValue.</remarks>
     public static ByteBuf CopyBoolean(ReadOnlySpan<bool> values)
     {
-        if (values.IsEmpty) return EmptyBuffer;
+        if (values.IsEmpty)
+        {
+            return EmptyBuffer;
+        }
         ByteBuf buffer = Buffer(checked(values.Length * 1));
         foreach (bool value in values) buffer.WriteBoolean(value);
         return buffer;
@@ -208,7 +226,10 @@ public static partial class Unpooled
     /// before allocation; a nonempty result can grow up to int.MaxValue.</remarks>
     public static ByteBuf CopyFloat(ReadOnlySpan<float> values)
     {
-        if (values.IsEmpty) return EmptyBuffer;
+        if (values.IsEmpty)
+        {
+            return EmptyBuffer;
+        }
         ByteBuf buffer = Buffer(checked(values.Length * 4));
         foreach (float value in values) buffer.WriteFloat(value);
         return buffer;
@@ -236,7 +257,10 @@ public static partial class Unpooled
     /// before allocation; a nonempty result can grow up to int.MaxValue.</remarks>
     public static ByteBuf CopyDouble(ReadOnlySpan<double> values)
     {
-        if (values.IsEmpty) return EmptyBuffer;
+        if (values.IsEmpty)
+        {
+            return EmptyBuffer;
+        }
         ByteBuf buffer = Buffer(checked(values.Length * 8));
         foreach (double value in values) buffer.WriteDouble(value);
         return buffer;

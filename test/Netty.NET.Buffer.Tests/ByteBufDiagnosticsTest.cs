@@ -53,16 +53,31 @@ public class ByteBufDiagnosticsTest
                 2 => "ByteBufView(ridx: 3, widx: 13, cap: 16" + viewMaximum + ", unwrapped: " + rootText + ")",
                 _ => "ReadOnlyByteBuf(ridx: 3, widx: 13, cap: 16" + maximum + ", unwrapped: " + rootText + ")"
             };
-            if (kind == 5 && viewKind == 3) expected = rootText; // Already read-only: AsReadOnly returns itself.
-            Assert.Equal(expected, view.ToString()); Assert.Equal(expected, ((object)view).ToString());
-            Assert.Equal(3, root.ReaderIndex); Assert.Equal(13, root.WriterIndex); Assert.Equal(1, root.RefCnt);
-            root.SetIndex(4, 14); root.ResetReaderIndex().ResetWriterIndex(); Assert.Equal(rootText, root.ToString());
+            if (kind == 5 && viewKind == 3)
+            {
+                expected = rootText; // Already read-only: AsReadOnly returns itself.
+            }
+            Assert.Equal(expected, view.ToString());
+            Assert.Equal(expected, ((object)view).ToString());
+            Assert.Equal(3, root.ReaderIndex);
+            Assert.Equal(13, root.WriterIndex);
+            Assert.Equal(1, root.RefCnt);
+            root.SetIndex(4, 14);
+            root.ResetReaderIndex().ResetWriterIndex();
+            Assert.Equal(rootText, root.ToString());
             Assert.True(owner.Release());
             string freed = viewKind == 0 || kind == 5 && viewKind == 3 ? names[kind] + "(freed" + components + ")"
                 : viewKind == 3 ? "ReadOnlyByteBuf(freed)" : "ByteBufView(freed)";
             Assert.Equal(freed, view.ToString());
         }
-        finally { if (owner.RefCnt > 0) owner.Release(); allocator?.Dispose(); }
+        finally
+        {
+            if (owner.RefCnt > 0)
+            {
+                owner.Release();
+            }
+            allocator?.Dispose();
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -123,7 +138,17 @@ public class ByteBufDiagnosticsTest
             Assert.Equal(name + '(' + Parent("UnpooledHeapByteBuf(freed)") + ')', wrapper.ToString());
             Assert.Equal(kind is 2 or 4 ? 1 : 0, tracker.Records); // Only advanced Release records.
         }
-        finally { if (root.RefCnt > 0) wrapper.Release(); if (root.RefCnt > 0) root.Release(); }
+        finally
+        {
+            if (root.RefCnt > 0)
+            {
+                wrapper.Release();
+            }
+            if (root.RefCnt > 0)
+            {
+                root.Release();
+            }
+        }
     }
 
     [Theory]
@@ -147,7 +172,13 @@ public class ByteBufDiagnosticsTest
             // CLR clears component references; the freed diagnostic preserves the original count.
             Assert.Equal(0, root.NumComponents);
         }
-        finally { if (root.RefCnt > 0) wrapper.Release(); }
+        finally
+        {
+            if (root.RefCnt > 0)
+            {
+                wrapper.Release();
+            }
+        }
     }
 
     [Fact]
@@ -179,7 +210,11 @@ public class ByteBufDiagnosticsTest
             CultureInfo.CurrentCulture = new CultureInfo("fa-IR");
             Assert.Equal("UnpooledHeapByteBuf(ridx: 3, widx: 13, cap: 16/64)", b.ToString());
         }
-        finally { CultureInfo.CurrentCulture = previous; b.Release(); }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+            b.Release();
+        }
     }
 
     private sealed class PlainWrapper(ByteBuf b) : WrappedByteBuf(b);

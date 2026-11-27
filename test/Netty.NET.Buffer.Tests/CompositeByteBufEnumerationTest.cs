@@ -58,7 +58,10 @@ public class CompositeByteBufEnumerationTest
             Assert.Throws<InvalidOperationException>(() => it.Current);
             Assert.Throws<NotSupportedException>(() => it.Reset());
         }
-        finally { cbuf.Release(); }
+        finally
+        {
+            cbuf.Release();
+        }
         Assert.Equal(1, Unpooled.EmptyBuffer.RefCnt);
     }
 
@@ -87,7 +90,10 @@ public class CompositeByteBufEnumerationTest
             // IEnumerator combines Java hasNext/next; Current is invalid after exhaustion.
             Assert.Throws<InvalidOperationException>(() => iterator.Current);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Fact]
@@ -149,7 +155,10 @@ public class CompositeByteBufEnumerationTest
             Assert.Same(second, iterator.Current);
             Assert.False(iterator.MoveNext());
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
         Assert.Equal(0, first.RefCnt);
         Assert.Equal(0, second.RefCnt);
     }
@@ -185,10 +194,20 @@ public class CompositeByteBufEnumerationTest
             Assert.Equal(1, source.ReaderIndex);
             Assert.Equal(3, source.WriterIndex);
             IEnumerator nongeneric = ((IEnumerable)buffer).GetEnumerator();
-            try { Assert.True(nongeneric.MoveNext()); Assert.Same(buffer.InternalComponent(0), nongeneric.Current); }
-            finally { ((IDisposable)nongeneric).Dispose(); }
+            try
+            {
+                Assert.True(nongeneric.MoveNext());
+                Assert.Same(buffer.InternalComponent(0), nongeneric.Current);
+            }
+            finally
+            {
+                ((IDisposable)nongeneric).Dispose();
+            }
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
         Assert.Equal(0, source.RefCnt);
         Assert.Equal(0, allocator.ReservedBytes);
     }
@@ -234,7 +253,10 @@ public class CompositeByteBufEnumerationTest
             Assert.NotSame(duplicate, buffer.ComponentAtOffset(2));
             Assert.Equal(new[] { 1, 1 }, new[] { whole.RefCnt, partial.RefCnt });
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Fact]
@@ -254,7 +276,10 @@ public class CompositeByteBufEnumerationTest
             Assert.Throws<ArgumentOutOfRangeException>(() => buffer.InternalComponentAtOffset(-1));
             Assert.Throws<ArgumentOutOfRangeException>(() => buffer.InternalComponentAtOffset(2));
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Theory]
@@ -267,7 +292,10 @@ public class CompositeByteBufEnumerationTest
         var allocator = new NativeMemoryAllocator(64);
         ByteBuf source = direct ? new UnpooledDirectByteBuf(6, allocator: allocator) : Unpooled.Buffer(6);
         source.WriteBytes(new byte[] { 9, 1, 2, 3, 4, 8 });
-        if (partial) source.SetIndex(1, 5);
+        if (partial)
+        {
+            source.SetIndex(1, 5);
+        }
         var buffer = new CompositeByteBuf();
         buffer.AddComponent(source, true);
         try
@@ -292,7 +320,10 @@ public class CompositeByteBufEnumerationTest
             Assert.Same(discarded, buffer.Single());
             Assert.Equal(1, source.RefCnt);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -312,7 +343,10 @@ public class CompositeByteBufEnumerationTest
             Assert.Equal(1, source.ReaderIndex);
             Assert.Equal(5, source.WriterIndex);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Fact]
@@ -359,7 +393,10 @@ public class CompositeByteBufEnumerationTest
             Assert.Equal(new byte[] { 1 }, Bytes(replacement));
             Assert.Equal(1, nested.RefCnt);
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
         Assert.Equal(0, nested.RefCnt);
     }
 
@@ -383,7 +420,10 @@ public class CompositeByteBufEnumerationTest
             Assert.Equal(0, target.ReaderIndex);
             Assert.Equal(1, source.RefCnt);
         }
-        finally { target.Release(); }
+        finally
+        {
+            target.Release();
+        }
     }
 
     [Fact]
@@ -400,7 +440,10 @@ public class CompositeByteBufEnumerationTest
             Assert.Equal(new byte[] { 1, 2 }, Bytes(target));
             Assert.Equal(1, source.RefCnt);
         }
-        finally { target.Release(); }
+        finally
+        {
+            target.Release();
+        }
         Assert.Equal(0, source.RefCnt);
     }
 
@@ -421,7 +464,10 @@ public class CompositeByteBufEnumerationTest
             Assert.Same(cached, buffer.InternalComponentAtOffset(0));
             Assert.Equal(new byte[] { 1, 2 }, Bytes(cached));
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Fact]
@@ -447,7 +493,11 @@ public class CompositeByteBufEnumerationTest
             Assert.Equal(1, first.RefCnt);
             Assert.Equal(0, second.RefCnt);
         }
-        finally { buffer.Release(); retained.Release(); }
+        finally
+        {
+            buffer.Release();
+            retained.Release();
+        }
     }
 
     [Fact]
@@ -467,7 +517,10 @@ public class CompositeByteBufEnumerationTest
             Assert.Same(cached, buffer.ComponentSlice(0));
             Assert.Equal(new byte[] { 1, 2 }, Bytes(cached));
         }
-        finally { buffer.Release(); }
+        finally
+        {
+            buffer.Release();
+        }
     }
 
     [Theory]
@@ -513,7 +566,10 @@ public class CompositeByteBufEnumerationTest
         finally
         {
             // On a success path, only composite2 will be non-null here.
-            source?.Release(); first?.Release(); second?.Release(); component?.Release();
+            source?.Release();
+            first?.Release();
+            second?.Release();
+            component?.Release();
         }
         pool?.Dispose();
         Assert.Equal(0, allocator.ReservedBytes);

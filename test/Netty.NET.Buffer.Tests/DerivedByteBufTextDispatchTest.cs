@@ -32,7 +32,10 @@ public class DerivedByteBufTextDispatchTest
         internal string Read(int index, int length, Encoding encoding)
         {
             Calls.Add((index, length, encoding));
-            if (Fail) throw Failure;
+            if (Fail)
+            {
+                throw Failure;
+            }
             return $"parent:{index}:{length}";
         }
     }
@@ -98,8 +101,15 @@ public class DerivedByteBufTextDispatchTest
 
         public void Dispose()
         {
-            for (int i = _owners.Count - 1; i >= 0; --i) if (_owners[i].RefCnt > 0) _owners[i].Release();
-            if (Root.RefCnt > 0) Root.Release();
+            for (int i = _owners.Count - 1; i >= 0; --i)
+            if (_owners[i].RefCnt > 0)
+            {
+                _owners[i].Release();
+            }
+            if (Root.RefCnt > 0)
+            {
+                Root.Release();
+            }
             Assert.Equal(0, Native.ReservedBytes);
         }
     }
@@ -217,6 +227,14 @@ public class DerivedByteBufTextDispatchTest
             Assert.Throws<IllegalReferenceCountException>(() => view.GetCharSequence(0, 5, Encoding.UTF8));
             Assert.Empty(observation.Calls);
         }
-        finally { if (owner.RefCnt > 0) owner.Release(); root.Release(); Assert.Equal(0, native.ReservedBytes); }
+        finally
+        {
+            if (owner.RefCnt > 0)
+            {
+                owner.Release();
+            }
+            root.Release();
+            Assert.Equal(0, native.ReservedBytes);
+        }
     }
 }

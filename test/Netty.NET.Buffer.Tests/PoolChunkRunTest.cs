@@ -210,13 +210,19 @@ public class PoolChunkRunTest
         for (int i = 0; i < occupied.Length;)
         {
             if (occupied[i])
-            { i++; continue; }
+            {
+                i++;
+                continue;
+            }
             int start = i;
             while (i < occupied.Length && !occupied[i])
                 i++;
             int floor = classes.FindLastIndex(n => n <= i - start);
             if (floor >= ceiling && floor < bestBucket)
-            { bestBucket = floor; bestOffset = start; }
+            {
+                bestBucket = floor;
+                bestOffset = start;
+            }
         }
         return bestOffset;
     }

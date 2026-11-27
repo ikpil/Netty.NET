@@ -55,7 +55,10 @@ public class SequenceComparisonContractTest
                 }
             }
         }
-        finally { CultureInfo.CurrentCulture = previous; }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
     }
 
     [Theory]
@@ -194,7 +197,10 @@ public class SequenceComparisonContractTest
             Assert.True(left.ContentEqualsIgnoreCase(new StringCharSequence("i")));
             Assert.True(left.RegionMatchesIgnoreCase(0, new StringCharSequence("i"), 0, 1));
         }
-        finally { CultureInfo.CurrentCulture = previous; }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
     }
 
     [Theory]

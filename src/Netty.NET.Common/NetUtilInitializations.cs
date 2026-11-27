@@ -194,13 +194,22 @@ internal static class NetUtilInitializations
     internal static bool IsLoopbackAddress(IPAddress address)
     {
         ArgumentNullException.ThrowIfNull(address);
-        if (IPAddress.IsLoopback(address)) return true;
+        if (IPAddress.IsLoopback(address))
+        {
+            return true;
+        }
         Span<byte> bytes = stackalloc byte[16];
         address.TryWriteBytes(bytes, out int written);
-        if (written != 16) return false;
+        if (written != 16)
+        {
+            return false;
+        }
 
         // Java treats the whole mapped 127/8 range as IPv4 loopback.
-        if (address.IsIPv4MappedToIPv6) return bytes[12] == 127;
+        if (address.IsIPv4MappedToIPv6)
+        {
+            return bytes[12] == 127;
+        }
         return bytes[15] == 1 && bytes[..15].IndexOfAnyExcept((byte)0) < 0;
     }
 
@@ -225,7 +234,10 @@ internal static class NetUtilInitializations
                 IPAddress observed = candidate.Address;
                 observed.TryWriteBytes(candidateBytes, out int candidateLength);
                 ReadOnlySpan<byte> bytes = observed.IsIPv4MappedToIPv6 ? candidateBytes[12..] : candidateBytes[..candidateLength];
-                if (bytes.SequenceEqual(requested)) return true;
+                if (bytes.SequenceEqual(requested))
+                {
+                    return true;
+                }
             }
         }
 

@@ -417,7 +417,8 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
                         }
                         encapsulatedTlvs.Add(haProxyTLV);
                     } while (byteBuf.ReadableBytes >= 4);
-                }  catch (Exception)
+                }
+                    catch (Exception)
                 {
                     // Release all previously read TLVs before rethrowing as otherwise we would leak.
                     ReleaseDeep(encapsulatedTlvs);

@@ -113,7 +113,10 @@ public class PlatformBootstrapContractTest
                 Assert.Empty(items);
             });
         }
-        finally { File.Delete(path); }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     private static object Invoke(Type type, string name)

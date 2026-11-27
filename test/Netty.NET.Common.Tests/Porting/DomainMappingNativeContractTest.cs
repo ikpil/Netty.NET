@@ -97,7 +97,10 @@ public class DomainMappingNativeContractTest
             Assert.Equal("wildcard", mapping("other.bücher.example"));
             Assert.Equal("root", mapping("BÜCHER.EXAMPLE"));
         }
-        finally { CultureInfo.CurrentCulture = previous; }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
     }
 
     [Fact]
@@ -121,7 +124,10 @@ public class DomainMappingNativeContractTest
         {
             Assert.Equal(caller, Thread.CurrentThread.ManagedThreadId);
             calls++;
-            if (input == null) throw failure;
+            if (input == null)
+            {
+                throw failure;
+            }
             return input.ToString();
         };
         Func<string, object> selection = source;

@@ -305,7 +305,10 @@ public class ResolverContractTest
                 Assert.Equal(8080, endpoint.Port);
             });
         }
-        finally { await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(10)); }
+        finally
+        {
+            await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(10));
+        }
     }
 
     private sealed class FixedResolver(IReadOnlyList<IPAddress> addresses) : InetNameResolver(ImmediateEventExecutor.INSTANCE)

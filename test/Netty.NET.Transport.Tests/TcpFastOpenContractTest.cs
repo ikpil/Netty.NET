@@ -18,9 +18,15 @@ public class TcpFastOpenContractTest
     [Fact(Timeout = 10000)]
     public async Task CachedCookieSendsInitialDataInTheSyn()
     {
-        if (!OperatingSystem.IsLinux()) Assert.Skip("Requires Linux TCP_INFO.");
+        if (!OperatingSystem.IsLinux())
+        {
+            Assert.Skip("Requires Linux TCP_INFO.");
+        }
         int flags = int.Parse(File.ReadAllText("/proc/sys/net/ipv4/tcp_fastopen").Trim());
-        if ((flags & 3) != 3) Assert.Skip("Requires kernel Fast Open client and server support.");
+        if ((flags & 3) != 3)
+        {
+            Assert.Skip("Requires kernel Fast Open client and server support.");
+        }
         var token = TestContext.Current.CancellationToken;
         using var listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         listener.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.FastOpen, 5);
@@ -58,7 +64,10 @@ public class TcpFastOpenContractTest
                 await channel.CloseAsync(token);
             }
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Theory(Timeout = 10000)]
@@ -66,7 +75,10 @@ public class TcpFastOpenContractTest
     [InlineData(true)]
     public async Task InitialPrefixAndRemainderAreSentExactlyOnce(bool enabled)
     {
-        if (!OperatingSystem.IsLinux()) Assert.Skip("Exercises the Linux native Fast Open path.");
+        if (!OperatingSystem.IsLinux())
+        {
+            Assert.Skip("Exercises the Linux native Fast Open path.");
+        }
         var token = TestContext.Current.CancellationToken;
         var local = new IPEndPoint(IPAddress.Loopback, 0);
         using var listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -106,13 +118,19 @@ public class TcpFastOpenContractTest
             Assert.Equal(payload, received);
             Assert.Equal(0, buffer.RefCnt);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Fact(Timeout = 10000)]
     public async Task NoInitialDataUsesAnOrdinaryConnect()
     {
-        if (!OperatingSystem.IsLinux()) Assert.Skip("Exercises the Linux Fast Open selection.");
+        if (!OperatingSystem.IsLinux())
+        {
+            Assert.Skip("Exercises the Linux Fast Open selection.");
+        }
         var token = TestContext.Current.CancellationToken;
         using var listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         listener.Bind(new IPEndPoint(IPAddress.Loopback, 0));
@@ -126,7 +144,10 @@ public class TcpFastOpenContractTest
             using var accepted = await listener.AcceptAsync(token);
             Assert.Equal(0, LinuxSocketOptions.GetInt(socket, (int)SocketOptionLevel.Tcp, LinuxSocketOptions.TcpFastOpenConnect));
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Theory(Timeout = 10000)]
@@ -134,7 +155,10 @@ public class TcpFastOpenContractTest
     [InlineData(true)]
     public async Task FailedConnectReleasesTheInitialData(bool cancel)
     {
-        if (!OperatingSystem.IsLinux()) Assert.Skip("Exercises the Linux Fast Open connection path.");
+        if (!OperatingSystem.IsLinux())
+        {
+            Assert.Skip("Exercises the Linux Fast Open connection path.");
+        }
         var token = TestContext.Current.CancellationToken;
         // Use an endpoint that the successful warm-up connections have not put in the cookie cache.
         var address = IPAddress.Parse(cancel ? "127.0.0.252" : "127.0.0.253");
@@ -167,7 +191,10 @@ public class TcpFastOpenContractTest
             Assert.False(channel.IsOpen);
             Assert.Equal(0, buffer.RefCnt);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     private static Bootstrap NewClient(MultiThreadIoEventLoopGroup group, Socket socket)

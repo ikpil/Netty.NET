@@ -68,8 +68,14 @@ public class RecyclerTest
     {
         return NewThread(() =>
         {
-            try { invocation(); }
-            catch (Exception error) { workerFailures.Enqueue(error); }
+            try
+            {
+                invocation();
+            }
+            catch (Exception error)
+            {
+                workerFailures.Enqueue(error);
+            }
         });
     }
 
@@ -208,8 +214,14 @@ public class RecyclerTest
             // This test makes only sense for guarded recyclers
             HandledObject value = NewRecycler(ownerType, false, 1024).Get();
             value.Recycle();
-            if (IsPooling(ownerType)) Assert.Throws<InvalidOperationException>(value.Recycle);
-            else value.Recycle(); // No-op because not pooling.
+            if (IsPooling(ownerType))
+            {
+                Assert.Throws<InvalidOperationException>(value.Recycle);
+            }
+            else
+            {
+                value.Recycle(); // No-op because not pooling.
+            }
         });
     }
 
@@ -236,11 +248,26 @@ public class RecyclerTest
             Exception failure = null;
             Thread first = Worker(value.Recycle);
             first.Start(); Join(first);
-            Thread second = Worker(() => { try { value.Recycle(); } catch (InvalidOperationException e) { failure = e; } });
+            Thread second = Worker(() => {
+                try
+                {
+                    value.Recycle();
+                }
+                catch (InvalidOperationException e)
+                {
+                    failure = e;
+                }
+            });
             second.Start(); Join(second);
             Assert.NotSame(recycler.Get(), recycler.Get());
-            if (IsPooling(ownerType)) Assert.NotNull(failure);
-            else Assert.Null(failure);
+            if (IsPooling(ownerType))
+            {
+                Assert.NotNull(failure);
+            }
+            else
+            {
+                Assert.Null(failure);
+            }
         });
     }
 
@@ -258,9 +285,19 @@ public class RecyclerTest
             using var done = new CountdownEvent(2);
             Action recycle = () =>
             {
-                try { value.Recycle(); }
-                catch (InvalidOperationException e) { Interlocked.Exchange(ref failure, e); Interlocked.Increment(ref failures); }
-                finally { done.Signal(); }
+                try
+                {
+                    value.Recycle();
+                }
+                catch (InvalidOperationException e)
+                {
+                    Interlocked.Exchange(ref failure, e);
+                    Interlocked.Increment(ref failures);
+                }
+                finally
+                {
+                    done.Signal();
+                }
             };
             Thread first = Worker(recycle), second = Worker(recycle);
             first.Start(); second.Start();
@@ -274,7 +311,11 @@ public class RecyclerTest
                     Assert.Equal(1, failures);
                 }
             }
-            finally { Join(first); Join(second); }
+            finally
+            {
+                Join(first);
+                Join(second);
+            }
         });
     }
 
@@ -291,21 +332,45 @@ public class RecyclerTest
             using var done = new CountdownEvent(1);
             Thread first = Worker(() =>
             {
-                try { value.Recycle(); }
-                catch (InvalidOperationException e) { Interlocked.Exchange(ref failure, e); }
-                finally { done.Signal(); }
+                try
+                {
+                    value.Recycle();
+                }
+                catch (InvalidOperationException e)
+                {
+                    Interlocked.Exchange(ref failure, e);
+                }
+                finally
+                {
+                    done.Signal();
+                }
             });
             first.Start();
-            try { value.Recycle(); }
-            catch (InvalidOperationException e) { Interlocked.Exchange(ref failure, e); }
+            try
+            {
+                value.Recycle();
+            }
+            catch (InvalidOperationException e)
+            {
+                Interlocked.Exchange(ref failure, e);
+            }
             try
             {
                 Assert.True(done.Wait(TimeSpan.FromSeconds(5)));
                 Assert.NotSame(recycler.Get(), recycler.Get());
-                if (IsPooling(ownerType)) Assert.NotNull(failure); // Object got recycled twice, so at least one of the calls must throw.
-                else Assert.Null(failure);
+                if (IsPooling(ownerType))
+                {
+                    Assert.NotNull(failure); // Object got recycled twice, so at least one of the calls must throw.
+                }
+                else
+                {
+                    Assert.Null(failure);
+                }
             }
-            finally { Join(first); }
+            finally
+            {
+                Join(first);
+            }
         });
     }
 
@@ -319,8 +384,14 @@ public class RecyclerTest
             HandledObject value = recycler.Get();
             value.Recycle();
             HandledObject other = recycler.Get();
-            if (IsPooling(ownerType)) Assert.Same(value, other);
-            else Assert.NotSame(value, other);
+            if (IsPooling(ownerType))
+            {
+                Assert.Same(value, other);
+            }
+            else
+            {
+                Assert.NotSame(value, other);
+            }
             other.Recycle();
         });
     }
@@ -432,7 +503,11 @@ public class RecyclerTest
                 // It should be the same object, right?
                 Assert.Same(recycler.Get(), first);
             }
-            finally { work.CompleteAdding(); Join(single); }
+            finally
+            {
+                work.CompleteAdding();
+                Join(single);
+            }
         });
     }
 

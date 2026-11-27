@@ -130,8 +130,14 @@ public class TypeParameterMatcherContractTest : IDisposable
                 Assert.False(other.IsInstanceOfType(new List<int>()));
                 Assert.Null(InternalThreadLocalMap.GetIfSet());
             }
-            catch (Exception exception) { failure = exception; }
-            finally { FastThreadLocal.RemoveAll(); }
+            catch (Exception exception)
+            {
+                failure = exception;
+            }
+            finally
+            {
+                FastThreadLocal.RemoveAll();
+            }
         }) { IsBackground = true };
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(5)));

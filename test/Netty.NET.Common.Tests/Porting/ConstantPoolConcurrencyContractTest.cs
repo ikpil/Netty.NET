@@ -18,7 +18,10 @@ public class ConstantPoolConcurrencyContractTest
             var value = new Constant(id, name);
             Created.Add(value);
             // Both calls must reach construction before either can publish.
-            if (rendezvous != null) Assert.True(rendezvous.SignalAndWait(TimeSpan.FromSeconds(5)));
+            if (rendezvous != null)
+            {
+                Assert.True(rendezvous.SignalAndWait(TimeSpan.FromSeconds(5)));
+            }
             return value;
         }
     }
@@ -32,8 +35,14 @@ public class ConstantPoolConcurrencyContractTest
         var pool = new Pool(rendezvous);
         Constant Create()
         {
-            try { return createOnly ? pool.NewInstance("shared") : pool.ValueOf("shared"); }
-            catch (ArgumentException) when (createOnly) { return null; }
+            try
+            {
+                return createOnly ? pool.NewInstance("shared") : pool.ValueOf("shared");
+            }
+            catch (ArgumentException) when (createOnly)
+            {
+                return null;
+            }
         }
         // Dedicated workers keep the barrier independent of thread-pool injection.
         Task<Constant> first = Task.Factory.StartNew(Create, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
@@ -47,7 +56,10 @@ public class ConstantPoolConcurrencyContractTest
             Assert.Single(returned, value => value != null);
             Assert.Contains(published, returned);
         }
-        else Assert.All(returned, value => Assert.Same(published, value));
+        else
+        {
+            Assert.All(returned, value => Assert.Same(published, value));
+        }
         Assert.Equal(3, pool.NextId());
     }
 

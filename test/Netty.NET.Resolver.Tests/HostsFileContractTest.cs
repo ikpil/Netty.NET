@@ -64,7 +64,10 @@ public class HostsFileContractTest
             // A successful first parse must never inspect later encodings.
             Assert.Single(HostsFileEntriesProvider.Parser().Parse(new FileInfo(path), Encoding.UTF8, null).Ipv4Entries());
         }
-        finally { File.Delete(path); }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     [Fact]
@@ -81,7 +84,10 @@ public class HostsFileContractTest
                 Assert.Equal(IPAddress.Loopback, Assert.Single(entries.Ipv4Entries()["host"]));
             }
         }
-        finally { File.Delete(path); }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     [Fact]
@@ -112,7 +118,10 @@ public class HostsFileContractTest
             Assert.Equal(IPAddress.Loopback, resolver.Address("FILE", ResolvedAddressTypes.Ipv4Only));
             Assert.Equal(IPAddress.Loopback, resolver.Address("file", ResolvedAddressTypes.Ipv4Only));
         }
-        finally { CultureInfo.CurrentCulture = previous; }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
     }
 
     [Fact]

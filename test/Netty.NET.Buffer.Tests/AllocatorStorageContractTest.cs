@@ -72,16 +72,31 @@ public class AllocatorStorageContractTest
             {
                 // Unwrap if needed
                 ByteBuf storage = UnwrapLeak(buffer);
-                if (provider == 3) Assert.IsType<AdaptiveByteBuf>(storage);
+                if (provider == 3)
+                {
+                    Assert.IsType<AdaptiveByteBuf>(storage);
+                }
                 else if (provider == 2)
                 {
-                    if (direct) Assert.IsType<PooledDirectByteBuf>(storage);
-                    else Assert.IsType<PooledHeapByteBuf>(storage);
+                    if (direct)
+                    {
+                        Assert.IsType<PooledDirectByteBuf>(storage);
+                    }
+                    else
+                    {
+                        Assert.IsType<PooledHeapByteBuf>(storage);
+                    }
                 }
                 else
                 {
-                    if (direct) Assert.IsAssignableFrom<UnpooledDirectByteBuf>(storage);
-                    else Assert.IsAssignableFrom<UnpooledHeapByteBuf>(storage);
+                    if (direct)
+                    {
+                        Assert.IsAssignableFrom<UnpooledDirectByteBuf>(storage);
+                    }
+                    else
+                    {
+                        Assert.IsAssignableFrom<UnpooledHeapByteBuf>(storage);
+                    }
                 }
                 Assert.Equal(direct, buffer.IsDirect);
                 Assert.True(buffer.IsContiguous);
@@ -91,7 +106,10 @@ public class AllocatorStorageContractTest
                 Assert.Equal(0, buffer.WriterIndex);
                 Assert.Equal(1, buffer.RefCnt);
             }
-            finally { Assert.True(buffer.Release()); }
+            finally
+            {
+                Assert.True(buffer.Release());
+            }
         }
     }
 
@@ -118,7 +136,10 @@ public class AllocatorStorageContractTest
             Assert.Equal(0, buffer.WriterIndex);
             Assert.Equal(1, buffer.RefCnt);
         }
-        finally { Assert.True(buffer.Release()); }
+        finally
+        {
+            Assert.True(buffer.Release());
+        }
     }
 
     [Theory]
@@ -148,7 +169,10 @@ public class AllocatorStorageContractTest
             Assert.Equal(reserved, s.Native.ReservedBytes);
             Assert.Equal(used, metric.UsedDirectMemory);
         }
-        finally { Assert.True(buffer.Release()); }
+        finally
+        {
+            Assert.True(buffer.Release());
+        }
     }
 
     [Theory]
@@ -186,7 +210,10 @@ public class AllocatorStorageContractTest
             Assert.Equal(1, directBuffer.RefCnt);
             Assert.Equal(reserved, s.Native.ReservedBytes);
         }
-        finally { Assert.True(directBuffer.Release()); }
+        finally
+        {
+            Assert.True(directBuffer.Release());
+        }
     }
 
     // CLR: supplemental overlapping windows of the own-memory copy, in both directions.
@@ -205,7 +232,8 @@ public class AllocatorStorageContractTest
             ReadOnlyMemory<byte> borrowed = buffer.AsReadOnlyMemory(source, length);
             long reserved = s.Native.ReservedBytes;
             Assert.Same(buffer, buffer.SetBytes(destination, borrowed.Span));
-            byte[] actual = new byte[8]; buffer.GetBytes(0, actual);
+            byte[] actual = new byte[8];
+            buffer.GetBytes(0, actual);
             Assert.Equal(expected, actual);
             Assert.Equal(8, buffer.Capacity);
             Assert.Equal(8, buffer.MaxCapacity);
@@ -214,6 +242,9 @@ public class AllocatorStorageContractTest
             Assert.Equal(1, buffer.RefCnt);
             Assert.Equal(reserved, s.Native.ReservedBytes);
         }
-        finally { Assert.True(buffer.Release()); }
+        finally
+        {
+            Assert.True(buffer.Release());
+        }
     }
 }

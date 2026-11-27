@@ -24,14 +24,24 @@ public class PipelineOptionalRemovalContractTest
             {
                 Rendezvous(ref ready);
                 try
-                { first = ((DefaultChannelPipeline)channel.Pipeline).RemoveIfExists(name); }
-                catch (Exception error) { firstError = error; }
+                {
+                    first = ((DefaultChannelPipeline)channel.Pipeline).RemoveIfExists(name);
+                }
+                catch (Exception error)
+                {
+                    firstError = error;
+                }
             });
             thread.Start();
             Rendezvous(ref ready);
             try
-            { second = ((DefaultChannelPipeline)channel.Pipeline).RemoveIfExists(name); }
-            catch (Exception error) { secondError = error; }
+            {
+                second = ((DefaultChannelPipeline)channel.Pipeline).RemoveIfExists(name);
+            }
+            catch (Exception error)
+            {
+                secondError = error;
+            }
             thread.Join();
             try
             {
@@ -42,7 +52,10 @@ public class PipelineOptionalRemovalContractTest
                 Assert.Equal(1, handler.Removals);
                 Assert.Null(channel.Pipeline.Context(handler));
             }
-            finally { channel.FinishAndReleaseAll(); }
+            finally
+            {
+                channel.FinishAndReleaseAll();
+            }
         }
     }
 

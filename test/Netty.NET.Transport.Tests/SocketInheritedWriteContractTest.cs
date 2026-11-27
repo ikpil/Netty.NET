@@ -39,7 +39,10 @@ public class SocketInheritedWriteContractTest
             Assert.True(fixture.Channel.FileCalls >= 1);
             Assert.Equal(new byte[] { 7, 8, 9 }, fixture.Receive(3));
         }
-        finally { File.Delete(path); }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     internal sealed class Inherited(Socket socket) : NioSocketChannel(socket);

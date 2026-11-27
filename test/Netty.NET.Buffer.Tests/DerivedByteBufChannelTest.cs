@@ -58,14 +58,23 @@ public class DerivedByteBufChannelTest
         public int Commit(ByteBuf root, int index, int length, bool input)
         {
             int count = Math.Min(2, length);
-            if (input) root.SetBytes(index, new byte[] { 91, 92 }.AsSpan(0, count));
-            else Written = ByteBufUtil.GetBytes(root, index, count);
+            if (input)
+            {
+                root.SetBytes(index, new byte[] { 91, 92 }.AsSpan(0, count));
+            }
+            else
+            {
+                Written = ByteBufUtil.GetBytes(root, index, count);
+            }
             return count;
         }
 
         public async ValueTask<int> CompleteAsync(ByteBuf root, int index, int length, bool input, int count)
         {
-            if (Pending == null) return count;
+            if (Pending == null)
+            {
+                return count;
+            }
             await Pending.Task.ConfigureAwait(false);
             return Commit(root, index, length, input);
         }
@@ -219,8 +228,14 @@ public class DerivedByteBufChannelTest
 
         public void Dispose()
         {
-            if (Owner?.RefCnt > 0) Assert.True(Owner.Release());
-            if (Root.RefCnt > 0) Assert.True(Root.Release());
+            if (Owner?.RefCnt > 0)
+            {
+                Assert.True(Owner.Release());
+            }
+            if (Root.RefCnt > 0)
+            {
+                Assert.True(Root.Release());
+            }
             Assert.Equal(0, Native.ReservedBytes);
         }
     }
@@ -239,24 +254,36 @@ public class DerivedByteBufChannelTest
                 _path = Path.GetTempFileName();
                 File = System.IO.File.OpenHandle(_path, FileMode.Open, FileAccess.ReadWrite,
                     FileShare.ReadWrite, FileOptions.Asynchronous);
-                if (input) RandomAccess.Write(File, new byte[] { 91, 92 }, 17);
+                if (input)
+                {
+                    RandomAccess.Write(File, new byte[] { 91, 92 }, 17);
+                }
             }
             else
             {
                 using var listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                listener.Bind(new IPEndPoint(IPAddress.Loopback, 0)); listener.Listen(1);
+                listener.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+                listener.Listen(1);
                 Local = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 Local.ReceiveTimeout = Local.SendTimeout = 5000;
-                Local.Connect(listener.LocalEndPoint); Peer = listener.Accept();
+                Local.Connect(listener.LocalEndPoint);
+                Peer = listener.Accept();
                 Peer.ReceiveTimeout = Peer.SendTimeout = 5000;
-                if (input) { Assert.Equal(2, Peer.Send(new byte[] { 91, 92 })); Peer.Shutdown(SocketShutdown.Send); }
+                if (input)
+                {
+                    Assert.Equal(2, Peer.Send(new byte[] { 91, 92 }));
+                    Peer.Shutdown(SocketShutdown.Send);
+                }
             }
         }
 
         public byte[] ReadOutput(int count)
         {
             byte[] bytes = new byte[count];
-            if (File != null) Assert.Equal(count, RandomAccess.Read(File, bytes, 17));
+            if (File != null)
+            {
+                Assert.Equal(count, RandomAccess.Read(File, bytes, 17));
+            }
             else
             {
                 int received = 0;
@@ -291,16 +318,22 @@ public class DerivedByteBufChannelTest
     {
         if (t.File != null)
         {
-            if (input) return asynchronous ? await (relative ? b.WriteBytesAsync(t.File, position, length, token)
+            if (input)
+            {
+                return asynchronous ? await (relative ? b.WriteBytesAsync(t.File, position, length, token)
                 : b.SetBytesAsync(index, t.File, position, length, token))
                 : relative ? b.WriteBytes(t.File, position, length) : b.SetBytes(index, t.File, position, length);
+            }
             return asynchronous ? await (relative ? b.ReadBytesAsync(t.File, position, length, token)
                 : b.GetBytesAsync(index, t.File, position, length, token))
                 : relative ? b.ReadBytes(t.File, position, length) : b.GetBytes(index, t.File, position, length);
         }
-        if (input) return asynchronous ? await (relative ? b.WriteBytesAsync(t.Local, length, token)
+        if (input)
+        {
+            return asynchronous ? await (relative ? b.WriteBytesAsync(t.Local, length, token)
             : b.SetBytesAsync(index, t.Local, length, token))
             : relative ? b.WriteBytes(t.Local, length) : b.SetBytes(index, t.Local, length);
+        }
         return asynchronous ? await (relative ? b.ReadBytesAsync(t.Local, length, token)
             : b.GetBytesAsync(index, t.Local, length, token))
             : relative ? b.ReadBytes(t.Local, length) : b.GetBytes(index, t.Local, length);
@@ -437,7 +470,11 @@ public class DerivedByteBufChannelTest
         foreach (bool file in new[] { false, true })
         foreach (bool direct in new[] { false, true })
         foreach (int kind in new[] { 0, 1, 2, 5, 6 })
-        foreach (bool input in new[] { false, true }) if (kind != 2 || !input) yield return [file, direct, kind, input];
+        foreach (bool input in new[] { false, true })
+                    if (kind != 2 || !input)
+                    {
+                        yield return [file, direct, kind, input];
+                    }
     }
 
     [Theory]
@@ -458,7 +495,11 @@ public class DerivedByteBufChannelTest
             Assert.Equal(1, s.View.ReaderIndex);
             Assert.Equal(input ? 3 : 4, s.View.WriterIndex);
         }
-        finally { s.Observation.Pending.SetResult(2); await operation; }
+        finally
+        {
+            s.Observation.Pending.SetResult(2);
+            await operation;
+        }
         Assert.Equal(2, await operation);
         Assert.Equal(input ? 1 : 3, s.View.ReaderIndex);
         Assert.Equal(input ? 5 : 4, s.View.WriterIndex);

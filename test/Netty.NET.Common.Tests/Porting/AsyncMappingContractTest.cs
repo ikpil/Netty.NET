@@ -54,8 +54,14 @@ public class AsyncMappingContractTest
         {
             return executor.SubmitAsync(() =>
             {
-                if (Suppressed) ReadPending = true;
-                else ++Reads;
+                if (Suppressed)
+                {
+                    ReadPending = true;
+                }
+                else
+                {
+                    ++Reads;
+                }
             });
         }
 
@@ -80,8 +86,14 @@ public class AsyncMappingContractTest
                             hello.Release();
                             Events.Add("release");
                             Suppressed = false;
-                            try { Selected = ((Task<object>)task).GetAwaiter().GetResult(); }
-                            catch (Exception error) { Failure = error; }
+                            try
+                            {
+                                Selected = ((Task<object>)task).GetAwaiter().GetResult();
+                            }
+                            catch (Exception error)
+                            {
+                                Failure = error;
+                            }
                             Events.Add("complete");
                             if (ReadPending)
                             {
@@ -93,10 +105,16 @@ public class AsyncMappingContractTest
                     }
                     catch
                     {
-                        if (registration == null && hello.RefCnt != 0) hello.Release();
+                        if (registration == null && hello.RefCnt != 0)
+                        {
+                            hello.Release();
+                        }
                         throw;
                     }
-                    finally { Started.TrySetResult(); }
+                    finally
+                    {
+                        Started.TrySetResult();
+                    }
                 }).ConfigureAwait(false);
                 await registration.NotificationCompleted.ConfigureAwait(false);
                 return await Operation.ConfigureAwait(false);
@@ -134,15 +152,28 @@ public class AsyncMappingContractTest
         });
         void Finish()
         {
-            if (outcome == 0) producer.SetResult(value);
-            else if (outcome == 1) producer.SetException(failure);
-            else { cancellation.Cancel(); producer.SetCanceled(cancellation.Token); }
+            if (outcome == 0)
+            {
+                producer.SetResult(value);
+            }
+            else if (outcome == 1)
+            {
+                producer.SetException(failure);
+            }
+            else
+            {
+                cancellation.Cancel();
+                producer.SetCanceled(cancellation.Token);
+            }
         }
         var hello = new HelloLease { Executor = executor };
         var consumer = new LookupConsumer(executor);
         try
         {
-            if (completed) Finish();
+            if (completed)
+            {
+                Finish();
+            }
             Task<object> lookup = consumer.LookupAsync(mapping, hostname, hello, cancellation.Token);
             await consumer.Started.Task.WaitAsync(TimeSpan.FromSeconds(5));
             if (!completed)
@@ -155,10 +186,15 @@ public class AsyncMappingContractTest
                 await consumer.RequestReadAsync();
                 await Task.Run(Finish);
             }
-            if (outcome == 0) Assert.Same(value, await lookup.WaitAsync(TimeSpan.FromSeconds(5)));
+            if (outcome == 0)
+            {
+                Assert.Same(value, await lookup.WaitAsync(TimeSpan.FromSeconds(5)));
+            }
             else if (outcome == 1)
+            {
                 Assert.Same(failure, await Assert.ThrowsAsync<InvalidOperationException>(async () =>
                     await lookup.WaitAsync(TimeSpan.FromSeconds(5))));
+            }
             else
             {
                 var error = await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
@@ -176,11 +212,23 @@ public class AsyncMappingContractTest
             Assert.Equal(completed ? 0 : 1, consumer.Reads);
             Assert.Equal(completed ? new[] { "release", "complete" } : new[] { "release", "complete", "read" },
                 consumer.Events);
-            if (outcome == 0) Assert.Same(value, consumer.Selected);
-            else if (outcome == 1) Assert.Same(failure, consumer.Failure);
-            else Assert.IsAssignableFrom<OperationCanceledException>(consumer.Failure);
+            if (outcome == 0)
+            {
+                Assert.Same(value, consumer.Selected);
+            }
+            else if (outcome == 1)
+            {
+                Assert.Same(failure, consumer.Failure);
+            }
+            else
+            {
+                Assert.IsAssignableFrom<OperationCanceledException>(consumer.Failure);
+            }
         }
-        finally { await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5));
+        }
     }
 
     [Theory]
@@ -196,12 +244,21 @@ public class AsyncMappingContractTest
         try
         {
             Task<object> lookup = consumer.LookupAsync(mapping, null, hello);
-            if (nullTask) await Assert.ThrowsAsync<InvalidOperationException>(async () => await lookup);
-            else Assert.Same(failure, await Assert.ThrowsAsync<ArgumentException>(async () => await lookup));
+            if (nullTask)
+            {
+                await Assert.ThrowsAsync<InvalidOperationException>(async () => await lookup);
+            }
+            else
+            {
+                Assert.Same(failure, await Assert.ThrowsAsync<ArgumentException>(async () => await lookup));
+            }
             Assert.Equal(1, hello.Releases);
             Assert.True(hello.ReleasedOnLoop);
         }
-        finally { await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5));
+        }
     }
 
     [Fact]

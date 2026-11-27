@@ -55,7 +55,10 @@ public class DirectByteBufReallocationTest
 
         public void Dispose()
         {
-            if (Buffer.RefCnt != 0) Assert.True(Buffer.Release());
+            if (Buffer.RefCnt != 0)
+            {
+                Assert.True(Buffer.Release());
+            }
             Assert.Equal(0, Native.ReservedBytes);
             Assert.Equal(0, Allocator.Metric.UsedDirectMemory);
         }
@@ -202,7 +205,10 @@ public class DirectByteBufReallocationTest
             Assert.Equal(Prefix(8), oldBytes.ToArray());
             s.Accounting(0, 0);
         }
-        finally { pin.Dispose(); }
+        finally
+        {
+            pin.Dispose();
+        }
         s.Accounting(0, 0);
     }
 
@@ -232,7 +238,10 @@ public class DirectByteBufReallocationTest
                 Assert.Equal(16, replacement.ReservedBytes);
                 Assert.Equal(0, creator.Metric.UsedDirectMemory);
             }
-            finally { b.Release(); }
+            finally
+            {
+                b.Release();
+            }
             Assert.Equal(0, replacement.ReservedBytes);
             Assert.Equal(24, external.ReservedBytes);
             Assert.Equal(Prefix(24), owner.Memory.ToArray());

@@ -43,12 +43,24 @@ public class ChannelPromiseTaskContractTest
         cancellation.Cancel();
         Assert.False(future.IsCompleted);
         var e = new IOException("Native write failed.");
-        if (fail) fixture.Write.SetException(e);
-        else fixture.Write.SetResult();
+        if (fail)
+        {
+            fixture.Write.SetException(e);
+        }
+        else
+        {
+            fixture.Write.SetResult();
+        }
         fixture.PumpUntil(() => future.IsCompleted);
         Assert.False(future.IsCanceled);
-        if (fail) Assert.Same(e, Assert.Throws<IOException>(() => future.GetAwaiter().GetResult()));
-        else Assert.True(future.IsCompletedSuccessfully);
+        if (fail)
+        {
+            Assert.Same(e, Assert.Throws<IOException>(() => future.GetAwaiter().GetResult()));
+        }
+        else
+        {
+            Assert.True(future.IsCompletedSuccessfully);
+        }
         Assert.Equal(0, buf.RefCnt);
         Assert.True(fixture.Channel.IsOpen);
     }

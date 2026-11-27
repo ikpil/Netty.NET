@@ -26,7 +26,10 @@ public class SocketNativeFileRegionContractTest
             var region = new DefaultFileRegion(file, 7, bytes.Length - 7);
             Task write = fixture.Channel.WriteAndFlushAsync(region);
             // The positional transfer never moves the supplied FileStream; the region closes it once released.
-            if (!write.IsCompleted) Assert.Equal(3, file.Position);
+            if (!write.IsCompleted)
+            {
+                Assert.Equal(3, file.Position);
+            }
             var received = new byte[bytes.Length - 7];
             int offset = 0;
             while (offset < received.Length)
@@ -41,7 +44,10 @@ public class SocketNativeFileRegionContractTest
             Assert.Equal(bytes.AsSpan(7).ToArray(), received);
             Assert.Equal(bytes.Length - 7, region.Transferred());
         }
-        finally { File.Delete(path); }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     [Fact]
@@ -62,7 +68,11 @@ public class SocketNativeFileRegionContractTest
             Assert.True(write.IsCompletedSuccessfully);
             Assert.Equal(new byte[] { 1, 2, 3 }, fixture.Receive(3));
         }
-        finally { File.Delete(path); File.Delete(moved); }
+        finally
+        {
+            File.Delete(path);
+            File.Delete(moved);
+        }
     }
 
     [Fact]
@@ -90,6 +100,9 @@ public class SocketNativeFileRegionContractTest
             Assert.ThrowsAny<IOException>(() => write.GetAwaiter().GetResult());
             Assert.Equal(0, region.RefCnt);
         }
-        finally { File.Delete(path); }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 }

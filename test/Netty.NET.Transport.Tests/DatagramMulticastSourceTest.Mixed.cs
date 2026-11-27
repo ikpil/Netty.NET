@@ -38,9 +38,14 @@ public partial class DatagramMulticastSourceTest
         using var socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp) { DualMode = true };
         socket.Bind(new IPEndPoint(source, 0));
         SetIPv4MulticastInterface(socket, iface);
-        try { socket.SendTo(new byte[4], new IPEndPoint(multicast, 12345)); }
+        try
+        {
+            socket.SendTo(new byte[4], new IPEndPoint(multicast, 12345));
+        }
         catch (SocketException error) when (error.SocketErrorCode == SocketError.NetworkUnreachable)
-        { return error.SocketErrorCode; }
+        {
+            return error.SocketErrorCode;
+        }
         return null;
     }
 

@@ -19,8 +19,14 @@ public class DynamicProgressContractTest
         internal void RunAll()
         {
             _running = Thread.CurrentThread;
-            try { while (_queue.TryDequeue(out var work)) work(); }
-            finally { _running = null; }
+            try
+            {
+                while (_queue.TryDequeue(out var work)) work();
+            }
+            finally
+            {
+                _running = null;
+            }
         }
 
         public override bool InEventLoop(Thread thread)
@@ -72,7 +78,10 @@ public class DynamicProgressContractTest
         while (!completion.IsCompleted && elapsed.Elapsed < TimeSpan.FromSeconds(5))
         {
             executor.RunAll();
-            if (!completion.IsCompleted) await Task.Delay(1);
+            if (!completion.IsCompleted)
+            {
+                await Task.Delay(1);
+            }
         }
         await completion.WaitAsync(TimeSpan.FromSeconds(5));
     }
@@ -170,9 +179,22 @@ public class DynamicProgressContractTest
         using var reporter = new ExecutorProgress(ImmediateEventExecutor.INSTANCE, source.Task);
         ProgressRegistration second = null;
         int calls = 0;
-        using var first = reporter.Register(_ => { if (!terminal) second.Dispose(); }, _ => { if (terminal) second.Dispose(); });
+        using var first = reporter.Register(_ => {
+            if (!terminal)
+            {
+                second.Dispose();
+            }
+        }, _ => {
+            if (terminal)
+            {
+                second.Dispose();
+            }
+        });
         second = reporter.Register(_ => ++calls, _ => ++calls);
-        if (terminal) source.SetResult();
+        if (terminal)
+        {
+            source.SetResult();
+        }
         else
         {
             reporter.Report(new TransferProgress(1));
@@ -180,8 +202,14 @@ public class DynamicProgressContractTest
             source.SetResult();
         }
         await reporter.NotificationsCompleted.WaitAsync(TimeSpan.FromSeconds(5));
-        if (terminal) await second.NotificationsCompleted;
-        else await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await second.NotificationsCompleted);
+        if (terminal)
+        {
+            await second.NotificationsCompleted;
+        }
+        else
+        {
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await second.NotificationsCompleted);
+        }
         Assert.Equal(1, calls);
         second.Dispose();
     }
@@ -259,7 +287,13 @@ public class DynamicProgressContractTest
         var active = pool.SubmitAsync(() =>
         {
             started.Set();
-            try { release.Wait(); } catch (ThreadInterruptedException) { }
+            try
+            {
+                release.Wait();
+            }
+            catch (ThreadInterruptedException)
+            {
+            }
         });
         try
         {
@@ -275,14 +309,20 @@ public class DynamicProgressContractTest
                 source.SetResult();
                 Assert.True(SpinWait.SpinUntil(() => pool.PendingTaskCount == 1, TimeSpan.FromSeconds(5)));
             }
-            else reporter.Report(new TransferProgress(1));
+            else
+            {
+                reporter.Report(new TransferProgress(1));
+            }
             Assert.Equal(1, pool.PendingTaskCount);
             _ = pool.StopAsync();
             foreach (var task in new[] { reporter.NotificationsCompleted, first.NotificationsCompleted, second.NotificationsCompleted })
                 await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await task.WaitAsync(TimeSpan.FromSeconds(5)));
             Assert.Equal(0, callbacks);
             Assert.Equal(terminal, source.Task.IsCompleted);
-            if (!terminal) source.SetResult();
+            if (!terminal)
+            {
+                source.SetResult();
+            }
         }
         finally
         {

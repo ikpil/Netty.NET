@@ -57,7 +57,14 @@ public class ConsolidationTest
             for (int pair = 0; pair < pairs; pair++)
             {
                 string key = ((char)('a' + pair)).ToString(), value = (pair + 1).ToString(System.Globalization.CultureInfo.InvariantCulture);
-                if (Current == null) Wrap(Segment(key), Segment("=")); else Wrap(Current, Segment(key), Segment("="));
+                if (Current == null)
+                {
+                    Wrap(Segment(key), Segment("="));
+                }
+                else
+                {
+                    Wrap(Current, Segment(key), Segment("="));
+                }
                 Wrap(Current, Segment(value), Segment("&"));
             }
             Expected = string.Concat(Enumerable.Range(0, pairs).Select(pair => $"{(char)('a' + pair)}={pair + 1}&"));
@@ -82,7 +89,10 @@ public class ConsolidationTest
         {
             Assert.Equal("a=1&", copy.ToString(Encoding.ASCII));
         }
-        finally { copy.Release(); }
+        finally
+        {
+            copy.Release();
+        }
     }
 
     [Theory] [InlineData(0)] [InlineData(1)] [InlineData(2)]
@@ -94,7 +104,10 @@ public class ConsolidationTest
         {
             Assert.Equal("a=1&b=2&c=3&d=4&e=5&", copy.ToString(Encoding.ASCII));
         }
-        finally { copy.Release(); }
+        finally
+        {
+            copy.Release();
+        }
     }
 
     public static IEnumerable<object[]> Limits()
@@ -122,7 +135,10 @@ public class ConsolidationTest
             Assert.Equal(graph.Expected, copy.ToString(Encoding.ASCII));
             Assert.Equal((byte)'z', current.GetByte(0));
         }
-        finally { copy.Release(); }
+        finally
+        {
+            copy.Release();
+        }
     }
 
     [Theory] [InlineData(0)] [InlineData(1)] [InlineData(2)]
@@ -152,7 +168,10 @@ public class ConsolidationTest
             Assert.Equal(1, copy.RefCnt);
             Assert.Equal(0, graph.Native.ReservedBytes);
         }
-        finally { copy.Release(); }
+        finally
+        {
+            copy.Release();
+        }
     }
 
     [Theory] [InlineData(0)] [InlineData(1)] [InlineData(2)]

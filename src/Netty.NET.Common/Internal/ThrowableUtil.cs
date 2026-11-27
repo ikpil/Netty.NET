@@ -38,7 +38,10 @@ public static class ThrowableUtil
         // CLR permits assigning a remote trace only before an exception has been thrown.
         // CLR: the single frame uses StackTraceElement.toString() for a null file name and line -1,
         // "className.method(Unknown Source)", with Type.FullName for Class.getName().
-        if (cause.StackTrace == null) ExceptionDispatchInfo.SetRemoteStackTrace(cause, "   at " + clazz.FullName + "." + method + "(Unknown Source)");
+        if (cause.StackTrace == null)
+        {
+            ExceptionDispatchInfo.SetRemoteStackTrace(cause, "   at " + clazz.FullName + "." + method + "(Unknown Source)");
+        }
         return cause;
     }
 
@@ -87,11 +90,20 @@ public static class ThrowableUtil
 
     public static void AddSuppressed(Exception target, Exception suppressed)
     {
-        if (suppressed == null) return;
+        if (suppressed == null)
+        {
+            return;
+        }
         ObjectUtil.CheckNotNull(target, "target");
-        if (ReferenceEquals(target, suppressed)) throw new ArgumentException("Self-suppression not permitted", nameof(suppressed));
+        if (ReferenceEquals(target, suppressed))
+        {
+            throw new ArgumentException("Self-suppression not permitted", nameof(suppressed));
+        }
         var list = Suppressed.GetValue(target, _ => new List<Exception>());
-        lock (list) list.Add(suppressed);
+        lock (list)
+        {
+            list.Add(suppressed);
+        }
     }
 
     public static void AddSuppressedAndClear(Exception target, List<Exception> suppressed)
@@ -108,8 +120,14 @@ public static class ThrowableUtil
     public static Exception[] GetSuppressed(Exception source)
     {
         ObjectUtil.CheckNotNull(source, "source");
-        if (!Suppressed.TryGetValue(source, out var list)) return Array.Empty<Exception>();
-        lock (list) return list.ToArray();
+        if (!Suppressed.TryGetValue(source, out var list))
+        {
+            return Array.Empty<Exception>();
+        }
+        lock (list)
+        {
+            return list.ToArray();
+        }
     }
 
     /**

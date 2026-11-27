@@ -68,7 +68,10 @@ internal abstract partial class PoolArena
                 var result = new List<IPoolSubpageMetric>();
                 foreach (PoolSubpage head in _smallSubpagePools)
                 {
-                    if (head == null) continue;
+                    if (head == null)
+                    {
+                        continue;
+                    }
                     lock (head.SyncRoot)
                         for (PoolSubpage subpage = head.Next; subpage != head; subpage = subpage.Next)
                             result.Add(subpage);
@@ -79,22 +82,102 @@ internal abstract partial class PoolArena
     }
     IReadOnlyList<IPoolChunkListMetric> IPoolArenaMetric.ChunkLists => ChunkLists;
 
-    public long NumAllocations { get { lock (_sync) return unchecked(_smallAllocations + _normalAllocations + _hugeAllocations); } }
-    public long NumDeallocations { get { lock (_sync) return unchecked(_smallDeallocations + _normalDeallocations + _hugeDeallocations); } }
-    public long NumSmallAllocations { get { lock (_sync) return _smallAllocations; } }
-    public long NumNormalAllocations { get { lock (_sync) return _normalAllocations; } }
-    public long NumHugeAllocations { get { lock (_sync) return _hugeAllocations; } }
-    public long NumSmallDeallocations { get { lock (_sync) return _smallDeallocations; } }
-    public long NumNormalDeallocations { get { lock (_sync) return _normalDeallocations; } }
-    public long NumHugeDeallocations { get { lock (_sync) return _hugeDeallocations; } }
-    public long NumChunkAllocations { get { lock (_sync) return _chunkAllocations; } }
-    public long NumChunkDeallocations { get { lock (_sync) return _chunkDeallocations; } }
-    public long NumActiveAllocations { get { lock (_sync) return Math.Max(unchecked(_smallAllocations + _normalAllocations + _hugeAllocations - _smallDeallocations - _normalDeallocations - _hugeDeallocations), 0); } }
-    public long NumActiveSmallAllocations { get { lock (_sync) return Math.Max(unchecked(_smallAllocations - _smallDeallocations), 0); } }
-    public long NumActiveNormalAllocations { get { lock (_sync) return Math.Max(unchecked(_normalAllocations - _normalDeallocations), 0); } }
-    public long NumActiveHugeAllocations { get { lock (_sync) return Math.Max(unchecked(_hugeAllocations - _hugeDeallocations), 0); } }
-    public long NumActiveChunks { get { lock (_sync) return Math.Max(unchecked(_chunkAllocations - _chunkDeallocations), 0); } }
-    public long NumActiveBytes { get { lock (_sync) return Math.Max(unchecked(_chunks.Count * (long)SizeClass.ChunkSize + _activeBytesHuge), 0); } }
+    public long NumAllocations { get {
+            lock (_sync)
+            {
+                return unchecked(_smallAllocations + _normalAllocations + _hugeAllocations);
+            }
+        } }
+    public long NumDeallocations { get {
+            lock (_sync)
+            {
+                return unchecked(_smallDeallocations + _normalDeallocations + _hugeDeallocations);
+            }
+        } }
+    public long NumSmallAllocations { get {
+            lock (_sync)
+            {
+                return _smallAllocations;
+            }
+        } }
+    public long NumNormalAllocations { get {
+            lock (_sync)
+            {
+                return _normalAllocations;
+            }
+        } }
+    public long NumHugeAllocations { get {
+            lock (_sync)
+            {
+                return _hugeAllocations;
+            }
+        } }
+    public long NumSmallDeallocations { get {
+            lock (_sync)
+            {
+                return _smallDeallocations;
+            }
+        } }
+    public long NumNormalDeallocations { get {
+            lock (_sync)
+            {
+                return _normalDeallocations;
+            }
+        } }
+    public long NumHugeDeallocations { get {
+            lock (_sync)
+            {
+                return _hugeDeallocations;
+            }
+        } }
+    public long NumChunkAllocations { get {
+            lock (_sync)
+            {
+                return _chunkAllocations;
+            }
+        } }
+    public long NumChunkDeallocations { get {
+            lock (_sync)
+            {
+                return _chunkDeallocations;
+            }
+        } }
+    public long NumActiveAllocations { get {
+            lock (_sync)
+            {
+                return Math.Max(unchecked(_smallAllocations + _normalAllocations + _hugeAllocations - _smallDeallocations - _normalDeallocations - _hugeDeallocations), 0);
+            }
+        } }
+    public long NumActiveSmallAllocations { get {
+            lock (_sync)
+            {
+                return Math.Max(unchecked(_smallAllocations - _smallDeallocations), 0);
+            }
+        } }
+    public long NumActiveNormalAllocations { get {
+            lock (_sync)
+            {
+                return Math.Max(unchecked(_normalAllocations - _normalDeallocations), 0);
+            }
+        } }
+    public long NumActiveHugeAllocations { get {
+            lock (_sync)
+            {
+                return Math.Max(unchecked(_hugeAllocations - _hugeDeallocations), 0);
+            }
+        } }
+    public long NumActiveChunks { get {
+            lock (_sync)
+            {
+                return Math.Max(unchecked(_chunkAllocations - _chunkDeallocations), 0);
+            }
+        } }
+    public long NumActiveBytes { get {
+            lock (_sync)
+            {
+                return Math.Max(unchecked(_chunks.Count * (long)SizeClass.ChunkSize + _activeBytesHuge), 0);
+            }
+        } }
 
     [Obsolete("Tiny allocations have been merged into small allocations.")]
     public long NumTinyAllocations => 0;
@@ -109,7 +192,12 @@ internal abstract partial class PoolArena
      */
     // CLR: internal operation leases also hold reservations. Raw native pins alone
     // preserve physical storage but do not contribute to this logical count.
-    public long NumPinnedBytes { get { lock (_sync) return Math.Max(_pinnedBytes, 0); } }
+    public long NumPinnedBytes { get {
+            lock (_sync)
+            {
+                return Math.Max(_pinnedBytes, 0);
+            }
+        } }
 
     public int SizeIdx2Size(int sizeIdx)
     {

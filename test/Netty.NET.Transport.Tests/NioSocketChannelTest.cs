@@ -204,7 +204,10 @@ public class NioSocketChannelTest
                 eventLoopCheck.TrySetResult();
                 await group.Next().RegisterAsync(ctx.Channel).ConfigureAwait(false);
             }
-            catch (Exception error) { eventLoopCheck.TrySetException(error); }
+            catch (Exception error)
+            {
+                eventLoopCheck.TrySetException(error);
+            }
         }
     }
     [Fact(Timeout = 30000)]
@@ -226,13 +229,17 @@ public class NioSocketChannelTest
         finally
         {
             try
-            { accepted?.Dispose(); }
+            {
+                accepted?.Dispose();
+            }
             catch (IOException)
             {
                 // ignore
             }
             try
-            { socket.Stop(); }
+            {
+                socket.Stop();
+            }
             catch (IOException)
             {
                 // ignore
@@ -253,7 +260,10 @@ public class NioSocketChannelTest
             bool closing = false;
             ctx.Channel.Config.WriteProgress = new Observer(report =>
             {
-                if (closing || ReferenceEquals(report.Operation, first) || !first.IsCompletedSuccessfully) return;
+                if (closing || ReferenceEquals(report.Operation, first) || !first.IsCompletedSuccessfully)
+                {
+                    return;
+                }
                 closing = true;
                 _ = CloseAsync(ctx);
             });
@@ -266,8 +276,14 @@ public class NioSocketChannelTest
         private async Task CloseAsync(IChannelHandlerContext ctx)
         {
             try
-            { await ctx.CloseAsync().ConfigureAwait(false); closed.TrySetResult(); }
-            catch (Exception error) { closed.TrySetException(error); }
+            {
+                await ctx.CloseAsync().ConfigureAwait(false);
+                closed.TrySetResult();
+            }
+            catch (Exception error)
+            {
+                closed.TrySetException(error);
+            }
         }
     }
     private sealed class Observer(Action<ChannelWriteProgress> report) : IProgress<ChannelWriteProgress>

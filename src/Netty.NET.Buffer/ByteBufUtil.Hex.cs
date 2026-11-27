@@ -45,7 +45,10 @@ public static partial class ByteBufUtil
         ArgumentNullException.ThrowIfNull(buffer);
         ReadOnlySequence<byte> sequence = buffer.AsReadOnlySequence(fromIndex, length);
         int characters = checked(length * 2);
-        if (sequence.IsSingleSegment) return HexDump(sequence.FirstSpan);
+        if (sequence.IsSingleSegment)
+        {
+            return HexDump(sequence.FirstSpan);
+        }
         return string.Create(characters, sequence, static (destination, bytes) =>
         {
             const string digits = "0123456789abcdef";
@@ -100,7 +103,10 @@ public static partial class ByteBufUtil
         CheckHexRange(text.Length, position, 2);
         int hi = StringUtil.DecodeHexNibble(text[position]);
         int lo = StringUtil.DecodeHexNibble(text[position + 1]);
-        if (hi < 0 || lo < 0) throw new ArgumentException("Expected two ASCII hex digits.", nameof(text));
+        if (hi < 0 || lo < 0)
+        {
+            throw new ArgumentException("Expected two ASCII hex digits.", nameof(text));
+        }
         return (byte)((hi << 4) | lo);
     }
 
@@ -126,8 +132,14 @@ public static partial class ByteBufUtil
     /// <summary>Decodes ASCII hex pairs; whitespace, separators and prefixes are rejected.</summary>
     public static byte[] DecodeHexDump(ReadOnlySpan<char> hexDump)
     {
-        if ((hexDump.Length & 1) != 0) throw new ArgumentException("The hex length must be even.", nameof(hexDump));
-        if (hexDump.IsEmpty) return Array.Empty<byte>();
+        if ((hexDump.Length & 1) != 0)
+        {
+            throw new ArgumentException("The hex length must be even.", nameof(hexDump));
+        }
+        if (hexDump.IsEmpty)
+        {
+            return Array.Empty<byte>();
+        }
         byte[] result = new byte[hexDump.Length / 2];
         for (int i = 0; i < result.Length; i++) result[i] = DecodeHexByte(hexDump, i * 2);
         return result;
@@ -176,7 +188,10 @@ public static partial class ByteBufUtil
         ArgumentNullException.ThrowIfNull(dump);
         ArgumentNullException.ThrowIfNull(buffer);
         var reader = new SequenceReader<byte>(buffer.AsReadOnlySequence(offset, length));
-        if (length == 0) return;
+        if (length == 0)
+        {
+            return;
+        }
         dump.Append("         +-------------------------------------------------+")
             .Append(StringUtil.NEWLINE).Append("         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |")
             .Append(StringUtil.NEWLINE).Append("+--------+-------------------------------------------------+----------------+");

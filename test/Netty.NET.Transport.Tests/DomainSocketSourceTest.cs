@@ -61,7 +61,10 @@ public class DomainSocketSourceTest
             Assert.False(server.ShouldClose(new IOException()));
             await server.CloseAsync();
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Fact]
@@ -80,7 +83,10 @@ public class DomainSocketSourceTest
             Assert.False(server.IsOpen);
             Assert.False(server.IsActive);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Theory]
@@ -106,7 +112,10 @@ public class DomainSocketSourceTest
             Assert.False(server.IsOpen);
             Assert.False(server.IsActive);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     internal static Socket NewSocket()
@@ -121,7 +130,10 @@ public class DomainSocketSourceTest
 
     internal static void RequireDomainSockets()
     {
-        if (!Socket.OSSupportsUnixDomainSockets) Assert.Skip("This host does not support Unix domain sockets.");
+        if (!Socket.OSSupportsUnixDomainSockets)
+        {
+            Assert.Skip("This host does not support Unix domain sockets.");
+        }
     }
 
     // Override just to to be able to call directly via unit tests.

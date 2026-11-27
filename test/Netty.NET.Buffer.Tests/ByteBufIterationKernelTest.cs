@@ -126,12 +126,24 @@ public class ByteBufIterationKernelTest
             Func<byte, bool> processor = value =>
             {
                 visited.Add(value);
-                if (scenario == 2 && visited.Count == 2) throw failure;
+                if (scenario == 2 && visited.Count == 2)
+                {
+                    throw failure;
+                }
                 if (visited.Count == 1)
                 {
-                    if (scenario == 4) owner.Capacity = 16;
-                    if (scenario is 3 or 4) owner.SetByte(next, 99);
-                    if (scenario == 5) owner.SetIndex(0, 8);
+                    if (scenario == 4)
+                    {
+                        owner.Capacity = 16;
+                    }
+                    if (scenario is 3 or 4)
+                    {
+                        owner.SetByte(next, 99);
+                    }
+                    if (scenario == 5)
+                    {
+                        owner.SetIndex(0, 8);
+                    }
                 }
                 return scenario switch { 0 => value != 132, 3 or 4 => value != 99, _ => true };
             };
@@ -139,23 +151,53 @@ public class ByteBufIterationKernelTest
             {
                 return indexed ? Scan(owner, descending, start, end - start, processor) : Scan(owner, descending, processor);
             }
-            if (scenario == 2) Assert.Same(failure, Assert.Throws<Failure>(() => Invoke()));
-            else Assert.Equal(scenario == 0 ? 4 : scenario is 3 or 4 ? next : -1, Invoke());
+            if (scenario == 2)
+            {
+                Assert.Same(failure, Assert.Throws<Failure>(() => Invoke()));
+            }
+            else
+            {
+                Assert.Equal(scenario == 0 ? 4 : scenario is 3 or 4 ? next : -1, Invoke());
+            }
             var indices = Enumerable.Range(start, end - start);
-            if (descending) indices = indices.Reverse();
+            if (descending)
+            {
+                indices = indices.Reverse();
+            }
             byte[] expected = indices.Select(i => (byte)(128 + i)).ToArray();
-            if (scenario == 0) expected = expected[..(Array.IndexOf(expected, (byte)132) + 1)];
-            if (scenario == 2) expected = expected[..2];
-            if (scenario is 3 or 4) expected = [expected[0], 99];
-            Assert.Equal(expected, visited); Assert.Equal(indexed ? 1 : 0, calls.Indexed); Assert.Equal(0, calls.Gets);
-            Assert.Equal(scenario == 5 ? 0 : 1, owner.ReaderIndex); Assert.Equal(scenario == 5 ? 8 : 7, owner.WriterIndex);
-            Assert.Equal(scenario == 4 ? 16 : 8, owner.Capacity); Assert.Equal(1, owner.RefCnt);
+            if (scenario == 0)
+            {
+                expected = expected[..(Array.IndexOf(expected, (byte)132) + 1)];
+            }
+            if (scenario == 2)
+            {
+                expected = expected[..2];
+            }
+            if (scenario is 3 or 4)
+            {
+                expected = [expected[0], 99];
+            }
+            Assert.Equal(expected, visited);
+            Assert.Equal(indexed ? 1 : 0, calls.Indexed);
+            Assert.Equal(0, calls.Gets);
+            Assert.Equal(scenario == 5 ? 0 : 1, owner.ReaderIndex);
+            Assert.Equal(scenario == 5 ? 8 : 7, owner.WriterIndex);
+            Assert.Equal(scenario == 4 ? 16 : 8, owner.Capacity);
+            Assert.Equal(1, owner.RefCnt);
             byte[] bytes = [128, 129, 130, 131, 132, 133, 134, 135];
-            if (scenario is 3 or 4) bytes[next] = 99;
+            if (scenario is 3 or 4)
+            {
+                bytes[next] = 99;
+            }
             Assert.Equal(bytes, ByteBufUtil.GetBytes(owner, 0, 8));
-            owner.ResetReaderIndex().ResetWriterIndex(); Assert.Equal(1, owner.ReaderIndex); Assert.Equal(7, owner.WriterIndex);
+            owner.ResetReaderIndex().ResetWriterIndex();
+            Assert.Equal(1, owner.ReaderIndex);
+            Assert.Equal(7, owner.WriterIndex);
         }
-        finally { Assert.True(owner.Release()); }
+        finally
+        {
+            Assert.True(owner.Release());
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -192,13 +234,23 @@ public class ByteBufIterationKernelTest
             Assert.Equal(-1, Scan(view, descending, value => { visited.Add(value); return true; }));
             IEnumerable<byte> expected = Enumerable.Range(offset + reader, writer - reader).Select(i => (byte)(128 + i));
             Assert.Equal(descending ? expected.Reverse() : expected, visited);
-            Assert.Equal(0, calls.Indexed); Assert.Equal(0, calls.Gets);
-            Assert.Equal(reader, view.ReaderIndex); Assert.Equal(writer, view.WriterIndex);
+            Assert.Equal(0, calls.Indexed);
+            Assert.Equal(0, calls.Gets);
+            Assert.Equal(reader, view.ReaderIndex);
+            Assert.Equal(writer, view.WriterIndex);
             view.SetIndex(0, view.Capacity).ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(reader, view.ReaderIndex); Assert.Equal(writer, view.WriterIndex);
+            Assert.Equal(reader, view.ReaderIndex);
+            Assert.Equal(writer, view.WriterIndex);
             Assert.Equal(retained == null ? 1 : 2, root.RefCnt);
         }
-        finally { if (retained != null) Assert.True(retained.Release()); Assert.True(root.Release()); }
+        finally
+        {
+            if (retained != null)
+            {
+                Assert.True(retained.Release());
+            }
+            Assert.True(root.Release());
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -231,7 +283,13 @@ public class ByteBufIterationKernelTest
             Assert.Equal(1, calls.Indexed);
             Assert.Equal(0, calls.Gets);
         }
-        finally { if (root.RefCnt != 0) root.Release(); }
+        finally
+        {
+            if (root.RefCnt != 0)
+            {
+                root.Release();
+            }
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -267,7 +325,13 @@ public class ByteBufIterationKernelTest
             Assert.Equal(0, calls.Gets);
             Assert.Equal(0, root.RefCnt);
         }
-        finally { if (root.RefCnt != 0) root.Release(); }
+        finally
+        {
+            if (root.RefCnt != 0)
+            {
+                root.Release();
+            }
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 }

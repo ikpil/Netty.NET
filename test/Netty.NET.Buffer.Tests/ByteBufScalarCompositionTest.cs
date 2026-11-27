@@ -241,7 +241,10 @@ public class ByteBufScalarCompositionTest
 
         public override ushort GetUnsignedShort(int index)
         {
-            if (o.TrapUnsigned) throw new InvalidOperationException("GetChar must use GetShort directly.");
+            if (o.TrapUnsigned)
+            {
+                throw new InvalidOperationException("GetChar must use GetShort directly.");
+            }
             return base.GetUnsignedShort(index);
         }
     }
@@ -442,7 +445,10 @@ public class ByteBufScalarCompositionTest
 
         public override ushort GetUnsignedShort(int index)
         {
-            if (o.TrapUnsigned) throw new InvalidOperationException("GetChar must use GetShort directly.");
+            if (o.TrapUnsigned)
+            {
+                throw new InvalidOperationException("GetChar must use GetShort directly.");
+            }
             return base.GetUnsignedShort(index);
         }
     }
@@ -559,7 +565,10 @@ public class ByteBufScalarCompositionTest
             Assert.Equal(1, buffer.RefCnt);
             Assert.Equal(1, Unpooled.EmptyBuffer.RefCnt);
         }
-        finally { Assert.True(buffer.Release()); }
+        finally
+        {
+            Assert.True(buffer.Release());
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 }

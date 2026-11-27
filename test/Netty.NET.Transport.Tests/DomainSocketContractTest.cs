@@ -45,7 +45,10 @@ public class DomainSocketContractTest
             await group.StopAsync();
             Assert.False(File.Exists(endpoint.ToString()));
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Fact(Timeout = 10000)]
@@ -68,7 +71,10 @@ public class DomainSocketContractTest
             await peer.ConnectAsync(endpoint, cancellation);
             await accepted.Active.Task.WaitAsync(cancellation);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Fact]
@@ -92,7 +98,10 @@ public class DomainSocketContractTest
             Assert.Equal(32, backlog);
             Assert.Contains(ChannelOption.SO_SNDBUF, client.Config.GetOptions().Keys);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     private sealed class ExchangeHandler : SimpleChannelInboundHandler<ByteBuf>
@@ -113,7 +122,10 @@ public class DomainSocketContractTest
 
         public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
         {
-            if (evt is ChannelInputShutdownEvent) InputClosed.TrySetResult();
+            if (evt is ChannelInputShutdownEvent)
+            {
+                InputClosed.TrySetResult();
+            }
         }
     }
 }

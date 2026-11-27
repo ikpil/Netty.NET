@@ -113,8 +113,14 @@ public class ByteBufWritableKernelTest
         byte[] before = buffer.AsReadOnlySpan(0, capacity).ToArray(), wire = WireBytes(operation);
         try
         {
-            if (scenario == 2) Assert.Throws<ArgumentOutOfRangeException>(() => Write(buffer, operation));
-            else Assert.Same(buffer, Write(buffer, operation));
+            if (scenario == 2)
+            {
+                Assert.Throws<ArgumentOutOfRangeException>(() => Write(buffer, operation));
+            }
+            else
+            {
+                Assert.Same(buffer, Write(buffer, operation));
+            }
             Assert.Equal(0, calls.Count);
             Assert.Equal(scenario == 1 ? 64 : capacity, buffer.Capacity);
             Assert.Equal(1, buffer.ReaderIndex);
@@ -127,10 +133,15 @@ public class ByteBufWritableKernelTest
             }
             Assert.Equal(expectedPrefix, buffer.AsReadOnlySpan(0, capacity).ToArray());
             buffer.SetIndex(0, buffer.Capacity).ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(1, buffer.ReaderIndex); Assert.Equal(writer, buffer.WriterIndex);
+            Assert.Equal(1, buffer.ReaderIndex);
+            Assert.Equal(writer, buffer.WriterIndex);
             Assert.Equal(1, buffer.RefCnt);
         }
-        finally { buffer.Release(); Assert.Equal(0, native.ReservedBytes); }
+        finally
+        {
+            buffer.Release();
+            Assert.Equal(0, native.ReservedBytes);
+        }
     }
 
     public static IEnumerable<object[]> PublicCases()
@@ -151,18 +162,33 @@ public class ByteBufWritableKernelTest
         byte[] before = buffer.AsReadOnlySpan(0, capacity).ToArray();
         try
         {
-            if (reject) Assert.Same(calls.Error, Assert.Throws<Failure>(() => buffer.EnsureWritable(8)));
-            else if (scenario == 2) Assert.Throws<ArgumentOutOfRangeException>(() => buffer.EnsureWritable(8));
-            else Assert.Same(buffer, buffer.EnsureWritable(8));
+            if (reject)
+            {
+                Assert.Same(calls.Error, Assert.Throws<Failure>(() => buffer.EnsureWritable(8)));
+            }
+            else if (scenario == 2)
+            {
+                Assert.Throws<ArgumentOutOfRangeException>(() => buffer.EnsureWritable(8));
+            }
+            else
+            {
+                Assert.Same(buffer, buffer.EnsureWritable(8));
+            }
             Assert.Equal(1, calls.Count);
             Assert.Equal(!reject && scenario == 1 ? 64 : capacity, buffer.Capacity);
             Assert.Equal(before, buffer.AsReadOnlySpan(0, capacity).ToArray());
-            Assert.Equal(1, buffer.ReaderIndex); Assert.Equal(writer, buffer.WriterIndex);
+            Assert.Equal(1, buffer.ReaderIndex);
+            Assert.Equal(writer, buffer.WriterIndex);
             buffer.SetIndex(0, buffer.Capacity).ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(1, buffer.ReaderIndex); Assert.Equal(writer, buffer.WriterIndex);
+            Assert.Equal(1, buffer.ReaderIndex);
+            Assert.Equal(writer, buffer.WriterIndex);
             Assert.Equal(1, buffer.RefCnt);
         }
-        finally { buffer.Release(); Assert.Equal(0, native.ReservedBytes); }
+        finally
+        {
+            buffer.Release();
+            Assert.Equal(0, native.ReservedBytes);
+        }
     }
 
     private static ByteBuf NewBuffer(bool direct, int length, NativeMemoryAllocator native)
@@ -182,9 +208,14 @@ public class ByteBufWritableKernelTest
         {
             buffer.WriterIndex = buffer.Capacity;
             buffer.EnsureWritable(8, force);
-            Assert.True(buffer.Capacity >= 16); Assert.Equal(8, buffer.WriterIndex);
+            Assert.True(buffer.Capacity >= 16);
+            Assert.Equal(8, buffer.WriterIndex);
         }
-        finally { buffer.Release(); Assert.Equal(0, native.ReservedBytes); }
+        finally
+        {
+            buffer.Release();
+            Assert.Equal(0, native.ReservedBytes);
+        }
     }
 
     // Supplemental read-only status/state check for the two force modes.
@@ -199,9 +230,14 @@ public class ByteBufWritableKernelTest
         {
             buffer.WriterIndex = buffer.Capacity;
             Assert.Equal(1, buffer.AsReadOnly().EnsureWritable(8, force));
-            Assert.Equal(8, buffer.Capacity); Assert.Equal(8, buffer.WriterIndex);
+            Assert.Equal(8, buffer.Capacity);
+            Assert.Equal(8, buffer.WriterIndex);
         }
-        finally { buffer.Release(); Assert.Equal(0, native.ReservedBytes); }
+        finally
+        {
+            buffer.Release();
+            Assert.Equal(0, native.ReservedBytes);
+        }
     }
 
     // Supplemental released-storage check with independent native-accounting verification.
@@ -231,8 +267,13 @@ public class ByteBufWritableKernelTest
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => buffer.EnsureWritable(int.MaxValue));
-            Assert.Equal(4096, buffer.Capacity); Assert.Equal(1, buffer.WriterIndex);
+            Assert.Equal(4096, buffer.Capacity);
+            Assert.Equal(1, buffer.WriterIndex);
         }
-        finally { buffer.Release(); Assert.Equal(0, native.ReservedBytes); }
+        finally
+        {
+            buffer.Release();
+            Assert.Equal(0, native.ReservedBytes);
+        }
     }
 }

@@ -30,7 +30,10 @@ public class AllocatorLeakConstructionFailureTest
         for (int provider = 0; provider < 4; ++provider)
         for (int method = 0; method < 7; ++method)
         for (int mode = 0; mode < 2; ++mode)
-            if (provider != 0 || method != 1) yield return [provider, method, mode];
+            if (provider != 0 || method != 1)
+                    {
+                        yield return [provider, method, mode];
+                    }
     }
 
     [Theory]
@@ -47,8 +50,13 @@ public class AllocatorLeakConstructionFailureTest
                 .Invoke(null, [provider, method, mode]);
         }
         catch (TargetInvocationException failure) when (failure.InnerException != null)
-        { ExceptionDispatchInfo.Capture(failure.InnerException).Throw(); }
-        finally { context.Unload(); }
+        {
+            ExceptionDispatchInfo.Capture(failure.InnerException).Throw();
+        }
+        finally
+        {
+            context.Unload();
+        }
     }
     private sealed class FailureFactory(int mode) : ResourceLeakDetectorFactory
     {
@@ -68,7 +76,10 @@ public class AllocatorLeakConstructionFailureTest
         public override IResourceLeakTracker<ByteBuf> Track(ByteBuf value)
         {
             state.Tracked = value;
-            if (mode == 0) throw state.Failure;
+            if (mode == 0)
+            {
+                throw state.Failure;
+            }
             return new Tracker(state);
         }
 

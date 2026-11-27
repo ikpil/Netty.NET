@@ -39,6 +39,9 @@ public class FailedChannelFutureSourceTest
             Assert.True(future.IsFaulted);
             Assert.Same(e, future.Exception!.InnerException);
         }
-        finally { ManualIoEventLoopSourceTest.Terminate(loop); }
+        finally
+        {
+            ManualIoEventLoopSourceTest.Terminate(loop);
+        }
     }
 }

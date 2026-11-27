@@ -87,7 +87,10 @@ public class ReferenceCountUtilContractTest : IDisposable
         public bool Release(int decrement)
         {
             Decrement = decrement;
-            if (Failure != null) throw Failure;
+            if (Failure != null)
+            {
+                throw Failure;
+            }
             Count -= decrement;
             return Count == 0;
         }
@@ -157,9 +160,14 @@ public class ReferenceCountUtilContractTest : IDisposable
             {
                 Assert.Same(first, ReferenceCountUtil.ReleaseLater(first));
                 Assert.Same(second, ReferenceCountUtil.ReleaseLater(second, 2));
-                queued.Set(); stop.Wait();
+                queued.Set();
+                stop.Wait();
             }
-            catch (Exception failure) { error = failure; queued.Set(); }
+            catch (Exception failure)
+            {
+                error = failure;
+                queued.Set();
+            }
         }) { IsBackground = true };
         caller.Start();
         try
@@ -170,7 +178,11 @@ public class ReferenceCountUtilContractTest : IDisposable
             Assert.Equal(3, second.RefCnt);
             Assert.Equal(0, first.Deallocations);
         }
-        finally { stop.Set(); Assert.True(caller.Join(TimeSpan.FromSeconds(5))); }
+        finally
+        {
+            stop.Set();
+            Assert.True(caller.Join(TimeSpan.FromSeconds(5)));
+        }
         Assert.True(ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromSeconds(5)));
         Assert.Equal(0, first.RefCnt);
         Assert.Equal(1, first.Deallocations);

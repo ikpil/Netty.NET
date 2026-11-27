@@ -120,7 +120,10 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
     public int IndexOf(char ch, int start = 0)
     {
         start = Math.Max(0, start);
-        if (start >= _count) return -1;
+        if (start >= _count)
+        {
+            return -1;
+        }
         int index = AsSpan().Slice(start).IndexOf(ch);
         return index < 0 ? -1 : start + index;
     }

@@ -31,16 +31,37 @@ public class ByteBufHexTest
 
     private static ByteBuf Owner(int kind, byte[] data)
     {
-        if (kind == 0) return Unpooled.WrappedBuffer(data);
-        if (kind == 1) return Unpooled.DirectBuffer(data.Length, data.Length).WriteBytes(data);
+        if (kind == 0)
+        {
+            return Unpooled.WrappedBuffer(data);
+        }
+        if (kind == 1)
+        {
+            return Unpooled.DirectBuffer(data.Length, data.Length).WriteBytes(data);
+        }
         int split = Math.Min(7, data.Length);
-        if (kind == 2) return Unpooled.CompositeBuffer().AddComponent(Unpooled.WrappedBuffer(data[..split]), true)
+        if (kind == 2)
+        {
+            return Unpooled.CompositeBuffer().AddComponent(Unpooled.WrappedBuffer(data[..split]), true)
             .AddComponent(Unpooled.EmptyBuffer).AddComponent(Unpooled.WrappedBuffer(data[split..]), true);
-        if (kind == 3) return Unpooled.WrappedUnmodifiableBuffer(
+        }
+        if (kind == 3)
+        {
+            return Unpooled.WrappedUnmodifiableBuffer(
             Unpooled.WrappedBuffer(data[..split]), Unpooled.WrappedBuffer(data[split..]));
-        if (kind == 4) return Unpooled.WrappedBuffer(new byte[] { 9 }.Concat(data).Append((byte)9).ToArray()).Slice(1, data.Length);
-        if (kind == 5) return Unpooled.WrappedBuffer(data).AsReadOnly();
-        if (kind == 6) return Unpooled.WrappedBuffer(data).Duplicate();
+        }
+        if (kind == 4)
+        {
+            return Unpooled.WrappedBuffer(new byte[] { 9 }.Concat(data).Append((byte)9).ToArray()).Slice(1, data.Length);
+        }
+        if (kind == 5)
+        {
+            return Unpooled.WrappedBuffer(data).AsReadOnly();
+        }
+        if (kind == 6)
+        {
+            return Unpooled.WrappedBuffer(data).Duplicate();
+        }
         throw new ArgumentOutOfRangeException(nameof(kind));
     }
 
@@ -98,7 +119,10 @@ public class ByteBufHexTest
             Assert.Equal(200, b.WriterIndex);
             Assert.Equal(1, b.RefCnt);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -128,7 +152,10 @@ public class ByteBufHexTest
             Assert.Equal("", ByteBufUtil.HexDump(b));
             Assert.Equal("", ByteBufUtil.PrettyHexDump(b));
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -153,7 +180,10 @@ public class ByteBufHexTest
             }
             Assert.Equal(9, b.ReaderIndex);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -168,7 +198,10 @@ public class ByteBufHexTest
             Assert.StartsWith("|" + (65536 + offset).ToString("x8", CultureInfo.InvariantCulture) + "|", lines[3 + 4096]);
             Assert.StartsWith("|" + (65552 + offset).ToString("x8", CultureInfo.InvariantCulture) + "|", lines[3 + 4097]);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -190,7 +223,10 @@ public class ByteBufHexTest
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.AppendPrettyHexDump(builder, b, 2, 2));
             Assert.Equal("prefix", builder.ToString());
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
         Assert.Throws<IllegalReferenceCountException>(() => ByteBufUtil.HexDump(b, 0, 0));
         Assert.Throws<IllegalReferenceCountException>(() => ByteBufUtil.PrettyHexDump(b, 0, 0));
         Assert.Throws<IllegalReferenceCountException>(() => ByteBufUtil.AppendPrettyHexDump(builder, b, 0, 0));

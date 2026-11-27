@@ -53,7 +53,12 @@ public partial class LocalChannelSourceTest
             await completion;
             Assert.False(client.IsOpen);
         }
-        finally { await CloseChannel(client); await CloseChannel(server); data.Release(); }
+        finally
+        {
+            await CloseChannel(client);
+            await CloseChannel(server);
+            data.Release();
+        }
     }
 
     [Fact]
@@ -110,7 +115,13 @@ public partial class LocalChannelSourceTest
             await messages.WaitAsync();
             await completion;
         }
-        finally { await CloseChannel(client); await CloseChannel(server); data.Release(); data2.Release(); }
+        finally
+        {
+            await CloseChannel(client);
+            await CloseChannel(server);
+            data.Release();
+            data2.Release();
+        }
     }
 
     [Fact]
@@ -154,7 +165,13 @@ public partial class LocalChannelSourceTest
             await messages.WaitAsync();
             await completion;
         }
-        finally { await CloseChannel(client); await CloseChannel(server); data.Release(); data2.Release(); }
+        finally
+        {
+            await CloseChannel(client);
+            await CloseChannel(server);
+            data.Release();
+            data2.Release();
+        }
     }
 
     [Fact]
@@ -194,7 +211,9 @@ public partial class LocalChannelSourceTest
                     while (copy.IsOpen)
                     {
                         try
-                        { Thread.Sleep(50); }
+                        {
+                            Thread.Sleep(50);
+                        }
                         catch (ThreadInterruptedException)
                         {
                             // ignored
@@ -202,8 +221,13 @@ public partial class LocalChannelSourceTest
                         Assert.True(++waitCount <= 5);
                     }
                     try
-                    { await peer.WriteAndFlushAsync(data2.RetainedDuplicate()); }
-                    catch (ClosedChannelException) { writeFailed.TrySetResult(); }
+                    {
+                        await peer.WriteAndFlushAsync(data2.RetainedDuplicate());
+                    }
+                    catch (ClosedChannelException)
+                    {
+                        writeFailed.TrySetResult();
+                    }
                 });
                 return copy.CloseAsync();
             });
@@ -217,7 +241,13 @@ public partial class LocalChannelSourceTest
             Assert.False(client.IsOpen);
             Assert.False(peer.IsOpen);
         }
-        finally { await CloseChannel(client); await CloseChannel(server); data.Release(); data2.Release(); }
+        finally
+        {
+            await CloseChannel(client);
+            await CloseChannel(server);
+            data.Release();
+            data2.Release();
+        }
     }
 
     private static Task WriteThenOnOwner(IChannel channel, ByteBuf message, Func<Task> completed)
@@ -264,9 +294,14 @@ public partial class LocalChannelSourceTest
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             if (expected.Equals(msg) && (!expectedCount.HasValue || count.Current == expectedCount.Value))
-            { ReferenceCountUtil.SafeRelease(msg); count.Signal(); }
+            {
+                ReferenceCountUtil.SafeRelease(msg);
+                count.Signal();
+            }
             else
+            {
                 ctx.FireChannelRead(msg);
+            }
         }
 
         public override void ChannelInactive(IChannelHandlerContext ctx)
@@ -303,14 +338,25 @@ public partial class LocalChannelSourceTest
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             if (msg is not ByteBuf buffer)
-            { ctx.FireChannelRead(msg); return; }
+            {
+                ctx.FireChannelRead(msg);
+                return;
+            }
             while (buffer.IsReadable())
             {
                 int size = buffer.ReadInt();
                 var slice = buffer.ReadRetainedSlice(size);
                 try
-                { if (slice.ReadInt() == count.Current) count.Signal(); }
-                finally { slice.Release(); }
+                {
+                    if (slice.ReadInt() == count.Current)
+                    {
+                        count.Signal();
+                    }
+                }
+                finally
+                {
+                    slice.Release();
+                }
             }
             buffer.Release();
         }

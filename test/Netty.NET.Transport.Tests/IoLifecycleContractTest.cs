@@ -47,7 +47,11 @@ public class IoLifecycleContractTest
             // Submit to the EventLoop so we are sure its really executed in a non-async manner.
             await Assert.ThrowsAsync<NotSupportedException>(() => loop.SubmitAsync(() => loop.RegisteredChannelsIterator()));
         }
-        finally { await channel.CloseAsync(); await group.StopAsync(); }
+        finally
+        {
+            await channel.CloseAsync();
+            await group.StopAsync();
+        }
     }
 
     [Fact(Timeout = 10000)]
@@ -62,7 +66,10 @@ public class IoLifecycleContractTest
             Assert.False(channel.IsOpen);
             Assert.False(channel.IsRegistered);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
     private sealed class BrokenRegistration : LocalChannel
     {
@@ -99,7 +106,12 @@ public class IoLifecycleContractTest
             await server.CloseAsync();
             Assert.Throws<ObjectDisposedException>(() => raw.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress));
         }
-        finally { await server.CloseAsync(); await group.StopAsync(); raw.Dispose(); }
+        finally
+        {
+            await server.CloseAsync();
+            await group.StopAsync();
+            raw.Dispose();
+        }
     }
 
     [Theory(Timeout = 10000)]
@@ -132,7 +144,14 @@ public class IoLifecycleContractTest
             var events = await listener.EventLoop.SubmitAsync(() => observer.Events.ToArray());
             Assert.Equal(new[] { "complete", "error", "read", "complete" }, events);
         }
-        finally { if (listener != null) await listener.CloseAsync(); await group.StopAsync(); }
+        finally
+        {
+            if (listener != null)
+            {
+                await listener.CloseAsync();
+            }
+            await group.StopAsync();
+        }
     }
 
     [Fact(Timeout = 10000)]
@@ -158,7 +177,10 @@ public class IoLifecycleContractTest
             Assert.Equal(1, server.Attempts);
             Assert.False(server.IsOpen);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
     private sealed class FaultingAccept(Exception error) : NioServerSocketChannel
     {
@@ -230,7 +252,12 @@ public class IoLifecycleContractTest
             await collector.Done.Task.WaitAsync(TestContext.Current.CancellationToken);
             Assert.Equal(new[] { 2, 1 }, collector.Batches);
         }
-        finally { await server.CloseAsync(); await group.StopAsync(); foreach (var peer in peers) peer.Dispose(); }
+        finally
+        {
+            await server.CloseAsync();
+            await group.StopAsync();
+            foreach (var peer in peers) peer.Dispose();
+        }
     }
     private sealed class CollectChildren(int expected = 1) : ChannelInboundHandlerAdapter
     {
@@ -292,7 +319,11 @@ public class IoLifecycleContractTest
             Assert.Equal(new[] { "read", "complete", "error", "read", "complete" }, collector.Events);
             Assert.Equal(3, server.Attempts);
         }
-        finally { await server.CloseAsync(); await group.StopAsync(); }
+        finally
+        {
+            await server.CloseAsync();
+            await group.StopAsync();
+        }
     }
     private sealed class SecondAcceptFails(Socket socket) : NioServerSocketChannel(socket)
     {
@@ -357,7 +388,10 @@ public class IoLifecycleContractTest
                 .WaitAsync(TestContext.Current.CancellationToken);
             Assert.Equal(2, count);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Fact(Timeout = 3000)]
@@ -374,7 +408,11 @@ public class IoLifecycleContractTest
             await socket.ConnectAsync(server.LocalAddress, TestContext.Current.CancellationToken);
             Assert.True(await server.EventLoop.SubmitAsync(() => server.EventLoop.InEventLoop()));
         }
-        finally { await server.CloseAsync(); await group.StopAsync(); }
+        finally
+        {
+            await server.CloseAsync();
+            await group.StopAsync();
+        }
     }
 
     [Fact]
@@ -388,6 +426,11 @@ public class IoLifecycleContractTest
             Assert.Null(value);
             Assert.Throws<ArgumentNullException>(() => server.Config.SetOption(ChannelOption.IP_MULTICAST_IF, null));
         }
-        finally { await group.RegisterAsync(server); await server.CloseAsync(); await group.StopAsync(); }
+        finally
+        {
+            await group.RegisterAsync(server);
+            await server.CloseAsync();
+            await group.StopAsync();
+        }
     }
 }

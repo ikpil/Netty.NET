@@ -40,9 +40,14 @@ internal static class NativeAotNetworkScenarios
     {
         switch (scenario)
         {
-            case 0: TcpEchoOverLoopback(); break;
-            case 1: UdpDatagramOverLoopback(); break;
-            default: throw new ArgumentOutOfRangeException(nameof(scenario));
+            case 0:
+                TcpEchoOverLoopback();
+                break;
+            case 1:
+                UdpDatagramOverLoopback();
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(scenario));
         }
     }
 
@@ -143,9 +148,15 @@ internal static class NativeAotNetworkScenarios
                 var chunk = new byte[buffer.ReadableBytes];
                 buffer.ReadBytes(chunk);
                 _bytes.Write(chunk);
-                if (_bytes.Length >= expected) received.TrySetResult(_bytes.ToArray());
+                if (_bytes.Length >= expected)
+                {
+                    received.TrySetResult(_bytes.ToArray());
+                }
             }
-            finally { buffer.Release(); }
+            finally
+            {
+                buffer.Release();
+            }
         }
 
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
@@ -171,7 +182,10 @@ internal static class NativeAotNetworkScenarios
                 packet.Content.ReadBytes(bytes);
                 received.TrySetResult(bytes);
             }
-            finally { ReferenceCountUtil.Release(packet); }
+            finally
+            {
+                ReferenceCountUtil.Release(packet);
+            }
         }
 
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)

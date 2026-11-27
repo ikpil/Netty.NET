@@ -63,7 +63,10 @@ internal sealed class LinuxTcpMd5Keys
             // Remove mappings not present in the new set.
             foreach (var peer in _peers.ToArray())
             {
-                if (replacement.ContainsKey(peer)) continue;
+                if (replacement.ContainsKey(peer))
+                {
+                    continue;
+                }
                 Apply(peer, ReadOnlySpan<byte>.Empty);
                 _peers.Remove(peer);
             }
@@ -106,7 +109,10 @@ internal sealed class LinuxTcpMd5Keys
                 return;
             throw new SocketException();
         }
-        finally { CryptographicOperations.ZeroMemory(value); }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(value);
+        }
     }
 
     [DllImport("libc", EntryPoint = "setsockopt", SetLastError = true)]

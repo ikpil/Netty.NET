@@ -97,7 +97,10 @@ public class BacklogContractTest
             Assert.Equal(200, SoMaxConnAction.Run(200, _ => true, _ => oversized, () => false, _ => null));
             Assert.Equal(1, oversized.DisposeCount);
         }
-        finally { CultureInfo.CurrentCulture = previous; }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
     }
 
     [Theory]
@@ -116,7 +119,10 @@ public class BacklogContractTest
             Assert.True(handle.IsClosed);
             Assert.True(observer.WaitForExit(5000));
         }
-        finally { StopObserver(observer); }
+        finally
+        {
+            StopObserver(observer);
+        }
     }
 
     [Fact]
@@ -131,7 +137,10 @@ public class BacklogContractTest
             Assert.True(handle.IsClosed);
             Assert.True(observer.WaitForExit(5000));
         }
-        finally { StopObserver(observer); }
+        finally
+        {
+            StopObserver(observer);
+        }
         var error = new Win32Exception(2);
         Assert.Same(error, Assert.Throws<Win32Exception>(() => NetUtil.SysctlGetInt("kern.ipc.somaxconn", _ => throw error)));
         Assert.Throws<Win32Exception>(() => NetUtil.SysctlGetInt("kern.ipc.somaxconn",
@@ -175,15 +184,31 @@ public class BacklogContractTest
             UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardInput = true
         };
         info.ArgumentList.Add(OperatingSystem.IsWindows() ? "/d" : "-c");
-        if (OperatingSystem.IsWindows()) info.ArgumentList.Add("/c");
+        if (OperatingSystem.IsWindows())
+        {
+            info.ArgumentList.Add("/c");
+        }
         return info;
     }
 
     private static void StopObserver(Process observer)
     {
-        if (observer == null) return;
-        try { if (!observer.HasExited) { observer.Kill(); observer.WaitForExit(5000); } }
-        finally { observer.Dispose(); }
+        if (observer == null)
+        {
+            return;
+        }
+        try
+        {
+            if (!observer.HasExited)
+            {
+                observer.Kill();
+                observer.WaitForExit(5000);
+            }
+        }
+        finally
+        {
+            observer.Dispose();
+        }
     }
 
     private sealed class OwnedStream : MemoryStream

@@ -301,13 +301,21 @@ public class MultiThreadIoEventLoopGroupSourceTest
 
         void Work()
         {
-            if (cancellation.IsCancellationRequested) return;
+            if (cancellation.IsCancellationRequested)
+            {
+                return;
+            }
             Thread.Sleep(20);
             if (!cancellation.IsCancellationRequested)
                 ThreadPool.QueueUserWorkItem(_ =>
                 {
-                    try { executor.Execute(Work); }
-                    catch (RejectedExecutionException) { }
+                    try
+                    {
+                        executor.Execute(Work);
+                    }
+                    catch (RejectedExecutionException)
+                    {
+                    }
                 });
         }
     }

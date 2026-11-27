@@ -53,8 +53,13 @@ public class AddressResolverGroupContractTest
         RegistrationContext.Value = "caller";
         CountingResolver resolver;
         try
-        { resolver = (CountingResolver)group.GetResolver(executor.Object); }
-        finally { RegistrationContext.Value = null; }
+        {
+            resolver = (CountingResolver)group.GetResolver(executor.Object);
+        }
+        finally
+        {
+            RegistrationContext.Value = null;
+        }
         termination.SetResult();
         await resolver.Closed.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
         Assert.Null(resolver.CloseContext);

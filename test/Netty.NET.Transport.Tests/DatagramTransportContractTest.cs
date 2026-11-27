@@ -76,7 +76,10 @@ public class DatagramTransportContractTest
             }
             var packet = await peer.ReceiveAsync().WaitAsync(TimeSpan.FromSeconds(10));
             Assert.Equal(expected, packet.Buffer);
-            if (length == 0) Assert.False(peer.Client.Poll(10_000, SelectMode.SelectRead));
+            if (length == 0)
+            {
+                Assert.False(peer.Client.Poll(10_000, SelectMode.SelectRead));
+            }
             Assert.Equal(0, buffer.RefCnt);
         }
         finally

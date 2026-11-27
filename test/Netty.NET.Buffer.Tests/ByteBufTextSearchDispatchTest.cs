@@ -83,7 +83,10 @@ public class ByteBufTextSearchDispatchTest
 
         public void Dispose()
         {
-            if (Root.RefCnt > 0) Assert.True(_owner.Release());
+            if (Root.RefCnt > 0)
+            {
+                Assert.True(_owner.Release());
+            }
             Assert.Equal(0, Root.RefCnt);
             Assert.Equal(1, Inner.Closes);
             Assert.Equal(_outerTracked ? 1 : 0, Outer.Closes);
@@ -357,6 +360,9 @@ public class ByteBufTextSearchDispatchTest
             Assert.Equal(operation >= 7 ? "한Z" : "", observation.Text);
             for (int i = 0; i < 9; ++i) Assert.Equal(i == operation ? 1 : 0, observation.Calls[i]);
         }
-        finally { root.Release(); }
+        finally
+        {
+            root.Release();
+        }
     }
 }

@@ -381,8 +381,15 @@ internal sealed class ShutdownTestHandler : SimpleChannelInboundHandler<ByteBuf>
 
     public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
     {
-        if (evt is ChannelInputShutdownEvent) { Interlocked.Increment(ref HalfClosureCount); HalfClosure.TrySetResult(); }
-        else if (evt is ChannelOutputShutdownEvent) Interlocked.Increment(ref OutputEvents);
+        if (evt is ChannelInputShutdownEvent)
+        {
+            Interlocked.Increment(ref HalfClosureCount);
+            HalfClosure.TrySetResult();
+        }
+        else if (evt is ChannelOutputShutdownEvent)
+        {
+            Interlocked.Increment(ref OutputEvents);
+        }
     }
 }
 
@@ -397,8 +404,16 @@ internal sealed class ShutdownFixture : IAsyncDisposable
         Client = new Bootstrap().Group(_group).Option(ChannelOption.ALLOCATOR, allocator);
         Server = new ServerBootstrap().Group(_group)
             .Option(ChannelOption.ALLOCATOR, allocator).ChildOption(ChannelOption.ALLOCATOR, allocator);
-        if (domain) { Client.Channel<NioDomainSocketChannel>(); Server.Channel<NioServerDomainSocketChannel>(); }
-        else { Client.Channel<NioSocketChannel>(); Server.Channel<NioServerSocketChannel>(); }
+        if (domain)
+        {
+            Client.Channel<NioDomainSocketChannel>();
+            Server.Channel<NioServerDomainSocketChannel>();
+        }
+        else
+        {
+            Client.Channel<NioSocketChannel>();
+            Server.Channel<NioServerSocketChannel>();
+        }
     }
 
     public async ValueTask DisposeAsync()

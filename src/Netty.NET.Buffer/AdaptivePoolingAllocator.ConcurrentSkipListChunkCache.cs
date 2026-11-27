@@ -37,13 +37,26 @@ internal sealed partial class AdaptivePoolingAllocator
             _chunkReuseQueue = chunkReuseQueue;
         }
 
-        public bool IsEmpty { get { lock (_sync) return _count == 0; } }
-        internal int Count { get { lock (_sync) return _count; } }
+        public bool IsEmpty { get {
+                lock (_sync)
+                {
+                    return _count == 0;
+                }
+            } }
+        internal int Count { get {
+                lock (_sync)
+                {
+                    return _count;
+                }
+            } }
 
         // CLR: multimap put/remove/iteration helpers over the sorted dictionary.
         private void Put(int key, Chunk chunk)
         {
-            if (!_chunks.TryGetValue(key, out var list)) _chunks.Add(key, list = new());
+            if (!_chunks.TryGetValue(key, out var list))
+            {
+                _chunks.Add(key, list = new());
+            }
             list.Insert(0, chunk);
             _count++;
         }
@@ -53,7 +66,10 @@ internal sealed partial class AdaptivePoolingAllocator
             List<Chunk> list = _chunks[key];
             list.Remove(chunk);
             _count--;
-            if (list.Count == 0) _chunks.Remove(key);
+            if (list.Count == 0)
+            {
+                _chunks.Remove(key);
+            }
         }
 
         private List<(int Key, Chunk Chunk)> Entries()
@@ -130,7 +146,10 @@ internal sealed partial class AdaptivePoolingAllocator
             using var events = BufferAllocatorEventSource.Log.BeginOperation();
             lock (_sync)
             {
-                if (_disposed) return false;
+                if (_disposed)
+                {
+                    return false;
+                }
                 Put(chunk.RemainingCapacity, chunk);
 
                 int size = _count;
@@ -149,7 +168,10 @@ internal sealed partial class AdaptivePoolingAllocator
                                 break;
                             }
                         }
-                        if (toDeallocate != null) break;
+                        if (toDeallocate != null)
+                        {
+                            break;
+                        }
                     }
                     if (toDeallocate == null)
                     {

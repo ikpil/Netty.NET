@@ -291,7 +291,10 @@ public class PoolSubpageTest
                     Assert.True(active.Add((owner, handle)));
                 Assert.InRange(owner.SubpageAt(PoolChunk.RunOffset(handle)).NumAvailable, 0, 4096 / 16);
                 lock (gate)
-                { owner.FreeSmall(handle); Assert.True(active.Remove((owner, handle))); }
+                {
+                    owner.FreeSmall(handle);
+                    Assert.True(active.Remove((owner, handle)));
+                }
             }
         })).ToArray();
         await Task.WhenAll(workers).WaitAsync(TimeSpan.FromSeconds(20), TestContext.Current.CancellationToken);

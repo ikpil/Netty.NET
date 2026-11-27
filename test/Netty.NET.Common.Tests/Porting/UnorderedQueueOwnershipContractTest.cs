@@ -25,7 +25,10 @@ public class UnorderedQueueOwnershipContractTest
         var expected = new InvalidOperationException("raw factory failed");
         var executor = new UnorderedThreadPoolEventExecutor(1, new Factory(task =>
         {
-            if (++attempts == 1) throw expected;
+            if (++attempts == 1)
+            {
+                throw expected;
+            }
             return new Thread(task.Invoke) { IsBackground = true };
         }));
         try
@@ -113,7 +116,10 @@ public class UnorderedQueueOwnershipContractTest
                     operation = executor.SubmitAsync(() => { Interlocked.Increment(ref calls); return 17; }, cancellation.Token);
                 });
                 await Task.WhenAll(admission, Task.Run(cancellation.Cancel)).WaitAsync(TimeSpan.FromSeconds(5));
-                try { Assert.Equal(17, await operation.WaitAsync(TimeSpan.FromSeconds(5))); }
+                try
+                {
+                    Assert.Equal(17, await operation.WaitAsync(TimeSpan.FromSeconds(5)));
+                }
                 catch (OperationCanceledException error)
                 {
                     Assert.Equal(cancellation.Token, error.CancellationToken);

@@ -40,7 +40,10 @@ public class RawIoRegistrationContractTest
             Assert.Equal(1, loop.RunNonBlockingTasks(0));
             Assert.True(ordinary);
         }
-        finally { Terminate(loop); }
+        finally
+        {
+            Terminate(loop);
+        }
         Assert.Equal(new[] { "registered", "read", "unregistered", "closed" }, handle.Events);
     }
 
@@ -63,7 +66,10 @@ public class RawIoRegistrationContractTest
             IIoRegistration next = loop.RegisterAsync(handle).GetAwaiter().GetResult();
             Assert.True(next.Cancel());
         }
-        finally { Terminate(loop); }
+        finally
+        {
+            Terminate(loop);
+        }
         Assert.Equal(new[] { "registered", "unregistered", "registered", "unregistered" }, handle.Events);
     }
 
@@ -85,7 +91,10 @@ public class RawIoRegistrationContractTest
             Assert.Throws<RejectedExecutionException>(() => { _ = loop.RegisterAsync(handle); });
             Assert.Equal(new[] { "registered", "unregistered", "closed" }, handle.Events);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Fact(Timeout = 5000)]
@@ -97,7 +106,10 @@ public class RawIoRegistrationContractTest
         {
             await Assert.ThrowsAsync<InvalidOperationException>(() => group.RegisterAsync(new RecordingHandle(group.Next(), socket)));
         }
-        finally { await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5)); }
+        finally
+        {
+            await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
+        }
     }
 
     [Fact(Timeout = 5000)]
@@ -119,7 +131,10 @@ public class RawIoRegistrationContractTest
             Assert.Equal(new[] { "registered", "unregistered", "closed" }, failing.Events);
             Assert.Equal(new[] { "registered", "unregistered", "closed" }, healthy.Events);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     private static void Terminate(ManualIoEventLoop loop)
@@ -166,7 +181,10 @@ public class RawIoRegistrationContractTest
         {
             Assert.True(owner.InEventLoop());
             Events.Add("closed");
-            if (FailClose) throw new InvalidOperationException("Close failed.");
+            if (FailClose)
+            {
+                throw new InvalidOperationException("Close failed.");
+            }
         }
     }
 }

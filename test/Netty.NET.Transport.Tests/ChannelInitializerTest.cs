@@ -110,7 +110,10 @@ public class ChannelInitializerTest : IAsyncLifetime
             Assert.Same(handler4, handlers.Current.Value);
             Assert.False(handlers.MoveNext());
         }
-        finally { await channel.CloseAsync(); }
+        finally
+        {
+            await channel.CloseAsync();
+        }
     }
 
     [Fact]
@@ -133,7 +136,10 @@ public class ChannelInitializerTest : IAsyncLifetime
             Assert.Equal(1, initChannelCalled);
             Assert.Equal(2, registeredCalled);
         }
-        finally { await channel.CloseAsync(); }
+        finally
+        {
+            await channel.CloseAsync();
+        }
     }
 
     [Fact(Timeout = TIMEOUT_MILLIS)]
@@ -186,7 +192,11 @@ public class ChannelInitializerTest : IAsyncLifetime
             clientChannel = await _client.ConnectAsync(SERVER_ADDRESS);
             Assert.Equal(1, _testHandler.ChannelRegisteredCount);
         }
-        finally { await CloseChannel(clientChannel); await CloseChannel(serverChannel); }
+        finally
+        {
+            await CloseChannel(clientChannel);
+            await CloseChannel(serverChannel);
+        }
     }
 
     [Fact(Timeout = 10000)]

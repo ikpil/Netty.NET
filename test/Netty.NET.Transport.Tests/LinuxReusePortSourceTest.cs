@@ -60,7 +60,10 @@ public class LinuxReusePortSourceTest
             var error = await Assert.ThrowsAsync<SocketException>(() => Bind(first.LocalAddress));
             Assert.Equal(SocketError.AddressAlreadyInUse, error.SocketErrorCode);
         }
-        finally { await loop.StopAsync(); }
+        finally
+        {
+            await loop.StopAsync();
+        }
     }
 
     [Fact(Timeout = 10000)]
@@ -88,7 +91,10 @@ public class LinuxReusePortSourceTest
             Assert.True(firstHandler.Accepted);
             Assert.True(secondHandler.Accepted);
         }
-        finally { await loop.StopAsync(); }
+        finally
+        {
+            await loop.StopAsync();
+        }
     }
 
     // TODO: Unignore after making it pass on centos6-1 and debian7-1
@@ -121,7 +127,10 @@ public class LinuxReusePortSourceTest
             Assert.True(firstHandler.Received);
             Assert.True(secondHandler.Received);
         }
-        finally { await loop.StopAsync(); }
+        finally
+        {
+            await loop.StopAsync();
+        }
     }
 
     private static ServerBootstrap NewServer(MultiThreadIoEventLoopGroup loop)

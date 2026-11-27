@@ -45,13 +45,22 @@ public class PooledAllocatorDiagnosticsTest
                 {
                     text.Append("Chunk(s) at ").Append(Labels[i]).Append(':').Append(Environment.NewLine);
                     var chunks = arena.ChunkLists[i].ToArray();
-                    if (chunks.Length == 0) text.Append("none");
-                    else for (int j = 0; j < chunks.Length; j++)
+                    if (chunks.Length == 0)
                     {
-                        if (j != 0) text.Append(Environment.NewLine);
+                        text.Append("none");
+                    }
+                    else
+                    {
+                        for (int j = 0; j < chunks.Length; j++)
+                    {
+                        if (j != 0)
+                            {
+                                text.Append(Environment.NewLine);
+                            }
                         IPoolChunkMetric chunk = chunks[j];
                         int usage = chunk.FreeBytes == 0 ? 100 : Math.Min(99, 100 - (int)(100L * chunk.FreeBytes / chunk.ChunkSize));
                         text.Append(FormattableString.Invariant($"Chunk(<id>: {usage}%, {chunk.ChunkSize - chunk.FreeBytes}/{chunk.ChunkSize})"));
+                    }
                     }
                     text.Append(Environment.NewLine);
                 }
@@ -109,7 +118,10 @@ public class PooledAllocatorDiagnosticsTest
             Assert.Equal(Model(allocator), Normalize(allocator.DumpStats()));
             Assert.Equal(0, native.ReservedBytes);
         }
-        finally { foreach (ByteBuf b in live) b.Release(); }
+        finally
+        {
+            foreach (ByteBuf b in live) b.Release();
+        }
     }
 
     [Theory]
@@ -123,11 +135,20 @@ public class PooledAllocatorDiagnosticsTest
         {
             for (int i = 0; i < 513; i++) live.Add(direct ? allocator.DirectBuffer(16, 16) : allocator.HeapBuffer(16, 16));
             Assert.Equal(Model(allocator), Normalize(allocator.DumpStats()));
-            live[0].Release(); live[256].Release();
+            live[0].Release();
+            live[256].Release();
             Assert.Equal(Model(allocator), Normalize(allocator.DumpStats()));
             Assert.Contains("0: ", allocator.DumpStats());
         }
-        finally { foreach (ByteBuf b in live) if (b.RefCnt != 0) b.Release(); allocator.Dispose(); }
+        finally
+        {
+            foreach (ByteBuf b in live)
+        if (b.RefCnt != 0)
+        {
+            b.Release();
+        }
+            allocator.Dispose();
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -149,7 +170,15 @@ public class PooledAllocatorDiagnosticsTest
             { live[i].Release(); Assert.Equal(Model(allocator), Normalize(allocator.DumpStats())); }
             live.Clear();
         }
-        finally { foreach (ByteBuf b in live) if (b.RefCnt != 0) b.Release(); allocator.Dispose(); }
+        finally
+        {
+            foreach (ByteBuf b in live)
+        if (b.RefCnt != 0)
+        {
+            b.Release();
+        }
+            allocator.Dispose();
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -212,7 +241,12 @@ public class PooledAllocatorDiagnosticsTest
             Assert.Contains("offset: -1", head.ToString());
             Assert.DoesNotContain("minus", head.ToString());
         }
-        finally { CultureInfo.CurrentCulture = before; b.Release(); allocator.Dispose(); }
+        finally
+        {
+            CultureInfo.CurrentCulture = before;
+            b.Release();
+            allocator.Dispose();
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -235,11 +269,17 @@ public class PooledAllocatorDiagnosticsTest
                     {
                         b = allocator.DirectBuffer(i % 2 == 0 ? 16 : 4096, 4096);
                     }
-                    catch (ObjectDisposedException) { break; }
+                    catch (ObjectDisposedException)
+                    {
+                        break;
+                    }
                     b.Release();
                 }
             }
-            catch (Exception e) { failure = e; }
+            catch (Exception e)
+            {
+                failure = e;
+            }
         });
         worker.Start();
         start.Set();
@@ -289,7 +329,12 @@ public class PooledAllocatorDiagnosticsTest
             allocator.ReleaseCurrentThreadBinding();
             Assert.Equal(0, metric.NumThreadLocalCaches);
         }
-        finally { heap.Release(); direct.Release(); allocator.Dispose(); }
+        finally
+        {
+            heap.Release();
+            direct.Release();
+            allocator.Dispose();
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 }

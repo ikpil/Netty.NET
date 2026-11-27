@@ -57,7 +57,8 @@ public class PooledDirectByteBufTest : AbstractPooledArenaByteBufTest
             var b = (PooledDirectByteBuf)allocator.DirectBuffer(requested, requested);
             try
             {
-                Assert.Equal(requested, b.Capacity); Assert.Equal(requested, b.MaxCapacity);
+                Assert.Equal(requested, b.Capacity);
+                Assert.Equal(requested, b.MaxCapacity);
                 Assert.True(b.Allocation.ReservedLength >= requested);
                 Assert.Equal(0, b.Allocation.ReservedLength % alignment);
                 Assert.True(NativeMemoryOwner.TryGetOwner(b.AsMemory(0, requested), out var owner));
@@ -66,7 +67,10 @@ public class PooledDirectByteBufTest : AbstractPooledArenaByteBufTest
                 b.AsSpan(0, requested).Fill(0xA5);
                 Assert.Equal(-1, b.AsSpan(0, requested).IndexOfAnyExcept((byte)0xA5));
             }
-            finally { b.Release(); }
+            finally
+            {
+                b.Release();
+            }
         }
     }
 
@@ -79,21 +83,31 @@ public class PooledDirectByteBufTest : AbstractPooledArenaByteBufTest
         var b = (PooledDirectByteBuf)allocator.DirectBuffer(requested, requested);
         try
         {
-            Assert.Equal(requested, b.Capacity); Assert.Equal(requested, b.MaxCapacity);
+            Assert.Equal(requested, b.Capacity);
+            Assert.Equal(requested, b.MaxCapacity);
             Assert.Equal(alignment == 0 ? requested : allocator.Arena.SizeClass.NormalizeSize(requested),
                 b.Allocation.ReservedLength);
             b.WriteLong(0x0102030405060708);
             ByteBuf copy = b.Copy(1, 6);
             try
             {
-                Assert.IsType<PooledDirectByteBuf>(copy); Assert.True(copy.IsDirect);
-                Assert.Same(allocator, copy.Alloc()); Assert.Equal(requested, copy.MaxCapacity);
+                Assert.IsType<PooledDirectByteBuf>(copy);
+                Assert.True(copy.IsDirect);
+                Assert.Same(allocator, copy.Alloc());
+                Assert.Equal(requested, copy.MaxCapacity);
                 Assert.Equal(new byte[] { 2, 3, 4, 5, 6, 7 }, ByteBufUtil.GetBytes(copy));
-                copy.SetByte(0, 99); Assert.Equal(2, b.GetByte(1));
+                copy.SetByte(0, 99);
+                Assert.Equal(2, b.GetByte(1));
             }
-            finally { copy.Release(); }
+            finally
+            {
+                copy.Release();
+            }
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -109,19 +123,32 @@ public class PooledDirectByteBufTest : AbstractPooledArenaByteBufTest
         try
         {
             Assert.Throws<OutOfDirectMemoryError>(() => b.Capacity = chunkSize + 1);
-            Assert.Same(before, b.Allocation); Assert.Equal(chunkSize, b.Capacity);
-            Assert.Equal(10, b.ReaderIndex); Assert.Equal(100, b.WriterIndex);
+            Assert.Same(before, b.Allocation);
+            Assert.Equal(chunkSize, b.Capacity);
+            Assert.Equal(10, b.ReaderIndex);
+            Assert.Equal(100, b.WriterIndex);
             Assert.Equal(chunkSize + alignment, allocator.Native.ReservedBytes);
             Assert.Equal(-1, b.AsSpan(0, chunkSize).IndexOfAnyExcept((byte)0xA5));
             b.SetIndex(20, 90).ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(10, b.ReaderIndex); Assert.Equal(100, b.WriterIndex);
+            Assert.Equal(10, b.ReaderIndex);
+            Assert.Equal(100, b.WriterIndex);
             Assert.Throws<OutOfDirectMemoryError>(() => allocator.DirectBuffer(48));
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
         Assert.Equal(0, allocator.Native.ReservedBytes);
         var retry = (PooledDirectByteBuf)allocator.DirectBuffer(48);
-        try { Assert.NotSame(before.Storage, retry.Allocation.Storage); retry.SetByte(0, 99); }
-        finally { retry.Release(); }
+        try
+        {
+            Assert.NotSame(before.Storage, retry.Allocation.Storage);
+            retry.SetByte(0, 99);
+        }
+        finally
+        {
+            retry.Release();
+        }
     }
 
     [Theory]
@@ -232,10 +259,14 @@ public class PooledDirectByteBufTest : AbstractPooledArenaByteBufTest
         try
         {
             Assert.False(b.Allocation.IsPooled);
-            Assert.Equal(47, b.Capacity); Assert.Equal(47, b.Allocation.ReservedLength);
+            Assert.Equal(47, b.Capacity);
+            Assert.Equal(47, b.Allocation.ReservedLength);
             Assert.Equal(47, allocator.Native.ReservedBytes);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
         Assert.Equal(0, allocator.Native.ReservedBytes);
     }
 
@@ -249,8 +280,14 @@ public class PooledDirectByteBufTest : AbstractPooledArenaByteBufTest
         Task close = Task.Run(() => allocator.Arena.Dispose(), cancellation);
         await Task.WhenAll(buffers.Select((b, i) => Task.Run(() =>
         {
-            try { Assert.Equal(i, b.GetInt(0)); }
-            finally { b.Release(); }
+            try
+            {
+                Assert.Equal(i, b.GetInt(0));
+            }
+            finally
+            {
+                b.Release();
+            }
         }, cancellation)).Append(close));
         Assert.Equal(0, allocator.Native.ReservedBytes);
     }

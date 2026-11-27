@@ -82,7 +82,10 @@ public class DefaultFileRegionTest
             Assert.Equal(data.Length, region.Transferred());
             Assert.Equal(data, outputStream.ToArray());
         }
-        finally { region.Release(); }
+        finally
+        {
+            region.Release();
+        }
     }
 
     [Fact]
@@ -106,8 +109,13 @@ public class DefaultFileRegionTest
             Assert.Equal(data.Length, region.Count());
             Assert.Equal(data.Length - 1024, region.Transferred());
             try
-            { Assert.Throws<IOException>(() => region.TransferTo(channel, data.Length - 1024)); }
-            finally { region.Release(); }
+            {
+                Assert.Throws<IOException>(() => region.TransferTo(channel, data.Length - 1024));
+            }
+            finally
+            {
+                region.Release();
+            }
         }
         finally
         {

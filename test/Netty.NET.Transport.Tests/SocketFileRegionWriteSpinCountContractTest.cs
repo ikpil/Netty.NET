@@ -48,7 +48,10 @@ public class SocketFileRegionWriteSpinCountContractTest
         using var fixture = new Fixture(writeSpinCount);
         var region = new Region(1, transfer: (self, target, position) =>
         {
-            if (self.Positions.Count <= 2) return 0;
+            if (self.Positions.Count <= 2)
+            {
+                return 0;
+            }
             target.WriteByte(42); self.Advance(1); return 1;
         });
         var write = fixture.Channel.WriteAndFlushAsync(region);
@@ -112,7 +115,10 @@ public class SocketFileRegionWriteSpinCountContractTest
         var region = new Region(1, transfer: (self, target, position) =>
         {
             self.Advance(10);
-            if (physicalBytes) target.WriteByte(42);
+            if (physicalBytes)
+            {
+                target.WriteByte(42);
+            }
             return physicalBytes ? 1 : 0;
         });
         var write = fixture.Channel.WriteAndFlushAsync(region);
@@ -122,7 +128,10 @@ public class SocketFileRegionWriteSpinCountContractTest
         Assert.Equal(1, fixture.Channel.FileCalls);
         Assert.Equal(10, region.Transferred());
         Assert.Equal(0, region.RefCnt);
-        if (physicalBytes) Assert.Equal(new byte[] { 42 }, fixture.Receive(1));
+        if (physicalBytes)
+        {
+            Assert.Equal(new byte[] { 42 }, fixture.Receive(1));
+        }
     }
 
     [Fact]
@@ -162,7 +171,10 @@ public class SocketFileRegionWriteSpinCountContractTest
         var region = new Region(1, transfer: (self, target, position) =>
         {
             onOwner |= fixture.Loop.InEventLoop();
-            if (self.Positions.Count == 1) return 0;
+            if (self.Positions.Count == 1)
+            {
+                return 0;
+            }
             target.WriteByte(42); self.Advance(1); return 1;
         });
         var write = fixture.Channel.WriteAndFlushAsync(region);
@@ -320,7 +332,10 @@ public class SocketFileRegionWriteSpinCountContractTest
         protected override long DoWriteFileRegion(IFileRegion region)
         {
             FileCalls++;
-            if (Failure != null) throw Failure;
+            if (Failure != null)
+            {
+                throw Failure;
+            }
             return base.DoWriteFileRegion(region);
         }
     }

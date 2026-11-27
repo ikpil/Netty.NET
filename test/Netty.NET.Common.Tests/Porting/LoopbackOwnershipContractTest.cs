@@ -45,7 +45,10 @@ public class LoopbackOwnershipContractTest
             Mutate(first, scope + 7);
             IPAddress later = Read(type, member);
             Assert.Equal(expected, later.GetAddressBytes());
-            if (later.AddressFamily == AddressFamily.InterNetworkV6) Assert.Equal(scope, later.ScopeId);
+            if (later.AddressFamily == AddressFamily.InterNetworkV6)
+            {
+                Assert.Equal(scope, later.ScopeId);
+            }
             Assert.NotSame(first, later);
         });
     }
@@ -62,7 +65,10 @@ public class LoopbackOwnershipContractTest
             long scope = second.Address.AddressFamily == AddressFamily.InterNetworkV6 ? second.Address.ScopeId : 0;
             Mutate(first.Address, scope + 42);
             Assert.Equal(expected, second.Address.GetAddressBytes());
-            if (second.Address.AddressFamily == AddressFamily.InterNetworkV6) Assert.Equal(scope, second.Address.ScopeId);
+            if (second.Address.AddressFamily == AddressFamily.InterNetworkV6)
+            {
+                Assert.Equal(scope, second.Address.ScopeId);
+            }
             Assert.NotSame(first.Address, second.Address);
             Assert.Equal(second.Address, Read(type, member));
         });
@@ -82,7 +88,10 @@ public class LoopbackOwnershipContractTest
                 Mutate(address, scope + index + 1);
                 IPAddress later = Read(type, "LOCALHOST");
                 Assert.Equal(bytes, later.GetAddressBytes());
-                if (later.AddressFamily == AddressFamily.InterNetworkV6) Assert.Equal(scope, later.ScopeId);
+                if (later.AddressFamily == AddressFamily.InterNetworkV6)
+                {
+                    Assert.Equal(scope, later.ScopeId);
+                }
                 Assert.NotSame(address, later);
             });
         });

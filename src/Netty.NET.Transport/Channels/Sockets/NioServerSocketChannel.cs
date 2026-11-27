@@ -174,7 +174,10 @@ public class NioServerSocketChannel : AbstractNioMessageChannel, IServerSocketCh
         if (OperatingSystem.IsLinux() && JavaChannel().ProtocolType == ProtocolType.Tcp &&
             Config.TryGetOption(ChannelOption.TCP_FASTOPEN, out int fastOpen) && fastOpen > 0)
         {
-            try { LinuxSocketOptions.SetInt(JavaChannel(), (int)SocketOptionLevel.Tcp, LinuxSocketOptions.TcpFastOpen, fastOpen); }
+            try
+            {
+                LinuxSocketOptions.SetInt(JavaChannel(), (int)SocketOptionLevel.Tcp, LinuxSocketOptions.TcpFastOpen, fastOpen);
+            }
             catch (SocketException error) when (error.SocketErrorCode is SocketError.ProtocolOption or SocketError.OperationNotSupported)
             {
                 // The source only applies the configured queue on a supporting kernel.

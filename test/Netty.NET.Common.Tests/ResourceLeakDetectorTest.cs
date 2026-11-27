@@ -81,16 +81,31 @@ public class ResourceLeakDetectorTest : IDisposable
                             Resource resource = new DefaultResource();
                             resources.Enqueue(new LeakAwareResource(resource, DefaultResource.detector.Track(resource)));
                         }
-                        if (CloseResources(true)) Volatile.Write(ref finished, 1);
+                        if (CloseResources(true))
+                        {
+                            Volatile.Write(ref finished, 1);
+                        }
                     }
                 }
-                catch (ThreadInterruptedException) { Thread.CurrentThread.Interrupt(); }
-                catch (Exception failure) { Interlocked.CompareExchange(ref error, failure, null); }
+                catch (ThreadInterruptedException)
+                {
+                    Thread.CurrentThread.Interrupt();
+                }
+                catch (Exception failure)
+                {
+                    Interlocked.CompareExchange(ref error, failure, null);
+                }
                 finally
                 {
                     // Just close all resource now without assert it to eliminate more reports.
-                    try { CloseResources(false); }
-                    catch (Exception failure) { Interlocked.CompareExchange(ref error, failure, null); }
+                    try
+                    {
+                        CloseResources(false);
+                    }
+                    catch (Exception failure)
+                    {
+                        Interlocked.CompareExchange(ref error, failure, null);
+                    }
                 }
             }) { IsBackground = true };
             threads[i].Start();
@@ -246,13 +261,19 @@ public class ResourceLeakDetectorTest : IDisposable
 
         protected override void ReportTracedLeak(string type, string records)
         {
-            if (!records.Contains(canaryString, StringComparison.Ordinal)) ReportError(new InvalidOperationException("Leak records did not contain canary string"));
+            if (!records.Contains(canaryString, StringComparison.Ordinal))
+            {
+                ReportError(new InvalidOperationException("Leak records did not contain canary string"));
+            }
             Interlocked.Increment(ref leaksFound);
         }
 
         protected override void ReportUntracedLeak(string type)
         {
-            if (failOnUntraced) ReportError(new InvalidOperationException("Got untraced leak w/o canary string"));
+            if (failOnUntraced)
+            {
+                ReportError(new InvalidOperationException("Got untraced leak w/o canary string"));
+            }
             Interlocked.Increment(ref leaksFound);
         }
 

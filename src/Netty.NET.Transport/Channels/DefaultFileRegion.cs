@@ -143,7 +143,10 @@ public class DefaultFileRegion : AbstractReferenceCounted, IFileRegion
                 _transferred = unchecked(_transferred + read);
             }
         }
-        finally { ArrayPool<byte>.Shared.Return(buffer); }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
         if (written == 0)
         {
             // If the amount of written data is 0 we need to check if the requested count is bigger then the
@@ -162,8 +165,13 @@ public class DefaultFileRegion : AbstractReferenceCounted, IFileRegion
             return;
         _file = null;
         try
-        { file.Dispose(); }
-        catch (IOException error) { Logger.Warn("Failed to close a file.", error); }
+        {
+            file.Dispose();
+        }
+        catch (IOException error)
+        {
+            Logger.Warn("Failed to close a file.", error);
+        }
     }
 
     public new IFileRegion Retain()
@@ -222,7 +230,10 @@ public class DefaultFileRegion : AbstractReferenceCounted, IFileRegion
                 written = sent;
             }
         }
-        finally { ArrayPool<byte>.Shared.Return(buffer); }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
         if (written > 0)
         {
             _transferred = unchecked(_transferred + written);

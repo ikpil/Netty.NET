@@ -47,7 +47,10 @@ public class ByteBufComparisonSourceTest
 
         public void Dispose()
         {
-            if (Root.RefCnt > 0) Root.Release();
+            if (Root.RefCnt > 0)
+            {
+                Root.Release();
+            }
             Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
@@ -111,7 +114,10 @@ public class ByteBufComparisonSourceTest
             Assert.Equal(1, buffer.RefCnt);
             Assert.Equal(1, expected.RefCnt);
         }
-        finally { Assert.True(expected.Release()); }
+        finally
+        {
+            Assert.True(expected.Release());
+        }
     }
 
     [Theory]
@@ -155,7 +161,10 @@ public class ByteBufComparisonSourceTest
                 {
                     Assert.True(retained.CompareTo(comparison) < 0);
                 }
-                finally { retained.Release(); }
+                finally
+                {
+                    retained.Release();
+                }
             }
             Assert.Equal(value, ByteBufUtil.GetBytes(buffer, 0, 32));
             Assert.Equal(0, buffer.ReaderIndex);
@@ -163,7 +172,10 @@ public class ByteBufComparisonSourceTest
             Assert.Equal(1, buffer.RefCnt);
             Assert.Equal(1, expected.RefCnt);
         }
-        finally { Assert.True(expected.Release()); }
+        finally
+        {
+            Assert.True(expected.Release());
+        }
     }
 
     [Theory]

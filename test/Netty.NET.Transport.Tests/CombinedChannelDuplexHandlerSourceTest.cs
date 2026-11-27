@@ -92,7 +92,10 @@ public class CombinedChannelDuplexHandlerSourceTest
         {
             Assert.Same(exception, cause);
             queue.Enqueue(this);
-            if (forward) ctx.FireExceptionCaught(cause);
+            if (forward)
+            {
+                ctx.FireExceptionCaught(cause);
+            }
         }
     }
     private sealed class OutboundExceptionHandler(Queue<IChannelHandler> queue, Exception exception) : ChannelOutboundHandlerAdapter
@@ -123,7 +126,10 @@ public class CombinedChannelDuplexHandlerSourceTest
             Assert.Same(lastHandler, queue.Dequeue());
             Assert.Empty(queue);
         }
-        finally { channel.FinishAndReleaseAll(); }
+        finally
+        {
+            channel.FinishAndReleaseAll();
+        }
     }
 
     [Fact]
@@ -151,7 +157,10 @@ public class CombinedChannelDuplexHandlerSourceTest
             Assert.True(channel.Finish());
             Assert.Null(inboundHandler.PollEvent());
         }
-        finally { channel.FinishAndReleaseAll(); }
+        finally
+        {
+            channel.FinishAndReleaseAll();
+        }
     }
 
     [Fact]
@@ -178,7 +187,10 @@ public class CombinedChannelDuplexHandlerSourceTest
             Assert.False(channel.Finish());
             Assert.Null(outboundHandler.PollEvent());
         }
-        finally { channel.FinishAndReleaseAll(); }
+        finally
+        {
+            channel.FinishAndReleaseAll();
+        }
     }
 
     private static async Task DoOutboundOperations(IChannel channel)
@@ -212,7 +224,10 @@ public class CombinedChannelDuplexHandlerSourceTest
             await pipeline.DeregisterAsync().WaitAsync(timeout);
             channel.Finish();
         }
-        finally { channel.FinishAndReleaseAll(); }
+        finally
+        {
+            channel.FinishAndReleaseAll();
+        }
     }
 
     private static void DoInboundOperations(IChannel channel)

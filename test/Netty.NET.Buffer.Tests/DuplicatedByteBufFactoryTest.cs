@@ -67,7 +67,10 @@ public class DuplicatedByteBufFactoryTest
             };
             Root.Clear();
             Buffer = retained ? Root.RetainedDuplicate() : Root.Duplicate();
-            if (retained) Root.Release();
+            if (retained)
+            {
+                Root.Release();
+            }
             Assert.Equal(Root.ReaderIndex, Buffer.ReaderIndex);
             Assert.Equal(Root.WriterIndex, Buffer.WriterIndex);
             Assert.Equal(1, Buffer.RefCnt);
@@ -75,7 +78,10 @@ public class DuplicatedByteBufFactoryTest
 
         public void Dispose()
         {
-            if (Buffer.RefCnt > 0) Buffer.Release(Buffer.RefCnt);
+            if (Buffer.RefCnt > 0)
+            {
+                Buffer.Release(Buffer.RefCnt);
+            }
             Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, _native.ReservedBytes);
@@ -380,8 +386,14 @@ public class DuplicatedByteBufFactoryTest
             Assert.Equal(0, dup.CompareTo(buf));
             Assert.Equal(0, dup.CompareTo(dup.Duplicate()));
             ByteBuf b = dup.RetainedDuplicate();
-            try { Assert.Equal(0, dup.CompareTo(b)); }
-            finally { b.Release(); }
+            try
+            {
+                Assert.Equal(0, dup.CompareTo(b));
+            }
+            finally
+            {
+                b.Release();
+            }
             Assert.Equal(0, dup.CompareTo(dup.Slice(dup.ReaderIndex, dup.ReadableBytes)));
             // CLR: mutations are shared while the reader indices stay independent.
             dup.SetByte(3, 99);

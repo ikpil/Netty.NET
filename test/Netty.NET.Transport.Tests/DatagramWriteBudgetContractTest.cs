@@ -87,7 +87,10 @@ public class DatagramWriteBudgetContractTest
             Assert.Equal(budget, await marker.Task.WaitAsync(TestContext.Current.CancellationToken));
             await Task.WhenAll(writes).WaitAsync(TestContext.Current.CancellationToken);
         }
-        finally { await group.StopAsync(); }
+        finally
+        {
+            await group.StopAsync();
+        }
     }
 
     [Theory]
@@ -98,7 +101,10 @@ public class DatagramWriteBudgetContractTest
         using var fixture = new Fixture(new RecordingDatagram(), initial);
         fixture.Channel.Write = id =>
         {
-            if (id == 1) fixture.Channel.Config.SetOption(ChannelOption.MAX_MESSAGES_PER_WRITE, next);
+            if (id == 1)
+            {
+                fixture.Channel.Config.SetOption(ChannelOption.MAX_MESSAGES_PER_WRITE, next);
+            }
             return Task.CompletedTask;
         };
         Task[] writes = Enqueue(fixture.Channel, 6);
@@ -160,7 +166,10 @@ public class DatagramWriteBudgetContractTest
             if (id == 1)
             {
                 later = fixture.Channel.WriteAsync(Unpooled.Buffer(1).WriteByte(4));
-                if (flush) fixture.Channel.Flush();
+                if (flush)
+                {
+                    fixture.Channel.Flush();
+                }
             }
             return Task.CompletedTask;
         };
@@ -218,7 +227,10 @@ public class DatagramWriteBudgetContractTest
             Assert.All(writes, write => Assert.True(write.IsCompletedSuccessfully));
             Assert.Equal(5, channel.OutboundMessages().Count);
         }
-        finally { channel.FinishAndReleaseAll(); }
+        finally
+        {
+            channel.FinishAndReleaseAll();
+        }
     }
 
     [Theory]
@@ -265,7 +277,10 @@ public class DatagramWriteBudgetContractTest
             Assert.Equal(42, bytes[0]);
             Assert.False(receiver.Poll(10_000, SelectMode.SelectRead));
         }
-        finally { ManualIoEventLoopSourceTest.Terminate(loop); }
+        finally
+        {
+            ManualIoEventLoopSourceTest.Terminate(loop);
+        }
     }
 
     private static Task[] Enqueue(IChannel channel, int count)
@@ -294,7 +309,10 @@ public class DatagramWriteBudgetContractTest
         {
             Channel = channel;
             Channel.Config.SetAutoRead(false);
-            if (budget.HasValue) Channel.Config.SetOption(ChannelOption.MAX_MESSAGES_PER_WRITE, budget.Value);
+            if (budget.HasValue)
+            {
+                Channel.Config.SetOption(ChannelOption.MAX_MESSAGES_PER_WRITE, budget.Value);
+            }
             Loop.RegisterAsync(Channel).GetAwaiter().GetResult();
             Channel.BindAsync(new IPEndPoint(IPAddress.Loopback, 0)).GetAwaiter().GetResult();
             // AbstractUnsafe.bind invokes channelActive later; settle it before counting write turns.

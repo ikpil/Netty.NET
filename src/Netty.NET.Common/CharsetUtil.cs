@@ -77,14 +77,38 @@ public static class CharsetUtil
         for (int i = 0; i < n; i++)
         {
             char c = s[i];
-            if (c >= 'A' && c <= 'Z') continue;
-            if (c >= 'a' && c <= 'z') continue;
-            if (c >= '0' && c <= '9') continue;
-            if (c == '-' && i != 0) continue;
-            if (c == '+' && i != 0) continue;
-            if (c == ':' && i != 0) continue;
-            if (c == '_' && i != 0) continue;
-            if (c == '.' && i != 0) continue;
+            if (c >= 'A' && c <= 'Z')
+            {
+                continue;
+            }
+            if (c >= 'a' && c <= 'z')
+            {
+                continue;
+            }
+            if (c >= '0' && c <= '9')
+            {
+                continue;
+            }
+            if (c == '-' && i != 0)
+            {
+                continue;
+            }
+            if (c == '+' && i != 0)
+            {
+                continue;
+            }
+            if (c == ':' && i != 0)
+            {
+                continue;
+            }
+            if (c == '_' && i != 0)
+            {
+                continue;
+            }
+            if (c == '.' && i != 0)
+            {
+                continue;
+            }
             throw new ArgumentException(s);
         }
     }

@@ -61,19 +61,39 @@ public class ByteBufAsciiCopyTest
         try
         {
             b.SetIndex(1, 4).MarkReaderIndex().MarkWriterIndex();
-            if (mode == 0) ByteBufUtil.Copy(source, b);
-            else if (mode == 1) ByteBufUtil.Copy(new AsciiString(padded, true), 2, b, 256);
-            else ByteBufUtil.Copy(source, 0, b, 8, 256);
+            if (mode == 0)
+            {
+                ByteBufUtil.Copy(source, b);
+            }
+            else if (mode == 1)
+            {
+                ByteBufUtil.Copy(new AsciiString(padded, true), 2, b, 256);
+            }
+            else
+            {
+                ByteBufUtil.Copy(source, 0, b, 8, 256);
+            }
             int start = mode == 2 ? 8 : 4;
             Assert.Equal(data, ByteBufUtil.GetBytes(b, start, 256));
-            Assert.Equal(1, b.ReaderIndex); Assert.Equal(mode == 2 ? 4 : 260, b.WriterIndex);
+            Assert.Equal(1, b.ReaderIndex);
+            Assert.Equal(mode == 2 ? 4 : 260, b.WriterIndex);
             Assert.Equal(1, owner.RefCnt);
             b.ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(1, b.ReaderIndex); Assert.Equal(4, b.WriterIndex);
-            if (kind == 5) Assert.Equal(4, owner.WriterIndex);
-            if (kind == 3 || kind == 4) Assert.Equal(kind == 3 ? 276 : 272, owner.WriterIndex);
+            Assert.Equal(1, b.ReaderIndex);
+            Assert.Equal(4, b.WriterIndex);
+            if (kind == 5)
+            {
+                Assert.Equal(4, owner.WriterIndex);
+            }
+            if (kind == 3 || kind == 4)
+            {
+                Assert.Equal(kind == 3 ? 276 : 272, owner.WriterIndex);
+            }
         }
-        finally { owner.Release(); }
+        finally
+        {
+            owner.Release();
+        }
     }
 
     [Theory]
@@ -85,11 +105,18 @@ public class ByteBufAsciiCopyTest
         {
             b.SetBytes(0, new byte[] { 1, 2, 3, 4 }).SetIndex(1, 4).MarkReaderIndex().MarkWriterIndex();
             ByteBufUtil.Copy(new AsciiString(new byte[] { 9, 128, 255, 0, 7 }, false), 1, b, 3);
-            Assert.True(b.Capacity >= 7); Assert.Equal(7, b.WriterIndex); Assert.Equal(1, b.ReaderIndex);
+            Assert.True(b.Capacity >= 7);
+            Assert.Equal(7, b.WriterIndex);
+            Assert.Equal(1, b.ReaderIndex);
             Assert.Equal(new byte[] { 1, 2, 3, 4, 128, 255, 0 }, ByteBufUtil.GetBytes(b, 0, 7));
-            b.ResetReaderIndex().ResetWriterIndex(); Assert.Equal(1, b.ReaderIndex); Assert.Equal(4, b.WriterIndex);
+            b.ResetReaderIndex().ResetWriterIndex();
+            Assert.Equal(1, b.ReaderIndex);
+            Assert.Equal(4, b.WriterIndex);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -105,9 +132,14 @@ public class ByteBufAsciiCopyTest
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.Copy(source, start, b, 0, length));
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.Copy(source, start, null, length));
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.Copy(source, start, null, 0, length));
-            Assert.Equal(2, b.Capacity); Assert.Equal(2, b.WriterIndex); Assert.Equal(new byte[] { 5, 6 }, ByteBufUtil.GetBytes(b));
+            Assert.Equal(2, b.Capacity);
+            Assert.Equal(2, b.WriterIndex);
+            Assert.Equal(new byte[] { 5, 6 }, ByteBufUtil.GetBytes(b));
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -119,10 +151,14 @@ public class ByteBufAsciiCopyTest
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.Copy(new AsciiString(new byte[8], false), 0, b, start, length));
-            Assert.Equal(8, b.Capacity); Assert.Equal(8, b.WriterIndex);
+            Assert.Equal(8, b.Capacity);
+            Assert.Equal(8, b.WriterIndex);
             Assert.Equal(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 }, ByteBufUtil.GetBytes(b));
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -141,7 +177,10 @@ public class ByteBufAsciiCopyTest
             Assert.Throws<NotSupportedException>(() => ByteBufUtil.Copy(source, 0, b, 0, length));
             Assert.Equal(kind == 2 ? 8 : 0, b.WriterIndex);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -180,7 +219,10 @@ public class ByteBufAsciiCopyTest
             Assert.Equal(expected, data);
             Assert.Equal(destinationIndex + 9, b.WriterIndex);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Fact]
@@ -195,7 +237,10 @@ public class ByteBufAsciiCopyTest
             Assert.Equal(new byte[] { 1, 2, 128, 255 }, old);
             Assert.NotSame(old, ByteBufUtil.GetBytes(b, 0, b.Capacity, false));
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Fact]
@@ -207,15 +252,20 @@ public class ByteBufAsciiCopyTest
             AsciiString source = new(new byte[] { 9 }, false);
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.Copy(source, b));
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.Copy(source, 0, b, 1));
-            ByteBufUtil.Copy(source, 1, b, 0); ByteBufUtil.Copy(source, 1, b, 4, 0);
+            ByteBufUtil.Copy(source, 1, b, 0);
+            ByteBufUtil.Copy(source, 1, b, 4, 0);
             ByteBufUtil.Copy(new AsciiString(Array.Empty<byte>(), false), b);
-            Assert.Equal(4, b.WriterIndex); Assert.Equal(new byte[] { 1, 2, 3, 4 }, ByteBufUtil.GetBytes(b));
+            Assert.Equal(4, b.WriterIndex);
+            Assert.Equal(new byte[] { 1, 2, 3, 4 }, ByteBufUtil.GetBytes(b));
             ByteBufUtil.Copy(source, 1, Unpooled.EmptyBuffer, 0);
             ByteBufUtil.Copy(source, 1, Unpooled.EmptyBuffer, 0, 0);
             ByteBufUtil.Copy(new AsciiString(Array.Empty<byte>(), false), Unpooled.EmptyBuffer);
             Assert.Equal(0, Unpooled.EmptyBuffer.WriterIndex);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -228,13 +278,26 @@ public class ByteBufAsciiCopyTest
         {
             b.SetIndex(0, 0);
             AsciiString source = new(new byte[] { 9, 8, 7, 6, 5 }, false);
-            if (relative) Assert.Throws<NotSupportedException>(() => ByteBufUtil.Copy(source, b));
-            else Assert.Throws<NotSupportedException>(() => ByteBufUtil.Copy(source, 0, b, 0, 4));
+            if (relative)
+            {
+                Assert.Throws<NotSupportedException>(() => ByteBufUtil.Copy(source, b));
+            }
+            else
+            {
+                Assert.Throws<NotSupportedException>(() => ByteBufUtil.Copy(source, 0, b, 0, 4));
+            }
             Assert.Equal(new byte[] { 9, 8, 3, 4 }, ByteBufUtil.GetBytes(b, 0, 4));
-            Assert.Equal(0, b.WriterIndex); Assert.Equal(0, b.ReaderIndex);
-            if (relative) Assert.True(b.Capacity >= 5);
+            Assert.Equal(0, b.WriterIndex);
+            Assert.Equal(0, b.ReaderIndex);
+            if (relative)
+            {
+                Assert.True(b.Capacity >= 5);
+            }
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -248,16 +311,25 @@ public class ByteBufAsciiCopyTest
         var (b, owner) = Destination(kind, 48);
         try
         {
-            b.WriteByte(99); int start = b.WriterIndex, offset = start;
+            b.WriteByte(99);
+            int start = b.WriterIndex, offset = start;
             b.EnsureWritable(name.Length() + value.Length() + 4);
-            ByteBufUtil.Copy(name, 0, b, offset, name.Length()); offset += name.Length();
-            b.SetShort(offset, 0x3a20); offset += 2;
-            ByteBufUtil.Copy(value, 0, b, offset, value.Length()); offset += value.Length();
-            b.SetShort(offset, 0x0d0a); offset += 2;
-            Assert.Equal(start, b.WriterIndex); b.WriterIndex = offset;
+            ByteBufUtil.Copy(name, 0, b, offset, name.Length());
+            offset += name.Length();
+            b.SetShort(offset, 0x3a20);
+            offset += 2;
+            ByteBufUtil.Copy(value, 0, b, offset, value.Length());
+            offset += value.Length();
+            b.SetShort(offset, 0x0d0a);
+            offset += 2;
+            Assert.Equal(start, b.WriterIndex);
+            b.WriterIndex = offset;
             Assert.Equal(Encoding.ASCII.GetBytes("Content-Type: application/octet-stream\r\n"), ByteBufUtil.GetBytes(b, start, offset - start));
         }
-        finally { owner.Release(); }
+        finally
+        {
+            owner.Release();
+        }
     }
 
     [Fact]

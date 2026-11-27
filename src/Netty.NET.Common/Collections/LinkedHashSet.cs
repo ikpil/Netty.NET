@@ -87,17 +87,26 @@ public class LinkedHashSet<T> : ISet<T> where T : notnull
 
     public void UnionWith(IEnumerable<T> other)
     {
-        if (other is null) throw new ArgumentNullException(nameof(other));
+        if (other is null)
+        {
+            throw new ArgumentNullException(nameof(other));
+        }
         // self-union is a no-op; but no special case needed (Add ignores duplicates)
         foreach (var item in other) Add(item);
     }
 
     public void IntersectWith(IEnumerable<T> other)
     {
-        if (other is null) throw new ArgumentNullException(nameof(other));
+        if (other is null)
+        {
+            throw new ArgumentNullException(nameof(other));
+        }
 
         // If other is same instance, it's a no-op.
-        if (ReferenceEquals(other, this)) return;
+        if (ReferenceEquals(other, this))
+        {
+            return;
+        }
 
         // Build fast lookup of other using same comparer.
         var otherSet = ToLookupSet(other);
@@ -119,7 +128,10 @@ public class LinkedHashSet<T> : ISet<T> where T : notnull
 
     public void ExceptWith(IEnumerable<T> other)
     {
-        if (other is null) throw new ArgumentNullException(nameof(other));
+        if (other is null)
+        {
+            throw new ArgumentNullException(nameof(other));
+        }
 
         // A \ A = empty
         if (ReferenceEquals(other, this))
@@ -140,7 +152,10 @@ public class LinkedHashSet<T> : ISet<T> where T : notnull
 
     public void SymmetricExceptWith(IEnumerable<T> other)
     {
-        if (other is null) throw new ArgumentNullException(nameof(other));
+        if (other is null)
+        {
+            throw new ArgumentNullException(nameof(other));
+        }
 
         // A ⊕ A = ∅, but enumerating self while mutating would break.
         if (ReferenceEquals(other, this))
@@ -158,11 +173,20 @@ public class LinkedHashSet<T> : ISet<T> where T : notnull
 
     public bool IsSubsetOf(IEnumerable<T> other)
     {
-        if (other is null) throw new ArgumentNullException(nameof(other));
-        if (ReferenceEquals(other, this)) return true;
+        if (other is null)
+        {
+            throw new ArgumentNullException(nameof(other));
+        }
+        if (ReferenceEquals(other, this))
+        {
+            return true;
+        }
 
         var otherSet = ToLookupSet(other);
-        if (Count > otherSet.Count) return false;
+        if (Count > otherSet.Count)
+        {
+            return false;
+        }
 
         foreach (var item in _dictionary.Keys)
             if (!otherSet.Contains(item))
@@ -173,8 +197,14 @@ public class LinkedHashSet<T> : ISet<T> where T : notnull
 
     public bool IsSupersetOf(IEnumerable<T> other)
     {
-        if (other is null) throw new ArgumentNullException(nameof(other));
-        if (ReferenceEquals(other, this)) return true;
+        if (other is null)
+        {
+            throw new ArgumentNullException(nameof(other));
+        }
+        if (ReferenceEquals(other, this))
+        {
+            return true;
+        }
 
         foreach (var item in other)
             if (!_dictionary.ContainsKey(item))
@@ -185,11 +215,20 @@ public class LinkedHashSet<T> : ISet<T> where T : notnull
 
     public bool IsProperSubsetOf(IEnumerable<T> other)
     {
-        if (other is null) throw new ArgumentNullException(nameof(other));
-        if (ReferenceEquals(other, this)) return false;
+        if (other is null)
+        {
+            throw new ArgumentNullException(nameof(other));
+        }
+        if (ReferenceEquals(other, this))
+        {
+            return false;
+        }
 
         var otherSet = ToLookupSet(other);
-        if (Count >= otherSet.Count) return false;
+        if (Count >= otherSet.Count)
+        {
+            return false;
+        }
 
         foreach (var item in _dictionary.Keys)
             if (!otherSet.Contains(item))
@@ -200,8 +239,14 @@ public class LinkedHashSet<T> : ISet<T> where T : notnull
 
     public bool IsProperSupersetOf(IEnumerable<T> other)
     {
-        if (other is null) throw new ArgumentNullException(nameof(other));
-        if (ReferenceEquals(other, this)) return false;
+        if (other is null)
+        {
+            throw new ArgumentNullException(nameof(other));
+        }
+        if (ReferenceEquals(other, this))
+        {
+            return false;
+        }
 
         var (allContained, distinctCount) = AllContainedAndDistinctCount(other);
         return allContained && Count > distinctCount;
@@ -209,8 +254,14 @@ public class LinkedHashSet<T> : ISet<T> where T : notnull
 
     public bool Overlaps(IEnumerable<T> other)
     {
-        if (other is null) throw new ArgumentNullException(nameof(other));
-        if (ReferenceEquals(other, this)) return Count > 0;
+        if (other is null)
+        {
+            throw new ArgumentNullException(nameof(other));
+        }
+        if (ReferenceEquals(other, this))
+        {
+            return Count > 0;
+        }
 
         foreach (var item in other)
             if (_dictionary.ContainsKey(item))
@@ -221,11 +272,20 @@ public class LinkedHashSet<T> : ISet<T> where T : notnull
 
     public bool SetEquals(IEnumerable<T> other)
     {
-        if (other is null) throw new ArgumentNullException(nameof(other));
-        if (ReferenceEquals(other, this)) return true;
+        if (other is null)
+        {
+            throw new ArgumentNullException(nameof(other));
+        }
+        if (ReferenceEquals(other, this))
+        {
+            return true;
+        }
 
         var otherSet = ToLookupSet(other);
-        if (Count != otherSet.Count) return false;
+        if (Count != otherSet.Count)
+        {
+            return false;
+        }
 
         foreach (var item in _dictionary.Keys)
             if (!otherSet.Contains(item))

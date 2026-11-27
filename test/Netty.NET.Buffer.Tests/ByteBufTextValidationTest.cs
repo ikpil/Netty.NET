@@ -79,8 +79,14 @@ public class ByteBufTextValidationTest
     private static void Check(int kind, string hex, Encoding encoding, bool expected)
     {
         ByteBuf b = Owner(kind, Convert.FromHexString(hex));
-        try { Assert.Equal(expected, ByteBufUtil.IsText(b, encoding)); }
-        finally { b.Release(); }
+        try
+        {
+            Assert.Equal(expected, ByteBufUtil.IsText(b, encoding));
+        }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -124,8 +130,14 @@ public class ByteBufTextValidationTest
             for (int split = 0; split <= bytes.Length; split++)
             {
                 ByteBuf b = Owner(kind, bytes, split);
-                try { Assert.Equal(vector.Expected, ByteBufUtil.IsText(b, vector.Encoding)); }
-                finally { b.Release(); }
+                try
+                {
+                    Assert.Equal(vector.Expected, ByteBufUtil.IsText(b, vector.Encoding));
+                }
+                finally
+                {
+                    b.Release();
+                }
             }
         }
     }
@@ -148,9 +160,14 @@ public class ByteBufTextValidationTest
             Assert.True(ByteBufUtil.IsText(b, 0, 4, Encoding.UTF8));
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.IsText(b, 0, 8, Encoding.UTF8));
             b.SetIndex(3, 5).ResetReaderIndex().ResetWriterIndex();
-            Assert.Equal(2, b.ReaderIndex); Assert.Equal(4, b.WriterIndex); Assert.Equal(1, b.RefCnt);
+            Assert.Equal(2, b.ReaderIndex);
+            Assert.Equal(4, b.WriterIndex);
+            Assert.Equal(1, b.RefCnt);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -188,7 +205,10 @@ public class ByteBufTextValidationTest
                 Assert.True(ByteBufUtil.IsText(b, encoding));
                 Assert.False(ByteBufUtil.IsText(b, 0, bytes.Length - 1, encoding));
             }
-            finally { b.Release(); }
+            finally
+            {
+                b.Release();
+            }
         }
     }
 
@@ -205,9 +225,14 @@ public class ByteBufTextValidationTest
             {
                 while (Interlocked.Decrement(ref remaining) > 0) Assert.True(ByteBufUtil.IsText(b, Encoding.Latin1));
             }, TestContext.Current.CancellationToken)));
-            Assert.Equal(0, b.ReaderIndex); Assert.Equal(13, b.WriterIndex); Assert.Equal(1, b.RefCnt);
+            Assert.Equal(0, b.ReaderIndex);
+            Assert.Equal(13, b.WriterIndex);
+            Assert.Equal(1, b.RefCnt);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Fact]
@@ -225,7 +250,10 @@ public class ByteBufTextValidationTest
             Assert.Equal(1, b.ReaderIndex);
             Assert.Equal(1, b.RefCnt);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
         foreach (Encoding encoding in new[] { Encoding.UTF8, Encoding.ASCII, Encoding.Unicode, Encoding.Latin1 })
         {
             Assert.True(ByteBufUtil.IsText(Unpooled.EmptyBuffer, encoding));
@@ -245,10 +273,14 @@ public class ByteBufTextValidationTest
         try
         {
             Assert.Equal(Encoding.UTF8.CodePage, encoding.CodePage);
-            Assert.False(ByteBufUtil.IsText(b, encoding)); Assert.Equal(1, encoding.Calls);
+            Assert.False(ByteBufUtil.IsText(b, encoding));
+            Assert.Equal(1, encoding.Calls);
             Assert.Same(originalFallback, encoding.DecoderFallback);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     private sealed class AsciiDecoderEncoding : UTF8Encoding
@@ -271,7 +303,10 @@ public class ByteBufTextValidationTest
             Assert.Throws<InvalidOperationException>(() => ByteBufUtil.IsText(b, new StalledEncoding()));
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.IsText(b, 0, 2, new FaultingEncoding()));
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     private sealed class FaultingEncoding : UTF8Encoding

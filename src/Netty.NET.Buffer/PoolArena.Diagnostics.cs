@@ -37,11 +37,17 @@ internal abstract partial class PoolArena
             for (int i = 0; i < _smallSubpagePools.Length; i++)
             {
                 PoolSubpage head = _smallSubpagePools[i];
-                if (head == null) continue; // CLR disposal removes heads; live reservations may still exist.
+                if (head == null)
+                {
+                    continue; // CLR disposal removes heads; live reservations may still exist.
+                }
                 // CLR mutations use the head lock even while holding the arena lock.
                 lock (head.SyncRoot)
                 {
-                    if (head.Next == head || head.Next == null) continue;
+                    if (head.Next == head || head.Next == null)
+                    {
+                        continue;
+                    }
                     text.Append(Environment.NewLine).Append(i.ToString(CultureInfo.InvariantCulture)).Append(": ");
                     for (PoolSubpage subpage = head.Next; subpage != null && subpage != head; subpage = subpage.Next)
                         text.Append(subpage);

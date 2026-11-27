@@ -52,7 +52,13 @@ public sealed class BootstrapConfig : AbstractBootstrapConfig
     protected override void Describe(List<string> values)
     {
         base.Describe(values);
-        if (Resolver != null) values.Add("resolver: " + Resolver);
-        if (RemoteAddress != null) values.Add("remoteAddress: " + RemoteAddress);
+        if (Resolver != null)
+        {
+            values.Add("resolver: " + Resolver);
+        }
+        if (RemoteAddress != null)
+        {
+            values.Add("remoteAddress: " + RemoteAddress);
+        }
     }
 }

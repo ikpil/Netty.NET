@@ -47,7 +47,10 @@ public class ByteBufIndexStateSourceTest
 
         public void Dispose()
         {
-            if (Root.RefCnt > 0) Root.Release();
+            if (Root.RefCnt > 0)
+            {
+                Root.Release();
+            }
             Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
@@ -77,54 +80,71 @@ public class ByteBufIndexStateSourceTest
             case IndexCase.ReaderNegative:
                 s.Root.WriterIndex = 0;
                 Assert.Throws<ArgumentOutOfRangeException>(() => s.Root.ReaderIndex = -1);
-                Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(0, s.Root.WriterIndex);
+                Assert.Equal(0, s.Root.ReaderIndex);
+                Assert.Equal(0, s.Root.WriterIndex);
                 break;
             case IndexCase.ReaderAboveCapacity:
                 s.Root.WriterIndex = capacity;
                 Assert.Throws<ArgumentOutOfRangeException>(() => s.Root.ReaderIndex = capacity + 1);
-                Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(capacity, s.Root.WriterIndex);
+                Assert.Equal(0, s.Root.ReaderIndex);
+                Assert.Equal(capacity, s.Root.WriterIndex);
                 break;
             case IndexCase.ReaderAboveWriter:
                 s.Root.WriterIndex = capacity / 2;
                 Assert.Throws<ArgumentOutOfRangeException>(() => s.Root.ReaderIndex = capacity * 3 / 2);
-                Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(capacity / 2, s.Root.WriterIndex);
+                Assert.Equal(0, s.Root.ReaderIndex);
+                Assert.Equal(capacity / 2, s.Root.WriterIndex);
                 break;
             case IndexCase.ReaderAtWriter:
-                s.Root.WriterIndex = 0; s.Root.ReaderIndex = 0;
-                s.Root.WriterIndex = capacity; s.Root.ReaderIndex = capacity;
-                Assert.Equal(capacity, s.Root.ReaderIndex); Assert.Equal(capacity, s.Root.WriterIndex);
+                s.Root.WriterIndex = 0;
+                s.Root.ReaderIndex = 0;
+                s.Root.WriterIndex = capacity;
+                s.Root.ReaderIndex = capacity;
+                Assert.Equal(capacity, s.Root.ReaderIndex);
+                Assert.Equal(capacity, s.Root.WriterIndex);
                 break;
             case IndexCase.WriterNegative:
                 Assert.Throws<ArgumentOutOfRangeException>(() => s.Root.WriterIndex = -1);
-                Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(0, s.Root.WriterIndex);
+                Assert.Equal(0, s.Root.ReaderIndex);
+                Assert.Equal(0, s.Root.WriterIndex);
                 break;
             case IndexCase.WriterAboveCapacity:
-                s.Root.WriterIndex = capacity; s.Root.ReaderIndex = capacity;
+                s.Root.WriterIndex = capacity;
+                s.Root.ReaderIndex = capacity;
                 Assert.Throws<ArgumentOutOfRangeException>(() => s.Root.WriterIndex = capacity + 1);
-                Assert.Equal(capacity, s.Root.ReaderIndex); Assert.Equal(capacity, s.Root.WriterIndex);
+                Assert.Equal(capacity, s.Root.ReaderIndex);
+                Assert.Equal(capacity, s.Root.WriterIndex);
                 break;
             case IndexCase.WriterBelowReader:
-                s.Root.WriterIndex = capacity; s.Root.ReaderIndex = capacity / 2;
+                s.Root.WriterIndex = capacity;
+                s.Root.ReaderIndex = capacity / 2;
                 Assert.Throws<ArgumentOutOfRangeException>(() => s.Root.WriterIndex = capacity / 4);
-                Assert.Equal(capacity / 2, s.Root.ReaderIndex); Assert.Equal(capacity, s.Root.WriterIndex);
+                Assert.Equal(capacity / 2, s.Root.ReaderIndex);
+                Assert.Equal(capacity, s.Root.WriterIndex);
                 break;
             case IndexCase.EmptyWriteAtCapacity:
-                s.Root.WriterIndex = 0; s.Root.ReaderIndex = 0; s.Root.WriterIndex = capacity;
+                s.Root.WriterIndex = 0;
+                s.Root.ReaderIndex = 0;
+                s.Root.WriterIndex = capacity;
                 // CLR span replaces the original empty ByteBuffer without a separate position/limit.
                 s.Root.WriteBytes(ReadOnlySpan<byte>.Empty);
-                Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(capacity, s.Root.WriterIndex);
+                Assert.Equal(0, s.Root.ReaderIndex);
+                Assert.Equal(capacity, s.Root.WriterIndex);
                 break;
             case IndexCase.SetNegativeReader:
                 Assert.Throws<ArgumentOutOfRangeException>(() => s.Root.SetIndex(-1, capacity));
-                Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(0, s.Root.WriterIndex);
+                Assert.Equal(0, s.Root.ReaderIndex);
+                Assert.Equal(0, s.Root.WriterIndex);
                 break;
             case IndexCase.SetReaderAboveWriter:
                 Assert.Throws<ArgumentOutOfRangeException>(() => s.Root.SetIndex(capacity / 2, capacity / 4));
-                Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(0, s.Root.WriterIndex);
+                Assert.Equal(0, s.Root.ReaderIndex);
+                Assert.Equal(0, s.Root.WriterIndex);
                 break;
             case IndexCase.SetWriterAboveCapacity:
                 Assert.Throws<ArgumentOutOfRangeException>(() => s.Root.SetIndex(0, capacity + 1));
-                Assert.Equal(0, s.Root.ReaderIndex); Assert.Equal(0, s.Root.WriterIndex);
+                Assert.Equal(0, s.Root.ReaderIndex);
+                Assert.Equal(0, s.Root.WriterIndex);
                 break;
             default:
                 s.Root.SetIndex(capacity / 4, capacity / 2);
@@ -161,29 +181,51 @@ public class ByteBufIndexStateSourceTest
         try
         {
             Assert.Same(view, view.SetIndex(2, 6));
-            Assert.Same(view, view.MarkReaderIndex()); Assert.Same(view, view.MarkWriterIndex());
+            Assert.Same(view, view.MarkReaderIndex());
+            Assert.Same(view, view.MarkWriterIndex());
             view.SetIndex(4, 5);
-            Assert.Same(view, view.Clear()); Assert.Equal(0, view.ReaderIndex); Assert.Equal(0, view.WriterIndex);
+            Assert.Same(view, view.Clear());
+            Assert.Equal(0, view.ReaderIndex);
+            Assert.Equal(0, view.WriterIndex);
             Assert.Throws<ArgumentOutOfRangeException>(() => view.ResetReaderIndex());
-            Assert.Equal(0, view.ReaderIndex); Assert.Equal(0, view.WriterIndex);
-            Assert.Same(view, view.ResetWriterIndex()); Assert.Same(view, view.ResetReaderIndex());
-            Assert.Equal(2, view.ReaderIndex); Assert.Equal(6, view.WriterIndex);
+            Assert.Equal(0, view.ReaderIndex);
+            Assert.Equal(0, view.WriterIndex);
+            Assert.Same(view, view.ResetWriterIndex());
+            Assert.Same(view, view.ResetReaderIndex());
+            Assert.Equal(2, view.ReaderIndex);
+            Assert.Equal(6, view.WriterIndex);
             view.SetIndex(0, 1);
             Assert.Throws<ArgumentOutOfRangeException>(() => view.ResetReaderIndex());
-            Assert.Equal(0, view.ReaderIndex); Assert.Equal(1, view.WriterIndex);
+            Assert.Equal(0, view.ReaderIndex);
+            Assert.Equal(1, view.WriterIndex);
             view.SetIndex(7, 7);
             Assert.Throws<ArgumentOutOfRangeException>(() => view.ResetWriterIndex());
-            Assert.Equal(7, view.ReaderIndex); Assert.Equal(7, view.WriterIndex);
+            Assert.Equal(7, view.ReaderIndex);
+            Assert.Equal(7, view.WriterIndex);
             view.ResetReaderIndex().ResetWriterIndex();
-            Assert.Same(view, view.SkipBytes(3)); Assert.Equal(5, view.ReaderIndex); Assert.Equal(6, view.WriterIndex);
+            Assert.Same(view, view.SkipBytes(3));
+            Assert.Equal(5, view.ReaderIndex);
+            Assert.Equal(6, view.WriterIndex);
             view.ResetReaderIndex();
             Assert.Throws<ArgumentOutOfRangeException>(() => view.SkipBytes(-1));
-            Assert.Equal(2, view.ReaderIndex); Assert.Equal(6, view.WriterIndex);
-            Assert.Equal(count, s.Root.RefCnt); Assert.Equal(viewCount, view.RefCnt);
+            Assert.Equal(2, view.ReaderIndex);
+            Assert.Equal(6, view.WriterIndex);
+            Assert.Equal(count, s.Root.RefCnt);
+            Assert.Equal(viewCount, view.RefCnt);
             Assert.Equal(bytes, ByteBufUtil.GetBytes(s.Root, 0, 16));
-            if (shape != 0) { Assert.Equal(3, s.Root.ReaderIndex); Assert.Equal(13, s.Root.WriterIndex); }
+            if (shape != 0)
+            {
+                Assert.Equal(3, s.Root.ReaderIndex);
+                Assert.Equal(13, s.Root.WriterIndex);
+            }
         }
-        finally { if (shape is 4 or 5) view.Release(); }
+        finally
+        {
+            if (shape is 4 or 5)
+            {
+                view.Release();
+            }
+        }
         Assert.Equal(1, s.Root.RefCnt);
     }
 }

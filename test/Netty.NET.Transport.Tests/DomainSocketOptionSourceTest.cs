@@ -55,7 +55,10 @@ public class DomainSocketOptionSourceTest
         RequireDomainSockets();
         var server = new NioServerDomainSocketChannel();
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
-        try { server.Config.GetOptions(); }
+        try
+        {
+            server.Config.GetOptions();
+        }
         finally
         {
             await group.RegisterAsync(server);

@@ -33,7 +33,10 @@ public class SlicedByteBufSourceTest
         public readonly ByteBuf Root, Parent, View;
         public Storage(int path, int offset)
         {
-            if (path >= 3) Pool = new PooledByteBufAllocator(nativeAllocator: Native, maxOrder: 1);
+            if (path >= 3)
+            {
+                Pool = new PooledByteBufAllocator(nativeAllocator: Native, maxOrder: 1);
+            }
             Root = path switch
             {
                 0 => new UnpooledHeapByteBuf(32, 64),
@@ -51,8 +54,14 @@ public class SlicedByteBufSourceTest
 
         public void Dispose()
         {
-            if (!ReferenceEquals(Parent, Root) && Parent.RefCnt > 0) Parent.Release(Parent.RefCnt);
-            if (Root.RefCnt > 0) Root.Release(Root.RefCnt);
+            if (!ReferenceEquals(Parent, Root) && Parent.RefCnt > 0)
+            {
+                Parent.Release(Parent.RefCnt);
+            }
+            if (Root.RefCnt > 0)
+            {
+                Root.Release(Root.RefCnt);
+            }
             Pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
         }
@@ -81,15 +90,33 @@ public class SlicedByteBufSourceTest
                 expected[offset + 7 + i] = unchecked((byte)(value >> (8 * (little ? i : width - i - 1))));
             switch (operation)
             {
-                case 0: s.View.SetByte(7, unchecked((int)value)); break;
-                case 1: s.View.SetShort(7, unchecked((int)value)); break;
-                case 2: s.View.SetShortLE(7, unchecked((int)value)); break;
-                case 3: s.View.SetMedium(7, unchecked((int)value)); break;
-                case 4: s.View.SetMediumLE(7, unchecked((int)value)); break;
-                case 5: s.View.SetInt(7, unchecked((int)value)); break;
-                case 6: s.View.SetIntLE(7, unchecked((int)value)); break;
-                case 7: s.View.SetLong(7, unchecked((long)value)); break;
-                default: s.View.SetLongLE(7, unchecked((long)value)); break;
+                case 0:
+                    s.View.SetByte(7, unchecked((int)value));
+                    break;
+                case 1:
+                    s.View.SetShort(7, unchecked((int)value));
+                    break;
+                case 2:
+                    s.View.SetShortLE(7, unchecked((int)value));
+                    break;
+                case 3:
+                    s.View.SetMedium(7, unchecked((int)value));
+                    break;
+                case 4:
+                    s.View.SetMediumLE(7, unchecked((int)value));
+                    break;
+                case 5:
+                    s.View.SetInt(7, unchecked((int)value));
+                    break;
+                case 6:
+                    s.View.SetIntLE(7, unchecked((int)value));
+                    break;
+                case 7:
+                    s.View.SetLong(7, unchecked((long)value));
+                    break;
+                default:
+                    s.View.SetLongLE(7, unchecked((long)value));
+                    break;
             }
             byte[] actual = new byte[32]; s.Root.GetBytes(0, actual); Assert.Equal(expected, actual);
             long read = operation switch

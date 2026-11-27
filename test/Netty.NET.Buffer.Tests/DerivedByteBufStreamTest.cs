@@ -130,8 +130,14 @@ public class DerivedByteBufStreamTest
 
         public void Dispose()
         {
-            if (Owner?.RefCnt > 0) Assert.True(Owner.Release());
-            if (Root.RefCnt > 0) Assert.True(Root.Release());
+            if (Owner?.RefCnt > 0)
+            {
+                Assert.True(Owner.Release());
+            }
+            if (Root.RefCnt > 0)
+            {
+                Assert.True(Root.Release());
+            }
             Assert.Equal(0, Native.ReservedBytes);
         }
     }
@@ -166,9 +172,19 @@ public class DerivedByteBufStreamTest
         }
         else if (asynchronous)
         {
-            if (relative) await b.ReadBytesAsync(stream, 3); else await b.GetBytesAsync(2, stream, 3);
+            if (relative)
+            {
+                await b.ReadBytesAsync(stream, 3);
+            }
+            else
+            {
+                await b.GetBytesAsync(2, stream, 3);
+            }
         }
-        else Assert.Same(b, relative ? b.ReadBytes(stream, 3) : b.GetBytes(2, stream, 3));
+        else
+        {
+            Assert.Same(b, relative ? b.ReadBytes(stream, 3) : b.GetBytes(2, stream, 3));
+        }
     }
 
     private static void Observed(Storage s, Stream stream, int index, bool asynchronous)
@@ -316,8 +332,15 @@ public class DerivedByteBufStreamTest
 
         public void Complete()
         {
-            if (input) { _read.Span[0] = 91; _read.Span[1] = 92; }
-            else Written = _write.ToArray();
+            if (input)
+            {
+                _read.Span[0] = 91;
+                _read.Span[1] = 92;
+            }
+            else
+            {
+                Written = _write.ToArray();
+            }
             _done.SetResult(input ? 2 : 0);
         }
     }
@@ -325,7 +348,11 @@ public class DerivedByteBufStreamTest
     {
         foreach (bool direct in new[] { false, true })
         foreach (int kind in new[] { 0, 1, 2, 5, 6 })
-        foreach (bool input in new[] { false, true }) if (kind != 2 || !input) yield return [direct, kind, input];
+        foreach (bool input in new[] { false, true })
+                if (kind != 2 || !input)
+                {
+                    yield return [direct, kind, input];
+                }
     }
 
     [Theory]
@@ -347,7 +374,11 @@ public class DerivedByteBufStreamTest
             Assert.Equal(1, s.View.ReaderIndex);
             Assert.Equal(input ? 3 : 4, s.View.WriterIndex);
         }
-        finally { stream.Complete(); await operation; }
+        finally
+        {
+            stream.Complete();
+            await operation;
+        }
         if (input)
             Assert.Equal(2, await read);
         else

@@ -28,7 +28,10 @@ public class LoggingContractTest
             Assert.Contains("value 42", writer.ToString());
             Assert.Contains(cause.ToString(), writer.ToString());
         }
-        finally { source.Close(); }
+        finally
+        {
+            source.Close();
+        }
     }
 
     [Fact]
@@ -41,7 +44,10 @@ public class LoggingContractTest
             Assert.Equal("1.5 [true, false] [-128, -1]", MessageFormatter.ArrayFormat(
                 "{} {} {}", new object[] { 1.5, new[] { true, false }, new byte[] { 128, 255 } }).GetMessage());
         }
-        finally { CultureInfo.CurrentCulture = previous; }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
     }
 
     private sealed class ThrowingString

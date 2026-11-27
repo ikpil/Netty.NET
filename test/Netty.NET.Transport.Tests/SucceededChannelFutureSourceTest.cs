@@ -37,6 +37,9 @@ public class SucceededChannelFutureSourceTest
             Assert.True(future.IsCompletedSuccessfully);
             Assert.Null(future.Exception);
         }
-        finally { ManualIoEventLoopSourceTest.Terminate(loop); }
+        finally
+        {
+            ManualIoEventLoopSourceTest.Terminate(loop);
+        }
     }
 }

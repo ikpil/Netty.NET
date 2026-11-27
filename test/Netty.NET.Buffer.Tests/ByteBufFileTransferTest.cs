@@ -30,8 +30,14 @@ public class ByteBufFileTransferTest
     private static CancellationToken Token => TestContext.Current.CancellationToken;
     private static ByteBuf Owner(int kind)
     {
-        if (kind == 0) return Unpooled.Buffer(8, 128).SetZero(0, 8);
-        if (kind == 1) return Unpooled.DirectBuffer(8, 128).SetZero(0, 8);
+        if (kind == 0)
+        {
+            return Unpooled.Buffer(8, 128).SetZero(0, 8);
+        }
+        if (kind == 1)
+        {
+            return Unpooled.DirectBuffer(8, 128).SetZero(0, 8);
+        }
         return Unpooled.CompositeBuffer().AddComponent(Unpooled.WrappedBuffer(new byte[3]))
             .AddComponent(Unpooled.EmptyBuffer).AddComponent(Unpooled.DirectBuffer(5, 5).WriteZero(5));
     }
@@ -95,7 +101,11 @@ public class ByteBufFileTransferTest
             Assert.False(file.Handle.IsClosed);
             Assert.Equal(1, target.RefCnt);
         }
-        finally { source.Release(); target.Release(); }
+        finally
+        {
+            source.Release();
+            target.Release();
+        }
     }
 
     [Theory]
@@ -121,7 +131,11 @@ public class ByteBufFileTransferTest
             Assert.Equal(channelPosition, file.Stream.Position);
             Assert.Equal(new byte[] { 97, 98, 99, 100 }, file.Bytes()[10..]);
         }
-        finally { source.Release(); target.Release(); }
+        finally
+        {
+            source.Release();
+            target.Release();
+        }
     }
 
     [Theory]
@@ -145,7 +159,10 @@ public class ByteBufFileTransferTest
             Assert.Equal(0, b.ReaderIndex);
             Assert.Equal(0, file.Stream.Position);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -172,7 +189,10 @@ public class ByteBufFileTransferTest
             Assert.Equal(8, b.Capacity);
             Assert.Equal(new byte[] { 9 }, file.Bytes());
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -196,7 +216,10 @@ public class ByteBufFileTransferTest
             Assert.Equal(1, b.WriterIndex);
             Assert.Equal(8, b.Capacity);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -213,9 +236,13 @@ public class ByteBufFileTransferTest
             await Assert.ThrowsAsync<NotSupportedException>(() => Set(b, async, 0, file.Handle, 0, 0, Token).AsTask());
             await Assert.ThrowsAsync<NotSupportedException>(() => Write(b, async, file.Handle, 0, 0, Token).AsTask());
             Assert.Equal(4, await Read(b, async, file.Handle, 2, 4, Token));
-            Assert.Equal(new byte[] { 0, 0, 1, 2, 3, 4 }, file.Bytes()); Assert.Equal(4, b.ReaderIndex);
+            Assert.Equal(new byte[] { 0, 0, 1, 2, 3, 4 }, file.Bytes());
+            Assert.Equal(4, b.ReaderIndex);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -260,7 +287,10 @@ public class ByteBufFileTransferTest
             Assert.Equal(new byte[] { 9 }, Bytes(b, 0, 1));
             Assert.Equal(0, RandomAccess.GetLength(file.Handle));
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -281,7 +311,10 @@ public class ByteBufFileTransferTest
             Assert.Equal(4, b.WriterIndex);
             Assert.Equal(4, wrapper.WriterIndex);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -299,7 +332,10 @@ public class ByteBufFileTransferTest
             Assert.Equal(0, b.WriterIndex);
             Assert.Equal(0, file.Stream.Position);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Fact]
@@ -321,7 +357,10 @@ public class ByteBufFileTransferTest
             Assert.Equal(0, b.ReaderIndex);
             Assert.Equal(Enumerable.Range(0, 1024).Select(i => (byte)(i % 8 + 1)).ToArray(), file.Bytes());
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -350,7 +389,10 @@ public class ByteBufFileTransferTest
             Assert.False(writeOnly.IsClosed);
             Assert.Equal(0, file.Stream.Position);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     private sealed class TemporaryFile : IDisposable

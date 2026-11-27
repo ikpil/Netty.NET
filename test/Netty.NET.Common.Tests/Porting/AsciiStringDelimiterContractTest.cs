@@ -40,7 +40,11 @@ public class AsciiStringDelimiterContractTest
                 int expected = -1;
                 for (int i = Math.Max(0, start); i < 256; i++)
                 {
-                    if (characters[i] == target) { expected = i; break; }
+                    if (characters[i] == target)
+                    {
+                        expected = i;
+                        break;
+                    }
                 }
                 Assert.Equal(expected, bytes.IndexOf((char)target, start));
                 Assert.Equal(expected, AsciiString.IndexOf(bytes, (char)target, start));

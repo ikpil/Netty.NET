@@ -75,9 +75,15 @@ public static partial class ByteBufUtil
 
         // Explicit big-endian access also handles words crossing component boundaries.
         for (int words = length >> 3; words > 0; words--, aStartIndex += 8, bStartIndex += 8)
-            if (a.GetLong(aStartIndex) != b.GetLong(bStartIndex)) return false;
+            if (a.GetLong(aStartIndex) != b.GetLong(bStartIndex))
+            {
+                return false;
+            }
         for (int bytes = length & 7; bytes > 0; bytes--)
-            if (a.GetByte(aStartIndex++) != b.GetByte(bStartIndex++)) return false;
+            if (a.GetByte(aStartIndex++) != b.GetByte(bStartIndex++))
+            {
+                return false;
+            }
         return true;
     }
 
@@ -90,7 +96,10 @@ public static partial class ByteBufUtil
     /// Distinct buffers must be accessible; their readable ranges are compared.</remarks>
     public static bool Equals(ByteBuf a, ByteBuf b)
     {
-        if (ReferenceEquals(a, b)) return true;
+        if (ReferenceEquals(a, b))
+        {
+            return true;
+        }
         ArgumentNullException.ThrowIfNull(a);
         ArgumentNullException.ThrowIfNull(b);
         EnsureComparisonAccessible(a);
@@ -108,7 +117,10 @@ public static partial class ByteBufUtil
     /// Reference identity returns zero; distinct buffers must be accessible.</remarks>
     public static int Compare(ByteBuf a, ByteBuf b)
     {
-        if (ReferenceEquals(a, b)) return 0;
+        if (ReferenceEquals(a, b))
+        {
+            return 0;
+        }
         ArgumentNullException.ThrowIfNull(a);
         ArgumentNullException.ThrowIfNull(b);
         EnsureComparisonAccessible(a);
@@ -122,18 +134,27 @@ public static partial class ByteBufUtil
         {
             long difference = (long)a.GetUnsignedInt(aIndex) - b.GetUnsignedInt(bIndex);
             // Ensure we not overflow when cast
-            if (difference != 0) return (int)Math.Clamp(difference, int.MinValue, int.MaxValue);
+            if (difference != 0)
+            {
+                return (int)Math.Clamp(difference, int.MinValue, int.MaxValue);
+            }
         }
         for (int bytes = length & 3; bytes > 0; bytes--)
         {
             int difference = a.GetByte(aIndex++) - b.GetByte(bIndex++);
-            if (difference != 0) return difference;
+            if (difference != 0)
+            {
+                return difference;
+            }
         }
         return aLength - bLength;
     }
 
     private static void EnsureComparisonAccessible(ByteBuf buffer)
     {
-        if (buffer.RefCnt == 0) throw new IllegalReferenceCountException(0);
+        if (buffer.RefCnt == 0)
+        {
+            throw new IllegalReferenceCountException(0);
+        }
     }
 }

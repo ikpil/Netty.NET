@@ -46,7 +46,10 @@ public class IndexedVariableContractTest : IDisposable
             Assert.Equal(Array.MaxLength, ReadIndex());
             Assert.Equal(Array.MaxLength - 1, InternalThreadLocalMap.LastVariableIndex());
         }
-        finally { WriteIndex(previous); }
+        finally
+        {
+            WriteIndex(previous);
+        }
     }
 
     [Fact]
@@ -61,8 +64,15 @@ public class IndexedVariableContractTest : IDisposable
             Parallel.For(0, 64, _ =>
             {
                 int index;
-                try { index = InternalThreadLocalMap.NextVariableIndex(); }
-                catch (InvalidOperationException) { Interlocked.Increment(ref failures); return; }
+                try
+                {
+                    index = InternalThreadLocalMap.NextVariableIndex();
+                }
+                catch (InvalidOperationException)
+                {
+                    Interlocked.Increment(ref failures);
+                    return;
+                }
                 Assert.True(claimed.TryAdd(index, 0), "An indexed variable ID must never be issued twice.");
             });
             Assert.Equal(4, claimed.Count);
@@ -71,7 +81,10 @@ public class IndexedVariableContractTest : IDisposable
                 Assert.True(claimed.ContainsKey(index));
             Assert.Equal(Array.MaxLength, ReadIndex());
         }
-        finally { WriteIndex(previous); }
+        finally
+        {
+            WriteIndex(previous);
+        }
     }
 
     [Theory]
@@ -121,9 +134,18 @@ public class IndexedVariableContractTest : IDisposable
         map.SetIndexedVariable(33, null);
         var error = Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
-            if (operation == 0) map.IndexedVariable(index);
-            else if (operation == 1) map.RemoveIndexedVariable(index);
-            else map.IsIndexedVariableSet(index);
+            if (operation == 0)
+            {
+                map.IndexedVariable(index);
+            }
+            else if (operation == 1)
+            {
+                map.RemoveIndexedVariable(index);
+            }
+            else
+            {
+                map.IsIndexedVariableSet(index);
+            }
         });
         Assert.Equal("index", error.ParamName);
         Assert.Same(value, map.IndexedVariable(1));

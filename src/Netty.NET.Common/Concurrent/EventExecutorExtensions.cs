@@ -52,7 +52,10 @@ public static class EventExecutorExtensions
     {
         ArgumentNullException.ThrowIfNull(executor);
         ArgumentNullException.ThrowIfNull(function);
-        if (cancellationToken.IsCancellationRequested) return Task.FromCanceled<T>(cancellationToken);
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return Task.FromCanceled<T>(cancellationToken);
+        }
         var submitted = new SubmittedTask<T>(function, cancellationToken);
         if (!submitted.Task.IsCompleted)
         {
@@ -64,7 +67,10 @@ public static class EventExecutorExtensions
                 IEventExecutor target = targetGroup as IEventExecutor ?? targetGroup.Next();
                 target.Execute(submitted);
             }
-            catch (Exception error) { submitted.Reject(error); }
+            catch (Exception error)
+            {
+                submitted.Reject(error);
+            }
         }
         return submitted.Task;
     }
@@ -129,7 +135,10 @@ public static class EventExecutorExtensions
             // Registration can synchronously call CancelBeforeStart before its
             // returned handle is assigned. The constructor and paths invoked after
             // construction unregister that immutable handle, avoiding a publication race.
-            if (Task.IsCompleted) _registration.Unregister();
+            if (Task.IsCompleted)
+            {
+                _registration.Unregister();
+            }
         }
 
         internal Task<T> Task => _completion.Task;
@@ -140,8 +149,14 @@ public static class EventExecutorExtensions
             Volatile.Write(ref _removeCanceled, remove);
             // Cancellation may have won before binding, or race the publication.
             // Either binder or canceler consumes this single membership hook.
-            if (Task.IsCanceled) RemoveCanceled();
-            else if (Task.IsCompleted) Interlocked.Exchange(ref _removeCanceled, null);
+            if (Task.IsCanceled)
+            {
+                RemoveCanceled();
+            }
+            else if (Task.IsCompleted)
+            {
+                Interlocked.Exchange(ref _removeCanceled, null);
+            }
         }
 
         public void CancelForShutdown()
@@ -152,7 +167,10 @@ public static class EventExecutorExtensions
 
         private void CancelBeforeStart()
         {
-            if (Interlocked.CompareExchange(ref _claimed, 1, 0) != 0) return;
+            if (Interlocked.CompareExchange(ref _claimed, 1, 0) != 0)
+            {
+                return;
+            }
             ReleaseInvocation();
             _completion.SetCanceled(_cancellationToken);
             RemoveCanceled();
@@ -181,7 +199,10 @@ public static class EventExecutorExtensions
             // Ownership is already decided by the claim. Never block an event
             // loop waiting for a cancellation callback that can no longer win.
             _registration.Unregister();
-            if (!execute) return;
+            if (!execute)
+            {
+                return;
+            }
             try
             {
                 ExecutionContext context = Interlocked.Exchange(ref _context, null) ?? CaptureExecutorContext();
@@ -192,8 +213,14 @@ public static class EventExecutorExtensions
             {
                 _completion.SetCanceled(_cancellationToken);
             }
-            catch (Exception error) { _completion.SetException(error); }
-            finally { ReleaseInvocation(); }
+            catch (Exception error)
+            {
+                _completion.SetException(error);
+            }
+            finally
+            {
+                ReleaseInvocation();
+            }
         }
 
         private void Invoke()
@@ -214,10 +241,19 @@ public static class EventExecutorExtensions
             // while still isolating changes made by this invocation. Capture needs
             // flow temporarily enabled even for an executor running under suppression.
             bool suppressed = ExecutionContext.IsFlowSuppressed();
-            if (!suppressed) return ExecutionContext.Capture();
+            if (!suppressed)
+            {
+                return ExecutionContext.Capture();
+            }
             ExecutionContext.RestoreFlow();
-            try { return ExecutionContext.Capture(); }
-            finally { ExecutionContext.SuppressFlow(); }
+            try
+            {
+                return ExecutionContext.Capture();
+            }
+            finally
+            {
+                ExecutionContext.SuppressFlow();
+            }
         }
     }
 }

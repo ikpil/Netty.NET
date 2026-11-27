@@ -370,8 +370,14 @@ public sealed class DefaultChannelId : IChannelId
                 parts[1].Length != 8 || parts[2].Length != 8 || parts[3].Length != 16 || parts[4].Length != 8)
                 return false;
             byte[] machineId;
-            try { machineId = Convert.FromHexString(parts[0]); }
-            catch (FormatException) { return false; }
+            try
+            {
+                machineId = Convert.FromHexString(parts[0]);
+            }
+            catch (FormatException)
+            {
+                return false;
+            }
             if (!uint.TryParse(parts[1], NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out uint processId) ||
                 !uint.TryParse(parts[2], NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out uint sequence) ||
                 !ulong.TryParse(parts[3], NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out ulong timestamp) ||

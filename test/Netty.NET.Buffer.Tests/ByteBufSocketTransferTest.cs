@@ -143,7 +143,8 @@ public class ByteBufSocketTransferTest
         try
         {
             b.WriteZero(length);
-            pair.Local.SendBufferSize = 4096; pair.Peer.ReceiveBufferSize = 4096;
+            pair.Local.SendBufferSize = 4096;
+            pair.Peer.ReceiveBufferSize = 4096;
             pair.Local.Blocking = false;
             bool sent = false, blocked = false;
             for (int i = 0; i < 64; i++)
@@ -152,16 +153,24 @@ public class ByteBufSocketTransferTest
                 int count = b.ReadBytes(pair.Local, b.ReadableBytes);
                 Assert.InRange(count, 0, length - before);
                 Assert.Equal(before + count, b.ReaderIndex);
-                if (count == 0) { blocked = true; break; }
+                if (count == 0)
+                {
+                    blocked = true;
+                    break;
+                }
                 sent = true;
                 // Socket buffer sizes are advisory. Windows may accept the whole
                 // request; resubmit without draining the peer to reach WouldBlock.
                 b.ReaderIndex = 0;
             }
-            Assert.True(sent); Assert.True(blocked);
+            Assert.True(sent);
+            Assert.True(blocked);
             Assert.Equal(length, b.WriterIndex);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory, MemberData(nameof(Modes))]
@@ -288,14 +297,18 @@ public class ByteBufSocketTransferTest
             if (kind == 4)
             {
                 var allocator = new PooledByteBufAllocator(nativeAllocator: _native, maxOrder: 1);
-                _allocator = allocator; Buffer = allocator.DirectBuffer(24, 256);
+                _allocator = allocator;
+                Buffer = allocator.DirectBuffer(24, 256);
             }
             else if (kind == 5)
             {
                 var allocator = new AdaptiveByteBufAllocator(nativeAllocator: _native, lowMemory: false);
-                _allocator = allocator; Buffer = allocator.DirectBuffer(24, 256);
+                _allocator = allocator;
+                Buffer = allocator.DirectBuffer(24, 256);
             }
-            else Buffer = kind switch
+            else
+            {
+                Buffer = kind switch
             {
                 0 => Unpooled.Buffer(24, 256),
                 1 => new UnpooledDirectByteBuf(24, 256, _native),
@@ -303,11 +316,15 @@ public class ByteBufSocketTransferTest
                     .AddComponent(Unpooled.EmptyBuffer).AddComponent(new UnpooledDirectByteBuf(15, 15, _native).WriteZero(15)),
                 _ => new UnpooledDirectByteBuf(28, 28, _native).Slice(2, 24)
             };
+            }
         }
 
         public void Dispose()
         {
-            if (Buffer.RefCnt != 0) Buffer.Release(Buffer.RefCnt);
+            if (Buffer.RefCnt != 0)
+            {
+                Buffer.Release(Buffer.RefCnt);
+            }
             _allocator?.Dispose();
             Assert.Equal(0, _native.ReservedBytes);
         }

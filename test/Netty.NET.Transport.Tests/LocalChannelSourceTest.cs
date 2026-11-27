@@ -60,7 +60,11 @@ public partial class LocalChannelSourceTest
                 await server.CloseFuture;
                 Assert.Null(LocalChannelRegistry.Get(TestAddress));
             }
-            finally { await CloseChannel(client); await CloseChannel(server); }
+            finally
+            {
+                await CloseChannel(client);
+                await CloseChannel(server);
+            }
         }
     }
 
@@ -94,7 +98,11 @@ public partial class LocalChannelSourceTest
             await client.CloseAsync();
             Assert.Null(cause);
         }
-        finally { await CloseChannel(client); await CloseChannel(server); }
+        finally
+        {
+            await CloseChannel(client);
+            await CloseChannel(server);
+        }
     }
 
     private static Task CloseChannel(IChannel channel)

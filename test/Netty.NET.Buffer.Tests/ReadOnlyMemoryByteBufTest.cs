@@ -59,7 +59,10 @@ public class ReadOnlyMemoryByteBufTest
             Assert.Throws<ArgumentOutOfRangeException>(() => b.GetByte(8));
             Assert.Throws<ArgumentOutOfRangeException>(() => b.GetByte(-1));
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
         Assert.Equal(0xee, storage.Memory.Span[0]);
     }
 
@@ -72,18 +75,28 @@ public class ReadOnlyMemoryByteBufTest
         ByteBuf b = Unpooled.WrappedBuffer((ReadOnlyMemory<byte>)storage.Memory);
         try
         {
-            Assert.Equal(1, b.ReadByte()); Assert.Equal(0x0203, b.ReadShort());
-            Assert.Equal(0x040506, b.ReadUnsignedMedium()); Assert.Equal(0x0708090a, b.ReadInt());
-            Assert.Equal(0x0102030405060708L, b.GetLong(0)); Assert.Equal(0x0807060504030201L, b.GetLongLE(0));
-            Assert.Equal(0x030201, b.GetUnsignedMediumLE(0)); Assert.Equal(0x04030201, b.GetIntLE(0));
-            Assert.Equal(10, b.ReaderIndex); Assert.Equal(16, b.WriterIndex);
+            Assert.Equal(1, b.ReadByte());
+            Assert.Equal(0x0203, b.ReadShort());
+            Assert.Equal(0x040506, b.ReadUnsignedMedium());
+            Assert.Equal(0x0708090a, b.ReadInt());
+            Assert.Equal(0x0102030405060708L, b.GetLong(0));
+            Assert.Equal(0x0807060504030201L, b.GetLongLE(0));
+            Assert.Equal(0x030201, b.GetUnsignedMediumLE(0));
+            Assert.Equal(0x04030201, b.GetIntLE(0));
+            Assert.Equal(10, b.ReaderIndex);
+            Assert.Equal(16, b.WriterIndex);
             // Ensure destination buffer is bigger then what is in the ByteBuf.
             Assert.Throws<ArgumentOutOfRangeException>(() => b.GetBytes(0, new byte[17].AsSpan()));
-            byte[] destination = new byte[18]; b.GetBytes(0, destination.AsSpan(1, 16));
-            Assert.Equal(storage.Memory.ToArray(), destination[1..17]); Assert.Equal(10, b.ReaderIndex);
+            byte[] destination = new byte[18];
+            b.GetBytes(0, destination.AsSpan(1, 16));
+            Assert.Equal(storage.Memory.ToArray(), destination[1..17]);
+            Assert.Equal(10, b.ReaderIndex);
             Assert.Equal(storage.Memory.ToArray(), b.AsReadOnlySequence(0, 16).ToArray());
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -116,7 +129,10 @@ public class ReadOnlyMemoryByteBufTest
             Assert.Equal(Enumerable.Repeat((byte)7, 8), storage.Memory.ToArray());
             Assert.Equal(0, b.WriterIndex);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     // CLR: supplemental copy contract over views, marks, ranges and an opaque managed MemoryManager (kind 2).
@@ -148,14 +164,20 @@ public class ReadOnlyMemoryByteBufTest
                     copy.SetByte(0, 99);
                     Assert.NotEqual(99, view.GetByte(view.ReaderIndex));
                 }
-                finally { copy.Release(); }
+                finally
+                {
+                    copy.Release();
+                }
             }
             ByteBuf offsetCopy = b.Copy(1, 9);
             try
             {
                 Assert.Equal(Enumerable.Range(1, 9).Select(i => (byte)i), ByteBufUtil.GetBytes(offsetCopy));
             }
-            finally { offsetCopy.Release(); }
+            finally
+            {
+                offsetCopy.Release();
+            }
             Assert.Equal(1, b.ReaderIndex);
             Assert.Equal(10, b.WriterIndex);
             Assert.Equal(1, b.RefCnt);
@@ -163,7 +185,10 @@ public class ReadOnlyMemoryByteBufTest
             Assert.Equal(0, a.Metric.UsedDirectMemory);
             Assert.Equal(0, native.ReservedBytes);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -216,7 +241,10 @@ public class ReadOnlyMemoryByteBufTest
             Assert.Equal(1, storage.Memory.Span[0]);
             Assert.Equal(99, b.GetByte(0));
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
         Assert.Equal(0, a.Metric.UsedHeapMemory);
         Assert.Equal(1, storage.Memory.Span[0]);
     }
@@ -239,7 +267,10 @@ public class ReadOnlyMemoryByteBufTest
                 {
                     Assert.Equal(Enumerable.Range(i, 32 - i).Select(v => (byte)v), ByteBufUtil.GetBytes(copy));
                 }
-                finally { copy.Release(); }
+                finally
+                {
+                    copy.Release();
+                }
             }, TestContext.Current.CancellationToken)));
             Assert.Equal(0, b.ReaderIndex);
             Assert.Equal(32, b.WriterIndex);
@@ -247,7 +278,10 @@ public class ReadOnlyMemoryByteBufTest
             Assert.Equal(0, a.Metric.UsedHeapMemory);
             Assert.Equal(0, a.Metric.UsedDirectMemory);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Theory]
@@ -259,12 +293,19 @@ public class ReadOnlyMemoryByteBufTest
         ByteBuf b = Unpooled.WrappedBuffer((ReadOnlyMemory<byte>)storage.Memory);
         try
         {
-            using var output = new MemoryStream(); b.GetBytes(1, output, 4);
-            Assert.Equal(new byte[] { 1, 2, 3, 4 }, output.ToArray()); Assert.Equal(0, b.ReaderIndex);
-            output.SetLength(0); await b.ReadBytesAsync(output, 5, TestContext.Current.CancellationToken);
-            Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, output.ToArray()); Assert.Equal(5, b.ReaderIndex);
+            using var output = new MemoryStream();
+            b.GetBytes(1, output, 4);
+            Assert.Equal(new byte[] { 1, 2, 3, 4 }, output.ToArray());
+            Assert.Equal(0, b.ReaderIndex);
+            output.SetLength(0);
+            await b.ReadBytesAsync(output, 5, TestContext.Current.CancellationToken);
+            Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, output.ToArray());
+            Assert.Equal(5, b.ReaderIndex);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Fact]
@@ -302,7 +343,15 @@ public class ReadOnlyMemoryByteBufTest
             owner.Dispose();
             Assert.Equal(0, native.ReservedBytes);
         }
-        finally { if (b.RefCnt > 0) b.Release(); owner.Dispose(); pin.Dispose(); }
+        finally
+        {
+            if (b.RefCnt > 0)
+            {
+                b.Release();
+            }
+            owner.Dispose();
+            pin.Dispose();
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -324,7 +373,10 @@ public class ReadOnlyMemoryByteBufTest
             Assert.Equal(1, b.RefCnt);
             Assert.Equal(7, b.GetByte(0));
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     [Fact]
@@ -339,7 +391,10 @@ public class ReadOnlyMemoryByteBufTest
             Assert.Equal(1, b.RefCnt);
             Assert.Equal(new byte[] { 1, 2 }, ByteBufUtil.GetBytes(b));
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
     }
 
     private sealed class ReadOnlyResultAllocator : AbstractByteBufAllocator
@@ -364,9 +419,20 @@ public class ReadOnlyMemoryByteBufTest
         public Memory<byte> Memory { get; }
         public ExternalStorage(int kind, int length)
         {
-            if (kind == 1) { _native = new NativeMemoryAllocator(1024).Allocate(length); Memory = _native.Memory; }
-            else if (kind == 2) { _manager = new ArrayMemoryManager(length); Memory = _manager.Memory; }
-            else Memory = new byte[length];
+            if (kind == 1)
+            {
+                _native = new NativeMemoryAllocator(1024).Allocate(length);
+                Memory = _native.Memory;
+            }
+            else if (kind == 2)
+            {
+                _manager = new ArrayMemoryManager(length);
+                Memory = _manager.Memory;
+            }
+            else
+            {
+                Memory = new byte[length];
+            }
         }
 
         public void Dispose()

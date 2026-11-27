@@ -54,13 +54,22 @@ public class CompositeByteBufStructuralDispatchTest
         {
             // Composites own their inserted sources; rejected inputs remain caller-owned.
             foreach (ByteBuf buffer in _buffers)
-                if (buffer is CompositeByteBuf && buffer.RefCnt > 0) buffer.Release();
+                if (buffer is CompositeByteBuf && buffer.RefCnt > 0)
+                {
+                    buffer.Release();
+                }
             foreach (ByteBuf buffer in _buffers)
             {
                 if (buffer is Trap trap)
                     foreach (ByteBuf rejected in trap.RejectedInputs)
-                        if (rejected.RefCnt > 0) rejected.Release();
-                if (buffer.RefCnt > 0) buffer.Release();
+                        if (rejected.RefCnt > 0)
+                        {
+                            rejected.Release();
+                        }
+                if (buffer.RefCnt > 0)
+                {
+                    buffer.Release();
+                }
                 Assert.Equal(0, buffer.RefCnt);
             }
             (Allocator as IDisposable)?.Dispose();
@@ -85,43 +94,65 @@ public class CompositeByteBufStructuralDispatchTest
 
         public override CompositeByteBuf AddComponent(ByteBuf buffer, bool increaseWriterIndex = false)
         {
-            if (RejectAdd) { RejectedInputs.Add(buffer); Reject("add"); }
+            if (RejectAdd)
+            {
+                RejectedInputs.Add(buffer);
+                Reject("add");
+            }
             return base.AddComponent(buffer, increaseWriterIndex);
         }
 
         public override CompositeByteBuf AddComponents(int index, ByteBuf[] buffers, bool increaseWriterIndex = false)
         {
-            if (RejectIndexedBatch) Reject("array-batch");
+            if (RejectIndexedBatch)
+            {
+                Reject("array-batch");
+            }
             return base.AddComponents(index, buffers, increaseWriterIndex);
         }
 
         public override CompositeByteBuf AddComponents(ByteBuf[] buffers, bool increaseWriterIndex)
         {
-            if (RejectArrayBatch) Reject("array-forward");
+            if (RejectArrayBatch)
+            {
+                Reject("array-forward");
+            }
             return base.AddComponents(buffers, increaseWriterIndex);
         }
 
         public override CompositeByteBuf AddComponents(int index, IEnumerable<ByteBuf> buffers, bool increaseWriterIndex = false)
         {
-            if (RejectIndexedBatch) Reject("enumerable-batch");
+            if (RejectIndexedBatch)
+            {
+                Reject("enumerable-batch");
+            }
             return base.AddComponents(index, buffers, increaseWriterIndex);
         }
 
         public override CompositeByteBuf Consolidate()
         {
-            if (RejectAllConsolidation) Reject("consolidate");
+            if (RejectAllConsolidation)
+            {
+                Reject("consolidate");
+            }
             return base.Consolidate();
         }
 
         public override CompositeByteBuf Consolidate(int index, int count)
         {
-            if (RejectRangeConsolidation) Reject("range-consolidate");
+            if (RejectRangeConsolidation)
+            {
+                Reject("range-consolidate");
+            }
             return base.Consolidate(index, count);
         }
 
         public override CompositeByteBuf RemoveComponents(int index, int count)
         {
-            if (RejectRemoval) Reject("remove");
+            if (RejectRemoval)
+            {
+                Reject("remove");
+            }
             return base.RemoveComponents(index, count);
         }
     }

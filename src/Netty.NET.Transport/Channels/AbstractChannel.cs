@@ -300,7 +300,9 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                 _registered = false;
                 _open = _active = false;
                 try
-                { DoClose(); }
+                {
+                    DoClose();
+                }
                 finally
                 {
                     var cause = new IOException("Channel registration failed.");
@@ -325,8 +327,14 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         if (loop.InEventLoop())
         {
             try
-            { action(); return Task.CompletedTask; }
-            catch (Exception error) { return Task.FromException(error); }
+            {
+                action();
+                return Task.CompletedTask;
+            }
+            catch (Exception error)
+            {
+                return Task.FromException(error);
+            }
         }
         return loop.SubmitAsync(() =>
         {
@@ -387,10 +395,15 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     protected internal virtual void CloseForcibly()
     {
         // An offloaded native close already owns disposal; keep its queue and completion ownership intact.
-        if (_closePending) return;
+        if (_closePending)
+        {
+            return;
+        }
         _open = _active = false;
         try
-        { DoClose(); }
+        {
+            DoClose();
+        }
         finally
         {
             ClosedChannelException cause = StacklessClosedChannelException.NewInstance(typeof(AbstractChannel), "closeForcibly()");
@@ -421,13 +434,28 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     {
         Task task;
         try
-        { EnsureOpen(); task = operation(); }
-        catch (Exception error) { CloseIfClosed(); return Task.FromException(error); }
+        {
+            EnsureOpen();
+            task = operation();
+        }
+        catch (Exception error)
+        {
+            CloseIfClosed();
+            return Task.FromException(error);
+        }
         if (task.IsCompleted)
         {
             try
-            { task.GetAwaiter().GetResult(); success(); return Task.CompletedTask; }
-            catch (Exception error) { CloseIfClosed(); return Task.FromException(error); }
+            {
+                task.GetAwaiter().GetResult();
+                success();
+                return Task.CompletedTask;
+            }
+            catch (Exception error)
+            {
+                CloseIfClosed();
+                return Task.FromException(error);
+            }
         }
         return FinishAsync();
         async Task FinishAsync()
@@ -475,7 +503,10 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                 {
                     Pipeline.FireChannelActive();
                     // CLR: BeginRead holds a read() issued before activation until the channel is active.
-                    if (_readBeforeActive) BeginRead();
+                    if (_readBeforeActive)
+                    {
+                        BeginRead();
+                    }
                 });
             }
         });
@@ -506,7 +537,13 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                     EnsureOpen();
                     completion.TrySetResult();
                     if (!wasActive && IsActive)
-                    { Pipeline.FireChannelActive(); if (_readBeforeActive) BeginRead(); }
+                    {
+                        Pipeline.FireChannelActive();
+                        if (_readBeforeActive)
+                        {
+                            BeginRead();
+                        }
+                    }
                 }).ConfigureAwait(false);
             }
             catch (Exception error)
@@ -601,8 +638,14 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                 // CLR: a rejected TaskScheduler must not leave the native resource and the reserved owner callback
                 // stranded. Close here and report the rejection unless the close itself failed.
                 Exception failure = t;
-                try { DoClose(); }
-                catch (Exception e) { failure = e; }
+                try
+                {
+                    DoClose();
+                }
+                catch (Exception e)
+                {
+                    failure = e;
+                }
                 _closeFuture.TrySetResult();
                 promise.TrySetException(failure);
                 invokeLater(CloseAndDeregister);
@@ -819,7 +862,11 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             int size = Math.Max(0, _pipeline.EstimatorHandle().Size(msg));
             return OutboundBuffer.AddMessage(msg, size, cancellationToken);
         }
-        catch (Exception error) { ReferenceCountUtil.Release(msg); return Task.FromException(error); }
+        catch (Exception error)
+        {
+            ReferenceCountUtil.Release(msg);
+            return Task.FromException(error);
+        }
     }
 
     /**
@@ -861,7 +908,10 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                     }
                 }
             }
-            finally { _writing = false; }
+            finally
+            {
+                _writing = false;
+            }
             return;
         }
         if (!HasDoWriteLoop)
@@ -912,7 +962,10 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                         pending = !operation.IsCompleted;
                         await operation.ConfigureAwait(false);
                     }
-                    finally { ReferenceCountUtil.Release(message); }
+                    finally
+                    {
+                        ReferenceCountUtil.Release(message);
+                    }
                     await OnLoopAsync(() => OutboundBuffer.Remove()).ConfigureAwait(false);
                 }
                 catch (Exception error)
@@ -930,20 +983,37 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
                         // Resume the existing flush without admitting writes queued after it.
                         await OnLoopAsync(() => _ = DrainWritesAsync()).ConfigureAwait(false);
                     }
-                    catch { handedOff = false; throw; }
+                    catch
+                    {
+                        handedOff = false;
+                        throw;
+                    }
                     return;
                 }
             }
             // Wrote all messages.
         }
-        catch (Exception error) { OnUnhandledException(error); }
-        finally { if (!handedOff && EventLoop.InEventLoop()) { _writing = false; DoWriteComplete(); } }
+        catch (Exception error)
+        {
+            OnUnhandledException(error);
+        }
+        finally
+        {
+            if (!handedOff && EventLoop.InEventLoop())
+            {
+                _writing = false;
+                DoWriteComplete();
+            }
+        }
     }
 
     // CLR: BeginRead holds a read() issued before activation until the channel is active.
     private protected void BeginReadIfRequestedBeforeActive()
     {
-        if (_readBeforeActive) BeginRead();
+        if (_readBeforeActive)
+        {
+            BeginRead();
+        }
     }
 
     /**
@@ -985,7 +1055,10 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     protected virtual bool ContinueOnWriteError => false;
     protected virtual void HandleWriteError(Exception t)
     {
-        if (OutboundBuffer.IsClosed) return;
+        if (OutboundBuffer.IsClosed)
+        {
+            return;
+        }
         if (ContinueOnWriteError)
         {
             OutboundBuffer.Remove(t);
@@ -997,8 +1070,14 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
             CloseOnWriteError(t);
             return;
         }
-        try { ShutdownOutput(t); }
-        catch (Exception shutdownFailure) { Pipeline.FireExceptionCaught(shutdownFailure); }
+        try
+        {
+            ShutdownOutput(t);
+        }
+        catch (Exception shutdownFailure)
+        {
+            Pipeline.FireExceptionCaught(shutdownFailure);
+        }
     }
 
     /**
@@ -1014,7 +1093,10 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     protected void ShutdownOutput(Exception cause)
     {
         EnsureOpen();
-        if (OutboundBuffer.IsClosed) throw new ClosedChannelException();
+        if (OutboundBuffer.IsClosed)
+        {
+            throw new ClosedChannelException();
+        }
         // Disallow adding any messages and flushes to outboundBuffer.
         OutboundBuffer.BeginOutputShutdown();
         _outputShutdownCause = cause == null ? new ChannelOutputShutdownException("Channel output shutdown")
@@ -1047,7 +1129,10 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         // The source default closes the transport. CLR channel state and deferred lifecycle callbacks
         // are owned here, so use the ordinary close path with the output-shutdown queue cause.
         Task close = Close();
-        if (close.IsFaulted) close.GetAwaiter().GetResult();
+        if (close.IsFaulted)
+        {
+            close.GetAwaiter().GetResult();
+        }
     }
 
     protected void CloseOnWriteError(Exception error)

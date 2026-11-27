@@ -70,16 +70,34 @@ public class EndianMemoryConsumerContractTest
         switch (width)
         {
             case 2:
-                if (little) BinaryPrimitives.WriteInt16LittleEndian(memory, unchecked((short)value));
-                else BinaryPrimitives.WriteInt16BigEndian(memory, unchecked((short)value));
+                if (little)
+                {
+                    BinaryPrimitives.WriteInt16LittleEndian(memory, unchecked((short)value));
+                }
+                else
+                {
+                    BinaryPrimitives.WriteInt16BigEndian(memory, unchecked((short)value));
+                }
                 break;
             case 4:
-                if (little) BinaryPrimitives.WriteInt32LittleEndian(memory, unchecked((int)value));
-                else BinaryPrimitives.WriteInt32BigEndian(memory, unchecked((int)value));
+                if (little)
+                {
+                    BinaryPrimitives.WriteInt32LittleEndian(memory, unchecked((int)value));
+                }
+                else
+                {
+                    BinaryPrimitives.WriteInt32BigEndian(memory, unchecked((int)value));
+                }
                 break;
             case 8:
-                if (little) BinaryPrimitives.WriteInt64LittleEndian(memory, value);
-                else BinaryPrimitives.WriteInt64BigEndian(memory, value);
+                if (little)
+                {
+                    BinaryPrimitives.WriteInt64LittleEndian(memory, value);
+                }
+                else
+                {
+                    BinaryPrimitives.WriteInt64BigEndian(memory, value);
+                }
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(width));

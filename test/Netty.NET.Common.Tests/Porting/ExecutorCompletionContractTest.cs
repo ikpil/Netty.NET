@@ -22,8 +22,14 @@ public class ExecutorCompletionContractTest
         internal void RunAll()
         {
             _running = Thread.CurrentThread;
-            try { while (_queue.TryDequeue(out var work)) work(); }
-            finally { _running = null; }
+            try
+            {
+                while (_queue.TryDequeue(out var work)) work();
+            }
+            finally
+            {
+                _running = null;
+            }
         }
 
         public override bool InEventLoop(Thread thread)
@@ -76,7 +82,10 @@ public class ExecutorCompletionContractTest
         while (!completion.IsCompleted && elapsed.Elapsed < TimeSpan.FromSeconds(5))
         {
             executor.RunAll();
-            if (!completion.IsCompleted) await Task.Delay(1);
+            if (!completion.IsCompleted)
+            {
+                await Task.Delay(1);
+            }
         }
         await completion.WaitAsync(TimeSpan.FromSeconds(5));
     }
@@ -96,15 +105,30 @@ public class ExecutorCompletionContractTest
         var failure = new InvalidOperationException("source failure");
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
-        if (outcome == 0) source.SetResult(42);
-        else if (outcome == 1) source.SetException(failure);
-        else source.SetCanceled(cancellation.Token);
+        if (outcome == 0)
+        {
+            source.SetResult(42);
+        }
+        else if (outcome == 1)
+        {
+            source.SetException(failure);
+        }
+        else
+        {
+            source.SetCanceled(cancellation.Token);
+        }
         await Drain(executor, registration.NotificationCompleted);
         Assert.Same(source.Task, observed);
         Assert.True(affinity);
         Assert.False((object)Assert.IsAssignableFrom<INativeSubmission>(ExecutorWork.GetNativeSubmission(executor.LastWork)) is System.Threading.Tasks.Task);
-        if (outcome == 0) Assert.Equal(42, await source.Task);
-        else if (outcome == 1) Assert.Same(failure, await Assert.ThrowsAsync<InvalidOperationException>(async () => await source.Task));
+        if (outcome == 0)
+        {
+            Assert.Equal(42, await source.Task);
+        }
+        else if (outcome == 1)
+        {
+            Assert.Same(failure, await Assert.ThrowsAsync<InvalidOperationException>(async () => await source.Task));
+        }
         else
         {
             var canceled = await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await source.Task);
@@ -139,7 +163,10 @@ public class ExecutorCompletionContractTest
     {
         var executor = new QueuedExecutor();
         var source = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        if (completed) source.SetResult();
+        if (completed)
+        {
+            source.SetResult();
+        }
         using var observation = new ExecutorCompletion(executor, source.Task);
         int calls = 0;
         var registration = observation.Register(_ => ++calls);
@@ -147,7 +174,10 @@ public class ExecutorCompletionContractTest
         registration.Dispose();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await registration.NotificationCompleted);
         Assert.Equal(completed, source.Task.IsCompleted);
-        if (!completed) source.SetResult();
+        if (!completed)
+        {
+            source.SetResult();
+        }
         executor.RunAll();
         using var barrier = observation.Register(_ => { });
         await Drain(executor, barrier.NotificationCompleted);
@@ -222,7 +252,10 @@ public class ExecutorCompletionContractTest
         callback = _ =>
         {
             maximum = Math.Max(maximum, ++depth);
-            if (++calls < 10_000) observation.Register(callback);
+            if (++calls < 10_000)
+            {
+                observation.Register(callback);
+            }
             --depth;
         };
         using var registration = observation.Register(callback);
@@ -241,7 +274,10 @@ public class ExecutorCompletionContractTest
         {
             maximum = Math.Max(maximum, ++depth);
             ++calls;
-            if (index + 1 < observations.Length) observations[index + 1].Register(_ => Invoke(index + 1));
+            if (index + 1 < observations.Length)
+            {
+                observations[index + 1].Register(_ => Invoke(index + 1));
+            }
             --depth;
         }
         try
@@ -250,7 +286,10 @@ public class ExecutorCompletionContractTest
             Assert.Equal(observations.Length, calls);
             Assert.InRange(maximum, 1, 16);
         }
-        finally { foreach (var observation in observations) observation.Dispose(); }
+        finally
+        {
+            foreach (var observation in observations) observation.Dispose();
+        }
     }
 
     [Theory]
@@ -274,8 +313,14 @@ public class ExecutorCompletionContractTest
         // Registration against an already-terminal source guarantees a queued drain without timing assumptions.
         using var barrier = observation.Register(_ => { });
         ambient.Value = "executor";
-        if (suppressFlow) { using (ExecutionContext.SuppressFlow()) executor.RunAll(); }
-        else executor.RunAll();
+        if (suppressFlow)
+        {
+            using (ExecutionContext.SuppressFlow()) executor.RunAll();
+        }
+        else
+        {
+            executor.RunAll();
+        }
         Assert.Equal("executor", ambient.Value);
         await Task.WhenAll(first.NotificationCompleted, second.NotificationCompleted, barrier.NotificationCompleted);
         Assert.Equal(new[] { "executor", "executor", "executor" }, seen);
@@ -361,8 +406,14 @@ public class ExecutorCompletionContractTest
                     int captured = index;
                     tasks.Add(observation.Register(_ =>
                     {
-                        if (Interlocked.Increment(ref active) != 1) Interlocked.Increment(ref overlaps);
-                        if (last[producer] + 1 != captured) Interlocked.Increment(ref outOfOrder);
+                        if (Interlocked.Increment(ref active) != 1)
+                        {
+                            Interlocked.Increment(ref overlaps);
+                        }
+                        if (last[producer] + 1 != captured)
+                        {
+                            Interlocked.Increment(ref outOfOrder);
+                        }
                         last[producer] = captured;
                         Interlocked.Increment(ref calls);
                         Interlocked.Decrement(ref active);
@@ -391,8 +442,13 @@ public class ExecutorCompletionContractTest
             int calls = 0;
             using var registration = observation.Register(_ => Interlocked.Increment(ref calls));
             await Task.WhenAll(Task.Run(() => source.SetResult()), Task.Run(registration.Dispose));
-            try { await registration.NotificationCompleted.WaitAsync(TimeSpan.FromSeconds(5)); }
-            catch (OperationCanceledException) { }
+            try
+            {
+                await registration.NotificationCompleted.WaitAsync(TimeSpan.FromSeconds(5));
+            }
+            catch (OperationCanceledException)
+            {
+            }
             Assert.Equal(registration.NotificationCompleted.IsCanceled ? 0 : 1, calls);
         }
     }
@@ -408,7 +464,13 @@ public class ExecutorCompletionContractTest
         var active = executor.SubmitAsync(() =>
         {
             started.Set();
-            try { release.Wait(); } catch (ThreadInterruptedException) { }
+            try
+            {
+                release.Wait();
+            }
+            catch (ThreadInterruptedException)
+            {
+            }
         });
         Assert.True(started.Wait(TimeSpan.FromSeconds(5)));
         IEventExecutor target = orderedChild ? new NonStickyEventExecutorGroup(executor, 1).Next() : executor;
@@ -541,7 +603,10 @@ public class ExecutorCompletionContractTest
             Assert.True(affinity);
             Assert.Equal(0, timeouts);
         }
-        finally { await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero); }
+        finally
+        {
+            await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
+        }
     }
 
     [Fact]

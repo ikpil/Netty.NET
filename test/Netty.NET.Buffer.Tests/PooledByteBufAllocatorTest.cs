@@ -596,7 +596,10 @@ public class PooledByteBufAllocatorTest : AbstractByteBufAllocatorTest<PooledByt
             catch (Exception e)
             {
                 task.SetException(e);
-                if (cacheLatch.CurrentCount > 0) cacheLatch.Signal();
+                if (cacheLatch.CurrentCount > 0)
+                {
+                    cacheLatch.Signal();
+                }
             }
         });
         t.Thread.Start();
@@ -1213,7 +1216,10 @@ public class PooledByteBufAllocatorClrContractTest
                 b.WriteLong(0x0102030405060708);
                 Assert.Equal(0x0102030405060708, b.ReadLong());
             }
-            finally { b.Release(); }
+            finally
+            {
+                b.Release();
+            }
         }
         Assert.Equal(poolHeap ? 131072 : -1, a.Metric.UsedHeapMemory);
         Assert.Equal(poolDirect ? 131072 : -1, a.Metric.UsedDirectMemory);
@@ -1277,7 +1283,10 @@ public class PooledByteBufAllocatorClrContractTest
             Assert.Equal(arena.PageIdx2Size(3), arena.PageIdx2SizeCompute(3));
             Assert.Equal(arena.Pages2PageIdx(4), arena.Pages2PageIdxFloor(4));
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
         Assert.Equal(snapshot[0].MaxNumElements, snapshot[0].NumAvailable);
         a.Dispose();
         Assert.Empty(arena.SmallSubpages);
@@ -1319,7 +1328,10 @@ public class PooledByteBufAllocatorClrContractTest
             Assert.Equal(1, arena.NumActiveAllocations);
             Assert.False(b.Release());
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
         // This is the case as allocations will start in qInit and chunks in qInit will never be released until
         // these are moved to q000.
         // See https://www.bsdcan.org/2006/papers/jemalloc.pdf
@@ -1358,7 +1370,10 @@ public class PooledByteBufAllocatorClrContractTest
             Assert.Equal(2, arena.NumChunkAllocations);
             Assert.Equal(1, arena.NumActiveChunks);
         }
-        finally { retry.Release(); }
+        finally
+        {
+            retry.Release();
+        }
     }
 
     [Theory]
@@ -1383,7 +1398,10 @@ public class PooledByteBufAllocatorClrContractTest
             Assert.Equal(0, arena.NumChunkAllocations);
             Assert.Equal(0, arena.NumActiveChunks);
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
         Assert.Equal(1, arena.NumHugeDeallocations);
         Assert.Equal(0, arena.NumActiveBytes);
         Assert.Equal(0, native.ReservedBytes);
@@ -1414,7 +1432,10 @@ public class PooledByteBufAllocatorClrContractTest
             Assert.Equal(2, arena.NumAllocations);
             Assert.Equal(2, arena.NumChunkAllocations);
         }
-        finally { retry.Release(); }
+        finally
+        {
+            retry.Release();
+        }
     }
 
     [Theory]
@@ -1484,7 +1505,14 @@ public class PooledByteBufAllocatorClrContractTest
             Assert.False(root.Release());
             Assert.True(view.Release());
         }
-        finally { copy.Release(); if (root.RefCnt != 0) root.Release(root.RefCnt); }
+        finally
+        {
+            copy.Release();
+            if (root.RefCnt != 0)
+            {
+                root.Release(root.RefCnt);
+            }
+        }
         CompositeByteBuf composite = a.CompositeBuffer(1);
         try
         {
@@ -1494,7 +1522,10 @@ public class PooledByteBufAllocatorClrContractTest
             Assert.Same(a, composite.Component(0).Alloc());
             Assert.Equal(1, arena.NumActiveAllocations);
         }
-        finally { composite.Release(); }
+        finally
+        {
+            composite.Release();
+        }
         Assert.Equal(0, arena.NumActiveAllocations);
         Assert.Equal(0, Pinned(a, direct));
     }
@@ -1510,12 +1541,19 @@ public class PooledByteBufAllocatorClrContractTest
         try
         {
             Assert.Throws<ObjectDisposedException>(() => a.Buffer(1));
-            b.Capacity = 16; Assert.Equal(42, b.GetInt(0));
-            Assert.Equal(-1, a.Metric.UsedHeapMemory); Assert.Equal(-1, a.Metric.UsedDirectMemory);
+            b.Capacity = 16;
+            Assert.Equal(42, b.GetInt(0));
+            Assert.Equal(-1, a.Metric.UsedHeapMemory);
+            Assert.Equal(-1, a.Metric.UsedDirectMemory);
             Assert.Same(a.HeapBuffer(0, 0), a.DirectBuffer(0, 0));
-            CompositeByteBuf empty = a.CompositeBuffer(); Assert.Equal(0, empty.Capacity); empty.Release();
+            CompositeByteBuf empty = a.CompositeBuffer();
+            Assert.Equal(0, empty.Capacity);
+            empty.Release();
         }
-        finally { b.Release(); }
+        finally
+        {
+            b.Release();
+        }
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -1580,7 +1618,10 @@ public class PooledByteBufAllocatorClrContractTest
                     b.WriteInt(worker);
                     Assert.Equal(worker, b.GetInt(0));
                 }
-                finally { b.Release(); }
+                finally
+                {
+                    b.Release();
+                }
             }
         }, token)));
         Assert.Equal(1024, arena.NumAllocations);

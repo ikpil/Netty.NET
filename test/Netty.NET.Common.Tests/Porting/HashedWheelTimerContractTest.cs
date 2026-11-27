@@ -97,7 +97,10 @@ public class HashedWheelTimerContractTest
         {
             base.Start();
             Started.Set();
-            if (!Continue.Wait(TimeSpan.FromSeconds(5))) throw new TimeoutException("Scheduling gate was not released.");
+            if (!Continue.Wait(TimeSpan.FromSeconds(5)))
+            {
+                throw new TimeoutException("Scheduling gate was not released.");
+            }
         }
     }
 
@@ -113,7 +116,10 @@ public class HashedWheelTimerContractTest
             {
                 timer.NewTimeout(TimerTask.Create(_ => Interlocked.Increment(ref runs)), TimeSpan.Zero);
             }
-            catch (Exception caught) { failure = caught; }
+            catch (Exception caught)
+            {
+                failure = caught;
+            }
         })
         {
             IsBackground = true
@@ -124,7 +130,11 @@ public class HashedWheelTimerContractTest
             Assert.True(timer.Started.Wait(TimeSpan.FromSeconds(5)));
             Assert.Empty(timer.Stop());
         }
-        finally { timer.Continue.Set(); Assert.True(submitter.Join(TimeSpan.FromSeconds(5))); }
+        finally
+        {
+            timer.Continue.Set();
+            Assert.True(submitter.Join(TimeSpan.FromSeconds(5)));
+        }
         Assert.IsType<InvalidOperationException>(failure);
         Assert.Equal("cannot be started once stopped", failure.Message);
         Assert.Equal(0, timer.PendingTimeouts());
@@ -206,7 +216,10 @@ public class HashedWheelTimerContractTest
             {
                 timer.Stop();
             }
-            catch (Exception caught) { stopFailure = caught; }
+            catch (Exception caught)
+            {
+                stopFailure = caught;
+            }
             ready.Set();
         }), TimeSpan.Zero);
         Assert.True(ready.Wait(TimeSpan.FromSeconds(5)));
@@ -314,9 +327,15 @@ public class HashedWheelTimerContractTest
                 {
                     Thread.Sleep(0);
                 }
-                catch (ThreadInterruptedException) { restored = true; }
+                catch (ThreadInterruptedException)
+                {
+                    restored = true;
+                }
             }
-            catch (Exception caught) { failure = caught; }
+            catch (Exception caught)
+            {
+                failure = caught;
+            }
         })
         {
             IsBackground = true
@@ -328,7 +347,11 @@ public class HashedWheelTimerContractTest
             Assert.True(SpinWait.SpinUntil(() => (stopper.ThreadState & ThreadState.WaitSleepJoin) != 0, TimeSpan.FromSeconds(5)));
             stopper.Interrupt();
         }
-        finally { Volatile.Write(ref release, 1); Assert.True(stopper.Join(TimeSpan.FromSeconds(5))); }
+        finally
+        {
+            Volatile.Write(ref release, 1);
+            Assert.True(stopper.Join(TimeSpan.FromSeconds(5)));
+        }
         Assert.Null(failure);
         Assert.True(restored);
     }

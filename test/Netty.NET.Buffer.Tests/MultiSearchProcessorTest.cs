@@ -79,9 +79,14 @@ public class MultiSearchProcessorTest
             Assert.Equal(0, processor.GetFoundNeedleId()); // index of "one" in needles[]
             Assert.Equal(-1, haystack.ForEachByte(17, length - 17, processor.Process));
             Assert.Equal(0, processor.GetFoundNeedleId());
-            Assert.Equal(0, haystack.ReaderIndex); Assert.Equal(length, haystack.WriterIndex); Assert.Equal(1, owner.RefCnt);
+            Assert.Equal(0, haystack.ReaderIndex);
+            Assert.Equal(length, haystack.WriterIndex);
+            Assert.Equal(1, owner.RefCnt);
         }
-        finally { owner.Release(); }
+        finally
+        {
+            owner.Release();
+        }
     }
 
     [Theory]
@@ -99,9 +104,13 @@ public class MultiSearchProcessorTest
             Assert.Equal(1, processor.GetFoundNeedleId()); // index of "bc" in needles[]
             Assert.Equal(3, haystack.ForEachByte(3, length - 3, processor.Process));
             Assert.Equal(2, processor.GetFoundNeedleId()); // index of "cd" in needles[]
-            Assert.Equal(0, haystack.ReaderIndex); Assert.Equal(length, haystack.WriterIndex);
+            Assert.Equal(0, haystack.ReaderIndex);
+            Assert.Equal(length, haystack.WriterIndex);
         }
-        finally { owner.Release(); }
+        finally
+        {
+            owner.Release();
+        }
     }
 
     [Theory]
@@ -118,7 +127,10 @@ public class MultiSearchProcessorTest
             Assert.Equal(3, haystack.ForEachByte(processor2.Process)); // end of "abc" in haystack
             Assert.Equal(1, processor2.GetFoundNeedleId()); // index of "abc" in needles[]
         }
-        finally { owner.Release(); }
+        finally
+        {
+            owner.Release();
+        }
     }
 
     private static int ExpectedId(byte[][] patterns, ReadOnlySpan<byte> session)
@@ -127,7 +139,11 @@ public class MultiSearchProcessorTest
         for (int id = 0; id < patterns.Length; id++)
         {
             byte[] pattern = patterns[id];
-            if (pattern.Length >= length && session.EndsWith(pattern)) { found = id; length = pattern.Length; }
+            if (pattern.Length >= length && session.EndsWith(pattern))
+            {
+                found = id;
+                length = pattern.Length;
+            }
         }
         return found;
     }
@@ -142,7 +158,10 @@ public class MultiSearchProcessorTest
         for (int i = 0; i < data.Length; i++)
         {
             int id = ExpectedId(patterns, data.AsSpan(0, i + 1));
-            if (id >= 0) expected.Add((i, id));
+            if (id >= 0)
+            {
+                expected.Add((i, id));
+            }
         }
         for (int split = 0; split <= data.Length; split++)
         {
@@ -153,13 +172,19 @@ public class MultiSearchProcessorTest
                 var (buffer, owner) = Buffer(chunk, kind);
                 try
                 {
-                    buffer.MarkReaderIndex().MarkWriterIndex(); int start = 0, found;
+                    buffer.MarkReaderIndex().MarkWriterIndex();
+                    int start = 0, found;
                     while ((found = buffer.ForEachByte(start, chunk.Length - start, processor.Process)) >= 0)
                     { actual.Add((consumed + found, processor.GetFoundNeedleId())); start = found + 1; }
                     buffer.ResetReaderIndex().ResetWriterIndex();
-                    Assert.Equal(0, buffer.ReaderIndex); Assert.Equal(chunk.Length, buffer.WriterIndex); Assert.Equal(1, owner.RefCnt);
+                    Assert.Equal(0, buffer.ReaderIndex);
+                    Assert.Equal(chunk.Length, buffer.WriterIndex);
+                    Assert.Equal(1, owner.RefCnt);
                 }
-                finally { owner.Release(); }
+                finally
+                {
+                    owner.Release();
+                }
                 consumed += chunk.Length;
             }
             Assert.Equal(expected, actual);
@@ -281,14 +306,23 @@ public class MultiSearchProcessorTest
         {
             byte[][] patterns = Enumerable.Range(0, 1 + seed % 12).Select(_ => new byte[random.Next(1, 24)]).ToArray();
             foreach (byte[] pattern in patterns) for (int j = 0; j < pattern.Length; j++) pattern[j] = (byte)(random.Next(8) * 33);
-            if (patterns.Length > 2) { patterns[^1] = patterns[0].ToArray(); patterns[^2] = patterns[0][^1..]; }
+            if (patterns.Length > 2)
+            {
+                patterns[^1] = patterns[0].ToArray();
+                patterns[^2] = patterns[0][^1..];
+            }
             byte[] data = new byte[384]; for (int j = 0; j < data.Length; j++) data[j] = (byte)(random.Next(8) * 33);
             patterns[0].CopyTo(data, 60); patterns[^1].CopyTo(data, 200);
             IMultiSearchProcessor processor = AbstractMultiSearchProcessorFactory.NewAhoCorasicSearchProcessorFactory(patterns).NewSearchProcessor();
             int resetStart = 0;
             for (int i = 0; i < data.Length; i++)
             {
-                if (i == 61 || i == 257) { processor.Reset(); resetStart = i; Assert.Equal(-1, processor.GetFoundNeedleId()); }
+                if (i == 61 || i == 257)
+                {
+                    processor.Reset();
+                    resetStart = i;
+                    Assert.Equal(-1, processor.GetFoundNeedleId());
+                }
                 int expected = ExpectedId(patterns, data.AsSpan(resetStart, i - resetStart + 1));
                 Assert.Equal(expected < 0, processor.Process(data[i])); Assert.Equal(expected, processor.GetFoundNeedleId());
             }

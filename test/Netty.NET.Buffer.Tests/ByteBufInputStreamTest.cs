@@ -41,8 +41,14 @@ public class ByteBufInputStreamTest : IDisposable
 
     private ByteBuf Owner(int kind, byte[] bytes)
     {
-        if (kind == 0) return Unpooled.WrappedBuffer(bytes);
-        if (kind == 1) return Unpooled.DirectBuffer(bytes.Length).WriteBytes(bytes);
+        if (kind == 0)
+        {
+            return Unpooled.WrappedBuffer(bytes);
+        }
+        if (kind == 1)
+        {
+            return Unpooled.DirectBuffer(bytes.Length).WriteBytes(bytes);
+        }
         if (kind is 4 or 5)
         {
             _pooled ??= new PooledByteBufAllocator(nativeAllocator: _native, maxOrder: 1,
@@ -195,11 +201,17 @@ public class ByteBufInputStreamTest : IDisposable
     {
         ByteBuf buffer = Owner(2, new byte[] { (byte)'A', (byte)'B', 13, 10, (byte)'C', (byte)'E' });
         using var stream = new ByteBufInputStream(buffer, length, true);
-        if (length == 0) Assert.Null(stream.ReadLine());
+        if (length == 0)
+        {
+            Assert.Null(stream.ReadLine());
+        }
         else
         {
             Assert.Equal(length == 1 ? "A" : "AB", stream.ReadLine());
-            if (length == 6) Assert.Equal("CE", stream.ReadLine());
+            if (length == 6)
+            {
+                Assert.Equal("CE", stream.ReadLine());
+            }
             Assert.Null(stream.ReadLine());
         }
         Assert.Equal(length, buffer.ReaderIndex);

@@ -15,8 +15,14 @@ public class NativeSubmissionConsumerContractTest
         internal void RunOwned(Action action)
         {
             _running = true;
-            try { action(); }
-            finally { _running = false; }
+            try
+            {
+                action();
+            }
+            finally
+            {
+                _running = false;
+            }
         }
 
         internal void RunAll()
@@ -141,7 +147,10 @@ public class NativeSubmissionConsumerContractTest
                 Assert.Throws<ThreadInterruptedException>(() => Thread.Sleep(0));
                 Thread.Sleep(0);
             }
-            catch (Exception error) { failure = error; }
+            catch (Exception error)
+            {
+                failure = error;
+            }
         }) { IsBackground = true };
         try
         {
@@ -168,7 +177,10 @@ public class NativeSubmissionConsumerContractTest
         private int _attempts;
         public Thread NewThread(Action task)
         {
-            if (Interlocked.Increment(ref _attempts) == 1) throw failure;
+            if (Interlocked.Increment(ref _attempts) == 1)
+            {
+                throw failure;
+            }
             return new Thread(task.Invoke) { IsBackground = true };
         }
     }
@@ -178,7 +190,13 @@ public class NativeSubmissionConsumerContractTest
     {
         var failure = new ThreadInterruptedException("worker creation failed");
         var executor = new DefaultEventExecutor(new FailingFactory(failure));
-        try { Assert.Same(failure, Assert.Throws<ThreadInterruptedException>(() => executor.ThreadProperties())); }
-        finally { await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5)); }
+        try
+        {
+            Assert.Same(failure, Assert.Throws<ThreadInterruptedException>(() => executor.ThreadProperties()));
+        }
+        finally
+        {
+            await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5));
+        }
     }
 }
