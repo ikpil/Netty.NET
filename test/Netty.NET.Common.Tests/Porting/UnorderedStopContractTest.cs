@@ -11,7 +11,10 @@ public class UnorderedStopContractTest
     private static readonly AsyncLocal<string> Ambient = new();
     private sealed class Factory(Func<Action, Thread> create) : IThreadFactory
     {
-        public Thread NewThread(Action task) => create(task);
+        public Thread NewThread(Action task)
+        {
+            return create(task);
+        }
     }
 
     // Exercise the native cancellation boundary with synchronous membership
@@ -23,7 +26,10 @@ public class UnorderedStopContractTest
         internal int Cancellations;
         internal Task Result => _completion.Task;
         public bool IsCanceled => Result.IsCanceled;
-        public void SetCancellationRemoval(Action remove) => _remove = remove;
+        public void SetCancellationRemoval(Action remove)
+        {
+            _remove = remove;
+        }
         public void CancelForShutdown()
         {
             if (!_completion.TrySetCanceled()) return;
@@ -31,8 +37,14 @@ public class UnorderedStopContractTest
             Interlocked.Exchange(ref _remove, null)?.Invoke();
             observe();
         }
-        public void Reject(Exception error) => _completion.TrySetException(error);
-        public void Run() => Assert.Fail("Removed reservation ran");
+        public void Reject(Exception error)
+        {
+            _completion.TrySetException(error);
+        }
+        public void Run()
+        {
+            Assert.Fail("Removed reservation ran");
+        }
     }
 
     [Fact]
@@ -382,11 +394,14 @@ public class UnorderedStopContractTest
         int callbacks = 0;
         using var registration = executor.StopToken.UnsafeRegister(_ => Interlocked.Increment(ref callbacks), null);
         Task first = null, second = null;
-        Task Invoke(Action<Task> save) => Task.Run(() =>
+        Task Invoke(Action<Task> save)
         {
-            Assert.True(barrier.SignalAndWait(TimeSpan.FromSeconds(5)));
-            save(executor.StopAsync());
-        });
+            return Task.Run(() =>
+            {
+                Assert.True(barrier.SignalAndWait(TimeSpan.FromSeconds(5)));
+                save(executor.StopAsync());
+            });
+        }
         Task one = Invoke(task => first = task), two = Invoke(task => second = task);
         Assert.True(barrier.SignalAndWait(TimeSpan.FromSeconds(5)));
         await Task.WhenAll(one, two).WaitAsync(TimeSpan.FromSeconds(5));

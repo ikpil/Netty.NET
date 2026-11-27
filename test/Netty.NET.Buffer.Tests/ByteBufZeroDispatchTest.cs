@@ -39,8 +39,14 @@ public class ByteBufZeroDispatchTest
     private sealed class Tracker : IResourceLeakTracker<ByteBuf>
     {
         public int Records, Closes;
-        public void Record() => ++Records;
-        public void Record(object hint) => ++Records;
+        public void Record()
+        {
+            ++Records;
+        }
+        public void Record(object hint)
+        {
+            ++Records;
+        }
         public bool Close(ByteBuf value) { ++Closes; return true; }
     }
     private sealed class Wrapped(ByteBuf buffer) : WrappedByteBuf(buffer);
@@ -180,7 +186,10 @@ public class ByteBufZeroDispatchTest
         };
         try
         {
-            ByteBuf Invoke() => write ? buffer.WriteZero(7) : buffer.SetZero(1, 5);
+            ByteBuf Invoke()
+            {
+                return write ? buffer.WriteZero(7) : buffer.SetZero(1, 5);
+            }
             if (failure) Assert.Same(calls.Error, Assert.Throws<Failure>(() => Invoke()));
             else Assert.Same(buffer, Invoke());
             Assert.Equal(write ? 1 : 0, calls.Write); Assert.Equal(write ? 0 : 1, calls.Set);

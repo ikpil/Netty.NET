@@ -42,8 +42,10 @@ public sealed class BufferAllocatorEventSource : EventSource
     private static string SourceName()
         // EventSource identities are process-wide, while library statics belong to
         // their load context. Separately loaded copies must not register the same GUID.
-        => AssemblyLoadContext.GetLoadContext(typeof(BufferAllocatorEventSource).Assembly) == AssemblyLoadContext.Default
+    {
+        return AssemblyLoadContext.GetLoadContext(typeof(BufferAllocatorEventSource).Assembly) == AssemblyLoadContext.Default
             ? "Netty-NET-Buffer" : "Netty-NET-Buffer-" + Guid.NewGuid().ToString("N");
+    }
 
     public static class Keywords
     {
@@ -63,7 +65,10 @@ public sealed class BufferAllocatorEventSource : EventSource
      * Statically check if this event is enabled.
      */
     [NonEvent]
-    internal bool Enabled(EventKeywords keyword) => IsEnabled(EventLevel.Informational, keyword);
+    internal bool Enabled(EventKeywords keyword)
+    {
+        return IsEnabled(EventLevel.Informational, keyword);
+    }
 
     [NonEvent]
     internal Snapshot? Capture(ByteBuf buffer, EventKeywords keyword, ReadOnlyMemory<byte> memory,

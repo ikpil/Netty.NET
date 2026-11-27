@@ -32,12 +32,15 @@ public class SearchProcessorTest
             for (int layout = 0; layout < 8; layout++) yield return new object[] { algorithm, layout };
     }
 
-    private static ISearchProcessorFactory Factory(int algorithm, byte[] needle) => algorithm switch
+    private static ISearchProcessorFactory Factory(int algorithm, byte[] needle)
     {
-        0 => AbstractSearchProcessorFactory.NewKmpSearchProcessorFactory(needle),
-        1 => AbstractSearchProcessorFactory.NewBitapSearchProcessorFactory(needle),
-        _ => AbstractMultiSearchProcessorFactory.NewAhoCorasicSearchProcessorFactory(needle)
-    };
+        return algorithm switch
+        {
+            0 => AbstractSearchProcessorFactory.NewKmpSearchProcessorFactory(needle),
+            1 => AbstractSearchProcessorFactory.NewBitapSearchProcessorFactory(needle),
+            _ => AbstractMultiSearchProcessorFactory.NewAhoCorasicSearchProcessorFactory(needle)
+        };
+    }
 
     private static (ByteBuf Buffer, ByteBuf Owner) Buffer(byte[] data, int layout)
     {
@@ -80,12 +83,16 @@ public class SearchProcessorTest
     [Theory]
     [MemberData(nameof(Layouts))]
     public void TestRepeating(int algorithm, int layout)
-        => AssertMatchesContinueAfterTheLastByte("abcababc", "ab", new[] { 1, 4, 6 }, algorithm, layout);
+    {
+        AssertMatchesContinueAfterTheLastByte("abcababc", "ab", new[] { 1, 4, 6 }, algorithm, layout);
+    }
 
     [Theory]
     [MemberData(nameof(Layouts))]
     public void TestOverlapping(int algorithm, int layout)
-        => AssertMatchesContinueAfterTheLastByte("ababab", "bab", new[] { 3, 5 }, algorithm, layout);
+    {
+        AssertMatchesContinueAfterTheLastByte("ababab", "bab", new[] { 3, 5 }, algorithm, layout);
+    }
 
     // Shared body of testRepeating and testOverlapping: each match ends at the reported index and the next search
     // starts after it, until -1. CLR: every buffer layout runs, and the haystack keeps its indices.
@@ -256,6 +263,9 @@ public class SearchProcessorTest
     {
         public void Record() { }
         public void Record(object hint) { }
-        public bool Close(ByteBuf buffer) => true;
+        public bool Close(ByteBuf buffer)
+        {
+            return true;
+        }
     }
 }

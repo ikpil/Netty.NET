@@ -53,8 +53,14 @@ public class DuplexChannelContractTest
     }
     private sealed class Signal(TaskCompletionSource<byte> received) : SimpleChannelInboundHandler<ByteBuf>
     {
-        protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf buffer) => received.TrySetResult((byte)buffer.ReadByte());
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => received.TrySetException(cause);
+        protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf buffer)
+        {
+            received.TrySetResult((byte)buffer.ReadByte());
+        }
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            received.TrySetException(cause);
+        }
     }
 }
 #pragma warning restore xUnit1051

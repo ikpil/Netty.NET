@@ -76,18 +76,26 @@ public class NumericAddressFormattingContractTest
         Assert.Equal(0, address.DisplayCalls);
     }
 
-    private static DisplayAddress Create(IPAddress reference, bool throws) =>
-        reference.AddressFamily == AddressFamily.InterNetworkV6
+    private static DisplayAddress Create(IPAddress reference, bool throws)
+    {
+        return reference.AddressFamily == AddressFamily.InterNetworkV6
             ? new DisplayAddress(reference.GetAddressBytes(), reference.ScopeId, throws)
             : new DisplayAddress(reference.GetAddressBytes(), throws);
+    }
 
     private sealed class DisplayAddress : IPAddress
     {
         private readonly bool throws;
         public int DisplayCalls { get; private set; }
 
-        public DisplayAddress(byte[] bytes, bool throws) : base(bytes) => this.throws = throws;
-        public DisplayAddress(byte[] bytes, long scope, bool throws) : base(bytes, scope) => this.throws = throws;
+        public DisplayAddress(byte[] bytes, bool throws) : base(bytes)
+        {
+            this.throws = throws;
+        }
+        public DisplayAddress(byte[] bytes, long scope, bool throws) : base(bytes, scope)
+        {
+            this.throws = throws;
+        }
 
         public override string ToString()
         {

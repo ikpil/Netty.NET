@@ -33,8 +33,14 @@ public class ByteBufAsyncStreamTransferTest
         return Unpooled.CompositeBuffer(2).AddComponent(Unpooled.WrappedBuffer(new byte[3]))
             .AddComponent(Unpooled.DirectBuffer(5, 5).WriteZero(5));
     }
-    private static byte[] Bytes(ByteBuf b, int index, int length) => b.AsReadOnlySequence(index, length).ToArray();
-    private static async Task Finish(Task task) => await task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+    private static byte[] Bytes(ByteBuf b, int index, int length)
+    {
+        return b.AsReadOnlySequence(index, length).ToArray();
+    }
+    private static async Task Finish(Task task)
+    {
+        await task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+    }
 
     [Theory]
     [InlineData(0)] [InlineData(1)] [InlineData(2)]
@@ -413,7 +419,10 @@ public class ByteBufAsyncStreamTransferTest
         public bool Fail, CancelAfterCopy, IgnoreCancellation, Disposed;
         public byte[] Accepted;
         public Action Callback;
-        public void Complete() => _completion.TrySetResult();
+        public void Complete()
+        {
+            _completion.TrySetResult();
+        }
         public override async ValueTask<int> ReadAsync(Memory<byte> destination, CancellationToken cancellationToken = default)
         {
             Calls++; RequestedLength = destination.Length; Token = cancellationToken;
@@ -440,10 +449,22 @@ public class ByteBufAsyncStreamTransferTest
         public override bool CanSeek => false;
         public override long Length => throw new NotSupportedException();
         public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
-        public override int Read(byte[] b, int offset, int count) => throw new InvalidOperationException("Synchronous I/O is forbidden.");
-        public override void Write(byte[] b, int offset, int count) => throw new InvalidOperationException("Synchronous I/O is forbidden.");
+        public override int Read(byte[] b, int offset, int count)
+        {
+            throw new InvalidOperationException("Synchronous I/O is forbidden.");
+        }
+        public override void Write(byte[] b, int offset, int count)
+        {
+            throw new InvalidOperationException("Synchronous I/O is forbidden.");
+        }
         public override void Flush() { }
-        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
-        public override void SetLength(long value) => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            throw new NotSupportedException();
+        }
+        public override void SetLength(long value)
+        {
+            throw new NotSupportedException();
+        }
     }
 }

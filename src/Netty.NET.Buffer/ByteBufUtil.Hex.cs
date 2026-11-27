@@ -81,12 +81,18 @@ public static partial class ByteBufUtil
     }
 
     /// <summary>Formats every octet as two lowercase ASCII hex digits without separators.</summary>
-    public static string HexDump(ReadOnlySpan<byte> bytes) => Convert.ToHexStringLower(bytes);
+    public static string HexDump(ReadOnlySpan<byte> bytes)
+    {
+        return Convert.ToHexStringLower(bytes);
+    }
 
 /**
      * Decode a 2-digit hex byte from within a string.
      */
-    public static byte DecodeHexByte(string text, int position) => StringUtil.DecodeHexByte(text, position);
+    public static byte DecodeHexByte(string text, int position)
+    {
+        return StringUtil.DecodeHexByte(text, position);
+    }
 
     /// <summary>Decodes exactly two ASCII hex digits at the specified character position.</summary>
     public static byte DecodeHexByte(ReadOnlySpan<char> text, int position)

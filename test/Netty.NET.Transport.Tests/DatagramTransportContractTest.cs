@@ -109,7 +109,13 @@ public class DatagramTransportContractTest
     }
     private sealed class CaptureHandler(TaskCompletionSource<(byte[], IPEndPoint)> received) : SimpleChannelInboundHandler<DatagramPacket>
     {
-        protected override void ChannelRead0(IChannelHandlerContext ctx, DatagramPacket packet) => received.TrySetResult((packet.Content.ReadableMemory.ToArray(), packet.Sender));
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => received.TrySetException(cause);
+        protected override void ChannelRead0(IChannelHandlerContext ctx, DatagramPacket packet)
+        {
+            received.TrySetResult((packet.Content.ReadableMemory.ToArray(), packet.Sender));
+        }
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            received.TrySetException(cause);
+        }
     }
 }

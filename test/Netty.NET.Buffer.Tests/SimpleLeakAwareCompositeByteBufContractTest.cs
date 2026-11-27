@@ -76,9 +76,15 @@ public class SimpleLeakAwareCompositeByteBufContractTest
         return (CompositeByteBuf)b.SetIndex(2, 32);
     }
 
-    private static ByteBuf Raw(ByteBuf b) => b is SimpleLeakAwareByteBuf ? b.Unwrap() : b;
-    internal static string Snapshot(ByteBuf b) => b.Capacity + "," + b.ReaderIndex + "," + b.WriterIndex + "," +
-        b.RefCnt + "," + ByteBufUtil.HexDump(b, 0, Math.Min(64, b.Capacity));
+    private static ByteBuf Raw(ByteBuf b)
+    {
+        return b is SimpleLeakAwareByteBuf ? b.Unwrap() : b;
+    }
+    internal static string Snapshot(ByteBuf b)
+    {
+        return b.Capacity + "," + b.ReaderIndex + "," + b.WriterIndex + "," +
+            b.RefCnt + "," + ByteBufUtil.HexDump(b, 0, Math.Min(64, b.Capacity));
+    }
     internal static void CleanupView(ByteBuf view, int op)
     {
         if (view != null && (op is >= 89 and <= 95)) view.Release();
@@ -508,13 +514,22 @@ public class SimpleLeakAwareCompositeByteBufContractTest
         : SimpleLeakAwareCompositeByteBuf(wrapped, tracker)
     {
         protected override SimpleLeakAwareByteBuf NewLeakAwareByteBuf(ByteBuf wrapped, ByteBuf tracked,
-            IResourceLeakTracker<ByteBuf> leak) => new AdvancedLeakAwareByteBuf(wrapped, tracked, leak);
+            IResourceLeakTracker<ByteBuf> leak)
+        {
+            return new AdvancedLeakAwareByteBuf(wrapped, tracked, leak);
+        }
     }
     private sealed class Tracker(ByteBuf expected) : IResourceLeakTracker<ByteBuf>
     {
         internal int Records, Closes;
-        public void Record() => Records++;
-        public void Record(object hint) => Records++;
+        public void Record()
+        {
+            Records++;
+        }
+        public void Record(object hint)
+        {
+            Records++;
+        }
         public bool Close(ByteBuf b) { Assert.Same(expected, b); Assert.Equal(0, b.RefCnt); return ++Closes == 1; }
     }
 }

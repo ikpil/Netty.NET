@@ -296,17 +296,35 @@ public class DefaultPriorityQueueTest
     private sealed class TestElementComparator : IComparer<TestElement>
     {
         public static readonly TestElementComparator INSTANCE = new();
-        public int Compare(TestElement o1, TestElement o2) => o1.value.CompareTo(o2.value);
+        public int Compare(TestElement o1, TestElement o2)
+        {
+            return o1.value.CompareTo(o2.value);
+        }
     }
 
     private sealed class TestElement : IPriorityQueueNode<TestElement>
     {
         internal int value;
         private int _index = -1;
-        public TestElement(int value) => this.value = value;
-        public override bool Equals(object o) => o is TestElement element && element.value == value;
-        public override int GetHashCode() => value;
-        public int PriorityQueueIndex(DefaultPriorityQueue<TestElement> queue) => _index;
-        public void PriorityQueueIndex(DefaultPriorityQueue<TestElement> queue, int i) => _index = i;
+        public TestElement(int value)
+        {
+            this.value = value;
+        }
+        public override bool Equals(object o)
+        {
+            return o is TestElement element && element.value == value;
+        }
+        public override int GetHashCode()
+        {
+            return value;
+        }
+        public int PriorityQueueIndex(DefaultPriorityQueue<TestElement> queue)
+        {
+            return _index;
+        }
+        public void PriorityQueueIndex(DefaultPriorityQueue<TestElement> queue, int i)
+        {
+            _index = i;
+        }
     }
 }

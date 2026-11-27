@@ -10,7 +10,10 @@ public class UnorderedTerminationContractTest
 {
     private sealed class Factory(Func<Action, Thread> create) : IThreadFactory
     {
-        public Thread NewThread(Action task) => create(task);
+        public Thread NewThread(Action task)
+        {
+            return create(task);
+        }
     }
 
     [Theory]
@@ -22,17 +25,20 @@ public class UnorderedTerminationContractTest
         using var entered = new CountdownEvent(2);
         using var firstRelease = new ManualResetEventSlim();
         using var lastRelease = new ManualResetEventSlim();
-        Task Invoke(ManualResetEventSlim release) => executor.SubmitAsync(() =>
+        Task Invoke(ManualResetEventSlim release)
         {
-            entered.Signal();
-            // Immediate shutdown can request interruption, but cannot force user
-            // code which deliberately defers cancellation to finish.
-            while (!release.IsSet)
+            return executor.SubmitAsync(() =>
             {
-                try { release.Wait(); }
-                catch (ThreadInterruptedException) { }
-            }
-        });
+                entered.Signal();
+                // Immediate shutdown can request interruption, but cannot force user
+                // code which deliberately defers cancellation to finish.
+                while (!release.IsSet)
+                {
+                    try { release.Wait(); }
+                    catch (ThreadInterruptedException) { }
+                }
+            });
+        }
         Task first = Invoke(firstRelease), last = Invoke(lastRelease);
         try
         {

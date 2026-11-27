@@ -37,10 +37,16 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
     public int Count => _count;
 
     /// <summary>Returns the logical UTF-16 view without copying or allocating a substring.</summary>
-    public ReadOnlySpan<char> AsSpan() => _value.AsSpan(_offset, _count);
+    public ReadOnlySpan<char> AsSpan()
+    {
+        return _value.AsSpan(_offset, _count);
+    }
 
     /// <summary>Returns a logical view that retains the immutable backing string.</summary>
-    public ReadOnlyMemory<char> AsMemory() => _value.AsMemory(_offset, _count);
+    public ReadOnlyMemory<char> AsMemory()
+    {
+        return _value.AsMemory(_offset, _count);
+    }
 
     public static explicit operator string(StringCharSequence charSequence)
     {
@@ -55,7 +61,10 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
         return value.Length > 0 ? new StringCharSequence(value) : Empty;
     }
 
-    public ICharSequence SubSequence(int start) => SubSequence(start, _count);
+    public ICharSequence SubSequence(int start)
+    {
+        return SubSequence(start, _count);
+    }
 
     public char CharAt(int index)
     {
@@ -91,15 +100,22 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
         }
     }
 
-    public bool RegionMatches(bool ignoreCase, int thisStart, ICharSequence seq, int start, int length) => ignoreCase
-        ? RegionMatchesIgnoreCase(thisStart, seq, start, length)
-        : RegionMatches(thisStart, seq, start, length);
+    public bool RegionMatches(bool ignoreCase, int thisStart, ICharSequence seq, int start, int length)
+    {
+        return ignoreCase
+            ? RegionMatchesIgnoreCase(thisStart, seq, start, length)
+            : RegionMatches(thisStart, seq, start, length);
+    }
 
-    public bool RegionMatches(int thisStart, ICharSequence seq, int start, int length) =>
-        CharUtil.RegionMatches(this, thisStart, seq, start, length);
+    public bool RegionMatches(int thisStart, ICharSequence seq, int start, int length)
+    {
+        return CharUtil.RegionMatches(this, thisStart, seq, start, length);
+    }
 
-    public bool RegionMatchesIgnoreCase(int thisStart, ICharSequence seq, int start, int length) =>
-        CharUtil.RegionMatchesIgnoreCase(this, thisStart, seq, start, length);
+    public bool RegionMatchesIgnoreCase(int thisStart, ICharSequence seq, int start, int length)
+    {
+        return CharUtil.RegionMatchesIgnoreCase(this, thisStart, seq, start, length);
+    }
 
     public int IndexOf(char ch, int start = 0)
     {
@@ -118,7 +134,10 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
         return _value.Substring(_offset + start, _count - start);
     }
 
-    public override string ToString() => _count == 0 ? string.Empty : ToString(0);
+    public override string ToString()
+    {
+        return _count == 0 ? string.Empty : ToString(0);
+    }
 
     public bool Equals(StringCharSequence other)
     {
@@ -161,16 +180,33 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
         return false;
     }
 
-    public int HashCode(bool ignoreCase) =>
-        string.GetHashCode(AsSpan(), ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+    public int HashCode(bool ignoreCase)
+    {
+        return string.GetHashCode(AsSpan(), ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+    }
 
-    public override int GetHashCode() => HashCode(false);
+    public override int GetHashCode()
+    {
+        return HashCode(false);
+    }
 
-    public bool ContentEquals(ICharSequence other) => CharUtil.ContentEquals(this, other);
+    public bool ContentEquals(ICharSequence other)
+    {
+        return CharUtil.ContentEquals(this, other);
+    }
 
-    public bool ContentEqualsIgnoreCase(ICharSequence other) => CharUtil.ContentEqualsIgnoreCase(this, other);
+    public bool ContentEqualsIgnoreCase(ICharSequence other)
+    {
+        return CharUtil.ContentEqualsIgnoreCase(this, other);
+    }
 
-    public IEnumerator<char> GetEnumerator() => new CharSequenceEnumerator(this);
+    public IEnumerator<char> GetEnumerator()
+    {
+        return new CharSequenceEnumerator(this);
+    }
 
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 }

@@ -28,8 +28,14 @@ public class ByteBufWritableDispatchTest
     private sealed class Tracker : IResourceLeakTracker<ByteBuf>
     {
         public int Records, Closes;
-        public void Record() => ++Records;
-        public void Record(object hint) => ++Records;
+        public void Record()
+        {
+            ++Records;
+        }
+        public void Record(object hint)
+        {
+            ++Records;
+        }
         public bool Close(ByteBuf value) { ++Closes; return true; }
     }
 

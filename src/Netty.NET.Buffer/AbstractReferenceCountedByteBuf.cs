@@ -36,11 +36,17 @@ public abstract class AbstractReferenceCountedByteBuf : ByteBuf
 /**
      * An unsafe operation intended for use by a subclass that sets the reference count of the buffer directly
      */
-    protected void SetReferenceCount(int count) => ReferenceCountUpdater.SetCount(ref _refCnt, count);
+    protected void SetReferenceCount(int count)
+    {
+        ReferenceCountUpdater.SetCount(ref _refCnt, count);
+    }
 /**
      * An unsafe operation intended for use by a subclass that resets the reference count of the buffer to 1
      */
-    protected void ResetReferenceCount() => ReferenceCountUpdater.Reset(ref _refCnt);
+    protected void ResetReferenceCount()
+    {
+        ReferenceCountUpdater.Reset(ref _refCnt);
+    }
     public override ByteBuf Retain(int increment = 1)
     {
         ReferenceCountUpdater.Retain(ref _refCnt, increment);

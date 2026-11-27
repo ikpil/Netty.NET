@@ -43,8 +43,14 @@ public class InetSocketAddressResolver : AbstractAddressResolver<IPEndPoint>
         _nameResolver = nameResolver;
     }
 
-    public override bool IsSupported(EndPoint address) => address is IPEndPoint or DnsEndPoint;
-    protected override bool DoIsResolved(EndPoint address) => address is IPEndPoint;
+    public override bool IsSupported(EndPoint address)
+    {
+        return address is IPEndPoint or DnsEndPoint;
+    }
+    protected override bool DoIsResolved(EndPoint address)
+    {
+        return address is IPEndPoint;
+    }
 
     protected override async Task<IPEndPoint> DoResolveAsync(EndPoint unresolvedAddress, CancellationToken cancellationToken)
     {
@@ -86,5 +92,8 @@ public class InetSocketAddressResolver : AbstractAddressResolver<IPEndPoint>
         return socketAddresses;
     }
 
-    public override void Dispose() => _nameResolver.Dispose();
+    public override void Dispose()
+    {
+        _nameResolver.Dispose();
+    }
 }

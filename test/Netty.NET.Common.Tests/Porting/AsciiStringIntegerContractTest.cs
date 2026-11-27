@@ -220,12 +220,15 @@ public class AsciiStringIntegerContractTest
         return negative ? "-" + result : result;
     }
 
-    private static long Parse(AsciiString value, int width, int start, int end, int radix = 10) => width switch
+    private static long Parse(AsciiString value, int width, int start, int end, int radix = 10)
     {
-        16 => value.ParseShort(start, end, radix),
-        32 => value.ParseInt(start, end, radix),
-        _ => value.ParseLong(start, end, radix)
-    };
+        return width switch
+        {
+            16 => value.ParseShort(start, end, radix),
+            32 => value.ParseInt(start, end, radix),
+            _ => value.ParseLong(start, end, radix)
+        };
+    }
 
     private static bool TryParse(AsciiString value, int width, int start, int end, out long result, int radix = 10)
     {

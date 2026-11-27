@@ -28,7 +28,9 @@ namespace Netty.NET.Buffer.Tests;
 public class AdaptiveThreadLocalAllocatorTest
 {
     private static AdaptiveByteBufAllocator Allocator(bool nonEventLoop = true, bool low = false, NativeMemoryAllocator native = null)
-        => new(false, low, native, 2, 4, 1, 4, nonEventLoop, 4, 4 * 131072, 2 * 131072);
+    {
+        return new(false, low, native, 2, 4, 1, 4, nonEventLoop, 4, 4 * 131072, 2 * 131072);
+    }
     private static void OnThread(Action action, bool fast = false)
     {
         Exception error = null;

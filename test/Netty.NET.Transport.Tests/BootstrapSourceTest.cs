@@ -84,9 +84,15 @@ public class BootstrapSourceTest
         finally { await group.StopAsync(); }
     }
     [Fact(Timeout = 10000)]
-    public Task TestBindDeadLock() => CrossOwners(false, TestContext.Current.CancellationToken);
+    public Task TestBindDeadLock()
+    {
+        return CrossOwners(false, TestContext.Current.CancellationToken);
+    }
     [Fact(Timeout = 10000)]
-    public Task TestConnectDeadLock() => CrossOwners(true, TestContext.Current.CancellationToken);
+    public Task TestConnectDeadLock()
+    {
+        return CrossOwners(true, TestContext.Current.CancellationToken);
+    }
     private static async Task CrossOwners(bool connect, CancellationToken timeout)
     {
         var groupA = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
@@ -154,7 +160,10 @@ public class BootstrapSourceTest
     private sealed class DummyHandler : ChannelInboundHandlerAdapter { }
     private sealed class OptionOrderChannel(ConcurrentQueue<ChannelOption> options) : LocalChannel
     {
-        protected override IChannelConfig NewConfig() => new OrderConfig(this, options);
+        protected override IChannelConfig NewConfig()
+        {
+            return new OrderConfig(this, options);
+        }
         private sealed class OrderConfig(IChannel channel, ConcurrentQueue<ChannelOption> options) : DefaultChannelConfig(channel)
         { protected override bool SetValue(ChannelOption option, object value) { options.Enqueue(option); return base.SetValue(option, value); } }
     }

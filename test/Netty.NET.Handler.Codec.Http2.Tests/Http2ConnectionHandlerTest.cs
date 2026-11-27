@@ -1205,19 +1205,36 @@ public class Http2ConnectionHandlerTest : IDisposable
             ScheduledDelays.Add(amount);
         }
 
-        public override bool IsShuttingDown() => false;
-        public override bool InEventLoop(Thread thread) => true;
+        public override bool IsShuttingDown()
+        {
+            return false;
+        }
+        public override bool InEventLoop(Thread thread)
+        {
+            return true;
+        }
         [Obsolete("Overrides the deprecated AbstractEventExecutor.Shutdown().")]
         public override void Shutdown()
         {
             // NOOP
         }
-        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) =>
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+        {
             throw new NotSupportedException();
+        }
         public override Task TerminationFuture => throw new NotSupportedException();
-        public override bool IsShutdown() => false;
-        public override bool IsTerminated() => false;
-        public override bool AwaitTermination(TimeSpan timeout) => false;
+        public override bool IsShutdown()
+        {
+            return false;
+        }
+        public override bool IsTerminated()
+        {
+            return false;
+        }
+        public override bool AwaitTermination(TimeSpan timeout)
+        {
+            return false;
+        }
         public override void Execute(Action command)
         {
             command();

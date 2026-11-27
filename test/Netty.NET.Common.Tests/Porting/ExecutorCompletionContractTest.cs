@@ -25,7 +25,10 @@ public class ExecutorCompletionContractTest
             try { while (_queue.TryDequeue(out var work)) work(); }
             finally { _running = null; }
         }
-        public override bool InEventLoop(Thread thread) => thread != null && thread == _running;
+        public override bool InEventLoop(Thread thread)
+        {
+            return thread != null && thread == _running;
+        }
         public override void Execute(Action work)
         {
             ArgumentNullException.ThrowIfNull(work);
@@ -35,12 +38,27 @@ public class ExecutorCompletionContractTest
             _queue.Enqueue(work);
         }
         public override Task TerminationFuture => Task.CompletedTask;
-        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+        {
+            return Task.CompletedTask;
+        }
         public override void Shutdown() { }
-        public override bool IsShuttingDown() => false;
-        public override bool IsShutdown() => false;
-        public override bool IsTerminated() => false;
-        public override bool AwaitTermination(TimeSpan timeout) => false;
+        public override bool IsShuttingDown()
+        {
+            return false;
+        }
+        public override bool IsShutdown()
+        {
+            return false;
+        }
+        public override bool IsTerminated()
+        {
+            return false;
+        }
+        public override bool AwaitTermination(TimeSpan timeout)
+        {
+            return false;
+        }
     }
 
     private static async Task Drain(QueuedExecutor executor, Task completion)
@@ -448,7 +466,9 @@ public class ExecutorCompletionContractTest
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static Task KeepNotificationTask(QueuedExecutor executor, Task operation, Action<Task> callback)
-        => new ExecutorCompletion(executor, operation).Register(callback).NotificationCompleted;
+    {
+        return new ExecutorCompletion(executor, operation).Register(callback).NotificationCompleted;
+    }
 
     [Fact]
     public async Task RetainingOnlyNotificationTaskKeepsItsPendingObservationAlive()

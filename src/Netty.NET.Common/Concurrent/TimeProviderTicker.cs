@@ -24,7 +24,10 @@ internal sealed class TimeProviderTicker : Ticker
             SystemTimer.NanosecondsPerSecond / frequency : 0;
     }
 
-    public override long InitialNanoTime() => initialNanos;
+    public override long InitialNanoTime()
+    {
+        return initialNanos;
+    }
 
     public override long NanoTime()
     {
@@ -35,6 +38,9 @@ internal sealed class TimeProviderTicker : Ticker
             SystemTimer.ScaleTimestamp(elapsed, SystemTimer.NanosecondsPerSecond, frequency);
     }
 
-    public override void Sleep(long delayNanos) => throw new NotSupportedException(
-        "A timestamp provider does not supply synchronous sleep. Drive the executor or use an explicit wait policy.");
+    public override void Sleep(long delayNanos)
+    {
+        throw new NotSupportedException(
+            "A timestamp provider does not supply synchronous sleep. Drive the executor or use an explicit wait policy.");
+    }
 }

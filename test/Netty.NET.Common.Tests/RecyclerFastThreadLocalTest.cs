@@ -21,7 +21,10 @@ namespace Netty.NET.Common.Tests;
 
 public class RecyclerFastThreadLocalTest : RecyclerTest
 {
-    protected override void RunTest(Action invocation) => RunInFastThreadLocalThreadExtension.Run(invocation);
+    protected override void RunTest(Action invocation)
+    {
+        RunInFastThreadLocalThreadExtension.Run(invocation);
+    }
     protected override Thread NewThread(Action invocation)
     {
         var owner = new FastThreadLocalThread(invocation);
@@ -39,5 +42,7 @@ public class RecyclerFastThreadLocalTest : RecyclerTest
     [Theory]
     [MemberData(nameof(OwnerTypeAndUnguarded))]
     public override void TestThreadCanBeCollectedEvenIfHandledObjectIsReferenced(OwnerType ownerType, bool unguarded)
-        => base.TestThreadCanBeCollectedEvenIfHandledObjectIsReferenced(ownerType, unguarded);
+    {
+        base.TestThreadCanBeCollectedEvenIfHandledObjectIsReferenced(ownerType, unguarded);
+    }
 }

@@ -23,7 +23,13 @@ internal static class UninterruptibleMonitor
     internal readonly struct Lease : IDisposable
     {
         private readonly object monitor;
-        internal Lease(object monitor) => this.monitor = monitor;
-        public void Dispose() => Monitor.Exit(monitor);
+        internal Lease(object monitor)
+        {
+            this.monitor = monitor;
+        }
+        public void Dispose()
+        {
+            Monitor.Exit(monitor);
+        }
     }
 }

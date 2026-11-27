@@ -10,8 +10,14 @@ namespace Netty.NET.Common.Tests.Porting;
 [Collection("Thread-local globals")]
 public class ThreadLocalCacheContractTest : IDisposable
 {
-    public ThreadLocalCacheContractTest() => FastThreadLocal.RemoveAll();
-    public void Dispose() => FastThreadLocal.RemoveAll();
+    public ThreadLocalCacheContractTest()
+    {
+        FastThreadLocal.RemoveAll();
+    }
+    public void Dispose()
+    {
+        FastThreadLocal.RemoveAll();
+    }
 
     [Fact]
     public void HandlerCacheDoesNotRootCollectibleTypes()
@@ -56,8 +62,17 @@ public class ThreadLocalCacheContractTest : IDisposable
 
     private sealed class EquivalentType() : TypeDelegator(typeof(object))
     {
-        public override bool Equals(Type other) => other is EquivalentType;
-        public override bool Equals(object other) => other is EquivalentType;
-        public override int GetHashCode() => 1;
+        public override bool Equals(Type other)
+        {
+            return other is EquivalentType;
+        }
+        public override bool Equals(object other)
+        {
+            return other is EquivalentType;
+        }
+        public override int GetHashCode()
+        {
+            return 1;
+        }
     }
 }

@@ -41,7 +41,10 @@ public abstract class ChannelOption : AbstractConstant<ChannelOption>
     private static readonly ConcurrentDictionary<string, ChannelOption> Pool = new();
     private static int _nextId;
     protected ChannelOption(int id, string name) : base(id, name) { }
-    internal static int NextId() => Interlocked.Increment(ref _nextId);
+    internal static int NextId()
+    {
+        return Interlocked.Increment(ref _nextId);
+    }
     /**
      * Returns the {@link ChannelOption} of the specified name.
      */
@@ -64,7 +67,10 @@ public abstract class ChannelOption : AbstractConstant<ChannelOption>
     /**
      * Returns {@code true} if a {@link ChannelOption} exists for the given {@code name}.
      */
-    public static bool Exists(string name) => Pool.ContainsKey(ObjectUtil.CheckNonEmpty(name, nameof(name)));
+    public static bool Exists(string name)
+    {
+        return Pool.ContainsKey(ObjectUtil.CheckNonEmpty(name, nameof(name)));
+    }
     /**
      * Creates a new {@link ChannelOption} for the given {@code name} or fail with an
      * {@link IllegalArgumentException} if a {@link ChannelOption} for the given {@code name} exists.
@@ -208,14 +214,25 @@ public class ChannelOption<T> : ChannelOption
     internal ChannelOption(int id, string name) : base(id, name) { }
     [Obsolete("Use ChannelOption.ValueOf<T>.")]
     protected ChannelOption(string name) : this(NextId(), name) { }
-    public static ChannelOption<T> ValueOf(string name) => ChannelOption.ValueOf<T>(name);
+    public static ChannelOption<T> ValueOf(string name)
+    {
+        return ChannelOption.ValueOf<T>(name);
+    }
     public static ChannelOption<T> ValueOf(Type firstNameComponent, string secondNameComponent)
-        => ChannelOption.ValueOf<T>(firstNameComponent, secondNameComponent);
+    {
+        return ChannelOption.ValueOf<T>(firstNameComponent, secondNameComponent);
+    }
     [Obsolete("Use ValueOf.")]
-    public static ChannelOption<T> NewInstance(string name) => ChannelOption.NewInstance<T>(name);
+    public static ChannelOption<T> NewInstance(string name)
+    {
+        return ChannelOption.NewInstance<T>(name);
+    }
     /**
      * Validate the value which is set for the {@link ChannelOption}. Sub-classes
      * may override this for special checks.
      */
-    public virtual void Validate(T value) => ArgumentNullException.ThrowIfNull(value);
+    public virtual void Validate(T value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+    }
 }

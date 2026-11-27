@@ -338,8 +338,10 @@ public partial class DatagramMulticastSourceTest : AbstractDatagramTest
     }
 
     // CLR: the first address of the family on the interface; DatagramMulticastSourceTest.Mixed.cs uses it too.
-    private static IPAddress InterfaceAddress(NetworkInterface iface, AddressFamily family) =>
-        iface.GetIPProperties().UnicastAddresses.First(a => a.Address.AddressFamily == family).Address;
+    private static IPAddress InterfaceAddress(NetworkInterface iface, AddressFamily family)
+    {
+        return iface.GetIPProperties().UnicastAddresses.First(a => a.Address.AddressFamily == family).Address;
+    }
 
     // CLR: true only for the EpollDatagramMulticastIpv6WithIpv4AddrTest overrides (INET6 socket, INET group).
     private bool MixedFamily => SocketInternetProtocalFamily() != GroupInternetProtocalFamily();

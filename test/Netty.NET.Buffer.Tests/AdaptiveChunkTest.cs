@@ -36,8 +36,10 @@ public class AdaptiveChunkTest
     }
 
     private static ByteBuf Storage(bool direct, int capacity, NativeMemoryAllocator native)
-        => direct ? new UnpooledDirectByteBuf(UnpooledByteBufAllocator.Default, capacity, capacity, native)
+    {
+        return direct ? new UnpooledDirectByteBuf(UnpooledByteBufAllocator.Default, capacity, capacity, native)
             : new UnpooledHeapByteBuf(capacity, capacity);
+    }
 
     [Theory]
     [MemberData(nameof(FixedClasses))]
@@ -181,7 +183,9 @@ public class AdaptiveChunkTest
     {
         internal bool Fail = true;
         protected override Memory<byte> GetMemoryCore(int index, int length)
-            => Fail ? throw new InvalidOperationException("injected initialization failure") : base.GetMemoryCore(index, length);
+        {
+            return Fail ? throw new InvalidOperationException("injected initialization failure") : base.GetMemoryCore(index, length);
+        }
     }
 
     [Theory]

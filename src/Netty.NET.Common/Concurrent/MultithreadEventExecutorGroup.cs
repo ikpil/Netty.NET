@@ -180,8 +180,11 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      *
      * @return the count of active threads.
      */
-    public virtual int ActiveExecutorCount() => chooser is IObservableEventExecutorChooser observable ?
-        observable.ActiveExecutorCount() : ExecutorCount();
+    public virtual int ActiveExecutorCount()
+    {
+        return chooser is IObservableEventExecutorChooser observable ?
+            observable.ActiveExecutorCount() : ExecutorCount();
+    }
 
     /**
      * Returns a list of real-time utilization metrics if the group was configured
@@ -189,9 +192,11 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
      *
      * @return A list of {@link AutoScalingUtilizationMetric} objects.
      */
-    public virtual IReadOnlyList<AutoScalingUtilizationMetric> ExecutorUtilizations() =>
-        chooser is IObservableEventExecutorChooser observable ? observable.ExecutorUtilizations() :
+    public virtual IReadOnlyList<AutoScalingUtilizationMetric> ExecutorUtilizations()
+    {
+        return chooser is IObservableEventExecutorChooser observable ? observable.ExecutorUtilizations() :
             Array.Empty<AutoScalingUtilizationMetric>();
+    }
 
     /**
      * Create a new EventExecutor which will later then accessible via the {@link #next()}  method. This method will be

@@ -9,8 +9,14 @@ public class RecyclerFactoryContractTest
     private sealed class Item(IRecyclerHandle<Item> handle)
     {
         internal readonly IRecyclerHandle<Item> Handle = handle;
-        public override bool Equals(object obj) => obj is Item;
-        public override int GetHashCode() => 0;
+        public override bool Equals(object obj)
+        {
+            return obj is Item;
+        }
+        public override int GetHashCode()
+        {
+            return 0;
+        }
     }
 
     private sealed class Other(IRecyclerHandle<Other> handle)

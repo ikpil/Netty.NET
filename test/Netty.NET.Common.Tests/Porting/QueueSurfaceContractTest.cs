@@ -21,9 +21,18 @@ public class QueueSurfaceContractTest
     private sealed class Receiver
     {
         internal readonly List<int> Calls = new();
-        internal void First() => Calls.Add(1);
-        internal void Second() => Calls.Add(2);
-        internal void Third() => Calls.Add(3);
+        internal void First()
+        {
+            Calls.Add(1);
+        }
+        internal void Second()
+        {
+            Calls.Add(2);
+        }
+        internal void Third()
+        {
+            Calls.Add(3);
+        }
     }
 
     [Fact]
@@ -105,7 +114,13 @@ public class QueueSurfaceContractTest
     {
         internal int Index = INDEX_NOT_IN_QUEUE;
         private const int INDEX_NOT_IN_QUEUE = -1;
-        public int PriorityQueueIndex(DefaultPriorityQueue<Node> queue) => Index;
-        public void PriorityQueueIndex(DefaultPriorityQueue<Node> queue, int index) => Index = index;
+        public int PriorityQueueIndex(DefaultPriorityQueue<Node> queue)
+        {
+            return Index;
+        }
+        public void PriorityQueueIndex(DefaultPriorityQueue<Node> queue, int index)
+        {
+            Index = index;
+        }
     }
 }

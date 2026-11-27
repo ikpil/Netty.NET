@@ -49,8 +49,14 @@ public class CompositeByteBufAllocationFailureTest
             buffer.SetZero(0, buffer.Capacity);
             ByteBuf result = new Destination(buffer, observation); observation.Allocations.Add(result); return result;
         }
-        protected override ByteBuf NewHeapBuffer(int initialCapacity, int maxCapacity) => Wrap(backing.HeapBuffer(initialCapacity, maxCapacity));
-        protected override ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity) => Wrap(backing.DirectBuffer(initialCapacity, maxCapacity));
+        protected override ByteBuf NewHeapBuffer(int initialCapacity, int maxCapacity)
+        {
+            return Wrap(backing.HeapBuffer(initialCapacity, maxCapacity));
+        }
+        protected override ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity)
+        {
+            return Wrap(backing.DirectBuffer(initialCapacity, maxCapacity));
+        }
     }
     public static IEnumerable<object[]> Cases()
     {

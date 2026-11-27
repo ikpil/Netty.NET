@@ -84,7 +84,10 @@ public abstract partial class ByteBuf
         return GetReadOnlyMemoryCore(index, length);
     }
 
-    public virtual ReadOnlySpan<byte> AsReadOnlySpan(int index, int length) => AsReadOnlyMemory(index, length).Span;
+    public virtual ReadOnlySpan<byte> AsReadOnlySpan(int index, int length)
+    {
+        return AsReadOnlyMemory(index, length).Span;
+    }
 
     protected internal void EnsureCanWrite()
     {

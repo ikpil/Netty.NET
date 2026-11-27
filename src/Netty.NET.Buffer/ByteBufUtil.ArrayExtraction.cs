@@ -41,7 +41,9 @@ public static partial class ByteBufUtil
     /// <remarks>The absolute range may extend past WriterIndex up to Capacity.
     /// Returns an independent snapshot; empty results use Array.Empty&lt;byte&gt;().</remarks>
     public static byte[] GetBytes(ByteBuf buffer, int start, int length)
-        => GetBytes(buffer, start, length, true);
+    {
+        return GetBytes(buffer, start, length, true);
+    }
 
 /**
      * Return an array of the underlying storage from {@code buf} into a byte array.

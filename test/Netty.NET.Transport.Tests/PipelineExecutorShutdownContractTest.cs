@@ -29,8 +29,14 @@ public class PipelineExecutorShutdownContractTest
             _onUnregistered = onUnregistered;
         }
 
-        public override void HandlerAdded(IChannelHandlerContext ctx) => _log.Enqueue(_name + ".added");
-        public override void HandlerRemoved(IChannelHandlerContext ctx) => _log.Enqueue(_name + ".removed");
+        public override void HandlerAdded(IChannelHandlerContext ctx)
+        {
+            _log.Enqueue(_name + ".added");
+        }
+        public override void HandlerRemoved(IChannelHandlerContext ctx)
+        {
+            _log.Enqueue(_name + ".removed");
+        }
 
         public override void ChannelUnregistered(IChannelHandlerContext ctx)
         {
@@ -39,12 +45,16 @@ public class PipelineExecutorShutdownContractTest
             ctx.FireChannelUnregistered();
         }
 
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) =>
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
             _log.Enqueue(_name + ".exception:" + cause.GetType().Name);
+        }
     }
 
-    private static string[] HandlerNames(IChannel channel) =>
-        channel.Pipeline.Names().Where(name => !name.Contains("TailContext", StringComparison.Ordinal)).ToArray();
+    private static string[] HandlerNames(IChannel channel)
+    {
+        return channel.Pipeline.Names().Where(name => !name.Contains("TailContext", StringComparison.Ordinal)).ToArray();
+    }
 
     [Fact(Timeout = 10000)]
     public async Task AStoppedSeparateExecutorRemovesItsPendingHandlerWithoutCallbacks()

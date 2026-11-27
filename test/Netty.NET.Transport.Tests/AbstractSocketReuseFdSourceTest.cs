@@ -125,13 +125,18 @@ public abstract class AbstractSocketReuseFdSourceTest : AbstractSocketTest
     // CLR: java.io.IOException covers the JDK's socket I/O failures, but a CLR SocketException derives from
     // Win32Exception, not IOException (https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socketexception),
     // so both types take the source's IOException branch, as AbstractNioByteChannel's read-error handling does.
-    private static bool IsIOException(Exception cause) => cause is IOException || cause is SocketException;
+    private static bool IsIOException(Exception cause)
+    {
+        return cause is IOException || cause is SocketException;
+    }
 
     // CLR: Future.cause() of a failed or cancelled future. A faulted Task wraps its cause in an AggregateException; a
     // cancelled Task has no exception, so it is represented by a TaskCanceledException, as a cancelled Netty future's
     // cause is a CancellationException.
-    private static Exception Cause(Task future) =>
-            future.IsCanceled ? new TaskCanceledException(future) : future.Exception?.InnerException;
+    private static Exception Cause(Task future)
+    {
+        return future.IsCanceled ? new TaskCanceledException(future) : future.Exception?.InnerException;
+    }
 
     internal class ReuseFdHandler : ChannelInboundHandlerAdapter
     {

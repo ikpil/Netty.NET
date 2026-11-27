@@ -240,7 +240,10 @@ public partial class LocalChannelSourceTest
         private readonly TaskCompletionSource _done = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal int Current => Math.Max(0, Volatile.Read(ref _remaining));
         internal void Signal() { if (Interlocked.Decrement(ref _remaining) == 0) _done.TrySetResult(); }
-        internal Task WaitAsync() => _done.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        internal Task WaitAsync()
+        {
+            return _done.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        }
     }
     private sealed class MatchRead(ByteBuf expected, MessageCount count, bool inactive = false, bool writeOnActive = false, int? expectedCount = null)
         : ChannelInboundHandlerAdapter

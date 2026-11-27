@@ -857,7 +857,10 @@ public class DefaultChannelPipeline : IChannelPipeline
         return ToMap().GetEnumerator();
     }
 
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 
     /**
      * Returns the {@link String} representation of this pipeline.

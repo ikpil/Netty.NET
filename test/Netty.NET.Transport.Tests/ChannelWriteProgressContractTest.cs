@@ -228,11 +228,18 @@ public class ChannelWriteProgressContractTest
     }
     private sealed class Encode : ChannelOutboundHandlerAdapter
     {
-        public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken) =>
-            ctx.WriteAsync(msg is string text ? Unpooled.CopiedBuffer("wire:" + text, System.Text.Encoding.ASCII) : msg, cancellationToken);
+        public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken)
+        {
+            return ctx.WriteAsync(msg is string text ? Unpooled.CopiedBuffer("wire:" + text, System.Text.Encoding.ASCII) : msg, cancellationToken);
+        }
     }
     internal sealed class Observer(Action<ChannelWriteProgress> report) : IProgress<ChannelWriteProgress>
-    { public void Report(ChannelWriteProgress value) => report(value); }
+    {
+        public void Report(ChannelWriteProgress value)
+        {
+            report(value);
+        }
+    }
     private sealed class ProbeChannel : NioSocketChannel
     {
         internal int GatheredCalls;

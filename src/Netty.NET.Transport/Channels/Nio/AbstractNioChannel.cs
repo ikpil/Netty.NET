@@ -607,8 +607,10 @@ public abstract class AbstractNioChannel : AbstractChannel
     }
 
     // CLR: the Task-returning connect hook of AbstractChannel is replaced by doConnect/doFinishConnect.
-    protected sealed override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken cancellationToken) =>
-        Task.FromException(new NotSupportedException());
+    protected sealed override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken cancellationToken)
+    {
+        return Task.FromException(new NotSupportedException());
+    }
 
     protected override void DoClose()
     {
@@ -629,5 +631,8 @@ public abstract class AbstractNioChannel : AbstractChannel
     }
 
     // CLR: an IPv6 dual-mode socket reports IPv4 peers as IPv4-mapped IPv6 addresses; Java reports the IPv4 form.
-    internal static EndPoint Normalize(EndPoint endpoint) => endpoint is IPEndPoint ip && ip.Address.IsIPv4MappedToIPv6 ? new IPEndPoint(ip.Address.MapToIPv4(), ip.Port) : endpoint;
+    internal static EndPoint Normalize(EndPoint endpoint)
+    {
+        return endpoint is IPEndPoint ip && ip.Address.IsIPv4MappedToIPv6 ? new IPEndPoint(ip.Address.MapToIPv4(), ip.Port) : endpoint;
+    }
 }

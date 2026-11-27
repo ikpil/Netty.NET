@@ -40,7 +40,10 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
     }
 
     public int Count => Volatile.Read(ref count);
-    public bool IsEmpty() => Count == 0;
+    public bool IsEmpty()
+    {
+        return Count == 0;
+    }
 
     public bool TryEnqueue(T item)
     {
@@ -60,7 +63,10 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
         if (!TryEnqueue(item)) throw new InvalidOperationException("Queue full");
     }
 
-    public bool TryDequeue(out T item) => TryTake(out item);
+    public bool TryDequeue(out T item)
+    {
+        return TryTake(out item);
+    }
 
     public bool TryTake(out T item)
     {

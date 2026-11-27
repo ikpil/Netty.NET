@@ -34,7 +34,10 @@ public class FixedRecvByteBufAllocator : DefaultMaxMessagesRecvByteBufAllocator
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(bufferSize);
         _bufferSize = bufferSize;
     }
-    public override IRecvByteBufAllocator.IHandle NewHandle() => new HandleImpl(this, _bufferSize);
+    public override IRecvByteBufAllocator.IHandle NewHandle()
+    {
+        return new HandleImpl(this, _bufferSize);
+    }
     public override FixedRecvByteBufAllocator RespectMaybeMoreData(bool respectMaybeMoreData)
     {
         base.RespectMaybeMoreData(respectMaybeMoreData);
@@ -42,6 +45,9 @@ public class FixedRecvByteBufAllocator : DefaultMaxMessagesRecvByteBufAllocator
     }
     private sealed class HandleImpl(FixedRecvByteBufAllocator owner, int size) : MaxMessageHandle(owner)
     {
-        public override int Guess() => size;
+        public override int Guess()
+        {
+            return size;
+        }
     }
 }

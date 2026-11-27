@@ -139,8 +139,10 @@ public partial class DefaultChannelGroup
     // CLR exposes channel lookup, immutable iteration and live partial completion through standard
     // dictionary/Task APIs. Callers keep the returned Task for aggregate await and inspect these Tasks
     // for progress; neither the map nor its task producers can be modified through the public API.
-    private static IReadOnlyDictionary<IChannel, Task> Snapshot(List<KeyValuePair<IChannel, Task>> tasks) =>
-        new ReadOnlyDictionary<IChannel, Task>(new Dictionary<IChannel, Task>(tasks, ReferenceEqualityComparer.Instance));
+    private static IReadOnlyDictionary<IChannel, Task> Snapshot(List<KeyValuePair<IChannel, Task>> tasks)
+    {
+        return new ReadOnlyDictionary<IChannel, Task>(new Dictionary<IChannel, Task>(tasks, ReferenceEqualityComparer.Instance));
+    }
 
     // CLR: aggregate success is Task.IsCompletedSuccessfully; the async method owns its completion producer.
     /**

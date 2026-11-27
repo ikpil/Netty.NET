@@ -53,7 +53,13 @@ public static partial class ByteBufUtil
 
     private sealed class LocalCache : FastThreadLocal<ThreadLocalDirectBufferCache>
     {
-        protected override ThreadLocalDirectBufferCache InitialValue() => new(ThreadLocalDirectSettings.Size);
-        protected override void OnRemoval(ThreadLocalDirectBufferCache cache) => cache.Dispose();
+        protected override ThreadLocalDirectBufferCache InitialValue()
+        {
+            return new(ThreadLocalDirectSettings.Size);
+        }
+        protected override void OnRemoval(ThreadLocalDirectBufferCache cache)
+        {
+            cache.Dispose();
+        }
     }
 }

@@ -28,7 +28,10 @@ namespace Netty.NET.Transport.Channels;
 public interface IEventLoop : IOrderedEventExecutor, IEventLoopGroup
 {
     // CLR: EventLoop.next() is AbstractEventExecutor.next(), which returns this.
-    IEventLoop IEventLoopGroup.Next() => this;
+    IEventLoop IEventLoopGroup.Next()
+    {
+        return this;
+    }
 
     // CLR: IOrderedEventExecutor and IEventLoopGroup are both reachable; redeclaring register(Channel) here gives
     // callers that hold an IEventLoop one member.

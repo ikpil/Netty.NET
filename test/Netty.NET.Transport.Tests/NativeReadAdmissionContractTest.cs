@@ -125,7 +125,10 @@ public class NativeReadAdmissionContractTest
         }
         finally { if (channel != null) await channel.CloseAsync(TestContext.Current.CancellationToken); await Stop(group); }
     }
-    private static Task Stop(MultiThreadIoEventLoopGroup group) => group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
+    private static Task Stop(MultiThreadIoEventLoopGroup group)
+    {
+        return group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
+    }
     private sealed class CaptureBytes(TaskCompletionSource<byte[]> received, int expectedLength = 3) : SimpleChannelInboundHandler<ByteBuf>
     {
         private readonly List<byte> _bytes = new();
@@ -139,12 +142,18 @@ public class NativeReadAdmissionContractTest
             if (_bytes.Count >= expectedLength)
                 received.TrySetResult(_bytes.ToArray());
         }
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => received.TrySetException(cause);
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            received.TrySetException(cause);
+        }
     }
     private sealed class CapturePacket(TaskCompletionSource<byte[]> received) : SimpleChannelInboundHandler<DatagramPacket>
     {
         protected override void ChannelRead0(IChannelHandlerContext ctx, DatagramPacket packet)
         { Assert.True(ctx.Channel.IsRegistered); Assert.True(ctx.Executor.InEventLoop()); received.TrySetResult(packet.Content.ReadableMemory.ToArray()); }
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => received.TrySetException(cause);
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            received.TrySetException(cause);
+        }
     }
 }

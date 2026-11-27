@@ -214,9 +214,15 @@ internal sealed class CodecOutputList : IList<object>
         return -1;
     }
 
-    public bool Contains(object item) => IndexOf(item) >= 0;
+    public bool Contains(object item)
+    {
+        return IndexOf(item) >= 0;
+    }
 
-    public void CopyTo(object[] destination, int arrayIndex) => Array.Copy(array, 0, destination, arrayIndex, size);
+    public void CopyTo(object[] destination, int arrayIndex)
+    {
+        Array.Copy(array, 0, destination, arrayIndex, size);
+    }
 
     public bool Remove(object item)
     {
@@ -237,7 +243,10 @@ internal sealed class CodecOutputList : IList<object>
         }
     }
 
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 
     /**
      * Returns {@code true} if any elements where added or set. This will be reset once {@link #recycle()} was called.

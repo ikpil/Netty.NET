@@ -187,8 +187,14 @@ public class ChannelPipelineSourceTest
     private sealed class LifecycleCountingHandler : ChannelInboundHandlerAdapter
     {
         internal int Added, Removed, Read;
-        public override void HandlerAdded(IChannelHandlerContext ctx) => Interlocked.Increment(ref Added);
-        public override void HandlerRemoved(IChannelHandlerContext ctx) => Interlocked.Increment(ref Removed);
+        public override void HandlerAdded(IChannelHandlerContext ctx)
+        {
+            Interlocked.Increment(ref Added);
+        }
+        public override void HandlerRemoved(IChannelHandlerContext ctx)
+        {
+            Interlocked.Increment(ref Removed);
+        }
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         { Interlocked.Increment(ref Read); ctx.FireChannelRead(msg); }
     }
@@ -197,20 +203,37 @@ public class ChannelPipelineSourceTest
         internal int Removed;
         public override void HandlerAdded(IChannelHandlerContext ctx)
         { ctx.Pipeline.Replace(this, "real", replacement); throw error; }
-        public override void HandlerRemoved(IChannelHandlerContext ctx) => Interlocked.Increment(ref Removed);
+        public override void HandlerRemoved(IChannelHandlerContext ctx)
+        {
+            Interlocked.Increment(ref Removed);
+        }
     }
     private sealed class SelfRemovingHandler(Exception error) : ChannelInboundHandlerAdapter
     {
         internal int Removed;
         public override void HandlerAdded(IChannelHandlerContext ctx) { ctx.Pipeline.Remove(this); throw error; }
-        public override void HandlerRemoved(IChannelHandlerContext ctx) => Interlocked.Increment(ref Removed);
+        public override void HandlerRemoved(IChannelHandlerContext ctx)
+        {
+            Interlocked.Increment(ref Removed);
+        }
     }
     private sealed class DeferredThrowingHandler(Exception error) : ChannelInboundHandlerAdapter
     {
         internal int Removed;
-        public override void HandlerAdded(IChannelHandlerContext ctx) => throw error;
-        public override void HandlerRemoved(IChannelHandlerContext ctx) => Interlocked.Increment(ref Removed);
+        public override void HandlerAdded(IChannelHandlerContext ctx)
+        {
+            throw error;
+        }
+        public override void HandlerRemoved(IChannelHandlerContext ctx)
+        {
+            Interlocked.Increment(ref Removed);
+        }
     }
     private sealed class ReplaceOnRemoval(IChannelHandler replacement) : ChannelInboundHandlerAdapter
-    { public override void HandlerRemoved(IChannelHandlerContext ctx) => ctx.Pipeline.Replace("handler", "replacement", replacement); }
+    {
+        public override void HandlerRemoved(IChannelHandlerContext ctx)
+        {
+            ctx.Pipeline.Replace("handler", "replacement", replacement);
+        }
+    }
 }

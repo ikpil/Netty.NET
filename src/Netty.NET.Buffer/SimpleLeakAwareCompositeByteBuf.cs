@@ -48,17 +48,50 @@ internal class SimpleLeakAwareCompositeByteBuf : WrappedCompositeByteBuf
         Debug.Assert(closed);
     }
 
-    public override ByteBuf Slice() => NewLeakAwareByteBuf(base.Slice());
-    public override ByteBuf Slice(int index, int length) => NewLeakAwareByteBuf(base.Slice(index, length));
-    public override ByteBuf RetainedSlice() => NewLeakAwareByteBuf(base.RetainedSlice());
-    public override ByteBuf RetainedSlice(int index, int length) => NewLeakAwareByteBuf(base.RetainedSlice(index, length));
-    public override ByteBuf Duplicate() => NewLeakAwareByteBuf(base.Duplicate());
-    public override ByteBuf RetainedDuplicate() => NewLeakAwareByteBuf(base.RetainedDuplicate());
-    public override ByteBuf ReadSlice(int length) => NewLeakAwareByteBuf(base.ReadSlice(length));
-    public override ByteBuf ReadRetainedSlice(int length) => NewLeakAwareByteBuf(base.ReadRetainedSlice(length));
-    public override ByteBuf AsReadOnly() => NewLeakAwareByteBuf(base.AsReadOnly());
+    public override ByteBuf Slice()
+    {
+        return NewLeakAwareByteBuf(base.Slice());
+    }
+    public override ByteBuf Slice(int index, int length)
+    {
+        return NewLeakAwareByteBuf(base.Slice(index, length));
+    }
+    public override ByteBuf RetainedSlice()
+    {
+        return NewLeakAwareByteBuf(base.RetainedSlice());
+    }
+    public override ByteBuf RetainedSlice(int index, int length)
+    {
+        return NewLeakAwareByteBuf(base.RetainedSlice(index, length));
+    }
+    public override ByteBuf Duplicate()
+    {
+        return NewLeakAwareByteBuf(base.Duplicate());
+    }
+    public override ByteBuf RetainedDuplicate()
+    {
+        return NewLeakAwareByteBuf(base.RetainedDuplicate());
+    }
+    public override ByteBuf ReadSlice(int length)
+    {
+        return NewLeakAwareByteBuf(base.ReadSlice(length));
+    }
+    public override ByteBuf ReadRetainedSlice(int length)
+    {
+        return NewLeakAwareByteBuf(base.ReadRetainedSlice(length));
+    }
+    public override ByteBuf AsReadOnly()
+    {
+        return NewLeakAwareByteBuf(base.AsReadOnly());
+    }
 
-    private SimpleLeakAwareByteBuf NewLeakAwareByteBuf(ByteBuf wrapped) => NewLeakAwareByteBuf(wrapped, Unwrap(), Leak);
+    private SimpleLeakAwareByteBuf NewLeakAwareByteBuf(ByteBuf wrapped)
+    {
+        return NewLeakAwareByteBuf(wrapped, Unwrap(), Leak);
+    }
     protected virtual SimpleLeakAwareByteBuf NewLeakAwareByteBuf(ByteBuf wrapped, ByteBuf trackedByteBuf,
-        IResourceLeakTracker<ByteBuf> leakTracker) => new(wrapped, trackedByteBuf, leakTracker);
+        IResourceLeakTracker<ByteBuf> leakTracker)
+    {
+        return new(wrapped, trackedByteBuf, leakTracker);
+    }
 }

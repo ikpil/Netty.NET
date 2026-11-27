@@ -10,10 +10,16 @@ namespace Netty.NET.Common.Tests.Porting;
 [Collection("Timer globals")]
 public class HashedWheelTimerContractTest
 {
-    private static IThreadFactory BackgroundFactory() => new DefaultThreadFactory("wheel-contract", true);
+    private static IThreadFactory BackgroundFactory()
+    {
+        return new DefaultThreadFactory("wheel-contract", true);
+    }
 
-    private static int InstanceCount() => (int)typeof(HashedWheelTimer)
-        .GetField("INSTANCE_COUNTER", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
+    private static int InstanceCount()
+    {
+        return (int)typeof(HashedWheelTimer)
+            .GetField("INSTANCE_COUNTER", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
+    }
 
     [Fact]
     public void FailedConstructionFinalizesWithoutCorruptingTheInstanceCount()
@@ -113,7 +119,10 @@ public class HashedWheelTimerContractTest
 
     private sealed class RunOnlyTask(Action<ITimeout> action) : ITimerTask
     {
-        public void Run(ITimeout timeout) => action(timeout);
+        public void Run(ITimeout timeout)
+        {
+            action(timeout);
+        }
     }
 
     [Fact]

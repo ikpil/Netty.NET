@@ -8,7 +8,10 @@ namespace Netty.NET.Common.Tests.Porting;
 public class ResourceLeakDetectorFactoryContractTest
 {
     private const string Property = "io.netty.customResourceLeakDetector";
-    private static DefaultResourceLeakDetectorFactory CreateFactory(Type type) => CreateFactory(type?.AssemblyQualifiedName);
+    private static DefaultResourceLeakDetectorFactory CreateFactory(Type type)
+    {
+        return CreateFactory(type?.AssemblyQualifiedName);
+    }
     private static DefaultResourceLeakDetectorFactory CreateFactory(string typeName)
     {
         string previous = Environment.GetEnvironmentVariable(Property);
@@ -43,8 +46,14 @@ public class ResourceLeakDetectorFactoryContractTest
     }
     public sealed class Throwing<T> : ResourceLeakDetector<T> where T : class
     {
-        public Throwing(Type resource, int sampling) : base(resource, sampling) => throw new InvalidOperationException("custom constructor");
-        public Throwing(Type resource, int sampling, long maxActive) : base(resource, sampling, maxActive) => throw new InvalidOperationException("custom constructor");
+        public Throwing(Type resource, int sampling) : base(resource, sampling)
+        {
+            throw new InvalidOperationException("custom constructor");
+        }
+        public Throwing(Type resource, int sampling, long maxActive) : base(resource, sampling, maxActive)
+        {
+            throw new InvalidOperationException("custom constructor");
+        }
     }
     public sealed class StreamOnly<T> : ResourceLeakDetector<T> where T : Stream
     {
@@ -56,7 +65,10 @@ public class ResourceLeakDetectorFactoryContractTest
     }
     public sealed class InitializationFailure : ResourceLeakDetector<object>
     {
-        static InitializationFailure() => throw new InvalidOperationException("custom initializer");
+        static InitializationFailure()
+        {
+            throw new InvalidOperationException("custom initializer");
+        }
         public InitializationFailure(Type resource, int sampling) : base(resource, sampling) { }
     }
 

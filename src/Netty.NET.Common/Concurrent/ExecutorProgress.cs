@@ -360,7 +360,10 @@ public sealed class ProgressRegistration : IDisposable
 
     /// <summary>Completes after this subscription's terminal callbacks; detach/shutdown cancel it and rejection faults it.</summary>
     public Task NotificationsCompleted => _notification.Task;
-    public void Dispose() => Volatile.Read(ref Owner)?.Remove(this);
+    public void Dispose()
+    {
+        Volatile.Read(ref Owner)?.Remove(this);
+    }
     internal void Release()
     {
         Owner = null;
@@ -368,7 +371,16 @@ public sealed class ProgressRegistration : IDisposable
         Progress = Array.Empty<Action<TransferProgress>>();
         Completed = Array.Empty<Action<Task>>();
     }
-    internal void Complete() => _notification.TrySetResult();
-    internal void Cancel() => _notification.TrySetCanceled();
-    internal void Reject(Exception error) => _notification.TrySetException(error);
+    internal void Complete()
+    {
+        _notification.TrySetResult();
+    }
+    internal void Cancel()
+    {
+        _notification.TrySetCanceled();
+    }
+    internal void Reject(Exception error)
+    {
+        _notification.TrySetException(error);
+    }
 }

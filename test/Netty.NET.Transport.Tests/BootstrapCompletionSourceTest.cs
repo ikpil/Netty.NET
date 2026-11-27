@@ -33,9 +33,15 @@ namespace Netty.NET.Transport.Tests;
 public class BootstrapCompletionSourceTest
 {
     [Fact]
-    public Task TestLateRegisterSuccess() => LateBind(false);
+    public Task TestLateRegisterSuccess()
+    {
+        return LateBind(false);
+    }
     [Fact]
-    public Task TestLateRegisterSuccessBindFailed() => LateBind(true);
+    public Task TestLateRegisterSuccessBindFailed()
+    {
+        return LateBind(true);
+    }
     private static async Task LateBind(bool fail)
     {
         var group = new HeldRegistrationGroup();
@@ -169,10 +175,16 @@ public class BootstrapCompletionSourceTest
     }
     private sealed class TestAddressResolverGroup(bool success) : AddressResolverGroup<EndPoint>
     {
-        protected override IAddressResolver<EndPoint> NewResolver(IEventExecutor executor) => new Resolver(executor, success);
+        protected override IAddressResolver<EndPoint> NewResolver(IEventExecutor executor)
+        {
+            return new Resolver(executor, success);
+        }
         private sealed class Resolver(IEventExecutor executor, bool success) : AbstractAddressResolver<EndPoint>(executor)
         {
-            protected override bool DoIsResolved(EndPoint address) => false;
+            protected override bool DoIsResolved(EndPoint address)
+            {
+                return false;
+            }
             protected override Task<EndPoint> DoResolveAsync(EndPoint address, CancellationToken token)
             {
                 var producer = new TaskCompletionSource<EndPoint>(TaskCreationOptions.RunContinuationsAsynchronously);

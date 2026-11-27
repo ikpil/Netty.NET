@@ -93,7 +93,10 @@ public abstract class AbstractBootstrap
     // CLR: new InetSocketAddress(addr, port) binds the wildcard address InetAddress.anyLocalAddress() when addr is null;
     // as in BindAsync(int), the wildcard is IPAddress.Any (0.0.0.0, the JDK default while java.net.preferIPv6Addresses
     // is false).
-    internal static IPEndPoint InetSocketAddress(IPAddress addr, int port) => new IPEndPoint(addr ?? IPAddress.Any, port);
+    internal static IPEndPoint InetSocketAddress(IPAddress addr, int port)
+    {
+        return new IPEndPoint(addr ?? IPAddress.Any, port);
+    }
 
     // CLR: the registration Task replaces the ChannelFuture returned by initAndRegister(). A Task has no channel()
     // accessor, so the created channel is returned through 'channel' (null when the factory failed; the faulted Task
@@ -267,12 +270,16 @@ public abstract class AbstractBootstrap
             TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
     }
 
-    internal static TaskCompletionSource<IChannel> NewPromise() =>
-        new TaskCompletionSource<IChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
+    internal static TaskCompletionSource<IChannel> NewPromise()
+    {
+        return new TaskCompletionSource<IChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
+    }
 
     // CLR: Future.cause() of a completed Task; a cancelled Task has no exception and is reported through IsCanceled.
-    internal static Exception Cause(Task future) =>
-        future.IsFaulted ? (future.Exception.InnerExceptions.Count == 1 ? future.Exception.InnerException : future.Exception) : null;
+    internal static Exception Cause(Task future)
+    {
+        return future.IsFaulted ? (future.Exception.InnerExceptions.Count == 1 ? future.Exception.InnerException : future.Exception) : null;
+    }
 
     internal static void SetFailure(TaskCompletionSource<IChannel> promise, Task future)
     {
@@ -297,8 +304,10 @@ public abstract class AbstractBootstrap
             "io.netty.bootstrap.closeOnSetOptionFailure", true);
 
     // CLR: there is no ClassLoader; the explicitly registered process-wide extensions are captured instead.
-    internal static IReadOnlyList<ChannelInitializerExtension> GetInitializerExtensions() =>
-        ChannelInitializerExtensions.Snapshot();
+    internal static IReadOnlyList<ChannelInitializerExtension> GetInitializerExtensions()
+    {
+        return ChannelInitializerExtensions.Snapshot();
+    }
 
     // CLR: an entry applies its typed AttributeKey<T>; channel.attr(key).set(value) needs the generic key.
     internal static void SetAttributes(IChannel channel, Action<IChannel>[] attrs)

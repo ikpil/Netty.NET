@@ -77,5 +77,8 @@ public class SourceNumberTextContractTest
         }
     }
 
-    private static string Message(Action action) => Assert.Throws<ArgumentException>(action).Message;
+    private static string Message(Action action)
+    {
+        return Assert.Throws<ArgumentException>(action).Message;
+    }
 }

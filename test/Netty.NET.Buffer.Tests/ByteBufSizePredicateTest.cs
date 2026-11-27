@@ -189,9 +189,19 @@ public class ByteBufSizePredicateTest
     private sealed class Tracker : IResourceLeakTracker<ByteBuf>
     {
         internal int Records, Closes;
-        public void Record() => Records++; public void Record(object hint) => Records++;
+        public void Record()
+        {
+            Records++;
+        }
+        public void Record(object hint)
+        {
+            Records++;
+        }
         public bool Close(ByteBuf b) { Closes++; return true; }
-        public Exception GetCloseStackTraceIfAny() => null;
+        public Exception GetCloseStackTraceIfAny()
+        {
+            return null;
+        }
     }
     private sealed class PredicateBuffer : IndicesOnlyBuffer
     {
@@ -210,8 +220,17 @@ public class ByteBufSizePredicateTest
         public override int Capacity { get => throw new Exception("Capacity accessed"); set => throw new NotSupportedException(); }
         public override int RefCnt => throw new Exception("Reference count accessed");
         public override bool IsDirect => false;
-        protected override Memory<byte> GetMemoryCore(int index, int length) => throw new Exception("Content accessed");
-        public override ByteBuf Retain(int increment = 1) => throw new NotSupportedException();
-        public override bool Release(int decrement = 1) => throw new NotSupportedException();
+        protected override Memory<byte> GetMemoryCore(int index, int length)
+        {
+            throw new Exception("Content accessed");
+        }
+        public override ByteBuf Retain(int increment = 1)
+        {
+            throw new NotSupportedException();
+        }
+        public override bool Release(int decrement = 1)
+        {
+            throw new NotSupportedException();
+        }
     }
 }

@@ -92,5 +92,8 @@ public abstract class ChannelHandlerAdapter : IChannelHandler
      * @deprecated is part of {@link ChannelInboundHandler}
      */
     [ChannelHandlerMask.Skip]
-    public virtual void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => ctx.FireExceptionCaught(cause);
+    public virtual void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+    {
+        ctx.FireExceptionCaught(cause);
+    }
 }

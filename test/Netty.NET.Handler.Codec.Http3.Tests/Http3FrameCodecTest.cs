@@ -1363,37 +1363,79 @@ public class Http3FrameCodecTest : IDisposable
             this.type = type;
         }
 
-        public long Type() => type;
+        public long Type()
+        {
+            return type;
+        }
 
-        public long Length() => 0;
+        public long Length()
+        {
+            return 0;
+        }
 
         public ByteBuf Content => null;
 
         public int RefCnt => 0;
 
-        public IByteBufHolder Copy() => null;
+        public IByteBufHolder Copy()
+        {
+            return null;
+        }
 
-        public IByteBufHolder Duplicate() => null;
+        public IByteBufHolder Duplicate()
+        {
+            return null;
+        }
 
-        public IByteBufHolder RetainedDuplicate() => null;
+        public IByteBufHolder RetainedDuplicate()
+        {
+            return null;
+        }
 
-        public IByteBufHolder Replace(ByteBuf content) => null;
+        public IByteBufHolder Replace(ByteBuf content)
+        {
+            return null;
+        }
 
-        public IByteBufHolder Retain() => null;
+        public IByteBufHolder Retain()
+        {
+            return null;
+        }
 
-        public IByteBufHolder Retain(int increment) => null;
+        public IByteBufHolder Retain(int increment)
+        {
+            return null;
+        }
 
-        public IByteBufHolder Touch() => this;
+        public IByteBufHolder Touch()
+        {
+            return this;
+        }
 
-        public IByteBufHolder Touch(object hint) => this;
+        public IByteBufHolder Touch(object hint)
+        {
+            return this;
+        }
 
-        IReferenceCounted IReferenceCounted.Retain() => Retain();
+        IReferenceCounted IReferenceCounted.Retain()
+        {
+            return Retain();
+        }
 
-        IReferenceCounted IReferenceCounted.Retain(int increment) => Retain(increment);
+        IReferenceCounted IReferenceCounted.Retain(int increment)
+        {
+            return Retain(increment);
+        }
 
-        IReferenceCounted IReferenceCounted.Touch() => Touch();
+        IReferenceCounted IReferenceCounted.Touch()
+        {
+            return Touch();
+        }
 
-        IReferenceCounted IReferenceCounted.Touch(object hint) => Touch(hint);
+        IReferenceCounted IReferenceCounted.Touch(object hint)
+        {
+            return Touch(hint);
+        }
 
         public bool Release()
         {
@@ -1401,7 +1443,10 @@ public class Http3FrameCodecTest : IDisposable
             return false;
         }
 
-        public bool Release(int decrement) => false;
+        public bool Release(int decrement)
+        {
+            return false;
+        }
     }
 
     // CLR: mock(Http3SettingsFrame.class) with when(frame.iterator()).thenReturn(Collections.singletonMap(key, 0L)
@@ -1415,14 +1460,29 @@ public class Http3FrameCodecTest : IDisposable
             iterator = new Dictionary<long, long> { { key, 0L } }.GetEnumerator();
         }
 
-        public long Type() => 0;
+        public long Type()
+        {
+            return 0;
+        }
 
-        public Http3Settings Settings() => null;
+        public Http3Settings Settings()
+        {
+            return null;
+        }
 
-        public long? Put(long key, long value) => null;
+        public long? Put(long key, long value)
+        {
+            return null;
+        }
 
-        public IEnumerator<KeyValuePair<long, long>> GetEnumerator() => iterator;
+        public IEnumerator<KeyValuePair<long, long>> GetEnumerator()
+        {
+            return iterator;
+        }
 
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
     }
 }

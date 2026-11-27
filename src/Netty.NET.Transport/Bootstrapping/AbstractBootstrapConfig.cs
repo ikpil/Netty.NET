@@ -60,10 +60,15 @@ public abstract class AbstractBootstrapConfig
         foreach (var pair in values) snapshot.Add(pair.Key, pair.Value);
         return new ReadOnlyDictionary<TKey, object>(snapshot);
     }
-    private static string Value(object value) => value is bool boolean ? boolean ? "true" : "false"
-        : value is IFormattable formattable ? formattable.ToString(null, CultureInfo.InvariantCulture) : value?.ToString();
+    private static string Value(object value)
+    {
+        return value is bool boolean ? boolean ? "true" : "false"
+            : value is IFormattable formattable ? formattable.ToString(null, CultureInfo.InvariantCulture) : value?.ToString();
+    }
     protected static string Map<TKey>(IReadOnlyDictionary<TKey, object> values)
-        => "{" + string.Join(", ", values.Select(pair => pair.Key + "=" + Value(pair.Value))) + "}";
+    {
+        return "{" + string.Join(", ", values.Select(pair => pair.Key + "=" + Value(pair.Value))) + "}";
+    }
     protected virtual void Describe(List<string> values)
     {
         if (Group != null) values.Add("group: " + StringUtil.SimpleClassName(Group));

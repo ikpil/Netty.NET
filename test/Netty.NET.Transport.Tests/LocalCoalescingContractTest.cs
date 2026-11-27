@@ -135,7 +135,10 @@ public class LocalCoalescingContractTest
             msg.GetBytes(msg.ReaderIndex, bytes);
             received.TrySetResult(bytes);
         }
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => received.TrySetException(cause);
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            received.TrySetException(cause);
+        }
     }
     private sealed class ReceiveTwo(TaskCompletionSource<int[]> received) : ChannelInboundHandlerAdapter
     {

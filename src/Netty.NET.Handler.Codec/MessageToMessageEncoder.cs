@@ -182,5 +182,8 @@ public abstract class MessageToMessageEncoder<I> : ChannelOutboundHandlerAdapter
     // internal Encode would make every override in a friend assembly repeat protected internal (CS0507), so the
     // package-level call goes through this internal forwarder
     // (https://learn.microsoft.com/dotnet/csharp/language-reference/keywords/protected-internal).
-    internal void InvokeEncode(IChannelHandlerContext ctx, I msg, IList<object> @out) => Encode(ctx, msg, @out);
+    internal void InvokeEncode(IChannelHandlerContext ctx, I msg, IList<object> @out)
+    {
+        Encode(ctx, msg, @out);
+    }
 }

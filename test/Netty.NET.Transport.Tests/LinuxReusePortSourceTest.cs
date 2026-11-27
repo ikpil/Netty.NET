@@ -31,10 +31,16 @@ public class LinuxReusePortSourceTest
     private static readonly IPEndPoint Loopback = new(IPAddress.Loopback, 0);
 
     [Fact]
-    public Task TestMultipleBindSocketChannelWithoutReusePortFails() => AssertDuplicateBindFails(tcp: true);
+    public Task TestMultipleBindSocketChannelWithoutReusePortFails()
+    {
+        return AssertDuplicateBindFails(tcp: true);
+    }
 
     [Fact]
-    public Task TestMultipleBindDatagramChannelWithoutReusePortFails() => AssertDuplicateBindFails(tcp: false);
+    public Task TestMultipleBindDatagramChannelWithoutReusePortFails()
+    {
+        return AssertDuplicateBindFails(tcp: false);
+    }
 
     private static async Task AssertDuplicateBindFails(bool tcp)
     {
@@ -46,7 +52,10 @@ public class LinuxReusePortSourceTest
             var handler = new DiscardHandler();
             var server = NewServer(loop).ChildHandler(handler);
             var datagram = NewDatagram(loop).Handler(handler);
-            Task<IChannel> Bind(EndPoint address) => tcp ? server.BindAsync(address, token) : datagram.BindAsync(address, token);
+            Task<IChannel> Bind(EndPoint address)
+            {
+                return tcp ? server.BindAsync(address, token) : datagram.BindAsync(address, token);
+            }
             var first = await Bind(Loopback);
             var error = await Assert.ThrowsAsync<SocketException>(() => Bind(first.LocalAddress));
             Assert.Equal(SocketError.AddressAlreadyInUse, error.SocketErrorCode);
@@ -115,11 +124,15 @@ public class LinuxReusePortSourceTest
         finally { await loop.StopAsync(); }
     }
 
-    private static ServerBootstrap NewServer(MultiThreadIoEventLoopGroup loop) =>
-        new ServerBootstrap().Group(loop).ChannelFactory(static () => new NioServerSocketChannel(AddressFamily.InterNetwork));
+    private static ServerBootstrap NewServer(MultiThreadIoEventLoopGroup loop)
+    {
+        return new ServerBootstrap().Group(loop).ChannelFactory(static () => new NioServerSocketChannel(AddressFamily.InterNetwork));
+    }
 
-    private static Bootstrap NewDatagram(MultiThreadIoEventLoopGroup loop) =>
-        new Bootstrap().Group(loop).ChannelFactory(static () => new NioDatagramChannel());
+    private static Bootstrap NewDatagram(MultiThreadIoEventLoopGroup loop)
+    {
+        return new Bootstrap().Group(loop).ChannelFactory(static () => new NioDatagramChannel());
+    }
 
     private static void RequireReusePort()
     {
@@ -149,6 +162,9 @@ public class LinuxReusePortSourceTest
     private sealed class DatagramHandler : SimpleChannelInboundHandler<DatagramPacket>
     {
         internal volatile bool Received;
-        protected override void ChannelRead0(IChannelHandlerContext ctx, DatagramPacket msg) => Received = true;
+        protected override void ChannelRead0(IChannelHandlerContext ctx, DatagramPacket msg)
+        {
+            Received = true;
+        }
     }
 }

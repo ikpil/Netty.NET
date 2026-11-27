@@ -29,13 +29,22 @@ public abstract class AbstractSingleRegionByteBufTest : AbstractByteBufTest
     private static readonly SemaphoreSlim InternalBorrowGrowthGate = new(1, 1);
 
     [Fact]
-    public void TestNioBuffer1() => AssertOriginalNioBuffer1();
+    public void TestNioBuffer1()
+    {
+        AssertOriginalNioBuffer1();
+    }
 
     [Fact]
-    public void TestToByteBuffer2() => AssertOriginalToByteBuffer2();
+    public void TestToByteBuffer2()
+    {
+        AssertOriginalToByteBuffer2();
+    }
 
     [Fact]
-    public void TestToByteBuffer3() => AssertOriginalToByteBuffer3();
+    public void TestToByteBuffer3()
+    {
+        AssertOriginalToByteBuffer3();
+    }
 
     [Fact]
     public virtual async Task TestInternalNioBuffer()

@@ -24,7 +24,9 @@ internal sealed class PoolHeapArena : PoolArena
     internal PoolHeapArena(IByteBufAllocator parent, SizeClasses sizeClass) : base(parent, sizeClass, false) { }
 
     internal override PooledHeapByteBuf Allocate(int initialCapacity, int maxCapacity, PoolThreadCache cache = null)
-        => new(this, initialCapacity, maxCapacity, cache);
+    {
+        return new(this, initialCapacity, maxCapacity, cache);
+    }
 
     protected override Memory<byte> AllocateBacking(int length, out NativeMemoryOwner owner)
     {

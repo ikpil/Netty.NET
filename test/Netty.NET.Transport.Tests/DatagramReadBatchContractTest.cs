@@ -98,9 +98,14 @@ public class DatagramReadBatchContractTest
         loop.RunNow();
     }
 
-    private static Socket NewSender() => new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-    private static void Send(Socket sender, IChannel channel, byte value) =>
+    private static Socket NewSender()
+    {
+        return new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+    }
+    private static void Send(Socket sender, IChannel channel, byte value)
+    {
         Assert.Equal(1, sender.SendTo(new[] { value }, channel.LocalAddress));
+    }
 
     private static void PumpUntil(ManualIoEventLoop loop, Func<bool> condition)
     {
@@ -141,7 +146,9 @@ public class DatagramReadBatchContractTest
     private sealed class FailingSecondReceive(Exception error) : NioDatagramChannel
     {
         private int _attempts;
-        protected override SocketReceiveFromResult ReceiveDatagram(Memory<byte> memory, EndPoint remote) =>
-            ++_attempts == 2 ? throw error : base.ReceiveDatagram(memory, remote);
+        protected override SocketReceiveFromResult ReceiveDatagram(Memory<byte> memory, EndPoint remote)
+        {
+            return ++_attempts == 2 ? throw error : base.ReceiveDatagram(memory, remote);
+        }
     }
 }

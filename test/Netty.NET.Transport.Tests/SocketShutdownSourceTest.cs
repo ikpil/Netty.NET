@@ -363,9 +363,18 @@ internal sealed class ShutdownTestHandler : SimpleChannelInboundHandler<ByteBuf>
     internal readonly TaskCompletionSource Closure = new(TaskCreationOptions.RunContinuationsAsynchronously);
     internal int HalfClosureCount;
     internal int OutputEvents;
-    public override void ChannelActive(IChannelHandlerContext ctx) => Channel = (IDuplexChannel)ctx.Channel;
-    public override void ChannelInactive(IChannelHandlerContext ctx) => Closure.TrySetResult();
-    protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf msg) => Bytes.Writer.TryWrite((byte)msg.ReadByte());
+    public override void ChannelActive(IChannelHandlerContext ctx)
+    {
+        Channel = (IDuplexChannel)ctx.Channel;
+    }
+    public override void ChannelInactive(IChannelHandlerContext ctx)
+    {
+        Closure.TrySetResult();
+    }
+    protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf msg)
+    {
+        Bytes.Writer.TryWrite((byte)msg.ReadByte());
+    }
     public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
     {
         if (evt is ChannelInputShutdownEvent) { Interlocked.Increment(ref HalfClosureCount); HalfClosure.TrySetResult(); }
@@ -387,5 +396,8 @@ internal sealed class ShutdownFixture : IAsyncDisposable
         if (domain) { Client.Channel<NioDomainSocketChannel>(); Server.Channel<NioServerDomainSocketChannel>(); }
         else { Client.Channel<NioSocketChannel>(); Server.Channel<NioServerSocketChannel>(); }
     }
-    public async ValueTask DisposeAsync() => await _group.StopAsync().WaitAsync(TimeSpan.FromSeconds(10));
+    public async ValueTask DisposeAsync()
+    {
+        await _group.StopAsync().WaitAsync(TimeSpan.FromSeconds(10));
+    }
 }

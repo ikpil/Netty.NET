@@ -29,5 +29,7 @@ public static partial class ByteBufUtil
     /// Notifications follow the existing detector's reporting policy and duplicate suppression,
     /// on the thread that drains collected leaks during a subsequent tracking call.</remarks>
     public static void SetLeakListener(ResourceLeakDetector<ByteBuf>.LeakListener leakListener)
-        => ByteBuf.LeakDetector.SetLeakListener(leakListener);
+    {
+        ByteBuf.LeakDetector.SetLeakListener(leakListener);
+    }
 }

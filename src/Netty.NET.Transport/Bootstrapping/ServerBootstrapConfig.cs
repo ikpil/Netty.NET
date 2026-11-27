@@ -28,7 +28,10 @@ namespace Netty.NET.Transport.Bootstrapping;
 public sealed class ServerBootstrapConfig : AbstractBootstrapConfig
 {
     private readonly ServerBootstrap _bootstrap;
-    internal ServerBootstrapConfig(ServerBootstrap bootstrap) => _bootstrap = bootstrap ?? throw new ArgumentNullException(nameof(bootstrap));
+    internal ServerBootstrapConfig(ServerBootstrap bootstrap)
+    {
+        _bootstrap = bootstrap ?? throw new ArgumentNullException(nameof(bootstrap));
+    }
     public override IEventLoopGroup Group => _bootstrap.ConfiguredGroup;
     public override Func<IChannel> ChannelFactory => _bootstrap.ConfiguredFactory;
     public override IChannelHandler Handler => _bootstrap.ConfiguredHandler;

@@ -101,7 +101,10 @@ public sealed class HostsFileEntriesProvider
      *
      * @return a new {@link HostsFileEntriesProvider.Parser}
      */
-    public static IParser Parser() => ParserImpl.Instance;
+    public static IParser Parser()
+    {
+        return ParserImpl.Instance;
+    }
 
     // CLR: package-private static final EMPTY becomes internal; tests see it through InternalsVisibleTo.
     internal static readonly HostsFileEntriesProvider Empty = new(
@@ -122,13 +125,19 @@ public sealed class HostsFileEntriesProvider
      *
      * @return the IPv4 entries
      */
-    public IReadOnlyDictionary<string, IReadOnlyList<IPAddress>> Ipv4Entries() => _ipv4Entries;
+    public IReadOnlyDictionary<string, IReadOnlyList<IPAddress>> Ipv4Entries()
+    {
+        return _ipv4Entries;
+    }
     /**
      * The IPv6 entries.
      *
      * @return the IPv6 entries
      */
-    public IReadOnlyDictionary<string, IReadOnlyList<IPAddress>> Ipv6Entries() => _ipv6Entries;
+    public IReadOnlyDictionary<string, IReadOnlyList<IPAddress>> Ipv6Entries()
+    {
+        return _ipv6Entries;
+    }
 
     // CLR: Java StandardCharsets.UTF_16 decoding has no Encoding counterpart: a leading BOM selects the byte order
     // and is consumed, and input without a BOM is big-endian. Encoding.Unicode is little-endian only, so this
@@ -150,8 +159,14 @@ public sealed class HostsFileEntriesProvider
             // singleton
         }
 
-        public HostsFileEntriesProvider Parse() => Parse(LocateHostsFile(), Encoding.Default);
-        public HostsFileEntriesProvider Parse(params Encoding[] charsets) => Parse(LocateHostsFile(), charsets);
+        public HostsFileEntriesProvider Parse()
+        {
+            return Parse(LocateHostsFile(), Encoding.Default);
+        }
+        public HostsFileEntriesProvider Parse(params Encoding[] charsets)
+        {
+            return Parse(LocateHostsFile(), charsets);
+        }
 
         public HostsFileEntriesProvider Parse(FileInfo file, params Encoding[] charsets)
         {
@@ -247,8 +262,14 @@ public sealed class HostsFileEntriesProvider
             }
         }
 
-        public HostsFileEntriesProvider ParseSilently() => ParseSilently(LocateHostsFile(), Encoding.Default);
-        public HostsFileEntriesProvider ParseSilently(params Encoding[] charsets) => ParseSilently(LocateHostsFile(), charsets);
+        public HostsFileEntriesProvider ParseSilently()
+        {
+            return ParseSilently(LocateHostsFile(), Encoding.Default);
+        }
+        public HostsFileEntriesProvider ParseSilently(params Encoding[] charsets)
+        {
+            return ParseSilently(LocateHostsFile(), charsets);
+        }
         public HostsFileEntriesProvider ParseSilently(FileInfo file, params Encoding[] charsets)
         {
             try

@@ -27,7 +27,10 @@ namespace Netty.NET.Buffer.Tests;
 // Selected pinned iterator/internal-component contracts and CLR ownership/cache cases.
 public class CompositeByteBufEnumerationTest
 {
-    private static byte[] Bytes(ByteBuf buffer) => buffer.ReadableSequence.ToArray();
+    private static byte[] Bytes(ByteBuf buffer)
+    {
+        return buffer.ReadableSequence.ToArray();
+    }
 
     [Fact]
     public void TestIteratorClrEnumeratorContract()

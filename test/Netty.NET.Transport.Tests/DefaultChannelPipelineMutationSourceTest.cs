@@ -197,13 +197,25 @@ public class DefaultChannelPipelineMutationSourceTest
         VerifyContextNumber(pipeline, 8);
     }
     [Fact]
-    public void TestFirstContextEmptyPipeline() => Assert.Null(new LocalChannel().Pipeline.FirstContext);
+    public void TestFirstContextEmptyPipeline()
+    {
+        Assert.Null(new LocalChannel().Pipeline.FirstContext);
+    }
     [Fact]
-    public void TestLastContextEmptyPipeline() => Assert.Null(new LocalChannel().Pipeline.LastContext);
+    public void TestLastContextEmptyPipeline()
+    {
+        Assert.Null(new LocalChannel().Pipeline.LastContext);
+    }
     [Fact]
-    public void TestFirstHandlerEmptyPipeline() => Assert.Null(new LocalChannel().Pipeline.First);
+    public void TestFirstHandlerEmptyPipeline()
+    {
+        Assert.Null(new LocalChannel().Pipeline.First);
+    }
     [Fact]
-    public void TestLastHandlerEmptyPipeline() => Assert.Null(new LocalChannel().Pipeline.Last);
+    public void TestLastHandlerEmptyPipeline()
+    {
+        Assert.Null(new LocalChannel().Pipeline.Last);
+    }
     [Fact]
     public void TestNullName()
     {
@@ -549,11 +561,20 @@ public class DefaultChannelPipelineMutationSourceTest
         { number++; context = context.Next; }
         Assert.Equal(expectedNumber, number);
     }
-    private static int Next(AbstractChannelHandlerContext ctx) => ctx.Next == null ? int.MaxValue : ToInt(ctx.Next.Name);
-    private static int ToInt(string name) => int.TryParse(name, out int value) ? value : -1;
+    private static int Next(AbstractChannelHandlerContext ctx)
+    {
+        return ctx.Next == null ? int.MaxValue : ToInt(ctx.Next.Name);
+    }
+    private static int ToInt(string name)
+    {
+        return int.TryParse(name, out int value) ? value : -1;
+    }
     private static IChannelHandler[] NewHandlers(int number)
     { Assert.True(number > 0); return Enumerable.Range(0, number).Select(_ => (IChannelHandler)NewHandler()).ToArray(); }
-    private static TestHandler NewHandler() => new();
+    private static TestHandler NewHandler()
+    {
+        return new();
+    }
     [Sharable]
     private sealed class TestHandler : ChannelDuplexHandler { }
     private sealed class BufferedTestHandler : ChannelDuplexHandler
@@ -563,7 +584,10 @@ public class DefaultChannelPipelineMutationSourceTest
         // The original buffered write stores only the message and deliberately leaves its completion pending.
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
         { OutboundBuffer.Enqueue(msg); return new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously).Task; }
-        public override void ChannelRead(IChannelHandlerContext ctx, object msg) => InboundBuffer.Enqueue(msg);
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            InboundBuffer.Enqueue(msg);
+        }
         public override void HandlerRemoved(IChannelHandlerContext ctx)
         {
             if (InboundBuffer.Count != 0)
@@ -582,7 +606,10 @@ public class DefaultChannelPipelineMutationSourceTest
          *
          * @param name Handler name to display in assertion messages.
          */
-        internal LifeCycleAwareTestHandler(string name) => Name = name;
+        internal LifeCycleAwareTestHandler(string name)
+        {
+            Name = name;
+        }
         internal void Validate(bool afterAdd, bool afterRemove)
         { Assert.True(afterAdd == _afterAdd, Name); Assert.True(afterRemove == _afterRemove, Name); }
         public override void HandlerAdded(IChannelHandlerContext ctx) { Validate(false, false); _afterAdd = true; }
@@ -592,17 +619,34 @@ public class DefaultChannelPipelineMutationSourceTest
     {
         internal readonly TaskCompletionSource Added = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal readonly TaskCompletionSource Removed = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        public override void HandlerAdded(IChannelHandlerContext ctx) => AssertExecutor(ctx, Added);
-        public override void HandlerRemoved(IChannelHandlerContext ctx) => AssertExecutor(ctx, Removed);
+        public override void HandlerAdded(IChannelHandlerContext ctx)
+        {
+            AssertExecutor(ctx, Added);
+        }
+        public override void HandlerRemoved(IChannelHandlerContext ctx)
+        {
+            AssertExecutor(ctx, Removed);
+        }
         private void AssertExecutor(IChannelHandlerContext ctx, TaskCompletionSource promise)
         { if (ReferenceEquals(executor, ctx.Executor)) promise.SetResult(); else promise.SetException(new InvalidOperationException("EventExecutor not the same")); }
     }
     private sealed class AddedSignal(TaskCompletionSource signal) : ChannelHandlerAdapter
-    { public override void HandlerAdded(IChannelHandlerContext ctx) => signal.SetResult(); }
+    {
+        public override void HandlerAdded(IChannelHandlerContext ctx)
+        {
+            signal.SetResult();
+        }
+    }
     private sealed class ErrorChannelHandler(Action<Exception> error) : ChannelHandlerAdapter
     {
-        public override void HandlerAdded(IChannelHandlerContext ctx) => error(new InvalidOperationException());
-        public override void HandlerRemoved(IChannelHandlerContext ctx) => error(new InvalidOperationException());
+        public override void HandlerAdded(IChannelHandlerContext ctx)
+        {
+            error(new InvalidOperationException());
+        }
+        public override void HandlerRemoved(IChannelHandlerContext ctx)
+        {
+            error(new InvalidOperationException());
+        }
     }
     private sealed class CallbackCheckHandler : ChannelHandlerAdapter
     {
@@ -630,7 +674,10 @@ public class DefaultChannelPipelineMutationSourceTest
         private Exception _error;
         public override void HandlerAdded(IChannelHandlerContext ctx) { addedQueue.Writer.TryWrite(this); CheckExecutor(ctx); }
         public override void HandlerRemoved(IChannelHandlerContext ctx) { removedQueue.Writer.TryWrite(this); CheckExecutor(ctx); }
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => _error = cause;
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            _error = cause;
+        }
         private void CheckExecutor(IChannelHandlerContext ctx) { if (!ctx.Executor.InEventLoop()) _error = new InvalidOperationException(); }
         internal void CheckError() { if (_error != null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(_error).Throw(); }
     }
@@ -670,7 +717,13 @@ public class DefaultChannelPipelineMutationSourceTest
     }
     private sealed class PeerRecorder(TaskCompletionSource<IChannel> peer) : ChannelInboundHandlerAdapter
     {
-        public override void ChannelRegistered(IChannelHandlerContext ctx) => peer.TrySetResult(ctx.Channel);
-        public override void ChannelRead(IChannelHandlerContext ctx, object msg) => ReferenceCountUtil.Release(msg);
+        public override void ChannelRegistered(IChannelHandlerContext ctx)
+        {
+            peer.TrySetResult(ctx.Channel);
+        }
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            ReferenceCountUtil.Release(msg);
+        }
     }
 }

@@ -85,10 +85,19 @@ public class AdvancedLeakAwareByteBufContractTest
         return kind == 2 ? b.AsReadOnly() : b;
     }
 
-    private static string Snapshot(ByteBuf b) => b.Capacity + "," + b.ReaderIndex + "," + b.WriterIndex + "," +
-        b.RefCnt + "," + ByteBufUtil.HexDump(b, 0, Math.Min(64, b.Capacity));
-    private static ByteBuf Raw(ByteBuf b) => b is AdvancedLeakAwareByteBuf ? b.Unwrap() : b;
-    private static bool IsSharedView(int op) => op is 84 or 85 or 86 or 87 or 88 or 89 or 90 or 91 or 92;
+    private static string Snapshot(ByteBuf b)
+    {
+        return b.Capacity + "," + b.ReaderIndex + "," + b.WriterIndex + "," +
+            b.RefCnt + "," + ByteBufUtil.HexDump(b, 0, Math.Min(64, b.Capacity));
+    }
+    private static ByteBuf Raw(ByteBuf b)
+    {
+        return b is AdvancedLeakAwareByteBuf ? b.Unwrap() : b;
+    }
+    private static bool IsSharedView(int op)
+    {
+        return op is 84 or 85 or 86 or 87 or 88 or 89 or 90 or 91 or 92;
+    }
     private static void CleanupView(ByteBuf view, int op)
     {
         if (view != null && (op is 89 or 90 or 91 or 92 || op is 93 or 94 or 95)) view.Release();
@@ -469,7 +478,10 @@ public class AdvancedLeakAwareByteBufContractTest
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void OriginalCloseCall(ByteBuf b) => b.Release();
+    private static void OriginalCloseCall(ByteBuf b)
+    {
+        b.Release();
+    }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
@@ -556,13 +568,19 @@ public class AdvancedLeakAwareByteBufContractTest
         internal object Hint;
         internal ByteBuf Closed;
         internal Exception Trace;
-        public void Record() => Records++;
+        public void Record()
+        {
+            Records++;
+        }
         public void Record(object hint) { Hint = hint; Records++; }
         public bool Close(ByteBuf trackedObject)
         {
             Assert.Same(expected, trackedObject); Assert.Equal(0, trackedObject.RefCnt);
             Closed = trackedObject; return ++Closes == 1;
         }
-        public Exception GetCloseStackTraceIfAny() => Closes == 0 ? null : Trace;
+        public Exception GetCloseStackTraceIfAny()
+        {
+            return Closes == 0 ? null : Trace;
+        }
     }
 }

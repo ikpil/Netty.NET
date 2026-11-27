@@ -38,7 +38,10 @@ public abstract partial class AbstractByteBufTest : IDisposable
     protected IByteBufAllocator Allocator;
     private UnpooledByteBufAllocator _peerAllocator;
 
-    protected ByteBuf NewBuffer(int capacity) => NewBuffer(capacity, int.MaxValue);
+    protected ByteBuf NewBuffer(int capacity)
+    {
+        return NewBuffer(capacity, int.MaxValue);
+    }
     protected abstract ByteBuf NewBuffer(int capacity, int maxCapacity);
 
     protected void Init(IByteBufAllocator allocator)
@@ -51,9 +54,18 @@ public abstract partial class AbstractByteBufTest : IDisposable
     }
 
     // Unpooled peer storage is independent of the fixture's actual root allocator.
-    private ByteBuf WrappedBuffer(byte[] bytes) => Own(Unpooled.WrappedBuffer(bytes));
-    private ByteBuf WrappedMemory(Memory<byte> bytes) => Own(Unpooled.WrappedBuffer(bytes));
-    private ByteBuf DirectBuffer(int capacity) => Own(_peerAllocator.DirectBuffer(capacity));
+    private ByteBuf WrappedBuffer(byte[] bytes)
+    {
+        return Own(Unpooled.WrappedBuffer(bytes));
+    }
+    private ByteBuf WrappedMemory(Memory<byte> bytes)
+    {
+        return Own(Unpooled.WrappedBuffer(bytes));
+    }
+    private ByteBuf DirectBuffer(int capacity)
+    {
+        return Own(_peerAllocator.DirectBuffer(capacity));
+    }
     private ByteBuf Own(ByteBuf value) { _peers.Add(value); return value; }
 
     public virtual void Dispose()

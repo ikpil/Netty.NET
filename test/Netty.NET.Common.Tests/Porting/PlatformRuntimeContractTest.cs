@@ -118,8 +118,10 @@ public class PlatformRuntimeContractTest
         }
     }
 
-    private static bool InvokeBoolean(Type platform, string name) =>
-        (bool)platform.GetMethod(name, BindingFlags.Public | BindingFlags.Static).Invoke(null, null);
+    private static bool InvokeBoolean(Type platform, string name)
+    {
+        return (bool)platform.GetMethod(name, BindingFlags.Public | BindingFlags.Static).Invoke(null, null);
+    }
 
     private static void AssertNativeMemoryAndHash(Type platform)
     {

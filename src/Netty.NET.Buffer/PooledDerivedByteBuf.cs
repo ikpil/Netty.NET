@@ -80,7 +80,9 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
     }
 
     internal static PooledDerivedByteBuf NewDuplicate(ByteBuf root, ByteBuf parent, int reader, int writer)
-        => new(root, parent, 0, root.MaxCapacity, reader, writer, false, true);
+    {
+        return new(root, parent, 0, root.MaxCapacity, reader, writer, false, true);
+    }
 
     // Called from within SimpleLeakAwareByteBuf and AdvancedLeakAwareByteBuf.
     internal void SetParent(SimpleLeakAwareByteBuf parent)
@@ -89,8 +91,14 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         _parent = parent;
     }
 
-    public override ByteBuf Unwrap() => Root;
-    public override IByteBufAllocator Alloc() => Root.Alloc();
+    public override ByteBuf Unwrap()
+    {
+        return Root;
+    }
+    public override IByteBufAllocator Alloc()
+    {
+        return Root.Alloc();
+    }
     public override bool IsDirect => Root.IsDirect;
     public override bool IsReadOnly => Root.IsReadOnly;
     public override bool IsContiguous => Root.IsContiguous;
@@ -114,16 +122,28 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
             Root.Capacity = value;
         }
     }
-    protected override Memory<byte> GetMemoryCore(int index, int length) => Root.AsMemory(_offset + index, length);
+    protected override Memory<byte> GetMemoryCore(int index, int length)
+    {
+        return Root.AsMemory(_offset + index, length);
+    }
     protected override bool TryGetMemoryCore(int index, int length, out Memory<byte> memory)
-        => Root.TryGetMemory(_offset + index, length, out memory);
+    {
+        return Root.TryGetMemory(_offset + index, length, out memory);
+    }
     protected override bool TryGetReadOnlyMemoryCore(int index, int length, out ReadOnlyMemory<byte> memory)
-        => Root.TryGetReadOnlyMemory(_offset + index, length, out memory);
+    {
+        return Root.TryGetReadOnlyMemory(_offset + index, length, out memory);
+    }
     protected override void SetBytesCore(int index, ReadOnlySpan<byte> source)
-        => Root.SetBytes(_offset + index, source);
+    {
+        Root.SetBytes(_offset + index, source);
+    }
     protected internal override void SetBytesFromIoCore(int index, ReadOnlySpan<byte> source)
     { EnsureCanWrite(); CheckIndex(index, source.Length); Root.SetBytesFromIoCore(_offset + index, source); }
-    protected override void SetZeroCore(int index, int length) => Root.SetZero(_offset + index, length);
+    protected override void SetZeroCore(int index, int length)
+    {
+        Root.SetZero(_offset + index, length);
+    }
     internal override byte ReadByteCore(int index)
     { CheckIndex(index, 1); return Root.ReadByteCore(_offset + index); }
     internal override void WriteByteCore(int index, int value)
@@ -133,11 +153,17 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
     internal override ByteBuf SetWord(int index, ulong value, int width, bool littleEndian)
     { EnsureCanWrite(); CheckIndex(index, width); Root.SetWord(_offset + index, value, width, littleEndian); return this; }
     protected override ReadOnlyMemory<byte> GetReadOnlyMemoryCore(int index, int length)
-        => Root.AsReadOnlyMemory(_offset + index, length);
+    {
+        return Root.AsReadOnlyMemory(_offset + index, length);
+    }
     protected override void GetBytesCore(int index, Span<byte> destination)
-        => Root.GetBytes(_offset + index, destination);
+    {
+        Root.GetBytes(_offset + index, destination);
+    }
     protected override ReadOnlySequence<byte> GetReadOnlySequenceCore(int index, int length)
-        => Root.AsReadOnlySequence(_offset + index, length);
+    {
+        return Root.AsReadOnlySequence(_offset + index, length);
+    }
     internal override ByteBuf UnwrapIterationStorage(ref int index)
     { index += _offset; return Root.UnwrapIterationStorage(ref index); }
     internal override bool SupportsDirectBulkCopy => Root.SupportsDirectBulkCopy;
@@ -148,9 +174,13 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
     public override ByteBuf Copy(int index, int length) { CheckIndex(index, length); return Root.Copy(_offset + index, length); }
     // Readable iteration stays on this view; indexed iteration follows the original root delegates.
     public override int ForEachByte(Func<byte, bool> processor)
-        => base.ForEachByte(ReaderIndex, ReadableBytes, processor);
+    {
+        return base.ForEachByte(ReaderIndex, ReadableBytes, processor);
+    }
     public override int ForEachByteDesc(Func<byte, bool> processor)
-        => base.ForEachByteDesc(ReaderIndex, ReadableBytes, processor);
+    {
+        return base.ForEachByteDesc(ReaderIndex, ReadableBytes, processor);
+    }
     public override int ForEachByte(int index, int length, Func<byte, bool> processor)
     {
         if (_fixedCapacity) CheckIndex(index, length); else EnsureAccessible();
@@ -431,7 +461,9 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         return this;
     }
     public override bool Release(int decrement = 1)
-        => IsIndependent ? base.Release(decrement) : _referenceCountDelegate.Release(decrement);
+    {
+        return IsIndependent ? base.Release(decrement) : _referenceCountDelegate.Release(decrement);
+    }
     public override ByteBuf Touch(object hint = null)
     {
         if (!IsIndependent) _referenceCountDelegate.Touch(hint);
@@ -445,7 +477,10 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         return new PooledDerivedByteBuf(Root, _referenceCountDelegate ?? this, _offset + index,
             length, 0, length, true, false);
     }
-    public override ByteBuf RetainedSlice() => RetainedSlice(ReaderIndex, ReadableBytes);
+    public override ByteBuf RetainedSlice()
+    {
+        return RetainedSlice(ReaderIndex, ReadableBytes);
+    }
     public override ByteBuf RetainedSlice(int index, int length)
     {
         // The original non-retained slice validates the translated root coordinates.

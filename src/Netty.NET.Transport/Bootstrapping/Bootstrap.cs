@@ -44,7 +44,10 @@ public class Bootstrap : AbstractBootstrap
 {
     private static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance(typeof(Bootstrap));
 
-    public Bootstrap() => Config = new BootstrapConfig(this);
+    public Bootstrap()
+    {
+        Config = new BootstrapConfig(this);
+    }
     public override BootstrapConfig Config { get; }
     internal IEventLoopGroup ConfiguredGroup => _group;
     internal IEventLoop ConfiguredEventLoop => _registrationLoop;
@@ -68,9 +71,14 @@ public class Bootstrap : AbstractBootstrap
     private readonly ConcurrentDictionary<IAttributeKey, (object Value, Action<IChannel> Apply)> _attributes = new();
     internal KeyValuePair<ChannelOption, object>[] NewOptionsArray() { lock (_optionsGate) return _options.ToArray(); }
     internal KeyValuePair<IAttributeKey, object>[] NewAttributesArray()
-        => _attributes.Select(pair => new KeyValuePair<IAttributeKey, object>(pair.Key, pair.Value.Value)).ToArray();
+    {
+        return _attributes.Select(pair => new KeyValuePair<IAttributeKey, object>(pair.Key, pair.Value.Value)).ToArray();
+    }
     // Select the configured owner without pretending that a native EventLoop is an EventLoopGroup.
-    internal IEventLoop NextEventLoop() => _registrationLoop ?? (_group ?? throw new InvalidOperationException("Group not set.")).Next();
+    internal IEventLoop NextEventLoop()
+    {
+        return _registrationLoop ?? (_group ?? throw new InvalidOperationException("Group not set.")).Next();
+    }
     /**
      * The {@link EventLoopGroup} which is used to handle all the events for the to-be-created
      * {@link Channel}
@@ -120,7 +128,10 @@ public class Bootstrap : AbstractBootstrap
     }
     // CLR: the generic form supplies the class at compile time and uses the same reflective factory.
     public Bootstrap Channel<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] T>()
-        where T : IChannel, new() => Channel(typeof(T));
+        where T : IChannel, new()
+    {
+        return Channel(typeof(T));
+    }
     /**
      * the {@link ChannelHandler} to use for serving the requests.
      */
@@ -142,12 +153,17 @@ public class Bootstrap : AbstractBootstrap
     /**
      * @see #remoteAddress(SocketAddress)
      */
-    public Bootstrap RemoteAddress(string inetHost, int inetPort) => RemoteAddress(new DnsEndPoint(inetHost, inetPort));
+    public Bootstrap RemoteAddress(string inetHost, int inetPort)
+    {
+        return RemoteAddress(new DnsEndPoint(inetHost, inetPort));
+    }
     /**
      * @see #remoteAddress(SocketAddress)
      */
-    public Bootstrap RemoteAddress(IPAddress inetHost, int inetPort) =>
-        RemoteAddress(AbstractBootstrap.InetSocketAddress(inetHost, inetPort));
+    public Bootstrap RemoteAddress(IPAddress inetHost, int inetPort)
+    {
+        return RemoteAddress(AbstractBootstrap.InetSocketAddress(inetHost, inetPort));
+    }
     /**
      * The {@link SocketAddress} which is used to bind the local "end" to.
      */
@@ -160,17 +176,24 @@ public class Bootstrap : AbstractBootstrap
      * @see #localAddress(SocketAddress)
      */
     // CLR: new InetSocketAddress(inetPort) is the wildcard address; as in BindAsync(int), the wildcard is IPAddress.Any.
-    public Bootstrap LocalAddress(int inetPort) => LocalAddress(new IPEndPoint(IPAddress.Any, inetPort));
+    public Bootstrap LocalAddress(int inetPort)
+    {
+        return LocalAddress(new IPEndPoint(IPAddress.Any, inetPort));
+    }
     /**
      * @see #localAddress(SocketAddress)
      */
-    public Bootstrap LocalAddress(string inetHost, int inetPort) =>
-        LocalAddress(AbstractBootstrap.SocketAddress(inetHost, inetPort));
+    public Bootstrap LocalAddress(string inetHost, int inetPort)
+    {
+        return LocalAddress(AbstractBootstrap.SocketAddress(inetHost, inetPort));
+    }
     /**
      * @see #localAddress(SocketAddress)
      */
-    public Bootstrap LocalAddress(IPAddress inetHost, int inetPort) =>
-        LocalAddress(AbstractBootstrap.InetSocketAddress(inetHost, inetPort));
+    public Bootstrap LocalAddress(IPAddress inetHost, int inetPort)
+    {
+        return LocalAddress(AbstractBootstrap.InetSocketAddress(inetHost, inetPort));
+    }
     /**
      * Allow to specify a {@link ChannelOption} which is used for the {@link Channel} instances once they got
      * created. Use a value of {@code null} to remove a previous set {@link ChannelOption}.
@@ -296,10 +319,12 @@ public class Bootstrap : AbstractBootstrap
         return channel;
     }
 
-    private Task InitAndRegister(CancellationToken token, out IChannel channel) =>
-        AbstractBootstrap.InitAndRegister(_factory, Init,
+    private Task InitAndRegister(CancellationToken token, out IChannel channel)
+    {
+        return AbstractBootstrap.InitAndRegister(_factory, Init,
             ch => _registrationLoop == null ? _group.RegisterAsync(ch, token) : _registrationLoop.RegisterAsync(ch, token),
             out channel);
+    }
 
     internal void Init(IChannel channel)
     {
@@ -342,13 +367,17 @@ public class Bootstrap : AbstractBootstrap
     /**
      * Connect a {@link Channel} to the remote peer.
      */
-    public Task<IChannel> ConnectAsync(string inetHost, int inetPort, CancellationToken cancellationToken = default) =>
-        ConnectAsync(new DnsEndPoint(inetHost, inetPort), cancellationToken);
+    public Task<IChannel> ConnectAsync(string inetHost, int inetPort, CancellationToken cancellationToken = default)
+    {
+        return ConnectAsync(new DnsEndPoint(inetHost, inetPort), cancellationToken);
+    }
     /**
      * Connect a {@link Channel} to the remote peer.
      */
-    public Task<IChannel> ConnectAsync(IPAddress inetHost, int inetPort, CancellationToken cancellationToken = default) =>
-        ConnectAsync(AbstractBootstrap.InetSocketAddress(inetHost, inetPort), cancellationToken);
+    public Task<IChannel> ConnectAsync(IPAddress inetHost, int inetPort, CancellationToken cancellationToken = default)
+    {
+        return ConnectAsync(AbstractBootstrap.InetSocketAddress(inetHost, inetPort), cancellationToken);
+    }
     /**
      * Connect a {@link Channel} to the remote peer.
      */
@@ -540,17 +569,23 @@ public class Bootstrap : AbstractBootstrap
      * Create a new {@link Channel} and bind it.
      */
     public Task<IChannel> BindAsync(int inetPort, CancellationToken cancellationToken = default)
-        => BindAsync(new IPEndPoint(IPAddress.Any, inetPort), cancellationToken);
+    {
+        return BindAsync(new IPEndPoint(IPAddress.Any, inetPort), cancellationToken);
+    }
     /**
      * Create a new {@link Channel} and bind it.
      */
     public Task<IChannel> BindAsync(string inetHost, int inetPort, CancellationToken cancellationToken = default)
-        => BindAsync(AbstractBootstrap.SocketAddress(inetHost, inetPort), cancellationToken);
+    {
+        return BindAsync(AbstractBootstrap.SocketAddress(inetHost, inetPort), cancellationToken);
+    }
     /**
      * Create a new {@link Channel} and bind it.
      */
     public Task<IChannel> BindAsync(IPAddress inetHost, int inetPort, CancellationToken cancellationToken = default)
-        => BindAsync(AbstractBootstrap.InetSocketAddress(inetHost, inetPort), cancellationToken);
+    {
+        return BindAsync(AbstractBootstrap.InetSocketAddress(inetHost, inetPort), cancellationToken);
+    }
     /**
      * Create a new {@link Channel} and bind it.
      */
@@ -601,10 +636,15 @@ public class Bootstrap : AbstractBootstrap
             _getResolver = getResolver;
         }
 
-        internal static ExternalAddressResolver Of<T>(AddressResolverGroup<T> resolverGroup) where T : EndPoint =>
-            new ExternalAddressResolver(resolverGroup, executor => new Resolver<T>(resolverGroup.GetResolver(executor)));
+        internal static ExternalAddressResolver Of<T>(AddressResolverGroup<T> resolverGroup) where T : EndPoint
+        {
+            return new ExternalAddressResolver(resolverGroup, executor => new Resolver<T>(resolverGroup.GetResolver(executor)));
+        }
 
-        internal Resolver GetResolver(IEventExecutor executor) => _getResolver(executor);
+        internal Resolver GetResolver(IEventExecutor executor)
+        {
+            return _getResolver(executor);
+        }
 
         internal static ExternalAddressResolver GetOrDefault(ExternalAddressResolver externalResolver)
         {
@@ -620,8 +660,14 @@ public class Bootstrap : AbstractBootstrap
 
         private sealed class Resolver<T>(IAddressResolver<T> resolver) : Resolver where T : EndPoint
         {
-            internal override bool IsSupported(EndPoint address) => resolver.IsSupported(address);
-            internal override bool IsResolved(EndPoint address) => resolver.IsResolved(address);
+            internal override bool IsSupported(EndPoint address)
+            {
+                return resolver.IsSupported(address);
+            }
+            internal override bool IsResolved(EndPoint address)
+            {
+                return resolver.IsResolved(address);
+            }
 
             internal override Task<EndPoint> Resolve(EndPoint address, CancellationToken cancellationToken)
             {
@@ -640,5 +686,8 @@ public class Bootstrap : AbstractBootstrap
 public sealed class ActionChannelInitializer<T>(Action<T> initialize) : ChannelInitializer<T> where T : IChannel
 {
     private readonly Action<T> _initialize = initialize ?? throw new ArgumentNullException(nameof(initialize));
-    protected override void InitChannel(T channel) => _initialize(channel);
+    protected override void InitChannel(T channel)
+    {
+        _initialize(channel);
+    }
 }

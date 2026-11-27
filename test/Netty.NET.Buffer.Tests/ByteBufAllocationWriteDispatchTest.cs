@@ -90,8 +90,14 @@ public class ByteBufAllocationWriteDispatchTest
         public override bool IsDirectBufferPooled => false;
         public override ByteBuf Buffer(int initialCapacity = 256, int maxCapacity = int.MaxValue)
         { ++BufferCalls; return base.Buffer(initialCapacity, maxCapacity); }
-        protected override ByteBuf NewHeapBuffer(int initialCapacity, int maxCapacity) => Allocate(initialCapacity, maxCapacity, false);
-        protected override ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity) => Allocate(initialCapacity, maxCapacity, true);
+        protected override ByteBuf NewHeapBuffer(int initialCapacity, int maxCapacity)
+        {
+            return Allocate(initialCapacity, maxCapacity, false);
+        }
+        protected override ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity)
+        {
+            return Allocate(initialCapacity, maxCapacity, true);
+        }
         private ByteBuf Allocate(int initial, int maximum, bool direct)
         {
             ++Calls; Initial = initial; Maximum = maximum; DirectAllocation = direct;
@@ -115,17 +121,26 @@ public class ByteBufAllocationWriteDispatchTest
     }
     private sealed class CopyHeap(CopyCalls calls) : UnpooledHeapByteBuf(8, 16)
     {
-        public override ByteBuf Copy() => calls.Invoke();
+        public override ByteBuf Copy()
+        {
+            return calls.Invoke();
+        }
         public override ByteBuf Copy(int index, int length) { ++calls.Indexed; throw calls.Error; }
     }
     private sealed class CopyDirect(CopyCalls calls, NativeMemoryAllocator native) : UnpooledDirectByteBuf(8, 16, native)
     {
-        public override ByteBuf Copy() => calls.Invoke();
+        public override ByteBuf Copy()
+        {
+            return calls.Invoke();
+        }
         public override ByteBuf Copy(int index, int length) { ++calls.Indexed; throw calls.Error; }
     }
     private sealed class CopyComposite(CopyCalls calls, NativeMemoryAllocator native) : CompositeByteBuf(16, false, native)
     {
-        public override ByteBuf Copy() => calls.Invoke();
+        public override ByteBuf Copy()
+        {
+            return calls.Invoke();
+        }
         public override ByteBuf Copy(int index, int length) { ++calls.Indexed; throw calls.Error; }
     }
     private sealed class Wrapped(ByteBuf buffer) : WrappedByteBuf(buffer);
@@ -202,7 +217,10 @@ public class ByteBufAllocationWriteDispatchTest
             bool invalid = length < 0 || !copy && length > 5;
             bool allocate = !invalid && (copy || length != 0);
             bool failure = allocate && mode is 1 or 2 or 5;
-            ByteBuf Invoke() => copy ? source.Copy(2, length) : source.ReadBytes(length);
+            ByteBuf Invoke()
+            {
+                return copy ? source.Copy(2, length) : source.ReadBytes(length);
+            }
             if (invalid) Assert.Throws<ArgumentOutOfRangeException>(() => Invoke());
             else if (failure) Assert.Same(observation.Error, Assert.Throws<Failure>(() => Invoke()));
             else result = Invoke();

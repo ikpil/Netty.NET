@@ -202,7 +202,10 @@ public class SimpleChannelPool : IChannelPool
      * <p>
      * The {@link Bootstrap} that is passed in here is cloned via {@link Bootstrap#clone()}, so it is safe to modify.
      */
-    protected virtual Task<IChannel> ConnectChannelAsync(Bootstrap bootstrap) => bootstrap.ConnectAsync();
+    protected virtual Task<IChannel> ConnectChannelAsync(Bootstrap bootstrap)
+    {
+        return bootstrap.ConnectAsync();
+    }
 
     /**
      * Adds the channel back to the pool only if the channel is healthy.
@@ -322,9 +325,18 @@ public class SimpleChannelPool : IChannelPool
 
     // CLR: native awaits replace blocking channel futures. CloseAsync can safely be called on
     // an event loop; synchronous Close/Dispose retain the source's blocking caller contract.
-    public virtual void Close() => CloseAsync().GetAwaiter().GetResult();
-    public void Dispose() => Close();
-    public ValueTask DisposeAsync() => new(CloseAsync());
+    public virtual void Close()
+    {
+        CloseAsync().GetAwaiter().GetResult();
+    }
+    public void Dispose()
+    {
+        Close();
+    }
+    public ValueTask DisposeAsync()
+    {
+        return new(CloseAsync());
+    }
 
     /**
      * Fails the release of a {@link Channel} that was not acquired from this pool. This lets {@link FixedChannelPool}

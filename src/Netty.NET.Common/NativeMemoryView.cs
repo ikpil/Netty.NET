@@ -31,12 +31,17 @@ public sealed class NativeMemoryView : IDisposable
     }
 
     [Obsolete("Wrapping raw addresses is unsupported. Supply bounded Memory<byte>.")]
-    public NativeMemoryView(nint address, int length) =>
+    public NativeMemoryView(nint address, int length)
+    {
         throw new PlatformNotSupportedException("Raw address views are unavailable on the managed allocator.");
+    }
 
     public int Length { get; }
     public Memory<byte> Memory => _manager.Memory;
-    public void Dispose() => ((IDisposable)_manager).Dispose();
+    public void Dispose()
+    {
+        ((IDisposable)_manager).Dispose();
+    }
 
     private sealed class ViewManager(Memory<byte> memory) : MemoryManager<byte>
     {
@@ -74,7 +79,10 @@ public sealed class NativeMemoryView : IDisposable
             }
         }
 
-        public override void Unpin() => throw new NotSupportedException("Dispose the returned MemoryHandle.");
+        public override void Unpin()
+        {
+            throw new NotSupportedException("Dispose the returned MemoryHandle.");
+        }
         protected override void Dispose(bool disposing)
         {
             lock (_sync)
@@ -84,6 +92,9 @@ public sealed class NativeMemoryView : IDisposable
             }
         }
 
-        private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(_disposed, this);
+        private void ThrowIfDisposed()
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+        }
     }
 }

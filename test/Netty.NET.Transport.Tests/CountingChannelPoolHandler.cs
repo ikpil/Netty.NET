@@ -26,13 +26,19 @@ internal sealed class CountingChannelPoolHandler : IChannelPoolHandler
     private int _channelCount, _acquiredCount, _releasedCount;
     // CLR: observe the asynchronous cancellation cleanup before asserting the original counters.
     internal readonly TaskCompletionSource SecondRelease = new(TaskCreationOptions.RunContinuationsAsynchronously);
-    public void ChannelCreated(IChannel channel) => Interlocked.Increment(ref _channelCount);
+    public void ChannelCreated(IChannel channel)
+    {
+        Interlocked.Increment(ref _channelCount);
+    }
     public void ChannelReleased(IChannel channel)
     {
         if (Interlocked.Increment(ref _releasedCount) == 2)
             SecondRelease.TrySetResult();
     }
-    public void ChannelAcquired(IChannel channel) => Interlocked.Increment(ref _acquiredCount);
+    public void ChannelAcquired(IChannel channel)
+    {
+        Interlocked.Increment(ref _acquiredCount);
+    }
     public int ChannelCount => Volatile.Read(ref _channelCount);
     public int AcquiredCount => Volatile.Read(ref _acquiredCount);
     public int ReleasedCount => Volatile.Read(ref _releasedCount);

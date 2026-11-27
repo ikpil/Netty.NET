@@ -18,20 +18,41 @@ public class NativeSubmissionConsumerContractTest
             try { action(); }
             finally { _running = false; }
         }
-        internal void RunAll() => RunOwned(() => { while (_queue.TryDequeue(out var task)) task(); });
+        internal void RunAll()
+        {
+            RunOwned(() => { while (_queue.TryDequeue(out var task)) task(); });
+        }
         public override void Execute(Action task)
         {
             ArgumentNullException.ThrowIfNull(task);
             _queue.Enqueue(task);
         }
-        public override bool InEventLoop(Thread thread) => _running && thread == Thread.CurrentThread;
+        public override bool InEventLoop(Thread thread)
+        {
+            return _running && thread == Thread.CurrentThread;
+        }
         public override Task TerminationFuture => Task.CompletedTask;
-        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+        {
+            return Task.CompletedTask;
+        }
         public override void Shutdown() { }
-        public override bool IsShutdown() => false;
-        public override bool IsShuttingDown() => false;
-        public override bool IsTerminated() => false;
-        public override bool AwaitTermination(TimeSpan timeout) => false;
+        public override bool IsShutdown()
+        {
+            return false;
+        }
+        public override bool IsShuttingDown()
+        {
+            return false;
+        }
+        public override bool IsTerminated()
+        {
+            return false;
+        }
+        public override bool AwaitTermination(TimeSpan timeout)
+        {
+            return false;
+        }
     }
 
     [Theory]
@@ -82,12 +103,15 @@ public class NativeSubmissionConsumerContractTest
 
     private sealed class GatedFactory(ManualResetEventSlim entered, ManualResetEventSlim release) : IThreadFactory
     {
-        public Thread NewThread(Action task) => new(() =>
+        public Thread NewThread(Action task)
         {
-            entered.Set();
-            release.Wait();
-            task();
-        }) { IsBackground = true };
+            return new(() =>
+            {
+                entered.Set();
+                release.Wait();
+                task();
+            }) { IsBackground = true };
+        }
     }
 
     [Fact]

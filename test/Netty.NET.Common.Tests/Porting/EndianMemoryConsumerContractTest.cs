@@ -54,13 +54,16 @@ public class EndianMemoryConsumerContractTest
         }
     }
 
-    private static long Read(ReadOnlySpan<byte> memory, int width, bool little) => width switch
+    private static long Read(ReadOnlySpan<byte> memory, int width, bool little)
     {
-        2 => little ? BinaryPrimitives.ReadInt16LittleEndian(memory) : BinaryPrimitives.ReadInt16BigEndian(memory),
-        4 => little ? BinaryPrimitives.ReadInt32LittleEndian(memory) : BinaryPrimitives.ReadInt32BigEndian(memory),
-        8 => little ? BinaryPrimitives.ReadInt64LittleEndian(memory) : BinaryPrimitives.ReadInt64BigEndian(memory),
-        _ => throw new ArgumentOutOfRangeException(nameof(width))
-    };
+        return width switch
+        {
+            2 => little ? BinaryPrimitives.ReadInt16LittleEndian(memory) : BinaryPrimitives.ReadInt16BigEndian(memory),
+            4 => little ? BinaryPrimitives.ReadInt32LittleEndian(memory) : BinaryPrimitives.ReadInt32BigEndian(memory),
+            8 => little ? BinaryPrimitives.ReadInt64LittleEndian(memory) : BinaryPrimitives.ReadInt64BigEndian(memory),
+            _ => throw new ArgumentOutOfRangeException(nameof(width))
+        };
+    }
 
     private static void Write(Span<byte> memory, int width, bool little, long value)
     {

@@ -11,7 +11,10 @@ public class ConstantPoolNativeContractTest
     private sealed class Pool : ConstantPool<Constant>
     {
         internal Func<int, string, Constant> Factory = (id, name) => new Constant(id, name);
-        protected override Constant NewConstant(int id, string name) => Factory(id, name);
+        protected override Constant NewConstant(int id, string name)
+        {
+            return Factory(id, name);
+        }
     }
 
     private sealed class First<T>;
@@ -52,13 +55,16 @@ public class ConstantPoolNativeContractTest
         Assert.Equal(3, pool.NextId());
     }
 
-    private static Type GetUnnamedType(int kind) => kind switch
+    private static Type GetUnnamedType(int kind)
     {
-        0 => typeof(First<>).GetGenericArguments()[0],
-        1 => typeof(Second<>).GetGenericArguments()[0],
-        2 => typeof(Dictionary<,>).MakeGenericType(typeof(string), typeof(First<>).GetGenericArguments()[0]),
-        _ => throw new ArgumentOutOfRangeException(nameof(kind))
-    };
+        return kind switch
+        {
+            0 => typeof(First<>).GetGenericArguments()[0],
+            1 => typeof(Second<>).GetGenericArguments()[0],
+            2 => typeof(Dictionary<,>).MakeGenericType(typeof(string), typeof(First<>).GetGenericArguments()[0]),
+            _ => throw new ArgumentOutOfRangeException(nameof(kind))
+        };
+    }
 
     [Theory]
     [InlineData("First<T> parameter", 0)]

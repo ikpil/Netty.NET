@@ -23,7 +23,9 @@ namespace Netty.NET.Buffer.Tests;
 public class PoolChunkRunTest
 {
     private static PoolChunk Create(int order = 4, int shifts = 12, int alignment = 0)
-        => new(new SizeClasses(1 << shifts, shifts, 1 << (shifts + order), alignment));
+    {
+        return new(new SizeClasses(1 << shifts, shifts, 1 << (shifts + order), alignment));
+    }
 
     public static IEnumerable<object[]> Configurations()
     {

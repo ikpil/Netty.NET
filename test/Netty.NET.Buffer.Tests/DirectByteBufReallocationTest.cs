@@ -61,7 +61,10 @@ public class DirectByteBufReallocationTest
         }
     }
 
-    private static byte[] Prefix(int length) => Enumerable.Range(1, length).Select(i => (byte)i).ToArray();
+    private static byte[] Prefix(int length)
+    {
+        return Enumerable.Range(1, length).Select(i => (byte)i).ToArray();
+    }
 
     public static IEnumerable<object[]> CapacityCases()
     {

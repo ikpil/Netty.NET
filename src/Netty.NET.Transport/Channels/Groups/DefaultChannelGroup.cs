@@ -97,18 +97,39 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
             _ = channel.CloseAsync();
         return added;
     }
-    public bool Remove(IChannel channel) => channel != null && _channels.TryRemove(new KeyValuePair<IChannelId, IChannel>(channel.Id, channel));
-    public bool RemoveById(IChannelId id) => id != null && _channels.TryRemove(id, out _);
-    public bool Contains(IChannel channel) => channel != null && _channels.TryGetValue(channel.Id, out var value) && ReferenceEquals(value, channel);
+    public bool Remove(IChannel channel)
+    {
+        return channel != null && _channels.TryRemove(new KeyValuePair<IChannelId, IChannel>(channel.Id, channel));
+    }
+    public bool RemoveById(IChannelId id)
+    {
+        return id != null && _channels.TryRemove(id, out _);
+    }
+    public bool Contains(IChannel channel)
+    {
+        return channel != null && _channels.TryGetValue(channel.Id, out var value) && ReferenceEquals(value, channel);
+    }
     /**
      * Returns the {@link Channel} which has the specified {@link ChannelId}.
      *
      * @return the matching {@link Channel} if found. {@code null} otherwise.
      */
-    public IChannel Find(IChannelId id) => _channels.TryGetValue(id, out var channel) ? channel : null;
-    public void Clear() => _channels.Clear();
-    public IEnumerator<IChannel> GetEnumerator() => _channels.Values.OrderBy(channel => channel is IServerChannel ? 0 : 1).GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    public IChannel Find(IChannelId id)
+    {
+        return _channels.TryGetValue(id, out var channel) ? channel : null;
+    }
+    public void Clear()
+    {
+        _channels.Clear();
+    }
+    public IEnumerator<IChannel> GetEnumerator()
+    {
+        return _channels.Values.OrderBy(channel => channel is IServerChannel ? 0 : 1).GetEnumerator();
+    }
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
     /**
      * Closes all {@link Channel}s in this group.  If the {@link Channel} is
      * connected to a remote peer or bound to a local address, it is
@@ -130,7 +151,10 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
      * @return the {@link ChannelGroupFuture} instance that notifies when
      *         the operation is done for all channels
      */
-    public Task CloseAsync(Func<IChannel, bool> matcher) => CloseAsync(out _, matcher);
+    public Task CloseAsync(Func<IChannel, bool> matcher)
+    {
+        return CloseAsync(out _, matcher);
+    }
     public Task CloseAsync(out IReadOnlyDictionary<IChannel, Task> operations, Func<IChannel, bool> matcher = null)
     {
         if (_stayClosed)
@@ -163,9 +187,14 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
      * @return the {@link ChannelGroupFuture} instance that notifies when
      *         the operation is done for all channels
      */
-    public Task DisconnectAsync(Func<IChannel, bool> matcher) => DisconnectAsync(out _, matcher);
-    public Task DisconnectAsync(out IReadOnlyDictionary<IChannel, Task> operations, Func<IChannel, bool> matcher = null) =>
-        OperateAsync(channel => channel.DisconnectAsync(), matcher, true, out operations);
+    public Task DisconnectAsync(Func<IChannel, bool> matcher)
+    {
+        return DisconnectAsync(out _, matcher);
+    }
+    public Task DisconnectAsync(out IReadOnlyDictionary<IChannel, Task> operations, Func<IChannel, bool> matcher = null)
+    {
+        return OperateAsync(channel => channel.DisconnectAsync(), matcher, true, out operations);
+    }
     /**
      * @deprecated This method will be removed in the next major feature release.
      *
@@ -190,9 +219,14 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
      * @return the {@link ChannelGroupFuture} instance that notifies when
      *         the operation is done for all channels
      */
-    public Task DeregisterAsync(Func<IChannel, bool> matcher) => DeregisterAsync(out _, matcher);
-    public Task DeregisterAsync(out IReadOnlyDictionary<IChannel, Task> operations, Func<IChannel, bool> matcher = null) =>
-        OperateAsync(channel => channel.DeregisterAsync(), matcher, true, out operations);
+    public Task DeregisterAsync(Func<IChannel, bool> matcher)
+    {
+        return DeregisterAsync(out _, matcher);
+    }
+    public Task DeregisterAsync(out IReadOnlyDictionary<IChannel, Task> operations, Func<IChannel, bool> matcher = null)
+    {
+        return OperateAsync(channel => channel.DeregisterAsync(), matcher, true, out operations);
+    }
     /**
      * Writes the specified {@code message} to all {@link Channel}s in this
      * group. If the specified {@code message} is an instance of
@@ -228,9 +262,14 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
      * @return the {@link ChannelGroupFuture} instance that notifies when
      *         the operation is done for all channels
      */
-    public Task WriteAsync(object message, Func<IChannel, bool> matcher = null) => WriteAsync(message, out _, matcher);
-    public Task WriteAsync(object message, out IReadOnlyDictionary<IChannel, Task> operations, Func<IChannel, bool> matcher = null) =>
-        WriteCoreAsync(message, matcher, false, out operations);
+    public Task WriteAsync(object message, Func<IChannel, bool> matcher = null)
+    {
+        return WriteAsync(message, out _, matcher);
+    }
+    public Task WriteAsync(object message, out IReadOnlyDictionary<IChannel, Task> operations, Func<IChannel, bool> matcher = null)
+    {
+        return WriteCoreAsync(message, matcher, false, out operations);
+    }
     /**
      * Shortcut for calling {@link #write(Object)} and {@link #flush()}.
      */
@@ -242,9 +281,14 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
      * Shortcut for calling {@link #write(Object, ChannelMatcher, boolean)} and {@link #flush()} and only act on
      * {@link Channel}s that are matched by the {@link ChannelMatcher}.
      */
-    public Task WriteAndFlushAsync(object message, Func<IChannel, bool> matcher = null) => WriteAndFlushAsync(message, out _, matcher);
-    public Task WriteAndFlushAsync(object message, out IReadOnlyDictionary<IChannel, Task> operations, Func<IChannel, bool> matcher = null) =>
-        WriteCoreAsync(message, matcher, true, out operations);
+    public Task WriteAndFlushAsync(object message, Func<IChannel, bool> matcher = null)
+    {
+        return WriteAndFlushAsync(message, out _, matcher);
+    }
+    public Task WriteAndFlushAsync(object message, out IReadOnlyDictionary<IChannel, Task> operations, Func<IChannel, bool> matcher = null)
+    {
+        return WriteCoreAsync(message, matcher, true, out operations);
+    }
     private Task WriteCoreAsync(object message, Func<IChannel, bool> matcher, bool flush, out IReadOnlyDictionary<IChannel, Task> operations)
     {
         ArgumentNullException.ThrowIfNull(message);
@@ -315,7 +359,10 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
      * Returns the {@link ChannelGroupFuture} which will be notified when all {@link Channel}s that are part of this
      * {@link ChannelGroup}, at the time of calling, are closed.
      */
-    public Task NewCloseFuture(Func<IChannel, bool> matcher = null) => NewCloseFuture(out _, matcher);
+    public Task NewCloseFuture(Func<IChannel, bool> matcher = null)
+    {
+        return NewCloseFuture(out _, matcher);
+    }
     public Task NewCloseFuture(out IReadOnlyDictionary<IChannel, Task> operations, Func<IChannel, bool> matcher = null)
     {
         var tasks = _channels.Values.Where(channel => matcher == null || matcher(channel))
@@ -323,5 +370,8 @@ public partial class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<I
         operations = Snapshot(tasks);
         return CompleteAsync(tasks);
     }
-    public override string ToString() => string.Create(CultureInfo.InvariantCulture, $"{StringUtil.SimpleClassName(this)}(name: {Name}, size: {Count})");
+    public override string ToString()
+    {
+        return string.Create(CultureInfo.InvariantCulture, $"{StringUtil.SimpleClassName(this)}(name: {Name}, size: {Count})");
+    }
 }

@@ -303,11 +303,17 @@ public class ByteBufSearchSourceTest
     }
     private sealed class SearchHeap(SearchCalls calls) : UnpooledHeapByteBuf(16, 64)
     {
-        public override int IndexOf(int fromIndex, int toIndex, byte value) => calls.Invoke(fromIndex, toIndex, value);
+        public override int IndexOf(int fromIndex, int toIndex, byte value)
+        {
+            return calls.Invoke(fromIndex, toIndex, value);
+        }
     }
     private sealed class SearchDirect(SearchCalls calls, NativeMemoryAllocator native) : UnpooledDirectByteBuf(16, 64, native)
     {
-        public override int IndexOf(int fromIndex, int toIndex, byte value) => calls.Invoke(fromIndex, toIndex, value);
+        public override int IndexOf(int fromIndex, int toIndex, byte value)
+        {
+            return calls.Invoke(fromIndex, toIndex, value);
+        }
     }
 
     public static IEnumerable<object[]> DelegationCases()
@@ -325,7 +331,10 @@ public class ByteBufSearchSourceTest
         var calls = new SearchCalls(outcome);
         ByteBuf buffer = direct ? new SearchDirect(calls, native) : new SearchHeap(calls);
         buffer.SetIndex(2, 12).MarkReaderIndex().MarkWriterIndex();
-        int Invoke() => overload switch { 0 => buffer.BytesBefore(128), 1 => buffer.BytesBefore(5, 128), _ => buffer.BytesBefore(3, 8, 128) };
+        int Invoke()
+        {
+            return overload switch { 0 => buffer.BytesBefore(128), 1 => buffer.BytesBefore(5, 128), _ => buffer.BytesBefore(3, 8, 128) };
+        }
         try
         {
             if (outcome == 2) Assert.Same(calls.Error, Assert.Throws<Failure>(() => Invoke()));

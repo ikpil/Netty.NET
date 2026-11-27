@@ -122,7 +122,10 @@ public class ByteBufRelativeTransferDispatchTest
             source.WriteBytes(new byte[] { 10, 11, 12, 13, 14, 15, 16, 17 });
             source.SetIndex(2, 7).MarkReaderIndex().MarkWriterIndex();
             destination.SetByte(0, 99).SetIndex(0, 1).MarkReaderIndex().MarkWriterIndex();
-            ByteBuf Invoke() => write ? owner.WriteBytes(peer, length) : owner.ReadBytes(peer, length);
+            ByteBuf Invoke()
+            {
+                return write ? owner.WriteBytes(peer, length) : owner.ReadBytes(peer, length);
+            }
             if (scenario is 2 or 3)
                 Assert.Same(calls.Error, Assert.Throws<Failure>(() => Invoke()));
             else if (scenario is 4 or 5 or 7)
@@ -172,7 +175,10 @@ public class ByteBufRelativeTransferDispatchTest
         try
         {
             owner.SetIndex(2, 7); peer.SetIndex(1, 3);
-            ByteBuf Invoke() => write ? owner.WriteBytes(peer) : owner.ReadBytes(peer);
+            ByteBuf Invoke()
+            {
+                return write ? owner.WriteBytes(peer) : owner.ReadBytes(peer);
+            }
             if (failure) Assert.Same(calls.Error, Assert.Throws<Failure>(() => Invoke()));
             else Assert.Same(owner, Invoke());
             Assert.Equal(1, calls.Count); Assert.Same(peer, calls.Peer);

@@ -63,7 +63,10 @@ internal sealed class SequentialDnsServerAddressStream : IDnsServerAddressStream
         return new SequentialDnsServerAddressStream(addresses, i);
     }
 
-    IDnsServerAddressStream IDnsServerAddressStream.Duplicate() => Duplicate();
+    IDnsServerAddressStream IDnsServerAddressStream.Duplicate()
+    {
+        return Duplicate();
+    }
 
     public override string ToString()
     {

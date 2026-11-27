@@ -73,7 +73,10 @@ public class AdaptiveRecvByteBufAllocator : DefaultMaxMessagesRecvByteBufAllocat
         _initial = initial;
         _maximum = maximum;
     }
-    public override IRecvByteBufAllocator.IHandle NewHandle() => new HandleImpl(this, _minimum, _initial, _maximum);
+    public override IRecvByteBufAllocator.IHandle NewHandle()
+    {
+        return new HandleImpl(this, _minimum, _initial, _maximum);
+    }
     public override AdaptiveRecvByteBufAllocator RespectMaybeMoreData(bool respectMaybeMoreData)
     {
         base.RespectMaybeMoreData(respectMaybeMoreData);
@@ -83,7 +86,9 @@ public class AdaptiveRecvByteBufAllocator : DefaultMaxMessagesRecvByteBufAllocat
     {
         private readonly AdaptiveCalculator _calculator;
         internal HandleImpl(AdaptiveRecvByteBufAllocator owner, int minimum, int initial, int maximum) : base(owner)
-            => _calculator = new AdaptiveCalculator(minimum, initial, maximum);
+        {
+            _calculator = new AdaptiveCalculator(minimum, initial, maximum);
+        }
         public override void LastBytesRead(int bytes)
         {
             // If we read as much as we asked for we should check if we need to ramp up the size of our next guess.
@@ -94,7 +99,13 @@ public class AdaptiveRecvByteBufAllocator : DefaultMaxMessagesRecvByteBufAllocat
                 _calculator.Record(bytes);
             base.LastBytesRead(bytes);
         }
-        public override int Guess() => _calculator.NextSize;
-        public override void ReadComplete() => _calculator.Record(TotalBytesRead());
+        public override int Guess()
+        {
+            return _calculator.NextSize;
+        }
+        public override void ReadComplete()
+        {
+            _calculator.Record(TotalBytesRead());
+        }
     }
 }

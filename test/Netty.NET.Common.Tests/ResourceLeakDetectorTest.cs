@@ -32,8 +32,14 @@ public class ResourceLeakDetectorTest : IDisposable
     private const int ConcurrentUsageTimeoutMilliseconds = 300000;
     private static volatile int sink;
     private readonly ResourceLeakDetectorLevel previous = ResourceLeakDetector.GetLevel();
-    public ResourceLeakDetectorTest() => ResourceLeakDetector.SetLevel(ResourceLeakDetectorLevel.SIMPLE);
-    public void Dispose() => ResourceLeakDetector.SetLevel(previous);
+    public ResourceLeakDetectorTest()
+    {
+        ResourceLeakDetector.SetLevel(ResourceLeakDetectorLevel.SIMPLE);
+    }
+    public void Dispose()
+    {
+        ResourceLeakDetector.SetLevel(previous);
+    }
 
     // The JVM's @Timeout is 60 seconds. CLR conditional weak values and captured
     // managed stacks need a wider bound; retain all 50 threads and 5,000,000 pairs.
@@ -142,7 +148,12 @@ public class ResourceLeakDetectorTest : IDisposable
         Assert.Equal(1, DefaultResource.detectorWithSetupHint.GetLeaksFound());
         DefaultResource.detectorWithSetupHint.AssertNoErrors();
     }
-    private sealed class BrokenHint : IResourceLeakHint { public string ToHintString() => throw new InvalidOperationException("expected failure"); }
+    private sealed class BrokenHint : IResourceLeakHint {
+        public string ToHintString()
+        {
+            throw new InvalidOperationException("expected failure");
+        }
+    }
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void LeakResource()
     {
@@ -168,7 +179,10 @@ public class ResourceLeakDetectorTest : IDisposable
         // Sample every allocation
         internal static readonly TestResourceLeakDetector<Resource> detector = new(typeof(Resource), 1, int.MaxValue);
         internal static readonly CreationRecordLeakDetector<Resource> detectorWithSetupHint = new(typeof(Resource), 1);
-        public bool Close() => true;
+        public bool Close()
+        {
+            return true;
+        }
     }
     private interface Resource { bool Close(); }
     private static void AssertNoErrors(Exception error) { if (error != null) ExceptionDispatchInfo.Capture(error).Throw(); }
@@ -176,11 +190,26 @@ public class ResourceLeakDetectorTest : IDisposable
     {
         private Exception error;
         internal TestResourceLeakDetector(Type type, int sampling, long maxActive) : base(type, sampling, maxActive) { }
-        protected override void ReportTracedLeak(string type, string records) => ReportError(new InvalidOperationException("Leak reported for '" + type + "':\n" + records));
-        protected override void ReportUntracedLeak(string type) => ReportError(new InvalidOperationException("Leak reported for '" + type + "'"));
-        protected override void ReportInstancesLeak(string type) => ReportError(new InvalidOperationException("Leak reported for '" + type + "'"));
-        private void ReportError(Exception failure) => Interlocked.CompareExchange(ref error, failure, null);
-        internal void AssertNoErrors() => ResourceLeakDetectorTest.AssertNoErrors(error);
+        protected override void ReportTracedLeak(string type, string records)
+        {
+            ReportError(new InvalidOperationException("Leak reported for '" + type + "':\n" + records));
+        }
+        protected override void ReportUntracedLeak(string type)
+        {
+            ReportError(new InvalidOperationException("Leak reported for '" + type + "'"));
+        }
+        protected override void ReportInstancesLeak(string type)
+        {
+            ReportError(new InvalidOperationException("Leak reported for '" + type + "'"));
+        }
+        private void ReportError(Exception failure)
+        {
+            Interlocked.CompareExchange(ref error, failure, null);
+        }
+        internal void AssertNoErrors()
+        {
+            ResourceLeakDetectorTest.AssertNoErrors(error);
+        }
     }
     private sealed class CreationRecordLeakDetector<T>(Type type, int sampling) : ResourceLeakDetector<T>(type, sampling) where T : class
     {
@@ -197,7 +226,10 @@ public class ResourceLeakDetectorTest : IDisposable
             error = null;
             leaksFound = 0;
         }
-        protected override bool NeedReport() => true;
+        protected override bool NeedReport()
+        {
+            return true;
+        }
         protected override void ReportTracedLeak(string type, string records)
         {
             if (!records.Contains(canaryString, StringComparison.Ordinal)) ReportError(new InvalidOperationException("Leak records did not contain canary string"));
@@ -208,9 +240,21 @@ public class ResourceLeakDetectorTest : IDisposable
             if (failOnUntraced) ReportError(new InvalidOperationException("Got untraced leak w/o canary string"));
             Interlocked.Increment(ref leaksFound);
         }
-        private void ReportError(Exception failure) => Interlocked.CompareExchange(ref error, failure, null);
-        protected override object GetInitialHint(string type) => initialHint;
-        internal int GetLeaksFound() => Volatile.Read(ref leaksFound);
-        internal void AssertNoErrors() => ResourceLeakDetectorTest.AssertNoErrors(error);
+        private void ReportError(Exception failure)
+        {
+            Interlocked.CompareExchange(ref error, failure, null);
+        }
+        protected override object GetInitialHint(string type)
+        {
+            return initialHint;
+        }
+        internal int GetLeaksFound()
+        {
+            return Volatile.Read(ref leaksFound);
+        }
+        internal void AssertNoErrors()
+        {
+            ResourceLeakDetectorTest.AssertNoErrors(error);
+        }
     }
 }

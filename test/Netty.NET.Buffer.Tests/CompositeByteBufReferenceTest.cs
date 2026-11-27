@@ -28,9 +28,11 @@ public class CompositeByteBufReferenceTest
         public readonly IByteBufAllocator Allocator;
 
         public Storage(bool pooled, bool direct)
-            => Allocator = pooled
+        {
+            Allocator = pooled
                 ? new PooledByteBufAllocator(direct, pageSize: 4096, maxOrder: 1, nativeAllocator: Native)
                 : new UnpooledByteBufAllocator(direct, Native);
+        }
 
         public void Dispose()
         {

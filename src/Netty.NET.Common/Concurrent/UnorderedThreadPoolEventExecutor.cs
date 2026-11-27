@@ -116,16 +116,40 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         stopToken = stopSource.Token;
     }
 
-    public IEventExecutorGroup Parent() => this;
-    public IEventExecutor Next() => this;
+    public IEventExecutorGroup Parent()
+    {
+        return this;
+    }
+    public IEventExecutor Next()
+    {
+        return this;
+    }
     public IEnumerable<IEventExecutor> Iterator() { yield return this; }
-    public Ticker Ticker() => global::Netty.NET.Common.Concurrent.Ticker.SystemTicker();
-    public bool InEventLoop() => InEventLoop(Thread.CurrentThread);
-    public bool InEventLoop(Thread thread) => thread != null && eventLoopThreads.ContainsKey(thread);
-    public bool IsExecutorThread(Thread thread) => InEventLoop(thread);
+    public Ticker Ticker()
+    {
+        return global::Netty.NET.Common.Concurrent.Ticker.SystemTicker();
+    }
+    public bool InEventLoop()
+    {
+        return InEventLoop(Thread.CurrentThread);
+    }
+    public bool InEventLoop(Thread thread)
+    {
+        return thread != null && eventLoopThreads.ContainsKey(thread);
+    }
+    public bool IsExecutorThread(Thread thread)
+    {
+        return InEventLoop(thread);
+    }
     public bool IsShuttingDown() { using (UninterruptibleMonitor.Enter(gate)) return gracefulRequested || shutdownRequested; }
-    public bool IsSuspended() => false;
-    public bool TrySuspend() => false;
+    public bool IsSuspended()
+    {
+        return false;
+    }
+    public bool TrySuspend()
+    {
+        return false;
+    }
     public bool IsShutdown() { using (UninterruptibleMonitor.Enter(gate)) return shutdownRequested; }
     public bool IsTerminated()
     {
@@ -149,7 +173,10 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         }
     }
     public Task TerminationFuture => termination.Task;
-    public Task ShutdownGracefullyAsync() => ShutdownGracefullyAsync(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(15));
+    public Task ShutdownGracefullyAsync()
+    {
+        return ShutdownGracefullyAsync(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(15));
+    }
     /// <summary>Gets the number of pending invocation reservations, including future deadlines.</summary>
     /// <remarks>
     /// This is a momentary observation under the pool gate, not an admission guarantee.
@@ -692,9 +719,18 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
             sequence = Interlocked.Increment(ref nextSequence) - 1;
             deadline = owner.TriggerTime(0);
         }
-        public bool IsCancelled() => Volatile.Read(ref _submission)?.IsCanceled ?? true;
-        public void CancelOuter() => Interlocked.Exchange(ref _submission, null)?.CancelForShutdown();
-        public void Reject(Exception error) => Interlocked.Exchange(ref _submission, null)?.Reject(error);
+        public bool IsCancelled()
+        {
+            return Volatile.Read(ref _submission)?.IsCanceled ?? true;
+        }
+        public void CancelOuter()
+        {
+            Interlocked.Exchange(ref _submission, null)?.CancelForShutdown();
+        }
+        public void Reject(Exception error)
+        {
+            Interlocked.Exchange(ref _submission, null)?.Reject(error);
+        }
         public void Run()
         {
             INativeSubmission submission = Interlocked.Exchange(ref _submission, null);
@@ -772,10 +808,22 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
             sequence = Interlocked.Increment(ref nextSequence) - 1;
             task.SetId(sequence);
         }
-        public bool IsCancelled() => _task.IsCanceled;
-        public void CancelOuter() => _task.CancelWithoutRemove();
-        public void Reject(Exception error) => _task.Reject(error);
-        public void Run() => _task.QueueCallback();
+        public bool IsCancelled()
+        {
+            return _task.IsCanceled;
+        }
+        public void CancelOuter()
+        {
+            _task.CancelWithoutRemove();
+        }
+        public void Reject(Exception error)
+        {
+            _task.Reject(error);
+        }
+        public void Run()
+        {
+            _task.QueueCallback();
+        }
     }
 
     // Raw execute owns no asynchronous result. Its queue entry claims and releases
@@ -794,9 +842,18 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
             sequence = Interlocked.Increment(ref nextSequence) - 1;
             deadline = owner.TriggerTime(0);
         }
-        public bool IsCancelled() => Volatile.Read(ref command) == null;
-        public void CancelOuter() => Interlocked.Exchange(ref command, null);
-        public void Reject(Exception error) => CancelOuter();
+        public bool IsCancelled()
+        {
+            return Volatile.Read(ref command) == null;
+        }
+        public void CancelOuter()
+        {
+            Interlocked.Exchange(ref command, null);
+        }
+        public void Reject(Exception error)
+        {
+            CancelOuter();
+        }
         public void Run()
         {
             Action callback = Interlocked.Exchange(ref command, null);

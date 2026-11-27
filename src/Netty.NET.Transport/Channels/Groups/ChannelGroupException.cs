@@ -32,7 +32,10 @@ public sealed class ChannelGroupException : AggregateException, IReadOnlyCollect
     public ChannelGroupException(IEnumerable<KeyValuePair<IChannel, Exception>> causes) : this(CopyCauses(causes)) { }
 
     private ChannelGroupException(KeyValuePair<IChannel, Exception>[] causes)
-        : base("One or more channel group operations failed.", causes.Select(pair => pair.Value)) => _failures = causes;
+        : base("One or more channel group operations failed.", causes.Select(pair => pair.Value))
+    {
+        _failures = causes;
+    }
 
     private static KeyValuePair<IChannel, Exception>[] CopyCauses(IEnumerable<KeyValuePair<IChannel, Exception>> causes)
     {
@@ -49,8 +52,13 @@ public sealed class ChannelGroupException : AggregateException, IReadOnlyCollect
      * Returns a {@link Iterator} which contains all the {@link Throwable} that was a cause of the failure and the
      * related id of the {@link Channel}.
      */
-    public IEnumerator<KeyValuePair<IChannel, Exception>> GetEnumerator() =>
-        ((IEnumerable<KeyValuePair<IChannel, Exception>>)_failures).GetEnumerator();
+    public IEnumerator<KeyValuePair<IChannel, Exception>> GetEnumerator()
+    {
+        return ((IEnumerable<KeyValuePair<IChannel, Exception>>)_failures).GetEnumerator();
+    }
 
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 }

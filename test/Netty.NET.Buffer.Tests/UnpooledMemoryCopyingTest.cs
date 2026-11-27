@@ -126,7 +126,9 @@ public class UnpooledMemoryCopyingTest
 
     [Fact]
     public void NullMemoryArrayIsRejected()
-        => Assert.Throws<ArgumentNullException>(() => Unpooled.CopiedBuffer((ReadOnlyMemory<byte>[])null));
+    {
+        Assert.Throws<ArgumentNullException>(() => Unpooled.CopiedBuffer((ReadOnlyMemory<byte>[])null));
+    }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
@@ -222,7 +224,10 @@ public class UnpooledMemoryCopyingTest
         public int PinCalls { get; private set; }
         public bool FailAccess { get; set; }
         public Memory<byte> Range => CreateMemory(_array.Length);
-        public ArrayMemoryManager(int length) => _array = new byte[length];
+        public ArrayMemoryManager(int length)
+        {
+            _array = new byte[length];
+        }
         public override Span<byte> GetSpan()
         {
             if (FailAccess) throw new InvalidOperationException("Source access failed.");
@@ -238,9 +243,15 @@ public class UnpooledMemoryCopyingTest
         private readonly int _length;
         public int SpanCalls { get; private set; }
         public Memory<byte> Range => CreateMemory(_length);
-        public ReportedLengthMemoryManager(int length) => _length = length;
+        public ReportedLengthMemoryManager(int length)
+        {
+            _length = length;
+        }
         public override Span<byte> GetSpan() { SpanCalls++; throw new InvalidOperationException("Must not access memory."); }
-        public override MemoryHandle Pin(int elementIndex = 0) => throw new NotSupportedException();
+        public override MemoryHandle Pin(int elementIndex = 0)
+        {
+            throw new NotSupportedException();
+        }
         public override void Unpin() { }
         protected override void Dispose(bool disposing) { }
     }

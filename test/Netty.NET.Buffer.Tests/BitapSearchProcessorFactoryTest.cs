@@ -32,5 +32,7 @@ public class BitapSearchProcessorFactoryTest
 
     [Fact]
     public void TestRejectTooLongNeedle()
-        => Assert.Throws<ArgumentException>(() => AbstractSearchProcessorFactory.NewBitapSearchProcessorFactory(new byte[65]));
+    {
+        Assert.Throws<ArgumentException>(() => AbstractSearchProcessorFactory.NewBitapSearchProcessorFactory(new byte[65]));
+    }
 }

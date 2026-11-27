@@ -94,7 +94,10 @@ public class SocketShutdownContractTest
         internal readonly TaskCompletionSource Final = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal readonly List<string> Events = new();
         internal bool AllOnOwner = true;
-        public override void ChannelActive(IChannelHandlerContext ctx) => Active.TrySetResult(ctx.Channel);
+        public override void ChannelActive(IChannelHandlerContext ctx)
+        {
+            Active.TrySetResult(ctx.Channel);
+        }
         public override void ChannelReadComplete(IChannelHandlerContext ctx)
         { AllOnOwner &= ctx.Executor.InEventLoop(); Events.Add("readComplete"); }
         public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)

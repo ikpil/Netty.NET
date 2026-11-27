@@ -175,18 +175,27 @@ public class FixedChannelPoolMapDeadlockTest
         }
     }
 
-    private static Bootstrap BootstrapFor(DefaultEventLoopGroup group) => new Bootstrap().Channel<LocalChannel>().Group(group)
-        .LocalAddress(new LocalAddress(typeof(FixedChannelPoolMapDeadlockTest)));
+    private static Bootstrap BootstrapFor(DefaultEventLoopGroup group)
+    {
+        return new Bootstrap().Channel<LocalChannel>().Group(group)
+            .LocalAddress(new LocalAddress(typeof(FixedChannelPoolMapDeadlockTest)));
+    }
     private static void Await(Barrier barrier)
     {
         if (!barrier.SignalAndWait(TimeSpan.FromSeconds(1)))
             throw new TimeoutException("Timed out waiting at the original worker barrier.");
     }
-    private static Task Shutdown(params DefaultEventLoopGroup[] groups) => Task.WhenAll(groups.Select(group => group.StopAsync()))
-        .WaitAsync(TimeSpan.FromSeconds(5));
+    private static Task Shutdown(params DefaultEventLoopGroup[] groups)
+    {
+        return Task.WhenAll(groups.Select(group => group.StopAsync()))
+            .WaitAsync(TimeSpan.FromSeconds(5));
+    }
     private sealed class PoolMap(Func<string, FixedChannelPool> factory) : AbstractChannelPoolMap<string, FixedChannelPool>
     {
-        protected override FixedChannelPool NewPool(string key) => factory(key);
+        protected override FixedChannelPool NewPool(string key)
+        {
+            return factory(key);
+        }
     }
     private sealed class NoopHandler : AbstractChannelPoolHandler
     {

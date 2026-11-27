@@ -258,7 +258,10 @@ public class DerivedByteBufScalarTest
     private static readonly int[] Kernels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 3, 4, 1, 2, 5, 6, 1, 5, 6, 7, 8];
     private static readonly string[] GetterNames = ["Byte", "Short", "ShortLE", "UnsignedMedium", "UnsignedMediumLE", "Int", "IntLE", "Long", "LongLE"];
     private static readonly string[] SetterNames = ["Byte", "Short", "ShortLE", "Medium", "MediumLE", "Int", "IntLE", "Long", "LongLE"];
-    private static bool Little(int type) => type is 2 or 4 or 6 or 8 or 11 or 13 or 15 or 18 or 20;
+    private static bool Little(int type)
+    {
+        return type is 2 or 4 or 6 or 8 or 11 or 13 or 15 or 18 or 20;
+    }
     private static ulong Decode(byte[] bytes, int index, int type)
     {
         ulong bits = 0; int width = Widths[type];
@@ -277,58 +280,70 @@ public class DerivedByteBufScalarTest
     {
         for (int i = 0; i < Widths[type]; i++) bytes[index + i] = unchecked((byte)(bits >> (8 * (Little(type) ? i : Widths[type] - 1 - i))));
     }
-    private static ulong Written(int type) => type == 9 ? 1UL : Value;
-    private static byte[] Snapshot(Storage s) => s.Root.AsReadOnlySpan(0, 64).ToArray();
-    private static ulong Read(ByteBuf b, int type, int index, bool relative) => type switch
+    private static ulong Written(int type)
     {
-        0 => unchecked((ulong)(relative ? b.ReadByte() : b.GetByte(index))),
-        1 => unchecked((ulong)(relative ? b.ReadShort() : b.GetShort(index))),
-        2 => unchecked((ulong)(relative ? b.ReadShortLE() : b.GetShortLE(index))),
-        3 => unchecked((ulong)(relative ? b.ReadUnsignedMedium() : b.GetUnsignedMedium(index))),
-        4 => unchecked((ulong)(relative ? b.ReadUnsignedMediumLE() : b.GetUnsignedMediumLE(index))),
-        5 => unchecked((ulong)(relative ? b.ReadInt() : b.GetInt(index))),
-        6 => unchecked((ulong)(relative ? b.ReadIntLE() : b.GetIntLE(index))),
-        7 => unchecked((ulong)(relative ? b.ReadLong() : b.GetLong(index))),
-        8 => unchecked((ulong)(relative ? b.ReadLongLE() : b.GetLongLE(index))),
-        9 => (relative ? b.ReadBoolean() : b.GetBoolean(index)) ? 1UL : 0UL,
-        10 => unchecked((ulong)(relative ? b.ReadMedium() : b.GetMedium(index))),
-        11 => unchecked((ulong)(relative ? b.ReadMediumLE() : b.GetMediumLE(index))),
-        12 => unchecked((ulong)(relative ? b.ReadUnsignedShort() : b.GetUnsignedShort(index))),
-        13 => unchecked((ulong)(relative ? b.ReadUnsignedShortLE() : b.GetUnsignedShortLE(index))),
-        14 => unchecked((ulong)(relative ? b.ReadUnsignedInt() : b.GetUnsignedInt(index))),
-        15 => unchecked((ulong)(relative ? b.ReadUnsignedIntLE() : b.GetUnsignedIntLE(index))),
-        16 => unchecked((ulong)(relative ? b.ReadChar() : b.GetChar(index))),
-        17 => unchecked((ulong)BitConverter.SingleToInt32Bits((relative ? b.ReadFloat() : b.GetFloat(index)))) & uint.MaxValue,
-        18 => unchecked((ulong)BitConverter.SingleToInt32Bits((relative ? b.ReadFloatLE() : b.GetFloatLE(index)))) & uint.MaxValue,
-        19 => unchecked((ulong)BitConverter.DoubleToInt64Bits((relative ? b.ReadDouble() : b.GetDouble(index)))),
-        20 => unchecked((ulong)BitConverter.DoubleToInt64Bits((relative ? b.ReadDoubleLE() : b.GetDoubleLE(index)))),
-        _ => throw new ArgumentOutOfRangeException(nameof(type))
-    };
-    private static ByteBuf Write(ByteBuf b, int type, int index, bool relative) => type switch
+        return type == 9 ? 1UL : Value;
+    }
+    private static byte[] Snapshot(Storage s)
     {
-        0 => relative ? b.WriteByte(unchecked((int)Value)) : b.SetByte(index, unchecked((int)Value)),
-        1 => relative ? b.WriteShort(unchecked((int)Value)) : b.SetShort(index, unchecked((int)Value)),
-        2 => relative ? b.WriteShortLE(unchecked((int)Value)) : b.SetShortLE(index, unchecked((int)Value)),
-        3 => relative ? b.WriteMedium(unchecked((int)Value)) : b.SetMedium(index, unchecked((int)Value)),
-        4 => relative ? b.WriteMediumLE(unchecked((int)Value)) : b.SetMediumLE(index, unchecked((int)Value)),
-        5 => relative ? b.WriteInt(unchecked((int)Value)) : b.SetInt(index, unchecked((int)Value)),
-        6 => relative ? b.WriteIntLE(unchecked((int)Value)) : b.SetIntLE(index, unchecked((int)Value)),
-        7 => relative ? b.WriteLong(unchecked((long)Value)) : b.SetLong(index, unchecked((long)Value)),
-        8 => relative ? b.WriteLongLE(unchecked((long)Value)) : b.SetLongLE(index, unchecked((long)Value)),
-        9 => relative ? b.WriteBoolean(true) : b.SetBoolean(index, true),
-        10 => relative ? b.WriteMedium(unchecked((int)Value)) : b.SetMedium(index, unchecked((int)Value)),
-        11 => relative ? b.WriteMediumLE(unchecked((int)Value)) : b.SetMediumLE(index, unchecked((int)Value)),
-        12 => relative ? b.WriteShort(unchecked((int)Value)) : b.SetShort(index, unchecked((int)Value)),
-        13 => relative ? b.WriteShortLE(unchecked((int)Value)) : b.SetShortLE(index, unchecked((int)Value)),
-        14 => relative ? b.WriteInt(unchecked((int)Value)) : b.SetInt(index, unchecked((int)Value)),
-        15 => relative ? b.WriteIntLE(unchecked((int)Value)) : b.SetIntLE(index, unchecked((int)Value)),
-        16 => relative ? b.WriteChar(unchecked((char)Value)) : b.SetChar(index, unchecked((char)Value)),
-        17 => relative ? b.WriteFloat(BitConverter.Int32BitsToSingle(unchecked((int)Value))) : b.SetFloat(index, BitConverter.Int32BitsToSingle(unchecked((int)Value))),
-        18 => relative ? b.WriteFloatLE(BitConverter.Int32BitsToSingle(unchecked((int)Value))) : b.SetFloatLE(index, BitConverter.Int32BitsToSingle(unchecked((int)Value))),
-        19 => relative ? b.WriteDouble(BitConverter.Int64BitsToDouble(unchecked((long)Value))) : b.SetDouble(index, BitConverter.Int64BitsToDouble(unchecked((long)Value))),
-        20 => relative ? b.WriteDoubleLE(BitConverter.Int64BitsToDouble(unchecked((long)Value))) : b.SetDoubleLE(index, BitConverter.Int64BitsToDouble(unchecked((long)Value))),
-        _ => throw new ArgumentOutOfRangeException(nameof(type))
-    };
+        return s.Root.AsReadOnlySpan(0, 64).ToArray();
+    }
+    private static ulong Read(ByteBuf b, int type, int index, bool relative)
+    {
+        return type switch
+        {
+            0 => unchecked((ulong)(relative ? b.ReadByte() : b.GetByte(index))),
+            1 => unchecked((ulong)(relative ? b.ReadShort() : b.GetShort(index))),
+            2 => unchecked((ulong)(relative ? b.ReadShortLE() : b.GetShortLE(index))),
+            3 => unchecked((ulong)(relative ? b.ReadUnsignedMedium() : b.GetUnsignedMedium(index))),
+            4 => unchecked((ulong)(relative ? b.ReadUnsignedMediumLE() : b.GetUnsignedMediumLE(index))),
+            5 => unchecked((ulong)(relative ? b.ReadInt() : b.GetInt(index))),
+            6 => unchecked((ulong)(relative ? b.ReadIntLE() : b.GetIntLE(index))),
+            7 => unchecked((ulong)(relative ? b.ReadLong() : b.GetLong(index))),
+            8 => unchecked((ulong)(relative ? b.ReadLongLE() : b.GetLongLE(index))),
+            9 => (relative ? b.ReadBoolean() : b.GetBoolean(index)) ? 1UL : 0UL,
+            10 => unchecked((ulong)(relative ? b.ReadMedium() : b.GetMedium(index))),
+            11 => unchecked((ulong)(relative ? b.ReadMediumLE() : b.GetMediumLE(index))),
+            12 => unchecked((ulong)(relative ? b.ReadUnsignedShort() : b.GetUnsignedShort(index))),
+            13 => unchecked((ulong)(relative ? b.ReadUnsignedShortLE() : b.GetUnsignedShortLE(index))),
+            14 => unchecked((ulong)(relative ? b.ReadUnsignedInt() : b.GetUnsignedInt(index))),
+            15 => unchecked((ulong)(relative ? b.ReadUnsignedIntLE() : b.GetUnsignedIntLE(index))),
+            16 => unchecked((ulong)(relative ? b.ReadChar() : b.GetChar(index))),
+            17 => unchecked((ulong)BitConverter.SingleToInt32Bits((relative ? b.ReadFloat() : b.GetFloat(index)))) & uint.MaxValue,
+            18 => unchecked((ulong)BitConverter.SingleToInt32Bits((relative ? b.ReadFloatLE() : b.GetFloatLE(index)))) & uint.MaxValue,
+            19 => unchecked((ulong)BitConverter.DoubleToInt64Bits((relative ? b.ReadDouble() : b.GetDouble(index)))),
+            20 => unchecked((ulong)BitConverter.DoubleToInt64Bits((relative ? b.ReadDoubleLE() : b.GetDoubleLE(index)))),
+            _ => throw new ArgumentOutOfRangeException(nameof(type))
+        };
+    }
+    private static ByteBuf Write(ByteBuf b, int type, int index, bool relative)
+    {
+        return type switch
+        {
+            0 => relative ? b.WriteByte(unchecked((int)Value)) : b.SetByte(index, unchecked((int)Value)),
+            1 => relative ? b.WriteShort(unchecked((int)Value)) : b.SetShort(index, unchecked((int)Value)),
+            2 => relative ? b.WriteShortLE(unchecked((int)Value)) : b.SetShortLE(index, unchecked((int)Value)),
+            3 => relative ? b.WriteMedium(unchecked((int)Value)) : b.SetMedium(index, unchecked((int)Value)),
+            4 => relative ? b.WriteMediumLE(unchecked((int)Value)) : b.SetMediumLE(index, unchecked((int)Value)),
+            5 => relative ? b.WriteInt(unchecked((int)Value)) : b.SetInt(index, unchecked((int)Value)),
+            6 => relative ? b.WriteIntLE(unchecked((int)Value)) : b.SetIntLE(index, unchecked((int)Value)),
+            7 => relative ? b.WriteLong(unchecked((long)Value)) : b.SetLong(index, unchecked((long)Value)),
+            8 => relative ? b.WriteLongLE(unchecked((long)Value)) : b.SetLongLE(index, unchecked((long)Value)),
+            9 => relative ? b.WriteBoolean(true) : b.SetBoolean(index, true),
+            10 => relative ? b.WriteMedium(unchecked((int)Value)) : b.SetMedium(index, unchecked((int)Value)),
+            11 => relative ? b.WriteMediumLE(unchecked((int)Value)) : b.SetMediumLE(index, unchecked((int)Value)),
+            12 => relative ? b.WriteShort(unchecked((int)Value)) : b.SetShort(index, unchecked((int)Value)),
+            13 => relative ? b.WriteShortLE(unchecked((int)Value)) : b.SetShortLE(index, unchecked((int)Value)),
+            14 => relative ? b.WriteInt(unchecked((int)Value)) : b.SetInt(index, unchecked((int)Value)),
+            15 => relative ? b.WriteIntLE(unchecked((int)Value)) : b.SetIntLE(index, unchecked((int)Value)),
+            16 => relative ? b.WriteChar(unchecked((char)Value)) : b.SetChar(index, unchecked((char)Value)),
+            17 => relative ? b.WriteFloat(BitConverter.Int32BitsToSingle(unchecked((int)Value))) : b.SetFloat(index, BitConverter.Int32BitsToSingle(unchecked((int)Value))),
+            18 => relative ? b.WriteFloatLE(BitConverter.Int32BitsToSingle(unchecked((int)Value))) : b.SetFloatLE(index, BitConverter.Int32BitsToSingle(unchecked((int)Value))),
+            19 => relative ? b.WriteDouble(BitConverter.Int64BitsToDouble(unchecked((long)Value))) : b.SetDouble(index, BitConverter.Int64BitsToDouble(unchecked((long)Value))),
+            20 => relative ? b.WriteDoubleLE(BitConverter.Int64BitsToDouble(unchecked((long)Value))) : b.SetDoubleLE(index, BitConverter.Int64BitsToDouble(unchecked((long)Value))),
+            _ => throw new ArgumentOutOfRangeException(nameof(type))
+        };
+    }
     public static IEnumerable<object[]> Cases()
     {
         foreach (bool direct in new[] { false, true })

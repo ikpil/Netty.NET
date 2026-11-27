@@ -207,7 +207,9 @@ internal sealed class PoolThreadCache : IDisposable
         private int _allocations;
 
         internal RegionCache(int size)
-            => _size = size >= 1 << 30 ? 1 << 30 : (int)BitOperations.RoundUpToPowerOf2((uint)size);
+        {
+            _size = size >= 1 << 30 ? 1 << 30 : (int)BitOperations.RoundUpToPowerOf2((uint)size);
+        }
 
         /**
          * Add to cache if not already full.

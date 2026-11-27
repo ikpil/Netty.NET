@@ -23,13 +23,22 @@ public class PlatformDependent0Test
     // Raw addresses have no managed view. The compatibility overload rejects
     // every address without taking ownership or reading it.
     [Fact]
-    public void TestNewDirectBufferNegativeMemoryAddress() => AssertUnsupported(-1);
+    public void TestNewDirectBufferNegativeMemoryAddress()
+    {
+        AssertUnsupported(-1);
+    }
 
     [Fact]
-    public void TestNewDirectBufferNonNegativeMemoryAddress() => AssertUnsupported(10);
+    public void TestNewDirectBufferNonNegativeMemoryAddress()
+    {
+        AssertUnsupported(10);
+    }
 
     [Fact]
-    public void TestNewDirectBufferZeroMemoryAddress() => AssertUnsupported(0);
+    public void TestNewDirectBufferZeroMemoryAddress()
+    {
+        AssertUnsupported(0);
+    }
 
     private static void AssertUnsupported(nint address)
     {

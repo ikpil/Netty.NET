@@ -136,5 +136,8 @@ public class LoopbackAddressContractTest
 
 internal static class LoopbackAddressTestExtensions
 {
-    internal static long ScopeIdOrZero(this IPAddress address) => address.AddressFamily == AddressFamily.InterNetworkV6 ? address.ScopeId : 0;
+    internal static long ScopeIdOrZero(this IPAddress address)
+    {
+        return address.AddressFamily == AddressFamily.InterNetworkV6 ? address.ScopeId : 0;
+    }
 }

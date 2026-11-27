@@ -30,22 +30,34 @@ public class DatagramScatteringReadSourceTest
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public Task TestScatteringReadPartial(bool adaptive) => ScatteringRead(adaptive, connected: false, partial: true);
+    public Task TestScatteringReadPartial(bool adaptive)
+    {
+        return ScatteringRead(adaptive, connected: false, partial: true);
+    }
 
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public Task TestScatteringRead(bool adaptive) => ScatteringRead(adaptive, connected: false, partial: false);
+    public Task TestScatteringRead(bool adaptive)
+    {
+        return ScatteringRead(adaptive, connected: false, partial: false);
+    }
 
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public Task TestScatteringReadConnectedPartial(bool adaptive) => ScatteringRead(adaptive, connected: true, partial: true);
+    public Task TestScatteringReadConnectedPartial(bool adaptive)
+    {
+        return ScatteringRead(adaptive, connected: true, partial: true);
+    }
 
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public Task TestScatteringConnectedRead(bool adaptive) => ScatteringRead(adaptive, connected: true, partial: false);
+    public Task TestScatteringConnectedRead(bool adaptive)
+    {
+        return ScatteringRead(adaptive, connected: true, partial: false);
+    }
 
     private static async Task ScatteringRead(bool adaptive, bool connected, bool partial)
     {
@@ -89,12 +101,18 @@ public class DatagramScatteringReadSourceTest
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public Task TestScatteringReadWithSmallBuffer(bool adaptive) => ScatteringReadWithSmallBuffer(adaptive, connected: false);
+    public Task TestScatteringReadWithSmallBuffer(bool adaptive)
+    {
+        return ScatteringReadWithSmallBuffer(adaptive, connected: false);
+    }
 
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public Task TestScatteringConnectedReadWithSmallBuffer(bool adaptive) => ScatteringReadWithSmallBuffer(adaptive, connected: true);
+    public Task TestScatteringConnectedReadWithSmallBuffer(bool adaptive)
+    {
+        return ScatteringReadWithSmallBuffer(adaptive, connected: true);
+    }
 
     private static async Task ScatteringReadWithSmallBuffer(bool adaptive, bool connected)
     {
@@ -122,9 +140,11 @@ public class DatagramScatteringReadSourceTest
         finally { await loop.StopAsync(); }
     }
 
-    private static Bootstrap NewBootstrap(MultiThreadIoEventLoopGroup loop, IByteBufAllocator allocator, IChannelHandler handler) =>
-        new Bootstrap().Group(loop).ChannelFactory(static () => new NioDatagramChannel())
+    private static Bootstrap NewBootstrap(MultiThreadIoEventLoopGroup loop, IByteBufAllocator allocator, IChannelHandler handler)
+    {
+        return new Bootstrap().Group(loop).ChannelFactory(static () => new NioDatagramChannel())
             .Option(ChannelOption.ALLOCATOR, allocator).Handler(handler);
+    }
 
     private sealed class Discard : SimpleChannelInboundHandler<object>
     {
@@ -171,6 +191,9 @@ public class DatagramScatteringReadSourceTest
             if (_received == expected) Completed.TrySetResult();
         }
 
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => Completed.TrySetException(cause);
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            Completed.TrySetException(cause);
+        }
     }
 }

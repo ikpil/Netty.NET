@@ -237,7 +237,10 @@ internal sealed partial class AdaptivePoolingAllocator : IDisposable
         return groups;
     }
 
-    internal ByteBuf Allocate(int size, int maxCapacity) => new AdaptiveByteBuf(size, maxCapacity, _allocate, _reallocate);
+    internal ByteBuf Allocate(int size, int maxCapacity)
+    {
+        return new AdaptiveByteBuf(size, maxCapacity, _allocate, _reallocate);
+    }
 
     // CLR: returns a reservation instead of initializing a recycled buffer; buf is the reservation
     // being replaced by a reallocation, or null.
@@ -296,7 +299,10 @@ internal sealed partial class AdaptivePoolingAllocator : IDisposable
         return SIZE_CLASSES_COUNT;
     }
 
-    internal static int[] GetSizeClasses() => (int[])SIZE_CLASSES.Clone();
+    internal static int[] GetSizeClasses()
+    {
+        return (int[])SIZE_CLASSES.Clone();
+    }
 
     private AdaptiveChunkAllocation AllocateFallback(int size, int maxCapacity, AdaptiveChunkAllocation buf)
     {
@@ -331,7 +337,9 @@ internal sealed partial class AdaptivePoolingAllocator : IDisposable
      */
     // CLR: return a replacement reservation; AdaptiveByteBuf publishes it after copying.
     private AdaptiveChunkAllocation Reallocate(int size, int maxCapacity, AdaptiveChunkAllocation into)
-        => Allocate(size, maxCapacity, into);
+    {
+        return Allocate(size, maxCapacity, into);
+    }
 
     internal long UsedMemory => _chunkRegistry.TotalCapacity;
 

@@ -107,9 +107,13 @@ public class DerivedByteBufIterationTest
         foreach (bool descending in new[] { false, true }) yield return [direct, kind, descending];
     }
     private static int Scan(ByteBuf b, bool descending, Func<byte, bool> p)
-        => descending ? b.ForEachByteDesc(p) : b.ForEachByte(p);
+    {
+        return descending ? b.ForEachByteDesc(p) : b.ForEachByte(p);
+    }
     private static int Scan(ByteBuf b, bool descending, int index, int length, Func<byte, bool> p)
-        => descending ? b.ForEachByteDesc(index, length, p) : b.ForEachByte(index, length, p);
+    {
+        return descending ? b.ForEachByteDesc(index, length, p) : b.ForEachByte(index, length, p);
+    }
 
     [Theory]
     [MemberData(nameof(Cases))]

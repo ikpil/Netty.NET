@@ -141,15 +141,33 @@ public class SocketFileRegionContractTest
         internal long TransferredBytes = initialTransferred;
         internal readonly ConcurrentQueue<long> Positions = new();
         internal readonly TaskCompletionSource Deallocated = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        public long Position() => 0;
-        public long Count() => count;
-        public long Transferred() => TransferredBytes;
+        public long Position()
+        {
+            return 0;
+        }
+        public long Count()
+        {
+            return count;
+        }
+        public long Transferred()
+        {
+            return TransferredBytes;
+        }
         public long TransferTo(Stream target, long position) { Positions.Enqueue(position); return transfer(this, target, position); }
-        protected override void Deallocate() => Deallocated.TrySetResult();
+        protected override void Deallocate()
+        {
+            Deallocated.TrySetResult();
+        }
         public new IFileRegion Retain() { base.Retain(); return this; }
         public override IFileRegion Retain(int increment) { base.Retain(increment); return this; }
-        public new IFileRegion Touch() => this;
-        public override IFileRegion Touch(object hint) => this;
+        public new IFileRegion Touch()
+        {
+            return this;
+        }
+        public override IFileRegion Touch(object hint)
+        {
+            return this;
+        }
     }
     private sealed class Connected : IAsyncDisposable
     {

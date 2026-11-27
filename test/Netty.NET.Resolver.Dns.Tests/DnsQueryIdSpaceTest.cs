@@ -96,6 +96,9 @@ public class DnsQueryIdSpaceTest
             return true;
         }
 
-        public IEnumerator<int> GetEnumerator() => order.GetEnumerator();
+        public IEnumerator<int> GetEnumerator()
+        {
+            return order.GetEnumerator();
+        }
     }
 }

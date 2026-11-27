@@ -47,12 +47,18 @@ public sealed class CoalescingBufferQueue : AbstractCoalescingBufferQueue
      * @param aggregatePromise used to aggregate the promises and listeners for the constituent buffers.
      * @return a {@link ByteBuf} composed of the enqueued buffers.
      */
-    public ByteBuf Remove(int bytes, TaskCompletionSource aggregateProducer) => Remove(_channel.Alloc(), bytes, aggregateProducer);
+    public ByteBuf Remove(int bytes, TaskCompletionSource aggregateProducer)
+    {
+        return Remove(_channel.Alloc(), bytes, aggregateProducer);
+    }
     protected override ByteBuf Compose(IByteBufAllocator allocator, ByteBuf cumulation, ByteBuf next)
     {
         if (cumulation is CompositeByteBuf composite)
         { composite.AddComponent(next, true); return composite; }
         return ComposeIntoComposite(allocator, cumulation, next);
     }
-    protected override ByteBuf RemoveEmptyValue() => Unpooled.EmptyBuffer;
+    protected override ByteBuf RemoveEmptyValue()
+    {
+        return Unpooled.EmptyBuffer;
+    }
 }

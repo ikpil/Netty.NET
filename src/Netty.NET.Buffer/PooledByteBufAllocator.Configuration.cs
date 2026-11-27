@@ -42,42 +42,66 @@ public partial class PooledByteBufAllocator
     /**
      * Default number of heap arenas - System Property: io.netty.allocator.numHeapArenas - default 2 * cores
      */
-    public static int DefaultNumHeapArena() => Configuration.Value.HeapArenaCount;
+    public static int DefaultNumHeapArena()
+    {
+        return Configuration.Value.HeapArenaCount;
+    }
 
     /**
      * Default number of direct arenas - System Property: io.netty.allocator.numDirectArenas - default 2 * cores
      */
-    public static int DefaultNumDirectArena() => Configuration.Value.DirectArenaCount;
+    public static int DefaultNumDirectArena()
+    {
+        return Configuration.Value.DirectArenaCount;
+    }
 
     /**
      * Default buffer page size - System Property: io.netty.allocator.pageSize - default 8192
      */
-    public static int DefaultPageSize() => Configuration.Value.PageSize;
+    public static int DefaultPageSize()
+    {
+        return Configuration.Value.PageSize;
+    }
 
     /**
      * Default maximum order - System Property: io.netty.allocator.maxOrder - default 9
      */
-    public static int DefaultMaxOrder() => Configuration.Value.MaxOrder;
+    public static int DefaultMaxOrder()
+    {
+        return Configuration.Value.MaxOrder;
+    }
 
     /**
      * Default thread caching behavior - System Property: io.netty.allocator.useCacheForAllThreads - default false
      */
-    public static bool DefaultUseCacheForAllThreads() => Configuration.Value.UseCacheForAllThreads;
+    public static bool DefaultUseCacheForAllThreads()
+    {
+        return Configuration.Value.UseCacheForAllThreads;
+    }
 
     /**
      * Default small cache size - System Property: io.netty.allocator.smallCacheSize - default 256
      */
-    public static int DefaultSmallCacheSize() => Configuration.Value.SmallCacheSize;
+    public static int DefaultSmallCacheSize()
+    {
+        return Configuration.Value.SmallCacheSize;
+    }
 
     /**
      * Default normal cache size - System Property: io.netty.allocator.normalCacheSize - default 64
      */
-    public static int DefaultNormalCacheSize() => Configuration.Value.NormalCacheSize;
+    public static int DefaultNormalCacheSize()
+    {
+        return Configuration.Value.NormalCacheSize;
+    }
 
     /**
      * Default prefer direct - System Property: io.netty.noPreferDirect - default false
      */
-    public static bool DefaultPreferDirect() => ByteBufUtil.PreferDirect;
+    public static bool DefaultPreferDirect()
+    {
+        return ByteBufUtil.PreferDirect;
+    }
 
     /**
      * Default tiny cache size - default 0
@@ -85,7 +109,10 @@ public partial class PooledByteBufAllocator
      * @deprecated Tiny caches have been merged into small caches.
      */
     [Obsolete("Tiny caches have been merged into small caches.")]
-    public static int DefaultTinyCacheSize() => 0;
+    public static int DefaultTinyCacheSize()
+    {
+        return 0;
+    }
 
     private sealed class RuntimeDefaults
     {

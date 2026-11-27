@@ -35,7 +35,9 @@ public class ByteBufNativeCopyLeaseTest
         public ByteBuf Last;
         public override bool IsDirectBufferPooled => false;
         protected override ByteBuf NewHeapBuffer(int initialCapacity, int maxCapacity)
-            => throw new InvalidOperationException("Native copy must use DirectBuffer.");
+        {
+            throw new InvalidOperationException("Native copy must use DirectBuffer.");
+        }
         protected override ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity)
         {
             ++Calls; Initial = initialCapacity; Maximum = maxCapacity;

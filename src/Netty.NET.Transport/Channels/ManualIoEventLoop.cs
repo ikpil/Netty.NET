@@ -378,7 +378,10 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
         return this;
     }
 
-    IEventLoop IEventLoopGroup.Next() => this;
+    IEventLoop IEventLoopGroup.Next()
+    {
+        return this;
+    }
 
     public sealed override IEventExecutorGroup Parent()
     {
@@ -522,8 +525,10 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
         return TerminationFuture;
     }
 
-    private static long ToNanos(TimeSpan duration) =>
-        duration.Ticks > long.MaxValue / 100 ? long.MaxValue : duration.Ticks * 100;
+    private static long ToNanos(TimeSpan duration)
+    {
+        return duration.Ticks > long.MaxValue / 100 ? long.MaxValue : duration.Ticks * 100;
+    }
 
     [Obsolete]
     public sealed override void Shutdown()

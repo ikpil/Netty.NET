@@ -22,7 +22,10 @@ namespace Netty.NET.Buffer.Tests;
  */
 public class BigEndianCompositeByteBufTest : AbstractCompositeByteBufTest
 {
-    public BigEndianCompositeByteBufTest() => Init(new UnpooledByteBufAllocator(false, Native));
+    public BigEndianCompositeByteBufTest()
+    {
+        Init(new UnpooledByteBufAllocator(false, Native));
+    }
 
     [Fact]
     public override void TestInternalNioBufferAfterRelease()

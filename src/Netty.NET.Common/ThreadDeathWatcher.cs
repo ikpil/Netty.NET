@@ -200,8 +200,14 @@ public static class ThreadDeathWatcher
         internal readonly Thread thread = thread;
         internal readonly Action task = task;
         internal readonly bool isWatch = isWatch;
-        public override int GetHashCode() => RuntimeHelpers.GetHashCode(thread) ^ RuntimeHelpers.GetHashCode(task);
-        public override bool Equals(object value) => value is Entry other &&
-            ReferenceEquals(thread, other.thread) && ReferenceEquals(task, other.task);
+        public override int GetHashCode()
+        {
+            return RuntimeHelpers.GetHashCode(thread) ^ RuntimeHelpers.GetHashCode(task);
+        }
+        public override bool Equals(object value)
+        {
+            return value is Entry other &&
+                ReferenceEquals(thread, other.thread) && ReferenceEquals(task, other.task);
+        }
     }
 }

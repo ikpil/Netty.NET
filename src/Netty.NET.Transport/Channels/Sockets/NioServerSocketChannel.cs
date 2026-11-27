@@ -142,9 +142,18 @@ public class NioServerSocketChannel : AbstractNioMessageChannel, IServerSocketCh
         }
     }
 
-    protected override EndPoint LocalAddress0() => Normalize(JavaChannel().LocalEndPoint);
-    protected override EndPoint RemoteAddress0() => null;
-    protected override IChannelConfig NewConfig() => new DefaultServerSocketChannelConfig(this, JavaChannel());
+    protected override EndPoint LocalAddress0()
+    {
+        return Normalize(JavaChannel().LocalEndPoint);
+    }
+    protected override EndPoint RemoteAddress0()
+    {
+        return null;
+    }
+    protected override IChannelConfig NewConfig()
+    {
+        return new DefaultServerSocketChannelConfig(this, JavaChannel());
+    }
     protected override Task DoBindAsync(EndPoint address, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();

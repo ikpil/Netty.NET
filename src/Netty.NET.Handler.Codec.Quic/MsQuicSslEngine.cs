@@ -60,17 +60,35 @@ internal sealed class MsQuicSslEngine : QuicSslEngine
     // The context that created this engine (the SNI mapping of a server context selects another one).
     internal MsQuicSslContext Context { get; }
 
-    public override bool GetUseClientMode() => clientMode;
+    public override bool GetUseClientMode()
+    {
+        return clientMode;
+    }
 
-    public override string GetPeerHost() => peerHost;
+    public override string GetPeerHost()
+    {
+        return peerHost;
+    }
 
-    public override int GetPeerPort() => peerPort;
+    public override int GetPeerPort()
+    {
+        return peerPort;
+    }
 
-    public override SslClientAuthenticationOptions ClientAuthenticationOptions() => clientOptions;
+    public override SslClientAuthenticationOptions ClientAuthenticationOptions()
+    {
+        return clientOptions;
+    }
 
-    public override SslServerAuthenticationOptions ServerAuthenticationOptions() => serverOptions;
+    public override SslServerAuthenticationOptions ServerAuthenticationOptions()
+    {
+        return serverOptions;
+    }
 
-    public override string GetApplicationProtocol() => applicationProtocol;
+    public override string GetApplicationProtocol()
+    {
+        return applicationProtocol;
+    }
 
     public override X509Certificate2[] GetPeerCertificates()
     {

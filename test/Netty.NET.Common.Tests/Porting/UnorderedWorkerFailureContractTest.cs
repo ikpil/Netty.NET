@@ -9,7 +9,10 @@ public class UnorderedWorkerFailureContractTest
 {
     private sealed class Factory(Func<Action, Thread> create) : IThreadFactory
     {
-        public Thread NewThread(Action task) => create(task);
+        public Thread NewThread(Action task)
+        {
+            return create(task);
+        }
     }
 
     // Simulate a native backend defect escaping the usual producer boundary.
@@ -20,8 +23,14 @@ public class UnorderedWorkerFailureContractTest
         internal readonly Exception Error = new InvalidOperationException("escaped invocation failure");
         internal Task Result => _completion.Task;
         public bool IsCanceled => Result.IsCanceled;
-        public void CancelForShutdown() => _completion.TrySetCanceled();
-        public void Reject(Exception error) => _completion.TrySetException(error);
+        public void CancelForShutdown()
+        {
+            _completion.TrySetCanceled();
+        }
+        public void Reject(Exception error)
+        {
+            _completion.TrySetException(error);
+        }
         public void Run() { entered.Set(); release.Wait(); throw Error; }
     }
 

@@ -37,7 +37,10 @@ public partial class CompositeByteBuf : IEnumerable<ByteBuf>
             : new ComponentEnumerator(this);
     }
 
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 
     /**
      * Return the internal {@link ByteBuf} on the specified index. Note that updating the indexes of the returned
@@ -57,7 +60,10 @@ public partial class CompositeByteBuf : IEnumerable<ByteBuf>
      *
      * @param offset the offset for which the {@link ByteBuf} should be returned
      */
-    public ByteBuf InternalComponentAtOffset(int offset) => InternalComponent(ToComponentIndex(offset));
+    public ByteBuf InternalComponentAtOffset(int offset)
+    {
+        return InternalComponent(ToComponentIndex(offset));
+    }
 
     private sealed class ComponentEnumerator : IEnumerator<ByteBuf>
     {
@@ -89,7 +95,10 @@ public partial class CompositeByteBuf : IEnumerable<ByteBuf>
         // Read-Only
         // CLR: IEnumerator has no remove operation. Reset is unsupported;
         // Dispose ends enumeration without releasing any borrowed component.
-        public void Reset() => throw new NotSupportedException("Read-Only");
+        public void Reset()
+        {
+            throw new NotSupportedException("Read-Only");
+        }
         public void Dispose() { _current = null; _disposed = true; }
     }
 }

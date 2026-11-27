@@ -180,7 +180,10 @@ public class ReadOnlyNativeProviderTest
             LastMaximum = maxCapacity;
             return Last = new UnpooledDirectByteBuf(this, initialCapacity, maxCapacity, native).AsReadOnly();
         }
-        protected override ByteBuf NewHeapBuffer(int initialCapacity, int maxCapacity) => throw new NotSupportedException();
+        protected override ByteBuf NewHeapBuffer(int initialCapacity, int maxCapacity)
+        {
+            throw new NotSupportedException();
+        }
     }
 
     [Fact]

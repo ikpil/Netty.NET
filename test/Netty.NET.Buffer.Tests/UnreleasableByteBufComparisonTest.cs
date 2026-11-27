@@ -26,8 +26,14 @@ public class UnreleasableByteBufComparisonTest
     private sealed class Tracker : IResourceLeakTracker<ByteBuf>
     {
         public int Records, Closes;
-        public void Record() => ++Records;
-        public void Record(object hint) => ++Records;
+        public void Record()
+        {
+            ++Records;
+        }
+        public void Record(object hint)
+        {
+            ++Records;
+        }
         public bool Close(ByteBuf value) { ++Closes; return true; }
     }
 
@@ -77,7 +83,10 @@ public class UnreleasableByteBufComparisonTest
         for (int parent = 0; parent < 4; parent++) yield return [backing, parent];
     }
 
-    private static ByteBuf Peer() => Unpooled.WrappedBuffer(new byte[] { 99, 1, 2, 3, 4, 5, 6, 7, 8, 99 }).SetIndex(1, 9);
+    private static ByteBuf Peer()
+    {
+        return Unpooled.WrappedBuffer(new byte[] { 99, 1, 2, 3, 4, 5, 6, 7, 8, 99 }).SetIndex(1, 9);
+    }
 
     [Theory]
     [MemberData(nameof(Cases))]

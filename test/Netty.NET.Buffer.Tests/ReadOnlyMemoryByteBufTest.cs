@@ -279,9 +279,13 @@ public class ReadOnlyMemoryByteBufTest
         public ByteBuf Last { get; private set; }
         public override bool IsDirectBufferPooled => false;
         protected override ByteBuf NewHeapBuffer(int initialCapacity, int maxCapacity)
-            => Last = new UnpooledHeapByteBuf(this, initialCapacity, maxCapacity).AsReadOnly();
+        {
+            return Last = new UnpooledHeapByteBuf(this, initialCapacity, maxCapacity).AsReadOnly();
+        }
         protected override ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity)
-            => throw new NotSupportedException();
+        {
+            throw new NotSupportedException();
+        }
     }
 
     private sealed class ExternalStorage : IDisposable
@@ -301,10 +305,22 @@ public class ReadOnlyMemoryByteBufTest
     private sealed class ArrayMemoryManager : MemoryManager<byte>
     {
         private byte[] _array;
-        public ArrayMemoryManager(int length) => _array = new byte[length];
-        public override Span<byte> GetSpan() => _array ?? throw new ObjectDisposedException(nameof(ArrayMemoryManager));
-        public override MemoryHandle Pin(int elementIndex = 0) => _array.AsMemory(elementIndex).Pin();
+        public ArrayMemoryManager(int length)
+        {
+            _array = new byte[length];
+        }
+        public override Span<byte> GetSpan()
+        {
+            return _array ?? throw new ObjectDisposedException(nameof(ArrayMemoryManager));
+        }
+        public override MemoryHandle Pin(int elementIndex = 0)
+        {
+            return _array.AsMemory(elementIndex).Pin();
+        }
         public override void Unpin() { }
-        protected override void Dispose(bool disposing) => _array = null;
+        protected override void Dispose(bool disposing)
+        {
+            _array = null;
+        }
     }
 }

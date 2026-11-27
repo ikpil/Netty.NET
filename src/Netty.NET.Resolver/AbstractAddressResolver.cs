@@ -50,7 +50,10 @@ public abstract class AbstractAddressResolver<T> : IAddressResolver<T> where T :
      */
     protected IEventExecutor Executor { get; }
 
-    public virtual bool IsSupported(EndPoint address) => address is T;
+    public virtual bool IsSupported(EndPoint address)
+    {
+        return address is T;
+    }
 
     public bool IsResolved(EndPoint address)
     {

@@ -130,7 +130,10 @@ public class DomainNameMappingBuilder<T> where T : class
             return _defaultValue;
         }
 
-        public override IReadOnlyDictionary<string, T> AsMap() => map;
+        public override IReadOnlyDictionary<string, T> AsMap()
+        {
+            return map;
+        }
 
         public override string ToString()
         {

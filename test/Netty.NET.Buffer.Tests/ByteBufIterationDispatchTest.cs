@@ -28,8 +28,14 @@ public class ByteBufIterationDispatchTest
     private sealed class Tracker : IResourceLeakTracker<ByteBuf>
     {
         public int Records, Closes;
-        public void Record() => ++Records;
-        public void Record(object hint) => ++Records;
+        public void Record()
+        {
+            ++Records;
+        }
+        public void Record(object hint)
+        {
+            ++Records;
+        }
         public bool Close(ByteBuf value) { ++Closes; return true; }
     }
 
@@ -87,13 +93,16 @@ public class ByteBufIterationDispatchTest
     }
 
     private static int Scan(ByteBuf buffer, int operation, Func<byte, bool> processor,
-        int index = 2, int length = 4) => operation switch
+        int index = 2, int length = 4)
+    {
+        return operation switch
     {
         0 => buffer.ForEachByte(processor),
         1 => buffer.ForEachByte(index, length, processor),
         2 => buffer.ForEachByteDesc(processor),
         _ => buffer.ForEachByteDesc(index, length, processor)
     };
+    }
 
     [Theory]
     [MemberData(nameof(Cases))]
@@ -160,18 +169,42 @@ public class ByteBufIterationDispatchTest
 
     private sealed class ObservedHeap(Observation observation) : UnpooledHeapByteBuf(8, 8)
     {
-        public override int ForEachByte(Func<byte, bool> processor) => observation.Visit(0, processor);
-        public override int ForEachByte(int index, int length, Func<byte, bool> processor) => observation.Visit(1, processor, index, length);
-        public override int ForEachByteDesc(Func<byte, bool> processor) => observation.Visit(2, processor);
-        public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor) => observation.Visit(3, processor, index, length);
+        public override int ForEachByte(Func<byte, bool> processor)
+        {
+            return observation.Visit(0, processor);
+        }
+        public override int ForEachByte(int index, int length, Func<byte, bool> processor)
+        {
+            return observation.Visit(1, processor, index, length);
+        }
+        public override int ForEachByteDesc(Func<byte, bool> processor)
+        {
+            return observation.Visit(2, processor);
+        }
+        public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
+        {
+            return observation.Visit(3, processor, index, length);
+        }
     }
 
     private sealed class ObservedComposite(Observation observation) : CompositeByteBuf
     {
-        public override int ForEachByte(Func<byte, bool> processor) => observation.Visit(0, processor);
-        public override int ForEachByte(int index, int length, Func<byte, bool> processor) => observation.Visit(1, processor, index, length);
-        public override int ForEachByteDesc(Func<byte, bool> processor) => observation.Visit(2, processor);
-        public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor) => observation.Visit(3, processor, index, length);
+        public override int ForEachByte(Func<byte, bool> processor)
+        {
+            return observation.Visit(0, processor);
+        }
+        public override int ForEachByte(int index, int length, Func<byte, bool> processor)
+        {
+            return observation.Visit(1, processor, index, length);
+        }
+        public override int ForEachByteDesc(Func<byte, bool> processor)
+        {
+            return observation.Visit(2, processor);
+        }
+        public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
+        {
+            return observation.Visit(3, processor, index, length);
+        }
     }
 
     [Theory]

@@ -39,9 +39,15 @@ internal abstract class PooledByteBuf : AbstractReferenceCountedByteBuf
         _length = initialCapacity;
     }
 
-    public override IByteBufAllocator Alloc() => _arena.Parent;
+    public override IByteBufAllocator Alloc()
+    {
+        return _arena.Parent;
+    }
     public override bool IsContiguous => true;
-    public override ByteBuf RetainedSlice() => RetainedSlice(ReaderIndex, ReadableBytes);
+    public override ByteBuf RetainedSlice()
+    {
+        return RetainedSlice(ReaderIndex, ReadableBytes);
+    }
     public override ByteBuf RetainedSlice(int index, int length)
     {
         CheckIndex(index, length);
@@ -56,7 +62,9 @@ internal abstract class PooledByteBuf : AbstractReferenceCountedByteBuf
         => Math.Min(_allocation?.ReservedLength ?? _length, MaxCapacity) - WriterIndex;
 
     protected override Memory<byte> GetMemoryCore(int index, int length)
-        => _allocation.Memory.Slice(_allocation.Offset + index, length);
+    {
+        return _allocation.Memory.Slice(_allocation.Offset + index, length);
+    }
 
     internal override BufferMemoryLease AcquireReadLease()
     {
@@ -134,9 +142,11 @@ internal abstract class PooledByteBuf : AbstractReferenceCountedByteBuf
     }
 
     private BufferAllocatorEventSource.Snapshot? CaptureEvent(System.Diagnostics.Tracing.EventKeywords keyword)
-        => BufferAllocatorEventSource.Log.Capture(this, keyword,
+    {
+        return BufferAllocatorEventSource.Log.Capture(this, keyword,
             IsDirect ? _allocation.Memory.Slice(_allocation.Offset, _length) : default,
             _allocation.IsPooled, _allocation.FromThreadCache);
+    }
 
     protected override void Deallocate()
     {

@@ -121,9 +121,15 @@ public sealed class NativeMemoryOwner : IMemoryOwner<byte>
         GC.SuppressFinalize(this);
     }
 
-    ~NativeMemoryOwner() => Dispose();
+    ~NativeMemoryOwner()
+    {
+        Dispose();
+    }
 
-    private void ThrowIfDisposed() => ObjectDisposedException.ThrowIf(_disposed, this);
+    private void ThrowIfDisposed()
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+    }
 
     internal Span<byte> GetSpan()
     {
@@ -131,7 +137,10 @@ public sealed class NativeMemoryOwner : IMemoryOwner<byte>
         return _storage.AsSpan(0, Length);
     }
 
-    internal void TakeReservation() => _hasReservation = true;
+    internal void TakeReservation()
+    {
+        _hasReservation = true;
+    }
 
     internal void EnsureReallocatable()
     {
@@ -172,7 +181,10 @@ public sealed class NativeMemoryOwner : IMemoryOwner<byte>
             GC.SuppressFinalize(this);
         }
 
-        ~StorageLease() => Dispose();
+        ~StorageLease()
+        {
+            Dispose();
+        }
     }
 
     private sealed class NativeMemoryManager(NativeMemoryOwner owner) : MemoryManager<byte>
@@ -207,7 +219,13 @@ public sealed class NativeMemoryOwner : IMemoryOwner<byte>
             }
         }
 
-        public override void Unpin() => throw new NotSupportedException("Dispose the returned MemoryHandle.");
-        protected override void Dispose(bool disposing) => owner.Dispose();
+        public override void Unpin()
+        {
+            throw new NotSupportedException("Dispose the returned MemoryHandle.");
+        }
+        protected override void Dispose(bool disposing)
+        {
+            owner.Dispose();
+        }
     }
 }

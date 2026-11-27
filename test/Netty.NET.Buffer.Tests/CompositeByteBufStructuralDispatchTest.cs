@@ -27,15 +27,21 @@ public class CompositeByteBufStructuralDispatchTest
         public readonly IByteBufAllocator Allocator;
         private readonly List<ByteBuf> _buffers = [];
         public Storage(bool pooled, bool direct)
-            => Allocator = pooled
+        {
+            Allocator = pooled
                 ? new PooledByteBufAllocator(direct, maxOrder: 1, smallCacheSize: 0,
                     normalCacheSize: 0, nativeAllocator: Native)
                 : new UnpooledByteBufAllocator(direct, Native);
+        }
         public T Own<T>(T buffer) where T : ByteBuf { _buffers.Add(buffer); return buffer; }
         public ByteBuf Data(params byte[] bytes)
-            => Own(Allocator.Buffer(bytes.Length, bytes.Length).WriteBytes(bytes));
+        {
+            return Own(Allocator.Buffer(bytes.Length, bytes.Length).WriteBytes(bytes));
+        }
         public Trap Composite(bool direct, int maximum)
-            => Own(new Trap(Allocator, direct, maximum));
+        {
+            return Own(new Trap(Allocator, direct, maximum));
+        }
         public void Dispose()
         {
             // Composites own their inserted sources; rejected inputs remain caller-owned.
@@ -105,7 +111,9 @@ public class CompositeByteBufStructuralDispatchTest
         public ConstructorTrap(IByteBufAllocator allocator, bool direct, IEnumerable<ByteBuf> buffers)
             : base(allocator, direct, 4, buffers) { }
         public override CompositeByteBuf AddComponents(int index, IEnumerable<ByteBuf> buffers, bool increaseWriterIndex = false)
-            => throw new InvalidOperationException("Virtual batch call before derived construction completed.");
+        {
+            throw new InvalidOperationException("Virtual batch call before derived construction completed.");
+        }
     }
 
     public static IEnumerable<object[]> Providers()

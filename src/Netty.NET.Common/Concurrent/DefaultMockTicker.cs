@@ -40,7 +40,10 @@ public sealed class DefaultMockTicker : MockTicker
     private sealed class Sleeper
     {
         internal readonly LinkedListNode<Sleeper> Tick;
-        internal Sleeper() => Tick = new LinkedListNode<Sleeper>(this);
+        internal Sleeper()
+        {
+            Tick = new LinkedListNode<Sleeper>(this);
+        }
     }
 
     public DefaultMockTicker()

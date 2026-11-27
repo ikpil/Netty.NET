@@ -22,7 +22,10 @@ namespace Netty.NET.Buffer.Tests;
  */
 public class DuplicatedByteBufTest : AbstractContiguousByteBufTest
 {
-    public DuplicatedByteBufTest() => Init(new UnpooledByteBufAllocator(false, Native));
+    public DuplicatedByteBufTest()
+    {
+        Init(new UnpooledByteBufAllocator(false, Native));
+    }
 
     protected override ByteBuf NewBuffer(int length, int maxCapacity)
     {
@@ -38,7 +41,10 @@ public class DuplicatedByteBufTest : AbstractContiguousByteBufTest
     // CLR: the inherited AbstractByteBufTest.testMaxFastWritableBytes is declared per finite-capacity
     // fixture in this port (see BigEndianHeapByteBufTest); the original runs it on the duplicate too.
     [Fact]
-    public void TestMaxFastWritableBytes() => AssertOriginalMaxFastWritableBytes();
+    public void TestMaxFastWritableBytes()
+    {
+        AssertOriginalMaxFastWritableBytes();
+    }
 
     [Fact]
     public void TestIsContiguous()

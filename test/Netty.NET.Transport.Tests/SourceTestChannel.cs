@@ -23,11 +23,26 @@ namespace Netty.NET.Transport.Tests;
 
 internal sealed class SourceTestChannel : AbstractChannel
 {
-    internal SourceTestChannel() : base(null, new ChannelMetadata(false)) => SetActive(true);
-    protected override EndPoint LocalAddress0() => null;
-    protected override EndPoint RemoteAddress0() => null;
-    protected override IChannelConfig NewConfig() => new TestConfig(this);
-    protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token) => Task.CompletedTask;
+    internal SourceTestChannel() : base(null, new ChannelMetadata(false))
+    {
+        SetActive(true);
+    }
+    protected override EndPoint LocalAddress0()
+    {
+        return null;
+    }
+    protected override EndPoint RemoteAddress0()
+    {
+        return null;
+    }
+    protected override IChannelConfig NewConfig()
+    {
+        return new TestConfig(this);
+    }
+    protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token)
+    {
+        return Task.CompletedTask;
+    }
     protected override Task DoBindAsync(EndPoint address, CancellationToken token)
     {
         // NOOP
@@ -45,6 +60,9 @@ internal sealed class SourceTestChannel : AbstractChannel
     }
     private sealed class TestConfig(IChannel channel) : DefaultChannelConfig(channel)
     {
-        protected override bool SetValue(ChannelOption option, object value) => throw new NotSupportedException("Unsupported channel option: " + option);
+        protected override bool SetValue(ChannelOption option, object value)
+        {
+            throw new NotSupportedException("Unsupported channel option: " + option);
+        }
     }
 }

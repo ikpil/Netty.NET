@@ -114,23 +114,43 @@ public class AbstractScheduledEventExecutorTest
     }
 
     [Fact]
-    public void TestDeadlineNanosNotOverflow() =>
+    public void TestDeadlineNanosNotOverflow()
+    {
         Assert.Equal(long.MaxValue, AbstractScheduledEventExecutor.DeadlineNanos(Ticker.SystemTicker().NanoTime(), long.MaxValue));
+    }
 
     private sealed class TestScheduledEventExecutor : AbstractScheduledEventExecutor
     {
         internal IScheduledWork Head => PeekScheduledTask();
-        public override bool IsShuttingDown() => false;
-        public override bool InEventLoop(Thread thread) => true;
+        public override bool IsShuttingDown()
+        {
+            return false;
+        }
+        public override bool InEventLoop(Thread thread)
+        {
+            return true;
+        }
         public override void Shutdown()
         {
             // NOOP
         }
-        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => throw new NotSupportedException();
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+        {
+            throw new NotSupportedException();
+        }
         public override Task TerminationFuture => throw new NotSupportedException();
-        public override bool IsShutdown() => false;
-        public override bool IsTerminated() => false;
-        public override bool AwaitTermination(TimeSpan timeout) => false;
+        public override bool IsShutdown()
+        {
+            return false;
+        }
+        public override bool IsTerminated()
+        {
+            return false;
+        }
+        public override bool AwaitTermination(TimeSpan timeout)
+        {
+            return false;
+        }
         public override void Execute(Action command)
         {
             ArgumentNullException.ThrowIfNull(command);

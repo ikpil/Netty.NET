@@ -64,14 +64,25 @@ public class PipelineHandlerAdmissionContractTest
         internal int Errors;
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         { ctx.Pipeline.Remove(this); throw failure; }
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => Errors++;
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            Errors++;
+        }
     }
     private sealed class CaptureFailure : ChannelInboundHandlerAdapter
-    { internal Exception Cause; public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => Cause = cause; }
+    { internal Exception Cause;
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            Cause = cause;
+        }
+    }
     private sealed class AdmissionHandler(TaskCompletionSource handlerAdded, TaskCompletionSource received) : ChannelInboundHandlerAdapter
     {
         internal int Events;
-        public override void HandlerAdded(IChannelHandlerContext ctx) => handlerAdded.TrySetResult();
+        public override void HandlerAdded(IChannelHandlerContext ctx)
+        {
+            handlerAdded.TrySetResult();
+        }
         public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
         { Interlocked.Increment(ref Events); received.TrySetResult(); }
     }
@@ -80,18 +91,39 @@ public class PipelineHandlerAdmissionContractTest
         private readonly UnorderedThreadPoolEventExecutor _pool = new(2);
         private Action _addition;
         private int _submissions;
-        public override bool InEventLoop(Thread thread) => _pool.InEventLoop(thread);
+        public override bool InEventLoop(Thread thread)
+        {
+            return _pool.InEventLoop(thread);
+        }
         public override void Execute(Action task)
         { if (Interlocked.Increment(ref _submissions) == 1) _addition = task; else _pool.Execute(task); }
         internal void ReleaseAddition()
         { var task = Interlocked.Exchange(ref _addition, null); if (task != null) _pool.Execute(task); }
-        public override bool IsShuttingDown() => _pool.IsShuttingDown();
-        public override bool IsShutdown() => _pool.IsShutdown();
-        public override bool IsTerminated() => _pool.IsTerminated();
+        public override bool IsShuttingDown()
+        {
+            return _pool.IsShuttingDown();
+        }
+        public override bool IsShutdown()
+        {
+            return _pool.IsShutdown();
+        }
+        public override bool IsTerminated()
+        {
+            return _pool.IsTerminated();
+        }
         public override Task TerminationFuture => _pool.TerminationFuture;
-        public override bool AwaitTermination(TimeSpan timeout) => _pool.AwaitTermination(timeout);
-        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => _pool.ShutdownGracefullyAsync(quietPeriod, timeout);
+        public override bool AwaitTermination(TimeSpan timeout)
+        {
+            return _pool.AwaitTermination(timeout);
+        }
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+        {
+            return _pool.ShutdownGracefullyAsync(quietPeriod, timeout);
+        }
         [Obsolete]
-        public override void Shutdown() => _pool.Shutdown();
+        public override void Shutdown()
+        {
+            _pool.Shutdown();
+        }
     }
 }

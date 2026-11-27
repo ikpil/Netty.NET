@@ -41,21 +41,30 @@ public class DefaultByteBufHolder : IByteBufHolder
      * <p>
      * This method calls {@code replace(content().copy())} by default.
      */
-    public virtual IByteBufHolder Copy() => Replace(_data.Copy());
+    public virtual IByteBufHolder Copy()
+    {
+        return Replace(_data.Copy());
+    }
 
     /**
      * {@inheritDoc}
      * <p>
      * This method calls {@code replace(content().duplicate())} by default.
      */
-    public virtual IByteBufHolder Duplicate() => Replace(_data.Duplicate());
+    public virtual IByteBufHolder Duplicate()
+    {
+        return Replace(_data.Duplicate());
+    }
 
     /**
      * {@inheritDoc}
      * <p>
      * This method calls {@code replace(content().retainedDuplicate())} by default.
      */
-    public virtual IByteBufHolder RetainedDuplicate() => Replace(_data.RetainedDuplicate());
+    public virtual IByteBufHolder RetainedDuplicate()
+    {
+        return Replace(_data.RetainedDuplicate());
+    }
 
     /**
      * {@inheritDoc}
@@ -64,7 +73,10 @@ public class DefaultByteBufHolder : IByteBufHolder
      * {@code content}. The default implementation of {@link #copy()}, {@link #duplicate()} and
      * {@link #retainedDuplicate()} invokes this method to create a copy.
      */
-    public virtual IByteBufHolder Replace(ByteBuf content) => new DefaultByteBufHolder(content);
+    public virtual IByteBufHolder Replace(ByteBuf content)
+    {
+        return new DefaultByteBufHolder(content);
+    }
 
     public virtual int RefCnt => _data.RefCnt;
 
@@ -92,21 +104,45 @@ public class DefaultByteBufHolder : IByteBufHolder
         return this;
     }
 
-    public virtual bool Release() => _data.Release();
-    public virtual bool Release(int decrement) => _data.Release(decrement);
+    public virtual bool Release()
+    {
+        return _data.Release();
+    }
+    public virtual bool Release(int decrement)
+    {
+        return _data.Release(decrement);
+    }
 
-    IReferenceCounted IReferenceCounted.Retain() => Retain();
-    IReferenceCounted IReferenceCounted.Retain(int increment) => Retain(increment);
-    IReferenceCounted IReferenceCounted.Touch() => Touch();
-    IReferenceCounted IReferenceCounted.Touch(object hint) => Touch(hint);
+    IReferenceCounted IReferenceCounted.Retain()
+    {
+        return Retain();
+    }
+    IReferenceCounted IReferenceCounted.Retain(int increment)
+    {
+        return Retain(increment);
+    }
+    IReferenceCounted IReferenceCounted.Touch()
+    {
+        return Touch();
+    }
+    IReferenceCounted IReferenceCounted.Touch(object hint)
+    {
+        return Touch(hint);
+    }
 
     /**
      * Return {@link ByteBuf#toString()} without checking the reference count first. This is useful to implement
      * {@link #toString()}.
      */
-    protected string ContentToString() => _data.ToString();
+    protected string ContentToString()
+    {
+        return _data.ToString();
+    }
 
-    public override string ToString() => StringUtil.SimpleClassName(this) + '(' + ContentToString() + ')';
+    public override string ToString()
+    {
+        return StringUtil.SimpleClassName(this) + '(' + ContentToString() + ')';
+    }
 
     /**
      * This implementation of the {@code equals} operation is restricted to
@@ -125,5 +161,8 @@ public class DefaultByteBufHolder : IByteBufHolder
         return obj is not null && GetType() == obj.GetType() && _data.Equals(((DefaultByteBufHolder)obj)._data);
     }
 
-    public override int GetHashCode() => _data.GetHashCode();
+    public override int GetHashCode()
+    {
+        return _data.GetHashCode();
+    }
 }

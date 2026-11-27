@@ -30,7 +30,10 @@ public sealed class AppendableCharSequence : ICharSequence
 
     /// <summary>Returns a synchronous borrowed view of the current logical characters.</summary>
     /// <remarks>Consume before append, reset or setLength; the view does not track later length or buffer changes.</remarks>
-    public ReadOnlySpan<char> AsSpan() => chars.AsSpan(0, pos);
+    public ReadOnlySpan<char> AsSpan()
+    {
+        return chars.AsSpan(0, pos);
+    }
 
     public AppendableCharSequence(int length)
     {

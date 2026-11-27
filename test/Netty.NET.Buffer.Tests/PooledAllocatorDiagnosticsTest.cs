@@ -28,7 +28,10 @@ namespace Netty.NET.Buffer.Tests;
 
 public class PooledAllocatorDiagnosticsTest
 {
-    private static string Normalize(string text) => Regex.Replace(text, @"Chunk\([0-9a-f]+:", "Chunk(<id>:");
+    private static string Normalize(string text)
+    {
+        return Regex.Replace(text, @"Chunk\([0-9a-f]+:", "Chunk(<id>:");
+    }
     private static readonly string[] Labels = ["0~25%", "0~50%", "25~75%", "50~100%", "75~100%", "100%"];
     private static string Model(PooledByteBufAllocator allocator)
     {

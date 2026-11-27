@@ -161,6 +161,9 @@ public interface IEventExecutorGroup : IExecutor
      *
      * @return The ticker for this scheduler
      */
-    Ticker Ticker() => global::Netty.NET.Common.Concurrent.Ticker.SystemTicker();
+    Ticker Ticker()
+    {
+        return global::Netty.NET.Common.Concurrent.Ticker.SystemTicker();
+    }
 
 }

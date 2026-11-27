@@ -103,7 +103,9 @@ public class DuplicatedByteBufFactoryTest
     [Fact]
     public void ShouldNotAllowNullInConstructor()
         // CLR: ArgumentNullException replaces NullPointerException.
-        => Assert.Throws<ArgumentNullException>(() => new ByteBufView(null));
+    {
+        Assert.Throws<ArgumentNullException>(() => new ByteBufView(null));
+    }
 
     // See https://github.com/netty/netty/issues/1800
     [Theory]
@@ -169,62 +171,86 @@ public class DuplicatedByteBufFactoryTest
     [Theory]
     [MemberData(nameof(Factories))]
     public void TestRetainedDuplicateReleaseOriginal1(int provider, bool factoryRetained)
-        => TestDuplicateReleaseOriginal(provider, factoryRetained, true, true);
+    {
+        TestDuplicateReleaseOriginal(provider, factoryRetained, true, true);
+    }
 
     [Theory]
     [MemberData(nameof(Factories))]
     public void TestRetainedDuplicateReleaseOriginal2(int provider, bool factoryRetained)
-        => TestDuplicateReleaseOriginal(provider, factoryRetained, true, false);
+    {
+        TestDuplicateReleaseOriginal(provider, factoryRetained, true, false);
+    }
 
     [Theory]
     [MemberData(nameof(Factories))]
     public void TestRetainedDuplicateReleaseOriginal3(int provider, bool factoryRetained)
-        => TestDuplicateReleaseOriginal(provider, factoryRetained, false, true);
+    {
+        TestDuplicateReleaseOriginal(provider, factoryRetained, false, true);
+    }
 
     [Theory]
     [MemberData(nameof(Factories))]
     public void TestRetainedDuplicateReleaseOriginal4(int provider, bool factoryRetained)
-        => TestDuplicateReleaseOriginal(provider, factoryRetained, false, false);
+    {
+        TestDuplicateReleaseOriginal(provider, factoryRetained, false, false);
+    }
 
     [Theory]
     [MemberData(nameof(Factories))]
     public void TestMultipleRetainedDuplicateReleaseOriginal1(int provider, bool factoryRetained)
-        => TestMultipleRetainedDuplicateReleaseOriginal(provider, factoryRetained, true, true);
+    {
+        TestMultipleRetainedDuplicateReleaseOriginal(provider, factoryRetained, true, true);
+    }
 
     [Theory]
     [MemberData(nameof(Factories))]
     public void TestMultipleRetainedDuplicateReleaseOriginal2(int provider, bool factoryRetained)
-        => TestMultipleRetainedDuplicateReleaseOriginal(provider, factoryRetained, true, false);
+    {
+        TestMultipleRetainedDuplicateReleaseOriginal(provider, factoryRetained, true, false);
+    }
 
     [Theory]
     [MemberData(nameof(Factories))]
     public void TestMultipleRetainedDuplicateReleaseOriginal3(int provider, bool factoryRetained)
-        => TestMultipleRetainedDuplicateReleaseOriginal(provider, factoryRetained, false, true);
+    {
+        TestMultipleRetainedDuplicateReleaseOriginal(provider, factoryRetained, false, true);
+    }
 
     [Theory]
     [MemberData(nameof(Factories))]
     public void TestMultipleRetainedDuplicateReleaseOriginal4(int provider, bool factoryRetained)
-        => TestMultipleRetainedDuplicateReleaseOriginal(provider, factoryRetained, false, false);
+    {
+        TestMultipleRetainedDuplicateReleaseOriginal(provider, factoryRetained, false, false);
+    }
 
     [Theory]
     [MemberData(nameof(Factories))]
     public void TestRetainedDuplicateContents(int provider, bool factoryRetained)
-        => TestDuplicateContents0(provider, factoryRetained, true);
+    {
+        TestDuplicateContents0(provider, factoryRetained, true);
+    }
 
     [Theory]
     [MemberData(nameof(Factories))]
     public void TestDuplicateContents(int provider, bool factoryRetained)
-        => TestDuplicateContents0(provider, factoryRetained, false);
+    {
+        TestDuplicateContents0(provider, factoryRetained, false);
+    }
 
     [Theory]
     [MemberData(nameof(Factories))]
     public void TestDuplicateCapacityChange(int provider, bool factoryRetained)
-        => TestDuplicateCapacityChange0(provider, factoryRetained, false);
+    {
+        TestDuplicateCapacityChange0(provider, factoryRetained, false);
+    }
 
     [Theory]
     [MemberData(nameof(Factories))]
     public void TestRetainedDuplicateCapacityChange(int provider, bool factoryRetained)
-        => TestDuplicateCapacityChange0(provider, factoryRetained, true);
+    {
+        TestDuplicateCapacityChange0(provider, factoryRetained, true);
+    }
 
     // CLR: xUnit1024 forbids overloading the TestDuplicateCapacityChange test name.
     private static void TestDuplicateCapacityChange0(int provider, bool factoryRetained, bool retainedDuplicate)

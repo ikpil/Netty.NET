@@ -259,16 +259,28 @@ public class ByteBufTextValidationTest
 
     private sealed class FaultingEncoding : UTF8Encoding
     {
-        public override Decoder GetDecoder() => throw new InvalidOperationException("Decoder creation failed.");
+        public override Decoder GetDecoder()
+        {
+            throw new InvalidOperationException("Decoder creation failed.");
+        }
     }
     private sealed class StalledEncoding : UTF8Encoding
     {
-        public override Decoder GetDecoder() => new StalledDecoder();
+        public override Decoder GetDecoder()
+        {
+            return new StalledDecoder();
+        }
     }
     private sealed class StalledDecoder : Decoder
     {
-        public override int GetCharCount(byte[] bytes, int index, int count) => throw new NotSupportedException();
-        public override int GetChars(byte[] bytes, int byteIndex, int byteCount, char[] chars, int charIndex) => throw new NotSupportedException();
+        public override int GetCharCount(byte[] bytes, int index, int count)
+        {
+            throw new NotSupportedException();
+        }
+        public override int GetChars(byte[] bytes, int byteIndex, int byteCount, char[] chars, int charIndex)
+        {
+            throw new NotSupportedException();
+        }
         public override void Convert(ReadOnlySpan<byte> bytes, Span<char> chars, bool flush, out int bytesUsed, out int charsUsed, out bool completed)
         { bytesUsed = charsUsed = 0; completed = false; }
     }

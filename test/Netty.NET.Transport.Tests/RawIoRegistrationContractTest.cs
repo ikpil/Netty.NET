@@ -134,7 +134,10 @@ public class RawIoRegistrationContractTest
         internal readonly List<int> Payloads = new();
         internal bool FailClose;
 
-        public Socket SelectableChannel() => socket;
+        public Socket SelectableChannel()
+        {
+            return socket;
+        }
 
         public void Registered()
         {

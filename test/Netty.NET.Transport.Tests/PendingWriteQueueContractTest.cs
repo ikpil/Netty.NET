@@ -187,6 +187,9 @@ public class PendingWriteQueueContractTest
     private sealed class QueueHandler : ChannelOutboundHandlerAdapter
     {
         internal PendingWriteQueue Queue;
-        public override void HandlerAdded(IChannelHandlerContext ctx) => Queue = new PendingWriteQueue(ctx);
+        public override void HandlerAdded(IChannelHandlerContext ctx)
+        {
+            Queue = new PendingWriteQueue(ctx);
+        }
     }
 }

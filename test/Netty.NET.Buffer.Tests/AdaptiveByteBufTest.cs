@@ -38,8 +38,13 @@ public class AdaptiveByteBufTest
             foreach (bool lowMemory in new[] { false, true }) yield return [direct, lowMemory];
     }
     private static AdaptiveByteBuf Buffer(AdaptiveBufferTestAllocator allocator, bool direct, int capacity, int max)
-        => (AdaptiveByteBuf)(direct ? allocator.DirectBuffer(capacity, max) : allocator.HeapBuffer(capacity, max));
-    private static byte[] Pattern(int count) => Enumerable.Range(0, count).Select(i => (byte)(i % 251)).ToArray();
+    {
+        return (AdaptiveByteBuf)(direct ? allocator.DirectBuffer(capacity, max) : allocator.HeapBuffer(capacity, max));
+    }
+    private static byte[] Pattern(int count)
+    {
+        return Enumerable.Range(0, count).Select(i => (byte)(i % 251)).ToArray();
+    }
 
     [Theory]
     [MemberData(nameof(Configurations))]
@@ -392,18 +397,39 @@ public class AdaptiveByteBufTest
         private readonly byte[] _array = new byte[length];
         internal bool Fail;
         internal bool Disposed;
-        public override Span<byte> GetSpan() => Fail ? throw new InvalidOperationException("injected copy failure") : _array;
-        public override MemoryHandle Pin(int elementIndex = 0) => throw new NotSupportedException();
-        public override void Unpin() => throw new NotSupportedException();
-        protected override void Dispose(bool disposing) => Disposed = true;
+        public override Span<byte> GetSpan()
+        {
+            return Fail ? throw new InvalidOperationException("injected copy failure") : _array;
+        }
+        public override MemoryHandle Pin(int elementIndex = 0)
+        {
+            throw new NotSupportedException();
+        }
+        public override void Unpin()
+        {
+            throw new NotSupportedException();
+        }
+        protected override void Dispose(bool disposing)
+        {
+            Disposed = true;
+        }
     }
 
     private sealed class FaultingStorage(IByteBufAllocator allocator, FaultingMemory memory, int max) : AbstractReferenceCountedByteBuf(max)
     {
-        public override IByteBufAllocator Alloc() => allocator;
+        public override IByteBufAllocator Alloc()
+        {
+            return allocator;
+        }
         public override int Capacity { get => memory.Memory.Length; set => throw new NotSupportedException(); }
         public override bool IsDirect => false;
-        protected override Memory<byte> GetMemoryCore(int index, int length) => memory.Memory.Slice(index, length);
-        protected override void Deallocate() => ((IDisposable)memory).Dispose();
+        protected override Memory<byte> GetMemoryCore(int index, int length)
+        {
+            return memory.Memory.Slice(index, length);
+        }
+        protected override void Deallocate()
+        {
+            ((IDisposable)memory).Dispose();
+        }
     }
 }

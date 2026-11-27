@@ -202,9 +202,12 @@ internal sealed class PoolSubpage : IPoolSubpageMetric
         return -1;
     }
 
-    private long ToHandle(int bitmapIdx) => (long)_runOffset << PoolChunk.RUN_OFFSET_SHIFT |
-        (long)(_runSize >> _pageShifts) << PoolChunk.SIZE_SHIFT | 1L << PoolChunk.IS_USED_SHIFT |
-        1L << PoolChunk.IS_SUBPAGE_SHIFT | (uint)bitmapIdx;
+    private long ToHandle(int bitmapIdx)
+    {
+        return (long)_runOffset << PoolChunk.RUN_OFFSET_SHIFT |
+            (long)(_runSize >> _pageShifts) << PoolChunk.SIZE_SHIFT | 1L << PoolChunk.IS_USED_SHIFT |
+            1L << PoolChunk.IS_SUBPAGE_SHIFT | (uint)bitmapIdx;
+    }
 
     public override string ToString()
     {

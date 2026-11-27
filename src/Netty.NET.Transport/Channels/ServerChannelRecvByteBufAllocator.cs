@@ -22,7 +22,15 @@ namespace Netty.NET.Transport.Channels;
 public sealed class ServerChannelRecvByteBufAllocator : DefaultMaxMessagesRecvByteBufAllocator
 {
     public ServerChannelRecvByteBufAllocator() : base(1, true) { }
-    public override IRecvByteBufAllocator.IHandle NewHandle() => new Handle(this);
+    public override IRecvByteBufAllocator.IHandle NewHandle()
+    {
+        return new Handle(this);
+    }
     private sealed class Handle(ServerChannelRecvByteBufAllocator owner) : MaxMessageHandle(owner)
-    { public override int Guess() => 128; }
+    {
+        public override int Guess()
+        {
+            return 128;
+        }
+    }
 }

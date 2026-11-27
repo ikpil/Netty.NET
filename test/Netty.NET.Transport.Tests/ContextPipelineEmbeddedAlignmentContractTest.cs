@@ -280,7 +280,10 @@ public class ContextPipelineEmbeddedAlignmentContractTest
         internal int Accepts = accepts;
         private Thread _running;
 
-        public override bool InEventLoop(Thread thread) => ReferenceEquals(thread, _running);
+        public override bool InEventLoop(Thread thread)
+        {
+            return ReferenceEquals(thread, _running);
+        }
 
         public override void Execute(Action task)
         {
@@ -301,11 +304,26 @@ public class ContextPipelineEmbeddedAlignmentContractTest
         }
 
         public override Task TerminationFuture => Task.CompletedTask;
-        public override bool IsShuttingDown() => false;
-        public override bool IsShutdown() => false;
-        public override bool IsTerminated() => false;
-        public override bool AwaitTermination(TimeSpan timeout) => false;
-        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
+        public override bool IsShuttingDown()
+        {
+            return false;
+        }
+        public override bool IsShutdown()
+        {
+            return false;
+        }
+        public override bool IsTerminated()
+        {
+            return false;
+        }
+        public override bool AwaitTermination(TimeSpan timeout)
+        {
+            return false;
+        }
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+        {
+            return Task.CompletedTask;
+        }
 
         [Obsolete]
         public override void Shutdown()
@@ -317,24 +335,39 @@ public class ContextPipelineEmbeddedAlignmentContractTest
     {
         internal int Added, Removed;
 
-        public override void HandlerAdded(IChannelHandlerContext ctx) => Added++;
+        public override void HandlerAdded(IChannelHandlerContext ctx)
+        {
+            Added++;
+        }
 
-        public override void HandlerRemoved(IChannelHandlerContext ctx) => Removed++;
+        public override void HandlerRemoved(IChannelHandlerContext ctx)
+        {
+            Removed++;
+        }
     }
 
     private sealed class ExceptionRecorder(List<Exception> errors) : ChannelInboundHandlerAdapter
     {
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => errors.Add(cause);
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            errors.Add(cause);
+        }
     }
 
     private sealed class ReadRecorder(List<object> reads) : ChannelInboundHandlerAdapter
     {
-        public override void ChannelRead(IChannelHandlerContext ctx, object msg) => reads.Add(msg);
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            reads.Add(msg);
+        }
     }
 
     private sealed class ReadForwarder : ChannelInboundHandlerAdapter
     {
-        public override void ChannelRead(IChannelHandlerContext ctx, object msg) => ctx.FireChannelRead(msg);
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            ctx.FireChannelRead(msg);
+        }
     }
 
     private sealed class FlushCounter : ChannelOutboundHandlerAdapter
@@ -350,12 +383,18 @@ public class ContextPipelineEmbeddedAlignmentContractTest
 
     private sealed class ThrowingAddedHandler(Exception cause) : ChannelInboundHandlerAdapter
     {
-        public override void HandlerAdded(IChannelHandlerContext ctx) => throw cause;
+        public override void HandlerAdded(IChannelHandlerContext ctx)
+        {
+            throw cause;
+        }
     }
 
     private sealed class AddedHandler(Action<IChannelHandlerContext> added) : ChannelHandlerAdapter
     {
-        public override void HandlerAdded(IChannelHandlerContext ctx) => added(ctx);
+        public override void HandlerAdded(IChannelHandlerContext ctx)
+        {
+            added(ctx);
+        }
     }
 
     private sealed class DeferringWriteHandler : ChannelOutboundHandlerAdapter
@@ -384,11 +423,20 @@ public class ContextPipelineEmbeddedAlignmentContractTest
 
         public int RefCnt => 1;
 
-        public IReferenceCounted Retain() => this;
+        public IReferenceCounted Retain()
+        {
+            return this;
+        }
 
-        public IReferenceCounted Retain(int increment) => this;
+        public IReferenceCounted Retain(int increment)
+        {
+            return this;
+        }
 
-        public IReferenceCounted Touch() => this;
+        public IReferenceCounted Touch()
+        {
+            return this;
+        }
 
         public IReferenceCounted Touch(object hint)
         {
@@ -396,9 +444,15 @@ public class ContextPipelineEmbeddedAlignmentContractTest
             return this;
         }
 
-        public bool Release() => false;
+        public bool Release()
+        {
+            return false;
+        }
 
-        public bool Release(int decrement) => false;
+        public bool Release(int decrement)
+        {
+            return false;
+        }
     }
 }
 #pragma warning restore xUnit1051

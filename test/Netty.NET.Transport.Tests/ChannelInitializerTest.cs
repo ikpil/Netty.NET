@@ -39,12 +39,24 @@ public class ChannelInitializerTest : IAsyncLifetime
         _server = new ServerBootstrap().Group(_group).Channel<LocalServerChannel>().LocalAddress(SERVER_ADDRESS);
         _client = new Bootstrap().Group(_group).Channel<LocalChannel>().Handler(new ChannelInboundHandlerAdapter());
     }
-    public ValueTask InitializeAsync() => ValueTask.CompletedTask;
-    public async ValueTask DisposeAsync() => await _group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromMilliseconds(TIMEOUT_MILLIS));
+    public ValueTask InitializeAsync()
+    {
+        return ValueTask.CompletedTask;
+    }
+    public async ValueTask DisposeAsync()
+    {
+        await _group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromMilliseconds(TIMEOUT_MILLIS));
+    }
     [Fact]
-    public async Task TestInitChannelThrowsRegisterFirst() => await TestInitChannelThrows(true);
+    public async Task TestInitChannelThrowsRegisterFirst()
+    {
+        await TestInitChannelThrows(true);
+    }
     [Fact]
-    public async Task TestInitChannelThrowsRegisterAfter() => await TestInitChannelThrows(false);
+    public async Task TestInitChannelThrowsRegisterAfter()
+    {
+        await TestInitChannelThrows(false);
+    }
     private async Task TestInitChannelThrows(bool registerFirst)
     {
         var error = new Exception();
@@ -117,15 +129,27 @@ public class ChannelInitializerTest : IAsyncLifetime
         finally { await channel.CloseAsync(); }
     }
     [Fact(Timeout = TIMEOUT_MILLIS)]
-    public async Task FirstHandlerInPipelineShouldReceiveChannelRegisteredEvent() => await TestChannelRegisteredEventPropagation(
-        new ActionChannelInitializer<LocalChannel>(channel => channel.Pipeline.AddFirst(_testHandler)));
+    public async Task FirstHandlerInPipelineShouldReceiveChannelRegisteredEvent()
+    {
+        await TestChannelRegisteredEventPropagation(
+            new ActionChannelInitializer<LocalChannel>(channel => channel.Pipeline.AddFirst(_testHandler)));
+    }
     [Fact(Timeout = TIMEOUT_MILLIS)]
-    public async Task LastHandlerInPipelineShouldReceiveChannelRegisteredEvent() => await TestChannelRegisteredEventPropagation(
-        new ActionChannelInitializer<LocalChannel>(channel => channel.Pipeline.AddLast(_testHandler)));
+    public async Task LastHandlerInPipelineShouldReceiveChannelRegisteredEvent()
+    {
+        await TestChannelRegisteredEventPropagation(
+            new ActionChannelInitializer<LocalChannel>(channel => channel.Pipeline.AddLast(_testHandler)));
+    }
     [Fact]
-    public void TestAddFirstChannelInitializer() => TestAddChannelInitializer(true);
+    public void TestAddFirstChannelInitializer()
+    {
+        TestAddChannelInitializer(true);
+    }
     [Fact]
-    public void TestAddLastChannelInitializer() => TestAddChannelInitializer(false);
+    public void TestAddLastChannelInitializer()
+    {
+        TestAddChannelInitializer(false);
+    }
     private static void TestAddChannelInitializer(bool first)
     {
         bool called = false;
@@ -190,14 +214,25 @@ public class ChannelInitializerTest : IAsyncLifetime
         }
         Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
     }
-    private static Task CloseChannel(IChannel channel) => channel?.CloseAsync() ?? Task.CompletedTask;
+    private static Task CloseChannel(IChannel channel)
+    {
+        return channel?.CloseAsync() ?? Task.CompletedTask;
+    }
     private sealed class ThrowingInitializer(Exception error, Action<Exception> capture) : ChannelInitializer<IChannel>
     {
-        protected override void InitChannel(IChannel channel) => throw error;
+        protected override void InitChannel(IChannel channel)
+        {
+            throw error;
+        }
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) { capture(cause); base.ExceptionCaught(ctx, cause); }
     }
     private sealed class RegisteredHandler(Action callback) : ChannelInboundHandlerAdapter
-    { public override void ChannelRegistered(IChannelHandlerContext ctx) => callback(); }
+    {
+        public override void ChannelRegistered(IChannelHandlerContext ctx)
+        {
+            callback();
+        }
+    }
     private sealed class InspectableHandler : ChannelDuplexHandler
     {
         internal int ChannelRegisteredCount;
@@ -215,7 +250,10 @@ public class ChannelInitializerTest : IAsyncLifetime
             channel.Pipeline.AddAfter(context.Executor, context.Name, null, new RemovedHandler(latch));
             complete();
         }
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => capture(cause);
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            capture(cause);
+        }
     }
     private sealed class RemovedHandler(CountdownEvent latch) : ChannelInboundHandlerAdapter
     {
@@ -223,7 +261,10 @@ public class ChannelInitializerTest : IAsyncLifetime
         {
             // just drop on the floor.
         }
-        public override void HandlerRemoved(IChannelHandlerContext ctx) => latch.Signal();
+        public override void HandlerRemoved(IChannelHandlerContext ctx)
+        {
+            latch.Signal();
+        }
     }
     private sealed class AlternatingExecutor : AbstractEventExecutor, IOrderedEventExecutor
     {
@@ -237,15 +278,36 @@ public class ChannelInitializerTest : IAsyncLifetime
             // Retain the ordered marker inherited by the source DefaultEventLoop helper.
             return _worker.InEventLoop(thread) && (Interlocked.Increment(ref _calls) & 1) == 0;
         }
-        public override void Execute(Action task) => _worker.Execute(task);
-        public override bool IsShuttingDown() => false;
-        public override bool IsShutdown() => _worker.IsShutdown();
-        public override bool IsTerminated() => _worker.IsTerminated();
+        public override void Execute(Action task)
+        {
+            _worker.Execute(task);
+        }
+        public override bool IsShuttingDown()
+        {
+            return false;
+        }
+        public override bool IsShutdown()
+        {
+            return _worker.IsShutdown();
+        }
+        public override bool IsTerminated()
+        {
+            return _worker.IsTerminated();
+        }
         public override Task TerminationFuture => _worker.TerminationFuture;
-        public override bool AwaitTermination(TimeSpan timeout) => _worker.AwaitTermination(timeout);
-        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => _worker.ShutdownGracefullyAsync(quietPeriod, timeout);
+        public override bool AwaitTermination(TimeSpan timeout)
+        {
+            return _worker.AwaitTermination(timeout);
+        }
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+        {
+            return _worker.ShutdownGracefullyAsync(quietPeriod, timeout);
+        }
         [Obsolete]
-        public override void Shutdown() => _ = _worker.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
+        public override void Shutdown()
+        {
+            _ = _worker.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
+        }
     }
 }
 #pragma warning restore xUnit1051, xUnit1069

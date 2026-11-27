@@ -120,15 +120,27 @@ public class SocketTransportContractTest
             if (_bytes.Count >= size)
                 received.TrySetResult(_bytes.ToArray());
         }
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => received.TrySetException(cause);
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            received.TrySetException(cause);
+        }
     }
     private sealed class LoopbackResolverGroup : AddressResolverGroup<IPEndPoint>
     {
-        protected override IAddressResolver<IPEndPoint> NewResolver(IEventExecutor executor) => new InetSocketAddressResolver(executor, new LoopbackNameResolver(executor));
+        protected override IAddressResolver<IPEndPoint> NewResolver(IEventExecutor executor)
+        {
+            return new InetSocketAddressResolver(executor, new LoopbackNameResolver(executor));
+        }
     }
     private sealed class LoopbackNameResolver(IEventExecutor executor) : InetNameResolver(executor)
     {
-        protected override Task<IPAddress> DoResolveAsync(string host, CancellationToken token) => Task.FromResult(IPAddress.Loopback);
-        protected override Task<IReadOnlyList<IPAddress>> DoResolveAllAsync(string host, CancellationToken token) => Task.FromResult<IReadOnlyList<IPAddress>>(new[] { IPAddress.Loopback });
+        protected override Task<IPAddress> DoResolveAsync(string host, CancellationToken token)
+        {
+            return Task.FromResult(IPAddress.Loopback);
+        }
+        protected override Task<IReadOnlyList<IPAddress>> DoResolveAllAsync(string host, CancellationToken token)
+        {
+            return Task.FromResult<IReadOnlyList<IPAddress>>(new[] { IPAddress.Loopback });
+        }
     }
 }

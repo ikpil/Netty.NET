@@ -23,7 +23,10 @@ public class ExecutorProgressContractTest
             try { while (_queue.TryDequeue(out var work)) work(); }
             finally { _running = null; }
         }
-        public override bool InEventLoop(Thread thread) => thread == _running;
+        public override bool InEventLoop(Thread thread)
+        {
+            return thread == _running;
+        }
         public override void Execute(Action work)
         {
             ArgumentNullException.ThrowIfNull(work);
@@ -32,12 +35,27 @@ public class ExecutorProgressContractTest
             _queue.Enqueue(work);
         }
         public override Task TerminationFuture => Task.CompletedTask;
-        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+        {
+            return Task.CompletedTask;
+        }
         public override void Shutdown() { }
-        public override bool IsShuttingDown() => false;
-        public override bool IsShutdown() => false;
-        public override bool IsTerminated() => false;
-        public override bool AwaitTermination(TimeSpan timeout) => false;
+        public override bool IsShuttingDown()
+        {
+            return false;
+        }
+        public override bool IsShutdown()
+        {
+            return false;
+        }
+        public override bool IsTerminated()
+        {
+            return false;
+        }
+        public override bool AwaitTermination(TimeSpan timeout)
+        {
+            return false;
+        }
     }
 
     private static async Task Drain(QueuedExecutor executor, Task completion)
@@ -312,7 +330,9 @@ public class ExecutorProgressContractTest
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static WeakReference AbandonReporter(IEventExecutor executor, Task operation)
-        => new(new ExecutorProgress(executor, operation, _ => { }));
+    {
+        return new(new ExecutorProgress(executor, operation, _ => { }));
+    }
 
     [Fact]
     public void PendingOperationDoesNotRetainAnAbandonedReporter()
@@ -326,7 +346,9 @@ public class ExecutorProgressContractTest
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static Task KeepNotificationTask(QueuedExecutor executor, Task operation, Action<Task> completed)
-        => new ExecutorProgress(executor, operation, _ => { }, completed).NotificationsCompleted;
+    {
+        return new ExecutorProgress(executor, operation, _ => { }, completed).NotificationsCompleted;
+    }
 
     [Fact]
     public async Task KeepingOnlyTheNotificationTaskKeepsThePendingDispatcherAlive()

@@ -294,13 +294,24 @@ public class ByteBufUtf8RangeTest
     private sealed class FailingHeapBuffer() : UnpooledHeapByteBuf(2, 2)
     {
         protected override bool TryGetMemoryCore(int index, int length, out Memory<byte> memory)
-            => throw new InvalidOperationException("Deliberate second-component write failure.");
+        {
+            throw new InvalidOperationException("Deliberate second-component write failure.");
+        }
     }
 
     private sealed class Tracker : IResourceLeakTracker<ByteBuf>
     {
-        public void Record() => throw new InvalidOperationException("Simple writes must not record accesses.");
-        public void Record(object hint) => throw new InvalidOperationException("Simple writes must not record hints.");
-        public bool Close(ByteBuf buffer) => true;
+        public void Record()
+        {
+            throw new InvalidOperationException("Simple writes must not record accesses.");
+        }
+        public void Record(object hint)
+        {
+            throw new InvalidOperationException("Simple writes must not record hints.");
+        }
+        public bool Close(ByteBuf buffer)
+        {
+            return true;
+        }
     }
 }

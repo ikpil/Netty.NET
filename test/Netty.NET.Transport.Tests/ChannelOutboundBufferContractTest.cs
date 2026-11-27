@@ -204,13 +204,22 @@ public class ChannelOutboundBufferContractTest
 
     private sealed class Processor(Func<object, bool> process) : ChannelOutboundBuffer.IMessageProcessor
     {
-        public bool ProcessMessage(object msg) => process(msg);
+        public bool ProcessMessage(object msg)
+        {
+            return process(msg);
+        }
     }
 
     private sealed class ReleaseCallback(Action deallocated) : AbstractReferenceCounted
     {
-        protected override void Deallocate() => deallocated();
-        public override IReferenceCounted Touch(object hint) => this;
+        protected override void Deallocate()
+        {
+            deallocated();
+        }
+        public override IReferenceCounted Touch(object hint)
+        {
+            return this;
+        }
     }
 
     private sealed class WritabilityCounter(Action changed) : ChannelInboundHandlerAdapter

@@ -8,7 +8,10 @@ namespace Netty.NET.Common.Tests.Porting;
 public class EnvironmentSettingsContractTest : IDisposable
 {
     private readonly string key = "NETTY_PORT_SETTINGS_" + Guid.NewGuid().ToString("N");
-    public void Dispose() => Environment.SetEnvironmentVariable(key, null);
+    public void Dispose()
+    {
+        Environment.SetEnvironmentVariable(key, null);
+    }
 
     [Theory]
     [InlineData("en-US")]
@@ -125,5 +128,8 @@ public class EnvironmentSettingsContractTest : IDisposable
         Assert.Equal("changed", Environment.GetEnvironmentVariable(key));
     }
 
-    private void Set(string value) => Environment.SetEnvironmentVariable(key, value);
+    private void Set(string value)
+    {
+        Environment.SetEnvironmentVariable(key, value);
+    }
 }

@@ -89,6 +89,8 @@ public class SegmentedDatagramContractTest
         finally { await group.StopAsync(); }
     }
 
-    private static Bootstrap NewSender(MultiThreadIoEventLoopGroup loop, AddressFamily family) =>
-        new Bootstrap().Group(loop).ChannelFactory(() => new NioDatagramChannel(family)).Handler(new ChannelInboundHandlerAdapter());
+    private static Bootstrap NewSender(MultiThreadIoEventLoopGroup loop, AddressFamily family)
+    {
+        return new Bootstrap().Group(loop).ChannelFactory(() => new NioDatagramChannel(family)).Handler(new ChannelInboundHandlerAdapter());
+    }
 }

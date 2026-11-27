@@ -102,7 +102,10 @@ public abstract class AbstractSearchProcessorFactory : ISearchProcessorFactory
     }
 
     /// <summary>Precomputes KMP search tables from a borrowed pattern; the factory copies the bytes.</summary>
-    public static KmpSearchProcessorFactory NewKmpSearchProcessorFactory(ReadOnlySpan<byte> needle) => new(needle);
+    public static KmpSearchProcessorFactory NewKmpSearchProcessorFactory(ReadOnlySpan<byte> needle)
+    {
+        return new(needle);
+    }
 
     /**
      * Creates a {@link SearchProcessorFactory} based on Bitap string search algorithm.
@@ -127,5 +130,8 @@ public abstract class AbstractSearchProcessorFactory : ISearchProcessorFactory
     }
 
     /// <summary>Precomputes Bitap masks from a borrowed pattern of 1 through 64 bytes.</summary>
-    public static BitapSearchProcessorFactory NewBitapSearchProcessorFactory(ReadOnlySpan<byte> needle) => new(needle);
+    public static BitapSearchProcessorFactory NewBitapSearchProcessorFactory(ReadOnlySpan<byte> needle)
+    {
+        return new(needle);
+    }
 }

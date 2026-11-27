@@ -61,8 +61,14 @@ public class PooledProviderCopyTest
                 : new HeapDestination(this, observation, size, max);
             Created.Add(b); return b;
         }
-        protected override ByteBuf NewHeapBuffer(int initialCapacity, int maxCapacity) => New(false, initialCapacity, maxCapacity);
-        protected override ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity) => New(true, initialCapacity, maxCapacity);
+        protected override ByteBuf NewHeapBuffer(int initialCapacity, int maxCapacity)
+        {
+            return New(false, initialCapacity, maxCapacity);
+        }
+        protected override ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity)
+        {
+            return New(true, initialCapacity, maxCapacity);
+        }
     }
     public static IEnumerable<object[]> Cases()
     {
@@ -89,7 +95,10 @@ public class PooledProviderCopyTest
             if (view == 2) target = root.Slice(2, 9);
             if (view == 3) target = root.RetainedSlice(2, 9);
             int reader = root.ReaderIndex, writer = root.WriterIndex, claims = root.RefCnt;
-            ByteBuf Copy() => view == 1 ? target.Copy() : target.Copy(view >= 2 ? 1 : 3, 7);
+            ByteBuf Copy()
+            {
+                return view == 1 ? target.Copy() : target.Copy(view >= 2 ? 1 : 3, 7);
+            }
             if (mode != 0) Assert.Same(observation.Failure, Assert.Throws<CopyFailure>(() => Copy()));
             else result = Copy();
             ByteBuf destination = Assert.Single(allocator.Created);

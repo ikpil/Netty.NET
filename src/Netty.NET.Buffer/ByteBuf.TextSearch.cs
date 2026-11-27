@@ -35,7 +35,10 @@ public abstract partial class ByteBuf
          *         current VM
          */
     /// <summary>Decodes readable bytes using the caller's encoding and fallback policy.</summary>
-    public virtual string ToString(Encoding charset) => ToString(_readerIndex, ReadableBytes, charset);
+    public virtual string ToString(Encoding charset)
+    {
+        return ToString(_readerIndex, ReadableBytes, charset);
+    }
 
     /**
          * Decodes this buffer's sub-region into a string with the specified
@@ -229,7 +232,10 @@ public abstract partial class ByteBuf
          * @return the number of bytes between the current {@code readerIndex}
          *         and the first occurrence if found. {@code -1} otherwise.
          */
-    public virtual int BytesBefore(byte value) => BytesBefore(_readerIndex, ReadableBytes, value);
+    public virtual int BytesBefore(byte value)
+    {
+        return BytesBefore(_readerIndex, ReadableBytes, value);
+    }
 
     /**
          * Locates the first occurrence of the specified {@code value} in this
@@ -304,7 +310,10 @@ public abstract partial class ByteBuf
 
     // Component iteration bypasses public iteration overrides after peeling transparent/derived layers.
     // The original owner still holds the claim; no reference is transferred by this lookup.
-    internal virtual ByteBuf UnwrapIterationStorage(ref int index) => this;
+    internal virtual ByteBuf UnwrapIterationStorage(ref int index)
+    {
+        return this;
+    }
 
     internal virtual int ForEachByteAscending(int start, int end, Func<byte, bool> processor)
     {

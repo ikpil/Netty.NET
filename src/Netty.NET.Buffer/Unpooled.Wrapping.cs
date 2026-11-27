@@ -23,9 +23,15 @@ public static partial class Unpooled
 {
     /// <summary>Returns the shared empty buffer.</summary>
     // CLR: resolves the otherwise ambiguous two params overloads for an empty call.
-    public static ByteBuf WrappedBuffer() => EmptyBuffer;
+    public static ByteBuf WrappedBuffer()
+    {
+        return EmptyBuffer;
+    }
     /// <summary>Returns the shared empty buffer when no inputs are supplied.</summary>
-    public static ByteBuf WrappedBuffer(int maxNumComponents) => EmptyBuffer;
+    public static ByteBuf WrappedBuffer(int maxNumComponents)
+    {
+        return EmptyBuffer;
+    }
 
     /**
      * Creates a new big-endian buffer which wraps the sub-region of the

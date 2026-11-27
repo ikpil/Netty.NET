@@ -65,8 +65,10 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
     // (https://learn.microsoft.com/dotnet/api/system.net.sockets.socket.dualmode).
     public NioDatagramChannel() : this(DefaultFamily(), Socket.OSSupportsIPv6 && Socket.OSSupportsIPv4) { }
 
-    private static AddressFamily DefaultFamily() =>
-        Socket.OSSupportsIPv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork;
+    private static AddressFamily DefaultFamily()
+    {
+        return Socket.OSSupportsIPv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork;
+    }
     public NioDatagramChannel(AddressFamily family) : this(family, false) { }
 
     /**
@@ -166,9 +168,18 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
         try { JavaChannel().SetRawSocketOption((int)level, option, disabled); }
         catch (SocketException error) when (error.SocketErrorCode == SocketError.ProtocolOption) { }
     }
-    protected override EndPoint LocalAddress0() => Normalize(Volatile.Read(ref _linuxLocalAddress) ?? JavaChannel().LocalEndPoint);
-    protected override EndPoint RemoteAddress0() => Volatile.Read(ref _connectedAddress);
-    protected override IChannelConfig NewConfig() => new DefaultDatagramChannelConfig(this, JavaChannel());
+    protected override EndPoint LocalAddress0()
+    {
+        return Normalize(Volatile.Read(ref _linuxLocalAddress) ?? JavaChannel().LocalEndPoint);
+    }
+    protected override EndPoint RemoteAddress0()
+    {
+        return Volatile.Read(ref _connectedAddress);
+    }
+    protected override IChannelConfig NewConfig()
+    {
+        return new DefaultDatagramChannelConfig(this, JavaChannel());
+    }
     protected override Task DoBindAsync(EndPoint address, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
@@ -543,31 +554,48 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
     }
 
     public Task JoinGroupAsync(IPAddress multicastAddress, IPAddress interfaceAddress = null)
-        => ChangeIPv4MembershipAsync(multicastAddress, interfaceAddress, true);
-    public Task LeaveGroupAsync(IPAddress multicastAddress, IPAddress interfaceAddress = null)
-        => ChangeIPv4MembershipAsync(multicastAddress, interfaceAddress, false);
-    private Task ChangeIPv4MembershipAsync(IPAddress multicastAddress, IPAddress interfaceAddress, bool join) => OnLoopAsync(() =>
     {
-        ArgumentNullException.ThrowIfNull(multicastAddress);
-        if (multicastAddress.AddressFamily != AddressFamily.InterNetwork)
-            throw new NotSupportedException("Use the IPv6 interface-index or network-interface overload.");
-        NetworkInterface networkInterface = interfaceAddress == null || interfaceAddress.Equals(IPAddress.Any)
-            ? ((DefaultDatagramChannelConfig)Config).GetNetworkInterface0() : FindInterface(interfaceAddress);
-        var local = (LocalAddress as IPEndPoint)?.Address;
-        var address = networkInterface != null && (interfaceAddress == null || interfaceAddress.Equals(IPAddress.Any))
-            ? InterfaceAddress(networkInterface, AddressFamily.InterNetwork)
-            : interfaceAddress ?? (local?.AddressFamily == AddressFamily.InterNetwork ? local : IPAddress.Any);
-        address ??= IPAddress.Any;
-        networkInterface ??= FindInterface(address);
-        ChangeMembership(multicastAddress, networkInterface?.GetIPProperties().GetIPv4Properties()?.Index ?? 0, address, join);
-    });
+        return ChangeIPv4MembershipAsync(multicastAddress, interfaceAddress, true);
+    }
+    public Task LeaveGroupAsync(IPAddress multicastAddress, IPAddress interfaceAddress = null)
+    {
+        return ChangeIPv4MembershipAsync(multicastAddress, interfaceAddress, false);
+    }
+    private Task ChangeIPv4MembershipAsync(IPAddress multicastAddress, IPAddress interfaceAddress, bool join)
+    {
+        return OnLoopAsync(() =>
+        {
+            ArgumentNullException.ThrowIfNull(multicastAddress);
+            if (multicastAddress.AddressFamily != AddressFamily.InterNetwork)
+                throw new NotSupportedException("Use the IPv6 interface-index or network-interface overload.");
+            NetworkInterface networkInterface = interfaceAddress == null || interfaceAddress.Equals(IPAddress.Any)
+                ? ((DefaultDatagramChannelConfig)Config).GetNetworkInterface0() : FindInterface(interfaceAddress);
+            var local = (LocalAddress as IPEndPoint)?.Address;
+            var address = networkInterface != null && (interfaceAddress == null || interfaceAddress.Equals(IPAddress.Any))
+                ? InterfaceAddress(networkInterface, AddressFamily.InterNetwork)
+                : interfaceAddress ?? (local?.AddressFamily == AddressFamily.InterNetwork ? local : IPAddress.Any);
+            address ??= IPAddress.Any;
+            networkInterface ??= FindInterface(address);
+            ChangeMembership(multicastAddress, networkInterface?.GetIPProperties().GetIPv4Properties()?.Index ?? 0, address, join);
+        });
+    }
     // CLR: the single-address forms of DatagramChannel; this class adds an optional interface address.
-    Task IDatagramChannel.JoinGroupAsync(IPAddress multicastAddress) => JoinGroupAsync(multicastAddress, null);
-    Task IDatagramChannel.LeaveGroupAsync(IPAddress multicastAddress) => LeaveGroupAsync(multicastAddress, null);
+    Task IDatagramChannel.JoinGroupAsync(IPAddress multicastAddress)
+    {
+        return JoinGroupAsync(multicastAddress, null);
+    }
+    Task IDatagramChannel.LeaveGroupAsync(IPAddress multicastAddress)
+    {
+        return LeaveGroupAsync(multicastAddress, null);
+    }
     public Task JoinGroupAsync(IPAddress multicastAddress, long interfaceIndex)
-        => OnLoopAsync(() => ChangeMembership(multicastAddress, interfaceIndex, null, true));
+    {
+        return OnLoopAsync(() => ChangeMembership(multicastAddress, interfaceIndex, null, true));
+    }
     public Task LeaveGroupAsync(IPAddress multicastAddress, long interfaceIndex)
-        => OnLoopAsync(() => ChangeMembership(multicastAddress, interfaceIndex, null, false));
+    {
+        return OnLoopAsync(() => ChangeMembership(multicastAddress, interfaceIndex, null, false));
+    }
     public Task JoinGroupAsync(IPEndPoint multicastAddress, NetworkInterface networkInterface)
     {
         ArgumentNullException.ThrowIfNull(multicastAddress);
@@ -591,8 +619,11 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
         });
     }
 
-    private bool SupportsGroupFamily(AddressFamily family) => family == JavaChannel().AddressFamily ||
-        (_linuxDualMode && family == AddressFamily.InterNetwork);
+    private bool SupportsGroupFamily(AddressFamily family)
+    {
+        return family == JavaChannel().AddressFamily ||
+            (_linuxDualMode && family == AddressFamily.InterNetwork);
+    }
 
     private void ChangeMembership(IPAddress group, long index, IPAddress address, bool join)
     {
@@ -624,9 +655,13 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
             _memberships.Remove(key);
     }
     public Task JoinGroupAsync(IPAddress multicastAddress, NetworkInterface networkInterface, IPAddress source)
-        => ChangeSourceMembershipAsync(multicastAddress, networkInterface, source, true);
+    {
+        return ChangeSourceMembershipAsync(multicastAddress, networkInterface, source, true);
+    }
     public Task LeaveGroupAsync(IPAddress multicastAddress, NetworkInterface networkInterface, IPAddress source)
-        => ChangeSourceMembershipAsync(multicastAddress, networkInterface, source, false);
+    {
+        return ChangeSourceMembershipAsync(multicastAddress, networkInterface, source, false);
+    }
     private Task ChangeSourceMembershipAsync(IPAddress group, NetworkInterface networkInterface, IPAddress source, bool join)
     {
         ArgumentNullException.ThrowIfNull(group);
@@ -701,9 +736,11 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
     }
     // The membership key already identifies the interface. Scoped and unscoped
     // forms of the same IPv6 address identify the same membership on that interface.
-    private static IPAddress MembershipAddress(IPAddress address) =>
-        address.AddressFamily == AddressFamily.InterNetworkV6 && address.ScopeId != 0
+    private static IPAddress MembershipAddress(IPAddress address)
+    {
+        return address.AddressFamily == AddressFamily.InterNetworkV6 && address.ScopeId != 0
             ? new IPAddress(address.GetAddressBytes()) : address;
+    }
 
     private void SetSourceOption(SocketOptionName option, IPAddress group, int index, IPAddress address, IPAddress source)
     {
@@ -760,14 +797,21 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
             serialized.Buffer.Span[..serialized.Size].CopyTo(destination);
         }
     }
-    internal static NetworkInterface FindInterface(IPAddress address) => NetworkInterface.GetAllNetworkInterfaces()
-        .FirstOrDefault(n => n.GetIPProperties().UnicastAddresses.Any(a => a.Address.Equals(address)));
+    internal static NetworkInterface FindInterface(IPAddress address)
+    {
+        return NetworkInterface.GetAllNetworkInterfaces()
+            .FirstOrDefault(n => n.GetIPProperties().UnicastAddresses.Any(a => a.Address.Equals(address)));
+    }
     internal static IPAddress InterfaceAddress(NetworkInterface networkInterface, AddressFamily family)
-        => networkInterface.GetIPProperties().UnicastAddresses.FirstOrDefault(a => a.Address.AddressFamily == family)?.Address
+    {
+        return networkInterface.GetIPProperties().UnicastAddresses.FirstOrDefault(a => a.Address.AddressFamily == family)?.Address
             ?? throw new ArgumentException("The interface has no address for the socket family.", nameof(networkInterface));
+    }
     internal static int InterfaceIndex(NetworkInterface networkInterface, AddressFamily family)
-        => family == AddressFamily.InterNetworkV6 ? networkInterface.GetIPProperties().GetIPv6Properties()?.Index
+    {
+        return family == AddressFamily.InterNetworkV6 ? networkInterface.GetIPProperties().GetIPv6Properties()?.Index
             ?? throw new ArgumentException("The interface does not support IPv6.", nameof(networkInterface))
             : networkInterface.GetIPProperties().GetIPv4Properties()?.Index
             ?? throw new ArgumentException("The interface does not support IPv4.", nameof(networkInterface));
+    }
 }

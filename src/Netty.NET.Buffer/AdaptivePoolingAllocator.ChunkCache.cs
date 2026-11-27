@@ -72,7 +72,10 @@ internal sealed partial class AdaptivePoolingAllocator
 
         public abstract SizeClassedChunk PollChunk(int size);
 
-        Chunk IChunkCache.PollChunk(int size) => PollChunk(size);
+        Chunk IChunkCache.PollChunk(int size)
+        {
+            return PollChunk(size);
+        }
 
         public abstract bool OfferChunk(Chunk chunk);
 

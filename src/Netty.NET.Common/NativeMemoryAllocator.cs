@@ -118,5 +118,8 @@ public sealed class NativeMemoryAllocator
         }
     }
 
-    internal void Release(long bytes) => Interlocked.Add(ref _reservedBytes, -bytes);
+    internal void Release(long bytes)
+    {
+        Interlocked.Add(ref _reservedBytes, -bytes);
+    }
 }

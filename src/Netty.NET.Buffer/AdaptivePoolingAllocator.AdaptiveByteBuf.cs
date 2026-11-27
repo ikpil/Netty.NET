@@ -73,7 +73,10 @@ internal sealed partial class AdaptivePoolingAllocator
 
         // setBytes(...) will take care of checking the indices.
         // CLR: text/bulk operations inherit those bounds from ByteBuf, then use this bounded region.
-        protected override Memory<byte> GetMemoryCore(int index, int length) => _allocation.Memory.Slice(index, length);
+        protected override Memory<byte> GetMemoryCore(int index, int length)
+        {
+            return _allocation.Memory.Slice(index, length);
+        }
         internal override BufferMemoryLease AcquireReadLease()
         {
             EnsureAccessible();
@@ -134,7 +137,9 @@ internal sealed partial class AdaptivePoolingAllocator
         }
 
         private BufferAllocatorEventSource.Snapshot? CaptureEvent(System.Diagnostics.Tracing.EventKeywords keyword)
-            => BufferAllocatorEventSource.Log.CaptureAdaptive(this, _allocation, keyword);
+        {
+            return BufferAllocatorEventSource.Log.CaptureAdaptive(this, _allocation, keyword);
+        }
 
         protected override void Deallocate()
         {

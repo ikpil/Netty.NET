@@ -57,8 +57,10 @@ public class AllocatorLeakConstructionFailureTest
         public int Closes;
         [Obsolete]
         public override ResourceLeakDetector<T> NewResourceLeakDetector<T>(Type resource, int samplingInterval, long maxActive)
-            => typeof(T) == typeof(ByteBuf) ? (ResourceLeakDetector<T>)(object)new Detector(this, mode)
+        {
+            return typeof(T) == typeof(ByteBuf) ? (ResourceLeakDetector<T>)(object)new Detector(this, mode)
                 : new ResourceLeakDetector<T>(resource, samplingInterval);
+        }
     }
     private sealed class Detector(FailureFactory state, int mode) : ResourceLeakDetector<ByteBuf>(typeof(ByteBuf), 1)
     {
@@ -68,7 +70,10 @@ public class AllocatorLeakConstructionFailureTest
             if (mode == 0) throw state.Failure;
             return new Tracker(state);
         }
-        public override bool IsRecordEnabled() => throw state.Failure;
+        public override bool IsRecordEnabled()
+        {
+            throw state.Failure;
+        }
     }
     private sealed class Tracker(FailureFactory state) : IResourceLeakTracker<ByteBuf>
     {
@@ -98,12 +103,15 @@ public class AllocatorLeakConstructionFailureTest
             };
             try
             {
-                ByteBuf Request() => method switch
+                ByteBuf Request()
                 {
-                    0 => allocator.DirectBuffer(64, 128), 1 => allocator.HeapBuffer(64, 128),
-                    2 => allocator.CompositeHeapBuffer(2), 3 => allocator.CompositeDirectBuffer(2),
-                    4 => allocator.Buffer(64, 128), 5 => allocator.IoBuffer(64, 128), _ => allocator.CompositeBuffer(2)
-                };
+                    return method switch
+                    {
+                        0 => allocator.DirectBuffer(64, 128), 1 => allocator.HeapBuffer(64, 128),
+                        2 => allocator.CompositeHeapBuffer(2), 3 => allocator.CompositeDirectBuffer(2),
+                        4 => allocator.Buffer(64, 128), 5 => allocator.IoBuffer(64, 128), _ => allocator.CompositeBuffer(2)
+                    };
+                }
                 Assert.Same(factory.Failure, Assert.Throws<InvalidOperationException>(() => Request()));
                 Assert.NotNull(factory.Tracked); Assert.Equal(0, factory.Tracked.RefCnt);
                 Assert.Equal(mode == 0 ? 0 : 1, factory.Closes);

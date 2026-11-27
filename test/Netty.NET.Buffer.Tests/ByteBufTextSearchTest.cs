@@ -41,8 +41,10 @@ namespace Netty.NET.Buffer.Tests;
 public class ByteBufTextSearchTest
 {
     private static ByteBuf NewBuffer(bool direct, int capacity = 32, int maximum = 256)
-        => direct ? new UnpooledDirectByteBuf(capacity, maximum, new NativeMemoryAllocator())
+    {
+        return direct ? new UnpooledDirectByteBuf(capacity, maximum, new NativeMemoryAllocator())
             : Unpooled.Buffer(capacity, maximum);
+    }
 
     [Fact]
     public void SharedEmptySearchValidatesEndpointsWhileOwnedEmptyCanClamp()
@@ -214,12 +216,15 @@ public class ByteBufTextSearchTest
             for (int kind = 0; kind < 6; ++kind) yield return new object[] { direct, kind };
     }
 
-    private static Encoding Encoder(int kind) => kind switch
+    private static Encoding Encoder(int kind)
     {
-        0 => new UTF8Encoding(true, true), 1 => new UnicodeEncoding(true, true, true),
-        2 => new UnicodeEncoding(false, true, true), 3 => new UTF32Encoding(false, true, true),
-        4 => Encoding.Latin1, _ => Encoding.ASCII
-    };
+        return kind switch
+        {
+            0 => new UTF8Encoding(true, true), 1 => new UnicodeEncoding(true, true, true),
+            2 => new UnicodeEncoding(false, true, true), 3 => new UTF32Encoding(false, true, true),
+            4 => Encoding.Latin1, _ => Encoding.ASCII
+        };
+    }
 
     [Theory]
     [MemberData(nameof(TextEncodings))]

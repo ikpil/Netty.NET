@@ -319,47 +319,110 @@ public class Http3PushStreamTest : IDisposable
 
         public IChannelPipeline Pipeline => null;
 
-        public IByteBufAllocator Alloc() => null;
+        public IByteBufAllocator Alloc()
+        {
+            return null;
+        }
 
-        public IAttribute<T> Attr<T>(AttributeKey<T> key) where T : class => null;
+        public IAttribute<T> Attr<T>(AttributeKey<T> key) where T : class
+        {
+            return null;
+        }
 
-        public bool HasAttr<T>(AttributeKey<T> key) where T : class => false;
+        public bool HasAttr<T>(AttributeKey<T> key) where T : class
+        {
+            return false;
+        }
 
-        public IChannelInboundInvoker FireChannelRegistered() => null;
+        public IChannelInboundInvoker FireChannelRegistered()
+        {
+            return null;
+        }
 
-        public IChannelInboundInvoker FireChannelUnregistered() => null;
+        public IChannelInboundInvoker FireChannelUnregistered()
+        {
+            return null;
+        }
 
-        public IChannelInboundInvoker FireChannelActive() => null;
+        public IChannelInboundInvoker FireChannelActive()
+        {
+            return null;
+        }
 
-        public IChannelInboundInvoker FireChannelInactive() => null;
+        public IChannelInboundInvoker FireChannelInactive()
+        {
+            return null;
+        }
 
-        public IChannelInboundInvoker FireExceptionCaught(Exception cause) => null;
+        public IChannelInboundInvoker FireExceptionCaught(Exception cause)
+        {
+            return null;
+        }
 
-        public IChannelInboundInvoker FireUserEventTriggered(object @event) => null;
+        public IChannelInboundInvoker FireUserEventTriggered(object @event)
+        {
+            return null;
+        }
 
-        public IChannelInboundInvoker FireChannelRead(object msg) => null;
+        public IChannelInboundInvoker FireChannelRead(object msg)
+        {
+            return null;
+        }
 
-        public IChannelInboundInvoker FireChannelReadComplete() => null;
+        public IChannelInboundInvoker FireChannelReadComplete()
+        {
+            return null;
+        }
 
-        public IChannelInboundInvoker FireChannelWritabilityChanged() => null;
+        public IChannelInboundInvoker FireChannelWritabilityChanged()
+        {
+            return null;
+        }
 
-        public Task BindAsync(EndPoint localAddress, CancellationToken cancellationToken = default) => null;
+        public Task BindAsync(EndPoint localAddress, CancellationToken cancellationToken = default)
+        {
+            return null;
+        }
 
         public Task ConnectAsync(EndPoint remoteAddress, EndPoint localAddress = null,
-                                 CancellationToken cancellationToken = default) => null;
+                                 CancellationToken cancellationToken = default)
+        {
+            return null;
+        }
 
-        public Task DisconnectAsync(CancellationToken cancellationToken = default) => null;
+        public Task DisconnectAsync(CancellationToken cancellationToken = default)
+        {
+            return null;
+        }
 
-        public Task CloseAsync(CancellationToken cancellationToken = default) => null;
+        public Task CloseAsync(CancellationToken cancellationToken = default)
+        {
+            return null;
+        }
 
-        public Task DeregisterAsync(CancellationToken cancellationToken = default) => null;
+        public Task DeregisterAsync(CancellationToken cancellationToken = default)
+        {
+            return null;
+        }
 
-        public Task WriteAsync(object msg, CancellationToken cancellationToken = default) => null;
+        public Task WriteAsync(object msg, CancellationToken cancellationToken = default)
+        {
+            return null;
+        }
 
-        public Task WriteAndFlushAsync(object msg, CancellationToken cancellationToken = default) => null;
+        public Task WriteAndFlushAsync(object msg, CancellationToken cancellationToken = default)
+        {
+            return null;
+        }
 
-        public IChannelOutboundInvoker Read() => null;
+        public IChannelOutboundInvoker Read()
+        {
+            return null;
+        }
 
-        public IChannelOutboundInvoker Flush() => null;
+        public IChannelOutboundInvoker Flush()
+        {
+            return null;
+        }
     }
 }

@@ -18,16 +18,24 @@ public sealed class ThreadGroup
         this.name = name ?? throw new ArgumentNullException(nameof(name));
     }
 
-    public string GetName() => name;
-    public static ThreadGroup CurrentThreadGroup() => GetThreadGroup(Thread.CurrentThread);
+    public string GetName()
+    {
+        return name;
+    }
+    public static ThreadGroup CurrentThreadGroup()
+    {
+        return GetThreadGroup(Thread.CurrentThread);
+    }
     public static ThreadGroup GetThreadGroup(Thread thread)
     {
         ArgumentNullException.ThrowIfNull(thread);
         return Groups.TryGetValue(thread, out var group) ? group : Root;
     }
 
-    internal static void Assign(Thread thread, ThreadGroup group) =>
+    internal static void Assign(Thread thread, ThreadGroup group)
+    {
         Groups.Add(thread, group ?? CurrentThreadGroup());
+    }
 
     // CLR counterpart of new Thread(group, runnable), without fast-local behavior.
     public Thread NewThread(Action runnable)

@@ -610,14 +610,17 @@ public class AsciiStringCharacterTest
 
     // Existing heterogeneous header-sequence APIs are tested through a local
     // adapter. Native construction uses string/span; this helper is not public API.
-    private static ICharSequence Seq(object value) => value switch
+    private static ICharSequence Seq(object value)
     {
-        null => null,
-        ICharSequence sequence => sequence,
-        string text => new StringCharSequence(text),
-        StringBuilder builder => new StringCharSequence(builder.ToString()),
-        _ => throw new ArgumentException("Unsupported test sequence", nameof(value))
-    };
+        return value switch
+        {
+            null => null,
+            ICharSequence sequence => sequence,
+            string text => new StringCharSequence(text),
+            StringBuilder builder => new StringCharSequence(builder.ToString()),
+            _ => throw new ArgumentException("Unsupported test sequence", nameof(value))
+        };
+    }
     [Fact]
     public void TestCachedWithAsciiString() {
         // Pure ASCII strings should reuse the original string to preserve identity

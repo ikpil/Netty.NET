@@ -154,9 +154,15 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
         return channel;
     }
 
-    protected override IChannelConfig NewConfig() => new MsQuicChannelConfig(this);
+    protected override IChannelConfig NewConfig()
+    {
+        return new MsQuicChannelConfig(this);
+    }
 
-    protected override DefaultChannelPipeline NewChannelPipeline() => new MsQuicChannelPipeline(this);
+    protected override DefaultChannelPipeline NewChannelPipeline()
+    {
+        return new MsQuicChannelPipeline(this);
+    }
 
     // The pipeline that sets up and registers a QuicStreamChannel that reaches its tail (onUnhandledInboundMessage).
     private sealed class MsQuicChannelPipeline : DefaultChannelPipeline
@@ -207,7 +213,10 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
         return (streamId & 0x2) == 0 ? QuicStreamType.BIDIRECTIONAL : QuicStreamType.UNIDIRECTIONAL;
     }
 
-    public QuicSslEngine SslEngine() => engine;
+    public QuicSslEngine SslEngine()
+    {
+        return engine;
+    }
 
     public long PeerAllowedStreams(QuicStreamType type)
     {
@@ -222,7 +231,10 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
         }
     }
 
-    public bool IsTimedOut() => timedOut;
+    public bool IsTimedOut()
+    {
+        return timedOut;
+    }
 
     public IQuicTransportParameters PeerTransportParameters()
     {
@@ -234,13 +246,25 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
 
     public override EndPoint RemoteAddress => RemoteAddress0();
 
-    protected override EndPoint LocalAddress0() => localConnectionAddress;
+    protected override EndPoint LocalAddress0()
+    {
+        return localConnectionAddress;
+    }
 
-    protected override EndPoint RemoteAddress0() => remoteConnectionAddress;
+    protected override EndPoint RemoteAddress0()
+    {
+        return remoteConnectionAddress;
+    }
 
-    public EndPoint LocalSocketAddress() => local;
+    public EndPoint LocalSocketAddress()
+    {
+        return local;
+    }
 
-    public EndPoint RemoteSocketAddress() => remote;
+    public EndPoint RemoteSocketAddress()
+    {
+        return remote;
+    }
 
     public Task<IQuicConnectionStats> CollectStatsAsync(CancellationToken cancellationToken = default)
     {

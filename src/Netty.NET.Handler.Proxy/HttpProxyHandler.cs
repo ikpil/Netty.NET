@@ -218,7 +218,10 @@ public sealed class HttpProxyHandler : ProxyHandler
     }
 
     // CLR: package access to the protected newInitialMessage(ctx) for HttpProxyHandlerTest (see the class comment).
-    internal object InvokeNewInitialMessage(IChannelHandlerContext ctx) => NewInitialMessage(ctx);
+    internal object InvokeNewInitialMessage(IChannelHandlerContext ctx)
+    {
+        return NewInitialMessage(ctx);
+    }
 
     protected override bool HandleResponse(IChannelHandlerContext ctx, object response)
     {

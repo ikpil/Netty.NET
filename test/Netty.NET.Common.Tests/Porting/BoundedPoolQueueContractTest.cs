@@ -15,7 +15,10 @@ public class BoundedPoolQueueContractTest
 
     private sealed class Pool(int capacity, bool unguarded = false) : Recycler<Item>(capacity, unguarded)
     {
-        protected override Item NewObject(IRecyclerHandle<Item> handle) => new(handle);
+        protected override Item NewObject(IRecyclerHandle<Item> handle)
+        {
+            return new(handle);
+        }
     }
 
     [Theory]

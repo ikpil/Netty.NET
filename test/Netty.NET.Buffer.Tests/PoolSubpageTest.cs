@@ -24,7 +24,9 @@ namespace Netty.NET.Buffer.Tests;
 public class PoolSubpageTest
 {
     private static SizeClasses Sizes(int shifts = 12, int order = 6, int alignment = 0)
-        => new(1 << shifts, shifts, 1 << (shifts + order), alignment);
+    {
+        return new(1 << shifts, shifts, 1 << (shifts + order), alignment);
+    }
 
     [Theory]
     [InlineData(1)]

@@ -22,18 +22,33 @@ namespace Netty.NET.Buffer.Tests;
 public abstract class AbstractContiguousByteBufTest : AbstractSingleRegionByteBufTest
 {
     [Fact]
-    public void TestCapacityEnforceMaxCapacity() => AssertOriginalCapacityEnforceMaxCapacity();
+    public void TestCapacityEnforceMaxCapacity()
+    {
+        AssertOriginalCapacityEnforceMaxCapacity();
+    }
 
     [Fact]
-    public void TestCapacityNegative() => AssertOriginalCapacityNegative();
+    public void TestCapacityNegative()
+    {
+        AssertOriginalCapacityNegative();
+    }
 
     [Fact]
-    public void TestCapacityDecrease() => AssertOriginalCapacityDecrease();
+    public void TestCapacityDecrease()
+    {
+        AssertOriginalCapacityDecrease();
+    }
 
     [Fact]
-    public void TestCapacityIncrease() => AssertOriginalCapacityIncrease();
+    public void TestCapacityIncrease()
+    {
+        AssertOriginalCapacityIncrease();
+    }
 
     [Fact]
-    public void TestMaxFastWritableBytesTracksWrittenBytes() => AssertOriginalMaxFastWritableBytesTracksWrittenBytes();
+    public void TestMaxFastWritableBytesTracksWrittenBytes()
+    {
+        AssertOriginalMaxFastWritableBytesTracksWrittenBytes();
+    }
 
 }

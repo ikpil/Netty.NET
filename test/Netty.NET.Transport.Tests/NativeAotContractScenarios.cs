@@ -132,7 +132,10 @@ internal static class NativeAotContractScenarios
 
     private class SkippedRead : ChannelInboundHandlerAdapter
     {
-        [Skip] public override void ChannelRead(IChannelHandlerContext ctx, object msg) => ctx.FireChannelRead(msg);
+        [Skip] public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            ctx.FireChannelRead(msg);
+        }
     }
     private class ActiveRead : SkippedRead
     {
@@ -169,28 +172,61 @@ internal static class NativeAotContractScenarios
     private sealed class ErrorHandler : ChannelHandlerAdapter
     {
         internal Exception Cause;
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => Cause = cause;
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            Cause = cause;
+        }
     }
     private sealed class DirectRead : IChannelInboundHandler
     {
         internal int Reads;
         public void HandlerAdded(IChannelHandlerContext ctx) { }
         public void HandlerRemoved(IChannelHandlerContext ctx) { }
-        public void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => ctx.FireExceptionCaught(cause);
-        public void ChannelRegistered(IChannelHandlerContext ctx) => ctx.FireChannelRegistered();
-        public void ChannelUnregistered(IChannelHandlerContext ctx) => ctx.FireChannelUnregistered();
-        public void ChannelActive(IChannelHandlerContext ctx) => ctx.FireChannelActive();
-        public void ChannelInactive(IChannelHandlerContext ctx) => ctx.FireChannelInactive();
+        public void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            ctx.FireExceptionCaught(cause);
+        }
+        public void ChannelRegistered(IChannelHandlerContext ctx)
+        {
+            ctx.FireChannelRegistered();
+        }
+        public void ChannelUnregistered(IChannelHandlerContext ctx)
+        {
+            ctx.FireChannelUnregistered();
+        }
+        public void ChannelActive(IChannelHandlerContext ctx)
+        {
+            ctx.FireChannelActive();
+        }
+        public void ChannelInactive(IChannelHandlerContext ctx)
+        {
+            ctx.FireChannelInactive();
+        }
         public void ChannelRead(IChannelHandlerContext ctx, object msg) { Reads++; ctx.FireChannelRead(msg); }
-        public void ChannelReadComplete(IChannelHandlerContext ctx) => ctx.FireChannelReadComplete();
-        public void UserEventTriggered(IChannelHandlerContext ctx, object evt) => ctx.FireUserEventTriggered(evt);
-        public void ChannelWritabilityChanged(IChannelHandlerContext ctx) => ctx.FireChannelWritabilityChanged();
+        public void ChannelReadComplete(IChannelHandlerContext ctx)
+        {
+            ctx.FireChannelReadComplete();
+        }
+        public void UserEventTriggered(IChannelHandlerContext ctx, object evt)
+        {
+            ctx.FireUserEventTriggered(evt);
+        }
+        public void ChannelWritabilityChanged(IChannelHandlerContext ctx)
+        {
+            ctx.FireChannelWritabilityChanged();
+        }
     }
     private sealed class DerivedSocket(Socket socket) : NioSocketChannel(socket);
     private sealed class CovariantSocket(Socket socket) : NioSocketChannel(socket)
     {
         internal bool Called;
-        protected override void DoWrite(ChannelOutboundBuffer @in) => Called = true;
-        internal void InvokeDoWrite() => DoWrite(OutboundBuffer);
+        protected override void DoWrite(ChannelOutboundBuffer @in)
+        {
+            Called = true;
+        }
+        internal void InvokeDoWrite()
+        {
+            DoWrite(OutboundBuffer);
+        }
     }
 }

@@ -46,6 +46,9 @@ public class DefaultChannelGroupTest
     }
     private sealed class ActiveHandler(DefaultChannelGroup channels) : ChannelInboundHandlerAdapter
     {
-        public override void ChannelActive(IChannelHandlerContext ctx) => channels.Add(ctx.Channel);
+        public override void ChannelActive(IChannelHandlerContext ctx)
+        {
+            channels.Add(ctx.Channel);
+        }
     }
 }

@@ -117,10 +117,22 @@ public class AsciiStringNativeMemoryContractTest
     private sealed class NonArrayMemoryOwner : MemoryManager<byte>
     {
         private byte[] _storage;
-        public NonArrayMemoryOwner(byte[] storage) => _storage = storage;
-        public override Span<byte> GetSpan() => _storage ?? throw new ObjectDisposedException(nameof(NonArrayMemoryOwner));
-        public override MemoryHandle Pin(int elementIndex = 0) => throw new NotSupportedException();
+        public NonArrayMemoryOwner(byte[] storage)
+        {
+            _storage = storage;
+        }
+        public override Span<byte> GetSpan()
+        {
+            return _storage ?? throw new ObjectDisposedException(nameof(NonArrayMemoryOwner));
+        }
+        public override MemoryHandle Pin(int elementIndex = 0)
+        {
+            throw new NotSupportedException();
+        }
         public override void Unpin() { }
-        protected override void Dispose(bool disposing) => _storage = null;
+        protected override void Dispose(bool disposing)
+        {
+            _storage = null;
+        }
     }
 }

@@ -29,14 +29,20 @@ public class PoolThreadCacheTest
 {
     private static PooledByteBufAllocator NewAllocator(int size = 4, int max = 32768, int trim = 8192,
         int arenas = 1, NativeMemoryAllocator native = null, int alignment = 0)
-        => new(false, arenas, arenas, maxOrder: 4, directMemoryCacheAlignment: alignment, nativeAllocator: native,
+    {
+        return new(false, arenas, arenas, maxOrder: 4, directMemoryCacheAlignment: alignment, nativeAllocator: native,
             smallCacheSize: size, normalCacheSize: size, maxCachedBufferCapacity: max, cacheTrimInterval: trim,
             // Like the source cache fixtures, which pass useCacheForAllThreads=true for ordinary test threads.
             useCacheForAllThreads: true);
+    }
     private static ByteBuf Allocate(PooledByteBufAllocator a, bool direct, int size)
-        => direct ? a.DirectBuffer(size) : a.HeapBuffer(size);
+    {
+        return direct ? a.DirectBuffer(size) : a.HeapBuffer(size);
+    }
     private static IPoolArenaMetric Arena(PooledByteBufAllocator a, bool direct)
-        => (direct ? a.Metric.DirectArenas : a.Metric.HeapArenas)[0];
+    {
+        return (direct ? a.Metric.DirectArenas : a.Metric.HeapArenas)[0];
+    }
 
     // Adapted from PooledByteBufAllocatorTest.testCacheWorksForNormalAllocations.
     [Theory]

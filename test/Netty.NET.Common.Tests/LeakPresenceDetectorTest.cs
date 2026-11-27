@@ -23,12 +23,20 @@ namespace Netty.NET.Common.Tests;
 public class LeakPresenceDetectorTest : IDisposable
 {
     private readonly ResourceLeakDetectorFactory oldFactory = ResourceLeakDetectorFactory.Instance();
-    private void SetUp() => ResourceLeakDetectorFactory.SetResourceLeakDetectorFactory(new Factory());
-    public void Dispose() => ResourceLeakDetectorFactory.SetResourceLeakDetectorFactory(oldFactory);
+    private void SetUp()
+    {
+        ResourceLeakDetectorFactory.SetResourceLeakDetectorFactory(new Factory());
+    }
+    public void Dispose()
+    {
+        ResourceLeakDetectorFactory.SetResourceLeakDetectorFactory(oldFactory);
+    }
     private sealed class Factory : ResourceLeakDetectorFactory
     {
         public override ResourceLeakDetector<T> NewResourceLeakDetector<T>(Type resource, int samplingInterval, long maxActive)
-            => new LeakPresenceDetector<T>(resource);
+        {
+            return new LeakPresenceDetector<T>(resource);
+        }
     }
 
     [Fact]
@@ -60,15 +68,30 @@ public class LeakPresenceDetectorTest : IDisposable
     private sealed class Resource : IDisposable
     {
         private readonly IResourceLeakTracker<Resource> leak;
-        internal Resource() => leak = ResourceLeakDetectorFactory.Instance().NewResourceLeakDetector<Resource>(typeof(Resource)).Track(this);
-        internal void Close() => leak.Close(this);
-        public void Dispose() => Close();
+        internal Resource()
+        {
+            leak = ResourceLeakDetectorFactory.Instance().NewResourceLeakDetector<Resource>(typeof(Resource)).Track(this);
+        }
+        internal void Close()
+        {
+            leak.Close(this);
+        }
+        public void Dispose()
+        {
+            Close();
+        }
     }
     private static class ResourceInStaticVariable1
     {
         private static readonly Resource RESOURCE;
-        static ResourceInStaticVariable1() => RESOURCE = LeakPresenceDetector.StaticInitializer(() => new Resource());
+        static ResourceInStaticVariable1()
+        {
+            RESOURCE = LeakPresenceDetector.StaticInitializer(() => new Resource());
+        }
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void Init() => GC.KeepAlive(RESOURCE);
+        internal static void Init()
+        {
+            GC.KeepAlive(RESOURCE);
+        }
     }
 }

@@ -40,15 +40,21 @@ public sealed class DefaultMessageSizeEstimator : IMessageSizeEstimator
         ArgumentOutOfRangeException.ThrowIfNegative(unknownSize);
         _handle = new HandleImpl(unknownSize);
     }
-    public IMessageSizeEstimator.IHandle NewHandle() => _handle;
+    public IMessageSizeEstimator.IHandle NewHandle()
+    {
+        return _handle;
+    }
     private sealed class HandleImpl(int unknownSize) : IMessageSizeEstimator.IHandle
     {
-        public int Size(object msg) => msg switch
+        public int Size(object msg)
         {
-            ByteBuf buffer => buffer.ReadableBytes,
-            IByteBufHolder holder => holder.Content.ReadableBytes,
-            IFileRegion => 0,
-            _ => unknownSize
-        };
+            return msg switch
+            {
+                ByteBuf buffer => buffer.ReadableBytes,
+                IByteBufHolder holder => holder.Content.ReadableBytes,
+                IFileRegion => 0,
+                _ => unknownSize
+            };
+        }
     }
 }

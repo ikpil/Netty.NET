@@ -13,11 +13,22 @@ public class TimeProviderClockContractTest
     {
         private long timestamp = timestamp;
         public override long TimestampFrequency => frequency;
-        public override long GetTimestamp() => Interlocked.Read(ref timestamp);
-        internal void Advance(long ticks) => Interlocked.Add(ref timestamp, ticks);
-        public override DateTimeOffset GetUtcNow() => throw new InvalidOperationException("Wall time is unrelated to deadlines");
+        public override long GetTimestamp()
+        {
+            return Interlocked.Read(ref timestamp);
+        }
+        internal void Advance(long ticks)
+        {
+            Interlocked.Add(ref timestamp, ticks);
+        }
+        public override DateTimeOffset GetUtcNow()
+        {
+            throw new InvalidOperationException("Wall time is unrelated to deadlines");
+        }
         public override System.Threading.ITimer CreateTimer(TimerCallback callback, object state, TimeSpan dueTime, TimeSpan period)
-            => throw new InvalidOperationException("The executor owns scheduling");
+        {
+            throw new InvalidOperationException("The executor owns scheduling");
+        }
     }
 
     private sealed class ManualExecutor(TimeProvider provider) : AbstractScheduledEventExecutor(null, provider), IDisposable
@@ -32,15 +43,30 @@ public class TimeProviderClockContractTest
             Action due;
             while ((due = PollScheduledTask()) != null) due();
         }
-        public override bool InEventLoop(Thread thread) => ReferenceEquals(thread, owner);
+        public override bool InEventLoop(Thread thread)
+        {
+            return ReferenceEquals(thread, owner);
+        }
         public override void Execute(Action task)
         {
             tasks.Enqueue(task);
         }
-        public override bool IsShutdown() => stopped;
-        public override bool IsShuttingDown() => stopped;
-        public override bool IsTerminated() => stopped;
-        public override bool AwaitTermination(TimeSpan timeout) => stopped;
+        public override bool IsShutdown()
+        {
+            return stopped;
+        }
+        public override bool IsShuttingDown()
+        {
+            return stopped;
+        }
+        public override bool IsTerminated()
+        {
+            return stopped;
+        }
+        public override bool AwaitTermination(TimeSpan timeout)
+        {
+            return stopped;
+        }
         public override Task TerminationFuture => Task.CompletedTask;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
         {
@@ -48,7 +74,10 @@ public class TimeProviderClockContractTest
             return TerminationFuture;
         }
         public override void Shutdown() { stopped = true; CancelScheduledTasks(); }
-        public void Dispose() => Shutdown();
+        public void Dispose()
+        {
+            Shutdown();
+        }
     }
 
     [Theory]

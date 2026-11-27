@@ -115,7 +115,10 @@ public class ByteBufAbsoluteTransferDispatchTest
             destination.WriteBytes(new byte[] { 90, 91, 92, 93, 94, 95, 96, 97 });
             source.SetIndex(2, 7).MarkReaderIndex().MarkWriterIndex();
             destination.SetIndex(1, 3).MarkReaderIndex().MarkWriterIndex();
-            ByteBuf Invoke() => set ? owner.SetBytes(index, peer, length) : owner.GetBytes(index, peer, length);
+            ByteBuf Invoke()
+            {
+                return set ? owner.SetBytes(index, peer, length) : owner.GetBytes(index, peer, length);
+            }
             if (scenario is 2 or 3) Assert.Same(calls.Error, Assert.Throws<Failure>(() => Invoke()));
             else if (scenario is >= 4 and <= 9) Assert.Throws<ArgumentOutOfRangeException>(() => Invoke());
             else Assert.Same(owner, Invoke());
@@ -160,7 +163,10 @@ public class ByteBufAbsoluteTransferDispatchTest
         try
         {
             owner.SetIndex(2, 7); peer.SetIndex(1, 3);
-            ByteBuf Invoke() => set ? owner.SetBytes(2, peer) : owner.GetBytes(2, peer);
+            ByteBuf Invoke()
+            {
+                return set ? owner.SetBytes(2, peer) : owner.GetBytes(2, peer);
+            }
             if (failure) Assert.Same(calls.Error, Assert.Throws<Failure>(() => Invoke()));
             else Assert.Same(owner, Invoke());
             Assert.Equal(1, calls.Count); Assert.Same(peer, calls.Peer);

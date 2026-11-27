@@ -448,7 +448,10 @@ public class FixedChannelPool : SimpleChannelPool
         return _closeTask = base.CloseAsync();
     }
 
-    private static InvalidOperationException ClosedException() => new("FixedChannelPool was closed");
+    private static InvalidOperationException ClosedException()
+    {
+        return new("FixedChannelPool was closed");
+    }
 
     // AcquireTask extends AcquireListener to reduce object creations and so GC pressure
     // CLR: one request holds native producer/queue/deadline state instead of a promise-listener hierarchy.
@@ -463,7 +466,10 @@ public class FixedChannelPool : SimpleChannelPool
         // We need to create a new promise as we need to ensure the AcquireListener runs in the correct
         // EventLoop.
         // CLR: request producer ownership and executor dispatch are independent native concerns.
-        internal AcquireRequest(CancellationToken token) => _registration = token.Register(() => Producer.TrySetCanceled(token));
+        internal AcquireRequest(CancellationToken token)
+        {
+            _registration = token.Register(() => Producer.TrySetCanceled(token));
+        }
         internal void Fail(Exception error) { Producer.TrySetException(error); Finish(); }
         internal void Finish() { _registration.Unregister(); CancelTimeout(); }
         internal void CancelTimeout()

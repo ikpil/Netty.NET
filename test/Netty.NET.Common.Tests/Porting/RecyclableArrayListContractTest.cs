@@ -233,7 +233,10 @@ public class RecyclableArrayListContractTest
     private sealed class Payload : IDisposable
     {
         internal int Disposals;
-        public void Dispose() => Disposals++;
+        public void Dispose()
+        {
+            Disposals++;
+        }
     }
 
     [Theory]

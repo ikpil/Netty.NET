@@ -77,6 +77,9 @@ public interface IFlushStrategy
             this.shouldFlushNow = shouldFlushNow;
         }
 
-        public bool ShouldFlushNow(int numPackets, int numBytes) => shouldFlushNow(numPackets, numBytes);
+        public bool ShouldFlushNow(int numPackets, int numBytes)
+        {
+            return shouldFlushNow(numPackets, numBytes);
+        }
     }
 }

@@ -28,12 +28,30 @@ internal sealed class EmbeddedChannelId : IChannelId
 {
     internal static readonly IChannelId Instance = new EmbeddedChannelId();
     private EmbeddedChannelId() { }
-    public string AsShortText() => ToString();
-    public string AsLongText() => ToString();
-    public int CompareTo(IChannelId o) => o is EmbeddedChannelId ? 0 : string.CompareOrdinal(AsLongText(), o?.AsLongText());
-    public override int GetHashCode() => 0;
-    public override bool Equals(object obj) => obj is EmbeddedChannelId;
-    public override string ToString() => "embedded";
+    public string AsShortText()
+    {
+        return ToString();
+    }
+    public string AsLongText()
+    {
+        return ToString();
+    }
+    public int CompareTo(IChannelId o)
+    {
+        return o is EmbeddedChannelId ? 0 : string.CompareOrdinal(AsLongText(), o?.AsLongText());
+    }
+    public override int GetHashCode()
+    {
+        return 0;
+    }
+    public override bool Equals(object obj)
+    {
+        return obj is EmbeddedChannelId;
+    }
+    public override string ToString()
+    {
+        return "embedded";
+    }
 
     // CLR: concrete-type JSON round trips preserve the original value equality, hash and comparison across distinct instances.
     public sealed class Converter : JsonConverter<EmbeddedChannelId>
@@ -45,7 +63,9 @@ internal sealed class EmbeddedChannelId : IChannelId
                 throw new JsonException("Expected the embedded channel identity.");
             return new EmbeddedChannelId();
         }
-        public override void Write(Utf8JsonWriter writer, EmbeddedChannelId value, JsonSerializerOptions options) =>
+        public override void Write(Utf8JsonWriter writer, EmbeddedChannelId value, JsonSerializerOptions options)
+        {
             writer.WriteStringValue(value.AsLongText());
+        }
     }
 }

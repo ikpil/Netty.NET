@@ -81,10 +81,22 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
     public Action QueueCallback { get; }
     public Task Completion => _completion.Task;
     public bool IsCanceled => Completion.IsCanceled;
-    public long DeadlineNanos() => _deadlineNanos;
-    public long DelayNanos() => DelayNanos(_clock());
-    public long DelayNanos(long now) => AbstractScheduledEventExecutor.DeadlineToDelayNanos(now, _deadlineNanos);
-    public long GetId() => _id;
+    public long DeadlineNanos()
+    {
+        return _deadlineNanos;
+    }
+    public long DelayNanos()
+    {
+        return DelayNanos(_clock());
+    }
+    public long DelayNanos(long now)
+    {
+        return AbstractScheduledEventExecutor.DeadlineToDelayNanos(now, _deadlineNanos);
+    }
+    public long GetId()
+    {
+        return _id;
+    }
     public void SetId(long id) { if (_id == 0) _id = id; }
     public void SetConsumed()
     {
@@ -213,7 +225,10 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
     private sealed class Invocation(Func<CancellationToken, T> function, CancellationToken token)
     {
         internal T Result;
-        internal void Run() => Result = function(token);
+        internal void Run()
+        {
+            Result = function(token);
+        }
     }
 
     internal static ExecutionContext CaptureExecutorContext()
@@ -225,6 +240,12 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
         finally { ExecutionContext.SuppressFlow(); }
     }
 
-    public int PriorityQueueIndex(DefaultPriorityQueue<IScheduledWork> queue) => _queueIndex;
-    public void PriorityQueueIndex(DefaultPriorityQueue<IScheduledWork> queue, int index) => _queueIndex = index;
+    public int PriorityQueueIndex(DefaultPriorityQueue<IScheduledWork> queue)
+    {
+        return _queueIndex;
+    }
+    public void PriorityQueueIndex(DefaultPriorityQueue<IScheduledWork> queue, int index)
+    {
+        _queueIndex = index;
+    }
 }

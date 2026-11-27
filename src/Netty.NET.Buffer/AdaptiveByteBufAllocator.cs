@@ -74,7 +74,10 @@ public sealed class AdaptiveByteBufAllocator : AbstractByteBufAllocator, IByteBu
             Math.Max(1, SystemPropertyUtil.GetInt("io.netty.allocator.threadLocalChunkCacheMaxBytes", 8 * 1024 * 1024)),
             LocalMinBytes()) { }
 
-    private static int MaxStripes() => (int)Math.Min(int.MaxValue, 2L * NettyRuntime.AvailableProcessors());
+    private static int MaxStripes()
+    {
+        return (int)Math.Min(int.MaxValue, 2L * NettyRuntime.AvailableProcessors());
+    }
 
     private static int LocalMinBytes()
     {

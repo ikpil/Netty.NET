@@ -123,23 +123,37 @@ public class BootstrapResolutionSourceTest
     }
     private sealed class TestException : Exception { }
     private sealed class FailingResolverGroup : AddressResolverGroup<EndPoint>
-    { protected override IAddressResolver<EndPoint> NewResolver(IEventExecutor executor) => throw new TestException(); }
+    {
+        protected override IAddressResolver<EndPoint> NewResolver(IEventExecutor executor)
+        {
+            throw new TestException();
+        }
+    }
     private sealed class PendingResolverGroup : AddressResolverGroup<EndPoint>
     {
         internal readonly TaskCompletionSource Started = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal readonly TaskCompletionSource<EndPoint> Producer = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal int Count;
-        protected override IAddressResolver<EndPoint> NewResolver(IEventExecutor executor) => new Pending(executor, this);
+        protected override IAddressResolver<EndPoint> NewResolver(IEventExecutor executor)
+        {
+            return new Pending(executor, this);
+        }
         private sealed class Pending(IEventExecutor executor, PendingResolverGroup owner) : AbstractAddressResolver<EndPoint>(executor)
         {
-            protected override bool DoIsResolved(EndPoint address) => false;
+            protected override bool DoIsResolved(EndPoint address)
+            {
+                return false;
+            }
             protected override Task<EndPoint> DoResolveAsync(EndPoint address, CancellationToken token)
             {
                 Interlocked.Increment(ref owner.Count);
                 owner.Started.TrySetResult();
                 return owner.Producer.Task;
             }
-            protected override Task<IReadOnlyList<EndPoint>> DoResolveAllAsync(EndPoint address, CancellationToken token) => throw new NotSupportedException();
+            protected override Task<IReadOnlyList<EndPoint>> DoResolveAllAsync(EndPoint address, CancellationToken token)
+            {
+                throw new NotSupportedException();
+            }
         }
     }
 }

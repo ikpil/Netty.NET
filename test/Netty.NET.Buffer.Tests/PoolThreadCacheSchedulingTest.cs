@@ -30,13 +30,22 @@ public class PoolThreadCacheSchedulingTest
 {
     private static readonly TimeSpan Period = TimeSpan.FromMilliseconds(10);
     private static PooledByteBufAllocator NewAllocator(TimeSpan? period = null, NativeMemoryAllocator native = null)
-        => new(maxOrder: 4, nativeAllocator: native, smallCacheSize: 4, normalCacheSize: 4,
+    {
+        return new(maxOrder: 4, nativeAllocator: native, smallCacheSize: 4, normalCacheSize: 4,
             cacheTrimPeriod: period ?? Period, useCacheForAllThreads: true); // Explicit cache sizes apply to every test thread, as with the source fixtures' useCacheForAllThreads=true.
+    }
     private static ByteBuf Allocate(PooledByteBufAllocator a, bool direct, int size)
-        => direct ? a.DirectBuffer(size) : a.HeapBuffer(size);
+    {
+        return direct ? a.DirectBuffer(size) : a.HeapBuffer(size);
+    }
     private static IPoolArenaMetric Arena(PooledByteBufAllocator a, bool direct)
-        => (direct ? a.Metric.DirectArenas : a.Metric.HeapArenas)[0];
-    private static void Mapped(IEventExecutor executor, Action action) => ThreadExecutorMap.Apply(action, executor)();
+    {
+        return (direct ? a.Metric.DirectArenas : a.Metric.HeapArenas)[0];
+    }
+    private static void Mapped(IEventExecutor executor, Action action)
+    {
+        ThreadExecutorMap.Apply(action, executor)();
+    }
 
     [Theory]
     [InlineData(false, 48)] [InlineData(true, 48)]
@@ -352,41 +361,92 @@ public class PoolThreadCacheSchedulingTest
         internal bool RejectSchedule;
         internal IScheduledWork Head => PeekScheduledTask();
         internal int ScheduledCount => _scheduledTaskQueue?.Count ?? 0;
-        internal void Advance(TimeSpan amount) => _clock.Advance(amount);
-        internal Action Poll() => PollScheduledTask();
+        internal void Advance(TimeSpan amount)
+        {
+            _clock.Advance(amount);
+        }
+        internal Action Poll()
+        {
+            return PollScheduledTask();
+        }
         internal int RunDue()
         {
             int count = 0;
             while (Poll() is Action due) { due(); Assert.True(++count < 1024); }
             return count;
         }
-        public override Ticker Ticker() => _clock;
-        public override bool InEventLoop(Thread thread) => true;
-        public override void Execute(Action task) => task();
+        public override Ticker Ticker()
+        {
+            return _clock;
+        }
+        public override bool InEventLoop(Thread thread)
+        {
+            return true;
+        }
+        public override void Execute(Action task)
+        {
+            task();
+        }
         [Obsolete]
         protected override void ValidateScheduled(TimeSpan amount)
         { if (RejectSchedule) throw new RejectedExecutionException("Test scheduling rejection"); }
-        public override bool IsShutdown() => _shutdown;
-        public override bool IsShuttingDown() => _shutdown;
-        public override bool IsTerminated() => _shutdown;
-        public override bool AwaitTermination(TimeSpan timeout) => _shutdown;
+        public override bool IsShutdown()
+        {
+            return _shutdown;
+        }
+        public override bool IsShuttingDown()
+        {
+            return _shutdown;
+        }
+        public override bool IsTerminated()
+        {
+            return _shutdown;
+        }
+        public override bool AwaitTermination(TimeSpan timeout)
+        {
+            return _shutdown;
+        }
         public override Task TerminationFuture => Task.CompletedTask;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) { Close(); return TerminationFuture; }
         internal void Close() { _shutdown = true; CancelScheduledTasks(); }
         [Obsolete]
-        public override void Shutdown() => Close();
+        public override void Shutdown()
+        {
+            Close();
+        }
     }
 
     private sealed class UnsupportedExecutor : AbstractEventExecutor
     {
-        public override bool InEventLoop(Thread thread) => true;
-        public override void Execute(Action task) => task();
-        public override bool IsShutdown() => false;
-        public override bool IsShuttingDown() => false;
-        public override bool IsTerminated() => false;
-        public override bool AwaitTermination(TimeSpan timeout) => false;
+        public override bool InEventLoop(Thread thread)
+        {
+            return true;
+        }
+        public override void Execute(Action task)
+        {
+            task();
+        }
+        public override bool IsShutdown()
+        {
+            return false;
+        }
+        public override bool IsShuttingDown()
+        {
+            return false;
+        }
+        public override bool IsTerminated()
+        {
+            return false;
+        }
+        public override bool AwaitTermination(TimeSpan timeout)
+        {
+            return false;
+        }
         public override Task TerminationFuture => Task.CompletedTask;
-        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+        {
+            return Task.CompletedTask;
+        }
         [Obsolete]
         public override void Shutdown() { }
     }
@@ -395,7 +455,13 @@ public class PoolThreadCacheSchedulingTest
     {
         private long _timestamp;
         public override long TimestampFrequency => TimeSpan.TicksPerSecond;
-        public override long GetTimestamp() => Interlocked.Read(ref _timestamp);
-        internal void Advance(TimeSpan amount) => Interlocked.Add(ref _timestamp, amount.Ticks);
+        public override long GetTimestamp()
+        {
+            return Interlocked.Read(ref _timestamp);
+        }
+        internal void Advance(TimeSpan amount)
+        {
+            Interlocked.Add(ref _timestamp, amount.Ticks);
+        }
     }
 }

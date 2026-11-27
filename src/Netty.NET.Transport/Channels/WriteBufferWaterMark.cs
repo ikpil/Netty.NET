@@ -63,10 +63,19 @@ public sealed class WriteBufferWaterMark
     /**
      * Returns the low water mark for the write buffer.
      */
-    public int Low() => _low;
+    public int Low()
+    {
+        return _low;
+    }
     /**
      * Returns the high water mark for the write buffer.
      */
-    public int High() => _high;
-    public override string ToString() => FormattableString.Invariant($"WriteBufferWaterMark(low: {_low}, high: {_high})");
+    public int High()
+    {
+        return _high;
+    }
+    public override string ToString()
+    {
+        return FormattableString.Invariant($"WriteBufferWaterMark(low: {_low}, high: {_high})");
+    }
 }

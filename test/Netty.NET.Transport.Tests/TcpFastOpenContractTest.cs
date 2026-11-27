@@ -170,7 +170,9 @@ public class TcpFastOpenContractTest
         finally { await group.StopAsync(); }
     }
 
-    private static Bootstrap NewClient(MultiThreadIoEventLoopGroup group, Socket socket) =>
-        new Bootstrap().Group(group).ChannelFactory(() => new NioSocketChannel(socket))
+    private static Bootstrap NewClient(MultiThreadIoEventLoopGroup group, Socket socket)
+    {
+        return new Bootstrap().Group(group).ChannelFactory(() => new NioSocketChannel(socket))
             .Handler(new ChannelInboundHandlerAdapter());
+    }
 }

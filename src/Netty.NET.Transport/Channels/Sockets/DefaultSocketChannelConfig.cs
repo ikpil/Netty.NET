@@ -389,7 +389,10 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig, ISocketChannelCo
         return this;
     }
 
-    public bool IsAllowHalfClosure() => _allowHalfClosure;
+    public bool IsAllowHalfClosure()
+    {
+        return _allowHalfClosure;
+    }
 
     public virtual IDuplexChannelConfig SetAllowHalfClosure(bool allowHalfClosure)
     {

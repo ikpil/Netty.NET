@@ -363,15 +363,18 @@ public class ChannelGroupContractTest
         return channel;
     }
 
-    private static Task Operate(DefaultChannelGroup group, string kind, Func<IChannel, bool> matcher) => kind switch
+    private static Task Operate(DefaultChannelGroup group, string kind, Func<IChannel, bool> matcher)
     {
-        "write" => group.WriteAsync(new object(), matcher),
-        "writeAndFlush" => group.WriteAndFlushAsync(new object(), matcher),
-        "close" => group.CloseAsync(matcher),
-        "disconnect" => group.DisconnectAsync(matcher),
-        "deregister" => group.DeregisterAsync(matcher),
-        "closeFuture" => group.NewCloseFuture(matcher),
-        _ => throw new ArgumentOutOfRangeException(nameof(kind))
-    };
+        return kind switch
+        {
+            "write" => group.WriteAsync(new object(), matcher),
+            "writeAndFlush" => group.WriteAndFlushAsync(new object(), matcher),
+            "close" => group.CloseAsync(matcher),
+            "disconnect" => group.DisconnectAsync(matcher),
+            "deregister" => group.DeregisterAsync(matcher),
+            "closeFuture" => group.NewCloseFuture(matcher),
+            _ => throw new ArgumentOutOfRangeException(nameof(kind))
+        };
+    }
 }
 #pragma warning restore xUnit1051

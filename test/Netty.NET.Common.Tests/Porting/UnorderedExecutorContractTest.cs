@@ -24,8 +24,14 @@ public class UnorderedExecutorContractTest
     private sealed class LambdaFactory : IThreadFactory
     {
         private readonly Func<Action, Thread> create;
-        internal LambdaFactory(Func<Action, Thread> create) => this.create = create;
-        public Thread NewThread(Action task) => create(task);
+        internal LambdaFactory(Func<Action, Thread> create)
+        {
+            this.create = create;
+        }
+        public Thread NewThread(Action task)
+        {
+            return create(task);
+        }
     }
 
     private static void Stop(UnorderedThreadPoolEventExecutor executor)

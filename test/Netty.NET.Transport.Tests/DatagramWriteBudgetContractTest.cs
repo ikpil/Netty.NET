@@ -268,8 +268,11 @@ public class DatagramWriteBudgetContractTest
         finally { ManualIoEventLoopSourceTest.Terminate(loop); }
     }
 
-    private static Task[] Enqueue(IChannel channel, int count) => Enumerable.Range(1, count)
-        .Select(id => channel.WriteAsync(Unpooled.Buffer(1).WriteByte(id))).ToArray();
+    private static Task[] Enqueue(IChannel channel, int count)
+    {
+        return Enumerable.Range(1, count)
+            .Select(id => channel.WriteAsync(Unpooled.Buffer(1).WriteByte(id))).ToArray();
+    }
 
     private static void PumpUntil(ManualIoEventLoop loop, Func<bool> condition)
     {
@@ -297,8 +300,14 @@ public class DatagramWriteBudgetContractTest
             // AbstractUnsafe.bind invokes channelActive later; settle it before counting write turns.
             Loop.RunNow();
         }
-        internal void PumpUntil(Func<bool> condition) => DatagramWriteBudgetContractTest.PumpUntil(Loop, condition);
-        public void Dispose() => ManualIoEventLoopSourceTest.Terminate(Loop);
+        internal void PumpUntil(Func<bool> condition)
+        {
+            DatagramWriteBudgetContractTest.PumpUntil(Loop, condition);
+        }
+        public void Dispose()
+        {
+            ManualIoEventLoopSourceTest.Terminate(Loop);
+        }
     }
 
     private class RecordingDatagram : NioDatagramChannel

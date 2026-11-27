@@ -365,11 +365,23 @@ public class LocalChannelOwnershipContractTest
         private Action _released = released;
         private int _refCnt = 1;
         public int RefCnt => Volatile.Read(ref _refCnt);
-        public IReferenceCounted Retain() => Retain(1);
+        public IReferenceCounted Retain()
+        {
+            return Retain(1);
+        }
         public IReferenceCounted Retain(int increment) { Interlocked.Add(ref _refCnt, increment); return this; }
-        public IReferenceCounted Touch() => this;
-        public IReferenceCounted Touch(object hint) => this;
-        public bool Release() => Release(1);
+        public IReferenceCounted Touch()
+        {
+            return this;
+        }
+        public IReferenceCounted Touch(object hint)
+        {
+            return this;
+        }
+        public bool Release()
+        {
+            return Release(1);
+        }
         public bool Release(int decrement)
         {
             bool deallocated = Interlocked.Add(ref _refCnt, -decrement) == 0;
@@ -388,7 +400,10 @@ public class LocalChannelOwnershipContractTest
         internal int Deallocations;
         // Since 2026-11-19 AbstractReferenceCounted.Retain() updates the count directly, as the Java retain() does,
         // instead of calling Retain(1); doWrite retains with Retain(), so it is routed to the counting override.
-        public override IReferenceCounted Retain() => Retain(1);
+        public override IReferenceCounted Retain()
+        {
+            return Retain(1);
+        }
         public override IReferenceCounted Retain(int increment)
         {
             base.Retain(increment);
@@ -397,7 +412,13 @@ public class LocalChannelOwnershipContractTest
                 retained();
             return this;
         }
-        public override IReferenceCounted Touch(object hint) => this;
-        protected override void Deallocate() => Interlocked.Increment(ref Deallocations);
+        public override IReferenceCounted Touch(object hint)
+        {
+            return this;
+        }
+        protected override void Deallocate()
+        {
+            Interlocked.Increment(ref Deallocations);
+        }
     }
 }

@@ -175,12 +175,18 @@ public interface IChannel : IAttributeMap, IChannelOutboundInvoker, IComparable<
     /**
      * Return the assigned {@link ByteBufAllocator} which will be used to allocate {@link ByteBuf}s.
      */
-    IByteBufAllocator Alloc() => Config.GetAllocator();
+    IByteBufAllocator Alloc()
+    {
+        return Config.GetAllocator();
+    }
     /**
      * Return the value of the given {@link ChannelOption}
      */
     // CLR: getOption(option) is the try pattern (recorded publicNameReview category try-pattern).
-    bool TryGetOption<T>(ChannelOption<T> option, out T value) => Config.TryGetOption(option, out value);
+    bool TryGetOption<T>(ChannelOption<T> option, out T value)
+    {
+        return Config.TryGetOption(option, out value);
+    }
     /**
      * Sets a configuration property with the specified name and value.
      * To override this method properly, you must call the super class:
@@ -201,7 +207,10 @@ public interface IChannel : IAttributeMap, IChannelOutboundInvoker, IComparable<
      *
      * @return {@code true} if and only if the property has been set
      */
-    bool SetOption<T>(ChannelOption<T> option, T value) => Config.SetOption(option, value);
+    bool SetOption<T>(ChannelOption<T> option, T value)
+    {
+        return Config.SetOption(option, value);
+    }
     /**
      * Register the {@link Channel} of the {@link ChannelPromise} and notify
      * the {@link ChannelFuture} once the registration was complete.

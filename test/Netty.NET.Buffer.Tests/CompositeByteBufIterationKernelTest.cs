@@ -65,8 +65,10 @@ public partial class CompositeByteBufIterationKernelTest
             if (form >= 5) Retained = View;
         }
         public byte[] Expected(int rootIndex, int length, bool logical)
-            => Enumerable.Range(rootIndex, length).Select(i => (byte)((i < 16 ? i + (Fixed ? 1 : 6)
+        {
+            return Enumerable.Range(rootIndex, length).Select(i => (byte)((i < 16 ? i + (Fixed ? 1 : 6)
                 : i - 16 + (Fixed ? 65 : 68)) ^ (logical ? 0x80 : 0))).ToArray();
+        }
         public void Dispose()
         {
             if (Retained?.RefCnt > 0) Retained.Release();

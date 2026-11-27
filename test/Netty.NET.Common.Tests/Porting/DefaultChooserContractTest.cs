@@ -12,19 +12,46 @@ public class DefaultChooserContractTest
     // Identity-only children: selection must not execute work or start a worker.
     private sealed class Child : AbstractEventExecutor
     {
-        public override void Execute(Action command) => throw new NotSupportedException();
-        public override bool InEventLoop(Thread thread) => false;
-        public override bool IsShuttingDown() => throw new NotSupportedException();
-        public override bool IsShutdown() => throw new NotSupportedException();
-        public override bool IsTerminated() => throw new NotSupportedException();
+        public override void Execute(Action command)
+        {
+            throw new NotSupportedException();
+        }
+        public override bool InEventLoop(Thread thread)
+        {
+            return false;
+        }
+        public override bool IsShuttingDown()
+        {
+            throw new NotSupportedException();
+        }
+        public override bool IsShutdown()
+        {
+            throw new NotSupportedException();
+        }
+        public override bool IsTerminated()
+        {
+            throw new NotSupportedException();
+        }
         [Obsolete]
-        public override void Shutdown() => throw new NotSupportedException();
+        public override void Shutdown()
+        {
+            throw new NotSupportedException();
+        }
         public override Task TerminationFuture => throw new NotSupportedException();
-        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => throw new NotSupportedException();
-        public override bool AwaitTermination(TimeSpan timeout) => throw new NotSupportedException();
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+        {
+            throw new NotSupportedException();
+        }
+        public override bool AwaitTermination(TimeSpan timeout)
+        {
+            throw new NotSupportedException();
+        }
     }
 
-    private static IEventExecutor[] Children(int count) => Enumerable.Range(0, count).Select(_ => (IEventExecutor)new Child()).ToArray();
+    private static IEventExecutor[] Children(int count)
+    {
+        return Enumerable.Range(0, count).Select(_ => (IEventExecutor)new Child()).ToArray();
+    }
 
     // Reach integer boundaries without billions of invocations. The same fixture
     // runs against the former atomic wrappers and the native primitive fields.

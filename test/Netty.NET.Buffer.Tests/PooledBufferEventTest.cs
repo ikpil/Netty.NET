@@ -33,10 +33,14 @@ public class PooledBufferEventCollection { }
 public class PooledBufferEventTest
 {
     private static PooledByteBufAllocator NewAllocator(NativeMemoryAllocator native, int cache = 0, bool pooled = true)
-        => new(poolHeap: pooled, poolDirect: pooled, maxOrder: 1, nativeAllocator: native, smallCacheSize: cache, normalCacheSize: cache,
+    {
+        return new(poolHeap: pooled, poolDirect: pooled, maxOrder: 1, nativeAllocator: native, smallCacheSize: cache, normalCacheSize: cache,
             useCacheForAllThreads: true); // Explicit cache sizes apply to every test thread, as with the source fixtures' useCacheForAllThreads=true.
+    }
     private static ByteBuf Allocate(PooledByteBufAllocator allocator, bool direct, int size, int max = 40000)
-        => direct ? allocator.DirectBuffer(size, max) : allocator.HeapBuffer(size, max);
+    {
+        return direct ? allocator.DirectBuffer(size, max) : allocator.HeapBuffer(size, max);
+    }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
@@ -309,8 +313,14 @@ public class PooledBufferEventTest
 
     internal sealed record Record(int Id, string Name, Dictionary<string, object> Fields)
     {
-        internal long Number(string field) => Convert.ToInt64(Fields[field]);
-        internal bool Flag(string field) => Convert.ToBoolean(Fields[field]);
+        internal long Number(string field)
+        {
+            return Convert.ToInt64(Fields[field]);
+        }
+        internal bool Flag(string field)
+        {
+            return Convert.ToBoolean(Fields[field]);
+        }
     }
 
     internal sealed class Listener : EventListener

@@ -52,7 +52,10 @@ public sealed class LocalIoHandler : IIoHandler
     {
         internal static readonly Factory INSTANCE = new Factory();
 
-        public IIoHandler NewHandler(IThreadAwareExecutor ioExecutor) => new LocalIoHandler(ioExecutor);
+        public IIoHandler NewHandler(IThreadAwareExecutor ioExecutor)
+        {
+            return new LocalIoHandler(ioExecutor);
+        }
     }
 
     // CLR: ArgumentException replaces IllegalArgumentException.

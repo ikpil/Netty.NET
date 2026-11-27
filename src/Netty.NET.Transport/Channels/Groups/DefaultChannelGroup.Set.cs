@@ -89,10 +89,16 @@ public partial class DefaultChannelGroup
     // operations; all mutations still go through the group's Id admission and close-listener rules.
     // Each operation has a membership snapshot, not an atomic transaction spanning multiple calls.
     public bool IsReadOnly => false;
-    void ICollection<IChannel>.Add(IChannel item) => Add(item);
+    void ICollection<IChannel>.Add(IChannel item)
+    {
+        Add(item);
+    }
 
     /// <summary>Copies a server-first membership snapshot without closing or transferring channel ownership.</summary>
-    public IChannel[] ToArray() => _channels.Values.OrderBy(channel => channel is IServerChannel ? 0 : 1).ToArray();
+    public IChannel[] ToArray()
+    {
+        return _channels.Values.OrderBy(channel => channel is IServerChannel ? 0 : 1).ToArray();
+    }
 
     public void CopyTo(IChannel[] array, int arrayIndex)
     {
@@ -129,15 +135,36 @@ public partial class DefaultChannelGroup
         if (ReferenceEquals(other, this)) { Clear(); return; }
         foreach (var channel in Members(other)) if (!Remove(channel)) Add(channel);
     }
-    public bool IsSubsetOf(IEnumerable<IChannel> other) => Members(this).IsSubsetOf(Checked(other));
-    public bool IsSupersetOf(IEnumerable<IChannel> other) => Members(this).IsSupersetOf(Checked(other));
-    public bool IsProperSubsetOf(IEnumerable<IChannel> other) => Members(this).IsProperSubsetOf(Checked(other));
-    public bool IsProperSupersetOf(IEnumerable<IChannel> other) => Members(this).IsProperSupersetOf(Checked(other));
-    public bool Overlaps(IEnumerable<IChannel> other) => Members(this).Overlaps(Checked(other));
-    public bool SetEquals(IEnumerable<IChannel> other) => Members(this).SetEquals(Checked(other));
+    public bool IsSubsetOf(IEnumerable<IChannel> other)
+    {
+        return Members(this).IsSubsetOf(Checked(other));
+    }
+    public bool IsSupersetOf(IEnumerable<IChannel> other)
+    {
+        return Members(this).IsSupersetOf(Checked(other));
+    }
+    public bool IsProperSubsetOf(IEnumerable<IChannel> other)
+    {
+        return Members(this).IsProperSubsetOf(Checked(other));
+    }
+    public bool IsProperSupersetOf(IEnumerable<IChannel> other)
+    {
+        return Members(this).IsProperSupersetOf(Checked(other));
+    }
+    public bool Overlaps(IEnumerable<IChannel> other)
+    {
+        return Members(this).Overlaps(Checked(other));
+    }
+    public bool SetEquals(IEnumerable<IChannel> other)
+    {
+        return Members(this).SetEquals(Checked(other));
+    }
     private static IEnumerable<IChannel> Checked(IEnumerable<IChannel> other)
     { ArgumentNullException.ThrowIfNull(other); return other; }
-    private static HashSet<IChannel> Members(IEnumerable<IChannel> channels) => new(channels, ReferenceEqualityComparer.Instance);
+    private static HashSet<IChannel> Members(IEnumerable<IChannel> channels)
+    {
+        return new(channels, ReferenceEqualityComparer.Instance);
+    }
 
     // Name is ordinal, as in Java String.compareTo. Same-name groups retain object identity;
     // group membership does not turn group equality/hash into mutable set-value equality.

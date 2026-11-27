@@ -258,8 +258,10 @@ public class QuicChannelEchoTest : AbstractQuicTest
 
     [Theory(Timeout = TIMEOUT)]
     [MemberData(nameof(Data))]
-    public Task TestEchoStartedFromClient(bool autoRead, bool directBuffer, bool composite) =>
-        EchoStartedFromClient(autoRead, composite, GetAllocator(directBuffer), TestContext.Current.CancellationToken);
+    public Task TestEchoStartedFromClient(bool autoRead, bool directBuffer, bool composite)
+    {
+        return EchoStartedFromClient(autoRead, composite, GetAllocator(directBuffer), TestContext.Current.CancellationToken);
+    }
 
     [Theory(Timeout = TIMEOUT)]
     [InlineData(false)]

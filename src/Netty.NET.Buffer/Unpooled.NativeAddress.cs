@@ -27,6 +27,8 @@ public static partial class Unpooled
     /// <remarks>Use the overload that accepts bounded Memory&lt;byte&gt;. This overload
     /// always throws before accessing the address or taking ownership.</remarks>
     [Obsolete("Wrapping raw addresses is unsupported. Use WrappedBuffer(Memory<byte>).")]
-    public static ByteBuf WrappedBuffer(nint memoryAddress, int size, bool doFree) =>
+    public static ByteBuf WrappedBuffer(nint memoryAddress, int size, bool doFree)
+    {
         throw new PlatformNotSupportedException("Raw address buffers are unavailable on the managed allocator.");
+    }
 }

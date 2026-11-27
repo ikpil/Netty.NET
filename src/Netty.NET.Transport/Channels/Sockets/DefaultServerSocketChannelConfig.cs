@@ -212,7 +212,10 @@ public class DefaultServerSocketChannelConfig : DefaultChannelConfig, IServerSoc
         return this;
     }
 
-    public int GetBacklog() => Volatile.Read(ref _backlog);
+    public int GetBacklog()
+    {
+        return Volatile.Read(ref _backlog);
+    }
 
     public virtual IServerSocketChannelConfig SetBacklog(int backlog)
     {

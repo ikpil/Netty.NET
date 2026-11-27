@@ -21,11 +21,29 @@ namespace Netty.NET.Transport.Tests;
 
 public sealed class CustomChannelId(int id) : IChannelId
 {
-    public int CompareTo(IChannelId other) => other is CustomChannelId custom ? id.CompareTo(custom.Value) : string.CompareOrdinal(AsLongText(), other.AsLongText());
+    public int CompareTo(IChannelId other)
+    {
+        return other is CustomChannelId custom ? id.CompareTo(custom.Value) : string.CompareOrdinal(AsLongText(), other.AsLongText());
+    }
     private int Value => id;
-    public override int GetHashCode() => id;
-    public override bool Equals(object other) => other is CustomChannelId custom && custom.Value == id;
-    public override string ToString() => "CustomChannelId " + id;
-    public string AsShortText() => ToString();
-    public string AsLongText() => ToString();
+    public override int GetHashCode()
+    {
+        return id;
+    }
+    public override bool Equals(object other)
+    {
+        return other is CustomChannelId custom && custom.Value == id;
+    }
+    public override string ToString()
+    {
+        return "CustomChannelId " + id;
+    }
+    public string AsShortText()
+    {
+        return ToString();
+    }
+    public string AsLongText()
+    {
+        return ToString();
+    }
 }

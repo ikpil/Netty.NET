@@ -42,7 +42,10 @@ sealed class SystemTicker : Ticker
         SleepMilliseconds(delayNanos / 1_000_000 + (delayNanos % 1_000_000 == 0 ? 0 : 1));
     }
 
-    public override void SleepMillis(long delayMillis) => SleepMilliseconds(delayMillis);
+    public override void SleepMillis(long delayMillis)
+    {
+        SleepMilliseconds(delayMillis);
+    }
 
     public override void Sleep(TimeSpan delay)
     {

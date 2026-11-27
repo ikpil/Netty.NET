@@ -44,7 +44,10 @@ public class JavaSourceAlignmentContractTest
         {
         }
 
-        protected override void ChannelRead0(IChannelHandlerContext ctx, Animal msg) => Handled.Add(msg);
+        protected override void ChannelRead0(IChannelHandlerContext ctx, Animal msg)
+        {
+            Handled.Add(msg);
+        }
     }
 
     private sealed class WrongTypeHandler : SimpleChannelInboundHandler<Dog>
@@ -81,14 +84,20 @@ public class JavaSourceAlignmentContractTest
         {
         }
 
-        protected override void EventReceived(IChannelHandlerContext ctx, Animal evt) => Received.Add(evt);
+        protected override void EventReceived(IChannelHandlerContext ctx, Animal evt)
+        {
+            Received.Add(evt);
+        }
     }
 
     private sealed class EventSink : ChannelInboundHandlerAdapter
     {
         public readonly List<object> Events = new();
 
-        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt) => Events.Add(evt);
+        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
+        {
+            Events.Add(evt);
+        }
     }
 
     [Fact]
@@ -108,13 +117,19 @@ public class JavaSourceAlignmentContractTest
 
     private sealed class NotSharableHandler : ChannelInboundHandlerAdapter
     {
-        public void Check() => EnsureNotSharable();
+        public void Check()
+        {
+            EnsureNotSharable();
+        }
     }
 
     [Sharable]
     private sealed class SharableHandler : ChannelInboundHandlerAdapter
     {
-        public void Check() => EnsureNotSharable();
+        public void Check()
+        {
+            EnsureNotSharable();
+        }
     }
 
     // ChannelHandlerAdapter.ensureNotSharable() and DefaultChannelPipeline.checkMultiplicity(ChannelHandler)

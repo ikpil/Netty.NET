@@ -79,15 +79,22 @@ internal sealed partial class FixedCompositeByteBuf : AbstractReferenceCountedBy
     }
     public override bool IsReadOnly => true;
     public override bool IsDirect => _direct;
-    public override bool IsWritable(int size) => false;
+    public override bool IsWritable(int size)
+    {
+        return false;
+    }
     public override ByteBuf DiscardReadBytes() { EnsureCanWrite(); return this; }
 
     protected override Memory<byte> GetMemoryCore(int index, int length)
-        => throw new NotSupportedException("The buffer is read-only.");
+    {
+        throw new NotSupportedException("The buffer is read-only.");
+    }
 
     protected override ReadOnlyMemory<byte> GetReadOnlyMemoryCore(int index, int length)
-        => TryGetReadOnlyMemoryCore(index, length, out var memory) ? memory
+    {
+        return TryGetReadOnlyMemoryCore(index, length, out var memory) ? memory
             : throw new NotSupportedException("The range spans multiple components. Use AsReadOnlySequence or GetBytes.");
+    }
 
     protected override bool TryGetReadOnlyMemoryCore(int index, int length, out ReadOnlyMemory<byte> memory)
     {
@@ -146,7 +153,9 @@ internal sealed partial class FixedCompositeByteBuf : AbstractReferenceCountedBy
     internal override ReadOnlySequence<byte> BorrowCopySequence(int index, int length)
     { CheckIndex(index, length); return CreateReadOnlySequence(index, length, true); }
     protected override ReadOnlySequence<byte> GetReadOnlySequenceCore(int index, int length)
-        => CreateReadOnlySequence(index, length, false);
+    {
+        return CreateReadOnlySequence(index, length, false);
+    }
     private ReadOnlySequence<byte> CreateReadOnlySequence(int index, int length, bool copying)
     {
         if (length == 0) return ReadOnlySequence<byte>.Empty;
@@ -208,7 +217,10 @@ internal sealed partial class FixedCompositeByteBuf : AbstractReferenceCountedBy
     /**
      * Return the {@link ByteBuf} stored at the given index of the array.
      */
-    private ByteBuf Buffer(int index) => _components[index].Source;
+    private ByteBuf Buffer(int index)
+    {
+        return _components[index].Source;
+    }
 
     private int FindComponent(int index)
     {
@@ -229,7 +241,10 @@ internal sealed partial class FixedCompositeByteBuf : AbstractReferenceCountedBy
 
     private sealed class SequenceSegment : ReadOnlySequenceSegment<byte>
     {
-        internal SequenceSegment(ReadOnlyMemory<byte> memory) => Memory = memory;
+        internal SequenceSegment(ReadOnlyMemory<byte> memory)
+        {
+            Memory = memory;
+        }
         internal void Append(SequenceSegment next)
         { next.RunningIndex = RunningIndex + Memory.Length; Next = next; }
     }

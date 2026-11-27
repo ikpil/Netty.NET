@@ -784,7 +784,10 @@ public static class NetUtil
      * @return {@link Inet6Address} representation of the {@code ip} or {@code null} if not a valid IP address.
      */
     /// <summary>Parses an unbracketed, unscoped literal as an owned IPv6 address, mapping IPv4 input.</summary>
-    public static IPAddress GetByName(ReadOnlySpan<char> ip) => GetByName(ip, true);
+    public static IPAddress GetByName(ReadOnlySpan<char> ip)
+    {
+        return GetByName(ip, true);
+    }
 
     public static IPAddress GetByName(string ip)
     {

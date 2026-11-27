@@ -27,18 +27,30 @@ namespace Netty.NET.Common.Internal;
 /// this counter neither owns storage nor keeps an unretained borrower alive.</remarks>
 public static class ReferenceCountUpdater
 {
-    public static int GetCount(ref int count) => Volatile.Read(ref count);
+    public static int GetCount(ref int count)
+    {
+        return Volatile.Read(ref count);
+    }
 
     /// <summary>A best-effort accessibility check, which does not acquire ownership.</summary>
-    public static bool IsLive(ref int count) => GetCount(ref count) > 0;
+    public static bool IsLive(ref int count)
+    {
+        return GetCount(ref count) > 0;
+    }
 
     /// <summary>Sets the count directly; nonpositive values represent released storage.</summary>
     /// <remarks>Only use while no other thread accesses this counter. This operation
     /// does not invoke deallocation and may deliberately reinitialize a released count.</remarks>
-    public static void SetCount(ref int count, int value) => Volatile.Write(ref count, value > 0 ? value : 0);
+    public static void SetCount(ref int count, int value)
+    {
+        Volatile.Write(ref count, value > 0 ? value : 0);
+    }
 
     /// <summary>Resets the count to one while all prior users are quiescent.</summary>
-    public static void Reset(ref int count) => SetCount(ref count, 1);
+    public static void Reset(ref int count)
+    {
+        SetCount(ref count, 1);
+    }
 
     public static void Retain(ref int count, int increment = 1)
     {

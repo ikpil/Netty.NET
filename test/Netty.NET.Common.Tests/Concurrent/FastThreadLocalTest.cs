@@ -33,11 +33,17 @@ public class FastThreadLocalTest : IDisposable
         FastThreadLocal.RemoveAll();
         Assert.Equal(0, FastThreadLocal.Size());
     }
-    public void Dispose() => FastThreadLocal.RemoveAll();
+    public void Dispose()
+    {
+        FastThreadLocal.RemoveAll();
+    }
 
     private sealed class BooleanLocal : FastThreadLocal<object>
     {
-        protected override object InitialValue() => true;
+        protected override object InitialValue()
+        {
+            return true;
+        }
     }
 
     [Fact]
@@ -65,7 +71,10 @@ public class FastThreadLocalTest : IDisposable
     private sealed class RemovalLocal : FastThreadLocal<object>
     {
         public bool Removed;
-        protected override void OnRemoval(object value) => Removed = true;
+        protected override void OnRemoval(object value)
+        {
+            Removed = true;
+        }
     }
 
     [Fact(Timeout = 10000)]
@@ -82,7 +91,10 @@ public class FastThreadLocalTest : IDisposable
     }
 
     [Fact(Timeout = 10000)]
-    public void TestRemoveAllFromFTLThread() => RunThread(TestRemoveAll, true);
+    public void TestRemoveAllFromFTLThread()
+    {
+        RunThread(TestRemoveAll, true);
+    }
 
     [Fact]
     public void TestWrappedProperties()
@@ -144,17 +156,35 @@ public class FastThreadLocalTest : IDisposable
     }
 
     [Fact(Timeout = 4000)]
-    public void TestOnRemoveCalledForFastThreadLocalGet() => TestOnRemoveCalled(true, false, true);
+    public void TestOnRemoveCalledForFastThreadLocalGet()
+    {
+        TestOnRemoveCalled(true, false, true);
+    }
     [Fact(Skip = "onRemoval(...) not called with non FastThreadLocal")]
-    public void TestOnRemoveCalledForNonFastThreadLocalGet() => TestOnRemoveCalled(false, false, true);
+    public void TestOnRemoveCalledForNonFastThreadLocalGet()
+    {
+        TestOnRemoveCalled(false, false, true);
+    }
     [Fact(Timeout = 4000)]
-    public void TestOnRemoveCalledForFastThreadLocalSet() => TestOnRemoveCalled(true, false, false);
+    public void TestOnRemoveCalledForFastThreadLocalSet()
+    {
+        TestOnRemoveCalled(true, false, false);
+    }
     [Fact(Skip = "onRemoval(...) not called with non FastThreadLocal")]
-    public void TestOnRemoveCalledForNonFastThreadLocalSet() => TestOnRemoveCalled(false, false, false);
+    public void TestOnRemoveCalledForNonFastThreadLocalSet()
+    {
+        TestOnRemoveCalled(false, false, false);
+    }
     [Fact(Timeout = 4000)]
-    public void TestOnRemoveCalledForWrappedGet() => TestOnRemoveCalled(false, true, true);
+    public void TestOnRemoveCalledForWrappedGet()
+    {
+        TestOnRemoveCalled(false, true, true);
+    }
     [Fact(Timeout = 4000)]
-    public void TestOnRemoveCalledForWrappedSet() => TestOnRemoveCalled(false, true, false);
+    public void TestOnRemoveCalledForWrappedSet()
+    {
+        TestOnRemoveCalled(false, true, false);
+    }
 
     private static void TestOnRemoveCalled(bool fastThreadLocal, bool wrap, bool callGet)
     {
@@ -197,8 +227,14 @@ public class FastThreadLocalTest : IDisposable
     private sealed class TestFastThreadLocal : FastThreadLocal<string>
     {
         public volatile string OnRemovalCalled;
-        protected override string InitialValue() => Thread.CurrentThread.Name;
-        protected override void OnRemoval(string value) => OnRemovalCalled = value;
+        protected override string InitialValue()
+        {
+            return Thread.CurrentThread.Name;
+        }
+        protected override void OnRemoval(string value)
+        {
+            OnRemovalCalled = value;
+        }
     }
 
     [Fact]
@@ -269,7 +305,10 @@ public class FastThreadLocalTest : IDisposable
 
     private sealed class UnsetLocal : FastThreadLocal<object>
     {
-        protected override object InitialValue() => InternalThreadLocalMap.UNSET;
+        protected override object InitialValue()
+        {
+            return InternalThreadLocalMap.UNSET;
+        }
     }
     [Fact]
     public void TestFastThreadLocalInitialValueWithUnset()

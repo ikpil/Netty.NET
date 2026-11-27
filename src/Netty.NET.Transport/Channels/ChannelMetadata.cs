@@ -53,10 +53,16 @@ public sealed class ChannelMetadata
      * that allows a user to disconnect and then call {@link Channel#connect(SocketAddress)} again,
      * such as UDP/IP.
      */
-    public bool HasDisconnect() => _hasDisconnect;
+    public bool HasDisconnect()
+    {
+        return _hasDisconnect;
+    }
     /**
      * If a {@link MaxMessagesRecvByteBufAllocator} is in use, then this is the default value for
      * {@link MaxMessagesRecvByteBufAllocator#maxMessagesPerRead()}.
      */
-    public int DefaultMaxMessagesPerRead() => _defaultMaxMessagesPerRead;
+    public int DefaultMaxMessagesPerRead()
+    {
+        return _defaultMaxMessagesPerRead;
+    }
 }

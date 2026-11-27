@@ -130,7 +130,10 @@ public sealed class EmbeddedEventLoop : AbstractScheduledEventExecutor, IEventLo
         return false;
     }
 
-    public Task RegisterAsync(IChannel channel, CancellationToken cancellationToken = default) => channel.RegisterAsync(this, cancellationToken);
+    public Task RegisterAsync(IChannel channel, CancellationToken cancellationToken = default)
+    {
+        return channel.RegisterAsync(this, cancellationToken);
+    }
 
     public override bool InEventLoop(Thread thread)
     {

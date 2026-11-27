@@ -174,14 +174,22 @@ internal abstract class ProxyServer
     }
 
     // CLR: getHostString() of an InetSocketAddress.
-    internal static string GetHostString(EndPoint address) => NetUtil.GetHostname(address);
+    internal static string GetHostString(EndPoint address)
+    {
+        return NetUtil.GetHostname(address);
+    }
 
     // CLR: getPort() of an InetSocketAddress.
-    internal static int GetPort(EndPoint address) =>
-        address is DnsEndPoint unresolved ? unresolved.Port : ((IPEndPoint) address).Port;
+    internal static int GetPort(EndPoint address)
+    {
+        return address is DnsEndPoint unresolved ? unresolved.Port : ((IPEndPoint) address).Port;
+    }
 
     // CLR: SocketUtils.socketAddress(hostname, port) of a literal host (see the class comment).
-    internal static EndPoint SocketAddress(string hostname, int port) => new IPEndPoint(IPAddress.Parse(hostname), port);
+    internal static EndPoint SocketAddress(string hostname, int port)
+    {
+        return new IPEndPoint(IPAddress.Parse(hostname), port);
+    }
 
     protected abstract class IntermediaryHandler : SimpleChannelInboundHandler<object>
     {

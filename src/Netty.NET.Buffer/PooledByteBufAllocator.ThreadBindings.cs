@@ -241,7 +241,10 @@ public partial class PooledByteBufAllocator
                 maxCachedBufferCapacity, cacheTrimInterval);
         }
 
-        internal bool IsOwner(Thread thread) => _thread.TryGetTarget(out Thread owner) && ReferenceEquals(owner, thread);
+        internal bool IsOwner(Thread thread)
+        {
+            return _thread.TryGetTarget(out Thread owner) && ReferenceEquals(owner, thread);
+        }
         internal bool IsAlive => _thread.TryGetTarget(out Thread thread) && thread.IsAlive;
 
         internal void StartTrimming(IEventExecutor executor, TimeSpan period)

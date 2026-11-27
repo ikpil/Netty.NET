@@ -56,7 +56,9 @@ public sealed class CompositeNameResolver<T> : SimpleNameResolver<T>
     }
 
     protected override Task<T> DoResolveAsync(string inetHost, CancellationToken cancellationToken)
-        => DoResolveRecAsync(inetHost, 0, null, cancellationToken);
+    {
+        return DoResolveRecAsync(inetHost, 0, null, cancellationToken);
+    }
 
     // CLR: a Task continuation replaces the promise listener; the recursion over resolverIndex is unchanged.
     private async Task<T> DoResolveRecAsync(string inetHost, int resolverIndex, Exception lastFailure,
@@ -82,7 +84,9 @@ public sealed class CompositeNameResolver<T> : SimpleNameResolver<T>
     }
 
     protected override Task<IReadOnlyList<T>> DoResolveAllAsync(string inetHost, CancellationToken cancellationToken)
-        => DoResolveAllRecAsync(inetHost, 0, null, cancellationToken);
+    {
+        return DoResolveAllRecAsync(inetHost, 0, null, cancellationToken);
+    }
 
     private async Task<IReadOnlyList<T>> DoResolveAllRecAsync(string inetHost, int resolverIndex, Exception lastFailure,
         CancellationToken cancellationToken)

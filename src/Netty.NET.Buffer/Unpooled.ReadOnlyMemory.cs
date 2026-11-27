@@ -29,5 +29,7 @@ public static partial class Unpooled
     /// <remarks>Slice the ReadOnlyMemory before calling to select the remaining range.
     /// The source owner must stay valid during access. Empty memory uses the shared sentinel.</remarks>
     public static ByteBuf WrappedBuffer(ReadOnlyMemory<byte> memory)
-        => memory.IsEmpty ? EmptyBuffer : new ReadOnlyMemoryByteBuf(UnpooledByteBufAllocator.Default, memory);
+    {
+        return memory.IsEmpty ? EmptyBuffer : new ReadOnlyMemoryByteBuf(UnpooledByteBufAllocator.Default, memory);
+    }
 }

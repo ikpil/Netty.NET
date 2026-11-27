@@ -24,7 +24,10 @@ internal sealed class ThreadLocalDirectByteBuf : AbstractReferenceCountedByteBuf
     private readonly NativeMemoryAllocator _native;
     private ThreadLocalDirectAllocation _allocation;
     private int _capacity;
-    public override IByteBufAllocator Alloc() => UnpooledByteBufAllocator.Default;
+    public override IByteBufAllocator Alloc()
+    {
+        return UnpooledByteBufAllocator.Default;
+    }
     public override bool IsDirect => true;
     public override bool IsContiguous => true;
 
@@ -45,7 +48,10 @@ internal sealed class ThreadLocalDirectByteBuf : AbstractReferenceCountedByteBuf
         _capacity = owner.Length;
     }
 
-    protected override Memory<byte> GetMemoryCore(int index, int length) => _allocation.Memory.Slice(index, length);
+    protected override Memory<byte> GetMemoryCore(int index, int length)
+    {
+        return _allocation.Memory.Slice(index, length);
+    }
     internal override BufferMemoryLease AcquireReadLease()
     { EnsureAccessible(); return _allocation.AcquireLease(); }
     public override int Capacity

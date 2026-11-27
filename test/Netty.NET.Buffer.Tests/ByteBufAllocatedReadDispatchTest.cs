@@ -29,8 +29,14 @@ public class ByteBufAllocatedReadDispatchTest
     {
         public int Records;
         public int Closes;
-        public void Record() => ++Records;
-        public void Record(object hint) => ++Records;
+        public void Record()
+        {
+            ++Records;
+        }
+        public void Record(object hint)
+        {
+            ++Records;
+        }
         public bool Close(ByteBuf trackedObject) { ++Closes; return true; }
     }
 
@@ -46,18 +52,21 @@ public class ByteBufAllocatedReadDispatchTest
         public override ByteBuf ReadBytes(int length) { ++Calls; return base.ReadBytes(length); }
     }
 
-    private static ByteBuf Wrap(ByteBuf owner, Tracker tracker, int kind) => kind switch
+    private static ByteBuf Wrap(ByteBuf owner, Tracker tracker, int kind)
     {
-        0 => new Wrapped(owner),
-        1 => new SimpleLeakAwareByteBuf(owner, tracker),
-        2 => new AdvancedLeakAwareByteBuf(owner, tracker),
-        3 => Unpooled.UnreleasableBuffer(owner),
-        4 => new Wrapped(Unpooled.UnreleasableBuffer(owner)),
-        5 => new WrappedCompositeByteBuf((CompositeByteBuf)owner),
-        6 => new SimpleLeakAwareCompositeByteBuf((CompositeByteBuf)owner, tracker),
-        7 => new AdvancedLeakAwareCompositeByteBuf((CompositeByteBuf)owner, tracker),
-        _ => throw new ArgumentOutOfRangeException(nameof(kind))
-    };
+        return kind switch
+        {
+            0 => new Wrapped(owner),
+            1 => new SimpleLeakAwareByteBuf(owner, tracker),
+            2 => new AdvancedLeakAwareByteBuf(owner, tracker),
+            3 => Unpooled.UnreleasableBuffer(owner),
+            4 => new Wrapped(Unpooled.UnreleasableBuffer(owner)),
+            5 => new WrappedCompositeByteBuf((CompositeByteBuf)owner),
+            6 => new SimpleLeakAwareCompositeByteBuf((CompositeByteBuf)owner, tracker),
+            7 => new AdvancedLeakAwareCompositeByteBuf((CompositeByteBuf)owner, tracker),
+            _ => throw new ArgumentOutOfRangeException(nameof(kind))
+        };
+    }
 
     [Theory]
     [InlineData(0, false)] [InlineData(0, true)]

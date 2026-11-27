@@ -29,8 +29,14 @@ public class ExecutorLifecycleContractTest
         internal readonly List<TimeSpan> waits = new();
         private bool running;
         internal Child(IEventExecutorGroup parent = null) : base(parent) { }
-        internal IScheduledWork FirstScheduled() => PeekScheduledTask();
-        public override bool InEventLoop(Thread thread) => running && thread == Thread.CurrentThread;
+        internal IScheduledWork FirstScheduled()
+        {
+            return PeekScheduledTask();
+        }
+        public override bool InEventLoop(Thread thread)
+        {
+            return running && thread == Thread.CurrentThread;
+        }
         public override void Execute(Action command)
         {
             if (++executions == rejectExecution)
@@ -67,9 +73,18 @@ public class ExecutorLifecycleContractTest
             if (stopFailure != null) throw stopFailure;
             return TerminationFuture;
         }
-        public override bool IsShuttingDown() => shuttingDown;
-        public override bool IsShutdown() => stopped;
-        public override bool IsTerminated() => termination.Task.IsCompleted;
+        public override bool IsShuttingDown()
+        {
+            return shuttingDown;
+        }
+        public override bool IsShutdown()
+        {
+            return stopped;
+        }
+        public override bool IsTerminated()
+        {
+            return termination.Task.IsCompleted;
+        }
         public override bool AwaitTermination(TimeSpan timeout)
         {
             waits.Add(timeout);
@@ -81,16 +96,40 @@ public class ExecutorLifecycleContractTest
     {
         internal readonly Child child;
         internal int selections;
-        internal SingleChildGroup(Child child) => this.child = child;
+        internal SingleChildGroup(Child child)
+        {
+            this.child = child;
+        }
         public override IEventExecutor Next() { ++selections; return child; }
-        public override IEnumerable<IEventExecutor> Iterator() => new[] { child };
-        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => child.ShutdownGracefullyAsync(quietPeriod, timeout);
+        public override IEnumerable<IEventExecutor> Iterator()
+        {
+            return new[] { child };
+        }
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+        {
+            return child.ShutdownGracefullyAsync(quietPeriod, timeout);
+        }
         public override Task TerminationFuture => child.TerminationFuture;
-        public override void Shutdown() => child.Shutdown();
-        public override bool IsShuttingDown() => child.IsShuttingDown();
-        public override bool IsShutdown() => child.IsShutdown();
-        public override bool IsTerminated() => child.IsTerminated();
-        public override bool AwaitTermination(TimeSpan timeout) => child.AwaitTermination(timeout);
+        public override void Shutdown()
+        {
+            child.Shutdown();
+        }
+        public override bool IsShuttingDown()
+        {
+            return child.IsShuttingDown();
+        }
+        public override bool IsShutdown()
+        {
+            return child.IsShutdown();
+        }
+        public override bool IsTerminated()
+        {
+            return child.IsTerminated();
+        }
+        public override bool AwaitTermination(TimeSpan timeout)
+        {
+            return child.AwaitTermination(timeout);
+        }
     }
 
     private sealed class ManualGroup : MultithreadEventExecutorGroup
@@ -98,8 +137,10 @@ public class ExecutorLifecycleContractTest
         internal ManualGroup(params Child[] children) : this(DefaultEventExecutorChooserFactory.INSTANCE, children) { }
         internal ManualGroup(IEventExecutorChooserFactory factory, params Child[] children)
             : base(children.Length, command => command(), factory, (object)children) { }
-        protected override IEventExecutor NewChild(Action<Action> executor, params object[] args) =>
-            ((Child[])args[0])[iteratorIndex++];
+        protected override IEventExecutor NewChild(Action<Action> executor, params object[] args)
+        {
+            return ((Child[])args[0])[iteratorIndex++];
+        }
         private int iteratorIndex;
     }
 
@@ -113,9 +154,18 @@ public class ExecutorLifecycleContractTest
             metrics = Array.AsReadOnly(executors.Select(executor => new AutoScalingUtilizationMetric(executor)).ToArray());
             return this;
         }
-        public IEventExecutor Next() => children[0];
-        public int ActiveExecutorCount() => 1;
-        public IReadOnlyList<AutoScalingUtilizationMetric> ExecutorUtilizations() => metrics;
+        public IEventExecutor Next()
+        {
+            return children[0];
+        }
+        public int ActiveExecutorCount()
+        {
+            return 1;
+        }
+        public IReadOnlyList<AutoScalingUtilizationMetric> ExecutorUtilizations()
+        {
+            return metrics;
+        }
     }
 
     private sealed class FailingGroup : MultithreadEventExecutorGroup
@@ -135,15 +185,24 @@ public class ExecutorLifecycleContractTest
     private sealed class RejectingExecutor
     {
         internal readonly RejectedExecutionException failure = new("worker rejected");
-        public void Execute(Action command) => throw failure;
+        public void Execute(Action command)
+        {
+            throw failure;
+        }
     }
 
     private sealed class FailingWorker : SingleThreadEventExecutor
     {
         private readonly Exception failure;
         internal FailingWorker(Exception failure)
-            : base(null, new DefaultThreadFactory("lifecycle-failure", true), true) => this.failure = failure;
-        protected override void Run() => throw failure;
+            : base(null, new DefaultThreadFactory("lifecycle-failure", true), true)
+        {
+            this.failure = failure;
+        }
+        protected override void Run()
+        {
+            throw failure;
+        }
     }
 
     [Fact]
@@ -258,7 +317,10 @@ public class ExecutorLifecycleContractTest
     private sealed class DormantSynchronizationContext : SynchronizationContext
     {
         internal int posts;
-        public override void Post(SendOrPostCallback callback, object state) => Interlocked.Increment(ref posts);
+        public override void Post(SendOrPostCallback callback, object state)
+        {
+            Interlocked.Increment(ref posts);
+        }
     }
 
     [Fact]

@@ -28,7 +28,10 @@ public abstract partial class ByteBuf : IEquatable<ByteBuf>, IComparable<ByteBuf
      */
     /// <remarks>Depends on the current readable bytes. Do not change content, indices or
     /// lifetime while the buffer is a key in a hash-based collection.</remarks>
-    public override int GetHashCode() => ByteBufUtil.HashCode(this);
+    public override int GetHashCode()
+    {
+        return ByteBufUtil.HashCode(this);
+    }
 
 /**
      * Determines if the content of the specified buffer is identical to the
@@ -42,10 +45,16 @@ public abstract partial class ByteBuf : IEquatable<ByteBuf>, IComparable<ByteBuf
      * {@code null} and an object which is not an instance of
      * {@link ByteBuf} type.
      */
-    public override bool Equals(object obj) => obj is ByteBuf other && Equals(other);
+    public override bool Equals(object obj)
+    {
+        return obj is ByteBuf other && Equals(other);
+    }
 
     /// <summary>Compares the current readable content, regardless of storage or absolute indices.</summary>
-    public virtual bool Equals(ByteBuf other) => other is not null && ByteBufUtil.Equals(this, other);
+    public virtual bool Equals(ByteBuf other)
+    {
+        return other is not null && ByteBufUtil.Equals(this, other);
+    }
 
 /**
      * Compares the content of the specified buffer to the content of this
@@ -55,5 +64,8 @@ public abstract partial class ByteBuf : IEquatable<ByteBuf>, IComparable<ByteBuf
      */
     /// <remarks>As required by IComparable, a non-null buffer sorts after null.
     /// Comparison otherwise follows ByteBufUtil.Compare over the readable bytes.</remarks>
-    public virtual int CompareTo(ByteBuf other) => other is null ? 1 : ByteBufUtil.Compare(this, other);
+    public virtual int CompareTo(ByteBuf other)
+    {
+        return other is null ? 1 : ByteBufUtil.Compare(this, other);
+    }
 }

@@ -61,9 +61,18 @@ internal sealed class DiscardingStatsOutputStream : System.IO.Stream
     {
     }
 
-    public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+    public override int Read(byte[] buffer, int offset, int count)
+    {
+        throw new NotSupportedException();
+    }
 
-    public override long Seek(long offset, System.IO.SeekOrigin origin) => throw new NotSupportedException();
+    public override long Seek(long offset, System.IO.SeekOrigin origin)
+    {
+        throw new NotSupportedException();
+    }
 
-    public override void SetLength(long value) => throw new NotSupportedException();
+    public override void SetLength(long value)
+    {
+        throw new NotSupportedException();
+    }
 }

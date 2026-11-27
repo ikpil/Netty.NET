@@ -21,9 +21,18 @@ public class NativeExecutorQueueContractTest
         internal Loop(Action<Action, SingleThreadEventExecutor> rejected = null)
             : base(null, _ => throw new Exception("unexpected worker start"), false, 16,
                 rejected ?? RejectedExecutionHandlers.Reject()) { }
-        public override bool InEventLoop(Thread thread) => thread == Thread.CurrentThread;
-        public override bool IsShutdown() => Closed || base.IsShutdown();
-        public override Ticker Ticker() => clock ?? global::Netty.NET.Common.Concurrent.Ticker.SystemTicker();
+        public override bool InEventLoop(Thread thread)
+        {
+            return thread == Thread.CurrentThread;
+        }
+        public override bool IsShutdown()
+        {
+            return Closed || base.IsShutdown();
+        }
+        public override Ticker Ticker()
+        {
+            return clock ?? global::Netty.NET.Common.Concurrent.Ticker.SystemTicker();
+        }
         protected override IQueue<Action> NewTaskQueue(int maxPendingTasks)
         {
             Capacity = maxPendingTasks;
@@ -31,21 +40,48 @@ public class NativeExecutorQueueContractTest
         }
         protected override void AddTask(Action task) { Added = task; base.AddTask(task); }
         protected override bool WakesUpForTask(Action task) { WakeChecked = task; return true; }
-        protected override void Run() => throw new Exception("unexpected worker loop");
-        internal Action Peek() => PeekTask();
-        internal Action Poll() => PollTask();
-        internal bool Remove(Action task) => RemoveTask(task);
-        internal bool Drain() => RunAllTasks();
-        internal bool Tail(IQueue<Action> queue) => RunAllTasksFrom(queue);
-        internal bool Transfer(IQueue<Action> queue) => FetchFromScheduledTaskQueue(queue);
+        protected override void Run()
+        {
+            throw new Exception("unexpected worker loop");
+        }
+        internal Action Peek()
+        {
+            return PeekTask();
+        }
+        internal Action Poll()
+        {
+            return PollTask();
+        }
+        internal bool Remove(Action task)
+        {
+            return RemoveTask(task);
+        }
+        internal bool Drain()
+        {
+            return RunAllTasks();
+        }
+        internal bool Tail(IQueue<Action> queue)
+        {
+            return RunAllTasksFrom(queue);
+        }
+        internal bool Transfer(IQueue<Action> queue)
+        {
+            return FetchFromScheduledTaskQueue(queue);
+        }
         internal IScheduledWork Head => PeekScheduledTask();
-        internal void Advance(long nanos) => clock.Advance(nanos);
+        internal void Advance(long nanos)
+        {
+            clock.Advance(nanos);
+        }
     }
 
     private sealed class Receiver
     {
         internal int Calls;
-        internal void Invoke() => Calls++;
+        internal void Invoke()
+        {
+            Calls++;
+        }
     }
 
     [Fact]
@@ -92,12 +128,27 @@ public class NativeExecutorQueueContractTest
         internal Action LastAttempt;
         private readonly LinkedBlockingQueue<Action> queue = new(1, ReferenceEqualityComparer.Instance);
         public int Count => queue.Count;
-        public bool IsEmpty() => queue.IsEmpty();
-        public bool TryRemove(Action item) => queue.TryRemove(item);
+        public bool IsEmpty()
+        {
+            return queue.IsEmpty();
+        }
+        public bool TryRemove(Action item)
+        {
+            return queue.TryRemove(item);
+        }
         public bool TryEnqueue(Action item) { LastAttempt = item; return queue.TryEnqueue(item); }
-        public bool TryDequeue(out Action item) => queue.TryDequeue(out item);
-        public bool TryPeek(out Action item) => queue.TryPeek(out item);
-        public void Clear() => queue.Clear();
+        public bool TryDequeue(out Action item)
+        {
+            return queue.TryDequeue(out item);
+        }
+        public bool TryPeek(out Action item)
+        {
+            return queue.TryPeek(out item);
+        }
+        public void Clear()
+        {
+            queue.Clear();
+        }
     }
 
     [Fact]

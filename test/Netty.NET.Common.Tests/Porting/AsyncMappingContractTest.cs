@@ -11,8 +11,10 @@ public class AsyncMappingContractTest
     private sealed class DelegateMapping<TInput, TOutput>(Func<TInput, CancellationToken, Task<TOutput>> function)
         : IAsyncMapping<TInput, TOutput>
     {
-        public Task<TOutput> MapAsync(TInput input, CancellationToken cancellationToken = default) =>
-            function(input, cancellationToken);
+        public Task<TOutput> MapAsync(TInput input, CancellationToken cancellationToken = default)
+        {
+            return function(input, cancellationToken);
+        }
     }
 
     private sealed class HelloLease : AbstractReferenceCounted
@@ -25,7 +27,10 @@ public class AsyncMappingContractTest
             ++Releases;
             ReleasedOnLoop = Executor.InEventLoop();
         }
-        public override IReferenceCounted Touch(object hint) => this;
+        public override IReferenceCounted Touch(object hint)
+        {
+            return this;
+        }
     }
 
     // Consumer model of SniHandler.lookup and SslClientHelloHandler.select:
@@ -44,11 +49,14 @@ public class AsyncMappingContractTest
         internal Exception Failure;
         internal Task<object> Operation;
 
-        internal Task RequestReadAsync() => executor.SubmitAsync(() =>
+        internal Task RequestReadAsync()
         {
-            if (Suppressed) ReadPending = true;
-            else ++Reads;
-        });
+            return executor.SubmitAsync(() =>
+            {
+                if (Suppressed) ReadPending = true;
+                else ++Reads;
+            });
+        }
 
         internal async Task<object> LookupAsync(IAsyncMapping<string, object> mapping, string hostname,
             HelloLease hello, CancellationToken cancellationToken = default)

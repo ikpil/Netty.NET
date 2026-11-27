@@ -36,7 +36,9 @@ public class ByteBufStreamTransferTest
     }
 
     private static byte[] Bytes(ByteBuf b, int index, int length)
-        => b.AsReadOnlySequence(index, length).ToArray();
+    {
+        return b.AsReadOnlySequence(index, length).ToArray();
+    }
 
     [Theory]
     [InlineData(0)] [InlineData(1)] [InlineData(2)]
@@ -362,11 +364,23 @@ public class ByteBufStreamTransferTest
             Calls++; Callback?.Invoke(); Accepted = (Fail ? source[..1] : source).ToArray();
             if (Fail) throw new IOException("Output failure after accepting a prefix.");
         }
-        public override int Read(byte[] b, int offset, int count) => Read(b.AsSpan(offset, count));
-        public override void Write(byte[] b, int offset, int count) => Write(b.AsSpan(offset, count));
+        public override int Read(byte[] b, int offset, int count)
+        {
+            return Read(b.AsSpan(offset, count));
+        }
+        public override void Write(byte[] b, int offset, int count)
+        {
+            Write(b.AsSpan(offset, count));
+        }
         protected override void Dispose(bool disposing) { Disposed = true; base.Dispose(disposing); }
         public override void Flush() { }
-        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
-        public override void SetLength(long value) => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            throw new NotSupportedException();
+        }
+        public override void SetLength(long value)
+        {
+            throw new NotSupportedException();
+        }
     }
 }

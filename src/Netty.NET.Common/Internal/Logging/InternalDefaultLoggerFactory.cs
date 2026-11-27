@@ -15,7 +15,10 @@ namespace Netty.NET.Common.Internal.Logging
             _loggers = new ConcurrentDictionary<string, InternalDefaultLogger>();
         }
 
-        protected virtual bool CheckDisposed() => _disposed;
+        protected virtual bool CheckDisposed()
+        {
+            return _disposed;
+        }
 
         public void Dispose()
         {

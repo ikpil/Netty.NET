@@ -29,10 +29,14 @@ public class HeapByteBufTest
     private const int Capacity = 4096; // Must be even
 
     protected virtual ByteBuf NewBuffer(int initialCapacity, int maxCapacity = int.MaxValue)
-        => Unpooled.Buffer(initialCapacity, maxCapacity);
+    {
+        return Unpooled.Buffer(initialCapacity, maxCapacity);
+    }
     protected virtual bool UsesDirectMemory => false;
     private ByteBuf NewCopiedBuffer(ReadOnlySpan<byte> bytes)
-        => NewBuffer(bytes.Length).WriteBytes(bytes);
+    {
+        return NewBuffer(bytes.Length).WriteBytes(bytes);
+    }
 
     [Fact]
     public void InitialState()

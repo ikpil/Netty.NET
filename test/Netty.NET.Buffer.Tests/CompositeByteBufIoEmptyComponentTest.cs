@@ -60,7 +60,10 @@ public class CompositeByteBufIoEmptyComponentTest
             ByteBuf Data(int start) { ByteBuf b = direct ? Allocator.DirectBuffer(4, 4) : Allocator.HeapBuffer(4, 4); for (int i = 0; i < 4; ++i) b.WriteByte(start + i); return b; }
             Root = new CompositeByteBuf(Allocator, direct, 16, Data(1), FirstEmpty, Data(5), SecondEmpty, Data(9));
             Root.SetIndex(0, 12); Tracker = new Tracker(Root); Index = facade is 5 or 6 or 9 or 11 ? 1 : 2;
-            CompositeByteBuf Nested(ByteBuf b) => new(Allocator, direct, 16, b);
+            CompositeByteBuf Nested(ByteBuf b)
+            {
+                return new(Allocator, direct, 16, b);
+            }
             Owner = facade switch
             {
                 0 => Root, 1 => new WrappedCompositeByteBuf(Root),

@@ -95,5 +95,8 @@ public class IpPreferenceContractTest
         }
     }
 
-    private static bool Read(Type type, string name) => (bool)type.GetProperty(name).GetValue(null);
+    private static bool Read(Type type, string name)
+    {
+        return (bool)type.GetProperty(name).GetValue(null);
+    }
 }

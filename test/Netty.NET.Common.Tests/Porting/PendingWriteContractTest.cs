@@ -12,7 +12,10 @@ public class PendingWriteContractTest
     {
         internal int Deallocations;
         internal Exception ReleaseError;
-        public override IReferenceCounted Touch(object hint) => this;
+        public override IReferenceCounted Touch(object hint)
+        {
+            return this;
+        }
         protected override void Deallocate()
         {
             ++Deallocations;

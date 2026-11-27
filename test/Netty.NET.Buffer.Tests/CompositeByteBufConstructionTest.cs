@@ -25,9 +25,12 @@ namespace Netty.NET.Buffer.Tests;
 public class CompositeByteBufConstructionTest
 {
     private static CompositeByteBuf Construct(IByteBufAllocator allocator, bool direct, int limit,
-        ByteBuf[] buffers, bool enumerable) => enumerable
+        ByteBuf[] buffers, bool enumerable)
+    {
+        return enumerable
         ? new CompositeByteBuf(allocator, direct, limit, (IEnumerable<ByteBuf>)buffers)
         : new CompositeByteBuf(allocator, direct, limit, buffers);
+    }
 
     [Theory]
     [InlineData(false, false, 1)] [InlineData(false, true, 1)]
@@ -275,7 +278,10 @@ public class CompositeByteBufConstructionTest
     private sealed class DerivedComposite(IByteBufAllocator allocator, ByteBuf[] buffers)
         : CompositeByteBuf(allocator, false, 8, buffers)
     {
-        protected override void Deallocate() => throw new InvalidOperationException("Derived state is not initialized.");
+        protected override void Deallocate()
+        {
+            throw new InvalidOperationException("Derived state is not initialized.");
+        }
     }
 
     private sealed class LogicalBuffer : AbstractReferenceCountedByteBuf
@@ -285,7 +291,10 @@ public class CompositeByteBufConstructionTest
         public override bool IsDirect => false;
         protected override bool TryGetReadOnlyMemoryCore(int index, int length, out ReadOnlyMemory<byte> memory)
         { memory = default; return false; }
-        protected override Memory<byte> GetMemoryCore(int index, int length) => throw new InvalidOperationException("No physical allocation.");
+        protected override Memory<byte> GetMemoryCore(int index, int length)
+        {
+            throw new InvalidOperationException("No physical allocation.");
+        }
         protected override void Deallocate() { }
     }
 
@@ -303,7 +312,10 @@ public class CompositeByteBufConstructionTest
         public override bool IsDirect => _source.IsDirect;
         public override int RefCnt => _source.RefCnt;
         public override ByteBuf Retain(int increment = 1) { _source.Retain(increment); return this; }
-        public override bool Release(int decrement = 1) => _source.Release(decrement);
+        public override bool Release(int decrement = 1)
+        {
+            return _source.Release(decrement);
+        }
         protected override Memory<byte> GetMemoryCore(int index, int length)
         {
             if (!_observed) { _observed = true; _action(); }
@@ -319,14 +331,23 @@ public class CompositeByteBufConstructionTest
             first.Capacity = 1;
             yield return second;
         }
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
     }
 
     private sealed class FailingEnumerable(ByteBuf first, ByteBuf tail, Exception failure, bool persistent) : IEnumerable<ByteBuf>
     {
         internal int Disposals;
-        public IEnumerator<ByteBuf> GetEnumerator() => new Enumerator(this, first, tail, failure, persistent);
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        public IEnumerator<ByteBuf> GetEnumerator()
+        {
+            return new Enumerator(this, first, tail, failure, persistent);
+        }
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
         private sealed class Enumerator(FailingEnumerable owner, ByteBuf first, ByteBuf tail, Exception failure, bool persistent) : IEnumerator<ByteBuf>
         {
             private int _position;
@@ -338,8 +359,14 @@ public class CompositeByteBufConstructionTest
                 if (_position == 1 && (persistent || !_failed)) { _failed = true; throw failure; }
                 return ++_position <= 2;
             }
-            public void Reset() => throw new NotSupportedException();
-            public void Dispose() => owner.Disposals++;
+            public void Reset()
+            {
+                throw new NotSupportedException();
+            }
+            public void Dispose()
+            {
+                owner.Disposals++;
+            }
         }
     }
 }

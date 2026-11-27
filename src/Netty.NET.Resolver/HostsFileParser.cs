@@ -37,7 +37,10 @@ public static class HostsFileParser
      *
      * @return a {@link HostsFileEntries}
      */
-    public static HostsFileEntries ParseSilently() => HostsFileEntries(HostsFileEntriesProvider.Parser().ParseSilently());
+    public static HostsFileEntries ParseSilently()
+    {
+        return HostsFileEntries(HostsFileEntriesProvider.Parser().ParseSilently());
+    }
     /**
      * Parse hosts file at standard OS location using the given {@link Charset}s one after each other until
      * we were able to parse something or none is left.
@@ -45,14 +48,20 @@ public static class HostsFileParser
      * @param charsets the {@link Charset}s to try as file encodings when parsing.
      * @return a {@link HostsFileEntries}
      */
-    public static HostsFileEntries ParseSilently(params Encoding[] charsets) => HostsFileEntries(HostsFileEntriesProvider.Parser().ParseSilently(charsets));
+    public static HostsFileEntries ParseSilently(params Encoding[] charsets)
+    {
+        return HostsFileEntries(HostsFileEntriesProvider.Parser().ParseSilently(charsets));
+    }
     /**
      * Parse hosts file at standard OS location using the system default {@link Charset} for decoding.
      *
      * @return a {@link HostsFileEntries}
      * @throws IOException file could not be read
      */
-    public static HostsFileEntries Parse() => HostsFileEntries(HostsFileEntriesProvider.Parser().Parse());
+    public static HostsFileEntries Parse()
+    {
+        return HostsFileEntries(HostsFileEntriesProvider.Parser().Parse());
+    }
     /**
      * Parse a hosts file using the system default {@link Charset} for decoding.
      *
@@ -60,7 +69,10 @@ public static class HostsFileParser
      * @return a {@link HostsFileEntries}
      * @throws IOException file could not be read
      */
-    public static HostsFileEntries Parse(FileInfo file) => HostsFileEntries(HostsFileEntriesProvider.Parser().Parse(file));
+    public static HostsFileEntries Parse(FileInfo file)
+    {
+        return HostsFileEntries(HostsFileEntriesProvider.Parser().Parse(file));
+    }
     /**
      * Parse a hosts file.
      *
@@ -69,7 +81,10 @@ public static class HostsFileParser
      * @return a {@link HostsFileEntries}
      * @throws IOException file could not be read
      */
-    public static HostsFileEntries Parse(FileInfo file, params Encoding[] charsets) => HostsFileEntries(HostsFileEntriesProvider.Parser().Parse(file, charsets));
+    public static HostsFileEntries Parse(FileInfo file, params Encoding[] charsets)
+    {
+        return HostsFileEntries(HostsFileEntriesProvider.Parser().Parse(file, charsets));
+    }
     /**
      * Parse a reader of hosts file format.
      *
@@ -77,7 +92,10 @@ public static class HostsFileParser
      * @return a {@link HostsFileEntries}
      * @throws IOException file could not be read
      */
-    public static HostsFileEntries Parse(TextReader reader) => HostsFileEntries(HostsFileEntriesProvider.Parser().Parse(reader));
+    public static HostsFileEntries Parse(TextReader reader)
+    {
+        return HostsFileEntries(HostsFileEntriesProvider.Parser().Parse(reader));
+    }
 
     private static HostsFileEntries HostsFileEntries(HostsFileEntriesProvider provider)
     {

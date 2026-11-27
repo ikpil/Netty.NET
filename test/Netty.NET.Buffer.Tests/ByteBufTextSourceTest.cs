@@ -109,22 +109,30 @@ public class ByteBufTextSourceTest
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestSetUsAsciiCharSequenceAfterRelease(int provider)
-        => Assert.Throws<IllegalReferenceCountException>(() => TestSetCharSequenceAfterRelease0(provider, Encoding.ASCII));
+    {
+        Assert.Throws<IllegalReferenceCountException>(() => TestSetCharSequenceAfterRelease0(provider, Encoding.ASCII));
+    }
 
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestSetIso88591CharSequenceAfterRelease(int provider)
-        => Assert.Throws<IllegalReferenceCountException>(() => TestSetCharSequenceAfterRelease0(provider, Encoding.Latin1));
+    {
+        Assert.Throws<IllegalReferenceCountException>(() => TestSetCharSequenceAfterRelease0(provider, Encoding.Latin1));
+    }
 
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestSetUtf8CharSequenceAfterRelease(int provider)
-        => Assert.Throws<IllegalReferenceCountException>(() => TestSetCharSequenceAfterRelease0(provider, Encoding.UTF8));
+    {
+        Assert.Throws<IllegalReferenceCountException>(() => TestSetCharSequenceAfterRelease0(provider, Encoding.UTF8));
+    }
 
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestSetUtf16CharSequenceAfterRelease(int provider)
-        => Assert.Throws<IllegalReferenceCountException>(() => TestSetCharSequenceAfterRelease0(provider, UTF_16));
+    {
+        Assert.Throws<IllegalReferenceCountException>(() => TestSetCharSequenceAfterRelease0(provider, UTF_16));
+    }
 
     private static void TestSetCharSequenceAfterRelease0(int provider, Encoding charset)
     {
@@ -135,22 +143,30 @@ public class ByteBufTextSourceTest
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestWriteUsAsciiCharSequenceAfterRelease(int provider)
-        => Assert.Throws<IllegalReferenceCountException>(() => TestWriteCharSequenceAfterRelease0(provider, Encoding.ASCII));
+    {
+        Assert.Throws<IllegalReferenceCountException>(() => TestWriteCharSequenceAfterRelease0(provider, Encoding.ASCII));
+    }
 
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestWriteIso88591CharSequenceAfterRelease(int provider)
-        => Assert.Throws<IllegalReferenceCountException>(() => TestWriteCharSequenceAfterRelease0(provider, Encoding.Latin1));
+    {
+        Assert.Throws<IllegalReferenceCountException>(() => TestWriteCharSequenceAfterRelease0(provider, Encoding.Latin1));
+    }
 
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestWriteUtf8CharSequenceAfterRelease(int provider)
-        => Assert.Throws<IllegalReferenceCountException>(() => TestWriteCharSequenceAfterRelease0(provider, Encoding.UTF8));
+    {
+        Assert.Throws<IllegalReferenceCountException>(() => TestWriteCharSequenceAfterRelease0(provider, Encoding.UTF8));
+    }
 
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestWriteUtf16CharSequenceAfterRelease(int provider)
-        => Assert.Throws<IllegalReferenceCountException>(() => TestWriteCharSequenceAfterRelease0(provider, UTF_16));
+    {
+        Assert.Throws<IllegalReferenceCountException>(() => TestWriteCharSequenceAfterRelease0(provider, UTF_16));
+    }
 
     private static void TestWriteCharSequenceAfterRelease0(int provider, Encoding charset)
     {
@@ -161,22 +177,30 @@ public class ByteBufTextSourceTest
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestWriteUsAsciiCharSequenceExpand(int provider)
-        => TestWriteCharSequenceExpand(provider, Encoding.ASCII);
+    {
+        TestWriteCharSequenceExpand(provider, Encoding.ASCII);
+    }
 
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestWriteUtf8CharSequenceExpand(int provider)
-        => TestWriteCharSequenceExpand(provider, Encoding.UTF8);
+    {
+        TestWriteCharSequenceExpand(provider, Encoding.UTF8);
+    }
 
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestWriteIso88591CharSequenceExpand(int provider)
-        => TestWriteCharSequenceExpand(provider, Encoding.Latin1);
+    {
+        TestWriteCharSequenceExpand(provider, Encoding.Latin1);
+    }
 
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestWriteUtf16CharSequenceExpand(int provider)
-        => TestWriteCharSequenceExpand(provider, UTF_16);
+    {
+        TestWriteCharSequenceExpand(provider, UTF_16);
+    }
 
     private static void TestWriteCharSequenceExpand(int provider, Encoding charset)
     {
@@ -197,22 +221,30 @@ public class ByteBufTextSourceTest
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestSetUsAsciiCharSequenceNoExpand(int provider)
-        => TestSetCharSequenceNoExpand(provider, Encoding.ASCII);
+    {
+        TestSetCharSequenceNoExpand(provider, Encoding.ASCII);
+    }
 
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestSetUtf8CharSequenceNoExpand(int provider)
-        => TestSetCharSequenceNoExpand(provider, Encoding.UTF8);
+    {
+        TestSetCharSequenceNoExpand(provider, Encoding.UTF8);
+    }
 
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestSetIso88591CharSequenceNoExpand(int provider)
-        => TestSetCharSequenceNoExpand(provider, Encoding.Latin1);
+    {
+        TestSetCharSequenceNoExpand(provider, Encoding.Latin1);
+    }
 
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestSetUtf16CharSequenceNoExpand(int provider)
-        => TestSetCharSequenceNoExpand(provider, UTF_16);
+    {
+        TestSetCharSequenceNoExpand(provider, UTF_16);
+    }
 
     private static void TestSetCharSequenceNoExpand(int provider, Encoding charset)
     {
@@ -231,26 +263,36 @@ public class ByteBufTextSourceTest
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestSetUsAsciiCharSequence(int provider)
-        => TestSetGetCharSequence(provider, Encoding.ASCII);
+    {
+        TestSetGetCharSequence(provider, Encoding.ASCII);
+    }
 
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestSetUtf8CharSequence(int provider)
-        => TestSetGetCharSequence(provider, Encoding.UTF8);
+    {
+        TestSetGetCharSequence(provider, Encoding.UTF8);
+    }
 
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestSetIso88591CharSequence(int provider)
-        => TestSetGetCharSequence(provider, Encoding.Latin1);
+    {
+        TestSetGetCharSequence(provider, Encoding.Latin1);
+    }
 
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestSetUtf16CharSequence(int provider)
-        => TestSetGetCharSequence(provider, UTF_16);
+    {
+        TestSetGetCharSequence(provider, UTF_16);
+    }
 
     // CLR: exact encoded byte count of the original character table (UTF-16 has no BOM).
     private static int ExpectedLength(Encoding charset)
-        => charset == Encoding.ASCII ? 128 : charset == Encoding.UTF8 ? 384 : charset == Encoding.Latin1 ? 256 : 512;
+    {
+        return charset == Encoding.ASCII ? 128 : charset == Encoding.UTF8 ? 384 : charset == Encoding.Latin1 ? 256 : 512;
+    }
 
     private static void TestSetGetCharSequence(int provider, Encoding charset)
     {
@@ -270,22 +312,30 @@ public class ByteBufTextSourceTest
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestWriteReadUsAsciiCharSequence(int provider)
-        => TestWriteReadCharSequence(provider, Encoding.ASCII);
+    {
+        TestWriteReadCharSequence(provider, Encoding.ASCII);
+    }
 
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestWriteReadUtf8CharSequence(int provider)
-        => TestWriteReadCharSequence(provider, Encoding.UTF8);
+    {
+        TestWriteReadCharSequence(provider, Encoding.UTF8);
+    }
 
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestWriteReadIso88591CharSequence(int provider)
-        => TestWriteReadCharSequence(provider, Encoding.Latin1);
+    {
+        TestWriteReadCharSequence(provider, Encoding.Latin1);
+    }
 
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestWriteReadUtf16CharSequence(int provider)
-        => TestWriteReadCharSequence(provider, UTF_16);
+    {
+        TestWriteReadCharSequence(provider, UTF_16);
+    }
 
     private static void TestWriteReadCharSequence(int provider, Encoding charset)
     {
@@ -307,22 +357,30 @@ public class ByteBufTextSourceTest
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestWriteReadUsAsciiString(int provider)
-        => TestWriteReadString(provider, Encoding.ASCII);
+    {
+        TestWriteReadString(provider, Encoding.ASCII);
+    }
 
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestWriteReadUtf8String(int provider)
-        => TestWriteReadString(provider, Encoding.UTF8);
+    {
+        TestWriteReadString(provider, Encoding.UTF8);
+    }
 
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestWriteReadIso88591String(int provider)
-        => TestWriteReadString(provider, Encoding.Latin1);
+    {
+        TestWriteReadString(provider, Encoding.Latin1);
+    }
 
     [Theory]
     [MemberData(nameof(Providers))]
     public void TestWriteReadUtf16String(int provider)
-        => TestWriteReadString(provider, UTF_16);
+    {
+        TestWriteReadString(provider, UTF_16);
+    }
 
     private static void TestWriteReadString(int provider, Encoding charset)
     {
@@ -380,8 +438,11 @@ public class ByteBufTextSourceTest
         for (int charset = 0; charset < 4; ++charset) yield return [provider, charset];
     }
 
-    private static Encoding Charset(int kind) => kind switch
-    { 0 => Encoding.ASCII, 1 => Encoding.UTF8, 2 => Encoding.Latin1, _ => Encoding.BigEndianUnicode };
+    private static Encoding Charset(int kind)
+    {
+        return kind switch
+        { 0 => Encoding.ASCII, 1 => Encoding.UTF8, 2 => Encoding.Latin1, _ => Encoding.BigEndianUnicode };
+    }
 
     [Theory]
     [MemberData(nameof(EncodingCases))]

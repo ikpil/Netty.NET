@@ -22,7 +22,10 @@ public static partial class Unpooled
 {
     /// <summary>Returns the shared empty buffer when there are no inputs.</summary>
     // CLR: resolves the two params overloads for a zero-input call.
-    public static ByteBuf CopiedBuffer() => EmptyBuffer;
+    public static ByteBuf CopiedBuffer()
+    {
+        return EmptyBuffer;
+    }
 
     /**
      * Creates a new big-endian buffer whose content is a copy of the

@@ -117,7 +117,9 @@ public class ByteBufEndianTest
     }
 
     private static byte[] Wire(ulong value, int width, bool little)
-        => Enumerable.Range(0, width).Select(i => unchecked((byte)(value >> (8 * (little ? i : width - 1 - i))))).ToArray();
+    {
+        return Enumerable.Range(0, width).Select(i => unchecked((byte)(value >> (8 * (little ? i : width - 1 - i))))).ToArray();
+    }
     private static long Signed(ReadOnlySpan<byte> bytes, bool little)
     {
         ulong value = 0;
@@ -131,11 +133,14 @@ public class ByteBufEndianTest
         else if (width == 4) { if (little) b.SetIntLE(index, unchecked((int)value)); else b.SetInt(index, unchecked((int)value)); }
         else { if (little) b.SetLongLE(index, unchecked((long)value)); else b.SetLong(index, unchecked((long)value)); }
     }
-    private static long Get(ByteBuf b, int index, int width, bool little) => width switch
+    private static long Get(ByteBuf b, int index, int width, bool little)
     {
-        2 => little ? b.GetShortLE(index) : b.GetShort(index), 3 => little ? b.GetMediumLE(index) : b.GetMedium(index),
-        4 => little ? b.GetIntLE(index) : b.GetInt(index), _ => little ? b.GetLongLE(index) : b.GetLong(index)
-    };
+        return width switch
+        {
+            2 => little ? b.GetShortLE(index) : b.GetShort(index), 3 => little ? b.GetMediumLE(index) : b.GetMedium(index),
+            4 => little ? b.GetIntLE(index) : b.GetInt(index), _ => little ? b.GetLongLE(index) : b.GetLong(index)
+        };
+    }
     private static void Write(ByteBuf b, int width, ulong value, bool little)
     {
         if (width == 2) { if (little) b.WriteShortLE(unchecked((int)value)); else b.WriteShort(unchecked((int)value)); }
@@ -143,11 +148,14 @@ public class ByteBufEndianTest
         else if (width == 4) { if (little) b.WriteIntLE(unchecked((int)value)); else b.WriteInt(unchecked((int)value)); }
         else { if (little) b.WriteLongLE(unchecked((long)value)); else b.WriteLong(unchecked((long)value)); }
     }
-    private static long Read(ByteBuf b, int width, bool little) => width switch
+    private static long Read(ByteBuf b, int width, bool little)
     {
-        2 => little ? b.ReadShortLE() : b.ReadShort(), 3 => little ? b.ReadMediumLE() : b.ReadMedium(),
-        4 => little ? b.ReadIntLE() : b.ReadInt(), _ => little ? b.ReadLongLE() : b.ReadLong()
-    };
+        return width switch
+        {
+            2 => little ? b.ReadShortLE() : b.ReadShort(), 3 => little ? b.ReadMediumLE() : b.ReadMedium(),
+            4 => little ? b.ReadIntLE() : b.ReadInt(), _ => little ? b.ReadLongLE() : b.ReadLong()
+        };
+    }
 
     [Theory] [MemberData(nameof(Cases))]
     public void ExplicitAbsoluteAndRelativeOperationsPreserveSignedWidthsAndCursorEffects(int kind, bool little)

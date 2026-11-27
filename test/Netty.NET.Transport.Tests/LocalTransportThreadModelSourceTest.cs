@@ -31,7 +31,10 @@ namespace Netty.NET.Transport.Tests;
 public partial class LocalTransportThreadModelSourceTest
 {
     [Fact(Timeout = 5000)]
-    public Task TestStagedExecution() => RunStagedExecutionAsync(TestContext.Current.CancellationToken);
+    public Task TestStagedExecution()
+    {
+        return RunStagedExecutionAsync(TestContext.Current.CancellationToken);
+    }
 
     [Fact(Timeout = 30000, Skip = "regression test")]
     public async Task TestStagedExecutionMultiple()
@@ -128,7 +131,10 @@ public partial class LocalTransportThreadModelSourceTest
         private Exception _error;
         internal Exception Error => Volatile.Read(ref _error);
 
-        public override void HandlerRemoved(IChannelHandlerContext ctx) => Removed.Enqueue(Thread.CurrentThread);
+        public override void HandlerRemoved(IChannelHandlerContext ctx)
+        {
+            Removed.Enqueue(Thread.CurrentThread);
+        }
 
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {

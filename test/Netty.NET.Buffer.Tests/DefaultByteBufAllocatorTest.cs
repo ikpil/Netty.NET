@@ -50,14 +50,25 @@ public partial class DefaultByteBufAllocatorTest
             if (!_previous.ContainsKey(key)) _previous.Add(key, Environment.GetEnvironmentVariable(key));
             Environment.SetEnvironmentVariable(key, value);
         }
-        internal Type Type(string name) => _buffer.GetType("Netty.NET.Buffer." + name, true);
+        internal Type Type(string name)
+        {
+            return _buffer.GetType("Netty.NET.Buffer." + name, true);
+        }
         internal object Default => Track(Type("IByteBufAllocator").GetProperty("Default").GetValue(null));
         internal object UtilityDefault => Type("ByteBufUtil").GetProperty("DefaultAllocator", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
-        internal object Singleton(string name) => Track(Type(name).GetProperty("Default").GetValue(null));
-        internal object Adaptive(bool? prefer = null, bool? low = null) => Track(Activator.CreateInstance(Type("AdaptiveByteBufAllocator"), prefer, null, low, null));
+        internal object Singleton(string name)
+        {
+            return Track(Type(name).GetProperty("Default").GetValue(null));
+        }
+        internal object Adaptive(bool? prefer = null, bool? low = null)
+        {
+            return Track(Activator.CreateInstance(Type("AdaptiveByteBufAllocator"), prefer, null, low, null));
+        }
         internal object Track(object allocator) { lock (_allocators) _allocators.Add(allocator); return allocator; }
         internal object CommonTypeCall(string type, string method, params object[] args)
-            => _common.GetType("Netty.NET.Common." + type, true).GetMethod(method).Invoke(null, args);
+        {
+            return _common.GetType("Netty.NET.Common." + type, true).GetMethod(method).Invoke(null, args);
+        }
         internal long NativeBytes
         {
             get
@@ -81,10 +92,15 @@ public partial class DefaultByteBufAllocatorTest
     }
 
     private static object Call(object target, string method, params object[] args)
-        => target.GetType().GetMethods().Single(m => m.Name == method && m.GetParameters().Length == args.Length
+    {
+        return target.GetType().GetMethods().Single(m => m.Name == method && m.GetParameters().Length == args.Length
             && m.GetParameters().Select((p, i) => args[i] == null || p.ParameterType.IsInstanceOfType(args[i])).All(x => x))
             .Invoke(target, args);
-    private static T Property<T>(object target, string name) => (T)target.GetType().GetProperty(name).GetValue(target);
+    }
+    private static T Property<T>(object target, string name)
+    {
+        return (T)target.GetType().GetProperty(name).GetValue(target);
+    }
     private static void CheckFactory(object allocator, string factory, bool direct)
     {
         object b = Call(allocator, factory, 9, 64);

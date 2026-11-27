@@ -720,8 +720,10 @@ public class SizeClassedChunkCacheTest : IDisposable
     // CLR: new AdaptivePoolingAllocator.ThreadLocalSizeClassedChunkCache(chunkSize) of the source; the CLR
     // constructor also takes the per-instance settings the source reads from statics.
     private static ThreadLocalSizeClassedChunkCache NewThreadLocalSizeClassedChunkCache(int chunkSize)
-        => new(chunkSize, CHUNK_PURGE_POLLS_THREAD_LOCAL, CHUNK_PURGE_THRESHOLD,
+    {
+        return new(chunkSize, CHUNK_PURGE_POLLS_THREAD_LOCAL, CHUNK_PURGE_THRESHOLD,
             THREAD_LOCAL_CACHE_MAX_BYTES, THREAD_LOCAL_CACHE_MIN_BYTES);
+    }
 
     // CLR: a real chunk standing in for a Mockito stub; `allocated` of its eight 512-byte segments stay claimed.
     private SizeClassedChunk Mock(int allocated)
@@ -752,15 +754,30 @@ public class SizeClassedChunkCacheTest : IDisposable
     private static readonly FieldInfo TailField = typeof(ThreadLocalSizeClassedChunkCache).GetField("_tail", BindingFlags.Instance | BindingFlags.NonPublic);
 
     // CLR: verify(chunk).markToDeallocate(); only Chunk.MarkToDeallocate sets the retirement flag.
-    private static bool MarkedToDeallocate(Chunk chunk) => (int)RetiredField.GetValue(chunk) != 0;
+    private static bool MarkedToDeallocate(Chunk chunk)
+    {
+        return (int)RetiredField.GetValue(chunk) != 0;
+    }
 
     // CLR: the source's package-private "for testing" ring fields chunks/head/tail are private in the CLR cache.
-    private static SizeClassedChunk[] Chunks(ThreadLocalSizeClassedChunkCache cache) => (SizeClassedChunk[])ChunksField.GetValue(cache);
-    private static int Head(ThreadLocalSizeClassedChunkCache cache) => (int)HeadField.GetValue(cache);
-    private static int Tail(ThreadLocalSizeClassedChunkCache cache) => (int)TailField.GetValue(cache);
+    private static SizeClassedChunk[] Chunks(ThreadLocalSizeClassedChunkCache cache)
+    {
+        return (SizeClassedChunk[])ChunksField.GetValue(cache);
+    }
+    private static int Head(ThreadLocalSizeClassedChunkCache cache)
+    {
+        return (int)HeadField.GetValue(cache);
+    }
+    private static int Tail(ThreadLocalSizeClassedChunkCache cache)
+    {
+        return (int)TailField.GetValue(cache);
+    }
 
     // CLR: Java string concatenation renders ints culture-independently.
-    private static string Text(FormattableString message) => message.ToString(CultureInfo.InvariantCulture);
+    private static string Text(FormattableString message)
+    {
+        return message.ToString(CultureInfo.InvariantCulture);
+    }
 
     public void Dispose()
     {

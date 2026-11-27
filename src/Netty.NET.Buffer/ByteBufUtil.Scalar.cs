@@ -53,12 +53,18 @@ public static partial class ByteBufUtil
      * @return {@code true} if {@code ensureWritableResult} means that there is adequate space and a write operation
      * will succeed.
      */
-    public static bool EnsureWritableSuccess(int ensureWritableResult) => ensureWritableResult is 0 or 2;
+    public static bool EnsureWritableSuccess(int ensureWritableResult)
+    {
+        return ensureWritableResult is 0 or 2;
+    }
 
     /**
      * Toggles the endianness of the specified 16-bit short integer.
      */
-    public static short SwapShort(short value) => BinaryPrimitives.ReverseEndianness(value);
+    public static short SwapShort(short value)
+    {
+        return BinaryPrimitives.ReverseEndianness(value);
+    }
 
     /**
      * Toggles the endianness of the specified 24-bit medium integer.
@@ -72,12 +78,18 @@ public static partial class ByteBufUtil
     /**
      * Toggles the endianness of the specified 32-bit integer.
      */
-    public static int SwapInt(int value) => BinaryPrimitives.ReverseEndianness(value);
+    public static int SwapInt(int value)
+    {
+        return BinaryPrimitives.ReverseEndianness(value);
+    }
 
     /**
      * Toggles the endianness of the specified 64-bit long integer.
      */
-    public static long SwapLong(long value) => BinaryPrimitives.ReverseEndianness(value);
+    public static long SwapLong(long value)
+    {
+        return BinaryPrimitives.ReverseEndianness(value);
+    }
 
     /**
      * Writes a big-endian 16-bit short integer to the buffer.

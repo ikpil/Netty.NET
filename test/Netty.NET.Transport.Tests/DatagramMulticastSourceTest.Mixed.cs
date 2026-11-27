@@ -44,7 +44,9 @@ public partial class DatagramMulticastSourceTest
         return null;
     }
 
-    private static void SetIPv4MulticastInterface(Socket socket, NetworkInterface iface) =>
+    private static void SetIPv4MulticastInterface(Socket socket, NetworkInterface iface)
+    {
         socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface,
             InterfaceAddress(iface, AddressFamily.InterNetwork).GetAddressBytes());
+    }
 }

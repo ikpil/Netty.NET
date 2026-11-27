@@ -12,8 +12,14 @@ public class NativeTypeResolutionContractTest : IDisposable
 {
     public class GenericParent<T> { }
 
-    public NativeTypeResolutionContractTest() => FastThreadLocal.RemoveAll();
-    public void Dispose() => FastThreadLocal.RemoveAll();
+    public NativeTypeResolutionContractTest()
+    {
+        FastThreadLocal.RemoveAll();
+    }
+    public void Dispose()
+    {
+        FastThreadLocal.RemoveAll();
+    }
 
     [Fact]
     public void ResolvingCollectibleTypesDoesNotKeepThemAliveThroughTheWorkerMap()

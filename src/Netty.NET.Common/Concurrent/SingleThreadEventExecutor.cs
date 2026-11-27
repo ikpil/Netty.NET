@@ -682,7 +682,10 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      *
      * @return The number of registered channels, or {@code -1} if not applicable.
      */
-    protected internal virtual int GetNumOfRegisteredChannels() => -1;
+    protected internal virtual int GetNumOfRegisteredChannels()
+    {
+        return -1;
+    }
 
     /**
      * Adds the given duration to the total active time for the current measurement window.
@@ -707,12 +710,18 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
     /**
      * Returns the accumulated active time since the last call and resets the counter.
      */
-    protected internal virtual long GetAndResetAccumulatedActiveTimeNanos() => Interlocked.Exchange(ref accumulatedActiveTimeNanos, 0);
+    protected internal virtual long GetAndResetAccumulatedActiveTimeNanos()
+    {
+        return Interlocked.Exchange(ref accumulatedActiveTimeNanos, 0);
+    }
 
     /**
      * Returns the timestamp of the last known activity (tasks + I/O).
      */
-    protected internal virtual long GetLastActivityTimeNanos() => Volatile.Read(ref lastActivityTimeNanos);
+    protected internal virtual long GetLastActivityTimeNanos()
+    {
+        return Volatile.Read(ref lastActivityTimeNanos);
+    }
 
     /**
      * Atomically increments the counter for consecutive monitor cycles where utilization was below the
@@ -720,13 +729,19 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      *
      * @return The number of consecutive idle cycles before the increment.
      */
-    protected internal virtual int GetAndIncrementIdleCycles() => unchecked(Interlocked.Increment(ref consecutiveIdleCycles) - 1);
+    protected internal virtual int GetAndIncrementIdleCycles()
+    {
+        return unchecked(Interlocked.Increment(ref consecutiveIdleCycles) - 1);
+    }
 
     /**
      * Resets the counter for consecutive idle cycles to zero. This is typically called when the
      * executor's utilization is no longer considered idle, breaking the streak.
      */
-    protected internal virtual void ResetIdleCycles() => Volatile.Write(ref consecutiveIdleCycles, 0);
+    protected internal virtual void ResetIdleCycles()
+    {
+        Volatile.Write(ref consecutiveIdleCycles, 0);
+    }
 
     /**
      * Atomically increments the counter for consecutive monitor cycles where utilization was above the
@@ -734,18 +749,27 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
      *
      * @return The number of consecutive busy cycles before the increment.
      */
-    protected internal virtual int GetAndIncrementBusyCycles() => unchecked(Interlocked.Increment(ref consecutiveBusyCycles) - 1);
+    protected internal virtual int GetAndIncrementBusyCycles()
+    {
+        return unchecked(Interlocked.Increment(ref consecutiveBusyCycles) - 1);
+    }
 
     /**
      * Resets the counter for consecutive busy cycles to zero. This is typically called when the
      * executor's utilization is no longer considered busy, breaking the streak.
      */
-    protected internal virtual void ResetBusyCycles() => Volatile.Write(ref consecutiveBusyCycles, 0);
+    protected internal virtual void ResetBusyCycles()
+    {
+        Volatile.Write(ref consecutiveBusyCycles, 0);
+    }
 
     /**
      * Returns {@code true} if this {@link SingleThreadEventExecutor} supports suspension.
      */
-    protected virtual bool IsSuspensionSupported() => _supportSuspension;
+    protected virtual bool IsSuspensionSupported()
+    {
+        return _supportSuspension;
+    }
 
     /**
      * Runs the task-processing loop until {@link #confirmShutdown()} returns {@code true}.

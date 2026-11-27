@@ -78,6 +78,9 @@ public class AttributeMapInterruptContractTest
         }
     }
 
-    private static object Field(object owner, string name) => owner.GetType()
-        .GetField(name, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(owner);
+    private static object Field(object owner, string name)
+    {
+        return owner.GetType()
+            .GetField(name, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(owner);
+    }
 }

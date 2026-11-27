@@ -297,8 +297,10 @@ public partial class LocalChannelSourceTest
     // Client and server share the single event loop of sharedGroup, so the connection is queued by the time
     // newLocalChannel(...) returns.
     private static Task<IChannel> BindServerWithAutoReadDisabled(IEventLoopGroup group, TaskCompletionSource<LocalChannel> accepted)
-        => new ServerBootstrap().Group(group).ChannelFactory(() => new ObservedLocalServer(accepted))
+    {
+        return new ServerBootstrap().Group(group).ChannelFactory(() => new ObservedLocalServer(accepted))
             .Option(ChannelOption.AUTO_READ, false).ChildHandler(new TestHandler()).BindAsync(TestAddress);
+    }
 
     private static (LocalChannel Channel, Task<IChannel> Completion) ConnectPendingClient(IEventLoopGroup group)
     {
@@ -353,7 +355,10 @@ public partial class LocalChannelSourceTest
     private sealed class LocalTaskGatedGroup(ManualResetEventSlim closeLatch) : DefaultEventLoopGroup(1)
     {
         private readonly ManualResetEventSlim _closeLatch = closeLatch;
-        protected override IEventExecutor NewChild(Action<Action> executor, params object[] args) => new LocalTaskGatedLoop(this, executor, _closeLatch);
+        protected override IEventExecutor NewChild(Action<Action> executor, params object[] args)
+        {
+            return new LocalTaskGatedLoop(this, executor, _closeLatch);
+        }
     }
     private sealed class LocalTaskGatedLoop(IEventLoopGroup parent, Action<Action> executor, ManualResetEventSlim closeLatch)
         : DefaultEventLoop(parent, executor)

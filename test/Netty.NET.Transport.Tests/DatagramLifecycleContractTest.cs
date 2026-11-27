@@ -280,6 +280,9 @@ public class DatagramLifecycleContractTest
 
     private sealed class Capture(ChannelWriter<int> writer) : SimpleChannelInboundHandler<DatagramPacket>
     {
-        protected override void ChannelRead0(IChannelHandlerContext ctx, DatagramPacket msg) => writer.TryWrite(msg.Content.ReadByte());
+        protected override void ChannelRead0(IChannelHandlerContext ctx, DatagramPacket msg)
+        {
+            writer.TryWrite(msg.Content.ReadByte());
+        }
     }
 }

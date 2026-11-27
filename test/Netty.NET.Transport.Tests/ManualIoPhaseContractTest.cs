@@ -54,11 +54,17 @@ public class ManualIoPhaseContractTest
     private sealed class ObservedDatagramAllocator : DefaultMaxMessagesRecvByteBufAllocator
     {
         internal bool Prepared { get; private set; }
-        public override IRecvByteBufAllocator.IHandle NewHandle() => new ObservedHandle(this);
+        public override IRecvByteBufAllocator.IHandle NewHandle()
+        {
+            return new ObservedHandle(this);
+        }
 
         private sealed class ObservedHandle(ObservedDatagramAllocator owner) : MaxMessageHandle(owner)
         {
-            public override int Guess() => 32;
+            public override int Guess()
+            {
+                return 32;
+            }
 
             public override void LastBytesRead(int bytes)
             {

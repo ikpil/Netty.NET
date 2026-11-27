@@ -24,7 +24,10 @@ public class CompositeByteBufBoundaryTest : IDisposable
     private readonly NativeMemoryAllocator _native = new();
     private readonly UnpooledByteBufAllocator _allocator;
 
-    public CompositeByteBufBoundaryTest() => _allocator = new UnpooledByteBufAllocator(false, _native);
+    public CompositeByteBufBoundaryTest()
+    {
+        _allocator = new UnpooledByteBufAllocator(false, _native);
+    }
 
     public void Dispose()
     {

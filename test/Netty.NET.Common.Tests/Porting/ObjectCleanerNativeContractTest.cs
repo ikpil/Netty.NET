@@ -194,7 +194,13 @@ public class ObjectCleanerNativeContractTest
     private sealed class Counter { internal int Value; }
     private sealed class EqualTarget
     {
-        public override bool Equals(object obj) => obj is EqualTarget;
-        public override int GetHashCode() => 1;
+        public override bool Equals(object obj)
+        {
+            return obj is EqualTarget;
+        }
+        public override int GetHashCode()
+        {
+            return 1;
+        }
     }
 }

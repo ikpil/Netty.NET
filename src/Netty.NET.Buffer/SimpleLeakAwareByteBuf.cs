@@ -45,11 +45,26 @@ internal class SimpleLeakAwareByteBuf : WrappedByteBuf
         _leak = leak;
     }
 
-    public override ByteBuf Slice() => NewSharedLeakAwareByteBuf(base.Slice());
-    public override ByteBuf Slice(int index, int length) => NewSharedLeakAwareByteBuf(base.Slice(index, length));
-    public override ByteBuf Duplicate() => NewSharedLeakAwareByteBuf(base.Duplicate());
-    public override ByteBuf ReadSlice(int length) => NewSharedLeakAwareByteBuf(base.ReadSlice(length));
-    public override ByteBuf AsReadOnly() => NewSharedLeakAwareByteBuf(base.AsReadOnly());
+    public override ByteBuf Slice()
+    {
+        return NewSharedLeakAwareByteBuf(base.Slice());
+    }
+    public override ByteBuf Slice(int index, int length)
+    {
+        return NewSharedLeakAwareByteBuf(base.Slice(index, length));
+    }
+    public override ByteBuf Duplicate()
+    {
+        return NewSharedLeakAwareByteBuf(base.Duplicate());
+    }
+    public override ByteBuf ReadSlice(int length)
+    {
+        return NewSharedLeakAwareByteBuf(base.ReadSlice(length));
+    }
+    public override ByteBuf AsReadOnly()
+    {
+        return NewSharedLeakAwareByteBuf(base.AsReadOnly());
+    }
 
     public override ByteBuf RetainedSlice()
     {
@@ -92,7 +107,10 @@ internal class SimpleLeakAwareByteBuf : WrappedByteBuf
         catch (IllegalReferenceCountException failure) { AddCloseTrace(failure); throw; }
     }
 
-    public override ByteBuf Touch(object hint = null) => this;
+    public override ByteBuf Touch(object hint = null)
+    {
+        return this;
+    }
 
     private void CloseLeak()
     {
@@ -103,10 +121,14 @@ internal class SimpleLeakAwareByteBuf : WrappedByteBuf
     }
 
     private void AddCloseTrace(IllegalReferenceCountException failure)
-        => ThrowableUtil.AddSuppressed(failure, _leak.GetCloseStackTraceIfAny());
+    {
+        ThrowableUtil.AddSuppressed(failure, _leak.GetCloseStackTraceIfAny());
+    }
 
     private SimpleLeakAwareByteBuf NewSharedLeakAwareByteBuf(ByteBuf wrapped)
-        => NewLeakAwareByteBuf(wrapped, _trackedByteBuf, _leak);
+    {
+        return NewLeakAwareByteBuf(wrapped, _trackedByteBuf, _leak);
+    }
 
     private ByteBuf UnwrappedDerived(ByteBuf derived)
     {
@@ -140,5 +162,8 @@ internal class SimpleLeakAwareByteBuf : WrappedByteBuf
     }
 
     protected virtual SimpleLeakAwareByteBuf NewLeakAwareByteBuf(ByteBuf buffer, ByteBuf trackedByteBuf,
-        IResourceLeakTracker<ByteBuf> leakTracker) => new(buffer, trackedByteBuf, leakTracker);
+        IResourceLeakTracker<ByteBuf> leakTracker)
+    {
+        return new(buffer, trackedByteBuf, leakTracker);
+    }
 }

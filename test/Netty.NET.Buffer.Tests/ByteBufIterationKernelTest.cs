@@ -35,7 +35,10 @@ public class ByteBufIterationKernelTest
 
     private sealed class Heap(Calls calls) : UnpooledHeapByteBuf(8, 32)
     {
-        public override byte GetByte(int index) => calls.Get();
+        public override byte GetByte(int index)
+        {
+            return calls.Get();
+        }
         public override int ForEachByte(int index, int length, Func<byte, bool> processor)
         { calls.BeforeIndexed(); return base.ForEachByte(index, length, processor); }
         public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
@@ -44,7 +47,10 @@ public class ByteBufIterationKernelTest
 
     private sealed class Direct(Calls calls, NativeMemoryAllocator native) : UnpooledDirectByteBuf(8, 32, native)
     {
-        public override byte GetByte(int index) => calls.Get();
+        public override byte GetByte(int index)
+        {
+            return calls.Get();
+        }
         public override int ForEachByte(int index, int length, Func<byte, bool> processor)
         { calls.BeforeIndexed(); return base.ForEachByte(index, length, processor); }
         public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
@@ -58,9 +64,13 @@ public class ByteBufIterationKernelTest
         return result.SetIndex(1, 7).MarkReaderIndex().MarkWriterIndex();
     }
     private static int Scan(ByteBuf buffer, bool descending, Func<byte, bool> processor)
-        => descending ? buffer.ForEachByteDesc(processor) : buffer.ForEachByte(processor);
+    {
+        return descending ? buffer.ForEachByteDesc(processor) : buffer.ForEachByte(processor);
+    }
     private static int Scan(ByteBuf buffer, bool descending, int index, int length, Func<byte, bool> processor)
-        => descending ? buffer.ForEachByteDesc(index, length, processor) : buffer.ForEachByte(index, length, processor);
+    {
+        return descending ? buffer.ForEachByteDesc(index, length, processor) : buffer.ForEachByte(index, length, processor);
+    }
 
     public static IEnumerable<object[]> OwnerCases()
     {
@@ -97,7 +107,10 @@ public class ByteBufIterationKernelTest
                 }
                 return scenario switch { 0 => value != 132, 3 or 4 => value != 99, _ => true };
             };
-            int Invoke() => indexed ? Scan(owner, descending, start, end - start, processor) : Scan(owner, descending, processor);
+            int Invoke()
+            {
+                return indexed ? Scan(owner, descending, start, end - start, processor) : Scan(owner, descending, processor);
+            }
             if (scenario == 2) Assert.Same(failure, Assert.Throws<Failure>(() => Invoke()));
             else Assert.Equal(scenario == 0 ? 4 : scenario is 3 or 4 ? next : -1, Invoke());
             var indices = Enumerable.Range(start, end - start);
@@ -206,7 +219,10 @@ public class ByteBufIterationKernelTest
         Func<byte, bool> processor = _ => { ++visits; Assert.True(root.Release()); return !stop; };
         try
         {
-            int Invoke() => indexed ? Scan(root, descending, 2, 4, processor) : Scan(root, descending, processor);
+            int Invoke()
+            {
+                return indexed ? Scan(root, descending, 2, 4, processor) : Scan(root, descending, processor);
+            }
             if (stop) Assert.Equal(descending ? indexed ? 5 : 6 : indexed ? 2 : 1, Invoke());
             else Assert.Throws<IllegalReferenceCountException>(() => Invoke());
             Assert.Equal(1, visits); Assert.Equal(indexed ? 1 : 0, calls.Indexed); Assert.Equal(0, calls.Gets);

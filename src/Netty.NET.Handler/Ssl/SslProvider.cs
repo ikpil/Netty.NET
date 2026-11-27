@@ -53,7 +53,10 @@ public sealed class SslProvider
         this.name = name;
     }
 
-    public override string ToString() => name;
+    public override string ToString()
+    {
+        return name;
+    }
 
     /**
      * Returns {@code true} if the specified {@link SslProvider} supports

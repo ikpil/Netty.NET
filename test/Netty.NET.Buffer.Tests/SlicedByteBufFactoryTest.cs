@@ -97,7 +97,9 @@ public class SlicedByteBufFactoryTest
     [Fact]
     public void ShouldNotAllowNullInConstructor()
         // CLR: ArgumentNullException replaces NullPointerException; the slice constructor stays internal.
-        => Assert.Throws<ArgumentNullException>(() => new ByteBufView(null, 0, 0));
+    {
+        Assert.Throws<ArgumentNullException>(() => new ByteBufView(null, 0, 0));
+    }
 
     [Theory]
     [MemberData(nameof(Factories))]
@@ -229,52 +231,72 @@ public class SlicedByteBufFactoryTest
     [Theory]
     [MemberData(nameof(Factories))]
     public void TestRetainedSliceContents(int provider, bool retained, int offset)
-        => TestSliceContents0(provider, retained, offset, true);
+    {
+        TestSliceContents0(provider, retained, offset, true);
+    }
 
     [Theory]
     [MemberData(nameof(Factories))]
     public void TestRetainedSliceReleaseOriginal1(int provider, bool retained, int offset)
-        => TestSliceReleaseOriginal(provider, retained, offset, true, true);
+    {
+        TestSliceReleaseOriginal(provider, retained, offset, true, true);
+    }
 
     [Theory]
     [MemberData(nameof(Factories))]
     public void TestRetainedSliceReleaseOriginal2(int provider, bool retained, int offset)
-        => TestSliceReleaseOriginal(provider, retained, offset, true, false);
+    {
+        TestSliceReleaseOriginal(provider, retained, offset, true, false);
+    }
 
     [Theory]
     [MemberData(nameof(Factories))]
     public void TestRetainedSliceReleaseOriginal3(int provider, bool retained, int offset)
-        => TestSliceReleaseOriginal(provider, retained, offset, false, true);
+    {
+        TestSliceReleaseOriginal(provider, retained, offset, false, true);
+    }
 
     [Theory]
     [MemberData(nameof(Factories))]
     public void TestRetainedSliceReleaseOriginal4(int provider, bool retained, int offset)
-        => TestSliceReleaseOriginal(provider, retained, offset, false, false);
+    {
+        TestSliceReleaseOriginal(provider, retained, offset, false, false);
+    }
 
     [Theory]
     [MemberData(nameof(Factories))]
     public void TestMultipleRetainedSliceReleaseOriginal1(int provider, bool retained, int offset)
-        => TestMultipleRetainedSliceReleaseOriginal(provider, retained, offset, true, true);
+    {
+        TestMultipleRetainedSliceReleaseOriginal(provider, retained, offset, true, true);
+    }
 
     [Theory]
     [MemberData(nameof(Factories))]
     public void TestMultipleRetainedSliceReleaseOriginal2(int provider, bool retained, int offset)
-        => TestMultipleRetainedSliceReleaseOriginal(provider, retained, offset, true, false);
+    {
+        TestMultipleRetainedSliceReleaseOriginal(provider, retained, offset, true, false);
+    }
 
     [Theory]
     [MemberData(nameof(Factories))]
     public void TestMultipleRetainedSliceReleaseOriginal3(int provider, bool retained, int offset)
-        => TestMultipleRetainedSliceReleaseOriginal(provider, retained, offset, false, true);
+    {
+        TestMultipleRetainedSliceReleaseOriginal(provider, retained, offset, false, true);
+    }
 
     [Theory]
     [MemberData(nameof(Factories))]
     public void TestMultipleRetainedSliceReleaseOriginal4(int provider, bool retained, int offset)
-        => TestMultipleRetainedSliceReleaseOriginal(provider, retained, offset, false, false);
+    {
+        TestMultipleRetainedSliceReleaseOriginal(provider, retained, offset, false, false);
+    }
 
     [Theory]
     [MemberData(nameof(Factories))]
     public void TestSliceContents(int provider, bool retained, int offset)
-        => TestSliceContents0(provider, retained, offset, false);
+    {
+        TestSliceContents0(provider, retained, offset, false);
+    }
 
     // CLR: xUnit1024 forbids overloading the TestSliceContents test name.
     private static void TestSliceContents0(int provider, bool retained, int offset, bool retainedSlice)

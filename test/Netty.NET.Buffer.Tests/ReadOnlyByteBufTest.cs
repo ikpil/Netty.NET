@@ -32,8 +32,10 @@ namespace Netty.NET.Buffer.Tests;
 public class ReadOnlyByteBufTest
 {
     private static ByteBuf NewBuffer(bool direct, int capacity = 16, int maximum = 128)
-        => direct ? new UnpooledDirectByteBuf(capacity, maximum, new NativeMemoryAllocator())
+    {
+        return direct ? new UnpooledDirectByteBuf(capacity, maximum, new NativeMemoryAllocator())
             : Unpooled.Buffer(capacity, maximum);
+    }
 
     // Original ReadOnlyByteBufTest methods, one CLR test each in source order. AsReadOnly replaces the deprecated
     // unmodifiableBuffer(ByteBuf) ("@deprecated Use ByteBuf#asReadOnly()"), Unpooled.EmptyBuffer is EMPTY_BUFFER,
@@ -41,7 +43,9 @@ public class ReadOnlyByteBufTest
 
     [Fact]
     public void ShouldNotAllowNullInConstructor()
-        => Assert.Throws<ArgumentNullException>(() => new ReadOnlyByteBuf(null));
+    {
+        Assert.Throws<ArgumentNullException>(() => new ReadOnlyByteBuf(null));
+    }
 
     [Fact]
     public void TestUnmodifiableBuffer()
@@ -127,13 +131,30 @@ public class ReadOnlyByteBufTest
         { Calls.Add($"span {index} {destination.Length}"); return this; }
         public override ByteBuf GetBytes(int index, ByteBuf destination, int destinationIndex, int length)
         { Calls.Add($"buf {index} {destinationIndex} {length}"); return this; }
-        public override byte GetByte(int index) => index == 13 ? (byte)14 : base.GetByte(index);
-        public override short GetShort(int index) => index == 15 ? (short)16 : base.GetShort(index);
-        public override int GetUnsignedMedium(int index) => index == 17 ? 18 : base.GetUnsignedMedium(index);
-        public override int GetInt(int index) => index == 19 ? 20 : base.GetInt(index);
-        public override long GetLong(int index) => index == 21 ? 22L : base.GetLong(index);
+        public override byte GetByte(int index)
+        {
+            return index == 13 ? (byte)14 : base.GetByte(index);
+        }
+        public override short GetShort(int index)
+        {
+            return index == 15 ? (short)16 : base.GetShort(index);
+        }
+        public override int GetUnsignedMedium(int index)
+        {
+            return index == 17 ? 18 : base.GetUnsignedMedium(index);
+        }
+        public override int GetInt(int index)
+        {
+            return index == 19 ? 20 : base.GetInt(index);
+        }
+        public override long GetLong(int index)
+        {
+            return index == 21 ? 22L : base.GetLong(index);
+        }
         public override ReadOnlyMemory<byte> AsReadOnlyMemory(int index, int length)
-            => index == 23 && length == 24 ? Nio : base.AsReadOnlyMemory(index, length);
+        {
+            return index == 23 && length == 24 ? Nio : base.AsReadOnlyMemory(index, length);
+        }
     }
 
     [Fact]
@@ -175,27 +196,39 @@ public class ReadOnlyByteBufTest
 
     [Fact]
     public void ShouldRejectDiscardReadBytes()
-        => Assert.Throws<NotSupportedException>(() => Unpooled.EmptyBuffer.AsReadOnly().DiscardReadBytes());
+    {
+        Assert.Throws<NotSupportedException>(() => Unpooled.EmptyBuffer.AsReadOnly().DiscardReadBytes());
+    }
 
     [Fact]
     public void ShouldRejectSetByte()
-        => Assert.Throws<NotSupportedException>(() => Unpooled.EmptyBuffer.AsReadOnly().SetByte(0, 0));
+    {
+        Assert.Throws<NotSupportedException>(() => Unpooled.EmptyBuffer.AsReadOnly().SetByte(0, 0));
+    }
 
     [Fact]
     public void ShouldRejectSetShort()
-        => Assert.Throws<NotSupportedException>(() => Unpooled.EmptyBuffer.AsReadOnly().SetShort(0, 0));
+    {
+        Assert.Throws<NotSupportedException>(() => Unpooled.EmptyBuffer.AsReadOnly().SetShort(0, 0));
+    }
 
     [Fact]
     public void ShouldRejectSetMedium()
-        => Assert.Throws<NotSupportedException>(() => Unpooled.EmptyBuffer.AsReadOnly().SetMedium(0, 0));
+    {
+        Assert.Throws<NotSupportedException>(() => Unpooled.EmptyBuffer.AsReadOnly().SetMedium(0, 0));
+    }
 
     [Fact]
     public void ShouldRejectSetInt()
-        => Assert.Throws<NotSupportedException>(() => Unpooled.EmptyBuffer.AsReadOnly().SetInt(0, 0));
+    {
+        Assert.Throws<NotSupportedException>(() => Unpooled.EmptyBuffer.AsReadOnly().SetInt(0, 0));
+    }
 
     [Fact]
     public void ShouldRejectSetLong()
-        => Assert.Throws<NotSupportedException>(() => Unpooled.EmptyBuffer.AsReadOnly().SetLong(0, 0));
+    {
+        Assert.Throws<NotSupportedException>(() => Unpooled.EmptyBuffer.AsReadOnly().SetLong(0, 0));
+    }
 
     // ReadOnlyByteBuf rejects these mutations before it inspects the source, so a null source still reports the
     // read-only error (ReadOnlyBufferException is an UnsupportedOperationException; CLR NotSupportedException).
@@ -249,10 +282,16 @@ public class ReadOnlyByteBufTest
     }
 
     [Fact]
-    public void EnsureWritableIntStatusShouldFailButNotThrow() => EnsureWritableIntStatusShouldFailButNotThrow0(false);
+    public void EnsureWritableIntStatusShouldFailButNotThrow()
+    {
+        EnsureWritableIntStatusShouldFailButNotThrow0(false);
+    }
 
     [Fact]
-    public void EnsureWritableForceIntStatusShouldFailButNotThrow() => EnsureWritableIntStatusShouldFailButNotThrow0(true);
+    public void EnsureWritableForceIntStatusShouldFailButNotThrow()
+    {
+        EnsureWritableIntStatusShouldFailButNotThrow0(true);
+    }
 
     // CLR: xUnit1024 rejects a test overloading the source helper ensureWritableIntStatusShouldFailButNotThrow(boolean),
     // so the helper carries a 0 suffix.
@@ -863,12 +902,16 @@ public class ReadOnlyByteBufTest
     private sealed class MemoryHeap(MemoryObservation o) : UnpooledHeapByteBuf(16, 16)
     {
         public override ReadOnlyMemory<byte> AsReadOnlyMemory(int index, int length)
-            => o.Record(index, length, base.AsReadOnlyMemory(index, length));
+        {
+            return o.Record(index, length, base.AsReadOnlyMemory(index, length));
+        }
     }
     private sealed class MemoryDirect(MemoryObservation o, NativeMemoryAllocator native) : UnpooledDirectByteBuf(16, 16, native)
     {
         public override ReadOnlyMemory<byte> AsReadOnlyMemory(int index, int length)
-            => o.Record(index, length, base.AsReadOnlyMemory(index, length));
+        {
+            return o.Record(index, length, base.AsReadOnlyMemory(index, length));
+        }
     }
     [Theory]
     [InlineData(false)]

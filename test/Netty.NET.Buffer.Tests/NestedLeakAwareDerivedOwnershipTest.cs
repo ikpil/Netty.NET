@@ -24,8 +24,14 @@ public class NestedLeakAwareDerivedOwnershipTest
     private sealed class Tracker(ByteBuf expected) : IResourceLeakTracker<ByteBuf>
     {
         internal int Closes, Records;
-        public void Record() => ++Records;
-        public void Record(object hint) => ++Records;
+        public void Record()
+        {
+            ++Records;
+        }
+        public void Record(object hint)
+        {
+            ++Records;
+        }
         public bool Close(ByteBuf value) { Assert.Same(expected, value); ++Closes; return true; }
     }
     public static IEnumerable<object[]> Cases()

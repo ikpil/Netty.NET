@@ -36,94 +36,243 @@ public partial class WrappedByteBuf : ByteBuf
 {
     protected readonly ByteBuf Buffer;
 
-    protected WrappedByteBuf(ByteBuf buffer) : base(buffer) => Buffer = buffer;
+    protected WrappedByteBuf(ByteBuf buffer) : base(buffer)
+    {
+        Buffer = buffer;
+    }
 
     public override int Capacity { get => Buffer.Capacity; set => Buffer.Capacity = value; }
-    public override IByteBufAllocator Alloc() => Buffer.Alloc();
+    public override IByteBufAllocator Alloc()
+    {
+        return Buffer.Alloc();
+    }
     public override bool IsContiguous => Buffer.IsContiguous;
     public override int MaxFastWritableBytes => Buffer.MaxFastWritableBytes;
     public override bool IsDirect => Buffer.IsDirect;
     public override bool IsReadOnly => Buffer.IsReadOnly;
-    public override bool IsReadable(int size) => Buffer.IsReadable(size);
-    public override bool IsWritable(int size) => Buffer.IsWritable(size);
-    public override ByteBuf Unwrap() => Buffer;
-    public override string ToString() => StringUtil.SimpleClassName(this) + '(' + Buffer.ToString() + ')';
+    public override bool IsReadable(int size)
+    {
+        return Buffer.IsReadable(size);
+    }
+    public override bool IsWritable(int size)
+    {
+        return Buffer.IsWritable(size);
+    }
+    public override ByteBuf Unwrap()
+    {
+        return Buffer;
+    }
+    public override string ToString()
+    {
+        return StringUtil.SimpleClassName(this) + '(' + Buffer.ToString() + ')';
+    }
     public override int RefCnt => Buffer.RefCnt;
     public override ByteBuf Retain(int increment = 1) { Buffer.Retain(increment); return this; }
-    public override bool Release(int decrement = 1) => Buffer.Release(decrement);
+    public override bool Release(int decrement = 1)
+    {
+        return Buffer.Release(decrement);
+    }
     public override ByteBuf Touch(object hint = null) { Buffer.Touch(hint); return this; }
 
-    protected override Memory<byte> GetMemoryCore(int index, int length) => Buffer.AsMemory(index, length);
-    internal override byte ReadByteCore(int index) => Buffer.ReadByteCore(index);
-    internal override void WriteByteCore(int index, int value) => Buffer.WriteByteCore(index, value);
-    internal override ulong ReadWord(int index, int width, bool littleEndian) => Buffer.ReadWord(index, width, littleEndian);
+    protected override Memory<byte> GetMemoryCore(int index, int length)
+    {
+        return Buffer.AsMemory(index, length);
+    }
+    internal override byte ReadByteCore(int index)
+    {
+        return Buffer.ReadByteCore(index);
+    }
+    internal override void WriteByteCore(int index, int value)
+    {
+        Buffer.WriteByteCore(index, value);
+    }
+    internal override ulong ReadWord(int index, int width, bool littleEndian)
+    {
+        return Buffer.ReadWord(index, width, littleEndian);
+    }
     internal override ByteBuf SetWord(int index, ulong value, int width, bool littleEndian)
     { Buffer.SetWord(index, value, width, littleEndian); return this; }
     protected override ReadOnlyMemory<byte> GetReadOnlyMemoryCore(int index, int length)
-        => Buffer.AsReadOnlyMemory(index, length);
+    {
+        return Buffer.AsReadOnlyMemory(index, length);
+    }
     protected override bool TryGetMemoryCore(int index, int length, out Memory<byte> memory)
-        => Buffer.TryGetMemory(index, length, out memory);
+    {
+        return Buffer.TryGetMemory(index, length, out memory);
+    }
     protected override bool TryGetReadOnlyMemoryCore(int index, int length, out ReadOnlyMemory<byte> memory)
-        => Buffer.TryGetReadOnlyMemory(index, length, out memory);
-    protected override void GetBytesCore(int index, Span<byte> destination) => Buffer.GetBytes(index, destination);
-    protected override void SetBytesCore(int index, ReadOnlySpan<byte> source) => Buffer.SetBytes(index, source);
+    {
+        return Buffer.TryGetReadOnlyMemory(index, length, out memory);
+    }
+    protected override void GetBytesCore(int index, Span<byte> destination)
+    {
+        Buffer.GetBytes(index, destination);
+    }
+    protected override void SetBytesCore(int index, ReadOnlySpan<byte> source)
+    {
+        Buffer.SetBytes(index, source);
+    }
     protected internal override void SetBytesFromIoCore(int index, ReadOnlySpan<byte> source)
-        => Buffer.SetBytesFromIoCore(index, source);
-    protected override void SetZeroCore(int index, int length) => Buffer.SetZero(index, length);
+    {
+        Buffer.SetBytesFromIoCore(index, source);
+    }
+    protected override void SetZeroCore(int index, int length)
+    {
+        Buffer.SetZero(index, length);
+    }
     protected override ReadOnlySequence<byte> GetReadOnlySequenceCore(int index, int length)
-        => Buffer.AsReadOnlySequence(index, length);
+    {
+        return Buffer.AsReadOnlySequence(index, length);
+    }
     internal override ByteBuf UnwrapIterationStorage(ref int index)
     { return Buffer.UnwrapIterationStorage(ref index); }
     internal override bool SupportsDirectBulkCopy => Buffer.SupportsDirectBulkCopy;
     internal override ReadOnlySequence<byte> BorrowCopySequence(int index, int length)
     { CheckIndex(index, length); return Buffer.BorrowCopySequence(index, length); }
-    internal override BufferMemoryLease AcquireReadLease() => Buffer.AcquireReadLease();
-    internal override BufferMemoryLease PinMemoryForWrite() => Buffer.PinMemoryForWrite();
+    internal override BufferMemoryLease AcquireReadLease()
+    {
+        return Buffer.AcquireReadLease();
+    }
+    internal override BufferMemoryLease PinMemoryForWrite()
+    {
+        return Buffer.PinMemoryForWrite();
+    }
 
-    public override ByteBuf Copy() => Buffer.Copy();
-    public override ByteBuf Copy(int index, int length) => Buffer.Copy(index, length);
-    public override ByteBuf ReadBytes(int length) => Buffer.ReadBytes(length);
-    public override int IndexOf(int fromIndex, int toIndex, byte value) => Buffer.IndexOf(fromIndex, toIndex, value);
-    public override int BytesBefore(byte value) => Buffer.BytesBefore(value);
-    public override int BytesBefore(int length, byte value) => Buffer.BytesBefore(length, value);
-    public override int BytesBefore(int index, int length, byte value) => Buffer.BytesBefore(index, length, value);
-    public override string ToString(Encoding charset) => Buffer.ToString(charset);
+    public override ByteBuf Copy()
+    {
+        return Buffer.Copy();
+    }
+    public override ByteBuf Copy(int index, int length)
+    {
+        return Buffer.Copy(index, length);
+    }
+    public override ByteBuf ReadBytes(int length)
+    {
+        return Buffer.ReadBytes(length);
+    }
+    public override int IndexOf(int fromIndex, int toIndex, byte value)
+    {
+        return Buffer.IndexOf(fromIndex, toIndex, value);
+    }
+    public override int BytesBefore(byte value)
+    {
+        return Buffer.BytesBefore(value);
+    }
+    public override int BytesBefore(int length, byte value)
+    {
+        return Buffer.BytesBefore(length, value);
+    }
+    public override int BytesBefore(int index, int length, byte value)
+    {
+        return Buffer.BytesBefore(index, length, value);
+    }
+    public override string ToString(Encoding charset)
+    {
+        return Buffer.ToString(charset);
+    }
     public override string ToString(int index, int length, Encoding charset)
-        => Buffer.ToString(index, length, charset);
+    {
+        return Buffer.ToString(index, length, charset);
+    }
     public override ICharSequence GetCharSequence(int index, int length, Encoding charset)
-        => Buffer.GetCharSequence(index, length, charset);
-    public override ICharSequence ReadCharSequence(int length, Encoding charset) => Buffer.ReadCharSequence(length, charset);
-    public override string ReadString(int length, Encoding charset) => Buffer.ReadString(length, charset);
+    {
+        return Buffer.GetCharSequence(index, length, charset);
+    }
+    public override ICharSequence ReadCharSequence(int length, Encoding charset)
+    {
+        return Buffer.ReadCharSequence(length, charset);
+    }
+    public override string ReadString(int length, Encoding charset)
+    {
+        return Buffer.ReadString(length, charset);
+    }
     public override int SetCharSequence(int index, ReadOnlySpan<char> sequence, Encoding charset)
-        => Buffer.SetCharSequence(index, sequence, charset);
-    public override int WriteCharSequence(ReadOnlySpan<char> sequence, Encoding charset) => Buffer.WriteCharSequence(sequence, charset);
-    public override int ForEachByte(Func<byte, bool> processor) => Buffer.ForEachByte(processor);
+    {
+        return Buffer.SetCharSequence(index, sequence, charset);
+    }
+    public override int WriteCharSequence(ReadOnlySpan<char> sequence, Encoding charset)
+    {
+        return Buffer.WriteCharSequence(sequence, charset);
+    }
+    public override int ForEachByte(Func<byte, bool> processor)
+    {
+        return Buffer.ForEachByte(processor);
+    }
     public override int ForEachByte(int index, int length, Func<byte, bool> processor)
-        => Buffer.ForEachByte(index, length, processor);
-    public override int ForEachByteDesc(Func<byte, bool> processor) => Buffer.ForEachByteDesc(processor);
+    {
+        return Buffer.ForEachByte(index, length, processor);
+    }
+    public override int ForEachByteDesc(Func<byte, bool> processor)
+    {
+        return Buffer.ForEachByteDesc(processor);
+    }
     public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
-        => Buffer.ForEachByteDesc(index, length, processor);
+    {
+        return Buffer.ForEachByteDesc(index, length, processor);
+    }
     public override ByteBuf DiscardReadBytes() { Buffer.DiscardReadBytes(); return this; }
     public override ByteBuf DiscardSomeReadBytes() { Buffer.DiscardSomeReadBytes(); return this; }
     public override ByteBuf EnsureWritable(int minimumWritableBytes) { Buffer.EnsureWritable(minimumWritableBytes); return this; }
-    public override int EnsureWritable(int minimumWritableBytes, bool force) => Buffer.EnsureWritable(minimumWritableBytes, force);
+    public override int EnsureWritable(int minimumWritableBytes, bool force)
+    {
+        return Buffer.EnsureWritable(minimumWritableBytes, force);
+    }
     public override ByteBuf SetZero(int index, int length) { Buffer.SetZero(index, length); return this; }
     public override ByteBuf WriteZero(int length) { Buffer.WriteZero(length); return this; }
-    public override ByteBuf AsReadOnly() => Buffer.AsReadOnly();
-    public override ByteBuf Slice() => Buffer.Slice();
-    public override ByteBuf Slice(int index, int length) => Buffer.Slice(index, length);
-    public override ByteBuf RetainedSlice() => Buffer.RetainedSlice();
-    public override ByteBuf RetainedSlice(int index, int length) => Buffer.RetainedSlice(index, length);
-    public override ByteBuf Duplicate() => Buffer.Duplicate();
-    public override ByteBuf RetainedDuplicate() => Buffer.RetainedDuplicate();
-    public override ByteBuf ReadSlice(int length) => Buffer.ReadSlice(length);
-    public override ByteBuf ReadRetainedSlice(int length) => Buffer.ReadRetainedSlice(length);
+    public override ByteBuf AsReadOnly()
+    {
+        return Buffer.AsReadOnly();
+    }
+    public override ByteBuf Slice()
+    {
+        return Buffer.Slice();
+    }
+    public override ByteBuf Slice(int index, int length)
+    {
+        return Buffer.Slice(index, length);
+    }
+    public override ByteBuf RetainedSlice()
+    {
+        return Buffer.RetainedSlice();
+    }
+    public override ByteBuf RetainedSlice(int index, int length)
+    {
+        return Buffer.RetainedSlice(index, length);
+    }
+    public override ByteBuf Duplicate()
+    {
+        return Buffer.Duplicate();
+    }
+    public override ByteBuf RetainedDuplicate()
+    {
+        return Buffer.RetainedDuplicate();
+    }
+    public override ByteBuf ReadSlice(int length)
+    {
+        return Buffer.ReadSlice(length);
+    }
+    public override ByteBuf ReadRetainedSlice(int length)
+    {
+        return Buffer.ReadRetainedSlice(length);
+    }
 
     // Preserve Java's direct comparison forwarding: hashing/comparing the wrapper
     // must not turn its own primitive implementation reads into advanced access records.
-    public override int GetHashCode() => Buffer.GetHashCode();
+    public override int GetHashCode()
+    {
+        return Buffer.GetHashCode();
+    }
     // CLR reference identity stays reflexive, including after final release.
-    public override bool Equals(object obj) => ReferenceEquals(this, obj) || Buffer.Equals(obj);
-    public override bool Equals(ByteBuf other) => ReferenceEquals(this, other) || Buffer.Equals(other);
-    public override int CompareTo(ByteBuf other) => ReferenceEquals(this, other) ? 0 : Buffer.CompareTo(other);
+    public override bool Equals(object obj)
+    {
+        return ReferenceEquals(this, obj) || Buffer.Equals(obj);
+    }
+    public override bool Equals(ByteBuf other)
+    {
+        return ReferenceEquals(this, other) || Buffer.Equals(other);
+    }
+    public override int CompareTo(ByteBuf other)
+    {
+        return ReferenceEquals(this, other) ? 0 : Buffer.CompareTo(other);
+    }
 }

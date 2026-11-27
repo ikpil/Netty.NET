@@ -23,7 +23,10 @@ namespace Netty.NET.Buffer.Tests;
 // Selected pinned UnpooledTest wrapping/release contracts, plus CLR failure cleanup.
 public class UnpooledWrappingTest
 {
-    private static byte[] Bytes(ByteBuf buffer) => buffer.ReadableSequence.ToArray();
+    private static byte[] Bytes(ByteBuf buffer)
+    {
+        return buffer.ReadableSequence.ToArray();
+    }
 
     [Fact]
     public void EmptyCallsAndTypedEmptyArraysReturnTheSharedSentinel()
@@ -70,7 +73,9 @@ public class UnpooledWrappingTest
     [InlineData(3, 2)]
     [InlineData(int.MaxValue, int.MaxValue)]
     public void RegionArgumentsAreCheckedEvenForZeroLength(int offset, int length)
-        => Assert.Throws<ArgumentOutOfRangeException>(() => Unpooled.WrappedBuffer(new byte[4], offset, length));
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => Unpooled.WrappedBuffer(new byte[4], offset, length));
+    }
 
     [Theory]
     [InlineData(false, false)]
@@ -364,7 +369,10 @@ public class UnpooledWrappingTest
     {
         private int _reads;
         internal readonly InvalidOperationException Failure = new("Source read failed during consolidation.");
-        internal FailingReadHeapByteBuf() : base(1) => WriteByte(1);
+        internal FailingReadHeapByteBuf() : base(1)
+        {
+            WriteByte(1);
+        }
         protected override ReadOnlyMemory<byte> GetReadOnlyMemoryCore(int index, int length)
         {
             if (++_reads == 2) throw Failure;

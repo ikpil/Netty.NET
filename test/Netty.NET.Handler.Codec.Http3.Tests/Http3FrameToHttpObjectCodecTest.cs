@@ -1352,9 +1352,15 @@ public class Http3FrameToHttpObjectCodecTest
             cert = X509CertificateLoader.LoadCertificate(selfSigned.RawData);
         }
 
-        internal AsymmetricAlgorithm Key() => key;
+        internal AsymmetricAlgorithm Key()
+        {
+            return key;
+        }
 
-        internal X509Certificate2 Cert() => cert;
+        internal X509Certificate2 Cert()
+        {
+            return cert;
+        }
     }
 
     [Fact]

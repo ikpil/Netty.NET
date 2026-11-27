@@ -25,10 +25,14 @@ namespace Netty.NET.Buffer.Tests;
 public class PoolChunkListTest
 {
     private static AbstractPooledByteBufTest.TestAllocator NewAllocator(bool direct, int shifts = 13, int order = 4)
-        => new(direct, shifts, order);
+    {
+        return new(direct, shifts, order);
+    }
 
     private static int ListIndex(PoolArena arena, PoolChunk chunk)
-        => Enumerable.Range(0, arena.ChunkLists.Count).Single(i => arena.ChunkLists[i].Contains(chunk));
+    {
+        return Enumerable.Range(0, arena.ChunkLists.Count).Single(i => arena.ChunkLists[i].Contains(chunk));
+    }
 
     [Theory]
     [InlineData(false, 12)] [InlineData(true, 12)]

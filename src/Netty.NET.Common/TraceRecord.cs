@@ -43,8 +43,14 @@ internal sealed class TraceRecord : Exception
         position = closeMarker ? CLOSE_MARK_POS : BOTTOM_POS;
     }
     public override string StackTrace => trace?.ToString();
-    internal int Pos() => position;
-    internal TraceRecord Next() => nextRecord;
+    internal int Pos()
+    {
+        return position;
+    }
+    internal TraceRecord Next()
+    {
+        return nextRecord;
+    }
     public override string ToString()
     {
         var buffer = new StringBuilder(2048);

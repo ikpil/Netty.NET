@@ -26,5 +26,8 @@ public sealed class DefaultAddressResolverGroup : AddressResolverGroup<IPEndPoin
 {
     public static readonly DefaultAddressResolverGroup INSTANCE = new();
     private DefaultAddressResolverGroup() { }
-    protected override IAddressResolver<IPEndPoint> NewResolver(IEventExecutor executor) => new DefaultNameResolver(executor).AsAddressResolver();
+    protected override IAddressResolver<IPEndPoint> NewResolver(IEventExecutor executor)
+    {
+        return new DefaultNameResolver(executor).AsAddressResolver();
+    }
 }

@@ -52,7 +52,10 @@ public static partial class Unpooled
             _memory = memory;
             SetIndex(0, memory.Length);
         }
-        public override IByteBufAllocator Alloc() => UnpooledByteBufAllocator.Default;
+        public override IByteBufAllocator Alloc()
+        {
+            return UnpooledByteBufAllocator.Default;
+        }
         public override bool IsContiguous => true;
         public override bool IsDirect => false;
         public override int Capacity
@@ -60,12 +63,18 @@ public static partial class Unpooled
             get => MaxCapacity;
             set { CheckNewCapacity(value); throw new NotSupportedException("A borrowed manager range has fixed capacity."); }
         }
-        protected override Memory<byte> GetMemoryCore(int index, int length) => _memory.Slice(index, length);
+        protected override Memory<byte> GetMemoryCore(int index, int length)
+        {
+            return _memory.Slice(index, length);
+        }
         internal override BufferMemoryLease AcquireReadLease()
         {
             EnsureAccessible();
             return BufferMemoryLease.ForBorrowedMemory(_memory);
         }
-        protected override void Deallocate() => _memory = default;
+        protected override void Deallocate()
+        {
+            _memory = default;
+        }
     }
 }

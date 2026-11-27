@@ -80,8 +80,10 @@ public static class LeakPresenceExtension
 
     // CLR: Boolean.getBoolean is true only for the value "true", ignoring case; SystemPropertyUtil.GetBoolean also
     // accepts "yes" and "1".
-    private static bool GetBoolean(string name) =>
-        "true".Equals(SystemPropertyUtil.Get(name), StringComparison.OrdinalIgnoreCase);
+    private static bool GetBoolean(string name)
+    {
+        return "true".Equals(SystemPropertyUtil.Get(name), StringComparison.OrdinalIgnoreCase);
+    }
 
     // CLR: ExecutionCondition.evaluateExecutionCondition. The framework applies the extension only when this returns
     // true. With the property set, the test classes run without leak presence detection, as they do in the Java build's

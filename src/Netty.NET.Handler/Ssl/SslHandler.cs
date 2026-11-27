@@ -2669,13 +2669,25 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
             this.bytesProduced = bytesProduced;
         }
 
-        internal Status GetStatus() => status;
+        internal Status GetStatus()
+        {
+            return status;
+        }
 
-        internal HandshakeStatus GetHandshakeStatus() => handshakeStatus;
+        internal HandshakeStatus GetHandshakeStatus()
+        {
+            return handshakeStatus;
+        }
 
-        internal int BytesConsumed() => bytesConsumed;
+        internal int BytesConsumed()
+        {
+            return bytesConsumed;
+        }
 
-        internal int BytesProduced() => bytesProduced;
+        internal int BytesProduced()
+        {
+            return bytesProduced;
+        }
     }
 
     private readonly SslClientAuthenticationOptions clientOptions;

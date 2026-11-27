@@ -26,14 +26,41 @@ namespace Netty.NET.Transport.Channels;
 public sealed class PreferHeapByteBufAllocator : IByteBufAllocator
 {
     private readonly IByteBufAllocator _allocator;
-    public PreferHeapByteBufAllocator(IByteBufAllocator allocator) => _allocator = allocator ?? throw new ArgumentNullException(nameof(allocator));
-    public ByteBuf Buffer(int initialCapacity = 256, int maxCapacity = int.MaxValue) => _allocator.HeapBuffer(initialCapacity, maxCapacity);
-    public ByteBuf IoBuffer(int initialCapacity = 256, int maxCapacity = int.MaxValue) => _allocator.HeapBuffer(initialCapacity, maxCapacity);
-    public ByteBuf HeapBuffer(int initialCapacity = 256, int maxCapacity = int.MaxValue) => _allocator.HeapBuffer(initialCapacity, maxCapacity);
-    public ByteBuf DirectBuffer(int initialCapacity = 256, int maxCapacity = int.MaxValue) => _allocator.DirectBuffer(initialCapacity, maxCapacity);
-    public CompositeByteBuf CompositeBuffer(int maxNumComponents = 16) => _allocator.CompositeHeapBuffer(maxNumComponents);
-    public CompositeByteBuf CompositeHeapBuffer(int maxNumComponents = 16) => _allocator.CompositeHeapBuffer(maxNumComponents);
-    public CompositeByteBuf CompositeDirectBuffer(int maxNumComponents = 16) => _allocator.CompositeDirectBuffer(maxNumComponents);
+    public PreferHeapByteBufAllocator(IByteBufAllocator allocator)
+    {
+        _allocator = allocator ?? throw new ArgumentNullException(nameof(allocator));
+    }
+    public ByteBuf Buffer(int initialCapacity = 256, int maxCapacity = int.MaxValue)
+    {
+        return _allocator.HeapBuffer(initialCapacity, maxCapacity);
+    }
+    public ByteBuf IoBuffer(int initialCapacity = 256, int maxCapacity = int.MaxValue)
+    {
+        return _allocator.HeapBuffer(initialCapacity, maxCapacity);
+    }
+    public ByteBuf HeapBuffer(int initialCapacity = 256, int maxCapacity = int.MaxValue)
+    {
+        return _allocator.HeapBuffer(initialCapacity, maxCapacity);
+    }
+    public ByteBuf DirectBuffer(int initialCapacity = 256, int maxCapacity = int.MaxValue)
+    {
+        return _allocator.DirectBuffer(initialCapacity, maxCapacity);
+    }
+    public CompositeByteBuf CompositeBuffer(int maxNumComponents = 16)
+    {
+        return _allocator.CompositeHeapBuffer(maxNumComponents);
+    }
+    public CompositeByteBuf CompositeHeapBuffer(int maxNumComponents = 16)
+    {
+        return _allocator.CompositeHeapBuffer(maxNumComponents);
+    }
+    public CompositeByteBuf CompositeDirectBuffer(int maxNumComponents = 16)
+    {
+        return _allocator.CompositeDirectBuffer(maxNumComponents);
+    }
     public bool IsDirectBufferPooled => _allocator.IsDirectBufferPooled;
-    public int CalculateNewCapacity(int minimumNewCapacity, int maxCapacity) => _allocator.CalculateNewCapacity(minimumNewCapacity, maxCapacity);
+    public int CalculateNewCapacity(int minimumNewCapacity, int maxCapacity)
+    {
+        return _allocator.CalculateNewCapacity(minimumNewCapacity, maxCapacity);
+    }
 }

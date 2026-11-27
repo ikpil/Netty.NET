@@ -76,7 +76,10 @@ public static class ThrowableUtil
         return cause == null ? null : cause.GetType().FullName + ": " + cause.Message;
     }
     [Obsolete]
-    public static bool HaveSuppressed() => true;
+    public static bool HaveSuppressed()
+    {
+        return true;
+    }
     public static void AddSuppressed(Exception target, Exception suppressed)
     {
         if (suppressed == null) return;

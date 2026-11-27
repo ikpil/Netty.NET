@@ -85,7 +85,10 @@ internal sealed class ShuffledDnsServerAddressStream : IDnsServerAddressStream
         return new ShuffledDnsServerAddressStream(addresses, i);
     }
 
-    IDnsServerAddressStream IDnsServerAddressStream.Duplicate() => Duplicate();
+    IDnsServerAddressStream IDnsServerAddressStream.Duplicate()
+    {
+        return Duplicate();
+    }
 
     public override string ToString()
     {

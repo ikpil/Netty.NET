@@ -16,7 +16,10 @@ internal sealed class ExecutorWork
         _entry = Invoke;
     }
 
-    private void Invoke() => _work.Run();
+    private void Invoke()
+    {
+        _work.Run();
+    }
 
     internal static Action Wrap(INativeSubmission work)
     {
@@ -33,12 +36,18 @@ internal sealed class ExecutorWork
         return null;
     }
 
-    internal static void Dispatch(IExecutor executor, INativeSubmission work) => executor.Execute(Wrap(work));
+    internal static void Dispatch(IExecutor executor, INativeSubmission work)
+    {
+        executor.Execute(Wrap(work));
+    }
 }
 
 // Real common producers use this bridge; external consumers see only Action.
 internal static class ExecutorWorkExtensions
 {
-    internal static void Execute(this IExecutor executor, INativeSubmission work) => ExecutorWork.Dispatch(executor, work);
+    internal static void Execute(this IExecutor executor, INativeSubmission work)
+    {
+        ExecutorWork.Dispatch(executor, work);
+    }
 
 }

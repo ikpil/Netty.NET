@@ -30,19 +30,43 @@ public class DefaultPromiseTest
 {
     // CLR adaptation: a StackOverflowException terminates the process and cannot be used to discover stack depth.
     // Both original chain shapes are exercised at 20,000 promises, inside and outside the executor thread.
-    private static int StackOverflowTestDepth() => 20000;
-    private static TaskCompletionSource<T> Source<T>() => new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private static int StackOverflowTestDepth()
+    {
+        return 20000;
+    }
+    private static TaskCompletionSource<T> Source<T>()
+    {
+        return new(TaskCreationOptions.RunContinuationsAsynchronously);
+    }
     private sealed class RejectingEventExecutor : AbstractEventExecutor
     {
         public int submissions;
-        public override bool IsShuttingDown() => false;
-        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
+        public override bool IsShuttingDown()
+        {
+            return false;
+        }
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+        {
+            return Task.CompletedTask;
+        }
         public override Task TerminationFuture => Task.CompletedTask;
         public override void Shutdown() { }
-        public override bool IsShutdown() => false;
-        public override bool IsTerminated() => false;
-        public override bool AwaitTermination(TimeSpan timeout) => false;
-        public override bool InEventLoop(Thread thread) => false;
+        public override bool IsShutdown()
+        {
+            return false;
+        }
+        public override bool IsTerminated()
+        {
+            return false;
+        }
+        public override bool AwaitTermination(TimeSpan timeout)
+        {
+            return false;
+        }
+        public override bool InEventLoop(Thread thread)
+        {
+            return false;
+        }
         public override void Execute(Action command)
         {
             ArgumentNullException.ThrowIfNull(command);
@@ -192,13 +216,25 @@ public class DefaultPromiseTest
         RunListenerNotifyLater(2);
     }
     [Fact]
-    public void TestPromiseListenerAddWhenCompleteFailure() => TestPromiseListenerAddWhenComplete(FakeException());
+    public void TestPromiseListenerAddWhenCompleteFailure()
+    {
+        TestPromiseListenerAddWhenComplete(FakeException());
+    }
     [Fact]
-    public void TestPromiseListenerAddWhenCompleteSuccess() => TestPromiseListenerAddWhenComplete(null);
+    public void TestPromiseListenerAddWhenCompleteSuccess()
+    {
+        TestPromiseListenerAddWhenComplete(null);
+    }
     [Fact]
-    public void TestLateListenerIsOrderedCorrectlySuccess() => TestLateListenerIsOrderedCorrectly(null);
+    public void TestLateListenerIsOrderedCorrectlySuccess()
+    {
+        TestLateListenerIsOrderedCorrectly(null);
+    }
     [Fact]
-    public void TestLateListenerIsOrderedCorrectlyFailure() => TestLateListenerIsOrderedCorrectly(FakeException());
+    public void TestLateListenerIsOrderedCorrectlyFailure()
+    {
+        TestLateListenerIsOrderedCorrectly(FakeException());
+    }
     [Fact]
     public void TestSignalRace()
     {
@@ -410,7 +446,10 @@ public class DefaultPromiseTest
             thread = new Thread(() => { foreach (var task in tasks.GetConsumingEnumerable()) task(); }) { IsBackground = true };
             thread.Start();
         }
-        public void Execute(Action task) => tasks.Add(task);
+        public void Execute(Action task)
+        {
+            tasks.Add(task);
+        }
         public void Dispose()
         {
             tasks.CompleteAdding();
@@ -422,5 +461,8 @@ public class DefaultPromiseTest
     {
         Assert.True(executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).Wait(TimeSpan.FromSeconds(5)));
     }
-    private static Exception FakeException() => new Exception("fake exception");
+    private static Exception FakeException()
+    {
+        return new Exception("fake exception");
+    }
 }

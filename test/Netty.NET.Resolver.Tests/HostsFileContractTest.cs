@@ -154,7 +154,10 @@ public class HostsFileContractTest
     private sealed class TrackingReader(string text, bool failRead) : StringReader(text)
     {
         internal bool Closed;
-        public override string ReadLine() => failRead ? throw new IOException("read") : base.ReadLine();
+        public override string ReadLine()
+        {
+            return failRead ? throw new IOException("read") : base.ReadLine();
+        }
         protected override void Dispose(bool disposing)
         {
             Closed = true;

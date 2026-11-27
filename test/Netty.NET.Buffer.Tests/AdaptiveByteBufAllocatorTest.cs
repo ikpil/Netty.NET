@@ -313,7 +313,9 @@ public class AdaptiveByteBufAllocatorTest : AbstractByteBufAllocatorTest<Adaptiv
     // CLR: @RepeatedTest(100) becomes a theory over the 1-based repetition numbers. @DisabledForSlowLeakDetection only
     // skips the original under paranoid leak detection; the CLR test always runs.
     public static IEnumerable<object[]> BuddyAllocationConsistencyRepetitions()
-        => Enumerable.Range(1, 100).Select(repetition => new object[] { repetition });
+    {
+        return Enumerable.Range(1, 100).Select(repetition => new object[] { repetition });
+    }
 
     [Theory]
     [MemberData(nameof(BuddyAllocationConsistencyRepetitions))]
@@ -412,8 +414,10 @@ public class AdaptiveByteBufAllocatorTest : AbstractByteBufAllocatorTest<Adaptiv
     // system-property defaults instead of class statics (src/Netty.NET.Buffer/AdaptivePoolingAllocator.cs); the test
     // reads the values the allocator under test actually uses.
     private static TValue PoolSetting<TValue>(AdaptiveByteBufAllocator allocator, string field)
-        => (TValue)typeof(AdaptivePoolingAllocator).GetField(field, BindingFlags.Instance | BindingFlags.NonPublic)!
+    {
+        return (TValue)typeof(AdaptivePoolingAllocator).GetField(field, BindingFlags.Instance | BindingFlags.NonPublic)!
             .GetValue(allocator.HeapPool)!;
+    }
 
     private static void AssertPurgeScanEvictsIdleChunks(AdaptiveByteBufAllocator allocator, long purgePolls)
     {
@@ -488,7 +492,9 @@ public class AdaptiveByteBufAllocatorClrContractTest
 {
     private static AdaptiveByteBufAllocator Allocator(bool lowMemory = false, NativeMemoryAllocator native = null,
         int reuseCapacity = 2, long purgePolls = 128, int threshold = 3, int stripes = 4)
-        => new(false, lowMemory, native, reuseCapacity, purgePolls, threshold, stripes);
+    {
+        return new(false, lowMemory, native, reuseCapacity, purgePolls, threshold, stripes);
+    }
 
     [Theory]
     [InlineData(false, false)] [InlineData(false, true)] [InlineData(true, false)] [InlineData(true, true)]
@@ -533,7 +539,10 @@ public class AdaptiveByteBufAllocatorClrContractTest
     public void AdaptiveChunkReuseForBothStorageKinds(bool direct)
     {
         using var allocator = Allocator(); var live = new List<ByteBuf>();
-        ByteBuf NewBuffer() => direct ? allocator.DirectBuffer(256) : allocator.HeapBuffer(256);
+        ByteBuf NewBuffer()
+        {
+            return direct ? allocator.DirectBuffer(256) : allocator.HeapBuffer(256);
+        }
         try
         {
             for (int i = 0; i < 513; i++) live.Add(NewBuffer());
@@ -551,7 +560,10 @@ public class AdaptiveByteBufAllocatorClrContractTest
     {
         using var allocator = Allocator(reuseCapacity: 2, purgePolls: 4, threshold: 1);
         var live = new List<ByteBuf>();
-        ByteBuf NewBuffer() => direct ? allocator.DirectBuffer(256, 256) : allocator.HeapBuffer(256, 256);
+        ByteBuf NewBuffer()
+        {
+            return direct ? allocator.DirectBuffer(256, 256) : allocator.HeapBuffer(256, 256);
+        }
         try
         {
             for (int i = 0; i < 10 * 512; i++) live.Add(NewBuffer());

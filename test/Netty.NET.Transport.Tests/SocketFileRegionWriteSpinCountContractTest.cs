@@ -176,7 +176,12 @@ public class SocketFileRegionWriteSpinCountContractTest
     }
 
     private sealed class Observer(Action<ChannelWriteProgress> report) : IProgress<ChannelWriteProgress>
-    { public void Report(ChannelWriteProgress value) => report(value); }
+    {
+        public void Report(ChannelWriteProgress value)
+        {
+            report(value);
+        }
+    }
 
     private sealed class Region(long count, long transferred = 0, Func<Region, Stream, long, long> transfer = null)
         : AbstractReferenceCounted, IFileRegion
@@ -184,10 +189,22 @@ public class SocketFileRegionWriteSpinCountContractTest
         private long _transferred = transferred;
         internal readonly List<long> Positions = new();
         internal volatile bool Deallocated;
-        public long Position() => 0;
-        public long Count() => count;
-        public long Transferred() => _transferred;
-        internal void Advance(long count) => _transferred += count;
+        public long Position()
+        {
+            return 0;
+        }
+        public long Count()
+        {
+            return count;
+        }
+        public long Transferred()
+        {
+            return _transferred;
+        }
+        internal void Advance(long count)
+        {
+            _transferred += count;
+        }
         public long TransferTo(Stream target, long position)
         {
             Positions.Add(position);
@@ -195,11 +212,20 @@ public class SocketFileRegionWriteSpinCountContractTest
             if (transfer != null) return transfer(this, target, position);
             target.WriteByte(42); _transferred++; return 1;
         }
-        protected override void Deallocate() => Deallocated = true;
+        protected override void Deallocate()
+        {
+            Deallocated = true;
+        }
         public new IFileRegion Retain() { base.Retain(); return this; }
         public override IFileRegion Retain(int increment) { base.Retain(increment); return this; }
-        public new IFileRegion Touch() => this;
-        public override IFileRegion Touch(object hint) => this;
+        public new IFileRegion Touch()
+        {
+            return this;
+        }
+        public override IFileRegion Touch(object hint)
+        {
+            return this;
+        }
     }
 
     private sealed class Fixture : IDisposable

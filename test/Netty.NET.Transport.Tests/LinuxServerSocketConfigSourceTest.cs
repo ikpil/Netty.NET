@@ -27,44 +27,59 @@ namespace Netty.NET.Transport.Tests;
 public class LinuxServerSocketConfigSourceTest
 {
     [Fact]
-    public Task TestTcpDeferAccept() => WithListener(config =>
+    public Task TestTcpDeferAccept()
     {
-        Assert.True(config.SetOption(ChannelOption.TCP_DEFER_ACCEPT, 0));
-        Assert.Equal(0, Get(config, ChannelOption.TCP_DEFER_ACCEPT));
-        Assert.True(config.SetOption(ChannelOption.TCP_DEFER_ACCEPT, 10));
-        // The returned value may be bigger then what we set.
-        // See https://www.spinics.net/lists/netdev/msg117330.html
-        Assert.True(10 <= Get(config, ChannelOption.TCP_DEFER_ACCEPT));
-    });
+        return WithListener(config =>
+        {
+            Assert.True(config.SetOption(ChannelOption.TCP_DEFER_ACCEPT, 0));
+            Assert.Equal(0, Get(config, ChannelOption.TCP_DEFER_ACCEPT));
+            Assert.True(config.SetOption(ChannelOption.TCP_DEFER_ACCEPT, 10));
+            // The returned value may be bigger then what we set.
+            // See https://www.spinics.net/lists/netdev/msg117330.html
+            Assert.True(10 <= Get(config, ChannelOption.TCP_DEFER_ACCEPT));
+        });
+    }
 
     [Fact]
-    public Task TestReusePort() => WithListener(config =>
+    public Task TestReusePort()
     {
-        Assert.True(config.SetOption(ChannelOption.SO_REUSEPORT, false));
-        Assert.False(Get(config, ChannelOption.SO_REUSEPORT));
-        Assert.True(config.SetOption(ChannelOption.SO_REUSEPORT, true));
-        Assert.True(Get(config, ChannelOption.SO_REUSEPORT));
-    });
+        return WithListener(config =>
+        {
+            Assert.True(config.SetOption(ChannelOption.SO_REUSEPORT, false));
+            Assert.False(Get(config, ChannelOption.SO_REUSEPORT));
+            Assert.True(config.SetOption(ChannelOption.SO_REUSEPORT, true));
+            Assert.True(Get(config, ChannelOption.SO_REUSEPORT));
+        });
+    }
 
     [Fact]
-    public Task TestFreeBind() => WithListener(config =>
+    public Task TestFreeBind()
     {
-        Assert.True(config.SetOption(ChannelOption.IP_FREEBIND, false));
-        Assert.False(Get(config, ChannelOption.IP_FREEBIND));
-        Assert.True(config.SetOption(ChannelOption.IP_FREEBIND, true));
-        Assert.True(Get(config, ChannelOption.IP_FREEBIND));
-    });
+        return WithListener(config =>
+        {
+            Assert.True(config.SetOption(ChannelOption.IP_FREEBIND, false));
+            Assert.False(Get(config, ChannelOption.IP_FREEBIND));
+            Assert.True(config.SetOption(ChannelOption.IP_FREEBIND, true));
+            Assert.True(Get(config, ChannelOption.IP_FREEBIND));
+        });
+    }
 
     [Fact]
-    public Task GetGetOptions() => WithListener(config => Assert.NotEmpty(config.GetOptions()));
+    public Task GetGetOptions()
+    {
+        return WithListener(config => Assert.NotEmpty(config.GetOptions()));
+    }
 
     [Fact]
-    public Task TestFastOpen() => WithListener(config =>
+    public Task TestFastOpen()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => config.SetOption(ChannelOption.TCP_FASTOPEN, -1));
-        Assert.True(config.SetOption(ChannelOption.TCP_FASTOPEN, 10));
-        Assert.Equal(10, Get(config, ChannelOption.TCP_FASTOPEN));
-    });
+        return WithListener(config =>
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => config.SetOption(ChannelOption.TCP_FASTOPEN, -1));
+            Assert.True(config.SetOption(ChannelOption.TCP_FASTOPEN, 10));
+            Assert.Equal(10, Get(config, ChannelOption.TCP_FASTOPEN));
+        });
+    }
 
     private static async Task WithListener(Action<IChannelConfig> assert)
     {

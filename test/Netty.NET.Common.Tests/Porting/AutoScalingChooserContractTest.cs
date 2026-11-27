@@ -21,9 +21,18 @@ public class AutoScalingChooserContractTest
         internal AccountingExecutor()
             : base(null, _ => throw new Exception("must not start"), true, true,
                 int.MaxValue, RejectedExecutionHandlers.Reject()) { }
-        public override Ticker Ticker() => clock ?? global::Netty.NET.Common.Concurrent.Ticker.SystemTicker();
-        public override bool InEventLoop(Thread thread) => thread != null && thread == Volatile.Read(ref reportingThread);
-        protected override void Run() => throw new Exception("must not run");
+        public override Ticker Ticker()
+        {
+            return clock ?? global::Netty.NET.Common.Concurrent.Ticker.SystemTicker();
+        }
+        public override bool InEventLoop(Thread thread)
+        {
+            return thread != null && thread == Volatile.Read(ref reportingThread);
+        }
+        protected override void Run()
+        {
+            throw new Exception("must not run");
+        }
         internal void Report(long nanos)
         {
             Volatile.Write(ref reportingThread, Thread.CurrentThread);
@@ -35,7 +44,10 @@ public class AutoScalingChooserContractTest
             AddTask(() => clock.Advance(nanos));
             RunAllTasks(1_000_000L);
         }
-        internal long Sample() => GetAndResetAccumulatedActiveTimeNanos();
+        internal long Sample()
+        {
+            return GetAndResetAccumulatedActiveTimeNanos();
+        }
     }
 
     [Theory]
@@ -93,10 +105,22 @@ public class AutoScalingChooserContractTest
 
         internal ManualExecutor(MockTicker clock)
             : base(null, _ => throw new Exception("must not start"), true, true,
-                int.MaxValue, RejectedExecutionHandlers.Reject()) => this.clock = clock;
-        public override Ticker Ticker() => clock ?? global::Netty.NET.Common.Concurrent.Ticker.SystemTicker();
-        public override bool IsSuspended() => suspended;
-        public override bool IsShuttingDown() => shuttingDown;
+                int.MaxValue, RejectedExecutionHandlers.Reject())
+        {
+            this.clock = clock;
+        }
+        public override Ticker Ticker()
+        {
+            return clock ?? global::Netty.NET.Common.Concurrent.Ticker.SystemTicker();
+        }
+        public override bool IsSuspended()
+        {
+            return suspended;
+        }
+        public override bool IsShuttingDown()
+        {
+            return shuttingDown;
+        }
         public override Task TerminationFuture => termination.Task;
         public override bool TrySuspend()
         {
@@ -110,8 +134,14 @@ public class AutoScalingChooserContractTest
             suspended = false;
             ++wakes;
         }
-        protected override void Run() => throw new Exception("must not run");
-        protected internal override int GetNumOfRegisteredChannels() => channels;
+        protected override void Run()
+        {
+            throw new Exception("must not run");
+        }
+        protected internal override int GetNumOfRegisteredChannels()
+        {
+            return channels;
+        }
         protected internal override long GetAndResetAccumulatedActiveTimeNanos()
         {
             ++metricReads;
@@ -119,9 +149,18 @@ public class AutoScalingChooserContractTest
             activeTime = 0;
             return result;
         }
-        protected internal override long GetLastActivityTimeNanos() => lastActivity;
-        internal int IdleCycles() => GetAndIncrementIdleCycles();
-        internal int BusyCycles() => GetAndIncrementBusyCycles();
+        protected internal override long GetLastActivityTimeNanos()
+        {
+            return lastActivity;
+        }
+        internal int IdleCycles()
+        {
+            return GetAndIncrementIdleCycles();
+        }
+        internal int BusyCycles()
+        {
+            return GetAndIncrementBusyCycles();
+        }
     }
 
     private sealed class Harness : IDisposable
@@ -151,7 +190,10 @@ public class AutoScalingChooserContractTest
             monitor = monitorType.GetMethod("Run", BindingFlags.Instance | BindingFlags.Public).CreateDelegate<Action>(instance);
         }
         internal void Tick(long delta = Period) { clock.Advance(delta); monitor(); }
-        public void Dispose() => children[0].termination.TrySetResult();
+        public void Dispose()
+        {
+            children[0].termination.TrySetResult();
+        }
     }
 
     [Fact]
@@ -454,8 +496,10 @@ public class AutoScalingChooserContractTest
     public void ConstructorChecksPinnedRangesAndKeepsJavaNaNComparisonSemantics()
     {
         AutoScalingEventExecutorChooserFactory Create(int min = 0, int max = 1, double down = 0.4,
-            double up = 0.6, int rampUp = 1, int rampDown = 1, int patience = 0, TimeSpan? window = null) =>
-            new(min, max, window ?? TimeSpan.FromHours(1), down, up, rampUp, rampDown, patience);
+            double up = 0.6, int rampUp = 1, int rampDown = 1, int patience = 0, TimeSpan? window = null)
+        {
+            return new(min, max, window ?? TimeSpan.FromHours(1), down, up, rampUp, rampDown, patience);
+        }
         Assert.Throws<ArgumentException>(() => Create(min: -1));
         Assert.Throws<ArgumentException>(() => Create(max: 0));
         Assert.Throws<ArgumentException>(() => Create(min: 2));

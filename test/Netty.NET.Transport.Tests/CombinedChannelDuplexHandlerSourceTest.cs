@@ -57,17 +57,29 @@ public class CombinedChannelDuplexHandlerSourceTest
         Assert.Throws<InvalidOperationException>(handler.RemoveOutboundHandler);
     }
     [Fact]
-    public void TestInboundHandlerImplementsOutboundHandler() => Assert.Throws<ArgumentException>(() =>
-        new CombinedChannelDuplexHandler<IChannelInboundHandler, IChannelOutboundHandler>(
-            new ChannelDuplexHandler(), new ChannelOutboundHandlerAdapter()));
+    public void TestInboundHandlerImplementsOutboundHandler()
+    {
+        Assert.Throws<ArgumentException>(() =>
+            new CombinedChannelDuplexHandler<IChannelInboundHandler, IChannelOutboundHandler>(
+                new ChannelDuplexHandler(), new ChannelOutboundHandlerAdapter()));
+    }
     [Fact]
-    public void TestOutboundHandlerImplementsInboundHandler() => Assert.Throws<ArgumentException>(() =>
-        new CombinedChannelDuplexHandler<IChannelInboundHandler, IChannelOutboundHandler>(
-            new ChannelInboundHandlerAdapter(), new ChannelDuplexHandler()));
+    public void TestOutboundHandlerImplementsInboundHandler()
+    {
+        Assert.Throws<ArgumentException>(() =>
+            new CombinedChannelDuplexHandler<IChannelInboundHandler, IChannelOutboundHandler>(
+                new ChannelInboundHandlerAdapter(), new ChannelDuplexHandler()));
+    }
     [Fact]
-    public void TestInitNotCalledBeforeAdded() => Assert.Throws<InvalidOperationException>(() => new UninitializedCombined().HandlerAdded(null));
+    public void TestInitNotCalledBeforeAdded()
+    {
+        Assert.Throws<InvalidOperationException>(() => new UninitializedCombined().HandlerAdded(null));
+    }
     [Fact]
-    public void TestNotSharable() => Assert.Throws<InvalidOperationException>(() => new SharableCombined());
+    public void TestNotSharable()
+    {
+        Assert.Throws<InvalidOperationException>(() => new SharableCombined());
+    }
 
     private sealed class InboundExceptionHandler(Queue<IChannelHandler> queue, Exception exception, bool forward) : ChannelInboundHandlerAdapter
     {
@@ -208,25 +220,70 @@ public class CombinedChannelDuplexHandlerSourceTest
     private sealed class InboundEventHandler : ChannelInboundHandlerAdapter
     {
         private readonly Queue<Event> _queue = new();
-        internal Event? PollEvent() => _queue.TryDequeue(out var evt) ? evt : null;
-        public override void HandlerAdded(IChannelHandlerContext ctx) => _queue.Enqueue(Event.HandlerAdded);
-        public override void HandlerRemoved(IChannelHandlerContext ctx) => _queue.Enqueue(Event.HandlerRemoved);
-        public override void ChannelRegistered(IChannelHandlerContext ctx) => _queue.Enqueue(Event.Registered);
-        public override void ChannelUnregistered(IChannelHandlerContext ctx) => _queue.Enqueue(Event.Unregistered);
-        public override void ChannelActive(IChannelHandlerContext ctx) => _queue.Enqueue(Event.Active);
-        public override void ChannelInactive(IChannelHandlerContext ctx) => _queue.Enqueue(Event.Inactive);
-        public override void ChannelRead(IChannelHandlerContext ctx, object msg) => _queue.Enqueue(Event.ChannelRead);
-        public override void ChannelReadComplete(IChannelHandlerContext ctx) => _queue.Enqueue(Event.ChannelReadComplete);
-        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt) => _queue.Enqueue(Event.UserEventTriggered);
-        public override void ChannelWritabilityChanged(IChannelHandlerContext ctx) => _queue.Enqueue(Event.ChannelWritabilityChanged);
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => _queue.Enqueue(Event.ExceptionCaught);
+        internal Event? PollEvent()
+        {
+            return _queue.TryDequeue(out var evt) ? evt : null;
+        }
+        public override void HandlerAdded(IChannelHandlerContext ctx)
+        {
+            _queue.Enqueue(Event.HandlerAdded);
+        }
+        public override void HandlerRemoved(IChannelHandlerContext ctx)
+        {
+            _queue.Enqueue(Event.HandlerRemoved);
+        }
+        public override void ChannelRegistered(IChannelHandlerContext ctx)
+        {
+            _queue.Enqueue(Event.Registered);
+        }
+        public override void ChannelUnregistered(IChannelHandlerContext ctx)
+        {
+            _queue.Enqueue(Event.Unregistered);
+        }
+        public override void ChannelActive(IChannelHandlerContext ctx)
+        {
+            _queue.Enqueue(Event.Active);
+        }
+        public override void ChannelInactive(IChannelHandlerContext ctx)
+        {
+            _queue.Enqueue(Event.Inactive);
+        }
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            _queue.Enqueue(Event.ChannelRead);
+        }
+        public override void ChannelReadComplete(IChannelHandlerContext ctx)
+        {
+            _queue.Enqueue(Event.ChannelReadComplete);
+        }
+        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
+        {
+            _queue.Enqueue(Event.UserEventTriggered);
+        }
+        public override void ChannelWritabilityChanged(IChannelHandlerContext ctx)
+        {
+            _queue.Enqueue(Event.ChannelWritabilityChanged);
+        }
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            _queue.Enqueue(Event.ExceptionCaught);
+        }
     }
     private sealed class OutboundEventHandler : ChannelOutboundHandlerAdapter
     {
         private readonly Queue<Event> _queue = new();
-        internal Event? PollEvent() => _queue.TryDequeue(out var evt) ? evt : null;
-        public override void HandlerAdded(IChannelHandlerContext ctx) => _queue.Enqueue(Event.HandlerAdded);
-        public override void HandlerRemoved(IChannelHandlerContext ctx) => _queue.Enqueue(Event.HandlerRemoved);
+        internal Event? PollEvent()
+        {
+            return _queue.TryDequeue(out var evt) ? evt : null;
+        }
+        public override void HandlerAdded(IChannelHandlerContext ctx)
+        {
+            _queue.Enqueue(Event.HandlerAdded);
+        }
+        public override void HandlerRemoved(IChannelHandlerContext ctx)
+        {
+            _queue.Enqueue(Event.HandlerRemoved);
+        }
         public override Task BindAsync(IChannelHandlerContext ctx, EndPoint localAddress, CancellationToken cancellationToken)
         { Assert.Same(LocalAddress, localAddress); _queue.Enqueue(Event.Bind); return Task.CompletedTask; }
         public override Task ConnectAsync(IChannelHandlerContext ctx, EndPoint remoteAddress, EndPoint localAddress, CancellationToken cancellationToken)
@@ -239,7 +296,13 @@ public class CombinedChannelDuplexHandlerSourceTest
         {  _queue.Enqueue(Event.Deregister); return Task.CompletedTask; }
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken)
         { Assert.Same(Msg, msg); _queue.Enqueue(Event.Write); return Task.CompletedTask; }
-        public override void Read(IChannelHandlerContext ctx) => _queue.Enqueue(Event.Read);
-        public override void Flush(IChannelHandlerContext ctx) => _queue.Enqueue(Event.Flush);
+        public override void Read(IChannelHandlerContext ctx)
+        {
+            _queue.Enqueue(Event.Read);
+        }
+        public override void Flush(IChannelHandlerContext ctx)
+        {
+            _queue.Enqueue(Event.Flush);
+        }
     }
 }

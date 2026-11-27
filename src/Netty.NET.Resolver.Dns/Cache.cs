@@ -305,7 +305,10 @@ internal abstract class Cache<E> where E : class
         }
 
         // CLR: Collections.singletonList(e), an immutable one-element list.
-        private static IReadOnlyList<E> SingletonList(E e) => Array.AsReadOnly(new[] { e });
+        private static IReadOnlyList<E> SingletonList(E e)
+        {
+            return Array.AsReadOnly(new[] { e });
+        }
     }
 
     // CLR: java.util.concurrent.ScheduledFuture has no CLR counterpart. loop.schedule(task, ttl, SECONDS) is

@@ -355,8 +355,10 @@ public sealed class DefaultChannelId : IChannelId
             return id;
         }
 
-        public override void Write(Utf8JsonWriter writer, DefaultChannelId value, JsonSerializerOptions options) =>
+        public override void Write(Utf8JsonWriter writer, DefaultChannelId value, JsonSerializerOptions options)
+        {
             writer.WriteStringValue(value.AsLongText());
+        }
 
         private static bool TryParse(string text, out DefaultChannelId id)
         {

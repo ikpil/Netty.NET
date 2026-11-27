@@ -73,22 +73,34 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
         CalculateMaxBytesPerGatheringWrite();
     }
 
-    protected override EndPoint LocalAddress0() => Normalize(JavaChannel().LocalEndPoint);
-    protected override EndPoint RemoteAddress0() => Normalize(JavaChannel().RemoteEndPoint);
-    protected override IChannelConfig NewConfig() => new DefaultSocketChannelConfig(this, JavaChannel());
+    protected override EndPoint LocalAddress0()
+    {
+        return Normalize(JavaChannel().LocalEndPoint);
+    }
+    protected override EndPoint RemoteAddress0()
+    {
+        return Normalize(JavaChannel().RemoteEndPoint);
+    }
+    protected override IChannelConfig NewConfig()
+    {
+        return new DefaultSocketChannelConfig(this, JavaChannel());
+    }
 
     /**
      * Shutdown the input side of the channel.
      */
-    public Task ShutdownInputAsync() => OnLoopAsync(() =>
+    public Task ShutdownInputAsync()
     {
-        EnsureOpen();
-        if (!_inputShutdown)
+        return OnLoopAsync(() =>
         {
-            DoShutdownInput();
-            _inputShutdown = true;
-        }
-    });
+            EnsureOpen();
+            if (!_inputShutdown)
+            {
+                DoShutdownInput();
+                _inputShutdown = true;
+            }
+        });
+    }
 
     // CLR: NioSocketChannel and NioDomainSocketChannel both return isInputShutdown().
     protected virtual bool IsInputShutdown0()
@@ -425,7 +437,10 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
         return written > 0 ? target.FlushPending() : written;
     }
 
-    private bool HasPendingFileRegionBytes() => _fileRegionTarget != null && _fileRegionTarget.HasPending;
+    private bool HasPendingFileRegionBytes()
+    {
+        return _fileRegionTarget != null && _fileRegionTarget.HasPending;
+    }
 
     /**
      * Read bytes into the given {@link ByteBuf} and return the amount.
@@ -506,10 +521,15 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
 
     // ---- NioSocketChannel / NioDomainSocketChannel members shared by both CLR stream channels ----
 
-    internal int GetMaxBytesPerGatheringWrite() => Volatile.Read(ref _maxBytesPerGatheringWrite);
+    internal int GetMaxBytesPerGatheringWrite()
+    {
+        return Volatile.Read(ref _maxBytesPerGatheringWrite);
+    }
 
-    internal void SetMaxBytesPerGatheringWrite(int maxBytesPerGatheringWrite) =>
+    internal void SetMaxBytesPerGatheringWrite(int maxBytesPerGatheringWrite)
+    {
         Volatile.Write(ref _maxBytesPerGatheringWrite, maxBytesPerGatheringWrite);
+    }
 
     internal void CalculateMaxBytesPerGatheringWrite()
     {
@@ -600,12 +620,15 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
         return SocketWriteResult(written, error);
     }
 
-    private static int SocketWriteResult(int written, SocketError error) => error switch
+    private static int SocketWriteResult(int written, SocketError error)
     {
-        SocketError.Success => written,
-        SocketError.WouldBlock => 0,
-        _ => throw new SocketException((int)error),
-    };
+        return error switch
+        {
+            SocketError.Success => written,
+            SocketError.WouldBlock => 0,
+            _ => throw new SocketException((int)error),
+        };
+    }
 
     protected void DoBind0(EndPoint localAddress)
     {
@@ -717,9 +740,18 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
     public bool IsInputShutdown => _inputShutdown || !IsActive;
     public bool IsOutputShutdown => OutboundBuffer.IsClosed || !IsActive;
     public bool IsShutdown => IsInputShutdown && IsOutputShutdown;
-    public Task ShutdownOutputAsync() => OnLoopAsync(() => ShutdownOutput(null));
-    protected override void DoShutdownOutput() => JavaChannel().Shutdown(SocketShutdown.Send);
-    protected virtual void DoShutdownInput() => JavaChannel().Shutdown(SocketShutdown.Receive);
+    public Task ShutdownOutputAsync()
+    {
+        return OnLoopAsync(() => ShutdownOutput(null));
+    }
+    protected override void DoShutdownOutput()
+    {
+        JavaChannel().Shutdown(SocketShutdown.Send);
+    }
+    protected virtual void DoShutdownInput()
+    {
+        JavaChannel().Shutdown(SocketShutdown.Receive);
+    }
     public async Task ShutdownAsync()
     {
         Exception outputFailure = null;
@@ -795,8 +827,17 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
             _accepted = 0;
         }
 
-        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
-        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
-        public override void SetLength(long value) => throw new NotSupportedException();
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            throw new NotSupportedException();
+        }
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            throw new NotSupportedException();
+        }
+        public override void SetLength(long value)
+        {
+            throw new NotSupportedException();
+        }
     }
 }

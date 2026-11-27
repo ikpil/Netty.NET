@@ -19,10 +19,16 @@ namespace Netty.NET.Buffer.Tests;
 public abstract partial class AbstractCompositeByteBufTest
 {
     [Fact]
-    public void TestAllocatorIsSameWhenCopy() => AssertAllocatorIsSameWhenCopy(false);
+    public void TestAllocatorIsSameWhenCopy()
+    {
+        AssertAllocatorIsSameWhenCopy(false);
+    }
 
     [Fact]
-    public void TestAllocatorIsSameWhenCopyUsingIndexAndLength() => AssertAllocatorIsSameWhenCopy(true);
+    public void TestAllocatorIsSameWhenCopyUsingIndexAndLength()
+    {
+        AssertAllocatorIsSameWhenCopy(true);
+    }
 
     private void AssertAllocatorIsSameWhenCopy(bool withIndexAndLength)
     {

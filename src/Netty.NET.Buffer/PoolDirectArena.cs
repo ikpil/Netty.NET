@@ -25,10 +25,14 @@ internal sealed class PoolDirectArena : PoolArena
 
     internal PoolDirectArena(IByteBufAllocator parent, SizeClasses sizeClass,
         NativeMemoryAllocator nativeAllocator = null) : base(parent, sizeClass, true)
-        => _nativeAllocator = nativeAllocator ?? NativeMemoryAllocator.Shared;
+    {
+        _nativeAllocator = nativeAllocator ?? NativeMemoryAllocator.Shared;
+    }
 
     internal override PooledDirectByteBuf Allocate(int initialCapacity, int maxCapacity, PoolThreadCache cache = null)
-        => new(this, initialCapacity, maxCapacity, cache);
+    {
+        return new(this, initialCapacity, maxCapacity, cache);
+    }
 
     protected override Memory<byte> AllocateBacking(int length, out NativeMemoryOwner owner)
     {

@@ -517,7 +517,10 @@ public class EmbeddedChannelTest
         internal Action<IChannelHandlerContext, object> ReadAction;
         internal Action<IChannelHandlerContext> ReadComplete, Inactive, Registered, Unregistered;
         internal Action<IChannelHandlerContext, Exception> ExceptionAction;
-        public override void ChannelRead(IChannelHandlerContext ctx, object msg) => ReadAction(ctx, msg);
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            ReadAction(ctx, msg);
+        }
         public override void ChannelReadComplete(IChannelHandlerContext ctx) { if (ReadComplete == null) base.ChannelReadComplete(ctx); else ReadComplete(ctx); }
         public override void ChannelInactive(IChannelHandlerContext ctx) { if (Inactive == null) base.ChannelInactive(ctx); else Inactive(ctx); }
         public override void ChannelRegistered(IChannelHandlerContext ctx) { if (Registered == null) base.ChannelRegistered(ctx); else Registered(ctx); }
@@ -525,13 +528,24 @@ public class EmbeddedChannelTest
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) { if (ExceptionAction == null) base.ExceptionCaught(ctx, cause); else ExceptionAction(ctx, cause); }
     }
     private sealed class AddedHandler(Action<IChannelHandlerContext> callback) : ChannelHandlerAdapter
-    { public override void HandlerAdded(IChannelHandlerContext ctx) => callback(ctx); }
+    {
+        public override void HandlerAdded(IChannelHandlerContext ctx)
+        {
+            callback(ctx);
+        }
+    }
     private sealed class OutboundActions : ChannelOutboundHandlerAdapter
     {
         internal Func<IChannelHandlerContext, object, CancellationToken, Task> WriteAction;
         internal Action<IChannelHandlerContext> FlushAction;
-        public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token) => WriteAction(ctx, msg, token);
-        public override void Flush(IChannelHandlerContext ctx) => FlushAction(ctx);
+        public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
+        {
+            return WriteAction(ctx, msg, token);
+        }
+        public override void Flush(IChannelHandlerContext ctx)
+        {
+            FlushAction(ctx);
+        }
     }
     private sealed class DeferredWriteHandler(int delayMillis = 0) : ChannelOutboundHandlerAdapter
     {
@@ -557,10 +571,18 @@ public class EmbeddedChannelTest
         private readonly Queue<int> _queue = new();
         public override Task DisconnectAsync(IChannelHandlerContext ctx, CancellationToken token) { _queue.Enqueue(DISCONNECT); return Task.CompletedTask; }
         public override Task CloseAsync(IChannelHandlerContext ctx, CancellationToken token) { _queue.Enqueue(CLOSE); return Task.CompletedTask; }
-        internal int? PollEvent() => _queue.TryDequeue(out var result) ? result : null;
+        internal int? PollEvent()
+        {
+            return _queue.TryDequeue(out var result) ? result : null;
+        }
     }
     private sealed class FailingCloseHandler : ChannelOutboundHandlerAdapter
-    { public override Task CloseAsync(IChannelHandlerContext ctx, CancellationToken token) => Task.FromException(new Exception()); }
+    {
+        public override Task CloseAsync(IChannelHandlerContext ctx, CancellationToken token)
+        {
+            return Task.FromException(new Exception());
+        }
+    }
     private sealed class MessageHandlingChannel(bool inbound, CountdownEvent latch) : EmbeddedChannel
     {
         protected override void HandleInboundMessage(object msg) { if (inbound) latch.Signal(); else base.HandleInboundMessage(msg); }

@@ -41,8 +41,13 @@ public class FixedCompositeByteBufOriginalTest
             : new UnpooledByteBufAllocator(false, Native);
         internal T Own<T>(T b) where T : ByteBuf { _buffers.Add(b); return b; }
         internal ByteBuf Data(bool direct, params byte[] bytes)
-            => Own((direct ? Allocator.DirectBuffer(256) : Allocator.HeapBuffer(256)).WriteBytes(bytes));
-        internal ByteBuf Fixed(params ByteBuf[] inputs) => Own(new FixedCompositeByteBuf(inputs));
+        {
+            return Own((direct ? Allocator.DirectBuffer(256) : Allocator.HeapBuffer(256)).WriteBytes(bytes));
+        }
+        internal ByteBuf Fixed(params ByteBuf[] inputs)
+        {
+            return Own(new FixedCompositeByteBuf(inputs));
+        }
         public void Dispose()
         {
             // Composite/fixed owners were registered last and consume input claims.
@@ -52,40 +57,76 @@ public class FixedCompositeByteBufOriginalTest
     }
 
     [Fact]
-    public void TestSetBoolean() => AssertReadOnlySetter((buf, _, _, _) => buf.SetBoolean(0, true));
+    public void TestSetBoolean()
+    {
+        AssertReadOnlySetter((buf, _, _, _) => buf.SetBoolean(0, true));
+    }
 
     [Fact]
-    public void TestSetByte() => AssertReadOnlySetter((buf, _, _, _) => buf.SetByte(0, 1));
+    public void TestSetByte()
+    {
+        AssertReadOnlySetter((buf, _, _, _) => buf.SetByte(0, 1));
+    }
 
     [Fact]
-    public void TestSetBytesWithByteBuf() => AssertReadOnlySetter((buf, src, _, _) => buf.SetBytes(0, src));
+    public void TestSetBytesWithByteBuf()
+    {
+        AssertReadOnlySetter((buf, src, _, _) => buf.SetBytes(0, src));
+    }
 
     [Fact]
-    public void TestSetBytesWithByteBuffer() => AssertReadOnlySetter((buf, _, _, _) => buf.SetBytes(0, new byte[4].AsSpan()));
+    public void TestSetBytesWithByteBuffer()
+    {
+        AssertReadOnlySetter((buf, _, _, _) => buf.SetBytes(0, new byte[4].AsSpan()));
+    }
 
     [Fact]
-    public void TestSetBytesWithInputStream() => AssertReadOnlySetter((buf, _, stream, _) => buf.SetBytes(0, stream, 4));
+    public void TestSetBytesWithInputStream()
+    {
+        AssertReadOnlySetter((buf, _, stream, _) => buf.SetBytes(0, stream, 4));
+    }
 
     [Fact]
-    public void TestSetBytesWithChannel() => AssertReadOnlySetter((buf, _, _, channel) => buf.SetBytes(0, channel, 4));
+    public void TestSetBytesWithChannel()
+    {
+        AssertReadOnlySetter((buf, _, _, channel) => buf.SetBytes(0, channel, 4));
+    }
 
     [Fact]
-    public void TestSetChar() => AssertReadOnlySetter((buf, _, _, _) => buf.SetChar(0, 'b'));
+    public void TestSetChar()
+    {
+        AssertReadOnlySetter((buf, _, _, _) => buf.SetChar(0, 'b'));
+    }
 
     [Fact]
-    public void TestSetDouble() => AssertReadOnlySetter((buf, _, _, _) => buf.SetDouble(0, 1));
+    public void TestSetDouble()
+    {
+        AssertReadOnlySetter((buf, _, _, _) => buf.SetDouble(0, 1));
+    }
 
     [Fact]
-    public void TestSetFloat() => AssertReadOnlySetter((buf, _, _, _) => buf.SetFloat(0, 1));
+    public void TestSetFloat()
+    {
+        AssertReadOnlySetter((buf, _, _, _) => buf.SetFloat(0, 1));
+    }
 
     [Fact]
-    public void TestSetInt() => AssertReadOnlySetter((buf, _, _, _) => buf.SetInt(0, 1));
+    public void TestSetInt()
+    {
+        AssertReadOnlySetter((buf, _, _, _) => buf.SetInt(0, 1));
+    }
 
     [Fact]
-    public void TestSetLong() => AssertReadOnlySetter((buf, _, _, _) => buf.SetLong(0, 1));
+    public void TestSetLong()
+    {
+        AssertReadOnlySetter((buf, _, _, _) => buf.SetLong(0, 1));
+    }
 
     [Fact]
-    public void TestSetMedium() => AssertReadOnlySetter((buf, _, _, _) => buf.SetMedium(0, 1));
+    public void TestSetMedium()
+    {
+        AssertReadOnlySetter((buf, _, _, _) => buf.SetMedium(0, 1));
+    }
 
     // Every original setter test: one heap input, assertThrows(ReadOnlyBufferException). CLR NotSupportedException
     // replaces ReadOnlyBufferException, Span replaces ByteBuffer and Socket replaces ScatteringByteChannel; the CLR
@@ -104,69 +145,117 @@ public class FixedCompositeByteBufOriginalTest
     // CLR: each gathering test runs the synchronous and the asynchronous Socket transfer.
     [Theory]
     [InlineData(false)] [InlineData(true)]
-    public Task TestGatheringWritesHeap(bool asynchronous) => TestGatheringWrites(false, false, false, asynchronous);
+    public Task TestGatheringWritesHeap(bool asynchronous)
+    {
+        return TestGatheringWrites(false, false, false, asynchronous);
+    }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
-    public Task TestGatheringWritesDirect(bool asynchronous) => TestGatheringWrites(false, true, true, asynchronous);
+    public Task TestGatheringWritesDirect(bool asynchronous)
+    {
+        return TestGatheringWrites(false, true, true, asynchronous);
+    }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
-    public Task TestGatheringWritesMixes(bool asynchronous) => TestGatheringWrites(false, false, true, asynchronous);
+    public Task TestGatheringWritesMixes(bool asynchronous)
+    {
+        return TestGatheringWrites(false, false, true, asynchronous);
+    }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
-    public Task TestGatheringWritesHeapPooled(bool asynchronous) => TestGatheringWrites(true, false, false, asynchronous);
+    public Task TestGatheringWritesHeapPooled(bool asynchronous)
+    {
+        return TestGatheringWrites(true, false, false, asynchronous);
+    }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
-    public Task TestGatheringWritesDirectPooled(bool asynchronous) => TestGatheringWrites(true, true, true, asynchronous);
+    public Task TestGatheringWritesDirectPooled(bool asynchronous)
+    {
+        return TestGatheringWrites(true, true, true, asynchronous);
+    }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
-    public Task TestGatheringWritesMixesPooled(bool asynchronous) => TestGatheringWrites(true, false, true, asynchronous);
+    public Task TestGatheringWritesMixesPooled(bool asynchronous)
+    {
+        return TestGatheringWrites(true, false, true, asynchronous);
+    }
 
     // Original testGatheringWrites(buf1, buf2): the scenario builds a mutable CompositeByteBuf, as the source does.
     private static Task TestGatheringWrites(bool pooled, bool direct1, bool direct2, bool asynchronous)
-        => GatheringWrites(0, pooled, direct1, direct2, asynchronous);
+    {
+        return GatheringWrites(0, pooled, direct1, direct2, asynchronous);
+    }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
-    public Task TestGatheringWritesPartialHeap(bool asynchronous) => TestGatheringWritesPartial(false, false, false, asynchronous);
+    public Task TestGatheringWritesPartialHeap(bool asynchronous)
+    {
+        return TestGatheringWritesPartial(false, false, false, asynchronous);
+    }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
-    public Task TestGatheringWritesPartialDirect(bool asynchronous) => TestGatheringWritesPartial(false, true, true, asynchronous);
+    public Task TestGatheringWritesPartialDirect(bool asynchronous)
+    {
+        return TestGatheringWritesPartial(false, true, true, asynchronous);
+    }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
-    public Task TestGatheringWritesPartialMixes(bool asynchronous) => TestGatheringWritesPartial(false, false, true, asynchronous);
+    public Task TestGatheringWritesPartialMixes(bool asynchronous)
+    {
+        return TestGatheringWritesPartial(false, false, true, asynchronous);
+    }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
-    public Task TestGatheringWritesPartialHeapPooled(bool asynchronous) => TestGatheringWritesPartial(true, false, false, asynchronous);
+    public Task TestGatheringWritesPartialHeapPooled(bool asynchronous)
+    {
+        return TestGatheringWritesPartial(true, false, false, asynchronous);
+    }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
-    public Task TestGatheringWritesPartialDirectPooled(bool asynchronous) => TestGatheringWritesPartial(true, true, true, asynchronous);
+    public Task TestGatheringWritesPartialDirectPooled(bool asynchronous)
+    {
+        return TestGatheringWritesPartial(true, true, true, asynchronous);
+    }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
-    public Task TestGatheringWritesPartialMixesPooled(bool asynchronous) => TestGatheringWritesPartial(true, false, true, asynchronous);
+    public Task TestGatheringWritesPartialMixesPooled(bool asynchronous)
+    {
+        return TestGatheringWritesPartial(true, false, true, asynchronous);
+    }
 
     private static Task TestGatheringWritesPartial(bool pooled, bool direct1, bool direct2, bool asynchronous)
-        => GatheringWrites(1, pooled, direct1, direct2, asynchronous);
+    {
+        return GatheringWrites(1, pooled, direct1, direct2, asynchronous);
+    }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
-    public Task TestGatheringWritesSingleHeap(bool asynchronous) => TestGatheringWritesSingleBuf(false, asynchronous);
+    public Task TestGatheringWritesSingleHeap(bool asynchronous)
+    {
+        return TestGatheringWritesSingleBuf(false, asynchronous);
+    }
 
     [Theory]
     [InlineData(false)] [InlineData(true)]
-    public Task TestGatheringWritesSingleDirect(bool asynchronous) => TestGatheringWritesSingleBuf(true, asynchronous);
+    public Task TestGatheringWritesSingleDirect(bool asynchronous)
+    {
+        return TestGatheringWritesSingleBuf(true, asynchronous);
+    }
 
     private static Task TestGatheringWritesSingleBuf(bool direct1, bool asynchronous)
-        => GatheringWrites(2, false, direct1, false, asynchronous);
+    {
+        return GatheringWrites(2, false, direct1, false, asynchronous);
+    }
 
     // Scenario 0 = testGatheringWrites, 1 = testGatheringWritesPartial, 2 = testGatheringWritesSingleBuf.
     private static async Task GatheringWrites(int scenario, bool pooled, bool firstDirect, bool secondDirect, bool asynchronous)
@@ -265,7 +354,10 @@ public class FixedCompositeByteBufOriginalTest
 
     [Theory]
     [InlineData(0)] [InlineData(10)]
-    public void TestHasMemoryAddressWithSingleBuffer(int written) => SingleInputCapabilities(true, written);
+    public void TestHasMemoryAddressWithSingleBuffer(int written)
+    {
+        SingleInputCapabilities(true, written);
+    }
 
     [Fact]
     public void TestHasMemoryAddressWhenEmpty()
@@ -278,11 +370,17 @@ public class FixedCompositeByteBufOriginalTest
 
     [Theory]
     [InlineData(0)] [InlineData(2)]
-    public void TestHasNoMemoryAddressWhenMultipleBuffers(int written) => MultipleInputCapabilities(true, written);
+    public void TestHasNoMemoryAddressWhenMultipleBuffers(int written)
+    {
+        MultipleInputCapabilities(true, written);
+    }
 
     [Theory]
     [InlineData(0)] [InlineData(10)]
-    public void TestHasArrayWithSingleBuffer(int written) => SingleInputCapabilities(false, written);
+    public void TestHasArrayWithSingleBuffer(int written)
+    {
+        SingleInputCapabilities(false, written);
+    }
 
     [Fact]
     public void TestHasArrayWhenEmptyAndIsDirect()
@@ -295,7 +393,10 @@ public class FixedCompositeByteBufOriginalTest
 
     [Theory]
     [InlineData(0)] [InlineData(2)]
-    public void TestHasNoArrayWhenMultipleBuffers(int written) => MultipleInputCapabilities(false, written);
+    public void TestHasNoArrayWhenMultipleBuffers(int written)
+    {
+        MultipleInputCapabilities(false, written);
+    }
 
     // CLR: the original single-buffer capability tests use an unwritten 10-byte buffer; the CLR test checks the
     // empty and the 10-byte readable range through bounded arrays (heap) and scoped pins (native).

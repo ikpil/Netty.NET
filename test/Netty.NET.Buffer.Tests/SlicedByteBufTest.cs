@@ -27,7 +27,10 @@ namespace Netty.NET.Buffer.Tests;
 // IndexOutOfBoundsException in the overrides that expect the inherited body to fail.
 public class SlicedByteBufTest : AbstractSingleRegionByteBufTest
 {
-    public SlicedByteBufTest() => Init(new UnpooledByteBufAllocator(false, Native));
+    public SlicedByteBufTest()
+    {
+        Init(new UnpooledByteBufAllocator(false, Native));
+    }
 
     protected sealed override ByteBuf NewBuffer(int length, int maxCapacity)
     {

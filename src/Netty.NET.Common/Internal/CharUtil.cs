@@ -5,11 +5,15 @@ namespace Netty.NET.Common.Internal;
 
 public static class CharUtil
 {
-    internal static bool ContentEquals(ICharSequence left, ICharSequence right) =>
-        ContentEquals(left, right, false);
+    internal static bool ContentEquals(ICharSequence left, ICharSequence right)
+    {
+        return ContentEquals(left, right, false);
+    }
 
-    internal static bool ContentEqualsIgnoreCase(ICharSequence left, ICharSequence right) =>
-        ContentEquals(left, right, true);
+    internal static bool ContentEqualsIgnoreCase(ICharSequence left, ICharSequence right)
+    {
+        return ContentEquals(left, right, true);
+    }
 
     private static bool ContentEquals(ICharSequence left, ICharSequence right, bool ignoreCase)
     {
@@ -22,11 +26,15 @@ public static class CharUtil
                CompareRegions(left, 0, right, 0, left.Count, ignoreCase);
     }
 
-    public static bool RegionMatches(IReadOnlyList<char> value, int thisStart, ICharSequence other, int start, int length) =>
-        RegionMatches(value, thisStart, other, start, length, false);
+    public static bool RegionMatches(IReadOnlyList<char> value, int thisStart, ICharSequence other, int start, int length)
+    {
+        return RegionMatches(value, thisStart, other, start, length, false);
+    }
 
-    public static bool RegionMatchesIgnoreCase(IReadOnlyList<char> value, int thisStart, ICharSequence other, int start, int length) =>
-        RegionMatches(value, thisStart, other, start, length, true);
+    public static bool RegionMatchesIgnoreCase(IReadOnlyList<char> value, int thisStart, ICharSequence other, int start, int length)
+    {
+        return RegionMatches(value, thisStart, other, start, length, true);
+    }
 
     private static bool RegionMatches(IReadOnlyList<char> value, int thisStart, ICharSequence other, int start, int length,
         bool ignoreCase)

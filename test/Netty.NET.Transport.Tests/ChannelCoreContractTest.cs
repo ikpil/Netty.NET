@@ -265,13 +265,28 @@ public class ChannelCoreContractTest
         private readonly Task _write;
         internal FailureChannel(Task write, bool active = true) : base(null, new ChannelMetadata(false))
         { _write = write; SetActive(active); }
-        protected override EndPoint LocalAddress0() => null;
-        protected override EndPoint RemoteAddress0() => null;
-        protected override Task DoBindAsync(EndPoint address, CancellationToken token) => Task.CompletedTask;
-        protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token) => Task.CompletedTask;
+        protected override EndPoint LocalAddress0()
+        {
+            return null;
+        }
+        protected override EndPoint RemoteAddress0()
+        {
+            return null;
+        }
+        protected override Task DoBindAsync(EndPoint address, CancellationToken token)
+        {
+            return Task.CompletedTask;
+        }
+        protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token)
+        {
+            return Task.CompletedTask;
+        }
         protected override void DoClose() { }
         protected override void DoBeginRead() { }
-        protected override Task DoWrite(object msg) => _write;
+        protected override Task DoWrite(object msg)
+        {
+            return _write;
+        }
     }
     private sealed class ReleaseObserver(ByteBuf content, Action released) : DefaultByteBufHolder(content)
     {
@@ -283,25 +298,54 @@ public class ChannelCoreContractTest
         }
     }
     private sealed class Initializer(Action<EmbeddedChannel> initialize) : ChannelInitializer<EmbeddedChannel>
-    { protected override void InitChannel(EmbeddedChannel channel) => initialize(channel); }
+    {
+        protected override void InitChannel(EmbeddedChannel channel)
+        {
+            initialize(channel);
+        }
+    }
     private sealed class BufferConsumer : SimpleChannelInboundHandler<ByteBuf>
     { protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf msg) { } }
     private sealed class LoopChannel() : AbstractChannel(null, new ChannelMetadata(false))
     {
-        protected override System.Net.EndPoint LocalAddress0() => null;
-        protected override System.Net.EndPoint RemoteAddress0() => null;
-        protected override void DoRegister() => SetActive(true);
-        protected override Task DoBindAsync(System.Net.EndPoint address, CancellationToken token) => Task.CompletedTask;
-        protected override Task DoConnectAsync(System.Net.EndPoint remote, System.Net.EndPoint local, CancellationToken token) => Task.CompletedTask;
+        protected override System.Net.EndPoint LocalAddress0()
+        {
+            return null;
+        }
+        protected override System.Net.EndPoint RemoteAddress0()
+        {
+            return null;
+        }
+        protected override void DoRegister()
+        {
+            SetActive(true);
+        }
+        protected override Task DoBindAsync(System.Net.EndPoint address, CancellationToken token)
+        {
+            return Task.CompletedTask;
+        }
+        protected override Task DoConnectAsync(System.Net.EndPoint remote, System.Net.EndPoint local, CancellationToken token)
+        {
+            return Task.CompletedTask;
+        }
         protected override void DoClose() { }
         protected override void DoBeginRead() { }
-        protected override Task DoWrite(object msg) => Task.CompletedTask;
+        protected override Task DoWrite(object msg)
+        {
+            return Task.CompletedTask;
+        }
     }
     private sealed class Recorder(string name, List<string> calls) : ChannelDuplexHandler
     {
         internal string Name => name;
-        public override void HandlerAdded(IChannelHandlerContext ctx) => calls.Add(name + ".added");
-        public override void HandlerRemoved(IChannelHandlerContext ctx) => calls.Add(name + ".removed");
+        public override void HandlerAdded(IChannelHandlerContext ctx)
+        {
+            calls.Add(name + ".added");
+        }
+        public override void HandlerRemoved(IChannelHandlerContext ctx)
+        {
+            calls.Add(name + ".removed");
+        }
         public override void ChannelRegistered(IChannelHandlerContext ctx) { calls.Add(name + ".registered"); ctx.FireChannelRegistered(); }
         public override void ChannelInactive(IChannelHandlerContext ctx) { calls.Add(name + ".inactive"); ctx.FireChannelInactive(); }
         public override void ChannelUnregistered(IChannelHandlerContext ctx) { calls.Add(name + ".unregistered"); ctx.FireChannelUnregistered(); }

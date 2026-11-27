@@ -65,9 +65,15 @@ public class ServerBootstrapSourceTest
         finally { await group.StopAsync(); }
     }
     [Fact(Timeout = 3000)]
-    public Task TestParentHandler() => ParentHandlerCase(false, TestContext.Current.CancellationToken);
+    public Task TestParentHandler()
+    {
+        return ParentHandlerCase(false, TestContext.Current.CancellationToken);
+    }
     [Fact(Timeout = 3000)]
-    public Task TestParentHandlerViaChannelInitializer() => ParentHandlerCase(true, TestContext.Current.CancellationToken);
+    public Task TestParentHandlerViaChannelInitializer()
+    {
+        return ParentHandlerCase(true, TestContext.Current.CancellationToken);
+    }
     private static async Task ParentHandlerCase(bool initializer, CancellationToken timeout)
     {
         var address = new LocalAddress(Guid.NewGuid().ToString());
@@ -125,7 +131,10 @@ public class ServerBootstrapSourceTest
     }
     private sealed class ParentHandler(Action<IChannelHandlerContext> added, Action<IChannelHandlerContext, object> read = null) : ChannelInboundHandlerAdapter
     {
-        public override void HandlerAdded(IChannelHandlerContext ctx) => added(ctx);
+        public override void HandlerAdded(IChannelHandlerContext ctx)
+        {
+            added(ctx);
+        }
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         { read?.Invoke(ctx, msg); base.ChannelRead(ctx, msg); }
     }

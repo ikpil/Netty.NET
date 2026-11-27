@@ -99,12 +99,26 @@ public class DefaultAttributeMap : IAttributeMap
         private T value;
 
         internal bool IsRemoved => Volatile.Read(ref attributeMap) == null;
-        public AttributeKey<T> Key() => key;
-        public T Get() => Volatile.Read(ref value);
-        public void Set(T value) => Volatile.Write(ref this.value, value);
-        public T GetAndSet(T value) => Interlocked.Exchange(ref this.value, value);
-        public bool CompareAndSet(T oldValue, T newValue) =>
-            ReferenceEquals(Interlocked.CompareExchange(ref value, newValue, oldValue), oldValue);
+        public AttributeKey<T> Key()
+        {
+            return key;
+        }
+        public T Get()
+        {
+            return Volatile.Read(ref value);
+        }
+        public void Set(T value)
+        {
+            Volatile.Write(ref this.value, value);
+        }
+        public T GetAndSet(T value)
+        {
+            return Interlocked.Exchange(ref this.value, value);
+        }
+        public bool CompareAndSet(T oldValue, T newValue)
+        {
+            return ReferenceEquals(Interlocked.CompareExchange(ref value, newValue, oldValue), oldValue);
+        }
 
         public T SetIfAbsent(T value)
         {

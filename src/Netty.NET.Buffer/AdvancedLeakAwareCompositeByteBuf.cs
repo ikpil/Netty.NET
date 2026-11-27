@@ -57,7 +57,10 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     }
 
     protected override SimpleLeakAwareByteBuf NewLeakAwareByteBuf(ByteBuf buffer, ByteBuf trackedByteBuf,
-        IResourceLeakTracker<ByteBuf> leakTracker) => new AdvancedLeakAwareByteBuf(buffer, trackedByteBuf, leakTracker);
+        IResourceLeakTracker<ByteBuf> leakTracker)
+    {
+        return new AdvancedLeakAwareByteBuf(buffer, trackedByteBuf, leakTracker);
+    }
 
     public override CompositeByteBuf DiscardReadBytes()
     { RecordLeakNonRefCountingOperation(Leak); Wrapped.DiscardReadBytes(); return this; }

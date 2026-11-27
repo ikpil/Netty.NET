@@ -44,7 +44,10 @@ public class CombinedChannelDuplexHandler<TInbound, TOutbound> : ChannelDuplexHa
      * {@link #init(ChannelInboundHandler, ChannelOutboundHandler)} before adding this handler into a
      * {@link ChannelPipeline}.
      */
-    protected CombinedChannelDuplexHandler() => EnsureNotSharable();
+    protected CombinedChannelDuplexHandler()
+    {
+        EnsureNotSharable();
+    }
 
     /**
      * Creates a new instance that combines the specified two handlers into one.
@@ -288,7 +291,10 @@ public class CombinedChannelDuplexHandler<TInbound, TOutbound> : ChannelDuplexHa
     {
         private readonly CombinedChannelDuplexHandler<TInbound, TOutbound> _owner;
         internal InboundContext(IChannelHandlerContext ctx, IChannelHandler handler,
-            CombinedChannelDuplexHandler<TInbound, TOutbound> owner) : base(ctx, handler) => _owner = owner;
+            CombinedChannelDuplexHandler<TInbound, TOutbound> owner) : base(ctx, handler)
+        {
+            _owner = owner;
+        }
         public override IChannelInboundInvoker FireExceptionCaught(Exception cause)
         {
             _owner.ForwardInboundException(cause);
@@ -312,9 +318,18 @@ public class CombinedChannelDuplexHandler<TInbound, TOutbound> : ChannelDuplexHa
         public IChannelHandler Handler => Ctx.Handler;
         public bool IsRemoved => Removed || Ctx.IsRemoved;
         public IChannelPipeline Pipeline => Ctx.Pipeline;
-        public IByteBufAllocator Alloc() => Ctx.Alloc();
-        public IAttribute<T> Attr<T>(AttributeKey<T> key) where T : class => Ctx.Channel.Attr(key);
-        public bool HasAttr<T>(AttributeKey<T> key) where T : class => Ctx.Channel.HasAttr(key);
+        public IByteBufAllocator Alloc()
+        {
+            return Ctx.Alloc();
+        }
+        public IAttribute<T> Attr<T>(AttributeKey<T> key) where T : class
+        {
+            return Ctx.Channel.Attr(key);
+        }
+        public bool HasAttr<T>(AttributeKey<T> key) where T : class
+        {
+            return Ctx.Channel.HasAttr(key);
+        }
         public IChannelInboundInvoker FireChannelRegistered() { Ctx.FireChannelRegistered(); return this; }
         public IChannelInboundInvoker FireChannelUnregistered() { Ctx.FireChannelUnregistered(); return this; }
         public IChannelInboundInvoker FireChannelActive() { Ctx.FireChannelActive(); return this; }
@@ -324,17 +339,41 @@ public class CombinedChannelDuplexHandler<TInbound, TOutbound> : ChannelDuplexHa
         public IChannelInboundInvoker FireChannelRead(object msg) { Ctx.FireChannelRead(msg); return this; }
         public IChannelInboundInvoker FireChannelReadComplete() { Ctx.FireChannelReadComplete(); return this; }
         public IChannelInboundInvoker FireChannelWritabilityChanged() { Ctx.FireChannelWritabilityChanged(); return this; }
-        public Task BindAsync(EndPoint localAddress, CancellationToken cancellationToken = default) => Ctx.BindAsync(localAddress, cancellationToken);
-        public Task ConnectAsync(EndPoint remoteAddress, EndPoint localAddress = null, CancellationToken cancellationToken = default) => Ctx.ConnectAsync(remoteAddress, localAddress, cancellationToken);
-        public Task DisconnectAsync(CancellationToken cancellationToken = default) => Ctx.DisconnectAsync(cancellationToken);
-        public Task CloseAsync(CancellationToken cancellationToken = default) => Ctx.CloseAsync(cancellationToken);
-        public Task DeregisterAsync(CancellationToken cancellationToken = default) => Ctx.DeregisterAsync(cancellationToken);
-        public Task WriteAsync(object msg, CancellationToken cancellationToken = default) => Ctx.WriteAsync(msg, cancellationToken);
-        public Task WriteAndFlushAsync(object msg, CancellationToken cancellationToken = default) => Ctx.WriteAndFlushAsync(msg, cancellationToken);
+        public Task BindAsync(EndPoint localAddress, CancellationToken cancellationToken = default)
+        {
+            return Ctx.BindAsync(localAddress, cancellationToken);
+        }
+        public Task ConnectAsync(EndPoint remoteAddress, EndPoint localAddress = null, CancellationToken cancellationToken = default)
+        {
+            return Ctx.ConnectAsync(remoteAddress, localAddress, cancellationToken);
+        }
+        public Task DisconnectAsync(CancellationToken cancellationToken = default)
+        {
+            return Ctx.DisconnectAsync(cancellationToken);
+        }
+        public Task CloseAsync(CancellationToken cancellationToken = default)
+        {
+            return Ctx.CloseAsync(cancellationToken);
+        }
+        public Task DeregisterAsync(CancellationToken cancellationToken = default)
+        {
+            return Ctx.DeregisterAsync(cancellationToken);
+        }
+        public Task WriteAsync(object msg, CancellationToken cancellationToken = default)
+        {
+            return Ctx.WriteAsync(msg, cancellationToken);
+        }
+        public Task WriteAndFlushAsync(object msg, CancellationToken cancellationToken = default)
+        {
+            return Ctx.WriteAndFlushAsync(msg, cancellationToken);
+        }
         public IChannelOutboundInvoker Read() { Ctx.Read(); return this; }
         public IChannelOutboundInvoker Flush() { Ctx.Flush(); return this; }
         // CLR: keeps the text of the delegated context, as this context formerly inherited its toString().
-        public override string ToString() => Ctx.ToString();
+        public override string ToString()
+        {
+            return Ctx.ToString();
+        }
 
         internal void Remove()
         {

@@ -29,8 +29,14 @@ public class ByteBufTextSearchDispatchTest
     private sealed class Tracker : IResourceLeakTracker<ByteBuf>
     {
         public int Records, Closes;
-        public void Record() => ++Records;
-        public void Record(object hint) => ++Records;
+        public void Record()
+        {
+            ++Records;
+        }
+        public void Record(object hint)
+        {
+            ++Records;
+        }
         public bool Close(ByteBuf value) { ++Closes; return true; }
     }
 
@@ -87,18 +93,21 @@ public class ByteBufTextSearchDispatchTest
             yield return [backing, facade, operation];
     }
 
-    private static object Invoke(ByteBuf buffer, int operation, Encoding encoding) => operation switch
+    private static object Invoke(ByteBuf buffer, int operation, Encoding encoding)
     {
-        0 => buffer.IndexOf(1, 7, 66),
-        1 => buffer.BytesBefore(66),
-        2 => buffer.BytesBefore(3, 66),
-        3 => buffer.BytesBefore(2, 4, 66),
-        4 => buffer.ToString(encoding),
-        5 => buffer.ToString(2, 3, encoding),
-        6 => buffer.ReadString(3, encoding),
-        7 => buffer.SetCharSequence(2, "한Z", encoding),
-        _ => buffer.WriteCharSequence("한Z", encoding)
-    };
+        return operation switch
+        {
+            0 => buffer.IndexOf(1, 7, 66),
+            1 => buffer.BytesBefore(66),
+            2 => buffer.BytesBefore(3, 66),
+            3 => buffer.BytesBefore(2, 4, 66),
+            4 => buffer.ToString(encoding),
+            5 => buffer.ToString(2, 3, encoding),
+            6 => buffer.ReadString(3, encoding),
+            7 => buffer.SetCharSequence(2, "한Z", encoding),
+            _ => buffer.WriteCharSequence("한Z", encoding)
+        };
+    }
 
     [Theory]
     [MemberData(nameof(Cases))]
@@ -195,28 +204,82 @@ public class ByteBufTextSearchDispatchTest
 
     private sealed class ObservedHeap(Observation o) : UnpooledHeapByteBuf(8, 8)
     {
-        public override int IndexOf(int fromIndex, int toIndex, byte value) => o.Visit(0, fromIndex, toIndex, value);
-        public override int BytesBefore(byte value) => o.Visit(1, value: value);
-        public override int BytesBefore(int length, byte value) => o.Visit(2, length: length, value: value);
-        public override int BytesBefore(int index, int length, byte value) => o.Visit(3, index, length, value);
-        public override string ToString(Encoding charset) => o.Visit(4, encoding: charset).ToString();
-        public override string ToString(int index, int length, Encoding charset) => o.Visit(5, index, length, encoding: charset).ToString();
-        public override string ReadString(int length, Encoding charset) => o.Visit(6, length: length, encoding: charset).ToString();
-        public override int SetCharSequence(int index, ReadOnlySpan<char> sequence, Encoding charset) => o.Visit(7, index, encoding: charset, text: sequence);
-        public override int WriteCharSequence(ReadOnlySpan<char> sequence, Encoding charset) => o.Visit(8, encoding: charset, text: sequence);
+        public override int IndexOf(int fromIndex, int toIndex, byte value)
+        {
+            return o.Visit(0, fromIndex, toIndex, value);
+        }
+        public override int BytesBefore(byte value)
+        {
+            return o.Visit(1, value: value);
+        }
+        public override int BytesBefore(int length, byte value)
+        {
+            return o.Visit(2, length: length, value: value);
+        }
+        public override int BytesBefore(int index, int length, byte value)
+        {
+            return o.Visit(3, index, length, value);
+        }
+        public override string ToString(Encoding charset)
+        {
+            return o.Visit(4, encoding: charset).ToString();
+        }
+        public override string ToString(int index, int length, Encoding charset)
+        {
+            return o.Visit(5, index, length, encoding: charset).ToString();
+        }
+        public override string ReadString(int length, Encoding charset)
+        {
+            return o.Visit(6, length: length, encoding: charset).ToString();
+        }
+        public override int SetCharSequence(int index, ReadOnlySpan<char> sequence, Encoding charset)
+        {
+            return o.Visit(7, index, encoding: charset, text: sequence);
+        }
+        public override int WriteCharSequence(ReadOnlySpan<char> sequence, Encoding charset)
+        {
+            return o.Visit(8, encoding: charset, text: sequence);
+        }
     }
 
     private sealed class ObservedComposite(Observation o) : CompositeByteBuf
     {
-        public override int IndexOf(int fromIndex, int toIndex, byte value) => o.Visit(0, fromIndex, toIndex, value);
-        public override int BytesBefore(byte value) => o.Visit(1, value: value);
-        public override int BytesBefore(int length, byte value) => o.Visit(2, length: length, value: value);
-        public override int BytesBefore(int index, int length, byte value) => o.Visit(3, index, length, value);
-        public override string ToString(Encoding charset) => o.Visit(4, encoding: charset).ToString();
-        public override string ToString(int index, int length, Encoding charset) => o.Visit(5, index, length, encoding: charset).ToString();
-        public override string ReadString(int length, Encoding charset) => o.Visit(6, length: length, encoding: charset).ToString();
-        public override int SetCharSequence(int index, ReadOnlySpan<char> sequence, Encoding charset) => o.Visit(7, index, encoding: charset, text: sequence);
-        public override int WriteCharSequence(ReadOnlySpan<char> sequence, Encoding charset) => o.Visit(8, encoding: charset, text: sequence);
+        public override int IndexOf(int fromIndex, int toIndex, byte value)
+        {
+            return o.Visit(0, fromIndex, toIndex, value);
+        }
+        public override int BytesBefore(byte value)
+        {
+            return o.Visit(1, value: value);
+        }
+        public override int BytesBefore(int length, byte value)
+        {
+            return o.Visit(2, length: length, value: value);
+        }
+        public override int BytesBefore(int index, int length, byte value)
+        {
+            return o.Visit(3, index, length, value);
+        }
+        public override string ToString(Encoding charset)
+        {
+            return o.Visit(4, encoding: charset).ToString();
+        }
+        public override string ToString(int index, int length, Encoding charset)
+        {
+            return o.Visit(5, index, length, encoding: charset).ToString();
+        }
+        public override string ReadString(int length, Encoding charset)
+        {
+            return o.Visit(6, length: length, encoding: charset).ToString();
+        }
+        public override int SetCharSequence(int index, ReadOnlySpan<char> sequence, Encoding charset)
+        {
+            return o.Visit(7, index, encoding: charset, text: sequence);
+        }
+        public override int WriteCharSequence(ReadOnlySpan<char> sequence, Encoding charset)
+        {
+            return o.Visit(8, encoding: charset, text: sequence);
+        }
     }
 
     public static IEnumerable<object[]> Overrides()

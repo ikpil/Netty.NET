@@ -330,9 +330,15 @@ public class EmbeddedChannel : AbstractChannel
     }
 
     // CLR: the untyped forms of the generic <T> T readInbound()/readOutbound().
-    public object ReadInbound() => ReadInbound<object>();
+    public object ReadInbound()
+    {
+        return ReadInbound<object>();
+    }
 
-    public object ReadOutbound() => ReadOutbound<object>();
+    public object ReadOutbound()
+    {
+        return ReadOutbound<object>();
+    }
 
     /**
      * Write messages to the inbound of this {@link Channel}.
@@ -1029,7 +1035,10 @@ public class EmbeddedChannel : AbstractChannel
         return Task.CompletedTask;
     }
 
-    protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken cancellationToken) => Task.CompletedTask;
+    protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+    }
 
     protected override Task DoDisconnectAsync(CancellationToken cancellationToken)
     {

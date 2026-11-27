@@ -93,7 +93,10 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     public IChannelConfig Config => _config.Value;
     public ChannelMetadata Metadata { get; }
     public IChannelPipeline Pipeline => _pipeline;
-    public IByteBufAllocator Alloc() => Config.GetAllocator();
+    public IByteBufAllocator Alloc()
+    {
+        return Config.GetAllocator();
+    }
     // CLR: isOpen()/isActive() are abstract in Java; the transport-owned flags are the defaults that transports
     // override. The lifecycle checks of register, bind, connect, disconnect, close and flush0 read IsActive where the
     // source calls isActive() (AbstractChannel.AbstractUnsafe, AbstractNioChannel.connect), so an override, such as
@@ -177,22 +180,37 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     // CLR: a closed ChannelOutboundBuffer stands for the null buffer of a closed channel.
     public virtual long BytesBeforeUnwritable => _open && !OutboundBuffer.IsClosed ? OutboundBuffer.BytesBeforeUnwritable : 0;
     public virtual long BytesBeforeWritable => _open && !OutboundBuffer.IsClosed ? OutboundBuffer.BytesBeforeWritable : long.MaxValue;
-    protected virtual IChannelConfig NewConfig() => new DefaultChannelConfig(this);
+    protected virtual IChannelConfig NewConfig()
+    {
+        return new DefaultChannelConfig(this);
+    }
     /**
      * Returns a new {@link DefaultChannelPipeline} instance.
      */
-    protected virtual DefaultChannelPipeline NewChannelPipeline() => new(this);
+    protected virtual DefaultChannelPipeline NewChannelPipeline()
+    {
+        return new(this);
+    }
     /**
      * Return the assigned {@link RecvByteBufAllocator.Handle} which will be used to allocate {@link ByteBuf}'s when
      * receiving data.
      */
     // CLR: Unsafe.recvBufAllocHandle() (Channel.Unsafe is folded into AbstractChannel, 2026-11-16 owner decision).
-    protected IRecvByteBufAllocator.IHandle RecvBufAllocHandle() => _receiveHandle ??= Config.GetRecvByteBufAllocator().NewHandle();
-    protected void SetActive(bool active) => _active = active;
+    protected IRecvByteBufAllocator.IHandle RecvBufAllocHandle()
+    {
+        return _receiveHandle ??= Config.GetRecvByteBufAllocator().NewHandle();
+    }
+    protected void SetActive(bool active)
+    {
+        _active = active;
+    }
     /**
      * Return {@code true} if the given {@link EventLoop} is compatible with this instance.
      */
-    protected virtual bool IsCompatible(IEventLoop eventLoop) => true;
+    protected virtual bool IsCompatible(IEventLoop eventLoop)
+    {
+        return true;
+    }
     public virtual Task RegisterAsync(IEventLoop eventLoop, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(eventLoop);
@@ -634,7 +652,10 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
      * {@link #doClose()} must be called from the caller thread. (i.e. {@link EventLoop})
      */
     // CLR: TaskScheduler selects the native close worker; no Java executor abstraction is required.
-    protected virtual TaskScheduler PrepareToClose() => null;
+    protected virtual TaskScheduler PrepareToClose()
+    {
+        return null;
+    }
     // CLR: true while an offloaded native close runs; HeadContext.channelUnregistered then leaves the pipeline to
     // the close completion, as the source's isOpen() still reports the open socket.
     internal bool ClosePending => _closePending;
@@ -644,7 +665,10 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
      * {@link ChannelPromise} once the operation was complete.
      */
     // CLR: Unsafe.deregister(promise) (Channel.Unsafe is folded into AbstractChannel).
-    protected internal virtual Task DeregisterTransportAsync() => Deregister(false);
+    protected internal virtual Task DeregisterTransportAsync()
+    {
+        return Deregister(false);
+    }
 
     private Task Deregister(bool fireChannelInactive)
     {
@@ -828,7 +852,10 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     /**
      * Flush the content of the given buffer to the remote peer.
      */
-    protected virtual void DoWrite(ChannelOutboundBuffer @in) => throw new NotSupportedException();
+    protected virtual void DoWrite(ChannelOutboundBuffer @in)
+    {
+        throw new NotSupportedException();
+    }
     private async Task DrainWritesAsync()
     {
         bool handedOff = false;
@@ -910,7 +937,10 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
      * Invoked when a new message is added to a {@link ChannelOutboundBuffer} of this {@link AbstractChannel}, so that
      * the {@link Channel} implementation converts the message to another. (e.g. heap buffer -> direct buffer)
      */
-    protected virtual object FilterOutboundMessage(object msg) => msg;
+    protected virtual object FilterOutboundMessage(object msg)
+    {
+        return msg;
+    }
     protected virtual bool ContinueOnWriteError => false;
     protected virtual void HandleWriteError(Exception t)
     {
@@ -1026,16 +1056,43 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
      */
     protected abstract void DoBeginRead();
     // CLR: per-message Task write used by transports without a doWrite(ChannelOutboundBuffer) loop.
-    protected virtual Task DoWrite(object msg) => Task.FromException(new NotSupportedException());
+    protected virtual Task DoWrite(object msg)
+    {
+        return Task.FromException(new NotSupportedException());
+    }
     protected virtual void DoWriteComplete() { }
-    protected internal virtual void OnUnhandledException(Exception error) => Logger.Warn("Unhandled channel exception.", error);
-    public virtual Task BindAsync(EndPoint address, CancellationToken cancellationToken = default) => Pipeline.BindAsync(address, cancellationToken);
-    public virtual Task ConnectAsync(EndPoint remote, EndPoint localAddress = null, CancellationToken cancellationToken = default) => Pipeline.ConnectAsync(remote, localAddress, cancellationToken);
-    public virtual Task DisconnectAsync(CancellationToken cancellationToken = default) => Pipeline.DisconnectAsync(cancellationToken);
-    public virtual Task CloseAsync(CancellationToken cancellationToken = default) => Pipeline.CloseAsync(cancellationToken);
-    public virtual Task DeregisterAsync(CancellationToken cancellationToken = default) => Pipeline.DeregisterAsync(cancellationToken);
-    public virtual Task WriteAsync(object msg, CancellationToken cancellationToken = default) => Pipeline.WriteAsync(msg, cancellationToken);
-    public virtual Task WriteAndFlushAsync(object msg, CancellationToken cancellationToken = default) => Pipeline.WriteAndFlushAsync(msg, cancellationToken);
+    protected internal virtual void OnUnhandledException(Exception error)
+    {
+        Logger.Warn("Unhandled channel exception.", error);
+    }
+    public virtual Task BindAsync(EndPoint address, CancellationToken cancellationToken = default)
+    {
+        return Pipeline.BindAsync(address, cancellationToken);
+    }
+    public virtual Task ConnectAsync(EndPoint remote, EndPoint localAddress = null, CancellationToken cancellationToken = default)
+    {
+        return Pipeline.ConnectAsync(remote, localAddress, cancellationToken);
+    }
+    public virtual Task DisconnectAsync(CancellationToken cancellationToken = default)
+    {
+        return Pipeline.DisconnectAsync(cancellationToken);
+    }
+    public virtual Task CloseAsync(CancellationToken cancellationToken = default)
+    {
+        return Pipeline.CloseAsync(cancellationToken);
+    }
+    public virtual Task DeregisterAsync(CancellationToken cancellationToken = default)
+    {
+        return Pipeline.DeregisterAsync(cancellationToken);
+    }
+    public virtual Task WriteAsync(object msg, CancellationToken cancellationToken = default)
+    {
+        return Pipeline.WriteAsync(msg, cancellationToken);
+    }
+    public virtual Task WriteAndFlushAsync(object msg, CancellationToken cancellationToken = default)
+    {
+        return Pipeline.WriteAndFlushAsync(msg, cancellationToken);
+    }
     public virtual IChannelOutboundInvoker Read() { Pipeline.Read(); return this; }
     public virtual IChannelOutboundInvoker Flush() { Pipeline.Flush(); return this; }
     /**
@@ -1055,7 +1112,10 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         return ReferenceEquals(this, o);
     }
 
-    public int CompareTo(IChannel other) => other == null ? 1 : Id.CompareTo(other.Id);
+    public int CompareTo(IChannel other)
+    {
+        return other == null ? 1 : Id.CompareTo(other.Id);
+    }
 
     // CLR: AbstractUnsafe.closeIfClosed() folded into the channel.
     protected void CloseIfClosed()
@@ -1087,8 +1147,10 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
     }
 
     // CLR: InetAddress.isAnyLocalAddress().
-    internal static bool IsAnyLocalAddress(IPAddress address) =>
-        address.Equals(IPAddress.Any) || address.Equals(IPAddress.IPv6Any);
+    internal static bool IsAnyLocalAddress(IPAddress address)
+    {
+        return address.Equals(IPAddress.Any) || address.Equals(IPAddress.IPv6Any);
+    }
 
     // CLR: PlatformDependent.maybeSuperUser() compares the user.name system property; Environment.UserName is the
     // process user (https://learn.microsoft.com/dotnet/api/system.environment.username).

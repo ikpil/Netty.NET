@@ -27,9 +27,14 @@ namespace Netty.NET.Buffer.Tests;
 // enumerator disposal, native quota and failure-ownership regressions.
 public class CompositeByteBufAddTest
 {
-    private static byte[] Bytes(ByteBuf buffer) => buffer.ReadableSequence.ToArray();
+    private static byte[] Bytes(ByteBuf buffer)
+    {
+        return buffer.ReadableSequence.ToArray();
+    }
     private static ByteBuf Segment(byte[] bytes, bool direct, NativeMemoryAllocator allocator)
-        => direct ? new UnpooledDirectByteBuf(bytes.Length, allocator: allocator).WriteBytes(bytes) : Unpooled.WrappedBuffer(bytes);
+    {
+        return direct ? new UnpooledDirectByteBuf(bytes.Length, allocator: allocator).WriteBytes(bytes) : Unpooled.WrappedBuffer(bytes);
+    }
 
     [Theory]
     [InlineData(false, false)]
@@ -572,7 +577,10 @@ public class CompositeByteBufAddTest
         private readonly Exception _failure = failure;
         internal int EnumeratorCount, DisposeCount;
         public IEnumerator<ByteBuf> GetEnumerator() { ++EnumeratorCount; return new Enumerator(this); }
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
         private sealed class Enumerator(TrackingEnumerable owner) : IEnumerator<ByteBuf>
         {
             private int _index = -1;
@@ -584,15 +592,27 @@ public class CompositeByteBufAddTest
                 if (_index == 0 && owner._failure != null && !_failed) { _failed = true; throw owner._failure; }
                 return ++_index < owner._buffers.Length;
             }
-            public void Reset() => throw new NotSupportedException();
-            public void Dispose() => ++owner.DisposeCount;
+            public void Reset()
+            {
+                throw new NotSupportedException();
+            }
+            public void Dispose()
+            {
+                ++owner.DisposeCount;
+            }
         }
     }
     private sealed class EnumerableHeapByteBuf : UnpooledHeapByteBuf, IEnumerable<ByteBuf>
     {
         internal EnumerableHeapByteBuf(byte[] bytes) : base(bytes.Length) { WriteBytes(bytes); }
-        public IEnumerator<ByteBuf> GetEnumerator() => throw new InvalidOperationException("Buffer enumeration is forbidden in this fixture.");
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        public IEnumerator<ByteBuf> GetEnumerator()
+        {
+            throw new InvalidOperationException("Buffer enumeration is forbidden in this fixture.");
+        }
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
     }
     private sealed class ObservingDirectByteBuf : UnpooledDirectByteBuf
     {
@@ -611,9 +631,21 @@ public class CompositeByteBufAddTest
         public override int Capacity { get => _parent.Capacity; set => _parent.Capacity = value; }
         public override bool IsDirect => _parent.IsDirect;
         public override int RefCnt => _parent.RefCnt;
-        public override ByteBuf Retain(int increment = 1) => throw _failure;
-        public override bool Release(int decrement = 1) => _parent.Release(decrement);
-        public override ByteBuf Unwrap() => _parent;
-        protected override Memory<byte> GetMemoryCore(int index, int length) => _parent.AsMemory(index, length);
+        public override ByteBuf Retain(int increment = 1)
+        {
+            throw _failure;
+        }
+        public override bool Release(int decrement = 1)
+        {
+            return _parent.Release(decrement);
+        }
+        public override ByteBuf Unwrap()
+        {
+            return _parent;
+        }
+        protected override Memory<byte> GetMemoryCore(int index, int length)
+        {
+            return _parent.AsMemory(index, length);
+        }
     }
 }

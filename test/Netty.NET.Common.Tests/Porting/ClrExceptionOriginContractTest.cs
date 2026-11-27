@@ -58,7 +58,10 @@ public class ClrExceptionOriginContractTest
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static string ThrowAtOrigin(Exception original) => throw original;
+    private static string ThrowAtOrigin(Exception original)
+    {
+        throw original;
+    }
 
     private sealed class FailingLocal(Exception original, bool failRemoval) : FastThreadLocal<string>
     {
@@ -78,6 +81,9 @@ public class ClrExceptionOriginContractTest
 
     private sealed class FailingExecutor(Exception original)
     {
-        public void Execute(Action command) => ThrowAtOrigin(original);
+        public void Execute(Action command)
+        {
+            ThrowAtOrigin(original);
+        }
     }
 }

@@ -139,10 +139,22 @@ public class HttpResponseEncoderTest
             return false;
         }
 
-        IReferenceCounted IReferenceCounted.Retain() => Retain();
-        IReferenceCounted IReferenceCounted.Retain(int increment) => Retain(increment);
-        IReferenceCounted IReferenceCounted.Touch() => Touch();
-        IReferenceCounted IReferenceCounted.Touch(object hint) => Touch(hint);
+        IReferenceCounted IReferenceCounted.Retain()
+        {
+            return Retain();
+        }
+        IReferenceCounted IReferenceCounted.Retain(int increment)
+        {
+            return Retain(increment);
+        }
+        IReferenceCounted IReferenceCounted.Touch()
+        {
+            return Touch();
+        }
+        IReferenceCounted IReferenceCounted.Touch(object hint)
+        {
+            return Touch(hint);
+        }
     }
 
     [Fact]

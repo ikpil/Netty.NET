@@ -147,6 +147,9 @@ public class ManualOutboundIoContractTest
     // answers.
     private sealed class NeverConnecting(AddressFamily family) : NioSocketChannel(family)
     {
-        internal override bool Connect(Socket socket, EndPoint remoteAddress) => false;
+        internal override bool Connect(Socket socket, EndPoint remoteAddress)
+        {
+            return false;
+        }
     }
 }

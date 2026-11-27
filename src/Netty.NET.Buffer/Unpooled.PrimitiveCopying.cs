@@ -21,18 +21,27 @@ namespace Netty.NET.Buffer;
 public static partial class Unpooled
 {
     // CLR: disambiguates the two params CopyShort overloads for zero-input calls.
-    public static ByteBuf CopyShort() => EmptyBuffer;
+    public static ByteBuf CopyShort()
+    {
+        return EmptyBuffer;
+    }
 
     /**
      * Creates a new 4-byte big-endian buffer that holds the specified 32-bit integer.
      */
-    public static ByteBuf CopyInt(int value) => Buffer(4).WriteInt(value);
+    public static ByteBuf CopyInt(int value)
+    {
+        return Buffer(4).WriteInt(value);
+    }
 
     /**
      * Create a big-endian buffer that holds a sequence of the specified 32-bit integers.
      */
     /// <remarks>Null and empty arrays return the shared empty buffer, as in Netty.</remarks>
-    public static ByteBuf CopyInt(params int[] values) => CopyInt(values.AsSpan());
+    public static ByteBuf CopyInt(params int[] values)
+    {
+        return CopyInt(values.AsSpan());
+    }
 
     /// <summary>Copies values in big-endian order into independent writable heap storage.</summary>
     /// <remarks>An empty span returns the shared empty buffer. The byte count is checked
@@ -48,13 +57,19 @@ public static partial class Unpooled
     /**
      * Creates a new 2-byte big-endian buffer that holds the specified 16-bit integer.
      */
-    public static ByteBuf CopyShort(int value) => Buffer(2).WriteShort(value);
+    public static ByteBuf CopyShort(int value)
+    {
+        return Buffer(2).WriteShort(value);
+    }
 
     /**
      * Create a new big-endian buffer that holds a sequence of the specified 16-bit integers.
      */
     /// <remarks>Null and empty arrays return the shared empty buffer, as in Netty.</remarks>
-    public static ByteBuf CopyShort(params short[] values) => CopyShort(values.AsSpan());
+    public static ByteBuf CopyShort(params short[] values)
+    {
+        return CopyShort(values.AsSpan());
+    }
 
     /// <summary>Copies values in big-endian order into independent writable heap storage.</summary>
     /// <remarks>An empty span returns the shared empty buffer. The byte count is checked
@@ -71,7 +86,10 @@ public static partial class Unpooled
      * Create a new big-endian buffer that holds a sequence of the specified 16-bit integers.
      */
     /// <remarks>Null and empty arrays return the shared empty buffer, as in Netty.</remarks>
-    public static ByteBuf CopyShort(params int[] values) => CopyShort(values.AsSpan());
+    public static ByteBuf CopyShort(params int[] values)
+    {
+        return CopyShort(values.AsSpan());
+    }
 
     /// <summary>Copies values in big-endian order into independent writable heap storage.</summary>
     /// <remarks>An empty span returns the shared empty buffer. The byte count is checked
@@ -87,13 +105,19 @@ public static partial class Unpooled
     /**
      * Creates a new 3-byte big-endian buffer that holds the specified 24-bit integer.
      */
-    public static ByteBuf CopyMedium(int value) => Buffer(3).WriteMedium(value);
+    public static ByteBuf CopyMedium(int value)
+    {
+        return Buffer(3).WriteMedium(value);
+    }
 
     /**
      * Create a new big-endian buffer that holds a sequence of the specified 24-bit integers.
      */
     /// <remarks>Null and empty arrays return the shared empty buffer, as in Netty.</remarks>
-    public static ByteBuf CopyMedium(params int[] values) => CopyMedium(values.AsSpan());
+    public static ByteBuf CopyMedium(params int[] values)
+    {
+        return CopyMedium(values.AsSpan());
+    }
 
     /// <summary>Copies values in big-endian order into independent writable heap storage.</summary>
     /// <remarks>An empty span returns the shared empty buffer. The byte count is checked
@@ -109,13 +133,19 @@ public static partial class Unpooled
     /**
      * Creates a new 8-byte big-endian buffer that holds the specified 64-bit integer.
      */
-    public static ByteBuf CopyLong(long value) => Buffer(8).WriteLong(value);
+    public static ByteBuf CopyLong(long value)
+    {
+        return Buffer(8).WriteLong(value);
+    }
 
     /**
      * Create a new big-endian buffer that holds a sequence of the specified 64-bit integers.
      */
     /// <remarks>Null and empty arrays return the shared empty buffer, as in Netty.</remarks>
-    public static ByteBuf CopyLong(params long[] values) => CopyLong(values.AsSpan());
+    public static ByteBuf CopyLong(params long[] values)
+    {
+        return CopyLong(values.AsSpan());
+    }
 
     /// <summary>Copies values in big-endian order into independent writable heap storage.</summary>
     /// <remarks>An empty span returns the shared empty buffer. The byte count is checked
@@ -131,13 +161,19 @@ public static partial class Unpooled
     /**
      * Creates a new single-byte big-endian buffer that holds the specified boolean value.
      */
-    public static ByteBuf CopyBoolean(bool value) => Buffer(1).WriteBoolean(value);
+    public static ByteBuf CopyBoolean(bool value)
+    {
+        return Buffer(1).WriteBoolean(value);
+    }
 
     /**
      * Create a new big-endian buffer that holds a sequence of the specified boolean values.
      */
     /// <remarks>Null and empty arrays return the shared empty buffer, as in Netty.</remarks>
-    public static ByteBuf CopyBoolean(params bool[] values) => CopyBoolean(values.AsSpan());
+    public static ByteBuf CopyBoolean(params bool[] values)
+    {
+        return CopyBoolean(values.AsSpan());
+    }
 
     /// <summary>Copies values in big-endian order into independent writable heap storage.</summary>
     /// <remarks>An empty span returns the shared empty buffer. The byte count is checked
@@ -153,13 +189,19 @@ public static partial class Unpooled
     /**
      * Creates a new 4-byte big-endian buffer that holds the specified 32-bit floating point number.
      */
-    public static ByteBuf CopyFloat(float value) => Buffer(4).WriteFloat(value);
+    public static ByteBuf CopyFloat(float value)
+    {
+        return Buffer(4).WriteFloat(value);
+    }
 
     /**
      * Create a new big-endian buffer that holds a sequence of the specified 32-bit floating point numbers.
      */
     /// <remarks>Null and empty arrays return the shared empty buffer, as in Netty.</remarks>
-    public static ByteBuf CopyFloat(params float[] values) => CopyFloat(values.AsSpan());
+    public static ByteBuf CopyFloat(params float[] values)
+    {
+        return CopyFloat(values.AsSpan());
+    }
 
     /// <summary>Copies values in big-endian order into independent writable heap storage.</summary>
     /// <remarks>An empty span returns the shared empty buffer. The byte count is checked
@@ -175,13 +217,19 @@ public static partial class Unpooled
     /**
      * Creates a new 8-byte big-endian buffer that holds the specified 64-bit floating point number.
      */
-    public static ByteBuf CopyDouble(double value) => Buffer(8).WriteDouble(value);
+    public static ByteBuf CopyDouble(double value)
+    {
+        return Buffer(8).WriteDouble(value);
+    }
 
     /**
      * Create a new big-endian buffer that holds a sequence of the specified 64-bit floating point numbers.
      */
     /// <remarks>Null and empty arrays return the shared empty buffer, as in Netty.</remarks>
-    public static ByteBuf CopyDouble(params double[] values) => CopyDouble(values.AsSpan());
+    public static ByteBuf CopyDouble(params double[] values)
+    {
+        return CopyDouble(values.AsSpan());
+    }
 
     /// <summary>Copies values in big-endian order into independent writable heap storage.</summary>
     /// <remarks>An empty span returns the shared empty buffer. The byte count is checked

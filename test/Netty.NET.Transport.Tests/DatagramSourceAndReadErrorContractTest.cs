@@ -210,13 +210,18 @@ public class DatagramSourceAndReadErrorContractTest
     {
         private int _attempts;
         protected override SocketReceiveFromResult ReceiveDatagram(Memory<byte> memory, EndPoint remote)
-            => Interlocked.Increment(ref _attempts) == 1 ? throw error : base.ReceiveDatagram(memory, remote);
+        {
+            return Interlocked.Increment(ref _attempts) == 1 ? throw error : base.ReceiveDatagram(memory, remote);
+        }
     }
     private sealed class Capture(ChannelWriter<int> writer, ConcurrentQueue<string> events = null, TaskCompletionSource<Exception> failure = null) : SimpleChannelInboundHandler<DatagramPacket>
     {
         protected override void ChannelRead0(IChannelHandlerContext ctx, DatagramPacket msg)
         { events?.Enqueue("read"); writer.TryWrite(msg.Content.ReadByte()); }
-        public override void ChannelReadComplete(IChannelHandlerContext ctx) => events?.Enqueue("complete");
+        public override void ChannelReadComplete(IChannelHandlerContext ctx)
+        {
+            events?.Enqueue("complete");
+        }
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         { events?.Enqueue("error"); if (failure != null) failure.TrySetResult(cause); else ctx.FireExceptionCaught(cause); }
     }

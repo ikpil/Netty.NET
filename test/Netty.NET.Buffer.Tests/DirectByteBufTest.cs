@@ -26,7 +26,9 @@ public class DirectByteBufTest : HeapByteBufTest
     private readonly NativeMemoryAllocator _contractAllocator = new();
     protected override bool UsesDirectMemory => true;
     protected override ByteBuf NewBuffer(int initialCapacity, int maxCapacity = int.MaxValue)
-        => new UnpooledDirectByteBuf(initialCapacity, maxCapacity, _contractAllocator);
+    {
+        return new UnpooledDirectByteBuf(initialCapacity, maxCapacity, _contractAllocator);
+    }
     [Fact]
     public void HeapAndDirectWireOperationsAndSharedViewsAgree()
     {

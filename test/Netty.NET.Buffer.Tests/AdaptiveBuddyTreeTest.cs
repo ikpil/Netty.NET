@@ -29,7 +29,10 @@ public class AdaptiveBuddyTreeTest
         private readonly Dictionary<int, AdaptiveChunkAllocation> _live = new();
         internal readonly ChunkRegistry Registry = new();
         internal readonly BuddyChunk Owner;
-        internal Tree(int capacity) => Owner = new BuddyChunk(new UnpooledHeapByteBuf(capacity, capacity), Registry);
+        internal Tree(int capacity)
+        {
+            Owner = new BuddyChunk(new UnpooledHeapByteBuf(capacity, capacity), Registry);
+        }
         internal int RemainingCapacity => Owner.RemainingCapacity;
         internal int TryAllocate(int size)
         {

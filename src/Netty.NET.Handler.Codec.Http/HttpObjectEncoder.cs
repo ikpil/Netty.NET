@@ -789,5 +789,8 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
     // C# protected access needs an instance of the calling class (CS1540), so the tests reach it through this internal
     // forwarder (InternalsVisibleTo), as codec-base MessageToMessageEncoder.InvokeEncode and handler
     // IpSubnetFilter.InvokeAccept do (docs/codec-base-porting.md, Package access; docs/handler-porting.md).
-    internal void InvokeEncodeInitialLine(ByteBuf buf, H message) => EncodeInitialLine(buf, message);
+    internal void InvokeEncodeInitialLine(ByteBuf buf, H message)
+    {
+        EncodeInitialLine(buf, message);
+    }
 }

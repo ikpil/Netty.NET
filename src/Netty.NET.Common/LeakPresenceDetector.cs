@@ -102,7 +102,10 @@ public static class LeakPresenceDetector
          *
          * @param name The scope name, used for error reporting
          */
-        public ResourceScope(string name) => this.name = name;
+        public ResourceScope(string name)
+        {
+            this.name = name;
+        }
         internal void CheckOpen()
         {
             if (Volatile.Read(ref open) == 0)
@@ -149,7 +152,10 @@ public static class LeakPresenceDetector
          *
          * @return {@code true} if there are open resources
          */
-        public bool HasOpenResources() => Volatile.Read(ref openResourceCounter) > 0;
+        public bool HasOpenResources()
+        {
+            return Volatile.Read(ref openResourceCounter) > 0;
+        }
         /**
          * Close this scope. Closing a scope will prevent new resources from being allocated (or released) in this
          * scope. The call also throws an exception if there are any resources left open.
@@ -160,7 +166,10 @@ public static class LeakPresenceDetector
             // Java decrement can become negative and accidentally allow reuse.
             if (Interlocked.Exchange(ref open, 0) != 0) Check();
         }
-        public void Dispose() => Close();
+        public void Dispose()
+        {
+            Close();
+        }
     }
     private sealed class LeakCreation : Exception
     {
@@ -283,12 +292,26 @@ public class LeakPresenceDetector<T> : ResourceLeakDetector<T> where T : class
      *
      * @return The resource scope to use
      */
-    protected virtual LeakPresenceDetector.ResourceScope CurrentScope() => LeakPresenceDetector.GLOBAL;
-    internal LeakPresenceDetector.ResourceScope ScopeForCheck() => CurrentScope();
+    protected virtual LeakPresenceDetector.ResourceScope CurrentScope()
+    {
+        return LeakPresenceDetector.GLOBAL;
+    }
+    internal LeakPresenceDetector.ResourceScope ScopeForCheck()
+    {
+        return CurrentScope();
+    }
     public sealed override IResourceLeakTracker<T> Track(T obj)
-        => LeakPresenceDetector.InStaticInitializerFast() ? null : TrackForcibly(obj);
-    public sealed override IResourceLeakTracker<T> TrackForcibly(T obj) => new PresenceTracker(CurrentScope());
-    public sealed override bool IsRecordEnabled() => false;
+    {
+        return LeakPresenceDetector.InStaticInitializerFast() ? null : TrackForcibly(obj);
+    }
+    public sealed override IResourceLeakTracker<T> TrackForcibly(T obj)
+    {
+        return new PresenceTracker(CurrentScope());
+    }
+    public sealed override bool IsRecordEnabled()
+    {
+        return false;
+    }
     private sealed class PresenceTracker : IResourceLeakTracker<T>
     {
         private readonly LeakPresenceDetector.ResourceScope scope;

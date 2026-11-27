@@ -41,13 +41,16 @@ public class ByteBufRelativeTransferTest
         }, owner);
     }
 
-    private static ByteBuf Invoke(int operation, ByteBuf source, ByteBuf destination, int length = 3) => operation switch
+    private static ByteBuf Invoke(int operation, ByteBuf source, ByteBuf destination, int length = 3)
     {
-        0 => source.GetBytes(12, destination), 1 => source.GetBytes(12, destination, length),
-        2 => destination.SetBytes(3, source), 3 => destination.SetBytes(3, source, length),
-        4 => source.ReadBytes(destination), 5 => source.ReadBytes(destination, 3, length),
-        6 => destination.WriteBytes(source), _ => destination.WriteBytes(source, 12, length)
-    };
+        return operation switch
+        {
+            0 => source.GetBytes(12, destination), 1 => source.GetBytes(12, destination, length),
+            2 => destination.SetBytes(3, source), 3 => destination.SetBytes(3, source, length),
+            4 => source.ReadBytes(destination), 5 => source.ReadBytes(destination, 3, length),
+            6 => destination.WriteBytes(source), _ => destination.WriteBytes(source, 12, length)
+        };
+    }
 
     public static IEnumerable<object[]> BackingPairs()
     {
@@ -302,15 +305,29 @@ public class ByteBufRelativeTransferTest
 
     private sealed class FailingHeapBuffer : UnpooledHeapByteBuf
     {
-        internal FailingHeapBuffer(int capacity) : base(capacity, capacity) => WriterIndex = capacity;
+        internal FailingHeapBuffer(int capacity) : base(capacity, capacity)
+        {
+            WriterIndex = capacity;
+        }
         protected override bool TryGetMemoryCore(int index, int length, out Memory<byte> memory)
-            => throw new InvalidOperationException("Deliberate partial composite write failure.");
+        {
+            throw new InvalidOperationException("Deliberate partial composite write failure.");
+        }
     }
 
     private sealed class Tracker : IResourceLeakTracker<ByteBuf>
     {
-        public void Record() => throw new InvalidOperationException("Simple transfer must not record.");
-        public void Record(object hint) => throw new InvalidOperationException("Simple transfer must not record.");
-        public bool Close(ByteBuf buffer) => true;
+        public void Record()
+        {
+            throw new InvalidOperationException("Simple transfer must not record.");
+        }
+        public void Record(object hint)
+        {
+            throw new InvalidOperationException("Simple transfer must not record.");
+        }
+        public bool Close(ByteBuf buffer)
+        {
+            return true;
+        }
     }
 }

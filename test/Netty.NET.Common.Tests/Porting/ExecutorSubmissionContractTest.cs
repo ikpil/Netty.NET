@@ -15,7 +15,10 @@ public class ExecutorSubmissionContractTest
     {
         internal readonly BlockingCollection<Action> tasks = new();
         private bool running;
-        public override bool InEventLoop(Thread thread) => running && thread == Thread.CurrentThread;
+        public override bool InEventLoop(Thread thread)
+        {
+            return running && thread == Thread.CurrentThread;
+        }
         public override void Execute(Action task)
         {
             ArgumentNullException.ThrowIfNull(task);
@@ -33,12 +36,27 @@ public class ExecutorSubmissionContractTest
             finally { running = false; }
         }
         public override void Shutdown() { }
-        public override bool IsShutdown() => false;
-        public override bool IsTerminated() => false;
-        public override bool IsShuttingDown() => false;
-        public override bool AwaitTermination(TimeSpan timeout) => false;
+        public override bool IsShutdown()
+        {
+            return false;
+        }
+        public override bool IsTerminated()
+        {
+            return false;
+        }
+        public override bool IsShuttingDown()
+        {
+            return false;
+        }
+        public override bool AwaitTermination(TimeSpan timeout)
+        {
+            return false;
+        }
         public override Task TerminationFuture => Task.CompletedTask;
-        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+        {
+            return Task.CompletedTask;
+        }
     }
     [Fact]
     public void NativeSubmissionReturnsItsResultAndNotifiesOnTheSelectedExecutor()

@@ -61,7 +61,12 @@ public class IoLifecycleContractTest
         finally { await group.StopAsync(); }
     }
     private sealed class BrokenRegistration : LocalChannel
-    { protected override void DoRegister() => throw new IOException("registration failed"); }
+    {
+        protected override void DoRegister()
+        {
+            throw new IOException("registration failed");
+        }
+    }
 
     [Theory(Timeout = 10000)]
     [InlineData(false)]
@@ -140,9 +145,14 @@ public class IoLifecycleContractTest
     private sealed class FaultingAccept(Exception error) : NioServerSocketChannel
     {
         internal int Attempts;
-        internal bool ShouldClose(Exception failure) => CloseOnReadError(failure);
+        internal bool ShouldClose(Exception failure)
+        {
+            return CloseOnReadError(failure);
+        }
         protected override int DoReadMessages(List<object> buf)
-            => Interlocked.Increment(ref Attempts) == 1 ? throw error : base.DoReadMessages(buf);
+        {
+            return Interlocked.Increment(ref Attempts) == 1 ? throw error : base.DoReadMessages(buf);
+        }
     }
     private sealed class ObserveParent : ChannelInboundHandlerAdapter
     {
@@ -220,8 +230,11 @@ public class IoLifecycleContractTest
     private sealed class SecondAcceptFails(Socket socket) : NioServerSocketChannel(socket)
     {
         internal int Attempts;
-        protected override int DoReadMessages(List<object> buf) => Interlocked.Increment(ref Attempts) == 2
-            ? throw new IOException("second accept failure") : base.DoReadMessages(buf);
+        protected override int DoReadMessages(List<object> buf)
+        {
+            return Interlocked.Increment(ref Attempts) == 2
+                ? throw new IOException("second accept failure") : base.DoReadMessages(buf);
+        }
     }
     private sealed class PartialCollector : ChannelInboundHandlerAdapter
     {

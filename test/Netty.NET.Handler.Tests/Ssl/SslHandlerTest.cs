@@ -1937,14 +1937,29 @@ public class SslHandlerTest
             keyManagerFactory = new Lazy<SslStreamCertificateContext>(bundle.ToKeyManagerFactory);
         }
 
-        internal FileInfo Certificate() => certificate.Value;
+        internal FileInfo Certificate()
+        {
+            return certificate.Value;
+        }
 
-        internal FileInfo PrivateKey() => privateKey.Value;
+        internal FileInfo PrivateKey()
+        {
+            return privateKey.Value;
+        }
 
-        internal X509Certificate2 Cert() => bundle.GetCertificate();
+        internal X509Certificate2 Cert()
+        {
+            return bundle.GetCertificate();
+        }
 
-        internal AsymmetricAlgorithm Key() => (AsymmetricAlgorithm) bundle.GetKeyPair();
+        internal AsymmetricAlgorithm Key()
+        {
+            return (AsymmetricAlgorithm) bundle.GetKeyPair();
+        }
 
-        internal SslStreamCertificateContext KeyManagerFactory() => keyManagerFactory.Value;
+        internal SslStreamCertificateContext KeyManagerFactory()
+        {
+            return keyManagerFactory.Value;
+        }
     }
 }

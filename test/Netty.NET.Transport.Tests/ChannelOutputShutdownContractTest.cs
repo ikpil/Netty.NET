@@ -125,8 +125,10 @@ public class ChannelOutputShutdownContractTest
     [Theory(Timeout = 10000)]
     [InlineData(false)]
     [InlineData(true)]
-    public Task AReadRequestedBeforeConnectIsHonoredWithAutoReadDisabled(bool adaptive) =>
-        SocketChannelNotYetConnectedSourceTest.ReadBeforeConnect(adaptive, false).WaitAsync(TestContext.Current.CancellationToken);
+    public Task AReadRequestedBeforeConnectIsHonoredWithAutoReadDisabled(bool adaptive)
+    {
+        return SocketChannelNotYetConnectedSourceTest.ReadBeforeConnect(adaptive, false).WaitAsync(TestContext.Current.CancellationToken);
+    }
 
     private sealed class ProbeChannel : AbstractChannel
     {
@@ -137,14 +139,32 @@ public class ChannelOutputShutdownContractTest
         internal Action DuringShutdown;
         internal Exception ShutdownFailure;
         internal ProbeChannel(bool halfClose) : base(null, new ChannelMetadata(false)) { _halfClose = halfClose; SetActive(true); }
-        internal Task ShutdownAsync() => OnLoopAsync(() => ShutdownOutput(null));
-        protected override EndPoint LocalAddress0() => null;
-        protected override EndPoint RemoteAddress0() => null;
-        protected override Task DoBindAsync(EndPoint address, CancellationToken token) => Task.CompletedTask;
-        protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token) => Task.CompletedTask;
+        internal Task ShutdownAsync()
+        {
+            return OnLoopAsync(() => ShutdownOutput(null));
+        }
+        protected override EndPoint LocalAddress0()
+        {
+            return null;
+        }
+        protected override EndPoint RemoteAddress0()
+        {
+            return null;
+        }
+        protected override Task DoBindAsync(EndPoint address, CancellationToken token)
+        {
+            return Task.CompletedTask;
+        }
+        protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token)
+        {
+            return Task.CompletedTask;
+        }
         protected override void DoClose() { AllOnOwner &= EventLoop.InEventLoop(); NativeCloses++; }
         protected override void DoBeginRead() { }
-        protected override Task DoWrite(object msg) => Write.Task;
+        protected override Task DoWrite(object msg)
+        {
+            return Write.Task;
+        }
         protected override void DoShutdownOutput()
         {
             AllOnOwner &= EventLoop.InEventLoop();

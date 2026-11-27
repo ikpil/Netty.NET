@@ -46,20 +46,28 @@ public abstract class AbstractServerChannel : AbstractChannel, IServerChannel
     {
     }
 
-    protected override EndPoint RemoteAddress0() => null;
+    protected override EndPoint RemoteAddress0()
+    {
+        return null;
+    }
 
     protected override Task DoDisconnectAsync(CancellationToken cancellationToken)
     {
         throw new NotSupportedException();
     }
 
-    protected override Task DoWrite(object msg) => Task.FromException(new NotSupportedException("Server channels cannot write."));
+    protected override Task DoWrite(object msg)
+    {
+        return Task.FromException(new NotSupportedException("Server channels cannot write."));
+    }
 
     protected sealed override object FilterOutboundMessage(object msg)
     {
         throw new NotSupportedException("Server channels cannot write.");
     }
 
-    protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken cancellationToken) =>
-        Task.FromException(new NotSupportedException("Server channels cannot connect."));
+    protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken cancellationToken)
+    {
+        return Task.FromException(new NotSupportedException("Server channels cannot connect."));
+    }
 }

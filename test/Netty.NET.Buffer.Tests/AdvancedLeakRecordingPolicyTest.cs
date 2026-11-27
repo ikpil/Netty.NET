@@ -34,7 +34,10 @@ public class AdvancedLeakRecordingPolicyTest
     {
         internal int Records, Closes;
         internal object Hint;
-        public void Record() => ++Records;
+        public void Record()
+        {
+            ++Records;
+        }
         public void Record(object hint) { ++Records; Hint = hint; }
         public bool Close(ByteBuf value) { Assert.Same(expected, value); ++Closes; return true; }
     }

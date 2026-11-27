@@ -508,13 +508,25 @@ internal sealed class SingleResp
 
     internal DateTimeOffset? NextUpdate { get; }
 
-    internal CertificateId GetCertID() => CertId;
+    internal CertificateId GetCertID()
+    {
+        return CertId;
+    }
 
-    internal object GetCertStatus() => CertStatus;
+    internal object GetCertStatus()
+    {
+        return CertStatus;
+    }
 
-    internal DateTimeOffset GetThisUpdate() => ThisUpdate;
+    internal DateTimeOffset GetThisUpdate()
+    {
+        return ThisUpdate;
+    }
 
-    internal DateTimeOffset? GetNextUpdate() => NextUpdate;
+    internal DateTimeOffset? GetNextUpdate()
+    {
+        return NextUpdate;
+    }
 
     internal static SingleResp Read(AsnReader reader)
     {

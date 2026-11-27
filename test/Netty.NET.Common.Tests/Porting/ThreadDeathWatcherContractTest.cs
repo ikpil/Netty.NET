@@ -22,7 +22,10 @@ public class ThreadDeathWatcherContractTest : IDisposable
         internal void End() { stop.Set(); Assert.True(Thread.Join(TimeSpan.FromSeconds(5))); }
         public void Dispose() { End(); stop.Dispose(); }
     }
-    public void Dispose() => Assert.True(ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromSeconds(5)));
+    public void Dispose()
+    {
+        Assert.True(ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromSeconds(5)));
+    }
 
     [Fact]
     public void ValidationRejectsNullAndNonLiveThreadsWhileUnwatchAcceptsUnstartedThreads()

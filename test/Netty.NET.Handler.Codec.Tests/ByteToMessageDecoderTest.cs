@@ -803,8 +803,10 @@ public class ByteToMessageDecoderTest
             this.decode = decode;
         }
 
-        protected override void Decode(IChannelHandlerContext ctx, ByteBuf @in, IList<object> @out) =>
+        protected override void Decode(IChannelHandlerContext ctx, ByteBuf @in, IList<object> @out)
+        {
             decode(this, ctx, @in, @out);
+        }
 
         protected override void DecodeLast(IChannelHandlerContext ctx, ByteBuf @in, IList<object> @out)
         {
@@ -818,11 +820,19 @@ public class ByteToMessageDecoderTest
             }
         }
 
-        protected override void HandlerRemoved0(IChannelHandlerContext ctx) => handlerRemoved0?.Invoke(this, ctx);
+        protected override void HandlerRemoved0(IChannelHandlerContext ctx)
+        {
+            handlerRemoved0?.Invoke(this, ctx);
+        }
 
-        internal ByteBuf CallInternalBuffer() => InternalBuffer();
+        internal ByteBuf CallInternalBuffer()
+        {
+            return InternalBuffer();
+        }
 
-        internal void CallBaseDecodeLast(IChannelHandlerContext ctx, ByteBuf @in, IList<object> @out) =>
+        internal void CallBaseDecodeLast(IChannelHandlerContext ctx, ByteBuf @in, IList<object> @out)
+        {
             base.DecodeLast(ctx, @in, @out);
+        }
     }
 }

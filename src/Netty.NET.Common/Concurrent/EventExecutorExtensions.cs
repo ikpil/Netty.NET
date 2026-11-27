@@ -43,7 +43,9 @@ public static class EventExecutorExtensions
     /// </remarks>
     public static Task<T> SubmitAsync<T>(this IEventExecutorGroup executor, Func<CancellationToken, T> function,
         CancellationToken cancellationToken = default)
-        => SubmitCoreAsync(executor, function, cancellationToken);
+    {
+        return SubmitCoreAsync(executor, function, cancellationToken);
+    }
 
     private static Task<T> SubmitCoreAsync<T>(IEventExecutorGroup executor, Func<CancellationToken, T> function,
         CancellationToken cancellationToken)
@@ -156,7 +158,10 @@ public static class EventExecutorExtensions
             RemoveCanceled();
         }
 
-        private void RemoveCanceled() => Interlocked.Exchange(ref _removeCanceled, null)?.Invoke();
+        private void RemoveCanceled()
+        {
+            Interlocked.Exchange(ref _removeCanceled, null)?.Invoke();
+        }
 
         public void Reject(Exception error)
         {

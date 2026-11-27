@@ -30,28 +30,42 @@ public class SegmentedDatagramSourceTest
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public Task TestSendSegmentedDatagramPacket(bool adaptive) => Run(adaptive, composite: false, gro: false);
+    public Task TestSendSegmentedDatagramPacket(bool adaptive)
+    {
+        return Run(adaptive, composite: false, gro: false);
+    }
 
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public Task TestSendSegmentedDatagramPacketComposite(bool adaptive) => Run(adaptive, composite: true, gro: false);
+    public Task TestSendSegmentedDatagramPacketComposite(bool adaptive)
+    {
+        return Run(adaptive, composite: true, gro: false);
+    }
 
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public Task TestSendAndReceiveSegmentedDatagramPacket(bool adaptive) => Run(adaptive, composite: false, gro: true);
+    public Task TestSendAndReceiveSegmentedDatagramPacket(bool adaptive)
+    {
+        return Run(adaptive, composite: false, gro: true);
+    }
 
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public Task TestSendAndReceiveSegmentedDatagramPacketComposite(bool adaptive) => Run(adaptive, composite: true, gro: true);
+    public Task TestSendAndReceiveSegmentedDatagramPacketComposite(bool adaptive)
+    {
+        return Run(adaptive, composite: true, gro: true);
+    }
 
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public Task TestSendAndReceiveSegmentedDatagramPacketWithScatteringRead(bool adaptive) =>
-        Run(adaptive, composite: false, gro: true);
+    public Task TestSendAndReceiveSegmentedDatagramPacketWithScatteringRead(bool adaptive)
+    {
+        return Run(adaptive, composite: false, gro: true);
+    }
 
     private static async Task Run(bool adaptive, bool composite, bool gro)
     {
@@ -94,9 +108,11 @@ public class SegmentedDatagramSourceTest
         finally { await loop.StopAsync(); }
     }
 
-    private static Bootstrap NewBootstrap(MultiThreadIoEventLoopGroup loop, IByteBufAllocator allocator, IChannelHandler handler) =>
-        new Bootstrap().Group(loop).ChannelFactory(static () => new NioDatagramChannel())
+    private static Bootstrap NewBootstrap(MultiThreadIoEventLoopGroup loop, IByteBufAllocator allocator, IChannelHandler handler)
+    {
+        return new Bootstrap().Group(loop).ChannelFactory(static () => new NioDatagramChannel())
             .Option(ChannelOption.ALLOCATOR, allocator).Handler(handler);
+    }
 
     private sealed class Discard : SimpleChannelInboundHandler<object>
     {
@@ -117,6 +133,9 @@ public class SegmentedDatagramSourceTest
             if (++_received == expected) Completed.TrySetResult();
         }
 
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => Completed.TrySetException(cause);
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            Completed.TrySetException(cause);
+        }
     }
 }

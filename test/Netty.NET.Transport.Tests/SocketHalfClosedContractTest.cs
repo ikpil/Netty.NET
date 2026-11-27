@@ -49,8 +49,14 @@ public class SocketHalfClosedContractTest
     }
     private sealed class HalfClosingPeer : ChannelInboundHandlerAdapter
     {
-        public override void ChannelActive(IChannelHandlerContext ctx) => _ = ((NioSocketChannel)ctx.Channel).ShutdownOutputAsync();
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => _ = ctx.CloseAsync();
+        public override void ChannelActive(IChannelHandlerContext ctx)
+        {
+            _ = ((NioSocketChannel)ctx.Channel).ShutdownOutputAsync();
+        }
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            _ = ctx.CloseAsync();
+        }
     }
     private sealed class SingleEventReader : ChannelInboundHandlerAdapter
     {
@@ -64,7 +70,10 @@ public class SocketHalfClosedContractTest
                 _ = ctx.Executor.ScheduleAsync(() => { _ = ctx.CloseAsync(); }, TimeSpan.FromMilliseconds(100));
             }
         }
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => _ = ctx.CloseAsync();
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            _ = ctx.CloseAsync();
+        }
     }
 
     [Theory(Timeout = 10000)]
@@ -190,7 +199,10 @@ public class SocketHalfClosedContractTest
             var buffer = ctx.Alloc().Buffer(1); buffer.WriterIndex = buffer.Capacity;
             _ = ctx.WriteAndFlushAsync(buffer);
         }
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => _ = ctx.CloseAsync();
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            _ = ctx.CloseAsync();
+        }
     }
     private sealed class LastByteReader : ChannelInboundHandlerAdapter
     {

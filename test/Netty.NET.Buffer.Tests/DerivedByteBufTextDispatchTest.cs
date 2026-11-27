@@ -40,12 +40,16 @@ public class DerivedByteBufTextDispatchTest
     private sealed class Heap(Observation o) : UnpooledHeapByteBuf(64, 128)
     {
         public override ICharSequence GetCharSequence(int index, int length, Encoding charset)
-            => new StringCharSequence(o.Read(index, length, charset));
+        {
+            return new StringCharSequence(o.Read(index, length, charset));
+        }
     }
     private sealed class Direct(Observation o, NativeMemoryAllocator native) : UnpooledDirectByteBuf(64, 128, native)
     {
         public override ICharSequence GetCharSequence(int index, int length, Encoding charset)
-            => new StringCharSequence(o.Read(index, length, charset));
+        {
+            return new StringCharSequence(o.Read(index, length, charset));
+        }
     }
     private sealed class Context : IDisposable
     {
@@ -60,8 +64,14 @@ public class DerivedByteBufTextDispatchTest
             Root = direct ? new Direct(Observation, Native) : new Heap(Observation);
             for (int i = 0; i < 64; ++i) Root.WriteByte('A' + i % 26);
             Root.SetIndex(3, 40);
-            ByteBuf Slice() => Own(PooledDerivedByteBuf.NewSlice(Root, Root, 2, 30));
-            ByteBuf Duplicate() => Own(PooledDerivedByteBuf.NewDuplicate(Root, Root, 3, 40));
+            ByteBuf Slice()
+            {
+                return Own(PooledDerivedByteBuf.NewSlice(Root, Root, 2, 30));
+            }
+            ByteBuf Duplicate()
+            {
+                return Own(PooledDerivedByteBuf.NewDuplicate(Root, Root, 3, 40));
+            }
             View = form switch
             {
                 0 => Root.Slice(4, 16), 1 => Root.Duplicate(), 2 => Root.AsReadOnly(),
@@ -108,14 +118,17 @@ public class DerivedByteBufTextDispatchTest
         int length = empty ? 0 : operation == 1 ? writer - reader : 5;
         // Operations 0 and 2 are getCharSequence/readCharSequence, which a non-retained slice delegates to its parent;
         // 1, 3 and 4 are toString(Charset), toString(int, int, Charset) and readString, which always decode locally.
-        string Request() => operation switch
+        string Request()
         {
-            0 => c.View.GetCharSequence(index, length, codec).ToString(),
-            1 => c.View.ToString(codec),
-            2 => c.View.ReadCharSequence(length, codec).ToString(),
-            3 => c.View.ToString(index, length, codec),
-            _ => c.View.ReadString(length, codec),
-        };
+            return operation switch
+            {
+                0 => c.View.GetCharSequence(index, length, codec).ToString(),
+                1 => c.View.ToString(codec),
+                2 => c.View.ReadCharSequence(length, codec).ToString(),
+                3 => c.View.ToString(index, length, codec),
+                _ => c.View.ReadString(length, codec),
+            };
+        }
         bool forward = c.Forward && operation is 0 or 2;
         if (forward && fail) Assert.Same(c.Observation.Failure, Assert.Throws<TextFailure>(() => Request()));
         else

@@ -9,8 +9,14 @@ namespace Netty.NET.Common.Tests.Porting;
 [Collection("Thread-local globals")]
 public class MapOwnershipContractTest : IDisposable
 {
-    public MapOwnershipContractTest() => FastThreadLocal.RemoveAll();
-    public void Dispose() => FastThreadLocal.RemoveAll();
+    public MapOwnershipContractTest()
+    {
+        FastThreadLocal.RemoveAll();
+    }
+    public void Dispose()
+    {
+        FastThreadLocal.RemoveAll();
+    }
 
     [Theory]
     [InlineData(0)] // Ordinary CLR thread.
@@ -90,6 +96,9 @@ public class MapOwnershipContractTest : IDisposable
     private sealed class TrackingLocal : FastThreadLocal<string>
     {
         public readonly ConcurrentQueue<string> Removed = new();
-        protected override void OnRemoval(string value) => Removed.Enqueue(value);
+        protected override void OnRemoval(string value)
+        {
+            Removed.Enqueue(value);
+        }
     }
 }

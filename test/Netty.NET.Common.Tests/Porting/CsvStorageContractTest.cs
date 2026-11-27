@@ -7,8 +7,14 @@ namespace Netty.NET.Common.Tests.Porting;
 [Collection("Thread-local globals")]
 public class CsvStorageContractTest : IDisposable
 {
-    public CsvStorageContractTest() => FastThreadLocal.RemoveAll();
-    public void Dispose() => FastThreadLocal.RemoveAll();
+    public CsvStorageContractTest()
+    {
+        FastThreadLocal.RemoveAll();
+    }
+    public void Dispose()
+    {
+        FastThreadLocal.RemoveAll();
+    }
 
     [Theory]
     [InlineData(false)]

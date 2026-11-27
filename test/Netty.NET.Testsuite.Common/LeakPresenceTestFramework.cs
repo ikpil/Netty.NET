@@ -84,9 +84,11 @@ public sealed class LeakPresenceTestFramework : XunitTestFramework
             IReadOnlyCollection<IXunitTestCase> testCases,
             IMessageSink executionMessageSink,
             ITestFrameworkExecutionOptions executionOptions,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken)
+        {
             await AssemblyRunner.Instance.Run(
                 TestAssembly, testCases, executionMessageSink, executionOptions, cancellationToken);
+        }
     }
 
     private sealed class AssemblyRunner : XunitTestAssemblyRunner
@@ -118,8 +120,9 @@ public sealed class LeakPresenceTestFramework : XunitTestFramework
     {
         public override ValueTask<RunSummary> RunTestCollection(
             IXunitTestCollection testCollection,
-            IReadOnlyCollection<IXunitTestCase> testCases) =>
-            CollectionRunner.Instance.Run(
+            IReadOnlyCollection<IXunitTestCase> testCases)
+        {
+            return CollectionRunner.Instance.Run(
                 testCollection,
                 testCases,
                 ExplicitOption,
@@ -129,6 +132,7 @@ public sealed class LeakPresenceTestFramework : XunitTestFramework
                 ParallelMode,
                 Scheduler,
                 AssemblyFixtureMappings);
+        }
     }
 
     private sealed class CollectionRunner : XunitTestCollectionRunner

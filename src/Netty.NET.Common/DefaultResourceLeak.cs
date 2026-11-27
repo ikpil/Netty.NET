@@ -37,8 +37,14 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
         try { head = initialHint == null ? new TraceRecord(TraceRecord.BOTTOM) : new TraceRecord(TraceRecord.BOTTOM, initialHint); }
         finally { GC.KeepAlive(referent); }
     }
-    public void Record() => Record0(null);
-    public void Record(object hint) => Record0(hint);
+    public void Record()
+    {
+        Record0(null);
+    }
+    public void Record(object hint)
+    {
+        Record0(hint);
+    }
     /**
          * This method works by exponentially backing off as more records are present in the stack. Each record has a
          * 1 / 2^n chance of dropping the top most record and replacing it with itself. This has a number of convenient
@@ -141,8 +147,14 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
         TraceRecord current = Volatile.Read(ref head);
         return current?.Pos() == TraceRecord.CLOSE_MARK_POS ? current : null;
     }
-    public override string ToString() => GenerateReport(Volatile.Read(ref head));
-    internal string GetReportAndClearRecords() => GenerateReport(Interlocked.Exchange(ref head, null));
+    public override string ToString()
+    {
+        return GenerateReport(Volatile.Read(ref head));
+    }
+    internal string GetReportAndClearRecords()
+    {
+        return GenerateReport(Interlocked.Exchange(ref head, null));
+    }
     private string GenerateReport(TraceRecord current)
     {
         if (current == null)

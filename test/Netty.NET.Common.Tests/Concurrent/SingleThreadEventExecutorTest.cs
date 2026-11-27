@@ -37,11 +37,19 @@ public class SingleThreadEventExecutorTest
         {
             thread = new Thread(() => { runLatch.Signal(); task(); }) { IsBackground = true };
         }
-        internal void AwaitStarted() =>
+        internal void AwaitStarted()
+        {
             Assert.True(SpinWait.SpinUntil(() => (thread.ThreadState & System.Threading.ThreadState.Unstarted) == 0,
                 TimeSpan.FromSeconds(5)));
-        internal void AwaitRunnableExecution() => Assert.True(runLatch.Wait(TimeSpan.FromSeconds(5)));
-        internal void Join() => Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
+        }
+        internal void AwaitRunnableExecution()
+        {
+            Assert.True(runLatch.Wait(TimeSpan.FromSeconds(5)));
+        }
+        internal void Join()
+        {
+            Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
+        }
     }
     private sealed class TestThreadFactory : IThreadFactory
     {
@@ -84,23 +92,37 @@ public class SingleThreadEventExecutorTest
         {
             while (!ConfirmShutdown() && !CanSuspend()) TakeTask()?.Invoke();
         }
-        protected internal override void Wakeup(bool inEventLoop) => InterruptThread();
+        protected internal override void Wakeup(bool inEventLoop)
+        {
+            InterruptThread();
+        }
     }
     private sealed class CountingExecutor : SingleThreadEventExecutor
     {
         internal CountingExecutor(Action<Action> executor)
             : base(null, executor, false, true, int.MaxValue, RejectedExecutionHandlers.Reject()) { }
-        protected override void Run() => throw new Exception("must not run");
+        protected override void Run()
+        {
+            throw new Exception("must not run");
+        }
     }
     private class LatchTask
     {
         internal readonly CountdownEvent latch = new(1);
-        public void Run() => latch.Signal();
-        internal void Await() => Assert.True(latch.Wait(TimeSpan.FromSeconds(5)));
+        public void Run()
+        {
+            latch.Signal();
+        }
+        internal void Await()
+        {
+            Assert.True(latch.Wait(TimeSpan.FromSeconds(5)));
+        }
     }
     private sealed class LazyLatchTask : LatchTask { }
-    private static void Shutdown(IEventExecutor executor) =>
+    private static void Shutdown(IEventExecutor executor)
+    {
         executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
+    }
     private static void Sync(Task future)
     {
         future.WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
@@ -345,7 +367,10 @@ public class SingleThreadEventExecutorTest
 
     private sealed class ClosedExecutor
     {
-        public void Execute(Action command) => throw new RejectedExecutionException();
+        public void Execute(Action command)
+        {
+            throw new RejectedExecutionException();
+        }
     }
     [Fact]
     public void TestWrappedExecutorIsShutdown()
@@ -358,11 +383,13 @@ public class SingleThreadEventExecutorTest
             executor.ShutdownGracefullyAsync().GetAwaiter().GetResult());
         Assert.True(executor.IsShutdown());
     }
-    private static void ExecuteShouldFail(IExecutor executor) =>
+    private static void ExecuteShouldFail(IExecutor executor)
+    {
         Assert.Throws<RejectedExecutionException>(() => executor.Execute(() =>
         {
             // Noop.
         }));
+    }
 
     [Fact]
     public void TestThreadProperties()
@@ -390,10 +417,22 @@ public class SingleThreadEventExecutorTest
     // The pinned four JDK blocking-guard tests have no retained bulk method.
     // Native async composition yields the owner and explicitly dispatches owned
     // state after await. The design record maps these replacement scenarios.
-    [Fact] public Task TestInvokeAnyInEventLoop() => TestInvokeInEventLoop(true, false);
-    [Fact] public Task TestInvokeAnyInEventLoopWithTimeout() => TestInvokeInEventLoop(true, true);
-    [Fact] public Task TestInvokeAllInEventLoop() => TestInvokeInEventLoop(false, false);
-    [Fact] public Task TestInvokeAllInEventLoopWithTimeout() => TestInvokeInEventLoop(false, true);
+    [Fact] public Task TestInvokeAnyInEventLoop()
+    {
+        return TestInvokeInEventLoop(true, false);
+    }
+    [Fact] public Task TestInvokeAnyInEventLoopWithTimeout()
+    {
+        return TestInvokeInEventLoop(true, true);
+    }
+    [Fact] public Task TestInvokeAllInEventLoop()
+    {
+        return TestInvokeInEventLoop(false, false);
+    }
+    [Fact] public Task TestInvokeAllInEventLoopWithTimeout()
+    {
+        return TestInvokeInEventLoop(false, true);
+    }
     private static async Task TestInvokeInEventLoop(bool any, bool timeout)
     {
         var executor = new LoopExecutor(new DefaultThreadFactory("compose"));
@@ -425,7 +464,10 @@ public class SingleThreadEventExecutorTest
     private sealed class LazyExecutor : LoopExecutor
     {
         internal LazyExecutor() : base(new DefaultThreadFactory("lazy"), false) { }
-        protected override bool WakesUpForTask(Action task) => task.Target is not LazyLatchTask;
+        protected override bool WakesUpForTask(Action task)
+        {
+            return task.Target is not LazyLatchTask;
+        }
         protected override void Run()
         {
             while (!ConfirmShutdown())
@@ -478,7 +520,10 @@ public class SingleThreadEventExecutorTest
     private sealed class NoRemoveQueue : LinkedBlockingQueue<Action>
     {
         internal NoRemoveQueue() : base(int.MaxValue) { }
-        public override bool TryRemove(Action task) => throw new NotSupportedException();
+        public override bool TryRemove(Action task)
+        {
+            throw new NotSupportedException();
+        }
     }
     private sealed class AfterShutdownExecutor : LoopExecutor
     {
@@ -532,7 +577,10 @@ public class SingleThreadEventExecutorTest
     private sealed class TestRunnable
     {
         internal volatile bool ran;
-        public void Run() => ran = true;
+        public void Run()
+        {
+            ran = true;
+        }
     }
     [Fact]
     public void TestTakeTask()
@@ -579,8 +627,14 @@ public class SingleThreadEventExecutorTest
     private sealed class ThrowingExecutor : LoopExecutor
     {
         private readonly Exception exception;
-        internal ThrowingExecutor(Exception exception) : base(new DefaultThreadFactory("throwing")) => this.exception = exception;
-        protected override void Run() => throw exception;
+        internal ThrowingExecutor(Exception exception) : base(new DefaultThreadFactory("throwing"))
+        {
+            this.exception = exception;
+        }
+        protected override void Run()
+        {
+            throw exception;
+        }
     }
     [Fact]
     public async Task TestExceptionIsPropagatedToTerminationFuture()

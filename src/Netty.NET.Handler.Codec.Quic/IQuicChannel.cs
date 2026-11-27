@@ -42,27 +42,41 @@ namespace Netty.NET.Handler.Codec.Quic;
 public interface IQuicChannel : IChannel
 {
 
-    Task IChannelOutboundInvoker.BindAsync(EndPoint localAddress, CancellationToken cancellationToken) =>
-        Pipeline.BindAsync(localAddress, cancellationToken);
+    Task IChannelOutboundInvoker.BindAsync(EndPoint localAddress, CancellationToken cancellationToken)
+    {
+        return Pipeline.BindAsync(localAddress, cancellationToken);
+    }
 
     Task IChannelOutboundInvoker.ConnectAsync(EndPoint remoteAddress, EndPoint localAddress,
-                                              CancellationToken cancellationToken) =>
-        Pipeline.ConnectAsync(remoteAddress, localAddress, cancellationToken);
+                                              CancellationToken cancellationToken)
+    {
+        return Pipeline.ConnectAsync(remoteAddress, localAddress, cancellationToken);
+    }
 
-    Task IChannelOutboundInvoker.DisconnectAsync(CancellationToken cancellationToken) =>
-        Pipeline.DisconnectAsync(cancellationToken);
+    Task IChannelOutboundInvoker.DisconnectAsync(CancellationToken cancellationToken)
+    {
+        return Pipeline.DisconnectAsync(cancellationToken);
+    }
 
-    Task IChannelOutboundInvoker.CloseAsync(CancellationToken cancellationToken) =>
-        Pipeline.CloseAsync(cancellationToken);
+    Task IChannelOutboundInvoker.CloseAsync(CancellationToken cancellationToken)
+    {
+        return Pipeline.CloseAsync(cancellationToken);
+    }
 
-    Task IChannelOutboundInvoker.DeregisterAsync(CancellationToken cancellationToken) =>
-        Pipeline.DeregisterAsync(cancellationToken);
+    Task IChannelOutboundInvoker.DeregisterAsync(CancellationToken cancellationToken)
+    {
+        return Pipeline.DeregisterAsync(cancellationToken);
+    }
 
-    Task IChannelOutboundInvoker.WriteAsync(object msg, CancellationToken cancellationToken) =>
-        Pipeline.WriteAsync(msg, cancellationToken);
+    Task IChannelOutboundInvoker.WriteAsync(object msg, CancellationToken cancellationToken)
+    {
+        return Pipeline.WriteAsync(msg, cancellationToken);
+    }
 
-    Task IChannelOutboundInvoker.WriteAndFlushAsync(object msg, CancellationToken cancellationToken) =>
-        Pipeline.WriteAndFlushAsync(msg, cancellationToken);
+    Task IChannelOutboundInvoker.WriteAndFlushAsync(object msg, CancellationToken cancellationToken)
+    {
+        return Pipeline.WriteAndFlushAsync(msg, cancellationToken);
+    }
 
     /**
      * Returns the configuration of this channel.

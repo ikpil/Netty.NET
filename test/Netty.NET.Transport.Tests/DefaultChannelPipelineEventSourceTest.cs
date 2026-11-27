@@ -313,9 +313,15 @@ public class DefaultChannelPipelineEventSourceTest
         finally { await group.StopAsync(); }
     }
     [Fact(Timeout = 5000)]
-    public async Task TestHandlerAddedFailedButHandlerStillRemoved() => await HandlerAddedFailedButRemoved(false, TestContext.Current.CancellationToken);
+    public async Task TestHandlerAddedFailedButHandlerStillRemoved()
+    {
+        await HandlerAddedFailedButRemoved(false, TestContext.Current.CancellationToken);
+    }
     [Fact(Timeout = 5000)]
-    public async Task TestHandlerAddedFailedButHandlerStillRemovedWithLaterRegister() => await HandlerAddedFailedButRemoved(true, TestContext.Current.CancellationToken);
+    public async Task TestHandlerAddedFailedButHandlerStillRemovedWithLaterRegister()
+    {
+        await HandlerAddedFailedButRemoved(true, TestContext.Current.CancellationToken);
+    }
     private static async Task HandlerAddedFailedButRemoved(bool lateRegister, CancellationToken token)
     {
         await using var fixture = new Fixture();
@@ -372,19 +378,40 @@ public class DefaultChannelPipelineEventSourceTest
     }
     // Tests for https://github.com/netty/netty/issues/2349
     [Fact]
-    public async Task TestCancelBind() => await CheckCanceledOperation((p, t) => p.BindAsync(new LocalAddress(typeof(DefaultChannelPipelineEventSourceTest)), t));
+    public async Task TestCancelBind()
+    {
+        await CheckCanceledOperation((p, t) => p.BindAsync(new LocalAddress(typeof(DefaultChannelPipelineEventSourceTest)), t));
+    }
     [Fact]
-    public async Task TestCancelConnect() => await CheckCanceledOperation((p, t) => p.ConnectAsync(new LocalAddress(typeof(DefaultChannelPipelineEventSourceTest)), cancellationToken: t));
+    public async Task TestCancelConnect()
+    {
+        await CheckCanceledOperation((p, t) => p.ConnectAsync(new LocalAddress(typeof(DefaultChannelPipelineEventSourceTest)), cancellationToken: t));
+    }
     [Fact]
-    public async Task TestCancelDisconnect() => await CheckCanceledOperation((p, t) => p.DisconnectAsync(t));
+    public async Task TestCancelDisconnect()
+    {
+        await CheckCanceledOperation((p, t) => p.DisconnectAsync(t));
+    }
     [Fact]
-    public async Task TestCancelClose() => await CheckCanceledOperation((p, t) => p.CloseAsync(t));
+    public async Task TestCancelClose()
+    {
+        await CheckCanceledOperation((p, t) => p.CloseAsync(t));
+    }
     [Fact]
-    public async Task TestCancelDeregister() => await CheckCanceledOperation((p, t) => p.DeregisterAsync(t));
+    public async Task TestCancelDeregister()
+    {
+        await CheckCanceledOperation((p, t) => p.DeregisterAsync(t));
+    }
     [Fact]
-    public async Task TestCancelWrite() => await CheckCanceledWrite(false);
+    public async Task TestCancelWrite()
+    {
+        await CheckCanceledWrite(false);
+    }
     [Fact]
-    public async Task TestCancelWriteAndFlush() => await CheckCanceledWrite(true);
+    public async Task TestCancelWriteAndFlush()
+    {
+        await CheckCanceledWrite(true);
+    }
     private static async Task CheckCanceledOperation(Func<IChannelPipeline, CancellationToken, Task> operation)
     {
         await using var fixture = new Fixture();
@@ -416,7 +443,10 @@ public class DefaultChannelPipelineEventSourceTest
     {
         private readonly MultiThreadIoEventLoopGroup _group = new(1, LocalIoHandler.NewFactory());
         internal readonly LocalChannel Channel = new();
-        internal Task Register() => Channel.RegisterAsync(_group.Next());
+        internal Task Register()
+        {
+            return Channel.RegisterAsync(_group.Next());
+        }
         public async ValueTask DisposeAsync()
         {
             // A test may already have closed the channel and stopped a handler's executor. Closing again would
@@ -430,7 +460,10 @@ public class DefaultChannelPipelineEventSourceTest
     private sealed class ThrowReadComplete(TaskCompletionSource latch) : ChannelInboundHandlerAdapter
     {
         internal int Count;
-        public override void ChannelReadComplete(IChannelHandlerContext ctx) => throw new TestException();
+        public override void ChannelReadComplete(IChannelHandlerContext ctx)
+        {
+            throw new TestException();
+        }
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         {
             if (cause is TestException)
@@ -440,13 +473,29 @@ public class DefaultChannelPipelineEventSourceTest
         }
     }
     private sealed class ReadCompleteOnException : ChannelInboundHandlerAdapter
-    { public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => ctx.FireChannelReadComplete(); }
+    {
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            ctx.FireChannelReadComplete();
+        }
+    }
     private sealed class RegisteredSignal(TaskCompletionSource signal) : ChannelInboundHandlerAdapter
-    { public override void ChannelRegistered(IChannelHandlerContext ctx) => signal.TrySetResult(); }
+    {
+        public override void ChannelRegistered(IChannelHandlerContext ctx)
+        {
+            signal.TrySetResult();
+        }
+    }
     private sealed class ReleasedSignal(TaskCompletionSource signal) : AbstractReferenceCounted
     {
-        public override IReferenceCounted Touch(object hint) => this;
-        protected override void Deallocate() => signal.TrySetResult();
+        public override IReferenceCounted Touch(object hint)
+        {
+            return this;
+        }
+        protected override void Deallocate()
+        {
+            signal.TrySetResult();
+        }
     }
     private sealed class StringInboundHandler : ChannelInboundHandlerAdapter
     {
@@ -455,20 +504,53 @@ public class DefaultChannelPipelineEventSourceTest
     }
     private sealed class PeerReceiver(TaskCompletionSource<IChannel> peer) : ChannelInboundHandlerAdapter
     {
-        public override void ChannelRegistered(IChannelHandlerContext ctx) => peer.TrySetResult(ctx.Channel);
-        public override void ChannelRead(IChannelHandlerContext ctx, object msg) => ReferenceCountUtil.Release(msg);
+        public override void ChannelRegistered(IChannelHandlerContext ctx)
+        {
+            peer.TrySetResult(ctx.Channel);
+        }
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            ReferenceCountUtil.Release(msg);
+        }
     }
     private sealed class InboundEvents(ChannelWriter<string> events) : ChannelInboundHandlerAdapter
     {
-        public override void ChannelRegistered(IChannelHandlerContext ctx) => events.TryWrite("channelRegistered");
-        public override void ChannelUnregistered(IChannelHandlerContext ctx) => events.TryWrite("channelUnregistered");
-        public override void ChannelActive(IChannelHandlerContext ctx) => events.TryWrite("channelActive");
-        public override void ChannelInactive(IChannelHandlerContext ctx) => events.TryWrite("channelInactive");
-        public override void ChannelRead(IChannelHandlerContext ctx, object msg) => events.TryWrite("channelRead");
-        public override void ChannelReadComplete(IChannelHandlerContext ctx) => events.TryWrite("channelReadComplete");
-        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt) => events.TryWrite("userEventTriggered");
-        public override void ChannelWritabilityChanged(IChannelHandlerContext ctx) => events.TryWrite("channelWritabilityChanged");
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => events.TryWrite("exceptionCaught");
+        public override void ChannelRegistered(IChannelHandlerContext ctx)
+        {
+            events.TryWrite("channelRegistered");
+        }
+        public override void ChannelUnregistered(IChannelHandlerContext ctx)
+        {
+            events.TryWrite("channelUnregistered");
+        }
+        public override void ChannelActive(IChannelHandlerContext ctx)
+        {
+            events.TryWrite("channelActive");
+        }
+        public override void ChannelInactive(IChannelHandlerContext ctx)
+        {
+            events.TryWrite("channelInactive");
+        }
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            events.TryWrite("channelRead");
+        }
+        public override void ChannelReadComplete(IChannelHandlerContext ctx)
+        {
+            events.TryWrite("channelReadComplete");
+        }
+        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
+        {
+            events.TryWrite("userEventTriggered");
+        }
+        public override void ChannelWritabilityChanged(IChannelHandlerContext ctx)
+        {
+            events.TryWrite("channelWritabilityChanged");
+        }
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            events.TryWrite("exceptionCaught");
+        }
     }
     private sealed class OutboundEvents(ChannelWriter<string> events) : ChannelOutboundHandlerAdapter
     {
@@ -476,19 +558,31 @@ public class DefaultChannelPipelineEventSourceTest
         public override Task ConnectAsync(IChannelHandlerContext ctx, EndPoint remote, EndPoint local, CancellationToken token) { events.TryWrite("connect"); return Task.CompletedTask; }
         public override Task CloseAsync(IChannelHandlerContext ctx, CancellationToken token) { events.TryWrite("close"); return Task.CompletedTask; }
         public override Task DeregisterAsync(IChannelHandlerContext ctx, CancellationToken token) { events.TryWrite("deregister"); return Task.CompletedTask; }
-        public override void Read(IChannelHandlerContext ctx) => events.TryWrite("read");
+        public override void Read(IChannelHandlerContext ctx)
+        {
+            events.TryWrite("read");
+        }
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token) { events.TryWrite("write"); return Task.CompletedTask; }
         public override void Flush(IChannelHandlerContext ctx) { events.TryWrite("flush"); ctx.Flush(); }
     }
     private sealed class FailingInitializer(Exception exception, TaskCompletionSource<Exception> error) : ChannelInitializer<IChannel>
     {
-        protected override void InitChannel(IChannel channel) => throw exception;
+        protected override void InitChannel(IChannel channel)
+        {
+            throw exception;
+        }
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) { base.ExceptionCaught(ctx, cause); error.TrySetResult(cause); }
     }
     private sealed class UnregistrationSignals(TaskCompletionSource unregistered, TaskCompletionSource removed) : ChannelInboundHandlerAdapter
     {
-        public override void ChannelUnregistered(IChannelHandlerContext ctx) => unregistered.TrySetResult();
-        public override void HandlerRemoved(IChannelHandlerContext ctx) => removed.TrySetResult();
+        public override void ChannelUnregistered(IChannelHandlerContext ctx)
+        {
+            unregistered.TrySetResult();
+        }
+        public override void HandlerRemoved(IChannelHandlerContext ctx)
+        {
+            removed.TrySetResult();
+        }
     }
     private sealed class CheckExceptionHandler(Exception expected, TaskCompletionSource promise) : ChannelInboundHandlerAdapter
     {
@@ -514,7 +608,10 @@ public class DefaultChannelPipelineEventSourceTest
             // Just block one of the two threads.
             unblock.Wait();
         }
-        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt) => triggered.TrySetResult();
+        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
+        {
+            triggered.TrySetResult();
+        }
     }
     private sealed class DelayedRemoval(ManualResetEventSlim latch) : ChannelInboundHandlerAdapter
     {
@@ -527,14 +624,20 @@ public class DefaultChannelPipelineEventSourceTest
     private sealed class VerifyAddedBeforeRemoved(Action<Exception> error) : ChannelInboundHandlerAdapter
     {
         private bool _handlerAddedCalled;
-        public override void HandlerAdded(IChannelHandlerContext ctx) => _handlerAddedCalled = true;
+        public override void HandlerAdded(IChannelHandlerContext ctx)
+        {
+            _handlerAddedCalled = true;
+        }
         public override void HandlerRemoved(IChannelHandlerContext ctx)
         { if (!_handlerAddedCalled) error(new InvalidOperationException("handlerRemoved(...) called without handlerAdded(...) before")); }
     }
     private sealed class BadChannelHandler(TaskCompletionSource latch) : ChannelHandlerAdapter
     {
         public override void HandlerAdded(IChannelHandlerContext ctx) { Thread.Sleep(10); throw new Exception(); }
-        public override void HandlerRemoved(IChannelHandlerContext ctx) => latch.TrySetResult();
+        public override void HandlerRemoved(IChannelHandlerContext ctx)
+        {
+            latch.TrySetResult();
+        }
     }
     private sealed class WriteOnUserEvent(object userEvent, object writeObject) : ChannelInboundHandlerAdapter
     {
@@ -543,7 +646,10 @@ public class DefaultChannelPipelineEventSourceTest
     }
     private sealed class EventFromAdded(object userEvent, object writeObject, TaskCompletionSource done) : ChannelDuplexHandler
     {
-        public override void HandlerAdded(IChannelHandlerContext ctx) => ctx.FireUserEventTriggered(userEvent);
+        public override void HandlerAdded(IChannelHandlerContext ctx)
+        {
+            ctx.FireUserEventTriggered(userEvent);
+        }
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
         { if (ReferenceEquals(msg, writeObject)) done.TrySetResult(); return ctx.WriteAsync(msg, token); }
     }

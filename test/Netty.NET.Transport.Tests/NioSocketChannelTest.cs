@@ -126,10 +126,16 @@ public class NioSocketChannelTest
     }
     // Test for https://github.com/netty/netty/issues/4805
     [Fact(Timeout = 30000)]
-    public async Task TestChannelReRegisterReadSameEventLoop() => await TestChannelReRegisterRead(true);
+    public async Task TestChannelReRegisterReadSameEventLoop()
+    {
+        await TestChannelReRegisterRead(true);
+    }
 
     [Fact(Timeout = 30000)]
-    public async Task TestChannelReRegisterReadDifferentEventLoop() => await TestChannelReRegisterRead(false);
+    public async Task TestChannelReRegisterReadDifferentEventLoop()
+    {
+        await TestChannelReRegisterRead(false);
+    }
 
     private static async Task TestChannelReRegisterRead(bool sameEventLoop)
     {
@@ -260,5 +266,10 @@ public class NioSocketChannelTest
         }
     }
     private sealed class Observer(Action<ChannelWriteProgress> report) : IProgress<ChannelWriteProgress>
-    { public void Report(ChannelWriteProgress value) => report(value); }
+    {
+        public void Report(ChannelWriteProgress value)
+        {
+            report(value);
+        }
+    }
 }

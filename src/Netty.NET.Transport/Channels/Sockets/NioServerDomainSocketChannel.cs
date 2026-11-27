@@ -142,7 +142,10 @@ public class NioServerDomainSocketChannel : AbstractNioMessageChannel, IServerCh
     {
         return null;
     }
-    protected override IChannelConfig NewConfig() => new DefaultServerSocketChannelConfig(this, JavaChannel());
+    protected override IChannelConfig NewConfig()
+    {
+        return new DefaultServerSocketChannelConfig(this, JavaChannel());
+    }
     protected override Task DoBindAsync(EndPoint address, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();

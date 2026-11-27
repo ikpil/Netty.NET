@@ -43,10 +43,16 @@ public sealed class HostsFileEntries
      * The IPv4 entries
      * @return the IPv4 entries
      */
-    public IReadOnlyDictionary<string, IPAddress> Inet4Entries() => _inet4Entries;
+    public IReadOnlyDictionary<string, IPAddress> Inet4Entries()
+    {
+        return _inet4Entries;
+    }
     /**
      * The IPv6 entries
      * @return the IPv6 entries
      */
-    public IReadOnlyDictionary<string, IPAddress> Inet6Entries() => _inet6Entries;
+    public IReadOnlyDictionary<string, IPAddress> Inet6Entries()
+    {
+        return _inet6Entries;
+    }
 }

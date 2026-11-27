@@ -52,7 +52,10 @@ public partial class WrappedCompositeByteBufDispatchTest
     {
         internal readonly DispatchFailure Failure = new();
         internal readonly List<(string Method, int Index, int Width, bool Little)> Calls = [];
-        public override byte GetByte(int index) => throw new InvalidOperationException("Public primitive trap");
+        public override byte GetByte(int index)
+        {
+            throw new InvalidOperationException("Public primitive trap");
+        }
         private void Visit(string name, int index, int width, bool little)
         { Calls.Add((name, index, width, little)); throw Failure; }
         internal override byte ReadByteCore(int index) { Visit("ReadByte", index, 1, false); return 0; }
@@ -106,10 +109,19 @@ public partial class WrappedCompositeByteBufDispatchTest
         private ManualResetValueTaskSourceCore<int> _core = new() { RunContinuationsAsynchronously = true };
         internal int Consumptions, Continuations;
         internal ValueTask<int> Task => new(this, _core.Version);
-        internal void Complete(int value) => _core.SetResult(value);
-        internal void Fail(Exception failure) => _core.SetException(failure);
+        internal void Complete(int value)
+        {
+            _core.SetResult(value);
+        }
+        internal void Fail(Exception failure)
+        {
+            _core.SetException(failure);
+        }
         public int GetResult(short token) { ++Consumptions; return _core.GetResult(token); }
-        public ValueTaskSourceStatus GetStatus(short token) => _core.GetStatus(token);
+        public ValueTaskSourceStatus GetStatus(short token)
+        {
+            return _core.GetStatus(token);
+        }
         public void OnCompleted(Action<object> continuation, object state, short token, ValueTaskSourceOnCompletedFlags flags)
         { ++Continuations; _core.OnCompleted(continuation, state, token, flags); }
     }
@@ -126,17 +138,29 @@ public partial class WrappedCompositeByteBufDispatchTest
         private ValueTask<int> Begin(string method, object peer, int index, long position, int length, CancellationToken token)
         { ++Calls; Method = method; Peer = peer; Index = index; Position = position; Length = length; Token = token; return Result.Task; }
         public override ValueTask<int> SetBytesAsync(int index, Stream source, int length, CancellationToken token = default)
-            => Begin("SetStream", source, index, 0, length, token);
+        {
+            return Begin("SetStream", source, index, 0, length, token);
+        }
         public override ValueTask<int> WriteBytesAsync(Stream source, int length, CancellationToken token = default)
-            => Begin("WriteStream", source, WriterIndex, 0, length, token);
+        {
+            return Begin("WriteStream", source, WriterIndex, 0, length, token);
+        }
         public override ValueTask<int> GetBytesAsync(int index, Socket destination, int length, CancellationToken token = default)
-            => Begin("GetSocket", destination, index, 0, length, token);
+        {
+            return Begin("GetSocket", destination, index, 0, length, token);
+        }
         public override ValueTask<int> ReadBytesAsync(Socket destination, int length, CancellationToken token = default)
-            => Begin("ReadSocket", destination, ReaderIndex, 0, length, token);
+        {
+            return Begin("ReadSocket", destination, ReaderIndex, 0, length, token);
+        }
         public override ValueTask<int> SetBytesAsync(int index, SafeFileHandle source, long position, int length, CancellationToken token = default)
-            => Begin("SetFile", source, index, position, length, token);
+        {
+            return Begin("SetFile", source, index, position, length, token);
+        }
         public override ValueTask<int> WriteBytesAsync(SafeFileHandle source, long position, int length, CancellationToken token = default)
-            => Begin("WriteFile", source, WriterIndex, position, length, token);
+        {
+            return Begin("WriteFile", source, WriterIndex, position, length, token);
+        }
     }
     public static IEnumerable<object[]> PendingCases()
     {

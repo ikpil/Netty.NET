@@ -159,12 +159,15 @@ public class ByteBufAllocatedUtilTest
         Assert.Equal(0, a.Last.WriterIndex);
     }
 
-    private static ByteBuf Invoke(int operation, IByteBufAllocator a) => operation switch
+    private static ByteBuf Invoke(int operation, IByteBufAllocator a)
     {
-        0 => ByteBufUtil.WriteUtf8(a, "A"), 1 => ByteBufUtil.WriteUtf8(a, new AsciiString("A")),
-        2 => ByteBufUtil.WriteAscii(a, "A"), 3 => ByteBufUtil.WriteAscii(a, new AsciiString("A")),
-        _ => ByteBufUtil.EncodeString(a, "A", Encoding.UTF8)
-    };
+        return operation switch
+        {
+            0 => ByteBufUtil.WriteUtf8(a, "A"), 1 => ByteBufUtil.WriteUtf8(a, new AsciiString("A")),
+            2 => ByteBufUtil.WriteAscii(a, "A"), 3 => ByteBufUtil.WriteAscii(a, new AsciiString("A")),
+            _ => ByteBufUtil.EncodeString(a, "A", Encoding.UTF8)
+        };
+    }
 
     [Fact]
     public void AsciiStringUtf8GrowthFailureReleasesTheInitialNativeAllocation()
@@ -274,8 +277,14 @@ public class ByteBufAllocatedUtilTest
         public ProbeAllocator(int kind, long maximumBytes = long.MaxValue) : base(kind == 1)
         { _kind = kind; Native = new NativeMemoryAllocator(maximumBytes); }
         public override bool IsDirectBufferPooled => false;
-        protected override ByteBuf NewHeapBuffer(int initialCapacity, int maxCapacity) => Allocate(initialCapacity, maxCapacity, false);
-        protected override ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity) => Allocate(initialCapacity, maxCapacity, true);
+        protected override ByteBuf NewHeapBuffer(int initialCapacity, int maxCapacity)
+        {
+            return Allocate(initialCapacity, maxCapacity, false);
+        }
+        protected override ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity)
+        {
+            return Allocate(initialCapacity, maxCapacity, true);
+        }
         private ByteBuf Allocate(int initial, int max, bool direct)
         {
             Calls++; RequestedCapacity = initial; RequestedCapacities.Add(initial);

@@ -218,7 +218,9 @@ public class ByteBufScalarUtilTest
     }
 
     private static byte[] Octets(int value, int width)
-        => Enumerable.Range(0, width).Select(i => unchecked((byte)(value >> (8 * (width - i - 1))))).ToArray();
+    {
+        return Enumerable.Range(0, width).Select(i => unchecked((byte)(value >> (8 * (width - i - 1))))).ToArray();
+    }
 
     private static uint ReverseWidth(int value, int width)
     {

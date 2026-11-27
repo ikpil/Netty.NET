@@ -30,9 +30,13 @@ public partial class CompositeByteBufBulkKernelTest
     {
         public MetadataTrap(ByteBuf buffer) : base(buffer) { }
         public override ReadOnlyMemory<byte> AsReadOnlyMemory(int index, int length)
-            => throw new InvalidOperationException("Bulk overlap checks must not call public memory accessors.");
+        {
+            throw new InvalidOperationException("Bulk overlap checks must not call public memory accessors.");
+        }
         public override ReadOnlySequence<byte> AsReadOnlySequence(int index, int length)
-            => throw new InvalidOperationException("Bulk overlap checks must not call public sequence accessors.");
+        {
+            throw new InvalidOperationException("Bulk overlap checks must not call public sequence accessors.");
+        }
     }
     private sealed class Wrapper : WrappedByteBuf { public Wrapper(ByteBuf b) : base(b) { } }
     public static IEnumerable<object[]> Aliases()

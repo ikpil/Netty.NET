@@ -31,7 +31,10 @@ public abstract class AbstractPooledArenaByteBufTest
     protected abstract bool Direct { get; }
 
     private protected TestAllocator NewAllocator(int shifts = 13, int order = 4, int alignment = 0,
-        long maximumBytes = long.MaxValue) => new(Direct, shifts, order, alignment, maximumBytes);
+        long maximumBytes = long.MaxValue)
+    {
+        return new(Direct, shifts, order, alignment, maximumBytes);
+    }
 
     [Theory]
     [InlineData(0)] [InlineData(1)] [InlineData(4)] [InlineData(150)] [InlineData(16384)] [InlineData(65536)] [InlineData(131073)]

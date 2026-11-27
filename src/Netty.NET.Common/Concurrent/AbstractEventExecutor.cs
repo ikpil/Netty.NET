@@ -135,7 +135,10 @@ public abstract class AbstractEventExecutor : IEventExecutor
         }
     }
 
-    protected static void RunTask(Action task) => task();
+    protected static void RunTask(Action task)
+    {
+        task();
+    }
 
     /**
      * Like {@link #execute(Runnable)} but does not guarantee the task will be run until either

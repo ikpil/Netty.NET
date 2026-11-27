@@ -27,14 +27,29 @@ internal sealed class EmptyByteBuf : ByteBuf
     private readonly IByteBufAllocator _allocator;
     internal EmptyByteBuf(IByteBufAllocator allocator) : base(0)
     { ArgumentNullException.ThrowIfNull(allocator); _allocator = allocator; }
-    public override IByteBufAllocator Alloc() => _allocator;
+    public override IByteBufAllocator Alloc()
+    {
+        return _allocator;
+    }
     // The CLR buffer API uses explicit LE accessors; its default byte order is always BE.
-    public override string ToString() => "EmptyByteBufBE";
-    protected override Memory<byte> GetMemoryCore(int index, int length) => Memory<byte>.Empty;
+    public override string ToString()
+    {
+        return "EmptyByteBufBE";
+    }
+    protected override Memory<byte> GetMemoryCore(int index, int length)
+    {
+        return Memory<byte>.Empty;
+    }
     public override bool IsContiguous => true;
     public override bool IsDirect => true;
-    public override bool IsReadable(int size) => false;
-    public override bool IsWritable(int size) => false;
+    public override bool IsReadable(int size)
+    {
+        return false;
+    }
+    public override bool IsWritable(int size)
+    {
+        return false;
+    }
     public override int Capacity
     {
         get => 0;
@@ -43,13 +58,22 @@ internal sealed class EmptyByteBuf : ByteBuf
     public override int RefCnt => 1;
     // Original EmptyByteBuf ignores ownership counts, including nonpositive values.
     // There is no owned allocation or lifetime transition to mutate.
-    public override ByteBuf Retain(int increment = 1) => this;
-    public override bool Release(int decrement = 1) => false;
+    public override ByteBuf Retain(int increment = 1)
+    {
+        return this;
+    }
+    public override bool Release(int decrement = 1)
+    {
+        return false;
+    }
     // Preserve this allocator's sentinel instead of AbstractByteBuf's global empty allocated-read result.
     public override ByteBuf ReadBytes(int length) { CheckIndex(0, length); return this; }
     public override ByteBuf Copy(int index, int length) { CheckIndex(index, length); return this; }
     public override ByteBuf Slice(int index, int length) { CheckIndex(index, length); return this; }
-    public override ByteBuf Duplicate() => this;
+    public override ByteBuf Duplicate()
+    {
+        return this;
+    }
     // Unlike an owned zero-capacity buffer, Netty's shared empty sentinel validates both search endpoints.
     public override int IndexOf(int fromIndex, int toIndex, byte value)
     {

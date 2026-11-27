@@ -89,7 +89,10 @@ public sealed class DefaultHttp2PushPromiseFrame : IHttp2PushPromiseFrame
         return this;
     }
 
-    IHttp2StreamFrame IHttp2StreamFrame.Stream(IHttp2FrameStream stream) => Stream(stream);
+    IHttp2StreamFrame IHttp2StreamFrame.Stream(IHttp2FrameStream stream)
+    {
+        return Stream(stream);
+    }
 
     public IHttp2FrameStream Stream()
     {

@@ -15,7 +15,10 @@ public class ConstantIdentityContractTest
     {
         public int Id => 1;
         public string Name => "value";
-        public int CompareTo(ValueConstant other) => 0;
+        public int CompareTo(ValueConstant other)
+        {
+            return 0;
+        }
     }
 
     [Fact]

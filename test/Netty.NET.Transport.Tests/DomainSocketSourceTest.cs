@@ -109,8 +109,14 @@ public class DomainSocketSourceTest
         finally { await group.StopAsync(); }
     }
 
-    internal static Socket NewSocket() => new(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
-    internal static UnixDomainSocketEndPoint NewAddress() => new(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")));
+    internal static Socket NewSocket()
+    {
+        return new(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
+    }
+    internal static UnixDomainSocketEndPoint NewAddress()
+    {
+        return new(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")));
+    }
     internal static void RequireDomainSockets()
     {
         if (!Socket.OSSupportsUnixDomainSockets) Assert.Skip("This host does not support Unix domain sockets.");
@@ -119,6 +125,9 @@ public class DomainSocketSourceTest
     // Override just to to be able to call directly via unit tests.
     private sealed class ProbeServer(Socket socket) : NioServerDomainSocketChannel(socket)
     {
-        internal bool ShouldClose(Exception error) => CloseOnReadError(error);
+        internal bool ShouldClose(Exception error)
+        {
+            return CloseOnReadError(error);
+        }
     }
 }

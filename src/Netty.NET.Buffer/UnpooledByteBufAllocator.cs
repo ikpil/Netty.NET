@@ -76,7 +76,9 @@ public sealed class UnpooledByteBufAllocator : AbstractByteBufAllocator, IByteBu
     public override bool IsDirectBufferPooled => false;
 
     protected override ByteBuf NewHeapBuffer(int initialCapacity, int maxCapacity)
-        => new UnpooledHeapByteBuf(this, initialCapacity, maxCapacity, _metric);
+    {
+        return new UnpooledHeapByteBuf(this, initialCapacity, maxCapacity, _metric);
+    }
 
     protected override ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity)
     {
@@ -104,9 +106,17 @@ public sealed class UnpooledByteBufAllocator : AbstractByteBufAllocator, IByteBu
         private long _directBytes;
         public long UsedHeapMemory => Volatile.Read(ref _heapBytes);
         public long UsedDirectMemory => Volatile.Read(ref _directBytes);
-        internal void AddHeap(long amount) => Interlocked.Add(ref _heapBytes, amount);
-        internal void AddDirect(long amount) => Interlocked.Add(ref _directBytes, amount);
+        internal void AddHeap(long amount)
+        {
+            Interlocked.Add(ref _heapBytes, amount);
+        }
+        internal void AddDirect(long amount)
+        {
+            Interlocked.Add(ref _directBytes, amount);
+        }
         public override string ToString()
-            => string.Create(CultureInfo.InvariantCulture, $"{StringUtil.SimpleClassName(this)}(usedHeapMemory: {UsedHeapMemory}; usedDirectMemory: {UsedDirectMemory})");
+        {
+            return string.Create(CultureInfo.InvariantCulture, $"{StringUtil.SimpleClassName(this)}(usedHeapMemory: {UsedHeapMemory}; usedDirectMemory: {UsedDirectMemory})");
+        }
     }
 }

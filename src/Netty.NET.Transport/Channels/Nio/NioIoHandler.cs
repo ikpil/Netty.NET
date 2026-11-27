@@ -300,7 +300,10 @@ public sealed class NioIoHandler : IIoHandler
             _handle.Handle(this, NioIoOps.EventOf(ready));
         }
 
-        internal bool IsCanceled() => _canceled.Get();
+        internal bool IsCanceled()
+        {
+            return _canceled.Get();
+        }
     }
 
     // CLR: InvalidOperationException stands for java.nio.channels.IllegalBlockingModeException, which register()
@@ -434,7 +437,10 @@ public sealed class NioIoHandler : IIoHandler
 
     // CLR: SystemTimer.NanoTime() is Common's System.nanoTime(); as in Java the handler does not use the executor's
     // ticker.
-    private static long NanoTime() => Netty.NET.Common.SystemTimer.NanoTime();
+    private static long NanoTime()
+    {
+        return Netty.NET.Common.SystemTimer.NanoTime();
+    }
 
     private int ProcessSelectedKeys()
     {
@@ -774,10 +780,15 @@ public sealed class NioIoHandler : IIoHandler
             }
         }
 
-        internal ICollection<DefaultNioRegistration> Keys() => _keys.Values;
+        internal ICollection<DefaultNioRegistration> Keys()
+        {
+            return _keys.Values;
+        }
 
-        internal DefaultNioRegistration KeyFor(Socket socket) =>
-            _keys.TryGetValue(socket, out DefaultNioRegistration key) ? key : null;
+        internal DefaultNioRegistration KeyFor(Socket socket)
+        {
+            return _keys.TryGetValue(socket, out DefaultNioRegistration key) ? key : null;
+        }
 
         // CLR: InvalidOperationException stands for the IllegalArgumentException/CancelledKeyException a JDK
         // selector raises when a channel is registered twice.
@@ -818,11 +829,17 @@ public sealed class NioIoHandler : IIoHandler
             }
         }
 
-        internal int SelectNow() => DoSelect(0);
+        internal int SelectNow()
+        {
+            return DoSelect(0);
+        }
 
         // A timeout of 0 blocks without a deadline, as Selector.select(0).
-        internal int Select(long timeoutMillis) => DoSelect(timeoutMillis == 0 ? -1
-            : (int)Math.Min(int.MaxValue, timeoutMillis * 1000L));
+        internal int Select(long timeoutMillis)
+        {
+            return DoSelect(timeoutMillis == 0 ? -1
+                : (int)Math.Min(int.MaxValue, timeoutMillis * 1000L));
+        }
 
         private int DoSelect(int microSeconds)
         {
@@ -971,6 +988,9 @@ public sealed class NioIoHandler : IIoHandler
             _wakeupSocket.Dispose();
         }
 
-        public override string ToString() => "SocketSelector@" + GetHashCode().ToString("x");
+        public override string ToString()
+        {
+            return "SocketSelector@" + GetHashCode().ToString("x");
+        }
     }
 }

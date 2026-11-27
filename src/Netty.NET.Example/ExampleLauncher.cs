@@ -31,7 +31,10 @@ public static class ExampleLauncher
     /// <summary>
     /// System.getProperty(key): the value of -Dkey=value, or null.
     /// </summary>
-    public static string GetProperty(string key) => GetProperty(key, null);
+    public static string GetProperty(string key)
+    {
+        return GetProperty(key, null);
+    }
 
     /// <summary>
     /// System.getProperty(key, def): the value of -Dkey=value, or def. user.dir, which the JVM sets to the working
@@ -104,8 +107,10 @@ public static class ExampleLauncher
         return 0;
     }
 
-    private static MethodInfo FindMain(Type type) =>
-        type.GetMethod("Main", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(string[]) }, null);
+    private static MethodInfo FindMain(Type type)
+    {
+        return type.GetMethod("Main", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(string[]) }, null);
+    }
 
     // Netty.NET.Example.Http.Snoop.HttpSnoopServer -> http.snoop.HttpSnoopServer (compared case-insensitively).
     private static string JavaName(Type type)

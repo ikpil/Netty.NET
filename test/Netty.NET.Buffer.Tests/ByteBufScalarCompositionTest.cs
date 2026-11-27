@@ -131,46 +131,49 @@ public class ByteBufScalarCompositionTest
         foreach (bool failure in new[] { false, true }) yield return [direct, operation, sample, failure];
     }
 
-    private static object Invoke(ByteBuf b, Observation o, int operation) => operation switch
+    private static object Invoke(ByteBuf b, Observation o, int operation)
     {
-        0 => (b.GetBoolean(2) ? 1L : 0L),
-        1 => b.SetBoolean(2, (o.Bits & 255) != 0),
-        2 => (long)b.GetUnsignedShort(2),
-        3 => (long)b.GetUnsignedShortLE(2),
-        4 => (long)b.GetUnsignedInt(2),
-        5 => (long)b.GetUnsignedIntLE(2),
-        6 => (long)b.GetChar(2),
-        7 => b.SetChar(2, unchecked((char)o.Bits)),
-        8 => (long)BitConverter.SingleToInt32Bits(b.GetFloat(2)),
-        9 => (long)BitConverter.SingleToInt32Bits(b.GetFloatLE(2)),
-        10 => BitConverter.DoubleToInt64Bits(b.GetDouble(2)),
-        11 => BitConverter.DoubleToInt64Bits(b.GetDoubleLE(2)),
-        12 => b.SetFloat(2, BitConverter.Int32BitsToSingle(o.IntBits)),
-        13 => b.SetFloatLE(2, BitConverter.Int32BitsToSingle(o.IntBits)),
-        14 => b.SetDouble(2, BitConverter.Int64BitsToDouble(unchecked((long)o.Bits))),
-        15 => b.SetDoubleLE(2, BitConverter.Int64BitsToDouble(unchecked((long)o.Bits))),
-        16 => (long)b.GetMedium(2),
-        17 => (long)b.GetMediumLE(2),
-        18 => (b.ReadBoolean() ? 1L : 0L),
-        19 => (long)b.ReadUnsignedShort(),
-        20 => (long)b.ReadUnsignedShortLE(),
-        21 => (long)b.ReadUnsignedInt(),
-        22 => (long)b.ReadUnsignedIntLE(),
-        23 => (long)b.ReadChar(),
-        24 => (long)BitConverter.SingleToInt32Bits(b.ReadFloat()),
-        25 => (long)BitConverter.SingleToInt32Bits(b.ReadFloatLE()),
-        26 => BitConverter.DoubleToInt64Bits(b.ReadDouble()),
-        27 => BitConverter.DoubleToInt64Bits(b.ReadDoubleLE()),
-        28 => (long)b.ReadMedium(),
-        29 => (long)b.ReadMediumLE(),
-        30 => b.WriteBoolean((o.Bits & 255) != 0),
-        31 => b.WriteChar(unchecked((char)o.Bits)),
-        32 => b.WriteFloat(BitConverter.Int32BitsToSingle(o.IntBits)),
-        33 => b.WriteFloatLE(BitConverter.Int32BitsToSingle(o.IntBits)),
-        34 => b.WriteDouble(BitConverter.Int64BitsToDouble(unchecked((long)o.Bits))),
-        35 => b.WriteDoubleLE(BitConverter.Int64BitsToDouble(unchecked((long)o.Bits))),
-        _ => throw new ArgumentOutOfRangeException(nameof(operation))
-    };
+        return operation switch
+        {
+            0 => (b.GetBoolean(2) ? 1L : 0L),
+            1 => b.SetBoolean(2, (o.Bits & 255) != 0),
+            2 => (long)b.GetUnsignedShort(2),
+            3 => (long)b.GetUnsignedShortLE(2),
+            4 => (long)b.GetUnsignedInt(2),
+            5 => (long)b.GetUnsignedIntLE(2),
+            6 => (long)b.GetChar(2),
+            7 => b.SetChar(2, unchecked((char)o.Bits)),
+            8 => (long)BitConverter.SingleToInt32Bits(b.GetFloat(2)),
+            9 => (long)BitConverter.SingleToInt32Bits(b.GetFloatLE(2)),
+            10 => BitConverter.DoubleToInt64Bits(b.GetDouble(2)),
+            11 => BitConverter.DoubleToInt64Bits(b.GetDoubleLE(2)),
+            12 => b.SetFloat(2, BitConverter.Int32BitsToSingle(o.IntBits)),
+            13 => b.SetFloatLE(2, BitConverter.Int32BitsToSingle(o.IntBits)),
+            14 => b.SetDouble(2, BitConverter.Int64BitsToDouble(unchecked((long)o.Bits))),
+            15 => b.SetDoubleLE(2, BitConverter.Int64BitsToDouble(unchecked((long)o.Bits))),
+            16 => (long)b.GetMedium(2),
+            17 => (long)b.GetMediumLE(2),
+            18 => (b.ReadBoolean() ? 1L : 0L),
+            19 => (long)b.ReadUnsignedShort(),
+            20 => (long)b.ReadUnsignedShortLE(),
+            21 => (long)b.ReadUnsignedInt(),
+            22 => (long)b.ReadUnsignedIntLE(),
+            23 => (long)b.ReadChar(),
+            24 => (long)BitConverter.SingleToInt32Bits(b.ReadFloat()),
+            25 => (long)BitConverter.SingleToInt32Bits(b.ReadFloatLE()),
+            26 => BitConverter.DoubleToInt64Bits(b.ReadDouble()),
+            27 => BitConverter.DoubleToInt64Bits(b.ReadDoubleLE()),
+            28 => (long)b.ReadMedium(),
+            29 => (long)b.ReadMediumLE(),
+            30 => b.WriteBoolean((o.Bits & 255) != 0),
+            31 => b.WriteChar(unchecked((char)o.Bits)),
+            32 => b.WriteFloat(BitConverter.Int32BitsToSingle(o.IntBits)),
+            33 => b.WriteFloatLE(BitConverter.Int32BitsToSingle(o.IntBits)),
+            34 => b.WriteDouble(BitConverter.Int64BitsToDouble(unchecked((long)o.Bits))),
+            35 => b.WriteDoubleLE(BitConverter.Int64BitsToDouble(unchecked((long)o.Bits))),
+            _ => throw new ArgumentOutOfRangeException(nameof(operation))
+        };
+    }
 
     private static readonly string[] Hooks =
     [

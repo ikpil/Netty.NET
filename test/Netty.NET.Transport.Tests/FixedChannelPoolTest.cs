@@ -160,10 +160,16 @@ public class FixedChannelPoolTest
     }
 
     [Fact]
-    public async Task TestAcquireTimeout() => await CheckAcquireTimeout(500);
+    public async Task TestAcquireTimeout()
+    {
+        await CheckAcquireTimeout(500);
+    }
 
     [Fact]
-    public async Task TestAcquireWithZeroTimeout() => await CheckAcquireTimeout(0);
+    public async Task TestAcquireWithZeroTimeout()
+    {
+        await CheckAcquireTimeout(0);
+    }
 
     private static async Task CheckAcquireTimeout(long timeoutMillis)
     {
@@ -427,7 +433,10 @@ public class FixedChannelPoolTest
             ServerBootstrap = new ServerBootstrap().Group(Group).Channel<LocalServerChannel>()
                 .ChildHandler(new ActionChannelInitializer<LocalChannel>(channel => channel.Pipeline.AddLast(new ChannelInboundHandlerAdapter())));
         }
-        internal async Task StartServerAsync() => Server = await ServerBootstrap.BindAsync(Address).WaitAsync(TimeSpan.FromSeconds(5));
+        internal async Task StartServerAsync()
+        {
+            Server = await ServerBootstrap.BindAsync(Address).WaitAsync(TimeSpan.FromSeconds(5));
+        }
         public async ValueTask DisposeAsync()
         {
             if (Server != null)
@@ -451,9 +460,18 @@ public class FixedChannelPoolTest
             if (!_continueAcquire.Wait(TimeSpan.FromSeconds(5)))
                 throw new TimeoutException("Timed out waiting to continue acquire");
         }
-        internal Task AwaitChannelAcquiredAsync() => _channelAcquired.Task.WaitAsync(TimeSpan.FromSeconds(5));
-        internal void ContinueAcquire() => _continueAcquire.Set();
-        public void Dispose() => _continueAcquire.Dispose();
+        internal Task AwaitChannelAcquiredAsync()
+        {
+            return _channelAcquired.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        }
+        internal void ContinueAcquire()
+        {
+            _continueAcquire.Set();
+        }
+        public void Dispose()
+        {
+            _continueAcquire.Dispose();
+        }
     }
 
     private sealed class TestChannelPoolHandler : AbstractChannelPoolHandler
@@ -463,8 +481,14 @@ public class FixedChannelPoolTest
     private sealed class CallbackHandler(Action<IChannel> acquired = null, Action<IChannel> released = null) : AbstractChannelPoolHandler
     {
         public override void ChannelCreated(IChannel channel) { /* NOOP */ }
-        public override void ChannelAcquired(IChannel channel) => acquired?.Invoke(channel);
-        public override void ChannelReleased(IChannel channel) => released?.Invoke(channel);
+        public override void ChannelAcquired(IChannel channel)
+        {
+            acquired?.Invoke(channel);
+        }
+        public override void ChannelReleased(IChannel channel)
+        {
+            released?.Invoke(channel);
+        }
     }
     private sealed class InnerFixedChannelPool(Bootstrap bootstrap, bool releaseHealthCheck)
         : FixedChannelPool(bootstrap, new TestChannelPoolHandler(), ChannelHealthChecker.Active, AcquireTimeoutAction.New,
@@ -476,6 +500,9 @@ public class FixedChannelPoolTest
          *
          * @return channel
          */
-        internal IChannel PollForTest() => base.PollChannel();
+        internal IChannel PollForTest()
+        {
+            return base.PollChannel();
+        }
     }
 }

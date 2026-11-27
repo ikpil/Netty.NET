@@ -112,9 +112,14 @@ public class ResolverJdkSemanticsContractTest
     }
 
     private static HostsFileEntriesProvider Parse(string path, Encoding charset)
-        => HostsFileEntriesProvider.Parser().Parse(new FileInfo(path), charset);
+    {
+        return HostsFileEntriesProvider.Parser().Parse(new FileInfo(path), charset);
+    }
 
-    private static byte[] Bytes(string text, Encoding encoding) => encoding.GetBytes(text);
+    private static byte[] Bytes(string text, Encoding encoding)
+    {
+        return encoding.GetBytes(text);
+    }
 
     private static byte[] Bom(byte[] bom, byte[] body)
     {

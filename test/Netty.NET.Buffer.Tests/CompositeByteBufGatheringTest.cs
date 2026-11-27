@@ -28,10 +28,22 @@ public class CompositeByteBufGatheringTest : IDisposable
     private PooledByteBufAllocator _pooled;
     private PooledByteBufAllocator Pooled => _pooled ??= new PooledByteBufAllocator(false,
         maxOrder: 4, smallCacheSize: 0, nativeAllocator: _native);
-    public CompositeByteBufGatheringTest() => _unpooled = new UnpooledByteBufAllocator(false, _native);
-    private ByteBuf Buffer(int capacity = 256) => _unpooled.HeapBuffer(capacity);
-    private ByteBuf DirectBuffer(int capacity = 256) => _unpooled.DirectBuffer(capacity);
-    private CompositeByteBuf CompositeBuffer() => _unpooled.CompositeHeapBuffer();
+    public CompositeByteBufGatheringTest()
+    {
+        _unpooled = new UnpooledByteBufAllocator(false, _native);
+    }
+    private ByteBuf Buffer(int capacity = 256)
+    {
+        return _unpooled.HeapBuffer(capacity);
+    }
+    private ByteBuf DirectBuffer(int capacity = 256)
+    {
+        return _unpooled.DirectBuffer(capacity);
+    }
+    private CompositeByteBuf CompositeBuffer()
+    {
+        return _unpooled.CompositeHeapBuffer();
+    }
     public void Dispose()
     {
         _pooled?.Dispose();
@@ -46,7 +58,9 @@ public class CompositeByteBufGatheringTest : IDisposable
     private sealed class ShortWriteComposite(IByteBufAllocator allocator) : CompositeByteBuf(allocator, false)
     {
         public override int GetBytes(int index, Socket destination, int length)
-            => base.GetBytes(index, destination, Math.Min(1, length));
+        {
+            return base.GetBytes(index, destination, Math.Min(1, length));
+        }
     }
 
     private sealed class TestGatheringByteChannel : IDisposable

@@ -118,16 +118,49 @@ public interface IRecvByteBufAllocator
          * Get the {@link Handle} which all methods will be delegated to.
          * @return the {@link Handle} which all methods will be delegated to.
          */
-        protected IHandle Delegate() => _delegate;
-        public virtual ByteBuf Allocate(IByteBufAllocator alloc) => _delegate.Allocate(alloc);
-        public virtual int Guess() => _delegate.Guess();
-        public virtual void Reset(IChannelConfig config) => _delegate.Reset(config);
-        public virtual void IncMessagesRead(int numMessages) => _delegate.IncMessagesRead(numMessages);
-        public virtual void LastBytesRead(int bytes) => _delegate.LastBytesRead(bytes);
-        public virtual int LastBytesRead() => _delegate.LastBytesRead();
-        public virtual void AttemptedBytesRead(int bytes) => _delegate.AttemptedBytesRead(bytes);
-        public virtual int AttemptedBytesRead() => _delegate.AttemptedBytesRead();
-        public virtual bool ContinueReading() => _delegate.ContinueReading();
-        public virtual void ReadComplete() => _delegate.ReadComplete();
+        protected IHandle Delegate()
+        {
+            return _delegate;
+        }
+        public virtual ByteBuf Allocate(IByteBufAllocator alloc)
+        {
+            return _delegate.Allocate(alloc);
+        }
+        public virtual int Guess()
+        {
+            return _delegate.Guess();
+        }
+        public virtual void Reset(IChannelConfig config)
+        {
+            _delegate.Reset(config);
+        }
+        public virtual void IncMessagesRead(int numMessages)
+        {
+            _delegate.IncMessagesRead(numMessages);
+        }
+        public virtual void LastBytesRead(int bytes)
+        {
+            _delegate.LastBytesRead(bytes);
+        }
+        public virtual int LastBytesRead()
+        {
+            return _delegate.LastBytesRead();
+        }
+        public virtual void AttemptedBytesRead(int bytes)
+        {
+            _delegate.AttemptedBytesRead(bytes);
+        }
+        public virtual int AttemptedBytesRead()
+        {
+            return _delegate.AttemptedBytesRead();
+        }
+        public virtual bool ContinueReading()
+        {
+            return _delegate.ContinueReading();
+        }
+        public virtual void ReadComplete()
+        {
+            _delegate.ReadComplete();
+        }
     }
 }

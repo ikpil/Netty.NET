@@ -32,27 +32,39 @@ namespace Netty.NET.Transport.Tests;
 public class PendingWriteQueueTest
 {
     [Fact]
-    public async Task TestRemoveAndWrite() => await AssertWrite(new TestHandler((queue, ctx, observations) =>
+    public async Task TestRemoveAndWrite()
     {
-        Assert.False(ctx.Channel.IsWritable, "Should not be writable anymore");
-        Task future = queue.RemoveAndWriteAsync();
-        observations.Add(OnCompleted(future, () => AssertQueueEmpty(queue)));
-        ctx.Flush();
-    }), 1);
+        await AssertWrite(new TestHandler((queue, ctx, observations) =>
+        {
+            Assert.False(ctx.Channel.IsWritable, "Should not be writable anymore");
+            Task future = queue.RemoveAndWriteAsync();
+            observations.Add(OnCompleted(future, () => AssertQueueEmpty(queue)));
+            ctx.Flush();
+        }), 1);
+    }
     [Fact]
-    public async Task TestRemoveAndWriteAll() => await AssertWrite(new TestHandler((queue, ctx, observations) =>
+    public async Task TestRemoveAndWriteAll()
     {
-        Assert.False(ctx.Channel.IsWritable, "Should not be writable anymore");
-        Task future = queue.RemoveAndWriteAllAsync();
-        observations.Add(OnCompleted(future, () => AssertQueueEmpty(queue)));
-        ctx.Flush();
-    }), 3);
+        await AssertWrite(new TestHandler((queue, ctx, observations) =>
+        {
+            Assert.False(ctx.Channel.IsWritable, "Should not be writable anymore");
+            Task future = queue.RemoveAndWriteAllAsync();
+            observations.Add(OnCompleted(future, () => AssertQueueEmpty(queue)));
+            ctx.Flush();
+        }), 3);
+    }
     [Fact]
-    public async Task TestRemoveAndFail() => await AssertWriteFails(new TestHandler((queue, ctx, _) =>
-    { queue.RemoveAndFail(new TestException()); ctx.Flush(); }), 1);
+    public async Task TestRemoveAndFail()
+    {
+        await AssertWriteFails(new TestHandler((queue, ctx, _) =>
+        { queue.RemoveAndFail(new TestException()); ctx.Flush(); }), 1);
+    }
     [Fact]
-    public async Task TestRemoveAndFailAll() => await AssertWriteFails(new TestHandler((queue, ctx, _) =>
-    { queue.RemoveAndFailAll(new TestException()); ctx.Flush(); }), 3);
+    public async Task TestRemoveAndFailAll()
+    {
+        await AssertWriteFails(new TestHandler((queue, ctx, _) =>
+        { queue.RemoveAndFailAll(new TestException()); ctx.Flush(); }), 3);
+    }
     [Fact]
     public void ShouldFireChannelWritabilityChangedAfterRemoval()
     {
@@ -275,18 +287,24 @@ public class PendingWriteQueueTest
         queue.RemoveAndFailAll(error);
         Assert.Same(error, Assert.Throws<InvalidOperationException>(() => promise.Task.GetAwaiter().GetResult()));
     }
-    private static Task OnCompleted(Task task, Action callback) => task.ContinueWith(completed =>
+    private static Task OnCompleted(Task task, Action callback)
     {
-        // Observe native faults even when the source listener only inspects completion state.
-        _ = completed.Exception;
-        callback();
-    }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+        return task.ContinueWith(completed =>
+        {
+            // Observe native faults even when the source listener only inspects completion state.
+            _ = completed.Exception;
+            callback();
+        }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+    }
     private sealed class TestHandler(Action<PendingWriteQueue, IChannelHandlerContext, List<Task>> flush) : ChannelDuplexHandler
     {
         private PendingWriteQueue _queue;
         private int _expectedSize;
         internal readonly List<Task> Observations = new();
-        public override void HandlerAdded(IChannelHandlerContext ctx) => _queue = new PendingWriteQueue(ctx);
+        public override void HandlerAdded(IChannelHandlerContext ctx)
+        {
+            _queue = new PendingWriteQueue(ctx);
+        }
         public override void ChannelActive(IChannelHandlerContext ctx)
         { base.ChannelActive(ctx); AssertQueueEmpty(_queue); Assert.True(ctx.Channel.IsWritable, "Should be writable"); }
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
@@ -297,12 +315,18 @@ public class PendingWriteQueueTest
             Assert.NotNull(_queue.Current);
             return result;
         }
-        public override void Flush(IChannelHandlerContext ctx) => flush(_queue, ctx, Observations);
+        public override void Flush(IChannelHandlerContext ctx)
+        {
+            flush(_queue, ctx, Observations);
+        }
     }
     private sealed class RemovalOnWritabilityHandler : ChannelInboundHandlerAdapter
     {
         internal PendingWriteQueue Queue;
-        public override void HandlerAdded(IChannelHandlerContext ctx) => Queue = new PendingWriteQueue(ctx);
+        public override void HandlerAdded(IChannelHandlerContext ctx)
+        {
+            Queue = new PendingWriteQueue(ctx);
+        }
         public override void ChannelWritabilityChanged(IChannelHandlerContext ctx)
         {
             if (Queue.Current is not ByteBuf message)

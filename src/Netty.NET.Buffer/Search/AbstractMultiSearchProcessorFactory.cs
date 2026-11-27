@@ -76,7 +76,10 @@ public abstract class AbstractMultiSearchProcessorFactory : IMultiSearchProcesso
 {
     public abstract IMultiSearchProcessor NewSearchProcessor();
 
-    ISearchProcessor ISearchProcessorFactory.NewSearchProcessor() => NewSearchProcessor();
+    ISearchProcessor ISearchProcessorFactory.NewSearchProcessor()
+    {
+        return NewSearchProcessor();
+    }
 
     /**
      * Creates a {@link MultiSearchProcessorFactory} based on
@@ -98,5 +101,7 @@ public abstract class AbstractMultiSearchProcessorFactory : IMultiSearchProcesso
      * @return a new instance of {@link AhoCorasicSearchProcessorFactory} precomputed for the given {@code needles}
      */
     public static AhoCorasicSearchProcessorFactory NewAhoCorasicSearchProcessorFactory(params byte[][] needles)
-        => new(needles);
+    {
+        return new(needles);
+    }
 }

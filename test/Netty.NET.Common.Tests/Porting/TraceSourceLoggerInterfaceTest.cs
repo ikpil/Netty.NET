@@ -22,7 +22,9 @@ public class TraceSourceLoggerInterfaceTest : AbstractInternalLoggerTest<TraceSo
     }
 
     protected override void SetLevelEnable(InternalLogLevel level, bool enable)
-        => mockLog.Switch.Level = enable ? SourceLevels.All : SourceLevels.Off;
+    {
+        mockLog.Switch.Level = enable ? SourceLevels.All : SourceLevels.Off;
+    }
 
     protected override void AssertResult(InternalLogLevel level, string format, Exception t, params object[] args)
     {
@@ -42,12 +44,17 @@ public class TraceSourceLoggerInterfaceTest : AbstractInternalLoggerTest<TraceSo
         Assert.Equal(message, result["message"]);
     }
 
-    public void Dispose() => mockLog.Close();
+    public void Dispose()
+    {
+        mockLog.Close();
+    }
 
     private sealed class CapturingListener(Action<TraceEventType, string> capture) : TraceListener
     {
         public override void TraceEvent(TraceEventCache eventCache, string source, TraceEventType eventType, int id, string message)
-            => capture(eventType, message);
+        {
+            capture(eventType, message);
+        }
         public override void Write(string message) { }
         public override void WriteLine(string message) { }
     }

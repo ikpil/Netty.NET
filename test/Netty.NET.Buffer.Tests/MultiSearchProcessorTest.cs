@@ -26,10 +26,18 @@ namespace Netty.NET.Buffer.Tests;
 
 public class MultiSearchProcessorTest
 {
-    public static IEnumerable<object[]> Backings() => Enumerable.Range(0, 8).Select(i => new object[] { i });
-    private static byte[] Bytes(string text) => Encoding.UTF8.GetBytes(text);
+    public static IEnumerable<object[]> Backings()
+    {
+        return Enumerable.Range(0, 8).Select(i => new object[] { i });
+    }
+    private static byte[] Bytes(string text)
+    {
+        return Encoding.UTF8.GetBytes(text);
+    }
     private static AhoCorasicSearchProcessorFactory Factory(params string[] patterns)
-        => AbstractMultiSearchProcessorFactory.NewAhoCorasicSearchProcessorFactory(patterns.Select(Bytes).ToArray());
+    {
+        return AbstractMultiSearchProcessorFactory.NewAhoCorasicSearchProcessorFactory(patterns.Select(Bytes).ToArray());
+    }
 
     private static (ByteBuf Buffer, ByteBuf Owner) Buffer(byte[] data, int kind)
     {
@@ -278,6 +286,9 @@ public class MultiSearchProcessorTest
     {
         public void Record() { }
         public void Record(object hint) { }
-        public bool Close(ByteBuf buffer) => true;
+        public bool Close(ByteBuf buffer)
+        {
+            return true;
+        }
     }
 }

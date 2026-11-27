@@ -334,7 +334,10 @@ public class PooledDerivedByteBufTest
         internal int Closes; internal ByteBuf Closed;
         public void Record() { } public void Record(object hint) { }
         public bool Close(ByteBuf b) { Assert.Same(expected, b); Assert.Equal(0, b.RefCnt); Closed = b; return ++Closes == 1; }
-        public Exception GetCloseStackTraceIfAny() => null;
+        public Exception GetCloseStackTraceIfAny()
+        {
+            return null;
+        }
     }
     private sealed class FailingWrapper(ByteBuf root, IResourceLeakTracker<ByteBuf> leak, Exception failure) : SimpleLeakAwareByteBuf(root, leak)
     {

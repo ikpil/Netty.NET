@@ -84,9 +84,15 @@ public class HAProxyIntegrationTest
     {
         private HAProxyMessage value;
 
-        internal HAProxyMessage Get() => Volatile.Read(ref value);
+        internal HAProxyMessage Get()
+        {
+            return Volatile.Read(ref value);
+        }
 
-        internal void Set(HAProxyMessage newValue) => Volatile.Write(ref value, newValue);
+        internal void Set(HAProxyMessage newValue)
+        {
+            Volatile.Write(ref value, newValue);
+        }
     }
 
     private sealed class ChildInitializer : ChannelInitializer<IChannel>

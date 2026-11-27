@@ -105,7 +105,10 @@ public sealed class ChannelOutboundBuffer
     internal bool IsClosed => _closed;
 
     // CLR: AbstractUnsafe.close(...) and shutdownOutput(...) set the source's outboundBuffer field to null first.
-    internal void BeginOutputShutdown() => _closed = true;
+    internal void BeginOutputShutdown()
+    {
+        _closed = true;
+    }
 
     /**
      * Add given message to this {@link ChannelOutboundBuffer}. The given {@link ChannelPromise} will be notified once

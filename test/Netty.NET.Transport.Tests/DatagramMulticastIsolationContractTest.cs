@@ -72,18 +72,29 @@ public class DatagramMulticastIsolationContractTest
             while (memberPackets.Reader.TryRead(out int memberValue)) Assert.Equal(1, memberValue);
             while (otherPackets.Reader.TryRead(out int otherValue)) Assert.Equal(2, otherValue);
 
-            Task JoinAsync(NioDatagramChannel channel) => sourceSpecific
-                ? channel.JoinGroupAsync(multicast, iface, source) : channel.JoinGroupAsync(target, iface);
-            Task SendAsync(int value) => sender.WriteAndFlushAsync(new DatagramPacket(Unpooled.Buffer(4).WriteInt(value), target), cancellation);
+            Task JoinAsync(NioDatagramChannel channel)
+            {
+                return sourceSpecific
+                    ? channel.JoinGroupAsync(multicast, iface, source) : channel.JoinGroupAsync(target, iface);
+            }
+            Task SendAsync(int value)
+            {
+                return sender.WriteAndFlushAsync(new DatagramPacket(Unpooled.Buffer(4).WriteInt(value), target), cancellation);
+            }
         }
         finally { await group.StopAsync(); }
     }
 
-    private static bool HasAddress(NetworkInterface network, AddressFamily family) =>
-        network.GetIPProperties().UnicastAddresses.Any(info => info.Address.AddressFamily == family);
+    private static bool HasAddress(NetworkInterface network, AddressFamily family)
+    {
+        return network.GetIPProperties().UnicastAddresses.Any(info => info.Address.AddressFamily == family);
+    }
 
     private sealed class Capture(ChannelWriter<int> writer) : SimpleChannelInboundHandler<DatagramPacket>
     {
-        protected override void ChannelRead0(IChannelHandlerContext ctx, DatagramPacket msg) => writer.TryWrite(msg.Content.ReadInt());
+        protected override void ChannelRead0(IChannelHandlerContext ctx, DatagramPacket msg)
+        {
+            writer.TryWrite(msg.Content.ReadInt());
+        }
     }
 }

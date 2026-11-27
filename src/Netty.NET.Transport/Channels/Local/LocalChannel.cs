@@ -52,9 +52,15 @@ public class LocalChannel : AbstractChannel
 
         private readonly string _name;
 
-        private State(string name) => _name = name;
+        private State(string name)
+        {
+            _name = name;
+        }
 
-        public override string ToString() => _name;
+        public override string ToString()
+        {
+            return _name;
+        }
     }
 
     // CLR: the configuration is created by NewConfig() below.
@@ -199,11 +205,15 @@ public class LocalChannel : AbstractChannel
 
     // CLR: LocalUnsafe.connect(...) replaces the whole connect operation, so no transport connect step is used.
     protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken cancellationToken)
-        => throw new NotSupportedException();
+    {
+        throw new NotSupportedException();
+    }
 
     // CLR: AbstractUnsafe.connect(...) is folded into AbstractChannel; LocalUnsafe.connect(...) overrides it.
     protected internal override Task ConnectTransportAsync(EndPoint remote, EndPoint local, CancellationToken cancellationToken)
-        => _unsafe.Connect(remote, local, cancellationToken);
+    {
+        return _unsafe.Connect(remote, local, cancellationToken);
+    }
 
     protected override Task DoDisconnectAsync(CancellationToken cancellationToken)
     {

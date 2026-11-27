@@ -92,16 +92,37 @@ public class CoalescingBufferQueueContractTest
     {
         private readonly Thread _owner = Thread.CurrentThread;
         private bool _stopped;
-        internal void Stop() => _stopped = true;
-        public override bool InEventLoop(Thread thread) => !_stopped && ReferenceEquals(thread, _owner);
+        internal void Stop()
+        {
+            _stopped = true;
+        }
+        public override bool InEventLoop(Thread thread)
+        {
+            return !_stopped && ReferenceEquals(thread, _owner);
+        }
         public override void Execute(Action task) { if (_stopped) throw new RejectedExecutionException(); task(); }
         public override Task TerminationFuture => Task.CompletedTask;
-        public override bool IsShuttingDown() => _stopped;
-        public override bool IsShutdown() => _stopped;
-        public override bool IsTerminated() => _stopped;
-        public override bool AwaitTermination(TimeSpan timeout) => _stopped;
+        public override bool IsShuttingDown()
+        {
+            return _stopped;
+        }
+        public override bool IsShutdown()
+        {
+            return _stopped;
+        }
+        public override bool IsTerminated()
+        {
+            return _stopped;
+        }
+        public override bool AwaitTermination(TimeSpan timeout)
+        {
+            return _stopped;
+        }
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) { Stop(); return Task.CompletedTask; }
         [Obsolete]
-        public override void Shutdown() => Stop();
+        public override void Shutdown()
+        {
+            Stop();
+        }
     }
 }

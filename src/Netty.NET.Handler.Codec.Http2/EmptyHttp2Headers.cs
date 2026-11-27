@@ -58,15 +58,30 @@ public sealed class EmptyHttp2Headers
         throw new NotSupportedException();
     }
 
-    IHttp2Headers IHttp2Headers.Method(ICharSequence value) => Method(value);
+    IHttp2Headers IHttp2Headers.Method(ICharSequence value)
+    {
+        return Method(value);
+    }
 
-    IHttp2Headers IHttp2Headers.Scheme(ICharSequence value) => Scheme(value);
+    IHttp2Headers IHttp2Headers.Scheme(ICharSequence value)
+    {
+        return Scheme(value);
+    }
 
-    IHttp2Headers IHttp2Headers.Authority(ICharSequence value) => Authority(value);
+    IHttp2Headers IHttp2Headers.Authority(ICharSequence value)
+    {
+        return Authority(value);
+    }
 
-    IHttp2Headers IHttp2Headers.Path(ICharSequence value) => Path(value);
+    IHttp2Headers IHttp2Headers.Path(ICharSequence value)
+    {
+        return Path(value);
+    }
 
-    IHttp2Headers IHttp2Headers.Status(ICharSequence value) => Status(value);
+    IHttp2Headers IHttp2Headers.Status(ICharSequence value)
+    {
+        return Status(value);
+    }
 
     public ICharSequence Method()
     {

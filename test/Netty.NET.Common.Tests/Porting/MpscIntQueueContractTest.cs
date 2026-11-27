@@ -11,12 +11,30 @@ public class MpscIntQueueContractTest
 {
     private sealed class DefaultReductionQueue : IMpscIntQueue
     {
-        public bool Offer(int value) => throw new NotSupportedException();
-        public int Poll() => throw new NotSupportedException();
-        public int Drain(int limit, Action<int> consumer) => throw new NotSupportedException();
-        public int Fill(int limit, Func<int> supplier) => throw new NotSupportedException();
-        public bool IsEmpty() => throw new NotSupportedException();
-        public int Size() => throw new NotSupportedException();
+        public bool Offer(int value)
+        {
+            throw new NotSupportedException();
+        }
+        public int Poll()
+        {
+            throw new NotSupportedException();
+        }
+        public int Drain(int limit, Action<int> consumer)
+        {
+            throw new NotSupportedException();
+        }
+        public int Fill(int limit, Func<int> supplier)
+        {
+            throw new NotSupportedException();
+        }
+        public bool IsEmpty()
+        {
+            throw new NotSupportedException();
+        }
+        public int Size()
+        {
+            throw new NotSupportedException();
+        }
     }
 
     [Fact]

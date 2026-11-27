@@ -198,7 +198,10 @@ public sealed class ByteBufInputStream : Stream
         return ReadAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
     }
 
-    public long Skip(long count) => count <= 0 ? SkipBytes(0) : SkipBytes((int)Math.Min(count, int.MaxValue));
+    public long Skip(long count)
+    {
+        return count <= 0 ? SkipBytes(0) : SkipBytes((int)Math.Min(count, int.MaxValue));
+    }
 
     public int SkipBytes(int count)
     {
@@ -209,16 +212,34 @@ public sealed class ByteBufInputStream : Stream
         return count;
     }
 
-    public bool ReadBoolean() => ReadUnsignedByte() != 0;
-    public sbyte ReadSByte() => unchecked((sbyte)ReadUnsignedByte());
+    public bool ReadBoolean()
+    {
+        return ReadUnsignedByte() != 0;
+    }
+    public sbyte ReadSByte()
+    {
+        return unchecked((sbyte)ReadUnsignedByte());
+    }
     public byte ReadUnsignedByte() { CheckAvailable(1); return _buffer.ReadByte(); }
     public short ReadInt16() { CheckAvailable(2); return _buffer.ReadShort(); }
-    public ushort ReadUInt16() => unchecked((ushort)ReadInt16());
-    public char ReadChar() => unchecked((char)ReadInt16());
+    public ushort ReadUInt16()
+    {
+        return unchecked((ushort)ReadInt16());
+    }
+    public char ReadChar()
+    {
+        return unchecked((char)ReadInt16());
+    }
     public int ReadInt32() { CheckAvailable(4); return _buffer.ReadInt(); }
     public long ReadInt64() { CheckAvailable(8); return _buffer.ReadLong(); }
-    public float ReadSingle() => BitConverter.Int32BitsToSingle(ReadInt32());
-    public double ReadDouble() => BitConverter.Int64BitsToDouble(ReadInt64());
+    public float ReadSingle()
+    {
+        return BitConverter.Int32BitsToSingle(ReadInt32());
+    }
+    public double ReadDouble()
+    {
+        return BitConverter.Int64BitsToDouble(ReadInt64());
+    }
 
     public void ReadFully(byte[] buffer)
     { ArgumentNullException.ThrowIfNull(buffer); ReadFully(buffer.AsSpan()); }
@@ -287,10 +308,28 @@ public sealed class ByteBufInputStream : Stream
         if (fieldSize > available) throw new EndOfStreamException(string.Create(CultureInfo.InvariantCulture, $"Needs {fieldSize} bytes, but only {available} remain."));
     }
 
-    private void ThrowIfClosed() => ObjectDisposedException.ThrowIf(_closed, this);
-    public override void Flush() => ThrowIfClosed();
-    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
-    public override void SetLength(long value) => throw new NotSupportedException();
-    public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
-    public override void Write(ReadOnlySpan<byte> buffer) => throw new NotSupportedException();
+    private void ThrowIfClosed()
+    {
+        ObjectDisposedException.ThrowIf(_closed, this);
+    }
+    public override void Flush()
+    {
+        ThrowIfClosed();
+    }
+    public override long Seek(long offset, SeekOrigin origin)
+    {
+        throw new NotSupportedException();
+    }
+    public override void SetLength(long value)
+    {
+        throw new NotSupportedException();
+    }
+    public override void Write(byte[] buffer, int offset, int count)
+    {
+        throw new NotSupportedException();
+    }
+    public override void Write(ReadOnlySpan<byte> buffer)
+    {
+        throw new NotSupportedException();
+    }
 }

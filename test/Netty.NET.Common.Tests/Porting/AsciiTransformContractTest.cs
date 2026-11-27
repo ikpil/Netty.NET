@@ -120,30 +120,75 @@ public class AsciiTransformContractTest
         Assert.Equal(8, SWARUtil.GetIndex(0, false));
     }
 
-    private static ICharSequence Sequence(string text, int representation) => representation switch
+    private static ICharSequence Sequence(string text, int representation)
     {
-        0 => new StringCharSequence("!!" + text + "!!", 2, text.Length),
-        1 => new AppendableCharSequence(1).Append(text),
-        _ => new IndexedSequence(text)
-    };
+        return representation switch
+        {
+            0 => new StringCharSequence("!!" + text + "!!", 2, text.Length),
+            1 => new AppendableCharSequence(1).Append(text),
+            _ => new IndexedSequence(text)
+        };
+    }
 
     private sealed class IndexedSequence(string text) : ICharSequence
     {
         public int Count => text.Length;
         public char this[int index] => text[index];
-        public char CharAt(int index) => this[index];
-        public int Length() => Count;
-        public ICharSequence SubSequence(int start, int end) => new IndexedSequence(text[start..end]);
-        public ICharSequence SubSequence(int start) => SubSequence(start, Count);
-        public override string ToString() => text;
-        public string ToString(int start) => text[start..];
-        public bool RegionMatches(int a, ICharSequence b, int c, int d) => throw new NotSupportedException();
-        public bool RegionMatchesIgnoreCase(int a, ICharSequence b, int c, int d) => throw new NotSupportedException();
-        public bool ContentEquals(ICharSequence other) => throw new NotSupportedException();
-        public bool ContentEqualsIgnoreCase(ICharSequence other) => throw new NotSupportedException();
-        public int IndexOf(char ch, int start = 0) => throw new NotSupportedException();
-        public int HashCode(bool ignoreCase) => throw new NotSupportedException();
-        public IEnumerator<char> GetEnumerator() => throw new NotSupportedException();
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        public char CharAt(int index)
+        {
+            return this[index];
+        }
+        public int Length()
+        {
+            return Count;
+        }
+        public ICharSequence SubSequence(int start, int end)
+        {
+            return new IndexedSequence(text[start..end]);
+        }
+        public ICharSequence SubSequence(int start)
+        {
+            return SubSequence(start, Count);
+        }
+        public override string ToString()
+        {
+            return text;
+        }
+        public string ToString(int start)
+        {
+            return text[start..];
+        }
+        public bool RegionMatches(int a, ICharSequence b, int c, int d)
+        {
+            throw new NotSupportedException();
+        }
+        public bool RegionMatchesIgnoreCase(int a, ICharSequence b, int c, int d)
+        {
+            throw new NotSupportedException();
+        }
+        public bool ContentEquals(ICharSequence other)
+        {
+            throw new NotSupportedException();
+        }
+        public bool ContentEqualsIgnoreCase(ICharSequence other)
+        {
+            throw new NotSupportedException();
+        }
+        public int IndexOf(char ch, int start = 0)
+        {
+            throw new NotSupportedException();
+        }
+        public int HashCode(bool ignoreCase)
+        {
+            throw new NotSupportedException();
+        }
+        public IEnumerator<char> GetEnumerator()
+        {
+            throw new NotSupportedException();
+        }
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
     }
 }

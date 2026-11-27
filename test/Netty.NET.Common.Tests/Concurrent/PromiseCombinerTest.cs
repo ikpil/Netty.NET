@@ -50,12 +50,16 @@ public class TaskWhenAllPortTest
     }
 
     [Fact]
-    public void TestAddNullPromise() =>
+    public void TestAddNullPromise()
+    {
         Assert.Throws<ArgumentException>(() => Task.WhenAll(new Task[] { Task.CompletedTask, null }));
+    }
 
     [Fact]
-    public void TestAddAllNullPromise() =>
+    public void TestAddAllNullPromise()
+    {
         Assert.Throws<ArgumentNullException>(() => Task.WhenAll((Task[])null));
+    }
 
     [Fact]
     public async Task TestAddAfterFinish()

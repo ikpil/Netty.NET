@@ -232,7 +232,10 @@ public class ReentrantChannelSourceTest
         channel.Config.SetWriteBufferHighWaterMark(1024);
     }
 
-    private static ByteBuf CreateTestBuffer(int length) => Unpooled.Buffer(length, length).SetIndex(0, length);
+    private static ByteBuf CreateTestBuffer(int length)
+    {
+        return Unpooled.Buffer(length, length).SetIndex(0, length);
+    }
 
     private sealed class Fixture(bool writability) : IAsyncDisposable
     {
@@ -261,7 +264,10 @@ public class ReentrantChannelSourceTest
             Assert.Equal(firstExpected, actual);
         }
 
-        public async ValueTask DisposeAsync() => await Task.WhenAll(_clients.StopAsync(), _servers.StopAsync());
+        public async ValueTask DisposeAsync()
+        {
+            await Task.WhenAll(_clients.StopAsync(), _servers.StopAsync());
+        }
     }
 
     private sealed class EventLog(bool writability) : ChannelDuplexHandler
@@ -294,8 +300,10 @@ public class ReentrantChannelSourceTest
 
     private sealed class PassWrite : ChannelOutboundHandlerAdapter
     {
-        public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token) =>
-            ctx.WriteAsync(msg, token);
+        public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
+        {
+            return ctx.WriteAsync(msg, token);
+        }
     }
 
     private sealed class PingPong : ChannelOutboundHandlerAdapter
@@ -333,8 +341,14 @@ public class ReentrantChannelSourceTest
 
     private sealed class FailFlush : ChannelOutboundHandlerAdapter
     {
-        public override void Flush(IChannelHandlerContext ctx) => throw new InvalidOperationException("intentional failure");
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => _ = ctx.CloseAsync();
+        public override void Flush(IChannelHandlerContext ctx)
+        {
+            throw new InvalidOperationException("intentional failure");
+        }
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            _ = ctx.CloseAsync();
+        }
     }
 
     private sealed class SplitInput : ChannelInboundHandlerAdapter
@@ -353,8 +367,14 @@ public class ReentrantChannelSourceTest
     {
         private readonly Queue<object> _queue = new();
         private bool _demand = true;
-        public override void HandlerAdded(IChannelHandlerContext ctx) => ctx.Read();
-        public override void ChannelRead(IChannelHandlerContext ctx, object msg) => _queue.Enqueue(msg);
+        public override void HandlerAdded(IChannelHandlerContext ctx)
+        {
+            ctx.Read();
+        }
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            _queue.Enqueue(msg);
+        }
         public override void ChannelReadComplete(IChannelHandlerContext ctx)
         {
             while (_demand && _queue.TryDequeue(out var item))
@@ -383,7 +403,13 @@ public class ReentrantChannelSourceTest
 
     private sealed class RequestInput : ChannelInboundHandlerAdapter
     {
-        public override void ChannelRead(IChannelHandlerContext ctx, object msg) => ctx.Read();
-        public override void ChannelReadComplete(IChannelHandlerContext ctx) => ctx.Read();
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            ctx.Read();
+        }
+        public override void ChannelReadComplete(IChannelHandlerContext ctx)
+        {
+            ctx.Read();
+        }
     }
 }

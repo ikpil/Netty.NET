@@ -74,7 +74,10 @@ public class DefaultFileRegion : AbstractReferenceCounted, IFileRegion
     /**
      * Returns {@code true} if the {@link FileRegion} has a open file-descriptor
      */
-    public bool IsOpen() => _file != null;
+    public bool IsOpen()
+    {
+        return _file != null;
+    }
     /**
      * Explicitly open the underlying file-descriptor if not done yet.
      */
@@ -87,9 +90,18 @@ public class DefaultFileRegion : AbstractReferenceCounted, IFileRegion
                 bufferSize: 1, options: FileOptions.Asynchronous);
         }
     }
-    public long Position() => _position;
-    public long Count() => _count;
-    public long Transferred() => _transferred;
+    public long Position()
+    {
+        return _position;
+    }
+    public long Count()
+    {
+        return _count;
+    }
+    public long Transferred()
+    {
+        return _transferred;
+    }
     public virtual long TransferTo(Stream target, long position)
     {
         if (position < 0 || position > _count)
@@ -147,8 +159,14 @@ public class DefaultFileRegion : AbstractReferenceCounted, IFileRegion
     }
     public new IFileRegion Retain() { base.Retain(); return this; }
     public override IFileRegion Retain(int increment) { base.Retain(increment); return this; }
-    public new IFileRegion Touch() => this;
-    public override IFileRegion Touch(object hint) => this;
+    public new IFileRegion Touch()
+    {
+        return this;
+    }
+    public override IFileRegion Touch(object hint)
+    {
+        return this;
+    }
     // CLR: the counterpart of transferTo(WritableByteChannel, long) for a non-blocking socket, where
     // FileChannel.transferTo writes what the channel accepts. One positional chunk is read and offered to the
     // socket; only the accepted bytes count as transferred and WouldBlock transfers zero bytes.

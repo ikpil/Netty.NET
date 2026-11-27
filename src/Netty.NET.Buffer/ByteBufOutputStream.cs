@@ -107,10 +107,16 @@ public sealed class ByteBufOutputStream : Stream
     public override void WriteByte(byte value)
     { ThrowIfClosed(); _buffer.WriteByte(value); }
 
-    public void WriteSByte(sbyte value) => WriteByte(unchecked((byte)value));
+    public void WriteSByte(sbyte value)
+    {
+        WriteByte(unchecked((byte)value));
+    }
     public void WriteBoolean(bool value) { ThrowIfClosed(); _buffer.WriteBoolean(value); }
     public void WriteInt16(int value) { ThrowIfClosed(); _buffer.WriteShort(value); }
-    public void WriteUInt16(ushort value) => WriteInt16(value);
+    public void WriteUInt16(ushort value)
+    {
+        WriteInt16(value);
+    }
     public void WriteChar(char value) { ThrowIfClosed(); _buffer.WriteChar(value); }
     public void WriteInt32(int value) { ThrowIfClosed(); _buffer.WriteInt(value); }
     public void WriteInt64(long value) { ThrowIfClosed(); _buffer.WriteLong(value); }
@@ -193,10 +199,28 @@ public sealed class ByteBufOutputStream : Stream
         return WriteAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
     }
 
-    private void ThrowIfClosed() => ObjectDisposedException.ThrowIf(_closed, this);
-    public override void Flush() => ThrowIfClosed();
-    public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
-    public override int Read(Span<byte> buffer) => throw new NotSupportedException();
-    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
-    public override void SetLength(long value) => throw new NotSupportedException();
+    private void ThrowIfClosed()
+    {
+        ObjectDisposedException.ThrowIf(_closed, this);
+    }
+    public override void Flush()
+    {
+        ThrowIfClosed();
+    }
+    public override int Read(byte[] buffer, int offset, int count)
+    {
+        throw new NotSupportedException();
+    }
+    public override int Read(Span<byte> buffer)
+    {
+        throw new NotSupportedException();
+    }
+    public override long Seek(long offset, SeekOrigin origin)
+    {
+        throw new NotSupportedException();
+    }
+    public override void SetLength(long value)
+    {
+        throw new NotSupportedException();
+    }
 }

@@ -257,11 +257,20 @@ public class ReceiveAllocatorContractTest
 
     private sealed class ProbeAllocator(int limit, bool ignoreBytes) : DefaultMaxMessagesRecvByteBufAllocator(limit, ignoreBytes)
     {
-        public override IRecvByteBufAllocator.IHandle NewHandle() => new ProbeHandle(this);
+        public override IRecvByteBufAllocator.IHandle NewHandle()
+        {
+            return new ProbeHandle(this);
+        }
         internal sealed class ProbeHandle(ProbeAllocator owner) : MaxMessageHandle(owner)
         {
-            public override int Guess() => 512;
-            internal int Total() => TotalBytesRead();
+            public override int Guess()
+            {
+                return 512;
+            }
+            internal int Total()
+            {
+                return TotalBytesRead();
+            }
         }
     }
 }

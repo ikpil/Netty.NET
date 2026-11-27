@@ -52,8 +52,14 @@ public class ByteBufUtilTest
                 _ => new AdaptiveByteBufAllocator(false, lowMemory: false, nativeAllocator: _native)
             };
         }
-        public ByteBuf Buffer(int capacity) => _direct ? _allocator.DirectBuffer(capacity) : _allocator.HeapBuffer(capacity);
-        public CompositeByteBuf Composite() => _direct ? _allocator.CompositeDirectBuffer() : _allocator.CompositeHeapBuffer();
+        public ByteBuf Buffer(int capacity)
+        {
+            return _direct ? _allocator.DirectBuffer(capacity) : _allocator.HeapBuffer(capacity);
+        }
+        public CompositeByteBuf Composite()
+        {
+            return _direct ? _allocator.CompositeDirectBuffer() : _allocator.CompositeHeapBuffer();
+        }
         public void Dispose() { (_allocator as IDisposable)?.Dispose(); Assert.Equal(0, _native.ReservedBytes); }
     }
     // Java UTF-8 encodes an isolated UTF-16 surrogate as '?'.

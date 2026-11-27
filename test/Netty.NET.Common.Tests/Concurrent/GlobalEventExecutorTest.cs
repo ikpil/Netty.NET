@@ -31,7 +31,10 @@ public class GlobalEventExecutorTest
 {
     private static readonly GlobalEventExecutor e = GlobalEventExecutor.INSTANCE;
 
-    public GlobalEventExecutorTest() => SetUp();
+    public GlobalEventExecutorTest()
+    {
+        SetUp();
+    }
 
     public void SetUp()
     {
@@ -177,7 +180,10 @@ public class GlobalEventExecutorTest
     {
         internal volatile bool ran;
         private readonly int delay;
-        internal TestRunnable(int delay) => this.delay = delay;
+        internal TestRunnable(int delay)
+        {
+            this.delay = delay;
+        }
         public void Run()
         {
             try

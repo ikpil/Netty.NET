@@ -49,7 +49,10 @@ public class KmpSearchProcessorFactory : AbstractSearchProcessorFactory
     /**
      * Returns a new {@link Processor}.
      */
-    public override Processor NewSearchProcessor() => new(_needle, _jumpTable);
+    public override Processor NewSearchProcessor()
+    {
+        return new(_needle, _jumpTable);
+    }
 
     public sealed class Processor : ISearchProcessor
     {
@@ -73,6 +76,9 @@ public class KmpSearchProcessorFactory : AbstractSearchProcessorFactory
             return true;
         }
 
-        public void Reset() => _currentPosition = 0;
+        public void Reset()
+        {
+            _currentPosition = 0;
+        }
     }
 }

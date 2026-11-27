@@ -38,8 +38,10 @@ public class TaskAggregationOwnershipPortTest
     }
 
     [Fact]
-    public void TestAddNullFuture() =>
+    public void TestAddNullFuture()
+    {
         Assert.Throws<ArgumentNullException>(() => Task.WhenAll((Task[])null));
+    }
 
     [Fact]
     public async Task TestSuccessfulNoPending()

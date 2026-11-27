@@ -38,26 +38,29 @@ public class LeakPresenceExtensionTest
         ResourceLeakDetectorFactory.Instance().NewResourceLeakDetector<object>(typeof(object));
 
     [Fact]
-    public Task NestedClassLifecycleIsSupported() => RunAsClass(async () =>
+    public Task NestedClassLifecycleIsSupported()
     {
-        // CLR: JUnit runs the @Nested InnerTest inside the lifecycle of OuterNestedTest: beforeAll of the outer class,
-        // outerTest, beforeAll of the nested class (which reuses the outer scope), innerTest, afterAll of the nested
-        // class (which does not close the scope it does not own), afterAll of the outer class.
-        BeforeAll(typeof(OuterNestedTest), nameof(OuterNestedTest));
-        ScopeWrapper outer = WithTransferableScope.SCOPE.Value;
-        Assert.NotNull(outer);
-        Assert.Same(typeof(OuterNestedTest), outer.owner);
-        TrackAndClose();
+        return RunAsClass(async () =>
+        {
+            // CLR: JUnit runs the @Nested InnerTest inside the lifecycle of OuterNestedTest: beforeAll of the outer class,
+            // outerTest, beforeAll of the nested class (which reuses the outer scope), innerTest, afterAll of the nested
+            // class (which does not close the scope it does not own), afterAll of the outer class.
+            BeforeAll(typeof(OuterNestedTest), nameof(OuterNestedTest));
+            ScopeWrapper outer = WithTransferableScope.SCOPE.Value;
+            Assert.NotNull(outer);
+            Assert.Same(typeof(OuterNestedTest), outer.owner);
+            TrackAndClose();
 
-        BeforeAll(typeof(OuterNestedTest.InnerTest), nameof(OuterNestedTest.InnerTest));
-        Assert.Same(outer, WithTransferableScope.SCOPE.Value);
-        TrackAndClose();
-        await AfterAll(outer, typeof(OuterNestedTest.InnerTest));
-        TrackAndClose();
+            BeforeAll(typeof(OuterNestedTest.InnerTest), nameof(OuterNestedTest.InnerTest));
+            Assert.Same(outer, WithTransferableScope.SCOPE.Value);
+            TrackAndClose();
+            await AfterAll(outer, typeof(OuterNestedTest.InnerTest));
+            TrackAndClose();
 
-        await AfterAll(outer, typeof(OuterNestedTest));
-        Assert.Throws<LeakPresenceDetector.AllocationProhibitedException>(() => DETECTOR.Track(new object()));
-    });
+            await AfterAll(outer, typeof(OuterNestedTest));
+            Assert.Throws<LeakPresenceDetector.AllocationProhibitedException>(() => DETECTOR.Track(new object()));
+        });
+    }
 
     [Fact]
     public void ExplicitExtensionTestIsSkippedWhenLeakPresenceDetectionIsDisabled()
@@ -80,21 +83,24 @@ public class LeakPresenceExtensionTest
     }
 
     [Fact]
-    public Task InheritedTestClassExecutesParentAndChildTests() => RunAsClass(async () =>
+    public Task InheritedTestClassExecutesParentAndChildTests()
     {
-        // CLR: JUnit runs parentTest and childTest in the lifecycle of InheritedChildTest; the scope is owned by the
-        // class that runs, not by the class that declares the test.
-        BeforeAll(typeof(InheritedChildTest), nameof(InheritedChildTest));
-        ScopeWrapper scope = WithTransferableScope.SCOPE.Value;
-        Assert.Same(typeof(InheritedChildTest), scope.owner);
-        TrackAndClose();
-        TrackAndClose();
+        return RunAsClass(async () =>
+        {
+            // CLR: JUnit runs parentTest and childTest in the lifecycle of InheritedChildTest; the scope is owned by the
+            // class that runs, not by the class that declares the test.
+            BeforeAll(typeof(InheritedChildTest), nameof(InheritedChildTest));
+            ScopeWrapper scope = WithTransferableScope.SCOPE.Value;
+            Assert.Same(typeof(InheritedChildTest), scope.owner);
+            TrackAndClose();
+            TrackAndClose();
 
-        await AfterAll(scope, typeof(InheritedParentTest));
-        TrackAndClose();
-        await AfterAll(scope, typeof(InheritedChildTest));
-        Assert.Throws<LeakPresenceDetector.AllocationProhibitedException>(() => DETECTOR.Track(new object()));
-    });
+            await AfterAll(scope, typeof(InheritedParentTest));
+            TrackAndClose();
+            await AfterAll(scope, typeof(InheritedChildTest));
+            Assert.Throws<LeakPresenceDetector.AllocationProhibitedException>(() => DETECTOR.Track(new object()));
+        });
+    }
 
     // CLR supplement: the framework installed the detector before any detector was created, and the class scope
     // reaches the test, a thread the test starts and a Task it queues (the ExecutionContext in place of the
@@ -129,40 +135,49 @@ public class LeakPresenceExtensionTest
     // CLR supplement: AfterAll waits for resources that close after the class finished (loop.shutdownGracefully
     // without waiting), and fails with the detector's message when one stays open.
     [Fact]
-    public Task AfterAllWaitsForResourcesToClose() => RunAsClass(async () =>
+    public Task AfterAllWaitsForResourcesToClose()
     {
-        BeforeAll(typeof(InheritedParentTest), "Closing");
-        ScopeWrapper scope = WithTransferableScope.SCOPE.Value;
-        IResourceLeakTracker<object> tracker = DETECTOR.Track(new object());
-        Task close = Task.Run(async () =>
+        return RunAsClass(async () =>
         {
-            await Task.Delay(300);
-            tracker.Close(null);
+            BeforeAll(typeof(InheritedParentTest), "Closing");
+            ScopeWrapper scope = WithTransferableScope.SCOPE.Value;
+            IResourceLeakTracker<object> tracker = DETECTOR.Track(new object());
+            Task close = Task.Run(async () =>
+            {
+                await Task.Delay(300);
+                tracker.Close(null);
+            });
+            long start = Stopwatch.GetTimestamp();
+            await AfterAll(scope, typeof(InheritedParentTest));
+            Assert.True(Stopwatch.GetElapsedTime(start) >= TimeSpan.FromMilliseconds(250));
+            await close;
         });
-        long start = Stopwatch.GetTimestamp();
-        await AfterAll(scope, typeof(InheritedParentTest));
-        Assert.True(Stopwatch.GetElapsedTime(start) >= TimeSpan.FromMilliseconds(250));
-        await close;
-    });
+    }
 
     [Fact]
-    public Task AfterAllReportsALeak() => RunAsClass(async () =>
+    public Task AfterAllReportsALeak()
     {
-        BeforeAll(typeof(InheritedParentTest), "Leaky");
-        ScopeWrapper scope = WithTransferableScope.SCOPE.Value;
-        DETECTOR.Track(new object());
-        InvalidOperationException leak = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await AfterAll(scope, typeof(InheritedParentTest)));
-        Assert.StartsWith("Possible memory leak detected for resource scope 'Leaky'. ", leak.Message);
-    });
+        return RunAsClass(async () =>
+        {
+            BeforeAll(typeof(InheritedParentTest), "Leaky");
+            ScopeWrapper scope = WithTransferableScope.SCOPE.Value;
+            DETECTOR.Track(new object());
+            InvalidOperationException leak = await Assert.ThrowsAsync<InvalidOperationException>(
+                async () => await AfterAll(scope, typeof(InheritedParentTest)));
+            Assert.StartsWith("Possible memory leak detected for resource scope 'Leaky'. ", leak.Message);
+        });
+    }
 
     [Fact]
-    public Task ResourceOutsideTestIsRejected() => RunAsClass(() =>
+    public Task ResourceOutsideTestIsRejected()
     {
-        NullReferenceException failure = Assert.Throws<NullReferenceException>(() => DETECTOR.Track(new object()));
-        Assert.Equal("Resource created outside test?", failure.Message);
-        return Task.CompletedTask;
-    });
+        return RunAsClass(() =>
+        {
+            NullReferenceException failure = Assert.Throws<NullReferenceException>(() => DETECTOR.Track(new object()));
+            Assert.Equal("Resource created outside test?", failure.Message);
+            return Task.CompletedTask;
+        });
+    }
 
     // CLR supplement: the presence detector records nothing, so DisabledForSlowLeakDetection does not skip.
     [Fact]
@@ -173,11 +188,14 @@ public class LeakPresenceExtensionTest
 
     // CLR: runs body in a flow without a class scope, as LeakPresenceTestFramework starts each class; the scope
     // holder changes made in the flow do not reach this test's own class scope.
-    private static Task RunAsClass(Func<Task> body) => Task.Run(() =>
+    private static Task RunAsClass(Func<Task> body)
     {
-        WithTransferableScope.SCOPE.Value = null;
-        return body();
-    });
+        return Task.Run(() =>
+        {
+            WithTransferableScope.SCOPE.Value = null;
+            return body();
+        });
+    }
 
     private static void TrackAndClose()
     {

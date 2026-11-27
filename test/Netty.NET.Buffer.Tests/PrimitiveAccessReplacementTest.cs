@@ -30,22 +30,28 @@ public class PrimitiveAccessReplacementTest
                     yield return [kind, width, little];
     }
 
-    internal static ByteBuf Set(ByteBuf b, int index, long value, int width, bool little) => width switch
+    internal static ByteBuf Set(ByteBuf b, int index, long value, int width, bool little)
     {
-        1 => b.SetByte(index, unchecked((int)value)),
-        2 => little ? b.SetShortLE(index, unchecked((int)value)) : b.SetShort(index, unchecked((int)value)),
-        3 => little ? b.SetMediumLE(index, unchecked((int)value)) : b.SetMedium(index, unchecked((int)value)),
-        4 => little ? b.SetIntLE(index, unchecked((int)value)) : b.SetInt(index, unchecked((int)value)),
-        _ => little ? b.SetLongLE(index, value) : b.SetLong(index, value)
-    };
-    internal static long Get(ByteBuf b, int index, int width, bool little) => width switch
+        return width switch
+        {
+            1 => b.SetByte(index, unchecked((int)value)),
+            2 => little ? b.SetShortLE(index, unchecked((int)value)) : b.SetShort(index, unchecked((int)value)),
+            3 => little ? b.SetMediumLE(index, unchecked((int)value)) : b.SetMedium(index, unchecked((int)value)),
+            4 => little ? b.SetIntLE(index, unchecked((int)value)) : b.SetInt(index, unchecked((int)value)),
+            _ => little ? b.SetLongLE(index, value) : b.SetLong(index, value)
+        };
+    }
+    internal static long Get(ByteBuf b, int index, int width, bool little)
     {
-        1 => b.GetByte(index),
-        2 => little ? b.GetShortLE(index) : b.GetShort(index),
-        3 => little ? b.GetUnsignedMediumLE(index) : b.GetUnsignedMedium(index),
-        4 => little ? b.GetIntLE(index) : b.GetInt(index),
-        _ => little ? b.GetLongLE(index) : b.GetLong(index)
-    };
+        return width switch
+        {
+            1 => b.GetByte(index),
+            2 => little ? b.GetShortLE(index) : b.GetShort(index),
+            3 => little ? b.GetUnsignedMediumLE(index) : b.GetUnsignedMedium(index),
+            4 => little ? b.GetIntLE(index) : b.GetInt(index),
+            _ => little ? b.GetLongLE(index) : b.GetLong(index)
+        };
+    }
     private static long[] Values()
     {
         var values = new List<long> { 0, 1, -1, 127, 128, 255, 256, 32767, 32768, 65535, 65536,

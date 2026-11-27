@@ -137,13 +137,31 @@ public class ChannelPromiseTaskContractTest
 // These overrides implement existing CLR transport hooks, not additional Java Future APIs.
 internal sealed class TaskTestChannel(Func<object, Task> write) : AbstractChannel(null, new ChannelMetadata(false))
 {
-    protected override EndPoint LocalAddress0() => null;
-    protected override EndPoint RemoteAddress0() => null;
-    protected override void DoRegister() => SetActive(true);
+    protected override EndPoint LocalAddress0()
+    {
+        return null;
+    }
+    protected override EndPoint RemoteAddress0()
+    {
+        return null;
+    }
+    protected override void DoRegister()
+    {
+        SetActive(true);
+    }
     protected override bool ContinueOnWriteError => true;
-    protected override Task DoWrite(object msg) => write(msg);
-    protected override Task DoBindAsync(EndPoint localAddress, CancellationToken cancellationToken) => throw new NotSupportedException();
-    protected override Task DoConnectAsync(EndPoint remoteAddress, EndPoint localAddress, CancellationToken cancellationToken) => throw new NotSupportedException();
+    protected override Task DoWrite(object msg)
+    {
+        return write(msg);
+    }
+    protected override Task DoBindAsync(EndPoint localAddress, CancellationToken cancellationToken)
+    {
+        throw new NotSupportedException();
+    }
+    protected override Task DoConnectAsync(EndPoint remoteAddress, EndPoint localAddress, CancellationToken cancellationToken)
+    {
+        throw new NotSupportedException();
+    }
     protected override void DoClose() { }
     protected override void DoBeginRead() { }
 }

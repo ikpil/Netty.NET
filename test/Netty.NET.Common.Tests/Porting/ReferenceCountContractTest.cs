@@ -10,8 +10,14 @@ public class ReferenceCountContractTest
     private sealed class Counted : AbstractReferenceCounted
     {
         public int Deallocations;
-        protected override void Deallocate() => Interlocked.Increment(ref Deallocations);
-        public override IReferenceCounted Touch(object hint) => this;
+        protected override void Deallocate()
+        {
+            Interlocked.Increment(ref Deallocations);
+        }
+        public override IReferenceCounted Touch(object hint)
+        {
+            return this;
+        }
     }
 
     [Theory]

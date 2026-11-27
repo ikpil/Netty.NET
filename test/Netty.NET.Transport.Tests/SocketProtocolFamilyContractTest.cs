@@ -138,7 +138,9 @@ public class SocketProtocolFamilyContractTest
     private sealed class Receiver(TaskCompletionSource<string> received) : SimpleChannelInboundHandler<DatagramPacket>
     {
         protected override void ChannelRead0(IChannelHandlerContext ctx, DatagramPacket msg)
-            => received.TrySetResult(msg.Content.ToString(Encoding.ASCII));
+        {
+            received.TrySetResult(msg.Content.ToString(Encoding.ASCII));
+        }
     }
 
     private sealed class StreamProbe : NioSocketChannel, IDisposable
@@ -146,7 +148,10 @@ public class SocketProtocolFamilyContractTest
         internal StreamProbe(SocketProtocolFamily? family) : base(family) { }
         internal StreamProbe(InternetProtocolFamily? family) : base(family) { }
         internal Socket NativeSocket => JavaChannel();
-        public void Dispose() => JavaChannel().Dispose();
+        public void Dispose()
+        {
+            JavaChannel().Dispose();
+        }
     }
 
     private sealed class ServerProbe : NioServerSocketChannel, IDisposable
@@ -154,6 +159,9 @@ public class SocketProtocolFamilyContractTest
         internal ServerProbe(SocketProtocolFamily? family) : base(family) { }
         internal ServerProbe(InternetProtocolFamily? family) : base(family) { }
         internal Socket NativeSocket => JavaChannel();
-        public void Dispose() => JavaChannel().Dispose();
+        public void Dispose()
+        {
+            JavaChannel().Dispose();
+        }
     }
 }

@@ -30,9 +30,14 @@ namespace Netty.NET.Buffer.Tests;
 public class CompositeByteBufTest
 {
     private static ByteBuf Segment(byte[] bytes, bool direct, NativeMemoryAllocator allocator)
-        => direct ? new UnpooledDirectByteBuf(bytes.Length, allocator: allocator).WriteBytes(bytes) : Unpooled.WrappedBuffer(bytes);
+    {
+        return direct ? new UnpooledDirectByteBuf(bytes.Length, allocator: allocator).WriteBytes(bytes) : Unpooled.WrappedBuffer(bytes);
+    }
 
-    private static byte[] Bytes(ByteBuf buffer) => buffer.ReadableSequence.ToArray();
+    private static byte[] Bytes(ByteBuf buffer)
+    {
+        return buffer.ReadableSequence.ToArray();
+    }
 
     [Fact]
     public void EmptyCompositeHasIndependentOwnershipAndCheckedAccess()

@@ -218,13 +218,19 @@ public class UnpooledMemoryWrappingTest
         public Memory<byte> Range => CreateMemory(_array.Length);
         public bool FailAccess { get; set; }
         public int DisposeCalls { get; private set; }
-        public ArrayMemoryManager(int length) => _array = new byte[length];
+        public ArrayMemoryManager(int length)
+        {
+            _array = new byte[length];
+        }
         public override Span<byte> GetSpan()
         {
             if (FailAccess) throw new InvalidOperationException("Source access failed.");
             return _array ?? throw new ObjectDisposedException(nameof(ArrayMemoryManager));
         }
-        public override MemoryHandle Pin(int elementIndex = 0) => _array.AsMemory(elementIndex).Pin();
+        public override MemoryHandle Pin(int elementIndex = 0)
+        {
+            return _array.AsMemory(elementIndex).Pin();
+        }
         public override void Unpin() { }
         protected override void Dispose(bool disposing) { DisposeCalls++; _array = null; }
     }
@@ -235,9 +241,15 @@ public class UnpooledMemoryWrappingTest
         public Memory<byte> Range => CreateMemory(_length);
         public int SpanCalls { get; private set; }
         public int DisposeCalls { get; private set; }
-        public ReportedLengthMemoryManager(int length) => _length = length;
+        public ReportedLengthMemoryManager(int length)
+        {
+            _length = length;
+        }
         public override Span<byte> GetSpan() { SpanCalls++; throw new InvalidOperationException("Must not access memory."); }
-        public override MemoryHandle Pin(int elementIndex = 0) => throw new NotSupportedException();
+        public override MemoryHandle Pin(int elementIndex = 0)
+        {
+            throw new NotSupportedException();
+        }
         public override void Unpin() { }
         protected override void Dispose(bool disposing) { DisposeCalls++; }
     }

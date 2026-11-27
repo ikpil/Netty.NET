@@ -20,7 +20,10 @@ namespace Netty.NET.Buffer.Tests;
  */
 public class BigEndianDirectByteBufTest : AbstractContiguousByteBufTest
 {
-    public BigEndianDirectByteBufTest() => Init(new UnpooledByteBufAllocator(false, Native));
+    public BigEndianDirectByteBufTest()
+    {
+        Init(new UnpooledByteBufAllocator(false, Native));
+    }
 
     protected override ByteBuf NewBuffer(int length, int maxCapacity)
     {
@@ -30,10 +33,15 @@ public class BigEndianDirectByteBufTest : AbstractContiguousByteBufTest
         return result;
     }
     protected virtual ByteBuf NewDirectBuffer(int length, int maxCapacity)
-        => Allocator.DirectBuffer(length, maxCapacity);
+    {
+        return Allocator.DirectBuffer(length, maxCapacity);
+    }
 
     [Fact]
-    public void TestMaxFastWritableBytes() => AssertOriginalMaxFastWritableBytes();
+    public void TestMaxFastWritableBytes()
+    {
+        AssertOriginalMaxFastWritableBytes();
+    }
 
     [Fact]
     public void TestIsContiguous()

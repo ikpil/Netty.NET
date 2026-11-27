@@ -51,9 +51,15 @@ public abstract class AbstractConstant<T> : IConstant<T>
 
     // Java final Object identity methods cannot be replaced with value equality
     // by a subclass. CLR sealed overrides keep that contract for constant keys.
-    public sealed override int GetHashCode() => RuntimeHelpers.GetHashCode(this);
+    public sealed override int GetHashCode()
+    {
+        return RuntimeHelpers.GetHashCode(this);
+    }
 
-    public sealed override bool Equals(object obj) => ReferenceEquals(this, obj);
+    public sealed override bool Equals(object obj)
+    {
+        return ReferenceEquals(this, obj);
+    }
 
     public int CompareTo(T o)
     {
@@ -93,5 +99,8 @@ internal static class ConstantIdentitySequence
 {
     private static long _next;
 
-    internal static long Next() => unchecked(Interlocked.Increment(ref _next) - 1);
+    internal static long Next()
+    {
+        return unchecked(Interlocked.Increment(ref _next) - 1);
+    }
 }

@@ -265,9 +265,15 @@ internal sealed partial class PoolChunk : IPoolChunkMetric
         }
     }
 
-    private static int LastPage(int runOffset, int pages) => runOffset + pages - 1;
+    private static int LastPage(int runOffset, int pages)
+    {
+        return runOffset + pages - 1;
+    }
 
-    private long GetAvailRunByOffset(int runOffset) => _runsAvailMap.GetValueOrDefault(runOffset, -1L);
+    private long GetAvailRunByOffset(int runOffset)
+    {
+        return _runsAvailMap.GetValueOrDefault(runOffset, -1L);
+    }
 
     public int Usage
     {
@@ -383,7 +389,10 @@ internal sealed partial class PoolChunk : IPoolChunkMetric
         }
     }
 
-    private long CollapseRuns(long handle) => CollapseNext(CollapsePast(handle));
+    private long CollapseRuns(long handle)
+    {
+        return CollapseNext(CollapsePast(handle));
+    }
 
     private long CollapsePast(long handle)
     {
@@ -433,14 +442,37 @@ internal sealed partial class PoolChunk : IPoolChunkMetric
         }
     }
 
-    private static long ToRunHandle(int runOffset, int runPages, int inUsed) =>
-        (long)runOffset << RUN_OFFSET_SHIFT | (long)runPages << SIZE_SHIFT | (long)inUsed << IS_USED_SHIFT;
+    private static long ToRunHandle(int runOffset, int runPages, int inUsed)
+    {
+        return (long)runOffset << RUN_OFFSET_SHIFT | (long)runPages << SIZE_SHIFT | (long)inUsed << IS_USED_SHIFT;
+    }
 
-    internal static int RunOffset(long handle) => (int)(handle >> RUN_OFFSET_SHIFT);
-    internal static int RunSize(int pageShifts, long handle) => RunPages(handle) << pageShifts;
-    internal static int RunPages(long handle) => (int)(handle >> SIZE_SHIFT & 0x7fff);
-    internal static bool IsUsed(long handle) => (handle >> IS_USED_SHIFT & 1) == 1L;
-    internal static bool IsRun(long handle) => !IsSubpage(handle);
-    internal static bool IsSubpage(long handle) => (handle >> IS_SUBPAGE_SHIFT & 1) == 1L;
-    internal static int BitmapIdx(long handle) => unchecked((int)handle);
+    internal static int RunOffset(long handle)
+    {
+        return (int)(handle >> RUN_OFFSET_SHIFT);
+    }
+    internal static int RunSize(int pageShifts, long handle)
+    {
+        return RunPages(handle) << pageShifts;
+    }
+    internal static int RunPages(long handle)
+    {
+        return (int)(handle >> SIZE_SHIFT & 0x7fff);
+    }
+    internal static bool IsUsed(long handle)
+    {
+        return (handle >> IS_USED_SHIFT & 1) == 1L;
+    }
+    internal static bool IsRun(long handle)
+    {
+        return !IsSubpage(handle);
+    }
+    internal static bool IsSubpage(long handle)
+    {
+        return (handle >> IS_SUBPAGE_SHIFT & 1) == 1L;
+    }
+    internal static int BitmapIdx(long handle)
+    {
+        return unchecked((int)handle);
+    }
 }

@@ -256,8 +256,14 @@ public class SimpleChannelPoolTest
         : SimpleChannelPool(bootstrap, handler, ChannelHealthChecker.Active)
     {
         private readonly BlockingCollection<IChannel> _queue = new(1);
-        protected override IChannel PollChannel() => _queue.TryTake(out var channel) ? channel : null;
-        protected override bool OfferChannel(IChannel channel) => _queue.TryAdd(channel);
+        protected override IChannel PollChannel()
+        {
+            return _queue.TryTake(out var channel) ? channel : null;
+        }
+        protected override bool OfferChannel(IChannel channel)
+        {
+            return _queue.TryAdd(channel);
+        }
     }
 
     private sealed class CallbackHandler(Action<IChannel> created = null, Action<IChannel> acquired = null, Action<IChannel> released = null)
@@ -265,7 +271,10 @@ public class SimpleChannelPoolTest
     {
         public void ChannelCreated(IChannel channel) { /* NOOP */ created?.Invoke(channel); }
         public void ChannelAcquired(IChannel channel) { /* NOOP */ acquired?.Invoke(channel); }
-        public void ChannelReleased(IChannel channel) => released?.Invoke(channel);
+        public void ChannelReleased(IChannel channel)
+        {
+            released?.Invoke(channel);
+        }
     }
 
     // CLR: shared setup only factors identical original bootstrap/server setup. Every test owns its
@@ -275,7 +284,10 @@ public class SimpleChannelPoolTest
         internal readonly MultiThreadIoEventLoopGroup Group = new(2, LocalIoHandler.NewFactory());
         internal readonly Bootstrap Client;
         private IChannel _server;
-        private Setup(LocalAddress address) => Client = new Bootstrap().RemoteAddress(address).Group(Group).Channel<LocalChannel>();
+        private Setup(LocalAddress address)
+        {
+            Client = new Bootstrap().RemoteAddress(address).Group(Group).Channel<LocalChannel>();
+        }
         internal static async Task<Setup> StartAsync()
         {
             var address = new LocalAddress(ChannelPoolTestUtils.GetLocalAddrId());

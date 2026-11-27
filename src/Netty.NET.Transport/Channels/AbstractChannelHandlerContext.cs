@@ -99,7 +99,10 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
 
     public IChannelPipeline Pipeline => _pipeline;
 
-    public IByteBufAllocator Alloc() => Channel.Config.GetAllocator();
+    public IByteBufAllocator Alloc()
+    {
+        return Channel.Config.GetAllocator();
+    }
 
     public IEventExecutor Executor
     {
@@ -1036,9 +1039,15 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
 
     public bool IsRemoved => _handlerState == REMOVE_COMPLETE;
 
-    public IAttribute<T> Attr<T>(AttributeKey<T> key) where T : class => Channel.Attr(key);
+    public IAttribute<T> Attr<T>(AttributeKey<T> key) where T : class
+    {
+        return Channel.Attr(key);
+    }
 
-    public bool HasAttr<T>(AttributeKey<T> key) where T : class => Channel.HasAttr(key);
+    public bool HasAttr<T>(AttributeKey<T> key) where T : class
+    {
+        return Channel.HasAttr(key);
+    }
 
     // CLR: an instance member, because a null promise stands for channel().voidPromise(), whose setFailure fires
     // exceptionCaught through the pipeline of a registered channel (VoidChannelPromise(channel, true)).

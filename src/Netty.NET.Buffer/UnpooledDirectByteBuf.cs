@@ -39,7 +39,10 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
     private int _capacity;
     private readonly IByteBufAllocator _bufferAllocator;
     private readonly UnpooledByteBufAllocator.UnpooledByteBufAllocatorMetric _metric;
-    public override IByteBufAllocator Alloc() => _bufferAllocator;
+    public override IByteBufAllocator Alloc()
+    {
+        return _bufferAllocator;
+    }
 
     /**
          * Creates a new direct buffer.
@@ -112,7 +115,10 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
         SetIndex(0, _capacity);
     }
 
-    protected override Memory<byte> GetMemoryCore(int index, int length) => _memory.Slice(index, length);
+    protected override Memory<byte> GetMemoryCore(int index, int length)
+    {
+        return _memory.Slice(index, length);
+    }
     internal override BufferMemoryLease AcquireReadLease()
     {
         EnsureAccessible();

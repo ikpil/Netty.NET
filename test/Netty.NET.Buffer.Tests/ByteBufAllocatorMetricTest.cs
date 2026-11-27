@@ -236,7 +236,9 @@ public class ByteBufAllocatorMetricTest
     }
 
     private static ByteBuf Allocate(UnpooledByteBufAllocator a, bool direct, int initial, int max)
-        => direct ? a.DirectBuffer(initial, max) : a.HeapBuffer(initial, max);
+    {
+        return direct ? a.DirectBuffer(initial, max) : a.HeapBuffer(initial, max);
+    }
 
     private static void AssertUsage(UnpooledByteBufAllocator a, bool direct, long expected)
     {

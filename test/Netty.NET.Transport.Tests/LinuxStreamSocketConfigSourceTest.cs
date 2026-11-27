@@ -28,77 +28,101 @@ namespace Netty.NET.Transport.Tests;
 public class LinuxStreamSocketConfigSourceTest
 {
     [Fact]
-    public Task TestRandomTcpNotSentLowAt() => WithChannel(channel =>
+    public Task TestRandomTcpNotSentLowAt()
     {
-        long expected = Random.Shared.NextInt64() & uint.MaxValue;
-        try
+        return WithChannel(channel =>
         {
-            Assert.True(channel.Config.SetOption(ChannelOption.TCP_NOTSENT_LOWAT, expected));
-            Assert.Equal(expected, Get(channel.Config, ChannelOption.TCP_NOTSENT_LOWAT));
-        }
-        catch (SocketException error) when (error.SocketErrorCode is SocketError.ProtocolOption or SocketError.OperationNotSupported)
-        { Assert.Skip("The kernel does not support TCP_NOTSENT_LOWAT."); }
-        return Task.CompletedTask;
-    });
+            long expected = Random.Shared.NextInt64() & uint.MaxValue;
+            try
+            {
+                Assert.True(channel.Config.SetOption(ChannelOption.TCP_NOTSENT_LOWAT, expected));
+                Assert.Equal(expected, Get(channel.Config, ChannelOption.TCP_NOTSENT_LOWAT));
+            }
+            catch (SocketException error) when (error.SocketErrorCode is SocketError.ProtocolOption or SocketError.OperationNotSupported)
+            { Assert.Skip("The kernel does not support TCP_NOTSENT_LOWAT."); }
+            return Task.CompletedTask;
+        });
+    }
 
     [Fact]
-    public Task TestInvalidHighTcpNotSentLowAt() => WithChannel(channel =>
+    public Task TestInvalidHighTcpNotSentLowAt()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => channel.Config.SetOption(ChannelOption.TCP_NOTSENT_LOWAT, (long)uint.MaxValue + 1));
-        return Task.CompletedTask;
-    });
+        return WithChannel(channel =>
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => channel.Config.SetOption(ChannelOption.TCP_NOTSENT_LOWAT, (long)uint.MaxValue + 1));
+            return Task.CompletedTask;
+        });
+    }
 
     [Fact]
-    public Task TestInvalidLowTcpNotSentLowAt() => WithChannel(channel =>
+    public Task TestInvalidLowTcpNotSentLowAt()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => channel.Config.SetOption(ChannelOption.TCP_NOTSENT_LOWAT, -1L));
-        return Task.CompletedTask;
-    });
+        return WithChannel(channel =>
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => channel.Config.SetOption(ChannelOption.TCP_NOTSENT_LOWAT, -1L));
+            return Task.CompletedTask;
+        });
+    }
 
     [Fact]
-    public Task TestTcpCork() => WithChannel(channel =>
+    public Task TestTcpCork()
     {
-        Assert.True(channel.Config.SetOption(ChannelOption.TCP_CORK, false));
-        Assert.False(Get(channel.Config, ChannelOption.TCP_CORK));
-        Assert.True(channel.Config.SetOption(ChannelOption.TCP_CORK, true));
-        Assert.True(Get(channel.Config, ChannelOption.TCP_CORK));
-        return Task.CompletedTask;
-    });
+        return WithChannel(channel =>
+        {
+            Assert.True(channel.Config.SetOption(ChannelOption.TCP_CORK, false));
+            Assert.False(Get(channel.Config, ChannelOption.TCP_CORK));
+            Assert.True(channel.Config.SetOption(ChannelOption.TCP_CORK, true));
+            Assert.True(Get(channel.Config, ChannelOption.TCP_CORK));
+            return Task.CompletedTask;
+        });
+    }
 
     [Fact]
-    public Task TestTcpQickAck() => WithChannel(channel =>
+    public Task TestTcpQickAck()
     {
-        Assert.True(channel.Config.SetOption(ChannelOption.TCP_QUICKACK, false));
-        Assert.False(Get(channel.Config, ChannelOption.TCP_QUICKACK));
-        Assert.True(channel.Config.SetOption(ChannelOption.TCP_QUICKACK, true));
-        Assert.True(Get(channel.Config, ChannelOption.TCP_QUICKACK));
-        return Task.CompletedTask;
-    });
+        return WithChannel(channel =>
+        {
+            Assert.True(channel.Config.SetOption(ChannelOption.TCP_QUICKACK, false));
+            Assert.False(Get(channel.Config, ChannelOption.TCP_QUICKACK));
+            Assert.True(channel.Config.SetOption(ChannelOption.TCP_QUICKACK, true));
+            Assert.True(Get(channel.Config, ChannelOption.TCP_QUICKACK));
+            return Task.CompletedTask;
+        });
+    }
 
     // For this test to pass, we are relying on the sockets file descriptor not being reused after the socket is closed.
     // This is inherently racy, so we allow getSoLinger to throw ChannelException a few of times, but eventually we do
     // want to see a ClosedChannelException for the test to pass.
     // CLR disposes the Socket object and uses a SafeHandle for descriptor operations.
     [Fact]
-    public Task TestSetOptionWhenClosed() => WithChannel(async channel =>
+    public Task TestSetOptionWhenClosed()
     {
-        await channel.CloseAsync();
-        Assert.Throws<ObjectDisposedException>(() => channel.Config.SetOption(ChannelOption.SO_LINGER, 0));
-    });
+        return WithChannel(async channel =>
+        {
+            await channel.CloseAsync();
+            Assert.Throws<ObjectDisposedException>(() => channel.Config.SetOption(ChannelOption.SO_LINGER, 0));
+        });
+    }
 
     [Fact]
-    public Task TestGetOptionWhenClosed() => WithChannel(async channel =>
+    public Task TestGetOptionWhenClosed()
     {
-        await channel.CloseAsync();
-        Assert.Throws<ObjectDisposedException>(() => channel.Config.TryGetOption(ChannelOption.SO_LINGER, out _));
-    });
+        return WithChannel(async channel =>
+        {
+            await channel.CloseAsync();
+            Assert.Throws<ObjectDisposedException>(() => channel.Config.TryGetOption(ChannelOption.SO_LINGER, out _));
+        });
+    }
 
     [Fact]
-    public Task GetGetOptions() => WithChannel(channel =>
+    public Task GetGetOptions()
     {
-        Assert.NotEmpty(channel.Config.GetOptions());
-        return Task.CompletedTask;
-    });
+        return WithChannel(channel =>
+        {
+            Assert.NotEmpty(channel.Config.GetOptions());
+            return Task.CompletedTask;
+        });
+    }
 
     private static async Task WithChannel(Func<IChannel, Task> assert)
     {

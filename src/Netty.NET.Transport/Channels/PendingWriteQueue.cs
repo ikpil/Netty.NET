@@ -81,7 +81,10 @@ public sealed class PendingWriteQueue
      */
     public object Current { get { AssertOwner(); return _head?.Message; } }
     [Conditional("DEBUG")]
-    private void AssertOwner() => Debug.Assert(_executor.InEventLoop());
+    private void AssertOwner()
+    {
+        Debug.Assert(_executor.InEventLoop());
+    }
     public Task Add(object msg, CancellationToken cancellationToken = default)
     {
         var producer = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -124,7 +127,10 @@ public sealed class PendingWriteQueue
             {
                 if (Interlocked.CompareExchange(ref entry.Claim, 2, 0) != 0)
                     return;
-                void Cancel() => producer.TrySetCanceled(cancellationToken);
+                void Cancel()
+                {
+                    producer.TrySetCanceled(cancellationToken);
+                }
                 if (_executor.InEventLoop())
                     Cancel();
                 else
@@ -333,7 +339,10 @@ public sealed class PendingWriteQueue
     private static void SafeFail(TaskCompletionSource producer, Exception cause)
     { if (!producer.TrySetException(cause)) Logger.Warn("Failed to mark a producer as failure because it's done already: " + producer.Task, cause); }
     [Conditional("DEBUG")]
-    private void AssertEmpty() => Debug.Assert(_head == null && _tail == null && Size == 0);
+    private void AssertEmpty()
+    {
+        Debug.Assert(_head == null && _tail == null && Size == 0);
+    }
     /**
      * Holds all meta-data and construct the linked-list structure.
      */

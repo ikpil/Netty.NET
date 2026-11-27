@@ -174,8 +174,10 @@ public class SingleThreadIoEventLoop : SingleThreadEventLoop, IIoEventLoop
     }
 
     // CLR: TimeUnit.MILLISECONDS.toNanos saturates at Long.MAX_VALUE instead of overflowing.
-    private static long TimeUnitMillisToNanos(long millis) =>
-        millis > long.MaxValue / 1_000_000L ? long.MaxValue : millis * 1_000_000L;
+    private static long TimeUnitMillisToNanos(long millis)
+    {
+        return millis > long.MaxValue / 1_000_000L ? long.MaxValue : millis * 1_000_000L;
+    }
 
     // CLR: the anonymous IoHandlerContext of the Java constructor becomes a nested class.
     private sealed class Context(SingleThreadIoEventLoop loop) : IIoHandlerContext
@@ -319,7 +321,10 @@ public class SingleThreadIoEventLoop : SingleThreadEventLoop, IIoEventLoop
         return this;
     }
 
-    IEventLoop IEventLoopGroup.Next() => this;
+    IEventLoop IEventLoopGroup.Next()
+    {
+        return this;
+    }
 
     // CLR: Task<IIoRegistration> replaces Future<IoRegistration>; the TaskCompletionSource is the promise.
     public Task<IIoRegistration> RegisterAsync(IIoHandle handle)

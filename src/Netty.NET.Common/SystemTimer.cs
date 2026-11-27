@@ -31,7 +31,9 @@ public static class SystemTimer
     }
 
     internal static long ScaleTimestamp(long timestamp, long unitsPerSecond)
-        => ScaleTimestamp(timestamp, unitsPerSecond, Frequency);
+    {
+        return ScaleTimestamp(timestamp, unitsPerSecond, Frequency);
+    }
 
     internal static long ScaleTimestamp(long timestamp, long unitsPerSecond, long frequency)
     {

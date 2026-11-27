@@ -92,7 +92,10 @@ public abstract class SimpleChannelInboundHandler<T> : ChannelInboundHandlerAdap
      * Returns {@code true} if the given message should be handled. If {@code false} it will be passed to the next
      * {@link ChannelInboundHandler} in the {@link ChannelPipeline}.
      */
-    public virtual bool AcceptInboundMessage(object msg) => matcher.IsInstanceOfType(msg);
+    public virtual bool AcceptInboundMessage(object msg)
+    {
+        return matcher.IsInstanceOfType(msg);
+    }
     public override void ChannelRead(IChannelHandlerContext ctx, object msg)
     {
         bool release = true;

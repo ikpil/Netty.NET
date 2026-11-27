@@ -441,7 +441,10 @@ public class SocketConfigurationContractTest
         Assert.IsType<SocketException>(error.InnerException);
     }
 
-    private static Socket NewSocket(AddressFamily family) => new(family, SocketType.Stream, ProtocolType.Tcp);
+    private static Socket NewSocket(AddressFamily family)
+    {
+        return new(family, SocketType.Stream, ProtocolType.Tcp);
+    }
     private static T Get<T>(IChannelConfig config, ChannelOption<T> option)
     { Assert.True(config.TryGetOption(option, out T value)); return value; }
     private static void AssertUnsupported<T>(IChannelConfig config, ChannelOption<T> option, T value)

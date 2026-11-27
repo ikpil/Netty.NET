@@ -41,7 +41,10 @@ public class CoalescingBufferQueueTest : IDisposable
         _queue = new CoalescingBufferQueue(_channel, 16, true);
         _mouseCompletion = task => { _mouseDone = true; _mouseSuccess = task.IsCompletedSuccessfully; };
     }
-    public void Dispose() => Assert.False(_channel.Finish());
+    public void Dispose()
+    {
+        Assert.False(_channel.Finish());
+    }
     [Fact]
     public void TestAddFirstPromiseRetained()
     {
@@ -288,9 +291,15 @@ public class CoalescingBufferQueueTest : IDisposable
         Assert.Equal(0, _mouse.RefCnt);
     }
     [Fact]
-    public void TestWritabilityChanged() => TestWritabilityChanged0(false);
+    public void TestWritabilityChanged()
+    {
+        TestWritabilityChanged0(false);
+    }
     [Fact]
-    public void TestWritabilityChangedFailAll() => TestWritabilityChanged0(true);
+    public void TestWritabilityChangedFailAll()
+    {
+        TestWritabilityChanged0(true);
+    }
     private void TestWritabilityChanged0(bool fail)
     {
         _channel.Config.SetWriteBufferWaterMark(new WriteBufferWaterMark(3, 4));
@@ -321,7 +330,10 @@ public class CoalescingBufferQueueTest : IDisposable
         Assert.True(_channel.IsWritable);
         Assert.True(_queue.IsEmpty);
     }
-    private static TaskCompletionSource NewProducer() => new();
+    private static TaskCompletionSource NewProducer()
+    {
+        return new();
+    }
     private void AssertQueueSize(int size, bool isEmpty) { Assert.Equal(size, _queue.ReadableBytes); if (isEmpty) Assert.True(_queue.IsEmpty); else Assert.False(_queue.IsEmpty); }
     private string Dequeue(int count, TaskCompletionSource aggregate)
     {

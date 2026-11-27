@@ -12,8 +12,14 @@ namespace Netty.NET.Common.Tests.Porting;
 public class ResourceLeakDetectorContractTest : IDisposable
 {
     private readonly ResourceLeakDetectorLevel previous = ResourceLeakDetector.GetLevel();
-    public ResourceLeakDetectorContractTest() => ResourceLeakDetector.SetLevel(ResourceLeakDetectorLevel.PARANOID);
-    public void Dispose() => ResourceLeakDetector.SetLevel(previous);
+    public ResourceLeakDetectorContractTest()
+    {
+        ResourceLeakDetector.SetLevel(ResourceLeakDetectorLevel.PARANOID);
+    }
+    public void Dispose()
+    {
+        ResourceLeakDetector.SetLevel(previous);
+    }
     private sealed class Detector : ResourceLeakDetector<object>, ResourceLeakDetector<object>.LeakListener
     {
         internal readonly List<string> Reports = new();
@@ -22,8 +28,14 @@ public class ResourceLeakDetectorContractTest : IDisposable
         internal int ListenerCalls;
         internal int ReportThread;
         internal Detector(int sampling = 1) : base(typeof(object), sampling) { }
-        protected override bool NeedReport() => Reporting;
-        protected override object GetInitialHint(string type) => Hint;
+        protected override bool NeedReport()
+        {
+            return Reporting;
+        }
+        protected override object GetInitialHint(string type)
+        {
+            return Hint;
+        }
         protected override void ReportTracedLeak(string type, string records) { Reports.Add(records); ReportThread = Environment.CurrentManagedThreadId; }
         protected override void ReportUntracedLeak(string type) { Reports.Add(""); ReportThread = Environment.CurrentManagedThreadId; }
         public void OnLeak(string type, string records) { Assert.Equal("Object", type); ListenerCalls++; }
@@ -32,7 +44,10 @@ public class ResourceLeakDetectorContractTest : IDisposable
     private sealed class MutableHint : IResourceLeakHint
     {
         internal string Text;
-        public string ToHintString() => Text;
+        public string ToHintString()
+        {
+            return Text;
+        }
     }
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static IResourceLeakTracker<object> CreateLeak(Detector detector, out WeakReference<object> resource)
@@ -42,7 +57,10 @@ public class ResourceLeakDetectorContractTest : IDisposable
         return detector.TrackForcibly(value);
     }
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static bool IsCollected(WeakReference<object> resource) => !resource.TryGetTarget(out _);
+    private static bool IsCollected(WeakReference<object> resource)
+    {
+        return !resource.TryGetTarget(out _);
+    }
     private static void CollectUntil(Action visit, Func<bool> done)
     {
         var elapsed = Stopwatch.StartNew();
@@ -66,7 +84,9 @@ public class ResourceLeakDetectorContractTest : IDisposable
     [InlineData("02", ResourceLeakDetectorLevel.SIMPLE)]
     [InlineData("SIMPLE,ADVANCED", ResourceLeakDetectorLevel.SIMPLE)]
     public void LevelParsingAcceptsOnlyNamedLevelsAndExactOrdinals(string text, ResourceLeakDetectorLevel expected)
-        => Assert.Equal(expected, ResourceLeakDetector.ParseLevel(text));
+    {
+        Assert.Equal(expected, ResourceLeakDetector.ParseLevel(text));
+    }
 
     [Fact]
     public void ForceIgnoresDisabledLevelAndSamplingWhileRecordCapabilityFollowsLevel()
@@ -126,10 +146,18 @@ public class ResourceLeakDetectorContractTest : IDisposable
         Assert.Same(close, tracker.GetCloseStackTraceIfAny());
         GC.KeepAlive(resource);
     }
-    private sealed class ThrowingHint : IResourceLeakHint { public string ToHintString() => throw new InvalidOperationException(); }
+    private sealed class ThrowingHint : IResourceLeakHint {
+        public string ToHintString()
+        {
+            throw new InvalidOperationException();
+        }
+    }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void RecordFromCaller(IResourceLeakTracker<object> tracker, object hint) => tracker.Record(hint);
+    private static void RecordFromCaller(IResourceLeakTracker<object> tracker, object hint)
+    {
+        tracker.Record(hint);
+    }
     [Fact]
     public void RecordsSnapshotHintAndAccessCallerRatherThanReportGenerationStack()
     {
@@ -276,13 +304,19 @@ public class ResourceLeakDetectorContractTest : IDisposable
     private sealed class ExcludedAccessHelper
     {
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void Record(IResourceLeakTracker<object> tracker) => tracker.Record();
+        internal static void Record(IResourceLeakTracker<object> tracker)
+        {
+            tracker.Record();
+        }
     }
 
     private sealed class GenericExcludedAccessHelper<T>
     {
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void Record(IResourceLeakTracker<object> tracker) => tracker.Record();
+        internal static void Record(IResourceLeakTracker<object> tracker)
+        {
+            tracker.Record();
+        }
     }
 
     [Fact]

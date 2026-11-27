@@ -23,7 +23,10 @@ namespace Netty.NET.Buffer.Tests;
 // Selected pinned UnpooledTest copy scenarios and CLR ownership/range/failure cases.
 public class UnpooledCopyingTest
 {
-    private static byte[] Bytes(ByteBuf buffer) => buffer.ReadableSequence.ToArray();
+    private static byte[] Bytes(ByteBuf buffer)
+    {
+        return buffer.ReadableSequence.ToArray();
+    }
 
     [Fact]
     public void EmptyInputsReturnTheSentinelWithoutConsumingSourceOwnership()
@@ -94,7 +97,9 @@ public class UnpooledCopyingTest
     [InlineData(3, 2)]
     [InlineData(int.MaxValue, int.MaxValue)]
     public void ArraySubregionChecksBoundsIncludingEmptyRanges(int offset, int length)
-        => Assert.Throws<ArgumentOutOfRangeException>(() => Unpooled.CopiedBuffer(new byte[4], offset, length));
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => Unpooled.CopiedBuffer(new byte[4], offset, length));
+    }
 
     [Fact]
     public void OriginalMultipleArrayCopyScenariosProduceOneIndependentBuffer()
@@ -345,8 +350,13 @@ public class UnpooledCopyingTest
     {
         internal bool Fail = true;
         internal readonly InvalidOperationException Failure = new("Source read failed.");
-        internal FailingReadHeapByteBuf() : base(4) => WriteBytes(new byte[] { 9, 1, 2, 8 }).SetIndex(1, 3);
+        internal FailingReadHeapByteBuf() : base(4)
+        {
+            WriteBytes(new byte[] { 9, 1, 2, 8 }).SetIndex(1, 3);
+        }
         protected override ReadOnlyMemory<byte> GetReadOnlyMemoryCore(int index, int length)
-            => Fail ? throw Failure : base.GetReadOnlyMemoryCore(index, length);
+        {
+            return Fail ? throw Failure : base.GetReadOnlyMemoryCore(index, length);
+        }
     }
 }

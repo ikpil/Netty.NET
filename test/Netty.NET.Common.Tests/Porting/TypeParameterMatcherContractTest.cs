@@ -10,8 +10,14 @@ namespace Netty.NET.Common.Tests.Porting;
 [Collection("Thread-local globals")]
 public class TypeParameterMatcherContractTest : IDisposable
 {
-    public TypeParameterMatcherContractTest() => FastThreadLocal.RemoveAll();
-    public void Dispose() => FastThreadLocal.RemoveAll();
+    public TypeParameterMatcherContractTest()
+    {
+        FastThreadLocal.RemoveAll();
+    }
+    public void Dispose()
+    {
+        FastThreadLocal.RemoveAll();
+    }
 
     private class Parent<E> { }
     private sealed class Lists : Parent<List<string>> { }

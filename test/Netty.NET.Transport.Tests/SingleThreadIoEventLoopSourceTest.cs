@@ -165,7 +165,10 @@ public class SingleThreadIoEventLoopSourceTest
     // CLR: the TestIoHandler::new method references become a factory delegate.
     private sealed class TestIoHandlerFactory(Func<IThreadAwareExecutor, IIoHandler> newHandler) : IIoHandlerFactory
     {
-        public IIoHandler NewHandler(IThreadAwareExecutor ioExecutor) => newHandler(ioExecutor);
+        public IIoHandler NewHandler(IThreadAwareExecutor ioExecutor)
+        {
+            return newHandler(ioExecutor);
+        }
     }
 
     private class TestIoHandler : IIoHandler

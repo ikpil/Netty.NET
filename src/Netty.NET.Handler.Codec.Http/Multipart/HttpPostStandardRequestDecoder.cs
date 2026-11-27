@@ -379,7 +379,10 @@ public class HttpPostStandardRequestDecoder : IInterfaceHttpPostRequestDecoder
         return this;
     }
 
-    IInterfaceHttpPostRequestDecoder IInterfaceHttpPostRequestDecoder.Offer(IHttpContent content) => Offer(content);
+    IInterfaceHttpPostRequestDecoder IInterfaceHttpPostRequestDecoder.Offer(IHttpContent content)
+    {
+        return Offer(content);
+    }
 
     /**
      * True if at current getStatus, there is an available decoded

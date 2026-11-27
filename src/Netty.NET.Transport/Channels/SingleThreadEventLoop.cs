@@ -54,7 +54,9 @@ public abstract class SingleThreadEventLoop : SingleThreadEventExecutor, IEventL
     protected SingleThreadEventLoop(IEventExecutorGroup parent, Action<Action> executor, bool addTaskWakesUp,
         bool supportSuspension, int maxPendingTasks, Action<Action, SingleThreadEventExecutor> rejectedHandler)
         : base(parent, executor, addTaskWakesUp, supportSuspension, maxPendingTasks, rejectedHandler)
-        => _tailTasks = NewTaskQueue(maxPendingTasks);
+    {
+        _tailTasks = NewTaskQueue(maxPendingTasks);
+    }
     protected SingleThreadEventLoop(IEventExecutorGroup parent, Action<Action> executor, bool addTaskWakesUp,
         IQueue<Action> taskQueue, IQueue<Action> tailTaskQueue, Action<Action, SingleThreadEventExecutor> rejectedExecutionHandler)
         : this(parent, executor, addTaskWakesUp, false, taskQueue, tailTaskQueue, rejectedExecutionHandler) { }
@@ -62,7 +64,9 @@ public abstract class SingleThreadEventLoop : SingleThreadEventExecutor, IEventL
         bool supportSuspension, IQueue<Action> taskQueue, IQueue<Action> tailTaskQueue,
         Action<Action, SingleThreadEventExecutor> rejectedExecutionHandler)
         : base(parent, executor, addTaskWakesUp, supportSuspension, taskQueue, rejectedExecutionHandler)
-        => _tailTasks = ObjectUtil.CheckNotNull(tailTaskQueue, "tailTaskQueue");
+    {
+        _tailTasks = ObjectUtil.CheckNotNull(tailTaskQueue, "tailTaskQueue");
+    }
     public Task RegisterAsync(IChannel channel, CancellationToken cancellationToken = default)
     { ArgumentNullException.ThrowIfNull(channel); return channel.RegisterAsync(this, cancellationToken); }
     /**
@@ -129,17 +133,32 @@ public abstract class SingleThreadEventLoop : SingleThreadEventExecutor, IEventL
         bool shutdown = base.ConfirmShutdown();
         return shutdown && _pendingCloseCompletions == 0;
     }
-    protected override bool CanSuspend(int state) => _pendingCloseCompletions == 0 && base.CanSuspend(state);
+    protected override bool CanSuspend(int state)
+    {
+        return _pendingCloseCompletions == 0 && base.CanSuspend(state);
+    }
     protected bool HasTailTasks => _tailTasks.Count != 0;
-    protected override bool HasTasks() => base.HasTasks() || HasTailTasks || !_closeCompletions.IsEmpty;
-    public override int PendingTasks() => base.PendingTasks() + _tailTasks.Count + _closeCompletions.Count;
-    protected override int GetNumOfRegisteredChannels() => RegisteredChannels();
+    protected override bool HasTasks()
+    {
+        return base.HasTasks() || HasTailTasks || !_closeCompletions.IsEmpty;
+    }
+    public override int PendingTasks()
+    {
+        return base.PendingTasks() + _tailTasks.Count + _closeCompletions.Count;
+    }
+    protected override int GetNumOfRegisteredChannels()
+    {
+        return RegisteredChannels();
+    }
     /**
      * Returns the number of {@link Channel}s registered with this {@link EventLoop} or {@code -1}
      * if operation is not supported. The returned value is not guaranteed to be exact accurate and
      * should be viewed as a best effort.
      */
-    public virtual int RegisteredChannels() => -1;
+    public virtual int RegisteredChannels()
+    {
+        return -1;
+    }
     /**
      * @return read-only iterator of active {@link Channel}s registered with this {@link EventLoop}.
      *         The returned value is not guaranteed to be exact accurate and
@@ -147,5 +166,8 @@ public abstract class SingleThreadEventLoop : SingleThreadEventExecutor, IEventL
      *         event loop.
      * @throws UnsupportedOperationException if operation is not supported by implementation.
      */
-    public virtual IEnumerable<IChannel> RegisteredChannelsIterator() => throw new NotSupportedException();
+    public virtual IEnumerable<IChannel> RegisteredChannelsIterator()
+    {
+        throw new NotSupportedException();
+    }
 }

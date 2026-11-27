@@ -218,10 +218,16 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
 
     /// <summary>Returns a read-only view of the logical bytes. It shares storage;
     /// it does not freeze an array exposed through array() or a no-copy constructor.</summary>
-    public ReadOnlyMemory<byte> AsMemory() => _value.AsMemory(_offset, _length);
+    public ReadOnlyMemory<byte> AsMemory()
+    {
+        return _value.AsMemory(_offset, _length);
+    }
 
     /// <summary>Returns a read-only view of the logical bytes for synchronous use.</summary>
-    public ReadOnlySpan<byte> AsSpan() => _value.AsSpan(_offset, _length);
+    public ReadOnlySpan<byte> AsSpan()
+    {
+        return _value.AsSpan(_offset, _length);
+    }
 
     /**
      * Create a copy of {@code value} into this instance assuming ASCII encoding.
@@ -574,7 +580,10 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     }
 
     // CLR: IComparable<AsciiString> lets BCL sorting use the source Comparable<CharSequence> order.
-    public int CompareTo(AsciiString @string) => CompareTo((ICharSequence)@string);
+    public int CompareTo(AsciiString @string)
+    {
+        return CompareTo((ICharSequence)@string);
+    }
 
     // CLR: the non-generic IComparable contract orders null first and rejects other types
     // (Microsoft Learn, IComparable.CompareTo); character sequences use compareTo(CharSequence).
@@ -800,9 +809,15 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
 
     // CLR: Java narrows CharSequence.subSequence to AsciiString covariantly; the CLR interface
     // members are implemented explicitly so the public methods keep the AsciiString return type.
-    ICharSequence ICharSequence.SubSequence(int start) => SubSequence(start);
+    ICharSequence ICharSequence.SubSequence(int start)
+    {
+        return SubSequence(start);
+    }
 
-    ICharSequence ICharSequence.SubSequence(int start, int end) => SubSequence(start, end);
+    ICharSequence ICharSequence.SubSequence(int start, int end)
+    {
+        return SubSequence(start, end);
+    }
 
     /**
      * Copies a range of characters into a new string.
@@ -1512,53 +1527,98 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     // Invalid slices/radices are argument errors; malformed numbers are format
     // errors and representable-range failures are overflow errors. TryParse leaves
     // zero on numeric failure and still rejects invalid arguments.
-    public short ParseShort() => ParseShort(10);
+    public short ParseShort()
+    {
+        return ParseShort(10);
+    }
 
-    public short ParseShort(int radix) => ParseInteger<short>(AsSpan(), radix);
-
-    // start is inclusive and end is exclusive, relative to this logical view.
-    public short ParseShort(int start, int end) => ParseShort(start, end, 10);
-
-    public short ParseShort(int start, int end, int radix) =>
-        ParseInteger<short>(NumericSlice(start, end), radix);
-
-    public bool TryParseInt16(out short result, int radix = 10) =>
-        TryParseInteger(AsSpan(), radix, out result);
-
-    public bool TryParseInt16(int start, int end, out short result, int radix = 10) =>
-        TryParseInteger(NumericSlice(start, end), radix, out result);
-
-    public int ParseInt() => ParseInt(10);
-
-    public int ParseInt(int radix) => ParseInteger<int>(AsSpan(), radix);
+    public short ParseShort(int radix)
+    {
+        return ParseInteger<short>(AsSpan(), radix);
+    }
 
     // start is inclusive and end is exclusive, relative to this logical view.
-    public int ParseInt(int start, int end) => ParseInt(start, end, 10);
+    public short ParseShort(int start, int end)
+    {
+        return ParseShort(start, end, 10);
+    }
 
-    public int ParseInt(int start, int end, int radix) =>
-        ParseInteger<int>(NumericSlice(start, end), radix);
+    public short ParseShort(int start, int end, int radix)
+    {
+        return ParseInteger<short>(NumericSlice(start, end), radix);
+    }
 
-    public bool TryParseInt32(out int result, int radix = 10) =>
-        TryParseInteger(AsSpan(), radix, out result);
+    public bool TryParseInt16(out short result, int radix = 10)
+    {
+        return TryParseInteger(AsSpan(), radix, out result);
+    }
 
-    public bool TryParseInt32(int start, int end, out int result, int radix = 10) =>
-        TryParseInteger(NumericSlice(start, end), radix, out result);
+    public bool TryParseInt16(int start, int end, out short result, int radix = 10)
+    {
+        return TryParseInteger(NumericSlice(start, end), radix, out result);
+    }
 
-    public long ParseLong() => ParseLong(10);
+    public int ParseInt()
+    {
+        return ParseInt(10);
+    }
 
-    public long ParseLong(int radix) => ParseInteger<long>(AsSpan(), radix);
+    public int ParseInt(int radix)
+    {
+        return ParseInteger<int>(AsSpan(), radix);
+    }
 
     // start is inclusive and end is exclusive, relative to this logical view.
-    public long ParseLong(int start, int end) => ParseLong(start, end, 10);
+    public int ParseInt(int start, int end)
+    {
+        return ParseInt(start, end, 10);
+    }
 
-    public long ParseLong(int start, int end, int radix) =>
-        ParseInteger<long>(NumericSlice(start, end), radix);
+    public int ParseInt(int start, int end, int radix)
+    {
+        return ParseInteger<int>(NumericSlice(start, end), radix);
+    }
 
-    public bool TryParseInt64(out long result, int radix = 10) =>
-        TryParseInteger(AsSpan(), radix, out result);
+    public bool TryParseInt32(out int result, int radix = 10)
+    {
+        return TryParseInteger(AsSpan(), radix, out result);
+    }
 
-    public bool TryParseInt64(int start, int end, out long result, int radix = 10) =>
-        TryParseInteger(NumericSlice(start, end), radix, out result);
+    public bool TryParseInt32(int start, int end, out int result, int radix = 10)
+    {
+        return TryParseInteger(NumericSlice(start, end), radix, out result);
+    }
+
+    public long ParseLong()
+    {
+        return ParseLong(10);
+    }
+
+    public long ParseLong(int radix)
+    {
+        return ParseInteger<long>(AsSpan(), radix);
+    }
+
+    // start is inclusive and end is exclusive, relative to this logical view.
+    public long ParseLong(int start, int end)
+    {
+        return ParseLong(start, end, 10);
+    }
+
+    public long ParseLong(int start, int end, int radix)
+    {
+        return ParseInteger<long>(NumericSlice(start, end), radix);
+    }
+
+    public bool TryParseInt64(out long result, int radix = 10)
+    {
+        return TryParseInteger(AsSpan(), radix, out result);
+    }
+
+    public bool TryParseInt64(int start, int end, out long result, int radix = 10)
+    {
+        return TryParseInteger(NumericSlice(start, end), radix, out result);
+    }
 
     private ReadOnlySpan<byte> NumericSlice(int start, int end)
     {
@@ -1666,24 +1726,46 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     // BCL byte-span conversion for decimals and exact binary rounding for hex.
     // Parse throws FormatException for numeric failure; TryParse returns false
     // and zero. Overflow/underflow produce signed infinity/zero, as in Java.
-    public float ParseFloat() => ParseFloatingPoint<float>(AsSpan());
+    public float ParseFloat()
+    {
+        return ParseFloatingPoint<float>(AsSpan());
+    }
 
     // Logical [start,end) bounds are checked even for empty input.
-    public float ParseFloat(int start, int end) => ParseFloatingPoint<float>(NumericSlice(start, end));
+    public float ParseFloat(int start, int end)
+    {
+        return ParseFloatingPoint<float>(NumericSlice(start, end));
+    }
 
-    public bool TryParseSingle(out float result) => TryParseFloatingPoint(AsSpan(), out result);
+    public bool TryParseSingle(out float result)
+    {
+        return TryParseFloatingPoint(AsSpan(), out result);
+    }
 
-    public bool TryParseSingle(int start, int end, out float result) =>
-        TryParseFloatingPoint(NumericSlice(start, end), out result);
+    public bool TryParseSingle(int start, int end, out float result)
+    {
+        return TryParseFloatingPoint(NumericSlice(start, end), out result);
+    }
 
-    public double ParseDouble() => ParseFloatingPoint<double>(AsSpan());
+    public double ParseDouble()
+    {
+        return ParseFloatingPoint<double>(AsSpan());
+    }
 
-    public double ParseDouble(int start, int end) => ParseFloatingPoint<double>(NumericSlice(start, end));
+    public double ParseDouble(int start, int end)
+    {
+        return ParseFloatingPoint<double>(NumericSlice(start, end));
+    }
 
-    public bool TryParseDouble(out double result) => TryParseFloatingPoint(AsSpan(), out result);
+    public bool TryParseDouble(out double result)
+    {
+        return TryParseFloatingPoint(AsSpan(), out result);
+    }
 
-    public bool TryParseDouble(int start, int end, out double result) =>
-        TryParseFloatingPoint(NumericSlice(start, end), out result);
+    public bool TryParseDouble(int start, int end, out double result)
+    {
+        return TryParseFloatingPoint(NumericSlice(start, end), out result);
+    }
 
     private static T ParseFloatingPoint<T>(ReadOnlySpan<byte> bytes) where T : IFloatingPointIeee754<T>
     {
@@ -1879,10 +1961,12 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         return true;
     }
 
-    private static T FloatingPointFromBits<T>(ulong bits) where T : IFloatingPointIeee754<T> =>
-        typeof(T) == typeof(float)
+    private static T FloatingPointFromBits<T>(ulong bits) where T : IFloatingPointIeee754<T>
+    {
+        return typeof(T) == typeof(float)
             ? T.CreateChecked(BitConverter.Int32BitsToSingle(unchecked((int)(uint)bits)))
             : T.CreateChecked(BitConverter.Int64BitsToDouble(unchecked((long)bits)));
+    }
 
 
     /**

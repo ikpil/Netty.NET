@@ -31,10 +31,17 @@ namespace Netty.NET.Buffer.Tests;
 public class AdaptiveAllocatorEventTest
 {
     private static AdaptiveByteBufAllocator NewAllocator(NativeMemoryAllocator native, bool low = false)
-        => new(false, low, native, 2, 128, 3, 2, true);
+    {
+        return new(false, low, native, 2, 128, 3, 2, true);
+    }
     private static ByteBuf Allocate(AdaptiveByteBufAllocator allocator, bool direct, int size, int max = 2097152)
-        => direct ? allocator.DirectBuffer(size, max) : allocator.HeapBuffer(size, max);
-    private static Listener Listen(EventKeywords keywords = (EventKeywords)31) => new(keywords);
+    {
+        return direct ? allocator.DirectBuffer(size, max) : allocator.HeapBuffer(size, max);
+    }
+    private static Listener Listen(EventKeywords keywords = (EventKeywords)31)
+    {
+        return new(keywords);
+    }
     private static void OnThread(bool fast, Action action)
     {
         Exception failure = null;

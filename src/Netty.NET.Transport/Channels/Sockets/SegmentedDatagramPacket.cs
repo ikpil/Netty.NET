@@ -56,8 +56,20 @@ public sealed class SegmentedDatagramPacket : DatagramPacket
      */
     public int SegmentSize { get; }
 
-    public override SegmentedDatagramPacket Copy() => (SegmentedDatagramPacket)base.Copy();
-    public override SegmentedDatagramPacket Duplicate() => (SegmentedDatagramPacket)base.Duplicate();
-    public override SegmentedDatagramPacket RetainedDuplicate() => (SegmentedDatagramPacket)base.RetainedDuplicate();
-    public override SegmentedDatagramPacket Replace(ByteBuf content) => new(content, SegmentSize, Recipient, Sender);
+    public override SegmentedDatagramPacket Copy()
+    {
+        return (SegmentedDatagramPacket)base.Copy();
+    }
+    public override SegmentedDatagramPacket Duplicate()
+    {
+        return (SegmentedDatagramPacket)base.Duplicate();
+    }
+    public override SegmentedDatagramPacket RetainedDuplicate()
+    {
+        return (SegmentedDatagramPacket)base.RetainedDuplicate();
+    }
+    public override SegmentedDatagramPacket Replace(ByteBuf content)
+    {
+        return new(content, SegmentSize, Recipient, Sender);
+    }
 }

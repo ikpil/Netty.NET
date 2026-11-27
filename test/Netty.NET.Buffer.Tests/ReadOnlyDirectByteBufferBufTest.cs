@@ -993,30 +993,48 @@ public abstract partial class AbstractByteBufTest
     internal static class StaticImports
     {
         internal static void AssertReadyOnlyNioBuffer(ByteBuf buffer)
-            => AbstractByteBufTest.AssertReadyOnlyNioBuffer(buffer);
+        {
+            AbstractByteBufTest.AssertReadyOnlyNioBuffer(buffer);
+        }
 
         internal static void AssertReadyOnlyNioBufferWithPositionLength(ByteBuf buffer)
-            => AbstractByteBufTest.AssertReadyOnlyNioBufferWithPositionLength(buffer);
+        {
+            AbstractByteBufTest.AssertReadyOnlyNioBufferWithPositionLength(buffer);
+        }
 
         internal static void AssertReadyOnlyNioBuffers(ByteBuf buffer)
-            => AbstractByteBufTest.AssertReadyOnlyNioBuffers(buffer);
+        {
+            AbstractByteBufTest.AssertReadyOnlyNioBuffers(buffer);
+        }
 
         internal static void AssertReadyOnlyNioBuffersWithPositionLength(ByteBuf buffer)
-            => AbstractByteBufTest.AssertReadyOnlyNioBuffersWithPositionLength(buffer);
+        {
+            AbstractByteBufTest.AssertReadyOnlyNioBuffersWithPositionLength(buffer);
+        }
 
         internal static Task TestBytesInArrayMultipleThreads(ByteBuf buffer, byte[] expectedBytes, bool slice)
-            => AssertBytesInArrayMultipleThreads(buffer, expectedBytes, slice);
+        {
+            return AssertBytesInArrayMultipleThreads(buffer, expectedBytes, slice);
+        }
 
         internal static void TestCopyMultipleThreads0(ByteBuf buffer)
-            => AssertCopyMultipleThreads(buffer);
+        {
+            AssertCopyMultipleThreads(buffer);
+        }
 
         internal static void TestReadGatheringByteChannelMultipleThreads(ByteBuf buffer, byte[] expectedBytes, bool slice)
-            => AssertReadGatheringByteChannelMultipleThreads(buffer, expectedBytes, slice);
+        {
+            AssertReadGatheringByteChannelMultipleThreads(buffer, expectedBytes, slice);
+        }
 
         internal static void TestReadOutputStreamMultipleThreads(ByteBuf buffer, byte[] expectedBytes, bool slice)
-            => AssertReadOutputStreamMultipleThreads(buffer, expectedBytes, slice);
+        {
+            AssertReadOutputStreamMultipleThreads(buffer, expectedBytes, slice);
+        }
 
         internal static void TestToStringMultipleThreads0(ByteBuf buffer)
-            => AssertToStringMultipleThreads(buffer);
+        {
+            AssertToStringMultipleThreads(buffer);
+        }
     }
 }

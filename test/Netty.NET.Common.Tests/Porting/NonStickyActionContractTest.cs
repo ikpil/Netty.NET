@@ -11,17 +11,44 @@ public class NonStickyActionContractTest
     private sealed class ManualExecutor : AbstractEventExecutor
     {
         internal readonly Queue<Action> Pending = new();
-        public override void Execute(Action command) => Pending.Enqueue(command);
-        internal void RunNext() => Pending.Dequeue()();
-        public override bool InEventLoop(Thread thread) => false;
-        public override bool IsShuttingDown() => false;
-        public override bool IsShutdown() => false;
-        public override bool IsTerminated() => false;
+        public override void Execute(Action command)
+        {
+            Pending.Enqueue(command);
+        }
+        internal void RunNext()
+        {
+            Pending.Dequeue()();
+        }
+        public override bool InEventLoop(Thread thread)
+        {
+            return false;
+        }
+        public override bool IsShuttingDown()
+        {
+            return false;
+        }
+        public override bool IsShutdown()
+        {
+            return false;
+        }
+        public override bool IsTerminated()
+        {
+            return false;
+        }
         [Obsolete]
-        public override void Shutdown() => throw new NotSupportedException();
+        public override void Shutdown()
+        {
+            throw new NotSupportedException();
+        }
         public override Task TerminationFuture => throw new NotSupportedException();
-        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => throw new NotSupportedException();
-        public override bool AwaitTermination(TimeSpan timeout) => false;
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+        {
+            throw new NotSupportedException();
+        }
+        public override bool AwaitTermination(TimeSpan timeout)
+        {
+            return false;
+        }
     }
 
     private sealed class OwnedSubmission : INativeSubmission

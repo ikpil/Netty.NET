@@ -58,7 +58,9 @@ public abstract class ChannelInitializerExtension
     /// <remarks>Withdrawal affects new bootstrap initialization. Existing listeners keep their captured extension set
     /// for future children, matching the source initialization snapshot.</remarks>
     public static IDisposable Register(ChannelInitializerExtension extension, bool invoke = true)
-        => ChannelInitializerExtensions.Register(extension, invoke);
+    {
+        return ChannelInitializerExtensions.Register(extension, invoke);
+    }
 
     /**
      * Get the "priority" of this extension. If multiple extensions are avilable, then they will be called in their

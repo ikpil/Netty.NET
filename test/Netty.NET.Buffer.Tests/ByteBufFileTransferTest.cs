@@ -35,19 +35,34 @@ public class ByteBufFileTransferTest
         return Unpooled.CompositeBuffer().AddComponent(Unpooled.WrappedBuffer(new byte[3]))
             .AddComponent(Unpooled.EmptyBuffer).AddComponent(Unpooled.DirectBuffer(5, 5).WriteZero(5));
     }
-    private static byte[] Bytes(ByteBuf b, int index, int length) => b.AsReadOnlySequence(index, length).ToArray();
+    private static byte[] Bytes(ByteBuf b, int index, int length)
+    {
+        return b.AsReadOnlySequence(index, length).ToArray();
+    }
     private static ValueTask<int> Get(ByteBuf b, bool async, int index, SafeFileHandle h, long position, int length,
-        CancellationToken token) => async ? b.GetBytesAsync(index, h, position, length, token)
+        CancellationToken token)
+    {
+        return async ? b.GetBytesAsync(index, h, position, length, token)
         : ValueTask.FromResult(b.GetBytes(index, h, position, length));
+    }
     private static ValueTask<int> Set(ByteBuf b, bool async, int index, SafeFileHandle h, long position, int length,
-        CancellationToken token) => async ? b.SetBytesAsync(index, h, position, length, token)
+        CancellationToken token)
+    {
+        return async ? b.SetBytesAsync(index, h, position, length, token)
         : ValueTask.FromResult(b.SetBytes(index, h, position, length));
+    }
     private static ValueTask<int> Read(ByteBuf b, bool async, SafeFileHandle h, long position, int length,
-        CancellationToken token) => async ? b.ReadBytesAsync(h, position, length, token)
+        CancellationToken token)
+    {
+        return async ? b.ReadBytesAsync(h, position, length, token)
         : ValueTask.FromResult(b.ReadBytes(h, position, length));
+    }
     private static ValueTask<int> Write(ByteBuf b, bool async, SafeFileHandle h, long position, int length,
-        CancellationToken token) => async ? b.WriteBytesAsync(h, position, length, token)
+        CancellationToken token)
+    {
+        return async ? b.WriteBytesAsync(h, position, length, token)
         : ValueTask.FromResult(b.WriteBytes(h, position, length));
+    }
 
     [Theory]
     [InlineData(0, false)] [InlineData(1, false)] [InlineData(2, false)]
@@ -312,6 +327,9 @@ public class ByteBufFileTransferTest
             }
             return bytes;
         }
-        public void Dispose() => Stream.Dispose();
+        public void Dispose()
+        {
+            Stream.Dispose();
+        }
     }
 }

@@ -12,15 +12,24 @@ public class RecyclerContractTest
     {
         internal readonly IRecyclerHandle<Item> Handle = handle;
         internal int Active;
-        public override bool Equals(object obj) => obj is Item;
-        public override int GetHashCode() => 0;
+        public override bool Equals(object obj)
+        {
+            return obj is Item;
+        }
+        public override int GetHashCode()
+        {
+            return 0;
+        }
     }
     private sealed class Pool : Recycler<Item>
     {
         internal Pool(int capacity, bool unguarded) : base(capacity, unguarded) { }
         internal Pool(Thread owner, bool unguarded) : base(4, 0, 2, owner, unguarded) { }
         internal Pool(bool unguarded) : base(4, 0, 2, unguarded) { }
-        protected override Item NewObject(IRecyclerHandle<Item> handle) => new(handle);
+        protected override Item NewObject(IRecyclerHandle<Item> handle)
+        {
+            return new(handle);
+        }
     }
 
     [Fact]
@@ -127,7 +136,10 @@ public class RecyclerContractTest
 
     private sealed class NoCleanupThread(Action action) : FastThreadLocalThread
     {
-        public override void Run() => action();
+        public override void Run()
+        {
+            action();
+        }
     }
 
     [Fact]

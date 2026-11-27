@@ -47,19 +47,22 @@ public class SimpleLeakAwareByteBufContractTest
             for (int operation = 0; operation < 9; operation++) yield return [kind, operation];
     }
 
-    private static ByteBuf View(ByteBuf buffer, int operation) => operation switch
+    private static ByteBuf View(ByteBuf buffer, int operation)
     {
-        0 => buffer.Slice(),
-        1 => buffer.Slice(2, 3),
-        2 => buffer.Duplicate(),
-        3 => buffer.ReadSlice(2),
-        4 => buffer.AsReadOnly(),
-        5 => buffer.RetainedSlice(),
-        6 => buffer.RetainedSlice(2, 3),
-        7 => buffer.RetainedDuplicate(),
-        8 => buffer.ReadRetainedSlice(2),
-        _ => throw new ArgumentOutOfRangeException(nameof(operation))
-    };
+        return operation switch
+        {
+            0 => buffer.Slice(),
+            1 => buffer.Slice(2, 3),
+            2 => buffer.Duplicate(),
+            3 => buffer.ReadSlice(2),
+            4 => buffer.AsReadOnly(),
+            5 => buffer.RetainedSlice(),
+            6 => buffer.RetainedSlice(2, 3),
+            7 => buffer.RetainedDuplicate(),
+            8 => buffer.ReadRetainedSlice(2),
+            _ => throw new ArgumentOutOfRangeException(nameof(operation))
+        };
+    }
 
     [Theory]
     [MemberData(nameof(ViewCases))]
@@ -345,13 +348,19 @@ public class SimpleLeakAwareByteBufContractTest
     private sealed class PlainWrapper(ByteBuf buffer) : WrappedByteBuf(buffer);
     private sealed class FailingRetainBuffer(ByteBuf buffer, IllegalReferenceCountException failure) : WrappedByteBuf(buffer)
     {
-        public override ByteBuf Retain(int increment = 1) => throw failure;
+        public override ByteBuf Retain(int increment = 1)
+        {
+            throw failure;
+        }
     }
     private sealed class DerivedLeakAware(ByteBuf buffer, ByteBuf tracked, IResourceLeakTracker<ByteBuf> leak)
         : SimpleLeakAwareByteBuf(buffer, tracked, leak)
     {
         protected override SimpleLeakAwareByteBuf NewLeakAwareByteBuf(ByteBuf buffer, ByteBuf trackedByteBuf,
-            IResourceLeakTracker<ByteBuf> leakTracker) => new DerivedLeakAware(buffer, trackedByteBuf, leakTracker);
+            IResourceLeakTracker<ByteBuf> leakTracker)
+        {
+            return new DerivedLeakAware(buffer, trackedByteBuf, leakTracker);
+        }
     }
     private sealed class TouchBuffer() : UnpooledHeapByteBuf(1, 1)
     {
@@ -363,8 +372,14 @@ public class SimpleLeakAwareByteBufContractTest
         internal int Closes, Records;
         internal ByteBuf ClosedObject;
         internal Exception Trace;
-        public void Record() => Records++;
-        public void Record(object hint) => Records++;
+        public void Record()
+        {
+            Records++;
+        }
+        public void Record(object hint)
+        {
+            Records++;
+        }
         public bool Close(ByteBuf trackedObject)
         {
             Assert.Same(expected, trackedObject);
@@ -373,6 +388,9 @@ public class SimpleLeakAwareByteBufContractTest
             Closes++;
             return Closes == 1;
         }
-        public Exception GetCloseStackTraceIfAny() => Closes > 0 ? Trace : null;
+        public Exception GetCloseStackTraceIfAny()
+        {
+            return Closes > 0 ? Trace : null;
+        }
     }
 }

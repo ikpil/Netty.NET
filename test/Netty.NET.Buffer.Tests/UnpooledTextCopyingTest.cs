@@ -23,25 +23,31 @@ namespace Netty.NET.Buffer.Tests;
 // Selected pinned UnpooledTest text-copy scenarios plus CLR encoding/range/ownership contracts.
 public class UnpooledTextCopyingTest
 {
-    private static Encoding Encoder(int kind) => kind switch
+    private static Encoding Encoder(int kind)
     {
-        0 => new UTF8Encoding(true, true),
-        1 => new UnicodeEncoding(false, true, true),
-        2 => new UnicodeEncoding(true, true, true),
-        3 => new UTF32Encoding(false, true, true),
-        4 => new UTF32Encoding(true, true, true),
-        5 => Encoding.Latin1,
-        _ => Encoding.ASCII
-    };
+        return kind switch
+        {
+            0 => new UTF8Encoding(true, true),
+            1 => new UnicodeEncoding(false, true, true),
+            2 => new UnicodeEncoding(true, true, true),
+            3 => new UTF32Encoding(false, true, true),
+            4 => new UTF32Encoding(true, true, true),
+            5 => Encoding.Latin1,
+            _ => Encoding.ASCII
+        };
+    }
 
-    private static ByteBuf Copy(string text, Encoding encoding, int shape) => shape switch
+    private static ByteBuf Copy(string text, Encoding encoding, int shape)
     {
-        0 => Unpooled.CopiedBuffer(text, encoding),
-        1 => Unpooled.CopiedBuffer("<" + text + ">", 1, text.Length, encoding),
-        2 => Unpooled.CopiedBuffer(text.ToCharArray(), encoding),
-        3 => Unpooled.CopiedBuffer(("<" + text + ">").ToCharArray(), 1, text.Length, encoding),
-        _ => Unpooled.CopiedBuffer(text.AsSpan(), encoding)
-    };
+        return shape switch
+        {
+            0 => Unpooled.CopiedBuffer(text, encoding),
+            1 => Unpooled.CopiedBuffer("<" + text + ">", 1, text.Length, encoding),
+            2 => Unpooled.CopiedBuffer(text.ToCharArray(), encoding),
+            3 => Unpooled.CopiedBuffer(("<" + text + ">").ToCharArray(), 1, text.Length, encoding),
+            _ => Unpooled.CopiedBuffer(text.AsSpan(), encoding)
+        };
+    }
 
     public static IEnumerable<object[]> EncodedCopies()
     {

@@ -35,8 +35,14 @@ public partial class WrappedByteBufDispatchTest
     {
         internal ByteBuf Expected;
         internal int Records, Closes;
-        public void Record() => ++Records;
-        public void Record(object hint) => ++Records;
+        public void Record()
+        {
+            ++Records;
+        }
+        public void Record(object hint)
+        {
+            ++Records;
+        }
         public bool Close(ByteBuf value) { Assert.Same(Expected, value); ++Closes; return true; }
     }
     private sealed class Context : IDisposable

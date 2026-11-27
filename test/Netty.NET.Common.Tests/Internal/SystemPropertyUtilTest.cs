@@ -23,7 +23,10 @@ namespace Netty.NET.Common.Tests.Internal;
 public class SystemPropertyUtilTest : IDisposable
 {
     private readonly string previousValue = Environment.GetEnvironmentVariable("key");
-    public void Dispose() => Environment.SetEnvironmentVariable("key", previousValue);
+    public void Dispose()
+    {
+        Environment.SetEnvironmentVariable("key", previousValue);
+    }
 
     public SystemPropertyUtilTest()
     {

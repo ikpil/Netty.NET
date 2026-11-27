@@ -14,12 +14,17 @@ public class LeakPresenceDetectorContractTest
 {
     private sealed class Scoped<T>(ResourceScope scope) : LeakPresenceDetector<T>(typeof(T)) where T : class
     {
-        protected override ResourceScope CurrentScope() => scope;
+        protected override ResourceScope CurrentScope()
+        {
+            return scope;
+        }
     }
     private sealed class ScopedFactory(ResourceScope scope) : ResourceLeakDetectorFactory
     {
         public override ResourceLeakDetector<T> NewResourceLeakDetector<T>(Type resource, int samplingInterval, long maxActive)
-            => new Scoped<T>(scope);
+        {
+            return new Scoped<T>(scope);
+        }
     }
     private static void WithFactory(ResourceLeakDetectorFactory factory, Action action)
     {
@@ -29,7 +34,10 @@ public class LeakPresenceDetectorContractTest
     }
     private sealed class ThrowingHint : IResourceLeakHint
     {
-        public string ToHintString() => throw new InvalidOperationException("record should be a no-op");
+        public string ToHintString()
+        {
+            throw new InvalidOperationException("record should be a no-op");
+        }
     }
 
     [Fact]
@@ -168,7 +176,9 @@ public class LeakPresenceDetectorContractTest
 
     [Fact]
     public void StaticInitializerWrapperRejectsOrdinaryCallers()
-        => Assert.Throws<InvalidOperationException>(() => LeakPresenceDetector.StaticInitializer(() => new object()));
+    {
+        Assert.Throws<InvalidOperationException>(() => LeakPresenceDetector.StaticInitializer(() => new object()));
+    }
 
     private static ResourceScope initializerScope;
     private static IResourceLeakTracker<object> concurrentTracker;
@@ -210,13 +220,19 @@ public class LeakPresenceDetectorContractTest
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static IResourceLeakTracker<object> CreateDiagnostic(Scoped<object> detector) => detector.Track(new object());
+    private static IResourceLeakTracker<object> CreateDiagnostic(Scoped<object> detector)
+    {
+        return detector.Track(new object());
+    }
 
     private static ResourceScope diagnosticInitializerScope;
     private static class UnwrappedInitializer
     {
         internal static readonly IResourceLeakTracker<object> Tracker;
-        static UnwrappedInitializer() => Tracker = new Scoped<object>(diagnosticInitializerScope).Track(new object());
+        static UnwrappedInitializer()
+        {
+            Tracker = new Scoped<object>(diagnosticInitializerScope).Track(new object());
+        }
     }
     [Fact]
     public void OptionalDiagnosticsIdentifyAnUnwrappedStaticInitializer()

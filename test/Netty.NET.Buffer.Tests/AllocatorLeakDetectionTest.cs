@@ -29,8 +29,14 @@ public class AllocatorLeakDetectionCollection { }
 public class AllocatorLeakDetectionTest : IDisposable
 {
     private readonly ResourceLeakDetectorLevel _previous = ResourceLeakDetector.GetLevel();
-    public AllocatorLeakDetectionTest() => ResourceLeakDetector.SetLevel(ResourceLeakDetectorLevel.PARANOID);
-    public void Dispose() => ResourceLeakDetector.SetLevel(_previous);
+    public AllocatorLeakDetectionTest()
+    {
+        ResourceLeakDetector.SetLevel(ResourceLeakDetectorLevel.PARANOID);
+    }
+    public void Dispose()
+    {
+        ResourceLeakDetector.SetLevel(_previous);
+    }
 
     // Inspection never replaces the public reference used for release.
     internal static ByteBuf UnwrapLeak(ByteBuf buffer)
@@ -38,7 +44,10 @@ public class AllocatorLeakDetectionTest : IDisposable
         while (buffer is SimpleLeakAwareByteBuf or SimpleLeakAwareCompositeByteBuf) buffer = buffer.Unwrap();
         return buffer;
     }
-    internal static PooledByteBuf PooledStorage(ByteBuf buffer) => Assert.IsAssignableFrom<PooledByteBuf>(UnwrapLeak(buffer));
+    internal static PooledByteBuf PooledStorage(ByteBuf buffer)
+    {
+        return Assert.IsAssignableFrom<PooledByteBuf>(UnwrapLeak(buffer));
+    }
     internal static IResourceLeakTracker<ByteBuf> Tracker(ByteBuf buffer)
     {
         if (buffer is SimpleLeakAwareByteBuf)
@@ -51,9 +60,11 @@ public class AllocatorLeakDetectionTest : IDisposable
     }
 
     private static IByteBufAllocator Allocator(int kind, bool prefer, NativeMemoryAllocator native)
-        => kind is 0 or 3 ? new UnpooledByteBufAllocator(prefer, kind == 3, native)
+    {
+        return kind is 0 or 3 ? new UnpooledByteBufAllocator(prefer, kind == 3, native)
             : new PooledByteBufAllocator(prefer, poolHeap: kind == 1, poolDirect: kind == 1,
                 pageSize: 4096, maxOrder: 1, nativeAllocator: native);
+    }
 
     public static IEnumerable<object[]> FactoryCases()
     {
@@ -207,9 +218,13 @@ public class AllocatorLeakDetectionTest : IDisposable
         public override CompositeByteBuf CompositeBuffer(int maxNumComponents = 16)
         { CompositeCalls++; return base.CompositeBuffer(maxNumComponents); }
         protected override ByteBuf NewHeapBuffer(int initialCapacity, int maxCapacity)
-            => new UnpooledHeapByteBuf(this, initialCapacity, maxCapacity);
+        {
+            return new UnpooledHeapByteBuf(this, initialCapacity, maxCapacity);
+        }
         protected override ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity)
-            => new UnpooledDirectByteBuf(this, initialCapacity, maxCapacity, native);
+        {
+            return new UnpooledDirectByteBuf(this, initialCapacity, maxCapacity, native);
+        }
     }
 
     [Theory]

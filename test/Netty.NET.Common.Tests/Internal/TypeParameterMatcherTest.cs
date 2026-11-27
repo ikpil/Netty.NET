@@ -67,8 +67,11 @@ public class TypeParameterMatcherTest
     }
 
     [Fact(Skip = "JVM type erasure leaves this parameter unresolved; CLR retains BBB.")]
-    public void TestUnsolvedParameter() => Assert.Throws<InvalidOperationException>(() =>
-        ReflectionUtil.ResolveTypeParameter(new TypeQ<BBB>(), typeof(TypeX<,,>), "B"));
+    public void TestUnsolvedParameter()
+    {
+        Assert.Throws<InvalidOperationException>(() =>
+            ReflectionUtil.ResolveTypeParameter(new TypeQ<BBB>(), typeof(TypeX<,,>), "B"));
+    }
 
     [Fact]
     public void TestAnonymousClass()
@@ -132,10 +135,13 @@ public class TypeParameterMatcherTest
     }
 
     [Fact(Skip = "JVM type erasure is not applicable to constructed CLR generic types.")]
-    public void TestErasure() => Assert.Throws<InvalidOperationException>(() =>
+    public void TestErasure()
     {
-        Type m = ReflectionUtil.ResolveTypeParameter(new X<string, DateTime>(), typeof(W<>), "E");
-        Assert.True(m.IsInstanceOfType(new DateTime()));
-        Assert.False(m.IsInstanceOfType(new object()));
-    });
+        Assert.Throws<InvalidOperationException>(() =>
+        {
+            Type m = ReflectionUtil.ResolveTypeParameter(new X<string, DateTime>(), typeof(W<>), "E");
+            Assert.True(m.IsInstanceOfType(new DateTime()));
+            Assert.False(m.IsInstanceOfType(new object()));
+        });
+    }
 }

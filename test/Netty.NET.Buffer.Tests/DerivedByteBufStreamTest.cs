@@ -109,9 +109,14 @@ public class DerivedByteBufStreamTest
     }
     private sealed class Input() : MemoryStream(new byte[] { 91, 92, 93 })
     {
-        public override int Read(Span<byte> destination) => base.Read(destination[..Math.Min(2, destination.Length)]);
+        public override int Read(Span<byte> destination)
+        {
+            return base.Read(destination[..Math.Min(2, destination.Length)]);
+        }
         public override ValueTask<int> ReadAsync(Memory<byte> destination, CancellationToken token = default)
-            => base.ReadAsync(destination[..Math.Min(2, destination.Length)], token);
+        {
+            return base.ReadAsync(destination[..Math.Min(2, destination.Length)], token);
+        }
     }
     private static async Task Transfer(ByteBuf b, Stream stream, bool input, bool asynchronous, bool relative)
     {
@@ -206,10 +211,22 @@ public class DerivedByteBufStreamTest
         public override long Length => throw new NotSupportedException();
         public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
         public override void Flush() { }
-        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
-        public override void SetLength(long value) => throw new NotSupportedException();
-        public override int Read(byte[] bytes, int offset, int length) => throw new NotSupportedException();
-        public override void Write(byte[] bytes, int offset, int length) => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            throw new NotSupportedException();
+        }
+        public override void SetLength(long value)
+        {
+            throw new NotSupportedException();
+        }
+        public override int Read(byte[] bytes, int offset, int length)
+        {
+            throw new NotSupportedException();
+        }
+        public override void Write(byte[] bytes, int offset, int length)
+        {
+            throw new NotSupportedException();
+        }
         public override ValueTask<int> ReadAsync(Memory<byte> bytes, CancellationToken token = default)
         { _read = bytes; Token = token; return new(_done.Task); }
         public override ValueTask WriteAsync(ReadOnlyMemory<byte> bytes, CancellationToken token = default)

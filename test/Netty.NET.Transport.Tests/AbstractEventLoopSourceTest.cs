@@ -100,7 +100,10 @@ public class AbstractEventLoopSourceTest
     private sealed class LoggingHandler : ChannelInboundHandlerAdapter { }
     private sealed class ReRegisterHandler(MultiThreadIoEventLoopGroup group, bool throughChannel, Action<Exception> failed) : ChannelInboundHandlerAdapter
     {
-        public override void ChannelRead(IChannelHandlerContext ctx, object msg) => _ = ReRegister(ctx, msg);
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            _ = ReRegister(ctx, msg);
+        }
         private async Task ReRegister(IChannelHandlerContext outCtx, object msg)
         {
             bool handedOff = false;
@@ -128,7 +131,12 @@ public class AbstractEventLoopSourceTest
         { ctx.FireExceptionCaught(cause); failed(cause); _ = ctx.CloseAsync(); }
     }
     private sealed class EchoThroughOriginalContext(IChannelHandlerContext outCtx) : ChannelInboundHandlerAdapter
-    { public override void ChannelRead(IChannelHandlerContext ctx, object msg) => _ = outCtx.WriteAndFlushAsync(msg); }
+    {
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            _ = outCtx.WriteAndFlushAsync(msg);
+        }
+    }
     private sealed class ClientReader(Action<Exception> failed) : ChannelInboundHandlerAdapter
     {
         public override void ChannelRead(IChannelHandlerContext ctx, object msg) { ((ByteBuf)msg).Release(); _ = ctx.CloseAsync(); }

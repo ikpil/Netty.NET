@@ -221,8 +221,10 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
     // (https://learn.microsoft.com/dotnet/csharp/language-reference/keywords/override), so this internal forwarder
     // serves the friend test assembly, like MessageToMessageDecoder.InvokeDecode in codec-base (docs/codec-base-porting.md,
     // Package access).
-    internal void InvokeDecode(IChannelHandlerContext ctx, ByteBuf buffer, IList<object> @out) =>
+    internal void InvokeDecode(IChannelHandlerContext ctx, ByteBuf buffer, IList<object> @out)
+    {
         Decode(ctx, buffer, @out);
+    }
 
     private MqttMessage InvalidMessage(Exception cause)
     {

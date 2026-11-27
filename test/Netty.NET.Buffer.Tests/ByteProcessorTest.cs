@@ -37,7 +37,10 @@ public class ByteProcessorTest
     {
         var native = new NativeMemoryAllocator();
         var allocator = new UnpooledByteBufAllocator(false, native);
-        ByteBuf Direct(byte[] content) => allocator.DirectBuffer(content.Length, content.Length).WriteBytes(content);
+        ByteBuf Direct(byte[] content)
+        {
+            return allocator.DirectBuffer(content.Length, content.Length).WriteBytes(content);
+        }
         ByteBuf buffer = kind switch
         {
             0 => Unpooled.WrappedBuffer(bytes),
@@ -101,13 +104,16 @@ public class ByteProcessorTest
         });
     }
 
-    private static bool Stops(int predicate, byte value) => predicate switch
+    private static bool Stops(int predicate, byte value)
     {
-        0 => value == 0, 1 => value != 0, 2 => value == 13, 3 => value != 13,
-        4 => value == 10, 5 => value != 10, 6 => value == 59, 7 => value == 44, 8 => value == 32,
-        9 => value is 13 or 10, 10 => value is not (13 or 10),
-        11 => value is 32 or 9, 12 => value is not (32 or 9), _ => throw new ArgumentOutOfRangeException(nameof(predicate))
-    };
+        return predicate switch
+        {
+            0 => value == 0, 1 => value != 0, 2 => value == 13, 3 => value != 13,
+            4 => value == 10, 5 => value != 10, 6 => value == 59, 7 => value == 44, 8 => value == 32,
+            9 => value is 13 or 10, 10 => value is not (13 or 10),
+            11 => value is 32 or 9, 12 => value is not (32 or 9), _ => throw new ArgumentOutOfRangeException(nameof(predicate))
+        };
+    }
 
     [Theory]
     [InlineData(0)] [InlineData(1)] [InlineData(2)] [InlineData(3)] [InlineData(4)] [InlineData(5)] [InlineData(6)]

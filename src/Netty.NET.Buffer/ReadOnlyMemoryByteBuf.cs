@@ -51,7 +51,10 @@ public sealed class ReadOnlyMemoryByteBuf : AbstractReferenceCountedByteBuf
         SetIndex(0, memory.Length);
     }
 
-    public override IByteBufAllocator Alloc() => _allocator;
+    public override IByteBufAllocator Alloc()
+    {
+        return _allocator;
+    }
     public override bool IsReadOnly => true;
     public override bool IsContiguous => true;
     public override bool IsDirect => _direct;
@@ -62,10 +65,14 @@ public sealed class ReadOnlyMemoryByteBuf : AbstractReferenceCountedByteBuf
     }
 
     protected override Memory<byte> GetMemoryCore(int index, int length)
-        => throw new NotSupportedException("The buffer is read-only.");
+    {
+        throw new NotSupportedException("The buffer is read-only.");
+    }
 
     protected override ReadOnlyMemory<byte> GetReadOnlyMemoryCore(int index, int length)
-        => _memory.Slice(index, length);
+    {
+        return _memory.Slice(index, length);
+    }
 
     internal override BufferMemoryLease AcquireReadLease()
     {
@@ -91,5 +98,8 @@ public sealed class ReadOnlyMemoryByteBuf : AbstractReferenceCountedByteBuf
         catch { result.Release(); throw; }
     }
 
-    protected override void Deallocate() => _memory = default;
+    protected override void Deallocate()
+    {
+        _memory = default;
+    }
 }

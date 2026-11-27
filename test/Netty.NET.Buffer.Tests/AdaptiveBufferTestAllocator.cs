@@ -53,19 +53,27 @@ internal sealed class AdaptiveBufferTestAllocator : AbstractByteBufAllocator, ID
     }
 
     private AdaptivePoolingAllocator Pool(bool direct)
-        => new(new TestChunkAllocator((size, max) => Raw(direct, size, max)), _lowMemory, 2, 128, 3, 1);
+    {
+        return new(new TestChunkAllocator((size, max) => Raw(direct, size, max)), _lowMemory, 2, 128, 3, 1);
+    }
 
     private ByteBuf Raw(bool direct, int capacity, int maxCapacity)
-        => StorageFactory != null ? StorageFactory(direct, capacity, maxCapacity)
+    {
+        return StorageFactory != null ? StorageFactory(direct, capacity, maxCapacity)
             : direct ? new UnpooledDirectByteBuf(this, capacity, maxCapacity, Native)
             : new UnpooledHeapByteBuf(this, capacity, maxCapacity);
+    }
 
     // Mirrors AdaptivePoolingAllocator.Allocate: fixed classes, then buddy unless low-memory.
     internal bool IsPooled(int size)
-        => size <= _pools[0].MaxPooledBufSize && (SizeClassIndexOf(size) < GetSizeClasses().Length || !_lowMemory);
+    {
+        return size <= _pools[0].MaxPooledBufSize && (SizeClassIndexOf(size) < GetSizeClasses().Length || !_lowMemory);
+    }
 
     internal int ComputeBufferCapacity(bool direct, int size, int maxCapacity)
-        => IsPooled(size) ? Controller(direct, SizeClassIndexOf(size)).ComputeBufferCapacity(size, maxCapacity, false) : size;
+    {
+        return IsPooled(size) ? Controller(direct, SizeClassIndexOf(size)).ComputeBufferCapacity(size, maxCapacity, false) : size;
+    }
 
     private IChunkController Controller(bool direct, int index)
     {
@@ -88,9 +96,13 @@ internal sealed class AdaptiveBufferTestAllocator : AbstractByteBufAllocator, ID
 
     public override bool IsDirectBufferPooled => true;
     protected override ByteBuf NewHeapBuffer(int initialCapacity, int maxCapacity)
-        => new AdaptiveByteBuf(initialCapacity, maxCapacity, (size, max) => Reserve(false, size, max));
+    {
+        return new AdaptiveByteBuf(initialCapacity, maxCapacity, (size, max) => Reserve(false, size, max));
+    }
     protected override ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity)
-        => new AdaptiveByteBuf(initialCapacity, maxCapacity, (size, max) => Reserve(true, size, max));
+    {
+        return new AdaptiveByteBuf(initialCapacity, maxCapacity, (size, max) => Reserve(true, size, max));
+    }
 
     internal AdaptiveChunkAllocation Reserve(bool direct, int size, int maxCapacity)
     {
@@ -148,15 +160,24 @@ internal sealed class AdaptiveBufferTestAllocator : AbstractByteBufAllocator, ID
 // Test-only AdaptivePoolingAllocator.IChunkAllocator over a delegate, with pool/controller helpers.
 internal sealed class TestChunkAllocator(Func<int, int, ByteBuf> allocate) : IChunkAllocator
 {
-    public ByteBuf Allocate(int initialCapacity, int maxCapacity) => allocate(initialCapacity, maxCapacity);
+    public ByteBuf Allocate(int initialCapacity, int maxCapacity)
+    {
+        return allocate(initialCapacity, maxCapacity);
+    }
 
     internal static AdaptivePoolingAllocator Pool(bool lowMemory = false, Func<int, int, ByteBuf> allocate = null)
-        => new(new TestChunkAllocator(allocate ?? ((size, max) => new UnpooledHeapByteBuf(size, max))),
+    {
+        return new(new TestChunkAllocator(allocate ?? ((size, max) => new UnpooledHeapByteBuf(size, max))),
             lowMemory, 2, 128, 3, 4);
+    }
 
     internal static SizeClassChunkController SizeClassController(AdaptivePoolingAllocator pool, int index)
-        => (SizeClassChunkController)pool.SizeClassedMagazineGroups[index].Magazines[0].ChunkController;
+    {
+        return (SizeClassChunkController)pool.SizeClassedMagazineGroups[index].Magazines[0].ChunkController;
+    }
 
     internal static BuddyChunkController BuddyController(AdaptivePoolingAllocator pool)
-        => (BuddyChunkController)pool.LargeBufferMagazineGroup.Magazines[0].ChunkController;
+    {
+        return (BuddyChunkController)pool.LargeBufferMagazineGroup.Magazines[0].ChunkController;
+    }
 }

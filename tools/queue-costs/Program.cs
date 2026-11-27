@@ -146,13 +146,16 @@ void Record(string candidate, string phase, int count, List<(double Ns, double B
     double[] allocations = values.Select(v => v.Bytes).Order().ToArray();
     rows.Add(new Row(candidate, phase, count, times[samples / 2], times[0], times[^1], allocations[samples / 2]));
 }
-static IQueue Create(string candidate) => candidate switch
+static IQueue Create(string candidate)
 {
-    "snapshot-rebuild" => new Heap(true),
-    "priority-queue-remove" => new Heap(false),
-    "indexed-heap" => new IndexedHeap(),
-    _ => new Tree()
-};
+    return candidate switch
+    {
+        "snapshot-rebuild" => new Heap(true),
+        "priority-queue-remove" => new Heap(false),
+        "indexed-heap" => new IndexedHeap(),
+        _ => new Tree()
+    };
+}
 record Row(string Candidate, string Phase, int Count, double MedianNs, double MinNs, double MaxNs, double MedianBytes);
 sealed class Entry(int id, int offset) : IPriorityQueueNode<Entry>
 {
@@ -161,10 +164,22 @@ sealed class Entry(int id, int offset) : IPriorityQueueNode<Entry>
     internal int Offset => offset;
     // Includes signed-clock wrap and equal deadlines, with a valid compact horizon.
     internal (long Deadline, long Sequence) Priority => (unchecked(long.MaxValue - 1000 + offset), id);
-    public override bool Equals(object other) => other is Entry;
-    public override int GetHashCode() => 0;
-    public int PriorityQueueIndex(DefaultPriorityQueue<Entry> queue) => index;
-    public void PriorityQueueIndex(DefaultPriorityQueue<Entry> queue, int value) => index = value;
+    public override bool Equals(object other)
+    {
+        return other is Entry;
+    }
+    public override int GetHashCode()
+    {
+        return 0;
+    }
+    public int PriorityQueueIndex(DefaultPriorityQueue<Entry> queue)
+    {
+        return index;
+    }
+    public void PriorityQueueIndex(DefaultPriorityQueue<Entry> queue, int value)
+    {
+        index = value;
+    }
 }
 interface IQueue
 {
@@ -177,10 +192,19 @@ sealed class Heap(bool rebuild) : IQueue
 {
     readonly PriorityQueue<Entry, (long Deadline, long Sequence)> queue = new(PriorityComparer.Instance);
     public int Count => queue.Count;
-    public void Add(Entry entry) => queue.Enqueue(entry, entry.Priority);
-    public Entry Pop() => queue.Dequeue();
-    public bool Remove(Entry entry) => rebuild ? RemoveByRebuilding(entry) :
-        queue.Remove(entry, out _, out _, ReferenceEqualityComparer.Instance);
+    public void Add(Entry entry)
+    {
+        queue.Enqueue(entry, entry.Priority);
+    }
+    public Entry Pop()
+    {
+        return queue.Dequeue();
+    }
+    public bool Remove(Entry entry)
+    {
+        return rebuild ? RemoveByRebuilding(entry) :
+            queue.Remove(entry, out _, out _, ReferenceEqualityComparer.Instance);
+    }
     private bool RemoveByRebuilding(Entry entry)
     {
         var items = queue.UnorderedItems.ToArray();
@@ -196,15 +220,27 @@ sealed class IndexedHeap : IQueue
     readonly DefaultPriorityQueue<Entry> queue = new(
         Comparer<Entry>.Create((a, b) => PriorityComparer.Instance.Compare(a.Priority, b.Priority)), 0);
     public int Count => queue.Count;
-    public void Add(Entry entry) => queue.Offer(entry);
-    public Entry Pop() => queue.Poll();
-    public bool Remove(Entry entry) => queue.Remove(entry);
+    public void Add(Entry entry)
+    {
+        queue.Offer(entry);
+    }
+    public Entry Pop()
+    {
+        return queue.Poll();
+    }
+    public bool Remove(Entry entry)
+    {
+        return queue.Remove(entry);
+    }
 }
 sealed class Tree : IQueue
 {
     readonly SortedSet<Entry> queue = new(Comparer<Entry>.Create((a, b) => PriorityComparer.Instance.Compare(a.Priority, b.Priority)));
     public int Count => queue.Count;
-    public void Add(Entry entry) => queue.Add(entry);
+    public void Add(Entry entry)
+    {
+        queue.Add(entry);
+    }
     public bool Remove(Entry entry)
     {
         // Priorities are unique but are not themselves identity. The adapter still
@@ -224,5 +260,8 @@ sealed class PriorityComparer : IComparer<(long Deadline, long Sequence)>
 }
 sealed class NoWorker : IThreadFactory
 {
-    public Thread NewThread(Action task) => null;
+    public Thread NewThread(Action task)
+    {
+        return null;
+    }
 }

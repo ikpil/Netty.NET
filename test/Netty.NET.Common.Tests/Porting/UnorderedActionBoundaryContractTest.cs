@@ -14,11 +14,16 @@ public class UnorderedActionBoundaryContractTest
 {
     private sealed class NoWorkerFactory : IThreadFactory
     {
-        public Thread NewThread(Action work) => null;
+        public Thread NewThread(Action work)
+        {
+            return null;
+        }
     }
 
     private static void Wait(ManualResetEventSlim gate)
-        => Assert.True(gate.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
+    {
+        Assert.True(gate.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
+    }
 
     [Fact]
     public void PublicStopUsesThePersistentTaskWithoutAJdkServiceOrMembershipList()

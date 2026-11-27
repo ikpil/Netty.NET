@@ -287,9 +287,11 @@ public class MultiThreadIoEventLoopGroupSourceTest
     }
 
     // CLR: shared with ScalableEventLoopGroupContractTest; a NIO-backed auto-scaling group of two workers.
-    internal static MultiThreadIoEventLoopGroup NewGroup(int minimum = 0) =>
-        new(2, (Action<Action>)null, new AutoScalingEventExecutorChooserFactory(
+    internal static MultiThreadIoEventLoopGroup NewGroup(int minimum = 0)
+    {
+        return new(2, (Action<Action>)null, new AutoScalingEventExecutorChooserFactory(
             minimum, 2, TimeSpan.FromMilliseconds(200), 0.4, 0.8, 2, 1, 1), NioIoHandler.NewFactory());
+    }
 
     // CLR: shared with ScalableEventLoopGroupContractTest; keeps an executor busy until cancelled. runAllTasks
     // publishes its active time when its queue drains, so each piece of work is re-submitted from outside the loop.

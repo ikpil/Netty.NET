@@ -33,46 +33,58 @@ public class LinuxTcpMd5SourceTest
     private static readonly IReadOnlyDictionary<IPAddress, byte[]> NoKeys = new Dictionary<IPAddress, byte[]>();
 
     [Fact]
-    public Task TestServerSocketChannelOption() => WithServer((_, server, _) =>
+    public Task TestServerSocketChannelOption()
     {
-        SetServerKeys(server, Keys(IPAddress.Loopback, ServerKey));
-        SetServerKeys(server, NoKeys);
-        return Task.CompletedTask;
-    });
-
-    [Fact]
-    public Task TestServerOption() => WithServer(async (group, _, token) =>
-    {
-        var any = Socket.OSSupportsIPv6 ? IPAddress.IPv6Any : IPAddress.Any;
-        var server = await NewServer(group).BindAsync(new IPEndPoint(any, 0), token);
-        try
+        return WithServer((_, server, _) =>
         {
             SetServerKeys(server, Keys(IPAddress.Loopback, ServerKey));
             SetServerKeys(server, NoKeys);
-        }
-        finally { await server.CloseAsync(); }
-    });
-
-    [Fact]
-    public Task TestKeyMismatch() => WithServer(async (group, server, token) =>
-    {
-        SetServerKeys(server, Keys(IPAddress.Loopback, ServerKey));
-        await Assert.ThrowsAsync<ConnectTimeoutException>(async () =>
-        {
-            var client = await NewClient(group).Option(ChannelOption.TCP_MD5SIG, Keys(IPAddress.Loopback, BadKey))
-                .Option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000).ConnectAsync(server.LocalAddress, cancellationToken: token);
-            await client.CloseAsync(TestContext.Current.CancellationToken);
+            return Task.CompletedTask;
         });
-    });
+    }
 
     [Fact]
-    public Task TestKeyMatch() => WithServer(async (group, server, token) =>
+    public Task TestServerOption()
     {
-        SetServerKeys(server, Keys(IPAddress.Loopback, ServerKey));
-        var client = await NewClient(group).Option(ChannelOption.TCP_MD5SIG, Keys(IPAddress.Loopback, ServerKey))
-            .ConnectAsync(server.LocalAddress, cancellationToken: token);
-        await client.CloseAsync();
-    });
+        return WithServer(async (group, _, token) =>
+        {
+            var any = Socket.OSSupportsIPv6 ? IPAddress.IPv6Any : IPAddress.Any;
+            var server = await NewServer(group).BindAsync(new IPEndPoint(any, 0), token);
+            try
+            {
+                SetServerKeys(server, Keys(IPAddress.Loopback, ServerKey));
+                SetServerKeys(server, NoKeys);
+            }
+            finally { await server.CloseAsync(); }
+        });
+    }
+
+    [Fact]
+    public Task TestKeyMismatch()
+    {
+        return WithServer(async (group, server, token) =>
+        {
+            SetServerKeys(server, Keys(IPAddress.Loopback, ServerKey));
+            await Assert.ThrowsAsync<ConnectTimeoutException>(async () =>
+            {
+                var client = await NewClient(group).Option(ChannelOption.TCP_MD5SIG, Keys(IPAddress.Loopback, BadKey))
+                    .Option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000).ConnectAsync(server.LocalAddress, cancellationToken: token);
+                await client.CloseAsync(TestContext.Current.CancellationToken);
+            });
+        });
+    }
+
+    [Fact]
+    public Task TestKeyMatch()
+    {
+        return WithServer(async (group, server, token) =>
+        {
+            SetServerKeys(server, Keys(IPAddress.Loopback, ServerKey));
+            var client = await NewClient(group).Option(ChannelOption.TCP_MD5SIG, Keys(IPAddress.Loopback, ServerKey))
+                .ConnectAsync(server.LocalAddress, cancellationToken: token);
+            await client.CloseAsync();
+        });
+    }
 
     internal static void SetServerKeys(IChannel server, IReadOnlyDictionary<IPAddress, byte[]> keys)
     {
@@ -100,13 +112,19 @@ public class LinuxTcpMd5SourceTest
         finally { await group.StopAsync(); }
     }
 
-    private static ServerBootstrap NewServer(MultiThreadIoEventLoopGroup group) =>
-        new ServerBootstrap().Group(group).ChannelFactory(static () => new NioServerSocketChannel())
+    private static ServerBootstrap NewServer(MultiThreadIoEventLoopGroup group)
+    {
+        return new ServerBootstrap().Group(group).ChannelFactory(static () => new NioServerSocketChannel())
             .ChildHandler(new ChannelInboundHandlerAdapter());
+    }
 
-    internal static Bootstrap NewClient(MultiThreadIoEventLoopGroup group) =>
-        new Bootstrap().Group(group).ChannelFactory(static () => new NioSocketChannel()).Handler(new ChannelInboundHandlerAdapter());
+    internal static Bootstrap NewClient(MultiThreadIoEventLoopGroup group)
+    {
+        return new Bootstrap().Group(group).ChannelFactory(static () => new NioSocketChannel()).Handler(new ChannelInboundHandlerAdapter());
+    }
 
-    internal static IReadOnlyDictionary<IPAddress, byte[]> Keys(IPAddress address, byte[] key) =>
-        new Dictionary<IPAddress, byte[]> { [address] = key };
+    internal static IReadOnlyDictionary<IPAddress, byte[]> Keys(IPAddress address, byte[] key)
+    {
+        return new Dictionary<IPAddress, byte[]> { [address] = key };
+    }
 }

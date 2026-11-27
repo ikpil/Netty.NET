@@ -46,7 +46,10 @@ public class EventLoopLifecycleContractTest
     }
     private sealed class IncompatibleLocalChannel : LocalChannel
     {
-        protected override bool IsCompatible(IEventLoop loop) => false;
+        protected override bool IsCompatible(IEventLoop loop)
+        {
+            return false;
+        }
     }
     [Fact(Timeout = 10000)]
     public async Task RegistrationFailuresKeepTheSourceMessages()

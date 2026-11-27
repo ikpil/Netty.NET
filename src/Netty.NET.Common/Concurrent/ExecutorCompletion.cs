@@ -253,7 +253,10 @@ public sealed class CompletionRegistration : IDisposable
 
     /// <summary>Removes this registration if it has not been claimed for notification.</summary>
     /// <remarks>Nonblocking and idempotent; it does not cancel the source Task or wait for a claimed callback.</remarks>
-    public void Dispose() => Volatile.Read(ref _owner)?.Remove(this);
+    public void Dispose()
+    {
+        Volatile.Read(ref _owner)?.Remove(this);
+    }
 
     internal void Finish(Exception error, bool canceled)
     {

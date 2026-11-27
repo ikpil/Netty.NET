@@ -309,10 +309,22 @@ public class WritableMemoryByteBufTest
     private sealed class ArrayMemoryManager : MemoryManager<byte>
     {
         private byte[] _array;
-        public ArrayMemoryManager(int length) => _array = new byte[length];
-        public override Span<byte> GetSpan() => _array ?? throw new ObjectDisposedException(nameof(ArrayMemoryManager));
-        public override MemoryHandle Pin(int elementIndex = 0) => _array.AsMemory(elementIndex).Pin();
+        public ArrayMemoryManager(int length)
+        {
+            _array = new byte[length];
+        }
+        public override Span<byte> GetSpan()
+        {
+            return _array ?? throw new ObjectDisposedException(nameof(ArrayMemoryManager));
+        }
+        public override MemoryHandle Pin(int elementIndex = 0)
+        {
+            return _array.AsMemory(elementIndex).Pin();
+        }
         public override void Unpin() { }
-        protected override void Dispose(bool disposing) => _array = null;
+        protected override void Dispose(bool disposing)
+        {
+            _array = null;
+        }
     }
 }

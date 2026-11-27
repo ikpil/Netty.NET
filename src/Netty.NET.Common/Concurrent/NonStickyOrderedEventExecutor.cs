@@ -163,7 +163,10 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
     }
 
     public override Task TerminationFuture => _executor.TerminationFuture;
-    public override Task StopAsync() => _executor.StopAsync();
+    public override Task StopAsync()
+    {
+        return _executor.StopAsync();
+    }
 
     public override void Shutdown()
     {
@@ -216,8 +219,10 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
         }
     }
 
-    private static bool IsImmediateShutdownRequested(RunnerReservation reservation) =>
-        reservation.QueueOwner?.IsImmediateShutdownRequested ?? false;
+    private static bool IsImmediateShutdownRequested(RunnerReservation reservation)
+    {
+        return reservation.QueueOwner?.IsImmediateShutdownRequested ?? false;
+    }
 
     private bool Dispatch(RunnerReservation reservation)
     {
@@ -269,9 +274,15 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
         private int _claim;
         internal bool Inline { get; private set; }
         internal UnorderedThreadPoolEventExecutor QueueOwner { get; private set; }
-        public void BindQueueOwner(UnorderedThreadPoolEventExecutor queueOwner) => QueueOwner = queueOwner;
+        public void BindQueueOwner(UnorderedThreadPoolEventExecutor queueOwner)
+        {
+            QueueOwner = queueOwner;
+        }
         public bool IsCanceled => Volatile.Read(ref _claim) == 2;
-        internal bool Invalidate() => Interlocked.CompareExchange(ref _claim, 2, 0) == 0;
+        internal bool Invalidate()
+        {
+            return Interlocked.CompareExchange(ref _claim, 2, 0) == 0;
+        }
         public void CancelForShutdown()
         {
             if (Invalidate()) owner.FinishPending(this, null, true);

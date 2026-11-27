@@ -57,7 +57,10 @@ public class DefaultDatagramChannelConfig : DefaultChannelConfig, IDatagramChann
         _linuxDualMode = channel.LinuxDualMode && Socket.OSSupportsIPv4;
     }
 
-    protected Socket JavaSocket() => _javaSocket;
+    protected Socket JavaSocket()
+    {
+        return _javaSocket;
+    }
 
     public override IReadOnlyDictionary<ChannelOption, object> GetOptions()
     {
@@ -213,7 +216,10 @@ public class DefaultDatagramChannelConfig : DefaultChannelConfig, IDatagramChann
     }
 
     // CLR: PlatformDependent.maybeSuperUser(); see AbstractChannel.MaybeSuperUser.
-    private static bool MaybeSuperUser() => AbstractChannel.MaybeSuperUser();
+    private static bool MaybeSuperUser()
+    {
+        return AbstractChannel.MaybeSuperUser();
+    }
 
     // CLR: NioDatagramChannelConfig returns an address of the IP_MULTICAST_IF interface; the CLR
     // socket uses the interface's first unicast address of the socket family.
@@ -474,7 +480,10 @@ public class DefaultDatagramChannelConfig : DefaultChannelConfig, IDatagramChann
         return this;
     }
 
-    protected override void AutoReadCleared() => ((AbstractChannel)Channel).ClearReadPending();
+    protected override void AutoReadCleared()
+    {
+        ((AbstractChannel)Channel).ClearReadPending();
+    }
 
     // Linux's IPv6 traffic class is IPV6_TCLASS, which has no SocketOptionName mapping.
     // https://github.com/torvalds/linux/blob/master/include/uapi/linux/in6.h

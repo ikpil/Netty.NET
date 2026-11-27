@@ -101,8 +101,14 @@ public class DomainSocketContractTest
         internal readonly TaskCompletionSource<int> ByteRead = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal readonly TaskCompletionSource InputClosed = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        public override void ChannelActive(IChannelHandlerContext ctx) => Active.TrySetResult(ctx.Channel);
-        protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf msg) => ByteRead.TrySetResult(msg.ReadByte());
+        public override void ChannelActive(IChannelHandlerContext ctx)
+        {
+            Active.TrySetResult(ctx.Channel);
+        }
+        protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf msg)
+        {
+            ByteRead.TrySetResult(msg.ReadByte());
+        }
         public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
         {
             if (evt is ChannelInputShutdownEvent) InputClosed.TrySetResult();

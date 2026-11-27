@@ -23,11 +23,14 @@ namespace Netty.NET.Buffer.Tests;
 
 public class UnpooledAsciiStringCopyingTest
 {
-    private static Encoding Encoder(int kind) => kind switch
+    private static Encoding Encoder(int kind)
     {
-        0 => Encoding.UTF8, 1 => Encoding.ASCII, 2 => Encoding.Latin1,
-        3 => Encoding.Unicode, 4 => Encoding.BigEndianUnicode, _ => Encoding.UTF32
-    };
+        return kind switch
+        {
+            0 => Encoding.UTF8, 1 => Encoding.ASCII, 2 => Encoding.Latin1,
+            3 => Encoding.Unicode, 4 => Encoding.BigEndianUnicode, _ => Encoding.UTF32
+        };
+    }
     public static IEnumerable<object[]> Cases()
     {
         for (int kind = 0; kind < 6; ++kind)

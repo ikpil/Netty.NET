@@ -94,9 +94,11 @@ public class NioEventLoopSourceTest
     // CLR: NioEventLoop.registeredChannels() returns NioIoHandler.numRegistered(); the deprecated NioEventLoop is not
     // ported, so the count is read from the loop's NioIoHandler.
     private static Task<int> RegisteredChannels(SingleThreadIoEventLoop loop)
-        => loop.SubmitAsync(() => ((NioIoHandler)typeof(SingleThreadIoEventLoop)
+    {
+        return loop.SubmitAsync(() => ((NioIoHandler)typeof(SingleThreadIoEventLoop)
             .GetMethod("IoHandler", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
             .Invoke(loop, null)).NumRegistered()).WaitAsync(TimeSpan.FromSeconds(1));
+    }
 
     [Fact(Timeout = 3000)]
     public async Task TestSelectableChannel()
@@ -173,7 +175,12 @@ public class TcpServerSocketSourceTest
         finally { await channel.CloseAsync(); await group.StopAsync(); }
     }
     private sealed class ProbeServer(Socket socket) : NioServerSocketChannel(socket)
-    { internal bool ShouldClose(Exception error) => CloseOnReadError(error); }
+    {
+        internal bool ShouldClose(Exception error)
+        {
+            return CloseOnReadError(error);
+        }
+    }
 }
 
 public class AbstractSocketChannelOptionsSourceTest

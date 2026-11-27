@@ -21,13 +21,22 @@ namespace Netty.NET.Transport.Tests;
 
 public class DefaultMaxMessagesRecvByteBufAllocatorTest
 {
-    private DefaultMaxMessagesRecvByteBufAllocator NewAllocator(bool ignoreReadBytes) => new Allocator(ignoreReadBytes);
+    private DefaultMaxMessagesRecvByteBufAllocator NewAllocator(bool ignoreReadBytes)
+    {
+        return new Allocator(ignoreReadBytes);
+    }
     private sealed class Allocator(bool ignoreReadBytes) : DefaultMaxMessagesRecvByteBufAllocator(2, ignoreReadBytes)
     {
-        public override IRecvByteBufAllocator.IHandle NewHandle() => new Handle(this);
+        public override IRecvByteBufAllocator.IHandle NewHandle()
+        {
+            return new Handle(this);
+        }
         private sealed class Handle(Allocator allocator) : MaxMessageHandle(allocator)
         {
-            public override int Guess() => 0;
+            public override int Guess()
+            {
+                return 0;
+            }
         }
     }
     [Fact]

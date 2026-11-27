@@ -14,7 +14,10 @@ public class UnorderedGracefulShutdownContractTest
 {
     private sealed class WorkerlessFactory : IThreadFactory
     {
-        public Thread NewThread(Action task) => null;
+        public Thread NewThread(Action task)
+        {
+            return null;
+        }
     }
 
     // Model a result canceled before its membership removal acquires the pool gate.
@@ -24,16 +27,28 @@ public class UnorderedGracefulShutdownContractTest
         private Action _remove;
         private int _claim;
         public bool IsCanceled => _result.Task.IsCanceled;
-        public void SetCancellationRemoval(Action remove) => _remove = remove;
-        internal void CancelResult() => _result.TrySetCanceled();
+        public void SetCancellationRemoval(Action remove)
+        {
+            _remove = remove;
+        }
+        internal void CancelResult()
+        {
+            _result.TrySetCanceled();
+        }
         public void CancelForShutdown()
         {
             if (Interlocked.Exchange(ref _claim, 1) != 0) return;
             Interlocked.Exchange(ref _remove, null)?.Invoke();
             observe();
         }
-        public void Reject(Exception error) => _result.TrySetException(error);
-        public void Run() => Assert.Fail("Canceled reservation ran");
+        public void Reject(Exception error)
+        {
+            _result.TrySetException(error);
+        }
+        public void Run()
+        {
+            Assert.Fail("Canceled reservation ran");
+        }
     }
 
     [Theory]

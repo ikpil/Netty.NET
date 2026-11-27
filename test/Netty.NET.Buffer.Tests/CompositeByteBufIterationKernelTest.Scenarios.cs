@@ -61,7 +61,10 @@ public partial class CompositeByteBufIterationKernelTest
                 if (mode == 2 && seen.Count == 4) throw failure;
                 return mode != 1 || seen.Count < 4;
             };
-            int Visit() => descending ? outer.ForEachByteDesc(processor) : outer.ForEachByte(processor);
+            int Visit()
+            {
+                return descending ? outer.ForEachByteDesc(processor) : outer.ForEachByte(processor);
+            }
             if (mode == 2) Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => Visit()));
             else Assert.Equal(mode == 0 ? -1 : descending ? 14 : 5, Visit());
             IEnumerable<byte> expected = s.Expected(8, 16, form == 3);
@@ -105,7 +108,10 @@ public partial class CompositeByteBufIterationKernelTest
             }
             return action != 2 && (action != 1 || seen.Count < 2);
         };
-        int Visit() => descending ? s.Owner.ForEachByteDesc(processor) : s.Owner.ForEachByte(processor);
+        int Visit()
+        {
+            return descending ? s.Owner.ForEachByteDesc(processor) : s.Owner.ForEachByte(processor);
+        }
         if (action == 0) Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => Visit()));
         else if (action == 3) Assert.Throws<IllegalReferenceCountException>(() => Visit());
         else Assert.Equal(action == 2 ? descending ? 5 : 2 : descending ? 4 : 3, Visit());
@@ -225,7 +231,10 @@ public partial class CompositeByteBufIterationKernelTest
         public HighCoordinateStorage() : base(int.MaxValue) { SetIndex(Start, int.MaxValue); }
         public override int Capacity { get => int.MaxValue; set => throw new NotSupportedException(); }
         public override bool IsDirect => false;
-        protected override Memory<byte> GetMemoryCore(int index, int length) => _bytes.AsMemory(index - Start, length);
+        protected override Memory<byte> GetMemoryCore(int index, int length)
+        {
+            return _bytes.AsMemory(index - Start, length);
+        }
         protected override void Deallocate() { }
     }
     [Theory]
@@ -265,7 +274,10 @@ public partial class CompositeByteBufIterationKernelTest
         using var s = new Storage(direct, 0);
         s.First.Retain(); int calls = 0;
         Func<byte, bool> processor = _ => { if (++calls == (last ? 4 : 1)) s.Owner.Release(); return true; };
-        int Visit() => descending ? s.Owner.ForEachByteDesc(2, 4, processor) : s.Owner.ForEachByte(2, 4, processor);
+        int Visit()
+        {
+            return descending ? s.Owner.ForEachByteDesc(2, 4, processor) : s.Owner.ForEachByte(2, 4, processor);
+        }
         if (last) Assert.Equal(-1, Visit());
         else Assert.Throws<IllegalReferenceCountException>(() => Visit());
         Assert.Equal(last ? 4 : 1, calls); Assert.Equal(0, s.Owner.RefCnt); Assert.Equal(1, s.First.RefCnt);

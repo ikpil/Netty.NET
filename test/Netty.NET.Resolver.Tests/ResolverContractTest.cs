@@ -310,13 +310,25 @@ public class ResolverContractTest
 
     private sealed class FixedResolver(IReadOnlyList<IPAddress> addresses) : InetNameResolver(ImmediateEventExecutor.INSTANCE)
     {
-        protected override Task<IPAddress> DoResolveAsync(string inetHost, CancellationToken cancellationToken) => Task.FromResult(addresses[0]);
-        protected override Task<IReadOnlyList<IPAddress>> DoResolveAllAsync(string inetHost, CancellationToken cancellationToken) => Task.FromResult(addresses);
+        protected override Task<IPAddress> DoResolveAsync(string inetHost, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(addresses[0]);
+        }
+        protected override Task<IReadOnlyList<IPAddress>> DoResolveAllAsync(string inetHost, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(addresses);
+        }
     }
 
     private sealed class ThrowingResolver(Exception error) : SimpleNameResolver<IPAddress>(ImmediateEventExecutor.INSTANCE)
     {
-        protected override Task<IPAddress> DoResolveAsync(string inetHost, CancellationToken cancellationToken) => throw error;
-        protected override Task<IReadOnlyList<IPAddress>> DoResolveAllAsync(string inetHost, CancellationToken cancellationToken) => throw error;
+        protected override Task<IPAddress> DoResolveAsync(string inetHost, CancellationToken cancellationToken)
+        {
+            throw error;
+        }
+        protected override Task<IReadOnlyList<IPAddress>> DoResolveAllAsync(string inetHost, CancellationToken cancellationToken)
+        {
+            throw error;
+        }
     }
 }

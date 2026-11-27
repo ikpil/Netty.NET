@@ -117,8 +117,14 @@ public class SchedulingContractTest
     {
         private readonly MockTicker clock = global::Netty.NET.Common.Concurrent.Ticker.NewMockTicker();
         public ManualExecutor() : base(null) { }
-        public override Ticker Ticker() => clock;
-        public void Advance(long nanos) => clock.Advance(nanos);
+        public override Ticker Ticker()
+        {
+            return clock;
+        }
+        public void Advance(long nanos)
+        {
+            clock.Advance(nanos);
+        }
         internal IScheduledWork Head => PeekScheduledTask();
         internal bool holdRemoval;
         internal readonly List<Action> removals = new();
@@ -127,19 +133,43 @@ public class SchedulingContractTest
             if (holdRemoval) removals.Add(task.QueueCallback);
             else base.ScheduleRemoveScheduled(task);
         }
-        public Action PollDue() => PollScheduledTask(GetCurrentTimeNanos());
-        public bool TransferDue(IQueue<Action> queue) => FetchFromScheduledTaskQueue(queue);
-        public override bool InEventLoop(Thread thread) => !holdRemoval;
+        public Action PollDue()
+        {
+            return PollScheduledTask(GetCurrentTimeNanos());
+        }
+        public bool TransferDue(IQueue<Action> queue)
+        {
+            return FetchFromScheduledTaskQueue(queue);
+        }
+        public override bool InEventLoop(Thread thread)
+        {
+            return !holdRemoval;
+        }
         public override void Execute(Action task)
         {
             task();
         }
-        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+        {
+            return Task.CompletedTask;
+        }
         public override Task TerminationFuture => Task.CompletedTask;
-        public override bool IsShuttingDown() => false;
-        public override bool IsShutdown() => false;
-        public override bool IsTerminated() => false;
-        public override bool AwaitTermination(TimeSpan timeout) => false;
+        public override bool IsShuttingDown()
+        {
+            return false;
+        }
+        public override bool IsShutdown()
+        {
+            return false;
+        }
+        public override bool IsTerminated()
+        {
+            return false;
+        }
+        public override bool AwaitTermination(TimeSpan timeout)
+        {
+            return false;
+        }
         public override void Shutdown() { }
     }
     [Theory]
@@ -163,8 +193,10 @@ public class SchedulingContractTest
         Assert.True(task.IsCompleted);
         if (!cancel) Assert.True(task.IsCompletedSuccessfully);
     }
-    private static void Shutdown(IEventExecutor executor) =>
+    private static void Shutdown(IEventExecutor executor)
+    {
         Assert.True(executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).Wait(TimeSpan.FromSeconds(5)));
+    }
 
     [Fact]
     public void SaturatingNanosecondConversionPreservesLargeDeadlines()
@@ -247,7 +279,10 @@ public class SchedulingContractTest
         internal int lazyCalls;
         internal readonly List<Action> submissions = new();
         private bool running;
-        public override bool InEventLoop(Thread thread) => running;
+        public override bool InEventLoop(Thread thread)
+        {
+            return running;
+        }
         internal void RunQueued(Action task)
         {
             running = true;
@@ -263,7 +298,10 @@ public class SchedulingContractTest
             ++lazyCalls;
             submissions.Add(command);
         }
-        protected override bool BeforeScheduledTaskSubmitted(long deadline) => before;
+        protected override bool BeforeScheduledTaskSubmitted(long deadline)
+        {
+            return before;
+        }
         protected override bool AfterScheduledTaskSubmitted(long deadline) { ++afterCalls; return after; }
         protected override void ValidateScheduled(TimeSpan amount)
         {

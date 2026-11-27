@@ -26,8 +26,17 @@ internal sealed class SourceInitializerExtension : ChannelInitializerExtension, 
     internal readonly ThreadLocal<IChannel> LastSeenListener = new();
     internal readonly ThreadLocal<IChannel> LastSeenChild = new();
     internal void ClearThreadLocals() { LastSeenClient.Value = null; LastSeenListener.Value = null; LastSeenChild.Value = null; }
-    public override void PostInitializeClientChannel(IChannel channel) => LastSeenClient.Value = channel;
-    public override void PostInitializeServerListenerChannel(IChannel channel) => LastSeenListener.Value = channel;
-    public override void PostInitializeServerChildChannel(IChannel channel) => LastSeenChild.Value = channel;
+    public override void PostInitializeClientChannel(IChannel channel)
+    {
+        LastSeenClient.Value = channel;
+    }
+    public override void PostInitializeServerListenerChannel(IChannel channel)
+    {
+        LastSeenListener.Value = channel;
+    }
+    public override void PostInitializeServerChildChannel(IChannel channel)
+    {
+        LastSeenChild.Value = channel;
+    }
     public void Dispose() { LastSeenClient.Dispose(); LastSeenListener.Dispose(); LastSeenChild.Dispose(); }
 }

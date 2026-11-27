@@ -103,9 +103,15 @@ internal sealed class MsQuicSslContext : QuicSslContext
     // The SNI mapping of a server context, or null.
     internal Func<string, QuicSslContext> Mapping => mapping;
 
-    internal long SessionCacheSize() => sessionCacheSize;
+    internal long SessionCacheSize()
+    {
+        return sessionCacheSize;
+    }
 
-    internal long SessionTimeout() => sessionTimeout;
+    internal long SessionTimeout()
+    {
+        return sessionTimeout;
+    }
 
     public override bool IsClient()
     {

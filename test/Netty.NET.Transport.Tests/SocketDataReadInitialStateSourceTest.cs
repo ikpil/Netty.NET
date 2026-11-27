@@ -207,8 +207,10 @@ public class SocketDataReadInitialStateSourceTest : AbstractSocketTest
         return DomainSocketTestPermutation.INSTANCE.DomainSocket();
     }
 
-    protected override EndPoint NewSocketAddress() =>
-        Domain ? DomainSocketTestPermutation.NewDomainSocketAddress() : base.NewSocketAddress();
+    protected override EndPoint NewSocketAddress()
+    {
+        return Domain ? DomainSocketTestPermutation.NewDomainSocketAddress() : base.NewSocketAddress();
+    }
 }
 #pragma warning restore xUnit1051
 #pragma warning restore xUnit1069

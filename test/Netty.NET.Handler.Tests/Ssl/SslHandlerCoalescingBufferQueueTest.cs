@@ -80,13 +80,19 @@ public class SslHandlerCoalescingBufferQueueTest
             this.bufferWrapper = bufferWrapper;
         }
 
-        internal static CumulationTestScenario[] Values() => new[]
+        internal static CumulationTestScenario[] Values()
         {
-            BASIC_NIO_BUFFER, READ_ONLY_AND_DUPLICATE_NIO_BUFFER, BASIC_DIRECT_BUFFER, DUPLICATE_DIRECT_BUFFER,
-            SLICED_DIRECT_BUFFER,
-        };
+            return new[]
+            {
+                BASIC_NIO_BUFFER, READ_ONLY_AND_DUPLICATE_NIO_BUFFER, BASIC_DIRECT_BUFFER, DUPLICATE_DIRECT_BUFFER,
+                SLICED_DIRECT_BUFFER,
+            };
+        }
 
-        public override string ToString() => name;
+        public override string ToString()
+        {
+            return name;
+        }
     }
 
     public static IEnumerable<object[]> CumulationTestScenarios()

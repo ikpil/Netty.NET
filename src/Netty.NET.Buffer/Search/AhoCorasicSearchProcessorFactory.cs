@@ -102,7 +102,10 @@ public class AhoCorasicSearchProcessorFactory : AbstractMultiSearchProcessorFact
     /**
      * Returns a new {@link Processor}.
      */
-    public override Processor NewSearchProcessor() => new(_jumpTable, _matchForNeedleId);
+    public override Processor NewSearchProcessor()
+    {
+        return new(_jumpTable, _matchForNeedleId);
+    }
 
     public sealed class Processor : IMultiSearchProcessor
     {
@@ -124,7 +127,13 @@ public class AhoCorasicSearchProcessorFactory : AbstractMultiSearchProcessorFact
             return true;
         }
 
-        public int GetFoundNeedleId() => _matchForNeedleId[_currentPosition >> BitsPerSymbol];
-        public void Reset() => _currentPosition = 0;
+        public int GetFoundNeedleId()
+        {
+            return _matchForNeedleId[_currentPosition >> BitsPerSymbol];
+        }
+        public void Reset()
+        {
+            _currentPosition = 0;
+        }
     }
 }

@@ -452,8 +452,11 @@ public class ChannelOutboundBufferTest
         }
         finally { execute.Set(); await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5)); }
     }
-    private static EmbeddedChannel NewRecordingChannel(StringBuilder text) => new(new WritabilityHandler(ctx =>
-    { text.Append(ctx.Channel.IsWritable ? "true" : "false").Append(' '); }));
+    private static EmbeddedChannel NewRecordingChannel(StringBuilder text)
+    {
+        return new(new WritabilityHandler(ctx =>
+        { text.Append(ctx.Channel.IsWritable ? "true" : "false").Append(' '); }));
+    }
     private static void Release(ChannelOutboundBuffer buffer) { while (buffer.Remove()) { } }
     private static void SafeClose(EmbeddedChannel channel)
     { channel.Finish(); while (channel.ReadOutbound<ByteBuf>() is { } message) message.Release(); }
@@ -467,20 +470,44 @@ public class ChannelOutboundBufferTest
     }
     private sealed class WritabilityHandler(Action<IChannelHandlerContext> callback, Action inactive = null) : ChannelInboundHandlerAdapter
     {
-        public override void ChannelWritabilityChanged(IChannelHandlerContext ctx) => callback(ctx);
+        public override void ChannelWritabilityChanged(IChannelHandlerContext ctx)
+        {
+            callback(ctx);
+        }
         public override void ChannelInactive(IChannelHandlerContext ctx) { inactive?.Invoke(); ctx.FireChannelInactive(); }
     }
     private sealed class ReentrantMessage(Action deallocate) : AbstractReferenceCounted
-    { protected override void Deallocate() => deallocate(); public override IReferenceCounted Touch(object hint) => this; }
+    {
+        protected override void Deallocate()
+        {
+            deallocate();
+        }
+        public override IReferenceCounted Touch(object hint)
+        {
+            return this;
+        }
+    }
     private sealed class RejectWriteHandler(CountdownEvent handlerAddedLatch, CountdownEvent handlerRemovedLatch) : ChannelOutboundHandlerAdapter
     {
-        public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token) => Task.FromException(new InvalidOperationException("Should not be called"));
-        public override void HandlerAdded(IChannelHandlerContext ctx) => handlerAddedLatch.Signal();
-        public override void HandlerRemoved(IChannelHandlerContext ctx) => handlerRemovedLatch.Signal();
+        public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
+        {
+            return Task.FromException(new InvalidOperationException("Should not be called"));
+        }
+        public override void HandlerAdded(IChannelHandlerContext ctx)
+        {
+            handlerAddedLatch.Signal();
+        }
+        public override void HandlerRemoved(IChannelHandlerContext ctx)
+        {
+            handlerRemovedLatch.Signal();
+        }
     }
     private sealed class OneSlotExecutor() : SingleThreadEventExecutor(null, new DefaultThreadFactory("executorPool"), true, 1, RejectedExecutionHandlers.Reject())
     {
-        protected override IQueue<Action> NewTaskQueue(int maxPendingTasks) => base.NewTaskQueue(1);
+        protected override IQueue<Action> NewTaskQueue(int maxPendingTasks)
+        {
+            return base.NewTaskQueue(1);
+        }
         protected override void Run()
         {
             do
@@ -490,14 +517,38 @@ public class ChannelOutboundBufferTest
     private sealed class TestChannel : AbstractChannel
     {
         internal TestChannel() : base(null, new ChannelMetadata(false)) { SetActive(true); }
-        protected override EndPoint LocalAddress0() => throw new NotSupportedException();
-        protected override EndPoint RemoteAddress0() => throw new NotSupportedException();
-        protected override bool IsCompatible(IEventLoop loop) => false;
-        protected override Task DoBindAsync(EndPoint address, CancellationToken token) => throw new NotSupportedException();
-        protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token) => throw new NotSupportedException();
-        protected override void DoClose() => throw new NotSupportedException();
-        protected override void DoBeginRead() => throw new NotSupportedException();
-        protected override Task DoWrite(object msg) => throw new NotSupportedException();
+        protected override EndPoint LocalAddress0()
+        {
+            throw new NotSupportedException();
+        }
+        protected override EndPoint RemoteAddress0()
+        {
+            throw new NotSupportedException();
+        }
+        protected override bool IsCompatible(IEventLoop loop)
+        {
+            return false;
+        }
+        protected override Task DoBindAsync(EndPoint address, CancellationToken token)
+        {
+            throw new NotSupportedException();
+        }
+        protected override Task DoConnectAsync(EndPoint remote, EndPoint local, CancellationToken token)
+        {
+            throw new NotSupportedException();
+        }
+        protected override void DoClose()
+        {
+            throw new NotSupportedException();
+        }
+        protected override void DoBeginRead()
+        {
+            throw new NotSupportedException();
+        }
+        protected override Task DoWrite(object msg)
+        {
+            throw new NotSupportedException();
+        }
     }
 }
 #pragma warning restore xUnit1051, xUnit1069

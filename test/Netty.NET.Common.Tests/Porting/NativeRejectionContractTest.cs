@@ -29,7 +29,9 @@ public class NativeRejectionContractTest
     }
 
     private static void Wait(ManualResetEventSlim gate)
-        => Assert.True(gate.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
+    {
+        Assert.True(gate.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
+    }
 
     private static async Task Stop(Loop executor)
     {
@@ -42,7 +44,9 @@ public class NativeRejectionContractTest
     [InlineData(0)]
     [InlineData(-1)]
     public void BackoffValidatesRetryCount(int retries)
-        => Assert.Contains("retries", Assert.Throws<ArgumentException>(() => RejectedExecutionHandlers.Backoff(retries, TimeSpan.Zero)).Message);
+    {
+        Assert.Contains("retries", Assert.Throws<ArgumentException>(() => RejectedExecutionHandlers.Backoff(retries, TimeSpan.Zero)).Message);
+    }
 
     [Theory]
     [InlineData(0L)]

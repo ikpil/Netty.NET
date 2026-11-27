@@ -46,7 +46,10 @@ public class BitapSearchProcessorFactory : AbstractSearchProcessorFactory
     /**
      * Returns a new {@link Processor}.
      */
-    public override Processor NewSearchProcessor() => new(_bitMasks, _successBit);
+    public override Processor NewSearchProcessor()
+    {
+        return new(_bitMasks, _successBit);
+    }
 
     public sealed class Processor : ISearchProcessor
     {
@@ -63,6 +66,9 @@ public class BitapSearchProcessorFactory : AbstractSearchProcessorFactory
             return (_currentMask & _successBit) == 0;
         }
 
-        public void Reset() => _currentMask = 0;
+        public void Reset()
+        {
+            _currentMask = 0;
+        }
     }
 }

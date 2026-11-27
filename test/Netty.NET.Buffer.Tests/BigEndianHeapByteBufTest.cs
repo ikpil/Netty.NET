@@ -22,7 +22,10 @@ namespace Netty.NET.Buffer.Tests;
  */
 public class BigEndianHeapByteBufTest : AbstractContiguousByteBufTest
 {
-    public BigEndianHeapByteBufTest() => Init(new UnpooledByteBufAllocator(false, Native));
+    public BigEndianHeapByteBufTest()
+    {
+        Init(new UnpooledByteBufAllocator(false, Native));
+    }
 
     protected override ByteBuf NewBuffer(int length, int maxCapacity)
     {
@@ -32,7 +35,10 @@ public class BigEndianHeapByteBufTest : AbstractContiguousByteBufTest
     }
 
     [Fact]
-    public void TestMaxFastWritableBytes() => AssertOriginalMaxFastWritableBytes();
+    public void TestMaxFastWritableBytes()
+    {
+        AssertOriginalMaxFastWritableBytes();
+    }
 
     [Fact]
     public void ShouldNotAllowNullInConstructor1()

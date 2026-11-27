@@ -318,7 +318,10 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
     {
         internal int Records, Closes;
         internal object Hint;
-        public void Record() => Records++;
+        public void Record()
+        {
+            Records++;
+        }
         public void Record(object hint) { Hint = hint; Records++; }
         public bool Close(ByteBuf b) { Assert.Same(expected, b); Assert.Equal(0, b.RefCnt); return ++Closes == 1; }
     }

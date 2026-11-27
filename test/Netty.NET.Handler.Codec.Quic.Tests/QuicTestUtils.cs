@@ -96,9 +96,15 @@ internal static class QuicTestUtils
             cert = X509CertificateLoader.LoadCertificate(selfSigned.RawData);
         }
 
-        internal AsymmetricAlgorithm PrivateKey() => key;
+        internal AsymmetricAlgorithm PrivateKey()
+        {
+            return key;
+        }
 
-        internal X509Certificate2 Certificate() => cert;
+        internal X509Certificate2 Certificate()
+        {
+            return cert;
+        }
     }
 
     internal static Task<IChannel> NewClient(IExecutor sslTaskExecutor)

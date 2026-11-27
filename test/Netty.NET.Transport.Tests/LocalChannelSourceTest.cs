@@ -94,16 +94,32 @@ public partial class LocalChannelSourceTest
         }
         finally { await CloseChannel(client); await CloseChannel(server); }
     }
-    private static Task CloseChannel(IChannel channel) => channel?.CloseAsync() ?? Task.CompletedTask;
+    private static Task CloseChannel(IChannel channel)
+    {
+        return channel?.CloseAsync() ?? Task.CompletedTask;
+    }
     private class TestHandler : ChannelInboundHandlerAdapter
-    { public override void ChannelRead(IChannelHandlerContext ctx, object msg) => ReferenceCountUtil.SafeRelease(msg); }
+    {
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            ReferenceCountUtil.SafeRelease(msg);
+        }
+    }
     private sealed class ExceptionCatcher(Action<Exception> caught) : ChannelInboundHandlerAdapter
-    { public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => caught(cause); }
+    {
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            caught(cause);
+        }
+    }
     private sealed class Groups : IAsyncDisposable
     {
         internal readonly MultiThreadIoEventLoopGroup First = new(2, LocalIoHandler.NewFactory());
         internal readonly MultiThreadIoEventLoopGroup Second = new(2, LocalIoHandler.NewFactory());
         internal readonly MultiThreadIoEventLoopGroup Shared = new(1, LocalIoHandler.NewFactory());
-        public async ValueTask DisposeAsync() => await Task.WhenAll(First.StopAsync(), Second.StopAsync(), Shared.StopAsync()).WaitAsync(TimeSpan.FromSeconds(10));
+        public async ValueTask DisposeAsync()
+        {
+            await Task.WhenAll(First.StopAsync(), Second.StopAsync(), Shared.StopAsync()).WaitAsync(TimeSpan.FromSeconds(10));
+        }
     }
 }

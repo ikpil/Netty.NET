@@ -17,7 +17,10 @@ public class ThreadLocalContractTest : IDisposable
         Assert.Equal(0, FastThreadLocal.Size());
     }
 
-    public void Dispose() => FastThreadLocal.RemoveAll();
+    public void Dispose()
+    {
+        FastThreadLocal.RemoveAll();
+    }
 
     [Fact]
     public void ScopeRejectsReentryAndCleansValuesWhenTheTaskThrows()
@@ -94,7 +97,10 @@ public class ThreadLocalContractTest : IDisposable
     private sealed class TrackingLocal : FastThreadLocal<string>
     {
         public string Removed;
-        protected override void OnRemoval(string value) => Removed = value;
+        protected override void OnRemoval(string value)
+        {
+            Removed = value;
+        }
     }
 
     [Fact]
@@ -113,9 +119,18 @@ public class ThreadLocalContractTest : IDisposable
     private sealed class EqualLocal : FastThreadLocal<string>
     {
         public string Removed;
-        public override bool Equals(object other) => other is EqualLocal;
-        public override int GetHashCode() => 1;
-        protected override void OnRemoval(string value) => Removed = value;
+        public override bool Equals(object other)
+        {
+            return other is EqualLocal;
+        }
+        public override int GetHashCode()
+        {
+            return 1;
+        }
+        protected override void OnRemoval(string value)
+        {
+            Removed = value;
+        }
     }
 
     [Fact]

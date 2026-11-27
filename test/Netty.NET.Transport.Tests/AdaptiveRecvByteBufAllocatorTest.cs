@@ -25,7 +25,10 @@ namespace Netty.NET.Transport.Tests;
 public class AdaptiveRecvByteBufAllocatorTest
 {
 
-    public AdaptiveRecvByteBufAllocatorTest() => Setup();
+    public AdaptiveRecvByteBufAllocatorTest()
+    {
+        Setup();
+    }
 
     private IChannelConfig config;
     private readonly IByteBufAllocator alloc = UnpooledByteBufAllocator.Default;

@@ -79,7 +79,10 @@ public abstract class AbstractCoalescingBufferQueue
     /**
      * Add a buffer to the end of the queue.
      */
-    public void Add(ByteBuf buffer) => AddCore(buffer, null);
+    public void Add(ByteBuf buffer)
+    {
+        AddCore(buffer, null);
+    }
     /**
      * Add a buffer to the end of the queue and associate a promise with it that should be completed when
      * all the buffer's bytes have been consumed from the queue and written.
@@ -99,7 +102,10 @@ public abstract class AbstractCoalescingBufferQueue
      * @param buf to add to the tail of the queue
      * @param listener to notify when all the bytes have been consumed and written, can be {@code null}.
      */
-    public void Add(ByteBuf buffer, Action<Task> completion) => AddCore(buffer, completion);
+    public void Add(ByteBuf buffer, Action<Task> completion)
+    {
+        AddCore(buffer, completion);
+    }
     private void AddCore(ByteBuf buffer, object completion)
     {
         ArgumentNullException.ThrowIfNull(buffer);
@@ -400,7 +406,10 @@ public abstract class AbstractCoalescingBufferQueue
      * @param bufferSize the optimal size of the buffer needed for cumulation
      * @return the first buffer
      */
-    protected virtual ByteBuf ComposeFirst(IByteBufAllocator allocator, ByteBuf first, int bufferSize) => ComposeFirst(allocator, first);
+    protected virtual ByteBuf ComposeFirst(IByteBufAllocator allocator, ByteBuf first, int bufferSize)
+    {
+        return ComposeFirst(allocator, first);
+    }
 #pragma warning restore CS0618
     [Obsolete("Override ComposeFirst(IByteBufAllocator, ByteBuf, int) instead.")]
     /**
@@ -410,7 +419,10 @@ public abstract class AbstractCoalescingBufferQueue
      * override {@link #composeFirst(ByteBufAllocator, ByteBuf, int)} instead.
      * @deprecated Use {AbstractCoalescingBufferQueue#composeFirst(ByteBufAllocator, ByteBuf, int)}
      */
-    protected virtual ByteBuf ComposeFirst(IByteBufAllocator allocator, ByteBuf first) => first;
+    protected virtual ByteBuf ComposeFirst(IByteBufAllocator allocator, ByteBuf first)
+    {
+        return first;
+    }
     /**
      * The value to return when {@link #remove(ByteBufAllocator, int, ChannelPromise)} is called but the queue is empty.
      * @return the {@link ByteBuf} which represents an empty queue.
@@ -442,5 +454,8 @@ public abstract class AbstractCoalescingBufferQueue
             DecrementReadableBytes(_readableBytes);
         }
     }
-    public override string ToString() => "bytes: " + _readableBytes.ToString(CultureInfo.InvariantCulture) + " buffers: " + ((Size >> 1).ToString(CultureInfo.InvariantCulture));
+    public override string ToString()
+    {
+        return "bytes: " + _readableBytes.ToString(CultureInfo.InvariantCulture) + " buffers: " + ((Size >> 1).ToString(CultureInfo.InvariantCulture));
+    }
 }

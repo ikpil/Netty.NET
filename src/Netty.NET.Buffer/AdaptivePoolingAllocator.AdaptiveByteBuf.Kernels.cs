@@ -47,9 +47,13 @@ internal sealed partial class AdaptivePoolingAllocator
             return this;
         }
         protected override void GetBytesCore(int index, Span<byte> destination)
-            => _allocation.Root.GetBytes(_allocation.Offset + index, destination);
+        {
+            _allocation.Root.GetBytes(_allocation.Offset + index, destination);
+        }
         protected override void SetZeroCore(int index, int length)
-            => _allocation.Root.SetZero(_allocation.Offset + index, length);
+        {
+            _allocation.Root.SetZero(_allocation.Offset + index, length);
+        }
         internal override bool SupportsDirectBulkCopy => _allocation.Root.SupportsDirectBulkCopy;
         internal override bool SupportsDirectSearch => _allocation.Root.SupportsDirectSearch;
 

@@ -75,7 +75,10 @@ public class NativeThreadFactoryContractTest
     private sealed class TrackingLocal : FastThreadLocal<object>
     {
         internal int Removed;
-        protected override void OnRemoval(object value) => Removed++;
+        protected override void OnRemoval(object value)
+        {
+            Removed++;
+        }
     }
 
     [Fact]
@@ -115,11 +118,14 @@ public class NativeThreadFactoryContractTest
     {
         internal Exception Error;
         internal CapturingFactory() : base("ordinary", true) { }
-        protected override Thread NewThread(Action action, string name) => new(() =>
+        protected override Thread NewThread(Action action, string name)
         {
-            try { action(); }
-            catch (Exception error) { Error = error; }
-        }) { Name = name };
+            return new(() =>
+            {
+                try { action(); }
+                catch (Exception error) { Error = error; }
+            }) { Name = name };
+        }
     }
 
     [Fact]

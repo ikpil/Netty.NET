@@ -106,7 +106,10 @@ public sealed class Signal : Exception, IConstant<Signal>
 
     private sealed class SignalConstantPool : ConstantPool<Signal>
     {
-        protected override Signal NewConstant(int id, string name) => new Signal(id, name);
+        protected override Signal NewConstant(int id, string name)
+        {
+            return new Signal(id, name);
+        }
     }
 
     private sealed class SignalConstant : AbstractConstant<SignalConstant>

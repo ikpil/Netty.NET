@@ -23,7 +23,10 @@ public class CompletedResultConsumerContractTest
         var error = new ArgumentException("Unsupported address type");
         // AbstractAddressResolver.resolve fast paths return a completed value or
         // failure without performing I/O. A failure is a result, not a factory throw.
-        Task<IPEndPoint> Resolve() => failed ? Task.FromException<IPEndPoint>(error) : Task.FromResult(address);
+        Task<IPEndPoint> Resolve()
+        {
+            return failed ? Task.FromException<IPEndPoint>(error) : Task.FromResult(address);
+        }
         Task<IPEndPoint> operation = Resolve();
         Assert.True(operation.IsCompleted);
         using var observation = new ExecutorCompletion(executor, operation);

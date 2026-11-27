@@ -181,14 +181,23 @@ public class SocketTestPermutation
     // (https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/delegates/).
     protected sealed class BootstrapFactory<T>(Func<T> newInstance) : IBootstrapFactory<T> where T : class
     {
-        public T NewInstance() => newInstance();
+        public T NewInstance()
+        {
+            return newInstance();
+        }
     }
 
     protected sealed class BootstrapComboFactory<A, B>(Func<A> newServerInstance, Func<B> newClientInstance)
         : IBootstrapComboFactory<A, B> where A : class where B : class
     {
-        public A NewServerInstance() => newServerInstance();
+        public A NewServerInstance()
+        {
+            return newServerInstance();
+        }
 
-        public B NewClientInstance() => newClientInstance();
+        public B NewClientInstance()
+        {
+            return newClientInstance();
+        }
     }
 }

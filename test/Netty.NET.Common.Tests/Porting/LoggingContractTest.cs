@@ -46,6 +46,9 @@ public class LoggingContractTest
 
     private sealed class ThrowingString
     {
-        public override string ToString() => throw new InvalidOperationException("Must not format disabled events");
+        public override string ToString()
+        {
+            throw new InvalidOperationException("Must not format disabled events");
+        }
     }
 }

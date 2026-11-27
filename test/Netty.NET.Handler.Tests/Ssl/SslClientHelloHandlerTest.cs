@@ -153,7 +153,10 @@ public class SslClientHelloHandlerTest
     {
         private volatile bool nullRetryOccurred;
 
-        internal bool NullRetryOccurred() => nullRetryOccurred;
+        internal bool NullRetryOccurred()
+        {
+            return nullRetryOccurred;
+        }
 
         protected override Task<object> Lookup(IChannelHandlerContext ctx, string hostname)
         {
@@ -175,7 +178,10 @@ public class SslClientHelloHandlerTest
     {
         private volatile bool lookupCalled;
 
-        internal bool LookupCalled() => lookupCalled;
+        internal bool LookupCalled()
+        {
+            return lookupCalled;
+        }
 
         protected override Task<object> Lookup(IChannelHandlerContext ctx, string hostname)
         {
@@ -194,7 +200,10 @@ public class SslClientHelloHandlerTest
     {
         private Exception exceptionRef;
 
-        internal Exception Get() => Volatile.Read(ref exceptionRef);
+        internal Exception Get()
+        {
+            return Volatile.Read(ref exceptionRef);
+        }
 
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         {
@@ -206,7 +215,10 @@ public class SslClientHelloHandlerTest
     {
         private SniCompletionEvent eventRef;
 
-        internal SniCompletionEvent Get() => Volatile.Read(ref eventRef);
+        internal SniCompletionEvent Get()
+        {
+            return Volatile.Read(ref eventRef);
+        }
 
         public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
         {

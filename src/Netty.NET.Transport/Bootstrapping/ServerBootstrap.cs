@@ -40,7 +40,10 @@ public class ServerBootstrap : AbstractBootstrap
 {
     private static readonly IInternalLogger Logger = InternalLoggerFactory.GetInstance(typeof(ServerBootstrap));
 
-    public ServerBootstrap() => Config = new ServerBootstrapConfig(this);
+    public ServerBootstrap()
+    {
+        Config = new ServerBootstrapConfig(this);
+    }
     public override ServerBootstrapConfig Config { get; }
     internal IEventLoopGroup ConfiguredGroup => _parentGroup;
     internal IEventLoopGroup ConfiguredChildGroup => _childGroup;
@@ -51,9 +54,13 @@ public class ServerBootstrap : AbstractBootstrap
     internal KeyValuePair<ChannelOption, object>[] NewOptionsArray() { lock (_optionsGate) return _options.ToArray(); }
     internal KeyValuePair<ChannelOption, object>[] NewChildOptionsArray() { lock (_optionsGate) return _childOptions.ToArray(); }
     internal KeyValuePair<IAttributeKey, object>[] NewAttributesArray()
-        => _attributes.Select(pair => new KeyValuePair<IAttributeKey, object>(pair.Key, pair.Value.Value)).ToArray();
+    {
+        return _attributes.Select(pair => new KeyValuePair<IAttributeKey, object>(pair.Key, pair.Value.Value)).ToArray();
+    }
     internal KeyValuePair<IAttributeKey, object>[] NewChildAttributesArray()
-        => _childAttributes.Select(pair => new KeyValuePair<IAttributeKey, object>(pair.Key, pair.Value.Value)).ToArray();
+    {
+        return _childAttributes.Select(pair => new KeyValuePair<IAttributeKey, object>(pair.Key, pair.Value.Value)).ToArray();
+    }
     private volatile IEventLoopGroup _parentGroup;
     private volatile IEventLoopGroup _childGroup;
     private volatile Func<IChannel> _factory;
@@ -137,7 +144,10 @@ public class ServerBootstrap : AbstractBootstrap
     }
     // CLR: the generic form supplies the class at compile time and uses the same reflective factory.
     public ServerBootstrap Channel<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] T>()
-        where T : IServerChannel, new() => Channel(typeof(T));
+        where T : IServerChannel, new()
+    {
+        return Channel(typeof(T));
+    }
     /**
      * the {@link ChannelHandler} to use for serving the requests.
      */
@@ -166,17 +176,24 @@ public class ServerBootstrap : AbstractBootstrap
      * @see #localAddress(SocketAddress)
      */
     // CLR: new InetSocketAddress(inetPort) is the wildcard address; as in BindAsync(int), the wildcard is IPAddress.Any.
-    public ServerBootstrap LocalAddress(int inetPort) => LocalAddress(new IPEndPoint(IPAddress.Any, inetPort));
+    public ServerBootstrap LocalAddress(int inetPort)
+    {
+        return LocalAddress(new IPEndPoint(IPAddress.Any, inetPort));
+    }
     /**
      * @see #localAddress(SocketAddress)
      */
-    public ServerBootstrap LocalAddress(string inetHost, int inetPort) =>
-        LocalAddress(AbstractBootstrap.SocketAddress(inetHost, inetPort));
+    public ServerBootstrap LocalAddress(string inetHost, int inetPort)
+    {
+        return LocalAddress(AbstractBootstrap.SocketAddress(inetHost, inetPort));
+    }
     /**
      * @see #localAddress(SocketAddress)
      */
-    public ServerBootstrap LocalAddress(IPAddress inetHost, int inetPort) =>
-        LocalAddress(AbstractBootstrap.InetSocketAddress(inetHost, inetPort));
+    public ServerBootstrap LocalAddress(IPAddress inetHost, int inetPort)
+    {
+        return LocalAddress(AbstractBootstrap.InetSocketAddress(inetHost, inetPort));
+    }
     /**
      * Allow to specify a {@link ChannelOption} which is used for the {@link Channel} instances once they got
      * created. Use a value of {@code null} to remove a previous set {@link ChannelOption}.
@@ -314,17 +331,23 @@ public class ServerBootstrap : AbstractBootstrap
     // CLR: AbstractBootstrap.bind(int) binds new InetSocketAddress(inetPort), the wildcard address; as in
     // Bootstrap.BindAsync(int), the wildcard is IPAddress.Any.
     public Task<IChannel> BindAsync(int inetPort, CancellationToken cancellationToken = default)
-        => BindAsync(new IPEndPoint(IPAddress.Any, inetPort), cancellationToken);
+    {
+        return BindAsync(new IPEndPoint(IPAddress.Any, inetPort), cancellationToken);
+    }
     /**
      * Create a new {@link Channel} and bind it.
      */
     public Task<IChannel> BindAsync(string inetHost, int inetPort, CancellationToken cancellationToken = default)
-        => BindAsync(AbstractBootstrap.SocketAddress(inetHost, inetPort), cancellationToken);
+    {
+        return BindAsync(AbstractBootstrap.SocketAddress(inetHost, inetPort), cancellationToken);
+    }
     /**
      * Create a new {@link Channel} and bind it.
      */
     public Task<IChannel> BindAsync(IPAddress inetHost, int inetPort, CancellationToken cancellationToken = default)
-        => BindAsync(AbstractBootstrap.InetSocketAddress(inetHost, inetPort), cancellationToken);
+    {
+        return BindAsync(AbstractBootstrap.InetSocketAddress(inetHost, inetPort), cancellationToken);
+    }
     /**
      * Create a new {@link Channel} and bind it.
      */
@@ -354,8 +377,10 @@ public class ServerBootstrap : AbstractBootstrap
         return Bootstrap.RegisteredChannelAsync(regFuture, channel);
     }
 
-    private Task InitAndRegister(CancellationToken cancellationToken, out IChannel channel) =>
-        AbstractBootstrap.InitAndRegister(_factory, Init, ch => _parentGroup.RegisterAsync(ch, cancellationToken), out channel);
+    private Task InitAndRegister(CancellationToken cancellationToken, out IChannel channel)
+    {
+        return AbstractBootstrap.InitAndRegister(_factory, Init, ch => _parentGroup.RegisterAsync(ch, cancellationToken), out channel);
+    }
 
     internal void Init(IChannel channel)
     {

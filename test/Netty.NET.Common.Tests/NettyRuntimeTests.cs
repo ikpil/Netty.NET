@@ -75,7 +75,9 @@ public class NettyRuntimeTests
     }
 
     private static ThreadStart GetRunnable(AvailableProcessorsHolder holder, Barrier barrier,
-        AtomicReference<Exception> reference) => () =>
+        AtomicReference<Exception> reference)
+    {
+        return () =>
     {
         try
         {
@@ -86,6 +88,7 @@ public class NettyRuntimeTests
         }
         catch (Exception e) { reference.Set(e); }
     };
+    }
 
     [Fact]
     public void TestRacingGetAndSet()
@@ -156,5 +159,8 @@ public class NettyRuntimeTests
         finally { Environment.SetEnvironmentVariable("io.netty.availableProcessors", previous); }
     }
 
-    private static void AwaitBarrier(Barrier barrier) => Assert.True(barrier.SignalAndWait(TimeSpan.FromSeconds(5)));
+    private static void AwaitBarrier(Barrier barrier)
+    {
+        Assert.True(barrier.SignalAndWait(TimeSpan.FromSeconds(5)));
+    }
 }

@@ -11,14 +11,29 @@ public class IndexedPriorityQueueContractTest
     {
         private readonly Dictionary<DefaultPriorityQueue<Node>, int> indices = new();
         internal int Priority = priority;
-        public int PriorityQueueIndex(DefaultPriorityQueue<Node> queue) => indices.GetValueOrDefault(queue, -1);
-        public void PriorityQueueIndex(DefaultPriorityQueue<Node> queue, int index) => indices[queue] = index;
-        public override bool Equals(object other) => other is Node node && node.Priority == Priority;
-        public override int GetHashCode() => Priority;
+        public int PriorityQueueIndex(DefaultPriorityQueue<Node> queue)
+        {
+            return indices.GetValueOrDefault(queue, -1);
+        }
+        public void PriorityQueueIndex(DefaultPriorityQueue<Node> queue, int index)
+        {
+            indices[queue] = index;
+        }
+        public override bool Equals(object other)
+        {
+            return other is Node node && node.Priority == Priority;
+        }
+        public override int GetHashCode()
+        {
+            return Priority;
+        }
     }
 
-    private static DefaultPriorityQueue<Node> Create(bool descending = false) => new(
-        Comparer<Node>.Create((a, b) => descending ? b.Priority.CompareTo(a.Priority) : a.Priority.CompareTo(b.Priority)), 0);
+    private static DefaultPriorityQueue<Node> Create(bool descending = false)
+    {
+        return new(
+            Comparer<Node>.Create((a, b) => descending ? b.Priority.CompareTo(a.Priority) : a.Priority.CompareTo(b.Priority)), 0);
+    }
 
     [Fact]
     public void PriorityChangesAndRemovalKeepIndependentMembershipInTwoQueues()

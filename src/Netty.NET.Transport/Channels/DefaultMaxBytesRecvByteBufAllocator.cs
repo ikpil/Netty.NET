@@ -35,8 +35,14 @@ public class DefaultMaxBytesRecvByteBufAllocator : IMaxBytesRecvByteBufAllocator
         _maxBytesPerRead = maxBytesPerRead;
         _maxBytesPerIndividualRead = maxBytesPerIndividualRead;
     }
-    public IRecvByteBufAllocator.IHandle NewHandle() => new HandleImpl(this);
-    public int MaxBytesPerRead() => _maxBytesPerRead;
+    public IRecvByteBufAllocator.IHandle NewHandle()
+    {
+        return new HandleImpl(this);
+    }
+    public int MaxBytesPerRead()
+    {
+        return _maxBytesPerRead;
+    }
     public DefaultMaxBytesRecvByteBufAllocator MaxBytesPerRead(int maxBytesPerRead)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxBytesPerRead);
@@ -50,7 +56,10 @@ public class DefaultMaxBytesRecvByteBufAllocator : IMaxBytesRecvByteBufAllocator
         }
         return this;
     }
-    public int MaxBytesPerIndividualRead() => _maxBytesPerIndividualRead;
+    public int MaxBytesPerIndividualRead()
+    {
+        return _maxBytesPerIndividualRead;
+    }
     public DefaultMaxBytesRecvByteBufAllocator MaxBytesPerIndividualRead(int maxBytesPerIndividualRead)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxBytesPerIndividualRead);
@@ -81,9 +90,18 @@ public class DefaultMaxBytesRecvByteBufAllocator : IMaxBytesRecvByteBufAllocator
         }
         return this;
     }
-    IMaxBytesRecvByteBufAllocator IMaxBytesRecvByteBufAllocator.MaxBytesPerRead(int value) => MaxBytesPerRead(value);
-    IMaxBytesRecvByteBufAllocator IMaxBytesRecvByteBufAllocator.MaxBytesPerIndividualRead(int value) => MaxBytesPerIndividualRead(value);
-    IMaxBytesRecvByteBufAllocator IMaxBytesRecvByteBufAllocator.MaxBytesPerReadPair(int total, int individual) => MaxBytesPerReadPair(total, individual);
+    IMaxBytesRecvByteBufAllocator IMaxBytesRecvByteBufAllocator.MaxBytesPerRead(int value)
+    {
+        return MaxBytesPerRead(value);
+    }
+    IMaxBytesRecvByteBufAllocator IMaxBytesRecvByteBufAllocator.MaxBytesPerIndividualRead(int value)
+    {
+        return MaxBytesPerIndividualRead(value);
+    }
+    IMaxBytesRecvByteBufAllocator IMaxBytesRecvByteBufAllocator.MaxBytesPerReadPair(int total, int individual)
+    {
+        return MaxBytesPerReadPair(total, individual);
+    }
     private static void CheckMaxBytesPerReadPair(int total, int individual)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(total);
@@ -97,8 +115,14 @@ public class DefaultMaxBytesRecvByteBufAllocator : IMaxBytesRecvByteBufAllocator
         private int _bytesToRead;
         private int _lastBytesRead;
         private int _attemptBytesRead;
-        public ByteBuf Allocate(IByteBufAllocator alloc) => alloc.IoBuffer(Guess());
-        public int Guess() => Math.Min(_individualReadMax, _bytesToRead);
+        public ByteBuf Allocate(IByteBufAllocator alloc)
+        {
+            return alloc.IoBuffer(Guess());
+        }
+        public int Guess()
+        {
+            return Math.Min(_individualReadMax, _bytesToRead);
+        }
         public void Reset(IChannelConfig config)
         {
             _bytesToRead = owner.MaxBytesPerRead();
@@ -112,15 +136,27 @@ public class DefaultMaxBytesRecvByteBufAllocator : IMaxBytesRecvByteBufAllocator
             // The value may be "invalid" after this point, but it doesn't matter because reading will be stopped.
             _bytesToRead = unchecked(_bytesToRead - bytes);
         }
-        public int LastBytesRead() => _lastBytesRead;
-        public bool ContinueReading() => ContinueReading(() => _attemptBytesRead == _lastBytesRead);
+        public int LastBytesRead()
+        {
+            return _lastBytesRead;
+        }
+        public bool ContinueReading()
+        {
+            return ContinueReading(() => _attemptBytesRead == _lastBytesRead);
+        }
         public bool ContinueReading(Func<bool> maybeMoreDataSupplier)
         {
             // Keep reading if we are allowed to read more bytes, and our last read filled up the buffer we provided.
             return _bytesToRead > 0 && maybeMoreDataSupplier();
         }
         public void ReadComplete() { }
-        public int AttemptedBytesRead() => _attemptBytesRead;
-        public void AttemptedBytesRead(int bytes) => _attemptBytesRead = bytes;
+        public int AttemptedBytesRead()
+        {
+            return _attemptBytesRead;
+        }
+        public void AttemptedBytesRead(int bytes)
+        {
+            _attemptBytesRead = bytes;
+        }
     }
 }

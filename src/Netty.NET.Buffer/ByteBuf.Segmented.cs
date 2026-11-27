@@ -60,18 +60,29 @@ public abstract partial class ByteBuf
     protected virtual bool TryGetReadOnlyMemoryCore(int index, int length, out ReadOnlyMemory<byte> memory)
     { memory = GetReadOnlyMemoryCore(index, length); return true; }
     protected virtual void GetBytesCore(int index, Span<byte> destination)
-        => GetReadOnlyMemoryCore(index, destination.Length).Span.CopyTo(destination);
+    {
+        GetReadOnlyMemoryCore(index, destination.Length).Span.CopyTo(destination);
+    }
     protected virtual void SetBytesCore(int index, ReadOnlySpan<byte> source)
-        => source.CopyTo(GetMemoryCore(index, source.Length).Span);
+    {
+        source.CopyTo(GetMemoryCore(index, source.Length).Span);
+    }
     // CLR: publish staged input through the source's I/O kernel. Composite input
     // skips empty components, while ordinary bulk setters preserve their dispatch.
     protected internal virtual void SetBytesFromIoCore(int index, ReadOnlySpan<byte> source)
-        => SetBytes(index, source);
+    {
+        SetBytes(index, source);
+    }
     // fast-path for small writes to avoid thread-state change JDK's handling
     // CLR: Span.Clear replaces the heap helper's manual batch/64-byte threshold strategy.
-    protected virtual void SetZeroCore(int index, int length) => GetMemoryCore(index, length).Span.Clear();
+    protected virtual void SetZeroCore(int index, int length)
+    {
+        GetMemoryCore(index, length).Span.Clear();
+    }
     protected virtual ReadOnlySequence<byte> GetReadOnlySequenceCore(int index, int length)
-        => new(GetReadOnlyMemoryCore(index, length));
+    {
+        return new(GetReadOnlyMemoryCore(index, length));
+    }
 
     internal bool TryGetMemory(int index, int length, out Memory<byte> memory)
     { EnsureCanWrite(); CheckIndex(index, length); return TryGetMemoryCore(index, length, out memory); }
@@ -119,8 +130,14 @@ public abstract partial class ByteBuf
      */
     // Keep scalar storage dispatch distinct from public getters/setters. Composite kernels
     // call their components' public operations; optimized views delegate to these kernels.
-    internal virtual byte ReadByteCore(int index) => AsReadOnlySpan(index, 1)[0];
-    internal virtual void WriteByteCore(int index, int value) => AsSpan(index, 1)[0] = unchecked((byte)value);
+    internal virtual byte ReadByteCore(int index)
+    {
+        return AsReadOnlySpan(index, 1)[0];
+    }
+    internal virtual void WriteByteCore(int index, int value)
+    {
+        AsSpan(index, 1)[0] = unchecked((byte)value);
+    }
 
     internal virtual ulong ReadWord(int index, int width, bool littleEndian)
     {

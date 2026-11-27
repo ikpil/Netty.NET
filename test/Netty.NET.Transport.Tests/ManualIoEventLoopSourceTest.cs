@@ -308,7 +308,10 @@ public class ManualIoEventLoopSourceTest
     // CLR: the executor -> new TestIoHandler(semaphore) lambdas become a factory class.
     private sealed class TestIoHandlerFactory(SemaphoreSlim semaphore) : IIoHandlerFactory
     {
-        public IIoHandler NewHandler(IThreadAwareExecutor ioExecutor) => new TestIoHandler(semaphore);
+        public IIoHandler NewHandler(IThreadAwareExecutor ioExecutor)
+        {
+            return new TestIoHandler(semaphore);
+        }
     }
 
     private class TestIoHandler : IIoHandler

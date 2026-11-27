@@ -51,7 +51,10 @@ public sealed class DefaultEventExecutorChooserFactory : IEventExecutorChooserFa
         private int idx;
         private readonly IEventExecutor[] executors;
 
-        internal PowerOfTwoEventExecutorChooser(IEventExecutor[] executors) => this.executors = executors;
+        internal PowerOfTwoEventExecutorChooser(IEventExecutor[] executors)
+        {
+            this.executors = executors;
+        }
 
         public IEventExecutor Next()
         {
@@ -69,7 +72,10 @@ public sealed class DefaultEventExecutorChooserFactory : IEventExecutorChooserFa
         private long idx;
         private readonly IEventExecutor[] executors;
 
-        internal GenericEventExecutorChooser(IEventExecutor[] executors) => this.executors = executors;
+        internal GenericEventExecutorChooser(IEventExecutor[] executors)
+        {
+            this.executors = executors;
+        }
 
         public IEventExecutor Next()
         {

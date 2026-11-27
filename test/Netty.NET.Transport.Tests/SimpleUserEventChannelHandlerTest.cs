@@ -58,11 +58,17 @@ public class SimpleUserEventChannelHandlerTest
     private sealed class FooEventCatcher : SimpleUserEventChannelHandler<FooEvent>
     {
         public readonly List<FooEvent> caughtEvents = new();
-        protected override void EventReceived(IChannelHandlerContext ctx, FooEvent evt) => caughtEvents.Add(evt);
+        protected override void EventReceived(IChannelHandlerContext ctx, FooEvent evt)
+        {
+            caughtEvents.Add(evt);
+        }
     }
     private sealed class AllEventCatcher : ChannelInboundHandlerAdapter
     {
         public readonly List<object> caughtEvents = new();
-        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt) => caughtEvents.Add(evt);
+        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
+        {
+            caughtEvents.Add(evt);
+        }
     }
 }

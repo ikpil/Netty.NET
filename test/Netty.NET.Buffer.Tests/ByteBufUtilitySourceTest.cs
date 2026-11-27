@@ -38,7 +38,10 @@ public class ByteBufUtilitySourceTest
                 _ => new AdaptiveByteBufAllocator(false, lowMemory: false, nativeAllocator: Native)
             };
             bool direct = (provider & 1) != 0;
-            ByteBuf Buffer(int size) => direct ? Allocator.DirectBuffer(size, maximum) : Allocator.HeapBuffer(size, maximum);
+            ByteBuf Buffer(int size)
+            {
+                return direct ? Allocator.DirectBuffer(size, maximum) : Allocator.HeapBuffer(size, maximum);
+            }
             if (composite)
             {
                 var c = direct ? Allocator.CompositeDirectBuffer(16) : Allocator.CompositeHeapBuffer(16);

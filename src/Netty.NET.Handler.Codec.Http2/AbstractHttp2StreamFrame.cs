@@ -36,7 +36,10 @@ public abstract class AbstractHttp2StreamFrame : IHttp2StreamFrame
         return this;
     }
 
-    IHttp2StreamFrame IHttp2StreamFrame.Stream(IHttp2FrameStream stream) => Stream(stream);
+    IHttp2StreamFrame IHttp2StreamFrame.Stream(IHttp2FrameStream stream)
+    {
+        return Stream(stream);
+    }
 
     public virtual IHttp2FrameStream Stream()
     {

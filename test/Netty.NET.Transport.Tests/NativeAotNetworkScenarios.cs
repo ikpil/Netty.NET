@@ -112,9 +112,18 @@ internal static class NativeAotNetworkScenarios
 
     private sealed class Echo : ChannelInboundHandlerAdapter
     {
-        public override void ChannelRead(IChannelHandlerContext ctx, object msg) => _ = ctx.WriteAsync(msg);
-        public override void ChannelReadComplete(IChannelHandlerContext ctx) => ctx.Flush();
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => ctx.CloseAsync();
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            _ = ctx.WriteAsync(msg);
+        }
+        public override void ChannelReadComplete(IChannelHandlerContext ctx)
+        {
+            ctx.Flush();
+        }
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            ctx.CloseAsync();
+        }
     }
 
     private sealed class Collector(int expected, TaskCompletionSource<byte[]> received) : ChannelInboundHandlerAdapter
@@ -134,7 +143,10 @@ internal static class NativeAotNetworkScenarios
             finally { buffer.Release(); }
         }
 
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => received.TrySetException(cause);
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            received.TrySetException(cause);
+        }
         public override void ChannelInactive(IChannelHandlerContext ctx)
         {
             received.TrySetException(new IOException("The connection closed before the echo completed."));
@@ -156,6 +168,9 @@ internal static class NativeAotNetworkScenarios
             finally { ReferenceCountUtil.Release(packet); }
         }
 
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => received.TrySetException(cause);
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            received.TrySetException(cause);
+        }
     }
 }

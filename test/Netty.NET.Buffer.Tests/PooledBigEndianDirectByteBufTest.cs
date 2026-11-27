@@ -22,11 +22,16 @@ public class PooledBigEndianDirectByteBufTest : AbstractPooledByteBufTest
 {
     // CLR: a scoped allocator over the fixture's NativeMemoryAllocator replaces the JVM-global
     // PooledByteBufAllocator.DEFAULT, so AbstractByteBufTest.Dispose can release it and prove zero reservations.
-    public PooledBigEndianDirectByteBufTest() => Init(NewAllocator());
+    public PooledBigEndianDirectByteBufTest()
+    {
+        Init(NewAllocator());
+    }
 
     // CLR: PooledAlignedBigEndianDirectByteBufTest substitutes its aligned allocator here, before Init allocates.
     protected virtual IByteBufAllocator NewAllocator()
-        => new PooledByteBufAllocator(false, maxOrder: 4, smallCacheSize: 0, nativeAllocator: Native);
+    {
+        return new PooledByteBufAllocator(false, maxOrder: 4, smallCacheSize: 0, nativeAllocator: Native);
+    }
 
     protected override ByteBuf Alloc(int length, int maxCapacity)
     {

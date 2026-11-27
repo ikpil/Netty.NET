@@ -28,18 +28,24 @@ public static partial class ByteBufUtil
      * This method is producing the exact length according to {@link #writeUtf8(ByteBuf, CharSequence, int, int)}.
      */
     public static int Utf8Bytes(ReadOnlySpan<char> text, int start, int end)
-        => Utf8Bytes(Utf8Range(text, start, end));
+    {
+        return Utf8Bytes(Utf8Range(text, start, end));
+    }
 
     /// <summary>Counts the raw octets in the logical [start, end) range, including values above 127.</summary>
     public static int Utf8Bytes(AsciiString text, int start, int end)
-        => Utf8Range(text, start, end).Length;
+    {
+        return Utf8Range(text, start, end).Length;
+    }
 
     /**
      * Equivalent to <code>{@link #writeUtf8(ByteBuf, CharSequence) writeUtf8(buf, seq.subSequence(start, end))}</code>
      * but avoids subsequence object allocation.
      */
     public static int WriteUtf8(ByteBuf buffer, ReadOnlySpan<char> text, int start, int end)
-        => WriteUtf8(buffer, Utf8Range(text, start, end));
+    {
+        return WriteUtf8(buffer, Utf8Range(text, start, end));
+    }
 
     /// <summary>Writes raw octets in [start, end), reserving three bytes per selected character as in Netty.</summary>
     public static int WriteUtf8(ByteBuf buffer, AsciiString text, int start, int end)
@@ -56,11 +62,15 @@ public static partial class ByteBufUtil
      * @return actual number of bytes written
      */
     public static int ReserveAndWriteUtf8(ByteBuf buffer, ReadOnlySpan<char> text, int start, int end, int reserveBytes)
-        => ReserveAndWriteUtf8(buffer, Utf8Range(text, start, end), reserveBytes);
+    {
+        return ReserveAndWriteUtf8(buffer, Utf8Range(text, start, end), reserveBytes);
+    }
 
     /// <summary>Writes raw octets in the logical [start, end) range using an explicit reservation.</summary>
     public static int ReserveAndWriteUtf8(ByteBuf buffer, AsciiString text, int start, int end, int reserveBytes)
-        => ReserveAndWriteUtf8Bytes(buffer, Utf8Range(text, start, end), reserveBytes);
+    {
+        return ReserveAndWriteUtf8Bytes(buffer, Utf8Range(text, start, end), reserveBytes);
+    }
 
     /// <summary>Writes all raw AsciiString octets using an explicit reservation.</summary>
     /// <remarks>Values above 127 are copied unchanged. The reservation must cover the selected octets;

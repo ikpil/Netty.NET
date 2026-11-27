@@ -38,17 +38,36 @@ public class NativeExecutorTaskContractTest
             try { command(); }
             finally { _executingThread = null; }
         }
-        public override bool InEventLoop(Thread thread) => ReferenceEquals(thread, _executingThread);
-        public override bool IsShuttingDown() => false;
-        public override bool IsShutdown() => false;
-        public override bool IsTerminated() => false;
-        public override void Shutdown() => throw new NotSupportedException("Test harness has no worker lifecycle");
-        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) =>
+        public override bool InEventLoop(Thread thread)
+        {
+            return ReferenceEquals(thread, _executingThread);
+        }
+        public override bool IsShuttingDown()
+        {
+            return false;
+        }
+        public override bool IsShutdown()
+        {
+            return false;
+        }
+        public override bool IsTerminated()
+        {
+            return false;
+        }
+        public override void Shutdown()
+        {
             throw new NotSupportedException("Test harness has no worker lifecycle");
+        }
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+        {
+            throw new NotSupportedException("Test harness has no worker lifecycle");
+        }
         public override Task TerminationFuture =>
             throw new NotSupportedException("Test harness has no worker lifecycle");
-        public override bool AwaitTermination(TimeSpan timeout) =>
+        public override bool AwaitTermination(TimeSpan timeout)
+        {
             throw new NotSupportedException("Test harness has no worker lifecycle");
+        }
     }
 
     private sealed class SelectingGroup : AbstractEventExecutorGroup
@@ -56,21 +75,42 @@ public class NativeExecutorTaskContractTest
         private readonly IEventExecutor[] _children;
         internal int Selections;
         internal Exception SelectionFailure;
-        internal SelectingGroup(params IEventExecutor[] children) => _children = children;
+        internal SelectingGroup(params IEventExecutor[] children)
+        {
+            _children = children;
+        }
         public override IEventExecutor Next()
         {
             int selection = Selections++;
             if (SelectionFailure != null) throw SelectionFailure;
             return _children[selection % _children.Length];
         }
-        public override IEnumerable<IEventExecutor> Iterator() => _children;
+        public override IEnumerable<IEventExecutor> Iterator()
+        {
+            return _children;
+        }
         public override Task TerminationFuture => Task.CompletedTask;
-        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => Task.CompletedTask;
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+        {
+            return Task.CompletedTask;
+        }
         public override void Shutdown() { }
-        public override bool IsShuttingDown() => false;
-        public override bool IsShutdown() => false;
-        public override bool IsTerminated() => false;
-        public override bool AwaitTermination(TimeSpan timeout) => false;
+        public override bool IsShuttingDown()
+        {
+            return false;
+        }
+        public override bool IsShutdown()
+        {
+            return false;
+        }
+        public override bool IsTerminated()
+        {
+            return false;
+        }
+        public override bool AwaitTermination(TimeSpan timeout)
+        {
+            return false;
+        }
     }
 
     [Fact]
@@ -308,15 +348,35 @@ public class NativeExecutorTaskContractTest
             ArgumentNullException.ThrowIfNull(command);
             underlying.Execute(command);
         }
-        public override bool InEventLoop(Thread thread) => underlying.InEventLoop(thread);
-        public override bool IsShuttingDown() => underlying.IsShuttingDown();
-        public override bool IsShutdown() => underlying.IsShutdown();
-        public override bool IsTerminated() => underlying.IsTerminated();
-        public override void Shutdown() => underlying.Shutdown();
+        public override bool InEventLoop(Thread thread)
+        {
+            return underlying.InEventLoop(thread);
+        }
+        public override bool IsShuttingDown()
+        {
+            return underlying.IsShuttingDown();
+        }
+        public override bool IsShutdown()
+        {
+            return underlying.IsShutdown();
+        }
+        public override bool IsTerminated()
+        {
+            return underlying.IsTerminated();
+        }
+        public override void Shutdown()
+        {
+            underlying.Shutdown();
+        }
         public override Task TerminationFuture => underlying.TerminationFuture;
-        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) =>
-            underlying.ShutdownGracefullyAsync(quietPeriod, timeout);
-        public override bool AwaitTermination(TimeSpan timeout) => underlying.AwaitTermination(timeout);
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+        {
+            return underlying.ShutdownGracefullyAsync(quietPeriod, timeout);
+        }
+        public override bool AwaitTermination(TimeSpan timeout)
+        {
+            return underlying.AwaitTermination(timeout);
+        }
     }
 
     [Theory]
@@ -459,7 +519,10 @@ public class NativeExecutorTaskContractTest
 
     private sealed class FailingThreadFactory(Exception error) : IThreadFactory
     {
-        public Thread NewThread(Action runnable) => throw error;
+        public Thread NewThread(Action runnable)
+        {
+            throw error;
+        }
     }
 
     [Fact]

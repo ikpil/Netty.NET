@@ -20,15 +20,24 @@ namespace Netty.NET.Common.Tests;
 public class RunInFastThreadLocalThreadExtensionTest
 {
     [Fact]
-    public void NormalTest() => RunInFastThreadLocalThreadExtension.Run(() =>
-        Assert.True(FastThreadLocalThread.CurrentThreadHasFastThreadLocal()));
+    public void NormalTest()
+    {
+        RunInFastThreadLocalThreadExtension.Run(() =>
+            Assert.True(FastThreadLocalThread.CurrentThreadHasFastThreadLocal()));
+    }
 
     [Fact]
-    public void RepeatedTest() => RunInFastThreadLocalThreadExtension.Run(() =>
-        Assert.True(FastThreadLocalThread.CurrentThreadHasFastThreadLocal()));
+    public void RepeatedTest()
+    {
+        RunInFastThreadLocalThreadExtension.Run(() =>
+            Assert.True(FastThreadLocalThread.CurrentThreadHasFastThreadLocal()));
+    }
 
     [Theory]
     [InlineData(1)]
-    public void ParameterizedTest(int ignoreParameter) => RunInFastThreadLocalThreadExtension.Run(() =>
-        Assert.True(FastThreadLocalThread.CurrentThreadHasFastThreadLocal()));
+    public void ParameterizedTest(int ignoreParameter)
+    {
+        RunInFastThreadLocalThreadExtension.Run(() =>
+            Assert.True(FastThreadLocalThread.CurrentThreadHasFastThreadLocal()));
+    }
 }

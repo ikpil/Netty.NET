@@ -20,5 +20,8 @@ namespace Netty.NET.Transport.Tests;
 
 internal static class ChannelPoolTestUtils
 {
-    internal static string GetLocalAddrId() => "test.id" + Random.Shared.Next();
+    internal static string GetLocalAddrId()
+    {
+        return "test.id" + Random.Shared.Next();
+    }
 }

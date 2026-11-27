@@ -29,8 +29,11 @@ namespace Netty.NET.Buffer.Tests;
 public class PooledByteBufAllocatorThreadBindingTest
 {
     private static PooledByteBufAllocator NewAllocator(int heap, int direct, int alignment = 0,
-        NativeMemoryAllocator native = null) => new(false, heap, direct, maxOrder: 4,
+        NativeMemoryAllocator native = null)
+    {
+        return new(false, heap, direct, maxOrder: 4,
             directMemoryCacheAlignment: alignment, nativeAllocator: native);
+    }
 
     private static void AllocateAndRelease(PooledByteBufAllocator a, bool direct)
     {
@@ -40,7 +43,9 @@ public class PooledByteBufAllocatorThreadBindingTest
     }
 
     private static IReadOnlyList<IPoolArenaMetric> Arenas(PooledByteBufAllocator a, bool direct)
-        => direct ? a.Metric.DirectArenas : a.Metric.HeapArenas;
+    {
+        return direct ? a.Metric.DirectArenas : a.Metric.HeapArenas;
+    }
 
     // Uses chunk-list identity only for test inspection, without adding public arena handles.
     private static int ArenaIndex(PooledByteBufAllocator a, ByteBuf b)

@@ -121,7 +121,10 @@ internal sealed class ByteBufView : ByteBuf
         _parent = parent; _offset = offset; _fixedCapacity = true;
         WriterIndex = length;
     }
-    protected override Memory<byte> GetMemoryCore(int index, int length) => _parent.AsMemory(_offset + index, length);
+    protected override Memory<byte> GetMemoryCore(int index, int length)
+    {
+        return _parent.AsMemory(_offset + index, length);
+    }
     internal override byte ReadByteCore(int index)
     { CheckIndex(index, 1); return _parent.ReadByteCore(_offset + index); }
     internal override void WriteByteCore(int index, int value)
@@ -131,27 +134,52 @@ internal sealed class ByteBufView : ByteBuf
     internal override ByteBuf SetWord(int index, ulong value, int width, bool littleEndian)
     { EnsureCanWrite(); CheckIndex(index, width); _parent.SetWord(_offset + index, value, width, littleEndian); return this; }
     protected override ReadOnlyMemory<byte> GetReadOnlyMemoryCore(int index, int length)
-        => _parent.AsReadOnlyMemory(_offset + index, length);
-    internal override BufferMemoryLease PinMemoryForWrite() => _parent.PinMemoryForWrite();
+    {
+        return _parent.AsReadOnlyMemory(_offset + index, length);
+    }
+    internal override BufferMemoryLease PinMemoryForWrite()
+    {
+        return _parent.PinMemoryForWrite();
+    }
     protected override bool TryGetReadOnlyMemoryCore(int index, int length, out ReadOnlyMemory<byte> memory)
-        => _parent.TryGetReadOnlyMemory(_offset + index, length, out memory);
+    {
+        return _parent.TryGetReadOnlyMemory(_offset + index, length, out memory);
+    }
     protected override void GetBytesCore(int index, Span<byte> destination)
-        => _parent.GetBytes(_offset + index, destination);
+    {
+        _parent.GetBytes(_offset + index, destination);
+    }
     protected override ReadOnlySequence<byte> GetReadOnlySequenceCore(int index, int length)
-        => _parent.AsReadOnlySequence(_offset + index, length);
+    {
+        return _parent.AsReadOnlySequence(_offset + index, length);
+    }
     internal override ByteBuf UnwrapIterationStorage(ref int index)
     { index += _offset; return _parent.UnwrapIterationStorage(ref index); }
     internal override bool SupportsDirectBulkCopy => _parent.SupportsDirectBulkCopy;
     internal override ReadOnlySequence<byte> BorrowCopySequence(int index, int length)
     { CheckIndex(index, length); return _parent.BorrowCopySequence(_offset + index, length); }
-    internal override BufferMemoryLease AcquireReadLease() => _parent.AcquireReadLease();
+    internal override BufferMemoryLease AcquireReadLease()
+    {
+        return _parent.AcquireReadLease();
+    }
     protected override bool TryGetMemoryCore(int index, int length, out Memory<byte> memory)
-        => _parent.TryGetMemory(_offset + index, length, out memory);
-    protected override void SetBytesCore(int index, ReadOnlySpan<byte> source) => _parent.SetBytes(_offset + index, source);
+    {
+        return _parent.TryGetMemory(_offset + index, length, out memory);
+    }
+    protected override void SetBytesCore(int index, ReadOnlySpan<byte> source)
+    {
+        _parent.SetBytes(_offset + index, source);
+    }
     protected internal override void SetBytesFromIoCore(int index, ReadOnlySpan<byte> source)
     { EnsureCanWrite(); CheckIndex(index, source.Length); _parent.SetBytesFromIoCore(_offset + index, source); }
-    protected override void SetZeroCore(int index, int length) => _parent.SetZero(_offset + index, length);
-    public override IByteBufAllocator Alloc() => _parent.Alloc();
+    protected override void SetZeroCore(int index, int length)
+    {
+        _parent.SetZero(_offset + index, length);
+    }
+    public override IByteBufAllocator Alloc()
+    {
+        return _parent.Alloc();
+    }
     public override bool IsContiguous => _parent.IsContiguous;
     public override bool IsDirect => _parent.IsDirect;
     public override bool IsReadOnly => _parent.IsReadOnly;
@@ -165,7 +193,10 @@ internal sealed class ByteBufView : ByteBuf
             _parent.Capacity = value;
         }
     }
-    public override ByteBuf Unwrap() => _parent;
+    public override ByteBuf Unwrap()
+    {
+        return _parent;
+    }
     // AbstractUnpooledSlicedByteBuf.getCharSequence: checkIndex0(index, length) and delegate to the parent at the
     // translated index. toString(int, int, Charset) and readString keep AbstractByteBuf's local decoding, as in the
     // source. CLR: duplicates (no fixed capacity) are not sliced views and keep the base implementation.
@@ -178,9 +209,13 @@ internal sealed class ByteBufView : ByteBuf
     }
     // AbstractByteBuf's readable overload uses its own loop, not the indexed virtual delegate.
     public override int ForEachByte(Func<byte, bool> processor)
-        => base.ForEachByte(ReaderIndex, ReadableBytes, processor);
+    {
+        return base.ForEachByte(ReaderIndex, ReadableBytes, processor);
+    }
     public override int ForEachByteDesc(Func<byte, bool> processor)
-        => base.ForEachByteDesc(ReaderIndex, ReadableBytes, processor);
+    {
+        return base.ForEachByteDesc(ReaderIndex, ReadableBytes, processor);
+    }
     public override int ForEachByte(int index, int length, Func<byte, bool> processor)
     {
         if (_fixedCapacity) CheckIndex(index, length); else EnsureAccessible();
@@ -468,6 +503,9 @@ internal sealed class ByteBufView : ByteBuf
     }
     public override int RefCnt => _parent.RefCnt;
     public override ByteBuf Retain(int increment = 1) { _parent.Retain(increment); return this; }
-    public override bool Release(int decrement = 1) => _parent.Release(decrement);
+    public override bool Release(int decrement = 1)
+    {
+        return _parent.Release(decrement);
+    }
     public override ByteBuf Touch(object hint = null) { _parent.Touch(hint); return this; }
 }

@@ -35,7 +35,10 @@ public abstract class DefaultMaxMessagesRecvByteBufAllocator : IMaxMessagesRecvB
         _ignoreBytesRead = ignoreBytesRead;
         MaxMessagesPerRead(maxMessagesPerRead);
     }
-    public int MaxMessagesPerRead() => _maxMessagesPerRead;
+    public int MaxMessagesPerRead()
+    {
+        return _maxMessagesPerRead;
+    }
     public IMaxMessagesRecvByteBufAllocator MaxMessagesPerRead(int maxMessagesPerRead)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxMessagesPerRead);
@@ -70,7 +73,10 @@ public abstract class DefaultMaxMessagesRecvByteBufAllocator : IMaxMessagesRecvB
      *          attempt to read.</li>
      * </ul>
      */
-    public bool RespectMaybeMoreData() => _respectMaybeMoreData;
+    public bool RespectMaybeMoreData()
+    {
+        return _respectMaybeMoreData;
+    }
     public abstract IRecvByteBufAllocator.IHandle NewHandle();
     /**
      * Focuses on enforcing the maximum messages per read condition for {@link #continueReading()}.
@@ -102,23 +108,46 @@ public abstract class DefaultMaxMessagesRecvByteBufAllocator : IMaxMessagesRecvB
             _maxMessagePerRead = _owner.MaxMessagesPerRead();
             _totalMessages = _totalBytesRead = 0;
         }
-        public virtual ByteBuf Allocate(IByteBufAllocator alloc) => alloc.IoBuffer(Guess());
+        public virtual ByteBuf Allocate(IByteBufAllocator alloc)
+        {
+            return alloc.IoBuffer(Guess());
+        }
         public abstract int Guess();
-        public void IncMessagesRead(int amt) => _totalMessages = unchecked(_totalMessages + amt);
+        public void IncMessagesRead(int amt)
+        {
+            _totalMessages = unchecked(_totalMessages + amt);
+        }
         public virtual void LastBytesRead(int bytes)
         {
             _lastBytesRead = bytes;
             if (bytes > 0)
                 _totalBytesRead = unchecked(_totalBytesRead + bytes);
         }
-        public int LastBytesRead() => _lastBytesRead;
-        public virtual bool ContinueReading() => ContinueReading(_defaultMaybeMoreSupplier);
+        public int LastBytesRead()
+        {
+            return _lastBytesRead;
+        }
+        public virtual bool ContinueReading()
+        {
+            return ContinueReading(_defaultMaybeMoreSupplier);
+        }
         public virtual bool ContinueReading(Func<bool> maybeMoreDataSupplier)
-            => _config.IsAutoRead() && (!_respectMaybeMoreData || maybeMoreDataSupplier()) &&
+        {
+            return _config.IsAutoRead() && (!_respectMaybeMoreData || maybeMoreDataSupplier()) &&
                 _totalMessages < _maxMessagePerRead && (_owner._ignoreBytesRead || _totalBytesRead > 0);
+        }
         public virtual void ReadComplete() { }
-        public int AttemptedBytesRead() => _attemptedBytesRead;
-        public void AttemptedBytesRead(int bytes) => _attemptedBytesRead = bytes;
-        protected int TotalBytesRead() => _totalBytesRead < 0 ? int.MaxValue : _totalBytesRead;
+        public int AttemptedBytesRead()
+        {
+            return _attemptedBytesRead;
+        }
+        public void AttemptedBytesRead(int bytes)
+        {
+            _attemptedBytesRead = bytes;
+        }
+        protected int TotalBytesRead()
+        {
+            return _totalBytesRead < 0 ? int.MaxValue : _totalBytesRead;
+        }
     }
 }

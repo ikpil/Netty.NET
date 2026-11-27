@@ -257,13 +257,19 @@ public class FixedCompositeByteBufTest
         internal CapacityOnlyBuffer(int capacity) : base(capacity) { WriterIndex = capacity; }
         public override int Capacity { get => MaxCapacity; set => throw new NotSupportedException(); }
         public override bool IsDirect => false;
-        protected override Memory<byte> GetMemoryCore(int index, int length) => throw new InvalidOperationException("No storage expected.");
+        protected override Memory<byte> GetMemoryCore(int index, int length)
+        {
+            throw new InvalidOperationException("No storage expected.");
+        }
         protected override void Deallocate() { }
     }
 
     private readonly struct ByteBufScope(ByteBuf value) : IDisposable
     {
         internal ByteBuf Value { get; } = value;
-        public void Dispose() => Value.Release();
+        public void Dispose()
+        {
+            Value.Release();
+        }
     }
 }

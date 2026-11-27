@@ -33,13 +33,21 @@ public class ByteBufSocketTransferTest
     }
 
     private static ValueTask<int> Get(ByteBuf b, bool async, int index, Socket s, int length, CancellationToken t)
-        => async ? b.GetBytesAsync(index, s, length, t) : ValueTask.FromResult(b.GetBytes(index, s, length));
+    {
+        return async ? b.GetBytesAsync(index, s, length, t) : ValueTask.FromResult(b.GetBytes(index, s, length));
+    }
     private static ValueTask<int> Set(ByteBuf b, bool async, int index, Socket s, int length, CancellationToken t)
-        => async ? b.SetBytesAsync(index, s, length, t) : ValueTask.FromResult(b.SetBytes(index, s, length));
+    {
+        return async ? b.SetBytesAsync(index, s, length, t) : ValueTask.FromResult(b.SetBytes(index, s, length));
+    }
     private static ValueTask<int> Read(ByteBuf b, bool async, Socket s, int length, CancellationToken t)
-        => async ? b.ReadBytesAsync(s, length, t) : ValueTask.FromResult(b.ReadBytes(s, length));
+    {
+        return async ? b.ReadBytesAsync(s, length, t) : ValueTask.FromResult(b.ReadBytes(s, length));
+    }
     private static ValueTask<int> Write(ByteBuf b, bool async, Socket s, int length, CancellationToken t)
-        => async ? b.WriteBytesAsync(s, length, t) : ValueTask.FromResult(b.WriteBytes(s, length));
+    {
+        return async ? b.WriteBytesAsync(s, length, t) : ValueTask.FromResult(b.WriteBytes(s, length));
+    }
 
     [Theory, MemberData(nameof(Modes))]
     public async Task AbsoluteAndRelativeOutputPreserveBytesMarksAndBorrowedOwnership(int kind, bool async)
@@ -279,8 +287,14 @@ public class ByteBufSocketTransferTest
     private sealed class Tracker(ByteBuf expected) : IResourceLeakTracker<ByteBuf>
     {
         internal int Records, Closes;
-        public void Record() => Records++;
-        public void Record(object hint) => Records++;
+        public void Record()
+        {
+            Records++;
+        }
+        public void Record(object hint)
+        {
+            Records++;
+        }
         public bool Close(ByteBuf b) { Assert.Same(expected, b); return ++Closes == 1; }
     }
 

@@ -121,14 +121,20 @@ public class LocalServerChannel : AbstractServerChannel
             _ = _channel.Close();
         }
     }
-    protected override IChannelConfig NewConfig() => new ServerConfig(this);
+    protected override IChannelConfig NewConfig()
+    {
+        return new ServerConfig(this);
+    }
 
     // CLR: AbstractChannel keeps its own lifecycle flags for the shared close/registration paths; the source state
     // field is combined with them.
     public override bool IsOpen => state < 2 && base.IsOpen;
 
     public override bool IsActive => state == 1 && base.IsActive;
-    protected override EndPoint LocalAddress0() => _local;
+    protected override EndPoint LocalAddress0()
+    {
+        return _local;
+    }
     protected override Task DoBindAsync(EndPoint address, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -158,7 +164,10 @@ public class LocalServerChannel : AbstractServerChannel
      * A factory method for {@link LocalChannel}s. Users may override it
      * to create custom instances of {@link LocalChannel}s.
      */
-    protected virtual LocalChannel NewLocalChannel(LocalChannel peer) => new(this, peer);
+    protected virtual LocalChannel NewLocalChannel(LocalChannel peer)
+    {
+        return new(this, peer);
+    }
     internal LocalChannel Serve(LocalChannel peer)
     {
         LocalChannel child = NewLocalChannel(peer);

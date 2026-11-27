@@ -91,8 +91,14 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
         return index >= 0 && index < _size && ReferenceEquals(o, _queue[index]);
     }
 
-    public bool ContainsTyped(T node) => Contains(node);
-    public bool RemoveTyped(T node) => Remove(node);
+    public bool ContainsTyped(T node)
+    {
+        return Contains(node);
+    }
+    public bool RemoveTyped(T node)
+    {
+        return Remove(node);
+    }
 
     public void Clear()
     {
@@ -286,8 +292,11 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
         SetIndex(node, k);
     }
 
-    private int IndexOf(T item) => item is IPriorityQueueNode<T> node
-        ? node.PriorityQueueIndex(this) : -1;
+    private int IndexOf(T item)
+    {
+        return item is IPriorityQueueNode<T> node
+            ? node.PriorityQueueIndex(this) : -1;
+    }
 
     private void SetIndex(T item, int index)
     {

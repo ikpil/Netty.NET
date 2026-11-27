@@ -32,7 +32,10 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
     private readonly LoopA _a = new();
     private readonly LoopB _b = new();
     private readonly LoopC _c = new();
-    public ValueTask InitializeAsync() => ValueTask.CompletedTask;
+    public ValueTask InitializeAsync()
+    {
+        return ValueTask.CompletedTask;
+    }
     public async ValueTask DisposeAsync()
     {
         foreach (var loop in new SingleThreadEventLoop[] { _a, _b, _c })
@@ -63,11 +66,23 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
         // Wait until the event loop is terminated.
         await _a.TerminationFuture.WaitAsync(TestContext.Current.CancellationToken);
     }
-    private static void AssertRejection(IEventExecutor loop) => Assert.Throws<RejectedExecutionException>(() => loop.Execute(Noop));
+    private static void AssertRejection(IEventExecutor loop)
+    {
+        Assert.Throws<RejectedExecutionException>(() => loop.Execute(Noop));
+    }
 
-    [Fact(Timeout = 10000)] public Task ScheduleTaskA() => ScheduleTask(_a).WaitAsync(TestContext.Current.CancellationToken);
-    [Fact(Timeout = 10000)] public Task ScheduleTaskB() => ScheduleTask(_b).WaitAsync(TestContext.Current.CancellationToken);
-    [Fact(Timeout = 10000)] public Task ScheduleTaskC() => ScheduleTask(_c).WaitAsync(TestContext.Current.CancellationToken);
+    [Fact(Timeout = 10000)] public Task ScheduleTaskA()
+    {
+        return ScheduleTask(_a).WaitAsync(TestContext.Current.CancellationToken);
+    }
+    [Fact(Timeout = 10000)] public Task ScheduleTaskB()
+    {
+        return ScheduleTask(_b).WaitAsync(TestContext.Current.CancellationToken);
+    }
+    [Fact(Timeout = 10000)] public Task ScheduleTaskC()
+    {
+        return ScheduleTask(_c).WaitAsync(TestContext.Current.CancellationToken);
+    }
     private static async Task ScheduleTask(IEventLoop loop)
     {
         long start = Stopwatch.GetTimestamp(), end = 0;
@@ -75,10 +90,22 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
         Assert.True(Stopwatch.GetElapsedTime(start, end) >= TimeSpan.FromMilliseconds(500));
     }
 
-    [Fact(Timeout = 5000)] public Task ScheduleTaskAtFixedRateA() => FixedRate(_a, false).WaitAsync(TestContext.Current.CancellationToken);
-    [Fact(Timeout = 5000)] public Task ScheduleTaskAtFixedRateB() => FixedRate(_b, false).WaitAsync(TestContext.Current.CancellationToken);
-    [Fact(Timeout = 5000)] public Task ScheduleLaggyTaskAtFixedRateA() => FixedRate(_a, true).WaitAsync(TestContext.Current.CancellationToken);
-    [Fact(Timeout = 5000)] public Task ScheduleLaggyTaskAtFixedRateB() => FixedRate(_b, true).WaitAsync(TestContext.Current.CancellationToken);
+    [Fact(Timeout = 5000)] public Task ScheduleTaskAtFixedRateA()
+    {
+        return FixedRate(_a, false).WaitAsync(TestContext.Current.CancellationToken);
+    }
+    [Fact(Timeout = 5000)] public Task ScheduleTaskAtFixedRateB()
+    {
+        return FixedRate(_b, false).WaitAsync(TestContext.Current.CancellationToken);
+    }
+    [Fact(Timeout = 5000)] public Task ScheduleLaggyTaskAtFixedRateA()
+    {
+        return FixedRate(_a, true).WaitAsync(TestContext.Current.CancellationToken);
+    }
+    [Fact(Timeout = 5000)] public Task ScheduleLaggyTaskAtFixedRateB()
+    {
+        return FixedRate(_b, true).WaitAsync(TestContext.Current.CancellationToken);
+    }
     private static async Task FixedRate(IEventLoop loop, bool laggy)
     {
         var timestamps = new ConcurrentQueue<long>();
@@ -134,8 +161,14 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
         catch (ThreadInterruptedException) { /* Ignore */ }
     }
 
-    [Fact(Timeout = 5000)] public Task ScheduleTaskWithFixedDelayA() => FixedDelay(_a).WaitAsync(TestContext.Current.CancellationToken);
-    [Fact(Timeout = 5000)] public Task ScheduleTaskWithFixedDelayB() => FixedDelay(_b).WaitAsync(TestContext.Current.CancellationToken);
+    [Fact(Timeout = 5000)] public Task ScheduleTaskWithFixedDelayA()
+    {
+        return FixedDelay(_a).WaitAsync(TestContext.Current.CancellationToken);
+    }
+    [Fact(Timeout = 5000)] public Task ScheduleTaskWithFixedDelayB()
+    {
+        return FixedDelay(_b).WaitAsync(TestContext.Current.CancellationToken);
+    }
     private static async Task FixedDelay(IEventLoop loop)
     {
         var timestamps = new ConcurrentQueue<long>();
@@ -253,7 +286,10 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
     {
         private int _count;
         internal readonly Action Work;
-        internal CountingRunnable() => Work = () => Interlocked.Increment(ref _count);
+        internal CountingRunnable()
+        {
+            Work = () => Interlocked.Increment(ref _count);
+        }
         internal int Count => Volatile.Read(ref _count);
     }
     internal sealed class LoopA : SingleThreadEventLoop
@@ -269,7 +305,10 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
                 if (ConfirmShutdown()) break;
             }
         }
-        protected override void Cleanup() => Interlocked.Increment(ref CleanedUp);
+        protected override void Cleanup()
+        {
+            Interlocked.Increment(ref CleanedUp);
+        }
     }
     internal class LoopB : SingleThreadEventLoop
     {
@@ -289,7 +328,10 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
                 if (ConfirmShutdown()) break;
             }
         }
-        protected virtual void RunTasks0() => RunAllTasks();
+        protected virtual void RunTasks0()
+        {
+            RunAllTasks();
+        }
         protected override void Wakeup(bool inEventLoop)
         {
             lock (_wakeupGate)
@@ -310,6 +352,9 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
     {
         internal readonly System.Threading.Channels.Channel<bool> IterationEnd = System.Threading.Channels.Channel.CreateBounded<bool>(1);
         protected override void AfterRunningAllTasks() { base.AfterRunningAllTasks(); IterationEnd.Writer.TryWrite(true); }
-        protected override void RunTasks0() => RunAllTasks(60000000000L);
+        protected override void RunTasks0()
+        {
+            RunAllTasks(60000000000L);
+        }
     }
 }

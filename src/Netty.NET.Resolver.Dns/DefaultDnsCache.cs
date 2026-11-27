@@ -375,7 +375,10 @@ public class DefaultDnsCache : IDnsCache
             }
         }
 
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
 
         public override int GetHashCode()
         {

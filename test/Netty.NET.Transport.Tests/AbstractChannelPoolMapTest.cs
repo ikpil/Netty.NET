@@ -110,6 +110,9 @@ public class AbstractChannelPoolMapTest
     private sealed class PoolMap<TPool>(Func<IEventLoop, TPool> create) : AbstractChannelPoolMap<IEventLoop, TPool>
         where TPool : class, IChannelPool
     {
-        protected override TPool NewPool(IEventLoop key) => create(key);
+        protected override TPool NewPool(IEventLoop key)
+        {
+            return create(key);
+        }
     }
 }

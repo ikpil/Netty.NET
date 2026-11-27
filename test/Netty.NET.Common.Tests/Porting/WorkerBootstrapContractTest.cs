@@ -180,7 +180,9 @@ public class WorkerBootstrapContractTest
     private sealed class NativeGroup(Action<Action> start) : MultithreadEventExecutorGroup(2, start)
     {
         protected override IEventExecutor NewChild(Action<Action> executor, params object[] args)
-            => new DefaultEventExecutor(this, executor);
+        {
+            return new DefaultEventExecutor(this, executor);
+        }
     }
 
     [Fact]

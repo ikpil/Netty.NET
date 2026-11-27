@@ -182,7 +182,10 @@ public abstract class DatagramUnicastSourceTest : AbstractDatagramTest
     // CLR: the native epoll variant needs original destination ancillary data.
     // Run this test with IP_RECVORIGDSTADDR option enabled
     [Fact(Skip = "IP_RECVORIGDSTADDR is unavailable on the managed transport.")]
-    public Task TestSimpleSendWithConnectAndOriginalDestination() => Task.CompletedTask;
+    public Task TestSimpleSendWithConnectAndOriginalDestination()
+    {
+        return Task.CompletedTask;
+    }
 
     [Fact]
     public async Task TestReceiveEmptyDatagrams()

@@ -69,6 +69,9 @@ public class ReflectiveChannelFactoryContractTest
 
     private sealed class ThrowingChannel : LocalChannel
     {
-        public ThrowingChannel() => throw new InvalidOperationException("boom");
+        public ThrowingChannel()
+        {
+            throw new InvalidOperationException("boom");
+        }
     }
 }

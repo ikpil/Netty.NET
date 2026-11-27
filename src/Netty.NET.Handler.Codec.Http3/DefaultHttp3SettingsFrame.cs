@@ -54,7 +54,10 @@ public sealed class DefaultHttp3SettingsFrame : IHttp3SettingsFrame
        return settings.GetEnumerator();
     }
 
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 
     public override int GetHashCode()
     {

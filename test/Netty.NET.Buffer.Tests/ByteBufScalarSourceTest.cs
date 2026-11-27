@@ -182,8 +182,14 @@ public class ByteBufScalarSourceTest
         Assert.Equal(1, s.Root.RefCnt);
     }
 
-    private static int Width(int operation) => operation switch { 0 => 1, 1 or 2 => 2, 3 or 4 => 3, 5 or 6 => 4, _ => 8 };
-    private static bool LittleEndian(int operation) => operation is 2 or 4 or 6 or 8;
+    private static int Width(int operation)
+    {
+        return operation switch { 0 => 1, 1 or 2 => 2, 3 or 4 => 3, 5 or 6 => 4, _ => 8 };
+    }
+    private static bool LittleEndian(int operation)
+    {
+        return operation is 2 or 4 or 6 or 8;
+    }
     private static void Set(ByteBuf b, int operation, ulong bits)
     {
         int value = unchecked((int)bits);
@@ -200,18 +206,24 @@ public class ByteBufScalarSourceTest
             default: b.SetLongLE(15, unchecked((long)bits)); break;
         }
     }
-    private static long Get(ByteBuf b, int operation) => operation switch
+    private static long Get(ByteBuf b, int operation)
     {
-        0 => b.GetByte(15), 1 => b.GetShort(15), 2 => b.GetShortLE(15),
-        3 => b.GetUnsignedMedium(15), 4 => b.GetUnsignedMediumLE(15),
-        5 => b.GetInt(15), 6 => b.GetIntLE(15), 7 => b.GetLong(15), _ => b.GetLongLE(15)
-    };
-    private static long Read(ByteBuf b, int operation) => operation switch
+        return operation switch
+        {
+            0 => b.GetByte(15), 1 => b.GetShort(15), 2 => b.GetShortLE(15),
+            3 => b.GetUnsignedMedium(15), 4 => b.GetUnsignedMediumLE(15),
+            5 => b.GetInt(15), 6 => b.GetIntLE(15), 7 => b.GetLong(15), _ => b.GetLongLE(15)
+        };
+    }
+    private static long Read(ByteBuf b, int operation)
     {
-        0 => b.ReadByte(), 1 => b.ReadShort(), 2 => b.ReadShortLE(),
-        3 => b.ReadUnsignedMedium(), 4 => b.ReadUnsignedMediumLE(),
-        5 => b.ReadInt(), 6 => b.ReadIntLE(), 7 => b.ReadLong(), _ => b.ReadLongLE()
-    };
+        return operation switch
+        {
+            0 => b.ReadByte(), 1 => b.ReadShort(), 2 => b.ReadShortLE(),
+            3 => b.ReadUnsignedMedium(), 4 => b.ReadUnsignedMediumLE(),
+            5 => b.ReadInt(), 6 => b.ReadIntLE(), 7 => b.ReadLong(), _ => b.ReadLongLE()
+        };
+    }
 
     [Theory]
     [MemberData(nameof(Providers))]

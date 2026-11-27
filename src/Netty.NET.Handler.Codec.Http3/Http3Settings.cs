@@ -311,7 +311,10 @@ public sealed class Http3Settings : IEnumerable<KeyValuePair<long, long>>
         return settings.GetEnumerator();
     }
 
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 
     /**
      * Compares this settings object to another for equality.

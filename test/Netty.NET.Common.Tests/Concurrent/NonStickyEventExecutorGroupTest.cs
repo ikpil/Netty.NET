@@ -149,33 +149,78 @@ public class NonStickyEventExecutorGroupTest
             this.underlying = underlying;
             executor = new RejectSecondExecutor(this, underlying);
         }
-        public override IEventExecutor Next() => executor;
-        public override IEnumerable<IEventExecutor> Iterator() => new[] { executor };
-        public override void Shutdown() => underlying.ShutdownGracefullyAsync();
-        public override bool IsShuttingDown() => underlying.IsShuttingDown();
-        public override bool IsShutdown() => underlying.IsShutdown();
-        public override bool IsTerminated() => underlying.IsTerminated();
-        public override bool AwaitTermination(TimeSpan timeout) => underlying.AwaitTermination(timeout);
+        public override IEventExecutor Next()
+        {
+            return executor;
+        }
+        public override IEnumerable<IEventExecutor> Iterator()
+        {
+            return new[] { executor };
+        }
+        public override void Shutdown()
+        {
+            underlying.ShutdownGracefullyAsync();
+        }
+        public override bool IsShuttingDown()
+        {
+            return underlying.IsShuttingDown();
+        }
+        public override bool IsShutdown()
+        {
+            return underlying.IsShutdown();
+        }
+        public override bool IsTerminated()
+        {
+            return underlying.IsTerminated();
+        }
+        public override bool AwaitTermination(TimeSpan timeout)
+        {
+            return underlying.AwaitTermination(timeout);
+        }
         public override Task TerminationFuture => underlying.TerminationFuture;
-        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) =>
-            underlying.ShutdownGracefullyAsync(quietPeriod, timeout);
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+        {
+            return underlying.ShutdownGracefullyAsync(quietPeriod, timeout);
+        }
     }
 
     private sealed class RejectSecondExecutor : AbstractEventExecutor
     {
         private readonly UnorderedThreadPoolEventExecutor underlying;
         private int executeCount;
-        internal RejectSecondExecutor(IEventExecutorGroup parent, UnorderedThreadPoolEventExecutor underlying) : base(parent) =>
+        internal RejectSecondExecutor(IEventExecutorGroup parent, UnorderedThreadPoolEventExecutor underlying) : base(parent)
+        {
             this.underlying = underlying;
-        public override bool InEventLoop(Thread thread) => underlying.InEventLoop(thread);
-        public override void Shutdown() => underlying.ShutdownGracefullyAsync();
-        public override bool IsShuttingDown() => underlying.IsShuttingDown();
-        public override bool IsShutdown() => underlying.IsShutdown();
-        public override bool IsTerminated() => underlying.IsTerminated();
-        public override bool AwaitTermination(TimeSpan timeout) => underlying.AwaitTermination(timeout);
+        }
+        public override bool InEventLoop(Thread thread)
+        {
+            return underlying.InEventLoop(thread);
+        }
+        public override void Shutdown()
+        {
+            underlying.ShutdownGracefullyAsync();
+        }
+        public override bool IsShuttingDown()
+        {
+            return underlying.IsShuttingDown();
+        }
+        public override bool IsShutdown()
+        {
+            return underlying.IsShutdown();
+        }
+        public override bool IsTerminated()
+        {
+            return underlying.IsTerminated();
+        }
+        public override bool AwaitTermination(TimeSpan timeout)
+        {
+            return underlying.AwaitTermination(timeout);
+        }
         public override Task TerminationFuture => underlying.TerminationFuture;
-        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) =>
-            underlying.ShutdownGracefullyAsync(quietPeriod, timeout);
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+        {
+            return underlying.ShutdownGracefullyAsync(quietPeriod, timeout);
+        }
         public override void Execute(Action command)
         {
             ArgumentNullException.ThrowIfNull(command);

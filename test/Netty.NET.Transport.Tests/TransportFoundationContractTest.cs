@@ -203,6 +203,9 @@ public class TransportFoundationContractTest
 
     private sealed class ThrowingStream : MemoryStream
     {
-        public override void Write(ReadOnlySpan<byte> buffer) => throw new IOException("write failed");
+        public override void Write(ReadOnlySpan<byte> buffer)
+        {
+            throw new IOException("write failed");
+        }
     }
 }

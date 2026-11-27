@@ -84,10 +84,15 @@ public class ClrTypeInitializationContractTest
         Initialize(typeof(object), typeof(IDisposable));
     }
 
-    private static void Initialize(params Type[] types) => ClassInitializerUtil.TryInitialize(types);
+    private static void Initialize(params Type[] types)
+    {
+        ClassInitializerUtil.TryInitialize(types);
+    }
 
-    private static Type Target(Assembly assembly, string name) =>
-        assembly.GetType(typeof(ClrTypeInitializationContractTest).FullName + "+" + name, throwOnError: true);
+    private static Type Target(Assembly assembly, string name)
+    {
+        return assembly.GetType(typeof(ClrTypeInitializationContractTest).FullName + "+" + name, throwOnError: true);
+    }
 
     private static int Count(Assembly assembly, string name)
     {
@@ -106,17 +111,26 @@ public class ClrTypeInitializationContractTest
     public static class Tracker
     {
         public static readonly ConcurrentDictionary<string, int> Counts = new();
-        public static void Record(string name) => Counts.AddOrUpdate(name, 1, (_, count) => count + 1);
+        public static void Record(string name)
+        {
+            Counts.AddOrUpdate(name, 1, (_, count) => count + 1);
+        }
     }
 
     private class SimpleTarget
     {
-        static SimpleTarget() => Tracker.Record("simple");
+        static SimpleTarget()
+        {
+            Tracker.Record("simple");
+        }
     }
 
     private class GenericTarget<T>
     {
-        static GenericTarget() => Tracker.Record(typeof(T).FullName);
+        static GenericTarget()
+        {
+            Tracker.Record(typeof(T).FullName);
+        }
     }
 
     private class FailingTarget

@@ -85,10 +85,15 @@ public class SocketMultipleConnectSourceTest : AbstractSocketTest
     }
 
     // CLR: shared helpers of the earlier per-test fixtures, still used by SocketConnectTimingContractTest.
-    internal static IByteBufAllocator SelectAllocator(bool adaptive) =>
-        adaptive ? new AdaptiveByteBufAllocator() : PooledByteBufAllocator.Default;
+    internal static IByteBufAllocator SelectAllocator(bool adaptive)
+    {
+        return adaptive ? new AdaptiveByteBufAllocator() : PooledByteBufAllocator.Default;
+    }
 
-    internal static IPAddress Loopback() => Socket.OSSupportsIPv6 ? IPAddress.IPv6Loopback : IPAddress.Loopback;
+    internal static IPAddress Loopback()
+    {
+        return Socket.OSSupportsIPv6 ? IPAddress.IPv6Loopback : IPAddress.Loopback;
+    }
 }
 #pragma warning restore xUnit1051
 #pragma warning restore xUnit1069

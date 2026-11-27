@@ -14,10 +14,22 @@ public class NativeSchedulingContractTest
         private readonly MockTicker _clock = global::Netty.NET.Common.Concurrent.Ticker.NewMockTicker();
         private bool _shutdown;
         internal IScheduledWork Head => PeekScheduledTask();
-        internal void Advance(long nanos) => _clock.Advance(TimeSpan.FromTicks(nanos / 100));
-        internal Action Poll() => PollScheduledTask();
-        public override Ticker Ticker() => _clock;
-        public override bool InEventLoop(Thread thread) => true;
+        internal void Advance(long nanos)
+        {
+            _clock.Advance(TimeSpan.FromTicks(nanos / 100));
+        }
+        internal Action Poll()
+        {
+            return PollScheduledTask();
+        }
+        public override Ticker Ticker()
+        {
+            return _clock;
+        }
+        public override bool InEventLoop(Thread thread)
+        {
+            return true;
+        }
         public override void Execute(Action task)
         {
             task();
@@ -25,10 +37,22 @@ public class NativeSchedulingContractTest
         public override Task TerminationFuture => Task.CompletedTask;
         public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) { Shutdown(); return TerminationFuture; }
         public override void Shutdown() { _shutdown = true; CancelScheduledTasks(); }
-        public override bool IsShuttingDown() => _shutdown;
-        public override bool IsShutdown() => _shutdown;
-        public override bool IsTerminated() => _shutdown;
-        public override bool AwaitTermination(TimeSpan timeout) => _shutdown;
+        public override bool IsShuttingDown()
+        {
+            return _shutdown;
+        }
+        public override bool IsShutdown()
+        {
+            return _shutdown;
+        }
+        public override bool IsTerminated()
+        {
+            return _shutdown;
+        }
+        public override bool AwaitTermination(TimeSpan timeout)
+        {
+            return _shutdown;
+        }
     }
 
     [Fact]
@@ -152,8 +176,11 @@ public class NativeSchedulingContractTest
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await task);
     }
 
-    private static IEventExecutor Create(bool unordered) => unordered
-        ? new UnorderedThreadPoolEventExecutor(1) : new DefaultEventExecutor();
+    private static IEventExecutor Create(bool unordered)
+    {
+        return unordered
+            ? new UnorderedThreadPoolEventExecutor(1) : new DefaultEventExecutor();
+    }
 
     [Theory]
     [InlineData(false)]
@@ -229,7 +256,10 @@ public class NativeSchedulingContractTest
 
     private sealed class FailingFactory(Exception error) : IThreadFactory
     {
-        public Thread NewThread(Action runnable) => throw error;
+        public Thread NewThread(Action runnable)
+        {
+            throw error;
+        }
     }
 
     [Fact]

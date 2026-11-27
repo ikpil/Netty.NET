@@ -85,7 +85,9 @@ public static partial class Unpooled
          * {@code 0}.
          */
     public static ByteBuf Buffer(int initialCapacity = 256, int maxCapacity = int.MaxValue)
-        => UnpooledByteBufAllocator.Default.HeapBuffer(initialCapacity, maxCapacity);
+    {
+        return UnpooledByteBufAllocator.Default.HeapBuffer(initialCapacity, maxCapacity);
+    }
     /**
          * Creates a new big-endian buffer which wraps the specified {@code array}.
          * A modification on the specified array's content will be visible to the
@@ -102,7 +104,9 @@ public static partial class Unpooled
          * {@code writerIndex} are {@code 0} and {@code array.length} respectively.
          */
     public static ByteBuf CopiedBuffer(ReadOnlySpan<byte> bytes)
-        => bytes.IsEmpty ? EmptyBuffer : WrappedBuffer(bytes.ToArray());
+    {
+        return bytes.IsEmpty ? EmptyBuffer : WrappedBuffer(bytes.ToArray());
+    }
 
     /**
      * Creates a new big-endian direct buffer with reasonably small initial capacity, which
@@ -120,7 +124,9 @@ public static partial class Unpooled
          * {@code 0}.
          */
     public static ByteBuf DirectBuffer(int initialCapacity = 256, int maxCapacity = int.MaxValue)
-        => UnpooledByteBufAllocator.Default.DirectBuffer(initialCapacity, maxCapacity);
+    {
+        return UnpooledByteBufAllocator.Default.DirectBuffer(initialCapacity, maxCapacity);
+    }
     /**
      * Returns a new big-endian composite buffer with no components.
      */
@@ -131,5 +137,7 @@ public static partial class Unpooled
     // allocator's compositeHeapBuffer, so it is not leak-tracked (the leak presence detector of testsuite-common
     // reported HttpDataTest's undisposed MemoryAttribute content while the call went through the allocator, 2026-11-27).
     public static CompositeByteBuf CompositeBuffer(int maxNumComponents = 16)
-        => new CompositeByteBuf(UnpooledByteBufAllocator.Default, false, maxNumComponents);
+    {
+        return new CompositeByteBuf(UnpooledByteBufAllocator.Default, false, maxNumComponents);
+    }
 }

@@ -12,7 +12,10 @@ public class UnorderedQueueOwnershipContractTest
 {
     private sealed class Factory(Func<Action, Thread> create) : IThreadFactory
     {
-        public Thread NewThread(Action task) => create(task);
+        public Thread NewThread(Action task)
+        {
+            return create(task);
+        }
     }
 
     [Fact]

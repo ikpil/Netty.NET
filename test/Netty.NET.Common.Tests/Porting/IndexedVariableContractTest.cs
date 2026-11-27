@@ -14,11 +14,23 @@ public class IndexedVariableContractTest : IDisposable
     private static readonly FieldInfo IndexField = typeof(InternalThreadLocalMap)
         .GetField("nextIndex", BindingFlags.NonPublic | BindingFlags.Static);
 
-    public IndexedVariableContractTest() => FastThreadLocal.RemoveAll();
-    public void Dispose() => FastThreadLocal.RemoveAll();
+    public IndexedVariableContractTest()
+    {
+        FastThreadLocal.RemoveAll();
+    }
+    public void Dispose()
+    {
+        FastThreadLocal.RemoveAll();
+    }
 
-    private static int ReadIndex() => (int)IndexField.GetValue(null);
-    private static void WriteIndex(int value) => IndexField.SetValue(null, value);
+    private static int ReadIndex()
+    {
+        return (int)IndexField.GetValue(null);
+    }
+    private static void WriteIndex(int value)
+    {
+        IndexField.SetValue(null, value);
+    }
 
     [Fact]
     public void AllocationStopsAtTheNativeArrayLimit()

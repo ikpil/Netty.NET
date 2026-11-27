@@ -77,7 +77,10 @@ internal sealed partial class AdaptivePoolingAllocator
             return MemoryMarshal.TryGetArray((ReadOnlyMemory<byte>)_memory, out segment);
         }
 
-        internal BufferMemoryLease AcquireLease() => new(AcquireClaim());
+        internal BufferMemoryLease AcquireLease()
+        {
+            return new(AcquireClaim());
+        }
 
         private Claim AcquireClaim()
         {
@@ -91,16 +94,29 @@ internal sealed partial class AdaptivePoolingAllocator
             throw new ObjectDisposedException(nameof(AdaptiveChunkAllocation));
         }
 
-        internal bool TryGetAddress(int offset, out nint address) =>
-            NativeMemoryOwner.TryGetAddress(_memory.Slice(offset), out address);
+        internal bool TryGetAddress(int offset, out nint address)
+        {
+            return NativeMemoryOwner.TryGetAddress(_memory.Slice(offset), out address);
+        }
 
-        internal ReadOnlyMemory<byte> GetStorage(int offset, int length) => _memory.Slice(offset, length);
+        internal ReadOnlyMemory<byte> GetStorage(int offset, int length)
+        {
+            return _memory.Slice(offset, length);
+        }
 
-        public override MemoryHandle Pin(int elementIndex = 0) =>
+        public override MemoryHandle Pin(int elementIndex = 0)
+        {
             throw new NotSupportedException("Keep the buffer retained while using this reusable memory.");
+        }
 
-        public override void Unpin() => throw new NotSupportedException();
-        internal void Release() => Dispose(true);
+        public override void Unpin()
+        {
+            throw new NotSupportedException();
+        }
+        internal void Release()
+        {
+            Dispose(true);
+        }
         protected override void Dispose(bool disposing)
         {
             if (Interlocked.Exchange(ref _disposed, 1) == 0) ReleaseClaim();
@@ -119,14 +135,20 @@ internal sealed partial class AdaptivePoolingAllocator
         private sealed class Claim : IDisposable
         {
             private AdaptiveChunkAllocation _allocation;
-            internal void Activate(AdaptiveChunkAllocation allocation) => _allocation = allocation;
+            internal void Activate(AdaptiveChunkAllocation allocation)
+            {
+                _allocation = allocation;
+            }
             public void Dispose()
             {
                 AdaptiveChunkAllocation allocation = Interlocked.Exchange(ref _allocation, null);
                 allocation?.ReleaseClaim();
                 GC.SuppressFinalize(this);
             }
-            ~Claim() => Dispose();
+            ~Claim()
+            {
+                Dispose();
+            }
         }
     }
 }

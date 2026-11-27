@@ -107,10 +107,16 @@ public abstract partial class AbstractByteBufTest
     }
 
     [Fact]
-    public virtual void TestGetReadOnlyDirectDst() => AssertGetReadOnlyDst(true);
+    public virtual void TestGetReadOnlyDirectDst()
+    {
+        AssertGetReadOnlyDst(true);
+    }
 
     [Fact]
-    public virtual void TestGetReadOnlyHeapDst() => AssertGetReadOnlyDst(false);
+    public virtual void TestGetReadOnlyHeapDst()
+    {
+        AssertGetReadOnlyDst(false);
+    }
 
     private void AssertGetReadOnlyDst(bool direct)
     {
@@ -132,13 +138,22 @@ public abstract partial class AbstractByteBufTest
     }
 
     [Fact]
-    public void TestReadyOnlyNioBuffer() => AssertReadyOnlyNioBuffer(buffer.AsReadOnly());
+    public void TestReadyOnlyNioBuffer()
+    {
+        AssertReadyOnlyNioBuffer(buffer.AsReadOnly());
+    }
 
     [Fact]
-    public void TestReadyOnlySliceNioBuffer() => AssertReadyOnlyNioBuffer(buffer.AsReadOnly().Slice());
+    public void TestReadyOnlySliceNioBuffer()
+    {
+        AssertReadyOnlyNioBuffer(buffer.AsReadOnly().Slice());
+    }
 
     [Fact]
-    public void TestReadyOnlyDuplicateNioBuffer() => AssertReadyOnlyNioBuffer(buffer.AsReadOnly().Duplicate());
+    public void TestReadyOnlyDuplicateNioBuffer()
+    {
+        AssertReadyOnlyNioBuffer(buffer.AsReadOnly().Duplicate());
+    }
 
     private static void AssertReadyOnlyNioBuffer(ByteBuf buffer)
     {
@@ -150,13 +165,22 @@ public abstract partial class AbstractByteBufTest
     }
 
     [Fact]
-    public void TestReadyOnlyNioBufferWithPositionLength() => AssertReadyOnlyNioBufferWithPositionLength(buffer.AsReadOnly());
+    public void TestReadyOnlyNioBufferWithPositionLength()
+    {
+        AssertReadyOnlyNioBufferWithPositionLength(buffer.AsReadOnly());
+    }
 
     [Fact]
-    public void TestReadyOnlySliceNioBufferWithPositionLength() => AssertReadyOnlyNioBufferWithPositionLength(buffer.AsReadOnly().Slice());
+    public void TestReadyOnlySliceNioBufferWithPositionLength()
+    {
+        AssertReadyOnlyNioBufferWithPositionLength(buffer.AsReadOnly().Slice());
+    }
 
     [Fact]
-    public void TestReadyOnlyDuplicateNioBufferWithPositionLength() => AssertReadyOnlyNioBufferWithPositionLength(buffer.AsReadOnly().Duplicate());
+    public void TestReadyOnlyDuplicateNioBufferWithPositionLength()
+    {
+        AssertReadyOnlyNioBufferWithPositionLength(buffer.AsReadOnly().Duplicate());
+    }
 
     private static void AssertReadyOnlyNioBufferWithPositionLength(ByteBuf buffer)
     {
@@ -169,13 +193,22 @@ public abstract partial class AbstractByteBufTest
     }
 
     [Fact]
-    public void TestReadyOnlyNioBuffers() => AssertReadyOnlyNioBuffers(buffer.AsReadOnly());
+    public void TestReadyOnlyNioBuffers()
+    {
+        AssertReadyOnlyNioBuffers(buffer.AsReadOnly());
+    }
 
     [Fact]
-    public void TestReadyOnlySliceNioBuffers() => AssertReadyOnlyNioBuffers(buffer.AsReadOnly().Slice());
+    public void TestReadyOnlySliceNioBuffers()
+    {
+        AssertReadyOnlyNioBuffers(buffer.AsReadOnly().Slice());
+    }
 
     [Fact]
-    public void TestReadyOnlyDuplicateNioBuffers() => AssertReadyOnlyNioBuffers(buffer.AsReadOnly().Duplicate());
+    public void TestReadyOnlyDuplicateNioBuffers()
+    {
+        AssertReadyOnlyNioBuffers(buffer.AsReadOnly().Duplicate());
+    }
 
     private static void AssertReadyOnlyNioBuffers(ByteBuf buffer)
     {
@@ -187,13 +220,22 @@ public abstract partial class AbstractByteBufTest
     }
 
     [Fact]
-    public void TestReadyOnlyNioBuffersWithPositionLength() => AssertReadyOnlyNioBuffersWithPositionLength(buffer.AsReadOnly());
+    public void TestReadyOnlyNioBuffersWithPositionLength()
+    {
+        AssertReadyOnlyNioBuffersWithPositionLength(buffer.AsReadOnly());
+    }
 
     [Fact]
-    public void TestReadyOnlySliceNioBuffersWithPositionLength() => AssertReadyOnlyNioBuffersWithPositionLength(buffer.AsReadOnly().Slice());
+    public void TestReadyOnlySliceNioBuffersWithPositionLength()
+    {
+        AssertReadyOnlyNioBuffersWithPositionLength(buffer.AsReadOnly().Slice());
+    }
 
     [Fact]
-    public void TestReadyOnlyDuplicateNioBuffersWithPositionLength() => AssertReadyOnlyNioBuffersWithPositionLength(buffer.AsReadOnly().Duplicate());
+    public void TestReadyOnlyDuplicateNioBuffersWithPositionLength()
+    {
+        AssertReadyOnlyNioBuffersWithPositionLength(buffer.AsReadOnly().Duplicate());
+    }
 
     private static void AssertReadyOnlyNioBuffersWithPositionLength(ByteBuf buffer)
     {

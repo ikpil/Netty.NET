@@ -78,7 +78,10 @@ public static partial class ByteBufUtil
          * <p>
          * It behaves like {@link #utf8MaxBytes(int)} applied to {@code seq} {@link CharSequence#length()}.
          */
-    public static int Utf8MaxBytes(ReadOnlySpan<char> text) => Utf8MaxBytes(text.Length);
+    public static int Utf8MaxBytes(ReadOnlySpan<char> text)
+    {
+        return Utf8MaxBytes(text.Length);
+    }
 
     /**
          * Returns max bytes length of UTF8 character sequence.
@@ -148,7 +151,10 @@ public static partial class ByteBufUtil
          * <p>
          * This method is producing the exact length according to {@link #writeUtf8(ByteBuf, CharSequence)}.
          */
-    public static int Utf8Bytes(AsciiString text) => Utf8MaxBytes(text);
+    public static int Utf8Bytes(AsciiString text)
+    {
+        return Utf8MaxBytes(text);
+    }
 
     /**
          * Encode a {@link CharSequence} in <a href="https://en.wikipedia.org/wiki/UTF-8">UTF-8</a> and write
@@ -159,7 +165,9 @@ public static partial class ByteBufUtil
          * This method returns the actual number of bytes written.
          */
     public static int WriteUtf8(ByteBuf buffer, ReadOnlySpan<char> text)
-        => ReserveAndWriteUtf8(buffer, text, Utf8MaxBytes(text));
+    {
+        return ReserveAndWriteUtf8(buffer, text, Utf8MaxBytes(text));
+    }
 
     /**
          * Encode a {@link CharSequence} in <a href="https://en.wikipedia.org/wiki/UTF-8">UTF-8</a> and write

@@ -24,8 +24,10 @@ namespace Netty.NET.Common.Tests.Concurrent;
 public class ImmediateExecutorTest
 {
     [Fact]
-    public void TestExecuteNullRunnable() =>
+    public void TestExecuteNullRunnable()
+    {
         Assert.Throws<ArgumentNullException>(() => ImmediateExecutor.INSTANCE.Execute(null));
+    }
 
     [Fact]
     public void TestExecuteNonNullRunnable()

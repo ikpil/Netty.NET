@@ -71,16 +71,28 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
     internal override ulong ReadWord(int index, int width, bool littleEndian)
     { CheckIndex(index, width); return _parent.ReadWord(index, width, littleEndian); }
     protected override bool TryGetReadOnlyMemoryCore(int index, int length, out ReadOnlyMemory<byte> memory)
-        => _parent.TryGetReadOnlyMemory(index, length, out memory);
+    {
+        return _parent.TryGetReadOnlyMemory(index, length, out memory);
+    }
     protected override void GetBytesCore(int index, Span<byte> destination)
-        => _parent.GetBytes(index, destination);
+    {
+        _parent.GetBytes(index, destination);
+    }
     protected override ReadOnlySequence<byte> GetReadOnlySequenceCore(int index, int length)
-        => _parent.AsReadOnlySequence(index, length);
+    {
+        return _parent.AsReadOnlySequence(index, length);
+    }
     internal override bool SupportsDirectBulkCopy => _parent.SupportsDirectBulkCopy;
     internal override ReadOnlySequence<byte> BorrowCopySequence(int index, int length)
     { CheckIndex(index, length); return _parent.BorrowCopySequence(index, length); }
-    internal override BufferMemoryLease AcquireReadLease() => _parent.AcquireReadLease();
-    public override IByteBufAllocator Alloc() => _parent.Alloc();
+    internal override BufferMemoryLease AcquireReadLease()
+    {
+        return _parent.AcquireReadLease();
+    }
+    public override IByteBufAllocator Alloc()
+    {
+        return _parent.Alloc();
+    }
     public override bool IsContiguous => _parent.IsContiguous;
     public override bool IsDirect => _parent.IsDirect;
     public override int Capacity
@@ -88,11 +100,18 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
         get => _parent.Capacity;
         set { EnsureCanWrite(); }
     }
-    public override ByteBuf Unwrap() => _parent;
+    public override ByteBuf Unwrap()
+    {
+        return _parent;
+    }
     protected override Memory<byte> GetMemoryCore(int index, int length)
-        => throw new NotSupportedException("The buffer is read-only.");
+    {
+        throw new NotSupportedException("The buffer is read-only.");
+    }
     protected override ReadOnlyMemory<byte> GetReadOnlyMemoryCore(int index, int length)
-        => _parent.AsReadOnlyMemory(index, length);
+    {
+        return _parent.AsReadOnlyMemory(index, length);
+    }
     // Preserve parent stream overrides and translated coordinates. CLR view
     // bounds/lifetime guards remain in front of dispatch, including duplicates.
     public override ByteBuf GetBytes(int index, Stream destination, int length)
@@ -203,15 +222,25 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
     }
     public override int RefCnt => _parent.RefCnt;
     public override ByteBuf Retain(int increment = 1) { _parent.Retain(increment); return this; }
-    public override bool Release(int decrement = 1) => _parent.Release(decrement);
+    public override bool Release(int decrement = 1)
+    {
+        return _parent.Release(decrement);
+    }
     public override ByteBuf Touch(object hint = null) { _parent.Touch(hint); return this; }
 
-    public override ByteBuf Copy(int index, int length) => _parent.Copy(index, length);
+    public override ByteBuf Copy(int index, int length)
+    {
+        return _parent.Copy(index, length);
+    }
     // Keep readable iteration on the view's own loop, as in AbstractByteBuf.
     public override int ForEachByte(Func<byte, bool> processor)
-        => base.ForEachByte(ReaderIndex, ReadableBytes, processor);
+    {
+        return base.ForEachByte(ReaderIndex, ReadableBytes, processor);
+    }
     public override int ForEachByteDesc(Func<byte, bool> processor)
-        => base.ForEachByteDesc(ReaderIndex, ReadableBytes, processor);
+    {
+        return base.ForEachByteDesc(ReaderIndex, ReadableBytes, processor);
+    }
     public override int ForEachByte(int index, int length, Func<byte, bool> processor)
     {
         EnsureAccessible();

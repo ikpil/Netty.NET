@@ -74,8 +74,11 @@ public class ByteBufScalarRoundTripSourceTest
         }
     }
 
-    private static int Width(int kind) => kind switch
-    { 0 or 1 => 1, 2 or 3 => 2, 4 or 5 => 3, 6 or 7 or 9 => 4, _ => 8 };
+    private static int Width(int kind)
+    {
+        return kind switch
+        { 0 or 1 => 1, 2 or 3 => 2, 4 or 5 => 3, 6 or 7 or 9 => 4, _ => 8 };
+    }
 
     private static long NextBits(Random random, int kind, bool sequential)
     {
@@ -92,12 +95,15 @@ public class ByteBufScalarRoundTripSourceTest
         };
     }
 
-    private static long LogicalValue(long bits, int kind) => kind switch
+    private static long LogicalValue(long bits, int kind)
     {
-        1 => unchecked((byte)bits), 3 => unchecked((ushort)bits),
-        4 => unchecked((int)bits) << 8 >> 8, 5 => bits & 0x00ffffff,
-        7 => unchecked((uint)bits), _ => bits
-    };
+        return kind switch
+        {
+            1 => unchecked((byte)bits), 3 => unchecked((ushort)bits),
+            4 => unchecked((int)bits) << 8 >> 8, 5 => bits & 0x00ffffff,
+            7 => unchecked((uint)bits), _ => bits
+        };
+    }
 
     private static void Model(Span<byte> destination, long bits, int kind, bool little)
     {

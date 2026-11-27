@@ -58,7 +58,9 @@ internal static class ChannelInitializerExtensions
      */
     // CLR registration replaces the upstream property/loader mechanism described above.
     internal static IReadOnlyList<ChannelInitializerExtension> Snapshot()
-        => Array.AsReadOnly(Volatile.Read(ref _entries).Where(e => e.Invoke).Select(e => e.Extension).ToArray());
+    {
+        return Array.AsReadOnly(Volatile.Read(ref _entries).Where(e => e.Invoke).Select(e => e.Extension).ToArray());
+    }
 
     private static int ComparePriority(double left, double right)
     {

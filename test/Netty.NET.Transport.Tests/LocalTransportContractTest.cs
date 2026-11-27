@@ -42,10 +42,21 @@ public class LocalTransportContractTest
         }
     }
     private sealed class Echo : SimpleChannelInboundHandler<ByteBuf>
-    { protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf msg) => _ = ctx.WriteAndFlushAsync(msg.Retain()); }
+    {
+        protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf msg)
+        {
+            _ = ctx.WriteAndFlushAsync(msg.Retain());
+        }
+    }
     private sealed class Receive(TaskCompletionSource<byte[]> received) : SimpleChannelInboundHandler<ByteBuf>
     {
-        protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf msg) => received.TrySetResult(msg.ReadableMemory.ToArray());
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => received.TrySetException(cause);
+        protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf msg)
+        {
+            received.TrySetResult(msg.ReadableMemory.ToArray());
+        }
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            received.TrySetException(cause);
+        }
     }
 }

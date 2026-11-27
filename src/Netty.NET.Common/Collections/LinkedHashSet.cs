@@ -42,7 +42,10 @@ public class LinkedHashSet<T> : ISet<T> where T : notnull
         return true;
     }
 
-    void ICollection<T>.Add(T item) => Add(item);
+    void ICollection<T>.Add(T item)
+    {
+        Add(item);
+    }
 
     public bool Remove(T item)
     {
@@ -54,7 +57,10 @@ public class LinkedHashSet<T> : ISet<T> where T : notnull
         return true;
     }
 
-    public bool Contains(T item) => _dictionary.ContainsKey(item);
+    public bool Contains(T item)
+    {
+        return _dictionary.ContainsKey(item);
+    }
 
     public void Clear()
     {
@@ -62,10 +68,19 @@ public class LinkedHashSet<T> : ISet<T> where T : notnull
         _linkedList.Clear();
     }
 
-    public void CopyTo(T[] array, int arrayIndex) => _linkedList.CopyTo(array, arrayIndex);
+    public void CopyTo(T[] array, int arrayIndex)
+    {
+        _linkedList.CopyTo(array, arrayIndex);
+    }
 
-    public IEnumerator<T> GetEnumerator() => _linkedList.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    public IEnumerator<T> GetEnumerator()
+    {
+        return _linkedList.GetEnumerator();
+    }
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 
     // --- Set operations (optimized) ---
 

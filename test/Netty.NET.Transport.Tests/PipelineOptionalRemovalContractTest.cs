@@ -54,6 +54,9 @@ public class PipelineOptionalRemovalContractTest
     private sealed class RemovalCounter : ChannelInboundHandlerAdapter
     {
         internal int Removals;
-        public override void HandlerRemoved(IChannelHandlerContext ctx) => Interlocked.Increment(ref Removals);
+        public override void HandlerRemoved(IChannelHandlerContext ctx)
+        {
+            Interlocked.Increment(ref Removals);
+        }
     }
 }

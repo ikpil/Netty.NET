@@ -112,21 +112,45 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
         SetActive(true);
     }
 
-    protected override IChannelConfig NewConfig() => new MsQuicStreamChannelConfig(this);
+    protected override IChannelConfig NewConfig()
+    {
+        return new MsQuicStreamChannelConfig(this);
+    }
 
-    protected override bool IsCompatible(IEventLoop eventLoop) => ReferenceEquals(eventLoop, parent.EventLoop);
+    protected override bool IsCompatible(IEventLoop eventLoop)
+    {
+        return ReferenceEquals(eventLoop, parent.EventLoop);
+    }
 
-    protected override EndPoint LocalAddress0() => address;
+    protected override EndPoint LocalAddress0()
+    {
+        return address;
+    }
 
-    protected override EndPoint RemoteAddress0() => address;
+    protected override EndPoint RemoteAddress0()
+    {
+        return address;
+    }
 
-    public bool IsLocalCreated() => localCreated;
+    public bool IsLocalCreated()
+    {
+        return localCreated;
+    }
 
-    public QuicStreamType Type() => type;
+    public QuicStreamType Type()
+    {
+        return type;
+    }
 
-    public long StreamId() => address.StreamId();
+    public long StreamId()
+    {
+        return address.StreamId();
+    }
 
-    public QuicStreamPriority Priority() => null;
+    public QuicStreamPriority Priority()
+    {
+        return null;
+    }
 
     public Task UpdatePriorityAsync(QuicStreamPriority priority, CancellationToken cancellationToken = default)
     {

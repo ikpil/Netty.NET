@@ -26,11 +26,14 @@ public class ThreadDeathWatcherGlobalsCollection { }
 [Collection("Thread death watcher globals")]
 public class ThreadDeathWatcherTest
 {
-    private static Thread CreateThread() => new(() =>
+    private static Thread CreateThread()
     {
-        try { for (;;) Thread.Sleep(1000); }
-        catch (ThreadInterruptedException) { }
-    }) { IsBackground = true };
+        return new(() =>
+        {
+            try { for (;;) Thread.Sleep(1000); }
+            catch (ThreadInterruptedException) { }
+        }) { IsBackground = true };
+    }
 
     [Fact(Timeout = 10000)]
     public void TestWatch()

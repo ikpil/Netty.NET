@@ -30,7 +30,10 @@ public interface IIoEventLoop : IEventLoop, IIoEventLoopGroup
         return this;
     }
 
-    IEventLoop IEventLoopGroup.Next() => this;
+    IEventLoop IEventLoopGroup.Next()
+    {
+        return this;
+    }
 
     // CLR: IEventLoop and IEventLoopGroup both declare register(Channel); redeclaring it removes the ambiguity for
     // callers that hold an IIoEventLoop.

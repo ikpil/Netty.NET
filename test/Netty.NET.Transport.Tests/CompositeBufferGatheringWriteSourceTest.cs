@@ -175,7 +175,10 @@ public class CompositeBufferGatheringWriteSourceTest : AbstractSocketTest
     // CLR: java.io.IOException covers the JDK's socket I/O failures, but a CLR SocketException derives from
     // Win32Exception, not IOException (https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socketexception),
     // so both types take the source's IOException branch, as AbstractNioByteChannel's read-error handling does.
-    private static bool IsIOException(Exception cause) => cause is IOException || cause is SocketException;
+    private static bool IsIOException(Exception cause)
+    {
+        return cause is IOException || cause is SocketException;
+    }
 
     private sealed class SingleCompositeBufferServerHandler : ChannelInboundHandlerAdapter
     {

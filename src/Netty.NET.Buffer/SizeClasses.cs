@@ -475,5 +475,8 @@ internal sealed class SizeClasses : ISizeClassesMetric
         return checked(size + deltaMask) & ~deltaMask;
     }
 
-    private static int Log2(int value) => BitOperations.Log2((uint)value);
+    private static int Log2(int value)
+    {
+        return BitOperations.Log2((uint)value);
+    }
 }

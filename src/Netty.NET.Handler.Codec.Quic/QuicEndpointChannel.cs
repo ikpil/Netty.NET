@@ -94,9 +94,15 @@ public sealed class QuicEndpointChannel : AbstractChannel
         }
     }
 
-    protected override EndPoint LocalAddress0() => localAddress;
+    protected override EndPoint LocalAddress0()
+    {
+        return localAddress;
+    }
 
-    protected override EndPoint RemoteAddress0() => null;
+    protected override EndPoint RemoteAddress0()
+    {
+        return null;
+    }
 
     // The QUIC codec of the pipeline (the builders' Build() result), or null.
     private MsQuicCodec Codec()

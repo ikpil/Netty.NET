@@ -53,7 +53,10 @@ public class UnsafeByteBufUtilTest
         }
     }
 
-    private static byte[] Data() => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    private static byte[] Data()
+    {
+        return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    }
 
     private static PoolArena.Allocation AllocationOf(ByteBuf buffer)
     {
@@ -240,8 +243,10 @@ public class UnsafeByteBufUtilTest
     }
 
     private static IByteBufAllocator Factory(bool adaptive, NativeMemoryAllocator native)
-        => adaptive ? new AdaptiveByteBufAllocator(true, lowMemory: false, nativeAllocator: native)
+    {
+        return adaptive ? new AdaptiveByteBufAllocator(true, lowMemory: false, nativeAllocator: native)
             : new PooledByteBufAllocator(true, poolHeap: false, poolDirect: false, nativeAllocator: native);
+    }
 
     [Theory]
     [MemberData(nameof(FactorySizes))]

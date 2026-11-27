@@ -87,7 +87,10 @@ public static class MathUtil
      */
     [Obsolete("Use int.CompareTo instead.")]
     // do not subtract for comparison, it could overflow
-    public static int Compare(int x, int y) => x.CompareTo(y);
+    public static int Compare(int x, int y)
+    {
+        return x.CompareTo(y);
+    }
 
     /**
      * @deprecated not used anymore. User Long.compare() instead. For removal.
@@ -102,5 +105,8 @@ public static class MathUtil
      * </ul>
      */
     [Obsolete("Use long.CompareTo instead.")]
-    public static int Compare(long x, long y) => x.CompareTo(y);
+    public static int Compare(long x, long y)
+    {
+        return x.CompareTo(y);
+    }
 }

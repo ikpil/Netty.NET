@@ -34,7 +34,9 @@ public partial class CompositeByteBuf
      * ownership of all {@link ByteBuf} objects is transferred to this {@link CompositeByteBuf}.
      */
     public virtual CompositeByteBuf AddComponents(params ByteBuf[] buffers)
-        => AddComponents(buffers, false);
+    {
+        return AddComponents(buffers, false);
+    }
 
     /**
      * Add the given {@link ByteBuf}s and increase the {@code writerIndex} if {@code increaseWriterIndex} is
@@ -46,7 +48,9 @@ public partial class CompositeByteBuf
      * ownership of all {@link ByteBuf} objects is transferred to this {@link CompositeByteBuf}.
      */
     public virtual CompositeByteBuf AddComponents(ByteBuf[] buffers, bool increaseWriterIndex)
-        => AddComponentsCore(_components.Count, buffers, 0, increaseWriterIndex);
+    {
+        return AddComponentsCore(_components.Count, buffers, 0, increaseWriterIndex);
+    }
 
     /**
      * Add the given {@link ByteBuf}s on the specific index
@@ -67,7 +71,9 @@ public partial class CompositeByteBuf
     /// failure keeps the successful prefix, including its writer-index increase.
     /// Consolidation runs once after the complete batch.</remarks>
     public virtual CompositeByteBuf AddComponents(int componentIndex, ByteBuf[] buffers, bool increaseWriterIndex = false)
-        => AddComponentsCore(componentIndex, buffers, 0, increaseWriterIndex);
+    {
+        return AddComponentsCore(componentIndex, buffers, 0, increaseWriterIndex);
+    }
 
     private CompositeByteBuf AddComponentsCore(int componentIndex, ByteBuf[] buffers, int offset, bool increaseWriterIndex)
     {
@@ -124,7 +130,9 @@ public partial class CompositeByteBuf
     // CLR: factory-only offset entry points avoid copying arrays or replacing
     // the original array preflight with streaming ownership semantics.
     internal CompositeByteBuf AddWrappedComponents(ByteBuf[] buffers, int offset)
-        => AddComponentsCore(0, buffers, offset, true);
+    {
+        return AddComponentsCore(0, buffers, offset, true);
+    }
 
     internal CompositeByteBuf AddWrappedArrays(byte[][] arrays, int offset)
     {
@@ -177,7 +185,9 @@ public partial class CompositeByteBuf
      * ownership of all {@link ByteBuf} objects is transferred to this {@link CompositeByteBuf}.
      */
     public virtual CompositeByteBuf AddComponents(IEnumerable<ByteBuf> buffers, bool increaseWriterIndex = false)
-        => AddComponentsCore(_components.Count, buffers, increaseWriterIndex);
+    {
+        return AddComponentsCore(_components.Count, buffers, increaseWriterIndex);
+    }
 
     /**
      * Add the given {@link ByteBuf}s on the specific index
@@ -196,7 +206,9 @@ public partial class CompositeByteBuf
     /// ends additions; remaining yielded entries are safely released. Enumeration
     /// and disposal follow the supplied IEnumerator's CLR contract.</remarks>
     public virtual CompositeByteBuf AddComponents(int componentIndex, IEnumerable<ByteBuf> buffers, bool increaseWriterIndex = false)
-        => AddComponentsCore(componentIndex, buffers, increaseWriterIndex);
+    {
+        return AddComponentsCore(componentIndex, buffers, increaseWriterIndex);
+    }
 
     // The original iterable kernel is private, including its use during construction.
     private CompositeByteBuf AddComponentsCore(int componentIndex, IEnumerable<ByteBuf> buffers, bool increaseWriterIndex)

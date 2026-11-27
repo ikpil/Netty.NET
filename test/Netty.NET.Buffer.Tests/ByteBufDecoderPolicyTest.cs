@@ -287,7 +287,10 @@ public class ByteBufDecoderPolicyTest
             get => _capacity;
             set { CheckNewCapacity(value); _capacity = value; TrimIndicesToCapacity(value); }
         }
-        protected override Memory<byte> GetMemoryCore(int index, int length) => _storage.AsMemory(index, length);
+        protected override Memory<byte> GetMemoryCore(int index, int length)
+        {
+            return _storage.AsMemory(index, length);
+        }
         protected override void Deallocate() { _storage = Array.Empty<byte>(); _capacity = 0; }
     }
 
@@ -297,8 +300,14 @@ public class ByteBufDecoderPolicyTest
         internal bool FailAllocation, ReadOnly; internal int ExtraCapacity, Calls;
         internal (int Initial, int Maximum) Requested; internal ByteBuf Last;
         public override bool IsDirectBufferPooled => false;
-        protected override ByteBuf NewHeapBuffer(int initialCapacity, int maxCapacity) => Allocate(initialCapacity, maxCapacity, false);
-        protected override ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity) => Allocate(initialCapacity, maxCapacity, true);
+        protected override ByteBuf NewHeapBuffer(int initialCapacity, int maxCapacity)
+        {
+            return Allocate(initialCapacity, maxCapacity, false);
+        }
+        protected override ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity)
+        {
+            return Allocate(initialCapacity, maxCapacity, true);
+        }
         private ByteBuf Allocate(int initial, int maximum, bool direct)
         {
             Calls++; Requested = (initial, maximum);
@@ -313,22 +322,36 @@ public class ByteBufDecoderPolicyTest
     private sealed class FailingReadBuffer(IByteBufAllocator allocator) : UnpooledHeapByteBuf(allocator, 8, 32)
     {
         protected override bool TryGetReadOnlyMemoryCore(int index, int length, out ReadOnlyMemory<byte> memory)
-            => throw new InvalidOperationException("Deliberate source read failure.");
+        {
+            throw new InvalidOperationException("Deliberate source read failure.");
+        }
     }
 
     private sealed class ArrayManager : MemoryManager<byte>
     {
         private readonly byte[] _bytes = new byte[8]; internal bool Disposed;
-        public override Span<byte> GetSpan() => _bytes;
-        public override MemoryHandle Pin(int elementIndex = 0) => throw new NotSupportedException();
+        public override Span<byte> GetSpan()
+        {
+            return _bytes;
+        }
+        public override MemoryHandle Pin(int elementIndex = 0)
+        {
+            throw new NotSupportedException();
+        }
         public override void Unpin() { }
-        protected override void Dispose(bool disposing) => Disposed = true;
+        protected override void Dispose(bool disposing)
+        {
+            Disposed = true;
+        }
     }
 
     private sealed class Tracker : IResourceLeakTracker<ByteBuf>
     {
         public void Record() { }
         public void Record(object hint) { }
-        public bool Close(ByteBuf buffer) => true;
+        public bool Close(ByteBuf buffer)
+        {
+            return true;
+        }
     }
 }

@@ -121,7 +121,10 @@ public abstract class AddressResolverGroup<T> : IDisposable where T : EndPoint
         private AddressResolverGroup<T> _owner = owner;
         internal IEventExecutor Executor = executor;
         internal IAddressResolver<T> Resolver = resolver;
-        internal void OnTermination() => Volatile.Read(ref _owner)?.OnTermination(this);
+        internal void OnTermination()
+        {
+            Volatile.Read(ref _owner)?.OnTermination(this);
+        }
         internal IAddressResolver<T> Detach()
         {
             var result = Resolver;

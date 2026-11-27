@@ -27,12 +27,18 @@ namespace Netty.NET.Common;
 public static class ReferenceCountUtil
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(ReferenceCountUtil));
-    static ReferenceCountUtil() => ResourceLeakDetector.AddExclusions(typeof(ReferenceCountUtil), nameof(Touch));
+    static ReferenceCountUtil()
+    {
+        ResourceLeakDetector.AddExclusions(typeof(ReferenceCountUtil), nameof(Touch));
+    }
     /**
      * Try to call {@link ReferenceCounted#retain()} if the specified message implements {@link ReferenceCounted}.
      * If the specified message doesn't implement {@link ReferenceCounted}, this method does nothing.
      */
-    public static T Retain<T>(T msg) => msg is IReferenceCounted reference ? (T)reference.Retain() : msg;
+    public static T Retain<T>(T msg)
+    {
+        return msg is IReferenceCounted reference ? (T)reference.Retain() : msg;
+    }
     /**
      * Try to call {@link ReferenceCounted#retain(int)} if the specified message implements {@link ReferenceCounted}.
      * If the specified message doesn't implement {@link ReferenceCounted}, this method does nothing.
@@ -46,18 +52,27 @@ public static class ReferenceCountUtil
      * Tries to call {@link ReferenceCounted#touch()} if the specified message implements {@link ReferenceCounted}.
      * If the specified message doesn't implement {@link ReferenceCounted}, this method does nothing.
      */
-    public static T Touch<T>(T msg) => msg is IReferenceCounted reference ? (T)reference.Touch() : msg;
+    public static T Touch<T>(T msg)
+    {
+        return msg is IReferenceCounted reference ? (T)reference.Touch() : msg;
+    }
     /**
      * Tries to call {@link ReferenceCounted#touch(Object)} if the specified message implements
      * {@link ReferenceCounted}.  If the specified message doesn't implement {@link ReferenceCounted},
      * this method does nothing.
      */
-    public static T Touch<T>(T msg, object hint) => msg is IReferenceCounted reference ? (T)reference.Touch(hint) : msg;
+    public static T Touch<T>(T msg, object hint)
+    {
+        return msg is IReferenceCounted reference ? (T)reference.Touch(hint) : msg;
+    }
     /**
      * Try to call {@link ReferenceCounted#release()} if the specified message implements {@link ReferenceCounted}.
      * If the specified message doesn't implement {@link ReferenceCounted}, this method does nothing.
      */
-    public static bool Release(object msg) => msg is IReferenceCounted reference && reference.Release();
+    public static bool Release(object msg)
+    {
+        return msg is IReferenceCounted reference && reference.Release();
+    }
     /**
      * Try to call {@link ReferenceCounted#release(int)} if the specified message implements {@link ReferenceCounted}.
      * If the specified message doesn't implement {@link ReferenceCounted}, this method does nothing.
@@ -106,7 +121,10 @@ public static class ReferenceCountUtil
      * @deprecated this may introduce a lot of memory usage so it is generally preferable to manually release objects.
      */
     [Obsolete]
-    public static T ReleaseLater<T>(T msg) => ReleaseLater(msg, 1);
+    public static T ReleaseLater<T>(T msg)
+    {
+        return ReleaseLater(msg, 1);
+    }
     /**
      * Schedules the specified object to be released when the caller thread terminates. Note that this operation is
      * intended to simplify reference counting of ephemeral objects during unit tests. Do not use it beyond the
@@ -125,7 +143,10 @@ public static class ReferenceCountUtil
      * Returns reference count of a {@link ReferenceCounted} object. If object is not type of
      * {@link ReferenceCounted}, {@code -1} is returned.
      */
-    public static int GetReferenceCount(object msg) => msg is IReferenceCounted reference ? reference.RefCnt : -1;
+    public static int GetReferenceCount(object msg)
+    {
+        return msg is IReferenceCounted reference ? reference.RefCnt : -1;
+    }
     /**
      * Releases the objects when the thread that called {@link #releaseLater(Object)} has been terminated.
      */
@@ -140,6 +161,9 @@ public static class ReferenceCountUtil
             }
             catch (Exception failure) { logger.Warn("Failed to release an object: {}", obj, failure); }
         }
-        public override string ToString() => StringUtil.SimpleClassName(obj) + ".release(" + decrement.ToString(CultureInfo.InvariantCulture) + ") refCnt: " + obj.RefCnt.ToString(CultureInfo.InvariantCulture);
+        public override string ToString()
+        {
+            return StringUtil.SimpleClassName(obj) + ".release(" + decrement.ToString(CultureInfo.InvariantCulture) + ") refCnt: " + obj.RefCnt.ToString(CultureInfo.InvariantCulture);
+        }
     }
 }

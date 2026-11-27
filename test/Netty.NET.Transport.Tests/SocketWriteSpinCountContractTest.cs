@@ -121,7 +121,10 @@ public class SocketWriteSpinCountContractTest
 
     private sealed class Observer(Action<ChannelWriteProgress> report) : IProgress<ChannelWriteProgress>
     {
-        public void Report(ChannelWriteProgress value) => report(value);
+        public void Report(ChannelWriteProgress value)
+        {
+            report(value);
+        }
     }
 
     private sealed class Fixture : IDisposable

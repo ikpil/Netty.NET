@@ -87,7 +87,10 @@ public class DefaultByteBufHolderTest
             return _extraField == ((OtherByteBufHolder)obj)._extraField;
         }
 
-        public override int GetHashCode() => unchecked(31 * base.GetHashCode() + _extraField);
+        public override int GetHashCode()
+        {
+            return unchecked(31 * base.GetHashCode() + _extraField);
+        }
     }
 
     private static ByteBuf Owner(int kind)
@@ -343,7 +346,10 @@ public class DefaultByteBufHolderTest
             Replacements++;
             return new ReplacingHolder(content, Tag);
         }
-        public string Diagnostic() => ContentToString();
+        public string Diagnostic()
+        {
+            return ContentToString();
+        }
     }
 
     private sealed class TouchBuffer() : UnpooledHeapByteBuf(1, 1)

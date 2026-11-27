@@ -254,7 +254,10 @@ public partial class LocalChannelSourceTest
 
     private sealed class DropEchoClient : SimpleChannelInboundHandler<ByteBuf>
     {
-        public override void ChannelActive(IChannelHandlerContext ctx) => _ = ctx.WriteAndFlushAsync(ctx.Alloc().Buffer().WriteZero(100));
+        public override void ChannelActive(IChannelHandlerContext ctx)
+        {
+            _ = ctx.WriteAndFlushAsync(ctx.Alloc().Buffer().WriteZero(100));
+        }
         protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf buffer)
         {
             // Just drop the buffer
@@ -294,8 +297,14 @@ public partial class LocalChannelSourceTest
     }
     private sealed class ManualEchoClient : ChannelInboundHandlerAdapter
     {
-        public override void ChannelActive(IChannelHandlerContext ctx) => WriteAndFlushReadOnSuccess(ctx, "test");
-        public override void ChannelRead(IChannelHandlerContext ctx, object msg) => WriteAndFlushReadOnSuccess(ctx, msg);
+        public override void ChannelActive(IChannelHandlerContext ctx)
+        {
+            WriteAndFlushReadOnSuccess(ctx, "test");
+        }
+        public override void ChannelRead(IChannelHandlerContext ctx, object msg)
+        {
+            WriteAndFlushReadOnSuccess(ctx, msg);
+        }
     }
     private sealed class EchoCounter(TaskCompletionSource completed, int remaining)
     {
@@ -309,7 +318,10 @@ public partial class LocalChannelSourceTest
     }
     private sealed class ManualEchoServer(EchoCounter counter) : ChannelInboundHandlerAdapter
     {
-        public override void ChannelActive(IChannelHandlerContext ctx) => ctx.Read();
+        public override void ChannelActive(IChannelHandlerContext ctx)
+        {
+            ctx.Read();
+        }
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         { if (counter.Signal()) WriteAndFlushReadOnSuccess(ctx, msg); }
     }
@@ -381,10 +393,16 @@ public partial class LocalChannelSourceTest
     }
     private sealed class ReadCompleteRecvAllocator(TaskCompletionSource completed) : DefaultMaxMessagesRecvByteBufAllocator
     {
-        public override IRecvByteBufAllocator.IHandle NewHandle() => new Handle(this, completed);
+        public override IRecvByteBufAllocator.IHandle NewHandle()
+        {
+            return new Handle(this, completed);
+        }
         private sealed class Handle(DefaultMaxMessagesRecvByteBufAllocator owner, TaskCompletionSource completed) : MaxMessageHandle(owner)
         {
-            public override int Guess() => 128;
+            public override int Guess()
+            {
+                return 128;
+            }
             public override void ReadComplete() { base.ReadComplete(); completed.TrySetResult(); }
         }
     }

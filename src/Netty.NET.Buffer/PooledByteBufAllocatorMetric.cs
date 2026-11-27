@@ -30,7 +30,10 @@ namespace Netty.NET.Buffer;
 public sealed class PooledByteBufAllocatorMetric : IByteBufAllocatorMetric
 {
     private readonly PooledByteBufAllocator _allocator;
-    internal PooledByteBufAllocatorMetric(PooledByteBufAllocator allocator) => _allocator = allocator;
+    internal PooledByteBufAllocatorMetric(PooledByteBufAllocator allocator)
+    {
+        _allocator = allocator;
+    }
 
     /**
      * Return the number of heap arenas.
@@ -83,5 +86,7 @@ public sealed class PooledByteBufAllocatorMetric : IByteBufAllocatorMetric
     public long UsedHeapMemory => _allocator.UsedHeapMemory;
     public long UsedDirectMemory => _allocator.UsedDirectMemory;
     public override string ToString()
-        => FormattableString.Invariant($"{StringUtil.SimpleClassName(this)}(usedHeapMemory: {UsedHeapMemory}; usedDirectMemory: {UsedDirectMemory}; numHeapArenas: {NumHeapArenas}; numDirectArenas: {NumDirectArenas}; smallCacheSize: {SmallCacheSize}; normalCacheSize: {NormalCacheSize}; numThreadLocalCaches: {NumThreadLocalCaches}; chunkSize: {ChunkSize})");
+    {
+        return FormattableString.Invariant($"{StringUtil.SimpleClassName(this)}(usedHeapMemory: {UsedHeapMemory}; usedDirectMemory: {UsedDirectMemory}; numHeapArenas: {NumHeapArenas}; numDirectArenas: {NumDirectArenas}; smallCacheSize: {SmallCacheSize}; normalCacheSize: {NormalCacheSize}; numThreadLocalCaches: {NumThreadLocalCaches}; chunkSize: {ChunkSize})");
+    }
 }

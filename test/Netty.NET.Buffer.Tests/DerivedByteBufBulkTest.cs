@@ -141,10 +141,16 @@ public class DerivedByteBufBulkTest
             Buffer = storage == 2 && input ? _owner.AsReadOnly() : _owner;
             Buffer.SetIndex(2, 9).MarkReaderIndex().MarkWriterIndex();
         }
-        public byte[] Snapshot() => Buffer == null ? Bytes.ToArray() : ByteBufUtil.GetBytes(Buffer, 0, 12);
+        public byte[] Snapshot()
+        {
+            return Buffer == null ? Bytes.ToArray() : ByteBufUtil.GetBytes(Buffer, 0, 12);
+        }
         public void Dispose() { if (_owner != null) Assert.True(_owner.Release()); }
     }
-    private static byte[] Snapshot(Storage s) => s.Root.AsReadOnlySpan(0, 16).ToArray();
+    private static byte[] Snapshot(Storage s)
+    {
+        return s.Root.AsReadOnlySpan(0, 16).ToArray();
+    }
     private static ByteBuf Transfer(ByteBuf b, Peer p, bool input, bool relative, int index = 2, int peerIndex = 4, int length = 3)
     {
         if (p.Buffer == null)

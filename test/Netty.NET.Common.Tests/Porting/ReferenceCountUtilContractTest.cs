@@ -7,7 +7,10 @@ namespace Netty.NET.Common.Tests.Porting;
 [Collection("Thread death watcher globals")]
 public class ReferenceCountUtilContractTest : IDisposable
 {
-    public void Dispose() => Assert.True(ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromSeconds(5)));
+    public void Dispose()
+    {
+        Assert.True(ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromSeconds(5)));
+    }
 
     [Fact]
     public void NonCountedValuesAndNullPassThroughWithoutCreatingOwnership()
@@ -55,7 +58,10 @@ public class ReferenceCountUtilContractTest : IDisposable
         public IReferenceCounted Retain(int increment) { Increment = increment; return Result ?? this; }
         public IReferenceCounted Touch() { Hint = null; return Result ?? this; }
         public IReferenceCounted Touch(object hint) { Hint = hint; return Result ?? this; }
-        public bool Release() => Release(1);
+        public bool Release()
+        {
+            return Release(1);
+        }
         public bool Release(int decrement)
         {
             Decrement = decrement;
@@ -103,7 +109,10 @@ public class ReferenceCountUtilContractTest : IDisposable
     {
         internal int Deallocations;
         internal Thread Deallocator;
-        public override IReferenceCounted Touch(object hint) => this;
+        public override IReferenceCounted Touch(object hint)
+        {
+            return this;
+        }
         protected override void Deallocate() { Deallocator = Thread.CurrentThread; Interlocked.Increment(ref Deallocations); }
     }
     [Fact]

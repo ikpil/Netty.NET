@@ -49,31 +49,37 @@ public class ByteBufWritableKernelTest
         return buffer.SetIndex(1, scenario == 0 ? 3 : initial).MarkReaderIndex().MarkWriterIndex();
     }
 
-    private static byte[] WireBytes(int operation) => operation switch
+    private static byte[] WireBytes(int operation)
     {
-        0 => [239],
-        1 => [205, 239],
-        2 => [239, 205],
-        3 => [171, 205, 239],
-        4 => [239, 205, 171],
-        5 => [137, 171, 205, 239],
-        6 => [239, 205, 171, 137],
-        7 => [136, 153, 170, 187, 204, 221, 238, 255],
-        _ => [255, 238, 221, 204, 187, 170, 153, 136]
-    };
+        return operation switch
+        {
+            0 => [239],
+            1 => [205, 239],
+            2 => [239, 205],
+            3 => [171, 205, 239],
+            4 => [239, 205, 171],
+            5 => [137, 171, 205, 239],
+            6 => [239, 205, 171, 137],
+            7 => [136, 153, 170, 187, 204, 221, 238, 255],
+            _ => [255, 238, 221, 204, 187, 170, 153, 136]
+        };
+    }
 
-    private static ByteBuf Write(ByteBuf buffer, int operation) => operation switch
+    private static ByteBuf Write(ByteBuf buffer, int operation)
     {
-        0 => buffer.WriteByte(239),
-        1 => buffer.WriteShort(0xabcdef),
-        2 => buffer.WriteShortLE(0xabcdef),
-        3 => buffer.WriteMedium(0xabcdef),
-        4 => buffer.WriteMediumLE(0xabcdef),
-        5 => buffer.WriteInt(unchecked((int)0x89abcdef)),
-        6 => buffer.WriteIntLE(unchecked((int)0x89abcdef)),
-        7 => buffer.WriteLong(unchecked((long)0x8899aabbccddeeffUL)),
-        _ => buffer.WriteLongLE(unchecked((long)0x8899aabbccddeeffUL))
-    };
+        return operation switch
+        {
+            0 => buffer.WriteByte(239),
+            1 => buffer.WriteShort(0xabcdef),
+            2 => buffer.WriteShortLE(0xabcdef),
+            3 => buffer.WriteMedium(0xabcdef),
+            4 => buffer.WriteMediumLE(0xabcdef),
+            5 => buffer.WriteInt(unchecked((int)0x89abcdef)),
+            6 => buffer.WriteIntLE(unchecked((int)0x89abcdef)),
+            7 => buffer.WriteLong(unchecked((long)0x8899aabbccddeeffUL)),
+            _ => buffer.WriteLongLE(unchecked((long)0x8899aabbccddeeffUL))
+        };
+    }
 
     public static IEnumerable<object[]> PrimitiveCases()
     {
@@ -149,7 +155,9 @@ public class ByteBufWritableKernelTest
     }
 
     private static ByteBuf NewBuffer(bool direct, int length, NativeMemoryAllocator native)
-        => direct ? new UnpooledDirectByteBuf(length, int.MaxValue, native) : new UnpooledHeapByteBuf(length);
+    {
+        return direct ? new UnpooledDirectByteBuf(length, int.MaxValue, native) : new UnpooledHeapByteBuf(length);
+    }
 
     // Supplemental growth/state check for the two force modes on heap/native storage.
     [Theory]

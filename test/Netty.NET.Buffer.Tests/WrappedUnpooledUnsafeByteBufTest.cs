@@ -30,7 +30,10 @@ namespace Netty.NET.Buffer.Tests;
 // (ByteBuf.CheckNewCapacity) in the overrides that expect the inherited body to fail.
 public class WrappedUnpooledUnsafeByteBufTest : AbstractSingleRegionByteBufTest
 {
-    public WrappedUnpooledUnsafeByteBufTest() => Init(new UnpooledByteBufAllocator(false, Native));
+    public WrappedUnpooledUnsafeByteBufTest()
+    {
+        Init(new UnpooledByteBufAllocator(false, Native));
+    }
 
     protected override ByteBuf NewBuffer(int length, int maxCapacity)
     {

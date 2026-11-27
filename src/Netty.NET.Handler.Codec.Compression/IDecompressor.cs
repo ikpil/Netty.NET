@@ -83,7 +83,10 @@ public interface IDecompressor : IDisposable
     void Close();
 
     // CLR: the using statement's Dispose() closes the decompressor (see the interface comment).
-    void IDisposable.Dispose() => Close();
+    void IDisposable.Dispose()
+    {
+        Close();
+    }
 
     /**
      * Current status of the decompressor. The status indicates which method may be called to make progress on

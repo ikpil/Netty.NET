@@ -152,15 +152,36 @@ public class QueuedActionContractTest
         internal int Executions;
         internal Func<Action, Action> Transform = static task => task;
         public override void Execute(Action task) { Executions++; owner.Execute(Transform(task)); }
-        public override bool InEventLoop(Thread thread) => owner.InEventLoop(thread);
-        public override bool IsShuttingDown() => owner.IsShuttingDown();
-        public override bool IsShutdown() => owner.IsShutdown();
-        public override bool IsTerminated() => owner.IsTerminated();
+        public override bool InEventLoop(Thread thread)
+        {
+            return owner.InEventLoop(thread);
+        }
+        public override bool IsShuttingDown()
+        {
+            return owner.IsShuttingDown();
+        }
+        public override bool IsShutdown()
+        {
+            return owner.IsShutdown();
+        }
+        public override bool IsTerminated()
+        {
+            return owner.IsTerminated();
+        }
         [Obsolete]
-        public override void Shutdown() => owner.Shutdown();
+        public override void Shutdown()
+        {
+            owner.Shutdown();
+        }
         public override Task TerminationFuture => owner.TerminationFuture;
-        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout) => owner.ShutdownGracefullyAsync(quietPeriod, timeout);
-        public override bool AwaitTermination(TimeSpan timeout) => owner.AwaitTermination(timeout);
+        public override Task ShutdownGracefullyAsync(TimeSpan quietPeriod, TimeSpan timeout)
+        {
+            return owner.ShutdownGracefullyAsync(quietPeriod, timeout);
+        }
+        public override bool AwaitTermination(TimeSpan timeout)
+        {
+            return owner.AwaitTermination(timeout);
+        }
     }
 
     [Fact]

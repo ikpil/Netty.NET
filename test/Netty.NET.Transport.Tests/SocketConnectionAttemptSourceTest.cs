@@ -289,7 +289,10 @@ public class SocketConnectionAttemptSourceTest : AbstractClientSocketTest
             return false;
         }
 
-        private bool BaseConnect(Socket socket, EndPoint remoteAddress) => base.Connect(socket, remoteAddress);
+        private bool BaseConnect(Socket socket, EndPoint remoteAddress)
+        {
+            return base.Connect(socket, remoteAddress);
+        }
     }
 }
 #pragma warning restore xUnit1051

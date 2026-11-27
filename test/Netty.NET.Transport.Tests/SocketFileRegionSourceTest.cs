@@ -56,8 +56,10 @@ public class SocketFileRegionSourceTest : AbstractSocketTest
         return DomainSocketTestPermutation.INSTANCE.DomainSocket();
     }
 
-    protected override EndPoint NewSocketAddress() =>
-        Domain ? DomainSocketTestPermutation.NewDomainSocketAddress() : base.NewSocketAddress();
+    protected override EndPoint NewSocketAddress()
+    {
+        return Domain ? DomainSocketTestPermutation.NewDomainSocketAddress() : base.NewSocketAddress();
+    }
 
     [Fact]
     public async Task TestFileRegion()
@@ -330,8 +332,10 @@ public class SocketFileRegionSourceTest : AbstractSocketTest
     // CLR: new RandomAccessFile(file, "r").getChannel() is a read-only FileStream, the channel type DefaultFileRegion
     // takes in this port; DefaultFileRegion reads it positionally through RandomAccess.Read, which "Reads a sequence
     // of bytes from given file at given offset" (https://learn.microsoft.com/en-us/dotnet/api/system.io.randomaccess.read).
-    private static FileStream OpenRead(FileInfo file) =>
-            new FileStream(file.FullName, FileMode.Open, FileAccess.Read);
+    private static FileStream OpenRead(FileInfo file)
+    {
+        return new FileStream(file.FullName, FileMode.Open, FileAccess.Read);
+    }
 
     // CLR: File.deleteOnExit() "Requests that the file or directory denoted by this abstract pathname be deleted when
     // the virtual machine terminates" (https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/io/File.html);
@@ -623,13 +627,25 @@ public class SocketFileRegionSourceTest : AbstractSocketTest
 
         // CLR: IFileRegion narrows the IReferenceCounted return types with new members, so the inherited interface
         // members are implemented explicitly and forward to the IFileRegion overloads.
-        IReferenceCounted IReferenceCounted.Retain() => Retain();
+        IReferenceCounted IReferenceCounted.Retain()
+        {
+            return Retain();
+        }
 
-        IReferenceCounted IReferenceCounted.Retain(int increment) => Retain(increment);
+        IReferenceCounted IReferenceCounted.Retain(int increment)
+        {
+            return Retain(increment);
+        }
 
-        IReferenceCounted IReferenceCounted.Touch() => Touch();
+        IReferenceCounted IReferenceCounted.Touch()
+        {
+            return Touch();
+        }
 
-        IReferenceCounted IReferenceCounted.Touch(object hint) => Touch(hint);
+        IReferenceCounted IReferenceCounted.Touch(object hint)
+        {
+            return Touch(hint);
+        }
     }
 }
 #pragma warning restore xUnit1051

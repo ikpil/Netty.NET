@@ -10,6 +10,12 @@ internal readonly ref struct ExecutorNotificationScope
     [ThreadStatic] private static int _depth;
 
     internal static bool CanInline => _depth < MaxInlineDepth;
-    public ExecutorNotificationScope() => ++_depth;
-    public void Dispose() => --_depth;
+    public ExecutorNotificationScope()
+    {
+        ++_depth;
+    }
+    public void Dispose()
+    {
+        --_depth;
+    }
 }

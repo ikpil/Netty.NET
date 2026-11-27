@@ -253,18 +253,38 @@ public class CombinedChannelDuplexHandlerContractTest
         public override void HandlerRemoved(IChannelHandlerContext ctx)
         { Removals++; RemovedCallback?.Invoke(ctx); Removed.TrySetResult(ctx.Executor.InEventLoop() && ctx.IsRemoved); }
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken)
-            => WriteCallback != null ? WriteCallback(ctx, msg, cancellationToken) : base.WriteAsync(ctx, msg, cancellationToken);
+        {
+            return WriteCallback != null ? WriteCallback(ctx, msg, cancellationToken) : base.WriteAsync(ctx, msg, cancellationToken);
+        }
     }
     private sealed class ControlledOutbound : ChannelOutboundHandlerAdapter
     {
         internal TaskCompletionSource Producer;
         internal CancellationToken Token;
         private Task Complete(CancellationToken token) { Token = token; return Producer.Task; }
-        public override Task BindAsync(IChannelHandlerContext ctx, EndPoint address, CancellationToken token) => Complete(token);
-        public override Task ConnectAsync(IChannelHandlerContext ctx, EndPoint remote, EndPoint local, CancellationToken token) => Complete(token);
-        public override Task CloseAsync(IChannelHandlerContext ctx, CancellationToken token) => Complete(token);
-        public override Task DisconnectAsync(IChannelHandlerContext ctx, CancellationToken token) => Complete(token);
-        public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token) => Complete(token);
-        public override Task DeregisterAsync(IChannelHandlerContext ctx, CancellationToken token) => Complete(token);
+        public override Task BindAsync(IChannelHandlerContext ctx, EndPoint address, CancellationToken token)
+        {
+            return Complete(token);
+        }
+        public override Task ConnectAsync(IChannelHandlerContext ctx, EndPoint remote, EndPoint local, CancellationToken token)
+        {
+            return Complete(token);
+        }
+        public override Task CloseAsync(IChannelHandlerContext ctx, CancellationToken token)
+        {
+            return Complete(token);
+        }
+        public override Task DisconnectAsync(IChannelHandlerContext ctx, CancellationToken token)
+        {
+            return Complete(token);
+        }
+        public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
+        {
+            return Complete(token);
+        }
+        public override Task DeregisterAsync(IChannelHandlerContext ctx, CancellationToken token)
+        {
+            return Complete(token);
+        }
     }
 }

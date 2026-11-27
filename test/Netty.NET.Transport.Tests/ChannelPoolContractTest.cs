@@ -135,7 +135,10 @@ public class ChannelPoolContractTest
         private int _acquired;
         internal int Acquired => Volatile.Read(ref _acquired);
         internal readonly TaskCompletionSource Released = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        public override void ChannelCreated(IChannel channel) => Assert.True(channel.EventLoop.InEventLoop());
+        public override void ChannelCreated(IChannel channel)
+        {
+            Assert.True(channel.EventLoop.InEventLoop());
+        }
         public override void ChannelAcquired(IChannel channel)
         {
             Assert.True(channel.EventLoop.InEventLoop());
@@ -161,16 +164,34 @@ public class ChannelPoolContractTest
     }
     private sealed class RacingMap(Func<TrackingPool> create) : AbstractChannelPoolMap<string, TrackingPool>
     {
-        protected override TrackingPool NewPool(string key) => create();
+        protected override TrackingPool NewPool(string key)
+        {
+            return create();
+        }
     }
     private sealed class TrackingPool : IChannelPool
     {
         internal bool Closed;
-        public Task<IChannel> AcquireAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
-        public Task ReleaseAsync(IChannel channel) => throw new NotSupportedException();
+        public Task<IChannel> AcquireAsync(CancellationToken cancellationToken = default)
+        {
+            throw new NotSupportedException();
+        }
+        public Task ReleaseAsync(IChannel channel)
+        {
+            throw new NotSupportedException();
+        }
         public Task CloseAsync() { Closed = true; return Task.CompletedTask; }
-        public void Close() => Closed = true;
-        public void Dispose() => Close();
-        public ValueTask DisposeAsync() => new(CloseAsync());
+        public void Close()
+        {
+            Closed = true;
+        }
+        public void Dispose()
+        {
+            Close();
+        }
+        public ValueTask DisposeAsync()
+        {
+            return new(CloseAsync());
+        }
     }
 }

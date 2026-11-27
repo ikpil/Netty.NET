@@ -109,13 +109,16 @@ public class ByteRangeComparisonContractTest
         Assert.Throws<ArgumentNullException>(() => ConstantTimeUtils.EqualsConstantTime(new byte[1], 0, null, 0, 0));
     }
 
-    private static object Invoke(string operation, byte[] bytes, int start, int length) => operation switch
+    private static object Invoke(string operation, byte[] bytes, int start, int length)
     {
-        "Equality" => PlatformDependent.Equals(bytes, start, new byte[16], 0, length),
-        "FixedTime" => PlatformDependent.EqualsConstantTime(bytes, start, new byte[16], 0, length),
-        "UtilityFixedTime" => ConstantTimeUtils.EqualsConstantTime(bytes, start, new byte[16], 0, length),
-        "Zero" => PlatformDependent.IsZero(bytes, start, length),
-        "Hash" => PlatformDependent.HashCodeAscii(bytes, start, length),
-        _ => throw new ArgumentException(nameof(operation))
-    };
+        return operation switch
+        {
+            "Equality" => PlatformDependent.Equals(bytes, start, new byte[16], 0, length),
+            "FixedTime" => PlatformDependent.EqualsConstantTime(bytes, start, new byte[16], 0, length),
+            "UtilityFixedTime" => ConstantTimeUtils.EqualsConstantTime(bytes, start, new byte[16], 0, length),
+            "Zero" => PlatformDependent.IsZero(bytes, start, length),
+            "Hash" => PlatformDependent.HashCodeAscii(bytes, start, length),
+            _ => throw new ArgumentException(nameof(operation))
+        };
+    }
 }

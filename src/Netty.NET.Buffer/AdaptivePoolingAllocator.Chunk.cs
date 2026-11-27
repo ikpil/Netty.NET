@@ -30,9 +30,15 @@ internal sealed partial class AdaptivePoolingAllocator
 
         internal long TotalCapacity => Volatile.Read(ref _totalCapacity);
 
-        internal void Add(Chunk chunk) => Interlocked.Add(ref _totalCapacity, chunk.Capacity);
+        internal void Add(Chunk chunk)
+        {
+            Interlocked.Add(ref _totalCapacity, chunk.Capacity);
+        }
 
-        internal void Remove(Chunk chunk) => Interlocked.Add(ref _totalCapacity, -chunk.Capacity);
+        internal void Remove(Chunk chunk)
+        {
+            Interlocked.Add(ref _totalCapacity, -chunk.Capacity);
+        }
     }
 
     // The allocating magazine must serialize allocation, capacity inspection and retirement.
@@ -61,7 +67,10 @@ internal sealed partial class AdaptivePoolingAllocator
         internal int RefCnt => ReferenceCountUpdater.GetCount(ref _refCnt);
         internal ByteBuf Root => Storage;
         internal IByteBufAllocator Allocator => Storage.Alloc();
-        internal ByteBuf Copy(int index, int length) => Storage.Copy(index, length);
+        internal ByteBuf Copy(int index, int length)
+        {
+            return Storage.Copy(index, length);
+        }
         internal bool IsDeallocated => Volatile.Read(ref _delegate) == null;
         protected ByteBuf Storage => Volatile.Read(ref _delegate) ?? throw new ObjectDisposedException(nameof(Chunk));
         protected bool IsRetired => Volatile.Read(ref _retired) != 0;
@@ -86,7 +95,10 @@ internal sealed partial class AdaptivePoolingAllocator
         }
 
         // Derived constructors register only after all fallible initialization succeeds.
-        private protected void Register() => _chunkRegistry.Add(this);
+        private protected void Register()
+        {
+            _chunkRegistry.Add(this);
+        }
 
         internal void TrackAllocation(bool threadLocal)
         {
@@ -127,7 +139,10 @@ internal sealed partial class AdaptivePoolingAllocator
         /**
          * Called when a ByteBuf is done using its allocation in this chunk.
          */
-        internal virtual void ReleaseSegment(int ignoredSegmentId, int size) => Release();
+        internal virtual void ReleaseSegment(int ignoredSegmentId, int size)
+        {
+            Release();
+        }
 
         // CLR: markToDeallocate retires the magazine/cache ownership once. Live allocations and
         // leases still own their segments. Calling it again must not release that ownership again.
@@ -138,11 +153,23 @@ internal sealed partial class AdaptivePoolingAllocator
         }
 
         // CLR: IDisposable scopes a chunk; disposing it is markToDeallocate().
-        public void Dispose() => MarkToDeallocate();
+        public void Dispose()
+        {
+            MarkToDeallocate();
+        }
 
-        private protected void ThrowIfRetired() => ObjectDisposedException.ThrowIf(IsRetired, this);
-        private protected bool TryRetire() => Interlocked.Exchange(ref _retired, 1) == 0;
-        private protected void Retain() => ReferenceCountUpdater.Retain(ref _refCnt);
+        private protected void ThrowIfRetired()
+        {
+            ObjectDisposedException.ThrowIf(IsRetired, this);
+        }
+        private protected bool TryRetire()
+        {
+            return Interlocked.Exchange(ref _retired, 1) == 0;
+        }
+        private protected void Retain()
+        {
+            ReferenceCountUpdater.Retain(ref _refCnt);
+        }
 
         private protected void Release()
         {

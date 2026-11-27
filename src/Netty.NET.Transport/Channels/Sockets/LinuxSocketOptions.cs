@@ -34,10 +34,15 @@ internal static class LinuxSocketOptions
         socket.SetRawSocketOption(level, option, bytes);
     }
 
-    internal static bool GetFlag(Socket socket, int level, int option) => GetInt(socket, level, option) != 0;
+    internal static bool GetFlag(Socket socket, int level, int option)
+    {
+        return GetInt(socket, level, option) != 0;
+    }
 
-    internal static void SetFlag(Socket socket, int level, int option, bool enabled) =>
+    internal static void SetFlag(Socket socket, int level, int option, bool enabled)
+    {
         SetInt(socket, level, option, enabled ? 1 : 0);
+    }
 
     // Reads a native int option as the value type of its ChannelOption: bool flags,
     // unsigned 32-bit thresholds exposed as long, and plain int values.

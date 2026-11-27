@@ -63,8 +63,11 @@ public class SocketConnectTimingContractTest
     }
 
     private static Bootstrap PendingBootstrap(MultiThreadIoEventLoopGroup group, PendingSocketConnect channel,
-        bool adaptive, int timeout) => new Bootstrap().Group(group).ChannelFactory(() => channel)
+        bool adaptive, int timeout)
+    {
+        return new Bootstrap().Group(group).ChannelFactory(() => channel)
         .Handler(new ChannelInboundHandlerAdapter()).Option(ChannelOption.ALLOCATOR, SelectAllocator(adaptive))
         .Option(ChannelOption.CONNECT_TIMEOUT_MILLIS, timeout);
+    }
 
 }

@@ -74,7 +74,10 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         nativeRemove = RemoveNative;
     }
 
-    public override Ticker Ticker() => selectedTicker;
+    public override Ticker Ticker()
+    {
+        return selectedTicker;
+    }
 
     /**
      * Get the current time in nanoseconds by this executor's clock. This is not the same as {@link System#nanoTime()}
@@ -256,7 +259,10 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
      * Return the {@link Runnable} which is ready to be executed with the given {@code nanoTime}.
      * You should use {@link #getCurrentTimeNanos()} to retrieve the correct {@code nanoTime}.
      */
-    protected Action PollScheduledTask(long nanoTime) => PollScheduledWork(nanoTime)?.QueueCallback;
+    protected Action PollScheduledTask(long nanoTime)
+    {
+        return PollScheduledWork(nanoTime)?.QueueCallback;
+    }
 
     // Transfer needs the actual membership for capacity rollback; consumers execute
     // only its native callback. Both polling overloads share this dequeue boundary.
@@ -278,8 +284,10 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     /**
      * Return the nanoseconds until the next scheduled task is ready to be run or {@code -1} if no task is scheduled.
      */
-    internal static long DeadlineToDelayNanos(long now, long deadline) =>
-        deadline == 0L ? 0L : Math.Max(0L, deadline - now);
+    internal static long DeadlineToDelayNanos(long now, long deadline)
+    {
+        return deadline == 0L ? 0L : Math.Max(0L, deadline - now);
+    }
 
     protected long NextScheduledTaskNano()
     {
@@ -322,7 +330,10 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
 
     // CLR: TimeSpan stores 100 ns ticks. Saturate like Java TimeUnit.toNanos,
     // retaining integer precision and avoiding a floating-point overflow cast.
-    internal static long ToNanos(TimeSpan amount) => TimeUtil.ToNanoseconds(amount);
+    internal static long ToNanos(TimeSpan amount)
+    {
+        return TimeUtil.ToNanoseconds(amount);
+    }
 
     /**
      * Sub-classes may override this to restrict the maximal amount of time someone can use to schedule a task.

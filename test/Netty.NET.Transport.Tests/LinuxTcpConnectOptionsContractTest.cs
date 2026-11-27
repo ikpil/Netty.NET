@@ -32,8 +32,9 @@ public class LinuxTcpConnectOptionsContractTest
     }
 
     [Fact]
-    public Task InvalidReplacementLeavesTheOriginalKeyAndEmptyReplacementRestoresUnauthenticatedConnect() =>
-        WithServer(async (group, server, token) =>
+    public Task InvalidReplacementLeavesTheOriginalKeyAndEmptyReplacementRestoresUnauthenticatedConnect()
+    {
+        return WithServer(async (group, server, token) =>
         {
             var initial = Keys(IPAddress.Loopback, "abc"u8.ToArray());
             byte[] next = "def"u8.ToArray();
@@ -56,16 +57,20 @@ public class LinuxTcpConnectOptionsContractTest
             SetServerKeys(server, new Dictionary<IPAddress, byte[]>());
             await (await NewClient(group).ConnectAsync(server.LocalAddress, cancellationToken: token)).CloseAsync();
         });
+    }
 
     [Fact]
-    public Task MatchingIpv6KeyAuthenticatesAConnection() => WithServer(async (group, server, token) =>
+    public Task MatchingIpv6KeyAuthenticatesAConnection()
     {
-        var keys = Keys(IPAddress.IPv6Loopback, "abc"u8.ToArray());
-        SetServerKeys(server, keys);
-        var client = await NewClient(group).Option(ChannelOption.TCP_MD5SIG, keys)
-            .ConnectAsync(server.LocalAddress, cancellationToken: token);
-        await client.CloseAsync();
-    }, ipv6: true);
+        return WithServer(async (group, server, token) =>
+        {
+            var keys = Keys(IPAddress.IPv6Loopback, "abc"u8.ToArray());
+            SetServerKeys(server, keys);
+            var client = await NewClient(group).Option(ChannelOption.TCP_MD5SIG, keys)
+                .ConnectAsync(server.LocalAddress, cancellationToken: token);
+            await client.CloseAsync();
+        }, ipv6: true);
+    }
 
     [Theory]
     [InlineData(false)]

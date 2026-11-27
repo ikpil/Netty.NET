@@ -60,7 +60,10 @@ public class ThreadConstructionContractTest
     private sealed class TrackingLocal : FastThreadLocal<object>
     {
         internal int Removed;
-        protected override void OnRemoval(object value) => Removed++;
+        protected override void OnRemoval(object value)
+        {
+            Removed++;
+        }
     }
 
     private sealed class Item(IRecyclerHandle<Item> handle)
@@ -69,7 +72,10 @@ public class ThreadConstructionContractTest
     }
     private sealed class Pool() : Recycler<Item>(4, 0, 2, false)
     {
-        protected override Item NewObject(IRecyclerHandle<Item> handle) => new(handle);
+        protected override Item NewObject(IRecyclerHandle<Item> handle)
+        {
+            return new(handle);
+        }
     }
 
     private sealed class ManualWorker(Action work, bool cleanup) : FastThreadLocalThread(name: "manual cleanup")

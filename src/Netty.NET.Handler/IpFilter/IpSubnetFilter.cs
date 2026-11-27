@@ -228,7 +228,10 @@ public class IpSubnetFilter : AbstractRemoteAddressFilter<IPEndPoint>
     // derived classes and an override cannot change its accessibility, so this internal forwarder serves the friend
     // test assembly, like MessageToMessageDecoder.InvokeDecode in codec-base (docs/codec-base-porting.md, Package
     // access).
-    internal bool InvokeAccept(IChannelHandlerContext ctx, IPEndPoint remoteAddress) => Accept(ctx, remoteAddress);
+    internal bool InvokeAccept(IChannelHandlerContext ctx, IPEndPoint remoteAddress)
+    {
+        return Accept(ctx, remoteAddress);
+    }
 
     /**
      * <ol>

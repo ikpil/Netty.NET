@@ -102,15 +102,18 @@ public class EncodingConstructorContractTest
         Assert.Null(failure);
     }
 
-    private static Encoding CreateEncoding(int kind) => kind switch
+    private static Encoding CreateEncoding(int kind)
     {
-        0 => new UnicodeEncoding(true, true),
-        1 => new UnicodeEncoding(true, false),
-        2 => new UnicodeEncoding(false, false),
-        3 => new UTF8Encoding(true),
-        4 => Encoding.GetEncoding("iso-8859-1", new EncoderReplacementFallback("?"), DecoderFallback.ExceptionFallback),
-        _ => Encoding.GetEncoding("us-ascii", new EncoderReplacementFallback("?"), DecoderFallback.ExceptionFallback)
-    };
+        return kind switch
+        {
+            0 => new UnicodeEncoding(true, true),
+            1 => new UnicodeEncoding(true, false),
+            2 => new UnicodeEncoding(false, false),
+            3 => new UTF8Encoding(true),
+            4 => Encoding.GetEncoding("iso-8859-1", new EncoderReplacementFallback("?"), DecoderFallback.ExceptionFallback),
+            _ => Encoding.GetEncoding("us-ascii", new EncoderReplacementFallback("?"), DecoderFallback.ExceptionFallback)
+        };
+    }
 
     private static void AssertAllInputs(string text, int start, int length, Encoding encoding, byte[] expected)
     {

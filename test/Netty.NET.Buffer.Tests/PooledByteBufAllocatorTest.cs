@@ -620,7 +620,10 @@ public class PooledByteBufAllocatorTest : AbstractByteBufAllocatorTest<PooledByt
     // CLR: the anonymous ThreadCache implementation.
     private sealed class DelegateThreadCache(Action destroy) : ThreadCache
     {
-        public void Destroy() => destroy();
+        public void Destroy()
+        {
+            destroy();
+        }
     }
 
     [Fact]
@@ -707,7 +710,10 @@ public class PooledByteBufAllocatorTest : AbstractByteBufAllocatorTest<PooledByt
             thread = new Thread(Run);
         }
 
-        internal void Start() => thread.Start();
+        internal void Start()
+        {
+            thread.Start();
+        }
 
         private void Run()
         {
@@ -1157,13 +1163,20 @@ public class PooledByteBufAllocatorClrContractTest
     // Like the source fixtures' new PooledByteBufAllocator(true, 1, 1, 8192, 9, 0, 0, 0): one arena per kind and no
     // thread caches.
     private static PooledByteBufAllocator NewAllocator(bool direct = false, int alignment = 0,
-        NativeMemoryAllocator native = null) => new(direct, 1, 1, pageSize: 8192, maxOrder: 4,
+        NativeMemoryAllocator native = null)
+    {
+        return new(direct, 1, 1, pageSize: 8192, maxOrder: 4,
             directMemoryCacheAlignment: alignment, nativeAllocator: native, smallCacheSize: 0, normalCacheSize: 0);
+    }
     // leastUsedArena binds the first thread to arenas[0].
     private static IPoolArenaMetric Arena(PooledByteBufAllocator a, bool direct)
-        => (direct ? a.Metric.DirectArenas : a.Metric.HeapArenas)[0];
+    {
+        return (direct ? a.Metric.DirectArenas : a.Metric.HeapArenas)[0];
+    }
     private static long Pinned(PooledByteBufAllocator a, bool direct)
-        => direct ? a.PinnedDirectMemory : a.PinnedHeapMemory;
+    {
+        return direct ? a.PinnedDirectMemory : a.PinnedHeapMemory;
+    }
 
     [Theory]
     [InlineData(false, false, false)] [InlineData(false, false, true)]

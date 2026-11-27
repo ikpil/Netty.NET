@@ -29,11 +29,18 @@ namespace Netty.NET.Buffer.Tests;
 public class PooledChunkEventTest
 {
     private static PooledByteBufAllocator NewAllocator(NativeMemoryAllocator native, int order = 1, int cache = 0, int alignment = 0)
-        => new(maxOrder: order, nativeAllocator: native, smallCacheSize: cache, normalCacheSize: cache, directMemoryCacheAlignment: alignment,
+    {
+        return new(maxOrder: order, nativeAllocator: native, smallCacheSize: cache, normalCacheSize: cache, directMemoryCacheAlignment: alignment,
             useCacheForAllThreads: true); // Explicit cache sizes apply to every test thread, as with the source fixtures' useCacheForAllThreads=true.
+    }
     private static ByteBuf Allocate(PooledByteBufAllocator allocator, bool direct, int size)
-        => direct ? allocator.DirectBuffer(size, 40000) : allocator.HeapBuffer(size, 40000);
-    private static Listener Listen(EventKeywords keywords = (EventKeywords)31) => new(keywords);
+    {
+        return direct ? allocator.DirectBuffer(size, 40000) : allocator.HeapBuffer(size, 40000);
+    }
+    private static Listener Listen(EventKeywords keywords = (EventKeywords)31)
+    {
+        return new(keywords);
+    }
     private static void Check(Record record, int id, int capacity, bool direct, bool pooled)
     {
         Assert.Equal(id, record.Id); Assert.Equal(typeof(PooledByteBufAllocator).FullName, record.Fields["allocatorType"]);

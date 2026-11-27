@@ -82,14 +82,17 @@ public class ByteBufWireContractTest
             case 8: if (le) b.SetLongLE(index, value); else b.SetLong(index, value); break;
         }
     }
-    private static long Get(ByteBuf b, int index, int width, bool le) => width switch
+    private static long Get(ByteBuf b, int index, int width, bool le)
     {
-        1 => b.GetByte(index),
-        2 => le ? b.GetShortLE(index) : b.GetShort(index),
-        3 => le ? b.GetMediumLE(index) : b.GetMedium(index),
-        4 => le ? b.GetIntLE(index) : b.GetInt(index),
-        _ => le ? b.GetLongLE(index) : b.GetLong(index)
-    };
+        return width switch
+        {
+            1 => b.GetByte(index),
+            2 => le ? b.GetShortLE(index) : b.GetShort(index),
+            3 => le ? b.GetMediumLE(index) : b.GetMedium(index),
+            4 => le ? b.GetIntLE(index) : b.GetInt(index),
+            _ => le ? b.GetLongLE(index) : b.GetLong(index)
+        };
+    }
 
     [Theory]
     [InlineData(false)]

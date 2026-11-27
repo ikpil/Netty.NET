@@ -29,7 +29,10 @@ public class UnpooledHeapByteBuf : AbstractReferenceCountedByteBuf
     private byte[] _array;
     private readonly IByteBufAllocator _bufferAllocator;
     private readonly UnpooledByteBufAllocator.UnpooledByteBufAllocatorMetric _metric;
-    public override IByteBufAllocator Alloc() => _bufferAllocator;
+    public override IByteBufAllocator Alloc()
+    {
+        return _bufferAllocator;
+    }
 /**
      * Creates a new heap buffer with a newly allocated byte array.
      *
@@ -67,7 +70,10 @@ public class UnpooledHeapByteBuf : AbstractReferenceCountedByteBuf
     }
     private static int GetLength(byte[] array)
     { ArgumentNullException.ThrowIfNull(array); return array.Length; }
-    protected override Memory<byte> GetMemoryCore(int index, int length) => _array.AsMemory(index, length);
+    protected override Memory<byte> GetMemoryCore(int index, int length)
+    {
+        return _array.AsMemory(index, length);
+    }
     public override bool IsContiguous => true;
     public override bool IsDirect => false;
     public override int Capacity

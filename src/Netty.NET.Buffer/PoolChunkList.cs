@@ -72,7 +72,9 @@ internal sealed class PoolChunkList : IPoolChunkListMetric
     }
 
     private static int Saturate(double value)
-        => value >= int.MaxValue ? int.MaxValue : value <= int.MinValue ? int.MinValue : (int)value;
+    {
+        return value >= int.MaxValue ? int.MaxValue : value <= int.MinValue ? int.MinValue : (int)value;
+    }
 
     /**
      * Calculates the maximum capacity of a buffer that will ever be possible to allocate out of the {@link PoolChunk}s
@@ -214,7 +216,10 @@ internal sealed class PoolChunkList : IPoolChunkListMetric
 
     public int MinUsage => MinUsage0(_minUsage);
     public int MaxUsage => Math.Min(_maxUsage, 100);
-    private static int MinUsage0(int value) => Math.Max(1, value);
+    private static int MinUsage0(int value)
+    {
+        return Math.Max(1, value);
+    }
 
     public IEnumerator<IPoolChunkMetric> GetEnumerator()
     {
@@ -226,7 +231,10 @@ internal sealed class PoolChunkList : IPoolChunkListMetric
         }
     }
 
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 
     public override string ToString()
     {

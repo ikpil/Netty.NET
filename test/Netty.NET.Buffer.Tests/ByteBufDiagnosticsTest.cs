@@ -92,7 +92,10 @@ public class ByteBufDiagnosticsTest
             _ => new SimpleLeakAwareByteBuf(new AdvancedLeakAwareByteBuf(root, tracker), new Tracker())
         };
         string name = kind switch { 0 => "ByteBufDiagnosticsTest+PlainWrapper", 1 => "SimpleLeakAwareByteBuf", 2 => "AdvancedLeakAwareByteBuf", 3 => "UnreleasableByteBuf", _ => "SimpleLeakAwareByteBuf" };
-        string Parent(string raw) => kind == 4 ? "AdvancedLeakAwareByteBuf(" + raw + ")" : raw;
+        string Parent(string raw)
+        {
+            return kind == 4 ? "AdvancedLeakAwareByteBuf(" + raw + ")" : raw;
+        }
         try
         {
             Assert.Equal(name + '(' + Parent("UnpooledHeapByteBuf(ridx: 3, widx: 13, cap: 16/64)") + ')', wrapper.ToString());
@@ -151,9 +154,19 @@ public class ByteBufDiagnosticsTest
     private sealed class Tracker : IResourceLeakTracker<ByteBuf>
     {
         internal int Records, Closes;
-        public void Record() => Records++; public void Record(object hint) => Records++;
+        public void Record()
+        {
+            Records++;
+        }
+        public void Record(object hint)
+        {
+            Records++;
+        }
         public bool Close(ByteBuf b) { Closes++; return true; }
-        public Exception GetCloseStackTraceIfAny() => null;
+        public Exception GetCloseStackTraceIfAny()
+        {
+            return null;
+        }
     }
     private sealed class MetadataOnlyBuffer(bool freed) : ByteBuf(64)
     {
@@ -161,9 +174,18 @@ public class ByteBufDiagnosticsTest
         public override int RefCnt => freed ? 0 : 1;
         public override int Capacity { get => !freed ? 16 : throw new Exception("Freed capacity accessed"); set => throw new NotSupportedException(); }
         public override bool IsDirect => false;
-        public override ByteBuf Unwrap() => !freed ? null : throw new Exception("Freed unwrap accessed");
+        public override ByteBuf Unwrap()
+        {
+            return !freed ? null : throw new Exception("Freed unwrap accessed");
+        }
         protected override Memory<byte> GetMemoryCore(int index, int length) { StorageReads++; throw new Exception("Content accessed"); }
-        public override ByteBuf Retain(int increment = 1) => throw new NotSupportedException();
-        public override bool Release(int decrement = 1) => throw new NotSupportedException();
+        public override ByteBuf Retain(int increment = 1)
+        {
+            throw new NotSupportedException();
+        }
+        public override bool Release(int decrement = 1)
+        {
+            throw new NotSupportedException();
+        }
     }
 }

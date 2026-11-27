@@ -161,8 +161,11 @@ public class SocketLingerCloseContractTest
             NioIoHandler.NewFactory());
         var removed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         channel.Pipeline.AddLast(new Observe(loop, new List<string>(), removed));
-        Task Shutdown() => shutdownMode == 2 ? loop.StopAsync()
-            : loop.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
+        Task Shutdown()
+        {
+            return shutdownMode == 2 ? loop.StopAsync()
+                : loop.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
+        }
         try
         {
             await channel.RegisterAsync(loop, cancellation);
@@ -245,7 +248,10 @@ public class SocketLingerCloseContractTest
             Channel.Pipeline.AddLast(new Observe(Loop, Events));
             Loop.RegisterAsync(Channel, TestContext.Current.CancellationToken).GetAwaiter().GetResult();
         }
-        internal void WaitForClose() => Assert.True(Channel.CloseEntered.Wait(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken));
+        internal void WaitForClose()
+        {
+            Assert.True(Channel.CloseEntered.Wait(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken));
+        }
         internal void PumpUntil(Func<bool> condition)
         {
             var deadline = DateTime.UtcNow.AddSeconds(5);
@@ -272,8 +278,14 @@ public class SocketLingerCloseContractTest
         internal int CloseCalls;
         internal Exception Failure;
         internal TaskScheduler CloseExecutor;
-        internal void DisposeSocket() => JavaChannel().Dispose();
-        protected override TaskScheduler PrepareToClose() => CloseExecutor ?? base.PrepareToClose();
+        internal void DisposeSocket()
+        {
+            JavaChannel().Dispose();
+        }
+        protected override TaskScheduler PrepareToClose()
+        {
+            return CloseExecutor ?? base.PrepareToClose();
+        }
         protected override void DoClose()
         {
             Interlocked.Increment(ref CloseCalls);
@@ -290,9 +302,18 @@ public class SocketLingerCloseContractTest
 
     private sealed class RejectScheduler : TaskScheduler
     {
-        protected override IEnumerable<Task> GetScheduledTasks() => Array.Empty<Task>();
-        protected override bool TryExecuteTaskInline(Task task, bool taskWasPreviouslyQueued) => false;
-        protected override void QueueTask(Task task) => throw new RejectedExecutionException("Close worker rejected.");
+        protected override IEnumerable<Task> GetScheduledTasks()
+        {
+            return Array.Empty<Task>();
+        }
+        protected override bool TryExecuteTaskInline(Task task, bool taskWasPreviouslyQueued)
+        {
+            return false;
+        }
+        protected override void QueueTask(Task task)
+        {
+            throw new RejectedExecutionException("Close worker rejected.");
+        }
     }
 
     private sealed class Observe(IEventLoop loop, List<string> events, TaskCompletionSource removed = null) : ChannelInboundHandlerAdapter

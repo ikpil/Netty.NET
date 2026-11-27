@@ -27,10 +27,22 @@ public class SingleThreadMetricsContractTest
         internal ActivityClockExecutor(IQueue<Action> queue)
             : base(null, _ => throw new Exception("must not start"), false, true,
                 queue, RejectedExecutionHandlers.Reject()) { }
-        public override Ticker Ticker() => clock;
-        protected override void Run() => throw new Exception("must not run");
-        internal long LastActivity() => GetLastActivityTimeNanos();
-        internal void UpdateActivity() => UpdateLastExecutionTime();
+        public override Ticker Ticker()
+        {
+            return clock;
+        }
+        protected override void Run()
+        {
+            throw new Exception("must not run");
+        }
+        internal long LastActivity()
+        {
+            return GetLastActivityTimeNanos();
+        }
+        internal void UpdateActivity()
+        {
+            UpdateLastExecutionTime();
+        }
     }
 
     [Fact]
@@ -55,19 +67,58 @@ public class SingleThreadMetricsContractTest
         internal ManualExecutor(bool support = false)
             : base(null, _ => throw new Exception("must not start"), false, support,
                 int.MaxValue, RejectedExecutionHandlers.Reject()) { }
-        public override bool InEventLoop(Thread thread) => thread == Thread.CurrentThread;
-        public override Ticker Ticker() => clock;
-        protected override void Run() => throw new Exception("must not run");
-        internal bool Drain(long nanos) => RunAllTasks(nanos);
-        internal long ResetActive() => GetAndResetAccumulatedActiveTimeNanos();
-        internal long LastActivity() => GetLastActivityTimeNanos();
-        internal void Io(long nanos) => ReportActiveIoTime(nanos);
-        internal int Idle() => GetAndIncrementIdleCycles();
-        internal int Busy() => GetAndIncrementBusyCycles();
-        internal void ResetIdle() => ResetIdleCycles();
-        internal void ResetBusy() => ResetBusyCycles();
-        internal int Channels() => GetNumOfRegisteredChannels();
-        internal bool SupportsSuspension() => IsSuspensionSupported();
+        public override bool InEventLoop(Thread thread)
+        {
+            return thread == Thread.CurrentThread;
+        }
+        public override Ticker Ticker()
+        {
+            return clock;
+        }
+        protected override void Run()
+        {
+            throw new Exception("must not run");
+        }
+        internal bool Drain(long nanos)
+        {
+            return RunAllTasks(nanos);
+        }
+        internal long ResetActive()
+        {
+            return GetAndResetAccumulatedActiveTimeNanos();
+        }
+        internal long LastActivity()
+        {
+            return GetLastActivityTimeNanos();
+        }
+        internal void Io(long nanos)
+        {
+            ReportActiveIoTime(nanos);
+        }
+        internal int Idle()
+        {
+            return GetAndIncrementIdleCycles();
+        }
+        internal int Busy()
+        {
+            return GetAndIncrementBusyCycles();
+        }
+        internal void ResetIdle()
+        {
+            ResetIdleCycles();
+        }
+        internal void ResetBusy()
+        {
+            ResetBusyCycles();
+        }
+        internal int Channels()
+        {
+            return GetNumOfRegisteredChannels();
+        }
+        internal bool SupportsSuspension()
+        {
+            return IsSuspensionSupported();
+        }
     }
 
     [Fact]
@@ -164,10 +215,22 @@ public class SingleThreadMetricsContractTest
     {
         internal CountingStartExecutor(Action<Action> executor)
             : base(null, executor, false, true, int.MaxValue, RejectedExecutionHandlers.Reject()) { }
-        protected override void Run() => throw new Exception("must not run");
-        public override bool InEventLoop(Thread thread) => false;
-        internal int Idle() => GetAndIncrementIdleCycles();
-        internal int Busy() => GetAndIncrementBusyCycles();
+        protected override void Run()
+        {
+            throw new Exception("must not run");
+        }
+        public override bool InEventLoop(Thread thread)
+        {
+            return false;
+        }
+        internal int Idle()
+        {
+            return GetAndIncrementIdleCycles();
+        }
+        internal int Busy()
+        {
+            return GetAndIncrementBusyCycles();
+        }
     }
 
     [Fact]

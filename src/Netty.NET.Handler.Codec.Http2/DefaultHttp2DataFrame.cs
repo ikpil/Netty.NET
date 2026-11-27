@@ -179,29 +179,65 @@ public sealed class DefaultHttp2DataFrame : AbstractHttp2StreamFrame, IHttp2Data
         return this;
     }
 
-    IByteBufHolder IByteBufHolder.Copy() => Copy();
+    IByteBufHolder IByteBufHolder.Copy()
+    {
+        return Copy();
+    }
 
-    IByteBufHolder IByteBufHolder.Duplicate() => Duplicate();
+    IByteBufHolder IByteBufHolder.Duplicate()
+    {
+        return Duplicate();
+    }
 
-    IByteBufHolder IByteBufHolder.RetainedDuplicate() => RetainedDuplicate();
+    IByteBufHolder IByteBufHolder.RetainedDuplicate()
+    {
+        return RetainedDuplicate();
+    }
 
-    IByteBufHolder IByteBufHolder.Replace(ByteBuf content) => Replace(content);
+    IByteBufHolder IByteBufHolder.Replace(ByteBuf content)
+    {
+        return Replace(content);
+    }
 
-    IByteBufHolder IByteBufHolder.Retain() => Retain();
+    IByteBufHolder IByteBufHolder.Retain()
+    {
+        return Retain();
+    }
 
-    IByteBufHolder IByteBufHolder.Retain(int increment) => Retain(increment);
+    IByteBufHolder IByteBufHolder.Retain(int increment)
+    {
+        return Retain(increment);
+    }
 
-    IByteBufHolder IByteBufHolder.Touch() => Touch();
+    IByteBufHolder IByteBufHolder.Touch()
+    {
+        return Touch();
+    }
 
-    IByteBufHolder IByteBufHolder.Touch(object hint) => Touch(hint);
+    IByteBufHolder IByteBufHolder.Touch(object hint)
+    {
+        return Touch(hint);
+    }
 
-    IReferenceCounted IReferenceCounted.Retain() => Retain();
+    IReferenceCounted IReferenceCounted.Retain()
+    {
+        return Retain();
+    }
 
-    IReferenceCounted IReferenceCounted.Retain(int increment) => Retain(increment);
+    IReferenceCounted IReferenceCounted.Retain(int increment)
+    {
+        return Retain(increment);
+    }
 
-    IReferenceCounted IReferenceCounted.Touch() => Touch();
+    IReferenceCounted IReferenceCounted.Touch()
+    {
+        return Touch();
+    }
 
-    IReferenceCounted IReferenceCounted.Touch(object hint) => Touch(hint);
+    IReferenceCounted IReferenceCounted.Touch(object hint)
+    {
+        return Touch(hint);
+    }
 
     public override bool Equals(object o)
     {

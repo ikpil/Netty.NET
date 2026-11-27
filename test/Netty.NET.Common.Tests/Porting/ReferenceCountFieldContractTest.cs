@@ -12,13 +12,19 @@ public class ReferenceCountFieldContractTest
     {
         public int Deallocations;
         public Exception DeallocationError;
-        public void SetCount(int count) => SetRefCnt(count);
+        public void SetCount(int count)
+        {
+            SetRefCnt(count);
+        }
         protected override void Deallocate()
         {
             Interlocked.Increment(ref Deallocations);
             if (DeallocationError != null) throw DeallocationError;
         }
-        public override IReferenceCounted Touch(object hint) => this;
+        public override IReferenceCounted Touch(object hint)
+        {
+            return this;
+        }
     }
 
     [Theory]

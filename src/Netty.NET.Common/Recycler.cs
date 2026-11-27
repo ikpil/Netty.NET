@@ -67,7 +67,10 @@ public static class Recycler
      * be garbage collected even if {@link Handle}s are still referenced by other objects.
      * <p>
      */
-    public static void UnpinOwner<T>(Recycler<T> recycler) where T : class => recycler.UnpinOwner();
+    public static void UnpinOwner<T>(Recycler<T> recycler) where T : class
+    {
+        recycler.UnpinOwner();
+    }
 
     // CLR counterpart of Netty's anonymous Recycler subclass: use a native
     // factory delegate without an ObjectPool/ObjectCreator adapter hierarchy.
@@ -79,7 +82,10 @@ public static class Recycler
 
     private sealed class FactoryRecycler<T>(Func<IRecyclerHandle<T>, T> factory) : Recycler<T> where T : class
     {
-        protected override T NewObject(IRecyclerHandle<T> handle) => factory(handle);
+        protected override T NewObject(IRecyclerHandle<T> handle)
+        {
+            return factory(handle);
+        }
     }
 }
 
@@ -223,9 +229,13 @@ public abstract class Recycler<T> where T : class
     }
 
     private static LocalPool CreatePool(int capacity, bool unguarded)
-        => unguarded ? new UnguardedLocalPool(capacity) : new GuardedLocalPool(capacity);
+    {
+        return unguarded ? new UnguardedLocalPool(capacity) : new GuardedLocalPool(capacity);
+    }
     private static LocalPool CreatePool(Thread owner, int capacity, int interval, int chunkSize, bool unguarded)
-        => unguarded ? new UnguardedLocalPool(owner, capacity, interval, chunkSize) : new GuardedLocalPool(owner, capacity, interval, chunkSize);
+    {
+        return unguarded ? new UnguardedLocalPool(owner, capacity, interval, chunkSize) : new GuardedLocalPool(owner, capacity, interval, chunkSize);
+    }
 
     public T Get()
     {
@@ -262,8 +272,10 @@ public abstract class Recycler<T> where T : class
     private sealed class PoolThreadLocal(int capacity, int interval, int chunkSize, bool unguarded) : FastThreadLocal<LocalPool>
     {
         protected override LocalPool InitialValue()
-            => CreatePool(!Recycler.BATCH_FAST_TL_ONLY || FastThreadLocalThread.CurrentThreadWillCleanupFastThreadLocals()
+        {
+            return CreatePool(!Recycler.BATCH_FAST_TL_ONLY || FastThreadLocalThread.CurrentThreadWillCleanupFastThreadLocals()
                 ? Thread.CurrentThread : null, capacity, interval, chunkSize, unguarded);
+        }
         protected override void OnRemoval(LocalPool pool)
         {
             base.OnRemoval(pool);
@@ -277,8 +289,14 @@ public abstract class Recycler<T> where T : class
      */
     private sealed class LocalPoolHandle(UnguardedLocalPool pool) : RecyclerEnhancedHandle<T>
     {
-        public override void Recycle(T value) => pool?.Release(value);
-        public override void UnguardedRecycle(object value) => pool?.Release((T)value);
+        public override void Recycle(T value)
+        {
+            pool?.Release(value);
+        }
+        public override void UnguardedRecycle(object value)
+        {
+            pool?.Release((T)value);
+        }
     }
 
     private sealed class DefaultHandle(GuardedLocalPool pool) : RecyclerEnhancedHandle<T>
@@ -305,7 +323,10 @@ public abstract class Recycler<T> where T : class
             pool.Release(this);
         }
         internal T Claim() { Volatile.Write(ref state, STATE_CLAIMED); return value; }
-        internal void Set(T item) => value = item;
+        internal void Set(T item)
+        {
+            value = item;
+        }
     }
 
     private sealed class GuardedLocalPool : LocalPool<DefaultHandle>
@@ -330,11 +351,17 @@ public abstract class Recycler<T> where T : class
     {
         private readonly RecyclerEnhancedHandle<T> handle;
         internal UnguardedLocalPool(int capacity) : base(capacity)
-            => handle = capacity == 0 ? null : new LocalPoolHandle(this);
+        {
+            handle = capacity == 0 ? null : new LocalPoolHandle(this);
+        }
         internal UnguardedLocalPool(Thread owner, int capacity, int interval, int chunkSize) : base(owner, capacity, interval, chunkSize)
-            => handle = new LocalPoolHandle(this);
+        {
+            handle = new LocalPoolHandle(this);
+        }
         internal override T GetWith(Recycler<T> recycler)
-            => Acquire() ?? recycler.NewObject(CanAllocatePooled() ? handle : NOOP_HANDLE);
+        {
+            return Acquire() ?? recycler.NewObject(CanAllocatePooled() ? handle : NOOP_HANDLE);
+        }
     }
 
     private abstract class LocalPool
@@ -410,8 +437,14 @@ public abstract class Recycler<T> where T : class
             ratioCounter = 0;
             return true;
         }
-        internal override int Size() => (Volatile.Read(ref pooledHandles)?.Size() ?? 0) + (batch != null ? batchSize : 0);
-        internal override void Unpin() => Volatile.Write(ref owner, null);
+        internal override int Size()
+        {
+            return (Volatile.Read(ref pooledHandles)?.Size() ?? 0) + (batch != null ? batchSize : 0);
+        }
+        internal override void Unpin()
+        {
+            Volatile.Write(ref owner, null);
+        }
         internal override void Detach()
         {
             ReturnQueue<H> handles = Volatile.Read(ref pooledHandles);
@@ -429,8 +462,10 @@ public abstract class Recycler<T> where T : class
         void Clear();
     }
     private static ReturnQueue<H> CreateQueue<H>(int capacity) where H : class
-        => capacity == 0 ? null : Recycler.BLOCKING_POOL ? new BlockingMessageQueue<H>(capacity)
+    {
+        return capacity == 0 ? null : Recycler.BLOCKING_POOL ? new BlockingMessageQueue<H>(capacity)
             : new ConcurrentReturnQueue<H>(MathUtil.SafeFindNextPositivePowerOfTwo(capacity));
+    }
 
     // CLR segments replace JCTools chunk allocation. CAS reservations enforce the
     // rounded fixed bound while ConcurrentQueue supplies MPMC publication and FIFO.
@@ -450,14 +485,20 @@ public abstract class Recycler<T> where T : class
             catch { Interlocked.Decrement(ref count); throw; }
             return true;
         }
-        public H Poll() => TryPoll(out H value) ? value : null;
+        public H Poll()
+        {
+            return TryPoll(out H value) ? value : null;
+        }
         private bool TryPoll(out H value)
         {
             if (!ConcurrentQueueOperations.TryDequeueUninterruptibly(queue, out value)) return false;
             Interlocked.Decrement(ref count);
             return true;
         }
-        public int Size() => Volatile.Read(ref count);
+        public int Size()
+        {
+            return Volatile.Read(ref count);
+        }
         public void Clear() { while (TryPoll(out _)) { } }
     }
 

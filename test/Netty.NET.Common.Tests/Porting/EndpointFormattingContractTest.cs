@@ -103,6 +103,9 @@ public class EndpointFormattingContractTest
     private sealed class UnsupportedEndpoint : EndPoint
     {
         public override AddressFamily AddressFamily => throw new InvalidOperationException("Unexpected family query.");
-        public override string ToString() => throw new InvalidOperationException("Unexpected endpoint formatting.");
+        public override string ToString()
+        {
+            throw new InvalidOperationException("Unexpected endpoint formatting.");
+        }
     }
 }

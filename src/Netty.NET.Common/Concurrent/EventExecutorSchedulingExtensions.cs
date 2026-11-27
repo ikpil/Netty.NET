@@ -38,7 +38,9 @@ public static class EventExecutorSchedulingExtensions
     /// </remarks>
     public static Task<T> ScheduleAsync<T>(this IEventExecutorGroup executor, Func<CancellationToken, T> function,
         TimeSpan delay, CancellationToken cancellationToken = default)
-        => ScheduleCore(executor, function, delay, 0, cancellationToken);
+    {
+        return ScheduleCore(executor, function, delay, 0, cancellationToken);
+    }
 
     /// <summary>Starts an asynchronous operation after the delay and observes its final completion.</summary>
     /// <remarks>Only invocation is ordered by the executor. After suspension, normal await context rules apply.</remarks>
@@ -85,7 +87,9 @@ public static class EventExecutorSchedulingExtensions
 
     public static Task ScheduleAtFixedRateAsync(this IEventExecutorGroup executor, Action<CancellationToken> action,
         TimeSpan initialDelay, TimeSpan period, CancellationToken cancellationToken = default)
-        => SchedulePeriodic(executor, action, initialDelay, period, false, cancellationToken);
+    {
+        return SchedulePeriodic(executor, action, initialDelay, period, false, cancellationToken);
+    }
 
     /// <summary>Repeats after a delay measured from each synchronous callback's return.</summary>
     public static Task ScheduleWithFixedDelayAsync(this IEventExecutorGroup executor, Action action, TimeSpan initialDelay,
@@ -97,7 +101,9 @@ public static class EventExecutorSchedulingExtensions
 
     public static Task ScheduleWithFixedDelayAsync(this IEventExecutorGroup executor, Action<CancellationToken> action,
         TimeSpan initialDelay, TimeSpan delay, CancellationToken cancellationToken = default)
-        => SchedulePeriodic(executor, action, initialDelay, delay, true, cancellationToken);
+    {
+        return SchedulePeriodic(executor, action, initialDelay, delay, true, cancellationToken);
+    }
 
     private static Task SchedulePeriodic(IEventExecutorGroup executor, Action<CancellationToken> action,
         TimeSpan initialDelay, TimeSpan interval, bool fixedDelay, CancellationToken token)

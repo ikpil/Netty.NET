@@ -177,16 +177,23 @@ public abstract class AbstractPooledByteBufTest : AbstractContiguousByteBufTest
         }
         public override bool IsDirectBufferPooled => _direct;
         protected override ByteBuf NewHeapBuffer(int initialCapacity, int maxCapacity)
-            => _direct ? new UnpooledHeapByteBuf(this, initialCapacity, maxCapacity)
+        {
+            return _direct ? new UnpooledHeapByteBuf(this, initialCapacity, maxCapacity)
                 : Arena.Allocate(initialCapacity, maxCapacity);
+        }
         protected override ByteBuf NewDirectBuffer(int initialCapacity, int maxCapacity)
-            => _direct ? Arena.Allocate(initialCapacity, maxCapacity)
+        {
+            return _direct ? Arena.Allocate(initialCapacity, maxCapacity)
                 : new UnpooledDirectByteBuf(this, initialCapacity, maxCapacity, Native);
+        }
         public override int CalculateNewCapacity(int minimumNewCapacity, int maxCapacity)
         {
             ++Calculations;
             return base.CalculateNewCapacity(minimumNewCapacity, maxCapacity);
         }
-        public void Dispose() => Arena.Dispose();
+        public void Dispose()
+        {
+            Arena.Dispose();
+        }
     }
 }

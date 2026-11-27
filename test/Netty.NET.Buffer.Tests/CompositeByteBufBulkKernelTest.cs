@@ -33,7 +33,10 @@ public partial class CompositeByteBufBulkKernelTest
     private sealed class HeapProbe : UnpooledHeapByteBuf
     {
         private readonly Observation _observation;
-        public HeapProbe(Observation observation) : base(32) => _observation = observation;
+        public HeapProbe(Observation observation) : base(32)
+        {
+            _observation = observation;
+        }
         public override ByteBuf GetBytes(int index, Span<byte> destination)
         {
             _observation.Visit("GetSpan", index, destination.Length);
@@ -54,7 +57,10 @@ public partial class CompositeByteBufBulkKernelTest
     private sealed class NativeProbe : UnpooledDirectByteBuf
     {
         private readonly Observation _observation;
-        public NativeProbe(Observation observation, NativeMemoryAllocator native) : base(32, 32, native) => _observation = observation;
+        public NativeProbe(Observation observation, NativeMemoryAllocator native) : base(32, 32, native)
+        {
+            _observation = observation;
+        }
         public override ByteBuf GetBytes(int index, Span<byte> destination)
         {
             _observation.Visit("GetSpan", index, destination.Length);

@@ -32,9 +32,15 @@ namespace Netty.NET.Transport.Tests;
 public class DefaultChannelPipelineCompletionSourceTest
 {
     [Fact(Timeout = 3000)]
-    public async Task TestAddInListenerNio() => await CheckAddInListener(new NioSocketChannel(), new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory()), TestContext.Current.CancellationToken);
+    public async Task TestAddInListenerNio()
+    {
+        await CheckAddInListener(new NioSocketChannel(), new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory()), TestContext.Current.CancellationToken);
+    }
     [Fact(Timeout = 3000)]
-    public async Task TestAddInListenerLocal() => await CheckAddInListener(new LocalChannel(), new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory()), TestContext.Current.CancellationToken);
+    public async Task TestAddInListenerLocal()
+    {
+        await CheckAddInListener(new LocalChannel(), new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory()), TestContext.Current.CancellationToken);
+    }
     private static async Task CheckAddInListener(IChannel channel, IEventLoopGroup group, CancellationToken token)
     {
         try
@@ -99,15 +105,27 @@ public class DefaultChannelPipelineCompletionSourceTest
     private sealed class ListenerAdded(TaskCompletionSource<object> captured) : ChannelInboundHandlerAdapter
     {
         internal bool Added;
-        public override void HandlerAdded(IChannelHandlerContext ctx) => Added = true;
-        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt) => captured.TrySetResult(evt);
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause) => captured.TrySetException(cause);
+        public override void HandlerAdded(IChannelHandlerContext ctx)
+        {
+            Added = true;
+        }
+        public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
+        {
+            captured.TrySetResult(evt);
+        }
+        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
+        {
+            captured.TrySetException(cause);
+        }
     }
     private sealed class SkipHandler : ChannelDuplexHandler
     {
         private int _state = 2;
         private Exception _error;
-        private void Fail() => _error = new InvalidOperationException("Method should never been called");
+        private void Fail()
+        {
+            _error = new InvalidOperationException("Method should never been called");
+        }
         [Skip]
         public override Task BindAsync(IChannelHandlerContext c, EndPoint address, CancellationToken token) { Fail(); return c.BindAsync(address, token); }
         [Skip]
@@ -142,39 +160,96 @@ public class DefaultChannelPipelineCompletionSourceTest
         public override void ChannelWritabilityChanged(IChannelHandlerContext c) { Fail(); c.FireChannelWritabilityChanged(); }
         [Skip]
         public override void ExceptionCaught(IChannelHandlerContext c, Exception cause) { Fail(); c.FireExceptionCaught(cause); }
-        public override void HandlerAdded(IChannelHandlerContext c) => _state--;
-        public override void HandlerRemoved(IChannelHandlerContext c) => _state--;
+        public override void HandlerAdded(IChannelHandlerContext c)
+        {
+            _state--;
+        }
+        public override void HandlerRemoved(IChannelHandlerContext c)
+        {
+            _state--;
+        }
         internal void AssertSkipped() { Assert.Equal(0, _state); if (_error != null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(_error).Throw(); }
     }
     private sealed class OutboundCalledHandler : ChannelOutboundHandlerAdapter
     {
         private int _mask;
-        public override void HandlerAdded(IChannelHandlerContext c) => _mask |= 1 << 8;
-        public override void HandlerRemoved(IChannelHandlerContext c) => _mask |= 1 << 9;
+        public override void HandlerAdded(IChannelHandlerContext c)
+        {
+            _mask |= 1 << 8;
+        }
+        public override void HandlerRemoved(IChannelHandlerContext c)
+        {
+            _mask |= 1 << 9;
+        }
         public override Task BindAsync(IChannelHandlerContext c, EndPoint address, CancellationToken token) { _mask |= 1; return Task.CompletedTask; }
         public override Task ConnectAsync(IChannelHandlerContext c, EndPoint remote, EndPoint local, CancellationToken token) { _mask |= 1 << 1; return Task.CompletedTask; }
         public override Task DisconnectAsync(IChannelHandlerContext c, CancellationToken token) { _mask |= 1 << 2; return Task.CompletedTask; }
         public override Task CloseAsync(IChannelHandlerContext c, CancellationToken token) { _mask |= 1 << 3; return Task.CompletedTask; }
         public override Task DeregisterAsync(IChannelHandlerContext c, CancellationToken token) { _mask |= 1 << 4; return Task.CompletedTask; }
-        public override void Read(IChannelHandlerContext c) => _mask |= 1 << 5;
+        public override void Read(IChannelHandlerContext c)
+        {
+            _mask |= 1 << 5;
+        }
         public override Task WriteAsync(IChannelHandlerContext c, object msg, CancellationToken token) { _mask |= 1 << 6; return Task.CompletedTask; }
-        public override void Flush(IChannelHandlerContext c) => _mask |= 1 << 7;
-        internal void AssertCalled() => Assert.Equal((1 << 10) - 1, _mask);
+        public override void Flush(IChannelHandlerContext c)
+        {
+            _mask |= 1 << 7;
+        }
+        internal void AssertCalled()
+        {
+            Assert.Equal((1 << 10) - 1, _mask);
+        }
     }
     private sealed class InboundCalledHandler : ChannelInboundHandlerAdapter
     {
         private int _mask;
-        public override void HandlerAdded(IChannelHandlerContext c) => _mask |= 1 << 9;
-        public override void HandlerRemoved(IChannelHandlerContext c) => _mask |= 1 << 10;
-        public override void ChannelRegistered(IChannelHandlerContext c) => _mask |= 1;
-        public override void ChannelUnregistered(IChannelHandlerContext c) => _mask |= 1 << 1;
-        public override void ChannelActive(IChannelHandlerContext c) => _mask |= 1 << 2;
-        public override void ChannelInactive(IChannelHandlerContext c) => _mask |= 1 << 3;
-        public override void ChannelRead(IChannelHandlerContext c, object msg) => _mask |= 1 << 4;
-        public override void ChannelReadComplete(IChannelHandlerContext c) => _mask |= 1 << 5;
-        public override void UserEventTriggered(IChannelHandlerContext c, object evt) => _mask |= 1 << 6;
-        public override void ChannelWritabilityChanged(IChannelHandlerContext c) => _mask |= 1 << 7;
-        public override void ExceptionCaught(IChannelHandlerContext c, Exception cause) => _mask |= 1 << 8;
-        internal void AssertCalled() => Assert.Equal((1 << 11) - 1, _mask);
+        public override void HandlerAdded(IChannelHandlerContext c)
+        {
+            _mask |= 1 << 9;
+        }
+        public override void HandlerRemoved(IChannelHandlerContext c)
+        {
+            _mask |= 1 << 10;
+        }
+        public override void ChannelRegistered(IChannelHandlerContext c)
+        {
+            _mask |= 1;
+        }
+        public override void ChannelUnregistered(IChannelHandlerContext c)
+        {
+            _mask |= 1 << 1;
+        }
+        public override void ChannelActive(IChannelHandlerContext c)
+        {
+            _mask |= 1 << 2;
+        }
+        public override void ChannelInactive(IChannelHandlerContext c)
+        {
+            _mask |= 1 << 3;
+        }
+        public override void ChannelRead(IChannelHandlerContext c, object msg)
+        {
+            _mask |= 1 << 4;
+        }
+        public override void ChannelReadComplete(IChannelHandlerContext c)
+        {
+            _mask |= 1 << 5;
+        }
+        public override void UserEventTriggered(IChannelHandlerContext c, object evt)
+        {
+            _mask |= 1 << 6;
+        }
+        public override void ChannelWritabilityChanged(IChannelHandlerContext c)
+        {
+            _mask |= 1 << 7;
+        }
+        public override void ExceptionCaught(IChannelHandlerContext c, Exception cause)
+        {
+            _mask |= 1 << 8;
+        }
+        internal void AssertCalled()
+        {
+            Assert.Equal((1 << 11) - 1, _mask);
+        }
     }
 }

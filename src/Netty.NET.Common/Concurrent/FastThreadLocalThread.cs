@@ -41,7 +41,10 @@ public class FastThreadLocalThread
     private InternalThreadLocalMap _threadLocalMap;
     private Action _target;
     public Thread Thread { get; }
-    internal static FastThreadLocalThread CurrentFastThreadLocalThread() => _current;
+    internal static FastThreadLocalThread CurrentFastThreadLocalThread()
+    {
+        return _current;
+    }
 
     // Targetless construction supports subclasses that implement Run and own their cleanup policy.
     public FastThreadLocalThread(string name = null, int maxStackSize = 0, ThreadGroup group = null)
@@ -75,7 +78,10 @@ public class FastThreadLocalThread
         }
     }
 
-    public virtual void Run() => _target?.Invoke();
+    public virtual void Run()
+    {
+        _target?.Invoke();
+    }
 
     /**
      * Returns the internal data structure that keeps the thread-local variables bound to this thread.

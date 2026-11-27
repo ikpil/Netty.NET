@@ -137,8 +137,17 @@ public class TickerContractTest
     private sealed class RecordingTicker : Ticker
     {
         public long Delay { get; private set; }
-        public override long InitialNanoTime() => 0;
-        public override long NanoTime() => 0;
-        public override void Sleep(long delayNanos) => Delay = delayNanos;
+        public override long InitialNanoTime()
+        {
+            return 0;
+        }
+        public override long NanoTime()
+        {
+            return 0;
+        }
+        public override void Sleep(long delayNanos)
+        {
+            Delay = delayNanos;
+        }
     }
 }

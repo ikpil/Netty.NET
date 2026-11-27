@@ -116,7 +116,10 @@ public class PlatformBootstrapContractTest
         finally { File.Delete(path); }
     }
 
-    private static object Invoke(Type type, string name) => type.GetMethod(name).Invoke(null, null);
+    private static object Invoke(Type type, string name)
+    {
+        return type.GetMethod(name).Invoke(null, null);
+    }
 
     private static void WithPlatform(Dictionary<string, string> settings, Action<Type> assertion)
     {

@@ -90,11 +90,14 @@ public partial class CompositeByteBuf
         WriteComponentWord(index + firstWidth, NarrowPart(littleEndian ? value >> (firstWidth * 8) : value, secondWidth), secondWidth, littleEndian);
     }
 
-    private static ulong NarrowPart(ulong value, int width) => width switch
+    private static ulong NarrowPart(ulong value, int width)
     {
-        1 => unchecked((ulong)(sbyte)value),
-        2 => unchecked((ulong)(short)value),
-        4 => unchecked((ulong)(int)value),
-        _ => throw new ArgumentOutOfRangeException(nameof(width))
-    };
+        return width switch
+        {
+            1 => unchecked((ulong)(sbyte)value),
+            2 => unchecked((ulong)(short)value),
+            4 => unchecked((ulong)(int)value),
+            _ => throw new ArgumentOutOfRangeException(nameof(width))
+        };
+    }
 }

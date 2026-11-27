@@ -53,7 +53,9 @@ public static partial class Unpooled
     /// when only one is nonempty. Consolidation runs once after all additions and
     /// copies into owned heap storage if the component limit is exceeded.</remarks>
     public static ByteBuf WrappedBuffer(int maxNumComponents, params Memory<byte>[] buffers)
-        => WrapMemoryBuffers(maxNumComponents, buffers, static memory => memory.IsEmpty, static memory => WrappedBuffer(memory));
+    {
+        return WrapMemoryBuffers(maxNumComponents, buffers, static memory => memory.IsEmpty, static memory => WrappedBuffer(memory));
+    }
 
     /**
      * Creates a new big-endian composite buffer which wraps the slices of the specified
@@ -66,7 +68,9 @@ public static partial class Unpooled
     /// to mix writable and read-only ranges explicitly. Default memory is empty;
     /// there are no nullable elements or mutable byte-order cursors.</remarks>
     public static ByteBuf WrappedBuffer(int maxNumComponents, params ReadOnlyMemory<byte>[] buffers)
-        => WrapMemoryBuffers(maxNumComponents, buffers, static memory => memory.IsEmpty, static memory => WrappedBuffer(memory));
+    {
+        return WrapMemoryBuffers(maxNumComponents, buffers, static memory => memory.IsEmpty, static memory => WrappedBuffer(memory));
+    }
 
     private static ByteBuf WrapMemoryBuffers<T>(int maxNumComponents, T[] buffers,
         Func<T, bool> isEmpty, Func<T, ByteBuf> wrap) where T : struct

@@ -29,12 +29,23 @@ public partial class DefaultByteBufAllocatorTest
         "io.netty.allocator.normalCacheSize", "io.netty.allocator.maxCachedBufferCapacity", "io.netty.allocator.cacheTrimInterval",
         "io.netty.allocator.cacheTrimIntervalMillis", "io.netty.allocation.cacheTrimIntervalMillis", "io.netty.allocator.useCacheForAllThreads"
     };
-    private static object Field(object target, string name) => target.GetType()
-        .GetField(name, BindingFlags.NonPublic | BindingFlags.Instance).GetValue(target);
-    private static T DefaultSetting<T>(Scope scope, string name) => (T)scope.Type("PooledByteBufAllocator").GetMethod(name).Invoke(null, null);
-    private static object Arena(object allocator) => ((Array)Field(allocator, "_heapArenas")).GetValue(0);
+    private static object Field(object target, string name)
+    {
+        return target.GetType()
+            .GetField(name, BindingFlags.NonPublic | BindingFlags.Instance).GetValue(target);
+    }
+    private static T DefaultSetting<T>(Scope scope, string name)
+    {
+        return (T)scope.Type("PooledByteBufAllocator").GetMethod(name).Invoke(null, null);
+    }
+    private static object Arena(object allocator)
+    {
+        return ((Array)Field(allocator, "_heapArenas")).GetValue(0);
+    }
     private static void FastScope(Scope scope, Action action)
-        => scope.CommonTypeCall("Concurrent.FastThreadLocalThread", "RunWithFastThreadLocal", action);
+    {
+        scope.CommonTypeCall("Concurrent.FastThreadLocalThread", "RunWithFastThreadLocal", action);
+    }
     private static void MappedScope(Scope scope, Action action)
     {
         Type executorType = scope._common.GetType("Netty.NET.Common.Concurrent.ImmediateEventExecutor", true);
