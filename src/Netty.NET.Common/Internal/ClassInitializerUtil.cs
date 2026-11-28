@@ -31,11 +31,13 @@ public static class ClassInitializerUtil
     public static void TryInitialize(params Type[] types)
     {
         ArgumentNullException.ThrowIfNull(types);
+
         foreach (Type type in types)
         {
             ArgumentNullException.ThrowIfNull(type);
             if (type.ContainsGenericParameters)
                 throw new ArgumentException("A closed runtime type is required for initialization.", nameof(types));
+
             try
             {
                 RuntimeHelpers.RunClassConstructor(type.TypeHandle);

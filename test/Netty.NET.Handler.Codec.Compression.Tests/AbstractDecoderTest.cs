@@ -131,6 +131,7 @@ public abstract class AbstractDecoderTest : AbstractCompressionTest, IAsyncLifet
                 data[i].Release();
             }
         }
+
         return data[dataIndex];
     }
 
@@ -173,6 +174,7 @@ public abstract class AbstractDecoderTest : AbstractCompressionTest, IAsyncLifet
         int compressedLength = data.ReadableBytes;
         int written = 0, length = rand.Next(100);
         ByteBuf compressedBuf;
+
         while (written + length < compressedLength)
         {
             compressedBuf = data.RetainedSlice(written, length);
@@ -180,6 +182,7 @@ public abstract class AbstractDecoderTest : AbstractCompressionTest, IAsyncLifet
             written += length;
             length = rand.Next(100);
         }
+
         compressedBuf = data.Slice(written, compressedLength - written);
         Assert.True(channel.WriteInbound(compressedBuf.Retain()));
 
@@ -194,10 +197,12 @@ public abstract class AbstractDecoderTest : AbstractCompressionTest, IAsyncLifet
     {
         CompositeByteBuf decompressed = Unpooled.CompositeBuffer();
         ByteBuf msg;
+
         while ((msg = channel.ReadInbound<ByteBuf>()) != null)
         {
             decompressed.AddComponent(msg, true);
         }
+
         return decompressed;
     }
 
@@ -216,8 +221,10 @@ public abstract class AbstractDecoderTest : AbstractCompressionTest, IAsyncLifet
                 {
                     break;
                 }
+
                 inflated.Release();
             }
+
             channel.Finish();
         }
     }

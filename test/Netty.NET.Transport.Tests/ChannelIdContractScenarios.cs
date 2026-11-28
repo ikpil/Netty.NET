@@ -24,6 +24,7 @@ internal static class ChannelIdContractScenarios
         {
             case 0:
                 var channels = new[] { new EmbeddedChannel(), new EmbeddedChannel(false, false), new EmbeddedChannel(true, true) };
+
                 try
                 {
                     foreach (var channel in channels)
@@ -41,13 +42,16 @@ internal static class ChannelIdContractScenarios
                         {
                             channel.Register();
                         }
+
                         channel.FinishAndReleaseAll();
                     }
                 }
+
                 break;
             case 1:
                 IChannelId id = DefaultChannelId.NewInstance();
                 var custom = new EmbeddedChannel(id);
+
                 try
                 {
                     Check(ReferenceEquals(id, custom.Id), "An explicit ID was replaced.");
@@ -56,11 +60,13 @@ internal static class ChannelIdContractScenarios
                 {
                     custom.FinishAndReleaseAll();
                 }
+
                 break;
             case 2:
                 var first = new EmbeddedChannel();
                 var second = new EmbeddedChannel();
                 var group = new DefaultChannelGroup();
+
                 try
                 {
                     Check(group.Add(first), "The first member was rejected.");
@@ -72,6 +78,7 @@ internal static class ChannelIdContractScenarios
                     first.FinishAndReleaseAll();
                     second.FinishAndReleaseAll();
                 }
+
                 break;
             case 3:
                 var normalInstance = (EmbeddedChannelId)EmbeddedChannelId.Instance;
@@ -85,6 +92,7 @@ internal static class ChannelIdContractScenarios
                 break;
             case 4:
                 var a = DefaultChannelId.NewInstance();
+
                 using (var buf = new MemoryStream())
                 {
                     JsonSerializer.Serialize(buf, a, ChannelIdJsonContext.Default.DefaultChannelId);
@@ -94,17 +102,21 @@ internal static class ChannelIdContractScenarios
                     Check(!ReferenceEquals(a, b) && a.Equals(b) && b.Equals(a), "Channel identity did not round trip.");
                     Check(a.GetHashCode() == b.GetHashCode() && a.CompareTo(b) == 0 && a.AsShortText() == b.AsShortText(), "Round-trip hash/order/text changed.");
                 }
+
                 break;
             case 5:
                 foreach (string json in new[] { "0", "{}", "\"bad\"", "\"00000000-0000-0000-0000-000000000000\"" })
                     Reject(() => JsonSerializer.Deserialize(json, ChannelIdJsonContext.Default.DefaultChannelId));
+
                 break;
             case 6:
                 foreach (string json in new[] { "0", "{}", "\"other\"" })
                     Reject(() => JsonSerializer.Deserialize(json, ChannelIdJsonContext.Default.EmbeddedChannelId));
+
                 break;
             case 7:
                 var ids = new HashSet<string>(StringComparer.Ordinal);
+
                 for (int i = 0; i < 1024; i++)
                 {
                     var value = DefaultChannelId.NewInstance();
@@ -112,6 +124,7 @@ internal static class ChannelIdContractScenarios
                     Check(System.Text.RegularExpressions.Regex.IsMatch(longValue, "^[0-9a-f]{16}-[0-9a-f]{8}-[0-9a-f]{8}-[0-9a-f]{16}-[0-9a-f]{8}$"), "Long text layout changed.");
                     Check(ids.Add(longValue), "Duplicate channel identity.");
                 }
+
                 break;
             case 8:
                 RejectNull(() => new EmbeddedChannel((IChannelId)null).FinishAndReleaseAll());
@@ -132,6 +145,7 @@ internal static class ChannelIdContractScenarios
         {
             return;
         }
+
         throw new InvalidOperationException("An explicitly null channelId was accepted.");
     }
 
@@ -145,6 +159,7 @@ internal static class ChannelIdContractScenarios
         {
             return;
         }
+
         throw new InvalidOperationException("An invalid identity payload was accepted.");
     }
 }

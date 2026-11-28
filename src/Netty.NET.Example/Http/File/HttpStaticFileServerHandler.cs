@@ -125,6 +125,7 @@ public class HttpStaticFileServerHandler : SimpleChannelInboundHandler<IFullHttp
     protected override void ChannelRead0(IChannelHandlerContext ctx, IFullHttpRequest request)
     {
         this.request = request;
+
         if (!request.DecoderResult().IsSuccess())
         {
             SendError(ctx, BAD_REQUEST);
@@ -163,6 +164,7 @@ public class HttpStaticFileServerHandler : SimpleChannelInboundHandler<IFullHttp
             {
                 SendRedirect(ctx, uri + '/');
             }
+
             return;
         }
 
@@ -191,6 +193,7 @@ public class HttpStaticFileServerHandler : SimpleChannelInboundHandler<IFullHttp
         }
 
         FileStream raf;
+
         try
         {
             raf = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -200,6 +203,7 @@ public class HttpStaticFileServerHandler : SimpleChannelInboundHandler<IFullHttp
             SendError(ctx, NOT_FOUND);
             return;
         }
+
         long fileLength = raf.Length;
 
         IHttpResponse response = new DefaultHttpResponse(HTTP_1_1, OK);
@@ -225,6 +229,7 @@ public class HttpStaticFileServerHandler : SimpleChannelInboundHandler<IFullHttp
         TransferProgressListener progressListener = new TransferProgressListener(ctx.Channel);
         IProgress<ChannelWriteProgress> previousObserver = ctx.Channel.Config.WriteProgress;
         ctx.Channel.Config.WriteProgress = progressListener;
+
         if (ctx.Pipeline.Get<SslHandler>() == null)
         {
             sendFileFuture =
@@ -293,6 +298,7 @@ public class HttpStaticFileServerHandler : SimpleChannelInboundHandler<IFullHttp
     public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
     {
         Console.Error.WriteLine(cause);
+
         if (ctx.Channel.IsActive)
         {
             SendError(ctx, INTERNAL_SERVER_ERROR);
@@ -421,6 +427,7 @@ public class HttpStaticFileServerHandler : SimpleChannelInboundHandler<IFullHttp
         IFullHttpRequest request = this.request;
         bool keepAlive = HttpUtil.IsKeepAlive(request);
         HttpUtil.SetContentLength(response, response.Content.ReadableBytes);
+
         if (!keepAlive)
         {
             // We're going to close the connection as soon as the response is sent,
@@ -488,6 +495,7 @@ public class HttpStaticFileServerHandler : SimpleChannelInboundHandler<IFullHttp
     private static void SetContentTypeHeader(IHttpResponse response, FileInfo file)
     {
         string contentType;
+
         switch (file.Extension.ToLowerInvariant())
         {
             case ".html":
@@ -544,6 +552,7 @@ public class HttpStaticFileServerHandler : SimpleChannelInboundHandler<IFullHttp
                 contentType = MediaTypeNames.Application.Octet;
                 break;
         }
+
         response.Headers().Set(HttpHeaderNames.CONTENT_TYPE, contentType);
     }
 }

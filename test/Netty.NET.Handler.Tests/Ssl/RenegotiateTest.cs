@@ -57,6 +57,7 @@ public abstract class RenegotiateTest
                 .SslProvider(sslProvider)
                 .Protocols(Netty.NET.Handler.Ssl.SslProtocols.TLS_v1_2)
                 .Build();
+
         try
         {
             ServerBootstrap sb = new ServerBootstrap();
@@ -146,6 +147,7 @@ public abstract class RenegotiateTest
                             error.CompareAndSet(null, CauseOf(future));
                             _ = ctx.CloseAsync();
                         }
+
                         CountDown(latch);
                     }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
                 }
@@ -204,6 +206,7 @@ public abstract class RenegotiateTest
                     error.CompareAndSet(null, @event.Cause());
                     _ = ctx.CloseAsync();
                 }
+
                 CountDown(latch);
             }
         }
@@ -232,6 +235,7 @@ public abstract class RenegotiateTest
         {
             return future.Exception.InnerException;
         }
+
         return future.IsCanceled ? new TaskCanceledException(future) : null;
     }
 

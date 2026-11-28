@@ -82,6 +82,7 @@ public static class Unpooled
     public static ByteBuf CopiedBuffer(byte[] bytes)
     {
         ArgumentNullException.ThrowIfNull(bytes);
+
         return CopiedBuffer(bytes.AsSpan());
     }
 
@@ -97,6 +98,7 @@ public static class Unpooled
         ArgumentNullException.ThrowIfNull(bytes);
         if (offset < 0 || length < 0 || offset > bytes.Length - length)
             throw new ArgumentOutOfRangeException(nameof(offset));
+
         return CopiedBuffer(bytes.AsSpan(offset, length));
     }
 
@@ -111,12 +113,15 @@ public static class Unpooled
     public static ByteBuf CopiedBuffer(ByteBuf buffer)
     {
         ArgumentNullException.ThrowIfNull(buffer);
+
         int readable = buffer.ReadableBytes;
         if (readable <= 0)
         {
             return EmptyBuffer;
         }
+
         ByteBuf copy = Buffer(readable);
+
         try
         {
             // CLR: absolute transfer preserves the source reader index.
@@ -145,26 +150,33 @@ public static class Unpooled
         {
             return CopiedBuffer(arrays[0]);
         }
+
         // Merge the specified arrays into one array.
         int length = 0;
+
         foreach (byte[] array in arrays)
         {
             ArgumentNullException.ThrowIfNull(array);
             if (array.Length > int.MaxValue - length)
                 throw new ArgumentException("The total length of the specified arrays is too big.", nameof(arrays));
+
             length += array.Length;
         }
+
         if (length == 0)
         {
             return EmptyBuffer;
         }
+
         byte[] merged = new byte[length];
         int offset = 0;
+
         foreach (byte[] array in arrays)
         {
             array.CopyTo(merged.AsSpan(offset, array.Length));
             offset += array.Length;
         }
+
         return WrappedBuffer(merged);
     }
 
@@ -188,11 +200,14 @@ public static class Unpooled
         {
             return CopiedBuffer(buffers[0]);
         }
+
         // Merge the specified buffers into one buffer.
         int length = 0;
+
         foreach (ByteBuf buffer in buffers)
         {
             ArgumentNullException.ThrowIfNull(buffer);
+
             int readable = buffer.ReadableBytes;
             if (readable <= 0)
             {
@@ -200,14 +215,18 @@ public static class Unpooled
             }
             if (readable > int.MaxValue - length)
                 throw new ArgumentException("The total length of the specified buffers is too big.", nameof(buffers));
+
             length += readable;
         }
+
         if (length == 0)
         {
             return EmptyBuffer;
         }
+
         byte[] merged = new byte[length];
         int offset = 0;
+
         foreach (ByteBuf buffer in buffers)
         {
             int readable = buffer.ReadableBytes;
@@ -216,6 +235,7 @@ public static class Unpooled
             buffer.GetBytes(buffer.ReaderIndex, merged.AsSpan(offset, readable));
             offset += readable;
         }
+
         // CLR: publish ownership only after every source read succeeds.
         return WrappedBuffer(merged);
     }
@@ -253,6 +273,7 @@ public static class Unpooled
     public static ByteBuf WrappedBuffer(byte[] bytes)
     {
         ArgumentNullException.ThrowIfNull(bytes);
+
         return bytes.Length == 0 ? EmptyBuffer : new UnpooledHeapByteBuf(bytes);
     }
 
@@ -321,6 +342,7 @@ public static class Unpooled
     public static ByteBuf WrappedUnmodifiableBuffer(params ByteBuf[] buffers)
     {
         ArgumentNullException.ThrowIfNull(buffers);
+
         return buffers.Length switch
         {
             0 => EmptyBuffer,
@@ -349,6 +371,7 @@ public static class Unpooled
             return WrappedBuffer(array.Array, array.Offset, array.Count);
         if (NativeMemoryOwner.TryGetOwner(memory, out _))
             return new UnpooledDirectByteBuf(UnpooledByteBufAllocator.Default, memory, memory.Length);
+
         return new WrappedMemoryByteBuf(memory);
     }
 
@@ -375,6 +398,7 @@ public static class Unpooled
             set
             {
                 CheckNewCapacity(value);
+
                 throw new NotSupportedException("A borrowed manager range has fixed capacity.");
             }
         }
@@ -386,6 +410,7 @@ public static class Unpooled
         internal override BufferMemoryLease AcquireReadLease()
         {
             EnsureAccessible();
+
             return BufferMemoryLease.ForBorrowedMemory(_memory);
         }
 
@@ -409,6 +434,7 @@ public static class Unpooled
         {
             return EmptyBuffer;
         }
+
         // Duplicate the buffer so we not adjust the position during our get operation.
         // See https://github.com/netty/netty/issues/3896
         // CLR: ReadOnlyMemory has immutable range metadata and no mutable cursor.
@@ -446,14 +472,18 @@ public static class Unpooled
         {
             return CopiedBuffer(buffers[0]);
         }
+
         // Merge the specified buffers into one buffer.
         int length = 0;
+
         foreach (ReadOnlyMemory<byte> buffer in buffers)
         {
             if (buffer.Length > int.MaxValue - length)
                 throw new ArgumentException("The total length of the specified buffers is too big.", nameof(buffers));
+
             length += buffer.Length;
         }
+
         if (length == 0)
         {
             return EmptyBuffer;
@@ -461,18 +491,21 @@ public static class Unpooled
 
         byte[] merged = new byte[length];
         int offset = 0;
+
         foreach (ReadOnlyMemory<byte> buffer in buffers)
         {
             if (buffer.IsEmpty)
             {
                 continue;
             }
+
             // Duplicate the buffer so we not adjust the position during our get operation.
             // See https://github.com/netty/netty/issues/3896
             // CLR: no cursor or source owner is changed, including when Span access fails.
             buffer.Span.CopyTo(merged.AsSpan(offset, buffer.Length));
             offset += buffer.Length;
         }
+
         return WrappedBuffer(merged);
     }
 
@@ -484,6 +517,7 @@ public static class Unpooled
     public static ByteBuf WrappedBuffer(params Memory<byte>[] buffers)
     {
         ArgumentNullException.ThrowIfNull(buffers);
+
         return WrappedBuffer(buffers.Length, buffers);
     }
 
@@ -495,6 +529,7 @@ public static class Unpooled
     public static ByteBuf WrappedBuffer(params ReadOnlyMemory<byte>[] buffers)
     {
         ArgumentNullException.ThrowIfNull(buffers);
+
         return WrappedBuffer(buffers.Length, buffers);
     }
 
@@ -535,13 +570,16 @@ public static class Unpooled
         {
             return wrap(buffers[0]);
         }
+
         for (int i = 0; i < buffers.Length; ++i)
         {
             if (isEmpty(buffers[i]))
             {
                 continue;
             }
+
             var composite = new CompositeByteBuf(maxNumComponents);
+
             try
             {
                 return composite.AddWrappedMemory(buffers, i, isEmpty, wrap);
@@ -554,6 +592,7 @@ public static class Unpooled
                 throw;
             }
         }
+
         return EmptyBuffer;
     }
 
@@ -601,6 +640,7 @@ public static class Unpooled
         {
             return EmptyBuffer;
         }
+
         ByteBuf buffer = Buffer(checked(values.Length * 4));
 
         foreach (int value in values)
@@ -637,6 +677,7 @@ public static class Unpooled
         {
             return EmptyBuffer;
         }
+
         ByteBuf buffer = Buffer(checked(values.Length * 2));
 
         foreach (short value in values)
@@ -665,6 +706,7 @@ public static class Unpooled
         {
             return EmptyBuffer;
         }
+
         ByteBuf buffer = Buffer(checked(values.Length * 2));
 
         foreach (int value in values)
@@ -701,6 +743,7 @@ public static class Unpooled
         {
             return EmptyBuffer;
         }
+
         ByteBuf buffer = Buffer(checked(values.Length * 3));
 
         foreach (int value in values)
@@ -737,6 +780,7 @@ public static class Unpooled
         {
             return EmptyBuffer;
         }
+
         ByteBuf buffer = Buffer(checked(values.Length * 8));
 
         foreach (long value in values)
@@ -773,6 +817,7 @@ public static class Unpooled
         {
             return EmptyBuffer;
         }
+
         ByteBuf buffer = Buffer(checked(values.Length * 1));
 
         foreach (bool value in values)
@@ -809,6 +854,7 @@ public static class Unpooled
         {
             return EmptyBuffer;
         }
+
         ByteBuf buffer = Buffer(checked(values.Length * 4));
 
         foreach (float value in values)
@@ -845,6 +891,7 @@ public static class Unpooled
         {
             return EmptyBuffer;
         }
+
         ByteBuf buffer = Buffer(checked(values.Length * 8));
 
         foreach (double value in values)
@@ -884,6 +931,7 @@ public static class Unpooled
     {
         ArgumentNullException.ThrowIfNull(text);
         ArgumentNullException.ThrowIfNull(encoding);
+
         return CopyEncodedText(text.AsSpan(), encoding);
     }
 
@@ -902,6 +950,7 @@ public static class Unpooled
         ArgumentNullException.ThrowIfNull(encoding);
         if (offset < 0 || length < 0 || offset > text.Length - length)
             throw new ArgumentOutOfRangeException(nameof(offset));
+
         return CopiedBuffer(text.AsSpan(offset, length), encoding);
     }
 
@@ -915,6 +964,7 @@ public static class Unpooled
     public static ByteBuf CopiedBuffer(char[] chars, Encoding encoding)
     {
         ArgumentNullException.ThrowIfNull(chars);
+
         return CopiedBuffer(chars.AsSpan(), encoding);
     }
 
@@ -932,6 +982,7 @@ public static class Unpooled
         ArgumentNullException.ThrowIfNull(encoding);
         if (offset < 0 || length < 0 || offset > chars.Length - length)
             throw new ArgumentOutOfRangeException(nameof(offset));
+
         return CopiedBuffer(chars.AsSpan(offset, length), encoding);
     }
 
@@ -943,6 +994,7 @@ public static class Unpooled
     public static ByteBuf CopiedBuffer(ReadOnlySpan<char> text, Encoding encoding)
     {
         ArgumentNullException.ThrowIfNull(encoding);
+
         return text.IsEmpty ? EmptyBuffer : CopyEncodedText(text, encoding);
     }
 
@@ -960,6 +1012,7 @@ public static class Unpooled
 
         // Mimic the same behavior as other copiedBuffer implementations.
         ByteBuf copy = Buffer(text.Length());
+
         try
         {
             return copy.WriteBytes(text.AsSpan());
@@ -982,6 +1035,7 @@ public static class Unpooled
         ArgumentNullException.ThrowIfNull(encoding);
         if (offset < 0 || length < 0 || offset > text.Length() - length)
             throw new ArgumentOutOfRangeException(nameof(offset));
+
         return CopiedBuffer(text.ToString(offset, offset + length).AsSpan(), encoding);
     }
 
@@ -991,6 +1045,7 @@ public static class Unpooled
         // CLR: size using the caller's Encoding, then encode directly into the new owner.
         int length = encoding.GetByteCount(text);
         ByteBuf copy = Buffer(length);
+
         try
         {
             copy.WriterIndex = encoding.GetBytes(text, copy.AsSpan(0, length));
@@ -1012,6 +1067,7 @@ public static class Unpooled
     public static ByteBuf UnreleasableBuffer(ByteBuf buffer)
     {
         ArgumentNullException.ThrowIfNull(buffer);
+
         return new UnreleasableByteBuf(buffer);
     }
 
@@ -1043,6 +1099,7 @@ public static class Unpooled
         {
             return EmptyBuffer;
         }
+
         return offset == 0 && length == bytes.Length ? WrappedBuffer(bytes) : WrappedBuffer(bytes).Slice(offset, length);
     }
 
@@ -1061,6 +1118,7 @@ public static class Unpooled
         {
             return buffer.Slice();
         }
+
         buffer.Release();
         return EmptyBuffer;
     }
@@ -1073,6 +1131,7 @@ public static class Unpooled
     public static ByteBuf WrappedBuffer(params byte[][] arrays)
     {
         ArgumentNullException.ThrowIfNull(arrays);
+
         return WrappedBuffer(arrays.Length, arrays);
     }
 
@@ -1086,6 +1145,7 @@ public static class Unpooled
     public static ByteBuf WrappedBuffer(params ByteBuf[] buffers)
     {
         ArgumentNullException.ThrowIfNull(buffers);
+
         return WrappedBuffer(buffers.Length, buffers);
     }
 
@@ -1099,11 +1159,14 @@ public static class Unpooled
     public static ByteBuf WrappedBuffer(int maxNumComponents, params byte[][] arrays)
     {
         ArgumentNullException.ThrowIfNull(arrays);
+
         if (arrays.Length == 1)
         {
             ArgumentNullException.ThrowIfNull(arrays[0]);
+
             return WrappedBuffer(arrays[0]);
         }
+
         for (int i = 0; i < arrays.Length; ++i)
         {
             byte[] array = arrays[i];
@@ -1115,7 +1178,9 @@ public static class Unpooled
             {
                 continue;
             }
+
             var composite = new CompositeByteBuf(maxNumComponents);
+
             try
             {
                 return composite.AddWrappedArrays(arrays, i);
@@ -1128,6 +1193,7 @@ public static class Unpooled
                 throw;
             }
         }
+
         return EmptyBuffer;
     }
 
@@ -1152,16 +1218,20 @@ public static class Unpooled
         {
             return WrappedBuffer(buffers[0]);
         }
+
         for (int i = 0; i < buffers.Length; ++i)
         {
             ByteBuf buffer = buffers[i];
             ArgumentNullException.ThrowIfNull(buffer);
+
             if (!buffer.IsReadable())
             {
                 buffer.Release();
                 continue;
             }
+
             var composite = new CompositeByteBuf(maxNumComponents);
+
             try
             {
                 return composite.AddWrappedComponents(buffers, i);
@@ -1174,6 +1244,7 @@ public static class Unpooled
                 throw;
             }
         }
+
         return EmptyBuffer;
     }
 }

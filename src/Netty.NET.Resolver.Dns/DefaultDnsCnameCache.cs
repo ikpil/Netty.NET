@@ -86,6 +86,7 @@ public sealed class DefaultDnsCnameCache : IDnsCnameCache
         {
             return null;
         }
+
         // We can never have more then one record.
         return cached[0];
     }
@@ -95,6 +96,7 @@ public sealed class DefaultDnsCnameCache : IDnsCnameCache
         ObjectUtil.CheckNotNull(hostname, "hostname");
         ObjectUtil.CheckNotNull(cname, "cname");
         ObjectUtil.CheckNotNull(loop, "loop");
+
         cache.Cache_(hostname, cname, Math.Max(minTtl, (int) Math.Min(maxTtl, originalTtl)), loop);
     }
 

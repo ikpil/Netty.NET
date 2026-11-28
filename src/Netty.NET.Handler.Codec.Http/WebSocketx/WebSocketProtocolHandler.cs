@@ -94,6 +94,7 @@ public abstract class WebSocketProtocolHandler : MessageToMessageDecoder<WebSock
             ReadIfNeeded(ctx);
             return;
         }
+
         if (frame is PongWebSocketFrame && dropPongFrames)
         {
             ReadIfNeeded(ctx);
@@ -123,7 +124,9 @@ public abstract class WebSocketProtocolHandler : MessageToMessageDecoder<WebSock
             {
                 _ = WriteAsync(ctx, new CloseWebSocketFrame(closeStatus, ctx.Alloc()), CancellationToken.None);
             }
+
             Flush(ctx);
+
             return closeSent.Task.ContinueWith(future => ctx.CloseAsync(cancellationToken), CancellationToken.None,
                     TaskContinuationOptions.ExecuteSynchronously,
                     new EventExecutorTaskScheduler(() => ctx.Executor)).Unwrap();
@@ -135,6 +138,7 @@ public abstract class WebSocketProtocolHandler : MessageToMessageDecoder<WebSock
         if (closeSent != null)
         {
             ReferenceCountUtil.Release(msg);
+
             return Task.FromException(new ClosedChannelException());
         }
         else if (msg is CloseWebSocketFrame)
@@ -159,6 +163,7 @@ public abstract class WebSocketProtocolHandler : MessageToMessageDecoder<WebSock
     public virtual void Flush(IChannelHandlerContext ctx)
     {
         ctx.Flush();
+
         // Give the flush a chance to complete synchronously before arming the deadline, so a write that
         // finishes immediately (e.g. EmbeddedChannel, or a fast socket) never races the force-close timer.
         if (closeSent != null)
@@ -185,6 +190,7 @@ public abstract class WebSocketProtocolHandler : MessageToMessageDecoder<WebSock
                     TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
             return;
         }
+
         closeSent = promise;
     }
 

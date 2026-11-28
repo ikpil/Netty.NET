@@ -62,20 +62,24 @@ public class FastThreadLocalThread
     private FastThreadLocalThread(Action target, string name, int maxStackSize, bool cleanup, ThreadGroup group)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(maxStackSize);
+
         cleanupFastThreadLocals = cleanup;
         _target = cleanup ? FastThreadLocalRunnable.Wrap(target) : target;
         Thread = new Thread(Entry, maxStackSize);
         ThreadGroup.Assign(Thread, group);
+
         if (name != null)
         {
             Thread.Name = name;
         }
+
         OwnedThreads.Add(Thread, this);
     }
 
     private void Entry()
     {
         _current = this;
+
         try
         {
             Run();
@@ -103,6 +107,7 @@ public class FastThreadLocalThread
     {
         if (_current != this && logger.IsWarnEnabled())
             logger.Warn(new InvalidOperationException("It's not thread-safe to get 'threadLocalMap' which doesn't belong to the caller thread"));
+
         return _threadLocalMap;
     }
 
@@ -114,6 +119,7 @@ public class FastThreadLocalThread
     {
         if (_current != this && logger.IsWarnEnabled())
             logger.Warn(new InvalidOperationException("It's not thread-safe to set 'threadLocalMap' which doesn't belong to the caller thread"));
+
         _threadLocalMap = threadLocalMap;
     }
 
@@ -178,7 +184,9 @@ public class FastThreadLocalThread
         {
             throw new InvalidOperationException("Reentrant call to run()");
         }
+
         _fallbackScope = true;
+
         try
         {
             runnable();

@@ -269,10 +269,12 @@ public sealed class Http3Settings : IEnumerable<KeyValuePair<long, long>>
     public Http3Settings PutAll(Http3Settings http3Settings)
     {
         CheckNotNull(http3Settings, "http3Settings");
+
         foreach (KeyValuePair<long, long> entry in http3Settings.settings)
         {
             settings[entry.Key] = entry.Value;
         }
+
         return this;
     }
 
@@ -333,12 +335,14 @@ public sealed class Http3Settings : IEnumerable<KeyValuePair<long, long>>
         {
             return false;
         }
+
         Http3Settings that = (Http3Settings) o;
         // CLR: LongObjectHashMap.equals: the same size and an equal value for every key.
         if (settings.Count != that.settings.Count)
         {
             return false;
         }
+
         foreach (KeyValuePair<long, long> entry in settings)
         {
             if (!that.settings.TryGetValue(entry.Key, out long otherValue) || otherValue != entry.Value)
@@ -346,6 +350,7 @@ public sealed class Http3Settings : IEnumerable<KeyValuePair<long, long>>
                 return false;
             }
         }
+
         return true;
     }
 
@@ -358,10 +363,12 @@ public sealed class Http3Settings : IEnumerable<KeyValuePair<long, long>>
     {
         // CLR: LongObjectHashMap.hashCode: the size XOR Long.hashCode of every key.
         int hash = settings.Count;
+
         foreach (long key in settings.Keys)
         {
             hash ^= unchecked((int) (key ^ (key >>> 32)));
         }
+
         return hash;
     }
 
@@ -377,16 +384,19 @@ public sealed class Http3Settings : IEnumerable<KeyValuePair<long, long>>
     {
         StringBuilder sb = new StringBuilder("Http3Settings{");
         bool first = true;
+
         foreach (KeyValuePair<long, long> e in settings)
         {
             if (!first)
             {
                 sb.Append(", ");
             }
+
             first = false;
             sb.Append("0x").Append(e.Key.ToString("x", CultureInfo.InvariantCulture)).Append('=')
                     .Append(e.Value.ToString(CultureInfo.InvariantCulture));
         }
+
         return sb.Append('}').ToString();
     }
 

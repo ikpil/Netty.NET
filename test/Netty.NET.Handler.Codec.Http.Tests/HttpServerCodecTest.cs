@@ -62,6 +62,7 @@ public class HttpServerCodecTest
 
         bool empty = true;
         int totalBytesPolled = 0;
+
         for (;;)
         {
             IHttpContent httpChunk = decoderEmbedder.ReadInbound<IHttpContent>();
@@ -69,11 +70,13 @@ public class HttpServerCodecTest
             {
                 break;
             }
+
             empty = false;
             totalBytesPolled += httpChunk.Content.ReadableBytes;
             Assert.False(httpChunk is ILastHttpContent);
             httpChunk.Release();
         }
+
         Assert.False(empty);
         Assert.Equal(offeredContentLength, totalBytesPolled);
     }
@@ -248,10 +251,12 @@ public class HttpServerCodecTest
 
         // Send 30 GET requests (not yet filling the 32-slot inline queue).
         StringBuilder requests = new StringBuilder();
+
         for (int i = 0; i < 30; i++)
         {
             requests.Append("GET /").Append(i.ToString(CultureInfo.InvariantCulture)).Append(" HTTP/1.1\r\nHost: a\r\n\r\n");
         }
+
         Assert.True(ch.WriteInbound(Unpooled.CopiedBuffer(requests.ToString(), Encoding.UTF8)));
 
         // Drain inbound.
@@ -262,6 +267,7 @@ public class HttpServerCodecTest
             {
                 break;
             }
+
             if (msg is IHttpContent)
             {
                 ((IHttpContent) msg).Release();
@@ -282,10 +288,12 @@ public class HttpServerCodecTest
         // Now send 15 more requests (20 remaining + 15 = 35 total, exceeding inline capacity of 32).
         // Put a HEAD request as the last one to verify overflow ordering.
         requests = new StringBuilder();
+
         for (int i = 30; i < 44; i++)
         {
             requests.Append("GET /").Append(i.ToString(CultureInfo.InvariantCulture)).Append(" HTTP/1.1\r\nHost: a\r\n\r\n");
         }
+
         requests.Append("HEAD /44 HTTP/1.1\r\nHost: a\r\n\r\n");
         Assert.True(ch.WriteInbound(Unpooled.CopiedBuffer(requests.ToString(), Encoding.UTF8)));
 
@@ -297,6 +305,7 @@ public class HttpServerCodecTest
             {
                 break;
             }
+
             if (msg is IHttpContent)
             {
                 ((IHttpContent) msg).Release();
@@ -390,6 +399,7 @@ public class HttpServerCodecTest
             {
                 break;
             }
+
             if (msg is IHttpContent)
             {
                 ((IHttpContent) msg).Release();
@@ -420,6 +430,7 @@ public class HttpServerCodecTest
 
         // Send 34 pipelined requests: position 33 (overflow) is HEAD.
         StringBuilder requests = new StringBuilder();
+
         for (int i = 0; i < totalRequests; i++)
         {
             if (i == 33)
@@ -431,6 +442,7 @@ public class HttpServerCodecTest
                 requests.Append("GET /").Append(i.ToString(CultureInfo.InvariantCulture)).Append(" HTTP/1.1\r\nHost: a\r\n\r\n");
             }
         }
+
         Assert.True(ch.WriteInbound(Unpooled.CopiedBuffer(requests.ToString(), Encoding.UTF8)));
 
         // Drain inbound.
@@ -441,6 +453,7 @@ public class HttpServerCodecTest
             {
                 break;
             }
+
             if (msg is IHttpContent)
             {
                 ((IHttpContent) msg).Release();
@@ -628,6 +641,7 @@ public class HttpServerCodecTest
 
         ByteBuf request = Unpooled.CopiedBuffer(
                 "GET / HTTP/1.1\r\nHost: netty.io\r\nContent-Length: 0\r\n\r\n", Encoding.ASCII);
+
         try
         {
             Assert.True(ch.WriteInbound(request.RetainedDuplicate()));
@@ -661,10 +675,12 @@ public class HttpServerCodecTest
     private static ByteBuf PrepareDataChunk(int size)
     {
         StringBuilder sb = new StringBuilder();
+
         for (int i = 0; i < size; ++i)
         {
             sb.Append('a');
         }
+
         return Unpooled.CopiedBuffer(sb.ToString(), Encoding.UTF8);
     }
 }

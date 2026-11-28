@@ -60,6 +60,7 @@ internal sealed class Http2MaxRstFrameDecoder : DecoratingHttp2ConnectionDecoder
         {
             return ((Http2MaxRstFrameListener) frameListener).listener;
         }
+
         return frameListener;
     }
 

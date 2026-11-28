@@ -57,6 +57,7 @@ public sealed class NonStickyEventExecutorGroup : IEventExecutorGroup
     private static IEventExecutorGroup Verify(IEventExecutorGroup group)
     {
         IEnumerable<IEventExecutor> executors = ObjectUtil.CheckNotNull(group, "group").Iterator();
+
         foreach (var executor in executors)
         {
             if (executor is IOrderedEventExecutor)
@@ -113,6 +114,7 @@ public sealed class NonStickyEventExecutorGroup : IEventExecutorGroup
     public IEnumerable<IEventExecutor> Iterator()
     {
         IEnumerable<IEventExecutor> itr = _group.Iterator();
+
         foreach (var it in itr)
         {
             yield return NewExecutor(it);

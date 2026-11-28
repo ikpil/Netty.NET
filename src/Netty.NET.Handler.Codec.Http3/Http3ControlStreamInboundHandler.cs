@@ -87,6 +87,7 @@ internal sealed class Http3ControlStreamInboundHandler
     public override void HandlerAdded(IChannelHandlerContext ctx)
     {
         base.HandlerAdded(ctx);
+
         // The user want's to be notified about control frames, add the handler to the pipeline.
         if (controlFrameHandler != null)
         {
@@ -111,15 +112,18 @@ internal sealed class Http3ControlStreamInboundHandler
             ReferenceCountUtil.Release(frame);
             return;
         }
+
         if (firstFrameRead && isSettingsFrame)
         {
             ConnectionError(ctx, H3_FRAME_UNEXPECTED, "Second settings frame received.", ForwardControlFrames());
             ReferenceCountUtil.Release(frame);
             return;
         }
+
         firstFrameRead = true;
 
         bool valid;
+
         if (isSettingsFrame)
         {
             valid = HandleHttp3SettingsFrame(ctx, (IHttp3SettingsFrame) frame);
@@ -167,11 +171,13 @@ internal sealed class Http3ControlStreamInboundHandler
                 CriticalStreamClosed(ctx);
             }
         };
+
         if (qpackAttributes.DynamicTableDisabled())
         {
             qpackEncoder.ConfigureDynamicTable(qpackAttributes, 0, 0);
             return true;
         }
+
         AddListener(ctx, quicChannel.CreateStreamAsync(QuicStreamType.UNIDIRECTIONAL,
                 new QPackEncoderStreamInitializer(qpackEncoder, qpackAttributes,
                         settingsFrame
@@ -204,12 +210,14 @@ internal sealed class Http3ControlStreamInboundHandler
                     ForwardControlFrames());
             return false;
         }
+
         if (receivedGoawayId != null && id > receivedGoawayId.Value)
         {
             ConnectionError(ctx, H3_ID_ERROR,
                     "GOAWAY received with ID larger than previously received.", ForwardControlFrames());
             return false;
         }
+
         receivedGoawayId = id;
         return true;
     }
@@ -217,17 +225,20 @@ internal sealed class Http3ControlStreamInboundHandler
     private bool HandleHttp3MaxPushIdFrame(IChannelHandlerContext ctx, IHttp3MaxPushIdFrame frame)
     {
         long id = frame.Id();
+
         if (!server)
         {
             ConnectionError(ctx, H3_FRAME_UNEXPECTED, "MAX_PUSH_ID received by client.",
                     ForwardControlFrames());
             return false;
         }
+
         if (receivedMaxPushId != null && id < receivedMaxPushId.Value)
         {
             ConnectionError(ctx, H3_ID_ERROR, "MAX_PUSH_ID reduced limit.", ForwardControlFrames());
             return false;
         }
+
         receivedMaxPushId = id;
         return true;
     }
@@ -241,6 +252,7 @@ internal sealed class Http3ControlStreamInboundHandler
                     ForwardControlFrames());
             return false;
         }
+
         return true;
     }
 
@@ -263,6 +275,7 @@ internal sealed class Http3ControlStreamInboundHandler
             // See https://www.ietf.org/archive/id/draft-ietf-quic-qpack-19.html#section-4.2
             CriticalStreamClosed(ctx);
         }
+
         ctx.FireUserEventTriggered(evt);
     }
 
@@ -292,11 +305,13 @@ internal sealed class Http3ControlStreamInboundHandler
         public sealed override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
         {
             StreamClosed(ctx);
+
             if (evt is ChannelInputShutdownEvent)
             {
                 // See https://quicwg.org/base-drafts/draft-ietf-quic-qpack.html#section-4.2
                 CriticalStreamClosed(ctx);
             }
+
             ctx.FireUserEventTriggered(evt);
         }
 

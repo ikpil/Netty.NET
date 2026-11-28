@@ -67,6 +67,7 @@ public class Http3ServerConnectionHandlerTest : AbtractHttp3ConnectionHandlerTes
         IHttp3Headers headers = new DefaultHttp3Headers(false);
         headers.Add(Cs("x-custom"), Cs("value"));
         ByteBuf @out = Unpooled.Buffer();
+
         try
         {
             handler.qpackEncoder.EncodeHeaders(new QpackAttributes(null, true), @out,

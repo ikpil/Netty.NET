@@ -143,6 +143,7 @@ public class SizeClassedChunkCacheTest : IDisposable
         {
             cache.OfferChunk(ChunkWithoutCapacity());
         }
+
         SizeClassedChunk workingSet = ChunkWithCapacity();
         cache.OfferChunk(workingSet);
         SizeClassedChunk idle = FullChunk();
@@ -156,6 +157,7 @@ public class SizeClassedChunkCacheTest : IDisposable
             Assert.Equal(i + 1, idle.PurgeEpoch);
             Assert.False(MarkedToDeallocate(idle));
         }
+
         {
             // CLR: braces scope the source's second `polled` local, which C# rejects in the enclosing method scope (CS0136).
             SizeClassedChunk polled = cache.ForcePurge();
@@ -173,12 +175,14 @@ public class SizeClassedChunkCacheTest : IDisposable
         {
             cache.OfferChunk(ChunkWithoutCapacity());
         }
+
         SizeClassedChunk workingSet = ChunkWithCapacity();
         cache.OfferChunk(workingSet);
         SizeClassedChunk idle = FullChunk();
         cache.OfferChunk(idle);
 
         int maxCycles = (CHUNK_PURGE_THRESHOLD + 1) * 3;
+
         for (int i = 0; i < maxCycles; i++)
         {
             SizeClassedChunk polled = cache.ForcePurge();
@@ -187,6 +191,7 @@ public class SizeClassedChunkCacheTest : IDisposable
                 cache.OfferChunk(polled);
             }
         }
+
         Assert.True(MarkedToDeallocate(idle));
     }
 
@@ -297,10 +302,12 @@ public class SizeClassedChunkCacheTest : IDisposable
 
         // Purge selects one, 8 remain — all should be retrievable
         Assert.NotNull(cache.ForcePurge());
+
         for (int i = 0; i < 8; i++)
         {
             Assert.NotNull(cache.PollChunk(256));
         }
+
         Assert.Null(cache.PollChunk(256));
     }
 
@@ -314,6 +321,7 @@ public class SizeClassedChunkCacheTest : IDisposable
         {
             cache.OfferChunk(ChunkWithCapacity());
         }
+
         cache.ForcePurge();
         cache.PollChunk(256);
         cache.PollChunk(256);
@@ -350,11 +358,14 @@ public class SizeClassedChunkCacheTest : IDisposable
         {
             cache.OfferChunk(ChunkWithCapacity());
         }
+
         cache.ForcePurge();
+
         while (cache.PollChunk(256) != null)
         {
             // drain
         }
+
         Assert.True(Head(cache) > 0, "head should have advanced past 0");
 
         // Offer 4 chunks — wraps past the array boundary
@@ -371,6 +382,7 @@ public class SizeClassedChunkCacheTest : IDisposable
 
         // Verify the backing array: exactly count non-null entries, no stale refs
         int nonNull = 0;
+
         for (int i = 0; i < Chunks(cache).Length; i++)
         {
             if (Chunks(cache)[i] != null)
@@ -378,6 +390,7 @@ public class SizeClassedChunkCacheTest : IDisposable
                 nonNull++;
             }
         }
+
         Assert.True(cache.Count == nonNull,
                 Text($"backing array should have exactly count={cache.Count} non-null entries, but found {nonNull}"));
     }
@@ -396,11 +409,14 @@ public class SizeClassedChunkCacheTest : IDisposable
 
         SizeClassedChunk workingSet = ChunkWithCapacity();
         cache.OfferChunk(workingSet);
+
         for (int i = 0; i < floor - 1; i++)
         {
             cache.OfferChunk(ChunkWithoutCapacity());
         }
+
         SizeClassedChunk[] excessChunks = new SizeClassedChunk[excess];
+
         for (int i = 0; i < excess; i++)
         {
             excessChunks[i] = FullChunk();
@@ -418,6 +434,7 @@ public class SizeClassedChunkCacheTest : IDisposable
         {
             Assert.True(MarkedToDeallocate(chunk));
         }
+
         Assert.False(MarkedToDeallocate(workingSet));
     }
 
@@ -432,11 +449,14 @@ public class SizeClassedChunkCacheTest : IDisposable
         Assert.True(excess > 0, "excess must be positive for the test to be meaningful");
         SizeClassedChunk workingSet = ChunkWithCapacity();
         cache.OfferChunk(workingSet);
+
         for (int i = 0; i < crq - 1; i++)
         {
             cache.OfferChunk(ChunkWithoutCapacity());
         }
+
         SizeClassedChunk[] excessChunks = new SizeClassedChunk[excess];
+
         for (int i = 0; i < excess; i++)
         {
             excessChunks[i] = FullChunk();
@@ -444,6 +464,7 @@ public class SizeClassedChunkCacheTest : IDisposable
         }
 
         int maxCycles = (CHUNK_PURGE_THRESHOLD + 1) * 3;
+
         for (int i = 0; i < maxCycles; i++)
         {
             SizeClassedChunk polled = cache.ForcePurge();
@@ -473,10 +494,12 @@ public class SizeClassedChunkCacheTest : IDisposable
         {
             cache.OfferChunk(ChunkWithoutCapacity());
         }
+
         SizeClassedChunk workingSet = ChunkWithCapacity();
         cache.OfferChunk(workingSet);
         int excess = 3;
         SizeClassedChunk[] idleChunks = new SizeClassedChunk[excess];
+
         for (int i = 0; i < excess; i++)
         {
             idleChunks[i] = FullChunk();
@@ -494,6 +517,7 @@ public class SizeClassedChunkCacheTest : IDisposable
         {
             Assert.True(MarkedToDeallocate(idle));
         }
+
         Assert.False(MarkedToDeallocate(workingSet));
     }
 
@@ -506,10 +530,12 @@ public class SizeClassedChunkCacheTest : IDisposable
         {
             cache.OfferChunk(ChunkWithoutCapacity());
         }
+
         SizeClassedChunk workingSet = ChunkWithCapacity();
         cache.OfferChunk(workingSet);
         int excess = 3;
         SizeClassedChunk[] idleChunks = new SizeClassedChunk[excess];
+
         for (int i = 0; i < excess; i++)
         {
             idleChunks[i] = FullChunk();
@@ -517,6 +543,7 @@ public class SizeClassedChunkCacheTest : IDisposable
         }
 
         int maxCycles = (CHUNK_PURGE_THRESHOLD + 1) * 3;
+
         for (int i = 0; i < maxCycles; i++)
         {
             SizeClassedChunk polled = cache.ForcePurge();
@@ -546,6 +573,7 @@ public class SizeClassedChunkCacheTest : IDisposable
         SizeClassedChunkCache cache = SizeClassedChunkCache.Create(threadLocal, chunkSize, Pool);
 
         int floor = threadLocal ? ThreadLocalPurgeFloor() : CHUNK_REUSE_QUEUE;
+
         for (int i = 0; i < floor; i++)
         {
             cache.OfferChunk(ChunkWithoutCapacity());
@@ -557,6 +585,7 @@ public class SizeClassedChunkCacheTest : IDisposable
         cache.OfferChunk(active);
 
         int cycles = CHUNK_PURGE_THRESHOLD + 2;
+
         for (int cycle = 0; cycle < cycles; cycle++)
         {
             SizeClassedChunk polled = cache.ForcePurge();
@@ -596,6 +625,7 @@ public class SizeClassedChunkCacheTest : IDisposable
                 try
                 {
                     startLatch.Wait();
+
                     for (int i = 0; i < 1000; i++)
                     {
                         Assert.Null(cache.PollChunk(256));
@@ -634,6 +664,7 @@ public class SizeClassedChunkCacheTest : IDisposable
         cache.OfferChunk(ChunkWithoutCapacity());
 
         int drained = 0;
+
         while (cache.PollChunk(0) != null)
         {
             drained++;
@@ -732,10 +763,12 @@ public class SizeClassedChunkCacheTest : IDisposable
         _chunks.Add(chunk);
         var claims = new Queue<AdaptiveChunkAllocation>();
         _claims.Add(chunk, claims);
+
         for (int i = 0; i < allocated; i++)
         {
             claims.Enqueue(chunk.TryAllocate(512));
         }
+
         return chunk;
     }
 
@@ -789,8 +822,10 @@ public class SizeClassedChunkCacheTest : IDisposable
             {
                 claim.Release();
             }
+
             chunk.MarkToDeallocate();
         }
+
         Assert.Equal(0, _registry.TotalCapacity);
     }
 }

@@ -37,10 +37,12 @@ public class MqttSubAckPayload
         ObjectUtil.CheckNotNull(reasonCodes, "reasonCodes");
 
         List<MqttReasonCodes.SubAck> list = new List<MqttReasonCodes.SubAck>(reasonCodes.Length);
+
         foreach (int v in reasonCodes)
         {
             list.Add(MqttReasonCodes.SubAck.ValueOf((byte) (v & 0xFF)));
         }
+
         this.reasonCodes = list.AsReadOnly();
     }
 
@@ -60,17 +62,21 @@ public class MqttSubAckPayload
     public MqttSubAckPayload(IEnumerable<int> reasonCodes)
     {
         ObjectUtil.CheckNotNull(reasonCodes, "reasonCodes");
+
         List<MqttReasonCodes.SubAck> list = new List<MqttReasonCodes.SubAck>();
+
         foreach (int v in reasonCodes)
         {
             list.Add(MqttReasonCodes.SubAck.ValueOf((byte) v));
         }
+
         this.reasonCodes = list.AsReadOnly();
     }
 
     public IList<int> GrantedQoSLevels()
     {
         List<int> qosLevels = new List<int>(reasonCodes.Count);
+
         foreach (MqttReasonCodes.SubAck code in reasonCodes)
         {
             if ((code.ByteValue() & 0xFF) > MqttQoS.EXACTLY_ONCE.Value())
@@ -82,6 +88,7 @@ public class MqttSubAckPayload
                 qosLevels.Add(code.ByteValue() & 0xFF);
             }
         }
+
         return qosLevels;
     }
 
@@ -93,10 +100,12 @@ public class MqttSubAckPayload
     private IList<int> TypedReasonCodesToOrdinal()
     {
         List<int> intCodes = new List<int>(reasonCodes.Count);
+
         foreach (MqttReasonCodes.SubAck code in reasonCodes)
         {
             intCodes.Add(code.ByteValue() & 0xFF);
         }
+
         return intCodes;
     }
 

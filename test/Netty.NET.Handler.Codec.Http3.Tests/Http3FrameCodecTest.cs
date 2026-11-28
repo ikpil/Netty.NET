@@ -147,10 +147,12 @@ public class Http3FrameCodecTest : IDisposable
                 encoder.ConfigureDynamicTable(qpackAttributes, maxTableCapacity, maxBlockedStreams);
             }
         });
+
         if (!delayQpackStreams)
         {
             SetQpackStreams();
         }
+
         codecChannel = (EmbeddedQuicStreamChannel) parent.CreateStreamAsync(QuicStreamType.BIDIRECTIONAL,
                 new CodecChannelInitializer(this, maxUnknownFramePayloadLength, executor)).GetAwaiter().GetResult();
     }
@@ -179,6 +181,7 @@ public class Http3FrameCodecTest : IDisposable
             Http3FrameCodec frameCodec = new Http3FrameCodec(IHttp3FrameTypeValidator.NO_VALIDATION,
                     test.decoder, MAX_HEADER_SIZE, maxUnknownFramePayloadLength, test.encoder,
                     encStateValidator, decStateValidator, new NoNonStandardSettings());
+
             if (executor == null)
             {
                 ch.Pipeline.AddLast(frameCodec);
@@ -187,6 +190,7 @@ public class Http3FrameCodecTest : IDisposable
             {
                 ch.Pipeline.AddLast(executor, null, frameCodec);
             }
+
             ch.Pipeline.AddLast(encStateValidator);
             ch.Pipeline.AddLast(decStateValidator);
         }
@@ -231,10 +235,12 @@ public class Http3FrameCodecTest : IDisposable
         {
             unblockCodecExecutor.Release();
         }
+
         Assert.False(codecChannel.Finish());
         Assert.False(decoderStream.Finish());
         Assert.False(encoderStream.Finish());
         Assert.False(parent.Finish());
+
         if (codecExecutor != null)
         {
             codecExecutor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).GetAwaiter().GetResult();
@@ -525,6 +531,7 @@ public class Http3FrameCodecTest : IDisposable
         Exception e = Assert.ThrowsAny<Exception>(() =>
         {
             Assert.False(codecChannel.WriteInbound(buffer));
+
             if (delayQpackStreams)
             {
                 SetQpackStreams();
@@ -574,6 +581,7 @@ public class Http3FrameCodecTest : IDisposable
         Exception e = Assert.ThrowsAny<Exception>(() =>
         {
             Assert.False(codecChannel.WriteOutbound(frame));
+
             if (delayQpackStreams)
             {
                 SetQpackStreams();
@@ -654,6 +662,7 @@ public class Http3FrameCodecTest : IDisposable
         Exception e = Assert.ThrowsAny<Exception>(() =>
         {
             Assert.False(codecChannel.WriteInbound(buffer));
+
             if (delayQpackStreams)
             {
                 SetQpackStreams();
@@ -703,6 +712,7 @@ public class Http3FrameCodecTest : IDisposable
         Exception e = Assert.ThrowsAny<Exception>(() =>
         {
             Assert.False(codecChannel.WriteOutbound(frame));
+
             if (delayQpackStreams)
             {
                 SetQpackStreams();
@@ -740,6 +750,7 @@ public class Http3FrameCodecTest : IDisposable
             SetQpackStreams();
             codecChannel.CheckException();
         }
+
         ByteBuf buffer = codecChannel.ReadOutbound<ByteBuf>();
 
         if (fragmented)
@@ -751,6 +762,7 @@ public class Http3FrameCodecTest : IDisposable
                     ByteBuf slice = buffer.ReadRetainedSlice(
                             Random.Shared.Next(buffer.ReadableBytes + 1));
                     bool producedData = codecChannel.WriteInbound(slice);
+
                     if (!isDataFrame)
                     {
                         if (buffer.IsReadable() || (isHeaderFrame && maxBlockedStreams > 0))
@@ -770,6 +782,7 @@ public class Http3FrameCodecTest : IDisposable
                 {
                     ReferenceCountUtil.Release(frame);
                 }
+
                 throw;
             }
             finally
@@ -792,9 +805,11 @@ public class Http3FrameCodecTest : IDisposable
         RelayQPACKEncoderInstructions();
 
         IHttp3Frame actualFrame;
+
         if (isDataFrame)
         {
             CompositeByteBuf composite = Unpooled.CompositeBuffer();
+
             for (;;)
             {
                 IHttp3DataFrame dataFrame = codecChannel.ReadInbound<IHttp3DataFrame>();
@@ -802,14 +817,17 @@ public class Http3FrameCodecTest : IDisposable
                 {
                     break;
                 }
+
                 composite.AddComponent(dataFrame.Content, true);
             }
+
             actualFrame = new DefaultHttp3DataFrame(composite);
         }
         else
         {
             actualFrame = codecChannel.ReadInbound<IHttp3Frame>();
         }
+
         Http3TestUtils.AssertFrameEquals(frame, actualFrame);
     }
 
@@ -830,6 +848,7 @@ public class Http3FrameCodecTest : IDisposable
         {
             return (IHttp3Frame) ((IByteBufHolder) frame).RetainedDuplicate();
         }
+
         return frame;
     }
 
@@ -876,6 +895,7 @@ public class Http3FrameCodecTest : IDisposable
         }
 
         ByteBuf mergedBuffer = Unpooled.Buffer();
+
         for (;;)
         {
             ByteBuf buffer = codecChannel.ReadOutbound<ByteBuf>();
@@ -883,6 +903,7 @@ public class Http3FrameCodecTest : IDisposable
             {
                 break;
             }
+
             mergedBuffer.WriteBytes(buffer);
             buffer.Release();
         }
@@ -895,6 +916,7 @@ public class Http3FrameCodecTest : IDisposable
         {
             Assert.True(codecChannel.WriteInbound(mergedBuffer));
         }
+
         RelayQPACKEncoderInstructions();
 
         IHttp3Frame readFrame = codecChannel.ReadInbound<IHttp3Frame>();
@@ -1029,6 +1051,7 @@ public class Http3FrameCodecTest : IDisposable
         Exception e = Assert.ThrowsAny<Exception>(() =>
         {
             Assert.False(codecChannel.WriteInbound(buffer));
+
             if (delayQpackStreams)
             {
                 SetQpackStreams();
@@ -1081,6 +1104,7 @@ public class Http3FrameCodecTest : IDisposable
         Exception e = Assert.ThrowsAny<Exception>(() =>
         {
             Assert.False(codecChannel.WriteInbound(buffer));
+
             if (delayQpackStreams)
             {
                 SetQpackStreams();
@@ -1110,6 +1134,7 @@ public class Http3FrameCodecTest : IDisposable
         Exception e = Assert.ThrowsAny<Exception>(() =>
         {
             Assert.False(codecChannel.WriteInbound(buffer));
+
             if (delayQpackStreams)
             {
                 SetQpackStreams();
@@ -1136,6 +1161,7 @@ public class Http3FrameCodecTest : IDisposable
         Exception e = Assert.ThrowsAny<Exception>(() =>
         {
             Assert.False(codecChannel.WriteInbound(buffer));
+
             if (delayQpackStreams)
             {
                 SetQpackStreams();
@@ -1237,6 +1263,7 @@ public class Http3FrameCodecTest : IDisposable
         ByteBuf expected = Unpooled.Buffer();
         QpackUtil.EncodePrefixedInteger(expected, (byte) 0b0100_0000, 6, codecChannel.StreamId());
         ByteBuf canceled = decoderStream.ReadOutbound<ByteBuf>();
+
         try
         {
             Assert.Equal(expected, canceled);
@@ -1254,6 +1281,7 @@ public class Http3FrameCodecTest : IDisposable
         SetUp(1, false);
         EmbeddedQuicStreamChannel first = NewValidatedRequestStream();
         EmbeddedQuicStreamChannel second = NewValidatedRequestStream();
+
         try
         {
             Assert.False(first.WriteInboundWithFin(BlockingHeadersFrame()));
@@ -1324,6 +1352,7 @@ public class Http3FrameCodecTest : IDisposable
         Exception e = Assert.ThrowsAny<Exception>(() =>
         {
             Assert.False(codecChannel.WriteInbound(buffer));
+
             if (delayQpackStreams)
             {
                 SetQpackStreams();
@@ -1337,10 +1366,12 @@ public class Http3FrameCodecTest : IDisposable
     private void RelayQPACKEncoderInstructions()
     {
         object msg;
+
         while ((msg = encoderStream.ReadOutbound()) != null)
         {
             qpackEncoderHandler.ChannelRead(encoderStream.Pipeline.FirstContext, msg);
         }
+
         while ((msg = decoderStream.ReadOutbound()) != null)
         {
             qpackDecoderHandler.ChannelRead(decoderStream.Pipeline.FirstContext, msg);

@@ -18,10 +18,12 @@ public class LinuxListenerOptionsContractTest
         {
             Assert.Skip("Linux socket options require Linux.");
         }
+
         var token = TestContext.Current.CancellationToken;
         using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         var group = new MultiThreadIoEventLoopGroup(2, NioIoHandler.NewFactory());
         var child = new AcceptedChild();
+
         try
         {
             var listener = await new ServerBootstrap().Group(group).ChannelFactory(() => new NioServerSocketChannel(socket))

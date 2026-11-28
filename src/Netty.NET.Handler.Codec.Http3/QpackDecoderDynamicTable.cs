@@ -62,11 +62,13 @@ internal sealed class QpackDecoderDynamicTable
         {
             throw GET_ENTRY_ILLEGAL_INDEX_VALUE;
         }
+
         QpackHeaderField entry = fields[index];
         if (entry == null)
         {
             throw GET_ENTRY_ILLEGAL_INDEX_VALUE;
         }
+
         return entry;
     }
 
@@ -90,10 +92,12 @@ internal sealed class QpackDecoderDynamicTable
         {
             throw HEADER_TOO_LARGE;
         }
+
         while (capacity - size < headerSize)
         {
             Remove();
         }
+
         insertCount++;
         fields[GetAndIncrementHead()] = header;
         size += headerSize;
@@ -106,6 +110,7 @@ internal sealed class QpackDecoderDynamicTable
         {
             return;
         }
+
         size -= removed.Size();
         fields[GetAndIncrementTail()] = null;
     }
@@ -116,6 +121,7 @@ internal sealed class QpackDecoderDynamicTable
         {
             Array.Clear(fields);
         }
+
         head = 0;
         tail = 0;
         size = 0;
@@ -132,6 +138,7 @@ internal sealed class QpackDecoderDynamicTable
         {
             return;
         }
+
         this.capacity = capacity;
 
         if (capacity == 0)
@@ -159,6 +166,7 @@ internal sealed class QpackDecoderDynamicTable
 
         // initially length will be 0 so there will be no copy
         int len = Length();
+
         if (fields != null && tail != head)
         {
             if (head > tail)

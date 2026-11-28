@@ -117,6 +117,7 @@ public class Socks5CommandStatus : IComparable<Socks5CommandStatus>
         {
             this.text = text = name + '(' + (byteValue & 0xFF).ToString(CultureInfo.InvariantCulture) + ')';
         }
+
         return text;
     }
 }

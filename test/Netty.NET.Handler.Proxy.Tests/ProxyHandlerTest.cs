@@ -114,6 +114,7 @@ public class ProxyHandlerTest : IClassFixture<ProxyHandlerTest.StopServersFixtur
 
         SslContext sctx;
         SslContext cctx;
+
         try
         {
             X509Bundle cert = new CertificateBuilder()
@@ -128,6 +129,7 @@ public class ProxyHandlerTest : IClassFixture<ProxyHandlerTest.StopServersFixtur
         {
             throw new InvalidOperationException(e.Message, e);
         }
+
         serverSslCtx = sctx;
         clientSslCtx = cctx;
 
@@ -492,6 +494,7 @@ public class ProxyHandlerTest : IClassFixture<ProxyHandlerTest.StopServersFixtur
 
         // Convert the test items to the list of constructor parameters.
         List<object[]> @params = new List<object[]>(items.Count);
+
         foreach (object i in items)
         {
             @params.Add(new object[] { i });
@@ -501,6 +504,7 @@ public class ProxyHandlerTest : IClassFixture<ProxyHandlerTest.StopServersFixtur
         long seed = (reproducibleSeed == 0L) ? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() : reproducibleSeed;
         logger.Debug("Seed used: {}\n", seed);
         Random rnd = new Random(unchecked((int) (seed ^ (seed >> 32))));
+
         for (int i = @params.Count; i > 1; i--)
         {
             int j = rnd.Next(i);
@@ -573,6 +577,7 @@ public class ProxyHandlerTest : IClassFixture<ProxyHandlerTest.StopServersFixtur
     public async Task TestPendingWritesFailedWhenConnectionToProxyFails(string type)
     {
         IEventLoopGroup localGroup = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
+
         try
         {
             // Nothing is bound to this address, so the connection to the proxy server fails and the channel is
@@ -671,6 +676,7 @@ public class ProxyHandlerTest : IClassFixture<ProxyHandlerTest.StopServersFixtur
         {
             return new TaskCanceledException(future);
         }
+
         return null;
     }
 
@@ -719,6 +725,7 @@ public class ProxyHandlerTest : IClassFixture<ProxyHandlerTest.StopServersFixtur
                     // ProxyHandlers in the pipeline.  Therefore, we send the 'B' message only on the first event.
                     _ = ctx.WriteAndFlushAsync(Unpooled.CopiedBuffer("B\n", Encoding.ASCII));
                 }
+
                 ReadIfNeeded(ctx);
             }
         }
@@ -727,10 +734,12 @@ public class ProxyHandlerTest : IClassFixture<ProxyHandlerTest.StopServersFixtur
         {
             string str = ((ByteBuf) msg).ToString(Encoding.ASCII);
             received.Enqueue(str);
+
             if ("2".Equals(str))
             {
                 _ = ctx.WriteAndFlushAsync(Unpooled.CopiedBuffer("C\n", Encoding.ASCII));
             }
+
             ReadIfNeeded(ctx);
         }
 
@@ -763,6 +772,7 @@ public class ProxyHandlerTest : IClassFixture<ProxyHandlerTest.StopServersFixtur
                     future =>
                     {
                         CountDown(latch);
+
                         if (!(Cause(future) is ProxyConnectException))
                         {
                             exceptions.Enqueue(Xunit.Sdk.FailException.ForFailure(
@@ -891,6 +901,7 @@ public class ProxyHandlerTest : IClassFixture<ProxyHandlerTest.StopServersFixtur
                         params IChannelHandler[] clientHandlers) : base(name, destination, clientHandlers)
         {
             int expectedEventCount = 0;
+
             foreach (IChannelHandler h in clientHandlers)
             {
                 if (h is ProxyHandler)
@@ -1003,6 +1014,7 @@ public class ProxyHandlerTest : IClassFixture<ProxyHandlerTest.StopServersFixtur
         internal override async Task Test()
         {
             const long TIMEOUT = 2000;
+
             foreach (IChannelHandler h in clientHandlers)
             {
                 if (h is ProxyHandler)

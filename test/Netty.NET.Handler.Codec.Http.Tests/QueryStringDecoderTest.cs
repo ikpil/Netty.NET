@@ -200,6 +200,7 @@ public class QueryStringDecoderTest
     {
         StringBuilder buf = new StringBuilder();
         buf.Append('?');
+
         for (int i = 0; i < 65536; i ++)
         {
             buf.Append('k');
@@ -208,6 +209,7 @@ public class QueryStringDecoderTest
             buf.Append(i);
             buf.Append('&');
         }
+
         Assert.Equal(1024, new QueryStringDecoder(buf.ToString()).Parameters().Count);
     }
 
@@ -250,10 +252,12 @@ public class QueryStringDecoderTest
             "случайный%20праздник",             "случайный праздник",
             "случайный%20праздник%20%E2%98%BA", "случайный праздник ☺",
         };
+
         for (int i = 0; i < tests.Length; i += 2)
         {
             string encoded = tests[i];
             string expected = tests[i + 1];
+
             try
             {
                 string decoded = QueryStringDecoder.DecodeComponent(encoded);
@@ -286,6 +290,7 @@ public class QueryStringDecoderTest
                                         IDictionary<string, IList<string>> actual)
     {
         Assert.Equal(expected.Count, actual.Count);
+
         foreach (KeyValuePair<string, IList<string>> e in expected)
         {
             Assert.True(actual.ContainsKey(e.Key));

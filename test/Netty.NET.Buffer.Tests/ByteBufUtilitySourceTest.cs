@@ -59,6 +59,7 @@ public class ByteBufUtilitySourceTest
         {
             if (Root.RefCnt > 0)
                 Root.Release();
+
             (Allocator as IDisposable)?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
         }
@@ -97,6 +98,7 @@ public class ByteBufUtilitySourceTest
         // write some byte so we start writing with an offset.
         if (prefix != 0)
             b.WriteByte(1);
+
         b.MarkReaderIndex().MarkWriterIndex();
         string value = Texts[text];
         Encoding encoder = Encoding.GetEncoding("utf-8", new EncoderReplacementFallback("?"), DecoderFallback.ExceptionFallback);
@@ -113,14 +115,18 @@ public class ByteBufUtilitySourceTest
         };
         Assert.Equal(expected.Length, written);
         Assert.Equal((0, prefix + written, 1), (b.ReaderIndex, b.WriterIndex, b.RefCnt));
+
         if (prefix != 0)
             Assert.Equal(1, b.GetByte(0));
+
         // Skip the previously written byte.
         Assert.Equal(expected, ByteBufUtil.GetBytes(b, prefix, written));
+
         if (mode <= 1)
             Assert.Equal(written, ByteBufUtil.Utf8Bytes(value));
         else if (mode >= 3)
             Assert.Equal(written, ByteBufUtil.Utf8Bytes(ascii));
+
         b.ResetWriterIndex().ResetReaderIndex();
         Assert.Equal((0, prefix), (b.ReaderIndex, b.WriterIndex));
     }
@@ -133,14 +139,17 @@ public class ByteBufUtilitySourceTest
         // CLR and Java seeded RNG streams differ; the scalar reference checks every trial.
         var random = new Random(needleReaderIndex);
         var allocator = new UnpooledByteBufAllocator(false, true);
+
         for (int trial = 0; trial < 10000; ++trial)
         {
             byte[] input = new byte[2 + random.Next(5)], data = new byte[random.Next(16)], prefix = new byte[needleReaderIndex];
+
             foreach (byte[] bytes in new[] { input, data, prefix })
                 for (int i = 0; i < bytes.Length; ++i)
                 {
                     bytes[i] = (byte)random.Next(3);
                 }
+
             int expected = -1;
 
             for (int i = 0; i <= data.Length - input.Length; ++i)
@@ -162,6 +171,7 @@ public class ByteBufUtilitySourceTest
             ByteBuf needle = allocator.HeapBuffer(256).WriteBytes(prefix).WriteBytes(input);
             needle.ReaderIndex = prefix.Length;
             ByteBuf haystack = Unpooled.WrappedBuffer(data);
+
             try
             {
                 Assert.Equal(expected, ByteBufUtil.IndexOf(needle, haystack));

@@ -63,6 +63,7 @@ public class AllocatorLeakDetectionTest : IDisposable
         if (buffer is SimpleLeakAwareCompositeByteBuf)
             return (IResourceLeakTracker<ByteBuf>)typeof(SimpleLeakAwareCompositeByteBuf)
                 .GetField("Leak", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(buffer);
+
         return null;
     }
 
@@ -90,9 +91,11 @@ public class AllocatorLeakDetectionTest : IDisposable
     {
         if (disabled)
             ResourceLeakDetector.SetLevel(ResourceLeakDetectorLevel.DISABLED);
+
         var native = new NativeMemoryAllocator();
         IByteBufAllocator allocator = Allocator(kind, prefer, native);
         ByteBuf b = null;
+
         try
         {
             b = method switch
@@ -115,15 +118,18 @@ public class AllocatorLeakDetectionTest : IDisposable
             Assert.Same(allocator, b.Alloc());
             Assert.Equal(1, b.RefCnt);
             Assert.Equal(tracked, Tracker(b) != null);
+
             if (tracked)
             {
                 if (composite)
                     Assert.IsType<AdvancedLeakAwareCompositeByteBuf>(b);
                 else
                     Assert.IsType<AdvancedLeakAwareByteBuf>(b);
+
                 Assert.NotNull(b.Unwrap());
                 Assert.Null(b.Unwrap().Unwrap());
             }
+
             if (empty)
             {
                 Assert.IsType<EmptyByteBuf>(b);
@@ -153,11 +159,14 @@ public class AllocatorLeakDetectionTest : IDisposable
                 var tracker = Tracker(b);
                 ByteBuf referent = b.Unwrap();
                 b.Release();
+
                 if (tracker != null)
                     Assert.False(tracker.Close(referent));
             }
+
             (allocator as IDisposable)?.Dispose();
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -179,12 +188,15 @@ public class AllocatorLeakDetectionTest : IDisposable
         ByteBuf root = shape == 5 ? allocator.CompositeHeapBuffer().AddComponent(Unpooled.Buffer(16, 16).WriteZero(16), true)
             : shape is 0 or 2 or 4 ? allocator.DirectBuffer(16, 64) : allocator.HeapBuffer(16, 64);
         root.SetIndex(0, 0);
+
         for (int i = 0; i < 16; ++i)
             root.WriteByte(i);
+
         ByteBuf view = null;
         var tracker = Tracker(root);
         ByteBuf referent = root.Unwrap();
         bool retained = method is >= 5;
+
         try
         {
             view = method switch
@@ -203,6 +215,7 @@ public class AllocatorLeakDetectionTest : IDisposable
             bool independent = retained && shape is 1 or 2;
             var viewTracker = Tracker(view);
             ByteBuf viewReferent = view.Unwrap();
+
             if (independent)
             {
                 Assert.NotSame(tracker, viewTracker);
@@ -210,27 +223,34 @@ public class AllocatorLeakDetectionTest : IDisposable
             }
             else
                 Assert.Same(tracker, viewTracker);
+
             Assert.Equal(retained ? 2 : 1, root.RefCnt);
             Assert.Equal(!retained, root.Release());
+
             if (retained)
             {
                 Assert.Equal(method == 6 ? 3 : 0, view.GetByte(0));
                 Assert.True(view.Release());
+
                 if (independent)
                     Assert.False(viewTracker.Close(viewReferent));
             }
             else
                 Assert.Throws<IllegalReferenceCountException>(() => view.GetByte(0));
+
             Assert.False(tracker.Close(referent));
         }
         finally
         {
             if (view != null && retained && view.RefCnt > 0)
                 view.Release();
+
             if (root.RefCnt > 0)
                 root.Release(root.RefCnt);
+
             (allocator as IDisposable)?.Dispose();
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -244,6 +264,7 @@ public class AllocatorLeakDetectionTest : IDisposable
         IByteBufAllocator contract = probe;
         ByteBuf[] buffers = [a.Buffer(8, 64), contract.Buffer(8, 64), a.IoBuffer(8, 64),
             contract.HeapBuffer(8, 64), contract.DirectBuffer(8, 64), a.CompositeBuffer(2), contract.CompositeBuffer(2)];
+
         try
         {
             Assert.Equal(2, probe.BufferCalls);
@@ -266,6 +287,7 @@ public class AllocatorLeakDetectionTest : IDisposable
                 b.Release();
             }
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -321,6 +343,7 @@ public class AllocatorLeakDetectionTest : IDisposable
         var native = new NativeMemoryAllocator();
         var allocator = Allocator(pooled ? 1 : 0, true, native);
         ByteBuf root = allocator.Buffer(8, 64).WriteLong(42), copy = null;
+
         try
         {
             copy = root.Copy();
@@ -335,10 +358,13 @@ public class AllocatorLeakDetectionTest : IDisposable
         {
             if (root.RefCnt > 0)
                 root.Release();
+
             if (copy?.RefCnt > 0)
                 copy.Release();
+
             (allocator as IDisposable)?.Dispose();
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -352,12 +378,14 @@ public class AllocatorLeakDetectionTest : IDisposable
         var tracker = Tracker(b);
         var referent = b.Unwrap();
         var lease = b.AcquireReadLease();
+
         try
         {
             Assert.True(b.Release());
             Assert.False(tracker.Close(referent));
             (allocator as IDisposable)?.Dispose();
             Assert.True(native.ReservedBytes > 0);
+
             if (allocator is UnpooledByteBufAllocator unpooled)
                 Assert.Equal(0, unpooled.Metric.UsedDirectMemory);
         }
@@ -367,9 +395,11 @@ public class AllocatorLeakDetectionTest : IDisposable
             {
                 b.Release();
             }
+
             (allocator as IDisposable)?.Dispose();
             lease.Dispose();
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 }

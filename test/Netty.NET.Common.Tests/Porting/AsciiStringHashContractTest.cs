@@ -13,11 +13,14 @@ public class AsciiStringHashContractTest
     public void EveryTailLengthAndWordBoundaryMatchesThePinnedJavaHash()
     {
         int[] expected = BitConverter.IsLittleEndian ? LittleEndian : BigEndian;
+
         for (int length = 0; length <= 64; length++)
         {
             byte[] bytes = new byte[length + 22];
+
             for (int i = 0; i < bytes.Length; i++)
                 bytes[i] = unchecked((byte)(i * 73 + length * 17 + 128));
+
             AsciiString view = new AsciiString(bytes, 11, length, false);
             Assert.Equal(expected[length], view.GetHashCode(), "length=" + length);
             Assert.Equal(expected[length], PlatformDependent.HashCodeAscii(bytes, 11, length), "length=" + length);

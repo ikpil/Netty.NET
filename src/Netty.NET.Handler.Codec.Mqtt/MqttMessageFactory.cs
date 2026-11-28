@@ -28,6 +28,7 @@ public sealed class MqttMessageFactory
     public static MqttMessage NewMessage(MqttFixedHeader mqttFixedHeader, object variableHeader, object payload)
     {
         MqttMessageType messageType = mqttFixedHeader.MessageType();
+
         switch (messageType)
         {
             case var _ when messageType == MqttMessageType.CONNECT:

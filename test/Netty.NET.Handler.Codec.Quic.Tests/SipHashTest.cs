@@ -118,20 +118,26 @@ public class SipHashTest
         ReferenceTestParam[] testCases = new ReferenceTestParam[64];
         // Use little-endian as this is what is expected by the reference output.
         byte[] bb = new byte[8];
+
         for (int i = 0; i < testCases.Length; ++i)
         {
             byte[] input = new byte[i];
+
             for (int j = 0; j < input.Length; ++j)
             {
                 input[j] = (byte) j;
             }
+
             int position = 0;
+
             foreach (int v in REFERENCE_OUTPUT[i])
             {
                 bb[position++] = (byte) v;
             }
+
             testCases[i] = new ReferenceTestParam(input, BinaryPrimitives.ReadInt64LittleEndian(bb));
         }
+
         foreach (ReferenceTestParam testCase in testCases)
         {
             yield return new object[] { testCase };

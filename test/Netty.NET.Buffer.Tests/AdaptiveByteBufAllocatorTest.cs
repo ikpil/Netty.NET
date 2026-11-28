@@ -132,23 +132,30 @@ public class AdaptiveByteBufAllocatorTest : AbstractByteBufAllocatorTest<Adaptiv
         bufs.AddLast(allocator.HeapBuffer(256));
         long usedHeapMemory = allocator.UsedHeapMemory;
         int buffersPerChunk = checked((int)(usedHeapMemory / 256));
+
         for (int i = 0; i < buffersPerChunk; i++)
         {
             bufs.AddLast(allocator.HeapBuffer(256));
         }
+
         Assert.Equal(2 * usedHeapMemory, allocator.UsedHeapMemory);
         Pop(bufs).Release();
         Assert.Equal(2 * usedHeapMemory, allocator.UsedHeapMemory);
+
         while (bufs.Count != 0)
         {
             Pop(bufs).Release();
         }
+
         Assert.Equal(2 * usedHeapMemory, allocator.UsedHeapMemory);
+
         for (int i = 0; i < 2 * buffersPerChunk; i++)
         {
             bufs.AddLast(allocator.HeapBuffer(256));
         }
+
         Assert.Equal(2 * usedHeapMemory, allocator.UsedHeapMemory);
+
         while (bufs.Count != 0)
         {
             Pop(bufs).Release();
@@ -168,6 +175,7 @@ public class AdaptiveByteBufAllocatorTest : AbstractByteBufAllocatorTest<Adaptiv
     {
         AdaptiveByteBufAllocator allocator = NewAllocator(false);
         ByteBuf buf = allocator.DirectBuffer(7);
+
         try
         {
             // CLR: ArgumentOutOfRangeException replaces IndexOutOfBoundsException; a positioned SafeFileHandle replaces
@@ -190,6 +198,7 @@ public class AdaptiveByteBufAllocatorTest : AbstractByteBufAllocatorTest<Adaptiv
         AdaptiveByteBufAllocator allocator = NewAllocator(false);
         TestGatheringByteChannel channel = new TestGatheringByteChannel();
         ByteBuf buf = allocator.DirectBuffer(7);
+
         try
         {
             // CLR: ArgumentOutOfRangeException replaces IndexOutOfBoundsException; a connected Socket replaces the
@@ -221,6 +230,7 @@ public class AdaptiveByteBufAllocatorTest : AbstractByteBufAllocatorTest<Adaptiv
             listener.Bind(new IPEndPoint(IPAddress.Loopback, 0));
             listener.Listen(1);
             Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
             try
             {
                 Socket.Connect(listener.LocalEndPoint!);
@@ -248,6 +258,7 @@ public class AdaptiveByteBufAllocatorTest : AbstractByteBufAllocatorTest<Adaptiv
         AdaptiveByteBufAllocator allocator = NewAllocator(false);
         ByteBuf buffer = allocator.Buffer(8);
         AssertInstanceOf(buffer, typeof(AdaptivePoolingAllocator.AdaptiveByteBuf));
+
         // Unwrap if this is wrapped by a leak aware buffer.
         if (buffer is SimpleLeakAwareByteBuf)
         {
@@ -284,6 +295,7 @@ public class AdaptiveByteBufAllocatorTest : AbstractByteBufAllocatorTest<Adaptiv
         int threadCount = NettyRuntime.AvailableProcessors() * 4;
         CountdownEvent countDownLatch = new CountdownEvent(threadCount);
         Exception throwableAtomicReference = null;
+
         for (int i = 0; i < threadCount; i++)
         {
             new Thread(() =>
@@ -293,6 +305,7 @@ public class AdaptiveByteBufAllocatorTest : AbstractByteBufAllocatorTest<Adaptiv
                     try
                     {
                         ByteBuf buffer = null;
+
                         try
                         {
                             buffer = alloc.HeapBuffer(128);
@@ -312,9 +325,11 @@ public class AdaptiveByteBufAllocatorTest : AbstractByteBufAllocatorTest<Adaptiv
                         Volatile.Write(ref throwableAtomicReference, t);
                     }
                 }
+
                 countDownLatch.Signal();
             }).Start();
         }
+
         countDownLatch.Wait(TestContext.Current.CancellationToken);
         Exception throwable = Volatile.Read(ref throwableAtomicReference);
         if (throwable != null)
@@ -350,6 +365,7 @@ public class AdaptiveByteBufAllocatorTest : AbstractByteBufAllocatorTest<Adaptiv
         Shuffle(rng, allocationSizes);
 
         ByteBuf[] bufs = new ByteBuf[allocationSizes.Length];
+
         for (int i = 0; i < bufs.Length; i++)
         {
             bufs[i] = allocator.Buffer(allocationSizes[i], allocationSizes[i]);
@@ -358,12 +374,14 @@ public class AdaptiveByteBufAllocatorTest : AbstractByteBufAllocatorTest<Adaptiv
         Shuffle(rng, bufs);
 
         int[] reallocations = new int[bufs.Length / 2];
+
         for (int i = 0; i < reallocations.Length; i++)
         {
             reallocations[i] = bufs[i].Capacity;
             bufs[i].Release();
             bufs[i] = null;
         }
+
         for (int i = 0; i < reallocations.Length; i++)
         {
             Assert.Null(bufs[i]);
@@ -377,6 +395,7 @@ public class AdaptiveByteBufAllocatorTest : AbstractByteBufAllocatorTest<Adaptiv
                 bufs[i].WriteByte(i + 1);
             }
         }
+
         try
         {
             for (int i = 0; i < bufs.Length; i++)
@@ -413,6 +432,7 @@ public class AdaptiveByteBufAllocatorTest : AbstractByteBufAllocatorTest<Adaptiv
                 PoolSetting<long>(allocator, "_chunkPurgePollsThreadLocal") :
                 PoolSetting<long>(allocator, "_chunkPurgePollsShared");
         Action test = () => AssertPurgeScanEvictsIdleChunks(allocator, purgePolls);
+
         if (threadLocal)
         {
             FastThreadLocalThread.RunWithFastThreadLocal(test);
@@ -443,6 +463,7 @@ public class AdaptiveByteBufAllocatorTest : AbstractByteBufAllocatorTest<Adaptiv
         int totalChunks = (int) Math.Max(purgePolls, chunkReuseQueue) * 4 + 10;
         int totalBuffers = totalChunks * buffersPerChunk;
         List<ByteBuf> bufs = new List<ByteBuf>(totalBuffers);
+
         for (int i = 0; i < totalBuffers; i++)
         {
             bufs.Add(allocator.HeapBuffer(256));
@@ -452,6 +473,7 @@ public class AdaptiveByteBufAllocatorTest : AbstractByteBufAllocatorTest<Adaptiv
         {
             buf.Release();
         }
+
         bufs.Clear();
         long memoryAfterRelease = allocator.UsedHeapMemory;
 
@@ -465,16 +487,19 @@ public class AdaptiveByteBufAllocatorTest : AbstractByteBufAllocatorTest<Adaptiv
         double advanceRate = 1.0 - (double) purgePolls / notEmpty;
         int cyclesNeeded = advanceRate > 0 ? (int) Math.Ceiling((threshold + 1) / advanceRate) + 2 : threshold + 2;
         int pollsNeeded = setupPolls + (int) (cyclesNeeded * purgePolls);
+
         for (int poll = 0; poll < pollsNeeded; poll++)
         {
             for (int i = 0; i < buffersPerChunk; i++)
             {
                 bufs.Add(allocator.HeapBuffer(256));
             }
+
             foreach (ByteBuf buf in bufs)
             {
                 buf.Release();
             }
+
             bufs.Clear();
         }
 
@@ -489,6 +514,7 @@ public class AdaptiveByteBufAllocatorTest : AbstractByteBufAllocatorTest<Adaptiv
     private static void Shuffle<TElement>(Random rng, TElement[] array)
     {
         int len = array.Length;
+
         for (int i = 0; i < len; i++)
         {
             int n = rng.Next(i, len);
@@ -516,6 +542,7 @@ public class AdaptiveByteBufAllocatorClrContractTest
         var native = new NativeMemoryAllocator();
         using var allocator = new AdaptiveByteBufAllocator(preferDirect, lowMemory: lowMemory, nativeAllocator: native);
         ByteBuf normal = allocator.Buffer(7, 100), heap = allocator.HeapBuffer(7, 100), direct = allocator.IoBuffer(7, 100);
+
         try
         {
             Assert.Equal(preferDirect, normal.IsDirect);
@@ -536,6 +563,7 @@ public class AdaptiveByteBufAllocatorClrContractTest
             heap.Release();
             direct.Release();
         }
+
         allocator.Dispose();
         Assert.Equal(0, allocator.UsedHeapMemory + allocator.UsedDirectMemory);
         Assert.Equal(0, native.ReservedBytes);
@@ -547,6 +575,7 @@ public class AdaptiveByteBufAllocatorClrContractTest
     {
         using var allocator = Allocator();
         ByteBuf buffer = direct ? allocator.DirectBuffer(1024, 4096) : allocator.HeapBuffer(1024, 4096);
+
         try
         {
             Assert.Equal(131072, direct ? allocator.UsedDirectMemory : allocator.UsedHeapMemory);
@@ -559,6 +588,7 @@ public class AdaptiveByteBufAllocatorClrContractTest
         {
             buffer.Release();
         }
+
         // Memory is still held by the magazines
         Assert.Equal(262144, direct ? allocator.UsedDirectMemory : allocator.UsedHeapMemory);
     }
@@ -579,12 +609,17 @@ public class AdaptiveByteBufAllocatorClrContractTest
         {
             for (int i = 0; i < 513; i++)
                 live.Add(NewBuffer());
+
             Assert.Equal(262144, direct ? allocator.UsedDirectMemory : allocator.UsedHeapMemory);
+
             foreach (var b in live)
                 b.Release();
+
             live.Clear();
+
             for (int i = 0; i < 1024; i++)
                 live.Add(NewBuffer());
+
             Assert.Equal(262144, direct ? allocator.UsedDirectMemory : allocator.UsedHeapMemory);
         }
         finally
@@ -614,6 +649,7 @@ public class AdaptiveByteBufAllocatorClrContractTest
             {
                 live.Add(NewBuffer());
             }
+
             foreach (var b in live)
             {
                 b.Release();
@@ -628,6 +664,7 @@ public class AdaptiveByteBufAllocatorClrContractTest
                 {
                     live.Add(NewBuffer());
                 }
+
                 foreach (var b in live)
                 {
                     b.Release();
@@ -659,6 +696,7 @@ public class AdaptiveByteBufAllocatorClrContractTest
         // Buddy reservations are the next power of two; low memory and sizes above the 1 MiB
         // pooled maximum use a dedicated chunk of exactly the requested size.
         int[] buddy = [32768, 65536, 524288, 1048576, 0];
+
         for (int i = 0; i < sizes.Length; i++)
         {
             int size = sizes[i];
@@ -671,10 +709,13 @@ public class AdaptiveByteBufAllocatorClrContractTest
             Assert.Equal(12345, b.GetInt(0));
             b.Release();
             long after = direct ? allocator.UsedDirectMemory : allocator.UsedHeapMemory;
+
             if (!pooled)
                 Assert.Equal(before, after);
+
             Assert.Equal(pooled ? buddy[i] : size, reservation.Length);
         }
+
         allocator.Dispose();
         Assert.Equal(0, allocator.UsedHeapMemory + allocator.UsedDirectMemory);
         Assert.Equal(0, native.ReservedBytes);
@@ -686,16 +727,20 @@ public class AdaptiveByteBufAllocatorClrContractTest
     {
         using var allocator = Allocator();
         var random = new Random(91);
+
         for (int iteration = 0; iteration < 100; iteration++)
         {
             int[] sizes = [32768,32768,32768,32768,32768,32768,32768,32768,65536,65536,65536,65536,131072,131072];
             random.Shuffle(sizes);
             ByteBuf[] buffers = new ByteBuf[sizes.Length];
+
             try
             {
                 for (int i = 0; i < sizes.Length; i++)
                     buffers[i] = direct ? allocator.DirectBuffer(sizes[i], sizes[i]) : allocator.HeapBuffer(sizes[i], sizes[i]);
+
                 random.Shuffle(buffers);
+
                 for (int i = 0; i < buffers.Length / 2; i++)
                 {
                     int size = buffers[i].Capacity;
@@ -703,8 +748,10 @@ public class AdaptiveByteBufAllocatorClrContractTest
                     buffers[i] = null;
                     buffers[i] = direct ? allocator.DirectBuffer(size, size) : allocator.HeapBuffer(size, size);
                 }
+
                 for (int i = 0; i < buffers.Length; i++)
                     buffers[i].AsSpan(0, buffers[i].Capacity).Fill((byte)(i + 1));
+
                 for (int i = 0; i < buffers.Length; i++)
                     Assert.True(buffers[i].AsSpan(0, buffers[i].Capacity).IndexOfAnyExcept((byte)(i + 1)) < 0);
             }
@@ -727,9 +774,11 @@ public class AdaptiveByteBufAllocatorClrContractTest
         await Task.WhenAll(Enumerable.Range(0, 16).Select(worker => Task.Run(() =>
         {
             var random = new Random(worker);
+
             for (int i = 0; i < 256; i++)
             {
                 ByteBuf b = allocator.DirectBuffer(128, 65536);
+
                 try
                 {
                     b.WriteInt(worker);
@@ -767,15 +816,19 @@ public class AdaptiveByteBufAllocatorClrContractTest
         });
         holder.Start();
         locked.Wait(TestContext.Current.CancellationToken);
+
         try
         {
             Task<ByteBuf> allocation = Task.Run(() => allocator.HeapBuffer(7, 100), TestContext.Current.CancellationToken);
+
             if (stripes > 1)
             {
                 Assert.True(SpinWait.SpinUntil(() => allocator.HeapPool.SizeClassedMagazineGroups[0].Magazines.Length > 1, TimeSpan.FromSeconds(10)));
                 release.Set();
             }
+
             ByteBuf b = await allocation;
+
             try
             {
                 Assert.Equal(stripes == 1 ? 7 : 32, AdaptiveByteBufAllocatorTest.Root(b).Allocation.Length);
@@ -791,6 +844,7 @@ public class AdaptiveByteBufAllocatorClrContractTest
             release.Set();
             Assert.True(holder.Join(TimeSpan.FromSeconds(10)));
         }
+
         allocator.Dispose();
         Assert.Equal(0, allocator.UsedHeapMemory);
     }
@@ -827,6 +881,7 @@ public class AdaptiveByteBufAllocatorClrContractTest
         using var allocator = Allocator(native: native);
         ByteBuf b = allocator.DirectBuffer(7, 100);
         b.SetInt(0, 12345);
+
         try
         {
             Assert.Throws<OutOfDirectMemoryError>(() => b.Capacity = 33);
@@ -838,6 +893,7 @@ public class AdaptiveByteBufAllocatorClrContractTest
         {
             b.Release();
         }
+
         allocator.Dispose();
         Assert.Equal(0, native.ReservedBytes);
     }
@@ -849,6 +905,7 @@ public class AdaptiveByteBufAllocatorClrContractTest
         var native = new NativeMemoryAllocator();
         using var allocator = Allocator(native: native);
         CompositeByteBuf composite = direct ? allocator.CompositeDirectBuffer(1) : allocator.CompositeHeapBuffer(1);
+
         try
         {
             ByteBuf first = direct ? allocator.DirectBuffer(4, 100) : allocator.HeapBuffer(4, 100);
@@ -865,6 +922,7 @@ public class AdaptiveByteBufAllocatorClrContractTest
         {
             composite.Release();
         }
+
         allocator.Dispose();
         Assert.Equal(0, allocator.UsedHeapMemory + allocator.UsedDirectMemory);
         Assert.Equal(0, native.ReservedBytes);

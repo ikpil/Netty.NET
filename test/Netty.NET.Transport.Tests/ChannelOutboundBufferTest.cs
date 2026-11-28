@@ -43,8 +43,10 @@ public class ChannelOutboundBufferTest
         Assert.Equal(0, buffer.NioBufferCount);
         var buffers = buffer.NioBuffers();
         Assert.NotNull(buffers);
+
         foreach (var b in buffers)
             Assert.True(b.IsEmpty);
+
         Assert.Equal(0, buffer.NioBufferCount);
         Release(buffer);
     }
@@ -96,11 +98,13 @@ public class ChannelOutboundBufferTest
         var buffers = buffer.NioBuffers();
         Assert.NotNull(buffers);
         Assert.Equal(1, buffer.NioBufferCount);
+
         for (int i = 0; i < buffer.NioBufferCount; i++)
             if (i == 0)
                 Assert.True(buffers[i].Span.SequenceEqual(nioBuf.Span));
             else
                 Assert.True(buffers[i].IsEmpty);
+
         Release(buffer);
     }
 
@@ -110,14 +114,18 @@ public class ChannelOutboundBufferTest
         var channel = new TestChannel();
         var buffer = new ChannelOutboundBuffer(channel);
         var buf = Unpooled.DirectBuffer().WriteBytes(Encoding.ASCII.GetBytes("buf1"));
+
         for (int i = 0; i < 64; i++)
             buffer.AddMessage(buf.Copy(), buf.ReadableBytes);
+
         Assert.Equal(0, buffer.NioBufferCount);
         buffer.AddFlush();
         var buffers = buffer.NioBuffers();
         Assert.Equal(64, buffer.NioBufferCount);
+
         for (int i = 0; i < buffer.NioBufferCount; i++)
             Assert.True(buffers[i].Span.SequenceEqual(buf.ReadableMemory.Span));
+
         Release(buffer);
         buf.Release();
     }
@@ -129,18 +137,22 @@ public class ChannelOutboundBufferTest
         var buffer = new ChannelOutboundBuffer(channel);
         var comp = Unpooled.CompositeBuffer(256);
         var buf = Unpooled.DirectBuffer().WriteBytes(Encoding.ASCII.GetBytes("buf1"));
+
         for (int i = 0; i < 65; i++)
             comp.AddComponent(buf.Copy(), true);
+
         buffer.AddMessage(comp, comp.ReadableBytes);
         Assert.Equal(0, buffer.NioBufferCount);
         buffer.AddFlush();
         var buffers = buffer.NioBuffers();
         Assert.Equal(65, buffer.NioBufferCount);
+
         for (int i = 0; i < buffer.NioBufferCount; i++)
             if (i < 65)
                 Assert.True(buffers[i].Span.SequenceEqual(buf.ReadableMemory.Span));
             else
                 Assert.True(buffers[i].IsEmpty);
+
         Release(buffer);
         buf.Release();
     }
@@ -152,11 +164,15 @@ public class ChannelOutboundBufferTest
         var buffer = new ChannelOutboundBuffer(channel);
         var comp = Unpooled.CompositeBuffer(256);
         var buf = Unpooled.DirectBuffer().WriteBytes(Encoding.ASCII.GetBytes("buf1"));
+
         for (int i = 0; i < 65; i++)
             comp.AddComponent(buf.Copy(), true);
+
         int segments = 0;
+
         foreach (var _ in comp.ReadableSequence)
             segments++;
+
         Assert.Equal(65, segments);
         buffer.AddMessage(comp, comp.ReadableBytes);
         Assert.Equal(0, buffer.NioBufferCount);
@@ -164,8 +180,10 @@ public class ChannelOutboundBufferTest
         const int maxCount = 10; // less than comp.nioBufferCount()
         var buffers = buffer.NioBuffers(maxCount, int.MaxValue);
         Assert.True(buffer.NioBufferCount <= maxCount, "Should not be greater than maxCount");
+
         for (int i = 0; i < buffer.NioBufferCount; i++)
             Assert.True(buffers[i].Span.SequenceEqual(buf.ReadableMemory.Span));
+
         Release(buffer);
         buf.Release();
     }
@@ -201,9 +219,11 @@ public class ChannelOutboundBufferTest
         channel.Config.SetWriteBufferLowWaterMark(128);
         channel.Config.SetWriteBufferHighWaterMark(256);
         var buffer = channel.OutboundBuffer;
+
         // Ensure that the default value of a user-defined writability flag is true.
         for (int i = 1; i <= 30; i++)
             Assert.True(buffer.GetUserDefinedWritability(i));
+
         // Ensure that setting a user-defined writability flag to false affects channel.isWritable();
         buffer.SetUserDefinedWritability(1, false);
         channel.RunPendingTasks();
@@ -280,6 +300,7 @@ public class ChannelOutboundBufferTest
             {
                 writes.Add(ctx.WriteAndFlushAsync(Unpooled.WrappedBuffer(new byte[] { 2 })));
             }
+
             ctx.FireChannelWritabilityChanged(); }));
         channel.Config.SetWriteBufferWaterMark(new WriteBufferWaterMark(256, 512));
         var cancelledBuffer = Unpooled.Buffer().WriteZero(512);
@@ -319,6 +340,7 @@ public class ChannelOutboundBufferTest
             {
                 _ = ctx.CloseAsync();
             }
+
             ctx.FireChannelWritabilityChanged(); }, () => Interlocked.Increment(ref inactive)));
         channel.Config.SetWriteBufferWaterMark(new WriteBufferWaterMark(256, 512));
         var cancelledBuffer = Unpooled.Buffer().WriteZero(512);
@@ -362,6 +384,7 @@ public class ChannelOutboundBufferTest
                 pendingAtEvent = buffer.TotalPendingWriteBytes;
                 currentAtEvent = buffer.Current;
             }
+
             ctx.FireChannelWritabilityChanged();
         }));
         channel.Config.SetWriteBufferWaterMark(new WriteBufferWaterMark(400, 800));
@@ -375,20 +398,25 @@ public class ChannelOutboundBufferTest
         var cancelledBuffers = new ByteBuf[3];
         var liveBuffers = new ByteBuf[2];
         var cancellations = new CancellationTokenSource[3];
+
         for (int i = 0; i < 3; i++)
         {
             cancelledBuffers[i] = Unpooled.Buffer().WriteZero(300);
             cancellations[i] = new CancellationTokenSource();
             buffer.AddMessage(cancelledBuffers[i], 300, cancellations[i].Token);
+
             if (i < 2)
             {
                 liveBuffers[i] = Unpooled.WrappedBuffer(new byte[] { (byte)(i + 1) });
                 buffer.AddMessage(liveBuffers[i], 1);
             }
         }
+
         Assert.False(channel.IsWritable);
+
         foreach (var cancellation in cancellations)
             cancellation.Cancel();
+
         buffer.AddFlush();
         Assert.Equal(1, writable);
         // The buffer must already be consistent when the event is fired.
@@ -397,16 +425,23 @@ public class ChannelOutboundBufferTest
         Assert.Same(live0, currentAtEvent);
         Assert.Equal(6, buffer.Size);
         Assert.True(channel.IsWritable);
+
         foreach (var data in cancelledBuffers)
             Assert.Equal(0, data.RefCnt);
+
         Assert.Equal(1, live0.RefCnt);
+
         foreach (var data in liveBuffers)
             Assert.Equal(1, data.RefCnt);
+
         Assert.True(channel.CloseAsync().IsCompletedSuccessfully);
         Assert.Equal(0, live0.RefCnt);
+
         foreach (var data in liveBuffers)
             Assert.Equal(0, data.RefCnt);
+
         Assert.Equal(0, buffer.TotalPendingWriteBytes);
+
         foreach (var cancellation in cancellations)
             cancellation.Dispose();
     }
@@ -456,6 +491,7 @@ public class ChannelOutboundBufferTest
         Assert.True(added.Wait(TimeSpan.FromSeconds(5)));
         using var execute = new ManualResetEventSlim();
         using var running = new ManualResetEventSlim();
+
         try
         {
             executor.Execute(() =>
@@ -477,11 +513,13 @@ public class ChannelOutboundBufferTest
             // In case of rejected task we should not have anything pending.
             Assert.Equal(0, channel.OutboundBuffer.TotalPendingWriteBytes);
             execute.Set();
+
             while (executor.PendingTasks() != 0)
             {
                 // Wait until there is no more pending task left.
                 await Task.Delay(10, TestContext.Current.CancellationToken);
             }
+
             channel.Pipeline.Remove("handler");
             // Ensure we do not try to shutdown the executor before we handled everything for the Channel. Otherwise
             // the Executor may reject when the Channel tries to add a task to it.
@@ -513,6 +551,7 @@ public class ChannelOutboundBufferTest
     private static void SafeClose(EmbeddedChannel channel)
     {
         channel.Finish();
+
         while (channel.ReadOutbound<ByteBuf>() is { } message)
             message.Release();
     }
@@ -521,6 +560,7 @@ public class ChannelOutboundBufferTest
     {
         var buffer = channel.ReadOutbound<ByteBuf>();
         Assert.NotNull(buffer);
+
         try
         {
             if (expected == 0)

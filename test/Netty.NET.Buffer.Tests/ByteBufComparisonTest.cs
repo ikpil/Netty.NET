@@ -50,6 +50,7 @@ public class ByteBufComparisonTest
         new Random(456).NextBytes(second);
         Array.Copy(first, 64, second, 192, 64);
         ByteBuf a = Owner(kind, first), b = Owner(kind, second);
+
         try
         {
             Assert.True(ByteBufUtil.Equals(a, 64, b, 192, 64));
@@ -72,6 +73,7 @@ public class ByteBufComparisonTest
         first[25 + new Random(1213).Next(25)] ^= 1;
         a = Owner(kind, first);
         b = Owner(kind, second);
+
         try
         {
             Assert.False(ByteBufUtil.Equals(a, 25, b, 75, 25));
@@ -90,12 +92,15 @@ public class ByteBufComparisonTest
     {
         byte[] content = Enumerable.Range(0, 32).Select(i => unchecked((byte)(i * 17))).ToArray();
         ByteBuf a = Owner(kind, new byte[] { 99 }.Concat(content).Append((byte)88).ToArray());
+
         try
         {
             a.SetIndex(1, 33).MarkReaderIndex().MarkWriterIndex();
+
             for (int otherKind = 0; otherKind < 7; otherKind++)
             {
                 ByteBuf b = Owner(otherKind, new byte[] { 55, 66, 77 }.Concat(content).ToArray());
+
                 try
                 {
                     b.SetIndex(3, 35).MarkReaderIndex().MarkWriterIndex();
@@ -117,6 +122,7 @@ public class ByteBufComparisonTest
                     b.Release();
                 }
             }
+
             a.SetIndex(2, 34).ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(1, a.ReaderIndex);
             Assert.Equal(33, a.WriterIndex);
@@ -139,12 +145,15 @@ public class ByteBufComparisonTest
         // Fill the random stuff
         byte[] value = new byte[32];
         new Random(12345).NextBytes(value);
+
         // Prevent overflow / underflow
         if (value[0] == 0)
             value[0]++;
         else if (value[0] == 255)
             value[0]--;
+
         ByteBuf a = Owner(kind, value.ToArray());
+
         try
         {
             value[0]++;
@@ -153,6 +162,7 @@ public class ByteBufComparisonTest
             ByteBuf lower = Owner(kind, value.ToArray());
             value[0]++;
             ByteBuf prefix = Owner(kind, value[..31]);
+
             try
             {
                 Assert.True(a.CompareTo(higher) < 0);
@@ -161,6 +171,7 @@ public class ByteBufComparisonTest
                 Assert.True(a.CompareTo(prefix) > 0);
                 Assert.True(a.Slice(0, 31).CompareTo(a) < 0);
                 ByteBuf retained = a.RetainedSlice(0, 31);
+
                 try
                 {
                     Assert.True(retained.CompareTo(a) < 0);
@@ -184,6 +195,7 @@ public class ByteBufComparisonTest
 
         a = Owner(kind, new byte[] { 1, 2, 3, 4 });
         ByteBuf b = Owner(kind, new byte[] { 4, 3, 2, 1 });
+
         try
         {
             Assert.Equal(-50396925, a.CompareTo(b));
@@ -209,9 +221,11 @@ public class ByteBufComparisonTest
             (new byte[] { 127, 255, 255, 255, 127, 255, 255, 255 }, 929),
             (new byte[] { 128, 0, 0, 0, 128, 0, 0, 0, 255 }, 29790)
         };
+
         foreach (var vector in vectors)
         {
             ByteBuf b = Owner(kind, new byte[] { 3 }.Concat(vector.Bytes).Append((byte)4).ToArray());
+
             try
             {
                 b.SetIndex(1, 1 + vector.Bytes.Length);
@@ -243,9 +257,11 @@ public class ByteBufComparisonTest
             (new byte[] { 127, 255, 255, 255 }, new byte[] { 128, 0, 0, 0 }, -1),
             (new byte[9], new byte[5], 4), (new byte[3], new byte[9], -6)
         };
+
         foreach (var vector in vectors)
         {
             ByteBuf a = Owner(kind, vector.A), b = Owner(kind, vector.B);
+
             try
             {
                 Assert.Equal(vector.Difference, ByteBufUtil.Compare(a, b));
@@ -265,6 +281,7 @@ public class ByteBufComparisonTest
     public void AbsoluteEqualityUsesWriterBoundBeforeReaderAndAvoidsOverflow(int kind)
     {
         ByteBuf a = Owner(kind, new byte[32]), b = Owner(kind, new byte[32]);
+
         try
         {
             a.SetIndex(8, 16);
@@ -292,6 +309,7 @@ public class ByteBufComparisonTest
         ByteBuf a = Unpooled.WrappedBuffer(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5 });
         ByteBuf b = Unpooled.DirectBuffer(15).WriteBytes(new byte[] { 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9 });
         ByteBuf aCopy = a.Copy(), bCopy = b.Copy(), probe = Unpooled.Buffer(15);
+
         try
         {
             var set = new HashSet<ByteBuf> { a, b };

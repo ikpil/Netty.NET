@@ -139,11 +139,13 @@ public class HttpMethodTest
         // a known request-smuggling vector if silently stripped, so the decoder must
         // surface a decoder failure rather than producing a valid GET message.
         EmbeddedChannel ch = new EmbeddedChannel(new HttpRequestDecoder());
+
         try
         {
             byte[] data = Encoding.ASCII.GetBytes(NUL + "GET" + NUL + " / HTTP/1.1\r\nHost: x\r\n\r\n");
             ch.WriteInbound(Unpooled.WrappedBuffer(data));
             IHttpRequest req = ch.ReadInbound<IHttpRequest>();
+
             try
             {
                 Assert.NotNull(req);
@@ -166,11 +168,13 @@ public class HttpMethodTest
     {
         // Regression: ordinary GET requests must still parse normally.
         EmbeddedChannel ch = new EmbeddedChannel(new HttpRequestDecoder());
+
         try
         {
             byte[] data = Encoding.ASCII.GetBytes("GET / HTTP/1.1\r\nHost: x\r\n\r\n");
             ch.WriteInbound(Unpooled.WrappedBuffer(data));
             IHttpRequest req = ch.ReadInbound<IHttpRequest>();
+
             try
             {
                 Assert.NotNull(req);

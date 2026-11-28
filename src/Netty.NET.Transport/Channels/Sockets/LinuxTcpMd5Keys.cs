@@ -38,6 +38,7 @@ internal sealed class LinuxTcpMd5Keys
     internal LinuxTcpMd5Keys(Socket socket, bool accepted)
     {
         _socket = socket;
+
         // The kernel may copy the listener's matching key to the accepted socket.
         if (accepted && socket.RemoteEndPoint is IPEndPoint peer)
             _peers.Add(Normalize(peer.Address));
@@ -46,17 +47,20 @@ internal sealed class LinuxTcpMd5Keys
     internal void Replace(IReadOnlyDictionary<IPAddress, byte[]> newKeys)
     {
         ArgumentNullException.ThrowIfNull(newKeys);
+
         // Add synchronized as newTcpMp5Sigs might do multiple operations on the socket itself.
         lock (_peers)
         {
             // Validate incoming values
             var replacement = new Dictionary<IPAddress, byte[]>(newKeys.Count);
+
             foreach (var (address, key) in newKeys)
             {
                 ArgumentNullException.ThrowIfNull(address);
                 ArgumentNullException.ThrowIfNull(key);
                 if (key.Length is 0 or > MaxKeyLength)
                     throw new ArgumentException("A TCP MD5 key must contain between 1 and 80 bytes.", nameof(newKeys));
+
                 replacement.Add(Normalize(address), key);
             }
 
@@ -67,6 +71,7 @@ internal sealed class LinuxTcpMd5Keys
                 {
                     continue;
                 }
+
                 Apply(peer, ReadOnlySpan<byte>.Empty);
                 _peers.Remove(peer);
             }
@@ -84,6 +89,7 @@ internal sealed class LinuxTcpMd5Keys
     {
         if (peer.IsIPv4MappedToIPv6)
             peer = peer.MapToIPv4();
+
         if (peer.AddressFamily != _socket.AddressFamily)
         {
             if (peer.AddressFamily == AddressFamily.InterNetwork && _socket.AddressFamily == AddressFamily.InterNetworkV6 && _socket.DualMode)
@@ -91,6 +97,7 @@ internal sealed class LinuxTcpMd5Keys
             else
                 throw new ArgumentException("The peer address family is incompatible with the socket.", nameof(peer));
         }
+
         return new IPAddress(peer.GetAddressBytes());
     }
 
@@ -101,12 +108,14 @@ internal sealed class LinuxTcpMd5Keys
         address.Buffer.Span[..address.Size].CopyTo(value);
         BitConverter.TryWriteBytes(value.AsSpan(KeyLengthOffset), (ushort)key.Length);
         key.CopyTo(value.AsSpan(KeyOffset));
+
         try
         {
             if (SetSocketOption(_socket.SafeHandle, (int)SocketOptionLevel.Tcp, TcpMd5Sig, value, (uint)value.Length) == 0)
                 return;
             if (key.IsEmpty && Marshal.GetLastPInvokeError() == NoSuchEntry)
                 return;
+
             throw new SocketException();
         }
         finally

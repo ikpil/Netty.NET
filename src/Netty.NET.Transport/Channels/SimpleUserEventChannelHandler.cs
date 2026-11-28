@@ -87,6 +87,7 @@ public abstract class SimpleUserEventChannelHandler<T> : ChannelInboundHandlerAd
         // CLR: Class<? extends I> is checked at run time.
         if (!typeof(T).IsAssignableFrom(eventType))
             throw new ArgumentException($"{eventType} is not assignable to {typeof(T)}", nameof(eventType));
+
         matcher = eventType;
         _autoRelease = autoRelease;
     }
@@ -103,6 +104,7 @@ public abstract class SimpleUserEventChannelHandler<T> : ChannelInboundHandlerAd
     public sealed override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
     {
         bool release = true;
+
         try
         {
             if (AcceptEvent(evt))

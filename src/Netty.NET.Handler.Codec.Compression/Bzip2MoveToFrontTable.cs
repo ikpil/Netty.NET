@@ -74,6 +74,7 @@ internal sealed class Bzip2MoveToFrontTable
         if (value != temp)
         {
             mtf[0] = value;
+
             while (value != temp)
             {
                 index++;
@@ -82,6 +83,7 @@ internal sealed class Bzip2MoveToFrontTable
                 mtf[index] = temp2;
             }
         }
+
         return index;
     }
 

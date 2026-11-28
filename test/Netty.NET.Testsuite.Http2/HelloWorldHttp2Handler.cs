@@ -56,10 +56,12 @@ public sealed class HelloWorldHttp2Handler : Http2ConnectionHandler, IHttp2Frame
                 .Method(HttpMethod.GET.AsciiName())
                 .Path(new StringCharSequence(request.Uri()))
                 .Scheme(HttpScheme.HTTP.Name());
+
         if (host != null)
         {
             http2Headers.Authority(new StringCharSequence(host));
         }
+
         return http2Headers;
     }
 
@@ -75,6 +77,7 @@ public sealed class HelloWorldHttp2Handler : Http2ConnectionHandler, IHttp2Frame
                     (HttpServerUpgradeHandler.UpgradeEvent) evt;
             OnHeadersRead(ctx, 1, Http1HeadersToHttp2Headers(upgradeEvent.UpgradeRequest()), 0 , true);
         }
+
         base.UserEventTriggered(ctx, evt);
     }
 
@@ -101,10 +104,12 @@ public sealed class HelloWorldHttp2Handler : Http2ConnectionHandler, IHttp2Frame
     public int OnDataRead(IChannelHandlerContext ctx, int streamId, ByteBuf data, int padding, bool endOfStream)
     {
         int processed = data.ReadableBytes + padding;
+
         if (endOfStream)
         {
             SendResponse(ctx, streamId, data.Retain());
         }
+
         return processed;
     }
 

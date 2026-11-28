@@ -36,10 +36,12 @@ public class HttpHelloWorldServerInitializer : ChannelInitializer<ISocketChannel
     protected override void InitChannel(ISocketChannel ch)
     {
         IChannelPipeline p = ch.Pipeline;
+
         if (sslCtx != null)
         {
             p.AddLast(sslCtx.NewHandler(ch.Alloc()));
         }
+
         p.AddLast(new HttpServerCodec());
         p.AddLast(new HttpContentCompressor((ICompressionOptions[]) null));
         p.AddLast(new HttpServerExpectContinueHandler());

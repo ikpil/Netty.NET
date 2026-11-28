@@ -64,6 +64,7 @@ public class LazyJavaxX509CertificateTest
     public void TestLazyX509Certificate()
     {
         X509Certificate x509Certificate;
+
         try
         {
             x509Certificate = X509CertificateLoader.LoadCertificate(Encoding.UTF8.GetBytes(CERTIFICATE));
@@ -74,6 +75,7 @@ public class LazyJavaxX509CertificateTest
             // JDK does not support this anymore
             return;
         }
+
         LazyJavaxX509Certificate lazyX509Certificate =
                 new LazyJavaxX509Certificate(Encoding.UTF8.GetBytes(CERTIFICATE));
         Assert.Equal(x509Certificate.GetRawCertData(), lazyX509Certificate.GetRawCertData());

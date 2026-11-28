@@ -49,6 +49,7 @@ public static class RtspVersions
         {
             throw new ArgumentException("text must not be empty");
         }
+
         // toUpperCase() must specify Locale.US so the comparison against "RTSP/1.0" is not
         // affected by the JVM default locale (e.g. Turkish, where 'i' uppercases to 'İ').
         string upper = text.ToUpperInvariant();

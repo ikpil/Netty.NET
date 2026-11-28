@@ -55,6 +55,7 @@ public static class TestsuitePermutation
         {
             return allocator.DirectBuffer().WriteBytes(data.AsSpan(offset, length));
         }
+
         return Unpooled.WrappedBuffer(data, offset, length);
     }
 }

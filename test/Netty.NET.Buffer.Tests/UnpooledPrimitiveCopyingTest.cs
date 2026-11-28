@@ -24,6 +24,7 @@ public class UnpooledPrimitiveCopyingTest
     private static void CheckOwnedCopy(ByteBuf buffer, string hex)
     {
         byte[] expected = Convert.FromHexString(hex);
+
         try
         {
             Assert.IsType<UnpooledHeapByteBuf>(buffer);
@@ -43,6 +44,7 @@ public class UnpooledPrimitiveCopyingTest
         {
             Assert.True(buffer.Release());
         }
+
         Assert.Equal(0, buffer.RefCnt);
     }
 
@@ -52,6 +54,7 @@ public class UnpooledPrimitiveCopyingTest
     public void SingleBooleanFactoryRoundtripsAndExhaustsTheReadableRange()
     {
         ByteBuf copy = Unpooled.CopyBoolean(true);
+
         try
         {
             Assert.Equal(1, copy.Capacity);
@@ -102,6 +105,7 @@ public class UnpooledPrimitiveCopyingTest
             4 => Unpooled.CopyLong(), 5 => Unpooled.CopyBoolean(),
             6 => Unpooled.CopyFloat(), _ => Unpooled.CopyDouble()
         };
+
         foreach (ByteBuf result in new[] { fromNull, fromEmpty, fromSpan, fromNoArguments })
         {
             Assert.Same(Unpooled.EmptyBuffer, result);
@@ -168,6 +172,7 @@ public class UnpooledPrimitiveCopyingTest
         Array.Clear(booleans);
         Array.Clear(floats);
         Array.Clear(doubles);
+
         try
         {
             arrayCopy.SetByte(0, 0x55);

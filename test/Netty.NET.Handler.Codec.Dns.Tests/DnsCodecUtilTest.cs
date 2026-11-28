@@ -79,6 +79,7 @@ public class DnsCodecUtilTest
     public void AcceptMaxCompressionPointers()
     {
         ByteBuf buf = NewPointerChain(DnsCodecUtil.MAX_COMPRESSION_POINTERS);
+
         try
         {
             Assert.Equal("abc.", DnsCodecUtil.DecodeDomainName(buf));
@@ -95,6 +96,7 @@ public class DnsCodecUtilTest
     public void RejectTooManyCompressionPointers()
     {
         ByteBuf buf = NewPointerChain(DnsCodecUtil.MAX_COMPRESSION_POINTERS + 1);
+
         try
         {
             Assert.Throws<CorruptedFrameException>(() => DnsCodecUtil.DecodeDomainName(buf));
@@ -111,6 +113,7 @@ public class DnsCodecUtilTest
         ByteBuf buf = Unpooled.Buffer();
         // A pointer to itself.
         buf.WriteShort(0xc000);
+
         try
         {
             Assert.Throws<CorruptedFrameException>(() => DnsCodecUtil.DecodeDomainName(buf));
@@ -130,12 +133,14 @@ public class DnsCodecUtilTest
         ByteBuf buf = Unpooled.Buffer();
         buf.WriteByte(3).WriteBytes(new byte[] { (byte) 'a', (byte) 'b', (byte) 'c' }).WriteByte(0);
         int previous = 0;
+
         for (int i = 0; i < pointers; i++)
         {
             int current = buf.WriterIndex;
             buf.WriteShort(0xc000 | previous);
             previous = current;
         }
+
         buf.ReaderIndex = previous;
         return buf;
     }
@@ -183,6 +188,7 @@ public class DnsCodecUtilTest
     private static void WriteLabel(ByteBuf buf, int length)
     {
         buf.WriteByte(length);
+
         for (int i = 1; i <= length; i++)
         {
             buf.WriteByte(i);
@@ -195,6 +201,7 @@ public class DnsCodecUtilTest
         {
             sb.Append('a');
         }
+
         sb.Append('.');
     }
 }

@@ -235,6 +235,7 @@ public sealed class CertificateBuilder
         {
             throw new ArgumentException("Blank DNS SANs are forbidden by RFC 5280, Section 4.2.1.6.");
         }
+
         subjectAlternativeNames.Add(GeneralNameUtils.DnsName(dns));
         return this;
     }
@@ -361,6 +362,7 @@ public sealed class CertificateBuilder
         byte[] fullName = GeneralNameUtils.UriName(uri);
         byte[] issuerName = GeneralNameUtils.DirectoryName(issuer);
         AsnWriter distributionPoint = new AsnWriter(AsnEncodingRules.DER);
+
         using (distributionPoint.PushSequence())
         {
             using (distributionPoint.PushSequence(new Asn1Tag(TagClass.ContextSpecific, 0)))
@@ -370,11 +372,13 @@ public sealed class CertificateBuilder
                     distributionPoint.WriteEncodedValue(fullName);
                 }
             }
+
             using (distributionPoint.PushSequence(new Asn1Tag(TagClass.ContextSpecific, 2)))
             {
                 distributionPoint.WriteEncodedValue(issuerName);
             }
         }
+
         crlDistributionPoints.Add(distributionPoint.Encode());
         return this;
     }
@@ -418,6 +422,7 @@ public sealed class CertificateBuilder
         {
             throw new NotSupportedException("This algorithm is not supported: " + algorithm);
         }
+
         this.algorithm = algorithm;
         return this;
     }
@@ -467,6 +472,7 @@ public sealed class CertificateBuilder
         {
             keyPair = publicKey;
         }
+
         return this;
     }
 
@@ -497,6 +503,7 @@ public sealed class CertificateBuilder
         {
             throw new ArgumentException("The given key pair must have a public key");
         }
+
         this.keyPair = keyPair;
         return this;
     }
@@ -506,6 +513,7 @@ public sealed class CertificateBuilder
     {
         ObjectUtil.CheckNotNull(identifierOid, "identifierOid");
         ObjectUtil.CheckNotNull(value, "value");
+
         modifierCallbacks.Add(builder =>
         {
             builder.Add(new X509Extension(
@@ -528,6 +536,7 @@ public sealed class CertificateBuilder
     {
         ObjectUtil.CheckNotNull(identifierOID, "identifierOID");
         ObjectUtil.CheckNotNull(contents, "contents");
+
         modifierCallbacks.Add(builder =>
         {
             builder.Add(new X509Extension(
@@ -554,6 +563,7 @@ public sealed class CertificateBuilder
     {
         AsnWriter writer = new AsnWriter(AsnEncodingRules.DER);
         writer.WriteCharacterString(UniversalTagNumber.UTF8String, value);
+
         return AddExtension(identifierOID, critical, writer.Encode());
     }
 
@@ -573,6 +583,7 @@ public sealed class CertificateBuilder
     {
         AsnWriter writer = new AsnWriter(AsnEncodingRules.DER);
         writer.WriteCharacterString(UniversalTagNumber.IA5String, value);
+
         return AddExtension(identifierOID, critical, writer.Encode());
     }
 
@@ -629,23 +640,30 @@ public sealed class CertificateBuilder
     public CertificateBuilder SetKeyUsage(bool critical, params KeyUsage[] keyUsages)
     {
         int maxBit = 0;
+
         foreach (KeyUsage usage in keyUsages)
         {
             maxBit = Math.Max(usage.bitId, maxBit);
         }
+
         bool[] bits = new bool[maxBit + 1];
+
         foreach (KeyUsage usage in keyUsages)
         {
             bits[usage.bitId] = true;
         }
+
         int padding = 8 - bits.Length % 8;
         int lenBytes = bits.Length / 8 + 1;
+
         if (padding == 8)
         {
             padding = 0;
             lenBytes--;
         }
+
         byte[] bytes = new byte[lenBytes];
+
         for (int i = 0; i < bits.Length; i++)
         {
             if (bits[i])
@@ -782,6 +800,7 @@ public sealed class CertificateBuilder
             throw new InvalidOperationException("Cannot create a self-signed certificate with a " +
                     "key algorithm that does not support signing: " + algorithm);
         }
+
         object keyPair = GenerateKeyPair();
 
         CertificateRequest generator = CreateCertBuilder(subject, keyPair, algorithm.signatureType);
@@ -834,12 +853,14 @@ public sealed class CertificateBuilder
             throw new ArgumentException(
                     "Cannot sign certificate with issuer bundle that does not have a private key.");
         }
+
         Signed signed = new Signed(signAlg, issuerPrivateKey);
         X509Certificate2 cert = CreateCertificate(generator, issuerPrincipal, signed);
         X509Certificate2[] issuerPath = issuerBundle.GetCertificatePath();
         X509Certificate2[] path = new X509Certificate2[issuerPath.Length + 1];
         path[0] = cert;
         Array.Copy(issuerPath, 0, path, 1, issuerPath.Length);
+
         return X509Bundle.FromCertificatePath(path, issuerBundle.GetRootCertificate(), keyPair);
     }
 
@@ -865,9 +886,11 @@ public sealed class CertificateBuilder
                 {
                     return "SHA256withRSA";
                 }
+
                 return "SHA384withRSA";
             }
         }
+
         using (ECDsa ec = key.GetECDsaPublicKey())
         {
             if (ec != null)
@@ -883,13 +906,16 @@ public sealed class CertificateBuilder
                 {
                     return "SHA384withECDSA";
                 }
+
                 return "SHA512withECDSA";
             }
         }
+
         if (IsDsaKey(key))
         {
             throw new ArgumentException("DSA keys are not supported because they are obsolete");
         }
+
         string keyAlgorithm = key.Oid.Value;
         if ("Ed25519".Equals(keyAlgorithm) || "1.3.101.112".Equals(keyAlgorithm))
         {
@@ -899,6 +925,7 @@ public sealed class CertificateBuilder
         {
             return "Ed448";
         }
+
         if ("EdDSA".Equals(keyAlgorithm))
         {
             byte[] encoded = key.ExportSubjectPublicKeyInfo();
@@ -911,6 +938,7 @@ public sealed class CertificateBuilder
                 return "Ed448";
             }
         }
+
         if ("2.16.840.1.101.3.4.3.17".Equals(keyAlgorithm) || "2.16.840.1.101.3.4.3.18".Equals(keyAlgorithm) ||
             "2.16.840.1.101.3.4.3.19".Equals(keyAlgorithm))
         {
@@ -926,11 +954,13 @@ public sealed class CertificateBuilder
                 throw new ArgumentException("Cannot get algorithm name for ML-DSA key", e);
             }
         }
+
         if ("2.16.840.1.101.3.4.4.1".Equals(keyAlgorithm) || "2.16.840.1.101.3.4.4.2".Equals(keyAlgorithm) ||
             "2.16.840.1.101.3.4.4.3".Equals(keyAlgorithm))
         {
             throw new ArgumentException("ML-KEM keys cannot be used for signing");
         }
+
         throw new ArgumentException("Don't know what signature algorithm is best for " + keyAlgorithm);
     }
 
@@ -987,6 +1017,7 @@ public sealed class CertificateBuilder
             random[0] &= 0x7F;
             serial = new BigInteger(random, isUnsigned: true, isBigEndian: true);
         }
+
         return generator.Create(issuer, signed, notBefore, notAfter,
                                 serial.ToByteArray(isUnsigned: true, isBigEndian: true));
     }
@@ -1002,9 +1033,11 @@ public sealed class CertificateBuilder
     private void AddExtensions(CertificateRequest tbsCert)
     {
         Collection<X509Extension> generator = tbsCert.CertificateExtensions;
+
         if (isCertificateAuthority)
         {
             X509BasicConstraintsExtension basicConstraints;
+
             if (pathLengthConstraint.HasValue)
             {
                 basicConstraints = new X509BasicConstraintsExtension(true, true, pathLengthConstraint.Value, true);
@@ -1013,8 +1046,10 @@ public sealed class CertificateBuilder
             {
                 basicConstraints = new X509BasicConstraintsExtension(true, false, 0, true);
             }
+
             generator.Add(basicConstraints);
         }
+
         if (keyUsage != null)
         {
             generator.Add(keyUsage);
@@ -1023,10 +1058,12 @@ public sealed class CertificateBuilder
         if (extendedKeyUsage.Count != 0)
         {
             OidCollection usages = new OidCollection();
+
             foreach (string usage in extendedKeyUsage)
             {
                 usages.Add(new Oid(usage));
             }
+
             generator.Add(new X509EnhancedKeyUsageExtension(usages, false));
         }
 
@@ -1035,6 +1072,7 @@ public sealed class CertificateBuilder
             // SAN is critical extension if subject is empty sequence:
             bool critical = subject.Name.Length == 0;
             AsnWriter generalNames = new AsnWriter(AsnEncodingRules.DER);
+
             using (generalNames.PushSequence())
             {
                 foreach (byte[] name in subjectAlternativeNames)
@@ -1042,12 +1080,14 @@ public sealed class CertificateBuilder
                     generalNames.WriteEncodedValue(name);
                 }
             }
+
             generator.Add(new X509SubjectAlternativeNameExtension(generalNames.Encode(), critical));
         }
 
         if (crlDistributionPoints.Count != 0)
         {
             AsnWriter distPoints = new AsnWriter(AsnEncodingRules.DER);
+
             using (distPoints.PushSequence())
             {
                 foreach (byte[] distributionPoint in crlDistributionPoints)
@@ -1055,6 +1095,7 @@ public sealed class CertificateBuilder
                     distPoints.WriteEncodedValue(distributionPoint);
                 }
             }
+
             generator.Add(new X509Extension("2.5.29.31", distPoints.Encode(), false));
         }
 
@@ -1348,6 +1389,7 @@ public sealed class CertificateBuilder
                     }
                 }
             }
+
             if (MLKem.IsSupported)
             {
                 foreach (MLKemAlgorithm mlKem in new[] { MLKemAlgorithm.MLKem512, MLKemAlgorithm.MLKem768, MLKemAlgorithm.MLKem1024 })

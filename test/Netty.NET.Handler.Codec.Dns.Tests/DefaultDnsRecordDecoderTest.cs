@@ -91,6 +91,7 @@ public class DefaultDnsRecordDecoderTest
         ByteBuf buffer = Unpooled.Buffer().WriteByte(0);
         int readerIndex = buffer.ReaderIndex;
         int writerIndex = buffer.WriterIndex;
+
         try
         {
             IDnsPtrRecord record = (IDnsPtrRecord) decoder.DecodeRecord(
@@ -117,6 +118,7 @@ public class DefaultDnsRecordDecoderTest
         };
         ByteBuf buffer = Unpooled.WrappedBuffer(compressionPointer);
         ByteBuf uncompressed = null;
+
         try
         {
             uncompressed = DnsCodecUtil.DecompressDomainName(buffer.Duplicate().SetIndex(10, 12));
@@ -125,6 +127,7 @@ public class DefaultDnsRecordDecoderTest
         finally
         {
             buffer.Release();
+
             if (uncompressed != null)
             {
                 uncompressed.Release();
@@ -142,6 +145,7 @@ public class DefaultDnsRecordDecoderTest
         };
         ByteBuf buffer = Unpooled.WrappedBuffer(nestedCompressionPointer);
         ByteBuf uncompressed = null;
+
         try
         {
             uncompressed = DnsCodecUtil.DecompressDomainName(buffer.Duplicate().SetIndex(19, 21));
@@ -155,6 +159,7 @@ public class DefaultDnsRecordDecoderTest
         finally
         {
             buffer.Release();
+
             if (uncompressed != null)
             {
                 uncompressed.Release();
@@ -173,6 +178,7 @@ public class DefaultDnsRecordDecoderTest
         ByteBuf buffer = Unpooled.WrappedBuffer(compressionPointer);
         DefaultDnsRawRecord cnameRecord = null;
         DefaultDnsRawRecord nsRecord = null;
+
         try
         {
             cnameRecord = (DefaultDnsRawRecord) decoder.DecodeRecord(
@@ -189,6 +195,7 @@ public class DefaultDnsRecordDecoderTest
         finally
         {
             buffer.Release();
+
             if (cnameRecord != null)
             {
                 cnameRecord.Release();
@@ -218,6 +225,7 @@ public class DefaultDnsRecordDecoderTest
         ByteBuf buffer = Unpooled.WrappedBuffer(compressionPointer);
         DefaultDnsRawRecord mxRecord = null;
         ByteBuf expectedBuf = null;
+
         try
         {
             mxRecord = (DefaultDnsRawRecord) decoder.DecodeRecord(
@@ -241,10 +249,12 @@ public class DefaultDnsRecordDecoderTest
         finally
         {
             buffer.Release();
+
             if (expectedBuf != null)
             {
                 expectedBuf.Release();
             }
+
             if (mxRecord != null)
             {
                 mxRecord.Release();
@@ -266,6 +276,7 @@ public class DefaultDnsRecordDecoderTest
         DefaultDnsRawRecord rawUncompressedRecord = null;
         DefaultDnsRawRecord rawUncompressedIndexedRecord = null;
         ByteBuf buffer = Unpooled.WrappedBuffer(rfcExample);
+
         try
         {
             // First lets test that our utility function can correctly handle index references and decompression.
@@ -315,14 +326,17 @@ public class DefaultDnsRecordDecoderTest
             {
                 rawPlainRecord.Release();
             }
+
             if (rawUncompressedRecord != null)
             {
                 rawUncompressedRecord.Release();
             }
+
             if (rawUncompressedIndexedRecord != null)
             {
                 rawUncompressedIndexedRecord.Release();
             }
+
             buffer.Release();
         }
     }
@@ -339,6 +353,7 @@ public class DefaultDnsRecordDecoderTest
         // Write a truncated last value.
         buffer.WriteByte(0);
         DefaultDnsRecordDecoder decoder = new DefaultDnsRecordDecoder();
+
         try
         {
             int readerIndex = buffer.ReaderIndex;

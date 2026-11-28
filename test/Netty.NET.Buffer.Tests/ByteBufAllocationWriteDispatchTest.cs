@@ -56,6 +56,7 @@ public class ByteBufAllocationWriteDispatchTest
             {
                 throw Error;
             }
+
             return Mode == 3 ? Unpooled.EmptyBuffer : receiver;
         }
     }
@@ -65,20 +66,24 @@ public class ByteBufAllocationWriteDispatchTest
         public override ByteBuf WriteBytes(ByteBuf source, int sourceIndex, int length)
         {
             allocator.Observation.Before(source, sourceIndex, length);
+
             if (allocator.Observation.Mode != 4)
             {
                 base.WriteBytes(source, sourceIndex, length);
             }
+
             return allocator.Observation.After(this);
         }
 
         public override ByteBuf WriteBytes(ReadOnlySpan<byte> source)
         {
             allocator.Observation.Before(source);
+
             if (allocator.Observation.Mode != 4)
             {
                 base.WriteBytes(source);
             }
+
             return allocator.Observation.After(this);
         }
     }
@@ -88,20 +93,24 @@ public class ByteBufAllocationWriteDispatchTest
         public override ByteBuf WriteBytes(ByteBuf source, int sourceIndex, int length)
         {
             allocator.Observation.Before(source, sourceIndex, length);
+
             if (allocator.Observation.Mode != 4)
             {
                 base.WriteBytes(source, sourceIndex, length);
             }
+
             return allocator.Observation.After(this);
         }
 
         public override ByteBuf WriteBytes(ReadOnlySpan<byte> source)
         {
             allocator.Observation.Before(source);
+
             if (allocator.Observation.Mode != 4)
             {
                 base.WriteBytes(source);
             }
+
             return allocator.Observation.After(this);
         }
     }
@@ -138,6 +147,7 @@ public class ByteBufAllocationWriteDispatchTest
             DirectAllocation = direct;
             if (Observation.Mode == 5)
                 throw Observation.Error;
+
             return Last = direct ? new Direct(this, initial, maximum) : new Heap(this, initial, maximum);
         }
     }
@@ -155,6 +165,7 @@ public class ByteBufAllocationWriteDispatchTest
             {
                 throw Error;
             }
+
             return Result;
         }
     }
@@ -228,6 +239,7 @@ public class ByteBufAllocationWriteDispatchTest
             1 => Unpooled.UnreleasableBuffer(owner),
             _ => new WrappedCompositeByteBuf((CompositeByteBuf)owner)
         };
+
         try
         {
             if (failure)
@@ -238,6 +250,7 @@ public class ByteBufAllocationWriteDispatchTest
             {
                 Assert.Same(calls.Result, buffer.Copy());
             }
+
             Assert.Equal(1, calls.Whole);
             Assert.Equal(0, calls.Indexed);
             Assert.Equal(2, owner.ReaderIndex);
@@ -254,6 +267,7 @@ public class ByteBufAllocationWriteDispatchTest
             Assert.True(facade == 1 ? owner.Release() : buffer.Release());
             Assert.True(calls.Result.Release());
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -280,6 +294,7 @@ public class ByteBufAllocationWriteDispatchTest
         ByteBuf source = direct ? new UnpooledDirectByteBuf(allocator, 8, 16, allocator.Native)
             : new UnpooledHeapByteBuf(allocator, 8, 16);
         ByteBuf result = null;
+
         try
         {
             source.SetBytes(0, new byte[] { 10, 11, 12, 13, 14, 15, 16, 17 });
@@ -311,24 +326,29 @@ public class ByteBufAllocationWriteDispatchTest
             bool wrote = allocate && mode != 5;
             Assert.Equal(wrote && !copy ? 1 : 0, observation.BufferWrites);
             Assert.Equal(wrote && copy ? 1 : 0, observation.SpanWrites);
+
             if (allocate)
             {
                 Assert.Equal(length, allocator.Initial);
                 Assert.Equal(16, allocator.Maximum);
                 Assert.Equal(copy ? direct : !direct, allocator.DirectAllocation);
             }
+
             if (wrote)
             {
                 Assert.Equal(length, observation.Length);
                 Assert.Equal(new byte[] { 12, 13, 14, 15, 16, 17 }[..length], observation.Input);
+
                 if (!copy)
                 {
                     Assert.Same(source, observation.Source);
                     Assert.Equal(2, observation.Index);
                 }
+
                 Assert.Equal(mode is 1 or 4 ? 0 : length, allocator.Last.WriterIndex);
                 Assert.Equal(failure ? 0 : 1, allocator.Last.RefCnt);
             }
+
             if (!invalid && !failure)
             {
                 if (!allocate || copy && mode == 3)
@@ -339,15 +359,18 @@ public class ByteBufAllocationWriteDispatchTest
                 {
                     Assert.Same(allocator.Last, result);
                 }
+
                 if (allocate)
                 {
                     Assert.Equal(length, allocator.Last.Capacity);
                     Assert.Equal(16, allocator.Last.MaxCapacity);
                     Assert.Equal(copy ? direct : !direct, allocator.Last.IsDirect);
                     Assert.Same(allocator, allocator.Last.Alloc());
+
                     if (mode != 4)
                     {
                         Assert.Equal(new byte[] { 12, 13, 14, 15, 16, 17 }[..length], ByteBufUtil.GetBytes(allocator.Last));
+
                         if (length > 0)
                         {
                             allocator.Last.SetByte(0, 201);
@@ -356,6 +379,7 @@ public class ByteBufAllocationWriteDispatchTest
                     }
                 }
             }
+
             Assert.Equal(!copy && !invalid && !failure ? 2 + length : 2, source.ReaderIndex);
             Assert.Equal(7, source.WriterIndex);
             Assert.Equal(8, source.Capacity);
@@ -364,6 +388,7 @@ public class ByteBufAllocationWriteDispatchTest
             source.SetIndex(0, 8).ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(2, source.ReaderIndex);
             Assert.Equal(7, source.WriterIndex);
+
             if (failure)
             {
                 Assert.Equal(direct ? 8 : 0, allocator.Native.ReservedBytes);
@@ -376,8 +401,10 @@ public class ByteBufAllocationWriteDispatchTest
             {
                 Assert.True(allocator.Last.Release());
             }
+
             Assert.True(source.Release());
         }
+
         Assert.Equal(0, allocator.Native.ReservedBytes);
     }
 }

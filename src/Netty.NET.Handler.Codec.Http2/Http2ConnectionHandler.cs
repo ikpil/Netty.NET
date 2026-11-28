@@ -139,6 +139,7 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
             throw new ArgumentException("gracefulShutdownTimeoutMillis: " + ToJavaString(gracefulShutdownTimeoutMillis) +
                                                " (expected: -1 for indefinite or >= 0)");
         }
+
         this.gracefulShutdownTimeoutMillis = gracefulShutdownTimeoutMillis;
     }
 
@@ -224,7 +225,9 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
             flushAgain = true;
             return;
         }
+
         inFlush = true;
+
         try
         {
             do
@@ -255,6 +258,7 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
     private bool HasPendingData()
     {
         IHttp2RemoteFlowController flowController = encoder.FlowController();
+
         try
         {
             // Stop at the first stream that still has a flow-controlled frame queued. Frame-based, so it counts
@@ -369,6 +373,7 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
                     // Skip all bytes before we report the exception as
                     @in.SkipBytes(@in.ReadableBytes);
                 }
+
                 handler.OnError(ctx, false, e);
             }
         }
@@ -435,11 +440,13 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
                     string chunk = @in.ToString(@in.ReaderIndex, http1Index - @in.ReaderIndex, Encoding.ASCII);
                     throw ConnectionError(PROTOCOL_ERROR, "Unexpected HTTP/1.x request: %s", chunk);
                 }
+
                 string receivedBytes = HexDump(@in, @in.ReaderIndex,
                                                Math.Min(@in.ReadableBytes, clientPrefaceString.ReadableBytes));
                 throw ConnectionError(PROTOCOL_ERROR, "HTTP/2 client preface string missing or corrupt. " +
                                                       "Hex dump for received bytes: %s", receivedBytes);
             }
+
             @in.SkipBytes(bytesRead);
             clientPrefaceString.SkipBytes(bytesRead);
 
@@ -450,6 +457,7 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
                 clientPrefaceString = null;
                 return true;
             }
+
             return false;
         }
 
@@ -477,6 +485,7 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
                                                       "Hex dump for first 5 bytes: %s",
                                       HexDump(@in, @in.ReaderIndex, 5));
             }
+
             short flags = @in.GetByte(@in.ReaderIndex + 4);
             if ((flags & Http2Flags.ACK) != 0)
             {
@@ -484,6 +493,7 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
                         "Hex dump for first 5 bytes: %s",
                         HexDump(@in, @in.ReaderIndex, 5));
             }
+
             return true;
         }
 
@@ -598,6 +608,7 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
         {
             byteDecoder = new PrefaceDecoder(this, ctx);
         }
+
         byteDecoder.ChannelActive(ctx);
         base.ChannelActive(ctx);
     }
@@ -606,6 +617,7 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
     {
         // Call super class first, as this may result in decode being called.
         base.ChannelInactive(ctx);
+
         if (byteDecoder != null)
         {
             byteDecoder.ChannelInactive(ctx);
@@ -624,6 +636,7 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
             {
                 Flush(ctx);
             }
+
             encoder.FlowController().ChannelWritabilityChanged();
         }
         finally
@@ -671,6 +684,7 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
         {
             return ctx.CloseAsync(cancellationToken);
         }
+
         TaskCompletionSource promise = NewPromise();
         // Avoid NotYetConnectedException and avoid sending before connection preface
         if (!ctx.Channel.IsActive || !PrefaceSent())
@@ -703,6 +717,7 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
     private void DoGracefulShutdown(IChannelHandlerContext ctx, Task future, TaskCompletionSource promise)
     {
         Action<Task> listener = NewClosingChannelFutureListener(ctx, promise);
+
         if (IsGracefulShutdownComplete())
         {
             // If there are no active streams, close immediately after the GO_AWAY write completes or the timeout
@@ -878,6 +893,7 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
             // exception for the same stream id, only report the first one, per RFC 9113, Section 5.4's
             // guidance to report at most one stream error per stream.
             HashSet<int> handledStreamIds = new HashSet<int>();
+
             foreach (StreamException streamException in compositException)
             {
                 if (handledStreamIds.Add(streamException.StreamId()))
@@ -890,6 +906,7 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
         {
             OnConnectionError(ctx, outbound, cause, embedded);
         }
+
         ctx.Flush();
     }
 
@@ -923,6 +940,7 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
 
         TaskCompletionSource promise = NewPromise();
         Task future = GoAwayAsync(ctx, http2Ex, NewPromise());
+
         if (http2Ex.ShutdownHint_() == Http2Exception.ShutdownHint.GRACEFUL_SHUTDOWN)
         {
             DoGracefulShutdown(ctx, future, promise);
@@ -1034,6 +1052,7 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
         {
             AddListener(ctx, future, f => CloseConnectionOnError(ctx, f));
         }
+
         return future;
     }
 
@@ -1058,6 +1077,7 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
             promise.SetResult();
             return promise.Task;
         }
+
         // Synchronously set the resetSent flag to prevent any subsequent calls
         // from resulting in multiple reset frames being sent.
         //
@@ -1066,6 +1086,7 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
         stream.ResetSent();
 
         Task future;
+
         // If the remote peer is not aware of the steam, then we are not allowed to send a RST_STREAM
         // https://tools.ietf.org/html/rfc7540#section-6.4.
         if (stream.State_() == IHttp2Stream.State.IDLE ||
@@ -1078,6 +1099,7 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
         {
             future = FrameWriter().WriteRstStreamAsync(ctx, stream.Id(), errorCode, promise);
         }
+
         if (future.IsCompleted)
         {
             ProcessRstStreamWriteResult(ctx, stream, future);
@@ -1094,6 +1116,7 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
                                 ByteBuf debugData, TaskCompletionSource promise)
     {
         IHttp2Connection connection = Connection();
+
         try
         {
             if (!connection.GoAwaySent(lastStreamId, errorCode, debugData))
@@ -1142,6 +1165,7 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
             // This method could be called multiple times
             // and we don't want to notify the closeListener multiple times.
             this.closeListener = null;
+
             try
             {
                 closeListener(future);
@@ -1161,6 +1185,7 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
     {
         long errorCode = cause != null ? cause.Error().Code() : NO_ERROR.Code();
         int lastKnownStream;
+
         if (cause != null && cause.ShutdownHint_() == Http2Exception.ShutdownHint.HARD_SHUTDOWN)
         {
             // The hard shutdown could have been triggered during header processing, before updating
@@ -1173,6 +1198,7 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
         {
             lastKnownStream = Connection().Remote().LastStreamCreated();
         }
+
         return GoAwayAsync(ctx, lastKnownStream, errorCode, Http2CodecUtil.ToByteBuf(ctx, cause), promise);
     }
 
@@ -1227,6 +1253,7 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
                                      "debugData '{}'. Forcing shutdown of the connection.",
                                      ctx.Channel, lastStreamId, errorCode, debugData.ToString(Encoding.UTF8));
                     }
+
                     _ = ctx.CloseAsync();
                 }
             }
@@ -1238,6 +1265,7 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
                                  "debugData '{}'. Forcing shutdown of the connection.",
                                  ctx.Channel, lastStreamId, errorCode, debugData.ToString(Encoding.UTF8), Cause(future));
                 }
+
                 _ = ctx.CloseAsync();
             }
         }
@@ -1294,6 +1322,7 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
             {
                 timeoutTask.Cancel(false);
             }
+
             DoClose();
         }
 
@@ -1307,7 +1336,9 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
                 Debug.Assert(timeoutTask != null);
                 return;
             }
+
             closed = true;
+
             if (promise == null)
             {
                 _ = ctx.CloseAsync();
@@ -1349,6 +1380,7 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
                     promise.SetException(e);
                     return;
                 }
+
                 promise.SetResult();
             }
             else

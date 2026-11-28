@@ -83,6 +83,7 @@ public class SocketSslGreetingTest : AbstractSocketTest
         // src/Netty.NET.Handler/Ssl/SslContext.cs) and only the delegate = false row remains, without the parameter, as
         // CipherSuiteCanaryTest drops its delegate rows (docs/handler-porting.md, "SSL tests").
         List<object[]> @params = new List<object[]>();
+
         foreach (SslContext sc in serverContexts)
         {
             foreach (SslContext cc in clientContexts)
@@ -90,6 +91,7 @@ public class SocketSslGreetingTest : AbstractSocketTest
                 @params.Add(new object[] { sc, cc });
             }
         }
+
         return @params;
     }
 
@@ -241,6 +243,7 @@ public class SocketSslGreetingTest : AbstractSocketTest
                     Assert.Null(session.RemoteCertificate);
                 }
             }
+
             ctx.FireUserEventTriggered(evt);
         }
     }

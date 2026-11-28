@@ -61,8 +61,10 @@ public class SpdyHeaderBlockRawEncoder : SpdyHeaderBlockEncoder
             throw new ArgumentException(
                     "header block contains too many headers");
         }
+
         ByteBuf headerBlock = alloc.HeapBuffer();
         WriteLengthField(headerBlock, numHeaders);
+
         foreach (ICharSequence name in names)
         {
             WriteLengthField(headerBlock, name.Length());
@@ -70,6 +72,7 @@ public class SpdyHeaderBlockRawEncoder : SpdyHeaderBlockEncoder
             int savedIndex = headerBlock.WriterIndex;
             int valueLength = 0;
             WriteLengthField(headerBlock, valueLength);
+
             foreach (ICharSequence value in frame.Headers().GetAll(name))
             {
                 int length = value.Length();
@@ -80,21 +83,25 @@ public class SpdyHeaderBlockRawEncoder : SpdyHeaderBlockEncoder
                     valueLength += length + 1;
                 }
             }
+
             if (valueLength != 0)
             {
                 valueLength --;
             }
+
             if (valueLength > SPDY_MAX_NV_LENGTH)
             {
                 throw new ArgumentException(
                         "header exceeds allowable length: " + name);
             }
+
             if (valueLength > 0)
             {
                 SetLengthField(headerBlock, savedIndex, valueLength);
                 headerBlock.WriterIndex = headerBlock.WriterIndex - 1;
             }
         }
+
         return headerBlock;
     }
 

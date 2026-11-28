@@ -156,6 +156,7 @@ internal sealed class QpackEncoderDynamicTable
             EvictUnreferencedEntries();
             return -1;
         }
+
         int h = AsciiString.HashCode(name);
         int i = Index(h);
         HeaderEntry old = fields[i];
@@ -201,12 +202,14 @@ internal sealed class QpackEncoderDynamicTable
         {
             throw INVALID_REQUIRED_INSERT_COUNT_INCREMENT;
         }
+
         for (HeaderEntry e = head.next; e != null; e = e.next)
         {
             if (e.index == entryIndex)
             {
                 Debug.Assert(e.refCount > 0);
                 e.refCount--;
+
                 if (updateKnownReceived && e.index > knownReceived.index)
                 {
                     // https://www.rfc-editor.org/rfc/rfc9204.html#name-known-received-count
@@ -214,10 +217,12 @@ internal sealed class QpackEncoderDynamicTable
                     // Received Count, Known Received Count is updated to that Required Insert Count value.
                     knownReceived = e;
                 }
+
                 EvictUnreferencedEntries();
                 return;
             }
         }
+
         // We have reached the end of the linked list so the index was invalid and hence the connection should
         // be closed.
         // https://www.rfc-editor.org/rfc/rfc9204.html#section-4.4
@@ -238,16 +243,19 @@ internal sealed class QpackEncoderDynamicTable
         {
             throw INVALID_KNOW_RECEIVED_COUNT_INCREMENT;
         }
+
         while (knownReceived.next != null && knownReceivedCountIncr > 0)
         {
             knownReceived = knownReceived.next;
             knownReceivedCountIncr--;
         }
+
         if (knownReceivedCountIncr == 0)
         {
             EvictUnreferencedEntries();
             return;
         }
+
         // We have reached the end of the linked list so the index was invalid and hence the connection should be
         // closed.
         // https://www.rfc-editor.org/rfc/rfc9204.html#name-decoder-instructions
@@ -301,6 +309,7 @@ internal sealed class QpackEncoderDynamicTable
         {
             throw CAPACITY_ALREADY_SET;
         }
+
         this.maxTableCapacity = capacity;
     }
 
@@ -336,6 +345,7 @@ internal sealed class QpackEncoderDynamicTable
             int i = Index(h);
             HeaderEntry firstNameMatch = null;
             HeaderEntry entry = null;
+
             for (HeaderEntry e = fields[i]; e != null; e = e.nextSibling)
             {
                 if (e.hash == h && EqualsVariableTime(value, e.value))
@@ -351,6 +361,7 @@ internal sealed class QpackEncoderDynamicTable
                     firstNameMatch = e;
                 }
             }
+
             if (entry != null)
             {
                 return entry.index;
@@ -360,6 +371,7 @@ internal sealed class QpackEncoderDynamicTable
                 return -firstNameMatch.index - 1;
             }
         }
+
         return NOT_FOUND;
     }
 
@@ -378,6 +390,7 @@ internal sealed class QpackEncoderDynamicTable
         {
             int h = AsciiString.HashCode(name);
             int i = Index(h);
+
             for (HeaderEntry e = fields[i]; e != null; e = e.nextSibling)
             {
                 if (e.hash == h && idx == e.index)
@@ -387,6 +400,7 @@ internal sealed class QpackEncoderDynamicTable
                 }
             }
         }
+
         throw new ArgumentException("Index " + idx.ToString(CultureInfo.InvariantCulture) + " not found");
     }
 
@@ -398,6 +412,7 @@ internal sealed class QpackEncoderDynamicTable
         {
             return false;
         }
+
         return idx >= head.next.index && idx <= drain.index;
     }
 
@@ -424,17 +439,20 @@ internal sealed class QpackEncoderDynamicTable
         {
             return false;
         }
+
         size -= toRemove.Size();
 
         // Remove from the hash map
         int i = Index(toRemove.hash);
         HeaderEntry e = fields[i];
         HeaderEntry prev = null;
+
         while (e != null && e != toRemove)
         {
             prev = e;
             e = e.nextSibling;
         }
+
         if (e == toRemove)
         {
             if (prev == null)
@@ -449,18 +467,22 @@ internal sealed class QpackEncoderDynamicTable
 
         // Remove from the linked list
         toRemove.Remove(head);
+
         if (toRemove == tail)
         {
             ResetIndicesToHead();
         }
+
         if (toRemove == drain)
         {
             drain = head;
         }
+
         if (toRemove == knownReceived)
         {
             knownReceived = head;
         }
+
         return true;
     }
 
@@ -476,10 +498,12 @@ internal sealed class QpackEncoderDynamicTable
         long maxDesiredSize = Math.Max(ENTRY_OVERHEAD, ((100 - expectedFreeCapacityPercentage) * maxTableCapacity) / 100);
         long cSize = size;
         HeaderEntry nDrain;
+
         for (nDrain = head; nDrain.next != null && cSize > maxDesiredSize; nDrain = nDrain.next)
         {
             cSize -= nDrain.next.Size();
         }
+
         if (cSize != size)
         {
             drain = nDrain;

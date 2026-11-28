@@ -228,6 +228,7 @@ public class ByteToMessageDecoderTest
                 ctx.Pipeline.Remove(decoder);
                 return;
             }
+
             ctx.FireChannelRead(msg);
         }
     }
@@ -263,6 +264,7 @@ public class ByteToMessageDecoderTest
             {
                 return;
             }
+
             @out.Add(@in.ReadBytes(decodeLast ? readable : readable - 1));
         })
         {
@@ -326,6 +328,7 @@ public class ByteToMessageDecoderTest
             {
                 throw error;
             }
+
             return base.SetBytes(index, src, srcIndex, length);
         }
 
@@ -343,6 +346,7 @@ public class ByteToMessageDecoderTest
         ByteBuf @in = Unpooled.Buffer().WriteZero(12);
 
         Exception thrown = null;
+
         try
         {
             ByteToMessageDecoder.MERGE_CUMULATOR.Cumulate(UnpooledByteBufAllocator.Default, oldCumulation, @in);
@@ -376,6 +380,7 @@ public class ByteToMessageDecoderTest
 
         ByteBuf @in = Unpooled.Buffer().WriteZero(12);
         Exception thrown = null;
+
         try
         {
             ByteToMessageDecoder.MERGE_CUMULATOR.Cumulate(allocator, oldCumulation, @in);
@@ -502,6 +507,7 @@ public class ByteToMessageDecoderTest
             Assert.Equal(i * 3 + 2, read.GetByte(2));
             read.Release();
         }
+
         Assert.False(channel.Finish());
     }
 
@@ -543,6 +549,7 @@ public class ByteToMessageDecoderTest
         {
             //read 4 byte then remove this decoder
             @out.Add(@in.ReadByte());
+
             if (++count >= 4)
             {
                 ctx.Pipeline.Remove(self);
@@ -670,6 +677,7 @@ public class ByteToMessageDecoderTest
                 int index = @in.ReaderIndex;
                 int len = @in.ReadInt();
                 Debug.Assert(len < (1 << 30), "In-plausibly long message: " + len);
+
                 if (@in.ReadableBytes >= len)
                 {
                     byte[] bytes = new byte[len];
@@ -690,6 +698,7 @@ public class ByteToMessageDecoderTest
         buffer.Retain(); // buffer is allocated from the pool, the pool would call retain()
         buffer.WriteInt(11); // total length of message
         buffer.WriteByte('h').WriteByte('e').WriteByte('l').WriteByte('l');
+
         if (secondPartial)
         {
             Assert.False(channel.WriteInbound(buffer)); // try reading incomplete message
@@ -697,6 +706,7 @@ public class ByteToMessageDecoderTest
             Assert.Equal(0, buffer.ReaderIndex, "Incomplete message should still be readable in buffer");
             buffer.Retain(); // buffer is allocated from the pool - reusing same buffer, the pool would call retain()
         }
+
         buffer.WriteByte('o').WriteByte(' ');
         Assert.False(channel.WriteInbound(buffer)); // try reading incomplete message
         Assert.True(channel.InboundMessages().Count == 0);
@@ -723,6 +733,7 @@ public class ByteToMessageDecoderTest
         ByteToMessageDecoder decoder = new TestDecoder((self, ctx, @in, @out) =>
         {
             reentrancy++;
+
             if (reentrancy == 1)
             {
                 ByteBuf buf2 = channel.Alloc().Buffer();
@@ -730,6 +741,7 @@ public class ByteToMessageDecoderTest
                 Assert.False(channel.WriteInbound(buf2)); // Reentrant call back into ByteToMessageDecoder
                 ctx.Read();
             }
+
             int bytes = @in.ReadableBytes;
             @out.Add(bytes);
             @in.SkipBytes(bytes);
@@ -755,6 +767,7 @@ public class ByteToMessageDecoderTest
         {
             Assert.False(removed);
             reentrancy++;
+
             if (reentrancy == 1)
             {
                 ByteBuf buf2 = channel.Alloc().Buffer();
@@ -769,6 +782,7 @@ public class ByteToMessageDecoderTest
             {
                 ctx.Pipeline.Remove(self);
             }
+
             int bytes = @in.ReadableBytes;
             @out.Add(bytes);
             @in.SkipBytes(bytes);

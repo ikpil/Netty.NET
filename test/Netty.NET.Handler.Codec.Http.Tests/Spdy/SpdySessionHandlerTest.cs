@@ -108,6 +108,7 @@ public class SpdySessionHandlerTest
         ISpdyHeadersFrame spdyHeadersFrame = (ISpdyHeadersFrame) msg;
         Assert.Equal(streamId, spdyHeadersFrame.StreamId());
         Assert.Equal(last, spdyHeadersFrame.IsLast());
+
         foreach (ICharSequence name in headers.Names())
         {
             IList<ICharSequence> expectedValues = headers.GetAll(name);
@@ -116,6 +117,7 @@ public class SpdySessionHandlerTest
             Assert.Equal(expectedValues.Count, receivedValues.Count);
             spdyHeadersFrame.Headers().Remove(name);
         }
+
         Assert.True(spdyHeadersFrame.Headers().IsEmpty());
     }
 
@@ -325,6 +327,7 @@ public class SpdySessionHandlerTest
         Assert.Null(sessionHandler.ReadOutbound<object>());
 
         int remoteStreamId = server ? 1 : 2;
+
         for (int i = 0; i < 100; i++)
         {
             ISpdySynStreamFrame spdySynStreamFrame =
@@ -359,6 +362,7 @@ public class SpdySessionHandlerTest
         Assert.Null(sessionHandler.ReadOutbound<object>());
 
         int remoteStreamId = server ? 1 : 2;
+
         for (int i = 0; i < maxConcurrentStreams; i++)
         {
             ISpdySynStreamFrame spdySynStreamFrame =
@@ -499,6 +503,7 @@ public class SpdySessionHandlerTest
                     int streamId = spdySynStreamFrame.StreamId();
                     ISpdySynReplyFrame spdySynReplyFrame = new DefaultSpdySynReplyFrame(streamId);
                     spdySynReplyFrame.SetLast(spdySynStreamFrame.IsLast());
+
                     foreach (IEntry<ICharSequence, ICharSequence> entry in spdySynStreamFrame.Headers())
                     {
                         spdySynReplyFrame.Headers().Add(entry.GetKey(), entry.GetValue());
@@ -506,6 +511,7 @@ public class SpdySessionHandlerTest
 
                     _ = ctx.WriteAndFlushAsync(spdySynReplyFrame);
                 }
+
                 return;
             }
 

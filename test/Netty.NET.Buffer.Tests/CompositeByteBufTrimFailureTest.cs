@@ -36,10 +36,12 @@ public class CompositeByteBufTrimFailureTest
             o.Length = length;
             if (o.Mode == 1)
                 throw o.Failure;
+
             ByteBuf result = base.Slice(index, length);
             // A borrowed slice has no new owner claim to release on failure.
             if (o.Mode == 2)
                 throw o.Failure;
+
             return result;
         }
     }
@@ -66,6 +68,7 @@ public class CompositeByteBufTrimFailureTest
         public override bool Release(int decrement = 1)
         {
             releases.Add(id);
+
             return base.Release(decrement);
         }
     }
@@ -89,8 +92,10 @@ public class CompositeByteBufTrimFailureTest
         IByteBufAllocator allocator = pooled ? new PooledByteBufAllocator(false, maxOrder: 4, nativeAllocator: native)
             : new UnpooledByteBufAllocator(false, native);
         ByteBuf raw = direct ? allocator.DirectBuffer(16, 16) : allocator.HeapBuffer(16, 16);
+
         for (int i = 0; i < 16; ++i)
             raw.WriteByte(i + 1);
+
         ByteBuf child = raw.RetainedSlice(2, 12);
         Assert.False(raw.Release());
         var observation = new Observation();
@@ -99,6 +104,7 @@ public class CompositeByteBufTrimFailureTest
         root.AddComponent(first, true);
         var trailing = new List<ByteBuf>();
         var releases = new List<int>();
+
         for (int i = 0; i < tails; ++i)
         {
             ByteBuf tail = direct ? allocator.DirectBuffer(6, 6) : allocator.HeapBuffer(6, 6);
@@ -107,6 +113,7 @@ public class CompositeByteBufTrimFailureTest
             trailing.Add(tail);
             root.AddComponent(tail, true);
         }
+
         var tracker = new Tracker(root);
         CompositeByteBuf owner = facade switch
         {
@@ -115,6 +122,7 @@ public class CompositeByteBufTrimFailureTest
             2 => new SimpleLeakAwareCompositeByteBuf(root, tracker),
             _ => new AdvancedLeakAwareCompositeByteBuf(root, tracker)
         };
+
         try
         {
             Assert.Same(first, root.ComponentSlice(0));
@@ -122,6 +130,7 @@ public class CompositeByteBufTrimFailureTest
             byte[] before = ByteBufUtil.GetBytes(root, 0, capacity);
             owner.SetIndex(1, 6).MarkReaderIndex().MarkWriterIndex().SetIndex(2, capacity - 1);
             observation.Mode = mode;
+
             if (mode == 0)
                 owner.Capacity = 7;
             else
@@ -140,13 +149,16 @@ public class CompositeByteBufTrimFailureTest
                 Assert.Equal((1, 6), (owner.ReaderIndex, owner.WriterIndex));
                 owner.SetIndex(2, capacity - 1);
             }
+
             Assert.Equal((1, 0, 7), (observation.Calls, observation.Index, observation.Length));
+
             if (mode != 0)
             {
                 observation.Mode = 0;
                 owner.Capacity = 7;
                 Assert.Equal(2, observation.Calls);
             }
+
             Assert.Equal((7, 1, 2, 7), (owner.Capacity, root.NumComponents, owner.ReaderIndex, owner.WriterIndex));
             Assert.Equal(before.AsSpan(0, 7).ToArray(), ByteBufUtil.GetBytes(owner, 0, 7));
             Assert.Equal(7, root.ComponentSlice(0).Capacity);
@@ -161,14 +173,18 @@ public class CompositeByteBufTrimFailureTest
         {
             if (owner.RefCnt > 0)
                 owner.Release();
+
             if (first.RefCnt > 0)
                 first.Release();
+
             foreach (ByteBuf b in trailing)
             if (b.RefCnt > 0)
                 b.Release();
+
             (allocator as IDisposable)?.Dispose();
             Assert.Equal(0, native.ReservedBytes);
         }
+
         Assert.Equal(0, child.RefCnt);
         Assert.Equal(0, raw.RefCnt);
         Assert.Equal(facade >= 2 ? 1 : 0, tracker.Closes);

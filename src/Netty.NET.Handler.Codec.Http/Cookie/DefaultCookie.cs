@@ -290,6 +290,7 @@ public class DefaultCookie : ICookie
         int n1 = s1.Length;
         int n2 = s2.Length;
         int min = Math.Min(n1, n2);
+
         for (int i = 0; i < min; i++)
         {
             char c1 = s1[i];
@@ -304,6 +305,7 @@ public class DefaultCookie : ICookie
                 }
             }
         }
+
         return n1 - n2;
     }
 
@@ -328,38 +330,46 @@ public class DefaultCookie : ICookie
             .Append(Name())
             .Append('=')
             .Append(Value());
+
         if (Domain() != null)
         {
             buf.Append(", domain=")
                .Append(Domain());
         }
+
         if (Path() != null)
         {
             buf.Append(", path=")
                .Append(Path());
         }
+
         if (MaxAge() >= 0)
         {
             buf.Append(", maxAge=")
                .Append(MaxAge().ToString(CultureInfo.InvariantCulture))
                .Append('s');
         }
+
         if (IsSecure())
         {
             buf.Append(", secure");
         }
+
         if (IsHttpOnly())
         {
             buf.Append(", HTTPOnly");
         }
+
         if (SameSite() != null)
         {
             buf.Append(", SameSite=").Append(SameSite());
         }
+
         if (IsPartitioned())
         {
             buf.Append(", Partitioned");
         }
+
         return buf.ToString();
     }
 }

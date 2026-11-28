@@ -66,8 +66,10 @@ public class DefaultSpdySettingsFrame : ISpdySettingsFrame
         {
             throw new ArgumentException("Setting ID is not valid: " + id.ToString(CultureInfo.InvariantCulture));
         }
+
         int key = id;
         settingsMap.TryGetValue(key, out Setting setting);
+
         if (setting != null)
         {
             setting.SetValue(value);
@@ -78,6 +80,7 @@ public class DefaultSpdySettingsFrame : ISpdySettingsFrame
         {
             settingsMap[key] = new Setting(value, persistValue, persisted);
         }
+
         return this;
     }
 
@@ -96,10 +99,12 @@ public class DefaultSpdySettingsFrame : ISpdySettingsFrame
     public virtual ISpdySettingsFrame SetPersistValue(int id, bool persistValue)
     {
         settingsMap.TryGetValue(id, out Setting setting);
+
         if (setting != null)
         {
             setting.SetPersist(persistValue);
         }
+
         return this;
     }
 
@@ -112,10 +117,12 @@ public class DefaultSpdySettingsFrame : ISpdySettingsFrame
     public virtual ISpdySettingsFrame SetPersisted(int id, bool persisted)
     {
         settingsMap.TryGetValue(id, out Setting setting);
+
         if (setting != null)
         {
             setting.SetPersisted(persisted);
         }
+
         return this;
     }
 

@@ -64,6 +64,7 @@ public class DefaultHttp2LocalFlowControllerTest
     private void SetupChannelHandlerContext(bool allowFlush)
     {
         ctx.Reset();
+
         if (allowFlush)
         {
             ctx.Setup(c => c.Flush()).Returns(() => ctx.Object);
@@ -76,6 +77,7 @@ public class DefaultHttp2LocalFlowControllerTest
                 return null;
             });
         }
+
         ctx.Setup(c => c.Executor).Returns(executor.Object);
     }
 
@@ -360,12 +362,15 @@ public class DefaultHttp2LocalFlowControllerTest
         int delta = newDefaultWindowSize - DEFAULT_WINDOW_SIZE;
         controller.IncrementWindowSize(Stream(0), delta);
         IHttp2Stream stream = connection.Local().CreateStream(newStreamId, false);
+
         if (setStreamRatio)
         {
             controller.WindowUpdateRatio(stream, ratio);
         }
+
         controller.IncrementWindowSize(stream, delta);
         frameWriter.Invocations.Clear();
+
         try
         {
             int data1 = (int) (newDefaultWindowSize * ratio) + 1;
@@ -409,6 +414,7 @@ public class DefaultHttp2LocalFlowControllerTest
                                             bool endOfStream)
     {
         ByteBuf buf = DummyData(dataSize);
+
         try
         {
             controller.ReceiveFlowControlledFrame(stream, buf, padding, endOfStream);

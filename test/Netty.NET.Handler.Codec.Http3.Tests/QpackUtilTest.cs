@@ -37,6 +37,7 @@ public class QpackUtilTest
     public void EncodeDecodeRoundTripsAtContinuationByteBoundary()
     {
         ByteBuf buf = Unpooled.Buffer();
+
         try
         {
             for (int prefixLength = 1; prefixLength <= 8; prefixLength++)
@@ -57,6 +58,7 @@ public class QpackUtilTest
     public void DecodesValueEncodedOnPrefixOnly()
     {
         ByteBuf @in = Unpooled.WrappedBuffer(new byte[] { 10 });
+
         try
         {
             Assert.Equal(10L, QpackUtil.DecodePrefixedInteger(@in, 5));
@@ -72,6 +74,7 @@ public class QpackUtilTest
     public void EncodeDecodeRoundTripsOverWideRange()
     {
         ByteBuf buf = Unpooled.Buffer();
+
         try
         {
             foreach (int prefixLength in new int[] { 4, 5, 6, 7, 8 })
@@ -101,6 +104,7 @@ public class QpackUtilTest
     {
         // 5-bit prefix (nbits = 31), followed by continuation bytes encoding 1337 - 31 = 1306.
         ByteBuf @in = Unpooled.WrappedBuffer(new byte[] { 0x1f, 0x9a, 0x0a });
+
         try
         {
             Assert.Equal(1337L, QpackUtil.DecodePrefixedInteger(@in, 5));
@@ -117,6 +121,7 @@ public class QpackUtilTest
     {
         // Prefix is all-ones (needs continuation), but no continuation byte is available yet.
         ByteBuf @in = Unpooled.WrappedBuffer(new byte[] { 0x1f });
+
         try
         {
             int readerIndex = @in.ReaderIndex;
@@ -139,11 +144,14 @@ public class QpackUtilTest
         // and letting the caller's cumulator grow without bound.
         byte[] bytes = new byte[4096];
         bytes[0] = 0x7f; // 7-bit prefix, all bits set.
+
         for (int i = 1; i < bytes.Length; i++)
         {
             bytes[i] = 0x80;
         }
+
         ByteBuf @in = Unpooled.WrappedBuffer(bytes);
+
         try
         {
             Assert.ThrowsAny<QpackException>(() => QpackUtil.DecodePrefixedInteger(@in, 7));
@@ -161,12 +169,15 @@ public class QpackUtilTest
         // to trip the guard, even though the buffer is finite and would otherwise terminate.
         byte[] bytes = new byte[11];
         bytes[0] = 0x0f; // 4-bit prefix, all bits set.
+
         for (int i = 1; i < bytes.Length - 1; i++)
         {
             bytes[i] = 0x80;
         }
+
         bytes[bytes.Length - 1] = 0x01; // terminator, never reached because the guard fires first.
         ByteBuf @in = Unpooled.WrappedBuffer(bytes);
+
         try
         {
             Assert.ThrowsAny<QpackException>(() => QpackUtil.DecodePrefixedInteger(@in, 4));

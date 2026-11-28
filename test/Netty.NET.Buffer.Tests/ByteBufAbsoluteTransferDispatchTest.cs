@@ -46,6 +46,7 @@ public class ByteBufAbsoluteTransferDispatchTest
             {
                 throw Error;
             }
+
             return result;
         }
     }
@@ -56,6 +57,7 @@ public class ByteBufAbsoluteTransferDispatchTest
         {
             if (!calls.Whole)
                 return base.GetBytes(index, destination, length);
+
             calls.Before(index, destination, -1, length);
             return destination;
         }
@@ -64,6 +66,7 @@ public class ByteBufAbsoluteTransferDispatchTest
         {
             if (!calls.Whole)
                 return base.SetBytes(index, source, length);
+
             calls.Before(index, source, -1, length);
             return source;
         }
@@ -87,6 +90,7 @@ public class ByteBufAbsoluteTransferDispatchTest
         {
             if (!calls.Whole)
                 return base.GetBytes(index, destination, length);
+
             calls.Before(index, destination, -1, length);
             return destination;
         }
@@ -95,6 +99,7 @@ public class ByteBufAbsoluteTransferDispatchTest
         {
             if (!calls.Whole)
                 return base.SetBytes(index, source, length);
+
             calls.Before(index, source, -1, length);
             return source;
         }
@@ -135,6 +140,7 @@ public class ByteBufAbsoluteTransferDispatchTest
         ByteBuf owner = direct ? new Direct(calls, native) : new Heap(calls);
         ByteBuf peer = new UnpooledHeapByteBuf(8, 16);
         ByteBuf source = set ? peer : owner, destination = set ? owner : peer;
+
         try
         {
             source.WriteBytes(new byte[] { 10, 11, 12, 13, 14, 15, 16, 17 });
@@ -162,6 +168,7 @@ public class ByteBufAbsoluteTransferDispatchTest
 
             bool dispatched = !set || scenario is not (>= 4 and <= 9);
             Assert.Equal(dispatched ? 1 : 0, calls.Count);
+
             if (dispatched)
             {
                 Assert.Same(peer, calls.Peer);
@@ -169,14 +176,17 @@ public class ByteBufAbsoluteTransferDispatchTest
                 Assert.Equal(set ? 2 : 3, calls.PeerIndex);
                 Assert.Equal(length, calls.Length);
             }
+
             bool succeeded = scenario is 0 or 1 or 10;
             Assert.Equal(2 + (set && succeeded ? length : 0), source.ReaderIndex);
             Assert.Equal(7, source.WriterIndex);
             Assert.Equal(1, destination.ReaderIndex);
             Assert.Equal(3 + (!set && succeeded ? length : 0), destination.WriterIndex);
             byte[] expected = [90, 91, 92, 93, 94, 95, 96, 97];
+
             if (scenario is 1 or 3)
                 Array.Copy(new byte[] { 10, 11, 12, 13, 14, 15, 16, 17 }, set ? 2 : 1, expected, set ? 1 : 3, 2);
+
             Assert.Equal(expected, ByteBufUtil.GetBytes(destination, 0, 8));
             Assert.Equal(new byte[] { 10, 11, 12, 13, 14, 15, 16, 17 }, ByteBufUtil.GetBytes(source, 0, 8));
             Assert.Equal(8, owner.Capacity);
@@ -195,6 +205,7 @@ public class ByteBufAbsoluteTransferDispatchTest
             Assert.True(owner.Release());
             Assert.True(peer.Release());
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -209,6 +220,7 @@ public class ByteBufAbsoluteTransferDispatchTest
         var native = new NativeMemoryAllocator();
         ByteBuf owner = direct ? new Direct(calls, native) : new Heap(calls);
         ByteBuf peer = new UnpooledHeapByteBuf(8, 16);
+
         try
         {
             owner.SetIndex(2, 7);
@@ -227,6 +239,7 @@ public class ByteBufAbsoluteTransferDispatchTest
             {
                 Assert.Same(owner, Invoke());
             }
+
             Assert.Equal(1, calls.Count);
             Assert.Same(peer, calls.Peer);
             Assert.Equal(2, calls.Index);
@@ -244,6 +257,7 @@ public class ByteBufAbsoluteTransferDispatchTest
             Assert.True(owner.Release());
             Assert.True(peer.Release());
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -256,6 +270,7 @@ public class ByteBufAbsoluteTransferDispatchTest
         ByteBuf owner = direct ? new Direct(calls, native) : new Heap(calls);
         ByteBuf source = new UnpooledHeapByteBuf(8, 16).WriteZero(8).SetIndex(2, 7);
         Assert.True(owner.Release());
+
         try
         {
             Assert.Throws<IllegalReferenceCountException>(() => owner.SetBytes(1, source, 2));
@@ -268,6 +283,7 @@ public class ByteBufAbsoluteTransferDispatchTest
         {
             Assert.True(source.Release());
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 }

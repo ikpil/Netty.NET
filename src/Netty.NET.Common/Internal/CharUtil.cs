@@ -94,11 +94,13 @@ public static class CharUtil
         // Compare complete surrogate pairs with the BCL; never truncate UTF-16 to bytes.
         Span<char> leftUnit = stackalloc char[2];
         Span<char> rightUnit = stackalloc char[2];
+
         for (int i = 0; i < length;)
         {
             leftUnit[0] = left[leftStart + i];
             rightUnit[0] = right[rightStart + i];
             int width = 1;
+
             if (i < length - 1 && char.IsHighSurrogate(leftUnit[0]) && char.IsLowSurrogate(left[leftStart + i + 1]))
             {
                 width = 2;

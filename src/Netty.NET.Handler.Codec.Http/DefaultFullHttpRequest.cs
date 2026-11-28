@@ -196,10 +196,12 @@ public class DefaultFullHttpRequest : DefaultHttpRequest, IFullHttpRequest
             {
                 hash = 31;
             }
+
             hash = 31 * hash + TrailingHeaders().GetHashCode();
             hash = 31 * hash + base.GetHashCode();
             this.hash = hash;
         }
+
         return hash;
     }
 

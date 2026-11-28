@@ -50,6 +50,7 @@ public sealed class SecureChatServer
             .Build();
 
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             ServerBootstrap b = new ServerBootstrap();

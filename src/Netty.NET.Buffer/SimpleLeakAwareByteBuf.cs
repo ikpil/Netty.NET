@@ -43,6 +43,7 @@ internal class SimpleLeakAwareByteBuf : WrappedByteBuf
     {
         ArgumentNullException.ThrowIfNull(trackedByteBuf);
         ArgumentNullException.ThrowIfNull(leak);
+
         _trackedByteBuf = trackedByteBuf;
         _leak = leak;
     }
@@ -146,6 +147,7 @@ internal class SimpleLeakAwareByteBuf : WrappedByteBuf
             {
                 return false;
             }
+
             CloseLeak();
             return true;
         }
@@ -200,6 +202,7 @@ internal class SimpleLeakAwareByteBuf : WrappedByteBuf
         // Update the parent to point to this buffer so we correctly close the ResourceLeakTracker.
         pooled.SetParent(this);
         IResourceLeakTracker<ByteBuf> tracker = null;
+
         try
         {
             // force tracking of derived buffers (see issue #13414)
@@ -217,6 +220,7 @@ internal class SimpleLeakAwareByteBuf : WrappedByteBuf
             {
                 tracker?.Close(derived);
             }
+
             throw;
         }
     }

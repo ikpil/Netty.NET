@@ -38,6 +38,7 @@ public class IndexedVariableContractTest : IDisposable
     public void AllocationStopsAtTheNativeArrayLimit()
     {
         int previous = ReadIndex();
+
         try
         {
             WriteIndex(Array.MaxLength - 1);
@@ -56,6 +57,7 @@ public class IndexedVariableContractTest : IDisposable
     public void ConcurrentClaimsAreUniqueAndStopAtTheNativeLimit()
     {
         int previous = ReadIndex();
+
         try
         {
             WriteIndex(Array.MaxLength - 4);
@@ -64,6 +66,7 @@ public class IndexedVariableContractTest : IDisposable
             Parallel.For(0, 64, _ =>
             {
                 int index;
+
                 try
                 {
                     index = InternalThreadLocalMap.NextVariableIndex();
@@ -73,12 +76,15 @@ public class IndexedVariableContractTest : IDisposable
                     Interlocked.Increment(ref failures);
                     return;
                 }
+
                 Assert.True(claimed.TryAdd(index, 0), "An indexed variable ID must never be issued twice.");
             });
             Assert.Equal(4, claimed.Count);
             Assert.Equal(60, failures);
+
             for (int index = Array.MaxLength - 4; index < Array.MaxLength; index++)
                 Assert.True(claimed.ContainsKey(index));
+
             Assert.Equal(Array.MaxLength, ReadIndex());
         }
         finally
@@ -158,12 +164,14 @@ public class IndexedVariableContractTest : IDisposable
     public void NativeSlotsDistinguishUnsetNullAndReferencesAcrossGrowthAndRemoval()
     {
         var map = InternalThreadLocalMap.Get();
+
         foreach (int index in new[] { 32, Array.MaxLength, int.MaxValue })
         {
             Assert.Same(InternalThreadLocalMap.UNSET, map.IndexedVariable(index));
             Assert.False(map.IsIndexedVariableSet(index));
             Assert.Same(InternalThreadLocalMap.UNSET, map.RemoveIndexedVariable(index));
         }
+
         Assert.True(map.SetIndexedVariable(1, null));
         Assert.True(map.IsIndexedVariableSet(1));
         Assert.Null(map.IndexedVariable(1));

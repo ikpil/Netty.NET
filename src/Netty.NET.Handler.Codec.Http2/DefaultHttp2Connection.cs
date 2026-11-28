@@ -117,6 +117,7 @@ public class DefaultHttp2Connection : IHttp2Connection
     public virtual Task CloseAsync(TaskCompletionSource promise)
     {
         CheckNotNull(promise, "promise");
+
         // Since we allow this method to be called multiple times, we must make sure that all the promises are notified
         // when all streams are removed and the close operation completes.
         if (closePromise != null)
@@ -136,6 +137,7 @@ public class DefaultHttp2Connection : IHttp2Connection
         {
             closePromise = promise;
         }
+
         if (IsStreamMapEmpty())
         {
             promise.TrySetResult();
@@ -143,11 +145,13 @@ public class DefaultHttp2Connection : IHttp2Connection
         }
 
         IEnumerator<KeyValuePair<int, IHttp2Stream>> itr = streamMap.GetEnumerator();
+
         // We must take care while iterating the streamMap as to not modify while iterating in case there are other code
         // paths iterating over the active streams.
         if (activeStreams.AllowModifications())
         {
             activeStreams.IncrementPendingIterations();
+
             try
             {
                 while (itr.MoveNext())
@@ -180,6 +184,7 @@ public class DefaultHttp2Connection : IHttp2Connection
                 }
             }
         }
+
         return closePromise.Task;
     }
 
@@ -247,6 +252,7 @@ public class DefaultHttp2Connection : IHttp2Connection
         }
 
         localEndpoint.LastStreamKnownByPeer(lastKnownStream);
+
         for (int i = 0; i < listeners.Count; ++i)
         {
             try
@@ -286,6 +292,7 @@ public class DefaultHttp2Connection : IHttp2Connection
         }
 
         remoteEndpoint.LastStreamKnownByPeer(lastKnownStream);
+
         for (int i = 0; i < listeners.Count; ++i)
         {
             try
@@ -326,6 +333,7 @@ public class DefaultHttp2Connection : IHttp2Connection
             {
                 stream.Close();
             }
+
             return true;
         }
     }
@@ -347,6 +355,7 @@ public class DefaultHttp2Connection : IHttp2Connection
     internal void RemoveStream(DefaultStream stream, IEnumerator<KeyValuePair<int, IHttp2Stream>> itr)
     {
         bool removed;
+
         if (itr == null)
         {
             removed = streamMap.Remove(stream.Id());
@@ -506,6 +515,7 @@ public class DefaultHttp2Connection : IHttp2Connection
             {
                 metaState |= IsHeadersSent() ? META_STATE_SENT_TRAILERS : META_STATE_SENT_HEADERS;
             }
+
             return this;
         }
 
@@ -525,6 +535,7 @@ public class DefaultHttp2Connection : IHttp2Connection
             {
                 metaState |= IsHeadersReceived() ? META_STATE_RECV_TRAILERS : META_STATE_RECV_HEADERS;
             }
+
             return this;
         }
 
@@ -560,6 +571,7 @@ public class DefaultHttp2Connection : IHttp2Connection
             {
                 return properties.AddGlobal((Http2ConnectionPropertyKeys.GlobalPropertyKey) key, value);
             }
+
             throw new ArgumentException("Unsupported key: " + key);
         }
 
@@ -574,6 +586,7 @@ public class DefaultHttp2Connection : IHttp2Connection
             {
                 return properties.GetGlobal<V>((Http2ConnectionPropertyKeys.GlobalPropertyKey) key);
             }
+
             throw new ArgumentException("Unsupported key: " + key);
         }
 
@@ -588,6 +601,7 @@ public class DefaultHttp2Connection : IHttp2Connection
             {
                 return properties.RemoveGlobal<V>((Http2ConnectionPropertyKeys.GlobalPropertyKey) key);
             }
+
             throw new ArgumentException("Unsupported key: " + key);
         }
 
@@ -617,6 +631,7 @@ public class DefaultHttp2Connection : IHttp2Connection
             {
                 HeadersReceived(/*isInformational*/ false);
             }
+
             connection.activeStreams.Activate(this);
         }
 
@@ -653,6 +668,7 @@ public class DefaultHttp2Connection : IHttp2Connection
             {
                 Close();
             }
+
             return this;
         }
 
@@ -670,6 +686,7 @@ public class DefaultHttp2Connection : IHttp2Connection
             {
                 Close();
             }
+
             return this;
         }
 
@@ -718,17 +735,20 @@ public class DefaultHttp2Connection : IHttp2Connection
                 {
                     return default;
                 }
+
                 return Cast<V>(values[key.index]);
             }
 
             internal V Remove<V>(DefaultPropertyKey key)
             {
                 V prevValue = default;
+
                 if (key.index < values.Length)
                 {
                     prevValue = Cast<V>(values[key.index]);
                     values[key.index] = null;
                 }
+
                 return prevValue;
             }
 
@@ -754,17 +774,20 @@ public class DefaultHttp2Connection : IHttp2Connection
                 {
                     return default;
                 }
+
                 return Cast<V>(globalValues[key.index]);
             }
 
             internal V RemoveGlobal<V>(Http2ConnectionPropertyKeys.GlobalPropertyKey key)
             {
                 V prevValue = default;
+
                 if (key.index < globalValues.Length)
                 {
                     prevValue = Cast<V>(globalValues[key.index]);
                     globalValues[key.index] = null;
                 }
+
                 return prevValue;
             }
 
@@ -797,6 +820,7 @@ public class DefaultHttp2Connection : IHttp2Connection
             {
                 return RuntimeHelpers.GetHashCode(this);
             }
+
             return (int) (value ^ (value >>> 32));
         }
 
@@ -954,6 +978,7 @@ public class DefaultHttp2Connection : IHttp2Connection
             {
                 nextReservationStreamId = streamId;
             }
+
             nextStreamIdToCreate = streamId + 2;
             ++numStreams;
         }
@@ -1023,6 +1048,7 @@ public class DefaultHttp2Connection : IHttp2Connection
             {
                 throw ConnectionError(PROTOCOL_ERROR, "Server push not allowed to opposite endpoint");
             }
+
             State state = IsLocal() ? State.RESERVED_LOCAL : State.RESERVED_REMOTE;
             CheckNewStreamAllowed(streamId, state);
 
@@ -1050,6 +1076,7 @@ public class DefaultHttp2Connection : IHttp2Connection
 
             // Notify the listeners of the event.
             List<IHttp2Connection.IListener> listeners = connection.listeners;
+
             for (int i = 0; i < listeners.Count; i++)
             {
                 try
@@ -1069,6 +1096,7 @@ public class DefaultHttp2Connection : IHttp2Connection
             {
                 throw new ArgumentException("Servers do not allow push");
             }
+
             pushToAllowed = allow;
         }
 
@@ -1131,15 +1159,18 @@ public class DefaultHttp2Connection : IHttp2Connection
                         "Cannot create stream %d greater than Last-Stream-ID %d from GOAWAY.",
                         streamId, lastStreamKnownByPeer);
             }
+
             if (!IsValidStreamId(streamId))
             {
                 if (streamId < 0)
                 {
                     throw new Http2NoMoreStreamIdsException();
                 }
+
                 throw ConnectionError(PROTOCOL_ERROR, "Request stream %d is not correct for %s connection", streamId,
                         server ? "server" : "client");
             }
+
             // This check must be after all id validated checks, but before the max streams check because it may be
             // recoverable to some degree for handling frames which can be sent on closed streams.
             if (streamId < nextStreamIdToCreate)
@@ -1154,6 +1185,7 @@ public class DefaultHttp2Connection : IHttp2Connection
                 throw new Http2Exception(REFUSED_STREAM, "Stream IDs are exhausted for this endpoint.",
                         Http2Exception.ShutdownHint.GRACEFUL_SHUTDOWN);
             }
+
             bool isReserved = state == State.RESERVED_LOCAL || state == State.RESERVED_REMOTE;
             if (!isReserved && !CanOpenStream() || isReserved && numStreams >= maxStreams)
             {
@@ -1261,6 +1293,7 @@ public class DefaultHttp2Connection : IHttp2Connection
         public IHttp2Stream ForEachActiveStream(IHttp2StreamVisitor visitor)
         {
             IncrementPendingIterations();
+
             try
             {
                 foreach (IHttp2Stream stream in streams)
@@ -1270,6 +1303,7 @@ public class DefaultHttp2Connection : IHttp2Connection
                         return stream;
                     }
                 }
+
                 return null;
             }
             finally
@@ -1307,6 +1341,7 @@ public class DefaultHttp2Connection : IHttp2Connection
                 stream.CreatedBy().numActiveStreams--;
                 connection.NotifyClosed(stream);
             }
+
             connection.RemoveStream(stream, itr);
         }
 
@@ -1323,6 +1358,7 @@ public class DefaultHttp2Connection : IHttp2Connection
         internal void DecrementPendingIterations()
         {
             --pendingIterations;
+
             if (AllowModifications())
             {
                 for (;;)
@@ -1331,6 +1367,7 @@ public class DefaultHttp2Connection : IHttp2Connection
                     {
                         break;
                     }
+
                     try
                     {
                         @event.Process();
@@ -1404,6 +1441,7 @@ public class DefaultHttp2Connection : IHttp2Connection
             {
                 throw new ArgumentException("Using a key that was not created by this connection");
             }
+
             return this;
         }
     }

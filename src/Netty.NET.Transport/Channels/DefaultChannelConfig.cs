@@ -52,6 +52,7 @@ public class DefaultChannelConfig : IChannelConfig
     protected DefaultChannelConfig(IChannel channel, IRecvByteBufAllocator allocator)
     {
         ArgumentNullException.ThrowIfNull(channel);
+
         SetRecvByteBufAllocator(allocator, channel.Metadata);
         Channel = channel;
     }
@@ -66,34 +67,43 @@ public class DefaultChannelConfig : IChannelConfig
     public virtual IReadOnlyDictionary<ChannelOption, object> GetOptions()
     {
         var result = new Dictionary<ChannelOption, object>();
+
         foreach (var option in StandardOptions)
             if (TryGetValue(option, out var value))
                 result.Add(option, value);
+
         return result;
     }
 
     public virtual bool SetOptions(IEnumerable<KeyValuePair<ChannelOption, object>> options)
     {
         ArgumentNullException.ThrowIfNull(options);
+
         bool all = true;
+
         foreach (var pair in options)
         {
             ArgumentNullException.ThrowIfNull(pair.Key);
+
             pair.Key.ValidateValue(pair.Value);
+
             if (!SetValue(pair.Key, pair.Value))
                 all = false;
         }
+
         return all;
     }
 
     public virtual bool TryGetOption<T>(ChannelOption<T> option, out T value)
     {
         ArgumentNullException.ThrowIfNull(option);
+
         if (TryGetValue(option, out var result))
         {
             value = (T)result;
             return true;
         }
+
         value = default;
         return false;
     }
@@ -157,13 +167,16 @@ public class DefaultChannelConfig : IChannelConfig
             value = null;
             return false;
         }
+
         return true;
     }
 
     public virtual bool SetOption<T>(ChannelOption<T> option, T value)
     {
         ArgumentNullException.ThrowIfNull(option);
+
         option.Validate(value);
+
         return SetValue(option, value);
     }
 
@@ -199,6 +212,7 @@ public class DefaultChannelConfig : IChannelConfig
             throw new PlatformNotSupportedException("TCP_MD5SIG requires a Linux TCP socket.");
         else
             return false;
+
         return true;
     }
 
@@ -210,6 +224,7 @@ public class DefaultChannelConfig : IChannelConfig
     public virtual IChannelConfig SetConnectTimeoutMillis(int value)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(value);
+
         Volatile.Write(ref _connectTimeoutMillis, value);
         return this;
     }
@@ -231,6 +246,7 @@ public class DefaultChannelConfig : IChannelConfig
     {
         if (_receiveAllocator is not IMaxMessagesRecvByteBufAllocator allocator)
             throw new InvalidOperationException("getRecvByteBufAllocator() must return an object of type MaxMessagesRecvByteBufAllocator");
+
         allocator.MaxMessagesPerRead(value);
         return this;
     }
@@ -252,6 +268,7 @@ public class DefaultChannelConfig : IChannelConfig
     public virtual IChannelConfig SetMaxMessagesPerWrite(int value)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(value);
+
         Volatile.Write(ref _maxMessagesPerWrite, value);
         return this;
     }
@@ -264,6 +281,7 @@ public class DefaultChannelConfig : IChannelConfig
     public virtual IChannelConfig SetWriteSpinCount(int writeSpinCount)
     {
         ObjectUtil.CheckPositive(writeSpinCount, "writeSpinCount");
+
         // Integer.MAX_VALUE is used as a special value in the channel implementations to indicate the channel cannot
         // accept any more data, and results in the writeOp being set on the selector (or execute a runnable which tries
         // to flush later because the writeSpinCount quantum has been exhausted). This strategy prevents additional
@@ -272,6 +290,7 @@ public class DefaultChannelConfig : IChannelConfig
         {
             --writeSpinCount;
         }
+
         Volatile.Write(ref _writeSpinCount, writeSpinCount);
         return this;
     }
@@ -284,6 +303,7 @@ public class DefaultChannelConfig : IChannelConfig
     public virtual IChannelConfig SetAllocator(IByteBufAllocator value)
     {
         ArgumentNullException.ThrowIfNull(value);
+
         Volatile.Write(ref _allocator, value);
         return this;
     }
@@ -296,6 +316,7 @@ public class DefaultChannelConfig : IChannelConfig
     public virtual IChannelConfig SetRecvByteBufAllocator(IRecvByteBufAllocator value)
     {
         ArgumentNullException.ThrowIfNull(value);
+
         Volatile.Write(ref _receiveAllocator, value);
         return this;
     }
@@ -310,10 +331,12 @@ public class DefaultChannelConfig : IChannelConfig
     {
         ObjectUtil.CheckNotNull(allocator, "allocator");
         ObjectUtil.CheckNotNull(metadata, "metadata");
+
         if (allocator is IMaxMessagesRecvByteBufAllocator messages)
         {
             messages.MaxMessagesPerRead(metadata.DefaultMaxMessagesPerRead());
         }
+
         SetRecvByteBufAllocator(allocator);
     }
 
@@ -329,6 +352,7 @@ public class DefaultChannelConfig : IChannelConfig
             Channel.Read();
         else if (!value && old)
             AutoReadCleared();
+
         return this;
     }
 
@@ -359,6 +383,7 @@ public class DefaultChannelConfig : IChannelConfig
     public virtual IChannelConfig SetWriteBufferHighWaterMark(int value)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(value);
+
         for (; ; )
         {
             var old = Volatile.Read(ref _waterMark);
@@ -378,6 +403,7 @@ public class DefaultChannelConfig : IChannelConfig
     public virtual IChannelConfig SetWriteBufferLowWaterMark(int value)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(value);
+
         for (; ; )
         {
             var old = Volatile.Read(ref _waterMark);
@@ -397,6 +423,7 @@ public class DefaultChannelConfig : IChannelConfig
     public virtual IChannelConfig SetWriteBufferWaterMark(WriteBufferWaterMark value)
     {
         ArgumentNullException.ThrowIfNull(value);
+
         Volatile.Write(ref _waterMark, value);
         return this;
     }
@@ -409,6 +436,7 @@ public class DefaultChannelConfig : IChannelConfig
     public virtual IChannelConfig SetMessageSizeEstimator(IMessageSizeEstimator value)
     {
         ArgumentNullException.ThrowIfNull(value);
+
         Volatile.Write(ref _estimator, value);
         return this;
     }

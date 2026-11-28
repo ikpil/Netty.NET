@@ -79,6 +79,7 @@ public class DefaultSocks5PasswordAuthRequest : AbstractSocks5Message, ISocks5Pa
         {
             buf.Append("(username: ");
         }
+
         buf.Append(Username());
         buf.Append(", password: ****)");
 

@@ -193,6 +193,7 @@ public class SlicedByteBufTest : AbstractSingleRegionByteBufTest
     public void TestReaderIndexAndMarks()
     {
         ByteBuf wrapped = Unpooled.Buffer(16);
+
         try
         {
             wrapped.WriterIndex = 14;
@@ -249,6 +250,7 @@ public class SlicedByteBufTest : AbstractSingleRegionByteBufTest
         // CLR: a byte array converts to the Span destination that replaces the NIO ByteBuffer.
         byte[] nioBuffer = new byte[bytes.Length + 1];
         ByteBuf wrappedBuffer = Unpooled.WrappedBuffer(bytes).Slice(0, bytes.Length - 1);
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() =>
@@ -321,6 +323,7 @@ public class SlicedByteBufTest : AbstractSingleRegionByteBufTest
         ByteBuf slice = NewBuffer(10);
         ByteBuf unwrapped = slice.Unwrap();
         unwrapped.WriterIndex = unwrapped.WriterIndex + 5;
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() =>

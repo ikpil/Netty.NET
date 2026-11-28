@@ -82,6 +82,7 @@ public class AppendableCharSequenceTest
     private static void TestSimpleAppend0(AppendableCharSequence seq)
     {
         string text = "testdata";
+
         for (int i = 0; i < text.Length; i++)
         {
             seq.Append(text[i]);
@@ -113,6 +114,7 @@ public class AppendableCharSequenceTest
     private static void AssertEqualChars(string seq1, ICharSequence seq2)
     {
         Assert.Equal(seq1.Length, seq2.Length());
+
         for (int i = 0; i < seq1.Length; i++)
         {
             Assert.Equal(seq1[i], seq2.CharAt(i));

@@ -55,11 +55,13 @@ internal sealed class AuthoritativeDnsServerCacheAdapter : IAuthoritativeDnsServ
         List<EndPoint> addresses = new List<EndPoint>(entries.Count);
 
         int i = 0;
+
         do
         {
             IPAddress addr = entries[i].Address();
             addresses.Add(new IPEndPoint(addr, DefaultDnsServerAddressStreamProvider.DNS_PORT));
         } while (++i < entries.Count);
+
         return new SequentialDnsServerAddressStream(addresses, 0);
     }
 

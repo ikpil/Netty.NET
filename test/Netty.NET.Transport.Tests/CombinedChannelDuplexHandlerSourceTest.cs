@@ -92,6 +92,7 @@ public class CombinedChannelDuplexHandlerSourceTest
         {
             Assert.Same(exception, cause);
             queue.Enqueue(this);
+
             if (forward)
             {
                 ctx.FireExceptionCaught(cause);
@@ -117,6 +118,7 @@ public class CombinedChannelDuplexHandlerSourceTest
         var lastHandler = new InboundExceptionHandler(queue, exception, false);
         var channel = new EmbeddedChannel(new CombinedChannelDuplexHandler<IChannelInboundHandler, IChannelOutboundHandler>(
             inboundHandler, outboundHandler), lastHandler);
+
         try
         {
             channel.Pipeline.FireExceptionCaught(exception);
@@ -139,14 +141,17 @@ public class CombinedChannelDuplexHandlerSourceTest
         var handler = new CombinedChannelDuplexHandler<IChannelInboundHandler, IChannelOutboundHandler>(
             inboundHandler, new ChannelOutboundHandlerAdapter());
         var channel = new EmbeddedChannel();
+
         try
         {
             channel.Pipeline.AddLast(handler);
             Assert.Equal(Event.HandlerAdded, inboundHandler.PollEvent());
             DoInboundOperations(channel);
+
             foreach (var evt in new[] { Event.Registered, Event.Active, Event.ChannelRead, Event.ChannelReadComplete,
                 Event.ExceptionCaught, Event.UserEventTriggered, Event.ChannelWritabilityChanged, Event.Inactive, Event.Unregistered })
                 Assert.Equal(evt, inboundHandler.PollEvent());
+
             handler.RemoveInboundHandler();
             Assert.Equal(Event.HandlerRemoved, inboundHandler.PollEvent());
             // These should not be handled by the inboundHandler anymore as it was removed before
@@ -170,14 +175,17 @@ public class CombinedChannelDuplexHandlerSourceTest
         var handler = new CombinedChannelDuplexHandler<IChannelInboundHandler, IChannelOutboundHandler>(
             new ChannelInboundHandlerAdapter(), outboundHandler);
         var channel = new EmbeddedChannel();
+
         try
         {
             channel.Pipeline.AddLast(new OutboundEventHandler());
             channel.Pipeline.AddLast(handler);
             Assert.Equal(Event.HandlerAdded, outboundHandler.PollEvent());
             await DoOutboundOperations(channel);
+
             foreach (var evt in new[] { Event.Bind, Event.Connect, Event.Write, Event.Flush, Event.Read, Event.Close, Event.Close, Event.Deregister })
                 Assert.Equal(evt, outboundHandler.PollEvent());
+
             handler.RemoveOutboundHandler();
             Assert.Equal(Event.HandlerRemoved, outboundHandler.PollEvent());
             // These should not be handled by the inboundHandler anymore as it was removed before
@@ -212,6 +220,7 @@ public class CombinedChannelDuplexHandlerSourceTest
         var channel = new EmbeddedChannel(outboundHandler,
             new CombinedChannelDuplexHandler<IChannelInboundHandler, IChannelOutboundHandler>(
                 new ChannelInboundHandlerAdapter(), new ChannelOutboundHandlerAdapter()));
+
         try
         {
             var pipeline = channel.Pipeline;

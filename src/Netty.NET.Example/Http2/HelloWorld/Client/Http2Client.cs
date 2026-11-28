@@ -70,6 +70,7 @@ public sealed class Http2Client
     {
         // Configure SSL.
         SslContext sslCtx;
+
         if (SSL)
         {
             SslProvider provider = SslProvider.IsAlpnSupported(SslProvider.OPENSSL) ? SslProvider.OPENSSL : SslProvider.JDK;
@@ -120,6 +121,7 @@ public sealed class Http2Client
             HttpScheme scheme = SSL ? HttpScheme.HTTPS : HttpScheme.HTTP;
             AsciiString hostName = new AsciiString(HOST + ':' + PORT);
             Console.Error.WriteLine("Sending request(s)...");
+
             if (URL != null)
             {
                 // Create a simple GET request.
@@ -132,6 +134,7 @@ public sealed class Http2Client
                         new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously));
                 streamId += 2;
             }
+
             if (URL2 != null)
             {
                 // Create a simple POST request with a body.
@@ -144,6 +147,7 @@ public sealed class Http2Client
                 responseHandler.Put(streamId, channel.WriteAsync(request),
                         new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously));
             }
+
             channel.Flush();
             await responseHandler.AwaitResponsesAsync(TimeSpan.FromSeconds(5));
             Console.WriteLine("Finished HTTP/2 request(s)");

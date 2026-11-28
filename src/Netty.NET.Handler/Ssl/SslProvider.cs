@@ -78,6 +78,7 @@ public sealed class SslProvider
         {
             return false;
         }
+
         throw new UnreachableException("Unexpected SslProvider: " + provider);
     }
 
@@ -98,6 +99,7 @@ public sealed class SslProvider
         {
             return false;
         }
+
         throw new UnreachableException("Unexpected SslProvider: " + sslProvider);
     }
 
@@ -118,6 +120,7 @@ public sealed class SslProvider
         {
             return false;
         }
+
         throw new UnreachableException("Unexpected SslProvider: " + sslProvider);
     }
 
@@ -136,6 +139,7 @@ public sealed class SslProvider
         {
             return false;
         }
+
         throw new UnreachableException("Unexpected SslProvider: " + sslProvider);
     }
 }

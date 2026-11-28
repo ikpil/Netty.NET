@@ -114,6 +114,7 @@ public interface IQuicTokenHandler
                 throw new ArgumentException("offset " + tokenOffset + " exceeds token length "
                         + token.ReadableBytes);
             }
+
             return token.Slice(tokenOffset, token.ReadableBytes - tokenOffset);
         }
     }

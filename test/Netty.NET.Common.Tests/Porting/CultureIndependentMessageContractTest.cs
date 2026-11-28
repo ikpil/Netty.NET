@@ -54,6 +54,7 @@ public class CultureIndependentMessageContractTest
     {
         var previous = CultureInfo.CurrentCulture;
         CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture);
+
         try
         {
             action();

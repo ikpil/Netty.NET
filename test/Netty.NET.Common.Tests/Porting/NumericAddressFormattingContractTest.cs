@@ -27,6 +27,7 @@ public class NumericAddressFormattingContractTest
             Assert.Equal(socket, NetUtil.ToSocketAddressString(new IPEndPoint(address, 443)));
             Assert.Equal(0, address.DisplayCalls);
             Assert.Equal(reference.GetAddressBytes(), address.GetAddressBytes());
+
             if (address.AddressFamily == AddressFamily.InterNetworkV6)
                 Assert.Equal(reference.ScopeId, address.ScopeId);
         }
@@ -42,6 +43,7 @@ public class NumericAddressFormattingContractTest
     public void ResolvedHostFormattingUsesNativeNumericTextIncludingScope(string literal)
     {
         IPAddress reference = IPAddress.Parse(literal);
+
         foreach (bool throws in new[] { false, true })
         {
             DisplayAddress address = Create(reference, throws);
@@ -59,6 +61,7 @@ public class NumericAddressFormattingContractTest
         DisplayAddress address = Create(reference, throws: true);
         EndPoint endpoint = new IPEndPoint(address, 443);
         string before = NetUtil.GetHostname(endpoint);
+
         if (ipv6)
         {
             address.ScopeId = reference.ScopeId = uint.MaxValue;
@@ -69,6 +72,7 @@ public class NumericAddressFormattingContractTest
             typeof(IPAddress).GetProperty("Address").SetValue(address, 0L);
             typeof(IPAddress).GetProperty("Address").SetValue(reference, 0L);
         }
+
         string after = NetUtil.GetHostname(endpoint);
         Assert.NotEqual(before, after);
         Assert.Equal(reference.ToString(), after);
@@ -105,6 +109,7 @@ public class NumericAddressFormattingContractTest
             {
                 throw new InvalidOperationException("Display override must not format a numeric address.");
             }
+
             return "display.example.invalid";
         }
     }

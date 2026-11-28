@@ -140,6 +140,7 @@ public class ConstantPoolNativeContractTest
         {
             return;
         }
+
         var name = type.GetProperty("Name");
         Assert.NotNull(name);
         Assert.Equal(typeof(string), name.PropertyType);

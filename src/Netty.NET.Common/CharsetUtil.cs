@@ -57,11 +57,13 @@ public static class CharsetUtil
         {
             throw new ArgumentException("Null charset name");
         }
+
         CheckName(charsetName);
         if (STANDARD_CHARSETS.TryGetValue(charsetName, out Encoding charset))
         {
             return charset;
         }
+
         return Encoding.GetEncoding(charsetName);
     }
 
@@ -74,6 +76,7 @@ public static class CharsetUtil
         {
             throw new ArgumentException(s);
         }
+
         for (int i = 0; i < n; i++)
         {
             char c = s[i];
@@ -109,6 +112,7 @@ public static class CharsetUtil
             {
                 continue;
             }
+
             throw new ArgumentException(s);
         }
     }

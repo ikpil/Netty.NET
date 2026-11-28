@@ -135,6 +135,7 @@ public class Socks5ClientEncoder : MessageToByteEncoder<ISocks5Message>
         {
             CheckFieldLength(addrValue.Length);
         }
+
         addressEncoder.EncodeAddress(dstAddrType, addrValue, @out);
         ByteBufUtil.WriteShortBE(@out, msg.DstPort());
     }

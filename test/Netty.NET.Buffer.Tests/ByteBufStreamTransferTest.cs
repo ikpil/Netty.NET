@@ -36,6 +36,7 @@ public class ByteBufStreamTransferTest
         {
             return Unpooled.DirectBuffer(32, 4096).SetZero(0, 32);
         }
+
         return Unpooled.CompositeBuffer().AddComponent(Unpooled.WrappedBuffer(new byte[7]))
             .AddComponent(Unpooled.WrappedBuffer(Array.Empty<byte>()))
             .AddComponent(Unpooled.WrappedBuffer(new byte[25]));
@@ -51,10 +52,12 @@ public class ByteBufStreamTransferTest
     public void OriginalAbsoluteBlockTransferPreservesIndices(int kind)
     {
         ByteBuf b = Owner(kind);
+
         try
         {
             byte[] expected = Enumerable.Range(0, 32).Select(i => (byte)(i * 7)).ToArray();
             using var output = new MemoryStream();
+
             for (int i = 0; i < 32; i += 8)
             {
                 using var input = new MemoryStream(expected, i, 8);
@@ -62,6 +65,7 @@ public class ByteBufStreamTransferTest
                 Assert.Equal(0, b.SetBytes(i, input, 0)); // CLR empty request does not query EOF.
                 Assert.Same(b, b.GetBytes(i, output, 8));
             }
+
             Assert.Equal(expected, output.ToArray());
             Assert.Equal(0, b.ReaderIndex);
             Assert.Equal(0, b.WriterIndex);
@@ -77,6 +81,7 @@ public class ByteBufStreamTransferTest
     public void OriginalRelativeBlockTransferAdvancesBothIndices(int kind)
     {
         ByteBuf b = Owner(kind);
+
         try
         {
             byte[] expected = Enumerable.Range(0, 32).Select(i => (byte)i).ToArray();
@@ -112,6 +117,7 @@ public class ByteBufStreamTransferTest
         ByteBuf b = Owner(kind);
         b.WriterIndex = 3;
         using var input = new ProbeStream { ReadCount = 2 };
+
         try
         {
             Assert.Equal(2, b.WriteBytes(input, 20));
@@ -139,6 +145,7 @@ public class ByteBufStreamTransferTest
         ByteBuf b = Owner(kind);
         b.WriterIndex = 3;
         using var input = new ProbeStream { ReadCount = 2, Fail = true };
+
         try
         {
             Assert.Throws<IOException>(() => b.WriteBytes(input, 20));
@@ -160,6 +167,7 @@ public class ByteBufStreamTransferTest
         ByteBuf b = Owner(kind).WriteBytes(new byte[] { 9, 8, 7, 6 });
         b.ReaderIndex = 1;
         using var output = new ProbeStream { Fail = true };
+
         try
         {
             Assert.Throws<IOException>(() => b.ReadBytes(output, 3));
@@ -181,6 +189,7 @@ public class ByteBufStreamTransferTest
     {
         ByteBuf b = Owner(kind);
         using var stream = new ProbeStream();
+
         try
         {
             Assert.Same(b, b.GetBytes(32, stream, 0));
@@ -209,6 +218,7 @@ public class ByteBufStreamTransferTest
     {
         ByteBuf b = kind == 0 ? Unpooled.Buffer(0, 64) : Unpooled.DirectBuffer(0, 64);
         using var input = new ProbeStream { ReadCount = 0 };
+
         try
         {
             Assert.Equal(0, b.WriteBytes(input, 40));
@@ -229,6 +239,7 @@ public class ByteBufStreamTransferTest
     {
         ByteBuf b = Owner(1);
         using var input = new ProbeStream { ReadCount = count };
+
         try
         {
             Assert.Throws<IOException>(() => b.WriteBytes(input, 32));
@@ -281,6 +292,7 @@ public class ByteBufStreamTransferTest
         ByteBuf slice = b.Slice(4, 10).Clear();
         using var input = new MemoryStream(new byte[] { 7, 8 });
         using var output = new MemoryStream();
+
         try
         {
             Assert.Equal(2, slice.WriteBytes(input, 2));
@@ -304,6 +316,7 @@ public class ByteBufStreamTransferTest
     public void OutputSnapshotSurvivesNativeGrowthOrCompositeConsolidation(bool composite)
     {
         ByteBuf b;
+
         if (composite)
         {
             var c = Unpooled.CompositeBuffer(2);
@@ -315,7 +328,9 @@ public class ByteBufStreamTransferTest
         {
             b = Unpooled.DirectBuffer(4, 64).WriteBytes(new byte[] { 1, 2, 3, 4 });
         }
+
         using var output = new ByteBufOutputStream(b);
+
         try
         {
             b.ReadBytes(output, 4);
@@ -334,6 +349,7 @@ public class ByteBufStreamTransferTest
     {
         ByteBuf b = Unpooled.DirectBuffer(4, 64);
         using var input = new ProbeStream { ReadCount = 3, Callback = () => b.Capacity = 64 };
+
         try
         {
             Assert.Equal(3, b.WriteBytes(input, 4));
@@ -355,6 +371,7 @@ public class ByteBufStreamTransferTest
             Unpooled.DirectBuffer(2, 2).WriteBytes(new byte[] { 3, 4 }));
         using var output = new MemoryStream();
         using var input = new ProbeStream();
+
         try
         {
             b.ReaderIndex = 1;
@@ -379,6 +396,7 @@ public class ByteBufStreamTransferTest
         ByteBuf b = Owner(kind).WriteBytes(new byte[] { 1, 2, 3, 4 });
         b.Capacity = 4;
         using var input = new ByteBufInputStream(b);
+
         try
         {
             Assert.Equal(4, b.WriteBytes(input, 4));
@@ -401,6 +419,7 @@ public class ByteBufStreamTransferTest
             .AddComponent(Unpooled.WrappedBuffer(new byte[2]))
             .AddComponent(Unpooled.WrappedBuffer(new byte[2]).AsReadOnly());
         using var input = new MemoryStream(new byte[] { 1, 2, 3, 4 });
+
         try
         {
             Assert.Throws<NotSupportedException>(() => b.WriteBytes(input, 4));
@@ -419,6 +438,7 @@ public class ByteBufStreamTransferTest
     public void OriginalIndependentDuplicateAndSliceOutputTransfersAreConcurrent(bool slice)
     {
         ByteBuf b = Owner(1).WriteBytes(Enumerable.Range(0, 32).Select(i => (byte)i).ToArray());
+
         try
         {
             Parallel.For(0, 1000, _ =>
@@ -453,13 +473,16 @@ public class ByteBufStreamTransferTest
         public override int Read(Span<byte> destination)
         {
             Calls++;
+
             for (int i = 0; i < Math.Min(destination.Length, Math.Max(0, ReadCount)); i++)
                 destination[i] = (byte)(i + 1);
+
             Callback?.Invoke();
             if (Fail)
             {
                 throw new IOException("Input failure after touching staging.");
             }
+
             return ReadCount;
         }
 

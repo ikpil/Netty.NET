@@ -45,6 +45,7 @@ public class EmptyByteBufTest
         var empty = new EmptyByteBuf(UnpooledByteBufAllocator.Default);
         empty.WriteBytes(Unpooled.EmptyBuffer); // Ok
         ByteBuf nonEmpty = UnpooledByteBufAllocator.Default.Buffer().WriteBoolean(false);
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => empty.WriteBytes(nonEmpty));
@@ -117,6 +118,7 @@ public class EmptyByteBufTest
             _ => new AdaptiveByteBufAllocator(preferDirect, lowMemory: false, nativeAllocator: native)
         };
         ByteBuf empty = allocator.IoBuffer(0, 0);
+
         try
         {
             Assert.Same(allocator, empty.Alloc());
@@ -133,6 +135,7 @@ public class EmptyByteBufTest
         {
             (allocator as IDisposable)?.Dispose();
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -148,6 +151,7 @@ public class EmptyByteBufTest
             Assert.Equal(1, empty.RefCnt);
             Assert.True(empty.ReadableMemory.IsEmpty);
         }
+
         Assert.True(empty.AsMemory(0, 0).IsEmpty);
         Assert.Equal(1, empty.RefCnt);
     }
@@ -157,6 +161,7 @@ public class EmptyByteBufTest
     {
         var empty = new EmptyByteBuf(UnpooledByteBufAllocator.Default);
         ByteBuf emptyAbstract = new UnpooledHeapByteBuf(UnpooledByteBufAllocator.Default, 0, 0);
+
         try
         {
             Assert.True(empty.Equals(emptyAbstract));
@@ -168,6 +173,7 @@ public class EmptyByteBufTest
         {
             Assert.True(emptyAbstract.Release());
         }
+
         Assert.False(empty.Release());
     }
 
@@ -270,6 +276,7 @@ public class EmptyByteBufTest
     public void ZeroLengthReadUsesSentinelWithoutAcquiringOwnership()
     {
         ByteBuf buffer = Unpooled.Buffer(8);
+
         try
         {
             Assert.Same(Unpooled.EmptyBuffer, buffer.ReadBytes(0));

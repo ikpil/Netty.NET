@@ -37,6 +37,7 @@ public class IpScopeParsingContractTest
         foreach (string host in new[] { "fe80::1%" + zone, "[fe80::1%" + zone + "]" })
         {
             IPAddress address = NetUtil.CreateInetAddressFromIpAddressString(host);
+
             if (expectedScope < 0)
             {
                 Assert.Null(address);
@@ -49,6 +50,7 @@ public class IpScopeParsingContractTest
                 Assert.Equal(IPAddress.Parse("fe80::1").GetAddressBytes(), address.GetAddressBytes());
                 Assert.Equal("[fe80::1]:80", NetUtil.ToSocketAddressString(new IPEndPoint(address, 80)));
             }
+
             // Scope syntax has no bearing on the sixteen wire-address bytes.
             Assert.Equal(IPAddress.Parse("fe80::1").GetAddressBytes(), NetUtil.CreateByteArrayFromIpAddressString(host));
         }
@@ -64,6 +66,7 @@ public class IpScopeParsingContractTest
         var culture = (CultureInfo)CultureInfo.GetCultureInfo(cultureName).Clone();
         culture.NumberFormat.PositiveSign = "POS";
         culture.NumberFormat.NegativeSign = "NEG";
+
         try
         {
             CultureInfo.CurrentCulture = culture;
@@ -93,6 +96,7 @@ public class IpScopeParsingContractTest
         Assert.NotSame(first, second);
         Assert.Equal(family, first.AddressFamily);
         Assert.Equal(Convert.FromHexString(hex), first.GetAddressBytes());
+
         if (family == AddressFamily.InterNetworkV6)
         {
             Assert.Equal(scope, first.ScopeId);

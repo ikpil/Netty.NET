@@ -72,6 +72,7 @@ public class AsciiTransformContractTest
             AsciiString trimmed = source.Trim();
             Assert.Equal(code <= 32 ? Array.Empty<byte>() : new[] { (byte)code }, trimmed.AsSpan().ToArray());
             Assert.Same(storage, trimmed.Array());
+
             if (code > 32)
             {
                 Assert.Equal(3, trimmed.ArrayOffset());
@@ -83,6 +84,7 @@ public class AsciiTransformContractTest
     public void ProtocolCaseConversionIsCultureIndependentAndOwnsChangedBytes()
     {
         CultureInfo previous = CultureInfo.CurrentCulture;
+
         try
         {
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("tr-TR");
@@ -107,9 +109,11 @@ public class AsciiTransformContractTest
     public void WordPatternsFindEveryByteInEitherEndianOrder()
     {
         Span<byte> bytes = stackalloc byte[8];
+
         for (int target = 0; target <= byte.MaxValue; target++)
         {
             long pattern = SWARUtil.CompilePattern((byte)target);
+
             for (int lane = 0; lane < bytes.Length; lane++)
             {
                 bytes.Fill((byte)(target ^ 255));
@@ -119,9 +123,11 @@ public class AsciiTransformContractTest
                 Assert.Equal(lane, SWARUtil.GetIndex(matches, !BitConverter.IsLittleEndian));
                 Assert.Equal(7 - lane, SWARUtil.GetIndex(matches, BitConverter.IsLittleEndian));
             }
+
             bytes.Fill((byte)(target ^ 255));
             Assert.Equal(0, SWARUtil.ApplyPattern(MemoryMarshal.Read<long>(bytes), pattern));
         }
+
         Assert.Equal(8, SWARUtil.GetIndex(0, true));
         Assert.Equal(8, SWARUtil.GetIndex(0, false));
     }

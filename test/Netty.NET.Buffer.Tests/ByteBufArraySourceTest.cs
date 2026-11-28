@@ -31,6 +31,7 @@ public class ByteBufArraySourceTest
             if (provider >= 3)
                 _pool = new PooledByteBufAllocator(nativeAllocator: Native, maxOrder: 1,
                     smallCacheSize: 0, normalCacheSize: 0);
+
             Root = provider switch
             {
                 0 => new UnpooledHeapByteBuf(length),
@@ -51,6 +52,7 @@ public class ByteBufArraySourceTest
             {
                 Root.Release();
             }
+
             Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
@@ -79,6 +81,7 @@ public class ByteBufArraySourceTest
         const int capacity = 4096, blockSize = 128, seed = 12345;
         using var s = new Storage(provider, scenario is ArrayCase.GetReleasedArray or ArrayCase.GetReleasedRange or ArrayCase.SetReleasedArray or ArrayCase.SetReleasedRange or ArrayCase.ReadReleasedArray or ArrayCase.ReadReleasedRange or ArrayCase.WriteReleasedArray or ArrayCase.WriteReleasedRange ? 8 : capacity);
         ByteBuf buffer = s.Root;
+
         if (scenario is ArrayCase.GetReleasedArray or ArrayCase.GetReleasedRange or ArrayCase.SetReleasedArray or ArrayCase.SetReleasedRange or ArrayCase.ReadReleasedArray or ArrayCase.ReadReleasedRange or ArrayCase.WriteReleasedArray or ArrayCase.WriteReleasedRange)
         {
             // Clear the buffer so we are sure the reader and writer indices are 0.
@@ -86,6 +89,7 @@ public class ByteBufArraySourceTest
             buffer.Clear();
             Assert.True(buffer.Release());
             byte[] bytes = new byte[8];
+
             switch (scenario)
             {
                 case ArrayCase.GetReleasedArray:
@@ -113,9 +117,11 @@ public class ByteBufArraySourceTest
                     Assert.Throws<IllegalReferenceCountException>(() => buffer.WriteBytes(bytes.AsSpan(0, 1)));
                     break;
             }
+
             Assert.Equal(new byte[8], bytes);
             return;
         }
+
         if (scenario is ArrayCase.NegativeBufferIndex or ArrayCase.NegativeBufferIndexEmptyRange or ArrayCase.NegativeDestinationIndex or ArrayCase.DestinationRangeTooLong)
         {
             if (scenario == ArrayCase.NegativeBufferIndex)
@@ -126,6 +132,7 @@ public class ByteBufArraySourceTest
             {
                 byte[] destination = new byte[4];
                 buffer.SetInt(0, 0x01020304);
+
                 if (scenario == ArrayCase.NegativeDestinationIndex)
                 {
                     Assert.Throws<ArgumentOutOfRangeException>(() => buffer.GetBytes(0, destination.AsSpan(-1, 4)));
@@ -139,41 +146,51 @@ public class ByteBufArraySourceTest
                     Assert.Equal(new byte[4], destination);
                 }
             }
+
             Assert.Equal(0, buffer.ReaderIndex);
             Assert.Equal(0, buffer.WriterIndex);
             return;
         }
+
         bool sequential = scenario is ArrayCase.SequentialArray or ArrayCase.SequentialArrayRange or ArrayCase.GetReleasedArray or ArrayCase.GetReleasedRange or ArrayCase.SetReleasedArray or ArrayCase.SetReleasedRange or ArrayCase.ReadReleasedArray or ArrayCase.ReadReleasedRange or ArrayCase.WriteReleasedArray or ArrayCase.WriteReleasedRange, ranged = scenario is ArrayCase.RandomArrayRange or ArrayCase.RandomWrappedArrayRange or ArrayCase.SequentialArrayRange;
         byte[] value = new byte[ranged ? blockSize * 2 : blockSize];
         var random = new Random(seed);
+
         if (sequential)
         {
             buffer.WriterIndex = 0;
         }
+
         for (int i = 0; i < buffer.Capacity - blockSize + 1; i += blockSize)
         {
             random.NextBytes(value);
+
             if (sequential)
             {
                 Assert.Equal(0, buffer.ReaderIndex);
                 Assert.Equal(i, buffer.WriterIndex);
             }
+
             int offset = ranged ? random.Next(blockSize) : 0;
             ReadOnlySpan<byte> source = value.AsSpan(offset, blockSize);
             Assert.Same(buffer, sequential ? buffer.WriteBytes(source) : buffer.SetBytes(i, source));
         }
+
         // CLR Random is independently reseeded; expected arrays need no ByteBuf wrapper or reference claim.
         random = new Random(seed);
         byte[] expected = new byte[value.Length];
+
         for (int i = 0; i < buffer.Capacity - blockSize + 1; i += blockSize)
         {
             random.NextBytes(expected);
             int offset = ranged ? random.Next(blockSize) : 0;
+
             if (sequential)
             {
                 Assert.Equal(i, buffer.ReaderIndex);
                 Assert.Equal(capacity, buffer.WriterIndex);
             }
+
             Span<byte> destination = value.AsSpan(offset, blockSize);
             Assert.Same(buffer, sequential ? buffer.ReadBytes(destination) : buffer.GetBytes(i, destination));
 
@@ -182,6 +199,7 @@ public class ByteBufArraySourceTest
                 Assert.Equal(expected[j], value[j]);
             }
         }
+
         Assert.Equal(sequential ? capacity : 0, buffer.ReaderIndex);
         Assert.Equal(sequential ? capacity : 0, buffer.WriterIndex);
         Assert.Equal(1, buffer.RefCnt);
@@ -202,19 +220,25 @@ public class ByteBufArraySourceTest
     {
         using var s = new Storage(provider, 32);
         byte[] bytes = new byte[32];
+
         for (int i = 0; i < bytes.Length; ++i)
             bytes[i] = (byte)(i * 7);
+
         byte[] source = [99, 99, 83, 91, 113, 127, 99, 99];
         byte[] destination = [199, 199, 199, 199, 199, 199, 199, 199];
         byte[] expectedSource = (byte[])source.Clone(), expectedDestination = (byte[])destination.Clone();
         byte[] expectedContent = (byte[])bytes.Clone();
         ByteBuf buffer = s.Root;
         buffer.SetBytes(0, bytes).SetIndex(3, 25).MarkReaderIndex().MarkWriterIndex();
+
         if (operation == 2)
             buffer.SetIndex(15, 25);
+
         if (operation == 3)
             buffer.SetIndex(3, 15);
+
         int reader = buffer.ReaderIndex, writer = buffer.WriterIndex;
+
         switch (operation)
         {
             case 0:
@@ -230,11 +254,13 @@ public class ByteBufArraySourceTest
                 Assert.Throws<ArgumentOutOfRangeException>(() => buffer.WriteBytes(source.AsSpan(-1, 4)));
                 break;
         }
+
         Assert.Equal(reader, buffer.ReaderIndex);
         Assert.Equal(writer, buffer.WriterIndex);
         Assert.Equal(bytes, ByteBufUtil.GetBytes(buffer, 0, 32));
         Assert.Equal(expectedSource, source);
         Assert.Equal(expectedDestination, destination);
+
         switch (operation)
         {
             case 0:
@@ -250,10 +276,12 @@ public class ByteBufArraySourceTest
                 Assert.Same(buffer, buffer.WriteBytes(source.AsSpan(2, 4)));
                 break;
         }
+
         if (operation is 0 or 2)
             Array.Copy(bytes, 15, expectedDestination, 2, 4);
         else
             Array.Copy(source, 2, expectedContent, 15, 4);
+
         Assert.Equal(expectedSource, source);
         Assert.Equal(expectedDestination, destination);
         Assert.Equal(expectedContent, ByteBufUtil.GetBytes(buffer, 0, 32));

@@ -174,6 +174,7 @@ public sealed class QuicTransportError
         {
             errorList.Add(new QuicTransportError(i, "CRYPTO_ERROR"));
         }
+
         INT_TO_ENUM_MAP = errorList.ToArray();
     }
     private readonly long code;
@@ -222,6 +223,7 @@ public sealed class QuicTransportError
         {
             throw new ArgumentException("Unknown error code value: " + value.ToString(CultureInfo.InvariantCulture));
         }
+
         return INT_TO_ENUM_MAP[(int) value];
     }
 
@@ -235,6 +237,7 @@ public sealed class QuicTransportError
         {
             return false;
         }
+
         QuicTransportError quicError = (QuicTransportError) o;
         return code == quicError.code;
     }

@@ -23,6 +23,7 @@ public class InternalDefaultLogger : AbstractInternalLogger
         {
             return;
         }
+
         _source.TraceEvent(level, 0, cause == null ? message : message + Environment.NewLine + cause);
     }
 
@@ -32,6 +33,7 @@ public class InternalDefaultLogger : AbstractInternalLogger
         {
             return;
         }
+
         FormattingTuple tuple = MessageFormatter.ArrayFormat(format, args);
         Write(level, tuple.GetMessage(), tuple.GetThrowable());
     }

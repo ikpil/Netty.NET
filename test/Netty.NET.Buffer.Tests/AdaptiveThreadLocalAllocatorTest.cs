@@ -71,6 +71,7 @@ public class AdaptiveThreadLocalAllocatorTest
             Action allocate = () =>
             {
                 var b = a.HeapBuffer(7, 100);
+
                 try
                 {
                     bool local = fast && (mapping || nonEventLoop);
@@ -82,6 +83,7 @@ public class AdaptiveThreadLocalAllocatorTest
                     b.Release();
                 }
             };
+
             if (mapping)
             {
                 ThreadExecutorMap.Apply(allocate, ImmediateEventExecutor.INSTANCE)();
@@ -104,6 +106,7 @@ public class AdaptiveThreadLocalAllocatorTest
         {
             var small = low.HeapBuffer(7);
             var large = normal.HeapBuffer(32768);
+
             try
             {
                 Assert.Equal(0, low.HeapPool.LocalBindingCount);
@@ -138,6 +141,7 @@ public class AdaptiveThreadLocalAllocatorTest
                 live = direct ? a.DirectBuffer(7, 100) : a.HeapBuffer(7, 100);
                 live.SetInt(0, 12345);
                 lease = live.AcquireReadLease();
+
                 for (int i = 0; i < 1300; i++)
                 {
                     var b = direct ? a.DirectBuffer(256, 256) : a.HeapBuffer(256, 256);
@@ -198,6 +202,7 @@ public class AdaptiveThreadLocalAllocatorTest
             var b = a.HeapBuffer(7);
             var owner = a.HeapPool.ThreadLocalGroup.GetIfExists()?[0];
             Assert.NotNull(owner);
+
             try
             {
                 Task.Run(() =>
@@ -205,6 +210,7 @@ public class AdaptiveThreadLocalAllocatorTest
                     Assert.False(FastThreadLocalThread.CurrentThreadWillCleanupFastThreadLocals());
                     Assert.Null(ThreadExecutorMap.CurrentExecutor());
                     var other = a.HeapBuffer(7);
+
                     try
                     {
                         Assert.Null(a.HeapPool.ThreadLocalGroup.GetIfExists()?[0]);
@@ -271,6 +277,7 @@ public class AdaptiveThreadLocalAllocatorTest
             });
             owner.Start();
             Assert.True(ready.Wait(TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken));
+
             try
             {
                 release.Set();
@@ -281,6 +288,7 @@ public class AdaptiveThreadLocalAllocatorTest
                 release.Set();
                 Assert.True(owner.Join(TimeSpan.FromSeconds(15)));
             }
+
             Assert.Null(error);
             Assert.Equal(54321, held.GetInt(0));
             Assert.Equal(131072, a.UsedHeapMemory + a.UsedDirectMemory);
@@ -306,6 +314,7 @@ public class AdaptiveThreadLocalAllocatorTest
             {
                 live.Add(direct ? a.DirectBuffer(256, 256) : a.HeapBuffer(256, 256));
             }
+
             foreach (var b in live)
             {
                 b.Release();
@@ -313,12 +322,14 @@ public class AdaptiveThreadLocalAllocatorTest
 
             live.Clear();
             long before = a.UsedHeapMemory + a.UsedDirectMemory;
+
             for (int poll = 0; poll < 40; poll++)
             {
                 for (int i = 0; i < 512; i++)
                 {
                     live.Add(direct ? a.DirectBuffer(256, 256) : a.HeapBuffer(256, 256));
                 }
+
                 foreach (var b in live)
                 {
                     b.Release();
@@ -326,6 +337,7 @@ public class AdaptiveThreadLocalAllocatorTest
 
                 live.Clear();
             }
+
             long after = a.UsedHeapMemory + a.UsedDirectMemory;
             Assert.True(after < before, $"Before purge: {before}, after purge: {after}");
             Assert.InRange(after, 131072, 4 * 131072);

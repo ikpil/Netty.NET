@@ -52,6 +52,7 @@ public class SocketFileRegionWriteSpinCountContractTest
             {
                 return 0;
             }
+
             target.WriteByte(42);
             self.Advance(1);
             return 1;
@@ -117,10 +118,12 @@ public class SocketFileRegionWriteSpinCountContractTest
         var region = new Region(1, transfer: (self, target, position) =>
         {
             self.Advance(10);
+
             if (physicalBytes)
             {
                 target.WriteByte(42);
             }
+
             return physicalBytes ? 1 : 0;
         });
         var write = fixture.Channel.WriteAndFlushAsync(region);
@@ -130,6 +133,7 @@ public class SocketFileRegionWriteSpinCountContractTest
         Assert.Equal(1, fixture.Channel.FileCalls);
         Assert.Equal(10, region.Transferred());
         Assert.Equal(0, region.RefCnt);
+
         if (physicalBytes)
         {
             Assert.Equal(new byte[] { 42 }, fixture.Receive(1));
@@ -180,6 +184,7 @@ public class SocketFileRegionWriteSpinCountContractTest
             {
                 return 0;
             }
+
             target.WriteByte(42);
             self.Advance(1);
             return 1;
@@ -234,6 +239,7 @@ public class SocketFileRegionWriteSpinCountContractTest
             Assert.Equal(_transferred, position);
             if (transfer != null)
                 return transfer(this, target, position);
+
             target.WriteByte(42);
             _transferred++;
             return 1;
@@ -291,6 +297,7 @@ public class SocketFileRegionWriteSpinCountContractTest
             while (!condition())
             {
                 TestContext.Current.CancellationToken.ThrowIfCancellationRequested();
+
                 Assert.True(clock.Elapsed < TimeSpan.FromSeconds(5), "File write did not reach its owner.");
                 Loop.RunNow();
                 Thread.Sleep(1);
@@ -301,6 +308,7 @@ public class SocketFileRegionWriteSpinCountContractTest
         {
             var bytes = new byte[length];
             int offset = 0;
+
             while (offset < length)
             {
                 Assert.True(_peer.Poll(2_000_000, SelectMode.SelectRead));
@@ -308,6 +316,7 @@ public class SocketFileRegionWriteSpinCountContractTest
                 Assert.True(read > 0);
                 offset += read;
             }
+
             return bytes;
         }
 
@@ -345,6 +354,7 @@ public class SocketFileRegionWriteSpinCountContractTest
             {
                 throw Failure;
             }
+
             return base.DoWriteFileRegion(region);
         }
     }

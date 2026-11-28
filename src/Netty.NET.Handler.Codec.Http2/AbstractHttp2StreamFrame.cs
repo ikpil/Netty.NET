@@ -57,6 +57,7 @@ public abstract class AbstractHttp2StreamFrame : IHttp2StreamFrame
         {
             return false;
         }
+
         IHttp2StreamFrame other = (IHttp2StreamFrame) o;
         return ReferenceEquals(stream, other.Stream()) || stream != null && stream.Equals(other.Stream());
     }
@@ -69,6 +70,7 @@ public abstract class AbstractHttp2StreamFrame : IHttp2StreamFrame
         {
             return 0;
         }
+
         return stream.GetHashCode();
     }
 }

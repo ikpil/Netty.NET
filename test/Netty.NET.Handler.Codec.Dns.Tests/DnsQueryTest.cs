@@ -165,11 +165,14 @@ public class DnsQueryTest
             EmbeddedChannel channel = new EmbeddedChannel(new DatagramDnsQueryDecoder());
             ByteBuf buf = ((IChannel) channel).Alloc().Buffer(12);
             buf.WriteShort(1).WriteShort(0);
+
             for (int i = 0; i < 4; i++)
             {
                 buf.WriteShort(i == section ? DnsCodecUtil.MAX_RECORDS_PER_SECTION + 1 : 0);
             }
+
             DatagramPacket packet = new DatagramPacket(buf, null, new IPEndPoint(IPAddress.Any, 0));
+
             try
             {
                 Assert.Throws<TooLongFrameException>(() => channel.WriteInbound(packet));

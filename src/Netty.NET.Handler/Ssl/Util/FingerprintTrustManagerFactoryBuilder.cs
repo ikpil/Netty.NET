@@ -69,11 +69,14 @@ public sealed class FingerprintTrustManagerFactoryBuilder
     public FingerprintTrustManagerFactoryBuilder Fingerprints(IEnumerable<string> fingerprints)
     {
         ObjectUtil.CheckNotNull(fingerprints, "fingerprints");
+
         foreach (string fingerprint in fingerprints)
         {
             ObjectUtil.CheckNotNullWithIAE(fingerprint, "fingerprint");
+
             this.fingerprints.Add(fingerprint);
         }
+
         return this;
     }
 
@@ -88,6 +91,7 @@ public sealed class FingerprintTrustManagerFactoryBuilder
         {
             throw new InvalidOperationException("No fingerprints provided");
         }
+
         return new FingerprintTrustManagerFactory(algorithm,
                                                   FingerprintTrustManagerFactory.ToFingerprintArray(fingerprints));
     }

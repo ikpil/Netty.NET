@@ -54,6 +54,7 @@ public class QuicStreamHalfClosureTest : AbstractQuicTest
         IChannel channel = null;
         QuicChannelValidationHandler serverHandler = new QuicChannelValidationHandler();
         QuicChannelValidationHandler clientHandler = new StreamCreationHandler(type);
+
         try
         {
             StreamHandler handler = new StreamHandler();
@@ -128,6 +129,7 @@ public class QuicStreamHalfClosureTest : AbstractQuicTest
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             ReferenceCountUtil.Release(msg);
+
             if (((IQuicStreamChannel) ctx.Channel).IsInputShutdown)
             {
                 queue.Add(1);
@@ -175,6 +177,7 @@ public class QuicStreamHalfClosureTest : AbstractQuicTest
             {
                 Assert.Equal(2, value);
             }
+
             Assert.Equal(3, Take());
             Assert.Equal(4, Take());
             Assert.Equal(5, Take());

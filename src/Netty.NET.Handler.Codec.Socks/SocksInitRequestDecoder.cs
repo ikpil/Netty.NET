@@ -57,6 +57,7 @@ public class SocksInitRequestDecoder : ReplayingDecoder<SocksInitRequestDecoder.
                     @out.Add(SocksCommonUtils.UNKNOWN_SOCKS_REQUEST);
                     break;
                 }
+
                 Checkpoint(State.READ_AUTH_SCHEMES);
                 goto case State.READ_AUTH_SCHEMES;
             }
@@ -69,11 +70,14 @@ public class SocksInitRequestDecoder : ReplayingDecoder<SocksInitRequestDecoder.
                     @out.Add(SocksCommonUtils.UNKNOWN_SOCKS_REQUEST);
                     break;
                 }
+
                 List<SocksAuthScheme> authSchemes = new List<SocksAuthScheme>(authSchemeNum);
+
                 for (int i = 0; i < authSchemeNum; i++)
                 {
                     authSchemes.Add(SocksAuthScheme.ValueOf(byteBuf.ReadByte()));
                 }
+
                 @out.Add(new SocksInitRequest(authSchemes));
                 break;
             }
@@ -82,6 +86,7 @@ public class SocksInitRequestDecoder : ReplayingDecoder<SocksInitRequestDecoder.
                 throw new InvalidOperationException("Unexpected request decoder type: " + base.State());
             }
         }
+
         ctx.Pipeline.Remove(this);
     }
 

@@ -54,6 +54,7 @@ public class DefaultFullBinaryMemcacheResponseTest
     public void FullCopy()
     {
         IFullBinaryMemcacheResponse newInstance = response.Copy();
+
         try
         {
             AssertResponseEquals(response, response.Content, newInstance);
@@ -83,6 +84,7 @@ public class DefaultFullBinaryMemcacheResponseTest
     {
         ByteBuf newContent = Unpooled.CopiedBuffer("new value", Encoding.UTF8);
         IFullBinaryMemcacheResponse newInstance = response.Replace(newContent);
+
         try
         {
             AssertResponseEquals(response, newContent, newInstance);

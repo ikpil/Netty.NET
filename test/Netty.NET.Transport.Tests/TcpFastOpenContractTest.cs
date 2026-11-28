@@ -22,17 +22,20 @@ public class TcpFastOpenContractTest
         {
             Assert.Skip("Requires Linux TCP_INFO.");
         }
+
         int flags = int.Parse(File.ReadAllText("/proc/sys/net/ipv4/tcp_fastopen").Trim());
         if ((flags & 3) != 3)
         {
             Assert.Skip("Requires kernel Fast Open client and server support.");
         }
+
         var token = TestContext.Current.CancellationToken;
         using var listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         listener.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.FastOpen, 5);
         listener.Bind(new IPEndPoint(IPAddress.Loopback, 0));
         listener.Listen(2);
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+
         try
         {
             for (int connection = 0; connection < 2; connection++)
@@ -45,12 +48,14 @@ public class TcpFastOpenContractTest
                 await write.WaitAsync(TimeSpan.FromSeconds(3), token);
                 byte[] data = new byte[8];
                 int offset = 0;
+
                 while (offset < data.Length)
                 {
                     int count = await accepted.ReceiveAsync(data.AsMemory(offset), SocketFlags.None, token);
                     Assert.True(count > 0);
                     offset += count;
                 }
+
                 if (connection == 1)
                 {
                     const int tcpInfo = 11;
@@ -61,6 +66,7 @@ public class TcpFastOpenContractTest
                     Assert.True(length > optionsOffset);
                     Assert.True((info[optionsOffset] & synData) != 0, "TCP_INFO did not report data acknowledged in the SYN.");
                 }
+
                 await channel.CloseAsync(token);
             }
         }
@@ -79,6 +85,7 @@ public class TcpFastOpenContractTest
         {
             Assert.Skip("Exercises the Linux native Fast Open path.");
         }
+
         var token = TestContext.Current.CancellationToken;
         var local = new IPEndPoint(IPAddress.Loopback, 0);
         using var listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -89,6 +96,7 @@ public class TcpFastOpenContractTest
         var payload = new byte[8192];
         Random.Shared.NextBytes(payload);
         var buffer = Unpooled.WrappedBuffer(payload);
+
         try
         {
             var channel = await NewClient(group, socket).Option(ChannelOption.TCP_FASTOPEN_CONNECT, enabled).RegisterAsync(token);
@@ -98,6 +106,7 @@ public class TcpFastOpenContractTest
             Assert.Equal(enabled, (int)socket.GetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.FastOpen) != 0);
             byte[] received = new byte[payload.Length];
             int offset = 0;
+
             if (enabled)
             {
                 offset = await accepted.ReceiveAsync(received.AsMemory(), SocketFlags.None, token)
@@ -105,9 +114,11 @@ public class TcpFastOpenContractTest
                 Assert.InRange(offset, 1, payload.Length - 1);
                 Assert.Equal(1, LinuxSocketOptions.GetInt(socket, (int)SocketOptionLevel.Tcp, LinuxSocketOptions.TcpFastOpenConnect));
             }
+
             Assert.False(write.IsCompleted);
             channel.Flush();
             await write.WaitAsync(TimeSpan.FromSeconds(3), token);
+
             while (offset < received.Length)
             {
                 int count = await accepted.ReceiveAsync(received.AsMemory(offset), SocketFlags.None, token)
@@ -115,6 +126,7 @@ public class TcpFastOpenContractTest
                 Assert.True(count > 0);
                 offset += count;
             }
+
             Assert.Equal(payload, received);
             Assert.Equal(0, buffer.RefCnt);
         }
@@ -131,12 +143,14 @@ public class TcpFastOpenContractTest
         {
             Assert.Skip("Exercises the Linux Fast Open selection.");
         }
+
         var token = TestContext.Current.CancellationToken;
         using var listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         listener.Bind(new IPEndPoint(IPAddress.Loopback, 0));
         listener.Listen(1);
         using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+
         try
         {
             await NewClient(group, socket).Option(ChannelOption.TCP_FASTOPEN_CONNECT, true)
@@ -159,12 +173,14 @@ public class TcpFastOpenContractTest
         {
             Assert.Skip("Exercises the Linux Fast Open connection path.");
         }
+
         var token = TestContext.Current.CancellationToken;
         // Use an endpoint that the successful warm-up connections have not put in the cookie cache.
         var address = IPAddress.Parse(cancel ? "127.0.0.252" : "127.0.0.253");
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(token);
+
         try
         {
             var server = await new ServerBootstrap().Group(group).ChannelFactory(static () => new NioServerSocketChannel())
@@ -182,6 +198,7 @@ public class TcpFastOpenContractTest
             }, token);
             Assert.False(connecting.IsCompleted);
             Assert.Equal(1, LinuxSocketOptions.GetInt(socket, (int)SocketOptionLevel.Tcp, LinuxSocketOptions.TcpFastOpenConnect));
+
             if (cancel)
             {
                 cancellation.Cancel();
@@ -189,6 +206,7 @@ public class TcpFastOpenContractTest
             }
             else
                 await Assert.ThrowsAsync<ConnectTimeoutException>(() => connecting);
+
             await Assert.ThrowsAnyAsync<Exception>(() => write.WaitAsync(TimeSpan.FromSeconds(3), token));
             Assert.False(channel.IsOpen);
             Assert.Equal(0, buffer.RefCnt);

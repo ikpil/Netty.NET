@@ -64,8 +64,10 @@ public class CompositeByteBufBulkKernelTest
         {
             _observation.Visit("GetBuffer", index, length, destination);
             byte[] bytes = AsReadOnlyMemory(index, length).ToArray();
+
             for (int i = 0; i < bytes.Length; ++i)
                 bytes[i] ^= 0x5A;
+
             destination.SetBytes(destinationIndex, bytes);
             return this;
         }
@@ -73,6 +75,7 @@ public class CompositeByteBufBulkKernelTest
         public override ByteBuf SetBytes(int index, ByteBuf source, int sourceIndex, int length)
         {
             _observation.Visit("SetBuffer", index, length, source);
+
             return base.SetBytes(index, source, sourceIndex, length);
         }
     }
@@ -101,8 +104,10 @@ public class CompositeByteBufBulkKernelTest
         {
             _observation.Visit("GetBuffer", index, length, destination);
             byte[] bytes = AsReadOnlyMemory(index, length).ToArray();
+
             for (int i = 0; i < bytes.Length; ++i)
                 bytes[i] ^= 0x5A;
+
             destination.SetBytes(destinationIndex, bytes);
             return this;
         }
@@ -110,6 +115,7 @@ public class CompositeByteBufBulkKernelTest
         public override ByteBuf SetBytes(int index, ByteBuf source, int sourceIndex, int length)
         {
             _observation.Visit("SetBuffer", index, length, source);
+
             return base.SetBytes(index, source, sourceIndex, length);
         }
     }
@@ -134,14 +140,17 @@ public class CompositeByteBufBulkKernelTest
         ByteBuf second = direct ? new NativeProbe(observation, native) : new HeapProbe(observation);
         ByteBuf owner = null, retained = null;
         ByteBuf external = new UnpooledHeapByteBuf(32);
+
         try
         {
             byte[] a = new byte[32], b = new byte[32];
+
             for (int i = 0; i < 32; ++i)
             {
                 a[i] = (byte)(i + 1);
                 b[i] = (byte)(i + 33);
             }
+
             first.SetBytes(0, a).SetIndex(5, 21);
             second.SetBytes(0, b).SetIndex(3, 19);
             external.SetIndex(2, 12);
@@ -156,16 +165,20 @@ public class CompositeByteBufBulkKernelTest
                 6 => PooledDerivedByteBuf.NewDuplicate(owner, owner, 0, 32),
                 _ => owner
             };
+
             if (form >= 5)
                 retained = caller;
+
             int rootIndex = boundary ? 15 : 8, index = rootIndex - (form is 1 or 5 ? 4 : 0);
             bool relativeRead = operation is 4 or 5, relativeWrite = operation == 6;
+
             if (relativeRead)
                 caller.SetIndex(index, index + 4);
             else if (relativeWrite)
                 caller.SetIndex(1, index);
             else
                 caller.SetIndex(1, 2);
+
             caller.MarkReaderIndex().MarkWriterIndex();
             int reader = caller.ReaderIndex, writer = caller.WriterIndex;
             Action request = () =>
@@ -201,6 +214,7 @@ public class CompositeByteBufBulkKernelTest
                         break;
                 }
             };
+
             if ((operation is 2 or 6) && caller.IsReadOnly)
             {
                 Assert.Throws<NotSupportedException>(request);
@@ -215,6 +229,7 @@ public class CompositeByteBufBulkKernelTest
                 Assert.Equal(method, visit.Method);
                 Assert.Equal(rootIndex + (form == 4 ? 0 : 5), visit.Index);
                 Assert.Equal(boundary ? 1 : 4, visit.Length);
+
                 if (operation is 1 or 2 or 5 or 6)
                     Assert.Same(external, visit.Other);
                 else if (operation == 8 && form != 4)
@@ -222,6 +237,7 @@ public class CompositeByteBufBulkKernelTest
                 else
                     Assert.Null(visit.Other);
             }
+
             Assert.Equal(reader, caller.ReaderIndex);
             Assert.Equal(writer, caller.WriterIndex);
             caller.SetIndex(0, caller.Capacity).ResetWriterIndex().ResetReaderIndex();
@@ -239,12 +255,16 @@ public class CompositeByteBufBulkKernelTest
         {
             if (retained?.RefCnt > 0)
                 retained.Release();
+
             if (owner?.RefCnt > 0)
                 owner.Release();
+
             if (first.RefCnt > 0)
                 first.Release();
+
             if (second.RefCnt > 0)
                 second.Release();
+
             external.Release();
             Assert.Equal(0, native.ReservedBytes);
         }
@@ -272,24 +292,29 @@ public class CompositeByteBufBulkKernelTest
         ByteBuf second = direct ? new NativeProbe(observation, native) : new HeapProbe(observation);
         ByteBuf owner = null;
         ByteBuf peer = new UnpooledHeapByteBuf(32);
+
         try
         {
             byte[] a = new byte[32], b = new byte[32], peerBytes = new byte[32];
+
             for (int i = 0; i < 32; ++i)
             {
                 a[i] = (byte)(i + 1);
                 b[i] = (byte)(i + 33);
                 peerBytes[i] = (byte)(0x80 + i);
             }
+
             first.SetBytes(0, a).SetIndex(5, 21);
             second.SetBytes(0, b).SetIndex(3, 19);
             peer.WriteBytes(peerBytes);
             owner = fixedComposite ? Unpooled.WrappedUnmodifiableBuffer(first, second)
                 : new CompositeByteBuf().AddComponent(first, true).AddComponent(second, true);
+
             if (relative)
                 owner.SetIndex(operation == 1 ? 1 : 14, operation == 1 ? 14 : 18);
             else
                 owner.SetIndex(1, 2);
+
             int reader = owner.ReaderIndex, writer = owner.WriterIndex;
             Assert.Throws<ProbeFailure>(() =>
             {
@@ -318,6 +343,7 @@ public class CompositeByteBufBulkKernelTest
             Assert.Equal(2, observation.Visits.Count);
             Assert.Equal(reader, owner.ReaderIndex);
             Assert.Equal(writer, owner.WriterIndex);
+
             if (operation == 0)
             {
                 peerBytes[4] = (byte)(a[fixedComposite ? 14 : 19] ^ 0x5A);
@@ -330,6 +356,7 @@ public class CompositeByteBufBulkKernelTest
             }
             else if (!fixedComposite)
                 Assert.All(observation.Visits, visit => Assert.Equal(0, visit.Other.RefCnt));
+
             Assert.Equal(a, first.AsReadOnlyMemory(0, 32).ToArray());
             Assert.Equal(b, second.AsReadOnlyMemory(0, 32).ToArray());
             Assert.Equal(peerBytes, peer.AsReadOnlyMemory(0, 32).ToArray());
@@ -341,10 +368,13 @@ public class CompositeByteBufBulkKernelTest
         {
             if (owner?.RefCnt > 0)
                 owner.Release();
+
             if (first.RefCnt > 0)
                 first.Release();
+
             if (second.RefCnt > 0)
                 second.Release();
+
             peer.Release();
             Assert.Equal(0, native.ReservedBytes);
         }
@@ -369,14 +399,17 @@ public class CompositeByteBufBulkKernelTest
         ByteBuf first = direct ? new NativeProbe(observation, native) : new HeapProbe(observation);
         ByteBuf second = direct ? new NativeProbe(observation, native) : new HeapProbe(observation);
         ByteBuf owner = null;
+
         try
         {
             byte[] a = new byte[32], b = new byte[32];
+
             for (int i = 0; i < 32; ++i)
             {
                 a[i] = (byte)(i + 1);
                 b[i] = (byte)(i + 33);
             }
+
             first.SetBytes(0, a).SetIndex(5, 21);
             second.SetBytes(0, b).SetIndex(3, 19);
             owner = fixedComposite ? Unpooled.WrappedUnmodifiableBuffer(first, second)
@@ -408,10 +441,13 @@ public class CompositeByteBufBulkKernelTest
         {
             if (owner?.RefCnt > 0)
                 owner.Release();
+
             if (first.RefCnt > 0)
                 first.Release();
+
             if (second.RefCnt > 0)
                 second.Release();
+
             Assert.Equal(0, native.ReservedBytes);
         }
     }
@@ -456,6 +492,7 @@ public class CompositeByteBufBulkKernelTest
         var native = new NativeMemoryAllocator();
         ByteBuf backing = direct ? new UnpooledDirectByteBuf(32, 32, native) : new UnpooledHeapByteBuf(32);
         ByteBuf owner = null;
+
         try
         {
             byte[] original = new byte[32];
@@ -474,6 +511,7 @@ public class CompositeByteBufBulkKernelTest
             (int source, int destination, int length) = range switch { 0 => (0, 4, 20), 1 => (4, 0, 20), _ => (4, 6, 16) };
             byte[] expected = (byte[])original.Clone();
             Array.Copy(original, source, expected, destination, length);
+
             if (operation is 0 or 4)
             {
                 aggregate.GetBytes(source, peer, destination, length);
@@ -494,6 +532,7 @@ public class CompositeByteBufBulkKernelTest
                 aggregate.WriteBytes(peer, source, length);
                 Assert.Equal(destination + length, aggregate.WriterIndex);
             }
+
             Assert.Equal(expected, backing.AsReadOnlyMemory(0, 32).ToArray());
             Assert.Equal(1, owner.RefCnt);
             Assert.Equal(3, backing.RefCnt);
@@ -504,10 +543,12 @@ public class CompositeByteBufBulkKernelTest
             {
                 owner.Release();
             }
+
             if (backing.RefCnt > 0)
             {
                 backing.Release();
             }
+
             Assert.Equal(0, native.ReservedBytes);
         }
     }
@@ -533,29 +574,36 @@ public class CompositeByteBufBulkKernelTest
         ByteBuf second = direct ? new NativeProbe(observation, native) : new HeapProbe(observation);
         ByteBuf owner = null;
         string path = null;
+
         try
         {
             byte[] a = new byte[32], b = new byte[32];
+
             for (int i = 0; i < 32; ++i)
             {
                 a[i] = (byte)(i + 1);
                 b[i] = (byte)(i + 33);
             }
+
             first.SetBytes(0, a).SetIndex(5, 21);
             second.SetBytes(0, b).SetIndex(3, 19);
             owner = fixedComposite ? Unpooled.WrappedUnmodifiableBuffer(first, second)
                 : new CompositeByteBuf().AddComponent(first, true).AddComponent(second, true);
             owner.SetIndex(1, 3).MarkReaderIndex().MarkWriterIndex();
             byte[] expected = fixedComposite ? [15, 16, 33, 34] : [20, 21, 36, 37];
+
             for (int i = 0; i < expected.Length; ++i)
                 expected[i] ^= 0x5A;
+
             if (endpoint < 2)
             {
                 using var output = new MemoryStream();
+
                 if (endpoint == 0)
                     owner.GetBytes(14, output, 4);
                 else
                     await owner.GetBytesAsync(14, output, 4, cancellation);
+
                 Assert.Equal(expected, output.ToArray());
                 Assert.True(output.CanWrite);
             }
@@ -575,6 +623,7 @@ public class CompositeByteBufBulkKernelTest
                 var listener = new TcpListener(IPAddress.Loopback, 0);
                 listener.Start();
                 using var sender = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
                 try
                 {
                     ValueTask connect = sender.ConnectAsync(listener.LocalEndpoint, cancellation);
@@ -583,12 +632,14 @@ public class CompositeByteBufBulkKernelTest
                     int count = endpoint == 4 ? owner.GetBytes(14, sender, 4) : await owner.GetBytesAsync(14, sender, 4, cancellation);
                     Assert.InRange(count, 1, 4);
                     byte[] actual = new byte[count];
+
                     for (int offset = 0; offset < count;)
                     {
                         int read = await receiver.ReceiveAsync(actual.AsMemory(offset), SocketFlags.None, cancellation);
                         Assert.True(read > 0);
                         offset += read;
                     }
+
                     Assert.Equal(expected[..count], actual);
                 }
                 finally
@@ -596,6 +647,7 @@ public class CompositeByteBufBulkKernelTest
                     listener.Stop();
                 }
             }
+
             Assert.Equal(2, observation.Visits.Count);
             Assert.All(observation.Visits, visit =>
             {
@@ -616,12 +668,16 @@ public class CompositeByteBufBulkKernelTest
         {
             if (owner?.RefCnt > 0)
                 owner.Release();
+
             if (first.RefCnt > 0)
                 first.Release();
+
             if (second.RefCnt > 0)
                 second.Release();
+
             if (path != null)
                 File.Delete(path);
+
             Assert.Equal(0, native.ReservedBytes);
         }
     }

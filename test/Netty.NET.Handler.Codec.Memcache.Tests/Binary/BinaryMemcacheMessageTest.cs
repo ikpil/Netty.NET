@@ -30,6 +30,7 @@ public class BinaryMemcacheMessageTest
         ByteBuf key = Unpooled.CopiedBuffer("Netty  Rocks!", Encoding.UTF8);
         ByteBuf extras = Unpooled.CopiedBuffer("some extras", Encoding.UTF8);
         ByteBuf content = Unpooled.CopiedBuffer("content", Encoding.UTF8);
+
         try
         {
             TestSettingLengths(new DefaultBinaryMemcacheRequest(), 0, 0, 0);
@@ -89,6 +90,7 @@ public class BinaryMemcacheMessageTest
         ByteBuf extras = Unpooled.CopiedBuffer("extras", Encoding.UTF8);
         ByteBuf key2 = Unpooled.CopiedBuffer("netty!", Encoding.UTF8);
         ByteBuf extras2 = Unpooled.CopiedBuffer("extras!", Encoding.UTF8);
+
         try
         {
             Assert.Equal(initialKeyLength, message.KeyLength());

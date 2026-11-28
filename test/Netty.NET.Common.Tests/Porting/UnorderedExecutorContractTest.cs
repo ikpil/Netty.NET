@@ -48,6 +48,7 @@ public class UnorderedExecutorContractTest
         var executor = new UnorderedThreadPoolEventExecutor(2, factory);
         using var entered = new CountdownEvent(2);
         using var release = new CountdownEvent(1);
+
         try
         {
             Assert.Same(executor, executor.Parent());
@@ -73,8 +74,10 @@ public class UnorderedExecutorContractTest
             {
                 release.Signal();
             }
+
             Stop(executor);
         }
+
         Assert.True(SpinWait.SpinUntil(() => factory.threads.All(thread => !executor.InEventLoop(thread)), TimeSpan.FromSeconds(5)));
     }
 
@@ -84,6 +87,7 @@ public class UnorderedExecutorContractTest
         var executor = new UnorderedThreadPoolEventExecutor(1);
         using var entered = new CountdownEvent(1);
         using var release = new CountdownEvent(1);
+
         try
         {
             var work = executor.SubmitAsync<int>(() =>
@@ -115,6 +119,7 @@ public class UnorderedExecutorContractTest
             {
                 release.Signal();
             }
+
             Stop(executor);
         }
     }
@@ -125,6 +130,7 @@ public class UnorderedExecutorContractTest
         var executor = new UnorderedThreadPoolEventExecutor(1);
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
+
         try
         {
             // Keep the one-shot work pending across shutdown independently of
@@ -159,6 +165,7 @@ public class UnorderedExecutorContractTest
         var executor = new UnorderedThreadPoolEventExecutor(1);
         using var entered = new CountdownEvent(1);
         using var release = new ManualResetEventSlim();
+
         try
         {
             var running = executor.SubmitAsync<bool>(token =>
@@ -187,6 +194,7 @@ public class UnorderedExecutorContractTest
     public void NativeResultsAndFailuresPreserveClrValueTypes()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
+
         try
         {
             Assert.Equal(123, executor.SubmitAsync<int>(() => 123).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
@@ -206,6 +214,7 @@ public class UnorderedExecutorContractTest
     public void NativeScheduledActionPublishesItsActualFailure()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
+
         try
         {
             var expected = new InvalidOperationException("scheduled action");
@@ -226,6 +235,7 @@ public class UnorderedExecutorContractTest
         var executor = new UnorderedThreadPoolEventExecutor(1);
         using var entered = new CountdownEvent(1);
         int calls = 0;
+
         try
         {
             var expected = new InvalidOperationException("periodic callback");
@@ -253,6 +263,7 @@ public class UnorderedExecutorContractTest
     public void NativeOneShotCancellationRemovesItsQueueEntryImmediately()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
+
         try
         {
             using var cancellation = new CancellationTokenSource();
@@ -275,6 +286,7 @@ public class UnorderedExecutorContractTest
     public void NativeProgressCanReportInsideItsOwnPoolWithoutCompletingTheSource()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
+
         try
         {
             executor.SubmitAsync(() =>
@@ -299,6 +311,7 @@ public class UnorderedExecutorContractTest
     {
         var factory = new Factory();
         var executor = new UnorderedThreadPoolEventExecutor(0, factory);
+
         try
         {
             var first = executor.SubmitAsync<Thread>(() => Thread.CurrentThread).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
@@ -342,6 +355,7 @@ public class UnorderedExecutorContractTest
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
         using var cancellation = new CancellationTokenSource();
+
         try
         {
             var delayed = executor.ScheduleAsync(() => 1, TimeSpan.MaxValue, cancellation.Token);
@@ -364,6 +378,7 @@ public class UnorderedExecutorContractTest
         var executor = new UnorderedThreadPoolEventExecutor(1);
         using var entered = new CountdownEvent(1);
         using var cancellation = new CancellationTokenSource();
+
         try
         {
             var periodic = executor.ScheduleAtFixedRateAsync(() => entered.Signal(), TimeSpan.Zero, TimeSpan.MaxValue, cancellation.Token);
@@ -390,10 +405,12 @@ public class UnorderedExecutorContractTest
         Task<int> operation = executor.SubmitAsync(token =>
         {
             entered.Set();
+
             try
             {
                 Assert.True(token.WaitHandle.WaitOne(TimeSpan.FromSeconds(5)));
                 token.ThrowIfCancellationRequested();
+
                 return 7;
             }
             finally
@@ -401,6 +418,7 @@ public class UnorderedExecutorContractTest
                 finished.Set();
             }
         }, owner.Token);
+
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -429,6 +447,7 @@ public class UnorderedExecutorContractTest
             entered.Set();
             Assert.True(token.WaitHandle.WaitOne(TimeSpan.FromSeconds(5)));
             token.ThrowIfCancellationRequested();
+
             return -1;
         }, owner.Token);
         Task<int> winner = executor.SubmitAsync(() =>
@@ -436,6 +455,7 @@ public class UnorderedExecutorContractTest
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             return 42;
         }, owner.Token);
+
         try
         {
             Task<int> completed = await Task.WhenAny(other, winner).WaitAsync(TimeSpan.FromSeconds(5));
@@ -458,6 +478,7 @@ public class UnorderedExecutorContractTest
     public async Task NativeAsyncBatchYieldsTheOnlyWorkerBeforeQueuedChildRuns()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
+
         try
         {
             Task<int> outer = executor.SubmitAsync(async () =>
@@ -486,12 +507,14 @@ public class UnorderedExecutorContractTest
         using var release = new ManualResetEventSlim();
         int calls = 0;
         bool interrupted = false;
+
         try
         {
             Task repeating = executor.ScheduleAtFixedRateAsync(() =>
             {
                 Interlocked.Increment(ref calls);
                 entered.Set();
+
                 try
                 {
                     release.Wait();
@@ -525,6 +548,7 @@ public class UnorderedExecutorContractTest
         var executor = new UnorderedThreadPoolEventExecutor(1);
         int calls = 0;
         using var cancellation = new CancellationTokenSource();
+
         try
         {
             Task repeating = executor.ScheduleAtFixedRateAsync(() => ++calls,
@@ -550,6 +574,7 @@ public class UnorderedExecutorContractTest
         using var entered = new CountdownEvent(1);
         using var release = new CountdownEvent(1);
         using var cancellation = new CancellationTokenSource();
+
         try
         {
             var running = executor.SubmitAsync<int>(() =>
@@ -576,6 +601,7 @@ public class UnorderedExecutorContractTest
             {
                 release.Signal();
             }
+
             Stop(executor);
         }
     }
@@ -585,6 +611,7 @@ public class UnorderedExecutorContractTest
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
         using var cancellation = new CancellationTokenSource();
+
         try
         {
             var future = executor.ScheduleAsync(() => 3, TimeSpan.FromDays(1), cancellation.Token);
@@ -608,6 +635,7 @@ public class UnorderedExecutorContractTest
         var executor = new UnorderedThreadPoolEventExecutor(1);
         using var entered = new CountdownEvent(1);
         using var release = new CountdownEvent(1);
+
         try
         {
             var running = executor.SubmitAsync<int>(() =>
@@ -638,6 +666,7 @@ public class UnorderedExecutorContractTest
             {
                 release.Signal();
             }
+
             Stop(executor);
         }
     }
@@ -649,11 +678,13 @@ public class UnorderedExecutorContractTest
         using var entered = new CountdownEvent(2);
         using var release = new CountdownEvent(1);
         int interrupted = 0;
+
         try
         {
             var operations = Enumerable.Range(0, 2).Select(_ => executor.SubmitAsync<int>(() =>
             {
                 entered.Signal();
+
                 try
                 {
                     release.Wait();
@@ -663,6 +694,7 @@ public class UnorderedExecutorContractTest
                     Interlocked.Increment(ref interrupted);
                     throw;
                 }
+
                 return 7;
             })).ToArray();
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -682,6 +714,7 @@ public class UnorderedExecutorContractTest
             {
                 release.Signal();
             }
+
             Stop(executor);
         }
     }
@@ -691,6 +724,7 @@ public class UnorderedExecutorContractTest
     {
         var factory = new Factory();
         var executor = new UnorderedThreadPoolEventExecutor(2, factory);
+
         try
         {
             Assert.Empty(factory.threads);
@@ -717,6 +751,7 @@ public class UnorderedExecutorContractTest
     {
         var executor = new UnorderedThreadPoolEventExecutor(0);
         using var cancellation = new CancellationTokenSource();
+
         try
         {
             var delayed = executor.ScheduleAsync(() => 1, TimeSpan.FromDays(1), cancellation.Token);
@@ -740,6 +775,7 @@ public class UnorderedExecutorContractTest
         var executor = new UnorderedThreadPoolEventExecutor(1);
         using var entered = new CountdownEvent(1);
         using var release = new CountdownEvent(1);
+
         try
         {
             var running = executor.SubmitAsync<int>(() =>
@@ -767,6 +803,7 @@ public class UnorderedExecutorContractTest
             {
                 release.Signal();
             }
+
             Stop(executor);
         }
     }
@@ -778,6 +815,7 @@ public class UnorderedExecutorContractTest
         var factory = new LambdaFactory(task => new Thread(task.Invoke)
             { IsBackground = true, Name = "native-worker-" + Interlocked.Increment(ref creations) });
         var executor = new UnorderedThreadPoolEventExecutor(0, factory);
+
         try
         {
             var first = executor.SubmitAsync<Thread>(() =>
@@ -808,6 +846,7 @@ public class UnorderedExecutorContractTest
         var executor = new UnorderedThreadPoolEventExecutor(2);
         using var entered = new CountdownEvent(2);
         using var release = new CountdownEvent(1);
+
         try
         {
             executor.Execute(() =>
@@ -837,6 +876,7 @@ public class UnorderedExecutorContractTest
             {
                 release.Signal();
             }
+
             Stop(executor);
         }
     }
@@ -849,11 +889,13 @@ public class UnorderedExecutorContractTest
         using var release = new CountdownEvent(1);
         using var cancellation = new CancellationTokenSource();
         bool interrupted = false;
+
         try
         {
             var future = executor.ScheduleAsync(() =>
             {
                 entered.Signal();
+
                 try
                 {
                     release.Wait();
@@ -862,6 +904,7 @@ public class UnorderedExecutorContractTest
                 {
                     interrupted = true;
                 }
+
                 return 7;
             }, TimeSpan.Zero, cancellation.Token);
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -879,6 +922,7 @@ public class UnorderedExecutorContractTest
             {
                 release.Signal();
             }
+
             Stop(executor);
         }
     }
@@ -887,6 +931,7 @@ public class UnorderedExecutorContractTest
     public void NativeScheduleCancellationDoesNotInjectAnInterruptIntoNextWork()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
+
         try
         {
             for (int i = 0; i < 256; ++i)
@@ -905,6 +950,7 @@ public class UnorderedExecutorContractTest
 
                     return 7;
                 }, TimeSpan.Zero, cancellation.Token);
+
                 try
                 {
                     Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -915,6 +961,7 @@ public class UnorderedExecutorContractTest
                 {
                     release.Signal();
                 }
+
                 var next = executor.SubmitAsync<int>(() =>
                 {
                     Thread.Sleep(0);
@@ -940,9 +987,11 @@ public class UnorderedExecutorContractTest
         {
             Assert.Equal(1, ++creations);
             executor.Execute(() => ++reentrantExecutions);
+
             return new Thread(task.Invoke) { IsBackground = true };
         });
         executor = new UnorderedThreadPoolEventExecutor(1, factory);
+
         try
         {
             Assert.Equal(7, executor.SubmitAsync<int>(() => 7).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
@@ -968,9 +1017,11 @@ public class UnorderedExecutorContractTest
             {
                 throw expected;
             }
+
             return new Thread(task.Invoke) { IsBackground = true };
         });
         var executor = new UnorderedThreadPoolEventExecutor(1, factory);
+
         try
         {
             var failed = executor.ScheduleAsync(() => ++executions, TimeSpan.Zero);
@@ -992,6 +1043,7 @@ public class UnorderedExecutorContractTest
     public void NullFactoryRetainedWorkIsCanceledByImmediateShutdown()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1, new LambdaFactory(_ => null));
+
         try
         {
             var operation = executor.SubmitAsync<int>(() => 7);
@@ -1019,6 +1071,7 @@ public class UnorderedExecutorContractTest
             (Action<Action, UnorderedThreadPoolEventExecutor>)null));
         Assert.Throws<ArgumentNullException>(() => new UnorderedThreadPoolEventExecutor(1, new Factory(), null));
         var executor = new UnorderedThreadPoolEventExecutor(2);
+
         try
         {
             Assert.Equal(7, executor.SubmitAsync(() => 7).WaitAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult());
@@ -1033,6 +1086,7 @@ public class UnorderedExecutorContractTest
     public void NullTasksAndNonpositivePeriodsAreRejectedBeforeEnqueue()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
+
         try
         {
             Assert.Throws<ArgumentNullException>(() => executor.SubmitAsync((Action)null));

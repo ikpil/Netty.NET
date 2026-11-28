@@ -43,6 +43,7 @@ public sealed class MessageType
     private static Dictionary<byte, MessageType> CreateMap()
     {
         Dictionary<byte, MessageType> reverseMap = new Dictionary<byte, MessageType>();
+
         foreach (MessageType e in VALUES)
         {
             reverseMap[e.Convert()] = e;

@@ -130,16 +130,20 @@ public class PoolChunkRunTest
     {
         PoolChunk chunk = Create();
         long[] handles = Enumerable.Range(0, 16).Select(_ => chunk.AllocateRun(4096)).ToArray();
+
         foreach (int i in new[] { 10, 4, 8, 2 })
             chunk.FreeRun(handles[i]);
+
         foreach (int expected in new[] { 2, 4, 8, 10 })
         {
             long handle = chunk.AllocateRun(4096);
             Assert.Equal(expected, PoolChunk.RunOffset(handle));
             handles[expected] = handle;
         }
+
         foreach (long handle in handles)
             chunk.FreeRun(handle);
+
         Assert.Equal(chunk.ChunkSize, chunk.FreeBytes);
     }
 
@@ -148,16 +152,20 @@ public class PoolChunkRunTest
     {
         PoolChunk chunk = Create(5);
         long[] h = Enumerable.Range(0, 32).Select(_ => chunk.AllocateRun(4096)).ToArray();
+
         foreach (int i in new[] { 2, 8, 14, 20, 26 })
             chunk.FreeRun(h[i]);
+
         // Freeing 15 must remove offset 14 even though offset 2 is the minimum queue entry.
         chunk.FreeRun(h[15]);
         long merged = chunk.AllocateRun(2 * 4096);
         Assert.Equal(14, PoolChunk.RunOffset(merged));
         var freed = new HashSet<int> { 2, 8, 14, 15, 20, 26 };
+
         for (int i = 0; i < h.Length; i++)
         if (!freed.Contains(i))
             chunk.FreeRun(h[i]);
+
         chunk.FreeRun(merged);
         Assert.Equal(chunk.ChunkSize, chunk.FreeBytes);
     }
@@ -167,13 +175,17 @@ public class PoolChunkRunTest
     {
         PoolChunk chunk = Create(3);
         long[] h = Enumerable.Range(0, 8).Select(_ => chunk.AllocateRun(4096)).ToArray();
+
         foreach (int i in new[] { 0, 2, 4, 6 })
             chunk.FreeRun(h[i]);
+
         Assert.Equal(4 * 4096, chunk.FreeBytes);
         Assert.Equal(-1L, chunk.AllocateRun(2 * 4096));
         Assert.Equal(50, chunk.Usage);
+
         foreach (int i in new[] { 1, 3, 5, 7 })
             chunk.FreeRun(h[i]);
+
         Assert.Equal(chunk.ChunkSize, chunk.FreeBytes);
     }
 
@@ -186,8 +198,10 @@ public class PoolChunkRunTest
     public void UsageRetainsOriginalRounding(int freePages, int expectedUsage)
     {
         PoolChunk chunk = Create(8);
+
         if (freePages < 256)
             chunk.AllocateRun((256 - freePages) * 4096);
+
         Assert.Equal(expectedUsage, chunk.Usage);
         Assert.Equal(freePages * 4096, chunk.FreeBytes);
     }
@@ -195,11 +209,14 @@ public class PoolChunkRunTest
     private static List<int> PageClasses(int total)
     {
         var values = new List<int>();
+
         for (int n = 1; n <= Math.Min(4, total); n++)
             values.Add(n);
+
         for (int basis = 4; basis < total; basis *= 2)
             for (int delta = 1; delta <= 4; delta++)
                 values.Add(basis + basis / 4 * delta);
+
         return values;
     }
 
@@ -207,6 +224,7 @@ public class PoolChunkRunTest
     {
         int ceiling = classes.FindIndex(n => n >= request);
         int bestOffset = -1, bestBucket = int.MaxValue;
+
         for (int i = 0; i < occupied.Length;)
         {
             if (occupied[i])
@@ -214,9 +232,12 @@ public class PoolChunkRunTest
                 i++;
                 continue;
             }
+
             int start = i;
+
             while (i < occupied.Length && !occupied[i])
                 i++;
+
             int floor = classes.FindLastIndex(n => n <= i - start);
             if (floor >= ceiling && floor < bestBucket)
             {
@@ -224,6 +245,7 @@ public class PoolChunkRunTest
                 bestOffset = start;
             }
         }
+
         return bestOffset;
     }
 
@@ -236,6 +258,7 @@ public class PoolChunkRunTest
         List<int> classes = PageClasses(occupied.Length);
         var live = new List<(long Handle, int Offset, int Pages)>();
         var random = new Random(20261012 + shifts * 31 + order * 7 + alignment);
+
         for (int step = 0; step < 600; step++)
         {
             if (live.Count != 0 && random.Next(100) < 45)
@@ -243,8 +266,10 @@ public class PoolChunkRunTest
                 int i = random.Next(live.Count);
                 var item = live[i];
                 chunk.FreeRun(item.Handle);
+
                 for (int p = 0; p < item.Pages; p++)
                     occupied[item.Offset + p] = false;
+
                 live.RemoveAt(i);
             }
             else
@@ -252,6 +277,7 @@ public class PoolChunkRunTest
                 int count = step % 13 == 0 ? occupied.Length : random.Next(1, Math.Min(occupied.Length, 32) + 1);
                 int expectedOffset = ChooseRun(occupied, count, classes);
                 long handle = chunk.AllocateRun(count << shifts);
+
                 if (expectedOffset < 0)
                     Assert.Equal(-1L, handle);
                 else
@@ -269,13 +295,16 @@ public class PoolChunkRunTest
                     live.Add((handle, expectedOffset, count));
                 }
             }
+
             int free = occupied.Count(value => !value) << shifts;
             Assert.Equal(free, chunk.FreeBytes);
             int freePercentage = (int)((long)free * 100 / chunk.ChunkSize);
             Assert.Equal(free == 0 ? 100 : freePercentage == 0 ? 99 : 100 - freePercentage, chunk.Usage);
         }
+
         foreach (var item in live)
             chunk.FreeRun(item.Handle);
+
         Assert.Equal(chunk.ChunkSize, chunk.FreeBytes);
         long whole = chunk.AllocateRun(chunk.ChunkSize);
         Assert.Equal(0, PoolChunk.RunOffset(whole));
@@ -295,9 +324,12 @@ public class PoolChunkRunTest
                 long handle = chunk.AllocateRun(4096);
                 Assert.True(handle >= 0);
                 int offset = PoolChunk.RunOffset(handle);
+
                 lock (gate)
                     Assert.True(active.Add(offset));
+
                 Assert.InRange(chunk.FreeBytes, 0, chunk.ChunkSize);
+
                 lock (gate)
                 {
                     chunk.FreeRun(handle);
@@ -335,10 +367,13 @@ public class PoolChunkRunTest
         Assert.Throws<ArgumentException>(() => new PoolChunk(new SizeClasses(8192, 11, 16777216, 0)));
         Assert.Throws<ArgumentException>(() => new PoolChunk(new SizeClasses(4096, 12, 1 << 27, 0)));
         PoolChunk chunk = Create();
+
         foreach (int size in new[] { -4096, 0, 1, 4095, 4097, chunk.ChunkSize + 4096 })
             Assert.Throws<ArgumentOutOfRangeException>(() => chunk.AllocateRun(size));
+
         foreach (long handle in new[] { -1L, 0L, 1L << 33, (1L << 34), (17L << 34) | (1L << 33), (1L << 34) | (1L << 33) | (1L << 32), (1L << 34) | (1L << 33) | 1 })
             Assert.Throws<ArgumentOutOfRangeException>(() => chunk.FreeRun(handle));
+
         Assert.Equal(chunk.ChunkSize, chunk.FreeBytes);
         long whole = chunk.AllocateRun(chunk.ChunkSize);
         Assert.True(whole >= 0);

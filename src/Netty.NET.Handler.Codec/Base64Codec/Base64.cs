@@ -168,6 +168,7 @@ public static class Base64
         int e = 0;
         int len2 = len - 2;
         int lineLength = 0;
+
         for (; d < len2; d += 3, e += 4)
         {
             Encode3to4(src, d + off, 3, dest, e, alphabet, addPadding);
@@ -192,10 +193,12 @@ public static class Base64
         {
             e--;
         }
+
         if (dest != destBuf)
         {
             dest.Release();
         }
+
         return destBuf.SetIndex(0, e);
     }
 
@@ -216,6 +219,7 @@ public static class Base64
         // when Java treats a value as negative that is cast from a byte to an int.
         // CLR: only the src.order() == ByteOrder.BIG_ENDIAN branch exists (see the class comment).
         int inBuff;
+
         switch (numSigBytes)
         {
             case 1:
@@ -228,6 +232,7 @@ public static class Base64
                 inBuff = numSigBytes <= 0 ? 0 : ToIntBE(src.GetMedium(srcOffset));
                 break;
         }
+
         return Encode3to4BigEndian(inBuff, numSigBytes, dest, destOffset, alphabet, addPadding);
     }
 
@@ -376,6 +381,7 @@ public static class Base64
             dest = allocator.Buffer(DecodedBufferSize(len)); // Upper limit on size of output
 
             decodabet = Decodabet(dialect);
+
             try
             {
                 src.ForEachByte(off, len, Process);
@@ -421,6 +427,7 @@ public static class Base64
                     if (sbiDecode >= EQUALS_SIGN_ENC)
                     { // Equals sign or better
                         b4[b4Posn ++] = value;
+
                         if (b4Posn > 3)
                         { // Quartet built
                             outBuffPosn += Decode4to3(b4, dest, outBuffPosn, decodabet);
@@ -430,9 +437,11 @@ public static class Base64
                             return value != EQUALS_SIGN;
                         }
                     }
+
                     return true;
                 }
             }
+
             throw new ArgumentException(
                     "invalid Base64 input character: " + (value & 0xFF).ToString(CultureInfo.InvariantCulture) +
                     " (decimal)");
@@ -446,6 +455,7 @@ public static class Base64
             byte src1 = src[1];
             byte src2 = src[2];
             int decodedValue;
+
             if (src2 == EQUALS_SIGN)
             {
                 // Example: Dk==
@@ -457,6 +467,7 @@ public static class Base64
                 {
                     throw new ArgumentException("not encoded in Base64");
                 }
+
                 dest.SetByte(destOffset, decodedValue);
                 return 1;
             }
@@ -466,6 +477,7 @@ public static class Base64
             {
                 // Example: DkL=
                 sbyte b1 = decodabet[src1];
+
                 // Packing bytes into a short to reduce bound and reference count checking.
                 try
                 {
@@ -481,6 +493,7 @@ public static class Base64
                 {
                     throw new ArgumentException("not encoded in Base64");
                 }
+
                 dest.SetShort(destOffset, decodedValue);
                 return 2;
             }
@@ -508,6 +521,7 @@ public static class Base64
             {
                 throw new ArgumentException("not encoded in Base64");
             }
+
             dest.SetMedium(destOffset, decodedValue);
             return 3;
         }

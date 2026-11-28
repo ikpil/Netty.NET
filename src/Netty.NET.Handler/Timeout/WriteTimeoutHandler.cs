@@ -121,10 +121,12 @@ public class WriteTimeoutHandler : ChannelOutboundHandlerAdapter
     public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken)
     {
         Task promise = ctx.WriteAsync(msg, cancellationToken);
+
         if (timeoutNanos > 0)
         {
             ScheduleTimeout(ctx, promise);
         }
+
         return promise;
     }
 
@@ -134,6 +136,7 @@ public class WriteTimeoutHandler : ChannelOutboundHandlerAdapter
         Debug.Assert(ctx.Executor.InEventLoop());
         WriteTimeoutTask task = lastTask;
         lastTask = null;
+
         while (task != null)
         {
             Debug.Assert(task.ctx.Executor.InEventLoop());
@@ -175,17 +178,20 @@ public class WriteTimeoutHandler : ChannelOutboundHandlerAdapter
     private void AddWriteTimeoutTask(WriteTimeoutTask task)
     {
         Debug.Assert(task.ctx.Executor.InEventLoop());
+
         if (lastTask != null)
         {
             lastTask.next = task;
             task.prev = lastTask;
         }
+
         lastTask = task;
     }
 
     private void RemoveWriteTimeoutTask(WriteTimeoutTask task)
     {
         Debug.Assert(task.ctx.Executor.InEventLoop());
+
         if (task == lastTask)
         {
             // task is the tail of list
@@ -211,6 +217,7 @@ public class WriteTimeoutHandler : ChannelOutboundHandlerAdapter
             task.prev.next = task.next;
             task.next.prev = task.prev;
         }
+
         task.prev = null;
         task.next = null;
     }
@@ -266,6 +273,7 @@ public class WriteTimeoutHandler : ChannelOutboundHandlerAdapter
                     ctx.FireExceptionCaught(t);
                 }
             }
+
             handler.RemoveWriteTimeoutTask(this);
         }
 

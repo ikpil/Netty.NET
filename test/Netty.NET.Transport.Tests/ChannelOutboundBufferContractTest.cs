@@ -78,10 +78,13 @@ public class ChannelOutboundBufferContractTest
         while (second.Remove())
         {
         }
+
         Assert.True(nioBuffers[0].IsEmpty);
+
         while (first.Remove())
         {
         }
+
         channel.FinishAndReleaseAll();
     }
 
@@ -195,9 +198,11 @@ public class ChannelOutboundBufferContractTest
         Assert.Equal(3, buffer.Size);
         buffer.AddFlush();
         Assert.Equal(4, buffer.Size);
+
         while (buffer.Remove())
         {
         }
+
         Assert.Equal(0, buffer.TotalPendingWriteBytes);
         channel.FinishAndReleaseAll();
     }
@@ -205,8 +210,10 @@ public class ChannelOutboundBufferContractTest
     private static string[] Texts(ReadOnlyMemory<byte>[] buffers, int count)
     {
         var texts = new string[count];
+
         for (int i = 0; i < count; i++)
             texts[i] = Encoding.ASCII.GetString(buffers[i].Span);
+
         return texts;
     }
 

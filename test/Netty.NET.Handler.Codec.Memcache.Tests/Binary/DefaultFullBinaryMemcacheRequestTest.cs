@@ -54,6 +54,7 @@ public class DefaultFullBinaryMemcacheRequestTest
     public void FullCopy()
     {
         IFullBinaryMemcacheRequest newInstance = request.Copy();
+
         try
         {
             AssertCopy(request, request.Content, newInstance);
@@ -69,6 +70,7 @@ public class DefaultFullBinaryMemcacheRequestTest
     public void FullDuplicate()
     {
         IFullBinaryMemcacheRequest newInstance = request.Duplicate();
+
         try
         {
             AssertCopy(request, request.Content, newInstance);
@@ -84,6 +86,7 @@ public class DefaultFullBinaryMemcacheRequestTest
     {
         ByteBuf newContent = Unpooled.CopiedBuffer("new value", Encoding.UTF8);
         IFullBinaryMemcacheRequest newInstance = request.Replace(newContent);
+
         try
         {
             AssertCopy(request, newContent, newInstance);

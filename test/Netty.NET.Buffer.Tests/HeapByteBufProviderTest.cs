@@ -41,6 +41,7 @@ public class HeapByteBufProviderTest
             Assert.False(Target.IsDirect);
             Assert.True(Target.IsContiguous);
             Assert.Same(Allocator, Target.Alloc());
+
             if (pooled)
             {
                 var a = Assert.IsAssignableFrom<PooledByteBuf>(Owner(Left)).Allocation;
@@ -69,6 +70,7 @@ public class HeapByteBufProviderTest
                 {
                     Assert.True(buffer.Release());
                 }
+
             (Allocator as IDisposable)?.Dispose();
             var metric = ((IByteBufAllocatorMetricProvider)Allocator).Metric;
             Assert.Equal(0, metric.UsedHeapMemory);
@@ -101,6 +103,7 @@ public class HeapByteBufProviderTest
     {
         using var s = new Storage(pooled);
         int[] widths = [1, 2, 2, 3, 3, 4, 4, 8, 8];
+
         foreach (ulong value in new ulong[] { 0, 0x1122334455667788, 0xffeeddcc8000fedc })
         for (int operation = 0; operation < widths.Length; ++operation)
         {
@@ -109,8 +112,10 @@ public class HeapByteBufProviderTest
             s.Target.SetBytes(0, expected).SetIndex(3, 100).MarkReaderIndex().MarkWriterIndex();
             int width = widths[operation];
                 bool little = operation != 0 && (operation & 1) == 0;
+
             for (int i = 0; i < width; ++i)
                 expected[index + i] = unchecked((byte)(value >> (8 * (little ? i : width - i - 1))));
+
             ByteBuf receiver = operation switch
             {
                 0 => s.Target.SetByte(index, unchecked((int)value)),
@@ -145,6 +150,7 @@ public class HeapByteBufProviderTest
                 Assert.Equal(100, s.Target.WriterIndex);
             s.Neighbors();
         }
+
         Assert.Throws<ArgumentOutOfRangeException>(() => s.Target.GetLong(121));
         Assert.Throws<ArgumentOutOfRangeException>(() => s.Target.SetLong(121, 1));
     }
@@ -167,6 +173,7 @@ public class HeapByteBufProviderTest
         Array.Fill(expected, (byte)0xcc);
         s.Target.SetBytes(0, expected).SetIndex(3, 100).MarkReaderIndex().MarkWriterIndex();
         int index = length < 128 ? 1 : 0;
+
         if (length > 128)
             Assert.Throws<ArgumentOutOfRangeException>(() => s.Target.SetZero(index, length));
         else
@@ -174,6 +181,7 @@ public class HeapByteBufProviderTest
             Array.Clear(expected, index, length);
             Assert.Same(s.Target, s.Target.SetZero(index, length));
         }
+
         Assert.Equal(expected, ByteBufUtil.GetBytes(s.Target, 0, 128));
         Assert.Equal(3, s.Target.ReaderIndex);
         Assert.Equal(100, s.Target.WriterIndex);
@@ -214,6 +222,7 @@ public class HeapByteBufProviderTest
         ByteBuf staleOwner = Owner(s.Target);
         Assert.True(s.Target.Release());
         ByteBuf replacement = s.Allocator.HeapBuffer(128, 512);
+
         try
         {
             Assert.NotSame(staleOwner, Owner(replacement));

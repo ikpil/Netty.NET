@@ -96,6 +96,7 @@ internal abstract class Cache<E> where E : class
     internal void Cache_(string hostname, E value, int ttl, IEventLoop loop)
     {
         resolveCache.TryGetValue(hostname, out Entries entries);
+
         if (entries == null)
         {
             entries = new Entries(this, hostname);
@@ -107,6 +108,7 @@ internal abstract class Cache<E> where E : class
                 entries = oldEntries;
             }
         }
+
         entries.Add(value, ttl, loop);
     }
 
@@ -184,6 +186,7 @@ internal abstract class Cache<E> where E : class
                         List<E> newEntries = new List<E>(entries.Count + 1);
                         int i = 0;
                         E replacedEntry = null;
+
                         do
                         {
                             E entry = entries[i];
@@ -200,17 +203,21 @@ internal abstract class Cache<E> where E : class
                                 newEntries.Add(e);
 
                                 ++i;
+
                                 for (; i < entries.Count; ++i)
                                 {
                                     newEntries.Add(entries[i]);
                                 }
+
                                 break;
                             }
                         } while (++i < entries.Count);
+
                         if (replacedEntry == null)
                         {
                             newEntries.Add(e);
                         }
+
                         cache.SortEntries(hostname, newEntries);
 
                         if (CompareAndSet(entries, newEntries.AsReadOnly()))
@@ -256,6 +263,7 @@ internal abstract class Cache<E> where E : class
                         {
                             oldFuture.Cancel(true);
                         }
+
                         break;
                     }
                     else
@@ -347,6 +355,7 @@ internal abstract class Cache<E> where E : class
             {
                 scheduled.GetAwaiter().GetResult();
             }
+
             return new ScheduledFuture(cancellation, ticker, deadlineNanos);
         }
 
@@ -356,6 +365,7 @@ internal abstract class Cache<E> where E : class
             {
                 return false;
             }
+
             cancellation.Cancel();
             return true;
         }

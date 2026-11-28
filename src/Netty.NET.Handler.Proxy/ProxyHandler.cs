@@ -318,6 +318,7 @@ public abstract class ProxyHandler : ChannelDuplexHandler
         {
             suppressChannelReadComplete = true;
             Exception cause = null;
+
             try
             {
                 bool done = HandleResponse(ctx, msg);
@@ -333,6 +334,7 @@ public abstract class ProxyHandler : ChannelDuplexHandler
             finally
             {
                 ReferenceCountUtil.Release(msg);
+
                 if (cause != null)
                 {
                     SetConnectFailure(cause);
@@ -375,6 +377,7 @@ public abstract class ProxyHandler : ChannelDuplexHandler
                 {
                     ctx.Flush();
                 }
+
                 connectPromise.TrySetResult(ctx.Channel);
             }
             else
@@ -478,6 +481,7 @@ public abstract class ProxyHandler : ChannelDuplexHandler
             .Append(proxyAddress)
             .Append(" => ")
             .Append((object) destinationAddress ?? "null");
+
         if (msg.Length != 0)
         {
             buf.Append(", ").Append(msg);
@@ -505,6 +509,7 @@ public abstract class ProxyHandler : ChannelDuplexHandler
         if (finished)
         {
             WritePendingWrites();
+
             return ctx.WriteAsync(msg, cancellationToken);
         }
         else
@@ -561,6 +566,7 @@ public abstract class ProxyHandler : ChannelDuplexHandler
         {
             this.pendingWrites = pendingWrites = new PendingWriteQueue(ctx);
         }
+
         return pendingWrites.Add(msg, cancellationToken);
     }
 
@@ -580,6 +586,7 @@ public abstract class ProxyHandler : ChannelDuplexHandler
         {
             return future.Exception.InnerException;
         }
+
         return new TaskCanceledException(future);
     }
 
@@ -592,6 +599,7 @@ public abstract class ProxyHandler : ChannelDuplexHandler
         {
             return address;
         }
+
         throw new InvalidCastException(string.Format(CultureInfo.InvariantCulture,
                 "Unable to cast object of type '{0}' to type 'InetSocketAddress'.", address.GetType().FullName));
     }
@@ -608,20 +616,25 @@ public abstract class ProxyHandler : ChannelDuplexHandler
         {
             return address.ToString();
         }
+
         byte[] src = address.GetAddressBytes();
         StringBuilder sb = new StringBuilder(39);
+
         for (int i = 0; i < 16 / 2; i++)
         {
             sb.Append((((src[i << 1] << 8) & 0xff00) | (src[(i << 1) + 1] & 0xff)).ToString("x", CultureInfo.InvariantCulture));
+
             if (i < 16 / 2 - 1)
             {
                 sb.Append(':');
             }
         }
+
         if (address.ScopeId != 0)
         {
             sb.Append('%').Append(address.ScopeId.ToString(CultureInfo.InvariantCulture));
         }
+
         return sb.ToString();
     }
 }

@@ -34,6 +34,7 @@ internal abstract class PooledByteBuf : AbstractReferenceCountedByteBuf
         ArgumentNullException.ThrowIfNull(arena);
         if (initialCapacity < 0 || initialCapacity > maxCapacity)
             throw new ArgumentOutOfRangeException(nameof(initialCapacity));
+
         _allocation = arena.AllocateMemory(initialCapacity, cache);
         _arena = _allocation.Arena;
         _length = initialCapacity;
@@ -52,12 +53,14 @@ internal abstract class PooledByteBuf : AbstractReferenceCountedByteBuf
     public override ByteBuf RetainedSlice(int index, int length)
     {
         CheckIndex(index, length);
+
         return PooledDerivedByteBuf.NewSlice(this, this, index, length);
     }
 
     public override ByteBuf RetainedDuplicate()
     {
         EnsureAccessible();
+
         return PooledDerivedByteBuf.NewDuplicate(this, this, ReaderIndex, WriterIndex);
     }
     public override int MaxFastWritableBytes
@@ -71,6 +74,7 @@ internal abstract class PooledByteBuf : AbstractReferenceCountedByteBuf
     internal override BufferMemoryLease AcquireReadLease()
     {
         EnsureAccessible();
+
         return _allocation.AcquireLease();
     }
 
@@ -91,6 +95,7 @@ internal abstract class PooledByteBuf : AbstractReferenceCountedByteBuf
             // CLR: use a private Monitor for all capacity mutations. Data access,
             // active cursors and final Release still require caller synchronization.
             using var events = BufferAllocatorEventSource.Log.BeginOperation();
+
             lock (_resizeLock)
             {
                 CheckNewCapacity(value);
@@ -98,8 +103,10 @@ internal abstract class PooledByteBuf : AbstractReferenceCountedByteBuf
                 {
                     return;
                 }
+
                 PoolArena.Allocation previous = _allocation;
                 int maxLength = previous.ReservedLength;
+
                 if (previous.IsPooled)
                 {
                     // If the request capacity does not require reallocation, just update the length of the memory.
@@ -108,6 +115,7 @@ internal abstract class PooledByteBuf : AbstractReferenceCountedByteBuf
                         _length = value;
                         return;
                     }
+
                     if (value < _length && value > maxLength >> 1 &&
                         (maxLength > 512 || value > maxLength - 16))
                     {
@@ -122,6 +130,7 @@ internal abstract class PooledByteBuf : AbstractReferenceCountedByteBuf
                 BufferAllocatorEventSource.Log.Reallocated(CaptureEvent(BufferAllocatorEventSource.Keywords.ReallocateBuffer), value);
                 PoolThreadCache cache = (_arena.Parent as PooledByteBufAllocator)?.PrepareThreadBinding();
                 PoolArena.Allocation replacement = _arena.AllocateMemory(value, cache);
+
                 try
                 {
                     // This does not touch buf's reader/writer indices
@@ -135,6 +144,7 @@ internal abstract class PooledByteBuf : AbstractReferenceCountedByteBuf
                     replacement.Dispose();
                     throw;
                 }
+
                 _allocation = replacement;
                 // A caller's cache may supply a handle belonging to another arena.
                 _arena = replacement.Arena;

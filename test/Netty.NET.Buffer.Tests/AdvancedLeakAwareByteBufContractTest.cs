@@ -49,6 +49,7 @@ public class AdvancedLeakAwareByteBufContractTest
         ByteBuf buffer = new AdvancedLeakAwareByteBuf(origin, tracker);
         ByteBuf expectedView = null, view = null;
         string expectedResult = "", result = "";
+
         try
         {
             Exception expectedFailure = Record.Exception(() => expectedResult = Execute(expected, operation, out expectedView));
@@ -58,6 +59,7 @@ public class AdvancedLeakAwareByteBufContractTest
             Assert.Equal(Snapshot(expected), Snapshot(origin));
             Assert.Equal(1, tracker.Records);
             Assert.Equal(0, tracker.Closes);
+
             if (view != null && expectedView.Unwrap() != null && IsSharedView(operation))
                 Assert.IsType<AdvancedLeakAwareByteBuf>(view);
         }
@@ -68,6 +70,7 @@ public class AdvancedLeakAwareByteBufContractTest
             expected.Release(expected.RefCnt);
             buffer.Release(origin.RefCnt);
         }
+
         Assert.Equal(1, tracker.Closes);
         Assert.Same(origin, tracker.Closed);
     }
@@ -122,6 +125,7 @@ public class AdvancedLeakAwareByteBufContractTest
     {
         view = null;
         string result = "ok";
+
         switch (operation)
         {
             case 0: // GetBoolean
@@ -643,6 +647,7 @@ public class AdvancedLeakAwareByteBufContractTest
             case 100: // GetBytes0
                 {
                     ByteBuf other=Unpooled.Buffer(8,8).SetZero(0,8).WriteBytes(new byte[]{90,91,92,93});
+
                     try
                     {
                         b.GetBytes(3,other);
@@ -652,11 +657,13 @@ public class AdvancedLeakAwareByteBufContractTest
                     {
                         other.Release();
                     }
+
                     break;
                 }
             case 101: // GetBytes1
                 {
                     ByteBuf other=Unpooled.Buffer(8,8).SetZero(0,8).WriteBytes(new byte[]{90,91,92,93});
+
                     try
                     {
                         b.GetBytes(3,other,4);
@@ -666,11 +673,13 @@ public class AdvancedLeakAwareByteBufContractTest
                     {
                         other.Release();
                     }
+
                     break;
                 }
             case 102: // GetBytes2
                 {
                     ByteBuf other=Unpooled.Buffer(8,8).SetZero(0,8).WriteBytes(new byte[]{90,91,92,93});
+
                     try
                     {
                         b.GetBytes(3,other,2,4);
@@ -680,11 +689,13 @@ public class AdvancedLeakAwareByteBufContractTest
                     {
                         other.Release();
                     }
+
                     break;
                 }
             case 103: // ReadBytes0
                 {
                     ByteBuf other=Unpooled.Buffer(8,8).SetZero(0,8).WriteBytes(new byte[]{90,91,92,93});
+
                     try
                     {
                         b.ReadBytes(other);
@@ -694,11 +705,13 @@ public class AdvancedLeakAwareByteBufContractTest
                     {
                         other.Release();
                     }
+
                     break;
                 }
             case 104: // ReadBytes1
                 {
                     ByteBuf other=Unpooled.Buffer(8,8).SetZero(0,8).WriteBytes(new byte[]{90,91,92,93});
+
                     try
                     {
                         b.ReadBytes(other,4);
@@ -708,11 +721,13 @@ public class AdvancedLeakAwareByteBufContractTest
                     {
                         other.Release();
                     }
+
                     break;
                 }
             case 105: // ReadBytes2
                 {
                     ByteBuf other=Unpooled.Buffer(8,8).SetZero(0,8).WriteBytes(new byte[]{90,91,92,93});
+
                     try
                     {
                         b.ReadBytes(other,2,4);
@@ -722,11 +737,13 @@ public class AdvancedLeakAwareByteBufContractTest
                     {
                         other.Release();
                     }
+
                     break;
                 }
             case 106: // SetBytes0
                 {
                     ByteBuf other=Unpooled.Buffer(8,8).SetZero(0,8).WriteBytes(new byte[]{90,91,92,93});
+
                     try
                     {
                         b.SetBytes(3,other);
@@ -736,11 +753,13 @@ public class AdvancedLeakAwareByteBufContractTest
                     {
                         other.Release();
                     }
+
                     break;
                 }
             case 107: // SetBytes1
                 {
                     ByteBuf other=Unpooled.Buffer(8,8).SetZero(0,8).WriteBytes(new byte[]{90,91,92,93});
+
                     try
                     {
                         b.SetBytes(3,other,4);
@@ -750,11 +769,13 @@ public class AdvancedLeakAwareByteBufContractTest
                     {
                         other.Release();
                     }
+
                     break;
                 }
             case 108: // SetBytes2
                 {
                     ByteBuf other=Unpooled.Buffer(8,8).SetZero(0,8).WriteBytes(new byte[]{90,91,92,93});
+
                     try
                     {
                         b.SetBytes(3,other,2,4);
@@ -764,11 +785,13 @@ public class AdvancedLeakAwareByteBufContractTest
                     {
                         other.Release();
                     }
+
                     break;
                 }
             case 109: // WriteBytes0
                 {
                     ByteBuf other=Unpooled.Buffer(8,8).SetZero(0,8).WriteBytes(new byte[]{90,91,92,93});
+
                     try
                     {
                         b.WriteBytes(other);
@@ -778,11 +801,13 @@ public class AdvancedLeakAwareByteBufContractTest
                     {
                         other.Release();
                     }
+
                     break;
                 }
             case 110: // WriteBytes1
                 {
                     ByteBuf other=Unpooled.Buffer(8,8).SetZero(0,8).WriteBytes(new byte[]{90,91,92,93});
+
                     try
                     {
                         b.WriteBytes(other,4);
@@ -792,11 +817,13 @@ public class AdvancedLeakAwareByteBufContractTest
                     {
                         other.Release();
                     }
+
                     break;
                 }
             case 111: // WriteBytes2
                 {
                     ByteBuf other=Unpooled.Buffer(8,8).SetZero(0,8).WriteBytes(new byte[]{90,91,92,93});
+
                     try
                     {
                         b.WriteBytes(other,2,4);
@@ -806,6 +833,7 @@ public class AdvancedLeakAwareByteBufContractTest
                     {
                         other.Release();
                     }
+
                     break;
                 }
             case 112: // Capacity
@@ -868,6 +896,7 @@ public class AdvancedLeakAwareByteBufContractTest
                     break;
                 }
         }
+
         return result;
     }
 
@@ -878,6 +907,7 @@ public class AdvancedLeakAwareByteBufContractTest
         var tracker = new Tracker(origin);
         ByteBuf buffer = new AdvancedLeakAwareByteBuf(origin, tracker);
         var composite = Unpooled.CompositeBuffer().AddComponent(buffer, true);
+
         try
         {
             byte[] result = new byte[5];
@@ -889,6 +919,7 @@ public class AdvancedLeakAwareByteBufContractTest
         {
             composite.Release();
         }
+
         Assert.Equal(1, tracker.Closes);
     }
 
@@ -928,6 +959,7 @@ public class AdvancedLeakAwareByteBufContractTest
         ByteBuf origin = Owner(0);
         var tracker = new Tracker(origin);
         ByteBuf b = new AdvancedLeakAwareByteBuf(origin, tracker);
+
         try
         {
             switch (operation)
@@ -960,6 +992,7 @@ public class AdvancedLeakAwareByteBufContractTest
                     Assert.Equal(1.25f, b.ReadFloatLE());
                     break;
             }
+
             Assert.Equal(1, tracker.Records);
         }
         finally
@@ -975,6 +1008,7 @@ public class AdvancedLeakAwareByteBufContractTest
         ByteBuf origin = Owner(0);
         var tracker = new Tracker(origin);
         var b = new AdvancedLeakAwareByteBuf(origin, tracker);
+
         try
         {
             _ = b.Capacity;
@@ -1002,6 +1036,7 @@ public class AdvancedLeakAwareByteBufContractTest
         {
             b.Release();
         }
+
         Assert.True(b.Equals(b));
         Assert.True(b.Equals((object)b));
         Assert.Equal(0, b.CompareTo(b));
@@ -1071,6 +1106,7 @@ public class AdvancedLeakAwareByteBufContractTest
         var tracker = new Tracker(origin);
         ByteBuf b = new AdvancedLeakAwareByteBuf(origin, tracker);
         using var stream = new MemoryStream();
+
         try
         {
             Assert.Same(b, b.GetBytes(3, stream, 8));
@@ -1102,6 +1138,7 @@ public class AdvancedLeakAwareByteBufContractTest
         var tracker = new Tracker(origin);
         ByteBuf b = new AdvancedLeakAwareByteBuf(origin, tracker);
         using var stream = new MemoryStream(new byte[64]);
+
         try
         {
             CancellationToken token = cancel ? new CancellationToken(true) : TestContext.Current.CancellationToken;
@@ -1118,10 +1155,12 @@ public class AdvancedLeakAwareByteBufContractTest
             Assert.Equal(1, tracker.Records);
             await Run(b.ReadBytesAsync(stream, 8, token));
             Assert.Equal(2, tracker.Records);
+
             if (cancel)
                 Assert.Equal(2, b.ReaderIndex);
             else
                 Assert.Equal(10, b.ReaderIndex);
+
             if (cancel)
                 await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await b.SetBytesAsync(3, stream, 8, token));
             else
@@ -1129,7 +1168,9 @@ public class AdvancedLeakAwareByteBufContractTest
                 stream.Position = 0;
                 Assert.Equal(8, await b.SetBytesAsync(3, stream, 8, token));
             }
+
             Assert.Equal(3, tracker.Records);
+
             if (cancel)
                 await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await b.WriteBytesAsync(stream, 8, token));
             else
@@ -1137,6 +1178,7 @@ public class AdvancedLeakAwareByteBufContractTest
                 stream.Position = 0;
                 Assert.Equal(8, await b.WriteBytesAsync(stream, 8, token));
             }
+
             Assert.Equal(4, tracker.Records);
             Assert.Equal(cancel ? 32 : 40, b.WriterIndex);
         }
@@ -1154,11 +1196,13 @@ public class AdvancedLeakAwareByteBufContractTest
         ByteBuf origin = Owner(1);
         var tracker = new Tracker(origin);
         ByteBuf b = new AdvancedLeakAwareByteBuf(origin, tracker);
+
         try
         {
             using var file = File.OpenHandle(path, FileMode.Open, FileAccess.ReadWrite, FileShare.Read,
                 asyncIo ? FileOptions.Asynchronous : FileOptions.None);
             var token = TestContext.Current.CancellationToken;
+
             if (asyncIo)
             {
                 Assert.Equal(8, await b.GetBytesAsync(3, file, 0, 8, token));
@@ -1181,6 +1225,7 @@ public class AdvancedLeakAwareByteBufContractTest
                 Assert.Equal(8, b.WriteBytes(file, 8, 8));
                 Assert.Equal(4, tracker.Records);
             }
+
             Assert.Equal(10, origin.ReaderIndex);
             Assert.Equal(40, origin.WriterIndex);
         }

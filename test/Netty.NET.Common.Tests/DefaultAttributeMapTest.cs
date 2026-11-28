@@ -91,18 +91,22 @@ public class DefaultAttributeMapTest {
     public void TestHasAttrRemoved()
     {
         AttributeKey<object>[] keys = new AttributeKey<object>[20];
+
         for (int i = 0; i < 20; i++)
         {
             keys[i] = AttributeKey.ValueOf<object>(i.ToString());
         }
+
         for (int i = 10; i < 20; i++)
         {
             map.Attr(keys[i]);
         }
+
         for (int i = 0; i < 10; i++)
         {
             map.Attr(keys[i]);
         }
+
         for (int i = 10; i < 20; i++)
         {
             AttributeKey<object> key = AttributeKey.ValueOf<object>(i.ToString());
@@ -110,6 +114,7 @@ public class DefaultAttributeMapTest {
             map.Attr(key).Remove();
             Assert.False(map.HasAttr(key));
         }
+
         for (int i = 0; i < 10; i++)
         {
             AttributeKey<object> key = AttributeKey.ValueOf<object>(i.ToString());

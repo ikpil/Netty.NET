@@ -42,6 +42,7 @@ public class WebSocketUtilTest
     public void TestRandomNumberGenerator()
     {
         int iteration = 0;
+
         while (++iteration < NUM_ITERATIONS)
         {
             AssertRandomWithinBoundaries(0, 1);
@@ -63,9 +64,11 @@ public class WebSocketUtilTest
 
         base64 = WebSocketUtil.Base64(Encoding.UTF8.GetBytes("bar"));
         ByteBuf src = Unpooled.WrappedBuffer(Encoding.UTF8.GetBytes(base64));
+
         try
         {
             ByteBuf dst = Base64.Decode(src);
+
             try
             {
                 Assert.Equal("bar", Encoding.UTF8.GetString(ByteBufUtil.GetBytes(dst)));

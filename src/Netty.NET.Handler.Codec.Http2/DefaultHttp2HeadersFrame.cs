@@ -103,6 +103,7 @@ public sealed class DefaultHttp2HeadersFrame : AbstractHttp2StreamFrame, IHttp2H
         {
             return false;
         }
+
         DefaultHttp2HeadersFrame other = (DefaultHttp2HeadersFrame) o;
         return base.Equals(other) && headers.Equals(other.headers)
                 && endStream == other.endStream && padding == other.padding;

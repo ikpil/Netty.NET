@@ -46,6 +46,7 @@ public sealed class DefaultHttp3GoAwayFrame : IHttp3GoAwayFrame
         {
             return false;
         }
+
         DefaultHttp3GoAwayFrame that = (DefaultHttp3GoAwayFrame) o;
         return id == that.id;
     }

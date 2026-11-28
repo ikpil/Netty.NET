@@ -80,6 +80,7 @@ internal class WebSocketServerProtocolHandshakeHandler : ChannelInboundHandlerAd
                         GetWebSocketLocation(ctx.Pipeline, req, serverConfig.WebsocketPath()),
                         serverConfig.Subprotocols(), serverConfig.DecoderConfig());
                 TaskCompletionSource localHandshakePromise = handshakePromise;
+
                 if (handshaker == null)
                 {
                     _ = WebSocketServerHandshakerFactory.SendUnsupportedVersionResponseAsync(ctx.Channel);
@@ -155,17 +156,20 @@ internal class WebSocketServerProtocolHandshakeHandler : ChannelInboundHandlerAd
             char nextUri = uri[len];
             return nextUri == '/' || nextUri == '?';
         }
+
         return true;
     }
 
     private static string GetWebSocketLocation(IChannelPipeline cp, IHttpRequest req, string path)
     {
         string protocol = "ws";
+
         if (cp.Get<SslHandler>() != null)
         {
             // SSL in use so use Secure WebSockets
             protocol = "wss";
         }
+
         string host = req.Headers().Get(HttpHeaderNames.HOST);
         return protocol + "://" + (host ?? "null") + path;
     }

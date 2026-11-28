@@ -43,6 +43,7 @@ public class FileServerHandler : SimpleChannelInboundHandler<string>
     {
         FileStream raf = null;
         long length = -1;
+
         try
         {
             raf = new FileStream(msg, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -62,6 +63,7 @@ public class FileServerHandler : SimpleChannelInboundHandler<string>
         }
 
         _ = ctx.WriteAsync("OK: " + raf.Length + '\n');
+
         if (ctx.Pipeline.Get<SslHandler>() == null)
         {
             // SSL not enabled - can use zero-copy file transfer.
@@ -72,6 +74,7 @@ public class FileServerHandler : SimpleChannelInboundHandler<string>
             // SSL enabled - cannot use zero-copy file transfer.
             _ = ctx.WriteAsync(new ChunkedFile(raf));
         }
+
         _ = ctx.WriteAndFlushAsync("\n");
     }
 

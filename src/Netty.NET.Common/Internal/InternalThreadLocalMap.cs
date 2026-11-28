@@ -70,11 +70,13 @@ public sealed class InternalThreadLocalMap
         {
             return SlowGet();
         }
+
         var map = thread.ThreadLocalMap();
         if (map == null)
         {
             thread.SetThreadLocalMap(map = new InternalThreadLocalMap());
         }
+
         return map;
     }
 
@@ -185,6 +187,7 @@ public sealed class InternalThreadLocalMap
     public object IndexedVariable(int index)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(index);
+
         object[] lookup = indexedVariables;
         return index < lookup.Length ? lookup[index] : UNSET;
     }
@@ -203,6 +206,7 @@ public sealed class InternalThreadLocalMap
     public object GetAndSetIndexedVariable(int index, object value)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(index);
+
         object[] lookup = indexedVariables;
         if (index < lookup.Length)
         {
@@ -233,6 +237,7 @@ public sealed class InternalThreadLocalMap
         ArgumentOutOfRangeException.ThrowIfNegative(index);
         if (index >= MAX_INDEXED_VARIABLE_COUNT)
             throw new ArgumentOutOfRangeException(nameof(index));
+
         uint capacity = BitOperations.RoundUpToPowerOf2((uint)index + 1);
         return (int)Math.Min(capacity, (uint)MAX_INDEXED_VARIABLE_COUNT);
     }
@@ -240,6 +245,7 @@ public sealed class InternalThreadLocalMap
     public object RemoveIndexedVariable(int index)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(index);
+
         object[] lookup = indexedVariables;
         if (index < lookup.Length)
         {
@@ -256,6 +262,7 @@ public sealed class InternalThreadLocalMap
     public bool IsIndexedVariableSet(int index)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(index);
+
         object[] lookup = indexedVariables;
         return index < lookup.Length && lookup[index] != UNSET;
     }

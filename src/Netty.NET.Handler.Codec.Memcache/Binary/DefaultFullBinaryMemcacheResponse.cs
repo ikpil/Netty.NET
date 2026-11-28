@@ -104,11 +104,13 @@ public class DefaultFullBinaryMemcacheResponse : DefaultBinaryMemcacheResponse
         {
             key = key.Copy();
         }
+
         ByteBuf extras = Extras();
         if (extras != null)
         {
             extras = extras.Copy();
         }
+
         return NewInstance(key, extras, Content.Copy());
     }
 
@@ -119,11 +121,13 @@ public class DefaultFullBinaryMemcacheResponse : DefaultBinaryMemcacheResponse
         {
             key = key.Duplicate();
         }
+
         ByteBuf extras = Extras();
         if (extras != null)
         {
             extras = extras.Duplicate();
         }
+
         return NewInstance(key, extras, Content.Duplicate());
     }
 
@@ -139,11 +143,13 @@ public class DefaultFullBinaryMemcacheResponse : DefaultBinaryMemcacheResponse
         {
             key = key.RetainedDuplicate();
         }
+
         ByteBuf extras = Extras();
         if (extras != null)
         {
             extras = extras.RetainedDuplicate();
         }
+
         return NewInstance(key, extras, content);
     }
 

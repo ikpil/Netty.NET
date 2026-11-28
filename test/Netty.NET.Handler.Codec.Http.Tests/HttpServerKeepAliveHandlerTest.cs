@@ -87,10 +87,12 @@ public class HttpServerKeepAliveHandlerTest
         IFullHttpRequest request = new DefaultFullHttpRequest(httpVersion, HttpMethod.GET, "/v1/foo/bar");
         SetKeepAlive(request, REQUEST_KEEP_ALIVE.Equals(sendKeepAlive));
         IHttpResponse response = new DefaultFullHttpResponse(httpVersion, responseStatus);
+
         if (setResponseConnection != null)
         {
             response.Headers().Set(HttpHeaderNames.CONNECTION, setResponseConnection);
         }
+
         SetupMessageLength(response, setSelfDefinedMessageLength);
 
         Assert.True(channel.WriteInbound(request));
@@ -206,6 +208,7 @@ public class HttpServerKeepAliveHandlerTest
         {
             response.Headers().Remove(HttpHeaderNames.CONNECTION);
         }
+
         SetupMessageLength(response, setSelfDefinedMessageLength);
         _ = channel.WriteAndFlushAsync(response.RetainedDuplicate());
         IHttpResponse secondResponse = channel.ReadOutbound<IHttpResponse>();
@@ -224,6 +227,7 @@ public class HttpServerKeepAliveHandlerTest
             Assert.False(channel.IsOpen, "channel.isOpen");
             Assert.False(IsKeepAlive(finalResponse), "response keep-alive");
         }
+
         ReferenceCountUtil.Release(response);
         Assert.False(channel.FinishAndReleaseAll());
     }
@@ -269,6 +273,7 @@ public class HttpServerKeepAliveHandlerTest
             {
                 response.Headers().Remove(HttpHeaderNames.CONTENT_LENGTH);
             }
+
             break;
         case SET_RESPONSE_LENGTH:
             SetContentLength(response, 0);

@@ -31,6 +31,7 @@ public sealed class ThreadGroup
     public static ThreadGroup GetThreadGroup(Thread thread)
     {
         ArgumentNullException.ThrowIfNull(thread);
+
         return Groups.TryGetValue(thread, out var group) ? group : Root;
     }
 
@@ -43,6 +44,7 @@ public sealed class ThreadGroup
     public Thread NewThread(Action runnable)
     {
         ArgumentNullException.ThrowIfNull(runnable);
+
         var thread = new Thread(runnable.Invoke);
         Assign(thread, this);
         return thread;

@@ -982,6 +982,7 @@ public abstract class DefaultHttp2RemoteFlowControllerTest
         listener.Verify(l => l.WritabilityChanged(Stream(STREAM_B)), Times.Exactly(amt));
         listener.Verify(l => l.WritabilityChanged(Stream(STREAM_C)), Times.Exactly(amt));
         listener.Verify(l => l.WritabilityChanged(Stream(STREAM_D)), Times.Exactly(amt));
+
         if (writable)
         {
             Assert.True(controller.IsWritable(Stream(STREAM_A)));
@@ -1057,6 +1058,7 @@ public abstract class DefaultHttp2RemoteFlowControllerTest
     {
         channel.Setup(c => c.BytesBeforeUnwritable).Returns(isWritable ? long.MaxValue : 0);
         channel.Setup(c => c.IsWritable).Returns(isWritable);
+
         if (controller != null)
         {
             controller.ChannelWritabilityChanged();
@@ -1116,6 +1118,7 @@ public abstract class DefaultHttp2RemoteFlowControllerTest
                 // Write has been called but no data can be written
                 return;
             }
+
             writeCalled = true;
             int written = Math.Min(Size(), allowedBytes);
             if (written > currentPayloadSize)
@@ -1141,6 +1144,7 @@ public abstract class DefaultHttp2RemoteFlowControllerTest
                 ffcNext.merged = true;
                 return true;
             }
+
             return false;
         }
 
@@ -1180,6 +1184,7 @@ public abstract class DefaultHttp2RemoteFlowControllerTest
         public void AssertError(Http2Error error)
         {
             Assert.NotNull(t);
+
             if (error != null)
             {
                 Assert.Same(error, ((Http2Exception) t).Error());

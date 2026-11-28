@@ -48,6 +48,7 @@ public static class ReferenceCountUtil
     public static T Retain<T>(T msg, int increment)
     {
         ObjectUtil.CheckPositive(increment, "increment");
+
         return msg is IReferenceCounted reference ? (T)reference.Retain(increment) : msg;
     }
 
@@ -86,6 +87,7 @@ public static class ReferenceCountUtil
     public static bool Release(object msg, int decrement)
     {
         ObjectUtil.CheckPositive(decrement, "decrement");
+
         return msg is IReferenceCounted reference && reference.Release(decrement);
     }
 
@@ -120,6 +122,7 @@ public static class ReferenceCountUtil
         try
         {
             ObjectUtil.CheckPositive(decrement, "decrement");
+
             Release(msg, decrement);
         }
         catch (Exception failure)
@@ -155,10 +158,12 @@ public static class ReferenceCountUtil
     public static T ReleaseLater<T>(T msg, int decrement)
     {
         ObjectUtil.CheckPositive(decrement, "decrement");
+
         if (msg is IReferenceCounted reference)
         {
             ThreadDeathWatcher.Watch(Thread.CurrentThread, new ReleasingTask(reference, decrement).Run);
         }
+
         return msg;
     }
 

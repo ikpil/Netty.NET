@@ -48,6 +48,7 @@ public class Http2StreamChannelIdTest
         // CLR: System.IO.Stream is qualified: inside Netty.NET.Handler.* the simple name Stream binds to the
         // Netty.NET.Handler.Stream namespace.
         System.IO.Stream outStream = new ByteBufOutputStream(buf);
+
         try
         {
             JsonSerializer.Serialize(outStream, (Http2StreamChannelId) normalInstance, OPTIONS);
@@ -59,6 +60,7 @@ public class Http2StreamChannelIdTest
 
         System.IO.Stream inStream = new ByteBufInputStream(buf, true);
         IChannelId deserializedInstance;
+
         try
         {
             deserializedInstance = JsonSerializer.Deserialize<Http2StreamChannelId>(inStream, OPTIONS);
@@ -95,12 +97,15 @@ public class Http2StreamChannelIdTest
             {
                 throw new JsonException("Expected an Http2StreamChannelId object.");
             }
+
             DefaultChannelId parentId = null;
             int? id = null;
+
             while (reader.Read() && reader.TokenType != JsonTokenType.EndObject)
             {
                 string property = reader.GetString();
                 reader.Read();
+
                 if (property == "parentId")
                 {
                     parentId = JsonSerializer.Deserialize<DefaultChannelId>(ref reader, options);
@@ -114,10 +119,12 @@ public class Http2StreamChannelIdTest
                     throw new JsonException("Unexpected property " + property + ".");
                 }
             }
+
             if (parentId == null || id == null)
             {
                 throw new JsonException("Expected parentId and id.");
             }
+
             return new Http2StreamChannelId(parentId, id.Value);
         }
 

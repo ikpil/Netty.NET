@@ -47,6 +47,7 @@ public class SocketConnectionAttemptSourceTest : AbstractClientSocketTest
         HandlerCapturingChannel(cb, new TestHandler(), created => channel = created)
                 .Option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 2000);
         Task<IChannel> future = cb.ConnectAsync(BAD_HOST, BAD_PORT);
+
         try
         {
             Assert.True(await AwaitAsync(future, 3000));
@@ -116,6 +117,7 @@ public class SocketConnectionAttemptSourceTest : AbstractClientSocketTest
         // dual-mode socket" when the OS supports IPv6 (https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket.-ctor),
         // so the family follows the target address as with the JDK socket.
         Socket socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+
         try
         {
             // CLR: SocketUtils.socketAddress(host, port) is new InetSocketAddress(host, port), which resolves the
@@ -167,6 +169,7 @@ public class SocketConnectionAttemptSourceTest : AbstractClientSocketTest
         // (https://learn.microsoft.com/en-us/dotnet/standard/parallel-programming/task-cancellation).
         using CancellationTokenSource cancellation = new CancellationTokenSource();
         Task<IChannel> future = cb.ConnectAsync(BAD_HOST, BAD_PORT, cancellation.Token);
+
         try
         {
             if (await AwaitAsync(future, 1000))
@@ -188,6 +191,7 @@ public class SocketConnectionAttemptSourceTest : AbstractClientSocketTest
             // rethrowing) before isCancelled() is checked.
             bool cancelled = !future.IsCompleted;
             cancellation.Cancel();
+
             if (cancelled)
             {
                 Assert.True(await AwaitAsync(channel.CloseFuture, 500));
@@ -283,6 +287,7 @@ public class SocketConnectionAttemptSourceTest : AbstractClientSocketTest
                         {
                             return;
                         }
+
                         try
                         {
                             BaseConnect(socket, remoteAddress);

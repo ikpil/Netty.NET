@@ -16,6 +16,7 @@ internal static class ThreadJoin
         {
             return true;
         }
+
         if (timeout == Timeout.InfiniteTimeSpan)
         {
             thread.Join();
@@ -26,6 +27,7 @@ internal static class ThreadJoin
         // budget across Int32-millisecond chunks without allocating a Stopwatch.
         long started = Stopwatch.GetTimestamp();
         long ticks = timeout.Ticks;
+
         for (;;)
         {
             long elapsed = Stopwatch.GetElapsedTime(started).Ticks;

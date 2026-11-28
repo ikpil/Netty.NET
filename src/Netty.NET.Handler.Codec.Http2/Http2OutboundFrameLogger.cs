@@ -44,6 +44,7 @@ public class Http2OutboundFrameLogger : IHttp2FrameWriter
             int padding, bool endStream, TaskCompletionSource promise)
     {
         logger.LogData(OUTBOUND, ctx, streamId, data, padding, endStream);
+
         return writer.WriteDataAsync(ctx, streamId, data, padding, endStream, promise);
     }
 
@@ -51,6 +52,7 @@ public class Http2OutboundFrameLogger : IHttp2FrameWriter
             IHttp2Headers headers, int padding, bool endStream, TaskCompletionSource promise)
     {
         logger.LogHeaders(OUTBOUND, ctx, streamId, headers, padding, endStream);
+
         return writer.WriteHeadersAsync(ctx, streamId, headers, padding, endStream, promise);
     }
 
@@ -60,6 +62,7 @@ public class Http2OutboundFrameLogger : IHttp2FrameWriter
     {
         logger.LogHeaders(OUTBOUND, ctx, streamId, headers, streamDependency, weight, exclusive,
                 padding, endStream);
+
         return writer.WriteHeadersAsync(ctx, streamId, headers, streamDependency, weight,
                 exclusive, padding, endStream, promise);
     }
@@ -68,6 +71,7 @@ public class Http2OutboundFrameLogger : IHttp2FrameWriter
             int streamDependency, short weight, bool exclusive, TaskCompletionSource promise)
     {
         logger.LogPriority(OUTBOUND, ctx, streamId, streamDependency, weight, exclusive);
+
         return writer.WritePriorityAsync(ctx, streamId, streamDependency, weight, exclusive, promise);
     }
 
@@ -75,6 +79,7 @@ public class Http2OutboundFrameLogger : IHttp2FrameWriter
             int streamId, long errorCode, TaskCompletionSource promise)
     {
         logger.LogRstStream(OUTBOUND, ctx, streamId, errorCode);
+
         return writer.WriteRstStreamAsync(ctx, streamId, errorCode, promise);
     }
 
@@ -82,12 +87,14 @@ public class Http2OutboundFrameLogger : IHttp2FrameWriter
             Http2Settings settings, TaskCompletionSource promise)
     {
         logger.LogSettings(OUTBOUND, ctx, settings);
+
         return writer.WriteSettingsAsync(ctx, settings, promise);
     }
 
     public Task WriteSettingsAckAsync(IChannelHandlerContext ctx, TaskCompletionSource promise)
     {
         logger.LogSettingsAck(OUTBOUND, ctx);
+
         return writer.WriteSettingsAckAsync(ctx, promise);
     }
 
@@ -102,6 +109,7 @@ public class Http2OutboundFrameLogger : IHttp2FrameWriter
         {
             logger.LogPing(OUTBOUND, ctx, data);
         }
+
         return writer.WritePingAsync(ctx, ack, data, promise);
     }
 
@@ -109,6 +117,7 @@ public class Http2OutboundFrameLogger : IHttp2FrameWriter
             int promisedStreamId, IHttp2Headers headers, int padding, TaskCompletionSource promise)
     {
         logger.LogPushPromise(OUTBOUND, ctx, streamId, promisedStreamId, headers, padding);
+
         return writer.WritePushPromiseAsync(ctx, streamId, promisedStreamId, headers, padding, promise);
     }
 
@@ -116,6 +125,7 @@ public class Http2OutboundFrameLogger : IHttp2FrameWriter
             ByteBuf debugData, TaskCompletionSource promise)
     {
         logger.LogGoAway(OUTBOUND, ctx, lastStreamId, errorCode, debugData);
+
         return writer.WriteGoAwayAsync(ctx, lastStreamId, errorCode, debugData, promise);
     }
 
@@ -123,6 +133,7 @@ public class Http2OutboundFrameLogger : IHttp2FrameWriter
             int streamId, int windowSizeIncrement, TaskCompletionSource promise)
     {
         logger.LogWindowsUpdate(OUTBOUND, ctx, streamId, windowSizeIncrement);
+
         return writer.WriteWindowUpdateAsync(ctx, streamId, windowSizeIncrement, promise);
     }
 
@@ -130,6 +141,7 @@ public class Http2OutboundFrameLogger : IHttp2FrameWriter
             Http2Flags flags, ByteBuf payload, TaskCompletionSource promise)
     {
         logger.LogUnknownFrame(OUTBOUND, ctx, frameType, streamId, flags, payload);
+
         return writer.WriteFrameAsync(ctx, frameType, streamId, flags, payload, promise);
     }
 

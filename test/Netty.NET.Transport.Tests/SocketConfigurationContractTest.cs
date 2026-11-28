@@ -75,6 +75,7 @@ public class SocketConfigurationContractTest
         AssertUnsupported(config, ChannelOption.SO_KEEPALIVE, true);
         AssertUnsupported(config, ChannelOption.SO_LINGER, 0);
         AssertUnsupported(config, ChannelOption.IP_TOS, 40);
+
         if (listener)
         {
             Assert.Equal(NetUtil.SOMAXCONN, Get(config, ChannelOption.SO_BACKLOG));
@@ -99,6 +100,7 @@ public class SocketConfigurationContractTest
         {
             DomainSocketSourceTest.RequireDomainSockets();
         }
+
         using var socket = domain ? new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified)
             : NewSocket(AddressFamily.InterNetwork);
         IChannel channel = domain ? new NioServerDomainSocketChannel(socket) : new NioServerSocketChannel(socket);
@@ -106,6 +108,7 @@ public class SocketConfigurationContractTest
         Assert.Equal(NetUtil.SOMAXCONN, Get(config, ChannelOption.SO_BACKLOG));
         Assert.Throws<ArgumentOutOfRangeException>(() => config.SetOption(ChannelOption.SO_BACKLOG, -1));
         Assert.Equal(NetUtil.SOMAXCONN, Get(config, ChannelOption.SO_BACKLOG));
+
         foreach (int value in new[] { 0, 1, 65536, int.MaxValue })
         {
             Assert.True(config.SetOption(ChannelOption.SO_BACKLOG, value));
@@ -123,6 +126,7 @@ public class SocketConfigurationContractTest
         IChannel channel = listener ? new NioServerSocketChannel(socket) : new NioSocketChannel(socket);
         var config = channel.Config;
         socket.Dispose();
+
         if (listener)
         {
             Assert.False(config.TryGetOption(ChannelOption.TCP_NODELAY, out _));
@@ -137,6 +141,7 @@ public class SocketConfigurationContractTest
             Assert.True(config.SetOption(ChannelOption.ALLOW_HALF_CLOSURE, true));
             Assert.True(Get(config, ChannelOption.ALLOW_HALF_CLOSURE));
         }
+
         Assert.Throws<ObjectDisposedException>(() => config.TryGetOption(ChannelOption.SO_RCVBUF, out _));
     }
 
@@ -148,6 +153,7 @@ public class SocketConfigurationContractTest
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var accepted = new TaskCompletionSource<IChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
         var token = TestContext.Current.CancellationToken;
+
         try
         {
             var server = await new ServerBootstrap().Group(group).ChannelFactory(() => new NioServerSocketChannel(AddressFamily.InterNetwork))
@@ -174,6 +180,7 @@ public class SocketConfigurationContractTest
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var accepted = new TaskCompletionSource<IChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
         var token = TestContext.Current.CancellationToken;
+
         try
         {
             var server = await new ServerBootstrap().Group(group).ChannelFactory(() => new NioServerSocketChannel(family))
@@ -202,6 +209,7 @@ public class SocketConfigurationContractTest
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var accepted = new TaskCompletionSource<IChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
         var token = TestContext.Current.CancellationToken;
+
         try
         {
             var server = await new ServerBootstrap().Group(group).ChannelFactory(() => new NativeOptionListener(noDelay))
@@ -224,6 +232,7 @@ public class SocketConfigurationContractTest
     {
         using var socket = NewSocket(family);
         var config = new NioSocketChannel(socket).Config;
+
         foreach (int value in new[] { 0, 2, 65535, 65536, int.MaxValue, -1, int.MinValue })
         {
             Assert.True(config.SetOption(ChannelOption.SO_LINGER, value));
@@ -243,14 +252,17 @@ public class SocketConfigurationContractTest
         using var socket = NewSocket(family);
         IChannel channel = listener ? new NioServerSocketChannel(socket) : new NioSocketChannel(socket);
         var config = channel.Config;
+
         foreach (var option in listener ? new[] { ChannelOption.SO_RCVBUF } : new[] { ChannelOption.SO_RCVBUF, ChannelOption.SO_SNDBUF })
         {
             int before = Get(config, option);
+
             foreach (int value in new[] { 0, -1, int.MinValue })
             {
                 Assert.Throws<ArgumentOutOfRangeException>(() => config.SetOption(option, value));
                 Assert.Equal(before, Get(config, option));
             }
+
             Assert.True(config.SetOption(option, 16384));
             Assert.Equal(ReferenceEquals(option, ChannelOption.SO_RCVBUF) ? socket.ReceiveBufferSize : socket.SendBufferSize, Get(config, option));
         }
@@ -264,6 +276,7 @@ public class SocketConfigurationContractTest
         using var socket = NewSocket(family);
         var config = new NioSocketChannel(socket).Config;
         int before = Get(config, ChannelOption.IP_TOS);
+
         foreach (int value in new[] { int.MinValue, -1, 256, int.MaxValue })
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => config.SetOption(ChannelOption.IP_TOS, value));
@@ -281,16 +294,21 @@ public class SocketConfigurationContractTest
         {
             Assert.Skip("Linux native IPv6 traffic-class verification requires Linux.");
         }
+
         using var socket = NewSocket(family);
+
         if (family == AddressFamily.InterNetworkV6)
         {
             socket.DualMode = dualMode;
         }
+
         var config = new NioSocketChannel(socket).Config;
+
         foreach (int value in new[] { 0x28, 0xb8, 0 })
         {
             Assert.True(config.SetOption(ChannelOption.IP_TOS, value));
             int actual;
+
             if (family == AddressFamily.InterNetworkV6)
             {
                 byte[] native = new byte[sizeof(int)];
@@ -301,9 +319,11 @@ public class SocketConfigurationContractTest
             {
                 actual = (int)socket.GetSocketOption(SocketOptionLevel.IP, SocketOptionName.TypeOfService);
             }
+
             Assert.Equal(value, actual);
             Assert.Equal(actual, Get(config, ChannelOption.IP_TOS));
             Assert.Equal(actual, config.GetOptions()[ChannelOption.IP_TOS]);
+
             if (dualMode)
             {
                 Assert.Equal(value, (int)socket.GetSocketOption(SocketOptionLevel.IP, SocketOptionName.TypeOfService));
@@ -366,15 +386,18 @@ public class SocketConfigurationContractTest
         Assert.Throws<ArgumentOutOfRangeException>(() => config.SetSendBufferSize(0));
 
         Assert.Equal(config.GetTrafficClass(), Get(config, ChannelOption.IP_TOS));
+
         // Non-Linux IPv6 traffic-class policy is not reviewed; Winsock rejects IP_TOS on an IPv6 stream.
         if (family == AddressFamily.InterNetwork || OperatingSystem.IsLinux())
         {
             Assert.Same(config, config.SetTrafficClass(0x28));
             Assert.Equal(0x28, config.GetTrafficClass());
             Assert.Equal(0x28, Get(config, ChannelOption.IP_TOS));
+
             if (family == AddressFamily.InterNetwork)
                 Assert.Equal(0x28, (int)socket.GetSocketOption(SocketOptionLevel.IP, SocketOptionName.TypeOfService));
         }
+
         Assert.Throws<ArgumentOutOfRangeException>(() => config.SetTrafficClass(256));
 
         Assert.False(config.IsAllowHalfClosure());
@@ -431,6 +454,7 @@ public class SocketConfigurationContractTest
     {
         DomainSocketSourceTest.RequireDomainSockets();
         using var socket = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
+
         if (listener)
         {
             var config = Assert.IsType<DefaultServerSocketChannelConfig>(new NioServerDomainSocketChannel(socket).Config);
@@ -497,9 +521,11 @@ public class SocketConfigurationContractTest
         {
             int start = buf.Count;
             int read = base.DoReadMessages(buf);
+
             for (int i = start; i < buf.Count; i++)
                 ((Socket)typeof(AbstractNioChannel).GetMethod("JavaChannel", BindingFlags.Instance | BindingFlags.NonPublic)!
                     .Invoke(buf[i], null)).NoDelay = noDelay;
+
             return read;
         }
     }

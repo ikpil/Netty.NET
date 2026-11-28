@@ -58,10 +58,12 @@ internal sealed class TraceRecord : Exception
     public override string ToString()
     {
         var buffer = new StringBuilder(2048);
+
         if (hintString != null)
         {
             buffer.Append("\tHint: ").Append(hintString).Append(StringUtil.NEWLINE);
         }
+
         // Append the stack trace.
         StackFrame[] frames = trace?.GetFrames() ?? Array.Empty<StackFrame>();
         // Skip the first three elements.
@@ -80,6 +82,7 @@ internal sealed class TraceRecord : Exception
             // Strip the noisy stack trace elements.
             string[] exclusions = ResourceLeakDetector.excludedMethods.Get();
             bool excluded = false;
+
             for (int k = 0; k < exclusions.Length; k += 2)
             {
                 // Suppress a warning about out of bounds access
@@ -90,11 +93,13 @@ internal sealed class TraceRecord : Exception
                     break;
                 }
             }
+
             if (!excluded)
             {
                 buffer.Append('\t').Append(new StackTrace(frames[i]).ToString().TrimEnd('\r', '\n')).Append(StringUtil.NEWLINE);
             }
         }
+
         return buffer.ToString();
     }
 
@@ -117,6 +122,7 @@ internal sealed class TraceRecord : Exception
         {
             return false;
         }
+
         Type definition = type.GetGenericTypeDefinition();
         return definition == typeof(DefaultResourceLeak<>) ||
             definition == typeof(ResourceLeakDetector<>) && method.Name == "Track0";

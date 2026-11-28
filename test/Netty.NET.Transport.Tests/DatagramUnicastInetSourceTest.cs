@@ -40,6 +40,7 @@ public class DatagramUnicastInetSourceTest : DatagramUnicastSourceTest
     private static async Task TestBindWithPortOnly0(Bootstrap cb)
     {
         IChannel channel = null;
+
         try
         {
             cb.Handler(new EmptyChannelHandlerAdapter());
@@ -60,6 +61,7 @@ public class DatagramUnicastInetSourceTest : DatagramUnicastSourceTest
                                          StrongBox<Exception> errorRef)
     {
         cb.Handler(new ClientHandler(bytes, latch, errorRef));
+
         return cb.BindAsync(NewSocketAddress());
     }
 
@@ -71,6 +73,7 @@ public class DatagramUnicastInetSourceTest : DatagramUnicastSourceTest
         {
             ch.Pipeline.AddLast(new ServerHandler(bytes, sender, latch, errorRef, echo));
         }));
+
         return sb.BindAsync(NewSocketAddress());
     }
 
@@ -112,6 +115,7 @@ public class DatagramUnicastInetSourceTest : DatagramUnicastSourceTest
             {
                 ByteBuf buf = msg.Content;
                 Assert.Equal(bytes.Length, buf.ReadableBytes);
+
                 for (int i = 0; i < bytes.Length; i++)
                 {
                     Assert.Equal(bytes[i], buf.GetByte(buf.ReaderIndex + i));
@@ -166,6 +170,7 @@ public class DatagramUnicastInetSourceTest : DatagramUnicastSourceTest
 
                 ByteBuf buf = msg.Content;
                 Assert.Equal(bytes.Length, buf.ReadableBytes);
+
                 for (int i = 0; i < bytes.Length; i++)
                 {
                     Assert.Equal(bytes[i], buf.GetByte(buf.ReaderIndex + i));

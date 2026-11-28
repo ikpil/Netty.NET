@@ -52,6 +52,7 @@ public class QuicCodecBuilderTest
     {
         FieldInfo[] fields = builder.GetType().BaseType.GetFields(
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+
         foreach (FieldInfo field in fields)
         {
             ModifyField(builder, field);
@@ -121,38 +122,48 @@ public class QuicCodecBuilderTest
             Assert.True(expected == null && actual == null, "Field '" + path + "' differs: " + expected + " != " + actual);
             return;
         }
+
         Type type = expected.GetType();
         Assert.True(type == actual.GetType(), "Field '" + path + "' has different types: " + type + " != " +
                 actual.GetType());
+
         if (ReferenceEquals(expected, actual) || type.IsPrimitive || type.IsEnum || expected is string ||
             expected is Delegate)
         {
             Assert.True(Equals(expected, actual), "Field '" + path + "' differs: " + expected + " != " + actual);
             return;
         }
+
         if (expected is IEnumerable expectedItems && type.IsArray)
         {
             List<object> left = new List<object>();
             List<object> right = new List<object>();
+
             foreach (object item in expectedItems)
             {
                 left.Add(item);
             }
+
             foreach (object item in (IEnumerable) actual)
             {
                 right.Add(item);
             }
+
             Assert.True(left.Count == right.Count, "Field '" + path + "' has a different length");
+
             for (int i = 0; i < left.Count; i++)
             {
                 AssertRecursiveEquals(left[i], right[i], path + "[" + i + "]", visited);
             }
+
             return;
         }
+
         if (!visited.Add((expected, actual)))
         {
             return;
         }
+
         for (Type t = type; t != null && t != typeof(object); t = t.BaseType)
         {
             foreach (FieldInfo field in t.GetFields(BindingFlags.Instance | BindingFlags.Public |

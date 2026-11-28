@@ -127,12 +127,14 @@ public class SpdyHeaderBlockZlibDecoderTest : IDisposable
         headerBlock.WriteBytes(zlibSyncFlush);
 
         int readableBytes = headerBlock.ReadableBytes;
+
         for (int i = 0; i < readableBytes; i++)
         {
             ByteBuf headerBlockSegment = headerBlock.Slice(i, 1);
             decoder.Decode(IByteBufAllocator.Default, headerBlockSegment, frame);
             Assert.False(headerBlockSegment.IsReadable());
         }
+
         decoder.EndHeaderBlock(frame);
 
         Assert.False(frame.IsInvalid());
@@ -156,10 +158,12 @@ public class SpdyHeaderBlockZlibDecoderTest : IDisposable
         headerBlock.WriteByte(0xdf); // one's compliment of length
         headerBlock.WriteInt(1); // number of Name/Value pairs
         headerBlock.WriteInt(8192); // length of name
+
         for (int i = 0; i < 8192; i++)
         {
             headerBlock.WriteByte('n');
         }
+
         headerBlock.WriteInt(0); // length of value
         headerBlock.WriteBytes(zlibSyncFlush);
         decoder.Decode(IByteBufAllocator.Default, headerBlock, frame);
@@ -187,10 +191,12 @@ public class SpdyHeaderBlockZlibDecoderTest : IDisposable
         headerBlock.WriteInt(1); // length of name
         headerBlock.WriteByte('n');
         headerBlock.WriteInt(8191); // length of value
+
         for (int i = 0; i < 8191; i++)
         {
             headerBlock.WriteByte('v');
         }
+
         headerBlock.WriteBytes(zlibSyncFlush);
         decoder.Decode(IByteBufAllocator.Default, headerBlock, frame);
         decoder.EndHeaderBlock(frame);
@@ -318,10 +324,12 @@ public class SpdyHeaderBlockZlibDecoderTest : IDisposable
     private static byte[] Deflate(byte[] input)
     {
         MemoryStream @out = new MemoryStream();
+
         using (ZLibStream deflater = new ZLibStream(@out, new ZLibCompressionOptions { CompressionLevel = 9 }))
         {
             deflater.Write(input, 0, input.Length);
         }
+
         return @out.ToArray();
     }
 }

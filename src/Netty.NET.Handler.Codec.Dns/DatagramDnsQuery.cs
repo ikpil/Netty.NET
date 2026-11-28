@@ -161,6 +161,7 @@ public class DatagramDnsQuery : DefaultDnsQuery, IAddressedEnvelope<DatagramDnsQ
         }
 
         IAddressedEnvelope<object, EndPoint> that = (IAddressedEnvelope<object, EndPoint>) obj;
+
         if (Sender == null)
         {
             if (that.Sender != null)
@@ -191,14 +192,17 @@ public class DatagramDnsQuery : DefaultDnsQuery, IAddressedEnvelope<DatagramDnsQ
     public override int GetHashCode()
     {
         int hashCode = base.GetHashCode();
+
         if (Sender != null)
         {
             hashCode = hashCode * 31 + Sender.GetHashCode();
         }
+
         if (Recipient != null)
         {
             hashCode = hashCode * 31 + Recipient.GetHashCode();
         }
+
         return hashCode;
     }
 }

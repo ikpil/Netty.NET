@@ -118,10 +118,12 @@ public sealed class HAProxySSLTLV : HAProxyTLV
     internal override int ContentNumBytes()
     {
         int tlvNumBytes = 0;
+
         for (int i = 0; i < tlvs.Count; i++)
         {
             tlvNumBytes += tlvs[i].TotalNumBytes();
         }
+
         return 5 + tlvNumBytes; // clientBit(1) + verify(4) + tlvs
     }
 

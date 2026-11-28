@@ -108,6 +108,7 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
         {
             throw ConnectionError(FRAME_SIZE_ERROR, "Invalid MAX_FRAME_SIZE specified in sent settings: %d", max);
         }
+
         maxFrameSize = max;
     }
 
@@ -137,6 +138,7 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
         SimpleChannelPromiseAggregator promiseAggregator =
                 new SimpleChannelPromiseAggregator(promise, ctx.Channel, ctx.Executor);
         ByteBuf frameHeader = null;
+
         try
         {
             VerifyStreamId(streamId, STREAM_ID);
@@ -146,11 +148,13 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
             Http2Flags flags = new Http2Flags();
             flags.EndOfStream(false);
             flags.PaddingPresent(false);
+
             // Fast path to write frames of payload size maxFrameSize first.
             if (remainingData > maxFrameSize)
             {
                 frameHeader = ctx.Alloc().Buffer(FRAME_HEADER_LENGTH);
                 WriteFrameHeaderInternal(frameHeader, maxFrameSize, DATA, flags, streamId);
+
                 do
                 {
                     // Write the header.
@@ -172,6 +176,7 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
                     frameHeader.Release();
                     frameHeader = null;
                 }
+
                 ByteBuf frameHeader2 = ctx.Alloc().Buffer(FRAME_HEADER_LENGTH);
                 flags.EndOfStream(endStream);
                 WriteFrameHeaderInternal(frameHeader2, remainingData, DATA, flags, streamId);
@@ -197,6 +202,7 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
                     remainingData -= maxFrameSize;
                     // Write the header.
                     ByteBuf lastFrame;
+
                     if (frameHeader == null)
                     {
                         lastFrame = ctx.Alloc().Buffer(FRAME_HEADER_LENGTH);
@@ -207,6 +213,7 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
                         lastFrame = frameHeader.Slice();
                         frameHeader = null;
                     }
+
                     Write(ctx, lastFrame, promiseAggregator.NewPromise());
 
                     // Write the payload.
@@ -246,6 +253,7 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
                             Write(ctx, data.ReadRetainedSlice(frameDataBytes), promiseAggregator.NewPromise());
                         }
                     }
+
                     // Write the frame padding.
                     if (PaddingBytes(framePaddingBytes) > 0)
                     {
@@ -261,6 +269,7 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
             {
                 frameHeader.Release();
             }
+
             // Use a try/finally here in case the data has been released before calling this method. This is not
             // necessary above because we internally allocate frameHeader.
             try
@@ -275,8 +284,10 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
                 promiseAggregator.SetFailure(cause);
                 promiseAggregator.DoneAllocatingPromises();
             }
+
             return promiseAggregator.Task;
         }
+
         return promiseAggregator.DoneAllocatingPromises().Task;
     }
 
@@ -309,6 +320,7 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
             buf.WriteInt(exclusive ? unchecked((int) (0x80000000L | (long) streamDependency)) : streamDependency);
             // Adjust the weight so that it fits into a single byte on the wire.
             buf.WriteByte(weight - 1);
+
             return Write(ctx, buf, promise);
         }
         catch (Exception t)
@@ -329,6 +341,7 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
             ByteBuf buf = ctx.Alloc().Buffer(RST_STREAM_FRAME_LENGTH);
             WriteFrameHeaderInternal(buf, INT_FIELD_LENGTH, RST_STREAM, new Http2Flags(), streamId);
             buf.WriteInt(unchecked((int) errorCode));
+
             return Write(ctx, buf, promise);
         }
         catch (Exception t)
@@ -344,14 +357,17 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
         try
         {
             CheckNotNull(settings, "settings");
+
             int payloadLength = SETTING_ENTRY_LENGTH * settings.Count;
             ByteBuf buf = ctx.Alloc().Buffer(FRAME_HEADER_LENGTH + payloadLength);
             WriteFrameHeaderInternal(buf, payloadLength, SETTINGS, new Http2Flags(), 0);
+
             foreach (KeyValuePair<char, long> entry in settings)
             {
                 buf.WriteChar(entry.Key);
                 buf.WriteInt(unchecked((int) entry.Value));
             }
+
             return Write(ctx, buf, promise);
         }
         catch (Exception t)
@@ -367,6 +383,7 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
         {
             ByteBuf buf = ctx.Alloc().Buffer(FRAME_HEADER_LENGTH);
             WriteFrameHeaderInternal(buf, 0, SETTINGS, new Http2Flags().Ack(true), 0);
+
             return Write(ctx, buf, promise);
         }
         catch (Exception t)
@@ -384,6 +401,7 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
         // in the catch block.
         WriteFrameHeaderInternal(buf, PING_FRAME_PAYLOAD_LENGTH, PING, flags, 0);
         buf.WriteLong(data);
+
         return Write(ctx, buf, promise);
     }
 
@@ -394,6 +412,7 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
         ByteBuf fragment = null;
         SimpleChannelPromiseAggregator promiseAggregator =
                 new SimpleChannelPromiseAggregator(promise, ctx.Channel, ctx.Executor);
+
         try
         {
             VerifyStreamId(streamId, STREAM_ID);
@@ -453,11 +472,13 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
             {
                 fragment.Release();
             }
+
             if (headerBlock != null)
             {
                 headerBlock.Release();
             }
         }
+
         return promiseAggregator.DoneAllocatingPromises().Task;
     }
 
@@ -466,6 +487,7 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
     {
         SimpleChannelPromiseAggregator promiseAggregator =
                 new SimpleChannelPromiseAggregator(promise, ctx.Channel, ctx.Executor);
+
         try
         {
             VerifyStreamOrConnectionId(lastStreamId, "Last Stream ID");
@@ -491,6 +513,7 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
                 promiseAggregator.SetFailure(t);
                 promiseAggregator.DoneAllocatingPromises();
             }
+
             return promiseAggregator.Task;
         }
 
@@ -502,6 +525,7 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
         {
             promiseAggregator.SetFailure(t);
         }
+
         return promiseAggregator.DoneAllocatingPromises().Task;
     }
 
@@ -516,6 +540,7 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
             ByteBuf buf = ctx.Alloc().Buffer(WINDOW_UPDATE_FRAME_LENGTH);
             WriteFrameHeaderInternal(buf, INT_FIELD_LENGTH, WINDOW_UPDATE, new Http2Flags(), streamId);
             buf.WriteInt(windowSizeIncrement);
+
             return Write(ctx, buf, promise);
         }
         catch (Exception t)
@@ -530,6 +555,7 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
     {
         SimpleChannelPromiseAggregator promiseAggregator =
                 new SimpleChannelPromiseAggregator(promise, ctx.Channel, ctx.Executor);
+
         try
         {
             VerifyStreamOrConnectionId(streamId, STREAM_ID);
@@ -550,8 +576,10 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
                 promiseAggregator.SetFailure(t);
                 promiseAggregator.DoneAllocatingPromises();
             }
+
             return promiseAggregator.Task;
         }
+
         try
         {
             Write(ctx, payload, promiseAggregator.NewPromise());
@@ -560,6 +588,7 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
         {
             promiseAggregator.SetFailure(t);
         }
+
         return promiseAggregator.DoneAllocatingPromises().Task;
     }
 
@@ -571,9 +600,11 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
         ByteBuf fragment = null;
         SimpleChannelPromiseAggregator promiseAggregator =
                 new SimpleChannelPromiseAggregator(promise, ctx.Channel, ctx.Executor);
+
         try
         {
             VerifyStreamId(streamId, STREAM_ID);
+
             if (hasPriority)
             {
                 VerifyStreamOrConnectionId(streamDependency, STREAM_DEPENDENCY);
@@ -608,6 +639,7 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
                 // Adjust the weight so that it fits into a single byte on the wire.
                 buf.WriteByte(weight - 1);
             }
+
             Write(ctx, buf, promiseAggregator.NewPromise());
 
             // Write the first fragment.
@@ -641,11 +673,13 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
             {
                 fragment.Release();
             }
+
             if (headerBlock != null)
             {
                 headerBlock.Release();
             }
         }
+
         return promiseAggregator.DoneAllocatingPromises().Task;
     }
 
@@ -661,6 +695,7 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
         {
             int fragmentReadableBytes;
             ByteBuf buf = null;
+
             try
             {
                 do
@@ -668,6 +703,7 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
                     fragmentReadableBytes = Math.Min(headerBlock.ReadableBytes, maxFrameSize);
                     ByteBuf fragment = headerBlock.ReadRetainedSlice(fragmentReadableBytes);
                     bool fragmentWritten = false;
+
                     try
                     {
                         if (headerBlock.IsReadable())
@@ -677,6 +713,7 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
                                 buf = ctx.Alloc().Buffer(CONTINUATION_FRAME_HEADER_LENGTH);
                                 WriteFrameHeaderInternal(buf, fragmentReadableBytes, CONTINUATION, flags, streamId);
                             }
+
                             Write(ctx, buf.RetainedSlice(), promiseAggregator.NewPromise());
                         }
                         else
@@ -688,12 +725,14 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
                                 buf.Release();
                                 buf = null;
                             }
+
                             flags = flags.EndOfHeaders(true);
                             buf = ctx.Alloc().Buffer(CONTINUATION_FRAME_HEADER_LENGTH);
                             WriteFrameHeaderInternal(buf, fragmentReadableBytes, CONTINUATION, flags, streamId);
                             Write(ctx, buf, promiseAggregator.NewPromise());
                             buf = null;
                         }
+
                         Write(ctx, fragment, promiseAggregator.NewPromise());
                         fragmentWritten = true;
                     }
@@ -714,6 +753,7 @@ public class DefaultHttp2FrameWriter : IHttp2FrameWriter, IHttp2FrameSizePolicy,
                 }
             }
         }
+
         return promiseAggregator.Task;
     }
 

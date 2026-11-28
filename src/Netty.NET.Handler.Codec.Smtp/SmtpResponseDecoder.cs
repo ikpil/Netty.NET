@@ -85,15 +85,18 @@ public sealed class SmtpResponseDecoder : LineBasedFrameDecoder
             // No full line received yet.
             return null;
         }
+
         try
         {
             int readable = frame.ReadableBytes;
             int readerIndex = frame.ReaderIndex;
+
             if (readable < 4)
             {
                 Reset();
                 throw NewDecoderException(buffer, readerIndex, readable);
             }
+
             int code = ParseCode(frame);
             int separator = frame.ReadByte();
             ICharSequence detail = frame.IsReadable() ? new StringCharSequence(frame.ToString(Encoding.ASCII)) : null;
@@ -105,6 +108,7 @@ public sealed class SmtpResponseDecoder : LineBasedFrameDecoder
             case ' ':
                 // Marks the end of a response.
                 Reset();
+
                 if (details != null)
                 {
                     if (detail != null)
@@ -123,6 +127,7 @@ public sealed class SmtpResponseDecoder : LineBasedFrameDecoder
                         details = new ReadOnlyCollection<ICharSequence>(new ICharSequence[] { detail });
                     }
                 }
+
                 return new DefaultSmtpResponse(code, details);
             case '-':
                 // Multi-line response.
@@ -135,14 +140,17 @@ public sealed class SmtpResponseDecoder : LineBasedFrameDecoder
                         throw new TooLongFrameException("SMTP response exceeds " +
                                                         maxResponseSize.ToString(CultureInfo.InvariantCulture) + " bytes");
                     }
+
                     if (details == null)
                     {
                         // Using initial capacity as it is very unlikely that we will receive a multi-line response
                         // with more then 3 lines.
                         details = this.details = new List<ICharSequence>(4);
                     }
+
                     details.Add(detail);
                 }
+
                 break;
             default:
                 Reset();
@@ -153,6 +161,7 @@ public sealed class SmtpResponseDecoder : LineBasedFrameDecoder
         {
             frame.Release();
         }
+
         return null;
     }
 

@@ -137,6 +137,7 @@ public class SpdyHttpDecoder : MessageToMessageDecoder<ISpdyFrame>
         {
             ReferenceCountUtil.SafeRelease(entry.Value);
         }
+
         messageMap.Clear();
         headerSizeMap.Clear();
         base.HandlerRemoved(ctx);
@@ -208,6 +209,7 @@ public class SpdyHttpDecoder : MessageToMessageDecoder<ISpdyFrame>
                 }
 
                 IFullHttpRequest httpRequestWithEntity = null;
+
                 try
                 {
                     httpRequestWithEntity = CreateHttpRequest(spdySynStreamFrame, ctx.Alloc());
@@ -228,6 +230,7 @@ public class SpdyHttpDecoder : MessageToMessageDecoder<ISpdyFrame>
                     {
                         httpRequestWithEntity.Release();
                     }
+
                     ISpdyRstStreamFrame spdyRstStreamFrame =
                         new DefaultSpdyRstStreamFrame(streamId, SpdyStreamStatus.PROTOCOL_ERROR);
                     _ = ctx.WriteAndFlushAsync(spdyRstStreamFrame);
@@ -251,6 +254,7 @@ public class SpdyHttpDecoder : MessageToMessageDecoder<ISpdyFrame>
                 }
 
                 IFullHttpRequest httpRequestWithEntity = null;
+
                 try
                 {
                     httpRequestWithEntity = CreateHttpRequest(spdySynStreamFrame, ctx.Alloc());
@@ -268,6 +272,7 @@ public class SpdyHttpDecoder : MessageToMessageDecoder<ISpdyFrame>
                         // Request body will follow in a series of Data Frames
                         IFullHttpMessage old = PutMessage(streamId, httpRequestWithEntity);
                         httpRequestWithEntity = null;
+
                         if (old != null)
                         {
                             old.Release();
@@ -280,6 +285,7 @@ public class SpdyHttpDecoder : MessageToMessageDecoder<ISpdyFrame>
                     {
                         httpRequestWithEntity.Release();
                     }
+
                     // If a client sends a SYN_STREAM without all of the getMethod, url (host and path),
                     // scheme, and version headers the server must reply with an HTTP 400 BAD REQUEST reply.
                     // Also sends HTTP 400 BAD REQUEST reply if header name/value pairs are invalid
@@ -310,6 +316,7 @@ public class SpdyHttpDecoder : MessageToMessageDecoder<ISpdyFrame>
             }
 
             IFullHttpResponse httpResponseWithEntity = null;
+
             try
             {
                 httpResponseWithEntity = CreateHttpResponse(spdySynReplyFrame, ctx.Alloc());
@@ -328,6 +335,7 @@ public class SpdyHttpDecoder : MessageToMessageDecoder<ISpdyFrame>
                     // Response body will follow in a series of Data Frames
                     IFullHttpMessage old = PutMessage(streamId, httpResponseWithEntity);
                     httpResponseWithEntity = null;
+
                     if (old != null)
                     {
                         old.Release();
@@ -340,6 +348,7 @@ public class SpdyHttpDecoder : MessageToMessageDecoder<ISpdyFrame>
                 {
                     httpResponseWithEntity.Release();
                 }
+
                 // If a client receives a SYN_REPLY without valid getStatus and version headers
                 // the client must reply with a RST_STREAM frame indicating a PROTOCOL_ERROR
                 ISpdyRstStreamFrame spdyRstStreamFrame =
@@ -389,6 +398,7 @@ public class SpdyHttpDecoder : MessageToMessageDecoder<ISpdyFrame>
                             // Response body will follow in a series of Data Frames
                             IFullHttpMessage old = PutMessage(streamId, fullHttpMessage);
                             fullHttpMessage = null;
+
                             if (old != null)
                             {
                                 old.Release();
@@ -401,6 +411,7 @@ public class SpdyHttpDecoder : MessageToMessageDecoder<ISpdyFrame>
                         {
                             fullHttpMessage.Release();
                         }
+
                         // If a client receives a SYN_REPLY without valid getStatus and version headers
                         // the client must reply with a RST_STREAM frame indicating a PROTOCOL_ERROR
                         ISpdyRstStreamFrame spdyRstStreamFrame =
@@ -408,6 +419,7 @@ public class SpdyHttpDecoder : MessageToMessageDecoder<ISpdyFrame>
                         _ = ctx.WriteAndFlushAsync(spdyRstStreamFrame);
                     }
                 }
+
                 return;
             }
 
@@ -417,6 +429,7 @@ public class SpdyHttpDecoder : MessageToMessageDecoder<ISpdyFrame>
                 long headerSize = headerSizeMap.TryGetValue(streamId, out long oldHeaderSize) ? oldHeaderSize : 0;
 
                 bool addHeaderSize = true;
+
                 try
                 {
                     foreach (IEntry<ICharSequence, ICharSequence> e in spdyHeadersFrame.Headers())
@@ -429,12 +442,14 @@ public class SpdyHttpDecoder : MessageToMessageDecoder<ISpdyFrame>
                             {
                                 removed.Release();
                             }
+
                             fullHttpMessage.Release();
                             addHeaderSize = false;
                             throw new TooLongHttpHeaderException(
                                 "HTTP header size exceeded " + maxHeaderSize.ToString(CultureInfo.InvariantCulture)
                                 + " bytes.");
                         }
+
                         headerSize += entrySize;
                         fullHttpMessage.Headers().Add(e.GetKey(), e.GetValue());
                     }
@@ -456,6 +471,7 @@ public class SpdyHttpDecoder : MessageToMessageDecoder<ISpdyFrame>
                 {
                     removed.Release();
                 }
+
                 @out.Add(fullHttpMessage);
             }
         }
@@ -480,6 +496,7 @@ public class SpdyHttpDecoder : MessageToMessageDecoder<ISpdyFrame>
                 {
                     removed.Release();
                 }
+
                 fullHttpMessage.Release();
                 throw new TooLongFrameException(
                         "HTTP content length exceeded " + maxContentLength.ToString(CultureInfo.InvariantCulture)
@@ -498,6 +515,7 @@ public class SpdyHttpDecoder : MessageToMessageDecoder<ISpdyFrame>
                 {
                     removed.Release();
                 }
+
                 @out.Add(fullHttpMessage);
             }
 
@@ -534,6 +552,7 @@ public class SpdyHttpDecoder : MessageToMessageDecoder<ISpdyFrame>
 
         bool release = true;
         ByteBuf buffer = alloc.Buffer();
+
         try
         {
             IFullHttpRequest req = new DefaultFullHttpRequest(httpVersion, method, url, buffer);
@@ -580,10 +599,12 @@ public class SpdyHttpDecoder : MessageToMessageDecoder<ISpdyFrame>
 
         bool release = true;
         ByteBuf buffer = alloc.Buffer();
+
         try
         {
             IFullHttpResponse res = new DefaultFullHttpResponse(
                     version, status, buffer, headersFactory, trailersFactory);
+
             foreach (IEntry<ICharSequence, ICharSequence> e in responseFrame.Headers())
             {
                 res.Headers().Add(e.GetKey(), e.GetValue());

@@ -111,6 +111,7 @@ public class PendingWriteQueueContractTest
         listener.Start();
         var handler = new QueueHandler();
         IChannel channel = null;
+
         try
         {
             var accepting = listener.AcceptTcpClientAsync(TestContext.Current.CancellationToken);
@@ -138,6 +139,7 @@ public class PendingWriteQueueContractTest
         {
             if (channel != null)
                 await channel.CloseAsync(TestContext.Current.CancellationToken);
+
             await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
         }
     }
@@ -157,6 +159,7 @@ public class PendingWriteQueueContractTest
         using var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
         IChannel channel = null;
+
         try
         {
             var accepting = listener.AcceptTcpClientAsync(TestContext.Current.CancellationToken);
@@ -188,6 +191,7 @@ public class PendingWriteQueueContractTest
         {
             if (channel != null)
                 await channel.CloseAsync(TestContext.Current.CancellationToken);
+
             await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
         }
     }

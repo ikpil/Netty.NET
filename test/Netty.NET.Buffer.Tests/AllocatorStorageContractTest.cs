@@ -71,13 +71,16 @@ public class AllocatorStorageContractTest
         // CLR: managed heap and owned native storage types replace the JVM safe/Unsafe subclasses. Providers 0/1
         // are the original newUnpooledAllocator factories; provider 3 is the AdaptiveByteBufAllocatorTest override.
         using var s = new Storage(provider, preferDirect);
+
         foreach (bool direct in new[] { true, false })
         {
             ByteBuf buffer = direct ? s.Allocator.DirectBuffer() : s.Allocator.HeapBuffer();
+
             try
             {
                 // Unwrap if needed
                 ByteBuf storage = UnwrapLeak(buffer);
+
                 if (provider == 3)
                 {
                     Assert.IsType<AdaptiveByteBuf>(storage);
@@ -104,6 +107,7 @@ public class AllocatorStorageContractTest
                         Assert.IsAssignableFrom<UnpooledHeapByteBuf>(storage);
                     }
                 }
+
                 Assert.Equal(direct, buffer.IsDirect);
                 Assert.True(buffer.IsContiguous);
                 Assert.Same(s.Allocator, storage.Alloc());
@@ -125,6 +129,7 @@ public class AllocatorStorageContractTest
     {
         using var s = new Storage(provider, preferDirect);
         ByteBuf buffer = s.Allocator.DirectBuffer();
+
         try
         {
             // Unwrap if needed
@@ -156,6 +161,7 @@ public class AllocatorStorageContractTest
         const int maximum = 100000;
         // CLR: the public DirectBuffer factory replaces the protected newDirectBuffer access.
         ByteBuf buffer = s.Allocator.DirectBuffer(maximum, maximum);
+
         try
         {
             buffer.SetByte(0, 0x5a).SetByte(maximum - 1, 0xa5);
@@ -188,26 +194,31 @@ public class AllocatorStorageContractTest
         using var s = new Storage(provider, preferDirect);
         int size = 8;
         ByteBuf directBuffer = s.Allocator.DirectBuffer(size, size);
+
         try
         {
             for (int i = 0; i < size; ++i)
             {
                 directBuffer.SetByte(i, i);
             }
+
             int srcStartIndex = size / 2;
             // The source is this buffer's own internal NIO buffer.
             // CLR: ReadOnlyMemory/Span carries the exact source window without a NIO cursor.
             ReadOnlyMemory<byte> srcByteBuf = directBuffer.AsReadOnlyMemory(srcStartIndex, size - srcStartIndex);
             long reserved = s.Native.ReservedBytes;
             Assert.Same(directBuffer, directBuffer.SetBytes(0, srcByteBuf.Span));
+
             for (int i = 0; i < srcStartIndex; i++)
             {
                 Assert.Equal((byte)(srcStartIndex + i), directBuffer.GetByte(i));
             }
+
             for (int i = srcStartIndex; i < size; i++)
             {
                 Assert.Equal((byte)i, directBuffer.GetByte(i));
             }
+
             // CLR: capacity, indices, claim and native reservation stay unchanged.
             Assert.Equal(size, directBuffer.Capacity);
             Assert.Equal(size, directBuffer.MaxCapacity);
@@ -229,6 +240,7 @@ public class AllocatorStorageContractTest
     {
         using var s = new Storage(provider, preferDirect);
         ByteBuf buffer = s.Allocator.DirectBuffer(8, 8);
+
         try
         {
             byte[] original = [0, 1, 2, 3, 4, 5, 6, 7], expected = (byte[])original.Clone();

@@ -63,6 +63,7 @@ public class HashedWheelTimerTest
     {
         CountdownEvent latch = new CountdownEvent(3);
         using HashedWheelTimer timerProcessed = new HashedWheelTimer();
+
         for (int i = 0; i < 3; i++)
         {
             timerProcessed.NewTimeout(TimerTask.Create(timeout =>
@@ -75,6 +76,7 @@ public class HashedWheelTimerTest
         Assert.Equal(0, timerProcessed.Stop().Count, "Number of unprocessed timeouts should be 0");
 
         using HashedWheelTimer timerUnprocessed = new HashedWheelTimer();
+
         for (int i = 0; i < 5; i++)
         {
             timerUnprocessed.NewTimeout(TimerTask.Create(timeout =>
@@ -91,6 +93,7 @@ public class HashedWheelTimerTest
     {
         CountdownEvent latch = new CountdownEvent(3);
         using HashedWheelTimer timer = new HashedWheelTimer();
+
         for (int i = 0; i < 3; i++)
         {
             timer.NewTimeout(TimerTask.Create(timeout =>
@@ -113,6 +116,7 @@ public class HashedWheelTimerTest
         public override void Start()
         {
             base.Start();
+
             // Stop the timer after newTimeout() started it but before it added the timeout to the queue. This
             // lets the worker terminate before the timeout is added.
             if (Unprocessed == null)
@@ -142,6 +146,7 @@ public class HashedWheelTimerTest
         repeated = TimerTask.Create(timeout =>
         {
             timer.NewTimeout(repeated, TimeSpan.FromMilliseconds(100));
+
             if (!latch.IsSet)
             {
                 latch.Signal();
@@ -163,6 +168,7 @@ public class HashedWheelTimerTest
         using var queue = new BlockingCollection<long>();
 
         int scheduledTasks = 100000;
+
         for (int i = 0; i < scheduledTasks; i++)
         {
             long start = SystemTimer.NanoTime();
@@ -219,6 +225,7 @@ public class HashedWheelTimerTest
             TimeSpan.FromMilliseconds(100), 32, true, 2);
         timer.NewTimeout(CreateNoOpTimerTask(), TimeSpan.FromSeconds(5));
         timer.NewTimeout(CreateNoOpTimerTask(), TimeSpan.FromSeconds(5));
+
         try
         {
             timer.NewTimeout(CreateNoOpTimerTask(), TimeSpan.FromMilliseconds(1));
@@ -307,6 +314,7 @@ public class HashedWheelTimerTest
     public void TestStopTimerCancelsPendingTasks()
     {
         using HashedWheelTimer timerUnprocessed = new HashedWheelTimer();
+
         for (int i = 0; i < 5; i++)
         {
             timerUnprocessed.NewTimeout(TimerTask.Create(timeout =>
@@ -352,12 +360,14 @@ public class HashedWheelTimerTest
             Thread.Sleep(1000);
         }), TimeSpan.FromMilliseconds(200));
         List<ITimeout> timeouts = new List<ITimeout>();
+
         for (int i = 0; i < 10; i++)
         {
             timeouts.Add(timer.NewTimeout(CreateNoOpTimerTask(), TimeSpan.FromMilliseconds(200)));
         }
 
         Assert.True(barrier.Wait(TimeSpan.FromSeconds(5)));
+
         // The simulation here is that the timeout has been transferred to a bucket and is canceled before it is
         // actually expired in the goal tick.
         foreach (ITimeout timeout in timeouts)

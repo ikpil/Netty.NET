@@ -64,6 +64,7 @@ public class DatagramDnsQueryEncoder : MessageToMessageEncoder<IAddressedEnvelop
         ByteBuf buf = AllocateBuffer(ctx, @in);
 
         bool success = false;
+
         try
         {
             encoder.Encode(query, buf);

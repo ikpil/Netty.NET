@@ -34,6 +34,7 @@ public class WebSocketClientHandshaker07Test : WebSocketClientHandshakerTest
                 new DefaultHttpHeaders().Set(HttpHeaderNames.HOST, "test.netty.io"), false, true);
 
         IFullHttpRequest request = handshaker.InvokeNewHandshakeRequest();
+
         try
         {
             Assert.Equal("/", request.Uri());

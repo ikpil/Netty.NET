@@ -47,6 +47,7 @@ public class ByteBufNativeCopyLeaseTest
             Callback?.Invoke();
             if (FailAllocation)
                 throw Error;
+
             return Last = new Target(this, initialCapacity, maxCapacity);
         }
     }
@@ -61,6 +62,7 @@ public class ByteBufNativeCopyLeaseTest
             base.WriteBytes(source);
             if (allocator.FailWrite)
                 throw allocator.Error;
+
             return this;
         }
     }
@@ -80,10 +82,12 @@ public class ByteBufNativeCopyLeaseTest
         ByteBuf root = form == 1 ? new ReadOnlyDirect(allocator)
             : new UnpooledDirectByteBuf(allocator, 16, 64, allocator.SourceNative);
         root.SetBytes(0, Bytes).SetIndex(3, 11).MarkReaderIndex().MarkWriterIndex();
+
         if (root is ReadOnlyDirect readOnly)
         {
             readOnly.ReadOnly = true;
         }
+
         ByteBuf view = form switch
         {
             2 => root.AsReadOnly(),
@@ -97,6 +101,7 @@ public class ByteBufNativeCopyLeaseTest
         {
             view.SetIndex(1, view.Capacity - 1).MarkReaderIndex().MarkWriterIndex();
         }
+
         return (root, view, form == 5 ? 3 : form is 4 or 6 ? 2 : 0);
     }
 
@@ -137,6 +142,7 @@ public class ByteBufNativeCopyLeaseTest
         int index = range switch { 0 => -1, 1 => view.Capacity, 4 => view.Capacity - 1, _ => 3 };
         int length = range switch { 0 or 1 => 0, 2 => 4, 3 => view.Capacity - 3, _ => 2 };
         bool invalid = range is 0 or 4;
+
         try
         {
             if (invalid)
@@ -159,29 +165,35 @@ public class ByteBufNativeCopyLeaseTest
                 Assert.Equal(0, result.ReaderIndex);
                 Assert.Equal(length, result.WriterIndex);
                 Assert.Equal(Bytes.AsSpan(offset + index, length).ToArray(), result.AsReadOnlySpan(0, length).ToArray());
+
                 if (length > 0)
                 {
                     result.SetByte(0, 7);
                     Assert.Equal(Bytes[offset + index], root.GetByte(offset + index));
                 }
             }
+
             Assert.Equal(invalid ? 0 : 1, allocator.Calls);
             Assert.Equal(!invalid && failure != 1 ? 1 : 0, allocator.Writes);
+
             if (!invalid)
             {
                 Assert.Equal(length, allocator.Initial);
                 Assert.Equal(64, allocator.Maximum);
+
                 if (failure != 1)
                 {
                     Assert.Equal(Bytes.AsSpan(offset + index, length).ToArray(), allocator.Input);
                 }
             }
+
             // CLR policy releases a newly allocated result after a failed write;
             // Java leaves that result owned by the allocator/caller's failure path.
             if (!invalid && failure == 2)
             {
                 Assert.Equal(0, allocator.Last.RefCnt);
             }
+
             Assert.Equal(16, allocator.SourceNative.ReservedBytes);
             Assert.Equal(1, root.RefCnt);
             AssertIndices(root, view);
@@ -192,6 +204,7 @@ public class ByteBufNativeCopyLeaseTest
             {
                 allocator.Last.Release();
             }
+
             root.Release();
             Assert.Equal(0, allocator.SourceNative.ReservedBytes);
             Assert.Equal(0, allocator.TargetNative.ReservedBytes);
@@ -219,6 +232,7 @@ public class ByteBufNativeCopyLeaseTest
         allocator.Callback = () =>
         {
             Assert.Equal(1, root.RefCnt);
+
             if (action is 0 or 2)
             {
                 root.Capacity = 32;
@@ -236,6 +250,7 @@ public class ByteBufNativeCopyLeaseTest
                 Assert.Equal(16, allocator.SourceNative.ReservedBytes);
             }
         };
+
         try
         {
             if (action is 2 or 3)
@@ -250,17 +265,21 @@ public class ByteBufNativeCopyLeaseTest
                 Assert.Equal(0, result.ReaderIndex);
                 Assert.Equal(4, result.WriterIndex);
             }
+
             Assert.Equal(action is 0 or 2 ? 32 : 0, allocator.SourceNative.ReservedBytes);
             Assert.Equal(1, allocator.Calls);
             Assert.Equal(action == 2 ? 0 : 1, allocator.Writes);
+
             if (action != 2)
             {
                 Assert.Equal(expected, allocator.Input);
             }
+
             if (action == 3)
             {
                 Assert.Equal(0, allocator.Last.RefCnt);
             }
+
             if (action is 0 or 2)
             {
                 Assert.Equal(99, root.GetByte(offset + 3));
@@ -273,10 +292,12 @@ public class ByteBufNativeCopyLeaseTest
             {
                 allocator.Last.Release();
             }
+
             if (root.RefCnt > 0)
             {
                 root.Release();
             }
+
             Assert.Equal(0, allocator.SourceNative.ReservedBytes);
             Assert.Equal(0, allocator.TargetNative.ReservedBytes);
         }

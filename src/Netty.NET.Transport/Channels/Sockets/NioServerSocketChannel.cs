@@ -36,6 +36,7 @@ public class NioServerSocketChannel : AbstractNioMessageChannel, IServerSocketCh
     private static Socket NewChannel(SocketProtocolFamily? family)
     {
         AddressFamily addressFamily;
+
         if (family == null)
         {
             // CLR: provider.openServerSocketChannel() uses the OS default, which prefers IPv6 when available.
@@ -52,6 +53,7 @@ public class NioServerSocketChannel : AbstractNioMessageChannel, IServerSocketCh
                 throw new NotSupportedException("ProtocolFamily is not supported: " + family);
             }
         }
+
         return NioSocketChannel.NewIpChannel(addressFamily, SocketType.Stream, ProtocolType.Tcp);
     }
 
@@ -170,7 +172,9 @@ public class NioServerSocketChannel : AbstractNioMessageChannel, IServerSocketCh
     protected override Task DoBindAsync(EndPoint address, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+
         JavaChannel().Bind(address);
+
         if (OperatingSystem.IsLinux() && JavaChannel().ProtocolType == ProtocolType.Tcp &&
             Config.TryGetOption(ChannelOption.TCP_FASTOPEN, out int fastOpen) && fastOpen > 0)
         {
@@ -183,6 +187,7 @@ public class NioServerSocketChannel : AbstractNioMessageChannel, IServerSocketCh
                 // The source only applies the configured queue on a supporting kernel.
             }
         }
+
         Config.TryGetOption(ChannelOption.SO_BACKLOG, out int backlog);
         JavaChannel().Listen(backlog);
         SetActive(true);

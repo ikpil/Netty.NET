@@ -26,6 +26,7 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
     internal DefaultResourceLeak(T referent, ConcurrentQueue<DefaultResourceLeak<T>> refQueue, ConcurrentDictionary<DefaultResourceLeak<T>, byte> allLeaks, object initialHint)
     {
         ArgumentNullException.ThrowIfNull(referent);
+
         this.allLeaks = allLeaks;
         // Store the hash of the tracked object to later assert it in the close(...) method.
         // It's important that we not store a reference to the referent as this would disallow it from
@@ -33,6 +34,7 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
         trackedHash = RuntimeHelpers.GetHashCode(referent);
         allLeaks.TryAdd(this, 0);
         registration = CollectedObjectWatch.Register(referent, () => refQueue.Enqueue(this));
+
         // Create a new Record so we always have the creation stacktrace included.
         try
         {
@@ -87,8 +89,10 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
         {
             return;
         }
+
         TraceRecord previous, next;
         bool dropped;
+
         do
         {
             previous = Volatile.Read(ref head);
@@ -97,6 +101,7 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
                 // already closed.
                 return;
             }
+
             TraceRecord prior = previous;
             int count = previous.Pos() + 1;
             dropped = count >= TARGET_RECORDS && Random.Shared.Next(1 << Math.Min(count - TARGET_RECORDS, 30)) != 0;
@@ -104,8 +109,10 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
             {
                 prior = previous.Next();
             }
+
             next = hint == null ? new TraceRecord(prior) : new TraceRecord(prior, hint);
         } while (!ReferenceEquals(Interlocked.CompareExchange(ref head, next, previous), previous));
+
         if (dropped)
         {
             Interlocked.Increment(ref droppedRecords);
@@ -115,6 +122,7 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
     internal bool Dispose()
     {
         registration.Cancel();
+
         return allLeaks.TryRemove(this, out _);
     }
 
@@ -124,6 +132,7 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
         {
             return false;
         }
+
         // Call clear so the reference is not even enqueued.
         registration.Cancel();
         Volatile.Write(ref head, TRACK_CLOSE ? new TraceRecord(true) : null);
@@ -134,6 +143,7 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
     {
         // Ensure that the object that was tracked is the same as the one that was passed to close(...).
         Debug.Assert(trackedHash == RuntimeHelpers.GetHashCode(trackedObject));
+
         try
         {
             return Close();
@@ -198,6 +208,7 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
             // Already closed
             return StringUtil.EMPTY_STRING;
         }
+
         int dropped = Volatile.Read(ref droppedRecords), duped = 0;
         int present = current.Pos() + 1;
         // Guess about 2 kilobytes per stack trace
@@ -205,6 +216,7 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
         buffer.Append("Recent access records: ").Append(StringUtil.NEWLINE);
         int index = 1;
         var seen = new HashSet<string>(StringComparer.Ordinal);
+
         for (; current != TraceRecord.BOTTOM; current = current.Next())
         {
             string record = current.ToString();
@@ -213,6 +225,7 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
                 duped++;
                 continue;
             }
+
             if (current.Next() == TraceRecord.BOTTOM)
             {
                 buffer.Append("Created at:").Append(StringUtil.NEWLINE).Append(record);
@@ -222,15 +235,18 @@ internal sealed class DefaultResourceLeak<T> : IResourceLeakTracker<T>, IResourc
                 buffer.Append('#').Append((index++).ToString(CultureInfo.InvariantCulture)).Append(':').Append(StringUtil.NEWLINE).Append(record);
             }
         }
+
         if (duped > 0)
         {
             buffer.Append(": ").Append(duped.ToString(CultureInfo.InvariantCulture)).Append(" leak records were discarded because they were duplicates").Append(StringUtil.NEWLINE);
         }
+
         if (dropped > 0)
         {
             buffer.Append(": ").Append(dropped.ToString(CultureInfo.InvariantCulture)).Append(" leak records were discarded because the leak record count is targeted to ")
             .Append(TARGET_RECORDS.ToString(CultureInfo.InvariantCulture)).Append(". Use system property ").Append(PROP_TARGET_RECORDS).Append(" to increase the limit.").Append(StringUtil.NEWLINE);
         }
+
         buffer.Length -= StringUtil.NEWLINE.Length;
         return buffer.ToString();
     }

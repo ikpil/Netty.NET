@@ -72,6 +72,7 @@ public class QuicHeaderParserTest
     public void TestThrowsOnTruncatedDestinationConnectionIdLength()
     {
         ByteBuf packet = TruncatedBeforeDestinationConnectionIdLength();
+
         try
         {
             using (QuicHeaderParser parser = new QuicHeaderParser(20))
@@ -90,6 +91,7 @@ public class QuicHeaderParserTest
     public void TestThrowsOnTruncatedSourceConnectionIdLength()
     {
         ByteBuf packet = TruncatedBeforeSourceConnectionIdLength();
+
         try
         {
             using (QuicHeaderParser parser = new QuicHeaderParser(20))

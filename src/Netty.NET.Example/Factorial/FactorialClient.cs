@@ -49,6 +49,7 @@ public sealed class FactorialClient
         SslContext sslCtx = ServerUtil.BuildSslContext();
 
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             Bootstrap b = new Bootstrap();

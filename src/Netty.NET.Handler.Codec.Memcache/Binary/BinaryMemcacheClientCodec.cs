@@ -115,6 +115,7 @@ public sealed class BinaryMemcacheClientCodec :
             if (codec.failOnMissingResponse)
             {
                 int size = @out.Count;
+
                 for (int i = oldSize; i < size; i ++)
                 {
                     object msg = @out[i];

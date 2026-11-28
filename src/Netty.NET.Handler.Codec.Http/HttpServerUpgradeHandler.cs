@@ -326,6 +326,7 @@ public class HttpServerUpgradeHandler : HttpObjectAggregator
                         // This is not an upgrade request, just remove this handler.
                         ctx.Pipeline.Remove(this);
                     }
+
                     ReferenceCountUtil.Retain(msg);
                     ctx.FireChannelRead(msg);
                     return;
@@ -340,6 +341,7 @@ public class HttpServerUpgradeHandler : HttpObjectAggregator
         }
 
         IFullHttpRequest fullRequest;
+
         if (msg is IFullHttpRequest)
         {
             fullRequest = (IFullHttpRequest) msg;
@@ -350,6 +352,7 @@ public class HttpServerUpgradeHandler : HttpObjectAggregator
         {
             // Call the base class to handle the aggregation of the full request.
             base.Decode(ctx, msg, @out);
+
             if (@out.Count == 0)
             {
                 if (msg is ILastHttpContent || failedAggregationStart)
@@ -426,6 +429,7 @@ public class HttpServerUpgradeHandler : HttpObjectAggregator
         int numRequestedProtocols = requestedProtocols.Count;
         IUpgradeCodec upgradeCodec = null;
         ICharSequence upgradeProtocol = null;
+
         for (int i = 0; i < numRequestedProtocols; i ++)
         {
             ICharSequence p = requestedProtocols[i];
@@ -453,10 +457,12 @@ public class HttpServerUpgradeHandler : HttpObjectAggregator
         }
 
         StringBuilder concatenatedConnectionValue = new StringBuilder(connectionHeaderValues.Count * 10);
+
         foreach (string connectionHeaderValue in connectionHeaderValues)
         {
             concatenatedConnectionValue.Append(connectionHeaderValue).Append(COMMA);
         }
+
         concatenatedConnectionValue.Length = concatenatedConnectionValue.Length - 1;
 
         // Make sure the CONNECTION header contains UPGRADE as well as all protocol-specific headers.
@@ -523,6 +529,7 @@ public class HttpServerUpgradeHandler : HttpObjectAggregator
             // Release the event if the upgrade event wasn't fired.
             @event.Release();
         }
+
         return true;
     }
 
@@ -546,6 +553,7 @@ public class HttpServerUpgradeHandler : HttpObjectAggregator
     {
         StringBuilder builder = new StringBuilder(header.Length());
         IList<ICharSequence> protocols = new List<ICharSequence>(4);
+
         for (int i = 0; i < header.Length(); ++i)
         {
             char c = header.CharAt(i);
@@ -554,6 +562,7 @@ public class HttpServerUpgradeHandler : HttpObjectAggregator
                 // Don't include any whitespace.
                 continue;
             }
+
             if (c == ',')
             {
                 // Add the string and reset the builder for the next protocol.

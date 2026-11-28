@@ -47,6 +47,7 @@ internal sealed class PendingBytesTracker
             var buffer = _pipeline.Owner.OutboundBuffer;
             if (_channel.IsOpen && !buffer.IsClosed)
                 return buffer;
+
             // Noop
             return null;
         }

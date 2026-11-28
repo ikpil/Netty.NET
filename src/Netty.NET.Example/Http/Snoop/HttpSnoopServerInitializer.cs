@@ -35,10 +35,12 @@ public class HttpSnoopServerInitializer : ChannelInitializer<ISocketChannel>
     protected override void InitChannel(ISocketChannel ch)
     {
         IChannelPipeline p = ch.Pipeline;
+
         if (sslCtx != null)
         {
             p.AddLast(sslCtx.NewHandler(ch.Alloc()));
         }
+
         p.AddLast(new HttpRequestDecoder());
         // Uncomment the following line if you don't want to handle HttpChunks.
         //p.addLast(new HttpObjectAggregator(1048576));

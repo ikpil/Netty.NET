@@ -52,6 +52,7 @@ internal abstract class SslHandlerCoalescingBufferQueue : AbstractCoalescingBuff
     protected override ByteBuf ComposeFirst(IByteBufAllocator allocator, ByteBuf first, int bufferSize)
     {
         ByteBuf newFirst;
+
         if (wantsDirectBuffer)
         {
             newFirst = allocator.DirectBuffer(bufferSize);
@@ -60,6 +61,7 @@ internal abstract class SslHandlerCoalescingBufferQueue : AbstractCoalescingBuff
         {
             newFirst = allocator.HeapBuffer(bufferSize);
         }
+
         try
         {
             newFirst.WriteBytes(first);
@@ -69,6 +71,7 @@ internal abstract class SslHandlerCoalescingBufferQueue : AbstractCoalescingBuff
             newFirst.Release();
             throw;
         }
+
         Debug.Assert(!first.IsReadable());
         first.Release();
         return newFirst;
@@ -88,6 +91,7 @@ internal abstract class SslHandlerCoalescingBufferQueue : AbstractCoalescingBuff
             next.Release();
             return true;
         }
+
         int cumulationCapacity = cumulation.Capacity;
         if (wrapDataSize - cumulation.ReadableBytes >= inReadableBytes &&
                 // Avoid using the same buffer if next's data would make cumulation exceed the wrapDataSize.
@@ -101,6 +105,7 @@ internal abstract class SslHandlerCoalescingBufferQueue : AbstractCoalescingBuff
             next.Release();
             return true;
         }
+
         return false;
     }
 }

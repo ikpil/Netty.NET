@@ -207,6 +207,7 @@ public class IdleStateHandler : ChannelDuplexHandler
         {
             readerIdleTimeNanos = Math.Max(ToNanos(readerIdleTime), MIN_TIMEOUT_NANOS);
         }
+
         if (writerIdleTime <= TimeSpan.Zero)
         {
             writerIdleTimeNanos = 0;
@@ -215,6 +216,7 @@ public class IdleStateHandler : ChannelDuplexHandler
         {
             writerIdleTimeNanos = Math.Max(ToNanos(writerIdleTime), MIN_TIMEOUT_NANOS);
         }
+
         if (allIdleTime <= TimeSpan.Zero)
         {
             allIdleTimeNanos = 0;
@@ -262,6 +264,7 @@ public class IdleStateHandler : ChannelDuplexHandler
     {
         this.ticker = ctx.Executor.Ticker();
         writeListenerScheduler = new EventExecutorTaskScheduler(() => ctx.Executor);
+
         if (ctx.Channel.IsActive && ctx.Channel.IsRegistered)
         {
             // channelActive() event has been fired already, which means this.channelActive() will
@@ -287,6 +290,7 @@ public class IdleStateHandler : ChannelDuplexHandler
         {
             Initialize(ctx);
         }
+
         base.ChannelRegistered(ctx);
     }
 
@@ -312,6 +316,7 @@ public class IdleStateHandler : ChannelDuplexHandler
             reading = true;
             firstReaderIdleEvent = firstAllIdleEvent = true;
         }
+
         ctx.FireChannelRead(msg);
     }
 
@@ -322,6 +327,7 @@ public class IdleStateHandler : ChannelDuplexHandler
             lastReadTime = ticker.NanoTime();
             reading = false;
         }
+
         ctx.FireChannelReadComplete();
     }
 
@@ -386,16 +392,19 @@ public class IdleStateHandler : ChannelDuplexHandler
         InitOutputChanged(ctx);
 
         lastReadTime = lastWriteTime = ticker.NanoTime();
+
         if (readerIdleTimeNanos > 0)
         {
             readerIdleTimeout = Schedule(ctx, new ReaderIdleTimeoutTask(this, ctx).Run,
                     NanosToTimeSpan(readerIdleTimeNanos));
         }
+
         if (writerIdleTimeNanos > 0)
         {
             writerIdleTimeout = Schedule(ctx, new WriterIdleTimeoutTask(this, ctx).Run,
                     NanosToTimeSpan(writerIdleTimeNanos));
         }
+
         if (allIdleTimeNanos > 0)
         {
             allIdleTimeout = Schedule(ctx, new AllIdleTimeoutTask(this, ctx).Run,
@@ -425,11 +434,13 @@ public class IdleStateHandler : ChannelDuplexHandler
             readerIdleTimeout.Cancel();
             readerIdleTimeout = null;
         }
+
         if (writerIdleTimeout != null)
         {
             writerIdleTimeout.Cancel();
             writerIdleTimeout = null;
         }
+
         if (allIdleTimeout != null)
         {
             allIdleTimeout.Cancel();
@@ -601,6 +612,7 @@ public class IdleStateHandler : ChannelDuplexHandler
         protected override void Run(IChannelHandlerContext ctx)
         {
             long nextDelay = handler.readerIdleTimeNanos;
+
             if (!handler.reading)
             {
                 nextDelay -= handler.ticker.NanoTime() - handler.lastReadTime;
@@ -690,10 +702,12 @@ public class IdleStateHandler : ChannelDuplexHandler
         {
 
             long nextDelay = handler.allIdleTimeNanos;
+
             if (!handler.reading)
             {
                 nextDelay -= handler.ticker.NanoTime() - Math.Max(handler.lastReadTime, handler.lastWriteTime);
             }
+
             if (nextDelay <= 0)
             {
                 // Both reader and writer are idle - set a new timeout and

@@ -38,6 +38,7 @@ internal sealed class MqttCodecUtil
         {
             return MqttVersion.MQTT_3_1_1;
         }
+
         return version;
     }
 
@@ -53,6 +54,7 @@ internal sealed class MqttCodecUtil
         {
             return false;
         }
+
         // publish topic name must not contain any wildcard
         for (int i = 0; i < topicName.Length; i++)
         {
@@ -62,6 +64,7 @@ internal sealed class MqttCodecUtil
                 return false;
             }
         }
+
         return true;
     }
 
@@ -101,6 +104,7 @@ internal sealed class MqttCodecUtil
             // that contain more than 23 encoded bytes. And, The Server MAY allow zero-length ClientId.
             return true;
         }
+
         // CLR: Java string conversion writes null as "null" (https://docs.oracle.com/javase/specs/jls/se17/html/jls-5.html#jls-5.1.11).
         throw new ArgumentException((mqttVersion?.ToString() ?? "null") + " is unknown mqtt version");
     }
@@ -108,6 +112,7 @@ internal sealed class MqttCodecUtil
     internal static MqttFixedHeader ValidateFixedHeader(IChannelHandlerContext ctx, MqttFixedHeader mqttFixedHeader)
     {
         MqttMessageType messageType = mqttFixedHeader.MessageType();
+
         switch (messageType)
         {
             case var _ when messageType == MqttMessageType.PUBREL:
@@ -117,12 +122,14 @@ internal sealed class MqttCodecUtil
                 {
                     throw new DecoderException(mqttFixedHeader.MessageType().Name() + " message must have QoS 1");
                 }
+
                 return mqttFixedHeader;
             case var _ when messageType == MqttMessageType.AUTH:
                 if (MqttCodecUtil.GetMqttVersion(ctx) != MqttVersion.MQTT_5)
                 {
                     throw new DecoderException("AUTH message requires at least MQTT 5");
                 }
+
                 return mqttFixedHeader;
             default:
                 return mqttFixedHeader;
@@ -132,6 +139,7 @@ internal sealed class MqttCodecUtil
     internal static MqttFixedHeader ResetUnusedFields(MqttFixedHeader mqttFixedHeader)
     {
         MqttMessageType messageType = mqttFixedHeader.MessageType();
+
         switch (messageType)
         {
             case var _ when messageType == MqttMessageType.CONNECT:
@@ -155,6 +163,7 @@ internal sealed class MqttCodecUtil
                             false,
                             mqttFixedHeader.RemainingLength());
                 }
+
                 return mqttFixedHeader;
             case var _ when messageType == MqttMessageType.PUBREL:
             case var _ when messageType == MqttMessageType.SUBSCRIBE:
@@ -168,6 +177,7 @@ internal sealed class MqttCodecUtil
                             false,
                             mqttFixedHeader.RemainingLength());
                 }
+
                 return mqttFixedHeader;
             default:
                 return mqttFixedHeader;

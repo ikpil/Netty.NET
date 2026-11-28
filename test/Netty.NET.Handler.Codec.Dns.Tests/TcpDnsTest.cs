@@ -107,6 +107,7 @@ public class TcpDnsTest
                     DnsRecordType.A, TTL, Unpooled.WrappedBuffer(address));
             response.AddRecord(DnsSection.ANSWER, queryAnswer);
         }
+
         return response;
     }
 }

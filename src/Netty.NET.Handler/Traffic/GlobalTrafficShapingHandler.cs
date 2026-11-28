@@ -253,6 +253,7 @@ public class GlobalTrafficShapingHandler : AbstractTrafficShapingHandler
         IChannel channel = ctx.Channel;
         int key = channel.GetHashCode();
         channelQueues.TryGetValue(key, out PerChannel perChannel);
+
         if (perChannel == null)
         {
             perChannel = new PerChannel();
@@ -262,6 +263,7 @@ public class GlobalTrafficShapingHandler : AbstractTrafficShapingHandler
             perChannel.lastWriteTimestamp = perChannel.lastReadTimestamp;
             channelQueues[key] = perChannel;
         }
+
         return perChannel;
     }
 
@@ -276,6 +278,7 @@ public class GlobalTrafficShapingHandler : AbstractTrafficShapingHandler
         IChannel channel = ctx.Channel;
         int key = channel.GetHashCode();
         channelQueues.TryRemove(key, out PerChannel perChannel);
+
         if (perChannel != null)
         {
             // write operations need synchronization
@@ -296,15 +299,19 @@ public class GlobalTrafficShapingHandler : AbstractTrafficShapingHandler
                 {
                     queuesSize.AddAndGet(-perChannel.queueSize);
                     ClosedChannelException cause = new ClosedChannelException();
+
                     foreach (ToSend toSend in perChannel.messagesQueue)
                     {
                         ReleaseAndFailQueuedWrite(toSend.toSend, toSend.promise, cause);
                     }
+
                     perChannel.queueSize = 0;
                 }
+
                 perChannel.messagesQueue.Clear();
             }
         }
+
         ReleaseWriteSuspended(ctx);
         ReleaseReadSuspended(ctx);
         base.HandlerRemoved(ctx);
@@ -314,6 +321,7 @@ public class GlobalTrafficShapingHandler : AbstractTrafficShapingHandler
     {
         int key = ctx.Channel.GetHashCode();
         channelQueues.TryGetValue(key, out PerChannel perChannel);
+
         if (perChannel != null)
         {
             long maxTime = Volatile.Read(ref this.maxTime);
@@ -322,6 +330,7 @@ public class GlobalTrafficShapingHandler : AbstractTrafficShapingHandler
                 wait = maxTime;
             }
         }
+
         return wait;
     }
 
@@ -329,6 +338,7 @@ public class GlobalTrafficShapingHandler : AbstractTrafficShapingHandler
     {
         int key = ctx.Channel.GetHashCode();
         channelQueues.TryGetValue(key, out PerChannel perChannel);
+
         if (perChannel != null)
         {
             perChannel.lastReadTimestamp = now;
@@ -362,15 +372,18 @@ public class GlobalTrafficShapingHandler : AbstractTrafficShapingHandler
         IChannel channel = ctx.Channel;
         int key = channel.GetHashCode();
         channelQueues.TryGetValue(key, out PerChannel perChannel);
+
         if (perChannel == null)
         {
             // in case write occurs before handlerAdded is raised for this handler
             // imply a synchronized only if needed
             perChannel = GetOrSetPerChannel(ctx);
         }
+
         ToSend newToSend;
         long delay = writedelay;
         bool globalSizeExceeded = false;
+
         // write operations need synchronization
         lock (perChannel)
         {
@@ -381,25 +394,30 @@ public class GlobalTrafficShapingHandler : AbstractTrafficShapingHandler
                 perChannel.lastWriteTimestamp = now;
                 return future;
             }
+
             long maxTime = Volatile.Read(ref this.maxTime);
             if (delay > maxTime && now + delay - perChannel.lastWriteTimestamp > maxTime)
             {
                 delay = maxTime;
             }
+
             newToSend = new ToSend(delay + now, msg, size, NewPromise(cancellationToken), cancellationToken);
             perChannel.messagesQueue.AddLast(newToSend);
             perChannel.queueSize += size;
             queuesSize.AddAndGet(size);
             CheckWriteSuspend(ctx, delay, perChannel.queueSize);
+
             if (queuesSize.Get() > maxGlobalWriteSize)
             {
                 globalSizeExceeded = true;
             }
         }
+
         if (globalSizeExceeded)
         {
             SetUserDefinedWritability(ctx, false);
         }
+
         long futureNow = newToSend.relativeTimeAction;
         PerChannel forSchedule = perChannel;
         _ = ctx.Executor.ScheduleAsync(() => SendAllValid(ctx, forSchedule, futureNow), TimeSpan.FromMilliseconds(delay));
@@ -412,6 +430,7 @@ public class GlobalTrafficShapingHandler : AbstractTrafficShapingHandler
         lock (perChannel)
         {
             ToSend newToSend = PollFirst(perChannel.messagesQueue);
+
             for (; newToSend != null; newToSend = PollFirst(perChannel.messagesQueue))
             {
                 if (newToSend.relativeTimeAction <= now)
@@ -429,11 +448,13 @@ public class GlobalTrafficShapingHandler : AbstractTrafficShapingHandler
                     break;
                 }
             }
+
             if (perChannel.messagesQueue.Count == 0)
             {
                 ReleaseWriteSuspended(ctx);
             }
         }
+
         ctx.Flush();
     }
 }

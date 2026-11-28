@@ -66,6 +66,7 @@ public class ThreadExecutorMapTest
         public override void Execute(Action command)
         {
             ArgumentNullException.ThrowIfNull(command);
+
             throw new NotSupportedException();
         }
     }

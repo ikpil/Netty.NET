@@ -51,6 +51,7 @@ public class DefaultSpdyWindowUpdateFrame : ISpdyWindowUpdateFrame
     public virtual ISpdyWindowUpdateFrame SetStreamId(int streamId)
     {
         CheckPositiveOrZero(streamId, "streamId");
+
         this.streamId = streamId;
         return this;
     }
@@ -63,6 +64,7 @@ public class DefaultSpdyWindowUpdateFrame : ISpdyWindowUpdateFrame
     public virtual ISpdyWindowUpdateFrame SetDeltaWindowSize(int deltaWindowSize)
     {
         CheckPositive(deltaWindowSize, "deltaWindowSize");
+
         this.deltaWindowSize = deltaWindowSize;
         return this;
     }

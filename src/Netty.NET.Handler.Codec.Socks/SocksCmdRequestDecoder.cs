@@ -52,6 +52,7 @@ public class SocksCmdRequestDecoder : ReplayingDecoder<SocksCmdRequestDecoder.St
                     @out.Add(SocksCommonUtils.UNKNOWN_SOCKS_REQUEST);
                     break;
                 }
+
                 Checkpoint(State.READ_CMD_HEADER);
                 goto case State.READ_CMD_HEADER;
             }
@@ -97,6 +98,7 @@ public class SocksCmdRequestDecoder : ReplayingDecoder<SocksCmdRequestDecoder.St
                 {
                     throw new InvalidOperationException("Unexpected address type: " + addressType);
                 }
+
                 break;
             }
             default:
@@ -104,6 +106,7 @@ public class SocksCmdRequestDecoder : ReplayingDecoder<SocksCmdRequestDecoder.St
                 throw new InvalidOperationException("Unexpected request decoder type: " + base.State());
             }
         }
+
         ctx.Pipeline.Remove(this);
     }
 

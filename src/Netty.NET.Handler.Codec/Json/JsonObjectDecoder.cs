@@ -115,6 +115,7 @@ public class JsonObjectDecoder : ByteToMessageDecoder
         for (/* use current idx */; idx < wrtIdx; idx++)
         {
             byte c = @in.GetByte(idx);
+
             if (state == ST_DECODING_NORMAL)
             {
                 DecodeByte(c, @in, idx);
@@ -152,6 +153,7 @@ public class JsonObjectDecoder : ByteToMessageDecoder
 
                     // skip trailing spaces.
                     int idxNoSpaces = idx - 1;
+
                     while (idxNoSpaces >= @in.ReaderIndex && IsWhitespace(@in.GetByte(idxNoSpaces)))
                     {
                         idxNoSpaces--;
@@ -204,6 +206,7 @@ public class JsonObjectDecoder : ByteToMessageDecoder
         {
             this.idx = idx;
         }
+
         this.lastReaderIndex = @in.ReaderIndex;
     }
 
@@ -237,6 +240,7 @@ public class JsonObjectDecoder : ByteToMessageDecoder
             {
                 int backslashCount = 0;
                 idx--;
+
                 while (idx >= 0)
                 {
                     if (@in.GetByte(idx) == '\\')
@@ -249,6 +253,7 @@ public class JsonObjectDecoder : ByteToMessageDecoder
                         break;
                     }
                 }
+
                 // The double quote isn't escaped only if there are even "\"s.
                 if (backslashCount % 2 == 0)
                 {
@@ -262,6 +267,7 @@ public class JsonObjectDecoder : ByteToMessageDecoder
     private void InitDecoding(byte openingBrace)
     {
         openBraces = 1;
+
         if (openingBrace == '[' && streamArrayElements)
         {
             state = ST_DECODING_ARRAY_STREAM;

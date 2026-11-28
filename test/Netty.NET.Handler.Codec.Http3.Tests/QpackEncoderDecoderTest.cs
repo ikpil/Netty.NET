@@ -272,6 +272,7 @@ public class QpackEncoderDecoderTest : IDisposable
         Assert.NotNull(encHeaders.Get(oldEntry.name, oldEntry.value));
 
         ByteBuf spareEncode = Unpooled.Buffer();
+
         try
         {
             Encode(spareEncode, encHeaders);
@@ -280,6 +281,7 @@ public class QpackEncoderDecoderTest : IDisposable
         {
             spareEncode.Release();
         }
+
         VerifyRequiredInsertCount(5);
         VerifyKnownReceivedCount(0);
 
@@ -327,6 +329,7 @@ public class QpackEncoderDecoderTest : IDisposable
         Assert.NotNull(encHeaders.Get(oldEntry.name, oldEntry.value));
 
         ByteBuf spareEncode = Unpooled.Buffer();
+
         try
         {
             Encode(spareEncode, encHeaders);
@@ -335,6 +338,7 @@ public class QpackEncoderDecoderTest : IDisposable
         {
             spareEncode.Release();
         }
+
         VerifyRequiredInsertCount(5);
         VerifyKnownReceivedCount(0);
 
@@ -596,6 +600,7 @@ public class QpackEncoderDecoderTest : IDisposable
     private void DrainAllSuspendedEncoderInstructions()
     {
         Action next;
+
         for (next = Poll(suspendedEncoderInstructions); next != null; next = Poll(suspendedEncoderInstructions))
         {
             next();
@@ -630,20 +635,24 @@ public class QpackEncoderDecoderTest : IDisposable
                 maxTableCapacity);
         localSettingsFrame.Settings().Put(Http3SettingIdentifier.HTTP3_SETTINGS_QPACK_BLOCKED_STREAMS.Id(),
                 (long) maxBlockedStreams);
+
         if (maxBlockedStreams > 0)
         {
             // section acknowledgment will implicitly ack insert count.
             stateSyncStrategyAckNextInsert = false;
         }
+
         syncStrategy.entryAddedAnswer = __ => stateSyncStrategyAckNextInsert;
         encDynamicTable = new QpackEncoderDynamicTable(16, expectedTableFreePercentage);
         decDynamicTable = new QpackDecoderDynamicTable();
         decoder = new QpackDecoder(maxTableCapacity, maxBlockedStreams, decDynamicTable, syncStrategy);
         encoder = new QpackEncoder(encDynamicTable, sensitivityDetector);
+
         if (maxBlockedStreams > 0)
         {
             suspendedEncoderInstructions = new ConcurrentQueue<Action>();
         }
+
         EmbeddedQuicStreamChannel encoderStream = (EmbeddedQuicStreamChannel) parent.CreateStreamAsync(
                 QuicStreamType.UNIDIRECTIONAL,
                 new ForwardWriteToReadOnOtherHandler(new QpackEncoderHandler(maxTableCapacity, decoder),
@@ -742,6 +751,7 @@ public class QpackEncoderDecoderTest : IDisposable
                 {
                     other.ChannelRead(ctx, msg);
                 }
+
                 return new TaskCompletionSource().Task;
             }
             else

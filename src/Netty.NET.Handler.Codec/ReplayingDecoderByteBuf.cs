@@ -157,6 +157,7 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
     public override ByteBuf Copy(int index, int length)
     {
         CheckIndex(index, length);
+
         return buffer.Copy(index, length);
     }
 
@@ -188,6 +189,7 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
     public override bool GetBoolean(int index)
     {
         CheckIndex(index, 1);
+
         return buffer.GetBoolean(index);
     }
 
@@ -195,6 +197,7 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
     public override byte GetByte(int index)
     {
         CheckIndex(index, 1);
+
         return buffer.GetByte(index);
     }
 
@@ -203,6 +206,7 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
     public override ByteBuf GetBytes(int index, Span<byte> dst)
     {
         CheckIndex(index, dst.Length);
+
         buffer.GetBytes(index, dst);
         return this;
     }
@@ -210,6 +214,7 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
     public override ByteBuf GetBytes(int index, ByteBuf dst, int dstIndex, int length)
     {
         CheckIndex(index, length);
+
         buffer.GetBytes(index, dst, dstIndex, length);
         return this;
     }
@@ -263,108 +268,126 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
     public override int GetInt(int index)
     {
         CheckIndex(index, 4);
+
         return buffer.GetInt(index);
     }
 
     public override int GetIntLE(int index)
     {
         CheckIndex(index, 4);
+
         return buffer.GetIntLE(index);
     }
 
     public override uint GetUnsignedInt(int index)
     {
         CheckIndex(index, 4);
+
         return buffer.GetUnsignedInt(index);
     }
 
     public override uint GetUnsignedIntLE(int index)
     {
         CheckIndex(index, 4);
+
         return buffer.GetUnsignedIntLE(index);
     }
 
     public override long GetLong(int index)
     {
         CheckIndex(index, 8);
+
         return buffer.GetLong(index);
     }
 
     public override long GetLongLE(int index)
     {
         CheckIndex(index, 8);
+
         return buffer.GetLongLE(index);
     }
 
     public override int GetMedium(int index)
     {
         CheckIndex(index, 3);
+
         return buffer.GetMedium(index);
     }
 
     public override int GetMediumLE(int index)
     {
         CheckIndex(index, 3);
+
         return buffer.GetMediumLE(index);
     }
 
     public override int GetUnsignedMedium(int index)
     {
         CheckIndex(index, 3);
+
         return buffer.GetUnsignedMedium(index);
     }
 
     public override int GetUnsignedMediumLE(int index)
     {
         CheckIndex(index, 3);
+
         return buffer.GetUnsignedMediumLE(index);
     }
 
     public override short GetShort(int index)
     {
         CheckIndex(index, 2);
+
         return buffer.GetShort(index);
     }
 
     public override short GetShortLE(int index)
     {
         CheckIndex(index, 2);
+
         return buffer.GetShortLE(index);
     }
 
     public override ushort GetUnsignedShort(int index)
     {
         CheckIndex(index, 2);
+
         return buffer.GetUnsignedShort(index);
     }
 
     public override ushort GetUnsignedShortLE(int index)
     {
         CheckIndex(index, 2);
+
         return buffer.GetUnsignedShortLE(index);
     }
 
     public override char GetChar(int index)
     {
         CheckIndex(index, 2);
+
         return buffer.GetChar(index);
     }
 
     public override float GetFloat(int index)
     {
         CheckIndex(index, 4);
+
         return buffer.GetFloat(index);
     }
 
     public override double GetDouble(int index)
     {
         CheckIndex(index, 8);
+
         return buffer.GetDouble(index);
     }
 
     public override ICharSequence GetCharSequence(int index, int length, Encoding charset)
     {
         CheckIndex(index, length);
+
         return buffer.GetCharSequence(index, length, charset);
     }
 
@@ -397,6 +420,7 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
         {
             throw REPLAY;
         }
+
         return bytes;
     }
 
@@ -404,6 +428,7 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
     {
         // CLR: the wrapped buffer's reader index is this view's (see FlushReaderIndex).
         FlushReaderIndex();
+
         return BytesBefore(buffer.ReaderIndex, length, value);
     }
 
@@ -477,6 +502,7 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
         {
             // CLR: the wrapped buffer iterates its readable bytes (see FlushReaderIndex).
             FlushReaderIndex();
+
             return buffer.ForEachByteDesc(processor);
         }
         else
@@ -519,6 +545,7 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
     public override bool ReadBoolean()
     {
         CheckReadableBytes(1);
+
         return PullIndices(buffer.ReadBoolean());
     }
 
@@ -526,6 +553,7 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
     public override byte ReadByte()
     {
         CheckReadableBytes(1);
+
         return PullIndices(buffer.ReadByte());
     }
 
@@ -534,6 +562,7 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
     public override ByteBuf ReadBytes(Span<byte> dst)
     {
         CheckReadableBytes(dst.Length);
+
         buffer.ReadBytes(dst);
         PullIndices();
         return this;
@@ -542,6 +571,7 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
     public override ByteBuf ReadBytes(ByteBuf dst, int dstIndex, int length)
     {
         CheckReadableBytes(length);
+
         buffer.ReadBytes(dst, dstIndex, length);
         PullIndices();
         return this;
@@ -555,6 +585,7 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
     public override ByteBuf ReadBytes(ByteBuf dst)
     {
         CheckReadableBytes(dst.WritableBytes);
+
         buffer.ReadBytes(dst);
         PullIndices();
         return this;
@@ -587,18 +618,21 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
     public override ByteBuf ReadBytes(int length)
     {
         CheckReadableBytes(length);
+
         return PullIndices(buffer.ReadBytes(length));
     }
 
     public override ByteBuf ReadSlice(int length)
     {
         CheckReadableBytes(length);
+
         return PullIndices(buffer.ReadSlice(length));
     }
 
     public override ByteBuf ReadRetainedSlice(int length)
     {
         CheckReadableBytes(length);
+
         return PullIndices(buffer.ReadRetainedSlice(length));
     }
 
@@ -619,114 +653,133 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
     public override int ReadInt()
     {
         CheckReadableBytes(4);
+
         return PullIndices(buffer.ReadInt());
     }
 
     public override int ReadIntLE()
     {
         CheckReadableBytes(4);
+
         return PullIndices(buffer.ReadIntLE());
     }
 
     public override uint ReadUnsignedInt()
     {
         CheckReadableBytes(4);
+
         return PullIndices(buffer.ReadUnsignedInt());
     }
 
     public override uint ReadUnsignedIntLE()
     {
         CheckReadableBytes(4);
+
         return PullIndices(buffer.ReadUnsignedIntLE());
     }
 
     public override long ReadLong()
     {
         CheckReadableBytes(8);
+
         return PullIndices(buffer.ReadLong());
     }
 
     public override long ReadLongLE()
     {
         CheckReadableBytes(8);
+
         return PullIndices(buffer.ReadLongLE());
     }
 
     public override int ReadMedium()
     {
         CheckReadableBytes(3);
+
         return PullIndices(buffer.ReadMedium());
     }
 
     public override int ReadMediumLE()
     {
         CheckReadableBytes(3);
+
         return PullIndices(buffer.ReadMediumLE());
     }
 
     public override int ReadUnsignedMedium()
     {
         CheckReadableBytes(3);
+
         return PullIndices(buffer.ReadUnsignedMedium());
     }
 
     public override int ReadUnsignedMediumLE()
     {
         CheckReadableBytes(3);
+
         return PullIndices(buffer.ReadUnsignedMediumLE());
     }
 
     public override short ReadShort()
     {
         CheckReadableBytes(2);
+
         return PullIndices(buffer.ReadShort());
     }
 
     public override short ReadShortLE()
     {
         CheckReadableBytes(2);
+
         return PullIndices(buffer.ReadShortLE());
     }
 
     public override ushort ReadUnsignedShort()
     {
         CheckReadableBytes(2);
+
         return PullIndices(buffer.ReadUnsignedShort());
     }
 
     public override ushort ReadUnsignedShortLE()
     {
         CheckReadableBytes(2);
+
         return PullIndices(buffer.ReadUnsignedShortLE());
     }
 
     public override char ReadChar()
     {
         CheckReadableBytes(2);
+
         return PullIndices(buffer.ReadChar());
     }
 
     public override float ReadFloat()
     {
         CheckReadableBytes(4);
+
         return PullIndices(buffer.ReadFloat());
     }
 
     public override double ReadDouble()
     {
         CheckReadableBytes(8);
+
         return PullIndices(buffer.ReadDouble());
     }
 
     public override ICharSequence ReadCharSequence(int length, Encoding charset)
     {
         CheckReadableBytes(length);
+
         return PullIndices(buffer.ReadCharSequence(length, charset));
     }
 
     public override string ReadString(int length, Encoding charset)
     {
         CheckReadableBytes(length);
+
         return PullIndices(buffer.ReadString(length, charset));
     }
 
@@ -867,6 +920,7 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
     public override ByteBuf SkipBytes(int length)
     {
         CheckReadableBytes(length);
+
         buffer.SkipBytes(length);
         PullIndices();
         return this;
@@ -885,12 +939,14 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
     public override ByteBuf Slice(int index, int length)
     {
         CheckIndex(index, length);
+
         return buffer.Slice(index, length);
     }
 
     public override ByteBuf RetainedSlice(int index, int length)
     {
         CheckIndex(index, length);
+
         return buffer.RetainedSlice(index, length);
     }
 
@@ -902,6 +958,7 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
     public override ReadOnlyMemory<byte> AsReadOnlyMemory(int index, int length)
     {
         CheckIndex(index, length);
+
         return buffer.AsReadOnlyMemory(index, length);
     }
 
@@ -909,6 +966,7 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
     public override ReadOnlySequence<byte> AsReadOnlySequence(int index, int length)
     {
         CheckIndex(index, length);
+
         return buffer.AsReadOnlySequence(index, length);
     }
 
@@ -916,12 +974,14 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
     public override Memory<byte> AsMemory(int index, int length)
     {
         CheckIndex(index, length);
+
         return buffer.AsMemory(index, length);
     }
 
     public override string ToString(int index, int length, Encoding charset)
     {
         CheckIndex(index, length);
+
         return buffer.ToString(index, length, charset);
     }
 
@@ -1169,18 +1229,21 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
     protected override ReadOnlyMemory<byte> GetReadOnlyMemoryCore(int index, int length)
     {
         CheckIndex(index, length);
+
         return buffer.AsReadOnlyMemory(index, length);
     }
 
     protected override bool TryGetReadOnlyMemoryCore(int index, int length, out ReadOnlyMemory<byte> memory)
     {
         CheckIndex(index, length);
+
         ReadOnlySequence<byte> sequence = buffer.AsReadOnlySequence(index, length);
         if (sequence.IsSingleSegment)
         {
             memory = sequence.First;
             return true;
         }
+
         memory = default;
         return false;
     }
@@ -1188,12 +1251,14 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
     protected override ReadOnlySequence<byte> GetReadOnlySequenceCore(int index, int length)
     {
         CheckIndex(index, length);
+
         return buffer.AsReadOnlySequence(index, length);
     }
 
     protected override void GetBytesCore(int index, Span<byte> destination)
     {
         CheckIndex(index, destination.Length);
+
         buffer.GetBytes(index, destination);
     }
 
@@ -1222,6 +1287,7 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
         {
             return;
         }
+
         int writerIndex = terminated ? Math.Min(buffer.WriterIndex, buffer.Capacity) : int.MaxValue;
         int readerIndex = Math.Min(buffer.ReaderIndex, writerIndex);
         SetIndex(readerIndex, writerIndex);

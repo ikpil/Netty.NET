@@ -79,10 +79,12 @@ public class SearchDomainTest : IDisposable
             dnsServer.Stop();
             dnsServer = null;
         }
+
         if (resolver != null)
         {
             resolver.Dispose();
         }
+
         _ = group.ShutdownGracefullyAsync();
     }
 
@@ -286,6 +288,7 @@ public class SearchDomainTest : IDisposable
     {
         Task<IPAddress> fut = resolver.ResolveAsync(inetHost);
         Assert.True(await Await(fut, 10000));
+
         return (await fut).ToString();
     }
 
@@ -295,10 +298,12 @@ public class SearchDomainTest : IDisposable
         Task<IReadOnlyList<IPAddress>> fut = resolver.ResolveAllAsync(inetHost);
         Assert.True(await Await(fut, 10000));
         IList<string> list = new List<string>();
+
         foreach (IPAddress addr in await fut)
         {
             list.Add(addr.ToString());
         }
+
         return list;
     }
 

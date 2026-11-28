@@ -105,10 +105,12 @@ public class WebSocketIndexPageHandler : SimpleChannelInboundHandler<IFullHttpRe
             ByteBufUtil.WriteUtf8(res.Content, responseStatus.ToString());
             HttpUtil.SetContentLength(res, res.Content.ReadableBytes);
         }
+
         // Send the response and close the connection if necessary.
         bool keepAlive = HttpUtil.IsKeepAlive(req) && responseStatus.Code() == 200;
         HttpUtil.SetKeepAlive(res, keepAlive);
         Task future = ctx.WriteAndFlushAsync(res);
+
         if (!keepAlive)
         {
             IChannel channel = ctx.Channel;
@@ -120,11 +122,13 @@ public class WebSocketIndexPageHandler : SimpleChannelInboundHandler<IFullHttpRe
     private static string GetWebSocketLocation(IChannelPipeline cp, IHttpRequest req, string path)
     {
         string protocol = "ws";
+
         if (cp.Get<SslHandler>() != null)
         {
             // SSL in use so use Secure WebSockets
             protocol = "wss";
         }
+
         return protocol + "://" + (req.Headers().Get(HttpHeaderNames.HOST) ?? "null") + path;
     }
 }

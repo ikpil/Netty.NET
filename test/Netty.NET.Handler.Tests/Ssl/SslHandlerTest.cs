@@ -88,6 +88,7 @@ public class SslHandlerTest
 
             // Simulate failing the SslHandler non-application writes after there are applications writes queued.
             TaskCompletionSource promiseToFail;
+
             while (writesToFail.TryDequeue(out promiseToFail))
             {
                 promiseToFail.TrySetException(new Exception("fake exception"));
@@ -105,6 +106,7 @@ public class SslHandlerTest
         {
             Assert.False(ch.FinishAndReleaseAll());
         }
+
         await Task.CompletedTask;
     }
 
@@ -140,6 +142,7 @@ public class SslHandlerTest
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken)
         {
             Task future = new TaskCompletionSource().Task;
+
             if (msg is ByteBuf)
             {
                 if (((ByteBuf) msg).IsReadable())
@@ -153,6 +156,7 @@ public class SslHandlerTest
                     future = Task.CompletedTask;
                 }
             }
+
             ReferenceCountUtil.Release(msg);
             return future;
         }
@@ -267,6 +271,7 @@ public class SslHandlerTest
         handler.SetHandshakeTimeoutMillis(1);
 
         EmbeddedChannel ch = new EmbeddedChannel(handler);
+
         try
         {
             while (!handler.HandshakeFuture().IsCompleted)
@@ -497,6 +502,7 @@ public class SslHandlerTest
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
         IChannel sc = null;
         IChannel cc = null;
+
         try
         {
             TaskCompletionSource clientPromise = NewPromise();
@@ -525,10 +531,12 @@ public class SslHandlerTest
             {
                 await cc.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             if (sc != null)
             {
                 await sc.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             _ = group.ShutdownGracefullyAsync();
         }
     }
@@ -583,6 +591,7 @@ public class SslHandlerTest
             {
                 cause = cause.InnerException;
             }
+
             if (cause is IllegalReferenceCountException)
             {
                 promise.SetException(cause);
@@ -665,6 +674,7 @@ public class SslHandlerTest
         IChannel serverChannel = null;
         IChannel clientChannel = null;
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(LocalIoHandler.NewFactory());
+
         try
         {
             ServerBootstrap sb = new ServerBootstrap();
@@ -706,10 +716,12 @@ public class SslHandlerTest
             {
                 _ = serverChannel.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             if (clientChannel != null)
             {
                 _ = clientChannel.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             _ = group.ShutdownGracefullyAsync();
             ReferenceCountUtil.Release(sslServerCtx);
         }
@@ -813,6 +825,7 @@ public class SslHandlerTest
         IChannel sc = null;
         IChannel cc = null;
         CountdownEvent serverReceiveLatch = new CountdownEvent(1);
+
         try
         {
             int expectedBytes = 11;
@@ -846,10 +859,12 @@ public class SslHandlerTest
             {
                 await cc.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             if (sc != null)
             {
                 await sc.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             _ = group.ShutdownGracefullyAsync();
 
             ReferenceCountUtil.Release(sslServerCtx);
@@ -935,6 +950,7 @@ public class SslHandlerTest
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         IChannel sc = null;
         IChannel cc = null;
+
         try
         {
             LocalAddress address = new LocalAddress(GetType().Name + ".testCloseOnHandshakeFailure");
@@ -963,10 +979,12 @@ public class SslHandlerTest
             {
                 await cc.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             if (sc != null)
             {
                 await sc.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             _ = group.ShutdownGracefullyAsync();
 
             ReferenceCountUtil.Release(sslServerCtx);
@@ -1041,6 +1059,7 @@ public class SslHandlerTest
         CountdownEvent activeLatch = new CountdownEvent(1);
         AtomicReference<UnreachableException> errorRef = new AtomicReference<UnreachableException>();
         SslHandler sslHandler = sslClientCtx.NewHandler(UnpooledByteBufAllocator.Default);
+
         try
         {
             sc = await new ServerBootstrap()
@@ -1064,6 +1083,7 @@ public class SslHandlerTest
             {
                 throw error;
             }
+
             await ((Task) sslHandler.HandshakeFuture()).ConfigureAwait(
                     ConfigureAwaitOptions.SuppressThrowing | ConfigureAwaitOptions.ContinueOnCapturedContext);
             Assert.IsAssignableFrom<AuthenticationException>(CauseOf(sslHandler.HandshakeFuture()));
@@ -1074,10 +1094,12 @@ public class SslHandlerTest
             {
                 await cc.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             if (sc != null)
             {
                 await sc.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             _ = group.ShutdownGracefullyAsync();
 
             ReferenceCountUtil.Release(sslClientCtx);
@@ -1198,10 +1220,12 @@ public class SslHandlerTest
             {
                 await cc.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             if (sc != null)
             {
                 await sc.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             _ = group.ShutdownGracefullyAsync();
             ReferenceCountUtil.Release(sslClientCtx);
         }
@@ -1221,6 +1245,7 @@ public class SslHandlerTest
         protected override void InitChannel(IChannel ch)
         {
             ch.Pipeline.AddLast(sslHandler);
+
             if (startTls)
             {
                 ch.Pipeline.AddLast(new WriteOnActiveHandler());
@@ -1328,6 +1353,7 @@ public class SslHandlerTest
             {
                 await sc.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             _ = group.ShutdownGracefullyAsync();
         }
     }
@@ -1440,6 +1466,7 @@ public class SslHandlerTest
             serverCipher = "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384";
             protocol = Netty.NET.Handler.Ssl.SslProtocols.TLS_v1_2;
         }
+
         SslContext sslClientCtx = SslContextBuilder.ForClient()
                 .TrustManager(InsecureTrustManagerFactory.INSTANCE)
                 .Protocols(protocol)
@@ -1462,6 +1489,7 @@ public class SslHandlerTest
                 new AtomicReference<SslHandshakeCompletionEvent>();
         AtomicReference<SslHandshakeCompletionEvent> serverEvent =
                 new AtomicReference<SslHandshakeCompletionEvent>();
+
         try
         {
             sc = await new ServerBootstrap()
@@ -1522,6 +1550,7 @@ public class SslHandlerTest
             {
                 @ref.Set((SslHandshakeCompletionEvent) evt);
             }
+
             base.UserEventTriggered(ctx, evt);
         }
     }
@@ -1616,6 +1645,7 @@ public class SslHandlerTest
 
         BlockingCollection<SslCloseCompletionEvent> clientCloseCompletionEvents =
                 new BlockingCollection<SslCloseCompletionEvent>();
+
         try
         {
             IChannel sc = await new ServerBootstrap()
@@ -1643,6 +1673,7 @@ public class SslHandlerTest
                         TestContext.Current.CancellationToken);
                 Assert.True(@event.IsSuccess());
             }
+
             for (int i = 0; i < 2; i++)
             {
                 SslHandshakeCompletionEvent @event = serverHandshakeCompletionEvents.Take(
@@ -1678,6 +1709,7 @@ public class SslHandlerTest
             {
                 SslCloseCompletionEvent @event = clientCloseCompletionEvents.Take(
                         TestContext.Current.CancellationToken);
+
                 if (clientClose)
                 {
                     // When we use TLSv1.3 the remote peer is not required to send a close_notify as response.
@@ -1698,6 +1730,7 @@ public class SslHandlerTest
                     Assert.True(@event.IsSuccess());
                 }
             }
+
             for (int i = 0; i < 2; i++)
             {
                 SslCloseCompletionEvent @event = serverCloseCompletionEvents.Take(
@@ -1762,10 +1795,12 @@ public class SslHandlerTest
         {
             acceptedChannels.Add(ch);
             SslHandler handler = sslServerCtx.NewHandler(ch.Alloc());
+
             if (!Netty.NET.Handler.Ssl.SslProtocols.TLS_v1_3.Equals(protocol))
             {
                 handler.SetCloseNotifyReadTimeout(TimeSpan.FromSeconds(5));
             }
+
             ch.Pipeline.AddLast(handler);
             ch.Pipeline.AddLast(new SslCompletionEventHandler(
                     serverHandshakeCompletionEvents, serverCloseCompletionEvents));
@@ -1794,10 +1829,12 @@ public class SslHandlerTest
         {
             SslHandler handler = sslClientCtx.NewHandler(
                     ch.Alloc(), "netty.io", 9999);
+
             if (!Netty.NET.Handler.Ssl.SslProtocols.TLS_v1_3.Equals(protocol))
             {
                 handler.SetCloseNotifyReadTimeout(TimeSpan.FromSeconds(5));
             }
+
             ch.Pipeline.AddLast(handler);
             ch.Pipeline.AddLast(
                     new SslCompletionEventHandler(
@@ -1849,6 +1886,7 @@ public class SslHandlerTest
         {
             return future.Exception.InnerException;
         }
+
         return future.IsCanceled ? new TaskCanceledException(future) : null;
     }
 
@@ -1898,6 +1936,7 @@ public class SslHandlerTest
         {
             return new IPEndPoint(IPAddress.IPv6Loopback, address.Port);
         }
+
         return server;
     }
 

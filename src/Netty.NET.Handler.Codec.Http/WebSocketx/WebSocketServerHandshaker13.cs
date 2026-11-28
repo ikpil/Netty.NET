@@ -165,6 +165,7 @@ public class WebSocketServerHandshaker13 : WebSocketServerHandshaker
 
         IFullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.SWITCHING_PROTOCOLS,
                 req.Content.Alloc().Buffer(0));
+
         if (headers != null)
         {
             res.Headers().Add(headers);
@@ -200,6 +201,7 @@ public class WebSocketServerHandshaker13 : WebSocketServerHandshaker
                 res.Headers().Set(HttpHeaderNames.SEC_WEBSOCKET_PROTOCOL, selectedSubprotocol);
             }
         }
+
         return res;
     }
 

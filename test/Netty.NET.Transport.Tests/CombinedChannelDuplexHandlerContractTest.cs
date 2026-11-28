@@ -20,10 +20,12 @@ public class CombinedChannelDuplexHandlerContractTest
         var outbound = new CaptureOutbound { RemovedCallback = ctx => Assert.True(ctx.IsRemoved) };
         var combined = new CombinedChannelDuplexHandler<CaptureInbound, CaptureOutbound>(inbound, outbound);
         var channel = new EmbeddedChannel(combined);
+
         try
         {
             var parent = channel.Pipeline.Context(combined);
             var key = AttributeKey<string>.ValueOf(nameof(ContextsKeepOuterIdentityAndIndependentIdempotentRemoval));
+
             foreach (var context in new[] { inbound.Context, outbound.Context })
             {
                 Assert.NotSame(parent, context);
@@ -38,6 +40,7 @@ public class CombinedChannelDuplexHandlerContractTest
                 Assert.True(context.HasAttr(key));
                 Assert.False(context.IsRemoved);
             }
+
             combined.RemoveInboundHandler();
             combined.RemoveInboundHandler();
             Assert.Equal(1, inbound.Removals);
@@ -73,6 +76,7 @@ public class CombinedChannelDuplexHandlerContractTest
             return Task.CompletedTask;
         }
         };
+
         try
         {
             channel.Pipeline.AddAfter("combined", "read", readHandler);
@@ -108,6 +112,7 @@ public class CombinedChannelDuplexHandlerContractTest
         var inbound = new CaptureInbound();
         var outbound = new CaptureOutbound();
         var combined = new CombinedChannelDuplexHandler<CaptureInbound, CaptureOutbound>(inbound, outbound);
+
         try
         {
             channel.Pipeline.AddLast(combined);
@@ -152,6 +157,7 @@ public class CombinedChannelDuplexHandlerContractTest
         var failures = new List<Exception>();
         var errors = new CaptureInbound { ErrorCallback = (_, cause) => failures.Add(cause) };
         var channel = new EmbeddedChannel();
+
         try
         {
             channel.Pipeline.AddLast("errors", errors);
@@ -177,6 +183,7 @@ public class CombinedChannelDuplexHandlerContractTest
         var failures = new List<Exception>();
         var errors = new CaptureInbound { ErrorCallback = (_, cause) => failures.Add(cause) };
         var channel = new EmbeddedChannel(combined, errors);
+
         try
         {
             combined.RemoveInboundHandler();
@@ -214,6 +221,7 @@ public class CombinedChannelDuplexHandlerContractTest
             () => channel.Pipeline.ConnectAsync(remote, local, cancellation.Token),
             () => channel.Pipeline.CloseAsync(cancellation.Token), () => channel.Pipeline.DisconnectAsync(cancellation.Token),
             () => channel.Pipeline.WriteAsync(message, cancellation.Token), () => channel.Pipeline.DeregisterAsync(cancellation.Token)];
+
         try
         {
             foreach (var operation in operations)
@@ -225,6 +233,7 @@ public class CombinedChannelDuplexHandlerContractTest
                     Assert.Equal(cancellation.Token, terminal.Token);
                     Assert.False(observed.IsCompleted);
                     var failure = new InvalidOperationException("outbound failure");
+
                     if (result == "success")
                     {
                         terminal.Producer.SetResult();

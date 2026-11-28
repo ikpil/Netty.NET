@@ -37,6 +37,7 @@ public class UnorderedStopContractTest
             {
                 return;
             }
+
             ++Cancellations;
             Interlocked.Exchange(ref _remove, null)?.Invoke();
             observe();
@@ -117,9 +118,11 @@ public class UnorderedStopContractTest
             release.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             return 7;
         }, TestContext.Current.CancellationToken);
+
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
+
             for (int i = 0; i < count; ++i)
             {
                 executor.Execute(() => Interlocked.Increment(ref rawCalls));
@@ -128,6 +131,7 @@ public class UnorderedStopContractTest
                 results[i * 4 + 2] = executor.ScheduleWithFixedDelayAsync(() => Assert.Fail("Removed periodic work ran"), TimeSpan.FromDays(1), TimeSpan.FromDays(1), owner.Token);
                 results[i * 4 + 3] = child.SubmitAsync(() => Assert.Fail("Removed child submission ran"), owner.Token);
             }
+
             // The ordered child shares one runner reservation for its pending results.
             Assert.Equal(count * 4 + 1, executor.PendingTaskCount);
             Task canceling = cancelOwner ? Task.Run(owner.Cancel, TestContext.Current.CancellationToken) : Task.CompletedTask;
@@ -170,16 +174,19 @@ public class UnorderedStopContractTest
             entered.Set();
             release.Wait(TimeSpan.FromSeconds(5), token);
         }, executor.StopToken);
+
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             Task queued = executor.SubmitAsync(() => Assert.Fail("Removed work ran"));
             Task scheduled = executor.ScheduleAsync(() => Assert.Fail("Removed deadline ran"), TimeSpan.FromDays(1));
             Assert.Equal(2, executor.PendingTaskCount);
+
             if (repeatRequest)
             {
                 Assert.Same(executor.TerminationFuture, executor.StopAsync());
             }
+
             Task stopping = executor.StopAsync();
             Assert.Same(executor.TerminationFuture, stopping);
             Assert.Same(stopping, executor.StopAsync());
@@ -212,6 +219,7 @@ public class UnorderedStopContractTest
             Assert.True(release.Wait(TimeSpan.FromSeconds(5)));
             return 7;
         }, owner.Token);
+
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -249,6 +257,7 @@ public class UnorderedStopContractTest
             entered.Set();
             Assert.True(release.Wait(TimeSpan.FromSeconds(5)));
         }, null);
+
         try
         {
             Task stopping = executor.StopAsync();
@@ -300,6 +309,7 @@ public class UnorderedStopContractTest
             entered.Set();
             release.Wait(TimeSpan.FromSeconds(5), token);
         }, linked.Token);
+
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -339,6 +349,7 @@ public class UnorderedStopContractTest
         var executor = new UnorderedThreadPoolEventExecutor(1, new Factory(task => worker = new Thread(() =>
         {
             task.Invoke();
+
             try
             {
                 Thread.Sleep(1);
@@ -357,6 +368,7 @@ public class UnorderedStopContractTest
                 Thread.SpinWait(64);
             }
         });
+
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -408,6 +420,7 @@ public class UnorderedStopContractTest
             await release.Task;
             token.ThrowIfCancellationRequested();
         }, executor.StopToken);
+
         try
         {
             await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
@@ -440,6 +453,7 @@ public class UnorderedStopContractTest
         Task work = periodic
             ? executor.ScheduleAtFixedRateAsync(body, TimeSpan.Zero, TimeSpan.FromDays(1), executor.StopToken)
             : executor.ScheduleAsync(body, TimeSpan.Zero, executor.StopToken);
+
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -460,6 +474,7 @@ public class UnorderedStopContractTest
     {
         var executor = new UnorderedThreadPoolEventExecutor(0);
         string previous = Ambient.Value, seen = "not invoked";
+
         try
         {
             Ambient.Value = "registration";

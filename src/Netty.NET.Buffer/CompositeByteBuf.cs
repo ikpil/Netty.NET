@@ -88,8 +88,10 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
     private CompositeByteBuf AddComponentsCore(int componentIndex, ByteBuf[] buffers, int offset, bool increaseWriterIndex)
     {
         ArgumentNullException.ThrowIfNull(buffers);
+
         int readableBytes = 0;
         int capacity = Capacity;
+
         for (int i = offset; i < buffers.Length; ++i)
         {
             ByteBuf buffer = buffers[i];
@@ -97,14 +99,18 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
             {
                 break;
             }
+
             int length = buffer.ReadableBytes;
             // Check if we would overflow.
             // See https://github.com/netty/netty/issues/10194
             if (length < 0 || length > MaxCapacity - capacity - readableBytes)
                 throw new ArgumentOutOfRangeException(nameof(buffers));
+
             readableBytes += length;
         }
+
         CheckComponentRange(componentIndex, 0);
+
         // CLR: cyclic references, including discarded tails, cannot transfer ownership.
         for (int i = offset; i < buffers.Length; ++i)
         {
@@ -117,6 +123,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
         // CLR: List insertion needs no shifted null slots. Track the next unconsumed
         // entry explicitly; AddComponentCore consumes a failing entry itself.
         int next = offset, addedBytes = 0;
+
         try
         {
             while (next < buffers.Length)
@@ -126,6 +133,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
                 {
                     break;
                 }
+
                 // will increase componentCount
                 addedBytes += AddComponentCore(componentIndex++, buffer, false);
             }
@@ -146,6 +154,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
                 WriterIndex += addedBytes;
             }
         }
+
         ConsolidateIfNeeded();
         return this;
     }
@@ -169,11 +178,13 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
             {
                 break;
             }
+
             if (array.Length != 0)
             {
                 AddComponentCore(_components.Count, Unpooled.WrappedBuffer(array), false);
             }
         }
+
         ConsolidateIfNeeded();
         WriterIndex = Capacity;
         return this;
@@ -191,6 +202,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
             {
                 AddComponentCore(_components.Count, wrap(buffers[i]), false);
             }
+
         ConsolidateIfNeeded();
         WriterIndex = Capacity;
         return this;
@@ -255,10 +267,13 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
             return AddComponent(componentIndex, buffer, increaseWriterIndex);
         }
         ArgumentNullException.ThrowIfNull(buffers);
+
         using IEnumerator<ByteBuf> iterator = buffers.GetEnumerator();
+
         try
         {
             CheckComponentRange(componentIndex, 0);
+
             // No need for consolidation
             while (iterator.MoveNext())
             {
@@ -267,6 +282,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
                 {
                     break;
                 }
+
                 AddComponentCore(componentIndex++, next, increaseWriterIndex);
             }
         }
@@ -282,6 +298,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
                 }
             }
         }
+
         ConsolidateIfNeeded();
         return this;
     }
@@ -308,12 +325,15 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
             throw new ArgumentException("Component ownership must be acyclic.", nameof(buffer));
         }
         EnsureAccessible();
+
         int readerIndex = buffer.ReaderIndex, writerIndex = buffer.WriterIndex;
+
         if (readerIndex == writerIndex)
         {
             buffer.Release();
             return this;
         }
+
         if (buffer is not CompositeByteBuf source)
         {
             AddComponentCore(_components.Count, buffer, increaseWriterIndex);
@@ -322,16 +342,19 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
         }
 
         source.CheckIndex(readerIndex, writerIndex - readerIndex);
+
         // CLR: checked capacity prevents the original unchecked flatten-offset overflow.
         int length = writerIndex - readerIndex;
         if (length > MaxCapacity - Capacity)
         {
             throw new ArgumentOutOfRangeException(nameof(buffer));
         }
+
         int countBefore = _components.Count, writerBefore = WriterIndex;
         int first = source.FindComponentIndex(readerIndex);
         var additions = new List<ComponentEntry>(source._components.Count - first);
         bool committed = false;
+
         try
         {
             for (int i = first; i < source._components.Count; ++i)
@@ -348,18 +371,22 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
                     component.Source.Retain();
                     additions.Add(addition); // capacity is reserved before any retain
                 }
+
                 if (writerIndex == toIndex)
                 {
                     break;
                 }
             }
+
             _components.EnsureCapacity(checked(countBefore + additions.Count));
             _components.AddRange(additions);
             UpdateOffsets();
+
             if (increaseWriterIndex)
             {
                 WriterIndex = writerBefore + length;
             }
+
             ConsolidateIfNeeded();
             committed = true;
         }
@@ -372,7 +399,9 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
                 {
                     _components.RemoveRange(countBefore, _components.Count - countBefore);
                 }
+
                 UpdateOffsets();
+
                 if (increaseWriterIndex)
                 {
                     WriterIndex = writerBefore;
@@ -384,6 +413,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
                 }
             }
         }
+
         buffer.Release();
         return this;
     }
@@ -409,6 +439,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
         {
             return this;
         }
+
         ComponentEntry component = _components[FindComponentIndex(index)];
         if (destination.Length <= component.EndOffset - index)
             component.Source.GetBytes(component.SourceIndex + (index - component.Offset), destination);
@@ -419,6 +450,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
             GetBytesCore(index, bytes);
             bytes.AsSpan().CopyTo(destination);
         }
+
         return this;
     }
 
@@ -430,9 +462,11 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
         destination.CheckIndex(destinationIndex, length);
         if (length == 0)
             return this;
+
         if (BulkRangesOverlap(this, index, destination, destinationIndex, length))
         {
             ByteBuf snapshot = new UnpooledHeapByteBuf(length);
+
             try
             {
                 GetBufferComponents(index, snapshot, 0, length);
@@ -445,12 +479,14 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
         }
         else
             GetBufferComponents(index, destination, destinationIndex, length);
+
         return this;
     }
 
     private void GetBufferComponents(int index, ByteBuf destination, int destinationIndex, int length)
     {
         CheckIndex(index, length);
+
         int componentIndex = FindComponentIndex(index);
 
         while (length > 0)
@@ -472,9 +508,11 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
         source.CheckIndex(sourceIndex, length);
         if (length == 0)
             return this;
+
         if (BulkRangesOverlap(source, sourceIndex, this, index, length))
         {
             ByteBuf snapshot = new UnpooledHeapByteBuf(length);
+
             try
             {
                 snapshot.SetBytes(0, source, sourceIndex, length);
@@ -487,6 +525,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
         }
         else
             SetBufferComponents(index, source, sourceIndex, length);
+
         return this;
     }
 
@@ -525,6 +564,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
             ArgumentNullException.ThrowIfNull(buffers);
             ArgumentOutOfRangeException.ThrowIfNegative(offset);
             ArgumentOutOfRangeException.ThrowIfGreaterThan(offset, buffers.Length);
+
             AddComponentsCore(0, buffers, offset, false);
             SetIndex(0, Capacity);
         }
@@ -603,6 +643,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
         {
             throw new ArgumentOutOfRangeException(nameof(maxNumComponents));
         }
+
         MaxNumComponents = maxNumComponents;
         _components = new();
         _direct = direct;
@@ -637,11 +678,13 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
             {
                 return false;
             }
+
             for (int i = 0; i < _components.Count; ++i)
                 if (!_components[i].Source.IsDirect)
                 {
                     return false;
                 }
+
             return true;
         }
     }
@@ -710,10 +753,13 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
         {
             throw new ArgumentException("Component ownership must be acyclic.", nameof(buffer));
         }
+
         bool wasAdded = false;
+
         try
         {
             CheckComponentRange(componentIndex, 0);
+
             int length = buffer.ReadableBytes;
             buffer.TryGetReadOnlyMemory(buffer.ReaderIndex, length, out _);
             // No need to consolidate - just add a component to the list.
@@ -723,6 +769,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
             {
                 throw new ArgumentOutOfRangeException(nameof(buffer));
             }
+
             // unpeel any intermediate outer layers (UnreleasableByteBuf, LeakAwareByteBufs, SwappedByteBuf)
             // unwrap if already sliced
             // We don't need to slice later to expose the internal component if the readable range
@@ -733,10 +780,12 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
             _components.Insert(componentIndex, component);
             wasAdded = true;
             UpdateOffsets();
+
             if (increaseWriterIndex)
             {
                 WriterIndex += length;
             }
+
             return length;
         }
         finally
@@ -754,6 +803,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
         {
             return true;
         }
+
         if (buffer is CompositeByteBuf composite)
         {
             // Wrapper aliases represent the same component owner; reject ownership
@@ -763,12 +813,14 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
             {
                 return true;
             }
+
             foreach (ComponentEntry entry in composite._components)
                 if (ContainsBuffer(entry.Source, target))
                 {
                     return true;
                 }
         }
+
         ByteBuf parent = buffer.Unwrap();
         return parent != null && ContainsBuffer(parent, target);
     }
@@ -817,12 +869,14 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
     public int ToComponentIndex(int offset)
     {
         CheckIndex(offset, 1);
+
         return FindComponentIndex(offset);
     }
 
     public int ToByteIndex(int componentIndex)
     {
         CheckComponentRange(componentIndex, 1);
+
         return _components[componentIndex].Offset;
     }
 
@@ -843,6 +897,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
     public ByteBuf Component(int componentIndex)
     {
         CheckComponentRange(componentIndex, 1);
+
         // It's important to use srcBuf and NOT buf as we need to return the "original" source buffer and not the
         // unwrapped one as otherwise we could loose the ability to correctly update the reference count on the
         // returned buffer.
@@ -866,6 +921,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
     public ByteBuf ComponentSlice(int componentIndex)
     {
         CheckComponentRange(componentIndex, 1);
+
         ComponentEntry component = _components[componentIndex];
         return component.Slice();
     }
@@ -891,6 +947,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
         {
             return Array.Empty<ByteBuf>();
         }
+
         var result = new List<ByteBuf>();
         // The first component
         int componentIndex = FindComponentIndex(offset);
@@ -917,11 +974,13 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
         set
         {
             CheckNewCapacity(value);
+
             int oldCapacity = Capacity;
             if (value == oldCapacity)
             {
                 return;
             }
+
             if (value > oldCapacity)
             {
                 int paddingLength = value - oldCapacity;
@@ -935,7 +994,9 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
                 ConsolidateIfNeeded();
                 return;
             }
+
             int bytesToTrim = oldCapacity - value, keepCount = _components.Count;
+
             for (int i = _components.Count - 1; i >= 0; --i)
             {
                 ComponentEntry component = _components[i];
@@ -948,6 +1009,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
                     component.Trim(0, component.Length - bytesToTrim);
                     break;
                 }
+
                 bytesToTrim -= component.Length;
                 keepCount = i;
             }
@@ -990,10 +1052,12 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
         {
             return this;
         }
+
         int length = _components[componentIndex + numComponents - 1].EndOffset - _components[componentIndex].Offset;
         var originals = _components.GetRange(componentIndex, numComponents);
         ByteBuf replacement = AllocateBuffer(length);
         ComponentEntry replacementEntry;
+
         try
         {
             for (int i = componentIndex; i < componentIndex + numComponents; ++i)
@@ -1001,6 +1065,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
                 ComponentEntry component = _components[i];
                 replacement.WriteBytes(component.Source, component.SourceIndex, component.Length);
             }
+
             replacementEntry = new ComponentEntry(replacement, 0, length);
         }
         catch
@@ -1008,6 +1073,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
             replacement.Release();
             throw;
         }
+
         // copy then release
         // CLR: prepare the entire replacement before publishing/releasing, preserving
         // the original layout and ownership if allocation or a source read fails.
@@ -1026,13 +1092,16 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
     public override ByteBuf Copy(int index, int length)
     {
         CheckIndex(index, length);
+
         ByteBuf result = AllocateBuffer(length);
+
         try
         {
             if (length != 0)
             {
                 GetBufferComponents(index, result, 0, length);
             }
+
             result.WriterIndex = length;
             return result;
         }
@@ -1049,9 +1118,11 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
     public virtual CompositeByteBuf DiscardReadComponents()
     {
         EnsureAccessible();
+
         int readerIndex = ReaderIndex;
         if (readerIndex == 0)
             return this;
+
         // Discard everything if (readerIndex = writerIndex = capacity).
         if (readerIndex == WriterIndex && WriterIndex == Capacity)
         {
@@ -1060,10 +1131,12 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
             AdjustMarkers(readerIndex);
             return this;
         }
+
         // Remove read components.
         int first = FindComponentIndex(readerIndex);
         if (first == 0)
             return this; // Nothing to discard
+
         int offset = _components[first].Offset;
         RemoveComponentsCore(0, first);
         // Update indexes and markers.
@@ -1075,9 +1148,11 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
     public override CompositeByteBuf DiscardReadBytes()
     {
         EnsureAccessible();
+
         int readerIndex = ReaderIndex;
         if (readerIndex == 0)
             return this;
+
         // Discard everything if (readerIndex = writerIndex = capacity).
         if (readerIndex == WriterIndex && WriterIndex == Capacity)
         {
@@ -1086,6 +1161,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
             AdjustMarkers(readerIndex);
             return this;
         }
+
         int first = FindComponentIndex(readerIndex);
         ComponentEntry component = _components[first];
         // Replace the first readable component with a new slice.
@@ -1125,9 +1201,11 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
             memory = Memory<byte>.Empty;
             return true;
         }
+
         ComponentEntry component = _components[FindComponentIndex(index)];
         if (length <= component.EndOffset - index)
             return component.Source.TryGetMemory(component.SourceIndex + (index - component.Offset), length, out memory);
+
         memory = default;
         return false;
     }
@@ -1139,9 +1217,11 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
             memory = ReadOnlyMemory<byte>.Empty;
             return true;
         }
+
         ComponentEntry component = _components[FindComponentIndex(index)];
         if (length <= component.EndOffset - index)
             return component.Source.TryGetReadOnlyMemory(component.SourceIndex + (index - component.Offset), length, out memory);
+
         memory = default;
         return false;
     }
@@ -1152,6 +1232,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
         {
             return;
         }
+
         int componentIndex = FindComponentIndex(index);
 
         while (!destination.IsEmpty)
@@ -1170,7 +1251,9 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
         CheckIndex(index, source.Length);
         if (source.IsEmpty)
             return;
+
         int componentIndex = FindComponentIndex(index);
+
         while (!source.IsEmpty)
         {
             ComponentEntry component = _components[componentIndex++];
@@ -1178,6 +1261,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
             // Skip empty buffer
             if (count == 0)
                 continue;
+
             component.Source.SetBytesFromIoCore(component.SourceIndex + (index - component.Offset), source[..count]);
             index += count;
             source = source[count..];
@@ -1190,6 +1274,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
         {
             return;
         }
+
         int componentIndex = FindComponentIndex(index);
 
         while (!source.IsEmpty)
@@ -1208,6 +1293,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
         {
             return;
         }
+
         int componentIndex = FindComponentIndex(index);
 
         while (length > 0)
@@ -1224,6 +1310,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
     internal override ReadOnlySequence<byte> BorrowCopySequence(int index, int length)
     {
         CheckIndex(index, length);
+
         return CreateReadOnlySequence(index, length, true);
     }
 
@@ -1238,6 +1325,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
         {
             return ReadOnlySequence<byte>.Empty;
         }
+
         SequenceSegment first = null, last = null;
         int componentIndex = FindComponentIndex(index);
 
@@ -1248,13 +1336,16 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
             // Some buffers override this so we must use srcBuf
             ReadOnlySequence<byte> sequence = copying ? component.Source.BorrowCopySequence(component.SourceIndex + (index - component.Offset), count)
                 : component.Source.AsReadOnlySequence(component.SourceIndex + (index - component.Offset), count);
+
             foreach (ReadOnlyMemory<byte> memory in sequence)
             {
                 if (memory.IsEmpty)
                 {
                     continue;
                 }
+
                 var next = new SequenceSegment(memory);
+
                 if (last == null)
                 {
                     first = next;
@@ -1263,8 +1354,10 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
                 {
                     last.Append(next);
                 }
+
                 last = next;
             }
+
             index += count;
             length -= count;
         }
@@ -1275,8 +1368,10 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
     internal override BufferMemoryLease AcquireReadLease()
     {
         EnsureAccessible();
+
         var leases = new BufferMemoryLease[_components.Count];
         int acquired = 0;
+
         try
         {
             for (; acquired < leases.Length; ++acquired)
@@ -1343,6 +1438,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
         // binary search instead of reproducing its separate dispatch paths.
         // Binary search skips zero-length components at a boundary.
         int low = 0, high = _components.Count - 1;
+
         while (low <= high)
         {
             int mid = low + ((high - low) >>> 1);
@@ -1360,6 +1456,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
                 return mid;
             }
         }
+
         throw new ArgumentOutOfRangeException(nameof(offset));
     }
 
@@ -1389,6 +1486,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
             Source = source;
             SourceIndex = sourceIndex;
             Length = length;
+
             // We don't need to slice later to expose the internal component if the readable range
             // is already the entire buffer
             if (reuseWholeSource && sourceIndex == 0 && length == source.Capacity)
@@ -1441,6 +1539,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
     public virtual IEnumerator<ByteBuf> GetEnumerator()
     {
         EnsureAccessible();
+
         // CLR: the original empty iterator is independent of subsequent additions.
         return _components.Count == 0
             ? ((IEnumerable<ByteBuf>)Array.Empty<ByteBuf>()).GetEnumerator()
@@ -1461,6 +1560,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
     public ByteBuf InternalComponent(int componentIndex)
     {
         CheckComponentRange(componentIndex, 1);
+
         return _components[componentIndex].Slice();
     }
 
@@ -1507,6 +1607,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
             {
                 return false;
             }
+
             _current = _buffer._components[_index++].Slice();
             return true;
         }
@@ -1532,18 +1633,23 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
         {
             return -1;
         }
+
         int componentIndex = FindComponentIndex(start);
+
         while (start < end)
         {
             CheckIndex(start, end - start);
+
             ComponentEntry component = _components[componentIndex++];
             if (component.Length == 0)
             {
                 continue; // empty
             }
+
             int count = Math.Min(end - start, component.EndOffset - start);
             int local = component.SourceIndex + (start - component.Offset);
             component.Source.CheckIndex(local, count);
+
             ByteBuf storage = component.Source.UnwrapIterationStorage(ref local);
             // avoid additional checks in AbstractByteBuf case
             // CLR: all storage providers expose this internal loop, independently of public iteration overrides.
@@ -1555,11 +1661,13 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
                 {
                     return false;
                 }
+
                 if (--remaining > 0)
                 {
                     EnsureAccessible();
                     component.Source.CheckIndex(0, 0);
                 }
+
                 return true;
             }
 
@@ -1568,8 +1676,10 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
             {
                 return start + (result - local);
             }
+
             start += count;
         }
+
         return -1;
     }
 
@@ -1580,21 +1690,26 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
         {
             return -1;
         }
+
         int componentIndex = FindComponentIndex(start);
+
         while (start >= end)
         {
             CheckIndex(end, start - end + 1);
+
             ComponentEntry component = _components[componentIndex--];
             if (component.Length == 0)
             {
                 continue; // empty
             }
+
             // CLR: clamp at the captured component boundary. The original localRStart-based
             // length can include bytes before a component's captured readable start.
             int count = Math.Min(start - end + 1, start - component.Offset + 1);
             int componentStart = start - count + 1;
             int local = component.SourceIndex + (componentStart - component.Offset);
             component.Source.CheckIndex(local, count);
+
             ByteBuf storage = component.Source.UnwrapIterationStorage(ref local);
             // avoid additional checks in AbstractByteBuf case
             int remaining = count;
@@ -1605,11 +1720,13 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
                 {
                     return false;
                 }
+
                 if (--remaining > 0)
                 {
                     EnsureAccessible();
                     component.Source.CheckIndex(0, 0);
                 }
+
                 return true;
             }
 
@@ -1618,8 +1735,10 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
             {
                 return componentStart + (result - local);
             }
+
             start -= count;
         }
+
         return -1;
     }
 
@@ -1628,6 +1747,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
     internal override byte ReadByteCore(int index)
     {
         CheckIndex(index, 1);
+
         return (byte)ReadComponentWord(index, 1, false);
     }
 
@@ -1635,12 +1755,14 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
     {
         EnsureCanWrite();
         CheckIndex(index, 1);
+
         WriteComponentWord(index, unchecked((ulong)value), 1, false);
     }
 
     internal override ulong ReadWord(int index, int width, bool littleEndian)
     {
         CheckIndex(index, width);
+
         return ReadComponentWord(index, width, littleEndian);
     }
 
@@ -1648,6 +1770,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
     {
         EnsureCanWrite();
         CheckIndex(index, width);
+
         WriteComponentWord(index, value, width, littleEndian);
         return this;
     }
@@ -1669,6 +1792,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
                 _ => throw new ArgumentOutOfRangeException(nameof(width))
             };
         }
+
         int firstWidth = width == 3 ? 2 : width / 2;
         ulong first = ReadComponentWord(index, firstWidth, littleEndian);
         ulong second = ReadComponentWord(index + firstWidth, width - firstWidth, littleEndian);
@@ -1682,6 +1806,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
         {
             int local = component.SourceIndex + (index - component.Offset);
             ByteBuf source = component.Source;
+
             switch (width)
             {
                 case 1:
@@ -1696,6 +1821,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
                     {
                         source.SetShort(local, unchecked((int)value));
                     }
+
                     break;
                 case 3:
                     if (littleEndian)
@@ -1706,6 +1832,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
                     {
                         source.SetMedium(local, unchecked((int)value));
                     }
+
                     break;
                 case 4:
                     if (littleEndian)
@@ -1716,6 +1843,7 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
                     {
                         source.SetInt(local, unchecked((int)value));
                     }
+
                     break;
                 case 8:
                     if (littleEndian)
@@ -1726,12 +1854,15 @@ public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<Byt
                     {
                         source.SetLong(local, unchecked((long)value));
                     }
+
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(width));
             }
+
             return;
         }
+
         int firstWidth = width == 3 ? 2 : width / 2, secondWidth = width - firstWidth;
         // Match the original byte/short/int casts before each recursive setter call.
         WriteComponentWord(index, NarrowPart(littleEndian ? value : value >> (secondWidth * 8), firstWidth), firstWidth, littleEndian);

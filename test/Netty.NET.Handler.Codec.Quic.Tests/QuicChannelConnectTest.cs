@@ -57,6 +57,7 @@ public class QuicChannelConnectTest : AbstractQuicTest
         // Bind to something so we can use the port to connect too and so can ensure we really timeout.
         UdpClient socket = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0));
         IChannel channel = await QuicTestUtils.NewClient(executor);
+
         try
         {
             ChannelStateVerifyHandler verifyHandler = new ChannelStateVerifyHandler();
@@ -90,6 +91,7 @@ public class QuicChannelConnectTest : AbstractQuicTest
         IChannel channel = await QuicTestUtils.NewClient(executor);
         Exception exception = new NotSupportedException();
         channel.Pipeline.AddLast(new FailConnectHandler(exception));
+
         try
         {
             ChannelStateVerifyHandler verifyHandler = new ChannelStateVerifyHandler();
@@ -140,6 +142,7 @@ public class QuicChannelConnectTest : AbstractQuicTest
         IChannel server = await QuicTestUtils.NewServer(executor, serverQuicChannelHandler, serverQuicStreamHandler);
         IPEndPoint address = (IPEndPoint) server.LocalAddress;
         IChannel channel = await QuicTestUtils.NewClient(executor);
+
         try
         {
             ChannelActiveVerifyHandler clientQuicChannelHandler = new ChannelActiveVerifyHandler();
@@ -180,6 +183,7 @@ public class QuicChannelConnectTest : AbstractQuicTest
                 QuicTestUtils.NOOP_HANDLER);
         IPEndPoint address = (IPEndPoint) server.LocalAddress;
         IChannel channel = await QuicTestUtils.NewClient(executor);
+
         try
         {
             QuicChannelBootstrap cb = QuicTestUtils.NewQuicChannelBootstrap(channel)
@@ -187,6 +191,7 @@ public class QuicChannelConnectTest : AbstractQuicTest
                     .StreamHandler(QuicTestUtils.NOOP_HANDLER)
                     .RemoteAddress(address);
             List<IQuicChannel> channels = new List<IQuicChannel>();
+
             for (int i = 0; i < 5; i++)
             {
                 channels.Add(await cb
@@ -234,6 +239,7 @@ public class QuicChannelConnectTest : AbstractQuicTest
         QuicSslContextBuilder ctxBuilder = QuicSslContextBuilder.ForClient()
             .TrustManager(trustManager)
             .ApplicationProtocols(QuicTestUtils.PROTOS);
+
         if (!extended)
         {
             ctxBuilder.EndpointIdentificationAlgorithm(null);
@@ -241,6 +247,7 @@ public class QuicChannelConnectTest : AbstractQuicTest
 
         IChannel channel = await QuicTestUtils.NewClient(
                 QuicTestUtils.NewQuicClientBuilder(executor, ctxBuilder.Build()));
+
         try
         {
             Exception cause = await Cause(QuicTestUtils.NewQuicChannelBootstrap(channel)
@@ -281,6 +288,7 @@ public class QuicChannelConnectTest : AbstractQuicTest
                         clientSslContext)
                         .SslEngineProvider(ch =>
                                 clientSslContext.NewEngine(ch.Alloc(), "localhost", address.Port)));
+
         try
         {
             ChannelActiveVerifyHandler clientQuicChannelHandler = new ChannelActiveVerifyHandler();
@@ -357,6 +365,7 @@ public class QuicChannelConnectTest : AbstractQuicTest
         QuicSslContextBuilder clientSslCtxBuilder = QuicSslContextBuilder.ForClient()
                 .TrustManager(InsecureTrustManagerFactory.INSTANCE)
                 .ApplicationProtocols(QuicTestUtils.PROTOS);
+
         switch (mode)
         {
             case MutalAuthTestMode.OPTIONAL_CERT:
@@ -378,6 +387,7 @@ public class QuicChannelConnectTest : AbstractQuicTest
 
         IChannel channel = await QuicTestUtils.NewClient(QuicTestUtils.NewQuicClientBuilder(executor,
                 clientSslCtxBuilder.Build()));
+
         try
         {
             ChannelActiveVerifyHandler clientQuicChannelHandler = new ChannelActiveVerifyHandler();
@@ -450,6 +460,7 @@ public class QuicChannelConnectTest : AbstractQuicTest
         IChannel channel = await QuicTestUtils.NewClient(executor);
 
         CountdownEvent clientConnectionsLatch = new CountdownEvent(numConnections);
+
         try
         {
             for (int i = 0; i < numConnections; i++)
@@ -471,6 +482,7 @@ public class QuicChannelConnectTest : AbstractQuicTest
 
             Assert.True(serverStreamsLatch.Wait(TimeSpan.FromSeconds(5), cancellationToken),
                     "Server did not receive all streams");
+
             lock (serverConnections)
             {
                 Assert.Equal(numConnections, serverConnections.Count);
@@ -482,10 +494,12 @@ public class QuicChannelConnectTest : AbstractQuicTest
                 for (int i = 0; i < numConnections; i++)
                 {
                     IQuicChannel serverConnection;
+
                     lock (serverConnections)
                     {
                         serverConnection = serverConnections[i];
                     }
+
                     _ = serverConnection.CloseAsync().ContinueWith(v =>
                     {
                         if (Interlocked.Increment(ref closedConnections) == numConnections)
@@ -525,6 +539,7 @@ public class QuicChannelConnectTest : AbstractQuicTest
             {
                 serverConnections.Add((IQuicChannel) ctx.Channel);
             }
+
             ctx.FireChannelActive();
         }
     }
@@ -599,6 +614,7 @@ public class QuicChannelConnectTest : AbstractQuicTest
             {
                 CountDown(clientConnectionsLatch);
             }
+
             ctx.FireUserEventTriggered(evt);
         }
     }
@@ -654,6 +670,7 @@ public class QuicChannelConnectTest : AbstractQuicTest
                 Assert.True(states.TryTake(out int state, TIMEOUT));
                 Assert.Equal(i, (long) state);
             }
+
             Assert.False(states.TryTake(out _));
             base.AssertState();
         }

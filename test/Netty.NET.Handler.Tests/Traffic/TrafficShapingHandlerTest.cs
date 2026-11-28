@@ -66,6 +66,7 @@ public class TrafficShapingHandlerTest : IClassFixture<TrafficShapingHandlerTest
         await TestHandlerRemove0(new ChannelTrafficShapingHandler(0, READ_LIMIT_BYTES_PER_SECOND));
         GlobalTrafficShapingHandler trafficHandler1 =
                 new GlobalTrafficShapingHandler(SES, 0, READ_LIMIT_BYTES_PER_SECOND);
+
         try
         {
             await TestHandlerRemove0(trafficHandler1);
@@ -74,9 +75,11 @@ public class TrafficShapingHandlerTest : IClassFixture<TrafficShapingHandlerTest
         {
             trafficHandler1.Release();
         }
+
         GlobalChannelTrafficShapingHandler trafficHandler2 =
                 new GlobalChannelTrafficShapingHandler(SES, 0,
                         READ_LIMIT_BYTES_PER_SECOND, 0, READ_LIMIT_BYTES_PER_SECOND);
+
         try
         {
             await TestHandlerRemove0(trafficHandler2);
@@ -95,6 +98,7 @@ public class TrafficShapingHandlerTest : IClassFixture<TrafficShapingHandlerTest
 
         GlobalTrafficShapingHandler trafficHandler1 =
                 new GlobalTrafficShapingHandler(SES, WRITE_LIMIT_BYTES_PER_SECOND, 0, 0);
+
         try
         {
             TestQueuedWritesReleasedAndFailedOnClose0(trafficHandler1);
@@ -107,6 +111,7 @@ public class TrafficShapingHandlerTest : IClassFixture<TrafficShapingHandlerTest
         GlobalChannelTrafficShapingHandler trafficHandler2 =
                 new GlobalChannelTrafficShapingHandler(SES, WRITE_LIMIT_BYTES_PER_SECOND, 0,
                         WRITE_LIMIT_BYTES_PER_SECOND, 0, 0);
+
         try
         {
             TestQueuedWritesReleasedAndFailedOnClose0(trafficHandler2);
@@ -138,6 +143,7 @@ public class TrafficShapingHandlerTest : IClassFixture<TrafficShapingHandlerTest
     {
         IChannel svrChannel = null;
         IChannel ch = null;
+
         try
         {
             ServerBootstrap serverBootstrap = new ServerBootstrap();
@@ -164,6 +170,7 @@ public class TrafficShapingHandlerTest : IClassFixture<TrafficShapingHandlerTest
             {
                 await ch.CloseAsync();
             }
+
             if (svrChannel != null)
             {
                 await svrChannel.CloseAsync();

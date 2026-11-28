@@ -103,19 +103,23 @@ public abstract class WebSocketServerHandshaker
     {
         this.version = version;
         this.uri = uri;
+
         if (subprotocols != null)
         {
             string[] subprotocolArray = Split(subprotocols, ',');
+
             for (int i = 0; i < subprotocolArray.Length; i++)
             {
                 subprotocolArray[i] = HttpUtil.TrimJava(subprotocolArray[i]);
             }
+
             this.subprotocols = subprotocolArray;
         }
         else
         {
             this.subprotocols = EmptyArrays.EMPTY_STRINGS;
         }
+
         this.decoderConfig = ObjectUtil.CheckNotNull(decoderConfig, "decoderConfig");
     }
 
@@ -134,10 +138,12 @@ public abstract class WebSocketServerHandshaker
     public virtual ISet<string> Subprotocols()
     {
         ISet<string> ret = new LinkedHashSet<string>();
+
         foreach (string subprotocol in subprotocols)
         {
             ret.Add(subprotocol);
         }
+
         return ret;
     }
 
@@ -231,6 +237,7 @@ public abstract class WebSocketServerHandshaker
     public virtual Task HandshakeAsync(IChannelHandlerContext ctx, IFullHttpRequest req)
     {
         ObjectUtil.CheckNotNull(ctx, "ctx");
+
         return HandshakeAsync(ctx, req, null, new TaskCompletionSource());
     }
 
@@ -258,6 +265,7 @@ public abstract class WebSocketServerHandshaker
                                        HttpHeaders responseHeaders, TaskCompletionSource promise)
     {
         ObjectUtil.CheckNotNull(ctx, "ctx");
+
         return Handshake0(ctx, ctx.Channel, req, responseHeaders, promise);
     }
 
@@ -269,18 +277,22 @@ public abstract class WebSocketServerHandshaker
         {
             logger.Debug("{} WebSocket version {} server handshake", channel, Version());
         }
+
         IFullHttpResponse response = NewHandshakeResponse(req, responseHeaders);
         IChannelPipeline p = channel.Pipeline;
         if (p.Get<HttpObjectAggregator>() != null)
         {
             p.Remove<HttpObjectAggregator>();
         }
+
         if (p.Get<HttpContentCompressor>() != null)
         {
             p.Remove<HttpContentCompressor>();
         }
+
         IChannelHandlerContext ctx = p.Context(typeof(HttpRequestDecoder));
         string encoderName;
+
         if (ctx == null)
         {
             // this means the user use an HttpServerCodec
@@ -292,6 +304,7 @@ public abstract class WebSocketServerHandshaker
                 response.Release();
                 return promise.Task;
             }
+
             p.AddBefore(ctx.Name, "wsencoder", NewWebSocketEncoder());
             p.AddBefore(ctx.Name, "wsdecoder", NewWebsocketDecoder());
             encoderName = ctx.Name;
@@ -303,6 +316,7 @@ public abstract class WebSocketServerHandshaker
             encoderName = p.Context(typeof(HttpResponseEncoder)).Name;
             p.AddBefore(encoderName, "wsencoder", NewWebSocketEncoder());
         }
+
         _ = invoker.WriteAndFlushAsync(response).ContinueWith(future =>
         {
             if (future.IsCompletedSuccessfully)
@@ -381,6 +395,7 @@ public abstract class WebSocketServerHandshaker
     public virtual Task HandshakeAsync(IChannelHandlerContext ctx, IHttpRequest req)
     {
         ObjectUtil.CheckNotNull(ctx, "ctx");
+
         return HandshakeAsync(ctx, req, null, new TaskCompletionSource());
     }
 
@@ -408,6 +423,7 @@ public abstract class WebSocketServerHandshaker
                                        HttpHeaders responseHeaders, TaskCompletionSource promise)
     {
         ObjectUtil.CheckNotNull(ctx, "ctx");
+
         return Handshake0(ctx, ctx.Channel, req, responseHeaders, promise);
     }
 
@@ -439,6 +455,7 @@ public abstract class WebSocketServerHandshaker
         }
 
         string aggregatorCtx = ctx.Name;
+
         if (HttpUtil.IsContentLengthSet(req) || HttpUtil.IsTransferEncodingChunked(req) ||
             version == WebSocketVersion.V00)
         {
@@ -450,6 +467,7 @@ public abstract class WebSocketServerHandshaker
 
         p.AddAfter(aggregatorCtx, "handshaker",
                    new HandshakeRequestHandler(this, invoker, channel, responseHeaders, promise));
+
         try
         {
             ctx.FireChannelRead(ReferenceCountUtil.Retain(req));
@@ -458,6 +476,7 @@ public abstract class WebSocketServerHandshaker
         {
             promise.SetException(cause);
         }
+
         return promise.Task;
     }
 
@@ -517,6 +536,7 @@ public abstract class WebSocketServerHandshaker
                 {
                     promise.TrySetException(new ClosedChannelException());
                 }
+
                 ctx.FireChannelInactive();
             }
             finally
@@ -544,6 +564,7 @@ public abstract class WebSocketServerHandshaker
                 Debug.Assert(fullHttpRequest != null);
                 IFullHttpRequest handshakeRequest = fullHttpRequest;
                 fullHttpRequest = null;
+
                 try
                 {
                     ctx.Pipeline.Remove(this);
@@ -553,6 +574,7 @@ public abstract class WebSocketServerHandshaker
                 {
                     handshakeRequest.Release();
                 }
+
                 return;
             }
 
@@ -561,6 +583,7 @@ public abstract class WebSocketServerHandshaker
                 IHttpRequest httpRequest = (IHttpRequest) httpObject;
                 fullHttpRequest = new DefaultFullHttpRequest(httpRequest.ProtocolVersion(), httpRequest.Method(),
                     httpRequest.Uri(), Unpooled.EmptyBuffer, httpRequest.Headers(), EmptyHttpHeaders.INSTANCE);
+
                 if (httpRequest.DecoderResult().IsFailure())
                 {
                     fullHttpRequest.SetDecoderResult(httpRequest.DecoderResult());
@@ -604,6 +627,7 @@ public abstract class WebSocketServerHandshaker
     public virtual Task CloseAsync(IChannel channel, CloseWebSocketFrame frame)
     {
         ObjectUtil.CheckNotNull(channel, "channel");
+
         return CloseAsync(channel, frame, new TaskCompletionSource());
     }
 
@@ -636,6 +660,7 @@ public abstract class WebSocketServerHandshaker
     public virtual Task CloseAsync(IChannelHandlerContext ctx, CloseWebSocketFrame frame)
     {
         ObjectUtil.CheckNotNull(ctx, "ctx");
+
         return CloseAsync(ctx, frame, new TaskCompletionSource());
     }
 
@@ -653,6 +678,7 @@ public abstract class WebSocketServerHandshaker
                                    TaskCompletionSource promise)
     {
         ObjectUtil.CheckNotNull(ctx, "ctx");
+
         Task future = Close0(ctx, ctx.Channel, frame, promise);
         IChannel channel = ctx.Channel;
         _ = future.ContinueWith(f => channel.CloseAsync(), CancellationToken.None,
@@ -685,6 +711,7 @@ public abstract class WebSocketServerHandshaker
         }
 
         string[] requestedSubprotocolArray = Split(requestedSubprotocols, ',');
+
         foreach (string p in requestedSubprotocolArray)
         {
             string requestedSubprotocol = HttpUtil.TrimJava(p);
@@ -712,11 +739,14 @@ public abstract class WebSocketServerHandshaker
         {
             return parts;
         }
+
         int length = parts.Length;
+
         while (length > 0 && parts[length - 1].Length == 0)
         {
             length--;
         }
+
         return length == parts.Length ? parts : parts.AsSpan(0, length).ToArray();
     }
 

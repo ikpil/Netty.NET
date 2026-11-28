@@ -10,6 +10,7 @@ internal static class ConcurrentQueueOperations
     internal static void EnqueueUninterruptibly<T>(ConcurrentQueue<T> queue, T value)
     {
         bool interrupted = false;
+
         try
         {
             for (;;)
@@ -40,6 +41,7 @@ internal static class ConcurrentQueueOperations
     internal static bool TryDequeueUninterruptibly<T>(ConcurrentQueue<T> queue, out T value)
     {
         bool interrupted = false;
+
         try
         {
             for (;;)

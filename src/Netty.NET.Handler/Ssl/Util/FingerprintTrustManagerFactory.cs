@@ -134,6 +134,7 @@ public sealed class FingerprintTrustManagerFactory
         // check early if the hash algorithm is available
         HashAlgorithmName md = ToHashAlgorithmName(algorithm);
         int hashLength;
+
         try
         {
             hashLength = CryptographicOperations.HashData(md, Array.Empty<byte>()).Length;
@@ -146,6 +147,7 @@ public sealed class FingerprintTrustManagerFactory
         }
 
         List<byte[]> list = new List<byte[]>(fingerprints.Length);
+
         foreach (byte[] f in fingerprints)
         {
             if (f == null)
@@ -159,6 +161,7 @@ public sealed class FingerprintTrustManagerFactory
                                 "malformed fingerprint (length is {0} but expected {1}): {2}",
                                 f.Length, hashLength, ByteBufUtil.HexDump(Unpooled.WrappedBuffer(f))));
             }
+
             list.Add((byte[]) f.Clone());
         }
 
@@ -176,6 +179,7 @@ public sealed class FingerprintTrustManagerFactory
         {
             name = "SHA" + name.Substring(4);
         }
+
         return new HashAlgorithmName(name);
     }
 
@@ -184,6 +188,7 @@ public sealed class FingerprintTrustManagerFactory
         ObjectUtil.CheckNotNull(fingerprints, "fingerprints");
 
         List<byte[]> list = new List<byte[]>();
+
         foreach (string fingerprint in fingerprints)
         {
             string f = fingerprint;
@@ -196,6 +201,7 @@ public sealed class FingerprintTrustManagerFactory
             {
                 throw new ArgumentException("malformed fingerprint: " + f);
             }
+
             f = FINGERPRINT_STRIP_PATTERN.Replace(f, "");
 
             list.Add(StringUtil.DecodeHexDump(f));
@@ -245,7 +251,9 @@ public sealed class FingerprintTrustManagerFactory
             {
                 return false;
             }
+
             X509Certificate2[] peerChain = { certificate as X509Certificate2 ?? new X509Certificate2(certificate) };
+
             if (sender is SslStream stream && stream.IsServer)
             {
                 CheckClientTrusted(peerChain, null);
@@ -254,6 +262,7 @@ public sealed class FingerprintTrustManagerFactory
             {
                 CheckServerTrusted(peerChain, null);
             }
+
             return (sslPolicyErrors & SslPolicyErrors.RemoteCertificateNameMismatch) == 0;
         }
 
@@ -272,6 +281,7 @@ public sealed class FingerprintTrustManagerFactory
             X509Certificate2 cert = chain[0];
             byte[] fingerprint = Fingerprint(cert);
             bool found = false;
+
             foreach (byte[] allowedFingerprint in parent.fingerprints)
             {
                 if (fingerprint.AsSpan().SequenceEqual(allowedFingerprint))

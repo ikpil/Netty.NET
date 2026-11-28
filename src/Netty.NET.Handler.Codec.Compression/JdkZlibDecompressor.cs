@@ -113,6 +113,7 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
         maxAllocation = builder.maxAllocation;
         dictionary = builder.dictionary;
         this.decompressConcatenated = builder.decompressConcatenated;
+
         switch (builder.wrapper)
         {
             case ZlibWrapper.GZIP:
@@ -163,12 +164,14 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
         {
             return;
         }
+
         if (crc != null && decompressConcatenated && gzipMemberFinished &&
                 gzipState == GzipState.HEADER_START && Available() == 0)
         {
             finished = true;
             return;
         }
+
         throw new DecompressionException("Compressed stream ended before the end-of-stream marker");
     }
 
@@ -209,14 +212,17 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
                         // Either there was not enough data or the input is finished.
                         return;
                     }
+
                     // If we consumed the footer we will start with the header again.
                     Debug.Assert(gzipState == GzipState.HEADER_START);
                 }
+
                 if (!ReadGZIPHeader(buf))
                 {
                     // There was not enough data readable to read the GZIP header.
                     return;
                 }
+
                 // Some bytes may have been consumed, and so we must re-set the number of readable bytes.
                 readableBytes = buf.ReadableBytes;
                 if (readableBytes == 0)
@@ -236,6 +242,7 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
             {
                 inflater.SetInput(ByteBufUtil.GetBytes(buf));
             }
+
             inputBufferInInflater = true;
         }
     }
@@ -245,6 +252,7 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
         if (inputBufferInInflater)
         {
             buf.ReaderIndex = buf.WriterIndex - inflater.GetRemaining();
+
             if (inflater.GetRemaining() == 0)
             {
                 inputBufferInInflater = false;
@@ -259,6 +267,7 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
                 ? proposedCapacity : Math.Min(maxAllocation, proposedCapacity);
         ByteBuf decompressed = allocator.HeapBuffer(targetCapacity);
         bool success = false;
+
         try
         {
             int writerIndex = decompressed.WriterIndex;
@@ -267,6 +276,7 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
             byte[] outArray = outSegment.Array;
             int outIndex = outSegment.Offset;
             int outputLength;
+
             try
             {
                 outputLength = inflater.Inflate(outArray, outIndex, writableBytes);
@@ -275,15 +285,19 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
             {
                 throw new DecompressionException("decompression failure", e);
             }
+
             ConsumeInput(buf);
+
             if (outputLength > 0)
             {
                 decompressed.WriterIndex = writerIndex + outputLength;
+
                 if (crc != null)
                 {
                     crc.Update(outArray, outIndex, outputLength);
                 }
             }
+
             if (inflater.NeedsDictionary())
             {
                 if (dictionary == null)
@@ -291,11 +305,14 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
                     throw new DecompressionException(
                             "decompression failure, unable to set dictionary as none was specified");
                 }
+
                 inflater.SetDictionary(dictionary);
             }
+
             if (inflater.Finished())
             {
                 inputBufferInInflater = false;
+
                 if (crc == null)
                 {
                     finished = true; // Do not decode anymore.
@@ -307,6 +324,7 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
                     ProcessInput(buf);
                 }
             }
+
             // If we filled the whole buffer the inflater may still have decoded data left that it could not write.
             // In that case we must ask for another output buffer, as needsInput() only tells us that all input
             // bytes were consumed, not that all output was produced.
@@ -339,6 +357,7 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
                 return true;
             }
         }
+
         return false;
     }
 
@@ -351,6 +370,7 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
                 {
                     return false;
                 }
+
                 // read magic numbers
                 int magic0 = @in.ReadByte();
                 int magic1 = @in.ReadByte();
@@ -359,6 +379,7 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
                 {
                     throw new DecompressionException("Input is not in the GZIP format");
                 }
+
                 crc.Update(magic0);
                 crc.Update(magic1);
 
@@ -368,6 +389,7 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
                     throw new DecompressionException("Unsupported compression method "
                             + method.ToString(CultureInfo.InvariantCulture) + " in the GZIP header");
                 }
+
                 crc.Update(method);
 
                 flags = @in.ReadByte();
@@ -396,6 +418,7 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
                     {
                         return false;
                     }
+
                     int xlen1 = @in.ReadByte();
                     int xlen2 = @in.ReadByte();
                     crc.Update(xlen1);
@@ -403,6 +426,7 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
 
                     xlen = xlen2 << 8 | xlen1;
                 }
+
                 gzipState = GzipState.XLEN_READ;
                 // fall through
                 goto case GzipState.XLEN_READ;
@@ -413,9 +437,11 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
                     {
                         return false;
                     }
+
                     crc.Update(@in, @in.ReaderIndex, xlen);
                     @in.SkipBytes(xlen);
                 }
+
                 gzipState = GzipState.SKIP_FNAME;
                 // fall through
                 goto case GzipState.SKIP_FNAME;
@@ -424,6 +450,7 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
                 {
                     return false;
                 }
+
                 gzipState = GzipState.SKIP_COMMENT;
                 // fall through
                 goto case GzipState.SKIP_COMMENT;
@@ -432,6 +459,7 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
                 {
                     return false;
                 }
+
                 gzipState = GzipState.PROCESS_FHCRC;
                 // fall through
                 goto case GzipState.PROCESS_FHCRC;
@@ -443,6 +471,7 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
                         return false;
                     }
                 }
+
                 crc.Reset();
                 gzipState = GzipState.HEADER_END;
                 // fall through
@@ -472,6 +501,7 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
                     // We didnt find the end yet, need to retry again once more data is readable
                     return false;
                 }
+
                 int b = @in.ReadByte();
                 crc.Update(b);
                 if (b == 0x00)
@@ -480,6 +510,7 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
                 }
             }
         }
+
         // Skip is handled, we can move to the next processing state.
         return true;
     }
@@ -510,6 +541,7 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
                     "Number of bytes mismatch. Expected: " + dataLength.ToString(CultureInfo.InvariantCulture) +
                     ", Got: " + readLength.ToString(CultureInfo.InvariantCulture));
         }
+
         return true;
     }
 
@@ -526,6 +558,7 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
         {
             return false;
         }
+
         long crcValue = @in.ReadUnsignedIntLE();
 
         long readCrc = crc.GetValue();
@@ -535,6 +568,7 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
                     "CRC value mismatch. Expected: " + crcValue.ToString(CultureInfo.InvariantCulture) +
                     ", Got: " + readCrc.ToString(CultureInfo.InvariantCulture));
         }
+
         return true;
     }
 
@@ -555,6 +589,7 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
                     "CRC16 value mismatch. Expected: " + crc16Value.ToString(CultureInfo.InvariantCulture) +
                     ", Got: " + readCrc16.ToString(CultureInfo.InvariantCulture));
         }
+
         return true;
     }
 
@@ -599,6 +634,7 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
         {
             return true;
         }
+
         array = default;
         return false;
     }
@@ -613,6 +649,7 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
         {
             return array;
         }
+
         throw new NotSupportedException("the buffer range is not backed by one managed array");
     }
 

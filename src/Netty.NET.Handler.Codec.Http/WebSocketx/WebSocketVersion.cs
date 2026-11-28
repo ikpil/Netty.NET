@@ -89,6 +89,7 @@ public sealed class WebSocketVersion
             // Let's special case this to preserve behaviour
             throw new InvalidOperationException("Unknown web socket version: " + this);
         }
+
         return headerValue;
     }
 

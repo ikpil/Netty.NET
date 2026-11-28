@@ -65,6 +65,7 @@ public class FactorialClientHandler : SimpleChannelInboundHandler<BigInteger>
     public BigInteger GetFactorial()
     {
         bool interrupted = false;
+
         try
         {
             for (;;)
@@ -97,6 +98,7 @@ public class FactorialClientHandler : SimpleChannelInboundHandler<BigInteger>
     protected override void ChannelRead0(IChannelHandlerContext ctx, BigInteger msg)
     {
         receivedMessages ++;
+
         if (receivedMessages == FactorialClient.COUNT)
         {
             // Offer the answer after closing the connection.
@@ -120,17 +122,20 @@ public class FactorialClientHandler : SimpleChannelInboundHandler<BigInteger>
     {
         // Do not send more than 4096 numbers.
         Task future = null;
+
         for (int i = 0; i < 4096 && next <= FactorialClient.COUNT; i++)
         {
             future = ctx.WriteAsync(next);
             next++;
         }
+
         if (next <= FactorialClient.COUNT)
         {
             Debug.Assert(future != null);
             _ = future.ContinueWith(numberSender, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously,
                 new EventExecutorTaskScheduler(() => ctx.Executor));
         }
+
         ctx.Flush();
     }
 

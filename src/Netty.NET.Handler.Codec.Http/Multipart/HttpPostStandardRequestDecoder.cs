@@ -193,6 +193,7 @@ public class HttpPostStandardRequestDecoder : IInterfaceHttpPostRequestDecoder
         this.factory = CheckNotNull(factory, "factory");
         this.maxFields = maxFields;
         this.maxBufferedBytes = maxBufferedBytes;
+
         try
         {
             if (request is IHttpContent)
@@ -230,6 +231,7 @@ public class HttpPostStandardRequestDecoder : IInterfaceHttpPostRequestDecoder
     public virtual bool IsMultipart()
     {
         CheckDestroyed();
+
         return false;
     }
 
@@ -269,6 +271,7 @@ public class HttpPostStandardRequestDecoder : IInterfaceHttpPostRequestDecoder
         {
             throw new NotEnoughDataDecoderException();
         }
+
         return bodyListHttpData;
     }
 
@@ -291,6 +294,7 @@ public class HttpPostStandardRequestDecoder : IInterfaceHttpPostRequestDecoder
         {
             throw new NotEnoughDataDecoderException();
         }
+
         return bodyMapHttpData.TryGetValue(name, out List<IInterfaceHttpData> list) ? list : null;
     }
 
@@ -314,11 +318,13 @@ public class HttpPostStandardRequestDecoder : IInterfaceHttpPostRequestDecoder
         {
             throw new NotEnoughDataDecoderException();
         }
+
         bodyMapHttpData.TryGetValue(name, out List<IInterfaceHttpData> list);
         if (list != null)
         {
             return list[0];
         }
+
         return null;
     }
 
@@ -341,6 +347,7 @@ public class HttpPostStandardRequestDecoder : IInterfaceHttpPostRequestDecoder
         }
 
         ByteBuf buf = content.Content;
+
         if (undecodedChunk == null)
         {
             undecodedChunk =
@@ -354,11 +361,13 @@ public class HttpPostStandardRequestDecoder : IInterfaceHttpPostRequestDecoder
         {
             undecodedChunk.WriteBytes(buf);
         }
+
         ParseBody();
         if (maxBufferedBytes > 0 && undecodedChunk != null && undecodedChunk.ReadableBytes > maxBufferedBytes)
         {
             throw new TooLongFormFieldException();
         }
+
         if (undecodedChunk != null && undecodedChunk.WriterIndex > discardThreshold)
         {
             if (undecodedChunk.RefCnt == 1)
@@ -376,6 +385,7 @@ public class HttpPostStandardRequestDecoder : IInterfaceHttpPostRequestDecoder
                 undecodedChunk = buffer;
             }
         }
+
         return this;
     }
 
@@ -406,6 +416,7 @@ public class HttpPostStandardRequestDecoder : IInterfaceHttpPostRequestDecoder
                 throw new EndOfDataDecoderException();
             }
         }
+
         return bodyListHttpData.Count != 0 && bodyListHttpDataRank < bodyListHttpData.Count;
     }
 
@@ -429,6 +440,7 @@ public class HttpPostStandardRequestDecoder : IInterfaceHttpPostRequestDecoder
         {
             return bodyListHttpData[bodyListHttpDataRank++];
         }
+
         return null;
     }
 
@@ -452,8 +464,10 @@ public class HttpPostStandardRequestDecoder : IInterfaceHttpPostRequestDecoder
             {
                 currentStatus = MultiPartStatus.EPILOGUE;
             }
+
             return;
         }
+
         ParseBodyAttributes();
     }
 
@@ -470,11 +484,13 @@ public class HttpPostStandardRequestDecoder : IInterfaceHttpPostRequestDecoder
         {
             throw new TooManyFormFieldsException();
         }
+
         if (!bodyMapHttpData.TryGetValue(data.GetName(), out List<IInterfaceHttpData> datas))
         {
             datas = new List<IInterfaceHttpData>(1);
             bodyMapHttpData[data.GetName()] = datas;
         }
+
         datas.Add(data);
         bodyListHttpData.Add(data);
     }
@@ -493,17 +509,21 @@ public class HttpPostStandardRequestDecoder : IInterfaceHttpPostRequestDecoder
         int currentpos = firstpos;
         int equalpos;
         int ampersandpos;
+
         if (currentStatus == MultiPartStatus.NOTSTARTED)
         {
             currentStatus = MultiPartStatus.DISPOSITION;
         }
+
         bool contRead = true;
+
         try
         {
             while (undecodedChunk.IsReadable() && contRead)
             {
                 char read = (char) undecodedChunk.ReadByte();
                 currentpos++;
+
                 switch (currentStatus)
                 {
                 case MultiPartStatus.DISPOSITION:// search '='
@@ -533,10 +553,12 @@ public class HttpPostStandardRequestDecoder : IInterfaceHttpPostRequestDecoder
                             currentAttribute.SetValue(""); // empty
                             AddHttpData(currentAttribute);
                         }
+
                         currentAttribute = null;
                         firstpos = currentpos;
                         contRead = true;
                     }
+
                     break;
                 case MultiPartStatus.FIELD:// search '&' or end of line
                     if (read == '&')
@@ -553,6 +575,7 @@ public class HttpPostStandardRequestDecoder : IInterfaceHttpPostRequestDecoder
                         {
                             read = (char) undecodedChunk.ReadByte();
                             currentpos++;
+
                             if (read == HttpConstants.LF)
                             {
                                 currentStatus = MultiPartStatus.PREEPILOGUE;
@@ -580,6 +603,7 @@ public class HttpPostStandardRequestDecoder : IInterfaceHttpPostRequestDecoder
                         firstpos = currentpos;
                         contRead = false;
                     }
+
                     break;
                 default:
                     // just stop
@@ -587,6 +611,7 @@ public class HttpPostStandardRequestDecoder : IInterfaceHttpPostRequestDecoder
                     break;
                 }
             }
+
             if (isLastChunk && currentAttribute != null)
             {
                 // special case
@@ -599,6 +624,7 @@ public class HttpPostStandardRequestDecoder : IInterfaceHttpPostRequestDecoder
                 {
                     SetFinalBuffer(Unpooled.EmptyBuffer);
                 }
+
                 firstpos = currentpos;
                 currentStatus = MultiPartStatus.EPILOGUE;
             }
@@ -609,6 +635,7 @@ public class HttpPostStandardRequestDecoder : IInterfaceHttpPostRequestDecoder
                                             false);
                 firstpos = currentpos;
             }
+
             undecodedChunk.ReaderIndex = firstpos;
         }
         catch (ErrorDataDecoderException)
@@ -639,6 +666,7 @@ public class HttpPostStandardRequestDecoder : IInterfaceHttpPostRequestDecoder
         {
             return;
         }
+
         ParseBodyAttributesStandard();
     }
 
@@ -650,6 +678,7 @@ public class HttpPostStandardRequestDecoder : IInterfaceHttpPostRequestDecoder
         { // override content only when ByteBuf needed decoding
             currentAttribute.SetContent(decodedBuf);
         }
+
         AddHttpData(currentAttribute);
         currentAttribute = null;
     }
@@ -682,12 +711,14 @@ public class HttpPostStandardRequestDecoder : IInterfaceHttpPostRequestDecoder
         ByteBuf buf = b.Alloc().Buffer(b.ReadableBytes);
         UrlDecoder urlDecode = new UrlDecoder(buf);
         int idx = b.ForEachByte(urlDecode.Process);
+
         if (urlDecode.nextEscapedIdx != 0)
         { // incomplete hex byte
             if (idx == -1)
             {
                 idx = b.ReadableBytes - 1;
             }
+
             idx -= urlDecode.nextEscapedIdx - 1;
             buf.Release();
             throw new ErrorDataDecoderException(
@@ -706,6 +737,7 @@ public class HttpPostStandardRequestDecoder : IInterfaceHttpPostRequestDecoder
     {
         // Release all data items, including those not yet pulled, only file based items
         CleanFiles();
+
         // Clean Memory based data
         foreach (IInterfaceHttpData httpData in bodyListHttpData)
         {
@@ -755,6 +787,7 @@ public class HttpPostStandardRequestDecoder : IInterfaceHttpPostRequestDecoder
         {
             return false;
         }
+
         return HttpHeaderValues.APPLICATION_X_WWW_FORM_URLENCODED.ContentEquals(new StringCharSequence(contentHeaderValue))
                 || HttpHeaderValues.MULTIPART_FORM_DATA.ContentEquals(new StringCharSequence(contentHeaderValue));
     }
@@ -797,6 +830,7 @@ public class HttpPostStandardRequestDecoder : IInterfaceHttpPostRequestDecoder
                         ++nextEscapedIdx;
                         return false;
                     }
+
                     output.WriteByte((hi << 4) + lo);
                     nextEscapedIdx = 0;
                 }
@@ -813,6 +847,7 @@ public class HttpPostStandardRequestDecoder : IInterfaceHttpPostRequestDecoder
             {
                 output.WriteByte(value);
             }
+
             return true;
         }
     }

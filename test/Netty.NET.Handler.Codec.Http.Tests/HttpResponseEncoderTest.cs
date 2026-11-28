@@ -225,15 +225,18 @@ public class HttpResponseEncoderTest
 
         EmbeddedChannel channel = new EmbeddedChannel(new HttpResponseEncoder());
         IHttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
+
         if (!chunked)
         {
             HttpUtil.SetContentLength(response, length);
         }
+
         Assert.True(channel.WriteOutbound(response));
         Assert.True(channel.WriteOutbound(new DefaultHttpContent(Unpooled.EmptyBuffer)));
         Assert.True(channel.WriteOutbound(new DefaultLastHttpContent(contentBuffer)));
 
         ByteBuf buffer = channel.ReadOutbound<ByteBuf>();
+
         if (!chunked)
         {
             Assert.Equal("HTTP/1.1 200 OK\r\ncontent-length: " + length + "\r\n\r\n",
@@ -243,6 +246,7 @@ public class HttpResponseEncoderTest
         {
             Assert.Equal("HTTP/1.1 200 OK\r\n\r\n", buffer.ToString(Encoding.ASCII));
         }
+
         buffer.Release();
 
         // Test writing an empty buffer works when the encoder is not at ST_INIT.
@@ -309,11 +313,13 @@ public class HttpResponseEncoderTest
     public void TestStatusInformational()
     {
         EmbeddedChannel channel = new EmbeddedChannel(new HttpResponseEncoder());
+
         for (int code = 100; code < 200; code++)
         {
             HttpResponseStatus status = HttpResponseStatus.ValueOf(code);
             AssertEmptyResponse(channel, status, null, false);
         }
+
         Assert.False(channel.Finish());
     }
 
@@ -321,11 +327,13 @@ public class HttpResponseEncoderTest
     public void TestStatusInformationalContentLength()
     {
         EmbeddedChannel channel = new EmbeddedChannel(new HttpResponseEncoder());
+
         for (int code = 100; code < 200; code++)
         {
             HttpResponseStatus status = HttpResponseStatus.ValueOf(code);
             AssertEmptyResponse(channel, status, HttpHeaderNames.CONTENT_LENGTH, code != 101);
         }
+
         Assert.False(channel.Finish());
     }
 
@@ -333,11 +341,13 @@ public class HttpResponseEncoderTest
     public void TestStatusInformationalTransferEncoding()
     {
         EmbeddedChannel channel = new EmbeddedChannel(new HttpResponseEncoder());
+
         for (int code = 100; code < 200; code++)
         {
             HttpResponseStatus status = HttpResponseStatus.ValueOf(code);
             AssertEmptyResponse(channel, status, HttpHeaderNames.TRANSFER_ENCODING, code != 101);
         }
+
         Assert.False(channel.Finish());
     }
 
@@ -345,6 +355,7 @@ public class HttpResponseEncoderTest
                                             ICharSequence headerName, bool headerStripped)
     {
         IHttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, status);
+
         if (HttpHeaderNames.CONTENT_LENGTH.ContentEquals(headerName))
         {
             response.Headers().Set(headerName, "0");
@@ -360,6 +371,7 @@ public class HttpResponseEncoderTest
         ByteBuf buffer = channel.ReadOutbound<ByteBuf>();
         StringBuilder responseText = new StringBuilder();
         responseText.Append(HttpVersion.HTTP_1_1).Append(' ').Append(status.ToString()).Append("\r\n");
+
         if (!headerStripped && headerName != null)
         {
             responseText.Append(headerName).Append(": ");
@@ -372,8 +384,10 @@ public class HttpResponseEncoderTest
             {
                 responseText.Append(HttpHeaderValues.CHUNKED);
             }
+
             responseText.Append("\r\n");
         }
+
         responseText.Append("\r\n");
 
         Assert.Equal(responseText.ToString(), buffer.ToString(Encoding.ASCII));
@@ -413,10 +427,12 @@ public class HttpResponseEncoderTest
         HttpResponseEncoder encoder = new HttpResponseEncoder();
         EmbeddedChannel channel = new EmbeddedChannel(encoder);
         IHttpResponse request = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
+
         if (chunked)
         {
             HttpUtil.SetTransferEncodingChunked(request, true);
         }
+
         Assert.True(channel.WriteOutbound(request));
 
         ByteBuf contentBuffer = Unpooled.Buffer();
@@ -424,10 +440,12 @@ public class HttpResponseEncoderTest
 
         ByteBuf lastContentBuffer = Unpooled.Buffer();
         ILastHttpContent last = new DefaultLastHttpContent(lastContentBuffer);
+
         if (trailers)
         {
             last.TrailingHeaders().Set("X-Netty-Test", "true");
         }
+
         Assert.True(channel.WriteOutbound(last));
 
         // Ensure we only produce ByteBuf instances.
@@ -459,6 +477,7 @@ public class HttpResponseEncoderTest
         EmbeddedChannel channel = new EmbeddedChannel(new HttpResponseEncoder());
 
         IHttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.RESET_CONTENT);
+
         if (HttpHeaderNames.CONTENT_LENGTH.ContentEqualsIgnoreCase(headerName))
         {
             response.Headers().Set(HttpHeaderNames.CONTENT_LENGTH, content.ReadableBytes);
@@ -479,6 +498,7 @@ public class HttpResponseEncoderTest
         responseText.Append("\r\n");
 
         StringBuilder written = new StringBuilder();
+
         for (;;)
         {
             ByteBuf buffer = channel.ReadOutbound<ByteBuf>();
@@ -486,6 +506,7 @@ public class HttpResponseEncoderTest
             {
                 break;
             }
+
             written.Append(buffer.ToString(Encoding.ASCII));
             buffer.Release();
         }
@@ -577,6 +598,7 @@ public class HttpResponseEncoderTest
             {
                 break;
             }
+
             buf.Release();
         }
 
@@ -587,6 +609,7 @@ public class HttpResponseEncoderTest
     private static void AssertAllTrackedBuffersReleased(TrackingFailingAllocator allocator)
     {
         Assert.False(allocator.allocated.Count == 0, "expected at least one buffer to be allocated");
+
         foreach (ByteBuf buf in allocator.allocated)
         {
             Assert.Equal(0, buf.RefCnt, "expected tracked buffer to be released: " + buf);

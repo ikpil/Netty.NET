@@ -20,6 +20,7 @@ public class LinuxTcpConnectOptionsContractTest
         var token = TestContext.Current.CancellationToken;
         var group = new DefaultEventLoopGroup(1);
         var channel = new LocalChannel();
+
         try
         {
             var bootstrap = new Bootstrap().Group(group).ChannelFactory(() => channel)
@@ -84,10 +85,12 @@ public class LinuxTcpConnectOptionsContractTest
         {
             Assert.Skip("IP_BIND_ADDRESS_NO_PORT requires Linux.");
         }
+
         if (ipv6 && !Socket.OSSupportsIPv6)
         {
             Assert.Skip("IPv6 unavailable.");
         }
+
         var token = TestContext.Current.CancellationToken;
         var address = ipv6 ? IPAddress.IPv6Loopback : IPAddress.Loopback;
         var local = new IPEndPoint(address, 0);
@@ -95,6 +98,7 @@ public class LinuxTcpConnectOptionsContractTest
         listener.Bind(local);
         listener.Listen(1);
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+
         try
         {
             var client = await new Bootstrap().Group(group)

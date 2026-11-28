@@ -31,6 +31,7 @@ public class FailedChannelFutureSourceTest
         Exception e = new Exception();
         var channel = new TaskTestChannel(_ => Task.FromException(e));
         var loop = new ManualIoEventLoop(Thread.CurrentThread, NioIoHandler.NewFactory());
+
         try
         {
             loop.RegisterAsync(channel, TestContext.Current.CancellationToken).GetAwaiter().GetResult();

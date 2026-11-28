@@ -189,6 +189,7 @@ public sealed class Quic
     internal static void UpdateOptions<T>(Dictionary<ChannelOption, object> options, ChannelOption<T> option, T value)
     {
         ObjectUtil.CheckNotNull(option, "option");
+
         if (value is null)
         {
             options.Remove(option);
@@ -207,6 +208,7 @@ public sealed class Quic
                                              AttributeKey<T> key, T value) where T : class
     {
         ObjectUtil.CheckNotNull(key, "key");
+
         if (value == null)
         {
             attributes.Remove(key);
@@ -223,6 +225,7 @@ public sealed class Quic
     {
         Quic.SetChannelOptions(ch, options, logger);
         Quic.SetAttributes(ch, attrs);
+
         if (handler != null)
         {
             ch.Pipeline.AddLast(handler);

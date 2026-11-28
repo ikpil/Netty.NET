@@ -83,6 +83,7 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
             // CLR: String.format formats with the default locale; CurrentCulture is its counterpart.
             throw new ArgumentException(string.Create(CultureInfo.CurrentCulture, $"minThreads: {minThreads} must not be greater than maxThreads: {maxThreads}"));
         }
+
         utilizationCheckPeriodNanos = AbstractScheduledEventExecutor.ToNanos(ObjectUtil.CheckPositive(utilizationWindow, "utilizationWindow"));
         this.scaleDownThreshold = ObjectUtil.CheckInRange(scaleDownThreshold, 0.0, 1.0, "scaleDownThreshold");
         this.scaleUpThreshold = ObjectUtil.CheckInRange(scaleUpThreshold, 0.0, 1.0, "scaleUpThreshold");
@@ -92,6 +93,7 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                     "scaleDownThreshold must be less than scaleUpThreshold: " +
                     JdkDecimal.DoubleToString(scaleDownThreshold) + " >= " + JdkDecimal.DoubleToString(scaleUpThreshold));
         }
+
         this.maxRampUpStep = ObjectUtil.CheckPositive(maxRampUpStep, "maxRampUpStep");
         this.maxRampDownStep = ObjectUtil.CheckPositive(maxRampDownStep, "maxRampDownStep");
         this.scalingPatienceCycles = ObjectUtil.CheckPositiveOrZero(scalingPatienceCycles, "scalingPatienceCycles");
@@ -138,10 +140,12 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
             this.factory = factory;
             this.executors = executors;
             List<AutoScalingUtilizationMetric> metrics = new List<AutoScalingUtilizationMetric>(executors.Length);
+
             foreach (IEventExecutor executor in executors)
             {
                 metrics.Add(new AutoScalingUtilizationMetric(executor));
             }
+
             utilizationMetrics = metrics.AsReadOnly();
             allExecutorsChooser = DefaultEventExecutorChooserFactory.INSTANCE.NewChooser(executors);
 
@@ -193,8 +197,10 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                 // To prevent an error and ensure the group can recover, we wake one up and use the
                 // chooser that contains all executors as a safe temporary choice.
                 TryScaleUpBy(1);
+
                 return allExecutorsChooser.Next();
             }
+
             return currentState.activeExecutorsChooser.Next();
         }
 
@@ -231,6 +237,7 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                     {
                         break; // We have woken up all the threads we reserved.
                     }
+
                     if (child is SingleThreadEventExecutor)
                     {
                         SingleThreadEventExecutor stee = (SingleThreadEventExecutor)child;
@@ -300,6 +307,7 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                 this.chooser = chooser;
                 consistentlyIdleChildren = new List<SingleThreadEventExecutor>(chooser.factory.maxChildren);
                 consistentlyBusyChildren = new List<SingleThreadEventExecutor>(chooser.factory.maxChildren);
+
                 if (chooser.executors.Length > 0)
                     nextCheckTimeNanos = unchecked(chooser.executors[0].Ticker().NanoTime() +
                         chooser.factory.utilizationCheckPeriodNanos);
@@ -366,12 +374,14 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                 AutoScalingState currentState = Volatile.Read(ref chooser.state);
 
                 int observedActive = 0;
+
                 for (int i = 0; i < chooser.executors.Length; i++)
                 {
                     IEventExecutor child = chooser.executors[i];
                     bool suspended = child.IsSuspended();
                     if (!suspended)
                         observedActive++;
+
                     if (!(child is SingleThreadEventExecutor))
                     {
                         continue;
@@ -380,6 +390,7 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                     SingleThreadEventExecutor eventExecutor = (SingleThreadEventExecutor)child;
 
                     double utilization = 0.0;
+
                     if (!suspended)
                     {
                         long activeTime = eventExecutor.GetAndResetAccumulatedActiveTimeNanos();
@@ -415,6 +426,7 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                             // Utilization is low, increment idle counter and reset busy counter.
                             int idleCycles = eventExecutor.GetAndIncrementIdleCycles();
                             eventExecutor.ResetBusyCycles();
+
                             if (idleCycles >= chooser.factory.scalingPatienceCycles &&
                                 eventExecutor.GetNumOfRegisteredChannels() <= 0)
                             {
@@ -426,6 +438,7 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                             // Utilization is high, increment busy counter and reset idle counter.
                             int busyCycles = eventExecutor.GetAndIncrementBusyCycles();
                             eventExecutor.ResetIdleCycles();
+
                             if (busyCycles >= chooser.factory.scalingPatienceCycles)
                             {
                                 consistentlyBusyChildren.Add(eventExecutor);
@@ -449,6 +462,7 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                     RebuildActiveExecutors();
                     currentState = Volatile.Read(ref chooser.state);
                 }
+
                 int currentActive = currentState.activeChildrenCount;
 
                 // Make scaling decisions based on stable states.
@@ -466,6 +480,7 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                             busyChild.ResetBusyCycles();
                             busyChild.ResetIdleCycles();
                         }
+
                         chooser.TryScaleUpBy(threadsToAdd);
                         // State change is handled by tryScaleUpBy, no need for rebuild here.
                         return; // Exit to avoid conflicting scale down logic in the same cycle.
@@ -473,6 +488,7 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                 }
 
                 bool changed = false; // Flag to track if we need to rebuild the active executors list.
+
                 if (consistentlyIdleChildren.Count != 0 && currentActive > chooser.factory.minChildren)
                 {
                     // Scale down, we have children that have been idle for multiple cycles.
@@ -509,6 +525,7 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                 {
                     AutoScalingState oldState = Volatile.Read(ref chooser.state);
                     List<IEventExecutor> active = new List<IEventExecutor>(oldState.activeChildrenCount);
+
                     foreach (IEventExecutor executor in chooser.executors)
                     {
                         if (!executor.IsSuspended())
@@ -516,6 +533,7 @@ public sealed class AutoScalingEventExecutorChooserFactory : IEventExecutorChoos
                             active.Add(executor);
                         }
                     }
+
                     IEventExecutor[] newActiveExecutors = active.ToArray();
 
                     // If the number of active executors in our scan differs from the count in the state,

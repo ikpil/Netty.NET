@@ -101,6 +101,7 @@ public sealed class StompWebSocketClientPageHandler : SimpleChannelInboundHandle
 
         FileStream raf = null;
         long fileLength = -1L;
+
         try
         {
             raf = new FileStream(resourceUrl, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -140,6 +141,7 @@ public sealed class StompWebSocketClientPageHandler : SimpleChannelInboundHandle
         HttpUtil.SetContentLength(response, fileLength);
 
         string contentType = "application/octet-stream";
+
         if (requestResource.EndsWith("html", StringComparison.Ordinal))
         {
             contentType = "text/html; charset=UTF-8";
@@ -168,6 +170,7 @@ public sealed class StompWebSocketClientPageHandler : SimpleChannelInboundHandle
             {
                 response.Headers().Set(CONNECTION, HttpHeaderValues.KEEP_ALIVE);
             }
+
             _ = ctx.WriteAsync(response);
         }
         else
@@ -191,6 +194,7 @@ public sealed class StompWebSocketClientPageHandler : SimpleChannelInboundHandle
         string root = Path.GetFullPath(Path.Combine(
                 AppContext.BaseDirectory, "Resources", "io", "netty", "example", "stomp", "websocket"));
         string path;
+
         try
         {
             path = Path.GetFullPath(Path.Combine(root, name));
@@ -203,11 +207,13 @@ public sealed class StompWebSocketClientPageHandler : SimpleChannelInboundHandle
         {
             return null;
         }
+
         if (!path.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.Ordinal) ||
                 (!System.IO.File.Exists(path) && !Directory.Exists(path)))
         {
             return null;
         }
+
         return path;
     }
 }

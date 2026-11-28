@@ -37,6 +37,7 @@ internal static class SmtpUtils
         {
             return ReadOnlyCollection<ICharSequence>.Empty;
         }
+
         return Array.AsReadOnly(sequences);
     }
 
@@ -114,6 +115,7 @@ internal static class SmtpUtils
         {
             return false;
         }
+
         for (int i = 0; i < a.Count; i++)
         {
             if (!Equals(a[i], b[i]))
@@ -121,30 +123,36 @@ internal static class SmtpUtils
                 return false;
             }
         }
+
         return true;
     }
 
     internal static int ListHashCode(IList<ICharSequence> list)
     {
         int hashCode = 1;
+
         foreach (ICharSequence e in list)
         {
             hashCode = 31 * hashCode + (e == null ? 0 : e.GetHashCode());
         }
+
         return hashCode;
     }
 
     internal static string ListToString(IList<ICharSequence> list)
     {
         StringBuilder sb = new StringBuilder("[");
+
         for (int i = 0; i < list.Count; i++)
         {
             if (i > 0)
             {
                 sb.Append(", ");
             }
+
             sb.Append(list[i] == null ? "null" : list[i].ToString());
         }
+
         return sb.Append(']').ToString();
     }
 }

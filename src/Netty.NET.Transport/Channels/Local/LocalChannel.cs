@@ -191,6 +191,7 @@ public class LocalChannel : AbstractChannel
     protected override Task DoBindAsync(EndPoint localAddress, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+
         DoBind(localAddress);
         return Task.CompletedTask;
     }
@@ -226,6 +227,7 @@ public class LocalChannel : AbstractChannel
         LocalChannel peer = this.peer;
         State oldState = state;
         State closedFrom = oldState;
+
         try
         {
             if (oldState != State.CLOSED)
@@ -237,6 +239,7 @@ public class LocalChannel : AbstractChannel
                     {
                         LocalChannelRegistry.Unregister(localAddress);
                     }
+
                     localAddress = null;
                 }
 
@@ -283,6 +286,7 @@ public class LocalChannel : AbstractChannel
                 // event is triggered *after* this peer's channelInActive event
                 IEventLoop peerEventLoop = peer.EventLoop;
                 bool peerIsActive = peer.IsActive;
+
                 try
                 {
                     peerEventLoop.Execute(() => peer.TryClose(peerIsActive));
@@ -291,6 +295,7 @@ public class LocalChannel : AbstractChannel
                 {
                     logger.Warn("Releasing Inbound Queues for channels {}-{} because exception occurred!",
                             this, peer, cause);
+
                     if (peerEventLoop.InEventLoop())
                     {
                         peer.ReleaseInboundBuffers();
@@ -301,6 +306,7 @@ public class LocalChannel : AbstractChannel
                         // rejects the close Runnable but give a best effort.
                         _ = peer.CloseAsync();
                     }
+
                     throw;
                 }
             }
@@ -350,6 +356,7 @@ public class LocalChannel : AbstractChannel
         IRecvByteBufAllocator.IHandle handle = RecvBufAllocHandle();
         handle.Reset(Config);
         IChannelPipeline pipeline = Pipeline;
+
         do
         {
             // CLR: TryDequeue returns false where poll() returns null.
@@ -357,6 +364,7 @@ public class LocalChannel : AbstractChannel
             {
                 break;
             }
+
             if (received is ByteBuf && inboundBuffer.TryPeek(out object next) && next is ByteBuf)
             {
                 ByteBuf msg = (ByteBuf)received;
@@ -367,6 +375,7 @@ public class LocalChannel : AbstractChannel
                     // CLR: indexed transfer handles segmented storage and preserves the source reader index.
                     output.WriteBytes(msg, msg.ReaderIndex, msg.ReadableBytes);
                     msg.Release();
+
                     while (inboundBuffer.TryPeek(out received) && received is ByteBuf peeked &&
                             peeked.ReadableBytes < output.WritableBytes)
                     {
@@ -375,6 +384,7 @@ public class LocalChannel : AbstractChannel
                         output.WriteBytes(msg, msg.ReaderIndex, msg.ReadableBytes);
                         msg.Release();
                     }
+
                     handle.LastBytesRead(output.ReadableBytes);
                     received = output; // Send the coalesced buffer down the pipeline.
                 }
@@ -385,9 +395,11 @@ public class LocalChannel : AbstractChannel
                     output.Release();
                 }
             }
+
             handle.IncMessagesRead(1);
             pipeline.FireChannelRead(received);
         } while (handle.ContinueReading());
+
         handle.ReadComplete();
         pipeline.FireChannelReadComplete();
     }
@@ -411,6 +423,7 @@ public class LocalChannel : AbstractChannel
         if (stackDepth < MAX_READER_STACK_DEPTH)
         {
             threadLocals.SetLocalChannelReaderStackDepth(stackDepth + 1);
+
             try
             {
                 ReadInbound();
@@ -456,9 +469,11 @@ public class LocalChannel : AbstractChannel
         LocalChannel peer = this.peer;
 
         writeInProgress = true;
+
         try
         {
             ClosedChannelException exception = null;
+
             for (;;)
             {
                 object msg = @in.Current;
@@ -466,6 +481,7 @@ public class LocalChannel : AbstractChannel
                 {
                     break;
                 }
+
                 try
                 {
                     // It is possible the peer could have closed while we are writing, and in this case we should
@@ -480,6 +496,7 @@ public class LocalChannel : AbstractChannel
                         {
                             exception = new ClosedChannelException();
                         }
+
                         @in.Remove(exception);
                     }
                 }
@@ -508,6 +525,7 @@ public class LocalChannel : AbstractChannel
     private bool AddInbound(object msg)
     {
         object retained = ReferenceCountUtil.Retain(msg);
+
         lock (inboundGate)
         {
             if (state == State.CONNECTED)
@@ -516,6 +534,7 @@ public class LocalChannel : AbstractChannel
                 return true;
             }
         }
+
         ReferenceCountUtil.Release(retained);
         return false;
     }
@@ -545,6 +564,7 @@ public class LocalChannel : AbstractChannel
             {
                 future.GetAwaiter().GetResult();
             }
+
             finishReadFuture = future;
         }
         else
@@ -574,6 +594,7 @@ public class LocalChannel : AbstractChannel
         Debug.Assert(AssignedEventLoop == null || AssignedEventLoop.InEventLoop());
         readInProgress = false;
         ConcurrentQueue<object> inboundBuffer = this.inboundBuffer;
+
         while (inboundBuffer.TryDequeue(out object msg))
         {
             ReferenceCountUtil.Release(msg);
@@ -598,6 +619,7 @@ public class LocalChannel : AbstractChannel
 #pragma warning restore CS0420
             }
         }
+
         // We should only set readInProgress to false if there is any data that was read as otherwise we may miss to
         // forward data later on.
         if (peer.readInProgress && !peer.inboundBuffer.IsEmpty)
@@ -687,6 +709,7 @@ public class LocalChannel : AbstractChannel
                     _channel.EventLoop.Execute(CloseNow);
                 }
             }
+
             IEventLoop loop = _channel.EventLoop;
             if (!(loop is IIoEventLoop) && loop is SingleThreadEventExecutor executor)
             {
@@ -718,6 +741,7 @@ public class LocalChannel : AbstractChannel
             {
                 return Task.FromCanceled(cancellationToken);
             }
+
             var promise = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             if (!EnsureOpen(promise))
             {
@@ -786,6 +810,7 @@ public class LocalChannel : AbstractChannel
             try
             {
                 _channel.EnsureOpen();
+
                 return true;
             }
             catch (ClosedChannelException e)
@@ -804,6 +829,7 @@ public class LocalChannel : AbstractChannel
             {
                 return;
             }
+
             LocalChannel channel = _channel;
             CancellationTokenRegistration cancellation = cancellationToken.UnsafeRegister(_ =>
             {
@@ -814,6 +840,7 @@ public class LocalChannel : AbstractChannel
                         channel.connectPromise = null;
                         _ = channel.Close();
                     }
+
                     promise.TrySetCanceled(cancellationToken);
                 }
 

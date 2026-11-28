@@ -325,12 +325,15 @@ public class DefaultHttpHeaders : HttpHeaders
         {
             return Array.Empty<IEntry<string, string>>();
         }
+
         IList<IEntry<string, string>> entriesConverted = new List<IEntry<string, string>>(
                 headers.Size());
+
         foreach (IEntry<string, string> entry in this)
         {
             entriesConverted.Add(entry);
         }
+
         return entriesConverted;
     }
 
@@ -386,6 +389,7 @@ public class DefaultHttpHeaders : HttpHeaders
             {
                 return false;
             }
+
             current = Next();
             return true;
         }
@@ -508,6 +512,7 @@ public class DefaultHttpHeaders : HttpHeaders
             {
                 return new StringCharSequence(DateFormatter.Format(new DateTimeOffset((DateTime) value)));
             }
+
             return base.ConvertObject(value);
         }
     }

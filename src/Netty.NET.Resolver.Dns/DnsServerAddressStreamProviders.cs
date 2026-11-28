@@ -57,6 +57,7 @@ public static class DnsServerAddressStreamProviders
     static DnsServerAddressStreamProviders()
     {
         ConstructorInfo constructor = null;
+
         if (PlatformDependent.IsOsx())
         {
             try
@@ -72,6 +73,7 @@ public static class DnsServerAddressStreamProviders
                     {
                         throw new MissingMethodException(providerClass.FullName, ".ctor");
                     }
+
                     constructor.Invoke(null);  // ctor ensures availability
                     LOGGER.Debug("{}: available", MACOS_PROVIDER_CLASS_NAME);
                 }
@@ -103,9 +105,11 @@ public static class DnsServerAddressStreamProviders
                             cause.InnerException != null ? ThrowableUtil.ThrowableToString(cause.InnerException) :
                                     ThrowableUtil.ThrowableToString(cause));
                 }
+
                 constructor = null;
             }
         }
+
         STREAM_PROVIDER_CONSTRUCTOR = constructor;
     }
 
@@ -142,6 +146,7 @@ public static class DnsServerAddressStreamProviders
                 // ignore
             }
         }
+
         return UnixDefault();
     }
 
@@ -179,6 +184,7 @@ public static class DnsServerAddressStreamProviders
             {
                 long last = Interlocked.Read(ref lastRefresh);
                 IDnsServerAddressStreamProvider current = currentProvider;
+
                 if (SystemTimer.NanoTime() - last > REFRESH_INTERVAL)
                 {
                     // This is slightly racy which means it will be possible still use the old configuration
@@ -188,6 +194,7 @@ public static class DnsServerAddressStreamProviders
                         current = currentProvider = Provider();
                     }
                 }
+
                 return current.NameServerAddressStream(hostname);
             }
 

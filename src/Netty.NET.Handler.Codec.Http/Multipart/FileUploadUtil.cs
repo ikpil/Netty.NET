@@ -57,6 +57,7 @@ internal static class FileUploadUtil
     internal static string ValidateFileNameForMultiPart(string filename)
     {
         int length = ObjectUtil.CheckNotNull(filename, "filename").Length;
+
         for (int i = 0; i < length; i++)
         {
             char c = filename[i];
@@ -68,6 +69,7 @@ internal static class FileUploadUtil
                         (int) c, i));
             }
         }
+
         return filename;
     }
 
@@ -122,6 +124,7 @@ internal static class FileUploadUtil
                     string.Format(CultureInfo.InvariantCulture, "Illegal Content-Type character 0x{0:x2} at index {1}",
                         (int) contentType[index], index));
             }
+
             return false;
         }
 
@@ -137,8 +140,10 @@ internal static class FileUploadUtil
                 throw new ArgumentException("Malformed content type value: " +
                     "index of '/' is " + slash + " content type length " + contentType.Length);
             }
+
             return false;
         }
+
         return true;
     }
 }

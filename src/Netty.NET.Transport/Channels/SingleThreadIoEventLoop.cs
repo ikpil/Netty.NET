@@ -191,12 +191,14 @@ public class SingleThreadIoEventLoop : SingleThreadEventLoop, IIoEventLoop
         public long DelayNanos(long currentTimeNanos)
         {
             Debug.Assert(loop.InEventLoop());
+
             return loop.DelayNanos(currentTimeNanos);
         }
 
         public long DeadlineNanos()
         {
             Debug.Assert(loop.InEventLoop());
+
             return loop.DeadlineNanos();
         }
 
@@ -206,6 +208,7 @@ public class SingleThreadIoEventLoop : SingleThreadEventLoop, IIoEventLoop
             {
                 loop._activeIoTimeNanos = activeNanos;
             }
+
             loop.ReportActiveIoTime(activeNanos);
         }
 
@@ -219,6 +222,7 @@ public class SingleThreadIoEventLoop : SingleThreadEventLoop, IIoEventLoop
     {
         Debug.Assert(InEventLoop());
         _ioHandler.Initialize();
+
         do
         {
             int ioRatio = _ioRatio;
@@ -227,6 +231,7 @@ public class SingleThreadIoEventLoop : SingleThreadEventLoop, IIoEventLoop
             // reset before calling runIo() which is responsible for calling reportActiveIoTime(...).
             _activeIoTimeNanos = -1;
             RunIo();
+
             if (ioRatio == 100 || _activeIoTimeNanos == -1)
             {
                 taskQuantumNs = _maxTaskProcessingQuantumNs;
@@ -246,10 +251,12 @@ public class SingleThreadIoEventLoop : SingleThreadEventLoop, IIoEventLoop
                     taskQuantumNs = quantum;
                 }
             }
+
             if (IsShuttingDown())
             {
                 _ioHandler.PrepareToDestroy();
             }
+
             // Now run tasks for the computed amount of time before trying to run IO again.
             RunAllTasks(taskQuantumNs);
 
@@ -266,6 +273,7 @@ public class SingleThreadIoEventLoop : SingleThreadEventLoop, IIoEventLoop
         {
             _ioHandler.PrepareToDestroy();
         }
+
         return base.ConfirmShutdown();
     }
 
@@ -313,6 +321,7 @@ public class SingleThreadIoEventLoop : SingleThreadEventLoop, IIoEventLoop
     protected int RunIo()
     {
         Debug.Assert(InEventLoop());
+
         return _ioHandler.Run(_context);
     }
 
@@ -330,6 +339,7 @@ public class SingleThreadIoEventLoop : SingleThreadEventLoop, IIoEventLoop
     public Task<IIoRegistration> RegisterAsync(IIoHandle handle)
     {
         var promise = new TaskCompletionSource<IIoRegistration>(TaskCreationOptions.RunContinuationsAsynchronously);
+
         if (InEventLoop())
         {
             RegisterForIo0(handle, promise);
@@ -351,6 +361,7 @@ public class SingleThreadIoEventLoop : SingleThreadEventLoop, IIoEventLoop
     {
         Debug.Assert(InEventLoop());
         IIoRegistration registration;
+
         try
         {
             registration = _ioHandler.Register(handle);
@@ -360,6 +371,7 @@ public class SingleThreadIoEventLoop : SingleThreadEventLoop, IIoEventLoop
             promise.SetException(e);
             return;
         }
+
         _numRegistrations.IncrementAndGet();
         promise.SetResult(new IoRegistrationWrapper(this, registration));
     }
@@ -430,6 +442,7 @@ public class SingleThreadIoEventLoop : SingleThreadEventLoop, IIoEventLoop
                 _loop._numRegistrations.DecrementAndGet();
                 return true;
             }
+
             return false;
         }
     }

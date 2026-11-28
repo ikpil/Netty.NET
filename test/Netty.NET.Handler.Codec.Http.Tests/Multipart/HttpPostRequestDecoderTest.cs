@@ -67,6 +67,7 @@ public class HttpPostRequestDecoderTest
     {
         string boundary = "dLV9Wyq26L_-JQxk6ferf-RT153LhOO";
         string contentTypeValue;
+
         if (withSpace)
         {
             contentTypeValue = "multipart/form-data; boundary=" + boundary;
@@ -75,6 +76,7 @@ public class HttpPostRequestDecoderTest
         {
             contentTypeValue = "multipart/form-data;boundary=" + boundary;
         }
+
         DefaultHttpRequest req = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST,
                 "http://localhost");
 
@@ -145,6 +147,7 @@ public class HttpPostRequestDecoderTest
 
             req.Content.WriteBytes(Encoding.UTF8.GetBytes(body));
         }
+
         // Create decoder instance to test.
         HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(inMemoryFactory, req);
         Assert.NotEmpty(decoder.GetBodyHttpDatas());
@@ -163,9 +166,11 @@ public class HttpPostRequestDecoderTest
         // Build test case
         string extradata = "aaaa";
         string[] datas = new string[5];
+
         for (int i = 0; i < 4; i++)
         {
             datas[i] = extradata;
+
             for (int j = 0; j < i; j++)
             {
                 datas[i] += '\r';
@@ -232,6 +237,7 @@ public class HttpPostRequestDecoderTest
 
             req.Content.WriteBytes(Encoding.UTF8.GetBytes(body));
         }
+
         // Create decoder instance to test.
         HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(inMemoryFactory, req);
         Assert.NotEmpty(decoder.GetBodyHttpDatas());
@@ -460,9 +466,11 @@ public class HttpPostRequestDecoderTest
 
             req.Content.WriteBytes(Encoding.UTF8.GetBytes(body));
         }
+
         // Create decoder instance to test without any exception.
         HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(inMemoryFactory, req);
         Assert.Single(decoder.GetBodyHttpDatas());
+
         while (decoder.HasNext())
         {
             IInterfaceHttpData data = decoder.Next();
@@ -471,6 +479,7 @@ public class HttpPostRequestDecoderTest
             Assert.Equal("tmp-0.txt", upload.GetFilename());
             Assert.Equal(HttpPostBodyUtil.DEFAULT_BINARY_CONTENT_TYPE, upload.GetContentType());
         }
+
         decoder.Destroy();
         Assert.True(req.Release());
     }
@@ -529,6 +538,7 @@ public class HttpPostRequestDecoderTest
                         "--" + boundary + "--\r\n";
 
         req.Content.WriteBytes(Encoding.UTF8.GetBytes(body));
+
         // Create decoder instance to test.
         try
         {
@@ -565,6 +575,7 @@ public class HttpPostRequestDecoderTest
                         "--" + boundary + "--\r\n";
 
         req.Content.WriteBytes(Encoding.UTF8.GetBytes(body));
+
         // Create decoder instance to test.
         try
         {
@@ -585,6 +596,7 @@ public class HttpPostRequestDecoderTest
                 Unpooled.CopiedBuffer("project=netty&=netty&project=netty", Encoding.ASCII));
         DefaultHttpRequest req = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, "/");
         HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(req);
+
         try
         {
             HttpPostRequestDecoder.ErrorDataDecoderException e = Assert.Throws<HttpPostRequestDecoder.ErrorDataDecoderException>(
@@ -820,6 +832,7 @@ public class HttpPostRequestDecoderTest
     {
         IFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, "/",
                 Unpooled.CopiedBuffer("a=1&=2&b=3", Encoding.ASCII));
+
         try
         {
             Assert.Throws<HttpPostRequestDecoder.ErrorDataDecoderException>(
@@ -849,6 +862,7 @@ public class HttpPostRequestDecoderTest
     {
         buf.WriteCharSequence("a=b&foo=%22bar%22&==", Encoding.ASCII);
         IFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, "/", buf);
+
         try
         {
             new HttpPostStandardRequestDecoder(request).Destroy();
@@ -952,6 +966,7 @@ public class HttpPostRequestDecoderTest
         content.WriteBytes(bodyBytes);
 
         IFullHttpRequest req = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, "/", content);
+
         try
         {
             HttpPostRequestDecoder.ErrorDataDecoderException e = Assert.Throws<HttpPostRequestDecoder.ErrorDataDecoderException>(
@@ -972,6 +987,7 @@ public class HttpPostRequestDecoderTest
         content.WriteBytes(bodyBytes);
 
         IFullHttpRequest req = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, "/", content);
+
         try
         {
             HttpPostRequestDecoder.ErrorDataDecoderException e = Assert.Throws<HttpPostRequestDecoder.ErrorDataDecoderException>(
@@ -992,6 +1008,7 @@ public class HttpPostRequestDecoderTest
         content.WriteBytes(bodyBytes);
 
         IFullHttpRequest req = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, "/", content);
+
         try
         {
             HttpPostRequestDecoder.ErrorDataDecoderException e = Assert.Throws<HttpPostRequestDecoder.ErrorDataDecoderException>(
@@ -1012,6 +1029,7 @@ public class HttpPostRequestDecoderTest
         content.WriteBytes(bodyBytes);
 
         IFullHttpRequest req = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, "/", content);
+
         try
         {
             HttpPostRequestDecoder.ErrorDataDecoderException e = Assert.Throws<HttpPostRequestDecoder.ErrorDataDecoderException>(
@@ -1090,6 +1108,7 @@ public class HttpPostRequestDecoderTest
                 "/",
                 content);
         HttpPostStandardRequestDecoder decoder = null;
+
         try
         {
             decoder = new HttpPostStandardRequestDecoder(
@@ -1104,6 +1123,7 @@ public class HttpPostRequestDecoderTest
             {
                 decoder.Destroy();
             }
+
             Assert.Fail("Was not expecting an exception");
         }
         finally
@@ -1120,6 +1140,7 @@ public class HttpPostRequestDecoderTest
         HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(req, 1024, -1);
 
         int num = 0;
+
         while (true)
         {
             try
@@ -1131,8 +1152,10 @@ public class HttpPostRequestDecoderTest
                 Assert.Equal(typeof(HttpPostRequestDecoder.TooManyFormFieldsException), e.GetType());
                 break;
             }
+
             Assert.True(num++ < 1024);
         }
+
         Assert.Equal(1024, num);
         decoder.Destroy();
     }
@@ -1147,6 +1170,7 @@ public class HttpPostRequestDecoderTest
         decoder.Offer(new DefaultHttpContent(Unpooled.WrappedBuffer(Encoding.Default.GetBytes("--be38b42a9ad2713f\n"))));
 
         int num = 0;
+
         while (true)
         {
             try
@@ -1165,8 +1189,10 @@ public class HttpPostRequestDecoderTest
                 Assert.Equal(typeof(HttpPostRequestDecoder.TooManyFormFieldsException), e.GetType());
                 break;
             }
+
             Assert.True(num++ < 1024);
         }
+
         Assert.Equal(1024, num);
         decoder.Destroy();
     }
@@ -1250,6 +1276,7 @@ public class HttpPostRequestDecoderTest
         req.Headers().Set(HttpHeaderNames.CONTENT_TYPE, "multipart/form-data; boundary=" + boundary);
 
         HttpPostMultipartRequestDecoder decoder = new HttpPostMultipartRequestDecoder(req);
+
         try
         {
             Assert.True(decoder.HasNext());

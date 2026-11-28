@@ -56,6 +56,7 @@ public class DatagramConnectNotExistsSourceTest : AbstractClientSocketTest
                 new TaskCompletionSource<Exception>(TaskCreationOptions.RunContinuationsAsynchronously);
         cb.Handler(new ExceptionPromiseHandler(promise));
         Task<IChannel> future = cb.ConnectAsync(NetUtil.LOCALHOST, SocketTestPermutation.BAD_PORT);
+
         try
         {
             IChannel datagramChannel = await future;

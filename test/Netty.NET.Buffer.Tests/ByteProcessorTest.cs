@@ -55,6 +55,7 @@ public class ByteProcessorTest
             6 => Direct(bytes).AsReadOnly(),
             _ => throw new ArgumentOutOfRangeException(nameof(kind))
         };
+
         try
         {
             test(buffer);
@@ -63,6 +64,7 @@ public class ByteProcessorTest
         {
             buffer.Release();
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -135,11 +137,13 @@ public class ByteProcessorTest
         WithBuffer(kind, bytes, buf =>
         {
             buf.SetIndex(7, 249);
+
             for (int predicate = 0; predicate < Processors.Length; predicate++)
                 for (int start = 0; start <= bytes.Length; start += 16)
                 {
                     int length = Math.Min(37, bytes.Length - start);
                     int first = -1, last = -1;
+
                     for (int index = start; index < start + length; index++)
                         if (Stops(predicate, bytes[index]))
                         {
@@ -147,11 +151,14 @@ public class ByteProcessorTest
                             {
                                 first = index;
                             }
+
                             last = index;
                         }
+
                     Assert.Equal(first, buf.ForEachByte(start, length, Processors[predicate]));
                     Assert.Equal(last, buf.ForEachByteDesc(start, length, Processors[predicate]));
                 }
+
             Assert.Equal(bytes, ByteBufUtil.GetBytes(buf, 0, bytes.Length));
             Assert.Equal(7, buf.ReaderIndex);
             Assert.Equal(249, buf.WriterIndex);

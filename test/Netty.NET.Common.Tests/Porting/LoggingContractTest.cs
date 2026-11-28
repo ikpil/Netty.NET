@@ -16,6 +16,7 @@ public class LoggingContractTest
         source.Listeners.Clear();
         source.Listeners.Add(new TextWriterTraceListener(writer));
         var logger = new InternalDefaultLogger("contract", source);
+
         try
         {
             Assert.False(logger.IsDebugEnabled());
@@ -38,6 +39,7 @@ public class LoggingContractTest
     public void PrimitiveFormattingPreservesJavaByteSignAndBooleanCaseAcrossCultures()
     {
         CultureInfo previous = CultureInfo.CurrentCulture;
+
         try
         {
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");

@@ -149,24 +149,29 @@ public abstract class XmlElement
     private protected static int ListHashCode<T>(List<T> list)
     {
         int hashCode = 1;
+
         foreach (T e in list)
         {
             hashCode = 31 * hashCode + (e == null ? 0 : e.GetHashCode());
         }
+
         return hashCode;
     }
 
     private protected static string ListToString<T>(List<T> list)
     {
         StringBuilder buf = new StringBuilder("[");
+
         for (int i = 0; i < list.Count; i++)
         {
             if (i > 0)
             {
                 buf.Append(", ");
             }
+
             buf.Append(list[i]?.ToString() ?? "null");
         }
+
         return buf.Append(']').ToString();
     }
 

@@ -328,6 +328,7 @@ public class ReplayingDecoderTest
                         + " but was " + @in.GetType()));
                 return;
             }
+
             if (!decoded)
             {
                 decoded = true;

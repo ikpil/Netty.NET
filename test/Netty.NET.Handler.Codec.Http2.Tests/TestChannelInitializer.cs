@@ -41,6 +41,7 @@ public class TestChannelInitializer : ChannelInitializer<IChannel>
             channel.Pipeline.AddLast(handler);
             handler = null;
         }
+
         if (maxReads != null)
         {
             channel.Config.SetRecvByteBufAllocator(new TestNumReadsRecvByteBufAllocator(maxReads));

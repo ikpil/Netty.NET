@@ -127,6 +127,7 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
                 ByteBuf response = Unpooled.CopiedBuffer(LARGE_STRING, Encoding.ASCII);
                 responseFuture = ctx.WriteAndFlushAsync(new DefaultHttp2DataFrame(response, true));
             }
+
             ReferenceCountUtil.Release(msg);
         }
 
@@ -141,6 +142,7 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
             {
                 handleInactivatedNotFlushed.IncrementAndGet();
             }
+
             CountDown(latchHandlerInactive);
             ctx.FireChannelInactive();
         }
@@ -148,10 +150,12 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
         private static string GenerateLargeString(int sizeInBytes)
         {
             StringBuilder sb = new StringBuilder(sizeInBytes);
+
             for (int i = 0; i < sizeInBytes; i++)
             {
                 sb.Append('X');
             }
+
             return sb.ToString();
         }
     }
@@ -174,14 +178,17 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
         {
             _ = clientChannel.CloseAsync();
         }
+
         if (serverChannel != null)
         {
             _ = serverChannel.CloseAsync();
         }
+
         if (serverConnectedChannel != null)
         {
             _ = serverConnectedChannel.CloseAsync();
         }
+
         await eventLoopGroup.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
     }
 
@@ -211,10 +218,12 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
         sb.ChildHandler(new ActionChannelInitializer<IChannel>(ch =>
         {
             ch.Pipeline.AddLast(codec);
+
             if (multiplexer != null)
             {
                 ch.Pipeline.AddLast(multiplexer);
             }
+
             ch.Pipeline.AddLast(new ServerSettingsAckHandler(serverConnectedChannelRef, serverConnectedChannelLatch,
                     serverAckOneLatch, serverAckAllLatch));
         }));
@@ -280,6 +289,7 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
                 CountDown(serverAckOneLatch);
                 CountDown(serverAckAllLatch);
             }
+
             ReferenceCountUtil.Release(msg);
         }
     }
@@ -300,6 +310,7 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
             {
                 CountDown(clientSettingsLatch);
             }
+
             ReferenceCountUtil.Release(msg);
         }
     }
@@ -380,6 +391,7 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
                             });
                 }, TimeSpan.FromMilliseconds(500));
             }
+
             ReferenceCountUtil.Release(msg);
         }
     }
@@ -404,6 +416,7 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
             {
                 CountDown(latch);
             }
+
             ReferenceCountUtil.Release(msg);
         }
 
@@ -444,10 +457,12 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
     private async Task TestSslException(SslProvider provider, bool tlsv13)
     {
         Assert.SkipUnless(SslProvider.IsAlpnSupported(provider), "SslProvider.isAlpnSupported(provider)");
+
         if (tlsv13)
         {
             Assert.SkipUnless(SslProvider.IsTlsv13Supported(provider), "SslProvider.isTlsv13Supported(provider)");
         }
+
         string protocol = tlsv13 ? "TLSv1.3" : "TLSv1.2";
         X509Bundle cert = new CertificateBuilder()
                 .Subject("cn=localhost")
@@ -455,6 +470,7 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
                 .BuildSelfSigned();
         SslContext sslCtx = null;
         SslContext clientCtx = null;
+
         try
         {
             sslCtx = SslContextBuilder.ForServer((AsymmetricAlgorithm) cert.GetKeyPair(), cert.GetCertificatePath())
@@ -593,6 +609,7 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
                     {
                         errorRef.Set(new XunitException("TLSv1.2 expected"));
                     }
+
                     CountDown(latch);
                     CountDown(latch);
                 }
@@ -649,6 +666,7 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
                 .BuildSelfSigned();
         SslContext serverCtx = null;
         SslContext clientCtx = null;
+
         try
         {
             serverCtx = SslContextBuilder.ForServer((AsymmetricAlgorithm) cert.GetKeyPair(),
@@ -738,6 +756,7 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
                                 ctx.WriteAndFlushAsync(
                                         new DefaultHttp2DataFrame(content, true)));
             }
+
             ReferenceCountUtil.Release(msg);
         }
     }
@@ -839,12 +858,14 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
             h2Bootstrap.Handler(new EndStreamDataLatchHandler(latchClientResponses, true));
 
             List<Task> streamFutures = new List<Task>();
+
             for (int i = 0; i < streams; i ++)
             {
                 IHttp2StreamChannel stream = await h2Bootstrap.OpenAsync();
                 streamFutures.Add(stream.WriteAndFlushAsync(
                         new DefaultHttp2HeadersFrame(new DefaultHttp2Headers(), true)));
             }
+
             for (int i = 0; i < streams; i ++)
             {
                 await streamFutures[i];
@@ -863,6 +884,7 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
             {
                 _ = serverEventLoopGroup.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
             }
+
             if (clientEventLoopGroup != null)
             {
                 _ = clientEventLoopGroup.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
@@ -920,6 +942,7 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
         IChannel serverChannel = null;
         IChannel clientChannel = null;
         IChannel clientStreamChannel = null;
+
         try
         {
             CountdownEvent clientReceivedResponseLatch = new CountdownEvent(1);
@@ -988,14 +1011,17 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
             {
                 await clientStreamChannel.CloseAsync();
             }
+
             if (clientChannel != null)
             {
                 await clientChannel.CloseAsync();
             }
+
             if (serverChannel != null)
             {
                 await serverChannel.CloseAsync();
             }
+
             if (group != null)
             {
                 _ = group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(3));
@@ -1048,6 +1074,7 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
         // Large enough to force many rounds of the (default 64KiB) HTTP/2 stream flow-control window.
         int payloadLength = 2 * 1024 * 1024;
         byte[] payloadBytes = new byte[payloadLength];
+
         for (int i = 0; i < payloadLength; i++)
         {
             payloadBytes[i] = (byte) i;
@@ -1066,6 +1093,7 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
         IHttp2StreamChannel inStream = null;
         IHttp2StreamChannel outStream = null;
         AtomicReference<ByteBuf> receivedHolder = new AtomicReference<ByteBuf>();
+
         try
         {
             inGroup = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
@@ -1157,6 +1185,7 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
             {
                 throw new XunitException(ThrowableUtil.ThrowableToString(cause), cause);
             }
+
             Assert.Equal(payloadLength, received.ReadableBytes);
             byte[] actual = new byte[payloadLength];
             received.ReadBytes(actual);
@@ -1169,34 +1198,42 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
             {
                 received.Release();
             }
+
             if (inStream != null)
             {
                 await inStream.CloseAsync();
             }
+
             if (outStream != null)
             {
                 await outStream.CloseAsync();
             }
+
             if (inClientChannel != null)
             {
                 await inClientChannel.CloseAsync();
             }
+
             if (outClientChannel != null)
             {
                 await outClientChannel.CloseAsync();
             }
+
             if (inServerChannel != null)
             {
                 await inServerChannel.CloseAsync();
             }
+
             if (outServerChannel != null)
             {
                 await outServerChannel.CloseAsync();
             }
+
             if (inGroup != null)
             {
                 _ = inGroup.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
             }
+
             if (outGroup != null)
             {
                 _ = outGroup.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
@@ -1224,6 +1261,7 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
                 _ = ctx.WriteAndFlushAsync(new DefaultHttp2DataFrame(
                         Unpooled.WrappedBuffer(payloadBytes), true));
             }
+
             ReferenceCountUtil.Release(msg);
         }
     }
@@ -1253,6 +1291,7 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
                 {
                     IHttp2DataFrame data = (IHttp2DataFrame) msg;
                     received.WriteBytes(data.Content);
+
                     if (data.IsEndStream())
                     {
                         CountDown(complete);
@@ -1290,6 +1329,7 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
                 _ = finalOutStream.WriteAndFlushAsync(
                         new DefaultHttp2DataFrame(data.Content.Retain(), data.IsEndStream()));
             }
+
             ReferenceCountUtil.Release(msg);
         }
     }
@@ -1340,6 +1380,7 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
         // Large enough to require many rounds of the (default 64KiB) HTTP/2 stream flow-control window.
         int payloadLength = 4 * 1024 * 1024;
         byte[] payloadBytes = new byte[payloadLength];
+
         for (int i = 0; i < payloadLength; i++)
         {
             payloadBytes[i] = (byte) i;
@@ -1352,6 +1393,7 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
         IHttp2StreamChannel clientStream = null;
         Thread hammer = null;
         AtomicReference<ByteBuf> receivedHolder = new AtomicReference<ByteBuf>();
+
         try
         {
             serverGroup = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
@@ -1395,6 +1437,7 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
             hammer = new Thread(() =>
             {
                 bool v = false;
+
                 while (!stop.Get())
                 {
                     v = !v;
@@ -1417,6 +1460,7 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
             {
                 throw new XunitException(ThrowableUtil.ThrowableToString(cause), cause);
             }
+
             Assert.Equal(payloadLength, received.ReadableBytes);
             byte[] actual = new byte[payloadLength];
             received.ReadBytes(actual);
@@ -1429,26 +1473,32 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
             {
                 received.Release();
             }
+
             if (hammer != null)
             {
                 hammer.Interrupt();
             }
+
             if (clientStream != null)
             {
                 await clientStream.CloseAsync();
             }
+
             if (clientChannel != null)
             {
                 await clientChannel.CloseAsync();
             }
+
             if (serverChannel != null)
             {
                 await serverChannel.CloseAsync();
             }
+
             if (serverGroup != null)
             {
                 _ = serverGroup.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
             }
+
             if (clientGroup != null)
             {
                 _ = clientGroup.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);

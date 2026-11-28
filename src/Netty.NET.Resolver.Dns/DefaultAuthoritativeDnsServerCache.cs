@@ -110,6 +110,7 @@ public class DefaultAuthoritativeDnsServerCache : IAuthoritativeDnsServerCache
                     "minTtl: " + minTtl.ToString(CultureInfo.InvariantCulture) + ", maxTtl: " +
                     maxTtl.ToString(CultureInfo.InvariantCulture) + " (expected: 0 <= minTtl <= maxTtl)");
         }
+
         this.comparator = comparator;
     }
 
@@ -122,6 +123,7 @@ public class DefaultAuthoritativeDnsServerCache : IAuthoritativeDnsServerCache
         {
             return null;
         }
+
         return new SequentialDnsServerAddressStream(addresses, 0);
     }
 

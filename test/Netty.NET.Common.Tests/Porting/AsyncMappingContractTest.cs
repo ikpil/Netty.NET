@@ -70,6 +70,7 @@ public class AsyncMappingContractTest
         {
             ExecutorCompletion observation = null;
             CompletionRegistration registration = null;
+
             try
             {
                 await executor.SubmitAsync(() =>
@@ -86,6 +87,7 @@ public class AsyncMappingContractTest
                             hello.Release();
                             Events.Add("release");
                             Suppressed = false;
+
                             try
                             {
                                 Selected = ((Task<object>)task).GetAwaiter().GetResult();
@@ -94,7 +96,9 @@ public class AsyncMappingContractTest
                             {
                                 Failure = error;
                             }
+
                             Events.Add("complete");
+
                             if (ReadPending)
                             {
                                 ReadPending = false;
@@ -109,6 +113,7 @@ public class AsyncMappingContractTest
                         {
                             hello.Release();
                         }
+
                         throw;
                     }
                     finally
@@ -170,14 +175,17 @@ public class AsyncMappingContractTest
 
         var hello = new HelloLease { Executor = executor };
         var consumer = new LookupConsumer(executor);
+
         try
         {
             if (completed)
             {
                 Finish();
             }
+
             Task<object> lookup = consumer.LookupAsync(mapping, hostname, hello, cancellation.Token);
             await consumer.Started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
             if (!completed)
             {
                 await executor.SubmitAsync(() =>
@@ -188,6 +196,7 @@ public class AsyncMappingContractTest
                 await consumer.RequestReadAsync();
                 await Task.Run(Finish);
             }
+
             if (outcome == 0)
             {
                 Assert.Same(value, await lookup.WaitAsync(TimeSpan.FromSeconds(5)));
@@ -203,6 +212,7 @@ public class AsyncMappingContractTest
                     await lookup.WaitAsync(TimeSpan.FromSeconds(5)));
                 Assert.Equal(cancellation.Token, error.CancellationToken);
             }
+
             Assert.True(invokedOnLoop);
             Assert.True(consumer.CompletionOnLoop);
             Assert.True(hello.ReleasedOnLoop);
@@ -214,6 +224,7 @@ public class AsyncMappingContractTest
             Assert.Equal(completed ? 0 : 1, consumer.Reads);
             Assert.Equal(completed ? new[] { "release", "complete" } : new[] { "release", "complete", "read" },
                 consumer.Events);
+
             if (outcome == 0)
             {
                 Assert.Same(value, consumer.Selected);
@@ -243,9 +254,11 @@ public class AsyncMappingContractTest
         var mapping = new DelegateMapping<string, object>((_, _) => nullTask ? null : throw failure);
         var hello = new HelloLease { Executor = executor };
         var consumer = new LookupConsumer(executor);
+
         try
         {
             Task<object> lookup = consumer.LookupAsync(mapping, null, hello);
+
             if (nullTask)
             {
                 await Assert.ThrowsAsync<InvalidOperationException>(async () => await lookup);
@@ -254,6 +267,7 @@ public class AsyncMappingContractTest
             {
                 Assert.Same(failure, await Assert.ThrowsAsync<ArgumentException>(async () => await lookup));
             }
+
             Assert.Equal(1, hello.Releases);
             Assert.True(hello.ReleasedOnLoop);
         }
@@ -278,6 +292,7 @@ public class AsyncMappingContractTest
         var hello = new HelloLease { Executor = executor };
         var consumer = new LookupConsumer(executor);
         var value = new object();
+
         try
         {
             Task<object> lookup = consumer.LookupAsync(mapping, null, hello, cancellation.Token);
@@ -310,6 +325,7 @@ public class AsyncMappingContractTest
         var consumer = new LookupConsumer(executor);
         using var waitCancellation = new CancellationTokenSource();
         var value = new object();
+
         try
         {
             Task<object> lookup = consumer.LookupAsync(mapping, "example.test", hello);

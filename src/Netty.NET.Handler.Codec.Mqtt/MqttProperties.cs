@@ -159,6 +159,7 @@ public sealed class MqttProperties
         static MqttPropertyType()
         {
             VALUES = new MqttPropertyType[43];
+
             foreach (MqttPropertyType v in Values())
             {
                 VALUES[v.value] = v;
@@ -182,6 +183,7 @@ public sealed class MqttProperties
         public static MqttPropertyType ValueOf(int type)
         {
             MqttPropertyType t = null;
+
             try
             {
                 t = VALUES[type];
@@ -190,10 +192,12 @@ public sealed class MqttProperties
             {
                 // nop
             }
+
             if (t == null)
             {
                 throw new ArgumentException("unknown property type: " + type.ToString(CultureInfo.InvariantCulture));
             }
+
             return t;
         }
 
@@ -230,6 +234,7 @@ public sealed class MqttProperties
         {
             return NO_PROPERTIES;
         }
+
         return properties;
     }
 
@@ -308,6 +313,7 @@ public sealed class MqttProperties
             {
                 return false;
             }
+
             MqttProperty<T> that = (MqttProperty<T>) obj;
             return this.propertyId == that.propertyId && ValueEquals(this.value, that.value);
         }
@@ -325,6 +331,7 @@ public sealed class MqttProperties
                 {
                     return false;
                 }
+
                 for (int i = 0; i < list.Count; i++)
                 {
                     if (!Equals(list[i], otherList[i]))
@@ -332,8 +339,10 @@ public sealed class MqttProperties
                         return false;
                     }
                 }
+
                 return true;
             }
+
             return value.Equals(other);
         }
 
@@ -342,12 +351,15 @@ public sealed class MqttProperties
             if (value is IList list)
             {
                 int hashCode = 1;
+
                 foreach (object e in list)
                 {
                     hashCode = 31 * hashCode + (e == null ? 0 : e.GetHashCode());
                 }
+
                 return hashCode;
             }
+
             return value.GetHashCode();
         }
     }
@@ -408,6 +420,7 @@ public sealed class MqttProperties
             {
                 return false;
             }
+
             StringPair that = (StringPair) obj;
 
             return that.key.Equals(this.key) && that.value.Equals(this.value);
@@ -436,10 +449,12 @@ public sealed class MqttProperties
         internal static UserProperties FromUserPropertyCollection(ICollection<UserProperty> properties)
         {
             UserProperties userProperties = new UserProperties();
+
             foreach (UserProperty property in properties)
             {
                 userProperties.Add(new StringPair(property.value.key, property.value.value));
             }
+
             return userProperties;
         }
 
@@ -458,16 +473,20 @@ public sealed class MqttProperties
         {
             StringBuilder builder = new StringBuilder("UserProperties(");
             bool first = true;
+
             foreach (StringPair pair in value)
             {
                 if (!first)
                 {
                     builder.Append(", ");
                 }
+
                 builder.Append((pair.key ?? "null") + "->" + (pair.value ?? "null"));
                 first = false;
             }
+
             builder.Append(")");
+
             return builder.ToString();
         }
     }
@@ -519,7 +538,9 @@ public sealed class MqttProperties
         {
             throw new NotSupportedException("adding property isn't allowed");
         }
+
         Dictionary<int, MqttProperty> props = this.props;
+
         if (property.propertyId == USER_PROPERTY)
         {
             List<UserProperty> userProperties = this.userProperties;
@@ -528,6 +549,7 @@ public sealed class MqttProperties
                 userProperties = new List<UserProperty>(1);
                 this.userProperties = userProperties;
             }
+
             if (property is UserProperty)
             {
                 userProperties.Add((UserProperty) property);
@@ -552,6 +574,7 @@ public sealed class MqttProperties
                 subscriptionIds = new List<IntegerProperty>(1);
                 this.subscriptionIds = subscriptionIds;
             }
+
             if (property is IntegerProperty)
             {
                 subscriptionIds.Add((IntegerProperty) property);
@@ -568,6 +591,7 @@ public sealed class MqttProperties
                 props = new Dictionary<int, MqttProperty>();
                 this.props = props;
             }
+
             props[property.propertyId] = property;
         }
     }
@@ -590,19 +614,24 @@ public sealed class MqttProperties
         {
             return subscriptionIds;
         }
+
         List<MqttProperty> propValues = new List<MqttProperty>(props != null ? props.Count : 1);
+
         if (props != null)
         {
             propValues.AddRange(props.Values);
         }
+
         if (subscriptionIds != null)
         {
             propValues.AddRange(subscriptionIds);
         }
+
         if (userProperties != null)
         {
             propValues.Add(UserProperties.FromUserPropertyCollection(userProperties));
         }
+
         return propValues;
     }
 
@@ -631,8 +660,10 @@ public sealed class MqttProperties
             {
                 return null;
             }
+
             return UserProperties.FromUserPropertyCollection(userProperties);
         }
+
         if (propertyId == SUBSCRIPTION_IDENTIFIER)
         {
             List<IntegerProperty> subscriptionIds = this.subscriptionIds;
@@ -640,8 +671,10 @@ public sealed class MqttProperties
             {
                 return null;
             }
+
             return subscriptionIds[0];
         }
+
         Dictionary<int, MqttProperty> props = this.props;
         return props == null ? null : props.TryGetValue(propertyId, out MqttProperty property) ? property : null;
     }
@@ -666,6 +699,7 @@ public sealed class MqttProperties
         {
             return subscriptionIds == null ? Array.Empty<MqttProperty>() : (IReadOnlyList<MqttProperty>) subscriptionIds;
         }
+
         Dictionary<int, MqttProperty> props = this.props;
         return (props == null || !props.ContainsKey(propertyId)) ?
                 Array.Empty<MqttProperty>() :

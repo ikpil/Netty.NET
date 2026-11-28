@@ -241,7 +241,9 @@ public sealed class CorsConfig
         {
             return EmptyHttpHeaders.INSTANCE;
         }
+
         HttpHeaders preflightHeaders = new DefaultHttpHeaders();
+
         foreach (KeyValuePair<ICharSequence, Func<object>> entry in this.preflightHeaders)
         {
             object value = GetValue(entry.Value);
@@ -254,6 +256,7 @@ public sealed class CorsConfig
                 preflightHeaders.Add(entry.Key, value);
             }
         }
+
         return preflightHeaders;
     }
 

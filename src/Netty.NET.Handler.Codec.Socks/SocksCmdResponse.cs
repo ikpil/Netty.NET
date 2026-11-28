@@ -71,6 +71,7 @@ public sealed class SocksCmdResponse : SocksResponse
     {
         ObjectUtil.CheckNotNull(cmdStatus, "cmdStatus");
         ObjectUtil.CheckNotNull(addressType, "addressType");
+
         if (host != null)
         {
             if (addressType == SocksAddressType.IPv4)
@@ -87,6 +88,7 @@ public sealed class SocksCmdResponse : SocksResponse
                 {
                     throw new ArgumentException(host + " IDN: " + asciiHost + " exceeds 255 char limit");
                 }
+
                 host = asciiHost;
             }
             else if (addressType == SocksAddressType.IPv6)
@@ -100,10 +102,12 @@ public sealed class SocksCmdResponse : SocksResponse
             {
             }
         }
+
         if (port < 0 || port > 65535)
         {
             throw new ArgumentException(port.ToString(CultureInfo.InvariantCulture) + " is not in bounds 0 <= x <= 65535");
         }
+
         this.cmdStatus = cmdStatus;
         this.addressType = addressType;
         this.host = host;
@@ -163,6 +167,7 @@ public sealed class SocksCmdResponse : SocksResponse
         byteBuf.WriteByte(cmdStatus.ByteValue());
         byteBuf.WriteByte(0x00);
         byteBuf.WriteByte(addressType.ByteValue());
+
         if (addressType == SocksAddressType.IPv4)
         {
             byte[] hostContent = host == null ?
@@ -182,6 +187,7 @@ public sealed class SocksCmdResponse : SocksResponse
                 byteBuf.WriteByte(DOMAIN_ZEROED.Length);
                 byteBuf.WriteBytes(DOMAIN_ZEROED);
             }
+
             ByteBufUtil.WriteShortBE(byteBuf, port);
         }
         else if (addressType == SocksAddressType.IPv6)

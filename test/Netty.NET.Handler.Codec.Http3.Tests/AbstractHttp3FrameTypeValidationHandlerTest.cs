@@ -80,14 +80,17 @@ public abstract class AbstractHttp3FrameTypeValidationHandlerTest<T> : IDisposab
         {
             QpackAttributes qpackAttributes = Http3.GetQpackAttributes(parent);
             Assert.NotNull(qpackAttributes);
+
             if (qpackAttributes.DecoderStreamAvailable())
             {
                 Assert.False(((EmbeddedQuicStreamChannel) qpackAttributes.DecoderStream()).Finish());
             }
+
             if (qpackAttributes.EncoderStreamAvailable())
             {
                 Assert.False(((EmbeddedQuicStreamChannel) qpackAttributes.EncoderStream()).Finish());
             }
+
             Assert.False(parent.Finish());
         }
     }
@@ -100,16 +103,19 @@ public abstract class AbstractHttp3FrameTypeValidationHandlerTest<T> : IDisposab
         SetUp(server);
         EmbeddedQuicStreamChannel channel = NewStream(defaultStreamType, NewHandler(server));
         List<T> validFrames = NewValidFrames();
+
         foreach (T valid in validFrames)
         {
             Assert.True(channel.WriteInbound(valid));
             T read = channel.ReadInbound<T>();
             Http3TestUtils.AssertFrameSame(valid, read);
+
             if (valid is IHttp3SettingsFrame)
             {
                 AfterSettingsFrameRead((IHttp3SettingsFrame) valid);
             }
         }
+
         Assert.False(channel.Finish());
     }
 
@@ -125,12 +131,14 @@ public abstract class AbstractHttp3FrameTypeValidationHandlerTest<T> : IDisposab
         SetUp(server);
         EmbeddedQuicStreamChannel channel = NewStream(defaultStreamType, NewHandler(server));
         List<T> validFrames = NewValidFrames();
+
         foreach (T valid in validFrames)
         {
             Assert.True(channel.WriteOutbound(valid));
             T read = channel.ReadOutbound<T>();
             Http3TestUtils.AssertFrameSame(valid, read);
         }
+
         Assert.False(channel.Finish());
     }
 
@@ -144,6 +152,7 @@ public abstract class AbstractHttp3FrameTypeValidationHandlerTest<T> : IDisposab
 
         Http3ErrorCode errorCode = InboundErrorCodeInvalid();
         List<IHttp3Frame> invalidFrames = NewInvalidFrames();
+
         foreach (IHttp3Frame invalid in invalidFrames)
         {
             Exception e = Assert.ThrowsAny<Exception>(() => channel.WriteInbound(invalid));
@@ -151,6 +160,7 @@ public abstract class AbstractHttp3FrameTypeValidationHandlerTest<T> : IDisposab
 
             Http3TestUtils.AssertFrameReleased(invalid);
         }
+
         Http3TestUtils.VerifyClose(invalidFrames.Count, errorCode, parent);
         Assert.False(channel.Finish());
     }
@@ -169,6 +179,7 @@ public abstract class AbstractHttp3FrameTypeValidationHandlerTest<T> : IDisposab
         EmbeddedQuicStreamChannel channel = NewStream(defaultStreamType, NewHandler(server));
 
         List<IHttp3Frame> invalidFrames = NewInvalidFrames();
+
         foreach (IHttp3Frame invalid in invalidFrames)
         {
             Exception e = Assert.ThrowsAny<Exception>(() => channel.WriteOutbound(invalid));
@@ -176,6 +187,7 @@ public abstract class AbstractHttp3FrameTypeValidationHandlerTest<T> : IDisposab
 
             Http3TestUtils.AssertFrameReleased(invalid);
         }
+
         Assert.False(channel.Finish());
     }
 

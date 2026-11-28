@@ -70,6 +70,7 @@ public class DefaultSocks4CommandRequest : AbstractSocks4Message, ISocks4Command
             throw new ArgumentException(
                     "dstPort: " + dstPort.ToString(CultureInfo.InvariantCulture) + " (expected: 1~65535)");
         }
+
         this.type = ObjectUtil.CheckNotNull(type, "type");
         this.dstAddr = IDN.ToASCII(
                 ObjectUtil.CheckNotNull(dstAddr, "dstAddr"));
@@ -113,6 +114,7 @@ public class DefaultSocks4CommandRequest : AbstractSocks4Message, ISocks4Command
         {
             buf.Append("(type: ");
         }
+
         buf.Append(Type());
         buf.Append(", dstAddr: ");
         buf.Append(DstAddr());

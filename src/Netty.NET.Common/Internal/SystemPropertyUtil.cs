@@ -64,6 +64,7 @@ public static class SystemPropertyUtil
         CheckNonEmpty(key, "key");
 
         string value = null;
+
         try
         {
             value = Environment.GetEnvironmentVariable(key);

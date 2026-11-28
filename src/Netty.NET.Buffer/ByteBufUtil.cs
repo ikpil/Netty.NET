@@ -55,7 +55,9 @@ public static class ByteBufUtil
         ArgumentNullException.ThrowIfNull(allocator);
         ArgumentNullException.ThrowIfNull(buffer);
         ArgumentOutOfRangeException.ThrowIfNegative(length);
+
         ByteBuf result = allocator.Buffer(length);
+
         try
         {
             if (result.WritableBytes == length)
@@ -66,6 +68,7 @@ public static class ByteBufUtil
             {
                 buffer.ReadBytes(result, length);
             }
+
             return result;
         }
         catch
@@ -88,8 +91,10 @@ public static class ByteBufUtil
     public static ByteBuf WriteUtf8(IByteBufAllocator allocator, ReadOnlySpan<char> text)
     {
         ArgumentNullException.ThrowIfNull(allocator);
+
         // UTF-8 uses max. 3 bytes per char, so calculate the worst case.
         ByteBuf result = allocator.Buffer(Utf8MaxBytes(text));
+
         try
         {
             WriteUtf8(result, text);
@@ -117,7 +122,9 @@ public static class ByteBufUtil
     {
         ArgumentNullException.ThrowIfNull(allocator);
         ArgumentNullException.ThrowIfNull(text);
+
         ByteBuf result = allocator.Buffer(Utf8MaxBytes(text));
+
         try
         {
             WriteUtf8(result, text);
@@ -143,8 +150,10 @@ public static class ByteBufUtil
     public static ByteBuf WriteAscii(IByteBufAllocator allocator, ReadOnlySpan<char> text)
     {
         ArgumentNullException.ThrowIfNull(allocator);
+
         // ASCII uses 1 byte per char
         ByteBuf result = allocator.Buffer(text.Length);
+
         try
         {
             WriteAscii(result, text);
@@ -171,7 +180,9 @@ public static class ByteBufUtil
     {
         ArgumentNullException.ThrowIfNull(allocator);
         ArgumentNullException.ThrowIfNull(text);
+
         ByteBuf result = allocator.Buffer(text.Length());
+
         try
         {
             WriteAscii(result, text);
@@ -209,8 +220,10 @@ public static class ByteBufUtil
         ArgumentNullException.ThrowIfNull(allocator);
         ArgumentNullException.ThrowIfNull(encoding);
         ArgumentOutOfRangeException.ThrowIfNegative(extraCapacity);
+
         int capacity = checked(encoding.GetByteCount(text) + extraCapacity);
         ByteBuf result = allocator.Buffer(capacity);
+
         try
         {
             result.WriteCharSequence(text, encoding);
@@ -250,6 +263,7 @@ public static class ByteBufUtil
             string allocType = SystemPropertyUtil.Get("io.netty.allocator.type", "adaptive");
             IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(ByteBufUtil));
             IByteBufAllocator allocator;
+
             if (allocType == "unpooled")
             {
                 allocator = UnpooledByteBufAllocator.Default;
@@ -270,6 +284,7 @@ public static class ByteBufUtil
                 allocator = PooledByteBufAllocator.Default;
                 logger.Debug("-Dio.netty.allocator.type: pooled (unknown: {})", allocType);
             }
+
             return allocator;
         }
     }
@@ -283,6 +298,7 @@ public static class ByteBufUtil
     public static byte[] GetBytes(ByteBuf buffer)
     {
         ArgumentNullException.ThrowIfNull(buffer);
+
         return GetBytes(buffer, buffer.ReaderIndex, buffer.ReadableBytes);
     }
 
@@ -315,11 +331,13 @@ public static class ByteBufUtil
     public static byte[] GetBytes(ByteBuf buffer, int start, int length, bool copy)
     {
         ArgumentNullException.ThrowIfNull(buffer);
+
         ReadOnlySequence<byte> bytes = buffer.AsReadOnlySequence(start, length);
         if (length == 0)
         {
             return Array.Empty<byte>();
         }
+
         if (!copy && start == 0 && length == buffer.Capacity && !buffer.IsReadOnly)
         {
             try
@@ -337,6 +355,7 @@ public static class ByteBufUtil
                 // Extraction is still supported through the read-only sequence below.
             }
         }
+
         return bytes.ToArray();
     }
 
@@ -351,6 +370,7 @@ public static class ByteBufUtil
     public static void Copy(AsciiString source, ByteBuf destination)
     {
         ArgumentNullException.ThrowIfNull(source);
+
         Copy(source, 0, destination, source.Length());
     }
 
@@ -371,8 +391,10 @@ public static class ByteBufUtil
     public static void Copy(AsciiString source, int sourceIndex, ByteBuf destination, int destinationIndex, int length)
     {
         ArgumentNullException.ThrowIfNull(source);
+
         ReadOnlySpan<byte> bytes = source.AsSpan().Slice(sourceIndex, length);
         ArgumentNullException.ThrowIfNull(destination);
+
         destination.SetBytes(destinationIndex, bytes);
     }
 
@@ -391,8 +413,10 @@ public static class ByteBufUtil
     public static void Copy(AsciiString source, int sourceIndex, ByteBuf destination, int length)
     {
         ArgumentNullException.ThrowIfNull(source);
+
         ReadOnlySpan<byte> bytes = source.AsSpan().Slice(sourceIndex, length);
         ArgumentNullException.ThrowIfNull(destination);
+
         destination.WriteBytes(bytes);
     }
 
@@ -406,17 +430,21 @@ public static class ByteBufUtil
     {
         ArgumentNullException.ThrowIfNull(buffer);
         EnsureComparisonAccessible(buffer);
+
         int length = buffer.ReadableBytes;
         int index = buffer.ReaderIndex;
         int hash = 1;
+
         unchecked
         {
             for (int words = length >> 2; words > 0; words--, index += 4)
                 hash = 31 * hash + buffer.GetInt(index);
+
             // CLR byte is unsigned; Java byte contributes a signed value to the hash.
             for (int bytes = length & 3; bytes > 0; bytes--)
                 hash = 31 * hash + (sbyte)buffer.GetByte(index++);
         }
+
         return hash == 0 ? 1 : hash;
     }
 
@@ -454,11 +482,13 @@ public static class ByteBufUtil
             {
                 return false;
             }
+
         for (int bytes = length & 7; bytes > 0; bytes--)
             if (a.GetByte(aStartIndex++) != b.GetByte(bStartIndex++))
             {
                 return false;
             }
+
         return true;
     }
 
@@ -479,6 +509,7 @@ public static class ByteBufUtil
         ArgumentNullException.ThrowIfNull(b);
         EnsureComparisonAccessible(a);
         EnsureComparisonAccessible(b);
+
         return a.ReadableBytes == b.ReadableBytes &&
             Equals(a, a.ReaderIndex, b, b.ReaderIndex, a.ReadableBytes);
     }
@@ -500,11 +531,13 @@ public static class ByteBufUtil
         ArgumentNullException.ThrowIfNull(b);
         EnsureComparisonAccessible(a);
         EnsureComparisonAccessible(b);
+
         int aLength = a.ReadableBytes;
         int bLength = b.ReadableBytes;
         int length = Math.Min(aLength, bLength);
         int aIndex = a.ReaderIndex;
         int bIndex = b.ReaderIndex;
+
         for (int words = length >> 2; words > 0; words--, aIndex += 4, bIndex += 4)
         {
             long difference = (long)a.GetUnsignedInt(aIndex) - b.GetUnsignedInt(bIndex);
@@ -514,6 +547,7 @@ public static class ByteBufUtil
                 return (int)Math.Clamp(difference, int.MinValue, int.MaxValue);
             }
         }
+
         for (int bytes = length & 3; bytes > 0; bytes--)
         {
             int difference = a.GetByte(aIndex++) - b.GetByte(bIndex++);
@@ -522,6 +556,7 @@ public static class ByteBufUtil
                 return difference;
             }
         }
+
         return aLength - bLength;
     }
 
@@ -549,6 +584,7 @@ public static class ByteBufUtil
         {
             return 0;
         }
+
         // CLR: materialize logical scalar bytes for aggregates; keep the contiguous storage Span search path.
         ReadOnlySpan<byte> input = needle.SupportsDirectSearch && needle.TryGetReadOnlyMemory(needle.ReaderIndex, needle.ReadableBytes, out var needleMemory)
             ? needleMemory.Span : SearchBytes(needle);
@@ -577,6 +613,7 @@ public static class ByteBufUtil
     public static int IndexOf(ByteBuf buffer, int fromIndex, int toIndex, byte value)
     {
         ArgumentNullException.ThrowIfNull(buffer);
+
         return buffer.IndexOf(fromIndex, toIndex, value);
     }
 
@@ -586,6 +623,7 @@ public static class ByteBufUtil
     public static int Utf8MaxBytes(int sequenceLength)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(sequenceLength);
+
         return checked(sequenceLength * 3);
     }
 
@@ -607,6 +645,7 @@ public static class ByteBufUtil
     public static int Utf8MaxBytes(AsciiString text)
     {
         ArgumentNullException.ThrowIfNull(text);
+
         return text.Length();
     }
 
@@ -626,6 +665,7 @@ public static class ByteBufUtil
         }
 
         int length = i;
+
         // !ASCII is packed in a separate method to let the ASCII case be smaller
         // CLR: keep the remainder in this method; no JVM inlining policy is reproduced.
         for (; i < text.Length; ++i)
@@ -646,6 +686,7 @@ public static class ByteBufUtil
                     // WRITE_UTF_UNKNOWN
                     continue;
                 }
+
                 // Surrogate Pair consumes 2 characters.
                 if (++i == text.Length)
                 {
@@ -653,12 +694,14 @@ public static class ByteBufUtil
                     // WRITE_UTF_UNKNOWN
                     break;
                 }
+
                 if (!char.IsLowSurrogate(text[i]))
                 {
                     // WRITE_UTF_UNKNOWN + (Character.isHighSurrogate(c2) ? WRITE_UTF_UNKNOWN : c2)
                     length = checked(length + 2);
                     continue;
                 }
+
                 // See https://www.unicode.org/versions/Unicode7.0.0/ch03.pdf#G2630.
                 length = checked(length + 4);
             }
@@ -667,6 +710,7 @@ public static class ByteBufUtil
                 length = checked(length + 3);
             }
         }
+
         return length;
     }
 
@@ -706,15 +750,18 @@ public static class ByteBufUtil
     {
         ArgumentNullException.ThrowIfNull(buffer);
         ArgumentOutOfRangeException.ThrowIfNegative(reserveBytes);
+
         // CLR: reject an undersized reservation before modifying storage; Java's unchecked path can overrun it.
         int length = Utf8Bytes(text);
         if (reserveBytes < length)
         {
             throw new ArgumentOutOfRangeException(nameof(reserveBytes));
         }
+
         using var lease = buffer.PinMemoryForWrite();
         buffer.EnsureWritable(reserveBytes);
         int written;
+
         if (buffer.TryGetMemory(buffer.WriterIndex, length, out var memory))
         {
             written = EncodeUtf8(text, memory.Span);
@@ -725,6 +772,7 @@ public static class ByteBufUtil
             written = EncodeUtf8(text, bytes);
             buffer.SetBytes(buffer.WriterIndex, bytes.AsSpan(0, written));
         }
+
         buffer.WriterIndex += written;
         return written;
     }
@@ -741,6 +789,7 @@ public static class ByteBufUtil
     {
         ArgumentNullException.ThrowIfNull(buffer);
         ArgumentNullException.ThrowIfNull(text);
+
         // The public Java writeUtf8 uses utf8MaxBytes(int), even for AsciiString's raw-octet fast path.
         return ReserveAndWriteUtf8Bytes(buffer, text.AsSpan(), Utf8MaxBytes(text.Length()));
     }
@@ -750,6 +799,7 @@ public static class ByteBufUtil
     private static int EncodeUtf8(ReadOnlySpan<char> text, Span<byte> destination)
     {
         int written = 0;
+
         // We can use the _set methods as these not need to do any index checks and reference checks.
         // This is possible as we called ensureWritable(...) before.
         // CLR: the bounded destination span replaces the unchecked Java _set methods.
@@ -772,12 +822,14 @@ public static class ByteBufUtil
                     destination[written++] = (byte)'?';
                     continue;
                 }
+
                 // Surrogate Pair consumes 2 characters.
                 if (++i == text.Length)
                 {
                     destination[written++] = (byte)'?';
                     break;
                 }
+
                 // Extra method is copied here to NOT allow inlining of writeUtf8
                 // and increase the chance to inline CharSequence::charAt instead
                 // CLR: no JVM inlining strategy is reproduced; the original comment records the source rationale.
@@ -804,6 +856,7 @@ public static class ByteBufUtil
                 destination[written++] = (byte)(0x80 | (c & 0x3f));
             }
         }
+
         return written;
     }
 
@@ -816,6 +869,7 @@ public static class ByteBufUtil
     public static int WriteAscii(ByteBuf buffer, ReadOnlySpan<char> text)
     {
         ArgumentNullException.ThrowIfNull(buffer);
+
         using var lease = buffer.PinMemoryForWrite();
         // ASCII uses 1 byte per char
         buffer.EnsureWritable(text.Length);
@@ -831,6 +885,7 @@ public static class ByteBufUtil
         {
             buffer.SetBytes(buffer.WriterIndex, destination);
         }
+
         buffer.WriterIndex += text.Length;
         return text.Length;
     }
@@ -845,7 +900,9 @@ public static class ByteBufUtil
     {
         ArgumentNullException.ThrowIfNull(buffer);
         ArgumentNullException.ThrowIfNull(text);
+
         buffer.WriteBytes(text.AsSpan());
+
         return text.Length();
     }
 
@@ -856,6 +913,7 @@ public static class ByteBufUtil
     public static string HexDump(ByteBuf buffer)
     {
         ArgumentNullException.ThrowIfNull(buffer);
+
         return HexDump(buffer, buffer.ReaderIndex, buffer.ReadableBytes);
     }
 
@@ -868,16 +926,19 @@ public static class ByteBufUtil
     public static string HexDump(ByteBuf buffer, int fromIndex, int length)
     {
         ArgumentNullException.ThrowIfNull(buffer);
+
         ReadOnlySequence<byte> sequence = buffer.AsReadOnlySequence(fromIndex, length);
         int characters = checked(length * 2);
         if (sequence.IsSingleSegment)
         {
             return HexDump(sequence.FirstSpan);
         }
+
         return string.Create(characters, sequence, static (destination, bytes) =>
         {
             const string digits = "0123456789abcdef";
             int i = 0;
+
             foreach (ReadOnlyMemory<byte> segment in bytes)
                 foreach (byte value in segment.Span)
                 {
@@ -894,6 +955,7 @@ public static class ByteBufUtil
     public static string HexDump(byte[] array)
     {
         ArgumentNullException.ThrowIfNull(array);
+
         return HexDump(array.AsSpan());
     }
 
@@ -904,7 +966,9 @@ public static class ByteBufUtil
     public static string HexDump(byte[] array, int fromIndex, int length)
     {
         ArgumentNullException.ThrowIfNull(array);
+
         CheckHexRange(array.Length, fromIndex, length);
+
         return HexDump(array.AsSpan(fromIndex, length));
     }
 
@@ -932,6 +996,7 @@ public static class ByteBufUtil
         {
             throw new ArgumentException("Expected two ASCII hex digits.", nameof(text));
         }
+
         return (byte)((hi << 4) | lo);
     }
 
@@ -941,6 +1006,7 @@ public static class ByteBufUtil
     public static byte[] DecodeHexDump(string hexDump)
     {
         ArgumentNullException.ThrowIfNull(hexDump);
+
         return DecodeHexDump(hexDump.AsSpan());
     }
 
@@ -950,7 +1016,9 @@ public static class ByteBufUtil
     public static byte[] DecodeHexDump(string hexDump, int fromIndex, int length)
     {
         ArgumentNullException.ThrowIfNull(hexDump);
+
         CheckHexRange(hexDump.Length, fromIndex, length);
+
         return DecodeHexDump(hexDump.AsSpan(fromIndex, length));
     }
 
@@ -965,6 +1033,7 @@ public static class ByteBufUtil
         {
             return Array.Empty<byte>();
         }
+
         byte[] result = new byte[hexDump.Length / 2];
 
         for (int i = 0; i < result.Length; i++)
@@ -981,6 +1050,7 @@ public static class ByteBufUtil
     public static string PrettyHexDump(ByteBuf buffer)
     {
         ArgumentNullException.ThrowIfNull(buffer);
+
         return PrettyHexDump(buffer, buffer.ReaderIndex, buffer.ReadableBytes);
     }
 
@@ -992,6 +1062,7 @@ public static class ByteBufUtil
     {
         var dump = new StringBuilder();
         AppendPrettyHexDump(dump, buffer, offset, length);
+
         return dump.ToString();
     }
 
@@ -1002,6 +1073,7 @@ public static class ByteBufUtil
     public static void AppendPrettyHexDump(StringBuilder dump, ByteBuf buffer)
     {
         ArgumentNullException.ThrowIfNull(buffer);
+
         AppendPrettyHexDump(dump, buffer, buffer.ReaderIndex, buffer.ReadableBytes);
     }
 
@@ -1017,11 +1089,13 @@ public static class ByteBufUtil
     {
         ArgumentNullException.ThrowIfNull(dump);
         ArgumentNullException.ThrowIfNull(buffer);
+
         var reader = new SequenceReader<byte>(buffer.AsReadOnlySequence(offset, length));
         if (length == 0)
         {
             return;
         }
+
         dump.Append("         +-------------------------------------------------+")
             .Append(StringUtil.NEWLINE).Append("         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |")
             .Append(StringUtil.NEWLINE).Append("+--------+-------------------------------------------------+----------------+");
@@ -1048,6 +1122,7 @@ public static class ByteBufUtil
             // Ascii dump
             AppendPrettyHexRow(dump, bytes[..remainder], fullRows, offset + fullRows * 16);
         }
+
         dump.Append(StringUtil.NEWLINE).Append("+--------+-------------------------------------------------+----------------+");
     }
 
@@ -1107,6 +1182,7 @@ public static class ByteBufUtil
     public static bool IsAccessible(ByteBuf buffer)
     {
         ArgumentNullException.ThrowIfNull(buffer);
+
         return buffer.RefCnt != 0;
     }
 
@@ -1117,11 +1193,13 @@ public static class ByteBufUtil
     public static ByteBuf EnsureAccessible(ByteBuf buffer)
     {
         ArgumentNullException.ThrowIfNull(buffer);
+
         int count = buffer.RefCnt;
         if (count == 0)
         {
             throw new IllegalReferenceCountException(count);
         }
+
         return buffer;
     }
 
@@ -1176,6 +1254,7 @@ public static class ByteBufUtil
     public static ByteBuf WriteShortBE(ByteBuf buffer, int value)
     {
         ArgumentNullException.ThrowIfNull(buffer);
+
         return buffer.WriteShort(value);
     }
 
@@ -1185,6 +1264,7 @@ public static class ByteBufUtil
     public static ByteBuf SetShortBE(ByteBuf buffer, int index, int value)
     {
         ArgumentNullException.ThrowIfNull(buffer);
+
         return buffer.SetShort(index, value);
     }
 
@@ -1194,6 +1274,7 @@ public static class ByteBufUtil
     public static ByteBuf WriteMediumBE(ByteBuf buffer, int value)
     {
         ArgumentNullException.ThrowIfNull(buffer);
+
         return buffer.WriteMedium(value);
     }
 
@@ -1203,6 +1284,7 @@ public static class ByteBufUtil
     public static ushort ReadUnsignedShortBE(ByteBuf buffer)
     {
         ArgumentNullException.ThrowIfNull(buffer);
+
         return buffer.ReadUnsignedShort();
     }
 
@@ -1212,6 +1294,7 @@ public static class ByteBufUtil
     public static int ReadIntBE(ByteBuf buffer)
     {
         ArgumentNullException.ThrowIfNull(buffer);
+
         return buffer.ReadInt();
     }
 
@@ -1229,6 +1312,7 @@ public static class ByteBufUtil
     public static bool IsText(ByteBuf buffer, Encoding encoding)
     {
         ArgumentNullException.ThrowIfNull(buffer);
+
         return IsText(buffer, buffer.ReaderIndex, buffer.ReadableBytes, encoding);
     }
 
@@ -1253,6 +1337,7 @@ public static class ByteBufUtil
         ArgumentNullException.ThrowIfNull(encoding);
         if (index < 0 || length < 0 || index > buffer.WriterIndex - length)
             throw new ArgumentOutOfRangeException(nameof(index));
+
         ReadOnlySequence<byte> bytes = buffer.AsReadOnlySequence(index, length);
         // Only canonical CLR instances use shortcuts. Custom encodings, even with the
         // same code page, retain their own GetDecoder implementation and byte semantics.
@@ -1264,6 +1349,7 @@ public static class ByteBufUtil
         {
             return IsAsciiText(bytes);
         }
+
         return IsEncodedText(bytes, encoding.GetDecoder());
     }
 
@@ -1286,6 +1372,7 @@ public static class ByteBufUtil
             {
                 return false;
             }
+
         return true;
     }
 
@@ -1373,6 +1460,7 @@ public static class ByteBufUtil
         {
             return Utf8.IsValid(bytes.FirstSpan);
         }
+
         return IsEncodedText(bytes, StrictTextUtf8.GetDecoder());
     }
 
@@ -1382,10 +1470,12 @@ public static class ByteBufUtil
         // fallback selected for ordinary string decoding. This changes only the local decoder.
         decoder.Fallback = DecoderFallback.ExceptionFallback;
         Span<char> scratch = stackalloc char[256];
+
         try
         {
             foreach (ReadOnlyMemory<byte> segment in bytes)
                 ValidateTextChunk(decoder, segment.Span, scratch, false);
+
             // Flush even an empty range so an incomplete final sequence is rejected.
             ValidateTextChunk(decoder, ReadOnlySpan<byte>.Empty, scratch, true);
             return true;
@@ -1399,11 +1489,13 @@ public static class ByteBufUtil
     private static void ValidateTextChunk(Decoder decoder, ReadOnlySpan<byte> bytes, Span<char> scratch, bool flush)
     {
         bool completed;
+
         do
         {
             decoder.Convert(bytes, scratch, flush, out int bytesUsed, out int charsUsed, out completed);
             if (!completed && bytesUsed == 0 && charsUsed == 0)
                 throw new InvalidOperationException("The text decoder made no progress.");
+
             bytes = bytes[bytesUsed..];
         } while (!completed);
     }
@@ -1425,6 +1517,7 @@ public static class ByteBufUtil
         {
             return null;
         }
+
         return FastThreadLocalThread.CurrentThreadWillCleanupFastThreadLocals()
             ? ThreadLocalDirectCaches.Local.Get().Rent()
             : ThreadLocalDirectByteBuf.Create(null);
@@ -1516,6 +1609,7 @@ public static class ByteBufUtil
     public static int ReserveAndWriteUtf8(ByteBuf buffer, AsciiString text, int reserveBytes)
     {
         ArgumentNullException.ThrowIfNull(text);
+
         return ReserveAndWriteUtf8Bytes(buffer, text.AsSpan(), reserveBytes);
     }
 
@@ -1527,6 +1621,7 @@ public static class ByteBufUtil
         {
             throw new ArgumentOutOfRangeException(nameof(reserveBytes));
         }
+
         using var lease = buffer.PinMemoryForWrite();
         buffer.EnsureWritable(reserveBytes);
         buffer.SetBytes(buffer.WriterIndex, bytes);
@@ -1550,13 +1645,16 @@ public static class ByteBufUtil
     private static ReadOnlySpan<char> Utf8Range(ReadOnlySpan<char> text, int start, int end)
     {
         CheckUtf8Range(text.Length, start, end);
+
         return text.Slice(start, end - start);
     }
 
     private static ReadOnlySpan<byte> Utf8Range(AsciiString text, int start, int end)
     {
         ArgumentNullException.ThrowIfNull(text);
+
         CheckUtf8Range(text.Length(), start, end);
+
         return text.AsSpan().Slice(start, end - start);
     }
 }

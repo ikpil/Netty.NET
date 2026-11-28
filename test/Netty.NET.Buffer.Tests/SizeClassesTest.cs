@@ -45,6 +45,7 @@ public class SizeClassesTest
         ISizeClassesMetric sizes = Original(alignment);
         int[] requests = { 0, 15, 510, 1024, 1023, 1025 };
         int[] expected = { alignment == 0 ? 16 : 64, alignment == 0 ? 16 : 64, 512, 1024, 1024, 1280 };
+
         for (int i = 0; i < requests.Length; i++)
             Assert.Equal(expected[i], sizes.SizeIdx2Size(sizes.Size2SizeIdx(requests[i])));
     }
@@ -53,6 +54,7 @@ public class SizeClassesTest
     public void OriginalSize2SizeIdxCoversEveryByteThroughSixteenMiB()
     {
         SizeClasses sizes = Original();
+
         for (int size = 0; size <= sizes.ChunkSize; size++)
         {
             int index = sizes.Size2SizeIdx(size);
@@ -66,14 +68,17 @@ public class SizeClassesTest
     {
         SizeClasses sizes = Original();
         int maximum = sizes.ChunkSize >> sizes.PageShifts;
+
         for (int pages = 1; pages <= maximum; pages++)
         {
             long bytes = (long)pages << sizes.PageShifts;
             int floor = sizes.Pages2PageIdxFloor(pages), ceiling = sizes.Pages2PageIdx(pages);
             Assert.True(bytes >= sizes.PageIdx2Size(floor));
             Assert.True(bytes <= sizes.PageIdx2Size(ceiling));
+
             if (floor > 0 && pages < maximum)
                 Assert.True(bytes < sizes.PageIdx2Size(floor + 1));
+
             if (ceiling > 0)
                 Assert.True(bytes > sizes.PageIdx2Size(ceiling - 1));
         }
@@ -83,6 +88,7 @@ public class SizeClassesTest
     public void OriginalSizeIdx2SizeComputeMatchesEveryTableEntry()
     {
         SizeClasses sizes = Original();
+
         for (int i = 0; i < sizes.NSizes; i++)
             Assert.Equal(sizes.SizeIdx2SizeCompute(i), sizes.SizeIdx2Size(i));
     }
@@ -91,6 +97,7 @@ public class SizeClassesTest
     public void OriginalPageIdx2SizeComputeMatchesEveryTableEntry()
     {
         SizeClasses sizes = Original();
+
         for (int i = 0; i < sizes.NPSizes; i++)
             Assert.Equal(sizes.PageIdx2SizeCompute(i), sizes.PageIdx2Size(i));
     }
@@ -98,9 +105,11 @@ public class SizeClassesTest
     private static List<int> RawClasses(int chunkSize)
     {
         var values = new List<int> { 16, 32, 48, 64 };
+
         for (int basis = 64; basis < chunkSize; basis *= 2)
             for (int delta = 1; delta <= 4; delta++)
                 values.Add(basis + basis / 4 * delta);
+
         return values;
     }
 
@@ -121,36 +130,47 @@ public class SizeClassesTest
         Assert.Equal(chunk, sizes.ChunkSize);
         Assert.Equal(pageShifts, sizes.PageShifts);
         Assert.Equal(alignment, sizes.DirectMemoryCacheAlignment);
+
         for (int i = 0; i < raw.Count; i++)
         {
             Assert.Equal(raw[i], sizes.SizeIdx2SizeCompute(i));
             Assert.Equal(Align(raw[i], alignment), sizes.SizeIdx2Size(i));
+
             foreach (int request in new[] { raw[i] - 1, raw[i], raw[i] + 1 })
             {
                 int aligned = Align(request, alignment), expected = raw.FindIndex(value => value >= aligned);
+
                 if (expected < 0)
                     expected = sizes.NSizes;
+
                 Assert.Equal(expected, sizes.Size2SizeIdx(request));
+
                 if (expected < sizes.NSizes)
                     Assert.Equal(Align(raw[expected], alignment), sizes.NormalizeSize(request));
             }
         }
+
         List<int> pages = raw.Where(value => value % page == 0).ToList();
         Assert.Equal(pages.Count, sizes.NPSizes);
+
         for (int i = 0; i < pages.Count; i++)
         {
             Assert.Equal(pages[i], sizes.PageIdx2Size(i));
             Assert.Equal(pages[i], sizes.PageIdx2SizeCompute(i));
+
             foreach (int count in new[] { Math.Max(1, pages[i] / page - 1), pages[i] / page, pages[i] / page + 1 })
             {
                 long bytes = (long)count * page;
                 int ceiling = pages.FindIndex(value => value >= bytes), floor = pages.FindLastIndex(value => value <= bytes);
+
                 if (bytes > chunk)
                     ceiling = floor = sizes.NPSizes;
+
                 Assert.Equal(ceiling, sizes.Pages2PageIdx(count));
                 Assert.Equal(floor, sizes.Pages2PageIdxFloor(count));
             }
         }
+
         int subpages = raw.Count(value => value < (long)page * 4);
         Assert.Equal(subpages, sizes.NSubpages);
         Assert.Equal(subpages - 1, sizes.SmallMaxSizeIdx);
@@ -181,6 +201,7 @@ public class SizeClassesTest
             Assert.Throws<ArgumentOutOfRangeException>(() => sizes.SizeIdx2Size(index));
             Assert.Throws<ArgumentOutOfRangeException>(() => sizes.SizeIdx2SizeCompute(index));
         }
+
         foreach (int index in new[] { -1, sizes.NPSizes })
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => sizes.PageIdx2Size(index));

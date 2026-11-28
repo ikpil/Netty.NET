@@ -92,6 +92,7 @@ public class ObjectUtilTest
     public void TestCheckNotNull()
     {
         Exception actualEx = null;
+
         try
         {
             ObjectUtil.CheckNotNull(NON_NULL_OBJECT, NON_NULL_NAME);
@@ -104,6 +105,7 @@ public class ObjectUtilTest
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckNotNull(NULL_OBJECT, NULL_NAME);
@@ -121,6 +123,7 @@ public class ObjectUtilTest
     public void TestCheckNotNullWithIAE()
     {
         Exception actualEx = null;
+
         try
         {
             ObjectUtil.CheckNotNullWithIAE(NON_NULL_OBJECT, NON_NULL_NAME);
@@ -133,6 +136,7 @@ public class ObjectUtilTest
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckNotNullWithIAE(NULL_OBJECT, NULL_NAME);
@@ -150,6 +154,7 @@ public class ObjectUtilTest
     public void TestCheckNotNullArrayParam()
     {
         Exception actualEx = null;
+
         try
         {
             ObjectUtil.CheckNotNullArrayParam(NON_NULL_OBJECT, 1, NON_NULL_NAME);
@@ -162,6 +167,7 @@ public class ObjectUtilTest
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckNotNullArrayParam(NULL_OBJECT, 1, NULL_NAME);
@@ -179,6 +185,7 @@ public class ObjectUtilTest
     public void TestCheckPositiveIntString()
     {
         Exception actualEx = null;
+
         try
         {
             ObjectUtil.CheckPositive(POS_ONE_INT, NUM_POS_NAME);
@@ -191,6 +198,7 @@ public class ObjectUtilTest
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckPositive(ZERO_INT, NUM_ZERO_NAME);
@@ -204,6 +212,7 @@ public class ObjectUtilTest
         Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckPositive(NEG_ONE_INT, NUM_NEG_NAME);
@@ -221,6 +230,7 @@ public class ObjectUtilTest
     public void TestCheckPositiveLongString()
     {
         Exception actualEx = null;
+
         try
         {
             ObjectUtil.CheckPositive(POS_ONE_LONG, NUM_POS_NAME);
@@ -233,6 +243,7 @@ public class ObjectUtilTest
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckPositive(ZERO_LONG, NUM_ZERO_NAME);
@@ -246,6 +257,7 @@ public class ObjectUtilTest
         Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckPositive(NEG_ONE_LONG, NUM_NEG_NAME);
@@ -263,6 +275,7 @@ public class ObjectUtilTest
     public void TestCheckPositiveDoubleString()
     {
         Exception actualEx = null;
+
         try
         {
             ObjectUtil.CheckPositive(POS_ONE_DOUBLE, NUM_POS_NAME);
@@ -275,6 +288,7 @@ public class ObjectUtilTest
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckPositive(ZERO_DOUBLE, NUM_ZERO_NAME);
@@ -288,6 +302,7 @@ public class ObjectUtilTest
         Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckPositive(NEG_ONE_DOUBLE, NUM_NEG_NAME);
@@ -305,6 +320,7 @@ public class ObjectUtilTest
     public void TestCheckPositiveFloatString()
     {
         Exception actualEx = null;
+
         try
         {
             ObjectUtil.CheckPositive(POS_ONE_FLOAT, NUM_POS_NAME);
@@ -317,6 +333,7 @@ public class ObjectUtilTest
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckPositive(ZERO_FLOAT, NUM_ZERO_NAME);
@@ -330,6 +347,7 @@ public class ObjectUtilTest
         Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckPositive(NEG_ONE_FLOAT, NUM_NEG_NAME);
@@ -347,6 +365,7 @@ public class ObjectUtilTest
     public void TestCheckPositiveOrZeroIntString()
     {
         Exception actualEx = null;
+
         try
         {
             ObjectUtil.CheckPositiveOrZero(POS_ONE_INT, NUM_POS_NAME);
@@ -359,6 +378,7 @@ public class ObjectUtilTest
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckPositiveOrZero(ZERO_INT, NUM_ZERO_NAME);
@@ -371,6 +391,7 @@ public class ObjectUtilTest
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckPositiveOrZero(NEG_ONE_INT, NUM_NEG_NAME);
@@ -388,6 +409,7 @@ public class ObjectUtilTest
     public void TestCheckPositiveOrZeroLongString()
     {
         Exception actualEx = null;
+
         try
         {
             ObjectUtil.CheckPositiveOrZero(POS_ONE_LONG, NUM_POS_NAME);
@@ -400,6 +422,7 @@ public class ObjectUtilTest
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckPositiveOrZero(ZERO_LONG, NUM_ZERO_NAME);
@@ -412,6 +435,7 @@ public class ObjectUtilTest
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckPositiveOrZero(NEG_ONE_LONG, NUM_NEG_NAME);
@@ -429,6 +453,7 @@ public class ObjectUtilTest
     public void TestCheckPositiveOrZeroDoubleString()
     {
         Exception actualEx = null;
+
         try
         {
             ObjectUtil.CheckPositiveOrZero(POS_ONE_DOUBLE, NUM_POS_NAME);
@@ -441,6 +466,7 @@ public class ObjectUtilTest
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckPositiveOrZero(ZERO_DOUBLE, NUM_ZERO_NAME);
@@ -453,6 +479,7 @@ public class ObjectUtilTest
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckPositiveOrZero(NEG_ONE_DOUBLE, NUM_NEG_NAME);
@@ -470,6 +497,7 @@ public class ObjectUtilTest
     public void TestCheckPositiveOrZeroFloatString()
     {
         Exception actualEx = null;
+
         try
         {
             ObjectUtil.CheckPositiveOrZero(POS_ONE_FLOAT, NUM_POS_NAME);
@@ -482,6 +510,7 @@ public class ObjectUtilTest
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckPositiveOrZero(ZERO_FLOAT, NUM_ZERO_NAME);
@@ -494,6 +523,7 @@ public class ObjectUtilTest
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckPositiveOrZero(NEG_ONE_FLOAT, NUM_NEG_NAME);
@@ -525,6 +555,7 @@ public class ObjectUtilTest
         Assert.True(actualEx is ArgumentNullException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckNonEmpty((object[])NON_NULL_FILLED_OBJECT_ARRAY, NON_NULL_NAME);
@@ -537,6 +568,7 @@ public class ObjectUtilTest
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckNonEmpty((object[])NON_NULL_EMPTY_OBJECT_ARRAY, NON_NULL_EMPTY_NAME);
@@ -568,6 +600,7 @@ public class ObjectUtilTest
         Assert.True(actualEx is ArgumentNullException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckNonEmpty((byte[])NON_NULL_FILLED_BYTE_ARRAY, NON_NULL_NAME);
@@ -580,6 +613,7 @@ public class ObjectUtilTest
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckNonEmpty((byte[])NON_NULL_EMPTY_BYTE_ARRAY, NON_NULL_EMPTY_NAME);
@@ -611,6 +645,7 @@ public class ObjectUtilTest
         Assert.True(actualEx is ArgumentNullException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckNonEmpty((char[])NON_NULL_FILLED_CHAR_ARRAY, NON_NULL_NAME);
@@ -623,6 +658,7 @@ public class ObjectUtilTest
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckNonEmpty((char[])NON_NULL_EMPTY_CHAR_ARRAY, NON_NULL_EMPTY_NAME);
@@ -640,6 +676,7 @@ public class ObjectUtilTest
     public void TestCheckNonEmptyTString()
     {
         Exception actualEx = null;
+
         try
         {
             ObjectUtil.CheckNonEmpty((object[])NULL_OBJECT, NULL_NAME);
@@ -653,6 +690,7 @@ public class ObjectUtilTest
         Assert.True(actualEx is ArgumentNullException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckNonEmpty((object[])NON_NULL_FILLED_OBJECT_ARRAY, NON_NULL_NAME);
@@ -665,6 +703,7 @@ public class ObjectUtilTest
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckNonEmpty((object[])NON_NULL_EMPTY_OBJECT_ARRAY, NON_NULL_EMPTY_NAME);
@@ -696,6 +735,7 @@ public class ObjectUtilTest
         Assert.True(actualEx is ArgumentNullException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckNonEmpty((string)NON_NULL_OBJECT, NON_NULL_NAME);
@@ -708,6 +748,7 @@ public class ObjectUtilTest
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckNonEmpty((string)NON_NULL_EMPTY_STRING, NON_NULL_EMPTY_NAME);
@@ -721,6 +762,7 @@ public class ObjectUtilTest
         Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckNonEmpty((string)NON_NULL_WHITESPACE_STRING, NON_NULL_EMPTY_NAME);
@@ -751,6 +793,7 @@ public class ObjectUtilTest
         Assert.True(actualEx is ArgumentNullException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckNonEmpty((ICharSequence)NON_NULL_CHARSEQUENCE, NON_NULL_NAME);
@@ -763,6 +806,7 @@ public class ObjectUtilTest
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckNonEmpty((ICharSequence)NON_NULL_EMPTY_CHARSEQUENCE, NON_NULL_EMPTY_NAME);
@@ -776,6 +820,7 @@ public class ObjectUtilTest
         Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckNonEmpty(new StringCharSequence(NON_NULL_WHITESPACE_STRING), NON_NULL_EMPTY_NAME);
@@ -806,6 +851,7 @@ public class ObjectUtilTest
         Assert.True(actualEx is ArgumentNullException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckNonEmptyAfterTrim((string)NON_NULL_OBJECT, NON_NULL_NAME);
@@ -818,6 +864,7 @@ public class ObjectUtilTest
         Assert.Null(actualEx, TEST_RESULT_NULLEX_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckNonEmptyAfterTrim(NON_NULL_EMPTY_STRING, NON_NULL_EMPTY_NAME);
@@ -831,6 +878,7 @@ public class ObjectUtilTest
         Assert.True(actualEx is ArgumentException, TEST_RESULT_EXTYPE_NOK);
 
         actualEx = null;
+
         try
         {
             ObjectUtil.CheckNonEmptyAfterTrim(NON_NULL_WHITESPACE_STRING, NON_NULL_EMPTY_NAME);

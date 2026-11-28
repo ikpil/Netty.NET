@@ -199,6 +199,7 @@ public sealed class RecordType
     private static Dictionary<short, RecordType> CreateMap()
     {
         Dictionary<short, RecordType> reverseMap = new Dictionary<short, RecordType>();
+
         foreach (RecordType e in VALUES)
         {
             reverseMap[e.Convert()] = e;

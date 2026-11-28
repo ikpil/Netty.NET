@@ -50,6 +50,7 @@ public class LinuxTcpMd5SourceTest
         {
             var any = Socket.OSSupportsIPv6 ? IPAddress.IPv6Any : IPAddress.Any;
             var server = await NewServer(group).BindAsync(new IPEndPoint(any, 0), token);
+
             try
             {
                 SetServerKeys(server, Keys(IPAddress.Loopback, ServerKey));
@@ -109,12 +110,15 @@ public class LinuxTcpMd5SourceTest
         {
             Assert.Skip("TCP_MD5SIG requires Linux.");
         }
+
         if (ipv6 && !Socket.OSSupportsIPv6)
         {
             Assert.Skip("IPv6 unavailable.");
         }
+
         var token = TestContext.Current.CancellationToken;
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+
         try
         {
             var server = await NewServer(group).BindAsync(

@@ -296,6 +296,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     internal virtual ReadOnlySequence<byte> BorrowCopySequence(int index, int length)
     {
         CheckIndex(index, length);
+
         return GetReadOnlySequenceCore(index, length);
     }
 
@@ -309,15 +310,18 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         {
             return true;
         }
+
         // Inspect storage without public access records. No span survives a component callback.
         ReadOnlySequence<byte> input = source.BorrowCopySequence(sourceIndex, length);
         ReadOnlySequence<byte> output = destination.BorrowCopySequence(destinationIndex, length);
+
         foreach (ReadOnlyMemory<byte> a in input)
         foreach (ReadOnlyMemory<byte> b in output)
             if (a.Span.Overlaps(b.Span))
                 {
                     return true;
                 }
+
         return false;
     }
 
@@ -399,6 +403,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     protected ByteBuf(int maxCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(maxCapacity);
+
         MaxCapacity = maxCapacity;
     }
 
@@ -435,6 +440,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     internal virtual BufferMemoryLease PinMemoryForWrite()
     {
         EnsureCanWrite();
+
         return AcquireReadLease();
     }
     /**
@@ -759,9 +765,12 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         {
             return this;
         }
+
         int consumed = _readerIndex;
+
         if (_readerIndex != _writerIndex)
             SetBytes(0, this, _readerIndex, ReadableBytes);
+
         _writerIndex -= consumed;
         AdjustMarkers(consumed);
         _readerIndex = 0;
@@ -777,6 +786,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual ByteBuf DiscardSomeReadBytes()
     {
         EnsureAccessible();
+
         if (_readerIndex > 0 && _readerIndex == _writerIndex)
         {
             // All bytes were consumed; only indices and marks need adjustment, including on read-only views.
@@ -791,6 +801,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
             AdjustMarkers(_readerIndex);
             _readerIndex = 0;
         }
+
         return this;
     }
 
@@ -833,6 +844,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual ByteBuf EnsureWritable(int minimumWritableBytes)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(minimumWritableBytes);
+
         EnsureWritableCore(minimumWritableBytes);
         return this;
     }
@@ -849,6 +861,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         }
         if (minimumWritableBytes > MaxCapacity - _writerIndex)
             throw new ArgumentOutOfRangeException(nameof(minimumWritableBytes));
+
         // Normalize the target capacity to the power of 2.
         int fastWritable = MaxFastWritableBytes;
         int newCapacity = fastWritable >= minimumWritableBytes ? _writerIndex + fastWritable
@@ -888,15 +901,18 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         {
             return 0;
         }
+
         if (minimumWritableBytes > MaxCapacity - _writerIndex)
         {
             if (!force || Capacity == MaxCapacity)
             {
                 return 1;
             }
+
             Capacity = MaxCapacity;
             return 3;
         }
+
         int fastWritable = MaxFastWritableBytes;
         int newCapacity = fastWritable >= minimumWritableBytes ? _writerIndex + fastWritable
             : Alloc().CalculateNewCapacity(_writerIndex + minimumWritableBytes, MaxCapacity);
@@ -913,17 +929,20 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         {
             throw new ArgumentOutOfRangeException(nameof(minimum));
         }
+
         const int threshold = 4 * 1024 * 1024; // 4 MiB page
         if (minimum == threshold)
         {
             return threshold;
         }
+
         // If over threshold, do not double but just increase by threshold.
         if (minimum > threshold)
         {
             int capacity = minimum / threshold * threshold;
             return capacity > maximum - threshold ? maximum : capacity + threshold;
         }
+
         // 64 <= newCapacity is a power of 2 <= threshold
         int rounded = 64;
 
@@ -992,6 +1011,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     {
         EnsureCanWrite();
         CheckIndex(index, length);
+
         return GetMemoryCore(index, length);
     }
 
@@ -1569,6 +1589,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual byte ReadByte()
     {
         CheckReadableBytes(1);
+
         byte value = ReadByteCore(_readerIndex);
         ++_readerIndex;
         return value;
@@ -1623,6 +1644,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual short ReadShort()
     {
         CheckReadableBytes(2);
+
         short value = unchecked((short)ReadWord(_readerIndex, 2, false));
         _readerIndex += 2;
         return value;
@@ -1654,6 +1676,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual short ReadShortLE()
     {
         CheckReadableBytes(2);
+
         short value = unchecked((short)ReadWord(_readerIndex, 2, true));
         _readerIndex += 2;
         return value;
@@ -1741,6 +1764,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual int ReadInt()
     {
         CheckReadableBytes(4);
+
         int value = unchecked((int)ReadWord(_readerIndex, 4, false));
         _readerIndex += 4;
         return value;
@@ -1771,6 +1795,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual int ReadIntLE()
     {
         CheckReadableBytes(4);
+
         int value = unchecked((int)ReadWord(_readerIndex, 4, true));
         _readerIndex += 4;
         return value;
@@ -1801,6 +1826,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual long ReadLong()
     {
         CheckReadableBytes(8);
+
         long value = unchecked((long)ReadWord(_readerIndex, 8, false));
         _readerIndex += 8;
         return value;
@@ -1832,6 +1858,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual long ReadLongLE()
     {
         CheckReadableBytes(8);
+
         long value = unchecked((long)ReadWord(_readerIndex, 8, true));
         _readerIndex += 8;
         return value;
@@ -2013,6 +2040,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual int ReadUnsignedMedium()
     {
         CheckReadableBytes(3);
+
         int value = (int)ReadWord(_readerIndex, 3, false);
         _readerIndex += 3;
         return value;
@@ -2029,6 +2057,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual int ReadUnsignedMediumLE()
     {
         CheckReadableBytes(3);
+
         int value = (int)ReadWord(_readerIndex, 3, true);
         _readerIndex += 3;
         return value;
@@ -2069,6 +2098,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual ByteBuf SkipBytes(int length)
     {
         CheckReadableBytes(length);
+
         _readerIndex += length;
         return this;
     }
@@ -2107,6 +2137,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual ByteBuf GetBytes(int index, Span<byte> destination)
     {
         CheckIndex(index, destination.Length);
+
         // We need to check if dst is ready-only so we not write something in it by using Unsafe.
         // Copy to direct memory
         // Copy to array
@@ -2123,6 +2154,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
             GetBytesCore(index, bytes);
             bytes.AsSpan().CopyTo(destination);
         }
+
         return this;
     }
 
@@ -2157,6 +2189,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     {
         EnsureCanWrite();
         CheckIndex(index, source.Length);
+
         // we need to check not null for src as it may cause the JVM crash
         // See https://github.com/netty/netty/issues/10791
         // Copy from direct memory
@@ -2166,6 +2199,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
             source.CopyTo(memory.Span);
         else
             SetBytesCore(index, source.ToArray()); // Preserve overlap across component boundaries.
+
         return this;
     }
 
@@ -2196,6 +2230,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual ByteBuf ReadBytes(Span<byte> destination)
     {
         CheckReadableBytes(destination.Length);
+
         GetBytes(_readerIndex, destination);
         _readerIndex += destination.Length;
         return this;
@@ -2254,6 +2289,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual ByteBuf GetBytes(int index, ByteBuf destination, int destinationIndex, int length)
     {
         ArgumentNullException.ThrowIfNull(destination);
+
         destination.SetBytes(destinationIndex, this, index, length);
         return this;
     }
@@ -2281,6 +2317,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         ArgumentNullException.ThrowIfNull(source);
         CheckIndex(index, length);
         source.CheckIndex(sourceIndex, length);
+
         if (source.SupportsDirectBulkCopy && SupportsDirectBulkCopy &&
             source.TryGetReadOnlyMemoryCore(sourceIndex, length, out var input) &&
             TryGetMemoryCore(index, length, out var output))
@@ -2291,6 +2328,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
             source.GetBytesCore(sourceIndex, bytes);
             SetBytesCore(index, bytes);
         }
+
         return this;
     }
 
@@ -2314,6 +2352,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         {
             throw new ArgumentOutOfRangeException(nameof(length));
         }
+
         // The indexed overload owns source validation/copying and advances this reader.
         ReadBytes(destination, destination.WriterIndex, length);
         destination.WriterIndex += length;
@@ -2338,6 +2377,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     {
         ArgumentNullException.ThrowIfNull(source);
         source.CheckReadableBytes(length);
+
         // Commit the source cursor only after the indexed virtual write succeeds.
         WriteBytes(source, source.ReaderIndex, length);
         source.ReaderIndex += length;
@@ -2360,6 +2400,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     {
         EnsureCanWrite();
         CheckIndex(index, length);
+
         SetZeroCore(index, length);
         return this;
     }
@@ -2379,6 +2420,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         CheckIndex(_writerIndex, length);
         // Like AbstractByteBuf's low-level writes, the storage kernel is independent of public SetZero overrides.
         EnsureCanWrite();
+
         SetZeroCore(_writerIndex, length);
         _writerIndex += length;
         return this;
@@ -2405,7 +2447,9 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual ByteBuf Copy(int index, int length)
     {
         CheckIndex(index, length);
+
         ByteBuf result = Alloc().HeapBuffer(length, MaxCapacity);
+
         try
         {
             result.SetBytes(0, this, index, length);
@@ -2440,7 +2484,9 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         {
             return Unpooled.EmptyBuffer;
         }
+
         ByteBuf result = Alloc().Buffer(length, MaxCapacity);
+
         try
         {
             result.WriteBytes(this, _readerIndex, length);
@@ -2450,6 +2496,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
             result.Release();
             throw;
         }
+
         _readerIndex += length;
         return result;
     }
@@ -2483,6 +2530,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual ByteBuf Slice(int index, int length)
     {
         CheckIndex(index, length);
+
         return new ByteBufView(this, index, length);
     }
 
@@ -2535,6 +2583,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual ByteBuf Duplicate()
     {
         EnsureAccessible();
+
         return new ByteBufView(this);
     }
 
@@ -2573,6 +2622,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual ByteBuf ReadSlice(int length)
     {
         CheckReadableBytes(length);
+
         ByteBuf result = Slice(_readerIndex, length);
         _readerIndex += length;
         return result;
@@ -2597,6 +2647,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual ByteBuf ReadRetainedSlice(int length)
     {
         CheckReadableBytes(length);
+
         ByteBuf result = RetainedSlice(_readerIndex, length);
         _readerIndex += length;
         return result;
@@ -2616,6 +2667,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         {
             return name + "(freed)";
         }
+
         // CLR: invariant formatting preserves Java's decimal metadata across caller cultures.
         string result = FormattableString.Invariant($"{name}(ridx: {_readerIndex}, widx: {_writerIndex}, cap: {Capacity}");
         int maximum = DiagnosticMaxCapacity;
@@ -2623,11 +2675,13 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         {
             result += FormattableString.Invariant($"/{maximum}");
         }
+
         ByteBuf unwrapped = Unwrap();
         if (unwrapped != null)
         {
             result += ", unwrapped: " + unwrapped;
         }
+
         return result + ')';
     }
 
@@ -2663,7 +2717,9 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         {
             return 0;
         }
+
         byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
+
         try
         {
             GetBytesCore(index, bytes.AsSpan(0, length));
@@ -2708,7 +2764,9 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         {
             return 0;
         }
+
         byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
+
         try
         {
             int count = RandomAccess.Read(source, bytes.AsSpan(0, length), position);
@@ -2716,6 +2774,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
             {
                 SetBytesFromIoCore(index, bytes.AsSpan(0, count));
             }
+
             return count;
         }
         finally
@@ -2743,6 +2802,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual int ReadBytes(SafeFileHandle destination, long position, int length)
     {
         CheckReadableBytes(length);
+
         int count = GetBytes(_readerIndex, destination, position, length);
         _readerIndex += count;
         return count;
@@ -2772,6 +2832,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     {
         EnsureCanWrite();
         CheckFileTransfer(source, position, length);
+
         EnsureWritable(length);
         int count = SetBytes(_writerIndex, source, position, length);
         _writerIndex += count;
@@ -2794,7 +2855,9 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         {
             return 0;
         }
+
         byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
+
         try
         {
             GetBytesCore(index, bytes.AsSpan(0, length));
@@ -2824,7 +2887,9 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         {
             return 0;
         }
+
         byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
+
         try
         {
             int count = await RandomAccess.ReadAsync(source, bytes.AsMemory(0, length), position, cancellationToken)
@@ -2833,8 +2898,10 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
             {
                 EnsureCanWrite();
                 CheckIndex(index, count);
+
                 SetBytesFromIoCore(index, bytes.AsSpan(0, count));
             }
+
             return count;
         }
         finally
@@ -2850,6 +2917,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         CancellationToken cancellationToken = default)
     {
         CheckReadableBytes(length);
+
         int count = await GetBytesAsync(_readerIndex, destination, position, length, cancellationToken)
             .ConfigureAwait(false);
         _readerIndex += count;
@@ -2870,6 +2938,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
             throw new ArgumentOutOfRangeException(nameof(length));
         }
         cancellationToken.ThrowIfCancellationRequested();
+
         EnsureWritable(length);
         int count = await SetBytesAsync(_writerIndex, source, position, length, cancellationToken)
             .ConfigureAwait(false);
@@ -2918,6 +2987,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual ByteBuf AsReadOnly()
     {
         EnsureAccessible();
+
         // We can only use ReadOnlyAbstractByteBuf if we either have nothing to unwrap or the unwrapped buffer is of
         // type AbstractByteBuf. Otherwise we will produce a CCE later.
         // CLR: the original factory rationale is retained; one bounded-memory view avoids subtype casts entirely.
@@ -2958,6 +3028,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual ReadOnlyMemory<byte> AsReadOnlyMemory(int index, int length)
     {
         CheckIndex(index, length);
+
         return GetReadOnlyMemoryCore(index, length);
     }
 
@@ -3022,12 +3093,14 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     {
         EnsureCanWrite();
         CheckIndex(index, length);
+
         return TryGetMemoryCore(index, length, out memory);
     }
 
     internal bool TryGetReadOnlyMemory(int index, int length, out ReadOnlyMemory<byte> memory)
     {
         CheckIndex(index, length);
+
         return TryGetReadOnlyMemoryCore(index, length, out memory);
     }
 
@@ -3053,6 +3126,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual ReadOnlySequence<byte> AsReadOnlySequence(int index, int length)
     {
         CheckIndex(index, length);
+
         return GetReadOnlySequenceCore(index, length);
     }
     public ReadOnlySequence<byte> ReadableSequence => AsReadOnlySequence(ReaderIndex, ReadableBytes);
@@ -3060,6 +3134,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     internal virtual BufferMemoryLease AcquireReadLease()
     {
         EnsureAccessible();
+
         return default;
     }
 
@@ -3094,8 +3169,10 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         CheckIndex(index, width);
         if (TryGetReadOnlyMemoryCore(index, width, out var memory))
             return DecodeWord(memory.Span, littleEndian);
+
         Span<byte> bytes = stackalloc byte[8];
         GetBytesCore(index, bytes[..width]);
+
         return DecodeWord(bytes[..width], littleEndian);
     }
 
@@ -3115,6 +3192,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     {
         EnsureCanWrite();
         CheckIndex(index, width);
+
         if (TryGetMemoryCore(index, width, out var memory))
             EncodeWord(memory.Span, value, littleEndian);
         else
@@ -3123,6 +3201,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
             EncodeWord(bytes[..width], value, littleEndian);
             SetBytesCore(index, bytes[..width]);
         }
+
         return this;
     }
 
@@ -3139,6 +3218,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
                 {
                     BinaryPrimitives.WriteUInt16BigEndian(bytes, unchecked((ushort)value));
                 }
+
                 break;
             case 3:
                 bytes[littleEndian ? 2 : 0] = unchecked((byte)(value >> 16));
@@ -3154,6 +3234,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
                 {
                     BinaryPrimitives.WriteUInt32BigEndian(bytes, unchecked((uint)value));
                 }
+
                 break;
             case 8:
                 if (littleEndian)
@@ -3164,6 +3245,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
                 {
                     BinaryPrimitives.WriteUInt64BigEndian(bytes, value);
                 }
+
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(bytes));
@@ -3200,7 +3282,9 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         {
             return 0;
         }
+
         byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
+
         try
         {
             GetBytesCore(index, bytes.AsSpan(0, length));
@@ -3245,7 +3329,9 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         {
             return 0;
         }
+
         byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
+
         try
         {
             int count = source.Receive(bytes.AsSpan(0, length), SocketFlags.None, out SocketError error);
@@ -3254,6 +3340,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
             {
                 SetBytesFromIoCore(index, bytes.AsSpan(0, count));
             }
+
             return count;
         }
         finally
@@ -3281,6 +3368,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     {
         ArgumentNullException.ThrowIfNull(destination);
         CheckReadableBytes(length);
+
         int count = GetBytes(_readerIndex, destination, length);
         _readerIndex += count;
         return count;
@@ -3307,6 +3395,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     {
         EnsureWritable(length);
         ArgumentNullException.ThrowIfNull(source);
+
         int count = SetBytes(_writerIndex, source, length);
         _writerIndex += count;
         return count;
@@ -3327,7 +3416,9 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         {
             return 0;
         }
+
         byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
+
         try
         {
             GetBytesCore(index, bytes.AsSpan(0, length));
@@ -3357,7 +3448,9 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         {
             return 0;
         }
+
         byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
+
         try
         {
             int count = await source.ReceiveAsync(bytes.AsMemory(0, length), SocketFlags.None, cancellationToken)
@@ -3366,8 +3459,10 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
             {
                 EnsureCanWrite();
                 CheckIndex(index, count);
+
                 SetBytesFromIoCore(index, bytes.AsSpan(0, count));
             }
+
             return count;
         }
         finally
@@ -3384,6 +3479,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     {
         ArgumentNullException.ThrowIfNull(destination);
         CheckReadableBytes(length);
+
         int count = await GetBytesAsync(_readerIndex, destination, length, cancellationToken).ConfigureAwait(false);
         _readerIndex += count;
         return count;
@@ -3403,6 +3499,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
             throw new ArgumentOutOfRangeException(nameof(length));
         }
         cancellationToken.ThrowIfCancellationRequested();
+
         EnsureWritable(length);
         int count = await SetBytesAsync(_writerIndex, source, length, cancellationToken).ConfigureAwait(false);
         _writerIndex += count;
@@ -3419,6 +3516,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         {
             throw new SocketException((int)error);
         }
+
         return count;
     }
 
@@ -3454,7 +3552,9 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         {
             return this;
         }
+
         byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
+
         try
         {
             GetBytesCore(index, bytes.AsSpan(0, length));
@@ -3464,6 +3564,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         {
             ArrayPool<byte>.Shared.Return(bytes);
         }
+
         return this;
     }
 
@@ -3499,20 +3600,25 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         {
             return 0;
         }
+
         byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
+
         try
         {
             int count = source.Read(bytes.AsSpan(0, length));
             if (count < 0 || count > length)
                 throw new IOException("The stream returned an invalid byte count.");
+
             // A stream callback can resize storage. Resolve the destination again
             // after reading instead of keeping a borrowed native span across I/O.
             if (count != 0)
             {
                 EnsureCanWrite();
                 CheckIndex(index, count);
+
                 SetBytesFromIoCore(index, bytes.AsSpan(0, count));
             }
+
             return count;
         }
         finally
@@ -3539,6 +3645,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     {
         ArgumentNullException.ThrowIfNull(destination);
         CheckReadableBytes(length);
+
         GetBytes(_readerIndex, destination, length);
         _readerIndex += length;
         return this;
@@ -3566,6 +3673,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     {
         EnsureWritable(length);
         ArgumentNullException.ThrowIfNull(source);
+
         int count = SetBytes(_writerIndex, source, length);
         _writerIndex += count;
         return count;
@@ -3587,7 +3695,9 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         {
             return;
         }
+
         byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
+
         try
         {
             GetBytesCore(index, bytes.AsSpan(0, length));
@@ -3617,19 +3727,24 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         {
             return 0;
         }
+
         byte[] bytes = ArrayPool<byte>.Shared.Rent(length);
+
         try
         {
             int count = await source.ReadAsync(bytes.AsMemory(0, length), cancellationToken).ConfigureAwait(false);
             if (count < 0 || count > length)
                 throw new IOException("The stream returned an invalid byte count.");
+
             if (count != 0)
             {
                 // Resolve storage after I/O; no borrowed native span survives suspension.
                 EnsureCanWrite();
                 CheckIndex(index, count);
+
                 SetBytesFromIoCore(index, bytes.AsSpan(0, count));
             }
+
             return count;
         }
         finally
@@ -3646,6 +3761,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     {
         ArgumentNullException.ThrowIfNull(destination);
         CheckReadableBytes(length);
+
         await GetBytesAsync(_readerIndex, destination, length, cancellationToken).ConfigureAwait(false);
         _readerIndex += length;
     }
@@ -3666,6 +3782,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
             throw new ArgumentOutOfRangeException(nameof(length));
         }
         cancellationToken.ThrowIfCancellationRequested();
+
         EnsureWritable(length);
         int count = await SetBytesAsync(_writerIndex, source, length, cancellationToken).ConfigureAwait(false);
         _writerIndex += count;
@@ -3700,8 +3817,10 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         ArgumentNullException.ThrowIfNull(charset);
         if (TryGetReadOnlyMemory(index, length, out var memory))
             return charset.GetString(memory.Span);
+
         byte[] bytes = new byte[length];
         GetBytesCore(index, bytes);
+
         return charset.GetString(bytes);
     }
 
@@ -3724,6 +3843,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
             // ByteBufUtil.getBytes(...) will return a new copy which the AsciiString uses directly
             return new AsciiString(ByteBufUtil.GetBytes(this, index, length, true), false);
         }
+
         return new StringCharSequence(ToString(index, length, charset));
     }
 
@@ -3742,6 +3862,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual ICharSequence ReadCharSequence(int length, Encoding charset)
     {
         CheckReadableBytes(length);
+
         ICharSequence sequence = GetCharSequence(_readerIndex, length, charset);
         _readerIndex += length;
         return sequence;
@@ -3761,6 +3882,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual string ReadString(int length, Encoding charset)
     {
         CheckReadableBytes(length);
+
         string result = ToString(_readerIndex, length, charset);
         _readerIndex += length;
         return result;
@@ -3782,6 +3904,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     {
         ArgumentNullException.ThrowIfNull(charset);
         EnsureCanWrite();
+
         int length = charset.GetByteCount(sequence);
         return EncodeString(index, sequence, charset, length);
     }
@@ -3793,6 +3916,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         // CLR: the bounded memory lookup below validates the range before encoding.
         if (TryGetMemory(index, length, out var memory))
             return encoding.GetBytes(text, memory.Span);
+
         byte[] bytes = new byte[length];
         int written = encoding.GetBytes(text, bytes);
         SetBytesCore(index, bytes.AsSpan(0, written));
@@ -3815,9 +3939,11 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual int WriteCharSequence(ReadOnlySpan<char> sequence, Encoding charset)
     {
         ArgumentNullException.ThrowIfNull(charset);
+
         // A UTF-16 span can alias native storage through MemoryMarshal.Cast. Keep it alive across growth.
         using var lease = PinMemoryForWrite();
         EnsureAccessible();
+
         int length = charset.GetByteCount(sequence);
         EnsureWritable(length);
         int written = EncodeString(_writerIndex, sequence, charset, length);
@@ -3851,8 +3977,10 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
             {
                 return -1;
             }
+
             int length = checked(toIndex - fromIndex);
             CheckIndex(fromIndex, length);
+
             if (!SupportsDirectSearch || !TryGetReadOnlyMemory(fromIndex, length, out var memory))
             {
                 // Match the original low-level search reads, independently of public GetByte overrides.
@@ -3861,8 +3989,10 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
                 {
                     return i;
                 }
+
                 return -1;
             }
+
             int found = memory.Span.IndexOf(value);
             return found < 0 ? -1 : fromIndex + found;
         }
@@ -3873,8 +4003,10 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
             return -1; // fromIndex is the exclusive upper bound.
         }
         CheckIndex(toIndex, 0);
+
         int reverseLength = checked(fromIndex - toIndex);
         CheckIndex(toIndex, reverseLength);
+
         if (!SupportsDirectSearch || !TryGetReadOnlyMemory(toIndex, reverseLength, out var reverseMemory))
         {
             for (int i = fromIndex - 1; i >= toIndex; --i)
@@ -3882,8 +4014,10 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
             {
                 return i;
             }
+
             return -1;
         }
+
         int reverseFound = reverseMemory.Span.LastIndexOf(value);
         return reverseFound < 0 ? -1 : toIndex + reverseFound;
     }
@@ -3921,6 +4055,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual int BytesBefore(int length, byte value)
     {
         CheckReadableBytes(length);
+
         return BytesBefore(_readerIndex, length, value);
     }
 
@@ -3941,6 +4076,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual int BytesBefore(int index, int length, byte value)
     {
         CheckIndex(index, length);
+
         int found = IndexOf(index, index + length, value);
         return found < 0 ? -1 : found - index;
     }
@@ -3955,6 +4091,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     {
         ArgumentNullException.ThrowIfNull(processor);
         CheckIndex(_readerIndex, ReadableBytes);
+
         return ForEachByteAscending(_readerIndex, _writerIndex, processor);
     }
 
@@ -3969,6 +4106,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     {
         ArgumentNullException.ThrowIfNull(processor);
         CheckIndex(index, length);
+
         return ForEachByteAscending(index, index + length, processor);
     }
 
@@ -3991,6 +4129,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
             {
                 return i;
             }
+
         return -1;
     }
 
@@ -4004,6 +4143,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     {
         ArgumentNullException.ThrowIfNull(processor);
         CheckIndex(_readerIndex, ReadableBytes);
+
         return ForEachByteDescending(_writerIndex - 1, _readerIndex, processor);
     }
 
@@ -4019,6 +4159,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     {
         ArgumentNullException.ThrowIfNull(processor);
         CheckIndex(index, length);
+
         return ForEachByteDescending(index + length - 1, index, processor);
     }
 
@@ -4029,6 +4170,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
             {
                 return i;
             }
+
         return -1;
     }
 
@@ -4054,6 +4196,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     {
         ArgumentNullException.ThrowIfNull(destination);
         destination.EnsureAccessible();
+
         GetBytes(index, destination, destination.WritableBytes);
         return this;
     }
@@ -4079,6 +4222,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual ByteBuf GetBytes(int index, ByteBuf destination, int length)
     {
         ArgumentNullException.ThrowIfNull(destination);
+
         GetBytes(index, destination, destination.WriterIndex, length);
         destination.WriterIndex += length;
         return this;
@@ -4103,6 +4247,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual ByteBuf SetBytes(int index, ByteBuf source)
     {
         ArgumentNullException.ThrowIfNull(source);
+
         SetBytes(index, source, source.ReadableBytes);
         return this;
     }
@@ -4131,6 +4276,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
         // Validate this range before the indexed override can run or consume the source.
         CheckIndex(index, length);
         source.CheckReadableBytes(length);
+
         SetBytes(index, source, source.ReaderIndex, length);
         source.ReaderIndex += length;
         return this;
@@ -4154,6 +4300,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     {
         ArgumentNullException.ThrowIfNull(destination);
         destination.EnsureAccessible();
+
         ReadBytes(destination, destination.WritableBytes);
         return this;
     }
@@ -4176,6 +4323,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     {
         ArgumentNullException.ThrowIfNull(destination);
         CheckReadableBytes(length);
+
         GetBytes(_readerIndex, destination, destinationIndex, length);
         _readerIndex += length;
         return this;
@@ -4197,6 +4345,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     public virtual ByteBuf WriteBytes(ByteBuf source)
     {
         ArgumentNullException.ThrowIfNull(source);
+
         WriteBytes(source, source.ReadableBytes);
         return this;
     }
@@ -4221,6 +4370,7 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
     {
         EnsureWritable(length);
         ArgumentNullException.ThrowIfNull(source);
+
         SetBytes(_writerIndex, source, sourceIndex, length);
         _writerIndex += length;
         return this;

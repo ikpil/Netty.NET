@@ -130,6 +130,7 @@ public sealed class BrotliDecoder : ByteToMessageDecoder
     public static BrotliDecoder NewDecoderWithMaxAllocation(int maxAllocation)
     {
         ObjectUtil.CheckPositiveOrZero(maxAllocation, "maxAllocation");
+
         return maxAllocation > 0 ?
                 new BrotliDecoder(DEFAULT_INPUT_BUFFER_SIZE, maxAllocation) :
                 new BrotliDecoder();
@@ -142,13 +143,16 @@ public sealed class BrotliDecoder : ByteToMessageDecoder
         ReadOnlySpan<byte> nativeBuffer = outputBuffer.AsSpan(0, outputLength);
         // nativeBuffer actually wraps brotli's internal buffer so we need to copy its content
         int remaining = nativeBuffer.Length;
+
         if (accumBuffer == null)
         {
             accumBuffer = ctx.Alloc().Buffer(remaining);
         }
+
         accumBuffer.WriteBytes(nativeBuffer);
         Pull();
         needsRead = false;
+
         if (accumBuffer.ReadableBytes >= outputBufferSize)
         {
             ctx.FireChannelRead(accumBuffer);
@@ -166,6 +170,7 @@ public sealed class BrotliDecoder : ByteToMessageDecoder
         {
             accumBuffer.Release();
         }
+
         accumBuffer = null;
     }
 
@@ -185,6 +190,7 @@ public sealed class BrotliDecoder : ByteToMessageDecoder
                         ForwardOutput(ctx);
                         break;
                     }
+
                     return inputOffset == inputLength ? State.DONE : State.ERROR;
 
                 case OperationStatus.NeedMoreData:
@@ -232,9 +238,11 @@ public sealed class BrotliDecoder : ByteToMessageDecoder
             inputOffset = 0;
             inputLength = length;
         }
+
         lastStatus = decoder.Decompress(inputBuffer.AsSpan(inputOffset, inputLength - inputOffset), outputBuffer,
                 out int bytesConsumed, out outputLength);
         inputOffset += bytesConsumed;
+
         if (lastStatus == OperationStatus.NeedMoreData && outputLength == outputBuffer.Length)
         {
             lastStatus = OperationStatus.DestinationTooSmall;
@@ -247,6 +255,7 @@ public sealed class BrotliDecoder : ByteToMessageDecoder
     private void Pull()
     {
         outputLength = 0;
+
         if (lastStatus == OperationStatus.DestinationTooSmall)
         {
             Push(0);
@@ -265,6 +274,7 @@ public sealed class BrotliDecoder : ByteToMessageDecoder
     protected override void Decode(IChannelHandlerContext ctx, ByteBuf @in, IList<object> @out)
     {
         needsRead = true;
+
         if (destroyed)
         {
             // Skip data received after finished.
@@ -342,6 +352,7 @@ public sealed class BrotliDecoder : ByteToMessageDecoder
         {
             ctx.Read();
         }
+
         ctx.FireChannelReadComplete();
     }
 }

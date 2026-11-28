@@ -41,6 +41,7 @@ public class AsciiStringFloatingPointContractTest
     public void ParsingDoesNotUseCurrentCulture()
     {
         CultureInfo previous = CultureInfo.CurrentCulture;
+
         try
         {
             var culture = (CultureInfo)CultureInfo.InvariantCulture.Clone();
@@ -239,6 +240,7 @@ public class AsciiStringFloatingPointContractTest
             Assert.Equal(1.5f, value.ParseFloat());
             Assert.Equal(1.5, value.ParseDouble());
         }
+
         for (int b = 128; b <= 255; b++)
         {
             var value = new AsciiString(new byte[] { (byte)b, (byte)'1', (byte)'.', (byte)'5', (byte)b });
@@ -252,12 +254,14 @@ public class AsciiStringFloatingPointContractTest
     {
         string zeros = new string('0', 10000);
         string exponent = new string('9', 10000);
+
         foreach (string text in new[] { "0x1." + zeros + "1p0", "0x0." + zeros + "1p40004" })
         {
             var value = new AsciiString(text);
             Assert.Equal(1.0f, value.ParseFloat());
             Assert.Equal(1.0, value.ParseDouble());
         }
+
         Assert.Equal(float.PositiveInfinity, new AsciiString("0x1p" + exponent).ParseFloat());
         Assert.Equal(double.PositiveInfinity, new AsciiString("1e" + exponent).ParseDouble());
         Assert.Equal(0.0, new AsciiString("0x1p-" + exponent).ParseDouble());

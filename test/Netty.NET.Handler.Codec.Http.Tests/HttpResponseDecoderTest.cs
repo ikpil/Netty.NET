@@ -156,6 +156,7 @@ public class HttpResponseDecoderTest
         Assert.Equal(HttpResponseStatus.OK, res.Status());
 
         byte[] data = new byte[64];
+
         for (int i = 0; i < data.Length; i++)
         {
             data[i] = (byte) i;
@@ -254,6 +255,7 @@ public class HttpResponseDecoderTest
         Assert.Equal(HttpResponseStatus.OK, res.Status());
 
         byte[] data = new byte[64];
+
         for (int i = 0; i < data.Length; i++)
         {
             data[i] = (byte) i;
@@ -550,6 +552,7 @@ public class HttpResponseDecoderTest
     {
         EmbeddedChannel ch = new EmbeddedChannel(new HttpResponseDecoder());
         int headerLength = 47;
+
         // split up the header
         for (int a = 0; a < headerLength;)
         {
@@ -654,10 +657,12 @@ public class HttpResponseDecoderTest
                         "\r\n", Encoding.ASCII));
 
         byte[] data = new byte[10];
+
         for (int i = 0; i < data.Length; i++)
         {
             data[i] = (byte) i;
         }
+
         ch.WriteInbound(Unpooled.CopiedBuffer(data, 0, data.Length / 2));
         ch.WriteInbound(Unpooled.CopiedBuffer(data, 5, data.Length / 2));
 
@@ -746,6 +751,7 @@ public class HttpResponseDecoderTest
     private static void TestResponseWithContentLengthFragmented0(byte[] header, int fragmentSize)
     {
         EmbeddedChannel ch = new EmbeddedChannel(new HttpResponseDecoder());
+
         // split up the header
         for (int a = 0; a < header.Length;)
         {
@@ -758,11 +764,14 @@ public class HttpResponseDecoderTest
             ch.WriteInbound(Unpooled.CopiedBuffer(header, a, amount));
             a += amount;
         }
+
         byte[] data = new byte[10];
+
         for (int i = 0; i < data.Length; i++)
         {
             data[i] = (byte) i;
         }
+
         ch.WriteInbound(Unpooled.CopiedBuffer(data, 0, data.Length / 2));
         ch.WriteInbound(Unpooled.CopiedBuffer(data, 5, data.Length / 2));
 
@@ -796,10 +805,12 @@ public class HttpResponseDecoderTest
         Assert.True(channel.WriteInbound(Unpooled.CopiedBuffer(requestStr, Encoding.ASCII)));
         IHttpResponse response = channel.ReadInbound<IHttpResponse>();
         List<string> headers = new List<string>();
+
         foreach (IEntry<string, string> header in response.Headers())
         {
             headers.Add(header.GetKey());
         }
+
         Assert.Equal(new List<string> { "Content-Type", "Content-Length", "Connection" }, headers, "ordered headers");
     }
 
@@ -855,6 +866,7 @@ public class HttpResponseDecoderTest
 
         ByteBuf expected = Unpooled.WrappedBuffer(otherData, 0, otherData.Length);
         ByteBuf buffer = ch.ReadInbound<ByteBuf>();
+
         try
         {
             Assert.Equal(expected, buffer);
@@ -862,6 +874,7 @@ public class HttpResponseDecoderTest
         finally
         {
             expected.Release();
+
             if (buffer != null)
             {
                 buffer.Release();
@@ -1290,6 +1303,7 @@ public class HttpResponseDecoderTest
         Assert.True(response.Headers().Contains("Transfer-Encoding", "chunked", false));
         int contentLength = 0;
         IHttpContent content;
+
         do
         {
             content = channel.ReadInbound<IHttpContent>();
@@ -1298,10 +1312,12 @@ public class HttpResponseDecoderTest
             {
                 throw new Exception(decoderResult.Cause().Message, decoderResult.Cause());
             }
+
             Assert.False(decoderResult.IsFailure()); // And we parse the chunk.
             contentLength += content.Content.ReadableBytes;
             content.Release();
         } while (!(content is ILastHttpContent));
+
         Assert.Equal(chars.Length, contentLength);
         Assert.False(channel.Finish()); // And there are no other chunks parsed.
     }

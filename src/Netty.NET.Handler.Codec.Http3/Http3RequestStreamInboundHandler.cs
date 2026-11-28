@@ -64,6 +64,7 @@ public abstract class Http3RequestStreamInboundHandler : ChannelInboundHandlerAd
         {
             ChannelInputClosed(ctx);
         }
+
         ctx.FireUserEventTriggered(evt);
     }
 

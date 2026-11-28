@@ -56,6 +56,7 @@ public class ReferenceCountContractTest
             var releases = Enumerable.Range(0, 4).Select(_ => Task.Run(() =>
             {
                 start.Wait();
+
                 return counted.Release();
             })).ToArray();
             start.Set();

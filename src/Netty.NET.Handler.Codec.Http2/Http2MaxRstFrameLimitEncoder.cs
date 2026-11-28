@@ -67,6 +67,7 @@ internal sealed class Http2MaxRstFrameLimitEncoder : DecoratingHttp2ConnectionEn
                                         TaskCompletionSource promise)
     {
         Task future = base.WriteRstStreamAsync(ctx, streamId, errorCode, promise);
+
         if (CountRstFrameErrorCode(errorCode))
         {
             long currentNano = ticker.NanoTime();
@@ -78,6 +79,7 @@ internal sealed class Http2MaxRstFrameLimitEncoder : DecoratingHttp2ConnectionEn
             else
             {
                 sendRstInWindow++;
+
                 if (sendRstInWindow > maxRstFramesPerWindow)
                 {
                     Http2Exception exception = Http2Exception.ConnectionError(Http2Error.ENHANCE_YOUR_CALM,

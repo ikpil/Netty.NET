@@ -84,6 +84,7 @@ public class SocketCancelWriteSourceTest : AbstractSocketTest
         {
             throw ch.exception;
         }
+
         Assert.Equal(0, ch.counter);
         Assert.Equal(Unpooled.WrappedBuffer(new byte[] { (byte)'b', (byte)'c', (byte)'e' }), sh.received);
         // CLR: supplemental check that both cancelled writes released their buffers.
@@ -121,6 +122,7 @@ public class SocketCancelWriteSourceTest : AbstractSocketTest
         {
             counter += @in.ReadableBytes;
             received.WriteBytes(@in);
+
             if (counter >= 3)
             {
                 Done.TrySetResult();

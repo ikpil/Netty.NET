@@ -212,6 +212,7 @@ public static class HttpConversionUtil
     public static HttpResponseStatus ParseStatus(ICharSequence status)
     {
         HttpResponseStatus result;
+
         try
         {
             result = HttpResponseStatus.ParseLine(status);
@@ -229,6 +230,7 @@ public static class HttpConversionUtil
             throw ConnectionError(PROTOCOL_ERROR, t,
                             "Unrecognized HTTP status code '%s' encountered in translation to HTTP/1.x", status);
         }
+
         return result;
     }
 
@@ -273,6 +275,7 @@ public static class HttpConversionUtil
         IFullHttpResponse msg = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, content,
                 DefaultHttpHeadersFactory.HeadersFactory().WithValidation(validateHttpHeaders),
                 DefaultHttpHeadersFactory.TrailersFactory().WithValidation(validateHttpHeaders));
+
         try
         {
             AddHttp2ToHttpHeaders(streamId, http2Headers, msg, false);
@@ -287,6 +290,7 @@ public static class HttpConversionUtil
             msg.Release();
             throw StreamError(streamId, PROTOCOL_ERROR, t, "HTTP/2 to HTTP/1.x headers conversion error");
         }
+
         return msg;
     }
 
@@ -348,6 +352,7 @@ public static class HttpConversionUtil
                         .ToString()), path.ToString(), content,
                 DefaultHttpHeadersFactory.HeadersFactory().WithValidation(validateHttpHeaders),
                 DefaultHttpHeadersFactory.TrailersFactory().WithValidation(validateHttpHeaders));
+
         try
         {
             AddHttp2ToHttpHeaders(streamId, http2Headers, msg, false);
@@ -362,6 +367,7 @@ public static class HttpConversionUtil
             msg.Release();
             throw StreamError(streamId, PROTOCOL_ERROR, t, "HTTP/2 to HTTP/1.x headers conversion error");
         }
+
         return msg;
     }
 
@@ -385,6 +391,7 @@ public static class HttpConversionUtil
         ICharSequence path = new StringCharSequence(ExtractPath(method, http2Headers));
         IHttpRequest msg = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.ValueOf(method.ToString()),
                 path.ToString(), DefaultHttpHeadersFactory.HeadersFactory().WithValidation(validateHttpHeaders));
+
         try
         {
             AddHttp2ToHttpHeaders(streamId, http2Headers, msg.Headers(), msg.ProtocolVersion(), false, true);
@@ -397,6 +404,7 @@ public static class HttpConversionUtil
         {
             throw StreamError(streamId, PROTOCOL_ERROR, t, "HTTP/2 to HTTP/1.x headers conversion error");
         }
+
         return msg;
     }
 
@@ -422,6 +430,7 @@ public static class HttpConversionUtil
         // HTTP/1.1 status line.
         IHttpResponse msg = new DefaultHttpResponse(HttpVersion.HTTP_1_1, status,
                 DefaultHttpHeadersFactory.HeadersFactory().WithValidation(validateHttpHeaders));
+
         try
         {
             AddHttp2ToHttpHeaders(streamId, http2Headers, msg.Headers(), msg.ProtocolVersion(), false, false);
@@ -434,6 +443,7 @@ public static class HttpConversionUtil
         {
             throw StreamError(streamId, PROTOCOL_ERROR, t, "HTTP/2 to HTTP/1.x headers conversion error");
         }
+
         return msg;
     }
 
@@ -478,6 +488,7 @@ public static class HttpConversionUtil
         bool isConnect = isRequest && HttpMethod.CONNECT.AsciiName().ContentEqualsIgnoreCase(inputHeaders.Method());
         Http2ToHttpHeaderTranslator translator =
                 new Http2ToHttpHeaderTranslator(streamId, outputHeaders, isRequest, isConnect);
+
         try
         {
             translator.TranslateHeaders(inputHeaders);
@@ -493,6 +504,7 @@ public static class HttpConversionUtil
 
         outputHeaders.Remove(HttpHeaderNames.TRANSFER_ENCODING);
         outputHeaders.Remove(HttpHeaderNames.TRAILER);
+
         if (!isTrailer)
         {
             outputHeaders.SetInt(ExtensionHeaderNames.STREAM_ID.Text(), streamId);
@@ -513,6 +525,7 @@ public static class HttpConversionUtil
     {
         HttpHeaders inHeaders = @in.Headers();
         IHttp2Headers @out = new DefaultHttp2Headers(validateHeaders, inHeaders.Size());
+
         if (@in is IHttpRequest)
         {
             IHttpRequest request = (IHttpRequest) @in;
@@ -533,12 +546,14 @@ public static class HttpConversionUtil
                     {
                         throw new ArgumentException("Invalid CONNECT request target: " + authorityForm);
                     }
+
                     @out.Authority(new AsciiString(authorityForm));
                 }
             }
             else
             {
                 string host = inHeaders.GetAsString(HttpHeaderNames.HOST);
+
                 if (HttpUtil.IsOriginForm(request.Uri()) || HttpUtil.IsAsteriskForm(request.Uri()))
                 {
                     @out.Path(new AsciiString(request.Uri()));
@@ -548,6 +563,7 @@ public static class HttpConversionUtil
                 {
                     string requestTarget = request.Uri();
                     @out.Path(ToHttp2Path(requestTarget));
+
                     if (HasSchemeAndAuthority(requestTarget))
                     {
                         string requestTargetUri = CreateUri(Http2PathlessRequestTarget(requestTarget));
@@ -570,8 +586,10 @@ public static class HttpConversionUtil
                         }
                     }
                 }
+
                 SetHttp2Authority(host, @out);
             }
+
             @out.Method(request.Method().AsciiName());
         }
         else if (@in is IHttpResponse)
@@ -606,18 +624,21 @@ public static class HttpConversionUtil
         while (valuesIter.HasNext())
         {
             AsciiString lowerCased = AsciiString.Of(valuesIter.Next()).ToLowerCase();
+
             try
             {
                 int index = lowerCased.ForEachByte(FIND_COMMA);
                 if (index != -1)
                 {
                     int start = 0;
+
                     do
                     {
                         result.Add(lowerCased.SubSequence(start, index, false).Trim(), EMPTY_STRING);
                         start = index + 1;
                     } while (start < lowerCased.Length() &&
                              (index = lowerCased.ForEachByte(start, lowerCased.Length() - start, FIND_COMMA)) != -1);
+
                     result.Add(lowerCased.SubSequence(start, lowerCased.Length(), false).Trim(), EMPTY_STRING);
                 }
                 else
@@ -632,6 +653,7 @@ public static class HttpConversionUtil
                 throw new InvalidOperationException(ThrowableUtil.ThrowableToString(e), e);
             }
         }
+
         return result;
     }
 
@@ -654,6 +676,7 @@ public static class HttpConversionUtil
         else
         {
             List<string> teValues = StringUtil.UnescapeCsvFields(entry.GetValue().ToString());
+
             foreach (string teValue in teValues)
             {
                 if (ContentEqualsIgnoreCase(AsciiString.Trim(new StringCharSequence(teValue)), HttpHeaderValues.TRAILERS))
@@ -672,6 +695,7 @@ public static class HttpConversionUtil
         // still allowing for "enough" space in the map to reduce the chance of hash code collision.
         CharSequenceMap<AsciiString> connectionBlacklist =
             ToLowercaseMap(inHeaders.ValueCharSequenceIterator(CONNECTION), 8);
+
         while (iter.HasNext())
         {
             IEntry<ICharSequence, ICharSequence> entry = iter.Next();
@@ -688,6 +712,7 @@ public static class HttpConversionUtil
                     ICharSequence valueCs = entry.GetValue();
                     // validate
                     bool invalid = false;
+
                     for (int i = 0; i < valueCs.Length(); i++)
                     {
                         char c = valueCs.CharAt(i);
@@ -699,6 +724,7 @@ public static class HttpConversionUtil
                                 invalid = true;
                                 break;
                             }
+
                             i++; // skip space
                         }
                         else if (c > 255)
@@ -737,6 +763,7 @@ public static class HttpConversionUtil
             if (index != -1)
             {
                 int start = 0;
+
                 do
                 {
                     @out.Add(COOKIE, value.SubSequence(start, index, false));
@@ -746,6 +773,7 @@ public static class HttpConversionUtil
                     start = index + 2;
                 } while (start < value.Length() &&
                         (index = value.ForEachByte(start, value.Length() - start, FIND_SEMI_COLON)) != -1);
+
                 System.Diagnostics.Debug.Assert(start < value.Length());
                 @out.Add(COOKIE, value.SubSequence(start, value.Length(), false));
             }
@@ -774,9 +802,11 @@ public static class HttpConversionUtil
         {
             return path.Length == 0 ? EMPTY_REQUEST_PATH : new AsciiString(path);
         }
+
         StringBuilder pathBuilder = new StringBuilder(path.Length + query.Length + 1);
         pathBuilder.Append(path);
         AppendQuery(pathBuilder, query);
+
         return new AsciiString(pathBuilder.ToString());
     }
 
@@ -789,7 +819,9 @@ public static class HttpConversionUtil
         {
             return StringUtil.EMPTY_STRING;
         }
+
         int i;
+
         if (uri[0] == '/')
         {
             i = 0;
@@ -825,6 +857,7 @@ public static class HttpConversionUtil
                 return uri;
             }
         }
+
         return uri.Substring(i, queryStart - i);
     }
 
@@ -902,10 +935,12 @@ public static class HttpConversionUtil
         {
             delimiter = pathStart;
         }
+
         if (delimiter == -1)
         {
             return requestTarget;
         }
+
         return delimiter == authorityStart ? requestTarget.Substring(0, delimiter + 1) :
                 requestTarget.Substring(0, delimiter);
     }
@@ -917,11 +952,13 @@ public static class HttpConversionUtil
         {
             return false;
         }
+
         char first = uri[0];
         if (!IsAlpha(first))
         {
             return false;
         }
+
         for (int i = 1; i < schemeEnd; ++i)
         {
             char c = uri[i];
@@ -930,6 +967,7 @@ public static class HttpConversionUtil
                 return false;
             }
         }
+
         return true;
     }
 
@@ -956,6 +994,7 @@ public static class HttpConversionUtil
                 {
                     throw new ArgumentException("authority: " + authority);
                 }
+
                 @out.Authority(new AsciiString(authority, start, length));
             }
         }
@@ -1023,17 +1062,21 @@ public static class HttpConversionUtil
         {
             return str;
         }
+
         int schemeEnd = str.IndexOf("://", StringComparison.Ordinal);
         if (!IsValidScheme(str, schemeEnd))
         {
             throw new ArgumentException("Illegal character in scheme name at index 0: " + str);
         }
+
         int p = schemeEnd + 3;
         int q = p;
+
         while (q < str.Length && str[q] != '/' && str[q] != '?' && str[q] != '#')
         {
             q++;
         }
+
         if (q > p)
         {
             ParseUriAuthority(str, str.Substring(p, q - p), p, out _);
@@ -1043,6 +1086,7 @@ public static class HttpConversionUtil
             throw new ArgumentException("Expected authority at index " +
                     p.ToString(CultureInfo.InvariantCulture) + ": " + str);
         }
+
         return str;
     }
 
@@ -1061,6 +1105,7 @@ public static class HttpConversionUtil
         {
             return -1;
         }
+
         ParseUriAuthority(uri, authority, 0, out int port);
         return port;
     }
@@ -1079,12 +1124,15 @@ public static class HttpConversionUtil
         {
             return null;
         }
+
         int p = schemeEnd + 3;
         int q = p;
+
         while (q < uri.Length && uri[q] != '/' && uri[q] != '?' && uri[q] != '#')
         {
             q++;
         }
+
         return q > p ? uri.Substring(p, q - p) : null;
     }
 
@@ -1094,6 +1142,7 @@ public static class HttpConversionUtil
     {
         port = -1;
         bool serverChars;
+
         if (authority.IndexOf(']') >= 0)
         {
             serverChars = ScanUri(input, authority, offset, true, true) == authority.Length;
@@ -1102,11 +1151,13 @@ public static class HttpConversionUtil
         {
             serverChars = ScanUri(input, authority, offset, true, false) == authority.Length;
         }
+
         bool regChars = ScanUri(input, authority, offset, false, false) == authority.Length;
         if (regChars && !serverChars)
         {
             return;
         }
+
         if (serverChars)
         {
             int serverPort = ParseUriServer(authority);
@@ -1115,12 +1166,15 @@ public static class HttpConversionUtil
                 port = serverPort;
                 return;
             }
+
             if (regChars)
             {
                 return;
             }
+
             throw new ArgumentException("Malformed authority: " + input);
         }
+
         if (!regChars)
         {
             throw new ArgumentException("Illegal character in authority: " + input);
@@ -1142,27 +1196,33 @@ public static class HttpConversionUtil
                 {
                     continue;
                 }
+
                 if (c == '%')
                 {
                     if (serverPercent)
                     {
                         continue;
                     }
+
                     if (i + 2 < s.Length && Uri.IsHexDigit(s[i + 1]) && Uri.IsHexDigit(s[i + 2]))
                     {
                         i += 2;
                         continue;
                     }
+
                     throw new ArgumentException("Malformed escape pair at index " +
                             (offset + i).ToString(CultureInfo.InvariantCulture) + ": " + input);
                 }
+
                 return i;
             }
+
             if (char.IsWhiteSpace(c) || char.IsControl(c))
             {
                 return i;
             }
         }
+
         return s.Length;
     }
 
@@ -1178,8 +1238,10 @@ public static class HttpConversionUtil
             {
                 return -2;
             }
+
             p = at + 1;
         }
+
         if (p < s.Length && s[p] == '[')
         {
             int close = s.IndexOf(']', p + 1);
@@ -1188,6 +1250,7 @@ public static class HttpConversionUtil
             {
                 return -2;
             }
+
             p = close + 1;
         }
         else
@@ -1197,30 +1260,38 @@ public static class HttpConversionUtil
             {
                 q = ParseUriHostname(s, p);
             }
+
             if (q < 0)
             {
                 return -2;
             }
+
             p = q;
         }
+
         int port = -1;
+
         if (p < s.Length && s[p] == ':')
         {
             p++;
             int q = p;
+
             while (q < s.Length && s[q] >= '0' && s[q] <= '9')
             {
                 q++;
             }
+
             if (q > p)
             {
                 if (!int.TryParse(s.AsSpan(p, q - p), NumberStyles.None, CultureInfo.InvariantCulture, out port))
                 {
                     return -2;
                 }
+
                 p = q;
             }
         }
+
         return p < s.Length ? -2 : port;
     }
 
@@ -1228,6 +1299,7 @@ public static class HttpConversionUtil
     private static int ParseUriIPv4Address(string s, int start)
     {
         int p = start;
+
         for (int octet = 0; octet < 4; octet++)
         {
             if (octet > 0)
@@ -1236,19 +1308,25 @@ public static class HttpConversionUtil
                 {
                     return -1;
                 }
+
                 p++;
             }
+
             int q = p;
+
             while (q < s.Length && q - p < 3 && s[q] >= '0' && s[q] <= '9')
             {
                 q++;
             }
+
             if (q == p || int.Parse(s.AsSpan(p, q - p), NumberStyles.None, CultureInfo.InvariantCulture) > 255)
             {
                 return -1;
             }
+
             p = q;
         }
+
         return p == s.Length || s[p] == ':' ? p : -1;
     }
 
@@ -1258,31 +1336,39 @@ public static class HttpConversionUtil
     {
         int p = start;
         int l = -1;
+
         while (p < s.Length)
         {
             int q = p;
+
             while (q < s.Length && char.IsAsciiLetterOrDigit(s[q]))
             {
                 q++;
             }
+
             if (q <= p)
             {
                 break;
             }
+
             l = p;
             p = q;
+
             while (q < s.Length && (char.IsAsciiLetterOrDigit(s[q]) || s[q] == '-'))
             {
                 q++;
             }
+
             if (q > p)
             {
                 if (s[q - 1] == '-')
                 {
                     return -1;
                 }
+
                 p = q;
             }
+
             if (p < s.Length && s[p] == '.')
             {
                 p++;
@@ -1292,6 +1378,7 @@ public static class HttpConversionUtil
                 break;
             }
         }
+
         if (p < s.Length && s[p] != ':')
         {
             return -1;
@@ -1304,6 +1391,7 @@ public static class HttpConversionUtil
         {
             return -1;
         }
+
         return p;
     }
 
@@ -1315,9 +1403,11 @@ public static class HttpConversionUtil
         {
             return s;
         }
+
         StringBuilder sb = new StringBuilder(s.Length);
         List<byte> bytes = new List<byte>();
         bool betweenBrackets = false;
+
         for (int i = 0; i < s.Length;)
         {
             char c = s[i];
@@ -1329,20 +1419,25 @@ public static class HttpConversionUtil
             {
                 betweenBrackets = false;
             }
+
             if (c != '%' || betweenBrackets)
             {
                 sb.Append(c);
                 i++;
                 continue;
             }
+
             bytes.Clear();
+
             while (i < s.Length && s[i] == '%')
             {
                 bytes.Add((byte) int.Parse(s.AsSpan(i + 1, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture));
                 i += 3;
             }
+
             sb.Append(Encoding.UTF8.GetString(bytes.ToArray()));
         }
+
         return sb.ToString();
     }
 
@@ -1402,6 +1497,7 @@ public static class HttpConversionUtil
         {
             this.streamId = streamId;
             this.output = output;
+
             if (request)
             {
                 translations = connect ? CONNECT_REQUEST_HEADER_TRANSLATIONS : REQUEST_HEADER_TRANSLATIONS;
@@ -1429,6 +1525,7 @@ public static class HttpConversionUtil
                     {
                         hostHeaderFound = true;
                     }
+
                     output.Add(translatedName, AsciiString.Of(value));
                 }
                 else if (!IHttp2Headers.PseudoHeaderName.IsPseudoHeader(name))
@@ -1444,6 +1541,7 @@ public static class HttpConversionUtil
                     {
                         continue;
                     }
+
                     if (COOKIE.Equals(name))
                     {
                         // combine the cookie values into 1 header entry.
@@ -1456,6 +1554,7 @@ public static class HttpConversionUtil
                         {
                             cookies.Append("; ");
                         }
+
                         cookies.Append(value);
                     }
                     else if (ContentEqualsIgnoreCase(HttpHeaderNames.HOST, name))
@@ -1486,6 +1585,7 @@ public static class HttpConversionUtil
                     }
                 }
             }
+
             if (cookies != null)
             {
                 output.Add(COOKIE, cookies.ToString());

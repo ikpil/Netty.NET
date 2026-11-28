@@ -30,6 +30,7 @@ public class SchedulingContractTest
     public void OneShotCallableCompletesWithValueOnTheExecutor()
     {
         var executor = new DefaultEventExecutor();
+
         try
         {
             bool ranOnExecutor = false;
@@ -52,6 +53,7 @@ public class SchedulingContractTest
     public void FailureRetainsTheCallableException()
     {
         var executor = new DefaultEventExecutor();
+
         try
         {
             var cause = new InvalidOperationException("scheduled failure");
@@ -69,6 +71,7 @@ public class SchedulingContractTest
     public void CancellingBeforeDeadlinePreventsExecution()
     {
         var executor = new DefaultEventExecutor();
+
         try
         {
             int calls = 0;
@@ -96,6 +99,7 @@ public class SchedulingContractTest
     public void PeriodicTasksRunRepeatedlyAndCancellationStopsThem(bool fixedRate)
     {
         var executor = new DefaultEventExecutor();
+
         try
         {
             int calls = 0;
@@ -129,6 +133,7 @@ public class SchedulingContractTest
     public void DifferentGenericResultTypesCanShareTheDeadlineQueue()
     {
         var executor = new DefaultEventExecutor();
+
         try
         {
             var first = executor.ScheduleAsync(() => "text", TimeSpan.FromMilliseconds(10));
@@ -234,15 +239,18 @@ public class SchedulingContractTest
             ++calls;
         }, TimeSpan.FromTicks(1), token.Token);
         Assert.False(task.IsCompleted);
+
         if (cancel)
         {
             token.Cancel();
             Assert.True(task.IsCanceled);
         }
+
         executor.Advance(100);
         executor.PollDue()?.Invoke();
         Assert.Equal(cancel ? 0 : 1, calls);
         Assert.True(task.IsCompleted);
+
         if (!cancel)
         {
             Assert.True(task.IsCompletedSuccessfully);
@@ -359,6 +367,7 @@ public class SchedulingContractTest
         internal void RunQueued(Action task)
         {
             running = true;
+
             try
             {
                 task();
@@ -419,6 +428,7 @@ public class SchedulingContractTest
         Assert.Equal(before ? 0 : 1, executor.lazyCalls);
         Assert.Equal(before ? 0 : 1, executor.afterCalls);
         Assert.Equal(!before && after ? 2 : 1, executor.submissions.Count);
+
         if (!before && after)
         {
             Assert.NotSame(issued, executor.submissions[1]);

@@ -98,6 +98,7 @@ public abstract class MessageToByteEncoder<I> : ChannelOutboundHandlerAdapter
         {
             throw new ArgumentException($"{messageType} is not assignable to {bound}", name);
         }
+
         return messageType;
     }
 
@@ -113,12 +114,14 @@ public abstract class MessageToByteEncoder<I> : ChannelOutboundHandlerAdapter
     public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken)
     {
         ByteBuf buf = null;
+
         try
         {
             if (AcceptOutboundMessage(msg))
             {
                 I cast = (I) msg;
                 buf = AllocateBuffer(ctx, cast, preferDirect);
+
                 try
                 {
                     Encode(ctx, cast, buf);
@@ -129,6 +132,7 @@ public abstract class MessageToByteEncoder<I> : ChannelOutboundHandlerAdapter
                 }
 
                 Task future;
+
                 if (buf.IsReadable())
                 {
                     future = ctx.WriteAsync(buf, cancellationToken);
@@ -138,6 +142,7 @@ public abstract class MessageToByteEncoder<I> : ChannelOutboundHandlerAdapter
                     buf.Release();
                     future = ctx.WriteAsync(Unpooled.EmptyBuffer, cancellationToken);
                 }
+
                 buf = null;
                 return future;
             }

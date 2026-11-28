@@ -106,6 +106,7 @@ public class Bzip2Encoder : MessageToByteEncoder<ByteBuf>
                     "blockSizeMultiplier: " + blockSizeMultiplier.ToString(CultureInfo.InvariantCulture) +
                     " (expected: 1-9)");
         }
+
         streamBlockSize = blockSizeMultiplier * BASE_BLOCK_SIZE;
     }
 
@@ -144,10 +145,12 @@ public class Bzip2Encoder : MessageToByteEncoder<ByteBuf>
                     {
                         return;
                     }
+
                     Bzip2BlockCompressor blockCompressor = this.blockCompressor;
                     int length = Math.Min(@in.ReadableBytes, blockCompressor.AvailableSize());
                     int bytesWritten = blockCompressor.Write(@in, @in.ReaderIndex, length);
                     @in.SkipBytes(bytesWritten);
+
                     if (!blockCompressor.IsFull())
                     {
                         if (@in.IsReadable())
@@ -159,6 +162,7 @@ public class Bzip2Encoder : MessageToByteEncoder<ByteBuf>
                             return;
                         }
                     }
+
                     currentState = State.CLOSE_BLOCK;
                     // fall through
                     goto case State.CLOSE_BLOCK;
@@ -249,6 +253,7 @@ public class Bzip2Encoder : MessageToByteEncoder<ByteBuf>
         {
             return Task.CompletedTask;
         }
+
         finished = true;
 
         ByteBuf footer = ctx.Alloc().Buffer();
@@ -256,6 +261,7 @@ public class Bzip2Encoder : MessageToByteEncoder<ByteBuf>
 
         int streamCRC = this.streamCRC;
         Bzip2BitWriter writer = this.writer;
+
         try
         {
             writer.WriteBits(footer, 24, END_OF_STREAM_MAGIC_1);
@@ -267,6 +273,7 @@ public class Bzip2Encoder : MessageToByteEncoder<ByteBuf>
         {
             blockCompressor = null;
         }
+
         return ctx.WriteAndFlushAsync(footer, cancellationToken);
     }
 
@@ -277,6 +284,7 @@ public class Bzip2Encoder : MessageToByteEncoder<ByteBuf>
         {
             throw new InvalidOperationException("not added to a pipeline");
         }
+
         return ctx;
     }
 

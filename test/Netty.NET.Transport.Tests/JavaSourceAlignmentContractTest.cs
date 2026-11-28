@@ -178,6 +178,7 @@ public class JavaSourceAlignmentContractTest
         var first = new EmbeddedChannel();
         var second = new EmbeddedChannel();
         Assert.Same(address, LocalChannelRegistry.Register(first, null, address));
+
         try
         {
             Assert.Equal("already bound", Assert.Throws<ChannelException>(() => LocalChannelRegistry.Register(first, address, address)).Message);
@@ -194,6 +195,7 @@ public class JavaSourceAlignmentContractTest
         {
             LocalChannelRegistry.Unregister(address);
         }
+
         Assert.Null(LocalChannelRegistry.Get(address));
     }
 
@@ -267,6 +269,7 @@ public class JavaSourceAlignmentContractTest
         var channel = new Channels.Sockets.NioDatagramChannel();
         var flags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
         var socket = (System.Net.Sockets.Socket)typeof(Channels.Nio.AbstractNioChannel).GetMethod("JavaChannel", flags)!.Invoke(channel, null);
+
         try
         {
             if (System.Net.Sockets.Socket.OSSupportsIPv6)

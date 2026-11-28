@@ -14,12 +14,14 @@ internal static class ManagedMemoryTest
             Assert.True(adaptive.TryGetAddress(offset, out nint address));
             return address;
         }
+
         if (MemoryMarshal.TryGetMemoryManager<byte, ThreadLocalDirectAllocation>(
                 memory, out var threadLocal, out offset, out _))
         {
             Assert.True(threadLocal.TryGetAddress(offset, out nint address));
             return address;
         }
+
         Assert.True(NativeMemoryOwner.TryGetAddress(memory, out nint directAddress));
         return directAddress;
     }

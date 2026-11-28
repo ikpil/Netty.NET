@@ -35,6 +35,7 @@ public static class ThrowableUtil
     {
         ObjectUtil.CheckNotNull(cause, "cause");
         ObjectUtil.CheckNotNull(clazz, "clazz");
+
         // CLR permits assigning a remote trace only before an exception has been thrown.
         // CLR: the single frame uses StackTraceElement.toString() for a null file name and line -1,
         // "className.method(Unknown Source)", with Type.FullName for Class.getName().
@@ -42,6 +43,7 @@ public static class ThrowableUtil
         {
             ExceptionDispatchInfo.SetRemoteStackTrace(cause, "   at " + clazz.FullName + "." + method + "(Unknown Source)");
         }
+
         return cause;
     }
 
@@ -99,7 +101,9 @@ public static class ThrowableUtil
         {
             throw new ArgumentException("Self-suppression not permitted", nameof(suppressed));
         }
+
         var list = Suppressed.GetValue(target, _ => new List<Exception>());
+
         lock (list)
         {
             list.Add(suppressed);
@@ -127,6 +131,7 @@ public static class ThrowableUtil
         {
             return Array.Empty<Exception>();
         }
+
         lock (list)
         {
             return list.ToArray();
@@ -143,6 +148,7 @@ public static class ThrowableUtil
     {
         ObjectUtil.CheckNotNull(thread, "thread");
         ObjectUtil.CheckNotNull(cause, "cause");
+
         System.Threading.ThreadState state = thread.ThreadState;
         // CLR exposes a managed stack for the current thread only. For other threads retain the observed
         // state and mark stack unavailability in the diagnostic rather than attributing this caller's stack.

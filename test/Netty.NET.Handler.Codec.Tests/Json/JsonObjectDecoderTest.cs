@@ -151,9 +151,11 @@ public class JsonObjectDecoderTest
         EmbeddedChannel ch = new EmbeddedChannel(new JsonObjectDecoder(true));
 
         bool dataAvailable = false;
+
         foreach (string part in array)
         {
             dataAvailable = ch.WriteInbound(Unpooled.CopiedBuffer(part, Encoding.UTF8));
+
             if (indexDataAvailable > 0)
             {
                 Assert.False(dataAvailable);
@@ -162,6 +164,7 @@ public class JsonObjectDecoderTest
             {
                 Assert.True(dataAvailable);
             }
+
             indexDataAvailable--;
         }
 
@@ -181,6 +184,7 @@ public class JsonObjectDecoderTest
         EmbeddedChannel ch = new EmbeddedChannel(new JsonObjectDecoder());
 
         string json = "{\"foo\" : {\"bar\" : [{},{}]}}";
+
         foreach (byte c in Encoding.UTF8.GetBytes(json))
         {
             ch.WriteInbound(Unpooled.CopiedBuffer(new byte[] {c}));
@@ -269,6 +273,7 @@ public class JsonObjectDecoderTest
     public void TestNonJsonContent1()
     {
         EmbeddedChannel ch = new EmbeddedChannel(new JsonObjectDecoder());
+
         try
         {
             Assert.Throws<CorruptedFrameException>(
@@ -305,6 +310,7 @@ public class JsonObjectDecoderTest
     public void TestMaxObjectLength()
     {
         EmbeddedChannel ch = new EmbeddedChannel(new JsonObjectDecoder(6));
+
         try
         {
             Assert.Throws<TooLongFrameException>(

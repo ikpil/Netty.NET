@@ -165,6 +165,7 @@ internal sealed class HashedWheelTimeout : ITimeout
             .Append(StringUtil.SimpleClassName(this))
             .Append('(')
             .Append("deadline: ");
+
         if (remaining > 0)
         {
             buf.Append(remaining.ToString(CultureInfo.InvariantCulture))

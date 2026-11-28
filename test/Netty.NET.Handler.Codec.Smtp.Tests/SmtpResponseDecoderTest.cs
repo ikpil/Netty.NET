@@ -192,12 +192,14 @@ public class SmtpResponseDecoderTest
     public void TestMaxResponseSizeAppliesPerResponse()
     {
         EmbeddedChannel channel = new EmbeddedChannel(new SmtpResponseDecoder(int.MaxValue, 256));
+
         for (int i = 0; i < 100; i++)
         {
             Assert.True(channel.WriteInbound(NewBuffer("250-Hello\r\n250 Ok\r\n")));
             ISmtpResponse response = channel.ReadInbound<ISmtpResponse>();
             Assert.Equal(2, response.Details().Count);
         }
+
         Assert.False(channel.Finish());
     }
 

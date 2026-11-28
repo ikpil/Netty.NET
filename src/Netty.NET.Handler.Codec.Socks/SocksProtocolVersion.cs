@@ -53,6 +53,7 @@ public sealed class SocksProtocolVersion
                 return code;
             }
         }
+
         return UNKNOWN;
     }
 

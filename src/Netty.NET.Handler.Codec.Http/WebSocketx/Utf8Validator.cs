@@ -89,6 +89,7 @@ internal sealed class Utf8Validator
     {
         checking = false;
         codep = 0;
+
         if (state != UTF8_ACCEPT)
         {
             state = UTF8_ACCEPT;
@@ -111,6 +112,7 @@ internal sealed class Utf8Validator
             throw new CorruptedWebSocketFrameException(
                 WebSocketCloseStatus.INVALID_PAYLOAD_DATA, "bytes are not UTF-8");
         }
+
         return true;
     }
 

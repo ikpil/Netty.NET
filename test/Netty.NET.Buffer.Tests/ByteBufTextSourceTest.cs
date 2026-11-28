@@ -36,6 +36,7 @@ public class ByteBufTextSourceTest
             if (provider >= 3)
                 _pool = new PooledByteBufAllocator(nativeAllocator: Native, maxOrder: 1,
                     smallCacheSize: 0, normalCacheSize: 0);
+
             Root = provider switch
             {
                 0 => new UnpooledHeapByteBuf(length, maximum),
@@ -56,6 +57,7 @@ public class ByteBufTextSourceTest
             {
                 Root.Release();
             }
+
             Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
@@ -70,10 +72,12 @@ public class ByteBufTextSourceTest
     static ByteBufTextSourceTest()
     {
         char[] chars = new char[256];
+
         for (char c = (char)0; c < chars.Length; c++)
         {
             chars[c] = c;
         }
+
         EXTENDED_ASCII_CHARS = new string(chars);
         ASCII_CHARS = new string(chars, 0, 128);
     }

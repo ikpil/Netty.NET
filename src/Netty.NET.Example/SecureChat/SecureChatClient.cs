@@ -52,6 +52,7 @@ public sealed class SecureChatClient
             .TrustManager(InsecureTrustManagerFactory.INSTANCE).Build();
 
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             Bootstrap b = new Bootstrap();
@@ -64,6 +65,7 @@ public sealed class SecureChatClient
 
             // Read commands from the stdin.
             Task lastWriteFuture = null;
+
             for (;;)
             {
                 string line = Console.In.ReadLine();

@@ -58,6 +58,7 @@ internal static class DnsCodecUtil
 
         int totalLength = 0;
         string[] labels = Split(name);
+
         for (int i = 0; i < labels.Length; i++)
         {
             string label = labels[i];
@@ -74,18 +75,21 @@ internal static class DnsCodecUtil
                     throw new ArgumentException("DNS name contains empty label: " + name);
                 }
             }
+
             if (labelLen > 63)
             {
                 throw new ArgumentException(
                         "DNS label length " + labelLen.ToString(CultureInfo.InvariantCulture) +
                         " exceeds maximum of 63: " + name);
             }
+
             int idx = label.IndexOf('\0');
             if (idx != -1)
             {
                 throw new ArgumentException(
                         "DNS label contains null byte at index " + idx.ToString(CultureInfo.InvariantCulture));
             }
+
             totalLength += 1 + labelLen;
             if (totalLength > MAX_DOMAIN_NAME_LENGTH)
             {
@@ -93,6 +97,7 @@ internal static class DnsCodecUtil
                         "DNS name exceeds maximum length of " +
                         MAX_DOMAIN_NAME_LENGTH.ToString(CultureInfo.InvariantCulture) + ": " + name);
             }
+
             buf.WriteByte(labelLen);
             ByteBufUtil.WriteAscii(buf, label);
         }
@@ -109,14 +114,17 @@ internal static class DnsCodecUtil
     {
         List<string> labels = new List<string>(name.Split('.'));
         int count = labels.Count;
+
         while (count > 0 && labels[count - 1].Length == 0)
         {
             count--;
         }
+
         if (labels.Count == 1)
         {
             return labels.ToArray();
         }
+
         return labels.GetRange(0, count).ToArray();
     }
 
@@ -147,6 +155,7 @@ internal static class DnsCodecUtil
                     MAX_RECORDS_PER_SECTION.ToString(CultureInfo.InvariantCulture) + " but was " +
                     count.ToString(CultureInfo.InvariantCulture));
         }
+
         return count;
     }
 
@@ -172,6 +181,7 @@ internal static class DnsCodecUtil
         }
 
         StringBuilder name = new StringBuilder(CalculateMaxNameLength(readable));
+
         while (@in.IsReadable())
         {
             int len = @in.ReadByte();
@@ -193,6 +203,7 @@ internal static class DnsCodecUtil
                 {
                     throw new CorruptedFrameException("name has an out-of-range pointer");
                 }
+
                 @in.ReaderIndex = next;
 
                 // Bounds the work per name, which also terminates loops.
@@ -214,6 +225,7 @@ internal static class DnsCodecUtil
                 {
                     throw new TooLongFrameException("label must be <= 63 but was " + len.ToString(CultureInfo.InvariantCulture));
                 }
+
                 name.Append(@in.ToString(@in.ReaderIndex, len, Encoding.UTF8)).Append('.');
                 @in.SkipBytes(len);
                 // See https://datatracker.ietf.org/doc/html/rfc1035#section-2.3.4
@@ -258,6 +270,7 @@ internal static class DnsCodecUtil
     {
         string domainName = DecodeDomainName(compression);
         ByteBuf result = compression.Alloc().Buffer(domainName.Length << 1);
+
         try
         {
             EncodeDomainName(domainName, result);
@@ -267,6 +280,7 @@ internal static class DnsCodecUtil
             result.Release();
             throw;
         }
+
         return result;
     }
 }

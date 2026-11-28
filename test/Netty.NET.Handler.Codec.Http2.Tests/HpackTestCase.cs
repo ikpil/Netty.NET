@@ -77,23 +77,29 @@ internal sealed class HpackTestCase
         using JsonDocument document = JsonDocument.Parse(@is);
         JsonElement root = document.RootElement;
         HpackTestCase hpackTestCase = new HpackTestCase();
+
         if (root.TryGetProperty("max_header_table_size", out JsonElement maxHeaderTableSize))
         {
             hpackTestCase.maxHeaderTableSize = maxHeaderTableSize.GetInt32();
         }
+
         if (root.TryGetProperty("sensitive_headers", out JsonElement sensitiveHeaders))
         {
             hpackTestCase.sensitiveHeaders = sensitiveHeaders.GetBoolean();
         }
+
         hpackTestCase.headerBlocks = new List<HeaderBlock>();
+
         foreach (JsonElement block in root.GetProperty("header_blocks").EnumerateArray())
         {
             hpackTestCase.headerBlocks.Add(HeaderBlock.Load(block));
         }
+
         foreach (HeaderBlock headerBlock in hpackTestCase.headerBlocks)
         {
             headerBlock.encodedBytes = StringUtil.DecodeHexDump(headerBlock.GetEncodedStr());
         }
+
         return hpackTestCase;
     }
 
@@ -116,6 +122,7 @@ internal sealed class HpackTestCase
             }
 
             List<HpackHeaderField> actualDynamicTable = new List<HpackHeaderField>();
+
             for (int index = 0; index < hpackEncoder.Length(); index++)
             {
                 actualDynamicTable.Add(hpackEncoder.GetHeaderField(index));
@@ -149,6 +156,7 @@ internal sealed class HpackTestCase
             List<HpackHeaderField> actualHeaders = Decode(hpackDecoder, headerBlock.encodedBytes);
 
             List<HpackHeaderField> expectedHeaders = new List<HpackHeaderField>();
+
             foreach (HpackHeaderField h in headerBlock.GetHeaders())
             {
                 expectedHeaders.Add(new HpackHeaderField(h.name, h.value));
@@ -162,6 +170,7 @@ internal sealed class HpackTestCase
             }
 
             List<HpackHeaderField> actualDynamicTable = new List<HpackHeaderField>();
+
             for (int index = 0; index < hpackDecoder.Length(); index++)
             {
                 actualDynamicTable.Add(hpackDecoder.GetHeaderField(index));
@@ -220,6 +229,7 @@ internal sealed class HpackTestCase
         IHttp2Headers http2Headers = ToHttp2Headers(headers);
         IHttp2HeadersEncoder.ISensitivityDetector sensitivityDetector = new FixedSensitivityDetector(sensitive);
         ByteBuf buffer = Unpooled.Buffer();
+
         try
         {
             if (maxHeaderTableSize != -1)
@@ -257,16 +267,19 @@ internal sealed class HpackTestCase
     private static IHttp2Headers ToHttp2Headers(List<HpackHeaderField> inHeaders)
     {
         IHttp2Headers headers = new DefaultHttp2Headers(false);
+
         foreach (HpackHeaderField e in inHeaders)
         {
             headers.Add(e.name, e.value);
         }
+
         return headers;
     }
 
     private static List<HpackHeaderField> Decode(HpackDecoder hpackDecoder, byte[] expected)
     {
         ByteBuf @in = Unpooled.WrappedBuffer(expected);
+
         try
         {
             List<HpackHeaderField> headers = new List<HpackHeaderField>();
@@ -283,10 +296,12 @@ internal sealed class HpackTestCase
     private static string Concat(List<string> l)
     {
         StringBuilder ret = new StringBuilder();
+
         foreach (string s in l)
         {
             ret.Append(s);
         }
+
         return ret.ToString();
     }
 
@@ -296,6 +311,7 @@ internal sealed class HpackTestCase
         {
             return false;
         }
+
         for (int i = 0; i < expected.Count; i++)
         {
             if (!expected[i].EqualsForTest(actual[i]))
@@ -303,6 +319,7 @@ internal sealed class HpackTestCase
                 return false;
             }
         }
+
         return true;
     }
 
@@ -326,24 +343,30 @@ internal sealed class HpackTestCase
         internal static HeaderBlock Load(JsonElement json)
         {
             HeaderBlock block = new HeaderBlock();
+
             if (json.TryGetProperty("max_header_table_size", out JsonElement maxHeaderTableSize))
             {
                 block.maxHeaderTableSize = maxHeaderTableSize.GetInt32();
             }
+
             if (json.TryGetProperty("encoded", out JsonElement encoded))
             {
                 block.encoded = new List<string>();
+
                 foreach (JsonElement line in encoded.EnumerateArray())
                 {
                     block.encoded.Add(line.GetString());
                 }
             }
+
             block.headers = HeaderFields(json, "headers");
             block.dynamicTable = HeaderFields(json, "dynamic_table");
+
             if (json.TryGetProperty("table_size", out JsonElement tableSize))
             {
                 block.tableSize = tableSize.GetInt32();
             }
+
             return block;
         }
 
@@ -353,11 +376,14 @@ internal sealed class HpackTestCase
             {
                 return null;
             }
+
             List<HpackHeaderField> fields = new List<HpackHeaderField>();
+
             foreach (JsonElement field in array.EnumerateArray())
             {
                 fields.Add(HeaderFieldDeserializer.Deserialize(field));
             }
+
             return fields;
         }
 
@@ -399,6 +425,7 @@ internal sealed class HpackTestCase
             {
                 throw new JsonException("JSON Object has multiple entries: [" + string.Join(", ", entrySet) + "]");
             }
+
             JsonProperty entry = entrySet[0];
             string name = entry.Name;
             string value = entry.Value.GetString();

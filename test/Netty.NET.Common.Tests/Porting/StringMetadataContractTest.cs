@@ -84,6 +84,7 @@ public class StringMetadataContractTest
             {
                 throw new InvalidOperationException("The input can only be enumerated once.");
             }
+
             try
             {
                 yield return "gzip";

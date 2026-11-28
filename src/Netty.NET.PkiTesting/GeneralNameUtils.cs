@@ -42,14 +42,17 @@ internal static class GeneralNameUtils
     {
         // CLR: new GeneralName(otherName, SEQUENCE { oid, [0] EXPLICIT value }) is the [0] IMPLICIT OtherName SEQUENCE.
         AsnWriter wrappedValue = new AsnWriter(AsnEncodingRules.DER);
+
         using (wrappedValue.PushSequence(new Asn1Tag(TagClass.ContextSpecific, 0)))
         {
             wrappedValue.WriteObjectIdentifier(oid);
+
             using (wrappedValue.PushSequence(new Asn1Tag(TagClass.ContextSpecific, 0)))
             {
                 wrappedValue.WriteEncodedValue(value);
             }
         }
+
         return wrappedValue.Encode();
     }
 
@@ -57,6 +60,7 @@ internal static class GeneralNameUtils
     {
         SubjectAlternativeNameBuilder builder = new SubjectAlternativeNameBuilder();
         builder.AddEmailAddress(emailAddress);
+
         return SingleName(builder);
     }
 
@@ -69,6 +73,7 @@ internal static class GeneralNameUtils
         string host = uri.Host;
         SubjectAlternativeNameBuilder builder = new SubjectAlternativeNameBuilder();
         builder.AddDnsName(host);
+
         return SingleName(builder);
     }
 
@@ -81,10 +86,12 @@ internal static class GeneralNameUtils
     {
         // CLR: directoryName is [4] EXPLICIT Name, because Name is a CHOICE.
         AsnWriter writer = new AsnWriter(AsnEncodingRules.DER);
+
         using (writer.PushSequence(new Asn1Tag(TagClass.ContextSpecific, 4)))
         {
             writer.WriteEncodedValue(name.RawData);
         }
+
         return writer.Encode();
     }
 
@@ -101,6 +108,7 @@ internal static class GeneralNameUtils
     {
         SubjectAlternativeNameBuilder builder = new SubjectAlternativeNameBuilder();
         builder.AddUri(uri);
+
         return SingleName(builder);
     }
 
@@ -110,10 +118,12 @@ internal static class GeneralNameUtils
         {
             throw new ArgumentException("Not a valid IP address: " + ipAddress);
         }
+
         // CLR: Bouncy Castle parses the text into the address octets; NetUtil.CreateByteArrayFromIpAddressString does so
         // with the rules of the validation above.
         SubjectAlternativeNameBuilder builder = new SubjectAlternativeNameBuilder();
         builder.AddIpAddress(new IPAddress(NetUtil.CreateByteArrayFromIpAddressString(ipAddress)));
+
         return SingleName(builder);
     }
 
@@ -122,6 +132,7 @@ internal static class GeneralNameUtils
         // CLR: registeredID is [8] IMPLICIT OBJECT IDENTIFIER.
         AsnWriter writer = new AsnWriter(AsnEncodingRules.DER);
         writer.WriteObjectIdentifier(oid, new Asn1Tag(TagClass.ContextSpecific, 8));
+
         return writer.Encode();
     }
 

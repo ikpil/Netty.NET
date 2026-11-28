@@ -18,12 +18,14 @@ public class FixedChannelPoolContractTest
         var channel = await pool.AcquireAsync(TestContext.Current.CancellationToken);
         const int cancelledCount = 1024;
         var cancelled = new Task<IChannel>[cancelledCount];
+
         for (int i = 0; i < cancelledCount; i++)
         {
             using var cancellation = new CancellationTokenSource();
             cancelled[i] = pool.AcquireAsync(cancellation.Token);
             cancellation.Cancel();
         }
+
         var next = pool.AcquireAsync(TestContext.Current.CancellationToken);
         await pool.ReleaseAsync(channel);
         Assert.Same(channel, await next.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));

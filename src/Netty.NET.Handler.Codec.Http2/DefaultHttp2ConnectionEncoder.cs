@@ -62,6 +62,7 @@ public class DefaultHttp2ConnectionEncoder : IHttp2ConnectionEncoder, IHttp2Sett
     {
         this.connection = CheckNotNull(connection, "connection");
         this.frameWriter = CheckNotNull(frameWriter, "frameWriter");
+
         if (connection.Remote().FlowController() == null)
         {
             connection.Remote().FlowController(new DefaultHttp2RemoteFlowController(connection));
@@ -94,6 +95,7 @@ public class DefaultHttp2ConnectionEncoder : IHttp2ConnectionEncoder, IHttp2Sett
         IHttp2FrameWriter.IConfiguration config = Configuration();
         IHttp2HeadersEncoder.IConfiguration outboundHeaderConfig = config.HeadersConfiguration();
         IHttp2FrameSizePolicy outboundFrameSizePolicy = config.FrameSizePolicy();
+
         if (pushEnabled != null)
         {
             if (!connection.IsServer() && pushEnabled.Value)
@@ -101,6 +103,7 @@ public class DefaultHttp2ConnectionEncoder : IHttp2ConnectionEncoder, IHttp2Sett
                 throw ConnectionError(PROTOCOL_ERROR,
                     "Client received a value of ENABLE_PUSH specified to other than 0");
             }
+
             connection.Remote().AllowPushTo(pushEnabled.Value);
         }
 
@@ -141,6 +144,7 @@ public class DefaultHttp2ConnectionEncoder : IHttp2ConnectionEncoder, IHttp2Sett
             bool endOfStream, TaskCompletionSource promise)
     {
         IHttp2Stream stream;
+
         try
         {
             stream = RequireStream(streamId);
@@ -185,6 +189,7 @@ public class DefaultHttp2ConnectionEncoder : IHttp2ConnectionEncoder, IHttp2Sett
             throw new InvalidOperationException("Stream " + ToJavaString(stream.Id()) + " sent too many headers EOS: " +
                                                 ToJavaString(endOfStream));
         }
+
         return isInformational;
     }
 
@@ -211,6 +216,7 @@ public class DefaultHttp2ConnectionEncoder : IHttp2ConnectionEncoder, IHttp2Sett
             return frameWriter.WriteHeadersAsync(ctx, streamId, headers, streamDependency,
                     weight, exclusive, padding, endOfStream, promise);
         }
+
         return frameWriter.WriteHeadersAsync(ctx, streamId, headers, padding, endOfStream, promise);
     }
 
@@ -242,6 +248,7 @@ public class DefaultHttp2ConnectionEncoder : IHttp2ConnectionEncoder, IHttp2Sett
                                                                               ToJavaString(streamId), cause));
                         return promise.Task;
                     }
+
                     throw;
                 }
             }
@@ -366,6 +373,7 @@ public class DefaultHttp2ConnectionEncoder : IHttp2ConnectionEncoder, IHttp2Sett
         {
             AddListener(ctx, future, outstandingLocalSettings.OperationComplete);
         }
+
         return future;
     }
 
@@ -375,12 +383,14 @@ public class DefaultHttp2ConnectionEncoder : IHttp2ConnectionEncoder, IHttp2Sett
         {
             return frameWriter.WriteSettingsAckAsync(ctx, promise);
         }
+
         if (!outstandingRemoteSettingsQueue.TryDequeue(out Http2Settings settings))
         {
             promise.SetException(new Http2Exception(INTERNAL_ERROR, "attempted to write a SETTINGS ACK with no " +
                     " pending SETTINGS"));
             return promise.Task;
         }
+
         SimpleChannelPromiseAggregator aggregator = new SimpleChannelPromiseAggregator(promise, ctx.Channel,
                 ctx.Executor);
         // Acknowledge receipt of the settings. We should do this before we process the settings to ensure our
@@ -391,6 +401,7 @@ public class DefaultHttp2ConnectionEncoder : IHttp2ConnectionEncoder, IHttp2Sett
         // We create a "new promise" to make sure that status from both the write and the application are taken into
         // account independently.
         TaskCompletionSource applySettingsPromise = aggregator.NewPromise();
+
         try
         {
             RemoteSettings(settings);
@@ -401,6 +412,7 @@ public class DefaultHttp2ConnectionEncoder : IHttp2ConnectionEncoder, IHttp2Sett
             applySettingsPromise.SetException(e);
             lifecycleManager.OnError(ctx, true, e);
         }
+
         return aggregator.DoneAllocatingPromises().Task;
     }
 
@@ -443,6 +455,7 @@ public class DefaultHttp2ConnectionEncoder : IHttp2ConnectionEncoder, IHttp2Sett
             {
                 lifecycleManager.OnError(ctx, true, failureCause);
             }
+
             return future;
         }
         catch (Exception t)
@@ -486,6 +499,7 @@ public class DefaultHttp2ConnectionEncoder : IHttp2ConnectionEncoder, IHttp2Sett
         {
             outstandingLocalSettingsQueue.RemoveFirst();
         }
+
         return outstandingLocalSettings == null ? null : outstandingLocalSettings.settings;
     }
 
@@ -500,6 +514,7 @@ public class DefaultHttp2ConnectionEncoder : IHttp2ConnectionEncoder, IHttp2Sett
         if (stream == null)
         {
             string message;
+
             if (connection.StreamMayHaveExisted(streamId))
             {
                 message = "Stream no longer exists: " + ToJavaString(streamId);
@@ -508,8 +523,10 @@ public class DefaultHttp2ConnectionEncoder : IHttp2ConnectionEncoder, IHttp2Sett
             {
                 message = "Stream does not exist: " + ToJavaString(streamId);
             }
+
             throw new ArgumentException(message);
         }
+
         return stream;
     }
 
@@ -539,6 +556,7 @@ public class DefaultHttp2ConnectionEncoder : IHttp2ConnectionEncoder, IHttp2Sett
         {
             outstandingRemoteSettingsQueue = new Queue<Http2Settings>(2);
         }
+
         outstandingRemoteSettingsQueue.Enqueue(settings);
     }
 
@@ -584,6 +602,7 @@ public class DefaultHttp2ConnectionEncoder : IHttp2ConnectionEncoder, IHttp2Sett
         public override void Write(IChannelHandlerContext ctx, int allowedBytes)
         {
             int queuedData = queue.ReadableBytes;
+
             if (!endOfStream)
             {
                 if (queuedData == 0)
@@ -609,6 +628,7 @@ public class DefaultHttp2ConnectionEncoder : IHttp2ConnectionEncoder, IHttp2Sett
                         AddListener(ctx, emptyWritePromise.Task, OperationComplete);
                         Http2CodecUtil.Write(ctx, queue.Remove(0, emptyWritePromise), emptyWritePromise);
                     }
+
                     return;
                 }
 
@@ -657,6 +677,7 @@ public class DefaultHttp2ConnectionEncoder : IHttp2ConnectionEncoder, IHttp2Sett
             {
                 return false;
             }
+
             nextData.queue.CopyTo(queue);
             dataSize = queue.ReadableBytes;
             // Given that we're merging data into a frame it doesn't really make sense to accumulate padding.
@@ -715,6 +736,7 @@ public class DefaultHttp2ConnectionEncoder : IHttp2ConnectionEncoder, IHttp2Sett
             {
                 encoder.lifecycleManager.OnError(ctx, true, cause);
             }
+
             promise.TrySetException(cause);
         }
 
@@ -763,6 +785,7 @@ public class DefaultHttp2ConnectionEncoder : IHttp2ConnectionEncoder, IHttp2Sett
                 bool endOfStream, TaskCompletionSource promise)
         {
             CheckPositiveOrZero(padding, "padding");
+
             this.encoder = encoder;
             this.padding = padding;
             this.endOfStream = endOfStream;

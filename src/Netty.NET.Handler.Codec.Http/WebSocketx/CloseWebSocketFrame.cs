@@ -153,10 +153,12 @@ public class CloseWebSocketFrame : WebSocketFrame
 
         ByteBuf binaryData = allocator.Buffer(2 + reasonText.Length);
         binaryData.WriteShort(statusCode);
+
         if (reasonText.Length != 0)
         {
             ByteBufUtil.WriteUtf8(binaryData, reasonText);
         }
+
         return binaryData;
     }
 

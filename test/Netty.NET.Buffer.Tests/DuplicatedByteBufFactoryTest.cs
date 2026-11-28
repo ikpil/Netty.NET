@@ -55,6 +55,7 @@ public class DuplicatedByteBufFactoryTest
             if (provider >= 3)
                 _pool = new PooledByteBufAllocator(nativeAllocator: _native, maxOrder: 1,
                     smallCacheSize: 0, normalCacheSize: 0);
+
             Root = provider switch
             {
                 0 => new UnpooledHeapByteBuf(8, 64),
@@ -67,10 +68,12 @@ public class DuplicatedByteBufFactoryTest
             };
             Root.Clear();
             Buffer = retained ? Root.RetainedDuplicate() : Root.Duplicate();
+
             if (retained)
             {
                 Root.Release();
             }
+
             Assert.Equal(Root.ReaderIndex, Buffer.ReaderIndex);
             Assert.Equal(Root.WriterIndex, Buffer.WriterIndex);
             Assert.Equal(1, Buffer.RefCnt);
@@ -82,6 +85,7 @@ public class DuplicatedByteBufFactoryTest
             {
                 Buffer.Release(Buffer.RefCnt);
             }
+
             Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, _native.ReservedBytes);
@@ -268,6 +272,7 @@ public class DuplicatedByteBufFactoryTest
         using var s = new Storage(provider, factoryRetained);
         ByteBuf buf = s.Buffer;
         ByteBuf dup = retainedDuplicate ? buf.RetainedDuplicate() : buf.Duplicate();
+
         try
         {
             dup.Capacity = 10;
@@ -384,11 +389,13 @@ public class DuplicatedByteBufFactoryTest
         ByteBuf buf = s.Buffer;
         buf.ResetWriterIndex().WriteBytes(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
         ByteBuf dup = retainedDuplicate ? buf.RetainedDuplicate() : buf.Duplicate();
+
         try
         {
             Assert.Equal(0, dup.CompareTo(buf));
             Assert.Equal(0, dup.CompareTo(dup.Duplicate()));
             ByteBuf b = dup.RetainedDuplicate();
+
             try
             {
                 Assert.Equal(0, dup.CompareTo(b));
@@ -397,6 +404,7 @@ public class DuplicatedByteBufFactoryTest
             {
                 b.Release();
             }
+
             Assert.Equal(0, dup.CompareTo(dup.Slice(dup.ReaderIndex, dup.ReadableBytes)));
             // CLR: mutations are shared while the reader indices stay independent.
             dup.SetByte(3, 99);

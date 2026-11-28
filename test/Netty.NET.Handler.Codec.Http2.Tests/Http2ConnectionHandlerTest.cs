@@ -140,6 +140,7 @@ public class Http2ConnectionHandlerTest : IDisposable
                 {
                     return stream.Object;
                 }
+
                 return null;
             });
         connection.Setup(c => c.Stream(NON_EXISTANT_STREAM_ID)).Returns((IHttp2Stream) null);
@@ -217,6 +218,7 @@ public class Http2ConnectionHandlerTest : IDisposable
         });
 
         handler.ChannelActive(ctx.Object);
+
         if (flushPreface)
         {
             ctx.Verify(c => c.Flush(), Times.Once());
@@ -225,6 +227,7 @@ public class Http2ConnectionHandlerTest : IDisposable
         {
             ctx.Verify(c => c.Flush(), Times.Never());
         }
+
         Assert.True(verified);
     }
 
@@ -759,10 +762,12 @@ public class Http2ConnectionHandlerTest : IDisposable
         // Simulate that all streams have become inactive by the time the future completes.
         // Simulate the future being completed.
         _ = handler.CloseAsync(ctx.Object, CancellationToken.None);
+
         if (future.IsCompleted)
         {
             connection.Setup(c => c.NumActiveStreams()).Returns(0);
         }
+
         handler.CloseStream(stream.Object, future);
         // Simulate another stream close call being made after the context should already be closed.
         handler.CloseStream(stream.Object, future);
@@ -983,6 +988,7 @@ public class Http2ConnectionHandlerTest : IDisposable
         EmbeddedChannel server = new EmbeddedChannel(serverHandler);
         EmbeddedChannel client = NewClientChannel(gracefulShutdownTimeoutMillis);
         Http2ConnectionHandler clientHandler = client.Pipeline.Get<Http2ConnectionHandler>();
+
         try
         {
             ExchangeFrames(client, server);
@@ -1021,6 +1027,7 @@ public class Http2ConnectionHandlerTest : IDisposable
         EmbeddedChannel server = new EmbeddedChannel(serverHandler);
         EmbeddedChannel client = NewClientChannel(gracefulShutdownTimeoutMillis);
         Http2ConnectionHandler clientHandler = client.Pipeline.Get<Http2ConnectionHandler>();
+
         try
         {
             ExchangeFrames(client, server);
@@ -1163,6 +1170,7 @@ public class Http2ConnectionHandlerTest : IDisposable
     private static bool IsConnectionPreface(object msg)
     {
         ByteBuf preface = ConnectionPrefaceBuf();
+
         try
         {
             return msg is ByteBuf buf && buf.Equals(preface);

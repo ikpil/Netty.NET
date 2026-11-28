@@ -87,7 +87,9 @@ public sealed class PendingWrite
     public bool FailAndRecycle(Exception cause)
     {
         ArgumentNullException.ThrowIfNull(cause);
+
         Claim();
+
         try
         {
             ReferenceCountUtil.Release(_msg);
@@ -97,6 +99,7 @@ public sealed class PendingWrite
         {
             ClearAndRecycle();
         }
+
         return true;
     }
 
@@ -107,6 +110,7 @@ public sealed class PendingWrite
     public bool SucceedAndRecycle()
     {
         Claim();
+
         try
         {
             _completion?.TrySetResult();
@@ -115,6 +119,7 @@ public sealed class PendingWrite
         {
             ClearAndRecycle();
         }
+
         return true;
     }
 

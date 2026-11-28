@@ -23,6 +23,7 @@ public class RawIoRegistrationContractTest
         receiver.Bind(new IPEndPoint(IPAddress.Loopback, 0));
         receiver.Blocking = false;
         var handle = new RecordingHandle(loop, receiver);
+
         try
         {
             IIoRegistration registration = loop.RegisterAsync(handle).GetAwaiter().GetResult();
@@ -44,6 +45,7 @@ public class RawIoRegistrationContractTest
         {
             Terminate(loop);
         }
+
         Assert.Equal(new[] { "registered", "read", "unregistered", "closed" }, handle.Events);
     }
 
@@ -54,6 +56,7 @@ public class RawIoRegistrationContractTest
         using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         socket.Blocking = false;
         var handle = new RecordingHandle(loop, socket);
+
         try
         {
             IIoRegistration registration = loop.RegisterAsync(handle).GetAwaiter().GetResult();
@@ -70,6 +73,7 @@ public class RawIoRegistrationContractTest
         {
             Terminate(loop);
         }
+
         Assert.Equal(new[] { "registered", "unregistered", "registered", "unregistered" }, handle.Events);
     }
 
@@ -81,6 +85,7 @@ public class RawIoRegistrationContractTest
         using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         socket.Blocking = false;
         var handle = new RecordingHandle(loop, socket);
+
         try
         {
             Assert.Same(loop, ((IIoEventLoopGroup)loop).Next());
@@ -105,6 +110,7 @@ public class RawIoRegistrationContractTest
     {
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+
         try
         {
             await Assert.ThrowsAsync<InvalidOperationException>(() => group.RegisterAsync(new RecordingHandle(group.Next(), socket)));
@@ -124,6 +130,7 @@ public class RawIoRegistrationContractTest
         using var second = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp) { Blocking = false };
         var failing = new RecordingHandle(loop, first) { FailClose = true };
         var healthy = new RecordingHandle(loop, second);
+
         try
         {
             IIoRegistration one = await loop.RegisterAsync(failing);
@@ -173,8 +180,10 @@ public class RawIoRegistrationContractTest
             Assert.True(registration.IsValid());
             Assert.True(NioIoOps.READ.Contains(((INioIoEvent)ioEvent).Ops()));
             byte[] buffer = new byte[1];
+
             while (socket.Receive(buffer, 0, 1, SocketFlags.None, out SocketError error) == 1 && error == SocketError.Success)
                 Payloads.Add(buffer[0]);
+
             Events.Add("read");
         }
 

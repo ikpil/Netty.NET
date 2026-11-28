@@ -288,6 +288,7 @@ public sealed class PcapWriteHandler : ChannelDuplexHandler, IDisposable
                 LogDiscard();
             }
         }
+
         base.ChannelRead(ctx, msg);
     }
 
@@ -303,6 +304,7 @@ public sealed class PcapWriteHandler : ChannelDuplexHandler, IDisposable
             catch (Exception ex)
             {
                 ReferenceCountUtil.Release(msg);
+
                 // CLR: promise.setFailure(ex) and return: the returned Task fails with ex.
                 return Task.FromException(ex);
             }
@@ -324,6 +326,7 @@ public sealed class PcapWriteHandler : ChannelDuplexHandler, IDisposable
                 LogDiscard();
             }
         }
+
         return base.WriteAsync(ctx, msg, cancellationToken);
     }
 
@@ -350,6 +353,7 @@ public sealed class PcapWriteHandler : ChannelDuplexHandler, IDisposable
             }
 
             IByteBufAllocator byteBufAllocator = ctx.Alloc();
+
             if (totalBytes == 0)
             {
                 HandleTcpPacket(ctx, (ByteBuf) msg, isWriteOperation, byteBufAllocator);
@@ -383,6 +387,7 @@ public sealed class PcapWriteHandler : ChannelDuplexHandler, IDisposable
             {
                 IPEndPoint srcAddr;
                 IPEndPoint dstAddr;
+
                 if (isServerPipeline)
                 {
                     srcAddr = handlerAddr;
@@ -411,6 +416,7 @@ public sealed class PcapWriteHandler : ChannelDuplexHandler, IDisposable
             {
                 IPEndPoint srcAddr;
                 IPEndPoint dstAddr;
+
                 if (isServerPipeline)
                 {
                     srcAddr = initiatorAddr;
@@ -681,6 +687,7 @@ public sealed class PcapWriteHandler : ChannelDuplexHandler, IDisposable
                 return new IPEndPoint(WildcardAddressHolder.wildcard4, local.Port);
             }
         }
+
         return local;
     }
 
@@ -897,6 +904,7 @@ public sealed class PcapWriteHandler : ChannelDuplexHandler, IDisposable
             {
                 pCapWriter = new PcapWriter(this);
             }
+
             pCapWriter.Close();
             MarkClosed();
             logger.Debug("PcapWriterHandler is now closed");
@@ -1031,6 +1039,7 @@ public sealed class PcapWriteHandler : ChannelDuplexHandler, IDisposable
         public PcapWriteHandler Build(System.IO.Stream outputStream)
         {
             CheckNotNull(outputStream, "outputStream");
+
             return new PcapWriteHandler(this, outputStream);
         }
     }

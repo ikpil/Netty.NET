@@ -81,6 +81,7 @@ public abstract class Http2ChannelDuplexHandler : ChannelDuplexHandler
             throw new InvalidOperationException(StringUtil.SimpleClassName(typeof(Http2FrameCodec)) + " not found." +
                     " Has the handler been added to a pipeline?");
         }
+
         return codec.NewStream();
     }
 
@@ -102,6 +103,7 @@ public abstract class Http2ChannelDuplexHandler : ChannelDuplexHandler
             throw new ArgumentException(StringUtil.SimpleClassName(typeof(Http2FrameCodec))
                                                + " was not found in the channel pipeline.");
         }
+
         return (Http2FrameCodec) frameCodecCtx.Handler;
     }
 }

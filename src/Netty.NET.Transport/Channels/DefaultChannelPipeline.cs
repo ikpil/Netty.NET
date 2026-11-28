@@ -106,6 +106,7 @@ public class DefaultChannelPipeline : IChannelPipeline
                 handle = witness;
             }
         }
+
         return handle;
     }
 
@@ -135,6 +136,7 @@ public class DefaultChannelPipeline : IChannelPipeline
         {
             return group.Next();
         }
+
         Dictionary<IEventExecutorGroup, IEventExecutor> childExecutors = _childExecutors;
         if (childExecutors == null)
         {
@@ -144,6 +146,7 @@ public class DefaultChannelPipeline : IChannelPipeline
             childExecutors = _childExecutors =
                 new Dictionary<IEventExecutorGroup, IEventExecutor>(4, ReferenceEqualityComparer.Instance);
         }
+
         // Pin one of the child executors once and remember it so that the same child executor
         // is used to fire events for the same channel.
         if (!childExecutors.TryGetValue(group, out IEventExecutor childExecutor))
@@ -151,6 +154,7 @@ public class DefaultChannelPipeline : IChannelPipeline
             childExecutor = group.Next();
             childExecutors[group] = childExecutor;
         }
+
         return childExecutor;
     }
 
@@ -175,7 +179,9 @@ public class DefaultChannelPipeline : IChannelPipeline
     {
         // CLR: the source's NullPointerException comes from handler.getClass() while the context is created.
         ObjectUtil.CheckNotNull(handler, "handler");
+
         AbstractChannelHandlerContext newCtx;
+
         lock (_gate)
         {
             CheckMultiplicity(handler);
@@ -218,6 +224,7 @@ public class DefaultChannelPipeline : IChannelPipeline
                 return this;
             }
         }
+
         CallHandlerAdded0(newCtx);
         return this;
     }
@@ -280,6 +287,7 @@ public class DefaultChannelPipeline : IChannelPipeline
         {
             return GenerateName(handler);
         }
+
         CheckDuplicateName(name);
         return name;
     }
@@ -312,6 +320,7 @@ public class DefaultChannelPipeline : IChannelPipeline
         }
 
         int size;
+
         for (size = 1; size < handlers.Length; size++)
         {
             if (handlers[size] == null)
@@ -339,6 +348,7 @@ public class DefaultChannelPipeline : IChannelPipeline
             {
                 break;
             }
+
             AddLast((IEventExecutorGroup)null, null, h);
         }
 
@@ -355,6 +365,7 @@ public class DefaultChannelPipeline : IChannelPipeline
         if (Context0(name) != null)
         {
             string baseName = name.Substring(0, name.Length - 1); // Strip the trailing '0'.
+
             for (int i = 1; ; i++)
             {
                 string newName = baseName + i.ToString(CultureInfo.InvariantCulture);
@@ -365,6 +376,7 @@ public class DefaultChannelPipeline : IChannelPipeline
                 }
             }
         }
+
         return name;
     }
 
@@ -412,6 +424,7 @@ public class DefaultChannelPipeline : IChannelPipeline
         {
             return null;
         }
+
         return ctx.Handler;
     }
 
@@ -422,6 +435,7 @@ public class DefaultChannelPipeline : IChannelPipeline
             // The context was removed or replaced concurrently after it was looked up.
             throw new KeyNotFoundException(ctx.Name);
         }
+
         return ctx;
     }
 
@@ -458,6 +472,7 @@ public class DefaultChannelPipeline : IChannelPipeline
                 return true;
             }
         }
+
         CallHandlerRemoved0(ctx);
         return true;
     }
@@ -487,6 +502,7 @@ public class DefaultChannelPipeline : IChannelPipeline
                 // Unlinking the context again would link its stale neighbours back into the pipeline.
                 return false;
             }
+
             AbstractChannelHandlerContext prev = ctx.Prev;
             AbstractChannelHandlerContext next = ctx.Next;
             prev.Next = next;
@@ -504,6 +520,7 @@ public class DefaultChannelPipeline : IChannelPipeline
         {
             throw new InvalidOperationException();
         }
+
         return Remove(Head.Next).Handler;
     }
 
@@ -513,6 +530,7 @@ public class DefaultChannelPipeline : IChannelPipeline
         {
             throw new InvalidOperationException();
         }
+
         return Remove(Tail.Prev).Handler;
     }
 
@@ -539,7 +557,9 @@ public class DefaultChannelPipeline : IChannelPipeline
 
         // CLR: the source's NullPointerException comes from newHandler.getClass() while the context is created.
         ObjectUtil.CheckNotNull(newHandler, "newHandler");
+
         AbstractChannelHandlerContext newCtx;
+
         lock (_gate)
         {
             if (!IsLinked(ctx))
@@ -547,7 +567,9 @@ public class DefaultChannelPipeline : IChannelPipeline
                 // The context was removed or replaced concurrently after it was looked up.
                 throw new KeyNotFoundException(ctx.Name);
             }
+
             CheckMultiplicity(newHandler);
+
             if (newName == null)
             {
                 newName = GenerateName(newHandler);
@@ -575,6 +597,7 @@ public class DefaultChannelPipeline : IChannelPipeline
                 CallHandlerCallbackLater(ctx, false);
                 return ctx.Handler;
             }
+
             IEventExecutor executor = ctx.Executor;
             if (!executor.InEventLoop())
             {
@@ -589,6 +612,7 @@ public class DefaultChannelPipeline : IChannelPipeline
                 return ctx.Handler;
             }
         }
+
         // Invoke newHandler.handlerAdded() first (i.e. before oldHandler.handlerRemoved() is invoked)
         // because callHandlerRemoved() will trigger channelRead() or flush() on newHandler and those
         // event handlers must be called after handlerAdded().
@@ -626,6 +650,7 @@ public class DefaultChannelPipeline : IChannelPipeline
                         h.GetType().FullName +
                         " is not a @Sharable handler, so can't be added or removed multiple times.");
             }
+
             h.added = true;
         }
     }
@@ -639,6 +664,7 @@ public class DefaultChannelPipeline : IChannelPipeline
         catch (Exception t)
         {
             bool removed = false;
+
             try
             {
                 // If handlerAdded(...) already removed or replaced the handler, whoever did that is responsible for
@@ -647,6 +673,7 @@ public class DefaultChannelPipeline : IChannelPipeline
                 {
                     ctx.CallHandlerRemoved();
                 }
+
                 removed = true;
             }
             catch (Exception t2)
@@ -689,6 +716,7 @@ public class DefaultChannelPipeline : IChannelPipeline
     internal void InvokeHandlerAddedIfNeeded()
     {
         Debug.Assert(_channel.EventLoop.InEventLoop());
+
         if (_firstRegistration)
         {
             _firstRegistration = false;
@@ -707,6 +735,7 @@ public class DefaultChannelPipeline : IChannelPipeline
             {
                 return null;
             }
+
             return first.Handler;
         }
     }
@@ -720,6 +749,7 @@ public class DefaultChannelPipeline : IChannelPipeline
             {
                 return null;
             }
+
             return Head.Next;
         }
     }
@@ -733,6 +763,7 @@ public class DefaultChannelPipeline : IChannelPipeline
             {
                 return null;
             }
+
             return last.Handler;
         }
     }
@@ -746,6 +777,7 @@ public class DefaultChannelPipeline : IChannelPipeline
             {
                 return null;
             }
+
             return last;
         }
     }
@@ -786,6 +818,7 @@ public class DefaultChannelPipeline : IChannelPipeline
         ObjectUtil.CheckNotNull(handler, "handler");
 
         AbstractChannelHandlerContext ctx = Head.Next;
+
         for (; ; )
         {
 
@@ -808,6 +841,7 @@ public class DefaultChannelPipeline : IChannelPipeline
         ObjectUtil.CheckNotNull(handlerType, "handlerType");
 
         AbstractChannelHandlerContext ctx = Head.Next;
+
         for (; ; )
         {
             if (ctx == null)
@@ -818,6 +852,7 @@ public class DefaultChannelPipeline : IChannelPipeline
             {
                 return ctx;
             }
+
             ctx = ctx.Next;
         }
     }
@@ -826,12 +861,14 @@ public class DefaultChannelPipeline : IChannelPipeline
     {
         List<string> list = new List<string>();
         AbstractChannelHandlerContext ctx = Head.Next;
+
         for (; ; )
         {
             if (ctx == null)
             {
                 return list;
             }
+
             list.Add(ctx.Name);
             ctx = ctx.Next;
         }
@@ -841,12 +878,14 @@ public class DefaultChannelPipeline : IChannelPipeline
     {
         Dictionary<string, IChannelHandler> map = new Dictionary<string, IChannelHandler>();
         AbstractChannelHandlerContext ctx = Head.Next;
+
         for (; ; )
         {
             if (ctx == Tail)
             {
                 return map;
             }
+
             map[ctx.Name] = ctx.Handler;
             ctx = ctx.Next;
         }
@@ -871,6 +910,7 @@ public class DefaultChannelPipeline : IChannelPipeline
             .Append(StringUtil.SimpleClassName(this))
             .Append('{');
         AbstractChannelHandlerContext ctx = Head.Next;
+
         for (; ; )
         {
             if (ctx == Tail)
@@ -892,7 +932,9 @@ public class DefaultChannelPipeline : IChannelPipeline
 
             buf.Append(", ");
         }
+
         buf.Append('}');
+
         return buf.ToString();
     }
 
@@ -913,6 +955,7 @@ public class DefaultChannelPipeline : IChannelPipeline
         {
             Head.Executor.Execute(() => FireChannelRegistered());
         }
+
         return this;
     }
 
@@ -933,6 +976,7 @@ public class DefaultChannelPipeline : IChannelPipeline
         {
             Head.Executor.Execute(() => FireChannelUnregistered());
         }
+
         return this;
     }
 
@@ -960,6 +1004,7 @@ public class DefaultChannelPipeline : IChannelPipeline
     {
         Thread currentThread = Thread.CurrentThread;
         AbstractChannelHandlerContext tail = Tail;
+
         for (; ; )
         {
             if (ctx == tail)
@@ -985,6 +1030,7 @@ public class DefaultChannelPipeline : IChannelPipeline
     {
         // We have reached at tail; now traverse backwards.
         AbstractChannelHandlerContext head = Head;
+
         for (; ; )
         {
             if (ctx == head)
@@ -1030,6 +1076,7 @@ public class DefaultChannelPipeline : IChannelPipeline
         {
             Head.Executor.Execute(() => FireChannelActive());
         }
+
         return this;
     }
 
@@ -1050,6 +1097,7 @@ public class DefaultChannelPipeline : IChannelPipeline
         {
             Head.Executor.Execute(() => FireChannelInactive());
         }
+
         return this;
     }
 
@@ -1070,6 +1118,7 @@ public class DefaultChannelPipeline : IChannelPipeline
         {
             Head.Executor.Execute(() => FireExceptionCaught(cause));
         }
+
         return this;
     }
 
@@ -1090,6 +1139,7 @@ public class DefaultChannelPipeline : IChannelPipeline
         {
             Head.Executor.Execute(() => FireUserEventTriggered(@event));
         }
+
         return this;
     }
 
@@ -1110,6 +1160,7 @@ public class DefaultChannelPipeline : IChannelPipeline
         {
             Head.Executor.Execute(() => FireChannelRead(msg));
         }
+
         return this;
     }
 
@@ -1130,6 +1181,7 @@ public class DefaultChannelPipeline : IChannelPipeline
         {
             Head.Executor.Execute(() => FireChannelReadComplete());
         }
+
         return this;
     }
 
@@ -1150,6 +1202,7 @@ public class DefaultChannelPipeline : IChannelPipeline
         {
             Head.Executor.Execute(() => FireChannelWritabilityChanged());
         }
+
         return this;
     }
 
@@ -1211,14 +1264,17 @@ public class DefaultChannelPipeline : IChannelPipeline
     private AbstractChannelHandlerContext Context0(string name)
     {
         AbstractChannelHandlerContext context = Head.Next;
+
         while (context != Tail)
         {
             if (context.Name.Equals(name))
             {
                 return context;
             }
+
             context = context.Next;
         }
+
         return null;
     }
 
@@ -1266,6 +1322,7 @@ public class DefaultChannelPipeline : IChannelPipeline
     private void CallHandlerAddedForAllHandlers()
     {
         PendingHandlerCallback pendingHandlerCallbackHead;
+
         lock (_gate)
         {
             Debug.Assert(!_registered);
@@ -1282,6 +1339,7 @@ public class DefaultChannelPipeline : IChannelPipeline
         // holding the lock and so produce a deadlock if handlerAdded(...) will try to add another handler from outside
         // the EventLoop.
         PendingHandlerCallback task = pendingHandlerCallbackHead;
+
         while (task != null)
         {
             task.Execute();
@@ -1306,6 +1364,7 @@ public class DefaultChannelPipeline : IChannelPipeline
             {
                 pending = pending.next;
             }
+
             pending.next = task;
         }
     }
@@ -1378,6 +1437,7 @@ public class DefaultChannelPipeline : IChannelPipeline
     protected virtual void OnUnhandledInboundMessage(IChannelHandlerContext ctx, object msg)
     {
         OnUnhandledInboundMessage(msg);
+
         if (logger.IsDebugEnabled())
         {
             logger.Debug("Discarded message pipeline : {}. Channel : {}.",
@@ -1688,6 +1748,7 @@ public class DefaultChannelPipeline : IChannelPipeline
                                 "Can't invoke handlerAdded() as the EventExecutor {} rejected it, removing handler {}.",
                                 executor, ctx.Name, e);
                     }
+
                     _pipeline.AtomicRemoveFromHandlerList(ctx);
                     ctx.SetRemoved();
                 }
@@ -1731,6 +1792,7 @@ public class DefaultChannelPipeline : IChannelPipeline
                                 "Can't invoke handlerRemoved() as the EventExecutor {} rejected it," +
                                         " removing handler {}.", executor, ctx.Name, e);
                     }
+
                     // remove0(...) was call before so just call AbstractChannelHandlerContext.setRemoved().
                     ctx.SetRemoved();
                 }

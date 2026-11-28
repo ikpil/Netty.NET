@@ -77,6 +77,7 @@ internal sealed class DnsQueryContextManager
         {
             return null;
         }
+
         return contexts.Get(id);
     }
 
@@ -95,6 +96,7 @@ internal sealed class DnsQueryContextManager
         {
             return null;
         }
+
         return contexts.Remove(id);
     }
 
@@ -125,6 +127,7 @@ internal sealed class DnsQueryContextManager
             Debug.Assert(old == null, "DnsQueryContextMap already exists for " + nameServerAddr);
 
             IPEndPoint extraAddress = null;
+
             if (a.AddressFamily == AddressFamily.InterNetwork)
             {
                 // Also add the mapping for the IPv4-compatible IPv6 address.
@@ -151,6 +154,7 @@ internal sealed class DnsQueryContextManager
                     extraAddress = new IPEndPoint(ToIPv4Address(a6), port);
                 }
             }
+
             if (extraAddress != null)
             {
                 map.TryGetValue(extraAddress, out old);
@@ -167,6 +171,7 @@ internal sealed class DnsQueryContextManager
     {
         byte[] b4 = a4.GetAddressBytes();
         byte[] b6 = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, b4[0], b4[1], b4[2], b4[3] };
+
         try
         {
             return new IPAddress(b6);
@@ -183,6 +188,7 @@ internal sealed class DnsQueryContextManager
 
         byte[] b6 = a6.GetAddressBytes();
         byte[] b4 = { b6[12], b6[13], b6[14], b6[15] };
+
         try
         {
             return new IPAddress(b4);
@@ -197,6 +203,7 @@ internal sealed class DnsQueryContextManager
     private static bool IsIPv4CompatibleAddress(IPAddress a6)
     {
         byte[] b6 = a6.GetAddressBytes();
+
         for (int i = 0; i < 12; i++)
         {
             if (b6[i] != 0)
@@ -204,6 +211,7 @@ internal sealed class DnsQueryContextManager
                 return false;
             }
         }
+
         return true;
     }
 
@@ -226,6 +234,7 @@ internal sealed class DnsQueryContextManager
                     // context in the map.
                     return -1;
                 }
+
                 map.TryGetValue(id, out DnsQueryContext oldCtx);
                 map[id] = ctx;
                 Debug.Assert(oldCtx == null);
@@ -247,10 +256,12 @@ internal sealed class DnsQueryContextManager
             lock (this)
             {
                 map.Remove(id, out DnsQueryContext result);
+
                 if (result != null)
                 {
                     idSpace.PushId(id);
                 }
+
                 Debug.Assert(result != null, "DnsQueryContext not found, id: " + id);
                 return result;
             }

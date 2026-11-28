@@ -24,10 +24,12 @@ public class NativeExecutorTaskContractTest
         public override void Execute(Action command)
         {
             ArgumentNullException.ThrowIfNull(command);
+
             ++Submissions;
             BeforeAdmission?.Invoke();
             if (Rejection != null)
                 throw Rejection;
+
             LastSubmission = command;
             _queue.Enqueue(command);
         }
@@ -36,6 +38,7 @@ public class NativeExecutorTaskContractTest
         {
             Action command = _queue.Dequeue();
             _executingThread = Thread.CurrentThread;
+
             try
             {
                 command();
@@ -100,6 +103,7 @@ public class NativeExecutorTaskContractTest
             {
                 throw SelectionFailure;
             }
+
             return _children[selection % _children.Length];
         }
 
@@ -174,6 +178,7 @@ public class NativeExecutorTaskContractTest
         Task<int> asyncValue = group.SubmitAsync(() =>
         {
             calls.Add(5);
+
             return Task.FromResult(5);
         });
         Task tokenAsyncAction = group.SubmitAsync((CancellationToken token) =>
@@ -186,6 +191,7 @@ public class NativeExecutorTaskContractTest
         {
             Assert.Equal(cancellation.Token, token);
             calls.Add(7);
+
             return Task.FromResult(7);
         }, cancellation.Token);
         Assert.Equal(8, group.Selections);
@@ -273,13 +279,17 @@ public class NativeExecutorTaskContractTest
     public async Task NativeGroupConsumerRunsOnSelectedRealEventLoops()
     {
         IEventExecutorGroup group = new DefaultEventExecutorGroup(2);
+
         try
         {
             var operations = new Task<int>[8];
+
             for (int i = 0; i < operations.Length; ++i)
                 operations[i] = group.SubmitAsync(() => Thread.CurrentThread.ManagedThreadId);
+
             int[] threadIds = await Task.WhenAll(operations).WaitAsync(TimeSpan.FromSeconds(5));
             Assert.NotEqual(threadIds[0], threadIds[1]);
+
             for (int i = 2; i < threadIds.Length; ++i)
                 Assert.Equal(threadIds[i % 2], threadIds[i]);
         }
@@ -313,6 +323,7 @@ public class NativeExecutorTaskContractTest
         Task running = executor.SubmitAsync(() =>
         {
             started.SetResult();
+
             try
             {
                 release.Wait(TimeSpan.FromSeconds(5));
@@ -321,6 +332,7 @@ public class NativeExecutorTaskContractTest
             {
             }
         });
+
         try
         {
             await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
@@ -382,6 +394,7 @@ public class NativeExecutorTaskContractTest
         {
         }),
             CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
+
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -422,6 +435,7 @@ public class NativeExecutorTaskContractTest
         public override void Execute(Action command)
         {
             ArgumentNullException.ThrowIfNull(command);
+
             underlying.Execute(command);
         }
 
@@ -474,6 +488,7 @@ public class NativeExecutorTaskContractTest
         Task running = executor.SubmitAsync(() =>
         {
             started.SetResult();
+
             try
             {
                 release.Wait(TimeSpan.FromSeconds(5));
@@ -482,6 +497,7 @@ public class NativeExecutorTaskContractTest
             {
             }
         });
+
         try
         {
             await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
@@ -529,6 +545,7 @@ public class NativeExecutorTaskContractTest
         {
             Assert.True(child.InEventLoop());
             started.SetResult();
+
             try
             {
                 Assert.True(release.Wait(TimeSpan.FromSeconds(5)));
@@ -536,9 +553,11 @@ public class NativeExecutorTaskContractTest
             catch (ThreadInterruptedException)
             {
             }
+
             Assert.True(child.InEventLoop());
             return 42;
         });
+
         try
         {
             await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
@@ -552,6 +571,7 @@ public class NativeExecutorTaskContractTest
                 Assert.True(child.InEventLoop());
                 calls.Add(2);
             });
+
             if (immediate)
             {
                 _ = executor.StopAsync();
@@ -560,8 +580,10 @@ public class NativeExecutorTaskContractTest
             {
                 executor.Shutdown();
             }
+
             release.Set();
             Assert.Equal(42, await running.WaitAsync(TimeSpan.FromSeconds(5)));
+
             if (immediate)
             {
                 await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await first.WaitAsync(TimeSpan.FromSeconds(5)));
@@ -597,10 +619,12 @@ public class NativeExecutorTaskContractTest
             ++depth;
             maximumDepth = Math.Max(maximumDepth, depth);
             Assert.True(child.InEventLoop());
+
             if (++count < 10001)
             {
                 operations.Add(child.SubmitAsync(invoke));
             }
+
             --depth;
         };
         operations.Add(child.SubmitAsync(invoke));
@@ -653,6 +677,7 @@ public class NativeExecutorTaskContractTest
     {
         var original = new InvalidOperationException("worker start failed");
         var executor = new UnorderedThreadPoolEventExecutor(1, new FailingThreadFactory(original));
+
         try
         {
             Task result = executor.SubmitAsync(() =>
@@ -779,11 +804,13 @@ public class NativeExecutorTaskContractTest
             {
                 cancellation.Cancel();
             }
+
             throw original;
         };
         Task<int> result = executor.SubmitAsync(function, cancellation.Token);
         executor.RunNext();
         OperationCanceledException actual = await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await result);
+
         if (matching && requested)
         {
             Assert.True(result.IsCanceled);
@@ -822,6 +849,7 @@ public class NativeExecutorTaskContractTest
                 return 7;
             }, cancellation.Token);
             Parallel.Invoke(cancellation.Cancel, executor.RunNext);
+
             if (calls == 0)
             {
                 Assert.True(result.IsCanceled);
@@ -859,6 +887,7 @@ public class NativeExecutorTaskContractTest
         var ambient = new AsyncLocal<string> { Value = "submission" };
         var executor = new QueuedExecutor();
         Task<string> result;
+
         using (ExecutionContext.SuppressFlow())
             result = executor.SubmitAsync(() =>
             {
@@ -866,6 +895,7 @@ public class NativeExecutorTaskContractTest
                 ambient.Value = "invocation";
                 return value;
             });
+
         ambient.Value = "executor";
         executor.RunNext();
         Assert.Equal("executor", ambient.Value);
@@ -877,6 +907,7 @@ public class NativeExecutorTaskContractTest
     {
         var ambient = new AsyncLocal<string> { Value = "caller" };
         Task<string> result;
+
         using (ExecutionContext.SuppressFlow())
         {
             result = ImmediateEventExecutor.INSTANCE.SubmitAsync(() =>
@@ -888,6 +919,7 @@ public class NativeExecutorTaskContractTest
             Assert.True(ExecutionContext.IsFlowSuppressed());
             Assert.Equal("caller", ambient.Value);
         }
+
         Assert.False(ExecutionContext.IsFlowSuppressed());
         Assert.Equal("caller", await result);
     }
@@ -977,6 +1009,7 @@ public class NativeExecutorTaskContractTest
         Task<int> result = executor.SubmitAsync(function, cancellation.Token);
         executor.RunNext();
         cancellation.Cancel();
+
         if (cooperative)
         {
             OperationCanceledException error = await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await result);
@@ -997,6 +1030,7 @@ public class NativeExecutorTaskContractTest
     {
         var executor = new DefaultEventExecutor();
         var continueIo = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
         try
         {
             int state = 0;
@@ -1034,11 +1068,13 @@ public class NativeExecutorTaskContractTest
         (WeakReference retained, Task result) = SubmitRetainingAnObject(executor, cancellation.Token);
         cancellation.Cancel();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await result);
+
         for (int i = 0; i < 3 && retained.IsAlive; i++)
         {
             GC.Collect();
             GC.WaitForPendingFinalizers();
         }
+
         Assert.False(retained.IsAlive);
         Assert.Equal(1, executor.Pending);
         executor.RunNext();

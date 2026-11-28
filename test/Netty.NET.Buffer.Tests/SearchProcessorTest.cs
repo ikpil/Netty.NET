@@ -68,16 +68,19 @@ public class SearchProcessorTest
     public void TestSearch(int algorithm, int layout)
     {
         var (buffer, owner) = Buffer(Encoding.UTF8.GetBytes("abc☺"), layout);
+
         try
         {
             string[] patterns = { "a", "ab", "abc", "abc☺", "abc☺☺", "abc☺x", "b", "bc", "bc☺", "bc☺☺", "bc☺x",
                 "c", "c☺", "c☺☺", "c☺x", "☺", "☺☺", "☺x", "z", "aa", "ba", "abcd", "abcde" };
             int[] expected = { 0, 1, 2, 5, -1, -1, 1, 2, 5, -1, -1, 2, 5, -1, -1, 5, -1, -1, -1, -1, -1, -1, -1 };
+
             for (int i = 0; i < patterns.Length; i++)
             {
                 ISearchProcessor processor = Factory(algorithm, Encoding.UTF8.GetBytes(patterns[i])).NewSearchProcessor();
                 Assert.Equal(expected[i], buffer.ForEachByte(processor.Process));
             }
+
             Assert.Equal(0, buffer.ReaderIndex);
             Assert.Equal(6, buffer.WriterIndex);
             Assert.Equal(1, owner.RefCnt);
@@ -107,15 +110,18 @@ public class SearchProcessorTest
     private static void AssertMatchesContinueAfterTheLastByte(string haystack, string needle, int[] expected, int algorithm, int layout)
     {
         var (buffer, owner) = Buffer(Encoding.UTF8.GetBytes(haystack), layout);
+
         try
         {
             ISearchProcessor processor = Factory(algorithm, Encoding.UTF8.GetBytes(needle)).NewSearchProcessor();
             int start = 0;
+
             foreach (int end in expected)
             {
                 Assert.Equal(end, buffer.ForEachByte(start, buffer.ReadableBytes - start, processor.Process));
                 start = end + 1;
             }
+
             Assert.Equal(-1, buffer.ForEachByte(start, buffer.ReadableBytes - start, processor.Process));
             Assert.Equal(0, buffer.ReaderIndex);
             Assert.Equal(haystack.Length, buffer.WriterIndex);
@@ -133,6 +139,7 @@ public class SearchProcessorTest
         byte[] haystackBytes = new byte[1024];
         haystackBytes[^1] = 1;
         ByteBuf haystack = Unpooled.CopiedBuffer(haystackBytes); // 00000...00001
+
         try
         {
             byte[] needleBytes = new byte[64]; // 000...000
@@ -157,12 +164,15 @@ public class SearchProcessorTest
     {
         byte[] haystackBytes = new byte[32 * 65]; // 1, 2, 2, 3, 3, 3, 4, 4, 4, 4, ...
         int pos = 0;
+
         for (int i = 1; i <= 64; i++)
             for (int j = 0; j < i; j++)
             {
                 haystackBytes[pos++] = (byte)i;
             }
+
         ByteBuf haystack = Unpooled.CopiedBuffer(haystackBytes);
+
         try
         {
             for (int start = 0; start < haystackBytes.Length - 64; start++)
@@ -180,23 +190,28 @@ public class SearchProcessorTest
     {
         byte[] needle = { 0xff, 0, 0x80, 0xff, 0 };
         byte[] wire = needle.Concat(needle).ToArray();
+
         for (int split = 0; split <= wire.Length; split++)
         {
             ISearchProcessor processor = Factory(algorithm, needle).NewSearchProcessor();
             var matches = new List<int>();
             int consumed = 0;
+
             foreach (byte[] chunk in new[] { wire[..split], Array.Empty<byte>(), wire[split..] })
             {
                 var (buffer, owner) = Buffer(chunk, layout);
+
                 try
                 {
                     buffer.MarkReaderIndex().MarkWriterIndex();
                     int start = 0, found;
+
                     while ((found = buffer.ForEachByte(start, chunk.Length - start, processor.Process)) >= 0)
                     {
                         matches.Add(consumed + found);
                         start = found + 1;
                     }
+
                     buffer.ResetReaderIndex().ResetWriterIndex();
                     Assert.Equal(0, buffer.ReaderIndex);
                     Assert.Equal(chunk.Length, buffer.WriterIndex);
@@ -206,8 +221,10 @@ public class SearchProcessorTest
                 {
                     owner.Release();
                 }
+
                 consumed += chunk.Length;
             }
+
             Assert.Equal(new[] { 4, 9 }, matches);
         }
     }
@@ -253,6 +270,7 @@ public class SearchProcessorTest
             pattern.CopyTo(data, 240);
             ISearchProcessor processor = Factory(algorithm, pattern).NewSearchProcessor();
             int resetStart = 0;
+
             for (int index = 0; index < data.Length; index++)
             {
                 if (index == 257 || index == 81 && seed % 2 == 0)
@@ -260,6 +278,7 @@ public class SearchProcessorTest
                     processor.Reset();
                     resetStart = index;
                 }
+
                 bool match = index - resetStart + 1 >= pattern.Length && data.AsSpan(index - pattern.Length + 1, pattern.Length).SequenceEqual(pattern);
                 Assert.Equal(!match, processor.Process(data[index]));
             }

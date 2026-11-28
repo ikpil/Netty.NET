@@ -95,21 +95,25 @@ public class Http2ConnectionRoundtripTest : IAsyncLifetime
             await clientChannel.CloseAsync();
             clientChannel = null;
         }
+
         if (serverChannel != null)
         {
             await serverChannel.CloseAsync();
             serverChannel = null;
         }
+
         IChannel serverConnectedChannel = this.serverConnectedChannel;
         if (serverConnectedChannel != null)
         {
             await serverConnectedChannel.CloseAsync();
             this.serverConnectedChannel = null;
         }
+
         if (sb == null)
         {
             return;
         }
+
         Task serverGroup = sb.Config.Group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
         Task serverChildGroup = sb.Config.ChildGroup.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
         Task clientGroup = cb.Config.Group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
@@ -605,6 +609,7 @@ public class Http2ConnectionRoundtripTest : IAsyncLifetime
                     0, false, NewPromise());
             ByteBuf emptyBuf = Unpooled.Buffer();
             emptyBuf.Release();
+
             switch (mode)
             {
                 case WriteEmptyBufferMode.SINGLE_END_OF_STREAM:
@@ -628,6 +633,7 @@ public class Http2ConnectionRoundtripTest : IAsyncLifetime
                 default:
                     throw new System.Diagnostics.UnreachableException("Unexpected WriteEmptyBufferMode: " + mode);
             }
+
             http2Client.Flush(Ctx());
         }));
 
@@ -690,6 +696,7 @@ public class Http2ConnectionRoundtripTest : IAsyncLifetime
             // Ensure we update the window size so we will try to write the rest of the frame while
             // processing the flush.
             test.http2Client.Encoder().FlowController().InitialWindowSize(8);
+
             return Task.FromException(new InvalidOperationException());
         }
     }
@@ -936,6 +943,7 @@ public class Http2ConnectionRoundtripTest : IAsyncLifetime
                 buf.ReadBytes(@out, buf.ReadableBytes);
                 return processedBytes;
             });
+
         try
         {
             // Initialize the data latch based on the number of bytes expected.
@@ -1010,15 +1018,18 @@ public class Http2ConnectionRoundtripTest : IAsyncLifetime
                     builder = new StringBuilder(dataAsHex.Length);
                     receivedData[streamIndex] = builder;
                 }
+
                 builder.Append(ByteBufUtil.HexDump(buf));
                 return processedBytes;
             });
+
         try
         {
             await BootstrapEnv(numStreams * length, 1, numStreams * 4 + 1 , numStreams, -1, numStreams);
             RunInChannel(clientChannel, new ActionRunnable(() =>
             {
                 int upperLimit = 3 + 2 * numStreams;
+
                 for (int streamId = 3; streamId < upperLimit; streamId += 2)
                 {
                     // Send a bunch of data on each stream.
@@ -1045,10 +1056,12 @@ public class Http2ConnectionRoundtripTest : IAsyncLifetime
                     It.IsAny<long>()), Times.Exactly(numStreams));
             serverListener.Verify(l => l.OnDataRead(It.IsAny<IChannelHandlerContext>(),
                     It.IsAny<int>(), It.IsAny<ByteBuf>(), 0, true), Times.Never());
+
             foreach (StringBuilder builder in receivedData)
             {
                 Assert.Equal(dataAsHex, builder.ToString());
             }
+
             foreach (long receivedPing in receivedPings)
             {
                 Assert.Equal(pingData, receivedPing);
@@ -1184,10 +1197,12 @@ public class Http2ConnectionRoundtripTest : IAsyncLifetime
                     .Server(true)
                     .FrameListener(test.serverFrameCountDown)
                     .ValidateHeaders(false);
+
             if (maxConcurrentStreams != -1)
             {
                 builder.InitialSettings(Http2Settings.DefaultSettings().MaxConcurrentStreams(maxConcurrentStreams));
             }
+
             Volatile.Write(ref serverHandlerRef[0], builder.Build());
             p.AddLast(serverHandlerRef[0]);
             serverInitLatch.Signal();
@@ -1312,6 +1327,7 @@ public class Http2ConnectionRoundtripTest : IAsyncLifetime
     {
         byte[] bytes = new byte[length];
         Random.Shared.NextBytes(bytes);
+
         return Unpooled.WrappedBuffer(bytes);
     }
 

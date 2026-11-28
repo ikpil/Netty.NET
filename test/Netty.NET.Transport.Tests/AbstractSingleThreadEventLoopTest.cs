@@ -77,6 +77,7 @@ public abstract class AbstractSingleThreadEventLoopTest
             future = loop.RegisterAsync(ch2);
             await future.WaitAsync(TestContext.Current.CancellationToken);
             Assert.True(future.IsCompletedSuccessfully);
+
             if (channelCountSupported)
             {
                 await CheckNumRegisteredChannels(loop, 2);
@@ -85,6 +86,7 @@ public abstract class AbstractSingleThreadEventLoopTest
             future = ch1.DeregisterAsync();
             await future.WaitAsync(TestContext.Current.CancellationToken);
             Assert.True(future.IsCompletedSuccessfully);
+
             if (channelCountSupported)
             {
                 await CheckNumRegisteredChannels(loop, 1);
@@ -169,6 +171,7 @@ public abstract class AbstractSingleThreadEventLoopTest
     {
         IEventLoopGroup group = NewEventLoopGroup();
         IEventLoop loop = group.Next();
+
         try
         {
             // CLR: CountdownEvent replaces CountDownLatch.
@@ -201,6 +204,7 @@ public abstract class AbstractSingleThreadEventLoopTest
         Assert.SkipUnless(SupportsChannelIteration(), "Assumption failed: supportsChannelIteration()");
         IEventLoopGroup group = NewEventLoopGroup();
         SingleThreadEventLoop loop = (SingleThreadEventLoop) group.Next();
+
         try
         {
             await RunBlockingOn(loop, () =>
@@ -228,6 +232,7 @@ public abstract class AbstractSingleThreadEventLoopTest
         Assert.SkipUnless(SupportsChannelIteration(), "Assumption failed: supportsChannelIteration()");
         IEventLoopGroup group = NewEventLoopGroup();
         SingleThreadEventLoop loop = (SingleThreadEventLoop) group.Next();
+
         try
         {
             IChannel ch1 = NewChannel();
@@ -281,29 +286,35 @@ public abstract class AbstractSingleThreadEventLoopTest
         // CancellationToken passed to the scheduling call, so each entry keeps its CancellationTokenSource.
         List<(Task Future, CancellationTokenSource Cancellation)> tasks = new List<(Task, CancellationTokenSource)>();
         IEventLoopGroup group = NewEventLoopGroup();
+
         try
         {
             IEventLoop eventLoop = group.Next();
+
             for (int i = 0; i < 5000; i++)
             {
                 CancellationTokenSource cancellation = new CancellationTokenSource();
                 tasks.Add((eventLoop.ScheduleAtFixedRateAsync(runnable, TimeSpan.FromMilliseconds(1),
                     TimeSpan.FromMilliseconds(1), cancellation.Token), cancellation));
+
                 if (tasks.Count > 500)
                 {
                     // CLR: Random.Shared replaces PlatformDependent.threadLocalRandom().
                     tasks[Random.Shared.Next(tasks.Count)].Cancellation.Cancel();
                 }
             }
+
             foreach (var task in tasks)
             {
                 task.Cancellation.Cancel();
             }
+
             foreach (var task in tasks)
             {
                 // CLR: Future.await() waits without rethrowing; Task.WhenAny completes when the Task does.
                 await Task.WhenAny(task.Future);
             }
+
             foreach (var task in tasks)
             {
                 if (!task.Future.IsCanceled)
@@ -318,6 +329,7 @@ public abstract class AbstractSingleThreadEventLoopTest
             {
                 task.Cancellation.Dispose();
             }
+
             _ = group.ShutdownGracefullyAsync();
         }
     }
@@ -330,6 +342,7 @@ public abstract class AbstractSingleThreadEventLoopTest
         {
             return;
         }
+
         try
         {
             StartAllExecutors(group);
@@ -339,6 +352,7 @@ public abstract class AbstractSingleThreadEventLoopTest
             // CLR: Stopwatch timestamps replace System.nanoTime(); TimeUnit.SECONDS.toNanos(5) is five seconds of
             // Stopwatch.Frequency ticks.
             long deadline = Stopwatch.GetTimestamp() + Stopwatch.Frequency * 5;
+
             while (CountActiveExecutors(group) > SCALING_MIN_THREADS && Stopwatch.GetTimestamp() < deadline)
             {
                 await Task.Delay(100, TestContext.Current.CancellationToken);
@@ -361,6 +375,7 @@ public abstract class AbstractSingleThreadEventLoopTest
         {
             return;
         }
+
         try
         {
             StartAllExecutors(group);
@@ -369,14 +384,17 @@ public abstract class AbstractSingleThreadEventLoopTest
 
             // CLR: TimeUnit.SECONDS.toNanos(10) as Stopwatch ticks, as in the test above.
             long deadline = Stopwatch.GetTimestamp() + Stopwatch.Frequency * 10;
+
             while (CountActiveExecutors(group) > SCALING_MIN_THREADS && Stopwatch.GetTimestamp() < deadline)
             {
                 await Task.Delay(100, TestContext.Current.CancellationToken);
             }
+
             AssertEquals(SCALING_MIN_THREADS, CountActiveExecutors(group),
                          "Group did not scale down to min threads in time.");
 
             IEventLoop suspendedLoop = null;
+
             foreach (IEventExecutor exec in group.Iterator())
             {
                 if (exec.IsSuspended())
@@ -385,11 +403,13 @@ public abstract class AbstractSingleThreadEventLoopTest
                     break;
                 }
             }
+
             Assert.True(suspendedLoop != null, "Could not find a suspended executor to test.");
 
             // Submit a task directly to the suspended loop, this should trigger the wake-up mechanism.
             int i = 0;
             bool isSuspended;
+
             do
             {
                 Task future = suspendedLoop.SubmitAsync(() =>
@@ -423,6 +443,7 @@ public abstract class AbstractSingleThreadEventLoopTest
     private static int CountActiveExecutors(IEventLoopGroup group)
     {
         int activeCount = 0;
+
         // CLR: EventExecutorGroup is Iterable<EventExecutor>; IEventExecutorGroup.Iterator() is that sequence.
         foreach (IEventExecutor executor in group.Iterator())
         {
@@ -431,6 +452,7 @@ public abstract class AbstractSingleThreadEventLoopTest
                 activeCount++;
             }
         }
+
         return activeCount;
     }
 
@@ -438,10 +460,12 @@ public abstract class AbstractSingleThreadEventLoopTest
     {
         // CLR: CountdownEvent replaces CountDownLatch.
         using CountdownEvent startLatch = new CountdownEvent(SCALING_MAX_THREADS);
+
         foreach (IEventExecutor executor in group.Iterator())
         {
             executor.Execute(() => startLatch.Signal());
         }
+
         startLatch.Wait(TestContext.Current.CancellationToken);
     }
 

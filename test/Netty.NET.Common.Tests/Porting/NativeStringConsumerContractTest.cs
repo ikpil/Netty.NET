@@ -68,6 +68,7 @@ public class NativeStringConsumerContractTest
     public void IgnorableCharactersCannotTurnLiteralDomainPatternsIntoWildcards(string culture)
     {
         CultureInfo previous = CultureInfo.CurrentCulture;
+
         try
         {
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture);

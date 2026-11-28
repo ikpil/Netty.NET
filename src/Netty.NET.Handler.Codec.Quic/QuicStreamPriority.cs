@@ -75,6 +75,7 @@ public sealed class QuicStreamPriority
         {
             return false;
         }
+
         QuicStreamPriority that = (QuicStreamPriority) o;
         return urgency == that.urgency && incremental == that.incremental;
     }

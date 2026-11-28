@@ -46,6 +46,7 @@ public sealed class DefaultHttp3CancelPushFrame : IHttp3CancelPushFrame
         {
             return false;
         }
+
         DefaultHttp3CancelPushFrame that = (DefaultHttp3CancelPushFrame) o;
         return id == that.id;
     }

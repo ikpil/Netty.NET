@@ -123,6 +123,7 @@ public class StompSubframeEncoder : MessageToMessageEncoder<IStompSubframe>
         {
             IStompHeadersSubframe stompHeadersSubframe = (IStompHeadersSubframe) msg;
             ByteBuf buf = ctx.Alloc().Buffer(HeadersSubFrameSize(stompHeadersSubframe));
+
             try
             {
                 EncodeHeaders(stompHeadersSubframe, buf);
@@ -196,6 +197,7 @@ public class StompSubframeEncoder : MessageToMessageEncoder<IStompSubframe>
     {
         int contentReadableBytes = frame.Content.ReadableBytes;
         ByteBuf buf = ctx.Alloc().Buffer(HeadersSubFrameSize(frame) + contentReadableBytes);
+
         try
         {
             EncodeHeaders(frame, buf);
@@ -222,6 +224,7 @@ public class StompSubframeEncoder : MessageToMessageEncoder<IStompSubframe>
 
         bool shouldEscape = ShouldEscape(command);
         EscapeHeaderKeyCache cache = ESCAPE_HEADER_KEY_CACHE.Get();
+
         foreach (IEntry<ICharSequence, ICharSequence> entry in frame.Headers())
         {
             ICharSequence headerKey = entry.GetKey();
@@ -230,14 +233,17 @@ public class StompSubframeEncoder : MessageToMessageEncoder<IStompSubframe>
             {
                 throw new ArgumentException("STOMP " + command + " contains empty header name");
             }
+
             if (shouldEscape)
             {
                 cache.TryGetValue(headerKey, out ICharSequence cachedHeaderKey);
+
                 if (cachedHeaderKey == null)
                 {
                     cachedHeaderKey = Escape(command, "header name", headerKey);
                     cache.Put(headerKey, cachedHeaderKey);
                 }
+
                 headerKey = cachedHeaderKey;
                 headerValue = Escape(command, "header value", headerValue);
             }
@@ -305,6 +311,7 @@ public class StompSubframeEncoder : MessageToMessageEncoder<IStompSubframe>
     private static ICharSequence Escape(StompCommand command, string type, ICharSequence input)
     {
         AppendableCharSequence builder = null;
+
         for (int i = 0; i < input.Length(); i++)
         {
             char chr = input.CharAt(i);

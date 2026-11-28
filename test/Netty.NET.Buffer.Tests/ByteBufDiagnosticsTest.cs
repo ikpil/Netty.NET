@@ -45,6 +45,7 @@ public class ByteBufDiagnosticsTest
         string viewMaximum = kind == 5 ? "/16" : maximum;
         string components = kind >= 4 ? ", components=2" : "";
         string rootText = names[kind] + "(ridx: 3, widx: 13, cap: 16" + maximum + components + ")";
+
         try
         {
             root.SetIndex(3, 13).MarkReaderIndex().MarkWriterIndex();
@@ -56,10 +57,12 @@ public class ByteBufDiagnosticsTest
                 2 => "ByteBufView(ridx: 3, widx: 13, cap: 16" + viewMaximum + ", unwrapped: " + rootText + ")",
                 _ => "ReadOnlyByteBuf(ridx: 3, widx: 13, cap: 16" + maximum + ", unwrapped: " + rootText + ")"
             };
+
             if (kind == 5 && viewKind == 3)
             {
                 expected = rootText; // Already read-only: AsReadOnly returns itself.
             }
+
             Assert.Equal(expected, view.ToString());
             Assert.Equal(expected, ((object)view).ToString());
             Assert.Equal(3, root.ReaderIndex);
@@ -79,8 +82,10 @@ public class ByteBufDiagnosticsTest
             {
                 owner.Release();
             }
+
             allocator?.Dispose();
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -92,12 +97,14 @@ public class ByteBufDiagnosticsTest
             return new UnpooledHeapByteBuf(a, 16, max);
         if (kind == 1)
             return new UnpooledDirectByteBuf(a, 16, max, native);
+
         if (kind is 2 or 3)
         {
             var pooled = new PooledByteBufAllocator(false, maxOrder: 1, nativeAllocator: native);
             disposable = pooled;
             return kind == 2 ? pooled.HeapBuffer(16, max) : pooled.DirectBuffer(16, max);
         }
+
         ByteBuf first = Unpooled.WrappedBuffer(new byte[8]), second = Unpooled.WrappedBuffer(new byte[8]);
         return kind == 4 ? new CompositeByteBuf(a, false, 4).AddComponents([first, second], true) : Unpooled.WrappedUnmodifiableBuffer(first, second);
     }
@@ -136,10 +143,12 @@ public class ByteBufDiagnosticsTest
             Assert.Equal(name + '(' + Parent("UnpooledHeapByteBuf(ridx: 3, widx: 13, cap: 16/64)") + ')', wrapper.ToString());
             Assert.Equal(0, tracker.Records);
             Assert.Equal(0, tracker.Closes);
+
             if (kind == 3)
                 root.Release();
             else
                 wrapper.Release();
+
             Assert.Equal(name + '(' + Parent("UnpooledHeapByteBuf(freed)") + ')', wrapper.ToString());
             Assert.Equal(kind is 2 or 4 ? 1 : 0, tracker.Records); // Only advanced Release records.
         }
@@ -149,6 +158,7 @@ public class ByteBufDiagnosticsTest
             {
                 wrapper.Release();
             }
+
             if (root.RefCnt > 0)
             {
                 root.Release();
@@ -164,8 +174,10 @@ public class ByteBufDiagnosticsTest
         root.SetIndex(3, 13);
         var tracker = new Tracker();
         CompositeByteBuf wrapper = advanced ? new AdvancedLeakAwareCompositeByteBuf(root, tracker) : new SimpleLeakAwareCompositeByteBuf(root, tracker);
+
         if (nested)
             wrapper = new AdvancedLeakAwareCompositeByteBuf(wrapper, new Tracker());
+
         try
         {
             Assert.Equal("CompositeByteBuf(ridx: 3, widx: 13, cap: 16, components=2)", wrapper.ToString());
@@ -210,6 +222,7 @@ public class ByteBufDiagnosticsTest
     {
         CultureInfo previous = CultureInfo.CurrentCulture;
         ByteBuf b = new UnpooledHeapByteBuf(16, 64).SetIndex(3, 13);
+
         try
         {
             CultureInfo.CurrentCulture = new CultureInfo("fa-IR");

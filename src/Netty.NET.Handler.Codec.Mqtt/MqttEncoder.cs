@@ -67,6 +67,7 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
     {
 
         MqttMessageType messageType = message.FixedHeader().MessageType();
+
         switch (messageType)
         {
             case var _ when messageType == MqttMessageType.CONNECT:
@@ -92,6 +93,7 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
                 {
                     return EncodeUnsubAckMessage(ctx, (MqttUnsubAckMessage) message);
                 }
+
                 return EncodeMessageWithOnlySingleByteFixedHeaderAndMessageId(ctx.Alloc(), message);
 
             case var _ when messageType == MqttMessageType.PUBACK:
@@ -141,6 +143,7 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
         {
             throw new MqttIdentifierRejectedException("invalid clientIdentifier");
         }
+
         int clientIdentifierBytes = Utf8Bytes(clientIdentifier);
         payloadBufferSize += 2 + clientIdentifierBytes;
 
@@ -149,29 +152,34 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
         int willTopicBytes = NullableUtf8Bytes(willTopic);
         byte[] willMessage = payload.WillMessageInBytes();
         byte[] willMessageBytes = willMessage != null ? willMessage : EmptyArrays.EMPTY_BYTES;
+
         if (variableHeader.IsWillFlag())
         {
             if (!IsValidPublishTopicName(willTopic))
             {
                 throw new MqttIdentifierRejectedException("invalid willTopic");
             }
+
             payloadBufferSize += 2 + willTopicBytes;
             payloadBufferSize += 2 + willMessageBytes.Length;
         }
 
         string userName = payload.UserName();
         int userNameBytes = NullableUtf8Bytes(userName);
+
         if (variableHeader.HasUserName())
         {
             if (!IsValidUserName(userName))
             {
                 throw new MqttIdentifierRejectedException("invalid userName");
             }
+
             payloadBufferSize += 2 + userNameBytes;
         }
 
         byte[] password = payload.PasswordInBytes();
         byte[] passwordBytes = password != null ? password : EmptyArrays.EMPTY_BYTES;
+
         if (variableHeader.HasPassword())
         {
             payloadBufferSize += 2 + passwordBytes.Length;
@@ -183,9 +191,11 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
                 mqttVersion,
                 ctx.Alloc(),
                 message.VariableHeader().Properties());
+
         try
         {
             ByteBuf willPropertiesBuf;
+
             if (variableHeader.IsWillFlag())
             {
                 willPropertiesBuf = EncodePropertiesIfNeeded(mqttVersion, ctx.Alloc(), payload.WillProperties());
@@ -195,6 +205,7 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
             {
                 willPropertiesBuf = Unpooled.EmptyBuffer;
             }
+
             try
             {
                 int variableHeaderBufferSize = 2 + protocolNameBytes.Length + 4 + propertiesBuf.ReadableBytes;
@@ -215,6 +226,7 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
 
                 // Payload
                 WriteExactUTF8String(buf, clientIdentifier, clientIdentifierBytes);
+
                 if (variableHeader.IsWillFlag())
                 {
                     buf.WriteBytes(willPropertiesBuf);
@@ -222,15 +234,18 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
                     buf.WriteShort(willMessageBytes.Length);
                     buf.WriteBytes(willMessageBytes.AsSpan(0, willMessageBytes.Length));
                 }
+
                 if (variableHeader.HasUserName())
                 {
                     WriteExactUTF8String(buf, userName, userNameBytes);
                 }
+
                 if (variableHeader.HasPassword())
                 {
                     buf.WriteShort(passwordBytes.Length);
                     buf.WriteBytes(passwordBytes.AsSpan(0, passwordBytes.Length));
                 }
+
                 return buf;
             }
             finally
@@ -247,27 +262,34 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
     private static int GetConnVariableHeaderFlag(MqttConnectVariableHeader variableHeader)
     {
         int flagByte = 0;
+
         if (variableHeader.HasUserName())
         {
             flagByte |= 0x80;
         }
+
         if (variableHeader.HasPassword())
         {
             flagByte |= 0x40;
         }
+
         if (variableHeader.IsWillRetain())
         {
             flagByte |= 0x20;
         }
+
         flagByte |= (variableHeader.WillQos() & 0x03) << 3;
+
         if (variableHeader.IsWillFlag())
         {
             flagByte |= 0x04;
         }
+
         if (variableHeader.IsCleanSession())
         {
             flagByte |= 0x02;
         }
+
         return flagByte;
     }
 
@@ -340,6 +362,7 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
             foreach (MqttTopicSubscription topic in payload.TopicSubscriptions())
             {
                 WriteEagerUTF8String(buf, topic.TopicFilter());
+
                 if (mqttVersion == MqttVersion.MQTT_3_1_1 || mqttVersion == MqttVersion.MQTT_3_1)
                 {
                     buf.WriteByte(topic.QualityOfService().Value());
@@ -349,14 +372,17 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
                     MqttSubscriptionOption option = topic.Option();
 
                     int optionEncoded = option.RetainHandling().Value() << 4;
+
                     if (option.IsRetainAsPublished())
                     {
                         optionEncoded |= 0x08;
                     }
+
                     if (option.IsNoLocal())
                     {
                         optionEncoded |= 0x04;
                     }
+
                     optionEncoded |= option.Qos().Value();
 
                     buf.WriteByte(optionEncoded);
@@ -429,6 +455,7 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
         ByteBuf propertiesBuf = EncodePropertiesIfNeeded(mqttVersion,
                 ctx.Alloc(),
                 message.IdAndPropertiesVariableHeader().Properties());
+
         try
         {
             int variableHeaderBufferSize = 2 + propertiesBuf.ReadableBytes;
@@ -440,6 +467,7 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
             WriteVariableLengthInt(buf, variablePartSize);
             buf.WriteShort(message.VariableHeader().MessageId());
             buf.WriteBytes(propertiesBuf);
+
             foreach (int code in message.Payload().ReasonCodes())
             {
                 buf.WriteByte(code);
@@ -467,6 +495,7 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
             ByteBuf propertiesBuf = EncodePropertiesIfNeeded(mqttVersion,
                     ctx.Alloc(),
                     message.IdAndPropertiesVariableHeader().Properties());
+
             try
             {
                 int variableHeaderBufferSize = 2 + propertiesBuf.ReadableBytes;
@@ -516,6 +545,7 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
         {
             throw new MqttIdentifierRejectedException("invalid topicName");
         }
+
         int topicNameBytes = Utf8Bytes(topicName);
 
         ByteBuf propertiesBuf = EncodePropertiesIfNeeded(mqttVersion,
@@ -535,10 +565,12 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
             buf.WriteByte(GetFixedHeaderByte1(mqttFixedHeader));
             WriteVariableLengthInt(buf, variablePartSize);
             WriteExactUTF8String(buf, topicName, topicNameBytes);
+
             if (qosLevelGreaterZero)
             {
                 buf.WriteShort(variableHeader.PacketId());
             }
+
             buf.WriteBytes(propertiesBuf);
             buf.WriteBytes(payload);
 
@@ -586,10 +618,12 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
                 buf.WriteByte(GetFixedHeaderByte1(mqttFixedHeader));
                 WriteVariableLengthInt(buf, variableHeaderBufferSize);
                 buf.WriteShort(msgId);
+
                 if (includeReasonCode)
                 {
                     buf.WriteByte(variableHeader.ReasonCode());
                 }
+
                 buf.WriteBytes(propertiesBuf);
 
                 return buf;
@@ -637,6 +671,7 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
             ByteBuf propertiesBuf;
             bool includeReasonCode;
             int variableHeaderBufferSize;
+
             if (mqttVersion == MqttVersion.MQTT_5 &&
                     (variableHeader.ReasonCode() != MqttReasonCodeAndPropertiesVariableHeader.REASON_CODE_OK ||
                             !variableHeader.Properties().IsEmpty()))
@@ -658,10 +693,12 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
                 ByteBuf buf = ctx.Alloc().Buffer(fixedHeaderBufferSize + variableHeaderBufferSize);
                 buf.WriteByte(GetFixedHeaderByte1(mqttFixedHeader));
                 WriteVariableLengthInt(buf, variableHeaderBufferSize);
+
                 if (includeReasonCode)
                 {
                     buf.WriteByte(variableHeader.ReasonCode());
                 }
+
                 buf.WriteBytes(propertiesBuf);
 
                 return buf;
@@ -697,6 +734,7 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
         {
             return EncodeProperties(byteBufAllocator, mqttProperties);
         }
+
         return Unpooled.EmptyBuffer;
     }
 
@@ -705,15 +743,18 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
                                             MqttProperties mqttProperties)
     {
         ByteBuf propertiesHeaderBuf = byteBufAllocator.Buffer();
+
         // encode also the Properties part
         try
         {
             ByteBuf propertiesBuf = byteBufAllocator.Buffer();
+
             try
             {
                 foreach (MqttProperties.MqttProperty property in mqttProperties.ListAll())
                 {
                     int propertyId = property.propertyId;
+
                     switch (propertyId)
                     {
                         case PAYLOAD_FORMAT_INDICATOR:
@@ -763,12 +804,14 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
                         case USER_PROPERTY:
                             List<MqttProperties.StringPair> pairs =
                                     ((MqttProperties.UserProperties) property).value;
+
                             foreach (MqttProperties.StringPair pair in pairs)
                             {
                                 WriteVariableLengthInt(propertiesBuf, propertyId);
                                 WriteEagerUTF8String(propertiesBuf, pair.key);
                                 WriteEagerUTF8String(propertiesBuf, pair.value);
                             }
+
                             break;
                         case CORRELATION_DATA:
                         case AUTHENTICATION_DATA:
@@ -783,6 +826,7 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
                                     propertyId.ToString(CultureInfo.InvariantCulture));
                     }
                 }
+
                 WriteVariableLengthInt(propertiesHeaderBuf, propertiesBuf.ReadableBytes);
                 propertiesHeaderBuf.WriteBytes(propertiesBuf);
 
@@ -804,15 +848,19 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
     {
         int ret = 0;
         ret |= header.MessageType().Value() << 4;
+
         if (header.IsDup())
         {
             ret |= 0x08;
         }
+
         ret |= header.QosLevel().Value() << 1;
+
         if (header.IsRetain())
         {
             ret |= 0x01;
         }
+
         return ret;
     }
 
@@ -826,6 +874,7 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
             {
                 digit |= 0x80;
             }
+
             buf.WriteByte(digit);
         } while (num > 0);
     }
@@ -844,6 +893,7 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
     {
         buf.EnsureWritable(utf8Length + 2);
         buf.WriteShort(utf8Length);
+
         if (utf8Length > 0)
         {
             int writtenUtf8Length = ReserveAndWriteUtf8(buf, s, utf8Length);
@@ -878,6 +928,7 @@ public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
             // 128 * 128 * 128
             return 3;
         }
+
         return 4;
     }
 

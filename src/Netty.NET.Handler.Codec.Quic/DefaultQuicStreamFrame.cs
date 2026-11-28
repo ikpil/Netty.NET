@@ -100,6 +100,7 @@ public sealed class DefaultQuicStreamFrame : DefaultByteBufHolder, IQuicStreamFr
         {
             return false;
         }
+
         DefaultQuicStreamFrame that = (DefaultQuicStreamFrame) o;
 
         if (fin != that.fin)

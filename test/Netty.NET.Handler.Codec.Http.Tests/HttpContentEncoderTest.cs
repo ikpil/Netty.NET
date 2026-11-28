@@ -495,6 +495,7 @@ public class HttpContentEncoderTest
     {
         TestEncoder encoder = new TestEncoder();
         EmbeddedChannel channel = new EmbeddedChannel(encoder);
+
         try
         {
             Assert.True(channel.WriteInbound(new DefaultFullHttpRequest(

@@ -16,6 +16,7 @@ public class RecyclableArrayListContractTest
     public void FactoriesProvideAnEmptyNativeList(int capacity)
     {
         var list = RecyclableArrayList.NewInstance(capacity);
+
         try
         {
             Assert.IsAssignableFrom<IList<object>>(list);
@@ -37,6 +38,7 @@ public class RecyclableArrayListContractTest
     public void EmptyRangesLeaveTheInsertionHistoryUnchanged(bool indexed, bool previouslyInserted)
     {
         var list = RecyclableArrayList.NewInstance();
+
         try
         {
             if (previouslyInserted)
@@ -44,6 +46,7 @@ public class RecyclableArrayListContractTest
                 list.Add(new object());
                 list.Clear();
             }
+
             if (indexed)
             {
                 list.InsertRange(0, Array.Empty<object>());
@@ -52,6 +55,7 @@ public class RecyclableArrayListContractTest
             {
                 list.AddRange(Array.Empty<object>());
             }
+
             Assert.Empty(list);
             Assert.Equal(previouslyInserted, list.InsertSinceRecycled);
         }
@@ -70,12 +74,14 @@ public class RecyclableArrayListContractTest
     {
         var list = RecyclableArrayList.NewInstance();
         object original = new object();
+
         try
         {
             if (previouslyInserted)
             {
                 list.Add(original);
             }
+
             object[] invalid = { new object(), null, new object() };
             var error = Assert.Throws<ArgumentException>(() =>
             {
@@ -104,6 +110,7 @@ public class RecyclableArrayListContractTest
     public void NullRangeSourcesUseNativeArgumentExceptions(bool indexed)
     {
         var list = RecyclableArrayList.NewInstance();
+
         try
         {
             var error = Assert.Throws<ArgumentNullException>(() =>
@@ -137,6 +144,7 @@ public class RecyclableArrayListContractTest
     public void NativeInterfaceWritesCannotBypassNullAndHistoryRules(int surface)
     {
         var list = RecyclableArrayList.NewInstance();
+
         try
         {
             Action<object> write = surface switch
@@ -173,6 +181,7 @@ public class RecyclableArrayListContractTest
     {
         var list = RecyclableArrayList.NewInstance();
         object first = new object(), last = new object();
+
         try
         {
             list.AddRange(new[] { first, (object)42, last });
@@ -210,6 +219,7 @@ public class RecyclableArrayListContractTest
             {
                 throw new InvalidOperationException("enumerated twice");
             }
+
             yield return first;
             yield return second;
         }
@@ -224,6 +234,7 @@ public class RecyclableArrayListContractTest
             {
                 list.AddRange(Values());
             }
+
             Assert.Equal(1, enumerations);
             Assert.Equal(new[] { first, second }, list.ToArray());
             Assert.True(list.InsertSinceRecycled);
@@ -276,9 +287,11 @@ public class RecyclableArrayListContractTest
     {
         var list = RecyclableArrayList.NewInstance();
         object first = new object(), second = new object();
+
         try
         {
             list.AddRange(new[] { first, second });
+
             if (indexed)
             {
                 list.InsertRange(1, list);
@@ -287,6 +300,7 @@ public class RecyclableArrayListContractTest
             {
                 list.AddRange(list);
             }
+
             Assert.Equal(indexed ? new[] { first, first, second, second } : new[] { first, second, first, second }, list.ToArray());
         }
         finally
@@ -301,6 +315,7 @@ public class RecyclableArrayListContractTest
     public void InvalidIndexesDoNotRecordAnInsertion(bool empty)
     {
         var list = RecyclableArrayList.NewInstance();
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => list.InsertRange(1, empty ? Array.Empty<object>() : new[] { new object() }));
@@ -335,6 +350,7 @@ public class RecyclableArrayListContractTest
             var payload = new Payload();
             list.Add(payload);
             object[] exported = list.ToArray();
+
             if (externalReturn)
             {
                 Exception failure = null;
@@ -356,8 +372,10 @@ public class RecyclableArrayListContractTest
             {
                 list.Recycle();
             }
+
             Assert.Throws<InvalidOperationException>(() => list.Recycle());
             var next = RecyclableArrayList.NewInstance();
+
             try
             {
                 Assert.Same(list, next);

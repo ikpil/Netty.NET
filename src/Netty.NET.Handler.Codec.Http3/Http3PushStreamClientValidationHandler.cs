@@ -77,6 +77,7 @@ internal sealed class Http3PushStreamClientValidationHandler
                 return;
             }
         }
+
         ctx.FireChannelRead(frame);
     }
 
@@ -90,6 +91,7 @@ internal sealed class Http3PushStreamClientValidationHandler
                 return;
             }
         }
+
         ctx.FireUserEventTriggered(evt);
     }
 

@@ -113,6 +113,7 @@ internal static class HttpPostBodyUtil
             {
                 throw new ArgumentException("buffer hasn't backing byte array");
             }
+
             this.buffer = buffer;
             bytes = segment.Array;
             readerIndex = buffer.ReaderIndex;
@@ -162,6 +163,7 @@ internal static class HttpPostBodyUtil
     internal static int FindNonWhitespace(string sb, int offset)
     {
         int result;
+
         for (result = offset; result < sb.Length; result ++)
         {
             if (!HttpVersion.IsJavaWhitespace(sb[result]))
@@ -169,6 +171,7 @@ internal static class HttpPostBodyUtil
                 break;
             }
         }
+
         return result;
     }
 
@@ -179,6 +182,7 @@ internal static class HttpPostBodyUtil
     internal static int FindEndOfString(string sb)
     {
         int result;
+
         for (result = sb.Length; result > 0; result --)
         {
             if (!HttpVersion.IsJavaWhitespace(sb[result - 1]))
@@ -186,6 +190,7 @@ internal static class HttpPostBodyUtil
                 break;
             }
         }
+
         return result;
     }
 
@@ -206,10 +211,12 @@ internal static class HttpPostBodyUtil
             // No LF, so neither CRLF
             return -1;
         }
+
         if (posFirstChar > 0 && buffer.GetByte(index + posFirstChar - 1) == HttpConstants.CR)
         {
             posFirstChar--;
         }
+
         return posFirstChar;
     }
 
@@ -225,6 +232,7 @@ internal static class HttpPostBodyUtil
     {
         int candidate = FindLineBreak(buffer, index);
         int findCRLF = 0;
+
         if (candidate >= 0)
         {
             if (buffer.GetByte(index + candidate) == HttpConstants.CR)
@@ -235,9 +243,12 @@ internal static class HttpPostBodyUtil
             {
                 findCRLF = 1;
             }
+
             candidate += findCRLF;
         }
+
         int next;
+
         while (candidate > 0 && (next = FindLineBreak(buffer, index + candidate)) >= 0)
         {
             candidate += next;
@@ -249,8 +260,10 @@ internal static class HttpPostBodyUtil
             {
                 findCRLF = 1;
             }
+
             candidate += findCRLF;
         }
+
         return candidate - findCRLF;
     }
 
@@ -277,6 +290,7 @@ internal static class HttpPostBodyUtil
         int toRead = writerIndex - index;
         int newOffset = index;
         bool delimiterNotFound = true;
+
         while (delimiterNotFound && delimiterLength <= toRead)
         {
             // Find first position: delimiter
@@ -285,12 +299,14 @@ internal static class HttpPostBodyUtil
             {
                 return -1;
             }
+
             newOffset += posDelimiter;
             toRead -= posDelimiter;
             // Now check for delimiter
             if (toRead >= delimiterLength)
             {
                 delimiterNotFound = false;
+
                 for (int i = 0; i < delimiterLength; i++)
                 {
                     if (buffer.GetByte(newOffset + i) != delimiter[i])
@@ -302,6 +318,7 @@ internal static class HttpPostBodyUtil
                     }
                 }
             }
+
             if (!delimiterNotFound)
             {
                 // Delimiter found, find if necessary: LF or CRLF
@@ -310,6 +327,7 @@ internal static class HttpPostBodyUtil
                     if (buffer.GetByte(newOffset - 1) == HttpConstants.LF)
                     {
                         newOffset--;
+
                         // Check if CR before: not mandatory to be there
                         if (newOffset > readerIndex && buffer.GetByte(newOffset - 1) == HttpConstants.CR)
                         {
@@ -325,9 +343,11 @@ internal static class HttpPostBodyUtil
                         continue;
                     }
                 }
+
                 return newOffset - readerIndex;
             }
         }
+
         return -1;
     }
 

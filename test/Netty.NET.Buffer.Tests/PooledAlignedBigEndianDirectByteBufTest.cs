@@ -27,6 +27,7 @@ public class PooledAlignedBigEndianDirectByteBufTest : PooledBigEndianDirectByte
         // CLR: assumeTrue(isDirectMemoryCacheAlignmentSupported()); the CLR aligns inside its own native reservation
         // and always supports alignment (src/Netty.NET.Buffer/PooledByteBufAllocator.cs), so the assumption holds.
         Assert.True(PooledByteBufAllocator.IsDirectMemoryCacheAlignmentSupported);
+
         // CLR: the source's nine-argument constructor followed by the CLR native-memory argument
         // (src/Netty.NET.Buffer/PooledByteBufAllocator.cs keeps the source positional prefix).
         return new PooledByteBufAllocator(

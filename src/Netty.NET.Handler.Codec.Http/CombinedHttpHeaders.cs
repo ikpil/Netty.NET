@@ -90,6 +90,7 @@ public class CombinedHttpHeaders : DefaultHttpHeaders
             {
                 objectEscaper = new ObjectCsvValueEscaper(this);
             }
+
             return objectEscaper;
         }
 
@@ -105,6 +106,7 @@ public class CombinedHttpHeaders : DefaultHttpHeaders
             public ICharSequence Escape(ICharSequence name, object value)
             {
                 ICharSequence converted;
+
                 try
                 {
                     converted = headers.ValueConverter().ConvertObject(value);
@@ -114,6 +116,7 @@ public class CombinedHttpHeaders : DefaultHttpHeaders
                     throw new ArgumentException(
                             "Failed to convert object value for header '" + name + '\'', e);
                 }
+
                 return new StringCharSequence(EscapeCsv(converted.ToString(), true));
             }
         }
@@ -124,6 +127,7 @@ public class CombinedHttpHeaders : DefaultHttpHeaders
             {
                 charSequenceEscaper = new CharSequenceCsvValueEscaper();
             }
+
             return charSequenceEscaper;
         }
 
@@ -159,11 +163,13 @@ public class CombinedHttpHeaders : DefaultHttpHeaders
             {
                 return itr;
             }
+
             IIterator<ICharSequence> unescapedItr = new ListIterator(UnescapeCsvFields(itr.Next()));
             if (itr.HasNext())
             {
                 throw new InvalidOperationException("CombinedHttpHeaders should only have one value");
             }
+
             return unescapedItr;
         }
 
@@ -171,6 +177,7 @@ public class CombinedHttpHeaders : DefaultHttpHeaders
                                    Func<ICharSequence, ICharSequence, bool> valuePredicate)
         {
             IIterator<ICharSequence> itr = ValueIterator(name);
+
             while (itr.HasNext())
             {
                 if (valuePredicate(itr.Next(), predicateArg))
@@ -178,6 +185,7 @@ public class CombinedHttpHeaders : DefaultHttpHeaders
                     return true;
                 }
             }
+
             return false;
         }
 
@@ -192,6 +200,7 @@ public class CombinedHttpHeaders : DefaultHttpHeaders
             {
                 throw new InvalidOperationException("CombinedHttpHeaders should only have one value");
             }
+
             return UnescapeCsvFields(values[0]);
         }
 
@@ -202,6 +211,7 @@ public class CombinedHttpHeaders : DefaultHttpHeaders
             {
                 throw new ArgumentException("can't add to itself.");
             }
+
             if (headers is CombinedHttpHeadersImpl)
             {
                 if (IsEmpty())
@@ -225,6 +235,7 @@ public class CombinedHttpHeaders : DefaultHttpHeaders
                     Add(header.GetKey(), header.GetValue());
                 }
             }
+
             return this;
         }
 
@@ -234,7 +245,9 @@ public class CombinedHttpHeaders : DefaultHttpHeaders
             {
                 return this;
             }
+
             Clear();
+
             return Add(headers);
         }
 
@@ -244,10 +257,12 @@ public class CombinedHttpHeaders : DefaultHttpHeaders
             {
                 return this;
             }
+
             foreach (ICharSequence key in headers.Names())
             {
                 Remove(key);
             }
+
             return Add(headers);
         }
 
@@ -327,21 +342,26 @@ public class CombinedHttpHeaders : DefaultHttpHeaders
             {
                 Set(name, CommaSeparateEscapedValues(currentValue, escapedValue));
             }
+
             return this;
         }
 
         private static ICharSequence CommaSeparate<T>(ICharSequence name, ICsvValueEscaper<T> escaper, params T[] values)
         {
             StringBuilder sb = new StringBuilder(values.Length * VALUE_LENGTH_ESTIMATE);
+
             if (values.Length > 0)
             {
                 int end = values.Length - 1;
+
                 for (int i = 0; i < end; i++)
                 {
                     sb.Append(escaper.Escape(name, values[i])).Append(COMMA);
                 }
+
                 sb.Append(escaper.Escape(name, values[end]));
             }
+
             return new StringCharSequence(sb.ToString());
         }
 
@@ -354,13 +374,16 @@ public class CombinedHttpHeaders : DefaultHttpHeaders
             if (iterator.MoveNext())
             {
                 T next = iterator.Current;
+
                 while (iterator.MoveNext())
                 {
                     sb.Append(escaper.Escape(name, next)).Append(COMMA);
                     next = iterator.Current;
                 }
+
                 sb.Append(escaper.Escape(name, next));
             }
+
             return new StringCharSequence(sb.ToString());
         }
 
@@ -377,10 +400,12 @@ public class CombinedHttpHeaders : DefaultHttpHeaders
         {
             List<string> fields = StringUtil.UnescapeCsvFields(value.ToString());
             List<ICharSequence> result = new List<ICharSequence>(fields.Count);
+
             foreach (string field in fields)
             {
                 result.Add(new StringCharSequence(field));
             }
+
             return result;
         }
 
@@ -407,6 +432,7 @@ public class CombinedHttpHeaders : DefaultHttpHeaders
                 {
                     throw new InvalidOperationException();
                 }
+
                 return list[next++];
             }
 
@@ -416,6 +442,7 @@ public class CombinedHttpHeaders : DefaultHttpHeaders
                 {
                     throw new InvalidOperationException();
                 }
+
                 list.RemoveAt(--next);
             }
 
@@ -429,6 +456,7 @@ public class CombinedHttpHeaders : DefaultHttpHeaders
                 {
                     return false;
                 }
+
                 current = Next();
                 return true;
             }

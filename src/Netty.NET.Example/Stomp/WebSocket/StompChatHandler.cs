@@ -140,6 +140,7 @@ public class StompChatHandler : SimpleChannelInboundHandler<IStompFrame>
         }
 
         ISet<StompSubscription> subscriptions = Get(destination);
+
         foreach (StompSubscription subscription in subscriptions)
         {
             _ = subscription.Channel().WriteAndFlushAsync(TransformToMessage(inboundFrame, subscription));
@@ -149,6 +150,7 @@ public class StompChatHandler : SimpleChannelInboundHandler<IStompFrame>
     private void OnUnsubscribe(IChannelHandlerContext ctx, IStompFrame inboundFrame)
     {
         string subscriptionId = inboundFrame.Headers().GetAsString(SUBSCRIPTION);
+
         foreach (KeyValuePair<string, ISet<StompSubscription>> entry in chatDestinations)
         {
             foreach (StompSubscription subscription in entry.Value)

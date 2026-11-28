@@ -46,6 +46,7 @@ public sealed class UptimeServer
     public static async Task Main(string[] args)
     {
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             ServerBootstrap b = new ServerBootstrap();

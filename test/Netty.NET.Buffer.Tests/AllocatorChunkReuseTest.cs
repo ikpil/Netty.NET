@@ -34,6 +34,7 @@ public class AllocatorChunkReuseTest(ITestOutputHelper output)
         // reference run. The nonparallel collection isolates this global policy;
         // leak tracking itself is covered by AllocatorLeakDetectionTest.
         ResourceLeakDetectorLevel previous = ResourceLeakDetector.GetLevel();
+
         try
         {
             ResourceLeakDetector.SetLevel(ResourceLeakDetectorLevel.DISABLED);
@@ -41,8 +42,10 @@ public class AllocatorChunkReuseTest(ITestOutputHelper output)
             // GC's physical-thread counter replaces the optional JVM ThreadMXBean.
             allocator.HeapBuffer(BufferSize, BufferSize).Release();
             long before = GC.GetAllocatedBytesForCurrentThread();
+
             for (int i = 0; i < Iterations; ++i)
                 allocator.HeapBuffer(BufferSize, BufferSize).Release();
+
             return GC.GetAllocatedBytesForCurrentThread() - before;
         }
         finally
@@ -62,6 +65,7 @@ public class AllocatorChunkReuseTest(ITestOutputHelper output)
                 useCacheForNonEventLoopThreads: false)
             : new PooledByteBufAllocator(false, nativeAllocator: native);
         var metric = ((IByteBufAllocatorMetricProvider)allocator).Metric;
+
         try
         {
             ResourceLeakDetectorLevel previous = ResourceLeakDetector.GetLevel();
@@ -75,6 +79,7 @@ public class AllocatorChunkReuseTest(ITestOutputHelper output)
         {
             ((IDisposable)allocator).Dispose();
         }
+
         Assert.Equal(0, metric.UsedHeapMemory);
         Assert.Equal(0, native.ReservedBytes);
     }

@@ -86,17 +86,20 @@ public class HttpToHttp2ConnectionHandlerTest : IAsyncLifetime
             await clientChannel.CloseAsync();
             clientChannel = null;
         }
+
         if (serverChannel != null)
         {
             await serverChannel.CloseAsync();
             serverChannel = null;
         }
+
         IChannel serverConnectedChannel = this.serverConnectedChannel;
         if (serverConnectedChannel != null)
         {
             await serverConnectedChannel.CloseAsync();
             this.serverConnectedChannel = null;
         }
+
         Task serverGroup = sb.Config.Group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
         Task serverChildGroup = sb.Config.ChildGroup.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
         Task clientGroup = cb.Config.Group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
@@ -440,6 +443,7 @@ public class HttpToHttp2ConnectionHandlerTest : IAsyncLifetime
                 It.IsAny<short>(), It.IsAny<bool>(), 0, false), Times.Once());
         serverListener.Verify(l => l.OnDataRead(It.IsAny<IChannelHandlerContext>(), 3, It.IsAny<ByteBuf>(), 0,
                 true), Times.Once());
+
         lock (receivedBuffers)
         {
             Assert.Equal(1, receivedBuffers.Count);
@@ -497,6 +501,7 @@ public class HttpToHttp2ConnectionHandlerTest : IAsyncLifetime
                 false), Times.Once());
         serverListener.Verify(l => l.OnHeadersRead(It.IsAny<IChannelHandlerContext>(), 3, http2TrailingHeaders, 0,
                 It.IsAny<short>(), It.IsAny<bool>(), 0, true), Times.Once());
+
         lock (receivedBuffers)
         {
             Assert.Equal(1, receivedBuffers.Count);
@@ -579,6 +584,7 @@ public class HttpToHttp2ConnectionHandlerTest : IAsyncLifetime
         serverListener.Verify(l => l.OnHeadersRead(It.IsAny<IChannelHandlerContext>(), 3, http2TrailingHeaders, 0,
                 It.IsAny<short>(), It.IsAny<bool>(), 0, true), Times.Once());
         StringBuilder receivedText = new StringBuilder();
+
         lock (receivedBuffers)
         {
             foreach (string buffer in receivedBuffers)
@@ -586,6 +592,7 @@ public class HttpToHttp2ConnectionHandlerTest : IAsyncLifetime
                 receivedText.Append(buffer);
             }
         }
+
         Assert.Equal(text + text2, receivedText.ToString());
     }
 
@@ -705,11 +712,13 @@ public class HttpToHttp2ConnectionHandlerTest : IAsyncLifetime
     private void AwaitRequests()
     {
         Assert.True(requestLatch.Wait(TimeSpan.FromSeconds(WAIT_TIME_SECONDS), TestContext.Current.CancellationToken));
+
         if (trailersLatch != null)
         {
             Assert.True(trailersLatch.Wait(TimeSpan.FromSeconds(WAIT_TIME_SECONDS),
                     TestContext.Current.CancellationToken));
         }
+
         Assert.True(serverSettingsAckLatch.Wait(TimeSpan.FromSeconds(WAIT_TIME_SECONDS),
                 TestContext.Current.CancellationToken));
     }

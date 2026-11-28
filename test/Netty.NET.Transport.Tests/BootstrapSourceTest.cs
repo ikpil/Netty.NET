@@ -37,6 +37,7 @@ public class BootstrapSourceTest
     {
         var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         SourceTestChannel created = null;
+
         try
         {
             var future = new Bootstrap().Group(group).ChannelFactory(() => created = new SourceTestChannel())
@@ -77,6 +78,7 @@ public class BootstrapSourceTest
     {
         var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         var key = AttributeKey<string>.ValueOf(Guid.NewGuid().ToString());
+
         try
         {
             await new Bootstrap().Group(group).Channel<LocalChannel>().Option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 4242)
@@ -113,9 +115,11 @@ public class BootstrapSourceTest
         var bootstrapA = new Bootstrap().Group(groupA).Channel<LocalChannel>().Handler(handler);
         var bootstrapB = new Bootstrap().Group(groupB).Channel<LocalChannel>().Handler(handler);
         var operations = new ConcurrentBag<Task<IChannel>>();
+
         try
         {
             var submissions = new List<Task>();
+
             // Try to bind from each other.
             // Try to connect from each other.
             for (int i = 0; i < 1024; i++)
@@ -139,6 +143,7 @@ public class BootstrapSourceTest
         {
             await groupA.StopAsync();
             await groupB.StopAsync();
+
             // Original only waits for owner submissions. Observe detached native failures during teardown.
             foreach (var operation in operations)
             {
@@ -159,6 +164,7 @@ public class BootstrapSourceTest
         var options = new ConcurrentQueue<ChannelOption>();
         var initialized = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
+
         try
         {
             await new Bootstrap().Group(group).ChannelFactory(() => new OptionOrderChannel(options))
@@ -183,6 +189,7 @@ public class BootstrapSourceTest
         using var extension = new SourceInitializerExtension();
         using var registration = ChannelInitializerExtension.Register(extension);
         var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
+
         try
         {
             extension.ClearThreadLocals();
@@ -210,6 +217,7 @@ public class BootstrapSourceTest
             protected override bool SetValue(ChannelOption option, object value)
             {
                 options.Enqueue(option);
+
                 return base.SetValue(option, value);
             }
         }

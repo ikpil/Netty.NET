@@ -102,6 +102,7 @@ public class CipherSuiteCanaryTest : IClassFixture<CipherSuiteCanaryTest.BeforeA
     private static void AssumeCipherAvailable(SslProvider provider, string cipher)
     {
         bool cipherSupported = false;
+
         if (provider == SslProvider.JDK)
         {
             foreach (string c in Enum.GetNames<TlsCipherSuite>())
@@ -117,6 +118,7 @@ public class CipherSuiteCanaryTest : IClassFixture<CipherSuiteCanaryTest.BeforeA
         {
             cipherSupported = false;
         }
+
         Assert.SkipUnless(cipherSupported, "Unsupported cipher: " + cipher);
     }
 
@@ -171,11 +173,13 @@ public class CipherSuiteCanaryTest : IClassFixture<CipherSuiteCanaryTest.BeforeA
                         + '-' + clientSslProvider + '-' + rfcCipherName);
 
                 IChannel server = await Server(address, serverHandler);
+
                 try
                 {
                     IChannelHandler clientHandler = new ClientInitializer(sslClientContext, clientPromise);
 
                     IChannel client = await Client(server, clientHandler);
+
                     try
                     {
                         await client.WriteAndFlushAsync(
@@ -253,6 +257,7 @@ public class CipherSuiteCanaryTest : IClassFixture<CipherSuiteCanaryTest.BeforeA
                 _ = ctx.WriteAndFlushAsync(
                         Unpooled.WrappedBuffer(new byte[] {(byte) 'P', (byte) 'O', (byte) 'N', (byte) 'G'}));
             }
+
             _ = ctx.CloseAsync();
         }
 

@@ -117,9 +117,11 @@ public class LinkedHashSet<T> : ISet<T> where T : notnull
 
         // Iterate nodes safely while removing.
         var node = _linkedList.First;
+
         while (node != null)
         {
             var next = node.Next;
+
             if (!otherSet.Contains(node.Value))
             {
                 _dictionary.Remove(node.Value);
@@ -311,6 +313,7 @@ public class LinkedHashSet<T> : ISet<T> where T : notnull
     private (bool allContained, int distinctCount) AllContainedAndDistinctCount(IEnumerable<T> source)
     {
         var seen = new HashSet<T>(_dictionary.Comparer);
+
         foreach (var item in source)
         {
             if (seen.Add(item))

@@ -52,6 +52,7 @@ public sealed class OpCode
     private static Dictionary<byte, OpCode> CreateMap()
     {
         Dictionary<byte, OpCode> reverseMap = new Dictionary<byte, OpCode>();
+
         foreach (OpCode e in VALUES)
         {
             reverseMap[e.Convert()] = e;

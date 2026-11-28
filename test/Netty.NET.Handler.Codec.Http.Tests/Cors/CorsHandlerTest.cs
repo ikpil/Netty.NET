@@ -761,14 +761,17 @@ public class CorsHandlerTest
     {
         EmbeddedChannel channel = new EmbeddedChannel(new CorsHandler(config), new EchoHandler());
         IFullHttpRequest httpRequest = CreateHttpRequest(method);
+
         if (origin != null)
         {
             httpRequest.Headers().Set(ORIGIN, origin);
         }
+
         if (requestHeaders != null)
         {
             httpRequest.Headers().Set(ACCESS_CONTROL_REQUEST_HEADERS, requestHeaders);
         }
+
         Assert.False(channel.WriteInbound(httpRequest));
         IHttpResponse response =  channel.ReadOutbound<IHttpResponse>();
         Assert.False(channel.Finish());
@@ -802,6 +805,7 @@ public class CorsHandlerTest
         httpRequest.Headers().Set(ORIGIN, origin);
         httpRequest.Headers().Set(ACCESS_CONTROL_REQUEST_METHOD, httpRequest.Method().ToString());
         httpRequest.Headers().Set(ACCESS_CONTROL_REQUEST_HEADERS, requestHeaders);
+
         if (connection != null)
         {
             httpRequest.Headers().Set(CONNECTION, connection);
@@ -828,6 +832,7 @@ public class CorsHandlerTest
     private static void AssertValues(IHttpResponse response, string headerName, params string[] values)
     {
         string header = response.Headers().Get(Of(headerName));
+
         foreach (string value in values)
         {
             Assert.Contains(value, header);

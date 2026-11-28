@@ -84,6 +84,7 @@ public class LastInboundHandler : ChannelDuplexHandler
         {
             throw new InvalidOperationException("channelActive may only be fired once.");
         }
+
         channelActive = true;
         base.ChannelActive(ctx);
     }
@@ -104,6 +105,7 @@ public class LastInboundHandler : ChannelDuplexHandler
         {
             throw new InvalidOperationException("channelInactive may only be fired once after channelActive.");
         }
+
         channelActive = false;
         base.ChannelInactive(ctx);
     }
@@ -118,6 +120,7 @@ public class LastInboundHandler : ChannelDuplexHandler
         {
             writabilityStates += "," + (ctx.Channel.IsWritable ? "true" : "false");
         }
+
         base.ChannelWritabilityChanged(ctx);
     }
 
@@ -160,6 +163,7 @@ public class LastInboundHandler : ChannelDuplexHandler
         {
             return;
         }
+
         Exception t = lastException;
         lastException = null;
         ExceptionDispatchInfo.Throw(t);
@@ -186,10 +190,12 @@ public class LastInboundHandler : ChannelDuplexHandler
     public T BlockingReadInbound<T>() where T : class
     {
         T msg;
+
         while ((msg = ReadInbound<T>()) == null)
         {
             Thread.Sleep(10);
         }
+
         return msg;
     }
 
@@ -222,12 +228,14 @@ public class LastInboundHandler : ChannelDuplexHandler
             {
                 return default;
             }
+
             object o = queue[0];
             queue.RemoveAt(0);
             if (o is UserEvent)
             {
                 return (T) ((UserEvent) o).evt;
             }
+
             return (T) o;
         }
     }
@@ -238,6 +246,7 @@ public class LastInboundHandler : ChannelDuplexHandler
         {
             _ = ctx.WriteAsync(msg);
         }
+
         ctx.Flush();
         EmbeddedChannel ch = (EmbeddedChannel) ctx.Channel;
         ch.RunPendingTasks();
@@ -248,7 +257,9 @@ public class LastInboundHandler : ChannelDuplexHandler
     public void FinishAndReleaseAll()
     {
         CheckException();
+
         object o;
+
         while ((o = ReadInboundMessageOrUserEvent<object>()) != null)
         {
             ReferenceCountUtil.Release(o);

@@ -194,6 +194,7 @@ public class TimeProviderClockContractTest
     {
         var provider = new TimestampProvider(1_000_000_000, 50_000);
         var executor = new DefaultEventExecutor(provider);
+
         try
         {
             Task<int> delayed = executor.ScheduleAsync(() =>

@@ -14,6 +14,7 @@ internal static class CollectedObjectWatch
     internal static Registration Register(object resource, Action notification)
     {
         ArgumentNullException.ThrowIfNull(resource);
+
         Watch watch = watches.GetValue(resource, static _ => new Watch());
         var registration = new Registration(watch, notification);
         watch.Add(registration);
@@ -35,6 +36,7 @@ internal static class CollectedObjectWatch
         internal void Cancel()
         {
             Interlocked.Exchange(ref notification, null);
+
             if (owner.TryGetTarget(out Watch watch))
             {
                 watch.Remove(this);
@@ -44,6 +46,7 @@ internal static class CollectedObjectWatch
         internal void Signal()
         {
             Action action = Interlocked.Exchange(ref notification, null);
+
             try
             {
                 action?.Invoke();
@@ -62,11 +65,13 @@ internal static class CollectedObjectWatch
         internal void Add(Registration registration)
         {
             using var held = UninterruptibleMonitor.Enter(this);
+
             if (suppressed)
             {
                 GC.ReRegisterForFinalize(this);
                 suppressed = false;
             }
+
             registration.Next = head;
             head = registration;
         }
@@ -75,6 +80,7 @@ internal static class CollectedObjectWatch
         {
             using var held = UninterruptibleMonitor.Enter(this);
             Registration previous = null;
+
             for (Registration current = head; current != null; current = current.Next)
             {
                 if (ReferenceEquals(current, registration))
@@ -87,11 +93,14 @@ internal static class CollectedObjectWatch
                     {
                         previous.Next = current.Next;
                     }
+
                     current.Next = null;
                     break;
                 }
+
                 previous = current;
             }
+
             if (head == null && !suppressed)
             {
                 GC.SuppressFinalize(this);
@@ -102,11 +111,13 @@ internal static class CollectedObjectWatch
         ~Watch()
         {
             Registration registrations;
+
             lock (this)
             {
                 registrations = head;
                 head = null;
             }
+
             while (registrations != null)
             {
                 Registration next = registrations.Next;

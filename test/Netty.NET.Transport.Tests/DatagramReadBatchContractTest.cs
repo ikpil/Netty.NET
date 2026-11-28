@@ -30,6 +30,7 @@ public class DatagramReadBatchContractTest
 #pragma warning restore CS0612, CS0618
         var capture = new Capture();
         using var sender = NewSender();
+
         try
         {
             Bind(loop, channel, capture, cancellation);
@@ -52,6 +53,7 @@ public class DatagramReadBatchContractTest
                     Assert.Equal(count, capture.Messages.Count);
                 }
             }
+
             Assert.Equal(new int?[] { 1, null, 2, 3, 4 }, capture.Messages);
             Assert.Equal(autoRead ? new[] { 2, 2, 1 } : new[] { 1, 1, 1, 1, 1 }, capture.Batches);
         }
@@ -72,6 +74,7 @@ public class DatagramReadBatchContractTest
         var channel = new FailingSecondReceive(error);
         var capture = new Capture();
         using var sender = NewSender();
+
         try
         {
             Bind(loop, channel, capture, cancellation);
@@ -82,6 +85,7 @@ public class DatagramReadBatchContractTest
             Assert.Equal(new[] { "read", "complete", "error" }, capture.Events);
             Assert.Same(error, capture.Failure);
             Assert.Equal(!fatal, channel.IsOpen);
+
             if (!fatal)
             {
                 PumpUntil(loop, () => capture.Batches.Count == 2);

@@ -92,6 +92,7 @@ public class DefaultHttpRequest : DefaultHttpMessage, IHttpRequest
         this.method = CheckNotNull(method, "method");
         this.uri = CheckNotNull(uri, "uri");
         this.validateRequestLine = validateRequestLine;
+
         if (validateRequestLine)
         {
             HttpUtil.ValidateRequestLineTokens(method, uri);
@@ -111,10 +112,12 @@ public class DefaultHttpRequest : DefaultHttpMessage, IHttpRequest
     public virtual IHttpRequest SetMethod(HttpMethod method)
     {
         CheckNotNull(method, "method");
+
         if (validateRequestLine)
         {
             HttpUtil.ValidateRequestLineTokens(method, uri);
         }
+
         this.method = method;
         return this;
     }
@@ -122,10 +125,12 @@ public class DefaultHttpRequest : DefaultHttpMessage, IHttpRequest
     public virtual IHttpRequest SetUri(string uri)
     {
         CheckNotNull(uri, "uri");
+
         if (validateRequestLine)
         {
             HttpUtil.ValidateRequestLineTokens(method, uri);
         }
+
         this.uri = uri;
         return this;
     }

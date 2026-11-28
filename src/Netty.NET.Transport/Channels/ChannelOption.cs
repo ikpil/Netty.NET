@@ -55,6 +55,7 @@ public abstract class ChannelOption : AbstractConstant<ChannelOption>
     public static ChannelOption<T> ValueOf<T>(string name)
     {
         ObjectUtil.CheckNonEmpty(name, nameof(name));
+
         var option = Pool.GetOrAdd(name, n => new ChannelOption<T>(NextId(), n));
         return option as ChannelOption<T> ?? throw new ArgumentException("Option is already registered with a different value type.", nameof(name));
     }
@@ -66,6 +67,7 @@ public abstract class ChannelOption : AbstractConstant<ChannelOption>
     {
         ArgumentNullException.ThrowIfNull(firstNameComponent);
         ArgumentNullException.ThrowIfNull(secondNameComponent);
+
         string name = firstNameComponent.FullName ?? throw new ArgumentException("A named CLR type is required.", nameof(firstNameComponent));
         return ValueOf<T>(name + '#' + secondNameComponent);
     }
@@ -88,9 +90,11 @@ public abstract class ChannelOption : AbstractConstant<ChannelOption>
     public static ChannelOption<T> NewInstance<T>(string name)
     {
         ObjectUtil.CheckNonEmpty(name, nameof(name));
+
         var option = new ChannelOption<T>(NextId(), name);
         if (!Pool.TryAdd(name, option))
             throw new ArgumentException("Option name is already in use.", nameof(name));
+
         return option;
     }
     public static readonly ChannelOption<IByteBufAllocator> ALLOCATOR = ValueOf<IByteBufAllocator>("ALLOCATOR");
@@ -216,6 +220,7 @@ public class ChannelOption<T> : ChannelOption
         {
             throw new ArgumentException("Invalid option value type.", nameof(value));
         }
+
         Validate(typed);
     }
 

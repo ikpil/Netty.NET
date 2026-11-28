@@ -140,6 +140,7 @@ public class DefensiveDecompressorTest
             {
                 throw statusException;
             }
+
             return status;
         }
 
@@ -150,6 +151,7 @@ public class DefensiveDecompressorTest
             {
                 throw addInputException;
             }
+
             input = buf;
         }
 

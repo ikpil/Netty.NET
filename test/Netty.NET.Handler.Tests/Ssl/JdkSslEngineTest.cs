@@ -98,6 +98,7 @@ public class JdkSslEngineTest : SSLEngineTest
         TheoryData<SSLEngineTestParam> @params = NewTestParams();
 
         TheoryData<JdkSSLEngineTestParam> jdkParams = new TheoryData<JdkSSLEngineTestParam>();
+
         foreach (ProviderType providerType in ProviderType.Values())
         {
             foreach (SSLEngineTestParam param in @params)
@@ -105,6 +106,7 @@ public class JdkSslEngineTest : SSLEngineTest
                 jdkParams.Add(new JdkSSLEngineTestParam(providerType, param));
             }
         }
+
         return jdkParams;
     }
 

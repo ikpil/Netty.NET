@@ -101,12 +101,14 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
     internal Action TakeTask()
     {
         LinkedBlockingQueue<Action> taskQueue = _taskQueue;
+
         for (;;)
         {
             var scheduledTask = PeekScheduledTask();
             if (scheduledTask == null)
             {
                 Action task = null;
+
                 try
                 {
                     task = taskQueue.Take();
@@ -122,6 +124,7 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
             {
                 long delayNanos = scheduledTask.DelayNanos();
                 Action task = null;
+
                 if (delayNanos > 0)
                 {
                     try
@@ -158,12 +161,14 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
     {
         long nanoTime = GetCurrentTimeNanos();
         IScheduledWork scheduledTask;
+
         while ((scheduledTask = PollScheduledWork(nanoTime)) != null)
         {
             if (scheduledTask.IsCanceled)
             {
                 continue;
             }
+
             _taskQueue.Add(scheduledTask.QueueCallback);
         }
     }
@@ -261,6 +266,7 @@ public sealed class GlobalEventExecutor : AbstractScheduledEventExecutor, IOrder
     private void Execute0(Action task)
     {
         AddTask(ObjectUtil.CheckNotNull(task, "task"));
+
         if (!InEventLoop())
         {
             StartThread();

@@ -109,6 +109,7 @@ public sealed class ByteBufInputStream : Stream
     public ByteBufInputStream(ByteBuf buffer, int length, bool releaseOnDispose)
     {
         ArgumentNullException.ThrowIfNull(buffer);
+
         if (length < 0 || length > buffer.ReadableBytes)
         {
             // Match ownership transfer on invalid length: return the supplied reference.
@@ -116,8 +117,10 @@ public sealed class ByteBufInputStream : Stream
             {
                 buffer.Release();
             }
+
             throw new ArgumentOutOfRangeException(nameof(length));
         }
+
         // Reject dead owners before publishing the adapter or altering marks.
         buffer.AsReadOnlySequence(buffer.ReaderIndex, 0);
         _buffer = buffer;
@@ -130,6 +133,7 @@ public sealed class ByteBufInputStream : Stream
     private static int ReadableLength(ByteBuf buffer)
     {
         ArgumentNullException.ThrowIfNull(buffer);
+
         return buffer.ReadableBytes;
     }
 
@@ -143,9 +147,11 @@ public sealed class ByteBufInputStream : Stream
         get
         {
             ThrowIfClosed();
+
             int reader = _buffer.ReaderIndex;
             if (reader < _startIndex || reader > _endIndex)
                 throw new InvalidOperationException("The buffer reader index moved outside this stream's range.");
+
             return _endIndex - reader;
         }
     }
@@ -165,6 +171,7 @@ public sealed class ByteBufInputStream : Stream
             if (!_closed)
             {
                 _closed = true;
+
                 if (disposing && _releaseOnDispose)
                 {
                     _buffer.Release();
@@ -181,6 +188,7 @@ public sealed class ByteBufInputStream : Stream
     public void Mark()
     {
         ThrowIfClosed();
+
         _buffer.MarkReaderIndex();
     }
 
@@ -188,6 +196,7 @@ public sealed class ByteBufInputStream : Stream
     public void Reset()
     {
         ThrowIfClosed();
+
         _buffer.ResetReaderIndex();
     }
 
@@ -197,12 +206,14 @@ public sealed class ByteBufInputStream : Stream
         {
             return -1;
         }
+
         return _buffer.ReadByte();
     }
 
     public override int Read(byte[] buffer, int offset, int count)
     {
         ValidateBufferArguments(buffer, offset, count);
+
         return Read(buffer.AsSpan(offset, count));
     }
 
@@ -214,6 +225,7 @@ public sealed class ByteBufInputStream : Stream
         {
             _buffer.ReadBytes(destination[..count]);
         }
+
         return count;
     }
 
@@ -223,6 +235,7 @@ public sealed class ByteBufInputStream : Stream
         {
             return ValueTask.FromCanceled<int>(cancellationToken);
         }
+
         try
         {
             return ValueTask.FromResult(Read(destination.Span));
@@ -236,6 +249,7 @@ public sealed class ByteBufInputStream : Stream
     public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
     {
         ValidateBufferArguments(buffer, offset, count);
+
         return ReadAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
     }
 
@@ -251,6 +265,7 @@ public sealed class ByteBufInputStream : Stream
         {
             return 0;
         }
+
         count = Math.Min(available, count);
         _buffer.SkipBytes(count);
         return count;
@@ -269,12 +284,14 @@ public sealed class ByteBufInputStream : Stream
     public byte ReadUnsignedByte()
     {
         CheckAvailable(1);
+
         return _buffer.ReadByte();
     }
 
     public short ReadInt16()
     {
         CheckAvailable(2);
+
         return _buffer.ReadShort();
     }
 
@@ -291,12 +308,14 @@ public sealed class ByteBufInputStream : Stream
     public int ReadInt32()
     {
         CheckAvailable(4);
+
         return _buffer.ReadInt();
     }
 
     public long ReadInt64()
     {
         CheckAvailable(8);
+
         return _buffer.ReadLong();
     }
 
@@ -313,18 +332,21 @@ public sealed class ByteBufInputStream : Stream
     public void ReadFully(byte[] buffer)
     {
         ArgumentNullException.ThrowIfNull(buffer);
+
         ReadFully(buffer.AsSpan());
     }
 
     public void ReadFully(byte[] buffer, int offset, int count)
     {
         ValidateBufferArguments(buffer, offset, count);
+
         ReadFully(buffer.AsSpan(offset, count));
     }
 
     public void ReadFully(Span<byte> destination)
     {
         CheckAvailable(destination.Length);
+
         _buffer.ReadBytes(destination);
     }
 
@@ -336,7 +358,9 @@ public sealed class ByteBufInputStream : Stream
         {
             return null;
         }
+
         _lineBuffer?.Clear();
+
         do
         {
             byte value = _buffer.ReadByte();
@@ -345,16 +369,20 @@ public sealed class ByteBufInputStream : Stream
             {
                 break;
             }
+
             if (value == '\r')
             {
                 if (available > 0 && _buffer.GetByte(_buffer.ReaderIndex) == '\n')
                 {
                     _buffer.SkipBytes(1);
                 }
+
                 break;
             }
+
             (_lineBuffer ??= new StringBuilder()).Append((char)value);
         } while (available > 0);
+
         return _lineBuffer?.ToString() ?? string.Empty;
     }
 
@@ -367,6 +395,7 @@ public sealed class ByteBufInputStream : Stream
         ReadFully(bytes);
         char[] characters = new char[length];
         int written = 0;
+
         for (int i = 0; i < length;)
         {
             int first = bytes[i++];
@@ -375,18 +404,21 @@ public sealed class ByteBufInputStream : Stream
                 characters[written++] = (char)first;
                 continue;
             }
+
             if ((first & 0xE0) == 0xC0)
             {
                 if (i >= length || (bytes[i] & 0xC0) != 0x80)
                 {
                     throw new InvalidDataException("Malformed modified UTF-8.");
                 }
+
                 characters[written++] = (char)((first & 0x1F) << 6 | bytes[i++] & 0x3F);
             }
             else if ((first & 0xF0) == 0xE0)
             {
                 if (length - i < 2 || (bytes[i] & 0xC0) != 0x80 || (bytes[i + 1] & 0xC0) != 0x80)
                     throw new InvalidDataException("Malformed modified UTF-8.");
+
                 characters[written++] = (char)((first & 0x0F) << 12 | (bytes[i] & 0x3F) << 6 | bytes[i + 1] & 0x3F);
                 i += 2;
             }
@@ -395,12 +427,14 @@ public sealed class ByteBufInputStream : Stream
                 throw new InvalidDataException("Malformed modified UTF-8.");
             }
         }
+
         return new string(characters, 0, written);
     }
 
     private void CheckAvailable(int fieldSize)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(fieldSize);
+
         int available = Available;
         if (fieldSize > available)
         {

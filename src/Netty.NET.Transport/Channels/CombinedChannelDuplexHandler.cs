@@ -76,6 +76,7 @@ public class CombinedChannelDuplexHandler<TInbound, TOutbound> : ChannelDuplexHa
             throw new ArgumentException("The inbound handler must not implement IChannelOutboundHandler.", nameof(inboundHandler));
         if (outboundHandler is IChannelInboundHandler)
             throw new ArgumentException("The outbound handler must not implement IChannelInboundHandler.", nameof(outboundHandler));
+
         _inboundHandler = inboundHandler;
         _outboundHandler = outboundHandler;
     }
@@ -111,11 +112,13 @@ public class CombinedChannelDuplexHandler<TInbound, TOutbound> : ChannelDuplexHa
     {
         if (_inboundHandler == null)
             throw new InvalidOperationException("Init() must be invoked before being added to a ChannelPipeline.");
+
         _outboundCtx = new DelegatingChannelHandlerContext(ctx, _outboundHandler);
         _inboundCtx = new InboundContext(ctx, _inboundHandler, this);
         // The inboundCtx and outboundCtx were created and set now it's safe to call removeInboundHandler() and
         // removeOutboundHandler().
         _handlerAdded = true;
+
         try
         {
             _inboundHandler.HandlerAdded(_inboundCtx);
@@ -163,6 +166,7 @@ public class CombinedChannelDuplexHandler<TInbound, TOutbound> : ChannelDuplexHa
     public override void ChannelRegistered(IChannelHandlerContext ctx)
     {
         Debug.Assert(ReferenceEquals(ctx, _inboundCtx.Ctx));
+
         if (!_inboundCtx.Removed)
             _inboundHandler.ChannelRegistered(_inboundCtx);
         else
@@ -172,6 +176,7 @@ public class CombinedChannelDuplexHandler<TInbound, TOutbound> : ChannelDuplexHa
     public override void ChannelUnregistered(IChannelHandlerContext ctx)
     {
         Debug.Assert(ReferenceEquals(ctx, _inboundCtx.Ctx));
+
         if (!_inboundCtx.Removed)
             _inboundHandler.ChannelUnregistered(_inboundCtx);
         else
@@ -181,6 +186,7 @@ public class CombinedChannelDuplexHandler<TInbound, TOutbound> : ChannelDuplexHa
     public override void ChannelActive(IChannelHandlerContext ctx)
     {
         Debug.Assert(ReferenceEquals(ctx, _inboundCtx.Ctx));
+
         if (!_inboundCtx.Removed)
             _inboundHandler.ChannelActive(_inboundCtx);
         else
@@ -190,6 +196,7 @@ public class CombinedChannelDuplexHandler<TInbound, TOutbound> : ChannelDuplexHa
     public override void ChannelInactive(IChannelHandlerContext ctx)
     {
         Debug.Assert(ReferenceEquals(ctx, _inboundCtx.Ctx));
+
         if (!_inboundCtx.Removed)
             _inboundHandler.ChannelInactive(_inboundCtx);
         else
@@ -199,6 +206,7 @@ public class CombinedChannelDuplexHandler<TInbound, TOutbound> : ChannelDuplexHa
     public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
     {
         Debug.Assert(ReferenceEquals(ctx, _inboundCtx.Ctx));
+
         if (!_inboundCtx.Removed)
             _inboundHandler.ExceptionCaught(_inboundCtx, cause);
         else
@@ -208,6 +216,7 @@ public class CombinedChannelDuplexHandler<TInbound, TOutbound> : ChannelDuplexHa
     public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
     {
         Debug.Assert(ReferenceEquals(ctx, _inboundCtx.Ctx));
+
         if (!_inboundCtx.Removed)
             _inboundHandler.UserEventTriggered(_inboundCtx, evt);
         else
@@ -217,6 +226,7 @@ public class CombinedChannelDuplexHandler<TInbound, TOutbound> : ChannelDuplexHa
     public override void ChannelRead(IChannelHandlerContext ctx, object msg)
     {
         Debug.Assert(ReferenceEquals(ctx, _inboundCtx.Ctx));
+
         if (!_inboundCtx.Removed)
             _inboundHandler.ChannelRead(_inboundCtx, msg);
         else
@@ -226,6 +236,7 @@ public class CombinedChannelDuplexHandler<TInbound, TOutbound> : ChannelDuplexHa
     public override void ChannelReadComplete(IChannelHandlerContext ctx)
     {
         Debug.Assert(ReferenceEquals(ctx, _inboundCtx.Ctx));
+
         if (!_inboundCtx.Removed)
             _inboundHandler.ChannelReadComplete(_inboundCtx);
         else
@@ -235,6 +246,7 @@ public class CombinedChannelDuplexHandler<TInbound, TOutbound> : ChannelDuplexHa
     public override void ChannelWritabilityChanged(IChannelHandlerContext ctx)
     {
         Debug.Assert(ReferenceEquals(ctx, _inboundCtx.Ctx));
+
         if (!_inboundCtx.Removed)
             _inboundHandler.ChannelWritabilityChanged(_inboundCtx);
         else
@@ -292,6 +304,7 @@ public class CombinedChannelDuplexHandler<TInbound, TOutbound> : ChannelDuplexHa
     public override void Read(IChannelHandlerContext ctx)
     {
         Debug.Assert(ReferenceEquals(ctx, _outboundCtx.Ctx));
+
         if (!_outboundCtx.Removed)
             _outboundHandler.Read(_outboundCtx);
         else
@@ -301,6 +314,7 @@ public class CombinedChannelDuplexHandler<TInbound, TOutbound> : ChannelDuplexHa
     public override void Flush(IChannelHandlerContext ctx)
     {
         Debug.Assert(ReferenceEquals(ctx, _outboundCtx.Ctx));
+
         if (!_outboundCtx.Removed)
             _outboundHandler.Flush(_outboundCtx);
         else
@@ -473,7 +487,9 @@ public class CombinedChannelDuplexHandler<TInbound, TOutbound> : ChannelDuplexHa
         {
             if (Removed)
                 return;
+
             Removed = true;
+
             try
             {
                 _handler.HandlerRemoved(this);

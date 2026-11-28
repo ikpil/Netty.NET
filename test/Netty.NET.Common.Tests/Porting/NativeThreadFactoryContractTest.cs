@@ -23,12 +23,14 @@ public class NativeThreadFactoryContractTest
     public void CompletedNativeThreadDoesNotRetainItsInvocationTarget()
     {
         var result = RunCapturedTarget();
+
         for (int attempt = 0; attempt < 10 && result.Target.IsAlive; attempt++)
         {
             GC.Collect();
             GC.WaitForPendingFinalizers();
             GC.Collect();
         }
+
         Assert.False(result.Target.IsAlive);
         Assert.True(FastThreadLocalThread.WillCleanupFastThreadLocals(result.Thread));
         GC.KeepAlive(result.Thread);
@@ -70,12 +72,14 @@ public class NativeThreadFactoryContractTest
     public void ExceptionalTerminationReleasesCapturedTargetsWithRetainedOwnershipMetadata()
     {
         var result = RunThrowingCapturedTarget();
+
         for (int attempt = 0; attempt < 10 && result.Target.IsAlive; attempt++)
         {
             GC.Collect();
             GC.WaitForPendingFinalizers();
             GC.Collect();
         }
+
         Assert.IsType<InvalidOperationException>(result.Owner.Error);
         Assert.False(result.Target.IsAlive);
         Assert.True(FastThreadLocalThread.WillCleanupFastThreadLocals(result.Owner.Thread));
@@ -198,6 +202,7 @@ public class NativeThreadFactoryContractTest
         string observed = "unexecuted";
         Thread thread = new DefaultThreadFactory("context", true).NewThread(() => observed = logical.Value);
         logical.Value = "at start";
+
         try
         {
             if (suppressed)
@@ -211,6 +216,7 @@ public class NativeThreadFactoryContractTest
             {
                 thread.Start();
             }
+
             Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
             Assert.Equal(suppressed ? null : "at start", observed);
             Assert.Equal("at start", logical.Value);

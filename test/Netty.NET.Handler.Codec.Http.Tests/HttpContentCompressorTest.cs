@@ -102,12 +102,14 @@ public class HttpContentCompressorTest
             "gzip; q=0, deflate", "deflate",
             " deflate ; q=0 , *;q=0.5", "gzip",
         };
+
         for (int i = 0; i < tests.Length; i += 2)
         {
             string acceptEncoding = tests[i];
             string contentEncoding = tests[i + 1];
             ZlibWrapper? targetWrapper = compressor.InvokeDetermineWrapper(acceptEncoding);
             string targetEncoding = null;
+
             if (targetWrapper != null)
             {
                 switch (targetWrapper)
@@ -123,6 +125,7 @@ public class HttpContentCompressorTest
                     break;
                 }
             }
+
             Assert.Equal(contentEncoding, targetEncoding);
         }
     }
@@ -148,6 +151,7 @@ public class HttpContentCompressorTest
                 "gzip", "gzip",
                 "gzip ; q=0.1", "gzip",
         };
+
         for (int i = 0; i < tests.Length; i += 2)
         {
             string acceptEncoding = tests[i];
@@ -474,6 +478,7 @@ public class HttpContentCompressorTest
                 ReferenceCountUtil.Release(msg);
                 return;
             }
+
             base.ChannelRead(ctx, msg);
         }
     }
@@ -514,6 +519,7 @@ public class HttpContentCompressorTest
                 responses.Add((IHttpObject) msg);
                 return;
             }
+
             base.ChannelRead(ctx, msg);
         }
     }
@@ -546,6 +552,7 @@ public class HttpContentCompressorTest
         IEventLoopGroup localGroup = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         IChannel server = null;
         IChannel client = null;
+
         try
         {
             ServerBootstrap bootstrap = new ServerBootstrap()
@@ -591,10 +598,12 @@ public class HttpContentCompressorTest
             {
                 await client.CloseAsync();
             }
+
             if (server != null)
             {
                 await server.CloseAsync();
             }
+
             _ = compressorGroup.ShutdownGracefullyAsync();
             _ = localGroup.ShutdownGracefullyAsync();
         }
@@ -832,6 +841,7 @@ public class HttpContentCompressorTest
                     HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.EmptyBuffer)));
         Assert.IsAssignableFrom<InvalidOperationException>(e.InnerException);
         Assert.True(ch.Finish());
+
         for (;;)
         {
             object message = ch.ReadOutbound();
@@ -839,8 +849,10 @@ public class HttpContentCompressorTest
             {
                 break;
             }
+
             ReferenceCountUtil.Release(message);
         }
+
         for (;;)
         {
             object message = ch.ReadInbound();
@@ -848,6 +860,7 @@ public class HttpContentCompressorTest
             {
                 break;
             }
+
             ReferenceCountUtil.Release(message);
         }
     }
@@ -911,6 +924,7 @@ public class HttpContentCompressorTest
         using System.IO.Compression.BrotliDecoder decoder = new System.IO.Compression.BrotliDecoder();
         OperationStatus status = decoder.Decompress(compressed, decompressed, out _, out int written);
         Assert.Equal(OperationStatus.Done, status);
+
         return Encoding.ASCII.GetString(decompressed, 0, written);
     }
 
@@ -936,6 +950,7 @@ public class HttpContentCompressorTest
 
         CompositeByteBuf contentBuf = Unpooled.CompositeBuffer();
         IHttpContent content;
+
         while ((content = ch.ReadOutbound<IHttpContent>()) != null)
         {
             if (content.Content.IsReadable())
@@ -979,6 +994,7 @@ public class HttpContentCompressorTest
 
         CompositeByteBuf contentBuf = Unpooled.CompositeBuffer();
         IHttpContent content;
+
         while ((content = ch.ReadOutbound<IHttpContent>()) != null)
         {
             if (content.Content.IsReadable())
@@ -1092,6 +1108,7 @@ public class HttpContentCompressorTest
         Assert.True(ch.WriteOutbound(ILastHttpContent.EMPTY_LAST_CONTENT));
 
         ch.CheckException();
+
         ch.FinishAndReleaseAll();
     }
 
@@ -1131,6 +1148,7 @@ public class HttpContentCompressorTest
         Assert.IsAssignableFrom<AssembledHttpResponse>(o);
 
         AssembledHttpResponse res = (AssembledHttpResponse) o;
+
         try
         {
             Assert.IsAssignableFrom<IHttpContent>(res);

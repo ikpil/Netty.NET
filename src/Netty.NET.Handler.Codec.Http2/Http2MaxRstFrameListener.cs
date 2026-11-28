@@ -58,6 +58,7 @@ internal sealed class Http2MaxRstFrameListener : Http2FrameListenerDecorator
         else
         {
             receivedRstInWindow++;
+
             if (receivedRstInWindow > maxRstFramesPerWindow)
             {
                 logger.Debug("{} Maximum number {} of RST frames reached within {} seconds, " +
@@ -67,6 +68,7 @@ internal sealed class Http2MaxRstFrameListener : Http2FrameListenerDecorator
                 throw RST_FRAME_RATE_EXCEEDED;
             }
         }
+
         base.OnRstStreamRead(ctx, streamId, errorCode);
     }
 }

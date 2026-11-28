@@ -43,6 +43,7 @@ internal sealed class SocksCommonUtils
         Debug.Assert(src.Length == 16);
         StringBuilder sb = new StringBuilder(39);
         Ipv6toStr(sb, src, 0, 8);
+
         return sb.ToString();
     }
 
@@ -50,6 +51,7 @@ internal sealed class SocksCommonUtils
     {
         int i;
         toHextet --;
+
         for (i = fromHextet; i < toHextet; i++)
         {
             AppendHextet(sb, src, i);

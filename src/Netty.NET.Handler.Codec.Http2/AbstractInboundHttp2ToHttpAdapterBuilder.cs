@@ -135,6 +135,7 @@ public abstract class AbstractInboundHttp2ToHttpAdapterBuilder<T, B>
     protected virtual T Build()
     {
         T instance;
+
         try
         {
             instance = Build(Connection(), MaxContentLength(),
@@ -144,6 +145,7 @@ public abstract class AbstractInboundHttp2ToHttpAdapterBuilder<T, B>
         {
             throw new InvalidOperationException("failed to create a new InboundHttp2ToHttpAdapter", t);
         }
+
         connection.AddListener(instance);
         return instance;
     }

@@ -15,6 +15,7 @@ public class AnonymousExecutor : IExecutor
     public void Execute(Action command)
     {
         ArgumentNullException.ThrowIfNull(command);
+
         _action.Invoke(command);
     }
 }

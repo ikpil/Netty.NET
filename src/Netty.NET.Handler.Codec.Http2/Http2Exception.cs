@@ -214,17 +214,22 @@ public class Http2Exception : Exception
             {
                 return "Unexpected error";
             }
+
             StringBuilder sb = new StringBuilder("Unexpected error: [");
+
             for (int i = 0; i < args.Length; i++)
             {
                 if (i > 0)
                 {
                     sb.Append(", ");
                 }
+
                 sb.Append(ToJavaString(args[i]));
             }
+
             return sb.Append(']').ToString();
         }
+
         return Format(fmt, args);
     }
 

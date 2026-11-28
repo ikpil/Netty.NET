@@ -224,6 +224,7 @@ internal sealed class QpackStaticTable
     {
         CharSequenceMap<List<int>> mapping =
             new CharSequenceMap<List<int>>(true, UnsupportedValueConverter<List<int>>.Instance(), length);
+
         for (int index = 0; index < length; index++)
         {
             QpackHeaderField field = GetField(index);
@@ -239,6 +240,7 @@ internal sealed class QpackStaticTable
                 cursor.Add(index);
             }
         }
+
         return mapping;
     }
 

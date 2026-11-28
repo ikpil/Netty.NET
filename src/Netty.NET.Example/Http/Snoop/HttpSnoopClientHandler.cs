@@ -45,6 +45,7 @@ public class HttpSnoopClientHandler : SimpleChannelInboundHandler<IHttpObject>
                         Console.Error.WriteLine("HEADER: " + name + " = " + value);
                     }
                 }
+
                 Console.Error.WriteLine();
             }
 
@@ -57,6 +58,7 @@ public class HttpSnoopClientHandler : SimpleChannelInboundHandler<IHttpObject>
                 Console.Error.WriteLine("CONTENT {");
             }
         }
+
         if (msg is IHttpContent)
         {
             IHttpContent content = (IHttpContent) msg;

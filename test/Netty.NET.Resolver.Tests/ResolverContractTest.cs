@@ -130,6 +130,7 @@ public class ResolverContractTest
         second.VerifyNoOtherCalls();
         third.VerifyNoOtherCalls();
         var error = new Exception("first failed");
+
         if (all)
         {
             pendingAll.SetException(error);
@@ -140,6 +141,7 @@ public class ResolverContractTest
             pending.SetException(error);
             Assert.Same(Addresses[0], await (Task<IPAddress>)operation);
         }
+
         third.VerifyNoOtherCalls();
     }
 
@@ -227,6 +229,7 @@ public class ResolverContractTest
         name.Setup(r => r.ResolveAllAsync("host", default)).ReturnsAsync(Addresses);
         name.Setup(r => r.Dispose());
         using var resolver = new RoundRobinInetAddressResolver(ImmediateEventExecutor.INSTANCE, name.Object);
+
         for (int iteration = 0; iteration < 50; iteration++)
         {
             Assert.Contains(await resolver.ResolveAsync("host"), Addresses);
@@ -234,10 +237,13 @@ public class ResolverContractTest
             Assert.NotSame(Addresses, rotated);
             Assert.Equal(Addresses.Length, rotated.Count);
             int first = Array.IndexOf(Addresses, rotated[0]);
+
             for (int i = 0; i < rotated.Count; i++)
                 Assert.Same(Addresses[(first + i) % Addresses.Length], rotated[i]);
+
             Assert.Equal(new[] { "192.0.2.1", "2001:db8::1", "192.0.2.2" }, Addresses.Select(a => a.ToString()));
         }
+
         name.Verify(r => r.ResolveAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never());
     }
 
@@ -300,6 +306,7 @@ public class ResolverContractTest
     public async Task DefaultGroupResolvesLocalhostThroughOsResolver()
     {
         var executor = new DefaultEventExecutor();
+
         try
         {
             var resolver = DefaultAddressResolverGroup.INSTANCE.GetResolver(executor);

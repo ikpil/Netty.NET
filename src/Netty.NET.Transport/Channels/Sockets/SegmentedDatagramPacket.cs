@@ -48,6 +48,7 @@ public sealed class SegmentedDatagramPacket : DatagramPacket
         : base(data, recipient, sender)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(segmentSize);
+
         SegmentSize = segmentSize;
     }
 

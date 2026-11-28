@@ -67,10 +67,12 @@ public class SpdyFrameEncoder
     {
         int headerBlockLength = headerBlock.ReadableBytes;
         byte flags = last ? SPDY_FLAG_FIN : (byte) 0;
+
         if (unidirectional)
         {
             flags |= SPDY_FLAG_UNIDIRECTIONAL;
         }
+
         int length = 10 + headerBlockLength;
         ByteBuf frame = allocator.IoBuffer(SPDY_HEADER_SIZE + length);
         WriteControlFrameHeader(frame, SPDY_SYN_STREAM_FRAME, flags, length);
@@ -116,21 +118,26 @@ public class SpdyFrameEncoder
         ByteBuf frame = allocator.IoBuffer(SPDY_HEADER_SIZE + length);
         WriteControlFrameHeader(frame, SPDY_SETTINGS_FRAME, flags, length);
         frame.WriteInt(numSettings);
+
         foreach (int id in ids)
         {
             flags = 0;
+
             if (spdySettingsFrame.IsPersistValue(id))
             {
                 flags |= SPDY_SETTINGS_PERSIST_VALUE;
             }
+
             if (spdySettingsFrame.IsPersisted(id))
             {
                 flags |= SPDY_SETTINGS_PERSISTED;
             }
+
             frame.WriteByte(flags);
             frame.WriteMedium(id);
             frame.WriteInt(spdySettingsFrame.GetValue(id));
         }
+
         return frame;
     }
 
@@ -183,10 +190,12 @@ public class SpdyFrameEncoder
         int length = data.ReadableBytes;
         ByteBuf frame = allocator.IoBuffer(SPDY_HEADER_SIZE + length);
         WriteControlFrameHeader(frame, frameType, flags, length);
+
         if (length > 0)
         {
             frame.WriteBytes(data, data.ReaderIndex, length);
         }
+
         return frame;
     }
 }

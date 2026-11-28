@@ -54,10 +54,12 @@ public class ProtobufVarint32LengthFieldPrependerTest
         byte[] buf = new byte[size + num];
         //0000 1010
         buf[0] = 0x0A;
+
         for (int i = size; i < num + size; ++i)
         {
             buf[i] = 1;
         }
+
         Assert.True(ch.WriteOutbound(WrappedBuffer(buf, size, buf.Length - size)));
 
         ByteBuf expected = WrappedBuffer(buf);
@@ -91,10 +93,12 @@ public class ProtobufVarint32LengthFieldPrependerTest
 
         buf[0] = (byte) (0x8A & 0xFF);
         buf[1] = 0x02;
+
         for (int i = size; i < num + size; ++i)
         {
             buf[i] = 1;
         }
+
         Assert.True(ch.WriteOutbound(WrappedBuffer(buf, size, buf.Length - size)));
 
         ByteBuf expected = WrappedBuffer(buf);
@@ -129,10 +133,12 @@ public class ProtobufVarint32LengthFieldPrependerTest
         buf[0] = (byte) (0x80 & 0xFF);
         buf[1] = (byte) (0x80 & 0xFF);
         buf[2] = 0x01;
+
         for (int i = size; i < num + size; ++i)
         {
             buf[i] = 1;
         }
+
         Assert.True(ch.WriteOutbound(WrappedBuffer(buf, size, buf.Length - size)));
 
         ByteBuf expected = WrappedBuffer(buf);
@@ -168,10 +174,12 @@ public class ProtobufVarint32LengthFieldPrependerTest
         buf[1] = (byte) (0x80 & 0xFF);
         buf[2] = (byte) (0x80 & 0xFF);
         buf[3] = 0x01;
+
         for (int i = size; i < num + size; ++i)
         {
             buf[i] = 1;
         }
+
         Assert.True(ch.WriteOutbound(WrappedBuffer(buf, size, buf.Length - size)));
 
         ByteBuf expected = WrappedBuffer(buf);
@@ -204,10 +212,12 @@ public class ProtobufVarint32LengthFieldPrependerTest
     public void TestRegularDecode()
     {
         byte[] b = new byte[2048];
+
         for (int i = 2; i < 2048; i ++)
         {
             b[i] = 1;
         }
+
         b[0] = unchecked((byte) -2);
         b[1] = 15;
         Assert.True(ch.WriteOutbound(WrappedBuffer(b, 2, b.Length - 2)));

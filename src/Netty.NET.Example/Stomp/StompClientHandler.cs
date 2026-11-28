@@ -59,6 +59,7 @@ public class StompClientHandler : SimpleChannelInboundHandler<IStompFrame>
     {
         string subscrReceiptId = "001";
         string disconReceiptId = "002";
+
         switch (frame.Command())
         {
             case StompCommand.CONNECTED:
@@ -90,6 +91,7 @@ public class StompClientHandler : SimpleChannelInboundHandler<IStompFrame>
                 {
                     throw new InvalidOperationException("received: " + frame + ", while internal state is " + state);
                 }
+
                 break;
             case StompCommand.MESSAGE:
                 if (state == ClientState.SUBSCRIBED)
@@ -101,6 +103,7 @@ public class StompClientHandler : SimpleChannelInboundHandler<IStompFrame>
                     state = ClientState.DISCONNECTING;
                     _ = ctx.WriteAndFlushAsync(disconnFrame);
                 }
+
                 break;
             default:
                 break;

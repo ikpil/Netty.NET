@@ -196,6 +196,7 @@ public abstract class WebSocketClientHandshakerTest
         WebSocketClientHandshaker handshaker = NewHandshaker(Create("ws://server.example.com/chat"), null,
                                                              customHeaders, false, true);
         IFullHttpRequest request = handshaker.InvokeNewHandshakeRequest();
+
         try
         {
             Assert.Equal("http://example.com", request.Headers().Get(GetOriginHeaderName()));
@@ -212,6 +213,7 @@ public abstract class WebSocketClientHandshakerTest
         Uri uri = Create("http://example.com/ws");
         WebSocketClientHandshaker handshaker = NewHandshaker(uri, null, null, false, false);
         IFullHttpRequest request = handshaker.InvokeNewHandshakeRequest();
+
         try
         {
             Assert.False(request.Headers().Contains(GetOriginHeaderName()));
@@ -270,6 +272,7 @@ public abstract class WebSocketClientHandshakerTest
     {
         WebSocketClientHandshaker handshaker = NewHandshaker(Create(uri));
         IFullHttpRequest request = handshaker.InvokeNewHandshakeRequest();
+
         try
         {
             Assert.Equal(expectedValue, request.Headers().Get(header));
@@ -286,6 +289,7 @@ public abstract class WebSocketClientHandshakerTest
         Uri uri = Create("ws://localhost:9999/path%20with%20ws");
         WebSocketClientHandshaker handshaker = NewHandshaker(uri);
         IFullHttpRequest request = handshaker.InvokeNewHandshakeRequest();
+
         try
         {
             Assert.Equal("/path%20with%20ws", request.Uri());
@@ -302,6 +306,7 @@ public abstract class WebSocketClientHandshakerTest
         Uri uri = Create("ws://localhost:9999/path%20with%20ws?a=b%20c");
         WebSocketClientHandshaker handshaker = NewHandshaker(uri);
         IFullHttpRequest request = handshaker.InvokeNewHandshakeRequest();
+
         try
         {
             Assert.Equal("/path%20with%20ws?a=b%20c", request.Uri());
@@ -318,6 +323,7 @@ public abstract class WebSocketClientHandshakerTest
         Uri uri = Create("ws://localhost:9999");
         WebSocketClientHandshaker handshaker = NewHandshaker(uri);
         IFullHttpRequest request = handshaker.InvokeNewHandshakeRequest();
+
         try
         {
             Assert.Equal("/", request.Uri());
@@ -334,6 +340,7 @@ public abstract class WebSocketClientHandshakerTest
         Uri uri = Create("ws://localhost:9999?a=b%20c");
         WebSocketClientHandshaker handshaker = NewHandshaker(uri);
         IFullHttpRequest request = handshaker.InvokeNewHandshakeRequest();
+
         try
         {
             Assert.Equal("/?a=b%20c", request.Uri());
@@ -350,6 +357,7 @@ public abstract class WebSocketClientHandshakerTest
         Uri uri = Create("ws://localhost:9999/path%20with%20ws?a=b%20c");
         WebSocketClientHandshaker handshaker = NewHandshaker(uri, null, null, true, true);
         IFullHttpRequest request = handshaker.InvokeNewHandshakeRequest();
+
         try
         {
             Assert.Equal("ws://localhost:9999/path%20with%20ws?a=b%20c", request.Uri());
@@ -445,6 +453,7 @@ public abstract class WebSocketClientHandshakerTest
 
         CompositeByteBuf compositeByteBuf = Unpooled.CompositeBuffer();
         compositeByteBuf.AddComponent(Unpooled.WrappedBuffer(bytes), true);
+
         for (;;)
         {
             ByteBuf frameBytes = websocketChannel.ReadOutbound<ByteBuf>();
@@ -452,11 +461,13 @@ public abstract class WebSocketClientHandshakerTest
             {
                 break;
             }
+
             compositeByteBuf.AddComponent(frameBytes, true);
         }
 
         EmbeddedChannel ch = new EmbeddedChannel(new HttpObjectAggregator(int.MaxValue),
                 new FinishHandshakeHandler(handshaker));
+
         if (codec)
         {
             ch.Pipeline.AddFirst(new HttpClientCodec());
@@ -465,9 +476,11 @@ public abstract class WebSocketClientHandshakerTest
         {
             ch.Pipeline.AddFirst(new HttpRequestEncoder(), new HttpResponseDecoder());
         }
+
         // We need to first write the request as HttpClientCodec will fail if we receive a response before a request
         // was written.
         shaker.HandshakeAsync(ch).GetAwaiter().GetResult();
+
         for (;;)
         {
             // Just consume the bytes, we are not interested in these.
@@ -476,13 +489,16 @@ public abstract class WebSocketClientHandshakerTest
             {
                 break;
             }
+
             buf.Release();
         }
+
         Assert.True(ch.WriteInbound(compositeByteBuf));
         Assert.True(ch.Finish());
 
         BinaryWebSocketFrame frame = ch.ReadInbound<BinaryWebSocketFrame>();
         ByteBuf expect = Unpooled.WrappedBuffer(data);
+
         try
         {
             Assert.Equal(expect, frame.Content);
@@ -513,6 +529,7 @@ public abstract class WebSocketClientHandshakerTest
                 inputHeaders.Add(header, bogusHeaderValue);
             }
         }
+
         inputHeaders.Add(GetProtocolHeaderName(), bogusSubProtocol);
 
         string realSubProtocol = "realSubProtocol";
@@ -568,6 +585,7 @@ public abstract class WebSocketClientHandshakerTest
         handshakeRequest.Release();
 
         string accept = "";
+
         if (clientHandshaker.Version() != WebSocketVersion.V00)
         {
             string acceptSeed = handshakeRequest.Headers().Get(HttpHeaderNames.SEC_WEBSOCKET_KEY)

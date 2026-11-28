@@ -208,6 +208,7 @@ public class NativeSchedulingContractTest
             ambient.Value = "changed";
         };
         Task task;
+
         if (suppressFlow)
         {
             using (ExecutionContext.SuppressFlow())
@@ -217,6 +218,7 @@ public class NativeSchedulingContractTest
         {
             task = executor.ScheduleAtFixedRateAsync(action, TimeSpan.Zero, TimeSpan.FromTicks(1), cancellation.Token);
         }
+
         ambient.Value = "executor";
         executor.Poll().Invoke();
         Assert.Equal("executor", ambient.Value);
@@ -271,6 +273,7 @@ public class NativeSchedulingContractTest
             started.Set();
             release.Wait();
         });
+
         try
         {
             Assert.True(started.Wait(TimeSpan.FromSeconds(5)));
@@ -287,6 +290,7 @@ public class NativeSchedulingContractTest
         finally
         {
             release.Set();
+
             try
             {
                 await blocker.WaitAsync(TimeSpan.FromSeconds(5));
@@ -305,6 +309,7 @@ public class NativeSchedulingContractTest
     {
         IEventExecutor executor = Create(unordered);
         using var cancellation = new CancellationTokenSource();
+
         try
         {
             CancellationToken observed = default;
@@ -355,6 +360,7 @@ public class NativeSchedulingContractTest
         var executor = new UnorderedThreadPoolEventExecutor(1);
         using var release = new ManualResetEventSlim();
         var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
         try
         {
             Task task = executor.ScheduleWithFixedDelayAsync(() =>
@@ -404,6 +410,7 @@ public class NativeSchedulingContractTest
     {
         var executor = new InspectableExecutor();
         int calls = 0;
+
         try
         {
             for (int i = 0; i < 256; ++i)
@@ -417,6 +424,7 @@ public class NativeSchedulingContractTest
                 await cancel;
                 await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await work);
             }
+
             Assert.Equal(0, await executor.SubmitAsync(() => executor.ScheduledCount));
             Assert.Equal(0, calls);
         }
@@ -429,6 +437,7 @@ public class NativeSchedulingContractTest
     private static async Task Stop(IEventExecutor executor)
     {
         await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5));
+
         if (executor is UnorderedThreadPoolEventExecutor)
             Assert.True(await Task.Run(() => executor.AwaitTermination(TimeSpan.FromSeconds(5))));
     }
@@ -439,6 +448,7 @@ public class NativeSchedulingContractTest
     public async Task ActionFailureAndPeriodicFailureFaultTheNativeTask(bool unordered)
     {
         IEventExecutor executor = Create(unordered);
+
         try
         {
             var failure = new InvalidOperationException("original failure");
@@ -473,6 +483,7 @@ public class NativeSchedulingContractTest
         using var cancellation = new CancellationTokenSource();
         using var release = new ManualResetEventSlim();
         var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
         try
         {
             Task<int> task = executor.ScheduleAsync(token =>
@@ -482,16 +493,19 @@ public class NativeSchedulingContractTest
                 {
                     throw new TimeoutException();
                 }
+
                 if (cooperate)
                 {
                     token.ThrowIfCancellationRequested();
                 }
+
                 return 42;
             }, TimeSpan.Zero, cancellation.Token);
             await started.Task.WaitAsync(TimeSpan.FromSeconds(5));
             cancellation.Cancel();
             Assert.False(task.IsCompleted);
             release.Set();
+
             if (cooperate)
             {
                 var error = await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await task.WaitAsync(TimeSpan.FromSeconds(5)));
@@ -518,6 +532,7 @@ public class NativeSchedulingContractTest
         IEventExecutor executor = Create(unordered);
         var inner = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
         var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
         try
         {
             Task<int> task = executor.ScheduleAsync(async () =>
@@ -546,6 +561,7 @@ public class NativeSchedulingContractTest
     public async Task UnrelatedCancellationExceptionIsFailureAndNullTaskIsFailure(bool unordered)
     {
         IEventExecutor executor = Create(unordered);
+
         try
         {
             var error = new OperationCanceledException();
@@ -571,6 +587,7 @@ public class NativeSchedulingContractTest
         using var release = new ManualResetEventSlim();
         var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         int calls = 0;
+
         try
         {
             Task task = executor.ScheduleAtFixedRateAsync(() =>
@@ -616,6 +633,7 @@ public class NativeSchedulingContractTest
     {
         var pool = new UnorderedThreadPoolEventExecutor(1);
         var group = new NonStickyEventExecutorGroup(pool);
+
         try
         {
             Assert.Equal(29, await group.ScheduleAsync(() => 29, TimeSpan.Zero));
@@ -651,6 +669,7 @@ public class NativeSchedulingContractTest
     public async Task ShutdownReleasesScheduledWorkWhileTheExecutorRemainsReferenced()
     {
         var executor = new InspectableExecutor();
+
         try
         {
             var scheduled = await executor.SubmitAsync(() => ScheduleRetainedWork(executor)).WaitAsync(TimeSpan.FromSeconds(5));

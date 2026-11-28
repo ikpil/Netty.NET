@@ -51,10 +51,12 @@ public class Socks5CommandResponseDecoderTest
         Socks5CommonTestUtils.WriteFromServerToClient(embedder, msg);
         msg = embedder.ReadInbound<ISocks5CommandResponse>();
         Assert.Equal(msg.Status(), status);
+
         if (bndAddr != null)
         {
             Assert.Equal(msg.BndAddr(), bndAddr);
         }
+
         Assert.Equal(msg.BndPort(), bndPort);
         Assert.Null(embedder.ReadInbound());
     }

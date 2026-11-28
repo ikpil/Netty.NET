@@ -46,6 +46,7 @@ public class SocketGatheringWriteContractTest
     public void GatheringPreservesBufferAndFileRegionOrder()
     {
         string path = Path.GetTempFileName();
+
         try
         {
             File.WriteAllBytes(path, new byte[] { 10, 11, 12, 13 });
@@ -112,6 +113,7 @@ internal sealed class StreamFixture<T> : IDisposable where T : NioSocketChannel
     internal void PumpUntil(Func<bool> condition)
     {
         var deadline = DateTime.UtcNow.AddSeconds(5);
+
         while (!condition())
         {
             Assert.True(DateTime.UtcNow < deadline, "The write did not complete on its owner.");
@@ -123,6 +125,7 @@ internal sealed class StreamFixture<T> : IDisposable where T : NioSocketChannel
     {
         var bytes = new byte[length];
         int offset = 0;
+
         while (offset < length)
         {
             Assert.True(_peer.Poll(2_000_000, SelectMode.SelectRead));
@@ -130,6 +133,7 @@ internal sealed class StreamFixture<T> : IDisposable where T : NioSocketChannel
             Assert.True(read > 0);
             offset += read;
         }
+
         return bytes;
     }
 

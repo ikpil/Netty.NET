@@ -387,6 +387,7 @@ public class DnsRecordType : IComparable<DnsRecordType>
         StringBuilder expected = new StringBuilder(1024);
 
         expected.Append(" (expected: ");
+
         foreach (DnsRecordType type in all)
         {
             BY_NAME[type.Name()] = type;
@@ -410,6 +411,7 @@ public class DnsRecordType : IComparable<DnsRecordType>
         {
             return new DnsRecordType(intValue);
         }
+
         return result;
     }
 
@@ -423,6 +425,7 @@ public class DnsRecordType : IComparable<DnsRecordType>
         {
             throw new ArgumentException("name: " + (name ?? "null") + EXPECTED);
         }
+
         return result;
     }
 
@@ -442,6 +445,7 @@ public class DnsRecordType : IComparable<DnsRecordType>
             throw new ArgumentException("intValue: " + intValue.ToString(CultureInfo.InvariantCulture) +
                                         " (expected: 0 ~ 65535)");
         }
+
         this.intValue = intValue;
         this.name = name;
     }
@@ -484,6 +488,7 @@ public class DnsRecordType : IComparable<DnsRecordType>
         {
             this.text = text = name + '(' + IntValue().ToString(CultureInfo.InvariantCulture) + ')';
         }
+
         return text;
     }
 }

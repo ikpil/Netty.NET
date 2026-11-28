@@ -73,6 +73,7 @@ public sealed class SslSessionTicketKey
         {
             throw new ArgumentException("Length of aesKey must be " + AES_KEY_SIZE);
         }
+
         this.name = (byte[]) name.Clone();
         this.hmacKey = (byte[]) hmacKey.Clone();
         this.aesKey = (byte[]) aesKey.Clone();
@@ -127,6 +128,7 @@ public sealed class SslSessionTicketKey
         {
             return false;
         }
+
         return aesKey.AsSpan().SequenceEqual(that.aesKey);
     }
 
@@ -155,11 +157,14 @@ public sealed class SslSessionTicketKey
         {
             return 0;
         }
+
         int h = 1;
+
         foreach (byte b in a)
         {
             h = unchecked(31 * h + (sbyte) b);
         }
+
         return h;
     }
 
@@ -171,15 +176,19 @@ public sealed class SslSessionTicketKey
         {
             return "null";
         }
+
         StringBuilder b = new StringBuilder("[");
+
         for (int i = 0; i < a.Length; i++)
         {
             if (i > 0)
             {
                 b.Append(", ");
             }
+
             b.Append(((sbyte) a[i]).ToString(CultureInfo.InvariantCulture));
         }
+
         return b.Append(']').ToString();
     }
 }

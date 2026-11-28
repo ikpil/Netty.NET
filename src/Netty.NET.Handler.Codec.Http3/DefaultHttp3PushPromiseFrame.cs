@@ -59,6 +59,7 @@ public sealed class DefaultHttp3PushPromiseFrame : IHttp3PushPromiseFrame
         {
             return false;
         }
+
         DefaultHttp3PushPromiseFrame that = (DefaultHttp3PushPromiseFrame) o;
         return id == that.id &&
                 object.Equals(headers, that.headers);

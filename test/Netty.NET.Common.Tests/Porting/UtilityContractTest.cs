@@ -23,12 +23,14 @@ public class UtilityContractTest
     public void BoundedStreamPreservesEofAndClosesUnderlyingStream()
     {
         var inner = new MemoryStream(new byte[] { 1 });
+
         using (var bounded = new BoundedInputStream(inner))
         {
             Assert.Equal(1, bounded.ReadByte());
             Assert.Equal(-1, bounded.ReadByte());
             Assert.Equal(0, bounded.Read(new byte[4], 0, 4));
         }
+
         Assert.False(inner.CanRead);
         Assert.Throws<ArgumentException>(() => new BoundedInputStream(new MemoryStream(), 0));
     }
@@ -59,6 +61,7 @@ public class UtilityContractTest
             Assert.True(queue.TryDequeue(out var value, out _));
             Assert.Equal(expected, value);
         }
+
         Assert.False(queue.TryDequeue(out _, out _));
         queue.Enqueue(5, 5);
         queue.Clear();

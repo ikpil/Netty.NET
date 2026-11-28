@@ -52,6 +52,7 @@ public class HttpPostMultipartLocaleEncoderTest
         // left alongside the new multipart Content-Type the encoder is about to set - producing
         // two Content-Type headers on the request.
         CultureInfo original = CultureInfo.CurrentCulture;
+
         try
         {
             CultureInfo.CurrentCulture = new CultureInfo("tr-TR");

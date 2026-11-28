@@ -35,6 +35,7 @@ internal sealed class ThreadLocalDirectByteBuf : AbstractReferenceCountedByteBuf
     {
         NativeMemoryAllocator native = cache?.NativeAllocator ?? NativeMemoryAllocator.Shared;
         owner ??= native.Allocate(256, clear: true);
+
         try
         {
             return new ThreadLocalDirectByteBuf(cache, native, owner);
@@ -63,6 +64,7 @@ internal sealed class ThreadLocalDirectByteBuf : AbstractReferenceCountedByteBuf
     internal override BufferMemoryLease AcquireReadLease()
     {
         EnsureAccessible();
+
         return _allocation.AcquireLease();
     }
     public override int Capacity
@@ -75,8 +77,10 @@ internal sealed class ThreadLocalDirectByteBuf : AbstractReferenceCountedByteBuf
             {
                 return;
             }
+
             NativeMemoryOwner owner = _native.Allocate(value, clear: true);
             ThreadLocalDirectAllocation replacement;
+
             try
             {
                 replacement = new ThreadLocalDirectAllocation(owner, _cache);
@@ -86,6 +90,7 @@ internal sealed class ThreadLocalDirectByteBuf : AbstractReferenceCountedByteBuf
                 owner.Dispose();
                 throw;
             }
+
             try
             {
                 _allocation.Memory.Span.Slice(0, Math.Min(value, _capacity)).CopyTo(replacement.Memory.Span);
@@ -96,6 +101,7 @@ internal sealed class ThreadLocalDirectByteBuf : AbstractReferenceCountedByteBuf
                 replacement.Release();
                 throw;
             }
+
             ThreadLocalDirectAllocation previous = _allocation;
             _allocation = replacement;
             _capacity = value;
@@ -108,7 +114,9 @@ internal sealed class ThreadLocalDirectByteBuf : AbstractReferenceCountedByteBuf
     public override ByteBuf Copy(int index, int length)
     {
         CheckIndex(index, length);
+
         ByteBuf result = Alloc().DirectBuffer(length, MaxCapacity);
+
         try
         {
             return result.WriteBytes(this, index, length);

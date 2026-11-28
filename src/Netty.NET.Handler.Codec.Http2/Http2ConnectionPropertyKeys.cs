@@ -56,6 +56,7 @@ internal static class Http2ConnectionPropertyKeys
             throw new InvalidOperationException("Only " + MAX_GLOBAL_KEYS.ToString(CultureInfo.InvariantCulture) +
                 " global keys can be created");
         }
+
         return new GlobalPropertyKey(index);
     }
 
@@ -89,6 +90,7 @@ internal static class Http2ConnectionPropertyKeys
             {
                 return false;
             }
+
             GlobalPropertyKey that = (GlobalPropertyKey) o;
             return index == that.index;
         }

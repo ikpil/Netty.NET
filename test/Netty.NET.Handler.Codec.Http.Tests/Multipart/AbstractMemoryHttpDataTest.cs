@@ -43,6 +43,7 @@ public class AbstractMemoryHttpDataTest
     public void TestSetContentFromFile()
     {
         TestHttpData test = new TestHttpData("test", Encoding.UTF8, 0);
+
         try
         {
             FileInfo tmpFile = PlatformDependent.CreateTempFile(Guid.NewGuid().ToString(), ".tmp", null);
@@ -50,6 +51,7 @@ public class AbstractMemoryHttpDataTest
             FileStream fos = new FileStream(tmpFile.FullName, FileMode.Create, FileAccess.Write);
             byte[] bytes = new byte[4096];
             Random.Shared.NextBytes(bytes);
+
             try
             {
                 fos.Write(bytes, 0, bytes.Length);
@@ -59,6 +61,7 @@ public class AbstractMemoryHttpDataTest
             {
                 fos.Dispose();
             }
+
             test.SetContent(tmpFile);
             ByteBuf buf = test.GetByteBuf();
             Assert.Equal(0, buf.ReaderIndex);
@@ -77,6 +80,7 @@ public class AbstractMemoryHttpDataTest
     public void TestRenameTo()
     {
         TestHttpData test = new TestHttpData("test", Encoding.UTF8, 0);
+
         try
         {
             FileInfo tmpFile = PlatformDependent.CreateTempFile(Guid.NewGuid().ToString(), ".tmp", null);
@@ -88,12 +92,14 @@ public class AbstractMemoryHttpDataTest
             test.SetContent(content);
             bool succ = test.RenameTo(tmpFile);
             Assert.True(succ);
+
             using (FileStream fis = new FileStream(tmpFile.FullName, FileMode.Open, FileAccess.Read))
             {
                 byte[] buf = new byte[totalByteCount];
                 int count = 0;
                 int offset = 0;
                 int size = totalByteCount;
+
                 while ((count = fis.Read(buf, offset, size)) > 0)
                 {
                     offset += count;
@@ -103,6 +109,7 @@ public class AbstractMemoryHttpDataTest
                         break;
                     }
                 }
+
                 Assert.Equal(bytes, buf);
                 Assert.Equal(0, fis.Length - fis.Position);
             }
@@ -127,6 +134,7 @@ public class AbstractMemoryHttpDataTest
         string contentStr = "foo_test";
         ByteBuf buf = Unpooled.WrappedBuffer(Encoding.UTF8.GetBytes(contentStr));
         buf.MarkReaderIndex();
+
         using (ByteBufInputStream @is = new ByteBufInputStream(buf))
         {
             test.SetContent(@is);

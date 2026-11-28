@@ -43,6 +43,7 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
     private void Run(RunnerReservation reservation)
     {
         Thread current = Thread.CurrentThread;
+
         try
         {
             for (;;)
@@ -53,10 +54,13 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
                     {
                         return;
                     }
+
                     _executingReservation = reservation;
                     Volatile.Write(ref _executingThread, current);
                 }
+
                 int i = 0;
+
                 for (; i < _maxTaskExecutePerRun; ++i)
                 {
                     if (IsImmediateShutdownRequested(reservation))
@@ -64,7 +68,9 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
                         FinishPending(reservation, null, true);
                         return;
                     }
+
                     Action task;
+
                     lock (_gate)
                     {
                         if (_stopped || !ReferenceEquals(_reservation, reservation))
@@ -76,16 +82,19 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
                             break;
                         }
                     }
+
                     SafeExecute(task);
                 }
 
                 RunnerReservation next;
+
                 lock (_gate)
                 {
                     if (_stopped || !ReferenceEquals(_reservation, reservation))
                     {
                         return;
                     }
+
                     // CLR adaptation: queue emptiness and runner ownership change
                     // under one gate. The original CAS scenarios below explain the
                     // producer-versus-empty-drain race this atomic change resolves.
@@ -111,15 +120,18 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
                         ClearExecuting(reservation);
                         return; // done
                     }
+
                     if (i < _maxTaskExecutePerRun)
                     {
                         continue;
                     }
+
                     next = new RunnerReservation(this);
                     _reservation = next;
                     // Only set executingThread to null if no other thread did update it yet.
                     ClearExecuting(reservation);
                 }
+
                 try
                 {
                     if (Dispatch(next))
@@ -129,6 +141,7 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
                         reservation = next;
                         continue;
                     }
+
                     return; // done
                 }
                 catch (Exception ignore)
@@ -138,16 +151,19 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
                         next.CancelForShutdown();
                         return;
                     }
+
                     if (!next.Invalidate())
                     {
                         return;
                     }
+
                     lock (_gate)
                     {
                         if (_stopped || !ReferenceEquals(_reservation, next))
                         {
                             return;
                         }
+
                         // Restore executingThread since we're continuing to execute tasks.
                         Volatile.Write(ref _executingThread, current);
                         _executingReservation = reservation;
@@ -218,14 +234,18 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
     public override void Execute(Action command)
     {
         ArgumentNullException.ThrowIfNull(command);
+
         RunnerReservation reservation;
+
         lock (_gate)
         {
             if (_stopped)
                 throw new RejectedExecutionException("Ordered executor has been stopped.");
+
             tasks.Enqueue(command);
             if (_reservation != null)
                 return;
+
             reservation = new RunnerReservation(this);
             _reservation = reservation;
         }
@@ -255,6 +275,7 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
     {
         NonStickyOrderedEventExecutor previous = _inlineDispatchOwner;
         _inlineDispatchOwner = this;
+
         try
         {
             // A native reservation owns only admission, never a result Task.
@@ -264,6 +285,7 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
         {
             _inlineDispatchOwner = previous;
         }
+
         return reservation.Inline;
     }
 
@@ -273,6 +295,7 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
         {
             return;
         }
+
         _executingReservation = null;
         Volatile.Write(ref _executingThread, null);
     }
@@ -280,17 +303,20 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
     private void FinishPending(RunnerReservation reservation, Exception error, bool stopped)
     {
         Action[] pending;
+
         lock (_gate)
         {
             if (!ReferenceEquals(_reservation, reservation))
             {
                 return;
             }
+
             _stopped |= stopped;
             pending = tasks.ToArray();
             tasks.Clear();
             _reservation = null;
         }
+
         // Native outcomes settle outside the child gate. No caller callback is
         // invoked by these cancellation/rejection hooks.
         foreach (Action command in pending)
@@ -348,6 +374,7 @@ internal sealed class NonStickyOrderedEventExecutor : AbstractEventExecutor, IOr
             {
                 return;
             }
+
             if (ReferenceEquals(_inlineDispatchOwner, owner))
             {
                 Inline = true;

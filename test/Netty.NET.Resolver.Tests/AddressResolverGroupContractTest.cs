@@ -52,6 +52,7 @@ public class AddressResolverGroupContractTest
         using var group = new CountingGroup();
         RegistrationContext.Value = "caller";
         CountingResolver resolver;
+
         try
         {
             resolver = (CountingResolver)group.GetResolver(executor.Object);
@@ -60,6 +61,7 @@ public class AddressResolverGroupContractTest
         {
             RegistrationContext.Value = null;
         }
+
         termination.SetResult();
         await resolver.Closed.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
         Assert.Null(resolver.CloseContext);
@@ -133,6 +135,7 @@ public class AddressResolverGroupContractTest
     {
         var first = new DefaultEventExecutor();
         var second = new DefaultEventExecutor();
+
         try
         {
             var a = NoopAddressResolverGroup.INSTANCE.GetResolver(first);
@@ -163,6 +166,7 @@ public class AddressResolverGroupContractTest
         {
             if (FactoryFailure != null)
                 throw FactoryFailure;
+
             var resolver = new CountingResolver(executor, FailClose);
             Created.Add(resolver);
             return resolver;

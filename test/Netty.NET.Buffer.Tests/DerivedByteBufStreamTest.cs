@@ -49,12 +49,14 @@ public class DerivedByteBufStreamTest
         public override ByteBuf GetBytes(int index, Stream destination, int length)
         {
             o.Visit(index, destination, length, false);
+
             return base.GetBytes(index, destination, length);
         }
 
         public override int SetBytes(int index, Stream source, int length)
         {
             o.Visit(index, source, length, false);
+
             return base.SetBytes(index, source, length);
         }
 
@@ -75,12 +77,14 @@ public class DerivedByteBufStreamTest
         public override ByteBuf GetBytes(int index, Stream destination, int length)
         {
             o.Visit(index, destination, length, false);
+
             return base.GetBytes(index, destination, length);
         }
 
         public override int SetBytes(int index, Stream source, int length)
         {
             o.Visit(index, source, length, false);
+
             return base.SetBytes(index, source, length);
         }
 
@@ -113,9 +117,11 @@ public class DerivedByteBufStreamTest
             }
 
             Root.SetIndex(2, 14).MarkReaderIndex().MarkWriterIndex();
+
             if (kind is >= 5 and <= 9)
                 Owner = kind is 6 or 8 ? PooledDerivedByteBuf.NewDuplicate(Root, Root, 2, 14)
                     : PooledDerivedByteBuf.NewSlice(Root, Root, 3, 10);
+
             View = kind switch
             {
                 0 => Root.Duplicate(),
@@ -139,10 +145,12 @@ public class DerivedByteBufStreamTest
             {
                 Assert.True(Owner.Release());
             }
+
             if (Root.RefCnt > 0)
             {
                 Assert.True(Root.Release());
             }
+
             Assert.Equal(0, Native.ReservedBytes);
         }
     }
@@ -213,6 +221,7 @@ public class DerivedByteBufStreamTest
         using var s = new Storage(direct, kind);
         s.View.SetIndex(1, 4).MarkReaderIndex().MarkWriterIndex();
         using Stream stream = input ? new Input() : new MemoryStream();
+
         if (input && s.View.IsReadOnly)
         {
             await Assert.ThrowsAsync<NotSupportedException>(() => Transfer(s.View, stream, true, asynchronous, false));
@@ -220,10 +229,12 @@ public class DerivedByteBufStreamTest
             Assert.Equal(0, stream.Position);
             return;
         }
+
         int references = s.Root.RefCnt;
         await Transfer(s.View, stream, input, asynchronous, false);
         Observed(s, stream, s.Offset + 2, asynchronous);
         byte[] expected = Enumerable.Range(0, 16).Select(i => (byte)i).ToArray();
+
         if (input)
         {
             expected[s.Offset + 2] = 91;
@@ -231,6 +242,7 @@ public class DerivedByteBufStreamTest
         }
         else
             Assert.Equal(expected.Skip(s.Offset + 2).Take(3), ((MemoryStream)stream).ToArray());
+
         Assert.Equal(expected, ByteBufUtil.GetBytes(s.Root, 0, 16));
         Assert.Equal(1, s.View.ReaderIndex);
         Assert.Equal(4, s.View.WriterIndex);
@@ -248,6 +260,7 @@ public class DerivedByteBufStreamTest
         Assert.Equal(input ? 1 : 4, s.View.ReaderIndex);
         Assert.Equal(input ? 5 : 4, s.View.WriterIndex);
         expected = Enumerable.Range(0, 16).Select(i => (byte)i).ToArray();
+
         if (input)
         {
             expected[s.Offset + 3] = 91;
@@ -255,6 +268,7 @@ public class DerivedByteBufStreamTest
         }
         else
             Assert.Equal(expected.Skip(s.Offset + 1).Take(3), ((MemoryStream)relative).ToArray());
+
         Assert.Equal(expected, ByteBufUtil.GetBytes(s.Root, 0, 16));
 
         s.View.SetIndex(1, 4);
@@ -267,6 +281,7 @@ public class DerivedByteBufStreamTest
         Assert.Equal(expected, ByteBufUtil.GetBytes(s.Root, 0, 16));
         s.Observation.Fail = false;
         s.Observation.Calls = 0;
+
         // CLR view guards stay before custom parent dispatch, including duplicates.
         if (asynchronous)
         {
@@ -278,7 +293,9 @@ public class DerivedByteBufStreamTest
             Assert.Throws<ArgumentOutOfRangeException>(() => s.View.SetBytes(s.View.Capacity, stream, 1));
         else
             Assert.Throws<ArgumentOutOfRangeException>(() => s.View.GetBytes(s.View.Capacity, stream, 1));
+
         Assert.Equal(0, s.Observation.Calls);
+
         if (s.Owner != null)
         {
             Assert.True(s.Owner.Release());
@@ -349,6 +366,7 @@ public class DerivedByteBufStreamTest
             {
                 Written = _write.ToArray();
             }
+
             _done.SetResult(input ? 2 : 0);
         }
     }
@@ -373,6 +391,7 @@ public class DerivedByteBufStreamTest
         s.View.SetIndex(1, input ? 3 : 4);
         Task<int> read = input ? s.View.WriteBytesAsync(stream, 3, cancellation.Token).AsTask() : null;
         Task operation = read ?? s.View.ReadBytesAsync(stream, 3, cancellation.Token).AsTask();
+
         try
         {
             Assert.False(operation.IsCompleted);
@@ -387,10 +406,12 @@ public class DerivedByteBufStreamTest
             stream.Complete();
             await operation;
         }
+
         if (input)
             Assert.Equal(2, await read);
         else
             Assert.Equal(Enumerable.Range(s.Offset + 1, 3).Select(i => (byte)i), stream.Written);
+
         Assert.Equal(input ? 1 : 4, s.View.ReaderIndex);
         Assert.Equal(input ? 5 : 4, s.View.WriterIndex);
         Assert.Equal(2, s.Root.ReaderIndex);

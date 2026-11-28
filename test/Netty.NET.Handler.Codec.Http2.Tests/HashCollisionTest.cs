@@ -65,12 +65,14 @@ public static class HashCollisionTest
         public int Apply(ICharSequence @string)
         {
             int h = 0;
+
             for (int i = 0; i < @string.Length(); ++i)
             {
                 // masking with 0x1F reduces the number of overall bits that impact the hash code but makes the hash
                 // code the same regardless of character case (upper case or lower case hash is the same).
                 h = h * 31 + (@string.CharAt(i) & 0x1F);
             }
+
             return h;
         }
     }
@@ -117,9 +119,11 @@ public static class HashCollisionTest
     private static void AddWordsFromFile(FileInfo file, List<ICharSequence> values)
     {
         StreamReader br = new StreamReader(file.FullName);
+
         try
         {
             string line;
+
             while ((line = br.ReadLine()) != null)
             {
                 // Make a "best effort" to prune input which contains characters that are not valid in HTTP header names
@@ -145,6 +149,7 @@ public static class HashCollisionTest
         {
             int hash = hasher.Apply(str);
             hashResults.TryGetValue(hash, out List<ICharSequence> results);
+
             if (results == null)
             {
                 results = new List<ICharSequence>(1);
@@ -154,6 +159,7 @@ public static class HashCollisionTest
             {
                 duplicateHashCodes.Add(hash);
             }
+
             results.Add(str);
         }
 
@@ -161,8 +167,10 @@ public static class HashCollisionTest
         {
             return ImmutableDictionary<int, List<ICharSequence>>.Empty;
         }
+
         IDictionary<int, List<ICharSequence>> duplicates =
                 new Dictionary<int, List<ICharSequence>>(duplicateHashCodes.Count);
+
         foreach (int duplicateHashCode in duplicateHashCodes)
         {
             List<ICharSequence> realDups = new List<ICharSequence>(2);
@@ -170,9 +178,11 @@ public static class HashCollisionTest
             // there should be at least 2 elements in the list ... bcz there may be duplicates
             itr.MoveNext();
             realDups.Add(itr.Current);
+
             while (itr.MoveNext())
             {
                 ICharSequence next = itr.Current;
+
                 foreach (ICharSequence potentialDup in realDups)
                 {
                     if (!AsciiString.ContentEqualsIgnoreCase(next, potentialDup))
@@ -189,20 +199,24 @@ public static class HashCollisionTest
                 duplicates[duplicateHashCode] = realDups;
             }
         }
+
         return duplicates;
     }
 
     private static void PrintResults(TextWriter stream, IDictionary<int, List<ICharSequence>> dups)
     {
         stream.WriteLine("Number duplicates: " + Http2CodecUtil.ToJavaString(dups.Count));
+
         foreach (KeyValuePair<int, List<ICharSequence>> entry in dups)
         {
             stream.Write(Http2CodecUtil.ToJavaString(entry.Value.Count) + " duplicates for hash: " +
                          Http2CodecUtil.ToJavaString(entry.Key) + " values: ");
+
             foreach (ICharSequence str in entry.Value)
             {
                 stream.Write("[" + str + "] ");
             }
+
             stream.WriteLine();
         }
     }

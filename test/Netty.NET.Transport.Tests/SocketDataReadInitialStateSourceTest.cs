@@ -43,6 +43,7 @@ public class SocketDataReadInitialStateSourceTest : AbstractSocketTest
         IChannel serverChannel = null;
         IChannel clientChannel = null;
         int sleepMs = 100;
+
         try
         {
             sb.Option(AUTO_READ, false);
@@ -113,6 +114,7 @@ public class SocketDataReadInitialStateSourceTest : AbstractSocketTest
             {
                 await serverChannel.CloseAsync();
             }
+
             if (clientChannel != null)
             {
                 await clientChannel.CloseAsync();
@@ -131,6 +133,7 @@ public class SocketDataReadInitialStateSourceTest : AbstractSocketTest
     {
         IChannel serverChannel = null;
         IChannel clientChannel = null;
+
         try
         {
             sb.Option(AUTO_READ, true);
@@ -161,6 +164,7 @@ public class SocketDataReadInitialStateSourceTest : AbstractSocketTest
             {
                 await serverChannel.CloseAsync();
             }
+
             if (clientChannel != null)
             {
                 await clientChannel.CloseAsync();
@@ -203,7 +207,9 @@ public class SocketDataReadInitialStateSourceTest : AbstractSocketTest
         {
             return base.NewFactories();
         }
+
         DomainSocketSourceTest.RequireDomainSockets();
+
         return DomainSocketTestPermutation.INSTANCE.DomainSocket();
     }
 

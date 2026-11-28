@@ -50,6 +50,7 @@ public sealed class DefaultHttp3HeadersFrame : IHttp3HeadersFrame
         {
             return false;
         }
+
         DefaultHttp3HeadersFrame that = (DefaultHttp3HeadersFrame) o;
         return object.Equals(headers, that.headers);
     }

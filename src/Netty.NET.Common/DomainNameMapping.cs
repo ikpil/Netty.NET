@@ -117,6 +117,7 @@ public class DomainNameMapping<T> where T : class
     public static string NormalizeHostname(string hostname)
     {
         ArgumentNullException.ThrowIfNull(hostname);
+
         // CLR IDNA follows the runtime IdnMapping policy, not Java Unicode 3.2 Nameprep tables.
         if (hostname.AsSpan().IndexOfAnyExceptInRange((char)0, (char)127) >= 0)
         {
@@ -158,15 +159,18 @@ public class DomainNameMapping<T> where T : class
         var text = new StringBuilder();
         text.Append(StringUtil.SimpleClassName(this)).Append("(default: ").Append(_defaultValue).Append(", map: {");
         bool first = true;
+
         foreach (var entry in _map)
         {
             if (!first)
             {
                 text.Append(", ");
             }
+
             first = false;
             text.Append(entry.Key).Append('=').Append(entry.Value);
         }
+
         return text.Append("})").ToString();
     }
 }

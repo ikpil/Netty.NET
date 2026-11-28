@@ -151,6 +151,7 @@ public abstract class AbstractSniHandler<T> : SslClientHelloHandler<T>
                 }
             }
         }
+
         return null;
     }
 
@@ -201,6 +202,7 @@ public abstract class AbstractSniHandler<T> : SslClientHelloHandler<T>
         {
             return;
         }
+
         timeoutFuture = new CancellationTokenSource();
         _ = ctx.Executor.ScheduleAsync(() =>
         {
@@ -227,6 +229,7 @@ public abstract class AbstractSniHandler<T> : SslClientHelloHandler<T>
         {
             timeoutFuture.Cancel();
         }
+
         try
         {
             OnLookupComplete(ctx, hostname, future);
@@ -276,6 +279,7 @@ public abstract class AbstractSniHandler<T> : SslClientHelloHandler<T>
         {
             return future.Exception.InnerExceptions.Count == 1 ? future.Exception.InnerException : future.Exception;
         }
+
         return future.IsCanceled ? new TaskCanceledException(future) : null;
     }
 }

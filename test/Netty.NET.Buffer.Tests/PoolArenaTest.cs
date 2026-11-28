@@ -36,6 +36,7 @@ public class PoolArenaTest
         SizeClasses sc = new SizeClasses(PAGE_SIZE, PAGE_SHIFTS, CHUNK_SIZE, 0);
         int[] reqCapacities = { 0, 15, 510, 1024, 1023, 1025 };
         int[] expectedResult = { 16, 16, 512, 1024, 1024, 1280 };
+
         for (int i = 0; i < reqCapacities.Length; i++)
         {
             Assert.Equal(expectedResult[i],
@@ -49,6 +50,7 @@ public class PoolArenaTest
         SizeClasses sc = new SizeClasses(PAGE_SIZE, PAGE_SHIFTS, CHUNK_SIZE, 64);
         int[] reqCapacities = { 0, 15, 510, 1024, 1023, 1025 };
         int[] expectedResult = { 64, 64, 512, 1024, 1024, 1280 };
+
         for (int i = 0; i < reqCapacities.Length; i++)
         {
             Assert.Equal(expectedResult[i],
@@ -65,6 +67,7 @@ public class PoolArenaTest
         {
             int sizeIdx = sc.Size2SizeIdx(sz);
             Assert.True(sz <= sc.SizeIdx2Size(sizeIdx));
+
             if (sizeIdx > 0)
             {
                 Assert.True(sz > sc.SizeIdx2Size(sizeIdx - 1));
@@ -79,10 +82,12 @@ public class PoolArenaTest
         SizeClasses sc = new SizeClasses(PAGE_SIZE, PAGE_SHIFTS, CHUNK_SIZE, 0);
 
         int maxPages = CHUNK_SIZE >> pageShifts;
+
         for (int pages = 1; pages <= maxPages; pages++)
         {
             int pageIdxFloor = sc.Pages2PageIdxFloor(pages);
             Assert.True(pages << pageShifts >= sc.PageIdx2Size(pageIdxFloor));
+
             if (pageIdxFloor > 0 && pages < maxPages)
             {
                 Assert.True(pages << pageShifts < sc.PageIdx2Size(pageIdxFloor + 1));
@@ -90,6 +95,7 @@ public class PoolArenaTest
 
             int pageIdxCeiling = sc.Pages2PageIdx(pages);
             Assert.True(pages << pageShifts <= sc.PageIdx2Size(pageIdxCeiling));
+
             if (pageIdxCeiling > 0)
             {
                 Assert.True(pages << pageShifts > sc.PageIdx2Size(pageIdxCeiling - 1));
@@ -101,6 +107,7 @@ public class PoolArenaTest
     public void TestSizeIdx2size()
     {
         SizeClasses sc = new SizeClasses(PAGE_SIZE, PAGE_SHIFTS, CHUNK_SIZE, 0);
+
         for (int i = 0; i < sc.NSizes; i++)
         {
             Assert.Equal(sc.SizeIdx2SizeCompute(i), sc.SizeIdx2Size(i));
@@ -111,6 +118,7 @@ public class PoolArenaTest
     public void TestPageIdx2size()
     {
         SizeClasses sc = new SizeClasses(PAGE_SIZE, PAGE_SHIFTS, CHUNK_SIZE, 0);
+
         for (int i = 0; i < sc.NPSizes; i++)
         {
             Assert.Equal(sc.PageIdx2SizeCompute(i), sc.PageIdx2Size(i));

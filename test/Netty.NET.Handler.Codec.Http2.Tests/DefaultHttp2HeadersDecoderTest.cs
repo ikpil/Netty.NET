@@ -57,6 +57,7 @@ public class DefaultHttp2HeadersDecoderTest
     public void DecodeShouldSucceed()
     {
         ByteBuf buf = Encode(B(":method"), B("GET"), B("akey"), B("avalue"), RandomBytes(), RandomBytes());
+
         try
         {
             IHttp2Headers headers = decoder.DecodeHeaders(0, buf);
@@ -111,6 +112,7 @@ public class DefaultHttp2HeadersDecoderTest
         ByteBuf buf = Encode(B(":method"), B("GET"), B("test_header"),
             B(0.ToString("D9000", CultureInfo.InvariantCulture).Replace('0', 'A')));
         int streamId = 1;
+
         try
         {
             Http2Exception.HeaderListSizeException e = Assert.ThrowsAny<Http2Exception.HeaderListSizeException>(() =>
@@ -131,6 +133,7 @@ public class DefaultHttp2HeadersDecoderTest
         decoder.MaxHeaderListSize(MIN_HEADER_LIST_SIZE, MIN_HEADER_LIST_SIZE);
         ByteBuf buf = Encode(B(":method"), B("GET"));
         int streamId = 1;
+
         try
         {
             Http2Exception e = Assert.ThrowsAny<Http2Exception>(() =>
@@ -166,6 +169,7 @@ public class DefaultHttp2HeadersDecoderTest
     {
         // The TE header is expressly allowed to have the value "trailers".
         ByteBuf buf = null;
+
         try
         {
             buf = Encode(B(":method"), B("GET"), B("te"), B("trailers"));
@@ -205,10 +209,12 @@ public class DefaultHttp2HeadersDecoderTest
     public static TheoryData<int> IllegalFirstChar()
     {
         TheoryData<int> list = new TheoryData<int>();
+
         for (int i = 0; i < 0x21; i++)
         {
             list.Add(i);
         }
+
         list.Add(0x7F);
         return list;
     }
@@ -225,14 +231,17 @@ public class DefaultHttp2HeadersDecoderTest
     public static TheoryData<int> IllegalNotFirstChar()
     {
         TheoryData<int> list = new TheoryData<int>();
+
         for (int i = 0; i < 0x21; i++)
         {
             if (i == ' ' || i == '\t')
             {
                 continue; // Space and horizontal tab are only illegal as first chars.
             }
+
             list.Add(i);
         }
+
         list.Add(0x7F);
         return list;
     }
@@ -251,6 +260,7 @@ public class DefaultHttp2HeadersDecoderTest
     {
         DefaultHttp2HeadersDecoder decoder = new DefaultHttp2HeadersDecoder(true);
         ByteBuf buf = null;
+
         try
         {
             buf = Encode(B(":method"), B("GET"), B("test_header"), B("a b"));
@@ -268,6 +278,7 @@ public class DefaultHttp2HeadersDecoderTest
     {
         DefaultHttp2HeadersDecoder decoder = new DefaultHttp2HeadersDecoder(true);
         ByteBuf buf = null;
+
         try
         {
             buf = Encode(B(":method"), B("GET"), B("test_header"), B("a\tb"));
@@ -283,10 +294,12 @@ public class DefaultHttp2HeadersDecoderTest
     public static TheoryData<int> ValidObsText()
     {
         TheoryData<int> list = new TheoryData<int>();
+
         for (int i = 0x80; i <= 0xFF; i++)
         {
             list.Add(i);
         }
+
         return list;
     }
 
@@ -296,6 +309,7 @@ public class DefaultHttp2HeadersDecoderTest
     {
         DefaultHttp2HeadersDecoder decoder = new DefaultHttp2HeadersDecoder(true);
         ByteBuf buf = null;
+
         try
         {
             byte[] bytes = {(byte) i, (byte) 'a'};
@@ -315,6 +329,7 @@ public class DefaultHttp2HeadersDecoderTest
     {
         DefaultHttp2HeadersDecoder decoder = new DefaultHttp2HeadersDecoder(true);
         ByteBuf buf = null;
+
         try
         {
             byte[] bytes = {(byte) 'a', (byte) i};
@@ -354,10 +369,12 @@ public class DefaultHttp2HeadersDecoderTest
         HpackEncoder hpackEncoder = NewTestEncoder();
         ByteBuf @out = Unpooled.Buffer();
         IHttp2Headers http2Headers = new DefaultHttp2Headers(false);
+
         for (int ix = 0; ix < entries.Length;)
         {
             http2Headers.Add(new AsciiString(entries[ix++], false), new AsciiString(entries[ix++], false));
         }
+
         hpackEncoder.EncodeHeaders(3 /* randomly chosen */, @out, http2Headers, NEVER_SENSITIVE);
         return @out;
     }

@@ -147,6 +147,7 @@ public sealed class MqttSubscriptionOption
         {
             return false;
         }
+
         return retainHandling == that.retainHandling;
     }
 

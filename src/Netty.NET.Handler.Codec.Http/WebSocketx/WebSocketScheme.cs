@@ -61,6 +61,7 @@ public sealed class WebSocketScheme
         {
             return false;
         }
+
         WebSocketScheme other = (WebSocketScheme) o;
         return other.Port() == port && other.Name().Equals(name);
     }

@@ -34,6 +34,7 @@ public sealed class AdaptiveCalculator
     static AdaptiveCalculator()
     {
         List<int> sizeTable = new List<int>();
+
         for (int i = 16; i < 512; i += 16)
         {
             sizeTable.Add(i);
@@ -46,6 +47,7 @@ public sealed class AdaptiveCalculator
         }
 
         SIZE_TABLE = new int[sizeTable.Count];
+
         for (int i = 0; i < SIZE_TABLE.Length; i ++)
         {
             SIZE_TABLE[i] = sizeTable[i];
@@ -139,6 +141,7 @@ public sealed class AdaptiveCalculator
         {
             this.index = initialIndex;
         }
+
         this.minCapacity = minimum;
         this.maxCapacity = maximum;
         _nextSize = Math.Max(SIZE_TABLE[index], minCapacity);

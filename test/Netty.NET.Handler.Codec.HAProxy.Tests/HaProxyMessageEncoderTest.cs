@@ -354,6 +354,7 @@ public class HaProxyMessageEncoderTest
         HAProxyMessage decoded = HAProxyMessage.DecodeHeader(original);
         EmbeddedChannel encoder = new EmbeddedChannel(INSTANCE);
         EmbeddedChannel downstream = new EmbeddedChannel(new HAProxyMessageDecoder());
+
         try
         {
             // 3 flattened entries: the top-level SSL TLV, its nested SSL TLV child, and the SSL_CN child.

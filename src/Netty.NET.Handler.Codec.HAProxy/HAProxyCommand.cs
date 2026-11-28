@@ -69,6 +69,7 @@ public sealed class HAProxyCommand
     public static HAProxyCommand ValueOf(byte verCmdByte)
     {
         int cmd = verCmdByte & COMMAND_MASK;
+
         switch ((byte) cmd)
         {
             case HAProxyConstants.COMMAND_PROXY_BYTE:

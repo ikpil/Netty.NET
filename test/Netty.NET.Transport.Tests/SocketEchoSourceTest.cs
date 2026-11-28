@@ -184,6 +184,7 @@ public class SocketEchoSourceTest : AbstractSocketTest, IClassFixture<SocketEcho
             sb.Handler(new StackTracePrintingHandler());
             cb.Handler(ch);
         }
+
         sb.ChildOption(ChannelOption.AUTO_READ, autoRead);
         cb.Option(ChannelOption.AUTO_READ, autoRead);
 
@@ -194,6 +195,7 @@ public class SocketEchoSourceTest : AbstractSocketTest, IClassFixture<SocketEcho
         // (https://learn.microsoft.com/en-us/dotnet/api/system.random.-ctor); Next(maxValue) keeps nextInt(bound)'s
         // exclusive upper bound.
         Random rng = new Random(random.Next());
+
         for (int i = 0; i < data.Length;)
         {
             int length = Math.Min(rng.Next(1024 * 64), data.Length - i);
@@ -290,6 +292,7 @@ public class SocketEchoSourceTest : AbstractSocketTest, IClassFixture<SocketEcho
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
             channel = ctx.Channel;
+
             if (!autoRead)
             {
                 ctx.Read();
@@ -302,6 +305,7 @@ public class SocketEchoSourceTest : AbstractSocketTest, IClassFixture<SocketEcho
             @in.ReadBytes(actual);
 
             int lastIdx = counter;
+
             for (int i = 0; i < actual.Length; i ++)
             {
                 Assert.Equal(data[i + lastIdx], actual[i]);

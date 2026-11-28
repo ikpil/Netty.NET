@@ -269,6 +269,7 @@ public class WebSocketClientHandshaker08 : WebSocketClientHandshaker
         if (customHeaders != null)
         {
             headers.Add(customHeaders);
+
             if (!headers.Contains(HttpHeaderNames.HOST))
             {
                 // Only add HOST header if customHeaders did not contain it.

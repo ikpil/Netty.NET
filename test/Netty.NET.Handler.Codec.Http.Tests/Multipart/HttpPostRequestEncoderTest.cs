@@ -334,6 +334,7 @@ public class HttpPostRequestEncoderTest
         FileInfo file1 = ResourcesUtil.GetFile(GetType(), "file-01.txt");
         encoder.AddBodyFileUpload("myfile", file1, "application/x-zip-compressed", false);
         encoder.FinalizeRequest();
+
         while (! encoder.IsEndOfInput())
         {
             IHttpContent httpContent = encoder.ReadChunk((IByteBufAllocator) null);
@@ -344,6 +345,7 @@ public class HttpPostRequestEncoderTest
                     "content: " + content + " content.unwrap(): " + content.Unwrap() + " refCnt: " + refCnt);
             httpContent.Release();
         }
+
         encoder.CleanFiles();
         encoder.Close();
     }
@@ -484,6 +486,7 @@ public class HttpPostRequestEncoderTest
         StringBuilder expectQueryStr = new StringBuilder();
         IHttpRequest req = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, "/");
         HttpPostRequestEncoder encoder = new HttpPostRequestEncoder(req, false);
+
         foreach (KeyValuePair<string, string> entry in @params)
         {
             string key = entry.Key;
@@ -491,10 +494,12 @@ public class HttpPostRequestEncoderTest
             encoder.AddBodyAttribute(key, value);
             expectQueryStr.Append(key).Append('=').Append(value).Append('&');
         }
+
         expectQueryStr.Length = expectQueryStr.Length - 1; //remove last '&'
         Assert.NotNull(encoder.FinalizeRequest());
 
         StringBuilder chunks = new StringBuilder();
+
         while (!encoder.IsEndOfInput())
         {
             IHttpContent httpContent = encoder.ReadChunk((IByteBufAllocator) null);

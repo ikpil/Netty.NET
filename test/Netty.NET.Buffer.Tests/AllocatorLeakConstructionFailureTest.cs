@@ -41,6 +41,7 @@ public class AllocatorLeakConstructionFailureTest
     public void DetectorFailureReleasesFactoryOwnedBufferAndPreservesOriginalException(int provider, int method, int mode)
     {
         var context = new AssemblyLoadContext("allocator detector failure", true);
+
         try
         {
             context.LoadFromAssemblyPath(typeof(ResourceLeakDetectorFactory).Assembly.Location);
@@ -80,6 +81,7 @@ public class AllocatorLeakConstructionFailureTest
             {
                 throw state.Failure;
             }
+
             return new Tracker(state);
         }
 
@@ -104,6 +106,7 @@ public class AllocatorLeakConstructionFailureTest
             ++state.Closes;
             if (state.FailClose)
                 throw new InvalidOperationException("secondary close failure");
+
             return true;
         }
     }
@@ -112,6 +115,7 @@ public class AllocatorLeakConstructionFailureTest
     {
         var factory = new FailureFactory(mode);
         ResourceLeakDetectorFactory.SetResourceLeakDetectorFactory(factory);
+
         foreach (bool failClose in new[] { false, true })
         {
             factory.FailClose = failClose;
@@ -125,6 +129,7 @@ public class AllocatorLeakConstructionFailureTest
                 2 => new PooledByteBufAllocator(true, poolHeap: false, poolDirect: false, nativeAllocator: native),
                 _ => new AdaptiveByteBufAllocator(true, lowMemory: false, nativeAllocator: native)
             };
+
             try
             {
                 ByteBuf Request()
@@ -145,11 +150,13 @@ public class AllocatorLeakConstructionFailureTest
                 Assert.NotNull(factory.Tracked);
                 Assert.Equal(0, factory.Tracked.RefCnt);
                 Assert.Equal(mode == 0 ? 0 : 1, factory.Closes);
+
                 if (allocator is PooledByteBufAllocator pooled)
                 {
                     Assert.True(pooled.PinnedHeapMemory <= 0);
                     Assert.True(pooled.PinnedDirectMemory <= 0);
                 }
+
                 if (allocator is UnpooledByteBufAllocator unpooled)
                 {
                     Assert.Equal(0, unpooled.Metric.UsedHeapMemory);
@@ -160,6 +167,7 @@ public class AllocatorLeakConstructionFailureTest
             {
                 if (factory.Tracked?.RefCnt > 0)
                     factory.Tracked.Release();
+
                 (allocator as IDisposable)?.Dispose();
                 Assert.Equal(0, native.ReservedBytes);
             }

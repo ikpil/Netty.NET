@@ -149,17 +149,21 @@ public class DomainWildcardMappingBuilder<T> where T : class
             var text = new StringBuilder();
             text.Append("ImmutableDomainWildcardMapping(default: ").Append(defaultValue).Append(", map: {");
             bool first = true;
+
             foreach (var entry in map)
             {
                 if (!first)
                 {
                     text.Append(", ");
                 }
+
                 first = false;
+
                 if (entry.Key[0] == '.')
                 {
                     text.Append('*');
                 }
+
                 text.Append(entry.Key).Append('=').Append(entry.Value);
             }
 

@@ -96,6 +96,7 @@ public class ApplicationProtocolNegotiationHandlerTest
         // client mode will generate a close_notify.
 
         EmbeddedChannel channel = new EmbeddedChannel();
+
         if (addLater)
         {
             channel.Pipeline.AddLast(alpnHandler);
@@ -106,6 +107,7 @@ public class ApplicationProtocolNegotiationHandlerTest
             channel.Pipeline.AddLast(new SslHandler(engine));
             channel.Pipeline.AddLast(alpnHandler);
         }
+
         channel.Pipeline.FireUserEventTriggered(SslHandshakeCompletionEvent.SUCCESS);
         Assert.Null(channel.Pipeline.Context(alpnHandler));
         // Should produce the close_notify messages
@@ -189,6 +191,7 @@ public class ApplicationProtocolNegotiationHandlerTest
     private static void AssertEmptyCloseBuffer(ByteBuf closeBuffer)
     {
         Assert.NotNull(closeBuffer);
+
         try
         {
             Assert.False(closeBuffer.IsReadable());
@@ -262,6 +265,7 @@ public class ApplicationProtocolNegotiationHandlerTest
         {
             Assert.Equal(ApplicationProtocolNames.HTTP_1_1, protocol);
             ctx.Pipeline.AddLast(new ReadRecorder(channelReadData, channelReadCompleteCalled));
+
             if (pipelineConfigurator != null)
             {
                 pipelineConfigurator.Consume(ctx);
@@ -306,6 +310,7 @@ public class ApplicationProtocolNegotiationHandlerTest
             {
                 ctx.FireChannelRead(someBytes);
             }
+
             ctx.FireUserEventTriggered(evt);
         }
     }

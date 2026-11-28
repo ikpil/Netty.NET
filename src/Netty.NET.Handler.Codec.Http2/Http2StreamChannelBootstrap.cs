@@ -84,6 +84,7 @@ public sealed class Http2StreamChannelBootstrap
                 options[option] = value;
             }
         }
+
         return this;
     }
 
@@ -94,6 +95,7 @@ public sealed class Http2StreamChannelBootstrap
     public Http2StreamChannelBootstrap Attr<T>(AttributeKey<T> key, T value) where T : class
     {
         ObjectUtil.CheckNotNull(key, "key");
+
         if (value == null)
         {
             attrs.TryRemove(key, out _);
@@ -102,6 +104,7 @@ public sealed class Http2StreamChannelBootstrap
         {
             attrs[key] = ch => ch.Attr(key).Set(value);
         }
+
         return this;
     }
 
@@ -157,6 +160,7 @@ public sealed class Http2StreamChannelBootstrap
         {
             promise.SetException(cause);
         }
+
         return promise.Task;
     }
 
@@ -168,6 +172,7 @@ public sealed class Http2StreamChannelBootstrap
         {
             return ctx;
         }
+
         IChannelPipeline pipeline = channel.Pipeline;
         ctx = pipeline.Context(typeof(Http2MultiplexHandler));
         if (ctx == null)
@@ -183,6 +188,7 @@ public sealed class Http2StreamChannelBootstrap
                 throw new ClosedChannelException();
             }
         }
+
         multiplexCtx = ctx;
         return ctx;
     }
@@ -194,7 +200,9 @@ public sealed class Http2StreamChannelBootstrap
         {
             return;
         }
+
         IHttp2StreamChannel streamChannel;
+
         try
         {
             streamChannel = ((Http2MultiplexHandler) ctx.Handler).NewOutboundStream();
@@ -204,6 +212,7 @@ public sealed class Http2StreamChannelBootstrap
             promise.SetException(e);
             return;
         }
+
         try
         {
             Init(streamChannel);
@@ -214,6 +223,7 @@ public sealed class Http2StreamChannelBootstrap
             promise.SetException(e);
             return;
         }
+
         Task future = ctx.Channel.EventLoop.RegisterAsync(streamChannel);
         Http2CodecUtil.AddListener(ctx, future, f =>
         {
@@ -249,7 +259,9 @@ public sealed class Http2StreamChannelBootstrap
         {
             p.AddLast(handler);
         }
+
         KeyValuePair<ChannelOption, object>[] optionArray;
+
         lock (options)
         {
             optionArray = options.ToArray();

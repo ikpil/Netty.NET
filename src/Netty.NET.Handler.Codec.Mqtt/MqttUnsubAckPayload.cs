@@ -50,10 +50,12 @@ public sealed class MqttUnsubAckPayload
         ObjectUtil.CheckNotNull(unsubscribeReasonCodes, "unsubscribeReasonCodes");
 
         List<MqttReasonCodes.UnsubAck> list = new List<MqttReasonCodes.UnsubAck>(unsubscribeReasonCodes.Length);
+
         foreach (short v in unsubscribeReasonCodes)
         {
             list.Add(MqttReasonCodes.UnsubAck.ValueOf((byte) (v & 0xFF)));
         }
+
         this.unsubscribeReasonCodes = list.AsReadOnly();
     }
 
@@ -65,10 +67,12 @@ public sealed class MqttUnsubAckPayload
         ObjectUtil.CheckNotNull(unsubscribeReasonCodes, "unsubscribeReasonCodes");
 
         List<MqttReasonCodes.UnsubAck> list = new List<MqttReasonCodes.UnsubAck>();
+
         foreach (short v in unsubscribeReasonCodes)
         {
             list.Add(MqttReasonCodes.UnsubAck.ValueOf((byte) v));
         }
+
         this.unsubscribeReasonCodes = list.AsReadOnly();
     }
 
@@ -80,10 +84,12 @@ public sealed class MqttUnsubAckPayload
     private IList<short> TypedReasonCodesToOrdinal()
     {
         List<short> codes = new List<short>(unsubscribeReasonCodes.Count);
+
         foreach (MqttReasonCodes.UnsubAck code in unsubscribeReasonCodes)
         {
             codes.Add((short) (code.ByteValue() & 0xFF));
         }
+
         return codes;
     }
 

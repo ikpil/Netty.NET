@@ -53,6 +53,7 @@ internal sealed class EncoderUtil
             {
                 // Cancel the scheduled timeout.
                 future.Cancel();
+
                 if (!promise.Task.IsCompleted)
                 {
                     Close(ctx, promise, cancellationToken);

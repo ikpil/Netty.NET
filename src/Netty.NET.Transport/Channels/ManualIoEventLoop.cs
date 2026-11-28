@@ -161,13 +161,16 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
         {
             return 0;
         }
+
         IEventExecutor old = setCurrentExecutor ? ThreadExecutorMap.SetCurrentExecutor(this) : null;
+
         try
         {
             long deadline = timeoutNanos > 0 ? _ticker.NanoTime() + timeoutNanos : 0;
             int runTasks = 0;
             long lastExecutionTime;
             Ticker ticker = _ticker;
+
             for (;;)
             {
                 SafeExecute(task);
@@ -189,6 +192,7 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
                     break;
                 }
             }
+
             _lastExecutionTime = lastExecutionTime;
             return runTasks;
         }
@@ -209,10 +213,13 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
             {
                 throw new InvalidOperationException("Owning thread not set");
             }
+
             _initialized = true;
             _handler.Initialize();
         }
+
         IEventExecutor old = ThreadExecutorMap.SetCurrentExecutor(this);
+
         try
         {
             if (IsShuttingDown())
@@ -222,14 +229,17 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
                     // Already completely terminated
                     return 0;
                 }
+
                 return RunAllTasksBeforeDestroy();
             }
+
             int ioTasks = _handler.Run(context);
             // Now run all tasks.
             if (runAllTasksTimeoutNanos < 0)
             {
                 return ioTasks;
             }
+
             Debug.Assert(runAllTasksTimeoutNanos >= 0);
             return ioTasks + RunAllTasks(runAllTasksTimeoutNanos, false);
         }
@@ -244,6 +254,7 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
         // Run all tasks before prepare to destroy.
         int run = RunAllTasks(-1, false);
         _handler.PrepareToDestroy();
+
         // CLR: an offloaded native close keeps the loop alive until its reserved owner callback has run.
         if (ConfirmShutdown() && _pendingCloseCompletions == 0)
         {
@@ -251,6 +262,7 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
             try
             {
                 _handler.Destroy();
+
                 for (;;)
                 {
                     int r = RunAllTasks(-1, false);
@@ -267,6 +279,7 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
                 _terminationFuture.TrySetResult();
             }
         }
+
         return run;
     }
 
@@ -286,6 +299,7 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
     public int RunNow(long runAllTasksTimeoutNanos)
     {
         CheckCurrentThread();
+
         return Run(_nonBlockingContext, runAllTasksTimeoutNanos);
     }
 
@@ -301,6 +315,7 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
     public int RunNow()
     {
         CheckCurrentThread();
+
         return Run(_nonBlockingContext, 0);
     }
 
@@ -323,6 +338,7 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
         CheckCurrentThread();
 
         IIoHandlerContext context;
+
         if (waitNanos < 0)
         {
             context = _nonBlockingContext;
@@ -332,6 +348,7 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
             context = _blockingContext;
             _blockingContext.MaxBlockingNanos = waitNanos == 0 ? long.MaxValue : waitNanos;
         }
+
         return Run(context, runAllTasksTimeoutNanos);
     }
 
@@ -370,6 +387,7 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
         {
             return;
         }
+
         _handler.Wakeup();
     }
 
@@ -396,6 +414,7 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
     public Task RegisterAsync(IChannel channel, CancellationToken cancellationToken = default)
     {
         ObjectUtil.CheckNotNull(channel, "channel");
+
         return channel.RegisterAsync(this, cancellationToken);
     }
 
@@ -403,6 +422,7 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
     public Task<IIoRegistration> RegisterAsync(IIoHandle handle)
     {
         var promise = new TaskCompletionSource<IIoRegistration>(TaskCreationOptions.RunContinuationsAsynchronously);
+
         if (InEventLoop())
         {
             RegisterForIo0(handle, promise);
@@ -419,6 +439,7 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
     {
         Debug.Assert(InEventLoop());
         IIoRegistration registration;
+
         try
         {
             registration = _handler.Register(handle);
@@ -428,6 +449,7 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
             promise.SetException(e);
             return;
         }
+
         promise.SetResult(registration);
     }
 
@@ -466,15 +488,18 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
         bool inEventLoop = InEventLoop();
         bool wakeup;
         int oldState;
+
         for (;;)
         {
             if (IsShuttingDown())
             {
                 return;
             }
+
             int newState;
             wakeup = true;
             oldState = _state.Get();
+
             if (inEventLoop)
             {
                 newState = shutdownState;
@@ -494,10 +519,12 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
                 break;
             }
         }
+
         if (quietPeriod != -1)
         {
             Volatile.Write(ref _gracefulShutdownQuietPeriod, quietPeriod);
         }
+
         if (timeout != -1)
         {
             Volatile.Write(ref _gracefulShutdownTimeout, timeout);
@@ -569,6 +596,7 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
             // We need to check if the method was called from within the EventLoop as this would cause a deadlock.
             ThrowIfInEventLoop("awaitTermination");
         }
+
         return _terminationFuture.Task.Wait(timeout);
     }
 
@@ -585,6 +613,7 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
     public sealed override void Execute(Action command)
     {
         ObjectUtil.CheckNotNull(command, "command");
+
         bool inEventLoop = InEventLoop();
         if (inEventLoop)
         {
@@ -593,12 +622,15 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
                 throw new RejectedExecutionException("event executor terminated");
             }
         }
+
         _taskQueue.TryEnqueue(command);
+
         if (!inEventLoop)
         {
             if (IsShutdown())
             {
                 bool reject = false;
+
                 try
                 {
                     if (_taskQueue.TryRemove(command))
@@ -612,11 +644,13 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
                     // hope we will be able to pick-up the task before its completely terminated.
                     // In worst case we will log on termination.
                 }
+
                 if (reject)
                 {
                     throw new RejectedExecutionException("event executor terminated");
                 }
             }
+
             _handler.Wakeup();
         }
     }
@@ -628,6 +662,7 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
         {
             throw new InvalidOperationException("Native close must be reserved by the event-loop owner.");
         }
+
         _pendingCloseCompletions++;
         return completion =>
         {
@@ -686,6 +721,7 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
             {
                 return true;
             }
+
             return false;
         }
 
@@ -751,6 +787,7 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
         public long DelayNanos(long currentTimeNanos)
         {
             Debug.Assert(loop.InEventLoop());
+
             return Math.Min(MaxBlockingNanos, loop.DelayNanos(currentTimeNanos, MaxBlockingNanos));
         }
 
@@ -763,12 +800,14 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
                 // next == -1? -1 : next i.e. return next
                 return next;
             }
+
             long now = loop._ticker.NanoTime();
             // we cannot just check Math.min as nanoTime can be negative or wrap around!
             if (next == -1 || unchecked(next - now) > MaxBlockingNanos)
             {
                 return unchecked(now + MaxBlockingNanos);
             }
+
             return next;
         }
     }

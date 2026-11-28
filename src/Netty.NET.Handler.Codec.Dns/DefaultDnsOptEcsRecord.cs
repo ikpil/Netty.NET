@@ -99,6 +99,7 @@ public sealed class DefaultDnsOptEcsRecord : AbstractDnsOptPseudoRrRecord, IDnsO
         {
             return bytes;
         }
+
         throw new ArgumentException("bytes.length must either 4 or 16");
     }
 
@@ -141,14 +142,17 @@ public sealed class DefaultDnsOptEcsRecord : AbstractDnsOptPseudoRrRecord, IDnsO
     {
         StringBuilder b = new StringBuilder();
         b.Append('[');
+
         for (int i = 0; i < a.Length; i++)
         {
             if (i > 0)
             {
                 b.Append(", ");
             }
+
             b.Append(unchecked((sbyte) a[i]).ToString(CultureInfo.InvariantCulture));
         }
+
         return b.Append(']').ToString();
     }
 }

@@ -106,6 +106,7 @@ public abstract class ChannelInitializer<T> : ChannelInboundHandlerAdapter where
             // Guard against re-entrance.
             if (!_initializing.Add(ctx))
                 return false;
+
         try
         {
             InitChannel((T)ctx.Channel);
@@ -121,6 +122,7 @@ public abstract class ChannelInitializer<T> : ChannelInboundHandlerAdapter where
             if (!ctx.IsRemoved)
                 ctx.Pipeline.Remove(this);
         }
+
         return true;
     }
 
@@ -160,6 +162,7 @@ public abstract class ChannelInitializer<T> : ChannelInboundHandlerAdapter where
     {
         if (Logger.IsWarnEnabled())
             Logger.Warn("Failed to initialize a channel. Closing: " + ctx.Channel, cause);
+
         _ = ctx.CloseAsync();
     }
 }

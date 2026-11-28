@@ -149,9 +149,11 @@ public class ThreadDeathWatcherContractTest : IDisposable
         object captured = marker;
         using var firstDone = new ManualResetEventSlim();
         using var secondDone = new ManualResetEventSlim();
+
         using (var owner = new LiveThread())
         {
             ambient.Value = marker;
+
             try
             {
                 ThreadDeathWatcher.Watch(owner.Thread, () =>
@@ -166,11 +168,14 @@ public class ThreadDeathWatcherContractTest : IDisposable
             {
                 ambient.Value = null;
             }
+
             owner.End();
             Assert.True(firstDone.Wait(TimeSpan.FromSeconds(5)));
         }
+
         Assert.Null(captured);
         Assert.True(ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromSeconds(5)));
+
         using (var owner = new LiveThread())
         {
             using (ExecutionContext.SuppressFlow())
@@ -182,10 +187,12 @@ public class ThreadDeathWatcherContractTest : IDisposable
                 });
                 Assert.True(ExecutionContext.IsFlowSuppressed());
             }
+
             Assert.False(ExecutionContext.IsFlowSuppressed());
             owner.End();
             Assert.True(secondDone.Wait(TimeSpan.FromSeconds(5)));
         }
+
         Assert.NotSame(firstWorker, secondWorker);
     }
 
@@ -212,6 +219,7 @@ public class ThreadDeathWatcherContractTest : IDisposable
         var waiter = new Thread(() =>
         {
             entered.Set();
+
             try
             {
                 ThreadDeathWatcher.AwaitInactivity(TimeSpan.MaxValue);
@@ -243,11 +251,13 @@ public class ThreadDeathWatcherContractTest : IDisposable
         ThreadDeathWatcher.Watch(owner.Thread, static () =>
         {
         });
+
         if (ticks < 0)
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromTicks(ticks)));
             return;
         }
+
         Exception failure = null;
         bool stopped = false;
         var waiter = new Thread(() =>
@@ -262,6 +272,7 @@ public class ThreadDeathWatcherContractTest : IDisposable
             }
         }) { IsBackground = true };
         waiter.Start();
+
         try
         {
             Assert.True(waiter.Join(TimeSpan.FromSeconds(5)));
@@ -272,6 +283,7 @@ public class ThreadDeathWatcherContractTest : IDisposable
         {
             owner.End();
         }
+
         Assert.True(waiter.Join(TimeSpan.FromSeconds(5)));
     }
 
@@ -298,9 +310,11 @@ public class ThreadDeathWatcherContractTest : IDisposable
             }
         }) { IsBackground = true };
         waiter.Start();
+
         try
         {
             Assert.False(waiter.Join(TimeSpan.FromMilliseconds(50)));
+
             if (interrupt)
             {
                 waiter.Interrupt();
@@ -312,6 +326,7 @@ public class ThreadDeathWatcherContractTest : IDisposable
             owner.End();
             Assert.True(waiter.Join(TimeSpan.FromSeconds(5)));
         }
+
         if (interrupt)
         {
             Assert.IsType<ThreadInterruptedException>(failure);
@@ -390,6 +405,7 @@ public class ThreadDeathWatcherContractTest : IDisposable
                         completed.Signal();
                     };
                 ThreadDeathWatcher.Watch(owner.Thread, task);
+
                 if (cancel)
                 {
                     ThreadDeathWatcher.Unwatch(owner.Thread, task);

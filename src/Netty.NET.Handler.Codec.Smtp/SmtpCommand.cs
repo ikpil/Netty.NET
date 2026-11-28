@@ -70,6 +70,7 @@ public sealed class SmtpCommand
     public static SmtpCommand ValueOf(ICharSequence commandName)
     {
         ObjectUtil.CheckNotNull(commandName, "commandName");
+
         SmtpCommand command = COMMANDS.GetValueOrDefault(commandName.ToString());
         return command != null ? command : new SmtpCommand(AsciiString.Of(commandName));
     }
@@ -115,6 +116,7 @@ public sealed class SmtpCommand
         {
             return false;
         }
+
         return name.ContentEqualsIgnoreCase(((SmtpCommand) obj).Name());
     }
 

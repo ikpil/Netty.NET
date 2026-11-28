@@ -38,6 +38,7 @@ public sealed class MqttPubReplyMessageVariableHeader : MqttMessageIdVariableHea
             throw new ArgumentException("messageId: " + messageId.ToString(CultureInfo.InvariantCulture) +
                     " (expected: 1 ~ 65535)");
         }
+
         this.reasonCode = reasonCode;
         this.properties = MqttProperties.WithEmptyDefaults(properties);
     }

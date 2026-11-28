@@ -86,6 +86,7 @@ public sealed class IoBuffer
         }
 
         limit = newLimit;
+
         if (position > newLimit)
         {
             position = newLimit;

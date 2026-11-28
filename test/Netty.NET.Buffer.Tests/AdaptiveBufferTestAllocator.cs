@@ -90,6 +90,7 @@ internal sealed class AdaptiveBufferTestAllocator : AbstractByteBufAllocator, ID
         if (!_threadLocal || index >= pool.SizeClassedMagazineGroups.Length)
             return (index < pool.SizeClassedMagazineGroups.Length
                 ? pool.SizeClassedMagazineGroups[index] : pool.LargeBufferMagazineGroup).Magazines[0];
+
         return _magazines[direct ? 1 : 0][index] ??= new Magazine(
             pool.SizeClassedMagazineGroups[index], false, Controller(direct, index));
     }
@@ -110,10 +111,12 @@ internal sealed class AdaptiveBufferTestAllocator : AbstractByteBufAllocator, ID
         lock (_sync)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
+
             int fast = ComputeBufferCapacity(direct, size, maxCapacity);
             bool pooled = IsPooled(size);
             int index = SizeClassIndexOf(size);
             AdaptiveChunkAllocation allocation = null;
+
             if (pooled)
                 foreach (var candidate in _chunks)
                     if (candidate.Direct == direct && candidate.Class == index &&
@@ -122,9 +125,11 @@ internal sealed class AdaptiveBufferTestAllocator : AbstractByteBufAllocator, ID
                     {
                         break;
                     }
+
             if (allocation == null)
             {
                 Chunk chunk;
+
                 if (pooled)
                 {
                     chunk = Controller(direct, index).NewChunkAllocation(size, MagazineFor(direct, index));
@@ -132,6 +137,7 @@ internal sealed class AdaptiveBufferTestAllocator : AbstractByteBufAllocator, ID
                 else
                 {
                     ByteBuf raw = Raw(direct, size, maxCapacity);
+
                     try
                     {
                         chunk = new Chunk(raw, _registries[direct ? 1 : 0]);
@@ -142,9 +148,11 @@ internal sealed class AdaptiveBufferTestAllocator : AbstractByteBufAllocator, ID
                         throw;
                     }
                 }
+
                 try
                 {
                     allocation = chunk.TryAllocate(fast) ?? throw new InvalidOperationException("A fresh chunk was exhausted.");
+
                     if (pooled)
                     {
                         _chunks.Add((chunk, direct, index));
@@ -156,11 +164,13 @@ internal sealed class AdaptiveBufferTestAllocator : AbstractByteBufAllocator, ID
                     chunk.Dispose();
                     throw;
                 }
+
                 if (!pooled)
                 {
                     chunk.Dispose();
                 }
             }
+
             try
             {
                 AfterReservation?.Invoke(size, allocation);
@@ -182,6 +192,7 @@ internal sealed class AdaptiveBufferTestAllocator : AbstractByteBufAllocator, ID
             {
                 return;
             }
+
             _disposed = true;
 
             foreach (var entry in _chunks)

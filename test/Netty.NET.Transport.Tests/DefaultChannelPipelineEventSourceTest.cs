@@ -79,6 +79,7 @@ public class DefaultChannelPipelineEventSourceTest
         var holder = new ReleasedSignal(freed);
         var handler = new StringInboundHandler();
         IChannel server = null, self = null, peer = null;
+
         try
         {
             var accepted = new TaskCompletionSource<IChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -96,11 +97,15 @@ public class DefaultChannelPipelineEventSourceTest
         {
             if (peer != null)
                 await peer.CloseAsync();
+
             if (self != null)
                 await self.CloseAsync();
+
             if (server != null)
                 await server.CloseAsync();
+
             await group.StopAsync();
+
             if (holder.RefCnt != 0)
                 holder.Release();
         }
@@ -118,12 +123,15 @@ public class DefaultChannelPipelineEventSourceTest
         var events = Channel.CreateUnbounded<string>();
         fixture.Channel.Pipeline.AddLast(new InboundEvents(events.Writer));
         var context = fixture.Channel.Pipeline.Context(anchor);
+
         if (inEventLoop)
             await fixture.Channel.EventLoop.SubmitAsync(() => ExecuteInboundOperations(context));
         else
             ExecuteInboundOperations(context);
+
         foreach (string name in new[] { "channelRegistered", "channelUnregistered", "channelActive", "channelInactive", "channelRead", "channelReadComplete", "userEventTriggered", "channelWritabilityChanged", "exceptionCaught" })
             Assert.Equal(name, await events.Reader.ReadAsync(TestContext.Current.CancellationToken));
+
         Assert.False(events.Reader.TryPeek(out _));
         fixture.Channel.Pipeline.RemoveLast();
     }
@@ -154,6 +162,7 @@ public class DefaultChannelPipelineEventSourceTest
         fixture.Channel.Pipeline.AddFirst(new OutboundEvents(events.Writer));
         var context = fixture.Channel.Pipeline.Context(anchor);
         Task[] operations = null;
+
         if (inEventLoop)
             await fixture.Channel.EventLoop.SubmitAsync(() =>
             {
@@ -161,8 +170,10 @@ public class DefaultChannelPipelineEventSourceTest
             });
         else
             operations = ExecuteOutboundOperations(context);
+
         foreach (string name in new[] { "bind", "connect", "close", "deregister", "read", "write", "flush" })
             Assert.Equal(name, await events.Reader.ReadAsync(TestContext.Current.CancellationToken));
+
         Assert.False(events.Reader.TryPeek(out _));
         await Task.WhenAll(operations);
         fixture.Channel.Pipeline.RemoveFirst();
@@ -186,6 +197,7 @@ public class DefaultChannelPipelineEventSourceTest
         var exception = new InvalidOperationException();
         var error = new TaskCompletionSource<Exception>(TaskCreationOptions.RunContinuationsAsynchronously);
         var channel = new EmbeddedChannel(new FailingInitializer(exception, error));
+
         try
         {
             Assert.Same(exception, await error.Task.WaitAsync(TestContext.Current.CancellationToken));
@@ -204,6 +216,7 @@ public class DefaultChannelPipelineEventSourceTest
         var executor = new DefaultEventLoop();
         var unregistered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var removed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
         try
         {
             fixture.Channel.Pipeline.AddLast(new ActionChannelInitializer<IChannel>(ch => ch.Pipeline.AddLast(executor, null, new UnregistrationSignals(unregistered, removed))));
@@ -228,6 +241,7 @@ public class DefaultChannelPipelineEventSourceTest
         var completed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var exception = new Exception();
         bool added = false;
+
         try
         {
             fixture.Channel.Pipeline.AddLast(group1, null, new CheckExceptionHandler(exception, completed));
@@ -251,6 +265,7 @@ public class DefaultChannelPipelineEventSourceTest
         var group1 = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         var completed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var exception = new Exception();
+
         try
         {
             fixture.Channel.Pipeline.AddLast("foo", new ThrowAddedRemoved(null, exception));
@@ -275,6 +290,7 @@ public class DefaultChannelPipelineEventSourceTest
         var latch = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var exceptionAdded = new Exception();
         var exceptionRemoved = new Exception();
+
         try
         {
             fixture.Channel.Pipeline.AddLast(group1, null, new CheckExceptionHandler(exceptionAdded, completed));
@@ -298,6 +314,7 @@ public class DefaultChannelPipelineEventSourceTest
         var executors = new UnorderedThreadPoolEventExecutor(2);
         using var unblock = new ManualResetEventSlim();
         var triggered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
         try
         {
             await fixture.Register();
@@ -322,6 +339,7 @@ public class DefaultChannelPipelineEventSourceTest
     {
         var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         Exception error = null;
+
         try
         {
             // As this only happens via a race we will verify 500 times. This was good enough to have it failed most of
@@ -344,6 +362,7 @@ public class DefaultChannelPipelineEventSourceTest
                 {
                     // NOOP
                 });
+
                 if (error != null)
                     System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(error).Throw();
             }
@@ -371,21 +390,27 @@ public class DefaultChannelPipelineEventSourceTest
         await using var fixture = new Fixture();
         var executors = new DefaultEventExecutorGroup(16);
         const int numHandlers = 32;
+
         try
         {
             fixture.Channel.Config.SetOption(ChannelOption.SINGLE_EVENTEXECUTOR_PER_GROUP, false);
+
             if (!lateRegister)
                 await fixture.Register();
+
             fixture.Channel.Pipeline.AddFirst(new ChannelDuplexHandler());
             var signals = new List<TaskCompletionSource>(numHandlers);
+
             for (int i = 0; i < numHandlers; i++)
             {
                 var latch = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
                 fixture.Channel.Pipeline.AddFirst(executors, "h" + i, new BadChannelHandler(latch));
                 signals.Add(latch);
             }
+
             if (lateRegister)
                 await fixture.Register();
+
             for (int i = 0; i < numHandlers; i++)
             {
                 // Wait until the latch was countDown which means handlerRemoved(...) was called.
@@ -430,6 +455,7 @@ public class DefaultChannelPipelineEventSourceTest
             await fixture.Channel.EventLoop.SubmitAsync(Run);
         else
             Run();
+
         await done.Task.WaitAsync(token);
         await registration;
     }
@@ -522,6 +548,7 @@ public class DefaultChannelPipelineEventSourceTest
             {
                 await Channel.CloseAsync();
             }
+
             await _group.StopAsync();
         }
     }
@@ -539,6 +566,7 @@ public class DefaultChannelPipelineEventSourceTest
         {
             if (cause is TestException)
                 ctx.Executor.Execute(() => latch.TrySetResult());
+
             Count++;
             throw new Exception();
         }
@@ -575,6 +603,7 @@ public class DefaultChannelPipelineEventSourceTest
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             Called = true;
+
             if (msg is not string)
                 ctx.FireChannelRead(msg);
         }
@@ -730,6 +759,7 @@ public class DefaultChannelPipelineEventSourceTest
             // Execute this later so we are sure the exception is handled first.
             if (removed != null)
                 ctx.Executor.Execute(() => removed.TrySetResult());
+
             if (removedException != null)
                 throw removedException;
         }
@@ -788,6 +818,7 @@ public class DefaultChannelPipelineEventSourceTest
         {
             if (ReferenceEquals(evt, userEvent))
                 _ = ctx.WriteAsync(writeObject);
+
             ctx.FireUserEventTriggered(evt);
         }
     }
@@ -802,6 +833,7 @@ public class DefaultChannelPipelineEventSourceTest
         {
             if (ReferenceEquals(msg, writeObject))
                 done.TrySetResult();
+
             return ctx.WriteAsync(msg, token);
         }
     }

@@ -51,6 +51,7 @@ internal static class QuicTestUtils
     static QuicTestUtils()
     {
         SelfSignedCertificate cert;
+
         try
         {
             cert = new SelfSignedCertificate();
@@ -59,6 +60,7 @@ internal static class QuicTestUtils
         {
             throw new TypeInitializationException(typeof(QuicTestUtils).FullName, e);
         }
+
         SELF_SIGNED_CERTIFICATE = cert;
         AppDomain.CurrentDomain.ProcessExit += (_, _) =>
         {
@@ -118,6 +120,7 @@ internal static class QuicTestUtils
         // Use recvmmsg when possible.
         // CLR: the endpoint channel replaces EpollDatagramChannel and NioDatagramChannel (see the class comment).
         bs.Channel<QuicEndpointChannel>();
+
         return bs.Group(GROUP);
     }
 
@@ -183,10 +186,12 @@ internal static class QuicTestUtils
     {
         serverBuilder.TokenHandler(tokenHandler)
                 .StreamHandler(streamHandler);
+
         if (handler != null)
         {
             serverBuilder.Handler(handler);
         }
+
         IChannelHandler codec = serverBuilder.Build();
         return NewServerBootstrap()
                 .Handler(codec);

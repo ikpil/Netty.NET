@@ -27,10 +27,12 @@ public class DatagramMulticastIsolationContractTest
         {
             Assert.Skip("Exercises the Linux multicast membership options.");
         }
+
         if ((ipv6Group || dualMode) && !Socket.OSSupportsIPv6)
         {
             Assert.Skip("IPv6 is not supported.");
         }
+
         var groupFamily = ipv6Group ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork;
         var socketFamily = dualMode ? AddressFamily.InterNetworkV6 : groupFamily;
         var iface = NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(network =>
@@ -43,16 +45,19 @@ public class DatagramMulticastIsolationContractTest
 
         var source = iface.GetIPProperties().UnicastAddresses.First(address => address.Address.AddressFamily == groupFamily).Address;
         var multicast = IPAddress.Parse(ipv6Group ? "ff12::17c" : "239.192.41.97");
+
         if (ipv6Group)
         {
             multicast.ScopeId = iface.GetIPProperties().GetIPv6Properties().Index;
         }
+
         var any = socketFamily == AddressFamily.InterNetworkV6 ? IPAddress.IPv6Any : IPAddress.Any;
         var cancellation = TestContext.Current.CancellationToken;
         var memberPackets = Channel.CreateUnbounded<int>();
         var otherPackets = Channel.CreateUnbounded<int>();
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         using var peer = new Socket(groupFamily, SocketType.Dgram, ProtocolType.Udp);
+
         try
         {
             peer.Bind(new IPEndPoint(source, 0));
@@ -73,10 +78,12 @@ public class DatagramMulticastIsolationContractTest
             await SendAsync(1);
             Assert.Equal(1, await memberPackets.Reader.ReadAsync(cancellation));
             await JoinAsync(other);
+
             if (sourceSpecific)
                 await member.LeaveGroupAsync(multicast, iface, source);
             else
                 await member.LeaveGroupAsync(target, iface);
+
             await SendAsync(2);
             Assert.Equal(2, await otherPackets.Reader.ReadAsync(cancellation));
             await Task.Delay(200, cancellation);
@@ -86,6 +93,7 @@ public class DatagramMulticastIsolationContractTest
             {
                 Assert.Equal(1, memberValue);
             }
+
             while (otherPackets.Reader.TryRead(out int otherValue))
             {
                 Assert.Equal(2, otherValue);

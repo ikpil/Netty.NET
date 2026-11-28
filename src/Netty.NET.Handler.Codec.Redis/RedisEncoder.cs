@@ -138,6 +138,7 @@ public class RedisEncoder : MessageToMessageEncoder<IRedisMessage>
                 throw new CodecException("Line breaks are not permitted in 'simple' messages");
             }
         }
+
         ByteBuf buf = allocator.IoBuffer(type.Length() + ByteBufUtil.Utf8MaxBytes(content) +
                                          RedisConstants.EOL_LENGTH);
         type.WriteTo(buf);
@@ -162,6 +163,7 @@ public class RedisEncoder : MessageToMessageEncoder<IRedisMessage>
                                         (msg.IsNull() ? RedisConstants.NULL_LENGTH :
                                                         RedisConstants.LONG_MAX_LENGTH + RedisConstants.EOL_LENGTH));
         RedisMessageType.BULK_STRING.WriteTo(buf);
+
         if (msg.IsNull())
         {
             buf.WriteShort(RedisConstants.NULL_SHORT);
@@ -171,6 +173,7 @@ public class RedisEncoder : MessageToMessageEncoder<IRedisMessage>
             buf.WriteBytes(NumberToBytes(msg.BulkStringLength()));
             buf.WriteShort(RedisConstants.EOL_SHORT);
         }
+
         @out.Add(buf);
     }
 
@@ -178,6 +181,7 @@ public class RedisEncoder : MessageToMessageEncoder<IRedisMessage>
                                                IList<object> @out)
     {
         @out.Add(msg.Content.Retain());
+
         if (msg is ILastBulkStringRedisContent)
         {
             @out.Add(allocator.IoBuffer(RedisConstants.EOL_LENGTH).WriteShort(RedisConstants.EOL_SHORT));
@@ -229,6 +233,7 @@ public class RedisEncoder : MessageToMessageEncoder<IRedisMessage>
         else
         {
             WriteArrayHeader(allocator, msg.IsNull(), msg.Children().Count, @out);
+
             foreach (IRedisMessage child in msg.Children())
             {
                 WriteRedisMessage(allocator, child, @out);

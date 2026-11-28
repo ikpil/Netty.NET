@@ -103,6 +103,7 @@ public class SimpleChannelPoolTest
         Func<IChannel, Task<bool>> checker = _ => Task.FromResult(false);
         await using var pool = new SimpleChannelPool(setup.Client, handler, checker);
         IChannel channel = null;
+
         try
         {
             channel = await pool.AcquireAsync();
@@ -228,6 +229,7 @@ public class SimpleChannelPoolTest
         // Health checks on release are turned off, so releasing does not need a hand-completed health check as well.
         await using var pool = new SimpleChannelPool(setup.Client, handler, checker, false);
         IChannel channel = null;
+
         try
         {
             // Nothing is pooled yet, so this connects a new Channel and does not run a health check at all.
@@ -331,6 +333,7 @@ public class SimpleChannelPoolTest
         {
             if (_server != null)
                 await _server.CloseAsync();
+
             await Group.StopAsync().WaitAsync(Timeout, TestContext.Current.CancellationToken);
         }
     }

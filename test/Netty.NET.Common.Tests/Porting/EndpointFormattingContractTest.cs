@@ -17,6 +17,7 @@ public class EndpointFormattingContractTest
         CultureInfo previous = CultureInfo.CurrentCulture;
         var culture = (CultureInfo)CultureInfo.GetCultureInfo(cultureName).Clone();
         culture.NumberFormat.NegativeSign = "NEG";
+
         try
         {
             CultureInfo.CurrentCulture = culture;
@@ -25,6 +26,7 @@ public class EndpointFormattingContractTest
                 (-1, "-1"), (int.MinValue, "-2147483648"), (0, "0"),
                 (65535, "65535"), (65536, "65536"), (int.MaxValue, "2147483647")
             };
+
             foreach (var port in ports)
             {
                 Assert.Equal("Example.invalid:" + port.Text, NetUtil.ToSocketAddressString("Example.invalid", port.Value));

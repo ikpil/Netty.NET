@@ -59,6 +59,7 @@ public class DirectByteBufReallocationTest
             {
                 Assert.True(Buffer.Release());
             }
+
             Assert.Equal(0, Native.ReservedBytes);
             Assert.Equal(0, Allocator.Metric.UsedDirectMemory);
         }
@@ -94,6 +95,7 @@ public class DirectByteBufReallocationTest
         Assert.Equal(Math.Min(initial, target), b.WriterIndex);
         s.Accounting(target, Math.Max(1, target));
         Assert.True(NativeMemoryOwner.TryGetOwner(b.AsMemory(0, target), out var replacement));
+
         if (initial == target)
         {
             Assert.Same(previous, replacement);
@@ -104,6 +106,7 @@ public class DirectByteBufReallocationTest
             Assert.NotSame(previous, replacement);
             Assert.Throws<ObjectDisposedException>(() => old.ToArray());
         }
+
         b.Capacity = 64;
         b.SetIndex(0, 64).ResetWriterIndex().ResetReaderIndex();
         Assert.Equal(initial / 2, b.ReaderIndex);
@@ -125,6 +128,7 @@ public class DirectByteBufReallocationTest
         b.ReaderIndex = 3;
         b.MarkReaderIndex();
         Memory<byte> old = b.AsMemory(0, 8);
+
         if (succeeds)
         {
             b.Capacity = target;
@@ -135,6 +139,7 @@ public class DirectByteBufReallocationTest
             Assert.Throws<OutOfDirectMemoryError>(() => b.Capacity = target);
             Assert.Equal(Prefix(8), old.ToArray());
         }
+
         int capacity = succeeds ? target : 8;
         Assert.Equal(capacity, b.Capacity);
         Assert.Equal(Prefix(8), b.AsMemory(0, 8).ToArray());
@@ -191,6 +196,7 @@ public class DirectByteBufReallocationTest
         Memory<byte> old = b.AsMemory(0, 8);
         ReadOnlySpan<byte> oldBytes = old.Span;
         var pin = old.Pin();
+
         try
         {
             b.Capacity = 16;
@@ -209,6 +215,7 @@ public class DirectByteBufReallocationTest
         {
             pin.Dispose();
         }
+
         s.Accounting(0, 0);
     }
 
@@ -220,11 +227,13 @@ public class DirectByteBufReallocationTest
         var external = new NativeMemoryAllocator(24);
         var replacement = new NativeMemoryAllocator(32);
         var creator = new UnpooledByteBufAllocator(true, replacement);
+
         using (NativeMemoryOwner owner = external.Allocate(24))
         {
             Prefix(24).CopyTo(owner.Memory.Span);
             Memory<byte> borrowed = owner.Memory.Slice(offset, 8);
             ByteBuf b = new UnpooledDirectByteBuf(creator, borrowed, 64, replacement);
+
             try
             {
                 b.Capacity = 16;
@@ -242,10 +251,12 @@ public class DirectByteBufReallocationTest
             {
                 b.Release();
             }
+
             Assert.Equal(0, replacement.ReservedBytes);
             Assert.Equal(24, external.ReservedBytes);
             Assert.Equal(Prefix(24), owner.Memory.ToArray());
         }
+
         Assert.Equal(0, external.ReservedBytes);
     }
 }

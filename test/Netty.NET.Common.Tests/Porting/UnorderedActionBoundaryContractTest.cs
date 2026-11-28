@@ -30,11 +30,13 @@ public class UnorderedActionBoundaryContractTest
     {
         Type[] types = [typeof(IEventExecutorGroup), typeof(AbstractEventExecutor),
             typeof(AbstractEventExecutorGroup), typeof(NonStickyEventExecutorGroup), typeof(UnorderedThreadPoolEventExecutor)];
+
         foreach (Type type in types)
         {
             Assert.Null(type.GetMethod("ShutdownNow"));
             Assert.Equal(typeof(Task), type.GetMethod("StopAsync").ReturnType);
         }
+
         Assert.Null(typeof(IEventExecutorGroup).Assembly.GetType("Netty.NET.Common.Concurrent.IExecutorService"));
         Assert.Equal(typeof(IExecutor), Assert.Single(typeof(IEventExecutorGroup).GetInterfaces()));
         var callbacks = typeof(UnorderedThreadPoolEventExecutor).GetConstructors()
@@ -59,6 +61,7 @@ public class UnorderedActionBoundaryContractTest
         });
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
+
         try
         {
             executor.Execute(() =>
@@ -94,6 +97,7 @@ public class UnorderedActionBoundaryContractTest
         var executor = new UnorderedThreadPoolEventExecutor(1, (work, _) => replay = work);
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
+
         try
         {
             executor.Execute(() =>
@@ -137,6 +141,7 @@ public class UnorderedActionBoundaryContractTest
         });
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
+
         try
         {
             executor.Execute(() =>
@@ -177,6 +182,7 @@ public class UnorderedActionBoundaryContractTest
         });
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
+
         try
         {
             executor.Execute(() =>
@@ -228,6 +234,7 @@ public class UnorderedActionBoundaryContractTest
         var payload = new object();
         var weak = new WeakReference(payload);
         Task result = Task.CompletedTask;
+
         switch (kind)
         {
             case "raw":
@@ -242,6 +249,7 @@ public class UnorderedActionBoundaryContractTest
             default:
                 throw new ArgumentException(nameof(kind));
         }
+
         return (owner, owner.StopAsync(), result, weak);
     }
 
@@ -256,15 +264,19 @@ public class UnorderedActionBoundaryContractTest
                 () => Assert.Same(stopped.Termination, stopped.Owner.StopAsync()), TestContext.Current.CancellationToken)))
             .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         await stopped.Owner.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
         if (kind != "raw")
             Assert.True(stopped.Result.IsCanceled);
+
         Assert.Equal(0, stopped.Owner.PendingTaskCount);
+
         for (int attempt = 0; attempt < 10 && stopped.Payload.IsAlive; attempt++)
         {
             GC.Collect();
             GC.WaitForPendingFinalizers();
             GC.Collect();
         }
+
         Assert.False(stopped.Payload.IsAlive);
         GC.KeepAlive(stopped.Owner);
         GC.KeepAlive(stopped.Termination);

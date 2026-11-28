@@ -70,6 +70,7 @@ public class DefaultHttp2FrameReaderTest : IDisposable
         int streamId = 1;
 
         ByteBuf input = Unpooled.Buffer();
+
         try
         {
             IHttp2Headers headers = new DefaultHttp2Headers()
@@ -95,6 +96,7 @@ public class DefaultHttp2FrameReaderTest : IDisposable
         int streamId = 1;
 
         ByteBuf input = Unpooled.Buffer();
+
         try
         {
             IHttp2Headers headers = new DefaultHttp2Headers()
@@ -125,6 +127,7 @@ public class DefaultHttp2FrameReaderTest : IDisposable
         int streamId = 1;
 
         ByteBuf input = Unpooled.Buffer();
+
         try
         {
             IHttp2Headers headers = new DefaultHttp2Headers()
@@ -156,6 +159,7 @@ public class DefaultHttp2FrameReaderTest : IDisposable
         int streamId = 1;
 
         ByteBuf input = Unpooled.Buffer();
+
         try
         {
             IHttp2Headers headers = new DefaultHttp2Headers()
@@ -180,6 +184,7 @@ public class DefaultHttp2FrameReaderTest : IDisposable
     {
         ByteBuf input = Unpooled.Buffer();
         ByteBuf payload = Unpooled.Buffer();
+
         try
         {
             payload.WriteByte(1);
@@ -204,6 +209,7 @@ public class DefaultHttp2FrameReaderTest : IDisposable
         int streamId = 1;
 
         ByteBuf input = Unpooled.Buffer();
+
         try
         {
             IHttp2Headers headers = new DefaultHttp2Headers()
@@ -229,6 +235,7 @@ public class DefaultHttp2FrameReaderTest : IDisposable
     public void FailedWhenContinuationFrameStreamIdMismatch()
     {
         ByteBuf input = Unpooled.Buffer();
+
         try
         {
             IHttp2Headers headers = new DefaultHttp2Headers()
@@ -255,6 +262,7 @@ public class DefaultHttp2FrameReaderTest : IDisposable
     public void FailedWhenContinuationFrameNotFollowHeaderFrame()
     {
         ByteBuf input = Unpooled.Buffer();
+
         try
         {
             WriteContinuationFrame(input, 1, new DefaultHttp2Headers().Add(Of("foo"), Of("bar")),
@@ -273,6 +281,7 @@ public class DefaultHttp2FrameReaderTest : IDisposable
     public void FailedWhenHeaderFrameDependsOnItself()
     {
         ByteBuf input = Unpooled.Buffer();
+
         try
         {
             IHttp2Headers headers = new DefaultHttp2Headers()
@@ -298,6 +307,7 @@ public class DefaultHttp2FrameReaderTest : IDisposable
     public void FailedHeadersValidationThrowsConnectionError()
     {
         ByteBuf input = Unpooled.Buffer();
+
         try
         {
             // Because we have padding we need at least 1 byte in the payload to specify the padding length.
@@ -318,6 +328,7 @@ public class DefaultHttp2FrameReaderTest : IDisposable
     {
         ByteBuf input = Unpooled.Buffer();
         ByteBuf dataPayload = Unpooled.Buffer();
+
         try
         {
             IHttp2Headers headers = new DefaultHttp2Headers()
@@ -345,6 +356,7 @@ public class DefaultHttp2FrameReaderTest : IDisposable
     {
         ByteBuf input = Unpooled.Buffer();
         ByteBuf payload = Unpooled.Buffer();
+
         try
         {
             payload.WriteByte(1);
@@ -364,6 +376,7 @@ public class DefaultHttp2FrameReaderTest : IDisposable
     public void FailedWhenPushPromiseFrameNotAssociateWithStream()
     {
         ByteBuf input = Unpooled.Buffer();
+
         try
         {
             WriteFrameHeader(input, INT_FIELD_LENGTH, PUSH_PROMISE, new Http2Flags().EndOfHeaders(true), 0);
@@ -385,6 +398,7 @@ public class DefaultHttp2FrameReaderTest : IDisposable
     public void ReadPriorityFrame()
     {
         ByteBuf input = Unpooled.Buffer();
+
         try
         {
             WritePriorityFrame(input, 1, 0, 10);
@@ -400,6 +414,7 @@ public class DefaultHttp2FrameReaderTest : IDisposable
     public void FailedWhenPriorityFrameDependsOnItself()
     {
         ByteBuf input = Unpooled.Buffer();
+
         try
         {
             WritePriorityFrame(input, 1, 1, 10);
@@ -415,6 +430,7 @@ public class DefaultHttp2FrameReaderTest : IDisposable
     public void FailedWhenConnectionWindowUpdateFrameWithZeroDelta()
     {
         ByteBuf input = Unpooled.Buffer();
+
         try
         {
             WriteFrameHeader(input, 4, WINDOW_UPDATE, new Http2Flags(), 0);
@@ -433,6 +449,7 @@ public class DefaultHttp2FrameReaderTest : IDisposable
     public void FailedWhenStreamWindowUpdateFrameWithZeroDelta()
     {
         ByteBuf input = Unpooled.Buffer();
+
         try
         {
             WriteFrameHeader(input, 4, WINDOW_UPDATE, new Http2Flags(), 1);
@@ -451,6 +468,7 @@ public class DefaultHttp2FrameReaderTest : IDisposable
     public void ReadSettingsFrame()
     {
         ByteBuf input = Unpooled.Buffer();
+
         try
         {
             WriteFrameHeader(input, 6, SETTINGS, new Http2Flags(), 0);
@@ -470,6 +488,7 @@ public class DefaultHttp2FrameReaderTest : IDisposable
     public void ReadAckSettingsFrame()
     {
         ByteBuf input = Unpooled.Buffer();
+
         try
         {
             WriteFrameHeader(input, 0, SETTINGS, new Http2Flags().Ack(true), 0);
@@ -487,6 +506,7 @@ public class DefaultHttp2FrameReaderTest : IDisposable
     public void FailedWhenSettingsFrameOnNonZeroStream()
     {
         ByteBuf input = Unpooled.Buffer();
+
         try
         {
             WriteFrameHeader(input, 6, SETTINGS, new Http2Flags(), 1);
@@ -506,6 +526,7 @@ public class DefaultHttp2FrameReaderTest : IDisposable
     public void FailedWhenAckSettingsFrameWithPayload()
     {
         ByteBuf input = Unpooled.Buffer();
+
         try
         {
             WriteFrameHeader(input, 1, SETTINGS, new Http2Flags().Ack(true), 0);
@@ -524,6 +545,7 @@ public class DefaultHttp2FrameReaderTest : IDisposable
     public void FailedWhenSettingsFrameWithWrongPayloadLength()
     {
         ByteBuf input = Unpooled.Buffer();
+
         try
         {
             WriteFrameHeader(input, 8, SETTINGS, new Http2Flags(), 0);
@@ -544,6 +566,7 @@ public class DefaultHttp2FrameReaderTest : IDisposable
     {
         ByteBuf input = Unpooled.Buffer();
         int priorityStreamId = 3, headerStreamId = 5;
+
         try
         {
             // Write a malformed priority header causing a stream exception in reader
@@ -589,6 +612,7 @@ public class DefaultHttp2FrameReaderTest : IDisposable
             Http2Flags flags)
     {
         ByteBuf headerBlock = Unpooled.Buffer();
+
         try
         {
             hpackEncoder.EncodeHeaders(streamId, headerBlock, headers, IHttp2HeadersEncoder.NEVER_SENSITIVE);
@@ -606,6 +630,7 @@ public class DefaultHttp2FrameReaderTest : IDisposable
             ByteBuf dataPayload)
     {
         ByteBuf headerBlock = Unpooled.Buffer();
+
         try
         {
             hpackEncoder.EncodeHeaders(streamId, headerBlock, headers, IHttp2HeadersEncoder.NEVER_SENSITIVE);
@@ -627,6 +652,7 @@ public class DefaultHttp2FrameReaderTest : IDisposable
             Http2Flags flags, int streamDependency, int weight)
     {
         ByteBuf headerBlock = Unpooled.Buffer();
+
         try
         {
             headerBlock.WriteInt(streamDependency);
@@ -646,6 +672,7 @@ public class DefaultHttp2FrameReaderTest : IDisposable
             Http2Flags flags)
     {
         ByteBuf headerBlock = Unpooled.Buffer();
+
         try
         {
             hpackEncoder.EncodeHeaders(streamId, headerBlock, headers, IHttp2HeadersEncoder.NEVER_SENSITIVE);

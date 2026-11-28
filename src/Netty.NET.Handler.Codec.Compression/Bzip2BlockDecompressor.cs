@@ -208,6 +208,7 @@ internal sealed class Bzip2BlockDecompressor
                 this.mtfValue = mtfValue;
                 return false;
             }
+
             int nextSymbol = huffmanDecoder.NextSymbol();
 
             if (nextSymbol == HUFFMAN_SYMBOL_RUNA)
@@ -223,14 +224,17 @@ internal sealed class Bzip2BlockDecompressor
             else
             {
                 byte nextByte;
+
                 if (repeatCount > 0)
                 {
                     if (repeatCount > streamBlockSize - bwtBlockLength)
                     {
                         throw new DecompressionException("block exceeds declared block size");
                     }
+
                     nextByte = huffmanSymbolMap[mtfValue];
                     bwtByteCounts[nextByte & 0xff] += repeatCount;
+
                     while (--repeatCount >= 0)
                     {
                         bwtBlock[bwtBlockLength++] = nextByte;
@@ -257,6 +261,7 @@ internal sealed class Bzip2BlockDecompressor
                 bwtBlock[bwtBlockLength++] = nextByte;
             }
         }
+
         if (bwtBlockLength > MAX_BLOCK_LENGTH)
         {
             throw new DecompressionException("block length exceeds max block length: "
@@ -286,6 +291,7 @@ internal sealed class Bzip2BlockDecompressor
 
         // Cumulative character counts
         Array.Copy(bwtByteCounts, 0, characterBase, 1, 255);
+
         for (int i = 2; i <= 255; i++)
         {
             characterBase[i] += characterBase[i - 1];
@@ -336,6 +342,7 @@ internal sealed class Bzip2BlockDecompressor
                     {
                         throw new DecompressionException("malformed RLE: run-length byte missing at end of block");
                     }
+
                     // Accumulation complete, start repetition
                     int rleRepeat = DecodeNextBWTByte() + 1;
                     this.rleRepeat = rleRepeat;
@@ -349,6 +356,7 @@ internal sealed class Bzip2BlockDecompressor
                 }
             }
         }
+
         rleRepeat--;
 
         return rleLastDecodedByte;
@@ -374,6 +382,7 @@ internal sealed class Bzip2BlockDecompressor
                 randomCount = Bzip2Rand.RNums(randomIndex);
             }
         }
+
         bwtBytesDecoded++;
 
         return nextDecodedByte;
@@ -396,6 +405,7 @@ internal sealed class Bzip2BlockDecompressor
         {
             throw new DecompressionException("block CRC error");
         }
+
         return computedBlockCRC;
     }
 }

@@ -63,6 +63,7 @@ public class UnorderedWorkerFailureContractTest
             {
                 return null;
             }
+
             var started = new Thread(() =>
             {
             }) { IsBackground = true };
@@ -75,6 +76,7 @@ public class UnorderedWorkerFailureContractTest
         using var release = new ManualResetEventSlim();
         var escaping = new EscapingSubmission(entered, release);
         executor.Execute(escaping);
+
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -94,6 +96,7 @@ public class UnorderedWorkerFailureContractTest
                 () => escaping.Result.WaitAsync(TimeSpan.FromSeconds(5))));
             Exception failure = await Assert.ThrowsAnyAsync<Exception>(() => queued.WaitAsync(TimeSpan.FromSeconds(5)));
             Assert.IsNotType<TimeoutException>(failure);
+
             if (mode == "throw")
             {
                 Assert.Same(expected, failure);
@@ -106,8 +109,10 @@ public class UnorderedWorkerFailureContractTest
             {
                 Assert.IsType<InvalidOperationException>(failure);
             }
+
             foreach (Task result in new Task[] { deadline, repeating, forwarded, notification.NotificationCompleted, executor.TerminationFuture })
                 Assert.Same(failure, await Assert.ThrowsAnyAsync<Exception>(() => result.WaitAsync(TimeSpan.FromSeconds(5))));
+
             Assert.True(executor.IsShutdown());
             Assert.True(executor.IsTerminated());
             Assert.Equal(0, executor.PendingTaskCount);
@@ -145,6 +150,7 @@ public class UnorderedWorkerFailureContractTest
         Task<int> survivor = executor.SubmitAsync(() =>
         {
             survivorEntered.Set();
+
             try
             {
                 survivorRelease.Wait();
@@ -154,8 +160,10 @@ public class UnorderedWorkerFailureContractTest
                 interrupted = true;
                 throw;
             }
+
             return 7;
         });
+
         try
         {
             Assert.True(escapedEntered.Wait(TimeSpan.FromSeconds(5)));
@@ -192,12 +200,14 @@ public class UnorderedWorkerFailureContractTest
             new Factory(task =>
             {
                 Interlocked.Increment(ref creations);
+
                 return new Thread(task.Invoke) { IsBackground = true };
             }));
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
         var escaping = new EscapingSubmission(entered, release);
         executor.Execute(escaping);
+
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -229,6 +239,7 @@ public class UnorderedWorkerFailureContractTest
         using var release = new ManualResetEventSlim();
         var escaping = new EscapingSubmission(entered, release);
         executor.Execute(escaping);
+
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -262,12 +273,14 @@ public class UnorderedWorkerFailureContractTest
             {
                 return new Thread(task.Invoke) { IsBackground = true };
             }
+
             _ = executor.StopAsync();
             pendingInsideFactory = !executor.TerminationFuture.IsCompleted;
             if (throwAfterClosing)
             {
                 throw expected;
             }
+
             return null;
         });
         executor = new UnorderedThreadPoolEventExecutor(1, factory);
@@ -275,6 +288,7 @@ public class UnorderedWorkerFailureContractTest
         using var release = new ManualResetEventSlim();
         var escaping = new EscapingSubmission(entered, release);
         executor.Execute(escaping);
+
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -282,6 +296,7 @@ public class UnorderedWorkerFailureContractTest
             {
             });
             release.Set();
+
             if (throwAfterClosing)
             {
                 Assert.Same(expected, await Assert.ThrowsAsync<InvalidOperationException>(
@@ -291,6 +306,7 @@ public class UnorderedWorkerFailureContractTest
             {
                 await executor.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5));
             }
+
             Assert.True(pendingInsideFactory);
             Assert.Equal(2, creations);
             Assert.True(queued.IsCanceled);
@@ -318,6 +334,7 @@ public class UnorderedWorkerFailureContractTest
             {
                 return new Thread(task.Invoke) { IsBackground = true };
             }
+
             executor.StopAsync();
             throw backend;
         });
@@ -327,6 +344,7 @@ public class UnorderedWorkerFailureContractTest
         using var registration = executor.StopToken.UnsafeRegister(_ => throw callback, null);
         var escaping = new EscapingSubmission(entered, release);
         executor.Execute(escaping);
+
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));

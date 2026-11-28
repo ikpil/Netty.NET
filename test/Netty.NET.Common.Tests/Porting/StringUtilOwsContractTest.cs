@@ -35,6 +35,7 @@ public class StringUtilOwsContractTest
         var row = TrimCases[index];
         string actual = StringUtil.TrimOws(row.Input);
         Assert.Equal(row.Expected, actual);
+
         if (row.Input == row.Expected)
         {
             Assert.Same(row.Input, actual);
@@ -61,6 +62,7 @@ public class StringUtilOwsContractTest
             Assert.Equal(expected, StringUtil.TrimOws(" \t" + text + "\t "));
             string actual = StringUtil.TrimOws(text);
             Assert.Equal(expected, actual);
+
             if (expected.Length != 0)
             {
                 Assert.Same(text, actual);

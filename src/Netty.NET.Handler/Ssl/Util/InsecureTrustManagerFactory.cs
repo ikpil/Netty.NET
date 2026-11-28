@@ -58,6 +58,7 @@ public static class InsecureTrustManagerFactory
         if (certificate != null)
         {
             X509Certificate[] peerChain = { certificate };
+
             if (sender is SslStream stream && stream.IsServer)
             {
                 CheckClientTrusted(peerChain, null);
@@ -67,6 +68,7 @@ public static class InsecureTrustManagerFactory
                 CheckServerTrusted(peerChain, null);
             }
         }
+
         return true;
     }
 

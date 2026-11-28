@@ -218,6 +218,7 @@ public class HttpRequestDecoder : HttpObjectDecoder
                 }
             }
         }
+
         return base.SplitHeaderName(sb, start, length);
     }
 
@@ -255,6 +256,7 @@ public class HttpRequestDecoder : HttpObjectDecoder
         {
             return false;
         }
+
         short maybeOn = unchecked((short) (sb[start + 8] | sb[start + 9] << 8));
         return maybeOn == CONNECTION_AS_SHORT_1;
     }
@@ -273,6 +275,7 @@ public class HttpRequestDecoder : HttpObjectDecoder
         {
             return false;
         }
+
         int maybeType = sb[start + 8] |
                 sb[start + 9] << 8 |
                 sb[start + 10] << 16 |
@@ -294,6 +297,7 @@ public class HttpRequestDecoder : HttpObjectDecoder
         {
             return false;
         }
+
         long maybeLength = (uint) (sb[start + 8] |
                 sb[start + 9] << 8 |
                 sb[start + 10] << 16 |
@@ -336,6 +340,7 @@ public class HttpRequestDecoder : HttpObjectDecoder
                 return HttpMethod.POST.Name();
             }
         }
+
         return base.SplitFirstWordInitialLine(sb, start, length);
     }
 
@@ -360,6 +365,7 @@ public class HttpRequestDecoder : HttpObjectDecoder
                 return HttpVersion.HTTP_1_0_STRING;
             }
         }
+
         return base.SplitThirdWordInitialLine(sb, start, length);
     }
 
@@ -383,6 +389,7 @@ public class HttpRequestDecoder : HttpObjectDecoder
         {
             return false;
         }
+
         return base.IsContentAlwaysEmpty(msg);
     }
 }

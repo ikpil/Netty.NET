@@ -69,7 +69,9 @@ public class LinkedHashMap<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyD
             {
                 _linkedList.Remove(existingNode);
             }
+
             existingNode.Value = new KeyValuePair<TKey, TValue>(key, value);
+
             if (_accessOrder)
             {
                 _linkedList.AddLast(existingNode);
@@ -147,6 +149,7 @@ public class LinkedHashMap<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyD
         {
             if (TryGetValue(key, out TValue value))
                 return value;
+
             throw new KeyNotFoundException($"The key '{key}' was not found.");
         }
         set => Add(key, value);
@@ -155,6 +158,7 @@ public class LinkedHashMap<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyD
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
     {
         var node = _linkedList.First;
+
         while (node != null)
         {
             yield return node.Value;

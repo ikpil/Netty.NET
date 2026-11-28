@@ -61,8 +61,10 @@ public class ByteBufSocketTransferTest
         using var scope = new Owner(kind);
         using var pair = new Pair();
         ByteBuf b = scope.Buffer;
+
         for (int i = 0; i < 24; i++)
             b.SetByte(i, 20 + i);
+
         b.SetIndex(2, 18).MarkReaderIndex().MarkWriterIndex();
         int sent = await Get(b, async, 7, pair.Local, 9, pair.Token);
         Assert.InRange(sent, 1, 9);
@@ -89,6 +91,7 @@ public class ByteBufSocketTransferTest
         ByteBuf b = scope.Buffer.SetZero(0, 24).SetIndex(2, 5).MarkReaderIndex().MarkWriterIndex();
         pair.SendAndFinish([91, 92, 93]);
         int total = 0;
+
         while (total < 3)
         {
             int count = await Set(b, async, 7 + total, pair.Local, 12 - total, pair.Token);
@@ -97,6 +100,7 @@ public class ByteBufSocketTransferTest
             Assert.Equal(2, b.ReaderIndex);
             Assert.Equal(5, b.WriterIndex);
         }
+
         Assert.Equal(new byte[] { 91, 92, 93 }, ByteBufUtil.GetBytes(b, 7, 3));
         Assert.Equal(0, b.GetByte(10));
         Assert.Equal(0, await Set(b, async, 7, pair.Local, 12, pair.Token));
@@ -106,6 +110,7 @@ public class ByteBufSocketTransferTest
         using var second = new Pair();
         second.SendAndFinish([81, 82, 83]);
         total = 0;
+
         while (total < 3)
         {
             int count = await Write(b, async, second.Local, 12, second.Token);
@@ -113,6 +118,7 @@ public class ByteBufSocketTransferTest
             total += count;
             Assert.Equal(5 + total, b.WriterIndex);
         }
+
         Assert.Equal(new byte[] { 81, 82, 83 }, ByteBufUtil.GetBytes(b, 5, 3));
         Assert.Equal(0, await Write(b, async, second.Local, 12, second.Token));
         b.ResetReaderIndex().ResetWriterIndex();
@@ -143,6 +149,7 @@ public class ByteBufSocketTransferTest
         const int length = 4 * 1024 * 1024;
         ByteBuf b = direct ? Unpooled.DirectBuffer(length, length) : Unpooled.Buffer(length, length);
         using var pair = new Pair();
+
         try
         {
             b.WriteZero(length);
@@ -150,22 +157,26 @@ public class ByteBufSocketTransferTest
             pair.Peer.ReceiveBufferSize = 4096;
             pair.Local.Blocking = false;
             bool sent = false, blocked = false;
+
             for (int i = 0; i < 64; i++)
             {
                 int before = b.ReaderIndex;
                 int count = b.ReadBytes(pair.Local, b.ReadableBytes);
                 Assert.InRange(count, 0, length - before);
                 Assert.Equal(before + count, b.ReaderIndex);
+
                 if (count == 0)
                 {
                     blocked = true;
                     break;
                 }
+
                 sent = true;
                 // Socket buffer sizes are advisory. Windows may accept the whole
                 // request; resubmit without draining the peer to reach WouldBlock.
                 b.ReaderIndex = 0;
             }
+
             Assert.True(sent);
             Assert.True(blocked);
             Assert.Equal(length, b.WriterIndex);
@@ -328,6 +339,7 @@ public class ByteBufSocketTransferTest
             {
                 Buffer.Release(Buffer.RefCnt);
             }
+
             _allocator?.Dispose();
             Assert.Equal(0, _native.ReservedBytes);
         }

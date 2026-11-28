@@ -192,6 +192,7 @@ public class HttpProxyHandlerTest
     public void TestInvalidHeaders(bool validation)
     {
         EndPoint socketAddress = new DnsEndPoint("10.0.0.1", 8080);
+
         try
         {
             TestInitialMessage(
@@ -202,6 +203,7 @@ public class HttpProxyHandlerTest
                             .Add("CUSTOM_HEADER", "CUSTOM_VALUE1\r\nInvalid: true")
                             .Add("CUSTOM_HEADER", "CUSTOM_VALUE2"),
                     true, validation);
+
             if (validation)
             {
                 Assert.Fail("Validation should have failed for the provided headers");
@@ -224,6 +226,7 @@ public class HttpProxyHandlerTest
         IEventLoopGroup group = null;
         IChannel serverChannel = null;
         IChannel clientChannel = null;
+
         try
         {
             group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
@@ -263,10 +266,12 @@ public class HttpProxyHandlerTest
             {
                 _ = clientChannel.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             if (serverChannel != null)
             {
                 _ = serverChannel.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             if (group != null)
             {
                 _ = group.ShutdownGracefullyAsync();
@@ -322,6 +327,7 @@ public class HttpProxyHandlerTest
         _ = handler.ConnectAsync(ctx.Object, socketAddress, null, promise);
 
         IFullHttpRequest request = (IFullHttpRequest) handler.InvokeNewInitialMessage(ctx.Object);
+
         try
         {
             Assert.Equal(HttpVersion.HTTP_1_1, request.ProtocolVersion());
@@ -342,6 +348,7 @@ public class HttpProxyHandlerTest
         {
             request.Release();
         }
+
         ctx.Verify(c => c.ConnectAsync(proxyAddress, null, promise), Times.Once());
     }
 
@@ -405,6 +412,7 @@ public class HttpProxyHandlerTest
                 // The handshake is done, so the proxy handler is not needed anymore.
                 ctx.Pipeline.Remove<HttpProxyHandler>();
             }
+
             ctx.FireUserEventTriggered(evt);
         }
     }

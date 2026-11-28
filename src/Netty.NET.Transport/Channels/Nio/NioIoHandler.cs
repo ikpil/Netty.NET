@@ -144,6 +144,7 @@ public sealed class NioIoHandler : IIoHandler
 
         // Register all channels to the new Selector.
         int nChannels = 0;
+
         foreach (DefaultNioRegistration handle in new List<DefaultNioRegistration>(oldSelector.Keys()))
         {
             try
@@ -191,6 +192,7 @@ public sealed class NioIoHandler : IIoHandler
         {
             return nioIoHandle;
         }
+
         throw new ArgumentException("IoHandle of type " + StringUtil.SimpleClassName(handle) + " not supported");
     }
 
@@ -200,6 +202,7 @@ public sealed class NioIoHandler : IIoHandler
         {
             return nioIoOps;
         }
+
         throw new ArgumentException("IoOps of type " + StringUtil.SimpleClassName(ops) + " not supported");
     }
 
@@ -256,6 +259,7 @@ public sealed class NioIoHandler : IIoHandler
             {
                 return -1;
             }
+
             int v = Cast(ops)._value;
             _interestOps = v;
             return v;
@@ -267,13 +271,16 @@ public sealed class NioIoHandler : IIoHandler
             {
                 return false;
             }
+
             _key.Cancel(_handle.SelectableChannel(), this);
             _ioHandler._cancelledKeys++;
+
             if (_ioHandler._cancelledKeys >= CLEANUP_INTERVAL)
             {
                 _ioHandler._cancelledKeys = 0;
                 _ioHandler._needsToSelectAgain = true;
             }
+
             _handle.Unregistered();
             return true;
         }
@@ -281,6 +288,7 @@ public sealed class NioIoHandler : IIoHandler
         internal void Close()
         {
             Cancel();
+
             try
             {
                 _handle.Close();
@@ -297,6 +305,7 @@ public sealed class NioIoHandler : IIoHandler
             {
                 return;
             }
+
             _handle.Handle(this, NioIoOps.EventOf(ready));
         }
 
@@ -316,6 +325,7 @@ public sealed class NioIoHandler : IIoHandler
         {
             throw new InvalidOperationException("IllegalBlockingModeException: the socket must be non-blocking.");
         }
+
         IIoRegistration registration = new DefaultNioRegistration(this, _executor, nioHandle, ops, _selector);
         handle.Registered();
         return registration;
@@ -324,6 +334,7 @@ public sealed class NioIoHandler : IIoHandler
     public int Run(IIoHandlerContext context)
     {
         int handled = 0;
+
         try
         {
             try
@@ -335,6 +346,7 @@ public sealed class NioIoHandler : IIoHandler
                         {
                             context.ReportActiveIoTime(0); // Report zero as we did no I/O.
                         }
+
                         return 0;
 
                     case ISelectStrategy.BUSY_WAIT:
@@ -376,6 +388,7 @@ public sealed class NioIoHandler : IIoHandler
                         {
                             _selector.Wakeup();
                         }
+
                         // fall through
                         break;
                     default:
@@ -416,6 +429,7 @@ public sealed class NioIoHandler : IIoHandler
         {
             HandleLoopException(t);
         }
+
         return handled;
     }
 
@@ -464,6 +478,7 @@ public sealed class NioIoHandler : IIoHandler
     {
         List<DefaultNioRegistration> selectedKeys = _selector.SelectedKeys;
         int handled = 0;
+
         for (int i = 0; i < selectedKeys.Count; ++i)
         {
             DefaultNioRegistration k = selectedKeys[i];
@@ -485,12 +500,14 @@ public sealed class NioIoHandler : IIoHandler
                         selectedKeys[j].ReadyOps = 0;
                     }
                 }
+
                 selectedKeys.Clear();
 
                 SelectAgain();
                 i = -1;
             }
         }
+
         selectedKeys.Clear();
         return handled;
     }
@@ -500,6 +517,7 @@ public sealed class NioIoHandler : IIoHandler
         DefaultNioRegistration registration = k;
         int readyOps = registration.ReadyOps;
         registration.ReadyOps = 0;
+
         if (!registration.IsValid())
         {
             // CLR: the JDK drops a key cancelled by deregistration from the selected set at the next selection
@@ -508,6 +526,7 @@ public sealed class NioIoHandler : IIoHandler
             {
                 return;
             }
+
             try
             {
                 registration.Handle().Close();
@@ -516,8 +535,10 @@ public sealed class NioIoHandler : IIoHandler
             {
                 logger.Debug("Exception during closing " + registration.Handle(), e);
             }
+
             return;
         }
+
         registration.Handle(readyOps);
     }
 
@@ -526,6 +547,7 @@ public sealed class NioIoHandler : IIoHandler
         SelectAgain();
         ICollection<DefaultNioRegistration> keys = _selector.Keys();
         List<DefaultNioRegistration> registrations = new List<DefaultNioRegistration>(keys.Count);
+
         foreach (DefaultNioRegistration k in keys)
         {
             DefaultNioRegistration handle = k;
@@ -560,13 +582,16 @@ public sealed class NioIoHandler : IIoHandler
         // that's some special value which is used to indicate that no scheduled task is present.
         // we set the deadline to a bogus (unused) value for us to represent infinity
         long selectDeadLineNanos = long.MaxValue;
+
         if (delayNanos != long.MaxValue)
         {
             selectDeadLineNanos = unchecked(currentTimeNanos + runner.DelayNanos(currentTimeNanos));
         }
+
         for (;;)
         {
             long timeoutMillis;
+
             if (delayNanos != long.MaxValue)
             {
                 long millisBeforeDeadline = MillisBeforeDeadline(selectDeadLineNanos, currentTimeNanos);
@@ -577,8 +602,10 @@ public sealed class NioIoHandler : IIoHandler
                         selector.SelectNow();
                         selectCnt = 1;
                     }
+
                     break;
                 }
+
                 timeoutMillis = millisBeforeDeadline;
             }
             else
@@ -586,6 +613,7 @@ public sealed class NioIoHandler : IIoHandler
                 // in NIO this means to block without any deadline
                 timeoutMillis = 0;
             }
+
             // If a task was submitted when wakenUp value was true, the task didn't get a chance to call
             // Selector#wakeup. So we need to check task queue again before executing select operation.
             // If we don't, the task might be pended until select operation was timed out.
@@ -650,6 +678,7 @@ public sealed class NioIoHandler : IIoHandler
         {
             return long.MaxValue / 1_000_000L;
         }
+
         // Add 500_000 to round up to the nearest millisecond.
         return (nanosBeforeDeadline + 500_000L) / 1_000_000L;
     }
@@ -689,6 +718,7 @@ public sealed class NioIoHandler : IIoHandler
     private void SelectAgain()
     {
         _needsToSelectAgain = false;
+
         try
         {
             _selector.SelectNow();
@@ -721,6 +751,7 @@ public sealed class NioIoHandler : IIoHandler
     public static IIoHandlerFactory NewFactory(ISelectStrategyFactory selectStrategyFactory)
     {
         ObjectUtil.CheckNotNull(selectStrategyFactory, "selectStrategyFactory");
+
         return new Factory(selectStrategyFactory);
     }
 
@@ -763,6 +794,7 @@ public sealed class NioIoHandler : IIoHandler
         private static Socket NewWakeupSocket()
         {
             Socket socket = null;
+
             try
             {
                 bool ipv4 = Socket.OSSupportsIPv4;
@@ -806,6 +838,7 @@ public sealed class NioIoHandler : IIoHandler
             {
                 throw new InvalidOperationException("The socket is already registered.");
             }
+
             _keys[socket] = registration;
         }
 
@@ -847,6 +880,7 @@ public sealed class NioIoHandler : IIoHandler
             {
                 throw new ObjectDisposedException(nameof(NioIoHandler), "ClosedSelectorException");
             }
+
             lock (_interruptLock)
             {
                 // A pending wakeup makes this selection return at once without blocking, as in WindowsSelectorImpl.
@@ -856,10 +890,12 @@ public sealed class NioIoHandler : IIoHandler
                     return 0;
                 }
             }
+
             _read.Clear();
             _write.Clear();
             _error.Clear();
             _read.Add(_wakeupSocket);
+
             foreach (KeyValuePair<Socket, DefaultNioRegistration> entry in _keys)
             {
                 DefaultNioRegistration key = entry.Value;
@@ -868,25 +904,30 @@ public sealed class NioIoHandler : IIoHandler
                 {
                     continue;
                 }
+
                 int ops = key.InterestOps;
                 if ((ops & (NioIoOps.OP_READ | NioIoOps.OP_ACCEPT)) != 0)
                 {
                     _read.Add(entry.Key);
                 }
+
                 if ((ops & (NioIoOps.OP_WRITE | NioIoOps.OP_CONNECT)) != 0)
                 {
                     _write.Add(entry.Key);
                 }
+
                 if ((ops & NioIoOps.OP_CONNECT) != 0)
                 {
                     // Winsock reports a failed non-blocking connect in exceptfds, not in writefds.
                     _error.Add(entry.Key);
                 }
             }
+
             Socket.Select(_read, _write.Count == 0 ? null : _write, _error.Count == 0 ? null : _error, microSeconds);
             int round = unchecked(++_round);
             int updated = 0;
             bool woken = false;
+
             foreach (Socket socket in _read)
             {
                 if (ReferenceEquals(socket, _wakeupSocket))
@@ -894,16 +935,20 @@ public sealed class NioIoHandler : IIoHandler
                     woken = true;
                     continue;
                 }
+
                 updated += Ready(socket, NioIoOps.OP_READ | NioIoOps.OP_ACCEPT, round);
             }
+
             foreach (Socket socket in _write)
             {
                 updated += Ready(socket, NioIoOps.OP_WRITE | NioIoOps.OP_CONNECT, round);
             }
+
             foreach (Socket socket in _error)
             {
                 updated += Ready(socket, NioIoOps.OP_CONNECT, round);
             }
+
             if (woken)
             {
                 lock (_interruptLock)
@@ -911,6 +956,7 @@ public sealed class NioIoHandler : IIoHandler
                     ResetWakeupSocket();
                 }
             }
+
             return updated;
         }
 
@@ -920,21 +966,27 @@ public sealed class NioIoHandler : IIoHandler
             {
                 return 0;
             }
+
             int ready = key.InterestOps & mask;
             if (ready == 0)
             {
                 return 0;
             }
+
             key.ReadyOps |= ready;
+
             if (key.SelectedRound != round)
             {
                 key.SelectedRound = round;
+
                 if (!SelectedKeys.Contains(key))
                 {
                     SelectedKeys.Add(key);
                 }
+
                 return 1;
             }
+
             return 0;
         }
 
@@ -946,6 +998,7 @@ public sealed class NioIoHandler : IIoHandler
                 {
                     return;
                 }
+
                 try
                 {
                     _wakeupSocket.Send(_wakeupBuffer, 0, 1, SocketFlags.None, out SocketError _);
@@ -954,6 +1007,7 @@ public sealed class NioIoHandler : IIoHandler
                 {
                     return;
                 }
+
                 _interruptTriggered = true;
             }
         }
@@ -965,11 +1019,13 @@ public sealed class NioIoHandler : IIoHandler
             {
                 return;
             }
+
             while (_wakeupSocket.Available > 0 &&
                 _wakeupSocket.Receive(_wakeupBuffer, 0, _wakeupBuffer.Length, SocketFlags.None, out SocketError error) > 0 &&
                 error == SocketError.Success)
             {
             }
+
             _interruptTriggered = false;
         }
 
@@ -981,8 +1037,10 @@ public sealed class NioIoHandler : IIoHandler
                 {
                     return;
                 }
+
                 _closed = true;
             }
+
             _keys.Clear();
             SelectedKeys.Clear();
             _wakeupSocket.Dispose();

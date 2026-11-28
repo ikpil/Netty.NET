@@ -27,6 +27,7 @@ internal class SimpleLeakAwareCompositeByteBuf : WrappedCompositeByteBuf
         : base(wrapped)
     {
         ArgumentNullException.ThrowIfNull(leak);
+
         Leak = leak;
     }
 
@@ -39,6 +40,7 @@ internal class SimpleLeakAwareCompositeByteBuf : WrappedCompositeByteBuf
         {
             return false;
         }
+
         CloseLeak(unwrapped);
         return true;
     }

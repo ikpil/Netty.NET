@@ -69,6 +69,7 @@ public class HelloWorldHttp1Handler : SimpleChannelInboundHandler<IFullHttpReque
             {
                 response.Headers().Set(CONNECTION, HttpHeaderValues.KEEP_ALIVE);
             }
+
             _ = ctx.WriteAsync(response);
         }
         else

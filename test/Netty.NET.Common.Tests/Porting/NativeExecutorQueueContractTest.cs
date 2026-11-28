@@ -205,6 +205,7 @@ public class NativeExecutorQueueContractTest
         Assert.Same(callback, ready.LastAttempt);
         Assert.True(ready.TryDequeue(out var retained));
         Assert.Same(occupied, retained);
+
         for (int i = 0; i < 3; i++)
         {
             Assert.True(executor.Transfer(ready));
@@ -217,6 +218,7 @@ public class NativeExecutorQueueContractTest
             Assert.Equal(id, work.GetId());
             executor.Advance(100);
         }
+
         Assert.True(executor.Transfer(ready));
         cancellation.Cancel();
         Assert.True(completion.IsCanceled);

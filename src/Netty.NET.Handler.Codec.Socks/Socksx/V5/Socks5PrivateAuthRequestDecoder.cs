@@ -48,6 +48,7 @@ public sealed class Socks5PrivateAuthRequestDecoder : ByteToMessageDecoder
                 {
                     @out.Add(@in.ReadRetainedSlice(readableBytes));
                 }
+
                 return;
             }
 

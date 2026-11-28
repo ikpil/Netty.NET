@@ -111,6 +111,7 @@ public class CoalescingBufferQueueContractTest
         {
             if (_stopped)
                 throw new RejectedExecutionException();
+
             task();
         }
         public override Task TerminationFuture => Task.CompletedTask;

@@ -42,6 +42,7 @@ public class CompletedResultConsumerContractTest
             onLoop = executor.InEventLoop();
             ++calls;
             Assert.Same(operation, task);
+
             try
             {
                 selected = ((Task<IPEndPoint>)task).GetAwaiter().GetResult();
@@ -51,6 +52,7 @@ public class CompletedResultConsumerContractTest
                 observedError = failure;
             }
         };
+
         try
         {
             if (registerOnLoop)
@@ -70,9 +72,11 @@ public class CompletedResultConsumerContractTest
                 Assert.Equal(0, calls);
                 release.Set();
             }
+
             await registration.NotificationCompleted.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.True(onLoop);
             Assert.Equal(1, calls);
+
             if (failed)
             {
                 Assert.Same(error, observedError);
@@ -116,6 +120,7 @@ public class CompletedResultConsumerContractTest
         using var firstCompletion = new ExecutorCompletion(executor, firstLookup.Task);
         using var secondCompletion = new ExecutorCompletion(executor, secondLookup.Task);
         CompletionRegistration first = null, second = null;
+
         try
         {
             await executor.SubmitAsync(() =>
@@ -163,6 +168,7 @@ public class CompletedResultConsumerContractTest
         object observedFirst = null, observedSecond = null;
         Task observedFirstTask = null, observedSecondTask = null;
         bool firstAffinity = false, secondAffinity = false;
+
         try
         {
             using var first = firstObservation.Register(task =>

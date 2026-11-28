@@ -42,10 +42,12 @@ public class RedisClientHandler : ChannelDuplexHandler
     {
         string[] commands = Regex.Split((string) msg, "\\s+");
         List<IRedisMessage> children = new List<IRedisMessage>(commands.Length);
+
         foreach (string cmdString in commands)
         {
             children.Add(new FullBulkStringRedisMessage(ByteBufUtil.WriteUtf8(ctx.Alloc(), cmdString)));
         }
+
         IRedisMessage request = new ArrayRedisMessage(children);
         return ctx.WriteAsync(request, cancellationToken);
     }
@@ -101,6 +103,7 @@ public class RedisClientHandler : ChannelDuplexHandler
         {
             return "(null)";
         }
+
         return msg.Content.ToString(Encoding.UTF8);
     }
 }

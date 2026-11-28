@@ -51,6 +51,7 @@ public class ReadOnlyByteBufTest
     public void TestUnmodifiableBuffer()
     {
         ByteBuf buf = Unpooled.Buffer(1);
+
         try
         {
             Assert.IsType<ReadOnlyByteBuf>(buf.AsReadOnly());
@@ -67,6 +68,7 @@ public class ReadOnlyByteBufTest
         // CLR: a duplicated view over a wrapper that is not one of the library's buffer classes replaces
         // new DuplicatedByteBuf(mock(ByteBuf.class)).
         ByteBuf root = Unpooled.Buffer(1);
+
         try
         {
             _ = new ByteBufView(new ForwardingWrapper(root)).AsReadOnly();
@@ -81,6 +83,7 @@ public class ReadOnlyByteBufTest
     public void TestUnwrap()
     {
         ByteBuf buf = Unpooled.Buffer(1);
+
         try
         {
             Assert.Same(buf, buf.AsReadOnly().Unwrap());
@@ -97,6 +100,7 @@ public class ReadOnlyByteBufTest
         // CLR has no mutable ByteOrder facade: the explicit big- and little-endian accessors of the view read the
         // parent's bytes in the same order as the parent's own accessors.
         ByteBuf buf = Unpooled.Buffer(2).WriteShort(0x0102);
+
         try
         {
             ByteBuf view = buf.AsReadOnly();
@@ -113,6 +117,7 @@ public class ReadOnlyByteBufTest
     public void ShouldReturnReadOnlyDerivedBuffer()
     {
         ByteBuf parent = Unpooled.Buffer(1);
+
         try
         {
             ByteBuf buf = parent.AsReadOnly();
@@ -131,9 +136,11 @@ public class ReadOnlyByteBufTest
     public void ShouldReturnWritableCopy()
     {
         ByteBuf parent = Unpooled.Buffer(1);
+
         try
         {
             ByteBuf copy = parent.AsReadOnly().Copy();
+
             try
             {
                 Assert.IsNotType<ReadOnlyByteBuf>(copy);
@@ -218,6 +225,7 @@ public class ReadOnlyByteBufTest
         var buf = new StubParent();
         ByteBuf destination = Unpooled.Buffer(21);
         using var channel = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
         try
         {
             Assert.Equal(65536, buf.MaxCapacity);
@@ -328,6 +336,7 @@ public class ReadOnlyByteBufTest
     public void ShouldIndicateNotWritable()
     {
         ByteBuf buf = Unpooled.Buffer(1);
+
         try
         {
             Assert.False(buf.AsReadOnly().IsWritable());
@@ -342,6 +351,7 @@ public class ReadOnlyByteBufTest
     public void ShouldIndicateNotWritableAnyNumber()
     {
         ByteBuf buf = Unpooled.Buffer(1);
+
         try
         {
             Assert.False(buf.AsReadOnly().IsWritable(1));
@@ -381,6 +391,7 @@ public class ReadOnlyByteBufTest
     {
         ByteBuf buf = Unpooled.Buffer(1);
         ByteBuf readOnly = buf.AsReadOnly();
+
         try
         {
             Assert.Throws<NotSupportedException>(() => readOnly.EnsureWritable(1));
@@ -466,6 +477,7 @@ public class ReadOnlyByteBufTest
     public void ReadOnlyViewSharesContentAndOwnershipWithIndependentIndicesAndMarks(bool direct)
     {
         ByteBuf parent = NewBuffer(direct);
+
         try
         {
             parent.WriteBytes(new byte[] { 1, 2, 3, 4 }).SetIndex(1, 4).MarkReaderIndex().MarkWriterIndex();
@@ -513,6 +525,7 @@ public class ReadOnlyByteBufTest
     {
         ByteBuf parent = NewBuffer(direct, 64);
         ByteBuf source = Unpooled.WrappedBuffer(new byte[] { 77 });
+
         try
         {
             parent.WriteBytes(new byte[] { 1, 2, 3, 4 });
@@ -544,6 +557,7 @@ public class ReadOnlyByteBufTest
                 () => ByteBufUtil.WriteAscii(view, new AsciiString("x")),
                 () => ByteBufUtil.WriteUtf8(view, new AsciiString("x"))
             };
+
             foreach (Action mutation in mutations)
             {
                 Assert.Throws<NotSupportedException>(mutation);
@@ -554,6 +568,7 @@ public class ReadOnlyByteBufTest
                 Assert.Equal(64, parent.Capacity);
                 Assert.Equal(1, parent.RefCnt);
             }
+
             Assert.Equal(1, view.EnsureWritable(0, false));
             Assert.Equal(1, view.EnsureWritable(1, true));
             Assert.Equal(1, view.EnsureWritable(int.MaxValue, true));
@@ -572,6 +587,7 @@ public class ReadOnlyByteBufTest
     public void ReadsWordsStringsSearchesAndProcessorsThroughReadOnlyStorage(bool direct)
     {
         ByteBuf parent = NewBuffer(direct, 32);
+
         try
         {
             parent.WriteBytes(new byte[] { 1, 0x80, 0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10,
@@ -627,6 +643,7 @@ public class ReadOnlyByteBufTest
     {
         ByteBuf parent = NewBuffer(direct);
         ByteBuf destination = NewBuffer(direct, 0);
+
         try
         {
             parent.WriteBytes(new byte[] { 1, 2, 3, 4, 5, 6 });
@@ -644,6 +661,7 @@ public class ReadOnlyByteBufTest
             Assert.Equal(new byte[] { 3, 4, 5 }, bytes);
             Assert.Equal(5, view.ReaderIndex);
             ByteBuf copy = view.Copy(1, 4);
+
             try
             {
                 Assert.False(copy.IsReadOnly);
@@ -656,7 +674,9 @@ public class ReadOnlyByteBufTest
             {
                 copy.Release();
             }
+
             ByteBuf allocatedRead = view.ReadBytes(1);
+
             try
             {
                 Assert.False(allocatedRead.IsReadOnly);
@@ -666,6 +686,7 @@ public class ReadOnlyByteBufTest
             {
                 allocatedRead.Release();
             }
+
             view.ReaderIndex = 0;
             Assert.Throws<NotSupportedException>(() => view.ReadBytes(destination.AsReadOnly(), 1));
             Assert.Equal(0, view.ReaderIndex);
@@ -684,6 +705,7 @@ public class ReadOnlyByteBufTest
     public void NestedSlicesAndDuplicatesRemainReadOnlyWithTheirOwnCoordinateSpace(bool direct)
     {
         ByteBuf parent = NewBuffer(direct);
+
         try
         {
             for (int i = 0; i < 16; ++i)
@@ -692,10 +714,12 @@ public class ReadOnlyByteBufTest
             }
 
             ByteBuf view = parent.AsReadOnly();
+
             foreach (bool retained in new[] { false, true })
             {
                 ByteBuf slice = retained ? view.RetainedSlice(2, 6) : view.Slice(2, 6);
                 ByteBuf duplicate = retained ? slice.RetainedDuplicate() : slice.Duplicate();
+
                 try
                 {
                     Assert.True(slice.IsReadOnly);
@@ -722,8 +746,10 @@ public class ReadOnlyByteBufTest
                         slice.Release();
                     }
                 }
+
                 parent.SetByte(3, 3);
             }
+
             Assert.Equal(1, parent.RefCnt);
             ByteBuf duplicateView = view.Duplicate();
             duplicateView.ReaderIndex = 4;
@@ -772,6 +798,7 @@ public class ReadOnlyByteBufTest
     public void DiscardSomeReadBytesSeparatesIndexOnlyResetFromDataCompaction(bool direct)
     {
         ByteBuf parent = NewBuffer(direct, 8);
+
         try
         {
             parent.WriteBytes(new byte[] { 1, 2, 3, 4, 5, 6 });
@@ -803,6 +830,7 @@ public class ReadOnlyByteBufTest
     public void ParentResizeUpdatesRootViewCapacityAndChecksSlicePhysicalRanges(bool direct)
     {
         ByteBuf parent = NewBuffer(direct, 8);
+
         try
         {
             parent.WriteBytes(new byte[] { 1, 2, 3, 4, 5, 6 });
@@ -835,6 +863,7 @@ public class ReadOnlyByteBufTest
         ByteBuf view = parent.AsReadOnly();
         ReadOnlyMemory<byte> borrowed = view.ReadableMemory;
         ReadOnlySpan<byte> captured = borrowed.Span;
+
         using (MemoryHandle lease = borrowed.Pin())
         {
             Assert.True(view.Release());
@@ -844,6 +873,7 @@ public class ReadOnlyByteBufTest
             Assert.Equal(8, captured[7]);
             Assert.Equal(0, allocator.ReservedBytes);
         }
+
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -852,6 +882,7 @@ public class ReadOnlyByteBufTest
     {
         var allocator = new NativeMemoryAllocator();
         ByteBuf parent = new UnpooledDirectByteBuf(4, 64, allocator);
+
         try
         {
             parent.WriteBytes(new byte[] { 1, 2, 3, 4 });
@@ -867,6 +898,7 @@ public class ReadOnlyByteBufTest
         {
             parent.Release();
         }
+
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -901,6 +933,7 @@ public class ReadOnlyByteBufTest
     {
         var native = new NativeMemoryAllocator();
         ByteBuf root = direct ? new UnpooledDirectByteBuf(16, 16, native) : new UnpooledHeapByteBuf(16, 16);
+
         try
         {
             for (int i = 0; i < 16; i++)
@@ -923,6 +956,7 @@ public class ReadOnlyByteBufTest
             Assert.Same(view, view.AsReadOnly());
             Assert.Equal(0x0203, view.GetShort(2));
             Assert.Equal(0x0302, view.GetShortLE(2));
+
             foreach (ByteBuf derived in new[] { view.Duplicate(), view.Slice(), view.Slice(2, 6) })
                 Assert.True(derived.IsReadOnly);
 
@@ -942,6 +976,7 @@ public class ReadOnlyByteBufTest
         {
             Assert.True(root.Release());
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -970,6 +1005,7 @@ public class ReadOnlyByteBufTest
             : direct ? new UnpooledDirectByteBuf(16, 32, native) : new UnpooledHeapByteBuf(16, 32);
         ByteBuf slice = null, duplicate = null;
         bool rootReleased = false, sliceReleased = false, duplicateReleased = false;
+
         try
         {
             for (int i = 0; i < 16; i++)
@@ -994,24 +1030,30 @@ public class ReadOnlyByteBufTest
             Assert.Equal(0, duplicate.ReaderIndex);
             Assert.Equal(length, duplicate.WriterIndex);
             Assert.Equal(count + (retainDuplicate ? 1 : 0), slice.RefCnt);
+
             if (length > 0)
             {
                 Assert.Equal(index, duplicate.ReadByte());
             }
+
             Assert.Equal(0, slice.ReaderIndex);
             Assert.Equal(length, slice.WriterIndex);
             Assert.Equal(4, root.ReaderIndex);
             Assert.Equal(12, root.WriterIndex);
+
             if (retainSlice)
             {
                 slice.Release();
                 sliceReleased = true;
             }
+
             root.Release();
             rootReleased = true;
+
             if (retainDuplicate)
             {
                 Assert.True(duplicate.RefCnt > 0);
+
                 if (length > 0)
                 {
                     Assert.Equal(index, duplicate.GetByte(0));
@@ -1020,9 +1062,11 @@ public class ReadOnlyByteBufTest
                 {
                     Assert.Empty(duplicate.AsReadOnlyMemory(0, 0).ToArray());
                 }
+
                 Assert.True(duplicate.Release());
                 duplicateReleased = true;
             }
+
             Assert.Equal(0, root.RefCnt);
             Assert.Equal(0, duplicate.RefCnt);
             Assert.Throws<IllegalReferenceCountException>(() => duplicate.AsReadOnlyMemory(0, 0));
@@ -1033,16 +1077,20 @@ public class ReadOnlyByteBufTest
             {
                 duplicate.Release();
             }
+
             if (retainSlice && !sliceReleased && slice?.RefCnt > 0)
             {
                 slice.Release();
             }
+
             if (!rootReleased && root.RefCnt > 0)
             {
                 root.Release();
             }
+
             allocator?.Dispose();
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -1108,10 +1156,12 @@ public class ReadOnlyByteBufTest
         var native = new NativeMemoryAllocator();
         var observed = new MemoryObservation();
         ByteBuf root = direct ? new MemoryDirect(observed, native) : new MemoryHeap(observed);
+
         try
         {
             for (int i = 0; i < 16; i++)
                 root.WriteByte(i);
+
             root.SetIndex(3, 13);
             ByteBuf view = root.AsReadOnly();
             ReadOnlyMemory<byte> memory = view.AsReadOnlyMemory(7, 3);
@@ -1135,6 +1185,7 @@ public class ReadOnlyByteBufTest
         {
             Assert.True(root.Release());
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 }

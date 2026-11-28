@@ -60,8 +60,10 @@ public class DefaultByteBufAllocatorTest
             Set("io.netty.availableProcessors", "2");
             Set("io.netty.leakDetection.level", "disabled");
             Set("io.netty.allocator.lowMemory", null);
+
             foreach (string name in PooledConfigurationKeys)
                 Set(name, null);
+
             _common = _context.LoadFromAssemblyPath(typeof(NettyRuntime).Assembly.Location);
             _buffer = _context.LoadFromAssemblyPath(typeof(ByteBuf).Assembly.Location);
         }
@@ -72,6 +74,7 @@ public class DefaultByteBufAllocatorTest
             {
                 _previous.Add(key, Environment.GetEnvironmentVariable(key));
             }
+
             Environment.SetEnvironmentVariable(key, value);
         }
 
@@ -95,6 +98,7 @@ public class DefaultByteBufAllocatorTest
         {
             lock (_allocators)
                 _allocators.Add(allocator);
+
             return allocator;
         }
 
@@ -151,6 +155,7 @@ public class DefaultByteBufAllocatorTest
     private static void CheckFactory(object allocator, string factory, bool direct)
     {
         object b = Call(allocator, factory, 9, 64);
+
         try
         {
             Assert.Equal(direct, Property<bool>(b, "IsDirect"));
@@ -158,6 +163,7 @@ public class DefaultByteBufAllocatorTest
             Assert.Same(allocator, Call(b, "Alloc"));
             Call(b, "WriteInt", 123456789);
             object copy = Call(b, "Copy");
+
             try
             {
                 Assert.Same(allocator, Call(copy, "Alloc"));
@@ -191,8 +197,10 @@ public class DefaultByteBufAllocatorTest
         Assert.Equal(expected, allocator.GetType().Name);
         Assert.Same(allocator, scope.Default);
         Assert.Same(allocator, scope.UtilityDefault);
+
         if (expected != "AdaptiveByteBufAllocator")
             Assert.Same(allocator, scope.Singleton(expected));
+
         bool direct = noPreferDirect != "true";
         CheckFactory(allocator, "Buffer", direct);
         CheckFactory(allocator, "HeapBuffer", false);
@@ -208,12 +216,14 @@ public class DefaultByteBufAllocatorTest
     public void SingletonAndUtilityFirstInitializationAvoidsCycles(string first)
     {
         using var scope = new Scope("adaptive", "true");
+
         if (first == "utility")
             Assert.Equal(0x04030201, scope.Type("ByteBufUtil").GetMethod("SwapInt").Invoke(null, new object[] { 0x01020304 }));
         else if (first == "adaptive")
             scope.Adaptive();
         else
             scope.Singleton(first == "unpooled" ? "UnpooledByteBufAllocator" : "PooledByteBufAllocator");
+
         Assert.Equal("AdaptiveByteBufAllocator", scope.Default.GetType().Name);
         Assert.Same(scope.Default, scope.UtilityDefault);
         CheckFactory(scope.Default, "Buffer", false);
@@ -255,6 +265,7 @@ public class DefaultByteBufAllocatorTest
         scope.Set("io.netty.availableProcessors", processors.ToString(CultureInfo.InvariantCulture));
         scope.Set("io.netty.allocator.chunkReuseQueueCapacity", null);
         object allocator = scope.Default;
+
         foreach (string name in new[] { "HeapPool", "DirectPool" })
         {
             object pool = allocator.GetType().GetProperty(name, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(allocator);
@@ -280,6 +291,7 @@ public class DefaultByteBufAllocatorTest
         static void Check(object allocator, bool lowMemory)
         {
             object b = Call(allocator, "HeapBuffer", 32768, 32768);
+
             try
             {
                 Assert.Equal(lowMemory ? 32768L : 262144L, Property<long>(allocator, "UsedHeapMemory"));
@@ -288,6 +300,7 @@ public class DefaultByteBufAllocatorTest
             {
                 Call(b, "Release", 1);
             }
+
             Assert.Equal(lowMemory ? 0L : 262144L, Property<long>(allocator, "UsedHeapMemory"));
         }
     }
@@ -309,6 +322,7 @@ public class DefaultByteBufAllocatorTest
     {
         using var scope = new Scope("adaptive", noPreferDirect.ToString());
         object b = scope.Type("Unpooled").GetMethod("Buffer").Invoke(null, new object[] { 9, 64 });
+
         try
         {
             Assert.False(Property<bool>(b, "IsDirect"));
@@ -318,6 +332,7 @@ public class DefaultByteBufAllocatorTest
         {
             Call(b, "Release", 1);
         }
+
         Assert.Equal("AdaptiveByteBufAllocator", scope.Default.GetType().Name);
     }
 
@@ -377,6 +392,7 @@ public class DefaultByteBufAllocatorTest
         Assert.Equal(expectedOrder, DefaultSetting<int>(scope, "DefaultMaxOrder"));
         object allocator = scope.Default;
         Assert.Equal(chunk, Property<int>(Property<object>(allocator, "Metric"), "ChunkSize"));
+
         if (chunk < 1000000)
             CheckFactory(allocator, "DirectBuffer", true);
     }
@@ -428,10 +444,12 @@ public class DefaultByteBufAllocatorTest
                 allocate();
             }
         };
+
         if (fast)
             FastScope(scope, run);
         else
             run();
+
         if (fast)
         {
             Assert.Equal(1L, Property<long>(arena, "NumSmallDeallocations"));
@@ -490,10 +508,12 @@ public class DefaultByteBufAllocatorTest
         using var scope = new Scope("pooled", null);
         scope.Set(PooledConfigurationKeys[8], "0");
         object allocator = scope.Default;
+
         if (eligible)
             FastScope(scope, () => Assert.Throws<TargetInvocationException>(() => Call(allocator, "HeapBuffer", 16, 16)));
         else
             CheckFactory(allocator, "HeapBuffer", false);
+
         Assert.Equal(eligible ? 0 : 1, Property<int>(Property<object>(allocator, "Metric"), "NumThreadLocalCaches"));
     }
 
@@ -504,6 +524,7 @@ public class DefaultByteBufAllocatorTest
         using var scope = new Scope("pooled", null);
         scope.Set(PooledConfigurationKeys[7], "-1");
         object allocator = scope.Default;
+
         if (eligible)
             FastScope(scope, () => Assert.Throws<TargetInvocationException>(() => Call(allocator, "HeapBuffer", 16, 16)));
         else
@@ -564,6 +585,7 @@ public class DefaultByteBufAllocatorTest
         scope.Set("io.netty.allocator.directMemoryCacheAlignment", "3");
         object b = scope.Type("ByteBufUtil").GetMethod("ThreadLocalDirectBuffer").Invoke(null, null);
         Assert.Equal(enabled, b != null);
+
         if (b != null)
         {
             Assert.True(Property<bool>(b, "IsDirect"));
@@ -572,9 +594,11 @@ public class DefaultByteBufAllocatorTest
             Call(b, "Release", 1);
             Assert.Equal(0, scope.NativeBytes); // Ordinary threads do not retain idle storage.
         }
+
         scope.Set("io.netty.threadLocalDirectBufferSize", enabled ? "0" : "1024");
         object again = scope.Type("ByteBufUtil").GetMethod("ThreadLocalDirectBuffer").Invoke(null, null);
         Assert.Equal(enabled, again != null);
+
         if (again != null)
             Call(again, "Release", 1);
     }

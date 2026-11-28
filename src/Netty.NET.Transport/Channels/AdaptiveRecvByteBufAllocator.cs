@@ -72,6 +72,7 @@ public class AdaptiveRecvByteBufAllocator : DefaultMaxMessagesRecvByteBufAllocat
         {
             throw new ArgumentException("maximum: " + maximum.ToString(CultureInfo.InvariantCulture));
         }
+
         _minimum = minimum;
         _initial = initial;
         _maximum = maximum;
@@ -103,6 +104,7 @@ public class AdaptiveRecvByteBufAllocator : DefaultMaxMessagesRecvByteBufAllocat
             // data transfers.
             if (bytes == AttemptedBytesRead())
                 _calculator.Record(bytes);
+
             base.LastBytesRead(bytes);
         }
 

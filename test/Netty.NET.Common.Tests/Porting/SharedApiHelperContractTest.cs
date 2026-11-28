@@ -19,31 +19,37 @@ public class SharedApiHelperContractTest
     private static TheoryData<string, string, byte[]> NewJavaCharsetNames()
     {
         var data = new TheoryData<string, string, byte[]>();
+
         foreach (string name in new[] { "UTF-8", "UTF8", "unicode-1-1-utf-8" })
         {
             data.Add(name, "A\u00e9", new byte[] { 0x41, 0xc3, 0xa9 });
         }
+
         foreach (string name in new[] { "US-ASCII", "iso-ir-6", "ANSI_X3.4-1986", "ISO_646.irv:1991", "ASCII",
                                         "ISO646-US", "us", "IBM367", "cp367", "csASCII", "default", "646",
                                         "iso_646.irv:1983", "ANSI_X3.4-1968", "ascii7" })
         {
             data.Add(name, "A", new byte[] { 0x41 });
         }
+
         foreach (string name in new[] { "ISO-8859-1", "iso-ir-100", "ISO_8859-1", "latin1", "l1", "IBM819", "cp819",
                                         "csISOLatin1", "819", "IBM-819", "ISO8859_1", "ISO_8859-1:1987", "ISO_8859_1",
                                         "8859_1", "ISO8859-1" })
         {
             data.Add(name, "A\u00e9", new byte[] { 0x41, 0xe9 });
         }
+
         foreach (string name in new[] { "UTF-16BE", "UTF_16BE", "ISO-10646-UCS-2", "X-UTF-16BE", "UnicodeBigUnmarked",
                                         "UTF-16", "UTF_16", "utf16", "unicode", "UnicodeBig" })
         {
             data.Add(name, "A\u00e9", new byte[] { 0x00, 0x41, 0x00, 0xe9 });
         }
+
         foreach (string name in new[] { "UTF-16LE", "UTF_16LE", "X-UTF-16LE", "UnicodeLittleUnmarked" })
         {
             data.Add(name, "A\u00e9", new byte[] { 0x41, 0x00, 0xe9, 0x00 });
         }
+
         return data;
     }
 
@@ -112,6 +118,7 @@ public class SharedApiHelperContractTest
         Assert.Equal("System.InvalidOperationException: " + noMessage.Message, ThrowableUtil.ThrowableToString(noMessage));
         // Unlike Exception.ToString(), the text has no inner exception and no stack trace.
         Exception thrown;
+
         try
         {
             throw new FormatException("outer", new ArgumentException("inner"));
@@ -120,6 +127,7 @@ public class SharedApiHelperContractTest
         {
             thrown = e;
         }
+
         Assert.Equal("System.FormatException: outer", ThrowableUtil.ThrowableToString(thrown));
         Assert.Equal("Netty.NET.Common.Tests.Porting.SharedApiHelperContractTest+NestedException: nested",
                 ThrowableUtil.ThrowableToString(new NestedException("nested")));

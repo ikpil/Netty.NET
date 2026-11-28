@@ -44,6 +44,7 @@ public class CompositeBufferGatheringWriteSourceTest : AbstractSocketTest
     {
         IChannel serverChannel = null;
         IChannel clientChannel = null;
+
         try
         {
             // CLR: CountDownLatch(1) is a TaskCompletionSource, and AtomicReference<Object> is a StrongBox<object>
@@ -82,6 +83,7 @@ public class CompositeBufferGatheringWriteSourceTest : AbstractSocketTest
             {
                 await clientChannel.CloseAsync();
             }
+
             if (serverChannel != null)
             {
                 await serverChannel.CloseAsync();
@@ -109,6 +111,7 @@ public class CompositeBufferGatheringWriteSourceTest : AbstractSocketTest
         // corrupted when we read it on the other side.
         IChannel serverChannel = null;
         IChannel clientChannel = null;
+
         try
         {
             const int soSndBuf = 1024;
@@ -149,6 +152,7 @@ public class CompositeBufferGatheringWriteSourceTest : AbstractSocketTest
             {
                 await clientChannel.CloseAsync();
             }
+
             if (serverChannel != null)
             {
                 await serverChannel.CloseAsync();
@@ -271,13 +275,16 @@ public class CompositeBufferGatheringWriteSourceTest : AbstractSocketTest
                 if (msg is ByteBuf)
                 {
                     aggregator.WriteBytes((ByteBuf) msg);
+
                     if (!acked && aggregator.ReadableBytes >= expectedBytes)
                     {
                         acked = true;
+
                         if (Interlocked.CompareExchange(ref clientReceived.Value, aggregator, null) == null)
                         {
                             latch.TrySetResult();
                         }
+
                         // Ack so the server knows it is safe to close.
                         _ = ctx.WriteAndFlushAsync(ctx.Alloc().Buffer(1).WriteByte(0));
                     }

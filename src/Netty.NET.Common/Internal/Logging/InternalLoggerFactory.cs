@@ -86,6 +86,7 @@ public abstract class InternalLoggerFactory : IInternalLoggerFactory
     public static void SetDefaultFactory(IInternalLoggerFactory factory)
     {
         ObjectUtil.CheckNotNull(factory, "defaultFactory");
+
         Volatile.Write(ref defaultFactory, factory);
     }
 

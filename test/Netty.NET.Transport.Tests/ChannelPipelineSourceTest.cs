@@ -128,6 +128,7 @@ public class ChannelPipelineSourceTest
             var remover = new Thread(() =>
             {
                 AwaitOtherThread(ref ready);
+
                 try
                 {
                     pipeline.Remove(handler);
@@ -141,6 +142,7 @@ public class ChannelPipelineSourceTest
             remover.Start();
             AwaitOtherThread(ref ready);
             Exception replaceResult = null;
+
             try
             {
                 pipeline.Replace(handler, "replacement", replacement);
@@ -149,7 +151,9 @@ public class ChannelPipelineSourceTest
             {
                 replaceResult = cause;
             }
+
             remover.Join();
+
             // Exactly one of remove(...) and replace(...) wins, the other one fails as if the handler was never
             // part of the pipeline.
             if (removed)
@@ -165,6 +169,7 @@ public class ChannelPipelineSourceTest
                 AssertPipelineLinked(pipeline, "before", "replacement", "after");
                 Assert.Equal(1, replacement.Added);
             }
+
             Assert.Equal(1, handler.Removed);
             Assert.Equal(0, replacement.Removed);
             Assert.False(channel.Finish());
@@ -177,6 +182,7 @@ public class ChannelPipelineSourceTest
     {
         // Spin instead of blocking so both threads start at (nearly) the same time.
         Interlocked.Increment(ref ready);
+
         while (Volatile.Read(ref ready) < 2)
             Thread.Yield();
     }
@@ -186,19 +192,23 @@ public class ChannelPipelineSourceTest
         var pipeline = (DefaultChannelPipeline)channelPipeline;
         var names = new List<string>();
         AbstractChannelHandlerContext context = pipeline.Head;
+
         while (context != pipeline.Tail)
         {
             var next = context.Next;
             Assert.NotSame(context, next);
             Assert.Same(context, next.Prev);
+
             if (next != pipeline.Tail)
             {
                 names.Add(next.Name);
                 // Stop early if the list contains a cycle.
                 Assert.True(names.Count <= expectedNames.Length);
             }
+
             context = next;
         }
+
         Assert.Equal(expectedNames, names);
     }
     private sealed class LifecycleCountingHandler : ChannelInboundHandlerAdapter

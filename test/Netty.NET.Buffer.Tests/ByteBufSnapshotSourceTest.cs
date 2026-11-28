@@ -32,6 +32,7 @@ public class ByteBufSnapshotSourceTest
             if (provider >= 3)
                 _pool = new PooledByteBufAllocator(nativeAllocator: Native, maxOrder: 1,
                     smallCacheSize: 0, normalCacheSize: 0);
+
             Root = provider switch
             {
                 0 => new UnpooledHeapByteBuf(length),
@@ -52,6 +53,7 @@ public class ByteBufSnapshotSourceTest
             {
                 Root.Release();
             }
+
             Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
@@ -82,6 +84,7 @@ public class ByteBufSnapshotSourceTest
         const int capacity = 4096;
         using var s = new Storage(provider, scenario is SnapshotCase.CopyAfterRelease or SnapshotCase.CopyAfterReleaseAlias or SnapshotCase.ReadOnlyRelease ? 8 : capacity);
         ByteBuf buffer = s.Root;
+
         if (scenario is SnapshotCase.CopyAfterRelease or SnapshotCase.CopyAfterReleaseAlias or SnapshotCase.ReadOnlyRelease)
         {
             if (scenario == SnapshotCase.ReadOnlyRelease)
@@ -99,8 +102,10 @@ public class ByteBufSnapshotSourceTest
                 // Both original declared methods call copy(), including testCopyAfterRelease1.
                 Assert.Throws<IllegalReferenceCountException>(() => buffer.Copy());
             }
+
             return;
         }
+
         if (scenario is SnapshotCase.CopyNegativeIndex or SnapshotCase.CopyBeyondCapacity or SnapshotCase.CopyIndexBeyondCapacity or SnapshotCase.CopyAtCapacity)
         {
             (int index, int length) = scenario switch
@@ -116,16 +121,21 @@ public class ByteBufSnapshotSourceTest
             Assert.Equal(1, buffer.RefCnt);
             return;
         }
+
         byte[] bytes = new byte[capacity];
         new Random(12345).NextBytes(bytes);
+
         for (int i = 0; i < bytes.Length; ++i)
             buffer.SetByte(i, bytes[i]);
+
         const int reader = capacity / 3, writer = capacity * 2 / 3;
         buffer.SetIndex(reader, writer);
+
         if (scenario == SnapshotCase.CopyIndependence)
         {
             // Make sure all properties are copied.
             ByteBuf copy = buffer.Copy();
+
             try
             {
                 Assert.Equal(0, copy.ReaderIndex);
@@ -159,6 +169,7 @@ public class ByteBufSnapshotSourceTest
             Assert.Equal(reader, buffer.ReaderIndex);
             Assert.Equal(writer, buffer.WriterIndex);
         }
+
         Assert.Equal(reader, buffer.ReaderIndex);
         Assert.Equal(writer, buffer.WriterIndex);
         Assert.Equal(1, buffer.RefCnt);
@@ -176,8 +187,10 @@ public class ByteBufSnapshotSourceTest
         // each slice reads the parent's wire bytes in both byte orders.
         byte[] bytes = new byte[capacity];
         new Random(12345).NextBytes(bytes);
+
         for (int i = 0; i < bytes.Length; ++i)
             buffer.SetByte(i, bytes[i]);
+
         AssertSliceEndianness(bytes, buffer.Slice(0, buffer.Capacity), 0, capacity);
         AssertSliceEndianness(bytes, buffer.Slice(0, buffer.Capacity - 1), 0, capacity - 1);
         AssertSliceEndianness(bytes, buffer.Slice(1, buffer.Capacity - 1), 1, capacity - 1);
@@ -211,16 +224,20 @@ public class ByteBufSnapshotSourceTest
     {
         using var s = new Storage(provider, 32);
         byte[] bytes = new byte[32];
+
         for (int i = 0; i < bytes.Length; ++i)
             bytes[i] = (byte)(i * 7);
+
         s.Root.SetBytes(0, bytes).SetIndex(5, 9).MarkReaderIndex().MarkWriterIndex();
         Assert.False(s.Root.IsReadOnly);
         ByteBuf source = form == 0 ? s.Root : s.Root.AsReadOnly().SetIndex(3, 7).MarkReaderIndex().MarkWriterIndex();
+
         if (form == 1)
         {
             Assert.True(source.IsReadOnly);
             Assert.Same(source, source.AsReadOnly());
         }
+
         (int index, int length) = range switch
         {
             0 => (15, 4),
@@ -229,6 +246,7 @@ public class ByteBufSnapshotSourceTest
         };
         int reader = source.ReaderIndex, writer = source.WriterIndex;
         ByteBuf copy = source.Copy(index, length);
+
         try
         {
             Assert.Equal(bytes[index..(index + length)], ByteBufUtil.GetBytes(copy, 0, length));
@@ -242,6 +260,7 @@ public class ByteBufSnapshotSourceTest
             Assert.Equal(1, copy.RefCnt);
             Assert.Equal(1, source.RefCnt);
             Assert.Equal(1, s.Root.RefCnt);
+
             if (length != 0)
             {
                 s.Root.SetByte(index, unchecked((byte)(bytes[index] + 1)));
@@ -249,6 +268,7 @@ public class ByteBufSnapshotSourceTest
                 copy.SetByte(length - 1, unchecked((byte)(copy.GetByte(length - 1) + 1)));
                 Assert.Equal(bytes[index + length - 1], s.Root.GetByte(index + length - 1));
             }
+
             Assert.Equal(reader, source.ReaderIndex);
             Assert.Equal(writer, source.WriterIndex);
             Assert.Equal(5, s.Root.ReaderIndex);
@@ -256,8 +276,10 @@ public class ByteBufSnapshotSourceTest
             source.SetIndex(0, source.Capacity).ResetWriterIndex().ResetReaderIndex();
             Assert.Equal(reader, source.ReaderIndex);
             Assert.Equal(writer, source.WriterIndex);
+
             if (form != 0)
                 s.Root.SetIndex(0, 32).ResetWriterIndex().ResetReaderIndex();
+
             Assert.Equal(5, s.Root.ReaderIndex);
             Assert.Equal(9, s.Root.WriterIndex);
         }
@@ -266,6 +288,7 @@ public class ByteBufSnapshotSourceTest
             Assert.True(copy.Release());
             Assert.Equal(0, copy.RefCnt);
         }
+
         Assert.Equal(1, s.Root.RefCnt);
     }
 
@@ -276,8 +299,10 @@ public class ByteBufSnapshotSourceTest
         using var s = new Storage(provider, 8);
         s.Root.Clear();
         Assert.True(s.Root.Release());
+
         foreach ((int index, int length) in new[] { (0, 0), (0, 1), (8, 0) })
             Assert.Throws<IllegalReferenceCountException>(() => s.Root.Copy(index, length));
+
         Assert.Equal(0, s.Root.RefCnt);
     }
 }

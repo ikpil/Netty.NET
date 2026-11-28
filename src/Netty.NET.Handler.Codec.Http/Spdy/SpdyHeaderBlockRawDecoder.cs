@@ -63,6 +63,7 @@ public class SpdyHeaderBlockRawDecoder : SpdyHeaderBlockDecoder
     public SpdyHeaderBlockRawDecoder(SpdyVersion spdyVersion, int maxHeaderSize)
     {
         ObjectUtil.CheckNotNull(spdyVersion, "spdyVersion");
+
         this.maxHeaderSize = maxHeaderSize;
         state = State.READ_NUM_HEADERS;
     }
@@ -82,6 +83,7 @@ public class SpdyHeaderBlockRawDecoder : SpdyHeaderBlockDecoder
         if (cumulation == null)
         {
             DecodeHeaderBlock(headerBlock, frame);
+
             if (headerBlock.IsReadable())
             {
                 cumulation = alloc.Buffer(headerBlock.ReadableBytes);
@@ -92,6 +94,7 @@ public class SpdyHeaderBlockRawDecoder : SpdyHeaderBlockDecoder
         {
             cumulation.WriteBytes(headerBlock);
             DecodeHeaderBlock(cumulation, frame);
+
             if (cumulation.IsReadable())
             {
                 cumulation.DiscardReadBytes();
@@ -106,6 +109,7 @@ public class SpdyHeaderBlockRawDecoder : SpdyHeaderBlockDecoder
     protected virtual void DecodeHeaderBlock(ByteBuf headerBlock, ISpdyHeadersFrame frame)
     {
         int skipLength;
+
         while (headerBlock.IsReadable())
         {
             switch(state)
@@ -131,6 +135,7 @@ public class SpdyHeaderBlockRawDecoder : SpdyHeaderBlockDecoder
                     {
                         state = State.READ_NAME_LENGTH;
                     }
+
                     break;
 
                 case State.READ_NAME_LENGTH:
@@ -158,6 +163,7 @@ public class SpdyHeaderBlockRawDecoder : SpdyHeaderBlockDecoder
                         headerSize += length;
                         state = State.READ_NAME;
                     }
+
                     break;
 
                 case State.READ_NAME:
@@ -180,6 +186,7 @@ public class SpdyHeaderBlockRawDecoder : SpdyHeaderBlockDecoder
                     {
                         state = State.READ_VALUE_LENGTH;
                     }
+
                     break;
 
                 case State.SKIP_NAME:
@@ -191,6 +198,7 @@ public class SpdyHeaderBlockRawDecoder : SpdyHeaderBlockDecoder
                     {
                         state = State.READ_VALUE_LENGTH;
                     }
+
                     break;
 
                 case State.READ_VALUE_LENGTH:
@@ -216,6 +224,7 @@ public class SpdyHeaderBlockRawDecoder : SpdyHeaderBlockDecoder
                         }
 
                         name = null;
+
                         if (--numHeaders == 0)
                         {
                             state = State.END_HEADER_BLOCK;
@@ -238,6 +247,7 @@ public class SpdyHeaderBlockRawDecoder : SpdyHeaderBlockDecoder
                         headerSize += length;
                         state = State.READ_VALUE;
                     }
+
                     break;
 
                 case State.READ_VALUE:
@@ -267,6 +277,7 @@ public class SpdyHeaderBlockRawDecoder : SpdyHeaderBlockDecoder
                         {
                             index ++;
                         }
+
                         if (index < valueBytes.Length)
                         {
                             // Received NULL character
@@ -280,6 +291,7 @@ public class SpdyHeaderBlockRawDecoder : SpdyHeaderBlockDecoder
                                 break;
                             }
                         }
+
                         string value = Encoding.UTF8.GetString(valueBytes, offset, index - offset);
 
                         try
@@ -293,6 +305,7 @@ public class SpdyHeaderBlockRawDecoder : SpdyHeaderBlockDecoder
                             frame.SetInvalid();
                             break;
                         }
+
                         index ++;
                         offset = index;
                     }
@@ -313,6 +326,7 @@ public class SpdyHeaderBlockRawDecoder : SpdyHeaderBlockDecoder
                     {
                         state = State.READ_NAME_LENGTH;
                     }
+
                     break;
 
                 case State.SKIP_VALUE:
@@ -331,6 +345,7 @@ public class SpdyHeaderBlockRawDecoder : SpdyHeaderBlockDecoder
                             state = State.READ_NAME_LENGTH;
                         }
                     }
+
                     break;
 
                 case State.END_HEADER_BLOCK:

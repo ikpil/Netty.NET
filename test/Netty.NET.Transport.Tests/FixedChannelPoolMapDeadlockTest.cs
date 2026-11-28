@@ -68,6 +68,7 @@ public class FixedChannelPoolMapDeadlockTest
                     Await(arrivalBarrier);
                     return poolA1;
                 }
+
                 if (threadA2.InEventLoop())
                 {
                     // Thread A2 gets pool A with thread B2, but only after A1 won
@@ -84,6 +85,7 @@ public class FixedChannelPoolMapDeadlockTest
                     Await(arrivalBarrier);
                     return poolB1;
                 }
+
                 if (threadB2.InEventLoop())
                 {
                     // Thread B2 gets pool with thread A2
@@ -92,8 +94,10 @@ public class FixedChannelPoolMapDeadlockTest
                     return poolB2;
                 }
             }
+
             throw new InvalidOperationException("Unexpected key=" + key + " or thread=" + Thread.CurrentThread.Name);
         });
+
         try
         {
             // Thread A1 calls ChannelPoolMap.get(A)
@@ -153,6 +157,7 @@ public class FixedChannelPoolMapDeadlockTest
             "#2" => pool2,
             _ => throw new InvalidOperationException("Unexpected key=" + key)
         });
+
         try
         {
             Assert.Same(pool1, map.Get("#1"));

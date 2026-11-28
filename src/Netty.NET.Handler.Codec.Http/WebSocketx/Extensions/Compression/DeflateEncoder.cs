@@ -106,6 +106,7 @@ internal abstract class DeflateEncoder : WebSocketExtensionEncoder
     protected override void Encode(IChannelHandlerContext ctx, WebSocketFrame msg, IList<object> @out)
     {
         ByteBuf compressedContent;
+
         if (msg.Content.IsReadable())
         {
             compressedContent = CompressContent(ctx, msg);
@@ -115,6 +116,7 @@ internal abstract class DeflateEncoder : WebSocketExtensionEncoder
             // Set empty DEFLATE block manually for unknown buffer size
             // https://tools.ietf.org/html/rfc7692#section-7.2.3.6
             compressedContent = EMPTY_DEFLATE_BLOCK.Duplicate();
+
             if (noContext)
             {
                 // The message ends here, so the next one must start with an empty sliding window,
@@ -128,6 +130,7 @@ internal abstract class DeflateEncoder : WebSocketExtensionEncoder
         }
 
         WebSocketFrame outMsg;
+
         if (msg is TextWebSocketFrame)
         {
             outMsg = new TextWebSocketFrame(msg.IsFinalFragment(), Rsv(msg), compressedContent);
@@ -167,6 +170,7 @@ internal abstract class DeflateEncoder : WebSocketExtensionEncoder
         encoder.WriteOutbound(msg.Content.Retain());
 
         CompositeByteBuf fullCompressedContent = ctx.Alloc().CompositeBuffer();
+
         for (;;)
         {
             ByteBuf partCompressedContent = encoder.ReadOutbound<ByteBuf>();
@@ -174,11 +178,13 @@ internal abstract class DeflateEncoder : WebSocketExtensionEncoder
             {
                 break;
             }
+
             if (!partCompressedContent.IsReadable())
             {
                 partCompressedContent.Release();
                 continue;
             }
+
             fullCompressedContent.AddComponent(partCompressedContent, true);
         }
 
@@ -194,6 +200,7 @@ internal abstract class DeflateEncoder : WebSocketExtensionEncoder
         }
 
         ByteBuf compressedContent;
+
         if (RemoveFrameTail(msg))
         {
             int realLength = fullCompressedContent.ReadableBytes - FRAME_TAIL.ReadableBytes;

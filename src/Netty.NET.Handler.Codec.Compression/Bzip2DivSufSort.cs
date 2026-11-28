@@ -128,6 +128,7 @@ internal sealed class Bzip2DivSufSort
 
         U1 %= size;
         U1n = SA[pa] + 2;
+
         while (U1 < U1n && U2 < U2n && T[U1] == T[U2])
         {
             ++U1;
@@ -155,15 +156,18 @@ internal sealed class Bzip2DivSufSort
                 {
                     SA[j - 1] = SA[j];
                 } while (++j < last && SA[j] < 0);
+
                 if (last <= j)
                 {
                     break;
                 }
             }
+
             if (r == 0)
             {
                 SA[j] = ~SA[j];
             }
+
             SA[j - 1] = t;
         }
     }
@@ -185,11 +189,13 @@ internal sealed class Bzip2DivSufSort
                 k = j;
                 d = e;
             }
+
             if (d <= c)
             {
                 break;
             }
         }
+
         SA[sa + i] = v;
     }
 
@@ -202,9 +208,11 @@ internal sealed class Bzip2DivSufSort
         int t;
 
         m = size;
+
         if (size % 2 == 0)
         {
             m--;
+
             if ((T[td + SA[pa + SA[sa + m / 2]]] & 0xff) < (T[td + SA[pa + SA[sa + m]]] & 0xff))
             {
                 SwapElements(SA, sa + m, SA, sa + m / 2);
@@ -249,14 +257,17 @@ internal sealed class Bzip2DivSufSort
             T_v1 = T_v2;
             T_v2 = T_vtemp;
         }
+
         if (T_v2 > T_v3)
         {
             if (T_v1 > T_v3)
             {
                 return v1;
             }
+
             return v3;
         }
+
         return v2;
     }
 
@@ -282,6 +293,7 @@ internal sealed class Bzip2DivSufSort
             T_v2 = T_v3;
             T_v3 = T_vtemp;
         }
+
         if (T_v4 > T_v5)
         {
             temp = v4;
@@ -291,6 +303,7 @@ internal sealed class Bzip2DivSufSort
             T_v4 = T_v5;
             T_v5 = T_vtemp;
         }
+
         if (T_v2 > T_v4)
         {
             temp = v2;
@@ -304,6 +317,7 @@ internal sealed class Bzip2DivSufSort
             T_v3 = T_v5;
             T_v5 = T_vtemp;
         }
+
         if (T_v1 > T_v3)
         {
             temp = v1;
@@ -313,6 +327,7 @@ internal sealed class Bzip2DivSufSort
             T_v1 = T_v3;
             T_v3 = T_vtemp;
         }
+
         if (T_v1 > T_v4)
         {
             temp = v1;
@@ -322,10 +337,12 @@ internal sealed class Bzip2DivSufSort
             v3 = v5;
             T_v3 = T_v5;
         }
+
         if (T_v3 > T_v4)
         {
             return v4;
         }
+
         return v3;
     }
 
@@ -343,9 +360,11 @@ internal sealed class Bzip2DivSufSort
             {
                 return SsMedian3(td, pa, first, middle, last - 1);
             }
+
             t >>= 2;
             return SsMedian5(td, pa, first, first + t, middle, last - 1 - t, last - 1);
         }
+
         t >>= 3;
         return SsMedian3(
                 td, pa,
@@ -375,7 +394,9 @@ internal sealed class Bzip2DivSufSort
             {
                 SA[a] = ~SA[a];
             }
+
             --b;
+
             while (a < b && (SA[pa + SA[b]] + depth < SA[pa + SA[b] + 1] + 1))
             {
                 --b;
@@ -385,14 +406,17 @@ internal sealed class Bzip2DivSufSort
             {
                 break;
             }
+
             t = ~SA[b];
             SA[b] = SA[a];
             SA[a] = t;
         }
+
         if (first < a)
         {
             SA[first] = ~SA[first];
         }
+
         return a;
     }
 
@@ -434,10 +458,12 @@ internal sealed class Bzip2DivSufSort
                 {
                     SsInsertionSort(pa, first, last, depth);
                 }
+
                 if (ssize == 0)
                 {
                     return;
                 }
+
                 StackEntry entry = stack[--ssize];
                 first = entry.a;
                 last = entry.b;
@@ -447,10 +473,12 @@ internal sealed class Bzip2DivSufSort
             }
 
             Td = depth;
+
             if (limit-- == 0)
             {
                 SsHeapSort(Td, pa, first, last - first);
             }
+
             if (limit < 0)
             {
                 for (a = first + 1, v = T[Td + SA[pa + SA[first]]] & 0xff; a < last; ++a)
@@ -461,14 +489,17 @@ internal sealed class Bzip2DivSufSort
                         {
                             break;
                         }
+
                         v = x;
                         first = a;
                     }
                 }
+
                 if ((T[Td + SA[pa + SA[first]] - 1] & 0xff) < v)
                 {
                     first = SsSubstringPartition(pa, first, a, depth);
                 }
+
                 if (a - first <= last - a)
                 {
                     if (1 < a - first)
@@ -499,6 +530,7 @@ internal sealed class Bzip2DivSufSort
                         limit = SsLog(a - first);
                     }
                 }
+
                 continue;
             }
 
@@ -507,10 +539,12 @@ internal sealed class Bzip2DivSufSort
             SwapElements(SA, first, SA, a);
 
             b = first + 1;
+
             while (b < last && (x = T[Td + SA[pa + SA[b]]] & 0xff) == v)
             {
                 ++b;
             }
+
             if ((a = b) < last && x < v)
             {
                 while (++b < last && (x = T[Td + SA[pa + SA[b]]] & 0xff) <= v)
@@ -524,10 +558,12 @@ internal sealed class Bzip2DivSufSort
             }
 
             c = last - 1;
+
             while (b < c && (x = T[Td + SA[pa + SA[c]]] & 0xff) == v)
             {
                 --c;
             }
+
             if (b < (d = c) && x > v)
             {
                 while (b < --c && (x = T[Td + SA[pa + SA[c]]] & 0xff) >= v)
@@ -539,9 +575,11 @@ internal sealed class Bzip2DivSufSort
                     }
                 }
             }
+
             while (b < c)
             {
                 SwapElements(SA, b, SA, c);
+
                 while (++b < c && (x = T[Td + SA[pa + SA[b]]] & 0xff) <= v)
                 {
                     if (x == v)
@@ -550,6 +588,7 @@ internal sealed class Bzip2DivSufSort
                         ++a;
                     }
                 }
+
                 while (b < --c && (x = T[Td + SA[pa + SA[c]]] & 0xff) >= v)
                 {
                     if (x == v)
@@ -568,14 +607,17 @@ internal sealed class Bzip2DivSufSort
                 {
                     s = t;
                 }
+
                 for (e = first, f = b - s; 0 < s; --s, ++e, ++f)
                 {
                     SwapElements(SA, e, SA, f);
                 }
+
                 if ((s = d - c) > (t = last - d - 1))
                 {
                     s = t;
                 }
+
                 for (e = b, f = last - s; 0 < s; --s, ++e, ++f)
                 {
                     SwapElements(SA, e, SA, f);
@@ -637,11 +679,13 @@ internal sealed class Bzip2DivSufSort
             else
             {
                 limit += 1;
+
                 if ((T[Td + SA[pa + SA[first]] - 1] & 0xff) < v)
                 {
                     first = SsSubstringPartition(pa, first, last, depth);
                     limit = SsLog(last - first);
                 }
+
                 depth += 1;
             }
         }
@@ -652,6 +696,7 @@ internal sealed class Bzip2DivSufSort
     {
         int a, b;
         int i;
+
         for (i = size, a = first1, b = first2; 0 < i; --i, ++a, ++b)
         {
             SwapElements(array1, a, array2, b);
@@ -679,11 +724,13 @@ internal sealed class Bzip2DivSufSort
                 do
                 {
                     SA[i++] = buf[j];
+
                     if (bufend <= j)
                     {
                         buf[j] = t;
                         return;
                     }
+
                     buf[j++] = SA[i];
                 } while (buf[j] < 0);
             }
@@ -693,6 +740,7 @@ internal sealed class Bzip2DivSufSort
                 {
                     SA[i++] = SA[k];
                     SA[k++] = SA[i];
+
                     if (last <= k)
                     {
                         while (j < bufend)
@@ -710,14 +758,17 @@ internal sealed class Bzip2DivSufSort
             else
             {
                 SA[k] = ~SA[k];
+
                 do
                 {
                     SA[i++] = buf[j];
+
                     if (bufend <= j)
                     {
                         buf[j] = t;
                         return;
                     }
+
                     buf[j++] = SA[i];
                 } while (buf[j] < 0);
 
@@ -725,6 +776,7 @@ internal sealed class Bzip2DivSufSort
                 {
                     SA[i++] = SA[k];
                     SA[k++] = SA[i];
+
                     if (last <= k)
                     {
                         while (j < bufend)
@@ -732,6 +784,7 @@ internal sealed class Bzip2DivSufSort
                             SA[i++] = buf[j];
                             buf[j++] = SA[i];
                         }
+
                         SA[i] = buf[j];
                         buf[j] = t;
                         return;
@@ -757,6 +810,7 @@ internal sealed class Bzip2DivSufSort
         SsBlockSwap(buf, bufoffset, SA, middle, last - middle);
 
         x = 0;
+
         if (buf[bufend - 1] < 0)
         {
             x |=  1;
@@ -766,6 +820,7 @@ internal sealed class Bzip2DivSufSort
         {
             p1 = pa +  buf[bufend - 1];
         }
+
         if (SA[middle - 1] < 0)
         {
             x |=  2;
@@ -775,6 +830,7 @@ internal sealed class Bzip2DivSufSort
         {
             p2 = pa +  SA[middle - 1];
         }
+
         for (t = SA[last - 1], i = last - 1, j = bufend - 1, k = middle - 1;;)
         {
 
@@ -788,14 +844,18 @@ internal sealed class Bzip2DivSufSort
                         SA[i--] = buf[j];
                         buf[j--] = SA[i];
                     } while (buf[j] < 0);
+
                     x ^= 1;
                 }
+
                 SA[i--] = buf[j];
+
                 if (j <= bufoffset)
                 {
                     buf[j] = t;
                     return;
                 }
+
                 buf[j--] = SA[i];
 
                 if (buf[j] < 0)
@@ -817,10 +877,13 @@ internal sealed class Bzip2DivSufSort
                         SA[i--] = SA[k];
                         SA[k--] = SA[i];
                     } while (SA[k] < 0);
+
                     x ^= 2;
                 }
+
                 SA[i--] = SA[k];
                 SA[k--] = SA[i];
+
                 if (k < first)
                 {
                     while (bufoffset < j)
@@ -828,6 +891,7 @@ internal sealed class Bzip2DivSufSort
                         SA[i--] = buf[j];
                         buf[j--] = SA[i];
                     }
+
                     SA[i] = buf[j];
                     buf[j] = t;
                     return;
@@ -852,14 +916,18 @@ internal sealed class Bzip2DivSufSort
                         SA[i--] = buf[j];
                         buf[j--] = SA[i];
                     } while (buf[j] < 0);
+
                     x ^= 1;
                 }
+
                 SA[i--] = ~buf[j];
+
                 if (j <= bufoffset)
                 {
                     buf[j] = t;
                     return;
                 }
+
                 buf[j--] = SA[i];
 
                 if ((x & 2) != 0)
@@ -869,10 +937,13 @@ internal sealed class Bzip2DivSufSort
                         SA[i--] = SA[k];
                         SA[k--] = SA[i];
                     } while (SA[k] < 0);
+
                     x ^= 2;
                 }
+
                 SA[i--] = SA[k];
                 SA[k--] = SA[i];
+
                 if (k < first)
                 {
                     while (bufoffset < j)
@@ -880,6 +951,7 @@ internal sealed class Bzip2DivSufSort
                         SA[i--] = buf[j];
                         buf[j--] = SA[i];
                     }
+
                     SA[i] = buf[j];
                     buf[j] = t;
                     return;
@@ -894,6 +966,7 @@ internal sealed class Bzip2DivSufSort
                 {
                     p1 = pa +  buf[j];
                 }
+
                 if (SA[k] < 0)
                 {
                     x |=  2;
@@ -948,14 +1021,17 @@ internal sealed class Bzip2DivSufSort
                 {
                     SsMergeCheckEqual(pa, depth, first);
                 }
+
                 if ((check & 2) != 0)
                 {
                     SsMergeCheckEqual(pa, depth, last);
                 }
+
                 if (ssize == 0)
                 {
                     return;
                 }
+
                 StackEntry entry = stack[--ssize];
                 first = entry.a;
                 middle = entry.b;
@@ -970,18 +1046,22 @@ internal sealed class Bzip2DivSufSort
                 {
                     SsMergeForward(pa, buf, bufoffset, first, middle, last, depth);
                 }
+
                 if ((check & 1) != 0)
                 {
                     SsMergeCheckEqual(pa, depth, first);
                 }
+
                 if ((check & 2) != 0)
                 {
                     SsMergeCheckEqual(pa, depth, last);
                 }
+
                 if (ssize == 0)
                 {
                     return;
                 }
+
                 StackEntry entry = stack[--ssize];
                 first = entry.a;
                 middle = entry.b;
@@ -1008,6 +1088,7 @@ internal sealed class Bzip2DivSufSort
                 SsBlockSwap(SA, middle - m, SA, middle, m);
                 i = j = middle;
                 next = 0;
+
                 if (middle + m < last)
                 {
                     if (SA[middle + m] < 0)
@@ -1016,14 +1097,18 @@ internal sealed class Bzip2DivSufSort
                         {
                             --i;
                         }
+
                         SA[middle + m] = ~SA[middle + m];
                     }
+
                     for (j = middle; SA[j] < 0;)
                     {
                         ++j;
                     }
+
                     next = 1;
                 }
+
                 if (i - first <= last - j)
                 {
                     stack[ssize++] = new StackEntry(j, middle + m, last, (check &  2) | (next & 1));
@@ -1037,6 +1122,7 @@ internal sealed class Bzip2DivSufSort
                     {
                         next <<= 1;
                     }
+
                     stack[ssize++] = new StackEntry(first, middle - m, i, (check & 1) | (next & 2));
                     first = j;
                     middle += m;
@@ -1049,15 +1135,19 @@ internal sealed class Bzip2DivSufSort
                 {
                     SsMergeCheckEqual(pa, depth, first);
                 }
+
                 SsMergeCheckEqual(pa, depth, middle);
+
                 if ((check & 2) != 0)
                 {
                     SsMergeCheckEqual(pa, depth, last);
                 }
+
                 if (ssize == 0)
                 {
                     return;
                 }
+
                 StackEntry entry = stack[--ssize];
                 first = entry.a;
                 middle = entry.b;
@@ -1083,6 +1173,7 @@ internal sealed class Bzip2DivSufSort
         {
             ++first;
         }
+
         for (a = first, i = 0; a + SS_BLOCKSIZE < last; a += SS_BLOCKSIZE, ++i)
         {
             SsMultiKeyIntroSort(pa, a, a + SS_BLOCKSIZE, depth);
@@ -1095,6 +1186,7 @@ internal sealed class Bzip2DivSufSort
                 curbuf = buf;
                 curbufoffset = bufoffset;
             }
+
             for (b = a, k = SS_BLOCKSIZE, j = i; (j & 1) != 0; b -= k, k <<= 1, j >>>= 1)
             {
                 SsMerge(pa, b - k, b, b + k, curbuf, curbufoffset, curbufsize, depth);
@@ -1115,16 +1207,19 @@ internal sealed class Bzip2DivSufSort
         if (lastsuffix)
         {
             int r;
+
             for (a = first, i = SA[first - 1], r = 1;
                     a < last && (SA[a] < 0 || 0 < (r = SsCompareLast(pa, pa + i, pa + SA[a], depth, size)));
                     ++a)
             {
                 SA[a - 1] = SA[a];
             }
+
             if (r == 0)
             {
                 SA[a] = ~SA[a];
             }
+
             SA[a - 1] = i;
         }
     }
@@ -1155,11 +1250,13 @@ internal sealed class Bzip2DivSufSort
                 k = j;
                 d = e;
             }
+
             if (d <= c)
             {
                 break;
             }
         }
+
         SA[sa + i] = v;
     }
 
@@ -1171,9 +1268,11 @@ internal sealed class Bzip2DivSufSort
         int t;
 
         m = size;
+
         if (size % 2 == 0)
         {
             m--;
+
             if (TrGetC(isa, isaD, isaN, SA[sa + m / 2]) < TrGetC(isa, isaD, isaN, SA[sa + m]))
             {
                 SwapElements(SA, sa + m, SA, sa + m / 2);
@@ -1215,15 +1314,18 @@ internal sealed class Bzip2DivSufSort
                 {
                     SA[b + 1] = SA[b];
                 } while (first <= --b && SA[b] < 0);
+
                 if (b < first)
                 {
                     break;
                 }
             }
+
             if (r == 0)
             {
                 SA[b] = ~SA[b];
             }
+
             SA[b + 1] = t;
         }
     }
@@ -1256,12 +1358,14 @@ internal sealed class Bzip2DivSufSort
             SA_v1 = SA_v2;
             SA_v2 = SA_vtemp;
         }
+
         if (SA_v2 > SA_v3)
         {
             if (SA_v1 > SA_v3)
             {
                 return v1;
             }
+
             return v3;
         }
 
@@ -1289,6 +1393,7 @@ internal sealed class Bzip2DivSufSort
             SA_v2 = SA_v3;
             SA_v3 = SA_vtemp;
         }
+
         if (SA_v4 > SA_v5)
         {
             temp = v4;
@@ -1298,6 +1403,7 @@ internal sealed class Bzip2DivSufSort
             SA_v4 = SA_v5;
             SA_v5 = SA_vtemp;
         }
+
         if (SA_v2 > SA_v4)
         {
             temp = v2;
@@ -1311,6 +1417,7 @@ internal sealed class Bzip2DivSufSort
             SA_v3 = SA_v5;
             SA_v5 = SA_vtemp;
         }
+
         if (SA_v1 > SA_v3)
         {
             temp = v1;
@@ -1320,6 +1427,7 @@ internal sealed class Bzip2DivSufSort
             SA_v1 = SA_v3;
             SA_v3 = SA_vtemp;
         }
+
         if (SA_v1 > SA_v4)
         {
             temp = v1;
@@ -1329,10 +1437,12 @@ internal sealed class Bzip2DivSufSort
             v3 = v5;
             SA_v3 = SA_v5;
         }
+
         if (SA_v3 > SA_v4)
         {
             return v4;
         }
+
         return v3;
     }
 
@@ -1350,6 +1460,7 @@ internal sealed class Bzip2DivSufSort
             {
                 return TrMedian3(isa, isaD, isaN, first, middle, last - 1);
             }
+
             t >>= 2;
             return TrMedian5(
                     isa, isaD, isaN,
@@ -1358,6 +1469,7 @@ internal sealed class Bzip2DivSufSort
                     last - 1 - t, last - 1
             );
         }
+
         t >>= 3;
         return TrMedian3(
                 isa, isaD, isaN,
@@ -1381,22 +1493,28 @@ internal sealed class Bzip2DivSufSort
             if (0 <= SA[a])
             {
                 b = a;
+
                 do
                 {
                     SA[isa + SA[a]] = a;
                 } while (++a < last && 0 <= SA[a]);
+
                 SA[b] = b - a;
                 if (last <= a)
                 {
                     break;
                 }
             }
+
             b = a;
+
             do
             {
                 SA[a] = ~SA[a];
             } while (SA[++a] < 0);
+
             t = a;
+
             do
             {
                 SA[isa + SA[b]] = t;
@@ -1429,10 +1547,12 @@ internal sealed class Bzip2DivSufSort
                 {
                     SA[first] = -1;
                 }
+
                 if (ssize == 0)
                 {
                     return;
                 }
+
                 StackEntry entry = stack[--ssize];
                 first = entry.a;
                 last = entry.b;
@@ -1443,6 +1563,7 @@ internal sealed class Bzip2DivSufSort
             if (limit-- == 0)
             {
                 TrHeapSort(isa, isaD, isaN, first, last - first);
+
                 for (a = last - 1; first < a; a = b)
                 {
                     for (x = TrGetC(isa, isaD, isaN, SA[a]), b = a - 1;
@@ -1452,11 +1573,13 @@ internal sealed class Bzip2DivSufSort
                         SA[b] = ~SA[b];
                     }
                 }
+
                 LsUpdateGroup(isa, first, last);
                 if (ssize == 0)
                 {
                     return;
                 }
+
                 StackEntry entry = stack[--ssize];
                 first = entry.a;
                 last = entry.b;
@@ -1469,10 +1592,12 @@ internal sealed class Bzip2DivSufSort
             v = TrGetC(isa, isaD, isaN, SA[first]);
 
             b = first + 1;
+
             while (b < last && (x = TrGetC(isa, isaD, isaN, SA[b])) == v)
             {
                 ++b;
             }
+
             if ((a = b) < last && x < v)
             {
                 while (++b < last && (x = TrGetC(isa, isaD, isaN, SA[b])) <= v)
@@ -1486,10 +1611,12 @@ internal sealed class Bzip2DivSufSort
             }
 
             c = last - 1;
+
             while (b < c && (x = TrGetC(isa, isaD, isaN, SA[c])) == v)
             {
                 --c;
             }
+
             if (b < (d = c) && x > v)
             {
                 while (b < --c && (x = TrGetC(isa, isaD, isaN, SA[c])) >= v)
@@ -1501,9 +1628,11 @@ internal sealed class Bzip2DivSufSort
                     }
                 }
             }
+
             while (b < c)
             {
                 SwapElements(SA, b, SA, c);
+
                 while (++b < c && (x = TrGetC(isa, isaD, isaN, SA[b])) <= v)
                 {
                     if (x == v)
@@ -1512,6 +1641,7 @@ internal sealed class Bzip2DivSufSort
                         ++a;
                     }
                 }
+
                 while (b < --c && (x = TrGetC(isa, isaD, isaN, SA[c])) >= v)
                 {
                     if (x == v)
@@ -1530,14 +1660,17 @@ internal sealed class Bzip2DivSufSort
                 {
                     s = t;
                 }
+
                 for (e = first, f = b - s; 0 < s; --s, ++e, ++f)
                 {
                     SwapElements(SA, e, SA, f);
                 }
+
                 if ((s = d - c) > (t = last - d - 1))
                 {
                     s = t;
                 }
+
                 for (e = b, f = last - s; 0 < s; --s, ++e, ++f)
                 {
                     SwapElements(SA, e, SA, f);
@@ -1550,6 +1683,7 @@ internal sealed class Bzip2DivSufSort
                 {
                     SA[isa + SA[c]] = v;
                 }
+
                 if (b < last)
                 {
                     for (c = a, v = b - 1; c < b; ++c)
@@ -1557,6 +1691,7 @@ internal sealed class Bzip2DivSufSort
                         SA[isa + SA[c]] = v;
                     }
                 }
+
                 if ((b - a) == 1)
                 {
                     SA[a] = - 1;
@@ -1593,6 +1728,7 @@ internal sealed class Bzip2DivSufSort
                 {
                     return;
                 }
+
                 StackEntry entry = stack[--ssize];
                 first = entry.a;
                 last = entry.b;
@@ -1613,6 +1749,7 @@ internal sealed class Bzip2DivSufSort
         {
             first = 0;
             skip = 0;
+
             do
             {
                 if ((t = SA[first]) < 0)
@@ -1627,18 +1764,22 @@ internal sealed class Bzip2DivSufSort
                         SA[first + skip] = skip;
                         skip = 0;
                     }
+
                     last = SA[isa + t] + 1;
                     LsIntroSort(isa, isaD, isa + n, first, last);
                     first = last;
                 }
             } while (first < n);
+
             if (skip != 0)
             {
                 SA[first + skip] = skip;
             }
+
             if (n < isaD - isa)
             {
                 first = 0;
+
                 do
                 {
                     if ((t = SA[first]) < 0)
@@ -1648,13 +1789,16 @@ internal sealed class Bzip2DivSufSort
                     else
                     {
                         last = SA[isa + t] + 1;
+
                         for (i = first; i < last; ++i)
                         {
                             SA[isa + SA[i]] = i;
                         }
+
                         first = last;
                     }
                 } while (first < n);
+
                 break;
             }
         }
@@ -1684,10 +1828,12 @@ internal sealed class Bzip2DivSufSort
         int x = 0;
 
         b = first;
+
         while (b < last && (x = TrGetC(isa, isaD, isaN, SA[b])) == v)
         {
             ++b;
         }
+
         if ((a = b) < last && x < v)
         {
             while (++b < last && (x = TrGetC(isa, isaD, isaN, SA[b])) <= v)
@@ -1701,10 +1847,12 @@ internal sealed class Bzip2DivSufSort
         }
 
         c = last - 1;
+
         while (b < c && (x = TrGetC(isa, isaD, isaN, SA[c])) == v)
         {
             --c;
         }
+
         if (b < (d = c) && x > v)
         {
             while (b < --c && (x = TrGetC(isa, isaD, isaN, SA[c])) >= v)
@@ -1716,9 +1864,11 @@ internal sealed class Bzip2DivSufSort
                 }
             }
         }
+
         while (b < c)
         {
             SwapElements(SA, b, SA, c);
+
             while (++b < c && (x = TrGetC(isa, isaD, isaN, SA[b])) <= v)
             {
                 if (x == v)
@@ -1727,6 +1877,7 @@ internal sealed class Bzip2DivSufSort
                     ++a;
                 }
             }
+
             while (b < --c && (x = TrGetC(isa, isaD, isaN, SA[c])) >= v)
             {
                 if (x == v)
@@ -1740,25 +1891,31 @@ internal sealed class Bzip2DivSufSort
         if (a <= d)
         {
             c = b - 1;
+
             if ((s = a - first) > (t = b - a))
             {
                 s = t;
             }
+
             for (e = first, f = b - s; 0 < s; --s, ++e, ++f)
             {
                 SwapElements(SA, e, SA, f);
             }
+
             if ((s = d - c) > (t = last - d - 1))
             {
                 s = t;
             }
+
             for (e = b, f = last - s; 0 < s; --s, ++e, ++f)
             {
                 SwapElements(SA, e, SA, f);
             }
+
             first += b - a;
             last -= d - c;
         }
+
         return new PartitionResult(first, last);
     }
 
@@ -1778,18 +1935,21 @@ internal sealed class Bzip2DivSufSort
             {
                 s += isaN - isa;
             }
+
             if (SA[isa + s] == v)
             {
                 SA[++d] = s;
                 SA[isa + s] = d;
             }
         }
+
         for (c = last - 1, e = d + 1, d = b; e < d; --c)
         {
             if ((s = SA[c] - depth) < 0)
             {
                 s += isaN - isa;
             }
+
             if (SA[isa + s] == v)
             {
                 SA[--d] = s;
@@ -1821,6 +1981,7 @@ internal sealed class Bzip2DivSufSort
                     {
                         break;
                     }
+
                     PartitionResult result = TrPartition(isa, isaD - 1, isaN, first, last, last - 1);
                     a = result.first;
                     b = result.last;
@@ -1833,6 +1994,7 @@ internal sealed class Bzip2DivSufSort
                                 SA[isa + SA[c]] = v;
                             }
                         }
+
                         if (b < last)
                         {
                             for (c = a, v = b - 1; c < b; ++c)
@@ -1843,6 +2005,7 @@ internal sealed class Bzip2DivSufSort
 
                         stack[ssize++] = new StackEntry(0, a, b, 0);
                         stack[ssize++] = new StackEntry(isaD - 1, first, last, -2);
+
                         if (a - first <= last - b)
                         {
                             if (1 < a - first)
@@ -1862,6 +2025,7 @@ internal sealed class Bzip2DivSufSort
                                 {
                                     return;
                                 }
+
                                 StackEntry entry = stack[--ssize];
                                 isaD = entry.a;
                                 first = entry.b;
@@ -1888,6 +2052,7 @@ internal sealed class Bzip2DivSufSort
                                 {
                                     return;
                                 }
+
                                 StackEntry entry = stack[--ssize];
                                 isaD = entry.a;
                                 first = entry.b;
@@ -1902,10 +2067,12 @@ internal sealed class Bzip2DivSufSort
                         {
                             SA[isa + SA[c]] = c;
                         }
+
                         if (ssize == 0)
                         {
                             return;
                         }
+
                         StackEntry entry = stack[--ssize];
                         isaD = entry.a;
                         first = entry.b;
@@ -1922,6 +2089,7 @@ internal sealed class Bzip2DivSufSort
                     {
                         return;
                     }
+
                     StackEntry entry = stack[--ssize];
                     isaD = entry.a;
                     first = entry.b;
@@ -1933,20 +2101,26 @@ internal sealed class Bzip2DivSufSort
                     if (0 <= SA[first])
                     {
                         a = first;
+
                         do
                         {
                             SA[isa + SA[a]] = a;
                         } while (++a < last && 0 <= SA[a]);
+
                         first = a;
                     }
+
                     if (first < last)
                     {
                         a = first;
+
                         do
                         {
                             SA[a] = ~SA[a];
                         } while (SA[++a] < 0);
+
                         next = SA[isa + SA[a]] != SA[isaD + SA[a]] ? TrLog(a - first + 1) : -1;
+
                         if (++a < last)
                         {
                             for (b = first, v = a - 1; b < a; ++b)
@@ -1984,6 +2158,7 @@ internal sealed class Bzip2DivSufSort
                         {
                             return;
                         }
+
                         StackEntry entry = stack[--ssize];
                         isaD = entry.a;
                         first = entry.b;
@@ -1991,6 +2166,7 @@ internal sealed class Bzip2DivSufSort
                         limit = entry.d;
                     }
                 }
+
                 continue;
             }
 
@@ -2000,6 +2176,7 @@ internal sealed class Bzip2DivSufSort
                 {
                     break;
                 }
+
                 TrInsertionSort(isa, isaD, isaN, first, last);
                 limit = -3;
                 continue;
@@ -2011,7 +2188,9 @@ internal sealed class Bzip2DivSufSort
                 {
                     break;
                 }
+
                 TrHeapSort(isa, isaD, isaN, first, last - first);
+
                 for (a = last - 1; first < a; a = b)
                 {
                     for (x = TrGetC(isa, isaD, isaN, SA[a]), b = a - 1;
@@ -2021,6 +2200,7 @@ internal sealed class Bzip2DivSufSort
                         SA[b] = ~SA[b];
                     }
                 }
+
                 limit = -3;
                 continue;
             }
@@ -2031,10 +2211,12 @@ internal sealed class Bzip2DivSufSort
             v = TrGetC(isa, isaD, isaN, SA[first]);
 
             b = first + 1;
+
             while (b < last && (x = TrGetC(isa, isaD, isaN, SA[b])) == v)
             {
                 ++b;
             }
+
             if ((a = b) < last && x < v)
             {
                 while (++b < last && (x = TrGetC(isa, isaD, isaN, SA[b])) <= v)
@@ -2048,10 +2230,12 @@ internal sealed class Bzip2DivSufSort
             }
 
             c = last - 1;
+
             while (b < c && (x = TrGetC(isa, isaD, isaN, SA[c])) == v)
             {
                 --c;
             }
+
             if (b < (d = c) && x > v)
             {
                 while (b < --c && (x = TrGetC(isa, isaD, isaN, SA[c])) >= v)
@@ -2063,9 +2247,11 @@ internal sealed class Bzip2DivSufSort
                     }
                 }
             }
+
             while (b < c)
             {
                 SwapElements(SA, b, SA, c);
+
                 while (++b < c && (x = TrGetC(isa, isaD, isaN, SA[b])) <= v)
                 {
                     if (x == v)
@@ -2074,6 +2260,7 @@ internal sealed class Bzip2DivSufSort
                         ++a;
                     }
                 }
+
                 while (b < --c && (x = TrGetC(isa, isaD, isaN, SA[c])) >= v)
                 {
                     if (x == v)
@@ -2092,14 +2279,17 @@ internal sealed class Bzip2DivSufSort
                 {
                     s = t;
                 }
+
                 for (e = first, f = b - s; 0 < s; --s, ++e, ++f)
                 {
                     SwapElements(SA, e, SA, f);
                 }
+
                 if ((s = d - c) > (t = last - d - 1))
                 {
                     s = t;
                 }
+
                 for (e = b, f = last - s; 0 < s; --s, ++e, ++f)
                 {
                     SwapElements(SA, e, SA, f);
@@ -2113,6 +2303,7 @@ internal sealed class Bzip2DivSufSort
                 {
                     SA[isa + SA[c]] = v;
                 }
+
                 if (b < last)
                 {
                     for (c = a, v = b - 1; c < b; ++c)
@@ -2149,6 +2340,7 @@ internal sealed class Bzip2DivSufSort
                             {
                                 return;
                             }
+
                             StackEntry entry = stack[--ssize];
                             isaD = entry.a;
                             first = entry.b;
@@ -2268,6 +2460,7 @@ internal sealed class Bzip2DivSufSort
                 {
                     break; // BUGFIX : Added to prevent an infinite loop in the original code
                 }
+
                 limit += 1;
                 isaD += 1;
             }
@@ -2302,8 +2495,10 @@ internal sealed class Bzip2DivSufSort
                 {
                     return false;
                 }
+
                 budget += size;
             }
+
             return true;
         }
     }
@@ -2318,6 +2513,7 @@ internal sealed class Bzip2DivSufSort
         if (-n < SA[0])
         {
             TRBudget budget = new TRBudget(n, TrLog(n) * 2 / 3 + 1);
+
             do
             {
                 if ((t = SA[first]) < 0)
@@ -2330,6 +2526,7 @@ internal sealed class Bzip2DivSufSort
                     if (1 < last - first)
                     {
                         TrIntroSort(isa, isa + depth, isa + n, first, last, budget, n);
+
                         if (budget.chance == 0)
                         {
                             /* Switch to Larsson-Sadakane sorting algorithm */
@@ -2337,10 +2534,12 @@ internal sealed class Bzip2DivSufSort
                             {
                                 SA[0] = -first;
                             }
+
                             LsSort(isa, n, depth);
                             break;
                         }
                     }
+
                     first = last;
                 }
             } while (first < n);
@@ -2380,13 +2579,16 @@ internal sealed class Bzip2DivSufSort
                 {
                     flag = 0;
                 }
+
                 break;
             }
         }
+
         i = n - 1;
         m = n;
 
         int ti, ti1, t0;
+
         if ((ti = T[i] & 0xff) < (t0 = T[0] & 0xff) || (T[i] == T[0] && flag != 0))
         {
             if (flag == 0)
@@ -2398,6 +2600,7 @@ internal sealed class Bzip2DivSufSort
             {
                 ++bucketB[BUCKET_B(ti, t0)];
             }
+
             for (--i; 0 <= i && (ti = T[i] & 0xff) <= (ti1 = T[i + 1] & 0xff); --i)
             {
                 ++bucketB[BUCKET_B(ti, ti1)];
@@ -2410,16 +2613,19 @@ internal sealed class Bzip2DivSufSort
             {
                 ++bucketA[T[i] & 0xff];
             } while (0 <= --i && (T[i] & 0xff) >= (T[i + 1] & 0xff));
+
             if (0 <= i)
             {
                 ++bucketB[BUCKET_BSTAR(T[i] & 0xff, T[i + 1] & 0xff)];
                 SA[--m] = i;
+
                 for (--i; 0 <= i && (ti = T[i] & 0xff) <= (ti1 = T[i + 1] & 0xff); --i)
                 {
                     ++bucketB[BUCKET_B(ti, ti1)];
                 }
             }
         }
+
         m = n - m;
         if (m == 0)
         {
@@ -2427,6 +2633,7 @@ internal sealed class Bzip2DivSufSort
             {
                 SA[i] = i;
             }
+
             return 0;
         }
 
@@ -2435,6 +2642,7 @@ internal sealed class Bzip2DivSufSort
             t = i + bucketA[c0];
             bucketA[c0] = i + j;
             i = t + bucketB[BUCKET_B(c0, c0)];
+
             for (c1 = c0 + 1; c1 < 256; ++c1)
             {
                 j += bucketB[BUCKET_BSTAR(c0, c1)];
@@ -2445,6 +2653,7 @@ internal sealed class Bzip2DivSufSort
 
         PAb = n - m;
         ISAb = m;
+
         for (i = m - 2; 0 <= i; --i)
         {
             t = SA[PAb + i];
@@ -2452,6 +2661,7 @@ internal sealed class Bzip2DivSufSort
             c1 = T[t + 1] & 0xff;
             SA[--bucketB[BUCKET_BSTAR(c0, c1)]] = i;
         }
+
         t = SA[PAb + m - 1];
         c0 = T[t] & 0xff;
         c1 = T[t + 1] & 0xff;
@@ -2484,21 +2694,26 @@ internal sealed class Bzip2DivSufSort
             if (0 <= SA[i])
             {
                 j = i;
+
                 do
                 {
                     SA[ISAb + SA[i]] = i;
                 } while (0 <= --i && 0 <= SA[i]);
+
                 SA[i + 1] = i - j;
                 if (i <= 0)
                 {
                     break;
                 }
             }
+
             j = i;
+
             do
             {
                 SA[ISAb + (SA[i] = ~SA[i])] = j;
             } while (SA[--i] < 0);
+
             SA[ISAb + SA[i]] = j;
         }
 
@@ -2506,26 +2721,31 @@ internal sealed class Bzip2DivSufSort
 
         i = n - 1;
         j = m;
+
         if ((T[i] & 0xff) < (T[0] & 0xff) || (T[i] == T[0] && flag != 0))
         {
             if (flag == 0)
             {
                 SA[SA[ISAb + --j]] = i;
             }
+
             for (--i; 0 <= i && (T[i] & 0xff) <= (T[i + 1] & 0xff);)
             {
                 --i;
             }
         }
+
         while (0 <= i)
         {
             for (--i; 0 <= i && (T[i] & 0xff) >= (T[i + 1] & 0xff);)
             {
                 --i;
             }
+
             if (0 <= i)
             {
                 SA[SA[ISAb + --j]] = i;
+
                 for (--i; 0 <= i && (T[i] & 0xff) <= (T[i + 1] & 0xff);)
                 {
                     --i;
@@ -2545,14 +2765,18 @@ internal sealed class Bzip2DivSufSort
                     SA[i] = SA[k];
                 }
             }
+
             t = i - bucketB[BUCKET_B(c0, c0)];
             bucketB[BUCKET_B(c0, c0)] = i + 1;
+
             if (c0 < 255)
             {
                 bucketB[BUCKET_BSTAR(c0, c0 + 1)] = t + 1;
             }
+
             i = bucketA[c0];
         }
+
         return m;
     }
 
@@ -2579,13 +2803,16 @@ internal sealed class Bzip2DivSufSort
                     {
                         s = n - 1;
                     }
+
                     if ((c0 = T[s] & 0xff) <= c1)
                     {
                         SA[j] = ~s1;
+
                         if (0 < s && (T[s - 1] & 0xff) > c0)
                         {
                             s = ~s;
                         }
+
                         if (c2 == c0)
                         {
                             SA[--t] = s;
@@ -2596,6 +2823,7 @@ internal sealed class Bzip2DivSufSort
                             {
                                 bucketB[BUCKET_B(c2, c1)] = t;
                             }
+
                             SA[t = bucketB[BUCKET_B(c2 = c0, c1)] - 1] = s;
                         }
                     }
@@ -2615,12 +2843,14 @@ internal sealed class Bzip2DivSufSort
                 {
                     s = n - 1;
                 }
+
                 if ((c0 = T[s] & 0xff) >= (T[s + 1] & 0xff))
                 {
                     if (0 < s && (T[s - 1] & 0xff) < c0)
                     {
                         s = ~s;
                     }
+
                     if (c0 == c2)
                     {
                         SA[++t] = s;
@@ -2631,6 +2861,7 @@ internal sealed class Bzip2DivSufSort
                         {
                             bucketA[c2] = t;    // BUGFIX: Original code can write to bucketA[-1]
                         }
+
                         SA[t = bucketA[c2 = c0] + 1] = s;
                     }
                 }
@@ -2650,6 +2881,7 @@ internal sealed class Bzip2DivSufSort
                 SA[i] = T[s1 - 1];
             }
         }
+
         return orig;
     }
 
@@ -2670,6 +2902,7 @@ internal sealed class Bzip2DivSufSort
         {
             return 0;
         }
+
         if (n == 1)
         {
             SA[0] = T[0];
@@ -2681,6 +2914,7 @@ internal sealed class Bzip2DivSufSort
         {
             return ConstructBWT(bucketA, bucketB);
         }
+
         return 0;
     }
 }

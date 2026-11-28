@@ -100,6 +100,7 @@ internal class WebSocketClientProtocolHandshakeHandler : ChannelInboundHandlerAd
         }
 
         IFullHttpResponse response = (IFullHttpResponse) msg;
+
         try
         {
             if (!handshaker.IsHandshakeComplete())
@@ -111,6 +112,7 @@ internal class WebSocketClientProtocolHandshakeHandler : ChannelInboundHandlerAd
                 ctx.Pipeline.Remove(this);
                 return;
             }
+
             throw new InvalidOperationException("WebSocketClientHandshaker should have been non finished yet");
         }
         finally

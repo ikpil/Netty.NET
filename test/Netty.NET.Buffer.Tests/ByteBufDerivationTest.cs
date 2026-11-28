@@ -30,6 +30,7 @@ public class ByteBufDerivationTest
         var native = new NativeMemoryAllocator();
         ByteBuf root = direct ? new UnpooledDirectByteBuf(capacity, capacity * 2, native) : new UnpooledHeapByteBuf(capacity, capacity * 2);
         root.WriteBytes(Enumerable.Range(0, capacity).Select(i => unchecked((byte)i)).ToArray());
+
         try
         {
             test(root);
@@ -38,6 +39,7 @@ public class ByteBufDerivationTest
         {
             root.Release();
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -175,6 +177,7 @@ public class ByteBufDerivationTest
             {
                 break;
             }
+
             buffer = parent;
         }
 
@@ -211,6 +214,7 @@ public class ByteBufDerivationTest
             for (int i = 0; i < 10000; i++)
             {
                 random = unchecked(random * 1664525 + 1013904223);
+
                 switch ((random >> 16) % 4)
                 {
                     case 0:
@@ -227,6 +231,7 @@ public class ByteBufDerivationTest
                         derived = new ReadOnlyByteBuf(derived);
                         break;
                 }
+
                 byte[] bytes = Enumerable.Range(offset, 4).Select(value => unchecked((byte)value)).ToArray();
                 long expected = 0;
 
@@ -324,6 +329,7 @@ public class ByteBufDerivationTest
             : new PooledHeapByteBuf((PoolHeapArena)allocator.HeapArenas[0], 8, 32);
         root.WriteLong(0x0102030405060708);
         ByteBuf owner = root.RetainedSlice(1, 7);
+
         try
         {
             ByteBuf borrowed = (readOnly ? owner.AsReadOnly() : owner).Duplicate().Slice(1, 4).Duplicate();
@@ -346,9 +352,11 @@ public class ByteBufDerivationTest
             {
                 owner.Release(owner.RefCnt);
             }
+
             root.Release();
             allocator.Dispose();
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -361,6 +369,7 @@ public class ByteBufDerivationTest
         root.WriteLong(0x0102030405060708);
         var tracker = new Tracker(root);
         ByteBuf facade = advanced ? new AdvancedLeakAwareByteBuf(root, tracker) : new SimpleLeakAwareByteBuf(root, tracker);
+
         try
         {
             ByteBuf derived = facade.Slice(1, 7).Duplicate().Slice(1, 5).Duplicate().AsReadOnly().Duplicate();
@@ -382,6 +391,7 @@ public class ByteBufDerivationTest
                 root.Release(root.RefCnt);
             }
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 

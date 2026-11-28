@@ -127,6 +127,7 @@ public static class SmtpRequests
             List<ICharSequence> @params = new List<ICharSequence>(mailParameters.Length + 1);
             @params.Add(sender != null? new StringCharSequence("FROM:<" + sender + '>') : (ICharSequence) FROM_NULL_SENDER);
             @params.AddRange(mailParameters);
+
             return new DefaultSmtpRequest(SmtpCommand.MAIL, @params);
         }
     }
@@ -137,6 +138,7 @@ public static class SmtpRequests
     public static ISmtpRequest Rcpt(ICharSequence recipient, params ICharSequence[] rcptParameters)
     {
         ObjectUtil.CheckNotNull(recipient, "recipient");
+
         if (rcptParameters == null || rcptParameters.Length == 0)
         {
             return new DefaultSmtpRequest(SmtpCommand.RCPT, new StringCharSequence("TO:<" + recipient + '>'));
@@ -146,6 +148,7 @@ public static class SmtpRequests
             List<ICharSequence> @params = new List<ICharSequence>(rcptParameters.Length + 1);
             @params.Add(new StringCharSequence("TO:<" + recipient + '>'));
             @params.AddRange(rcptParameters);
+
             return new DefaultSmtpRequest(SmtpCommand.RCPT, @params);
         }
     }

@@ -110,6 +110,7 @@ public class TrafficShapingHandlerTest : AbstractSocketTest, IClassFixture<Traff
     {
         long[] minimalWaitBetween = new long[multipleMessage.Length + 1];
         minimalWaitBetween[0] = 0;
+
         for (int i = 0; i < multipleMessage.Length; i++)
         {
             if (multipleMessage[i] > 1)
@@ -121,12 +122,14 @@ public class TrafficShapingHandlerTest : AbstractSocketTest, IClassFixture<Traff
                 minimalWaitBetween[i + 1] = 10;
             }
         }
+
         return minimalWaitBetween;
     }
 
     private static long[] ComputeWaitWrite(int[] multipleMessage)
     {
         long[] minimalWaitBetween = new long[multipleMessage.Length + 1];
+
         for (int i = 0; i < multipleMessage.Length; i++)
         {
             if (multipleMessage[i] > 1)
@@ -138,6 +141,7 @@ public class TrafficShapingHandlerTest : AbstractSocketTest, IClassFixture<Traff
                 minimalWaitBetween[i] = 10;
             }
         }
+
         return minimalWaitBetween;
     }
 
@@ -145,6 +149,7 @@ public class TrafficShapingHandlerTest : AbstractSocketTest, IClassFixture<Traff
     {
         long [] minimalWaitBetween = new long[autoRead.Length + 1];
         minimalWaitBetween[0] = 0;
+
         for (int i = 0; i < autoRead.Length; i++)
         {
             if (autoRead[i] != 0)
@@ -163,6 +168,7 @@ public class TrafficShapingHandlerTest : AbstractSocketTest, IClassFixture<Traff
                 minimalWaitBetween[i + 1] = 0;
             }
         }
+
         return minimalWaitBetween;
     }
 
@@ -351,6 +357,7 @@ public class TrafficShapingHandlerTest : AbstractSocketTest, IClassFixture<Traff
                                              autoRead);
 
         AbstractTrafficShapingHandler handler;
+
         if (limitRead)
         {
             if (globalLimit)
@@ -385,6 +392,7 @@ public class TrafficShapingHandlerTest : AbstractSocketTest, IClassFixture<Traff
             {
                 c.Pipeline.AddLast(TRAFFIC, handler);
             }
+
             c.Pipeline.AddLast(sh);
         }));
         cb.Handler(new ActionChannelInitializer<IChannel>(c =>
@@ -393,6 +401,7 @@ public class TrafficShapingHandlerTest : AbstractSocketTest, IClassFixture<Traff
             {
                 c.Pipeline.AddLast(TRAFFIC, handler);
             }
+
             c.Pipeline.AddLast(ch);
         }));
 
@@ -400,17 +409,21 @@ public class TrafficShapingHandlerTest : AbstractSocketTest, IClassFixture<Traff
         IChannel cc = await cb.ConnectAsync(sc.LocalAddress);
 
         int totalNb = 0;
+
         for (int i = 1; i < multipleMessage.Length; i++)
         {
             totalNb += multipleMessage[i];
         }
+
         // CLR: the boxed Long start/stop of the source are long.
         long start = TrafficCounter.MilliSecondFromNano();
         int nb = multipleMessage[0];
+
         for (int i = 0; i < nb; i++)
         {
             _ = cc.WriteAsync(cc.Alloc().Buffer().WriteBytes(data));
         }
+
         cc.Flush();
 
         await ((Task) promise.Task).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
@@ -423,6 +436,7 @@ public class TrafficShapingHandlerTest : AbstractSocketTest, IClassFixture<Traff
         await sh.channel.CloseAsync();
         await ch.channel.CloseAsync();
         await sc.CloseAsync();
+
         if (autoRead != null)
         {
             // for extra release call in AutoRead
@@ -434,6 +448,7 @@ public class TrafficShapingHandlerTest : AbstractSocketTest, IClassFixture<Traff
         {
             Assert.True(average <= maxfactor,
                 FormattableString.Invariant($"Overall Traffic not ok since > {maxfactor}: {average}"));
+
             if (additionalExecutor)
             {
                 // Oio is not as good when using additionalExecutor
@@ -445,6 +460,7 @@ public class TrafficShapingHandlerTest : AbstractSocketTest, IClassFixture<Traff
                     FormattableString.Invariant($"Overall Traffic not ok since < {minfactor}: {average}"));
             }
         }
+
         if (handler != null && globalLimit)
         {
             ((GlobalTrafficShapingHandler) handler).Release();
@@ -519,18 +535,22 @@ public class TrafficShapingHandlerTest : AbstractSocketTest, IClassFixture<Traff
         {
             long lastTimestamp = 0;
             loggerClient.Debug(FormattableString.Invariant($"Step: {step} Read: {@in.ReadableBytes / 8} blocks"));
+
             while (@in.IsReadable())
             {
                 lastTimestamp = @in.ReadLong();
                 multipleMessage[step]--;
             }
+
             if (multipleMessage[step] > 0)
             {
                 // still some message to get
                 return;
             }
+
             long minimalWait = minimalWaitBetween != null? minimalWaitBetween[step] : 0;
             int ar = 0;
+
             if (autoRead != null)
             {
                 if (step > 0 && autoRead[step - 1] != 0)
@@ -538,6 +558,7 @@ public class TrafficShapingHandlerTest : AbstractSocketTest, IClassFixture<Traff
                     ar = autoRead[step - 1];
                 }
             }
+
             loggerClient.Info(FormattableString.Invariant($"Step: {step} Interval: {lastTimestamp - currentLastTime}") +
                               FormattableString.Invariant($" compareTo {minimalWait} ({ar})"));
             Assert.True(lastTimestamp - currentLastTime >= minimalWait,
@@ -545,13 +566,16 @@ public class TrafficShapingHandlerTest : AbstractSocketTest, IClassFixture<Traff
                             $"The interval of time is incorrect:{lastTimestamp - currentLastTime} not> {minimalWait}"));
             currentLastTime = lastTimestamp;
             step++;
+
             if (multipleMessage.Length > step)
             {
                 int nb = multipleMessage[step];
+
                 for (int i = 0; i < nb; i++)
                 {
                     _ = channel.WriteAsync(channel.Alloc().Buffer().WriteBytes(data));
                 }
+
                 channel.Flush();
             }
             else
@@ -600,9 +624,11 @@ public class TrafficShapingHandlerTest : AbstractSocketTest, IClassFixture<Traff
             long timestamp = TrafficCounter.MilliSecondFromNano();
             int isAutoRead = 0;
             int laststep = step;
+
             for (int i = 0; i < nb; i++)
             {
                 multipleMessage[step]--;
+
                 if (multipleMessage[step] == 0)
                 {
                     // setAutoRead test
@@ -610,9 +636,11 @@ public class TrafficShapingHandlerTest : AbstractSocketTest, IClassFixture<Traff
                     {
                         isAutoRead = autoRead[step];
                     }
+
                     step++;
                 }
             }
+
             if (laststep != step)
             {
                 // setAutoRead test
@@ -630,14 +658,18 @@ public class TrafficShapingHandlerTest : AbstractSocketTest, IClassFixture<Traff
                     }
                 }
             }
+
             // CLR: Thread.sleep(10) blocks the handler's thread for 10 ms, as Thread.Sleep does.
             Thread.Sleep(10);
             loggerServer.Debug(FormattableString.Invariant($"Step: {step} Write: {nb}"));
+
             for (int i = 0; i < nb; i++)
             {
                 _ = channel.WriteAsync(Unpooled.CopyLong(timestamp));
             }
+
             channel.Flush();
+
             if (laststep != step)
             {
                 // setAutoRead test
@@ -647,10 +679,12 @@ public class TrafficShapingHandlerTest : AbstractSocketTest, IClassFixture<Traff
                     {
                         int exactStep = step;
                         long wait = isAutoRead == -1? minimalms : stepms + minimalms;
+
                         if (isAutoRead == -3)
                         {
                             wait = stepms * 3;
                         }
+
                         // CLR: the anonymous Runnable is a lambda (see the executor field).
                         _ = executor.ScheduleAsync(() =>
                         {

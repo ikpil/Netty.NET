@@ -61,8 +61,10 @@ public class PoolThreadCacheSchedulingTest
         Mapped(executor, () =>
         {
             var buffers = Enumerable.Range(0, 4).Select(_ => Allocate(a, direct, size)).ToArray();
+
             foreach (var b in buffers)
                 b.Release();
+
             for (int i = 0; i < 4; ++i)
                 Allocate(a, direct, size).Release();
         });
@@ -107,10 +109,12 @@ public class PoolThreadCacheSchedulingTest
     {
         var executor = new ManualExecutor();
         using var a = NewAllocator(disablePeriod ? TimeSpan.Zero : Period);
+
         if (disablePeriod)
             Mapped(executor, () => Allocate(a, false, 48).Release());
         else
             Allocate(a, false, 48).Release();
+
         Assert.Equal(0, executor.ScheduledCount);
         executor.Advance(Period * 100);
         Assert.Equal(0, executor.RunDue());
@@ -140,10 +144,12 @@ public class PoolThreadCacheSchedulingTest
         var first = new ManualExecutor();
         var second = new ManualExecutor();
         using var a = NewAllocator();
+
         if (initiallyMapped)
             Mapped(first, () => Allocate(a, false, 48).Release());
         else
             Allocate(a, false, 48).Release();
+
         Mapped(second, () => Allocate(a, false, 48).Release());
         Assert.Equal(initiallyMapped ? 1 : 0, first.ScheduledCount);
         Assert.Equal(0, second.ScheduledCount);
@@ -212,8 +218,10 @@ public class PoolThreadCacheSchedulingTest
             Allocate(a, true, 64).Release();
         });
         var lease = useLease ? live.AcquireReadLease() : default;
+
         if (useLease)
             live.Release();
+
         IScheduledWork work = executor.Head;
         a.Dispose();
         Assert.True(work.IsCanceled);
@@ -222,6 +230,7 @@ public class PoolThreadCacheSchedulingTest
         Assert.True(native.ReservedBytes > 0);
         executor.Advance(Period * 10);
         Assert.Equal(0, executor.RunDue());
+
         if (useLease)
             lease.Dispose();
         else
@@ -229,6 +238,7 @@ public class PoolThreadCacheSchedulingTest
             Assert.Equal(42, live.ReadInt());
             live.Release();
         }
+
         Assert.Equal(0, native.ReservedBytes);
         Assert.Equal(0, a.Metric.DirectArenas[0].NumActiveAllocations);
     }
@@ -358,6 +368,7 @@ public class PoolThreadCacheSchedulingTest
         var executor = new ManualExecutor();
         using var a = NewAllocator(TimeSpan.FromDays(1));
         WeakReference payload;
+
         if (alreadySuppressed)
         {
             using (ExecutionContext.SuppressFlow())
@@ -371,6 +382,7 @@ public class PoolThreadCacheSchedulingTest
             payload = AllocateWithAmbientPayload(a, executor);
             Assert.False(ExecutionContext.IsFlowSuppressed());
         }
+
         GC.Collect();
         GC.WaitForPendingFinalizers();
         GC.Collect();
@@ -423,6 +435,7 @@ public class PoolThreadCacheSchedulingTest
         var executor = new DefaultEventExecutor(clock);
         var native = new NativeMemoryAllocator();
         using var a = NewAllocator(native: native);
+
         try
         {
             Task barrier = null;
@@ -471,6 +484,7 @@ public class PoolThreadCacheSchedulingTest
         var native = new NativeMemoryAllocator();
         using var a = new PooledByteBufAllocator(false, 2, 2, maxOrder: 4, nativeAllocator: native,
             smallCacheSize: 4, normalCacheSize: 4, cacheTrimPeriod: Period);
+
         try
         {
             Task barrier = null;

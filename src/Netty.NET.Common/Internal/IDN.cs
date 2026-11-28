@@ -60,16 +60,20 @@ public static class IDN
 
         StringBuilder @out = new StringBuilder(input.Length);
         int p = 0;
+
         while (p < input.Length)
         {
             int q = SearchDots(input, p);
             @out.Append(ToASCIIInternal(input.Substring(p, q - p)));
+
             if (q != input.Length)
             {
                 @out.Append('.');
             }
+
             p = q + 1;
         }
+
         return @out.ToString();
     }
 
@@ -83,16 +87,20 @@ public static class IDN
 
         StringBuilder @out = new StringBuilder(input.Length);
         int p = 0;
+
         while (p < input.Length)
         {
             int q = SearchDots(input, p);
             @out.Append(ToUnicodeInternal(input.Substring(p, q - p)));
+
             if (q != input.Length)
             {
                 @out.Append('.');
             }
+
             p = q + 1;
         }
+
         return @out.ToString();
     }
 
@@ -107,6 +115,7 @@ public static class IDN
         {
             throw new ArgumentException("The label in the input is too long");
         }
+
         return dest;
     }
 
@@ -116,6 +125,7 @@ public static class IDN
         {
             return label;
         }
+
         try
         {
             return MAPPING.GetUnicode(label);
@@ -134,6 +144,7 @@ public static class IDN
     private static int SearchDots(string s, int start)
     {
         int i;
+
         for (i = start; i < s.Length; i++)
         {
             if (IsLabelSeparator(s[i]))
@@ -141,6 +152,7 @@ public static class IDN
                 break;
             }
         }
+
         return i;
     }
 

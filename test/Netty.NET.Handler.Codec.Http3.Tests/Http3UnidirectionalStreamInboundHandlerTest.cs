@@ -99,6 +99,7 @@ public class Http3UnidirectionalStreamInboundHandlerTest : IDisposable
         EmbeddedChannel channel = NewChannel(server, v =>
         {
             Assert.Equal(streamType, v);
+
             // Add an handler that will just forward the received bytes.
             return new ChannelInboundHandlerAdapter();
         });
@@ -130,6 +131,7 @@ public class Http3UnidirectionalStreamInboundHandlerTest : IDisposable
         Http3CodecUtils.WriteVariableLengthInteger(buffer, 2);
         Assert.False(channel.WriteInbound(buffer));
         Assert.Equal(0, buffer.RefCnt);
+
         if (server)
         {
             Http3TestUtils.VerifyClose(Http3ErrorCode.H3_STREAM_CREATION_ERROR, (EmbeddedQuicChannel) channel.Parent);
@@ -140,6 +142,7 @@ public class Http3UnidirectionalStreamInboundHandlerTest : IDisposable
             Assert.False(channel.WriteInbound(b));
             Assert.Equal(0, b.RefCnt);
         }
+
         Assert.False(channel.Finish());
     }
 
@@ -191,6 +194,7 @@ public class Http3UnidirectionalStreamInboundHandlerTest : IDisposable
             {
                 break;
             }
+
             ReferenceCountUtil.Release(written);
         }
 
@@ -213,6 +217,7 @@ public class Http3UnidirectionalStreamInboundHandlerTest : IDisposable
 
         Assert.False(channel.WriteInbound(buffer));
         Assert.Equal(0, buffer.RefCnt);
+
         if (server)
         {
             Http3TestUtils.VerifyClose(Http3ErrorCode.H3_STREAM_CREATION_ERROR, parent);
@@ -229,6 +234,7 @@ public class Http3UnidirectionalStreamInboundHandlerTest : IDisposable
                 Assert.NotNull(channel.Pipeline.Context(typeof(CodecHandler)));
             }
         }
+
         Assert.False(channel.Finish());
         Assert.False(outboundControlChannel.Finish());
     }
@@ -269,6 +275,7 @@ public class Http3UnidirectionalStreamInboundHandlerTest : IDisposable
         Assert.Equal(0, buffer.RefCnt);
         Assert.Null(channel.Pipeline.Context(typeof(Http3UnidirectionalStreamInboundHandler)));
         Assert.NotNull(channel.Pipeline.Context(clazz));
+
         if (hasCodec)
         {
             Assert.NotNull(channel.Pipeline.Context(typeof(CodecHandler)));
@@ -277,6 +284,7 @@ public class Http3UnidirectionalStreamInboundHandlerTest : IDisposable
         {
             Assert.Null(channel.Pipeline.Context(typeof(CodecHandler)));
         }
+
         Assert.False(channel.Finish());
 
         channel = new EmbeddedChannel(channel.Parent, DefaultChannelId.NewInstance(),

@@ -47,6 +47,7 @@ internal sealed class QpackDecoderHandler : ByteToMessageDecoder
         {
             return;
         }
+
         if (discard)
         {
             @in.SkipBytes(@in.ReadableBytes);
@@ -71,6 +72,7 @@ internal sealed class QpackDecoderHandler : ByteToMessageDecoder
                     // Not enough readable bytes
                     return;
                 }
+
                 qpackEncoder.SectionAcknowledgment(streamId);
             }
             catch (QpackException e)
@@ -78,6 +80,7 @@ internal sealed class QpackDecoderHandler : ByteToMessageDecoder
                 ConnectionError(ctx, new Http3Exception(QPACK_DECODER_STREAM_ERROR,
                                 "Section acknowledgment decode failed.", e), true);
             }
+
             return;
         }
 
@@ -97,6 +100,7 @@ internal sealed class QpackDecoderHandler : ByteToMessageDecoder
                     // Not enough readable bytes
                     return;
                 }
+
                 qpackEncoder.StreamCancellation(streamId);
             }
             catch (QpackException e)
@@ -104,6 +108,7 @@ internal sealed class QpackDecoderHandler : ByteToMessageDecoder
                 ConnectionError(ctx, new Http3Exception(QPACK_DECODER_STREAM_ERROR,
                         "Stream cancellation decode failed.", e), true);
             }
+
             return;
         }
 
@@ -127,11 +132,13 @@ internal sealed class QpackDecoderHandler : ByteToMessageDecoder
                         "Invalid increment '" + increment.ToString(CultureInfo.InvariantCulture) + "'.",  false);
                 return;
             }
+
             if (increment < 0)
             {
                 // Not enough readable bytes
                 return;
             }
+
             try
             {
                 qpackEncoder.InsertCountIncrement(increment);
@@ -141,8 +148,10 @@ internal sealed class QpackDecoderHandler : ByteToMessageDecoder
                 ConnectionError(ctx, new Http3Exception(QPACK_DECODER_STREAM_ERROR,
                         "Insert count increment decode failed.", e), true);
             }
+
             return;
         }
+
         // unknown frame
         discard = true;
         ConnectionError(ctx, QPACK_DECODER_STREAM_ERROR,
@@ -165,6 +174,7 @@ internal sealed class QpackDecoderHandler : ByteToMessageDecoder
             // See https://www.rfc-editor.org/rfc/rfc9204.html#name-encoder-and-decoder-streams
             Http3CodecUtils.CriticalStreamClosed(ctx);
         }
+
         ctx.FireUserEventTriggered(evt);
     }
 

@@ -55,6 +55,7 @@ public sealed class DnsClient
             IDnsQuestion question = msg.RecordAt<IDnsQuestion>(DnsSection.QUESTION, 0);
             Console.WriteLine("name: {0}", question.Name());
         }
+
         for (int i = 0, count = msg.Count(DnsSection.ANSWER); i < count; i++)
         {
             IDnsRecord record = msg.RecordAt<IDnsRecord>(DnsSection.ANSWER, i);
@@ -71,6 +72,7 @@ public sealed class DnsClient
     {
         IPEndPoint addr = new IPEndPoint(IPAddress.Parse(DNS_SERVER_HOST), DNS_SERVER_PORT);
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             Bootstrap b = new Bootstrap();

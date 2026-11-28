@@ -16,6 +16,7 @@ public class DefaultResourceLeakDetectorFactory : ResourceLeakDetectorFactory
     public DefaultResourceLeakDetectorFactory()
     {
         string customLeakDetector;
+
         try
         {
             customLeakDetector = SystemPropertyUtil.Get("io.netty.customResourceLeakDetector");
@@ -25,10 +26,12 @@ public class DefaultResourceLeakDetectorFactory : ResourceLeakDetectorFactory
             logger.Error("Could not access System property: io.netty.customResourceLeakDetector", cause);
             customLeakDetector = null;
         }
+
         if (customLeakDetector == null)
         {
             return;
         }
+
         obsoleteCustomClassConstructor = LoadConstructor(customLeakDetector, [typeof(Type), typeof(int), typeof(long)]);
         customClassConstructor = LoadConstructor(customLeakDetector, [typeof(Type), typeof(int)]);
     }
@@ -39,27 +42,32 @@ public class DefaultResourceLeakDetectorFactory : ResourceLeakDetectorFactory
         {
             Type type = Type.GetType(name, throwOnError: true);
             bool inheritsDetector = false;
+
             for (Type current = type; current != null; current = current.BaseType)
                 if (current.IsGenericType && current.GetGenericTypeDefinition() == typeof(ResourceLeakDetector<>))
                 {
                     inheritsDetector = true;
                     break;
                 }
+
             if (!inheritsDetector)
             {
                 logger.Error("Class {} does not inherit from ResourceLeakDetector.", name);
                 return null;
             }
+
             // Java erases T. A CLR provider can be a one-parameter generic definition,
             // closed for each requested T, or an already closed compatible subclass.
             if (type.ContainsGenericParameters && (!type.IsGenericTypeDefinition || type.GetGenericArguments().Length != 1))
                 throw new ArgumentException("A custom detector must be closed or have exactly one generic parameter.", nameof(name));
+
             // Generic definitions have no single initializer; initialize their closed
             // construction when a resource type is requested instead.
             if (!type.ContainsGenericParameters)
             {
                 RuntimeHelpers.RunClassConstructor(type.TypeHandle);
             }
+
             return type.GetConstructor(parameters) ?? throw new MissingMethodException(type.FullName, ".ctor");
         }
         catch (Exception cause)
@@ -78,10 +86,12 @@ public class DefaultResourceLeakDetectorFactory : ResourceLeakDetectorFactory
             Type[] parameters = Array.ConvertAll(constructor.GetParameters(), parameter => parameter.ParameterType);
             constructor = type.GetConstructor(parameters);
         }
+
         // An erased Java cast may succeed across T. CLR generic classes are invariant;
         // an incompatible closed provider follows the original failure/fallback path.
         if (!typeof(ResourceLeakDetector<T>).IsAssignableFrom(type))
             throw new InvalidCastException("The custom detector is incompatible with resource type " + typeof(T).FullName);
+
         RuntimeHelpers.RunClassConstructor(type.TypeHandle);
         return (ResourceLeakDetector<T>)constructor.Invoke(arguments);
     }
@@ -103,6 +113,7 @@ public class DefaultResourceLeakDetectorFactory : ResourceLeakDetectorFactory
                     obsoleteCustomClassConstructor.DeclaringType.FullName, resource, cause);
             }
         }
+
         var fallback = new ResourceLeakDetector<T>(resource, samplingInterval, maxActive);
         logger.Debug("Loaded default ResourceLeakDetector: {}", fallback);
         return fallback;
@@ -124,6 +135,7 @@ public class DefaultResourceLeakDetectorFactory : ResourceLeakDetectorFactory
                     customClassConstructor.DeclaringType.FullName, resource, cause);
             }
         }
+
         var fallback = new ResourceLeakDetector<T>(resource, samplingInterval);
         logger.Debug("Loaded default ResourceLeakDetector: {}", fallback);
         return fallback;

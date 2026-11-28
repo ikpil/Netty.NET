@@ -105,6 +105,7 @@ public sealed class RedisDecoder : ByteToMessageDecoder
                                           RedisConstants.REDIS_MESSAGE_MAX_LENGTH.ToString(CultureInfo.InvariantCulture) +
                                           ")");
         }
+
         this.maxInlineMessageLength = maxInlineMessageLength;
         this.messagePool = messagePool;
         this.decodeInlineCommands = decodeInlineCommands;
@@ -123,30 +124,35 @@ public sealed class RedisDecoder : ByteToMessageDecoder
                     {
                         return;
                     }
+
                     break;
                 case State.DECODE_INLINE:
                     if (!DecodeInline(@in, @out))
                     {
                         return;
                     }
+
                     break;
                 case State.DECODE_LENGTH:
                     if (!DecodeLength(@in, @out))
                     {
                         return;
                     }
+
                     break;
                 case State.DECODE_BULK_STRING_EOL:
                     if (!DecodeBulkStringEndOfLine(@in, @out))
                     {
                         return;
                     }
+
                     break;
                 case State.DECODE_BULK_STRING_CONTENT:
                     if (!DecodeBulkStringContent(@in, @out))
                     {
                         return;
                     }
+
                     break;
                 default:
                     throw new RedisCodecException("Unknown state: " + state);
@@ -198,8 +204,10 @@ public sealed class RedisDecoder : ByteToMessageDecoder
                                               " (expected: <= " +
                                               maxInlineMessageLength.ToString(CultureInfo.InvariantCulture) + ")");
             }
+
             return false;
         }
+
         @out.Add(NewInlineRedisMessage(type, lineBytes));
         ResetDecoder();
         return true;
@@ -216,6 +224,7 @@ public sealed class RedisDecoder : ByteToMessageDecoder
                 // fast-path
                 return false;
             }
+
             bool isNegative = @in.GetByte(@in.ReaderIndex) == '-';
             int capacity = RedisConstants.POSITIVE_LONG_MAX_LENGTH + (isNegative ? 1 : 0) + 1;
             if (readableBytes > capacity)
@@ -223,8 +232,10 @@ public sealed class RedisDecoder : ByteToMessageDecoder
                 throw new RedisCodecException("too many characters to be a valid RESP Integer: " +
                                               readableBytes.ToString(CultureInfo.InvariantCulture));
             }
+
             return false;
         }
+
         long length = ParseRedisNumber(lineByteBuf);
         if (length < RedisConstants.NULL_VALUE)
         {
@@ -232,6 +243,7 @@ public sealed class RedisDecoder : ByteToMessageDecoder
                                           " (expected: >= " +
                                           RedisConstants.NULL_VALUE.ToString(CultureInfo.InvariantCulture) + ")");
         }
+
         if (type == RedisMessageType.ARRAY_HEADER)
         {
             @out.Add(new ArrayHeaderRedisMessage(length));
@@ -247,6 +259,7 @@ public sealed class RedisDecoder : ByteToMessageDecoder
                                               RedisConstants.REDIS_MESSAGE_MAX_LENGTH.ToString(CultureInfo.InvariantCulture) +
                                               ")");
             }
+
             remainingBulkLength = (int) length; // range(int) is already checked.
             return DecodeBulkString(@in, @out);
         }
@@ -281,6 +294,7 @@ public sealed class RedisDecoder : ByteToMessageDecoder
         {
             return false;
         }
+
         ReadEndOfLine(@in);
         @out.Add(FullBulkStringRedisMessage.EMPTY_INSTANCE);
         ResetDecoder();
@@ -324,6 +338,7 @@ public sealed class RedisDecoder : ByteToMessageDecoder
         {
             return;
         }
+
         byte[] bytes = RedisCodecUtil.ShortToBytes(delim);
         throw new RedisCodecException("delimiter: [" + ((sbyte) bytes[0]).ToString(CultureInfo.InvariantCulture) + "," +
                 ((sbyte) bytes[1]).ToString(CultureInfo.InvariantCulture) + "] (expected: \\r\\n)");
@@ -362,11 +377,13 @@ public sealed class RedisDecoder : ByteToMessageDecoder
         {
             return null;
         }
+
         int lfIndex = @in.IndexOf(@in.ReaderIndex, @in.WriterIndex, (byte) '\n');
         if (lfIndex < 0)
         {
             return null;
         }
+
         ByteBuf data = @in.ReadSlice(lfIndex - @in.ReaderIndex - 1); // `-1` is for CR
         ReadEndOfLine(@in); // validate CR LF
         return data;
@@ -390,6 +407,7 @@ public sealed class RedisDecoder : ByteToMessageDecoder
         {
             return -ParsePositiveNumber(byteBuf.SkipBytes(extraOneByteForNegative));
         }
+
         return ParsePositiveNumber(byteBuf);
     }
 
@@ -397,6 +415,7 @@ public sealed class RedisDecoder : ByteToMessageDecoder
     {
         toPositiveLongProcessor.Reset();
         byteBuf.ForEachByte(toPositiveLongProcessor.Process);
+
         return toPositiveLongProcessor.Content();
     }
 
@@ -414,6 +433,7 @@ public sealed class RedisDecoder : ByteToMessageDecoder
             {
                 throw new RedisCodecException("bad byte in number: " + ((sbyte) value).ToString(CultureInfo.InvariantCulture));
             }
+
             result = result * 10 + (value - '0');
             return true;
         }

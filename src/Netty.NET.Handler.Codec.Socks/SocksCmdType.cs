@@ -54,6 +54,7 @@ public sealed class SocksCmdType
                 return code;
             }
         }
+
         return UNKNOWN;
     }
 

@@ -71,12 +71,15 @@ public static class HttpHeadersTestUtils
             if (array == null)
             {
                 IList<ICharSequence> list = new List<ICharSequence>(nr);
+
                 for (int i = 1; i <= nr; i++)
                 {
                     list.Add(new StringCharSequence(Of(i).ToString()));
                 }
+
                 array = list;
             }
+
             return array;
         }
 
@@ -88,10 +91,12 @@ public static class HttpHeadersTestUtils
             int end = from + size;
             IList<ICharSequence> list = new List<ICharSequence>(size);
             IList<ICharSequence> fullList = AsList();
+
             for (int i = from; i < end; ++i)
             {
                 list.Add(fullList[i]);
             }
+
             return list;
         }
 
@@ -107,13 +112,17 @@ public static class HttpHeadersTestUtils
             {
                 return "";
             }
+
             StringBuilder sb = new StringBuilder(arr.Count * 10);
             int end = arr.Count - 1;
+
             for (int i = 0; i < end; ++i)
             {
                 Quoted(sb, arr[i]).Append(COMMA);
             }
+
             Quoted(sb, arr[end]);
+
             return sb.ToString();
         }
 
@@ -128,6 +137,7 @@ public static class HttpHeadersTestUtils
             {
                 return sb.Append(DOUBLE_QUOTE).Append(value).Append(DOUBLE_QUOTE);
             }
+
             return sb.Append(value);
         }
 
@@ -140,6 +150,7 @@ public static class HttpHeadersTestUtils
                     return true;
                 }
             }
+
             return false;
         }
 
@@ -148,11 +159,13 @@ public static class HttpHeadersTestUtils
         static HeaderValue()
         {
             Dictionary<int, HeaderValue> map = new Dictionary<int, HeaderValue>();
+
             foreach (HeaderValue v in VALUES)
             {
                 int nr = v.nr;
                 map[nr] = v;
             }
+
             MAP = map;
         }
 

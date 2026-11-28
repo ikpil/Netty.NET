@@ -89,6 +89,7 @@ public abstract class AbstractMixedHttpData<D> : AbstractReferenceCounted, IHttp
             try
             {
                 CheckSize(wrapped.Length() + buffer.ReadableBytes);
+
                 if (wrapped.Length() + buffer.ReadableBytes > limitSize)
                 {
                     D diskData = MakeDiskData();
@@ -97,6 +98,7 @@ public abstract class AbstractMixedHttpData<D> : AbstractReferenceCounted, IHttp
                     {
                         diskData.AddContent(data.Retain(), false);
                     }
+
                     wrapped.Release();
                     wrapped = diskData;
                 }
@@ -107,6 +109,7 @@ public abstract class AbstractMixedHttpData<D> : AbstractReferenceCounted, IHttp
                 throw;
             }
         }
+
         wrapped.AddContent(buffer, last);
     }
 
@@ -171,6 +174,7 @@ public abstract class AbstractMixedHttpData<D> : AbstractReferenceCounted, IHttp
             buffer.Release();
             throw;
         }
+
         if (buffer.ReadableBytes > limitSize)
         {
             if (wrapped is AbstractMemoryHttpData)
@@ -180,12 +184,14 @@ public abstract class AbstractMixedHttpData<D> : AbstractReferenceCounted, IHttp
                 wrapped = MakeDiskData();
             }
         }
+
         wrapped.SetContent(buffer);
     }
 
     public virtual void SetContent(FileInfo file)
     {
         CheckSize(AbstractDiskHttpData.FileLength(file));
+
         if (AbstractDiskHttpData.FileLength(file) > limitSize)
         {
             if (wrapped is AbstractMemoryHttpData)
@@ -195,6 +201,7 @@ public abstract class AbstractMixedHttpData<D> : AbstractReferenceCounted, IHttp
                 wrapped = MakeDiskData();
             }
         }
+
         wrapped.SetContent(file);
     }
 
@@ -206,6 +213,7 @@ public abstract class AbstractMixedHttpData<D> : AbstractReferenceCounted, IHttp
             wrapped.Release();
             wrapped = MakeDiskData();
         }
+
         wrapped.SetContent(inputStream);
     }
 

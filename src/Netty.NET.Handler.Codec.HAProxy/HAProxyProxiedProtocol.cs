@@ -129,6 +129,7 @@ public sealed class HAProxyProxiedProtocol
         {
             throw new ArgumentNullException(nameof(name), "Name is null");
         }
+
         foreach (HAProxyProxiedProtocol value in Values())
         {
             if (value.name == name)
@@ -136,6 +137,7 @@ public sealed class HAProxyProxiedProtocol
                 return value;
             }
         }
+
         throw new ArgumentException("No enum constant " + typeof(HAProxyProxiedProtocol).FullName + "." + name);
     }
 
@@ -233,6 +235,7 @@ public sealed class HAProxyProxiedProtocol
         public static AddressFamily ValueOf(byte tpafByte)
         {
             int addressFamily = unchecked((sbyte) tpafByte & (sbyte) FAMILY_MASK);
+
             switch ((byte) addressFamily)
             {
                 case AF_IPV4_BYTE:
@@ -316,6 +319,7 @@ public sealed class HAProxyProxiedProtocol
         public static TransportProtocol ValueOf(byte tpafByte)
         {
             int transportProtocol = tpafByte & TRANSPORT_MASK;
+
             switch ((byte) transportProtocol)
             {
                 case TRANSPORT_STREAM_BYTE:

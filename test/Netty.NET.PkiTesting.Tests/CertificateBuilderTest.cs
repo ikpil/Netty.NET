@@ -302,6 +302,7 @@ public class CertificateBuilderTest
         Assert.Equal(0, sans[7][0]);
         Assert.Equal(Bytes(
                 48, 17, 6, 10, 42, -122, 72, -122, -9, 99, 100, 1, 2, 42, -96, 3, 1, 1, 0), sans[7][1]);
+
         // Java versions older than 19 re-encode the value in an extra context-constructed tag, the {-96, 5} bit.
         if (sans[7].Count > 2)
         {
@@ -319,17 +320,21 @@ public class CertificateBuilderTest
                 .SetIsCertificateAuthority(true)
                 .SetKeyUsage(true, KeyUsage.digitalSignature, KeyUsage.keyCertSign)
                 .AddExtendedKeyUsage("1.2.840.113635.100.1.2.42");
+
         foreach (CertificateBuilder.ExtendedKeyUsage extendedKeyUsage in CertificateBuilder.ExtendedKeyUsage.Values())
         {
             builder.AddExtendedKeyUsage(extendedKeyUsage);
         }
+
         X509Bundle bundle = builder.BuildSelfSigned();
         SortedSet<string> expectedExtendedKeyUsage = new SortedSet<string>(StringComparer.Ordinal);
         expectedExtendedKeyUsage.Add("1.2.840.113635.100.1.2.42");
+
         foreach (CertificateBuilder.ExtendedKeyUsage extendedKeyUsage in CertificateBuilder.ExtendedKeyUsage.Values())
         {
             expectedExtendedKeyUsage.Add(extendedKeyUsage.GetOid());
         }
+
         List<string> actualExtendedKeyUsage = GetExtendedKeyUsage(bundle.GetCertificate());
         Assert.Equal(expectedExtendedKeyUsage, actualExtendedKeyUsage.OrderBy(oid => oid, StringComparer.Ordinal));
     }
@@ -514,6 +519,7 @@ public class CertificateBuilderTest
         {
             trustManager.ChainPolicy.ExtraStore.Add(chain[i]);
         }
+
         trustManager.ChainPolicy.ApplicationPolicy.Add(new Oid(OID_PKIX_KP_CLIENT_AUTH));
         if (!trustManager.Build(chain[0]))
         {
@@ -547,6 +553,7 @@ public class CertificateBuilderTest
     private static List<string> GetExtendedKeyUsage(X509Certificate2 cert)
     {
         List<string> usages = new List<string>();
+
         foreach (X509Extension extension in cert.Extensions)
         {
             if (extension is X509EnhancedKeyUsageExtension eku)
@@ -557,6 +564,7 @@ public class CertificateBuilderTest
                 }
             }
         }
+
         return usages;
     }
 
@@ -568,14 +576,17 @@ public class CertificateBuilderTest
             {
                 int flags = (int) keyUsage.KeyUsages;
                 bool[] bits = new bool[9];
+
                 for (int i = 0; i < 8; i++)
                 {
                     bits[i] = (flags & (0x80 >>> i)) != 0;
                 }
+
                 bits[8] = (flags & 0x8000) != 0;
                 return bits;
             }
         }
+
         return null;
     }
 
@@ -586,6 +597,7 @@ public class CertificateBuilderTest
         chain.ChainPolicy.CustomTrustStore.Add(cert);
         chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
         chain.Build(cert);
+
         return chain.ChainStatus.Any(s => s.Status.HasFlag(X509ChainStatusFlags.HasNotSupportedCriticalExtension));
     }
 
@@ -593,9 +605,11 @@ public class CertificateBuilderTest
     {
         X509Extension extension = cert.Extensions["2.5.29.17"];
         AsnReader names = new AsnReader(extension.RawData, AsnEncodingRules.DER).ReadSequence();
+
         while (names.HasData)
         {
             Asn1Tag tag = names.PeekTag();
+
             switch (tag.TagValue)
             {
                 case 0:

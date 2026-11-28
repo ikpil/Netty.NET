@@ -62,9 +62,11 @@ public class NativeTimerDispatchContractTest
         using var timer = new HashedWheelTimer(factory, TimeSpan.FromMilliseconds(1));
         Assert.True((worker.ThreadState & ThreadState.Unstarted) != 0);
         ITimerTask callback = TimerTask.Create(_ => observations.Add((Thread.CurrentThread, ambient.Value)));
+
         try
         {
             ambient.Value = "start";
+
             if (suppressFlow)
             {
                 using (ExecutionContext.SuppressFlow())
@@ -76,6 +78,7 @@ public class NativeTimerDispatchContractTest
             {
                 timer.NewTimeout(callback, TimeSpan.Zero);
             }
+
             Assert.True(observations.TryTake(out var first, 5000, TestContext.Current.CancellationToken));
             Assert.Same(worker, first.Thread);
             Assert.Equal(suppressFlow ? null : "start", first.Context);

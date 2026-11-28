@@ -52,14 +52,17 @@ public class DefaultMaxBytesRecvByteBufAllocator : IMaxBytesRecvByteBufAllocator
     public DefaultMaxBytesRecvByteBufAllocator MaxBytesPerRead(int maxBytesPerRead)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxBytesPerRead);
+
         // There is a dependency between this.maxBytesPerRead and this.maxBytesPerIndividualRead (a < b).
         // Write operations must be synchronized, but independent read operations can just be volatile.
         lock (_gate)
         {
             if (maxBytesPerRead < _maxBytesPerIndividualRead)
                 throw new ArgumentOutOfRangeException(nameof(maxBytesPerRead));
+
             _maxBytesPerRead = maxBytesPerRead;
         }
+
         return this;
     }
 
@@ -71,14 +74,17 @@ public class DefaultMaxBytesRecvByteBufAllocator : IMaxBytesRecvByteBufAllocator
     public DefaultMaxBytesRecvByteBufAllocator MaxBytesPerIndividualRead(int maxBytesPerIndividualRead)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxBytesPerIndividualRead);
+
         // There is a dependency between this.maxBytesPerRead and this.maxBytesPerIndividualRead (a < b).
         // Write operations must be synchronized, but independent read operations can just be volatile.
         lock (_gate)
         {
             if (maxBytesPerIndividualRead > _maxBytesPerRead)
                 throw new ArgumentOutOfRangeException(nameof(maxBytesPerIndividualRead));
+
             _maxBytesPerIndividualRead = maxBytesPerIndividualRead;
         }
+
         return this;
     }
 
@@ -91,6 +97,7 @@ public class DefaultMaxBytesRecvByteBufAllocator : IMaxBytesRecvByteBufAllocator
     public DefaultMaxBytesRecvByteBufAllocator MaxBytesPerReadPair(int maxBytesPerRead, int maxBytesPerIndividualRead)
     {
         CheckMaxBytesPerReadPair(maxBytesPerRead, maxBytesPerIndividualRead);
+
         // There is a dependency between this.maxBytesPerRead and this.maxBytesPerIndividualRead (a < b).
         // Write operations must be synchronized, but independent read operations can just be volatile.
         lock (_gate)
@@ -98,6 +105,7 @@ public class DefaultMaxBytesRecvByteBufAllocator : IMaxBytesRecvByteBufAllocator
             _maxBytesPerRead = maxBytesPerRead;
             _maxBytesPerIndividualRead = maxBytesPerIndividualRead;
         }
+
         return this;
     }
 

@@ -16,9 +16,11 @@ public class ResourceLeakDetectorFactoryContractTest
     private static DefaultResourceLeakDetectorFactory CreateFactory(string typeName)
     {
         string previous = Environment.GetEnvironmentVariable(Property);
+
         try
         {
             Environment.SetEnvironmentVariable(Property, typeName);
+
             return new DefaultResourceLeakDetectorFactory();
         }
         finally
@@ -160,6 +162,7 @@ public class ResourceLeakDetectorFactoryContractTest
     {
         foreach (var type in new[] { typeof(object), typeof(InvalidArity<,>), typeof(InitializationFailure) })
             Assert.IsType<ResourceLeakDetector<object>>(CreateFactory(type).NewResourceLeakDetector<object>(typeof(object), 1));
+
         Assert.IsType<ResourceLeakDetector<object>>(CreateFactory("Missing.Detector, Missing.Assembly").NewResourceLeakDetector<object>(typeof(object), 1));
         Assert.IsType<ResourceLeakDetector<object>>(CreateFactory((string)null).NewResourceLeakDetector<object>(typeof(object), 1));
     }
@@ -197,6 +200,7 @@ public class ResourceLeakDetectorFactoryContractTest
     {
         var previous = ResourceLeakDetectorFactory.Instance();
         var replacement = new LegacyFactory();
+
         try
         {
             ResourceLeakDetectorFactory.SetResourceLeakDetectorFactory(replacement);

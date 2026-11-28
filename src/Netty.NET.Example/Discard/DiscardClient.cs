@@ -48,6 +48,7 @@ public sealed class DiscardClient
     {
         // Configure SSL.
         SslContext sslCtx;
+
         if (SSL)
         {
             sslCtx = SslContextBuilder.ForClient()
@@ -59,6 +60,7 @@ public sealed class DiscardClient
         }
 
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             Bootstrap b = new Bootstrap();
@@ -67,10 +69,12 @@ public sealed class DiscardClient
              .Handler(new ActionChannelInitializer<ISocketChannel>(ch =>
              {
                  IChannelPipeline p = ch.Pipeline;
+
                  if (sslCtx != null)
                  {
                      p.AddLast(sslCtx.NewHandler(ch.Alloc(), HOST, PORT));
                  }
+
                  p.AddLast(new DiscardClientHandler());
              }));
 

@@ -56,6 +56,7 @@ public class AbstractReferenceCountedTest
     {
         AbstractReferenceCounted referenceCounted = NewReferenceCounted();
         Assert.True(referenceCounted.Release());
+
         try
         {
             referenceCounted.Release(1);
@@ -109,6 +110,7 @@ public class AbstractReferenceCountedTest
                         try
                         {
                             retainLatch.Wait();
+
                             try
                             {
                                 referenceCounted.Retain(retainCnt);
@@ -173,6 +175,7 @@ public class AbstractReferenceCountedTest
                         try
                         {
                             releaseLatch.Wait();
+
                             try
                             {
                                 if (referenceCounted.Release(releaseCnt.IncrementAndGet()))

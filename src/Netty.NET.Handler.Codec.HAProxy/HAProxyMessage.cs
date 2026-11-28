@@ -106,6 +106,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
         ObjectUtil.CheckNotNull(protocolVersion, "protocolVersion");
         ObjectUtil.CheckNotNull(proxiedProtocol, "proxiedProtocol");
         ObjectUtil.CheckNotNull(tlvs, "tlvs");
+
         AddressFamily addrFamily = proxiedProtocol.AddressFamily_();
 
         CheckAddress(sourceAddress, addrFamily, protocolVersion);
@@ -155,6 +156,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
         byte verCmdByte = header.ReadByte();
 
         HAProxyProtocolVersion ver;
+
         try
         {
             ver = HAProxyProtocolVersion.ValueOf(verCmdByte);
@@ -171,6 +173,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
         }
 
         HAProxyCommand cmd;
+
         try
         {
             cmd = HAProxyCommand.ValueOf(verCmdByte);
@@ -187,6 +190,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
 
         // Per spec, the 14th byte is the protocol and address family byte
         HAProxyProxiedProtocol protAndFam;
+
         try
         {
             protAndFam = HAProxyProxiedProtocol.ValueOf(header.ReadByte());
@@ -221,6 +225,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
                             Math.Min(addressInfoLen, header.ReadableBytes).ToString(CultureInfo.InvariantCulture) +
                             " bytes (expected: 216+ bytes)");
             }
+
             int startIdx = header.ReaderIndex;
             int addressEnd = header.IndexOf(startIdx, startIdx + 108, (byte) 0); // FIND_NUL
             if (addressEnd == -1)
@@ -231,6 +236,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
             {
                 addressLen = addressEnd - startIdx;
             }
+
             srcAddress = header.ToString(startIdx, addressLen, Encoding.ASCII);
 
             startIdx += 108;
@@ -244,6 +250,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
             {
                 addressLen = addressEnd - startIdx;
             }
+
             dstAddress = header.ToString(startIdx, addressLen, Encoding.ASCII);
             // AF_UNIX defines that exactly 108 bytes are reserved for the address. The previous methods
             // did not increase the reader index although we already consumed the information.
@@ -261,6 +268,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
                                 Math.Min(addressInfoLen, header.ReadableBytes).ToString(CultureInfo.InvariantCulture) +
                                 " bytes (expected: 12+ bytes)");
                 }
+
                 addressLen = 4;
             }
             else if (addressFamily == AddressFamily.AF_IPv6)
@@ -273,6 +281,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
                                 Math.Min(addressInfoLen, header.ReadableBytes).ToString(CultureInfo.InvariantCulture) +
                                 " bytes (expected: 36+ bytes)");
                 }
+
                 addressLen = 16;
             }
             else
@@ -300,6 +309,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
         {
             return Array.Empty<HAProxyTLV>();
         }
+
         // In most cases there are less than 4 TLVs available
         List<HAProxyTLV> haProxyTLVs = new List<HAProxyTLV>(4);
 
@@ -308,6 +318,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
             do
             {
                 haProxyTLVs.Add(haProxyTLV);
+
                 if (haProxyTLV is HAProxySSLTLV)
                 {
                     haProxyTLVs.AddRange(((HAProxySSLTLV) haProxyTLV).EncapsulatedTLVs());
@@ -320,6 +331,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
             ReleaseTlvs(haProxyTLVs);
             throw;
         }
+
         return haProxyTLVs;
     }
 
@@ -328,6 +340,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
         foreach (HAProxyTLV child in children)
         {
             child.Release();
+
             if (child is HAProxySSLTLV)
             {
                 ReleaseDeep(((HAProxySSLTLV) child).EncapsulatedTLVs());
@@ -338,11 +351,13 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
     private static void ReleaseTlvs(IList<HAProxyTLV> tlvs)
     {
         int skip = 0;
+
         foreach (HAProxyTLV tlv in tlvs)
         {
             if (skip > 0)
             {
                 skip--;
+
                 // This TLV is a flattened depth-1 child. If it encapsulates anything (depth-2+),
                 // those deeper children were NOT flattened, so we must release them recursively.
                 if (tlv is HAProxySSLTLV)
@@ -357,6 +372,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
                 // so we must skip them in the outer loop to avoid treating them as top-level TLVs.
                 skip = ((HAProxySSLTLV) tlv).EncapsulatedTLVs().Count;
             }
+
             tlv.Release();
         }
     }
@@ -381,6 +397,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
         HAProxyTLV.Type type = HAProxyTLV.Type.TypeForByteValue(typeAsByte);
 
         int length = header.ReadUnsignedShort();
+
         switch (type)
         {
         case var _ when type == HAProxyTLV.Type.PP2_TYPE_SSL:
@@ -395,6 +412,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
                         header.ReadableBytes.ToString(CultureInfo.InvariantCulture) + ") but was: " +
                         length.ToString(CultureInfo.InvariantCulture));
             }
+
             // Slice the rawContent but only retain it if we didn't see an error as otherwise we might
             // leak.
             ByteBuf rawContent = header.Slice(header.ReaderIndex, length);
@@ -406,6 +424,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
             {
 
                 List<HAProxyTLV> encapsulatedTlvs = new List<HAProxyTLV>(4);
+
                 try
                 {
                     do
@@ -415,6 +434,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
                         {
                             break;
                         }
+
                         encapsulatedTlvs.Add(haProxyTLV);
                     } while (byteBuf.ReadableBytes >= 4);
                 }
@@ -427,6 +447,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
 
                 return new HAProxySSLTLV(verify, client, encapsulatedTlvs, rawContent.Retain());
             }
+
             return new HAProxySSLTLV(verify, client, Array.Empty<HAProxyTLV>(), rawContent.Retain());
         // If we're not dealing with an SSL Type, we can use the same mechanism
         case var _ when type == HAProxyTLV.Type.PP2_TYPE_ALPN:
@@ -464,12 +485,15 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
         if (parts.Length > 1)
         {
             int count = parts.Length;
+
             while (count > 0 && parts[count - 1].Length == 0)
             {
                 count--;
             }
+
             Array.Resize(ref parts, count);
         }
+
         int numParts = parts.Length;
 
         if (numParts < 2)
@@ -484,6 +508,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
         }
 
         HAProxyProxiedProtocol protAndFam;
+
         try
         {
             protAndFam = HAProxyProxiedProtocol.ValueOf(parts[1]);
@@ -544,6 +569,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
         StringBuilder sb = new StringBuilder();
         const int ipv4Len = 4;
         const int ipv6Len = 8;
+
         if (addressLen == ipv4Len)
         {
             for (int i = 0; i < ipv4Len; i++)
@@ -560,6 +586,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
                 sb.Append(':');
             }
         }
+
         sb.Length = sb.Length - 1;
         return sb.ToString();
     }
@@ -578,6 +605,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
     private static int PortStringToInt(string value)
     {
         int port;
+
         try
         {
             port = int.Parse(value, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture);
@@ -616,6 +644,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
                 {
                     throw new ArgumentException("unable to validate an AF_UNSPEC address: " + address);
                 }
+
                 return;
             case var _ when addrFamily == AddressFamily.AF_UNIX:
                 ObjectUtil.CheckNotNull(address, "address");
@@ -623,6 +652,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
                 {
                     throw new ArgumentException("invalid AF_UNIX address: " + address);
                 }
+
                 if (version == HAProxyProtocolVersion.V1)
                 {
                     // V1 is text-based and uses CR LF as header delimiters, and space as field delimiter.
@@ -635,6 +665,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
                         }
                     }
                 }
+
                 return;
         }
 
@@ -647,12 +678,14 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
                 {
                     throw new ArgumentException("invalid IPv4 address: " + address);
                 }
+
                 break;
             case var _ when addrFamily == AddressFamily.AF_IPv6:
                 if (!NetUtil.IsValidIpV6Address(address))
                 {
                     throw new ArgumentException("invalid IPv6 address: " + address);
                 }
+
                 break;
             default:
                 throw new ArgumentException("unexpected addrFamily: " + addrFamily);
@@ -676,6 +709,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
                 throw new ArgumentException("invalid port: " + port.ToString(CultureInfo.InvariantCulture) +
                         " (expected: 0 ~ 65535)");
             }
+
             break;
         case var _ when addrFamily == AddressFamily.AF_UNIX:
         case var _ when addrFamily == AddressFamily.AF_UNSPEC:
@@ -683,6 +717,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
             {
                 throw new ArgumentException("port cannot be specified with addrFamily: " + addrFamily);
             }
+
             break;
         default:
             throw new ArgumentException("unexpected addrFamily: " + (addrFamily?.ToString() ?? "null"));
@@ -759,10 +794,12 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
     internal int TlvNumBytes()
     {
         int tlvNumBytes = 0;
+
         for (int i = 0; i < tlvs.Count; i += 1 + FlattenedChildren(tlvs, i))
         {
             tlvNumBytes += tlvs[i].TotalNumBytes();
         }
+
         return tlvNumBytes;
     }
 
@@ -777,13 +814,16 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
         {
             return 0;
         }
+
         IList<HAProxyTLV> children = ((HAProxySSLTLV) tlv).EncapsulatedTLVs();
         int n = 0;
+
         while (n < children.Count && (index + 1 + n) < tlvs.Count &&
                 children[n] == tlvs[index + 1 + n])
         {
             n++;
         }
+
         return n;
     }
 
@@ -801,6 +841,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
         {
             leak.Record(hint);
         }
+
         return this;
     }
 
@@ -819,12 +860,14 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
     public override bool Release()
     {
         TryRecord();
+
         return base.Release();
     }
 
     public override bool Release(int decrement)
     {
         TryRecord();
+
         return base.Release(decrement);
     }
 
@@ -868,15 +911,19 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
                 .Append(", sourcePort: ").Append(sourcePort.ToString(CultureInfo.InvariantCulture))
                 .Append(", destinationPort: ").Append(destinationPort.ToString(CultureInfo.InvariantCulture))
                 .Append(", tlvs: [");
+
         if (tlvs.Count != 0)
         {
             foreach (HAProxyTLV tlv in tlvs)
             {
                 sb.Append(tlv).Append(", ");
             }
+
             sb.Length = sb.Length - 2;
         }
+
         sb.Append("])");
+
         return sb.ToString();
     }
 }

@@ -175,6 +175,7 @@ public class DefaultHttpDataFactory : IHttpDataFactory
                 list = new List<IHttpData>();
                 requestFileDeleteMap[request] = list;
             }
+
             return list;
         }
     }
@@ -189,6 +190,7 @@ public class DefaultHttpDataFactory : IHttpDataFactory
             list.Add(attribute);
             return attribute;
         }
+
         if (checkSize)
         {
             IAttribute attribute = new MixedAttribute(name, minSize, charset, baseDir, deleteOnExit);
@@ -197,6 +199,7 @@ public class DefaultHttpDataFactory : IHttpDataFactory
             list.Add(attribute);
             return attribute;
         }
+
         MemoryAttribute memoryAttribute = new MemoryAttribute(name);
         memoryAttribute.SetMaxSize(maxSize);
         return memoryAttribute;
@@ -212,6 +215,7 @@ public class DefaultHttpDataFactory : IHttpDataFactory
             list.Add(attribute);
             return attribute;
         }
+
         if (checkSize)
         {
             IAttribute attribute = new MixedAttribute(name, definedSize, minSize, charset, baseDir, deleteOnExit);
@@ -220,6 +224,7 @@ public class DefaultHttpDataFactory : IHttpDataFactory
             list.Add(attribute);
             return attribute;
         }
+
         MemoryAttribute memoryAttribute = new MemoryAttribute(name, definedSize);
         memoryAttribute.SetMaxSize(maxSize);
         return memoryAttribute;
@@ -245,6 +250,7 @@ public class DefaultHttpDataFactory : IHttpDataFactory
         if (useDisk)
         {
             IAttribute attribute;
+
             try
             {
                 attribute = new DiskAttribute(name, value, charset, baseDir, deleteOnExit);
@@ -256,11 +262,13 @@ public class DefaultHttpDataFactory : IHttpDataFactory
                 attribute = new MixedAttribute(name, value, minSize, charset, baseDir, deleteOnExit);
                 attribute.SetMaxSize(maxSize);
             }
+
             CheckHttpDataSize(attribute);
             List<IHttpData> list = GetList(request);
             list.Add(attribute);
             return attribute;
         }
+
         if (checkSize)
         {
             IAttribute attribute = new MixedAttribute(name, value, minSize, charset, baseDir, deleteOnExit);
@@ -270,6 +278,7 @@ public class DefaultHttpDataFactory : IHttpDataFactory
             list.Add(attribute);
             return attribute;
         }
+
         try
         {
             MemoryAttribute attribute = new MemoryAttribute(name, value, charset);
@@ -297,6 +306,7 @@ public class DefaultHttpDataFactory : IHttpDataFactory
             list.Add(fileUpload);
             return fileUpload;
         }
+
         if (checkSize)
         {
             IFileUpload fileUpload = new MixedFileUpload(name, filename, contentType,
@@ -307,6 +317,7 @@ public class DefaultHttpDataFactory : IHttpDataFactory
             list.Add(fileUpload);
             return fileUpload;
         }
+
         MemoryFileUpload memoryFileUpload = new MemoryFileUpload(name, filename, contentType,
                 contentTransferEncoding, charset, size);
         memoryFileUpload.SetMaxSize(maxSize);
@@ -354,10 +365,12 @@ public class DefaultHttpDataFactory : IHttpDataFactory
     public virtual void CleanRequestHttpData(IHttpRequest request)
     {
         List<IHttpData> list;
+
         lock (requestFileDeleteMap)
         {
             requestFileDeleteMap.Remove(request, out list);
         }
+
         if (list != null)
         {
             foreach (IHttpData data in list)
@@ -379,6 +392,7 @@ public class DefaultHttpDataFactory : IHttpDataFactory
                 // at e.getValue() below
 
                 List<IHttpData> list = e.Value;
+
                 foreach (IHttpData data in list)
                 {
                     data.Release();

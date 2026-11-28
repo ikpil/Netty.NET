@@ -31,6 +31,7 @@ public class ByteBufScalarSourceTest
             if (provider >= 3)
                 _pool = new PooledByteBufAllocator(nativeAllocator: Native, maxOrder: 1,
                     smallCacheSize: 0, normalCacheSize: 0);
+
             Root = provider switch
             {
                 0 => new UnpooledHeapByteBuf(length),
@@ -51,6 +52,7 @@ public class ByteBufScalarSourceTest
             {
                 Root.Release();
             }
+
             Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
@@ -230,6 +232,7 @@ public class ByteBufScalarSourceTest
     private static void Set(ByteBuf b, int operation, ulong bits)
     {
         int value = unchecked((int)bits);
+
         switch (operation)
         {
             case 0:
@@ -288,6 +291,7 @@ public class ByteBufScalarSourceTest
     {
         using var s = new Storage(provider, 32);
         ulong[] values = [0, ulong.MaxValue, 0x8000000080008000UL, 0x0123456789abcdefUL, 0xfedcba9876543210UL];
+
         for (int operation = 0; operation < 9; ++operation)
         foreach (ulong bits in values)
         {
@@ -295,8 +299,10 @@ public class ByteBufScalarSourceTest
             byte[] expected = new byte[32];
                 Array.Fill(expected, (byte)165);
             s.Root.SetBytes(0, expected).SetIndex(2, 6).MarkReaderIndex().MarkWriterIndex();
+
             for (int i = 0; i < width; ++i)
                 expected[15 + i] = unchecked((byte)(bits >> (8 * (LittleEndian(operation) ? i : width - i - 1))));
+
             Set(s.Root, operation, bits);
             Assert.Equal(expected, ByteBufUtil.GetBytes(s.Root, 0, 32));
             ulong masked = width == 8 ? bits : bits & ((1UL << (width * 8)) - 1);

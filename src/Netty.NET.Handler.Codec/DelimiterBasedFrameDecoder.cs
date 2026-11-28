@@ -198,6 +198,7 @@ public class DelimiterBasedFrameDecoder : ByteToMessageDecoder
         {
             this.delimiters = new ByteBuf[delimiters.Length];
             int maxDelimiterLength = 0;
+
             for (int i = 0; i < delimiters.Length; i ++)
             {
                 ByteBuf d = delimiters[i];
@@ -205,9 +206,11 @@ public class DelimiterBasedFrameDecoder : ByteToMessageDecoder
                 this.delimiters[i] = d.Slice(d.ReaderIndex, d.ReadableBytes);
                 maxDelimiterLength = Math.Max(maxDelimiterLength, this.delimiters[i].ReadableBytes);
             }
+
             this.maxDelimiterLength = maxDelimiterLength;
             lineBasedDecoder = null;
         }
+
         this.maxFrameLength = maxFrameLength;
         this.stripDelimiter = stripDelimiter;
         this.failFast = failFast;
@@ -220,6 +223,7 @@ public class DelimiterBasedFrameDecoder : ByteToMessageDecoder
         {
             return false;
         }
+
         ByteBuf a = delimiters[0];
         ByteBuf b = delimiters[1];
         if (a.Capacity < b.Capacity)
@@ -227,6 +231,7 @@ public class DelimiterBasedFrameDecoder : ByteToMessageDecoder
             a = delimiters[1];
             b = delimiters[0];
         }
+
         return a.Capacity == 2 && b.Capacity == 1
                 && a.GetByte(0) == '\r' && a.GetByte(1) == '\n'
                 && b.GetByte(0) == '\n';
@@ -265,6 +270,7 @@ public class DelimiterBasedFrameDecoder : ByteToMessageDecoder
         {
             return lineBasedDecoder.Decode(ctx, buffer);
         }
+
         // Try all delimiters and choose the delimiter which yields the shortest frame.
         int minFrameLength = int.MaxValue;
         ByteBuf minDelim = null;
@@ -275,12 +281,14 @@ public class DelimiterBasedFrameDecoder : ByteToMessageDecoder
         // size, so the work done is bounded by the length of the frame we find rather than by the buffer size.
         long window = delimiters.Length == 1 ? readableBytes : Math.Max(INITIAL_SCAN_WINDOW, maxDelimiterLength);
         int from = scanOffset;
+
         while (from < readableBytes)
         {
             // Extend the region by maxDelimiterLength - 1 so a delimiter that starts inside the window but ends
             // after it is still found.
             int end = (int) Math.Min(readableBytes, from + window + maxDelimiterLength - 1);
             ByteBuf region = buffer.Slice(buffer.ReaderIndex + from, end - from);
+
             foreach (ByteBuf delim in delimiters)
             {
                 int index = ByteBufUtil.IndexOf(delim, region);
@@ -290,11 +298,13 @@ public class DelimiterBasedFrameDecoder : ByteToMessageDecoder
                     minDelim = delim;
                 }
             }
+
             if (minDelim != null && (end == readableBytes || minFrameLength < from + window))
             {
                 // All matches that start before the current minimum are guaranteed to be inside the region.
                 break;
             }
+
             // Either nothing was found, or the only matches start in the overlap and another delimiter might
             // match earlier. Continue with the next window, which will find those matches again.
             minFrameLength = int.MaxValue;
@@ -319,10 +329,12 @@ public class DelimiterBasedFrameDecoder : ByteToMessageDecoder
 
                 int tooLongFrameLength = this.tooLongFrameLength;
                 this.tooLongFrameLength = 0;
+
                 if (!failFast)
                 {
                     Fail(tooLongFrameLength);
                 }
+
                 return null;
             }
 
@@ -357,6 +369,7 @@ public class DelimiterBasedFrameDecoder : ByteToMessageDecoder
                     buffer.SkipBytes(readableBytes);
                     discardingTooLongFrame = true;
                     scanOffset = 0;
+
                     if (failFast)
                     {
                         Fail(tooLongFrameLength);
@@ -376,6 +389,7 @@ public class DelimiterBasedFrameDecoder : ByteToMessageDecoder
                 buffer.SkipBytes(buffer.ReadableBytes);
                 scanOffset = 0;
             }
+
             return null;
         }
     }

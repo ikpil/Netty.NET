@@ -38,6 +38,7 @@ public class WebSocketServerHandshakerFactoryTest
         {
             Assert.Fail("Got wrong response " + (msg?.ToString() ?? "null"));
         }
+
         IFullHttpResponse response = (IFullHttpResponse) msg;
 
         Assert.Equal(HttpResponseStatus.UPGRADE_REQUIRED, response.Status());

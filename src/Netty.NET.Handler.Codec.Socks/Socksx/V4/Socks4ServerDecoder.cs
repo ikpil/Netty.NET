@@ -97,6 +97,7 @@ public class Socks4ServerDecoder : ReplayingDecoder<Socks4ServerDecoder.State>
                 {
                     dstAddr = ReadString("dstAddr", @in);
                 }
+
                 @out.Add(new DefaultSocks4CommandRequest(type, dstAddr, dstPort, userId));
                 Checkpoint(State.SUCCESS);
                 goto case State.SUCCESS;
@@ -108,6 +109,7 @@ public class Socks4ServerDecoder : ReplayingDecoder<Socks4ServerDecoder.State>
                 {
                     @out.Add(@in.ReadRetainedSlice(readableBytes));
                 }
+
                 break;
             }
             case State.FAILURE:

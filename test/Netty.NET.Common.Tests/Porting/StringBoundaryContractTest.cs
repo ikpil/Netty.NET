@@ -27,6 +27,7 @@ public class StringBoundaryContractTest
     public void ResolverStyleLabelScanningKeepsNonBreakingCharactersInsideTokens()
     {
         const string label = "nameserver";
+
         foreach (char separator in new[] { '\u0085', '\u00a0', '\u2007', '\u202f' })
         {
             string line = label + separator + "127.0.0.1";
@@ -35,6 +36,7 @@ public class StringBoundaryContractTest
             Assert.Equal(-1, StringUtil.IndexOfWhiteSpace(line, start));
             Assert.False(NetUtil.IsValidIpV4Address(line.Substring(start)));
         }
+
         const string ordinary = "nameserver\u001f127.0.0.1 # note";
         int addressStart = StringUtil.IndexOfNonWhiteSpace(ordinary, label.Length);
         int addressEnd = StringUtil.IndexOfWhiteSpace(ordinary, addressStart);
@@ -47,11 +49,13 @@ public class StringBoundaryContractTest
     {
         Assert.Equal("seq", Assert.Throws<ArgumentNullException>(() => StringUtil.IndexOfWhiteSpace(null, 0)).ParamName);
         Assert.Equal("seq", Assert.Throws<ArgumentNullException>(() => StringUtil.IndexOfNonWhiteSpace(null, int.MaxValue)).ParamName);
+
         foreach (int offset in new[] { -1, int.MinValue })
         {
             Assert.Equal("offset", Assert.Throws<ArgumentOutOfRangeException>(() => StringUtil.IndexOfWhiteSpace("", offset)).ParamName);
             Assert.Equal("offset", Assert.Throws<ArgumentOutOfRangeException>(() => StringUtil.IndexOfNonWhiteSpace(" \tx", offset)).ParamName);
         }
+
         Assert.Equal("s", Assert.Throws<ArgumentNullException>(() => StringUtil.EndsWith(null, '.')).ParamName);
         Assert.Equal("value", Assert.Throws<ArgumentNullException>(() => StringUtil.SubstringBefore(null, ':')).ParamName);
         Assert.Equal("value", Assert.Throws<ArgumentNullException>(() => StringUtil.SubstringAfter(null, ':')).ParamName);
@@ -65,6 +69,7 @@ public class StringBoundaryContractTest
             Assert.Equal(-1, StringUtil.IndexOfWhiteSpace("", offset));
             Assert.Equal(-1, StringUtil.IndexOfNonWhiteSpace("", offset));
         }
+
         foreach (int offset in new[] { 3, 4, int.MaxValue })
         {
             Assert.Equal(-1, StringUtil.IndexOfWhiteSpace("x\t ", offset));
@@ -77,6 +82,7 @@ public class StringBoundaryContractTest
     {
         for (int codeUnit = 0; codeUnit <= char.MaxValue; codeUnit++)
             Assert.Equal(codeUnit >= 0xd800 && codeUnit <= 0xdfff, StringUtil.IsSurrogate((char)codeUnit));
+
         Assert.True(StringUtil.EndsWith("example.org.", '.'));
         Assert.False(StringUtil.EndsWith("example.org\uff0e", '.'));
         Assert.False(StringUtil.EndsWith("", '\0'));

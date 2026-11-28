@@ -110,10 +110,12 @@ public class DefaultDnsRecordDecoder : IDnsRecordDecoder
             return new DefaultDnsPtrRecord(
                     name, dnsClass, timeToLive, DecodeName0(@in.Duplicate().SetIndex(offset, offset + length)));
         }
+
         if (type == DnsRecordType.CNAME || type == DnsRecordType.NS)
         {
             ByteBuf decompressed = DnsCodecUtil.DecompressDomainName(
                     @in.Duplicate().SetIndex(offset, offset + length));
+
             try
             {
                 IDnsRecord record = new DefaultDnsRawRecord(name, type, dnsClass, timeToLive, decompressed);
@@ -128,6 +130,7 @@ public class DefaultDnsRecordDecoder : IDnsRecordDecoder
                 }
             }
         }
+
         if (type ==  DnsRecordType.MX)
         {
             // MX RDATA: 16-bit preference + exchange (domain name, possibly compressed)
@@ -136,9 +139,11 @@ public class DefaultDnsRecordDecoder : IDnsRecordDecoder
                 throw new CorruptedFrameException("MX record RDATA is too short: " +
                                                   length.ToString(CultureInfo.InvariantCulture));
             }
+
             int pref = @in.GetUnsignedShort(offset);
             ByteBuf exchange = null;
             ByteBuf @out = null;
+
             try
             {
                 exchange = DnsCodecUtil.DecompressDomainName(
@@ -159,6 +164,7 @@ public class DefaultDnsRecordDecoder : IDnsRecordDecoder
                 {
                     exchange.Release();
                 }
+
                 if (@out != null)
                 {
                     @out.Release();
@@ -167,6 +173,7 @@ public class DefaultDnsRecordDecoder : IDnsRecordDecoder
         }
 
         ByteBuf content = @in.RetainedDuplicate();
+
         try
         {
             content.SetIndex(offset, offset + length);

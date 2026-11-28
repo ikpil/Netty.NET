@@ -40,6 +40,7 @@ public class InetSocketAddressResolver : AbstractAddressResolver<IPEndPoint>
     public InetSocketAddressResolver(IEventExecutor executor, INameResolver<IPAddress> nameResolver) : base(executor)
     {
         ArgumentNullException.ThrowIfNull(nameResolver);
+
         _nameResolver = nameResolver;
     }
 
@@ -68,8 +69,10 @@ public class InetSocketAddressResolver : AbstractAddressResolver<IPEndPoint>
                 // without addresses.
                 throw new UnknownHostException(endpoint.Host);
             }
+
             return socketAddresses[0];
         }
+
         IPAddress inetAddress = await _nameResolver.ResolveAsync(endpoint.Host, cancellationToken).ConfigureAwait(false);
         return new IPEndPoint(inetAddress, endpoint.Port);
     }
@@ -83,6 +86,7 @@ public class InetSocketAddressResolver : AbstractAddressResolver<IPEndPoint>
         IReadOnlyList<IPAddress> inetAddresses =
             await _nameResolver.ResolveAllAsync(endpoint.Host, cancellationToken).ConfigureAwait(false);
         var socketAddresses = new List<IPEndPoint>(inetAddresses.Count);
+
         foreach (IPAddress inetAddress in inetAddresses)
         {
             if (endpoint.AddressFamily == AddressFamily.Unspecified || inetAddress.AddressFamily == endpoint.AddressFamily)
@@ -90,6 +94,7 @@ public class InetSocketAddressResolver : AbstractAddressResolver<IPEndPoint>
                 socketAddresses.Add(new IPEndPoint(inetAddress, endpoint.Port));
             }
         }
+
         return socketAddresses;
     }
 

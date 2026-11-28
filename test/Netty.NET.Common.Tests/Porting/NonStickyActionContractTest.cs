@@ -101,6 +101,7 @@ public class NonStickyActionContractTest
         child.Execute(() => callerRuns++);
         var runner = Assert.IsAssignableFrom<INativeSubmission>(ExecutorWork.GetNativeSubmission(Assert.Single(executor.Pending)));
         var cause = new RejectedExecutionException("runner rejected");
+
         if (reject)
         {
             runner.Reject(cause);
@@ -111,6 +112,7 @@ public class NonStickyActionContractTest
             runner.CancelForShutdown();
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => submission.Result);
         }
+
         runner.CancelForShutdown();
         runner.Reject(cause);
         executor.RunNext();

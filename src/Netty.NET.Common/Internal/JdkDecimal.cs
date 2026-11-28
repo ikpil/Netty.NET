@@ -99,6 +99,7 @@ public static class JdkDecimal
         {
             digits = null;
             exponent = 0;
+
             for (int precision = 1; digits == null; precision++)
             {
                 string candidate = scientific(precision);
@@ -140,6 +141,7 @@ public static class JdkDecimal
         {
             return null;
         }
+
         return unscaled.ToString(CultureInfo.InvariantCulture) + "E"
             + (exp - (mantissa.Length - 1)).ToString(CultureInfo.InvariantCulture);
     }
@@ -157,12 +159,15 @@ public static class JdkDecimal
         exp += integerPart.Length - 1;
 
         int start = 0;
+
         while (start < all.Length - 1 && all[start] == '0')
         {
             start++;
             exp--;
         }
+
         int end = all.Length;
+
         while (end > start + 1 && all[end - 1] == '0')
         {
             end--;
@@ -175,6 +180,7 @@ public static class JdkDecimal
     private static string Layout(bool negative, string digits, int exponent, bool plain)
     {
         StringBuilder sb = new StringBuilder(digits.Length + 8);
+
         if (negative)
         {
             sb.Append('-');
@@ -202,6 +208,7 @@ public static class JdkDecimal
         else
         {
             sb.Append(digits[0]).Append('.');
+
             if (digits.Length == 1)
             {
                 sb.Append('0');
@@ -210,6 +217,7 @@ public static class JdkDecimal
             {
                 sb.Append(digits, 1, digits.Length - 1);
             }
+
             sb.Append('E').Append(exponent.ToString(CultureInfo.InvariantCulture));
         }
 

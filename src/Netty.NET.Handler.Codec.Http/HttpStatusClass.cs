@@ -87,6 +87,7 @@ public class HttpStatusClass
         {
             return UNKNOWN;
         }
+
         return statusArray[Fast_div100(code)];
     }
 
@@ -111,6 +112,7 @@ public class HttpStatusClass
             return IsDigit(c0) && IsDigit(code.CharAt(1)) && IsDigit(code.CharAt(2)) ? ValueOf(Digit(c0) * 100)
                                                                                      : UNKNOWN;
         }
+
         return UNKNOWN;
     }
 

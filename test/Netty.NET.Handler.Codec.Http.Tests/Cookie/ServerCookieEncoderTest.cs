@@ -88,12 +88,15 @@ public class ServerCookieEncoderTest
     public void IllegalCharInCookieNameMakesStrictEncoderThrowsException()
     {
         ISet<char> illegalChars = new HashSet<char>();
+
         // CTLs
         for (int i = 0x00; i <= 0x1F; i++)
         {
             illegalChars.Add((char) i);
         }
+
         illegalChars.Add((char) 0x7F);
+
         // separators
         foreach (char c in new char[] { '(', ')', '<', '>', '@', ',', ';', ':', '\\', '"', '/', '[', ']',
                 '?', '=', '{', '}', ' ', '\t' })
@@ -122,12 +125,15 @@ public class ServerCookieEncoderTest
     public void IllegalCharInCookieValueMakesStrictEncoderThrowsException()
     {
         ISet<char> illegalChars = new HashSet<char>();
+
         // CTLs
         for (int i = 0x00; i <= 0x1F; i++)
         {
             illegalChars.Add((char) i);
         }
+
         illegalChars.Add((char) 0x7F);
+
         // whitespace, DQUOTE, comma, semicolon, and backslash
         foreach (char c in new char[] { ' ', '"', ',', ';', '\\' })
         {

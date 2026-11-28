@@ -55,6 +55,7 @@ public class InboundHttp2ToHttpAdapter : Http2EventAdapter
             {
                 return msg.Headers().Contains(HttpHeaderNames.EXPECT);
             }
+
             return false;
         }
 
@@ -66,6 +67,7 @@ public class InboundHttp2ToHttpAdapter : Http2EventAdapter
                 copy.Headers().Remove(HttpHeaderNames.EXPECT);
                 return copy;
             }
+
             return null;
         }
     }
@@ -199,6 +201,7 @@ public class InboundHttp2ToHttpAdapter : Http2EventAdapter
     {
         IFullHttpMessage msg = GetMessage(stream);
         bool release = true;
+
         if (msg == null)
         {
             msg = NewMessage(stream, headers, validateHttpHeaders, ctx.Alloc());
@@ -303,6 +306,7 @@ public class InboundHttp2ToHttpAdapter : Http2EventAdapter
                 msg.Headers().SetInt(HttpConversionUtil.ExtensionHeaderNames.STREAM_DEPENDENCY_ID.Text(),
                         streamDependency);
             }
+
             msg.Headers().SetShort(HttpConversionUtil.ExtensionHeaderNames.STREAM_WEIGHT.Text(), weight);
 
             ProcessHeadersEnd(ctx, stream, msg, endOfStream);
@@ -317,6 +321,7 @@ public class InboundHttp2ToHttpAdapter : Http2EventAdapter
         {
             OnRstStreamRead(stream, msg);
         }
+
         ctx.FireExceptionCaught(Http2Exception.StreamError(streamId, Http2Error.ValueOf(errorCode),
                 "HTTP/2 to HTTP layer caught stream reset"));
     }
@@ -326,6 +331,7 @@ public class InboundHttp2ToHttpAdapter : Http2EventAdapter
     {
         // A push promise should not be allowed to add headers to an existing stream
         IHttp2Stream promisedStream = connection.Stream(promisedStreamId);
+
         if (headers.Status() == null)
         {
             // A PUSH_PROMISE frame has no Http response status.
@@ -335,6 +341,7 @@ public class InboundHttp2ToHttpAdapter : Http2EventAdapter
             // server, as a PUSH_PROMISE frame.
             headers.Status(OK.CodeAsText());
         }
+
         IFullHttpMessage msg = ProcessHeadersBegin(ctx, promisedStream, headers, false, false, false);
         if (msg == null)
         {

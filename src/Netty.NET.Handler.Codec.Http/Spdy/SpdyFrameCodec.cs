@@ -166,6 +166,7 @@ public class SpdyFrameCodec : ByteToMessageDecoder, ISpdyFrameDecoderDelegate, I
             {
                 return codec.IsValidUnknownFrameHeader(streamId, type, flags, length);
             }
+
             return base.IsValidUnknownFrameHeader(streamId, type, flags, length);
         }
     }
@@ -182,6 +183,7 @@ public class SpdyFrameCodec : ByteToMessageDecoder, ISpdyFrameDecoderDelegate, I
         _ = ctx.Channel.CloseFuture.ContinueWith(static (_, state) =>
         {
             (SpdyFrameCodec codec, IChannelHandlerContext context) = ((SpdyFrameCodec, IChannelHandlerContext)) state;
+
             if (context.Executor.InEventLoop())
             {
                 codec.EndHeaderBlockCodecs();
@@ -214,6 +216,7 @@ public class SpdyFrameCodec : ByteToMessageDecoder, ISpdyFrameDecoderDelegate, I
                 ctx.Read();
             }
         }
+
         read = false;
         base.ChannelReadComplete(ctx);
     }
@@ -263,6 +266,7 @@ public class SpdyFrameCodec : ByteToMessageDecoder, ISpdyFrameDecoderDelegate, I
         {
 
             ISpdyDataFrame spdyDataFrame = (ISpdyDataFrame) msg;
+
             try
             {
                 frame = spdyFrameEncoder.EncodeDataFrame(
@@ -284,6 +288,7 @@ public class SpdyFrameCodec : ByteToMessageDecoder, ISpdyFrameDecoderDelegate, I
 
             ISpdySynStreamFrame spdySynStreamFrame = (ISpdySynStreamFrame) msg;
             ByteBuf headerBlock = spdyHeaderBlockEncoder.Encode(ctx.Alloc(), spdySynStreamFrame);
+
             try
             {
                 frame = spdyFrameEncoder.EncodeSynStreamFrame(
@@ -300,6 +305,7 @@ public class SpdyFrameCodec : ByteToMessageDecoder, ISpdyFrameDecoderDelegate, I
             {
                 headerBlock.Release();
             }
+
             return ctx.WriteAsync(frame, cancellationToken);
 
         }
@@ -308,6 +314,7 @@ public class SpdyFrameCodec : ByteToMessageDecoder, ISpdyFrameDecoderDelegate, I
 
             ISpdySynReplyFrame spdySynReplyFrame = (ISpdySynReplyFrame) msg;
             ByteBuf headerBlock = spdyHeaderBlockEncoder.Encode(ctx.Alloc(), spdySynReplyFrame);
+
             try
             {
                 frame = spdyFrameEncoder.EncodeSynReplyFrame(
@@ -321,6 +328,7 @@ public class SpdyFrameCodec : ByteToMessageDecoder, ISpdyFrameDecoderDelegate, I
             {
                 headerBlock.Release();
             }
+
             return ctx.WriteAsync(frame, cancellationToken);
 
         }
@@ -375,6 +383,7 @@ public class SpdyFrameCodec : ByteToMessageDecoder, ISpdyFrameDecoderDelegate, I
 
             ISpdyHeadersFrame spdyHeadersFrame = (ISpdyHeadersFrame) msg;
             ByteBuf headerBlock = spdyHeaderBlockEncoder.Encode(ctx.Alloc(), spdyHeadersFrame);
+
             try
             {
                 frame = spdyFrameEncoder.EncodeHeadersFrame(
@@ -388,6 +397,7 @@ public class SpdyFrameCodec : ByteToMessageDecoder, ISpdyFrameDecoderDelegate, I
             {
                 headerBlock.Release();
             }
+
             return ctx.WriteAsync(frame, cancellationToken);
 
         }
@@ -405,6 +415,7 @@ public class SpdyFrameCodec : ByteToMessageDecoder, ISpdyFrameDecoderDelegate, I
         else if (msg is ISpdyUnknownFrame)
         {
             ISpdyUnknownFrame spdyUnknownFrame = (ISpdyUnknownFrame) msg;
+
             try
             {
                 frame = spdyFrameEncoder.EncodeUnknownFrame(
@@ -530,6 +541,7 @@ public class SpdyFrameCodec : ByteToMessageDecoder, ISpdyFrameDecoderDelegate, I
     public virtual void ReadHeaderBlockEnd()
     {
         object frame = null;
+
         try
         {
             spdyHeaderBlockDecoder.EndHeaderBlock(spdyHeadersFrame);
@@ -540,6 +552,7 @@ public class SpdyFrameCodec : ByteToMessageDecoder, ISpdyFrameDecoderDelegate, I
         {
             ctx.FireExceptionCaught(e);
         }
+
         if (frame != null)
         {
             read = true;

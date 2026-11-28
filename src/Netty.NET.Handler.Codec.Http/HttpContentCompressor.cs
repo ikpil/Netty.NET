@@ -79,10 +79,12 @@ public class HttpContentCompressor : HttpContentEncoder
         options.Add(StandardCompressionOptions.Gzip());
         options.Add(StandardCompressionOptions.Deflate());
         options.Add(StandardCompressionOptions.Snappy());
+
         if (Brotli.IsAvailable())
         {
             options.Add(StandardCompressionOptions.Brotli());
         }
+
         DEFAULT_COMPRESSION_OPTIONS = options.ToArray();
     }
 
@@ -227,12 +229,14 @@ public class HttpContentCompressor : HttpContentEncoder
         DeflateOptions deflateOptions = null;
         ICompressionOptions zstdOptions = null;
         SnappyOptions snappyOptions = null;
+
         if (compressionOptions == null || compressionOptions.Length == 0)
         {
             compressionOptions = DEFAULT_COMPRESSION_OPTIONS;
         }
 
         ObjectUtil.DeepCheckNotNull("compressionOptions", compressionOptions);
+
         foreach (ICompressionOptions compressionOption in compressionOptions)
         {
             // BrotliOptions' class initialization depends on Brotli classes being on the classpath.
@@ -284,6 +288,7 @@ public class HttpContentCompressor : HttpContentEncoder
         {
             options.Add(StandardCompressionOptions.Brotli());
         }
+
         return options.ToArray();
     }
 
@@ -336,24 +341,28 @@ public class HttpContentCompressor : HttpContentEncoder
                 {
                     throw new InvalidOperationException("Brotli not configured");
                 }
+
                 return new BrotliEncoder(brotliOptions);
             case "zstd":
                 if (zstdOptions == null)
                 {
                     throw new InvalidOperationException("Zstd not configured");
                 }
+
                 throw new NotSupportedException("ZstdEncoder needs zstd-jni, which is not ported");
             case "snappy":
                 if (snappyOptions == null)
                 {
                     throw new InvalidOperationException("Snappy not configured");
                 }
+
                 return new SnappyFrameEncoder();
             case "gzip":
                 if (gzipOptions == null)
                 {
                     throw new InvalidOperationException("Gzip not configured");
                 }
+
                 return ZlibCodecFactory.NewZlibEncoder(
                         ZlibWrapper.GZIP,
                         gzipOptions.CompressionLevel(),
@@ -365,6 +374,7 @@ public class HttpContentCompressor : HttpContentEncoder
                 {
                     throw new InvalidOperationException("Deflate not configured");
                 }
+
                 return ZlibCodecFactory.NewZlibEncoder(
                         ZlibWrapper.ZLIB,
                         deflateOptions.CompressionLevel(),
@@ -387,6 +397,7 @@ public class HttpContentCompressor : HttpContentEncoder
 
         int start = 0;
         int length = acceptEncoding.Length;
+
         while (start < length)
         {
             int comma = acceptEncoding.IndexOf(',', start);
@@ -394,6 +405,7 @@ public class HttpContentCompressor : HttpContentEncoder
             {
                 comma = length;
             }
+
             string encoding = acceptEncoding.Substring(start, comma - start);
             float q = 1.0f;
             int equalsPos = encoding.IndexOf('=');
@@ -409,6 +421,7 @@ public class HttpContentCompressor : HttpContentEncoder
                     q = 0.0f;
                 }
             }
+
             if (encoding.Contains('*'))
             {
                 starQ = q;
@@ -433,8 +446,10 @@ public class HttpContentCompressor : HttpContentEncoder
             {
                 deflateQ = q;
             }
+
             start = comma + 1;
         }
+
         if (brQ > 0.0f || zstdQ > 0.0f || snappyQ > 0.0f || gzipQ > 0.0f || deflateQ > 0.0f)
         {
             if (brQ != -1.0f && brQ >= zstdQ && this.brotliOptions != null)
@@ -458,6 +473,7 @@ public class HttpContentCompressor : HttpContentEncoder
                 return "deflate";
             }
         }
+
         if (starQ > 0.0f)
         {
             if (brQ == -1.0f && this.brotliOptions != null)
@@ -481,6 +497,7 @@ public class HttpContentCompressor : HttpContentEncoder
                 return "deflate";
             }
         }
+
         return null;
     }
 
@@ -490,6 +507,7 @@ public class HttpContentCompressor : HttpContentEncoder
         float starQ = -1.0f;
         float gzipQ = -1.0f;
         float deflateQ = -1.0f;
+
         foreach (string encoding in acceptEncoding.Split(','))
         {
             float q = 1.0f;
@@ -506,6 +524,7 @@ public class HttpContentCompressor : HttpContentEncoder
                     q = 0.0f;
                 }
             }
+
             if (encoding.Contains('*'))
             {
                 starQ = q;
@@ -519,6 +538,7 @@ public class HttpContentCompressor : HttpContentEncoder
                 deflateQ = q;
             }
         }
+
         if (gzipQ > 0.0f || deflateQ > 0.0f)
         {
             if (gzipQ >= deflateQ)
@@ -530,6 +550,7 @@ public class HttpContentCompressor : HttpContentEncoder
                 return ZlibWrapper.ZLIB;
             }
         }
+
         if (starQ > 0.0f)
         {
             if (gzipQ == -1.0f)
@@ -541,6 +562,7 @@ public class HttpContentCompressor : HttpContentEncoder
                 return ZlibWrapper.ZLIB;
             }
         }
+
         return null;
     }
 

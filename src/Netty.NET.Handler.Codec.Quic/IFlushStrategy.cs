@@ -52,6 +52,7 @@ public interface IFlushStrategy
     public static IFlushStrategy AfterNumBytes(int bytes)
     {
         ObjectUtil.CheckPositive(bytes, "bytes");
+
         return new LambdaFlushStrategy((numPackets, numBytes) => numBytes > bytes);
     }
 
@@ -64,6 +65,7 @@ public interface IFlushStrategy
     public static IFlushStrategy AfterNumPackets(int packets)
     {
         ObjectUtil.CheckPositive(packets, "packets");
+
         return new LambdaFlushStrategy((numPackets, numBytes) => numPackets > packets);
     }
 

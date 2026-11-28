@@ -149,6 +149,7 @@ public class StreamBufferingEncoderTest : IDisposable
         writer.Verify(w => w.WriteDataAsync(ctx.Object, 3, It.IsAny<ByteBuf>(), 0, false,
                 It.IsAny<TaskCompletionSource>()), Times.Once());
         ByteBuf captured = null;
+
         foreach (IInvocation invocation in writer.Invocations)
         {
             if (invocation.Method.Name == nameof(IHttp2FrameWriter.WriteDataAsync))
@@ -156,6 +157,7 @@ public class StreamBufferingEncoderTest : IDisposable
                 captured = (ByteBuf) invocation.Arguments[2];
             }
         }
+
         Assert.Equal(expectedBytes, captured.ReadableBytes);
     }
 
@@ -228,11 +230,13 @@ public class StreamBufferingEncoderTest : IDisposable
 
         int streamId = 3;
         List<Task> futures = new List<Task>();
+
         for (int i = 0; i < 9; i++)
         {
             futures.Add(EncoderWriteHeaders(streamId, NewPromise()));
             streamId += 2;
         }
+
         Assert.Equal(5, connection.NumActiveStreams());
         Assert.Equal(4, encoder.NumBufferedStreams());
 
@@ -241,6 +245,7 @@ public class StreamBufferingEncoderTest : IDisposable
         Assert.Equal(5, connection.NumActiveStreams());
         Assert.Equal(0, encoder.NumBufferedStreams());
         int failCount = 0;
+
         foreach (Task f in futures)
         {
             if (Cause(f) != null)
@@ -249,6 +254,7 @@ public class StreamBufferingEncoderTest : IDisposable
                 failCount++;
             }
         }
+
         Assert.Equal(4, failCount);
     }
 
@@ -407,9 +413,11 @@ public class StreamBufferingEncoderTest : IDisposable
     {
         int initialLimit = SMALLEST_MAX_CONCURRENT_STREAMS;
         int numStreams = initialLimit * 2;
+
         for (int ix = 0, nextStreamId = 3; ix < numStreams; ++ix, nextStreamId += 2)
         {
             EncoderWriteHeaders(nextStreamId, NewPromise());
+
             if (ix < initialLimit)
             {
                 WriteVerifyWriteHeaders(Times.Once(), nextStreamId);
@@ -419,6 +427,7 @@ public class StreamBufferingEncoderTest : IDisposable
                 WriteVerifyWriteHeaders(Times.Never(), nextStreamId);
             }
         }
+
         Assert.Equal(numStreams / 2, encoder.NumBufferedStreams());
 
         // Simulate that we received a SETTINGS frame.
@@ -433,9 +442,11 @@ public class StreamBufferingEncoderTest : IDisposable
     {
         int initialLimit = SMALLEST_MAX_CONCURRENT_STREAMS;
         int numStreams = initialLimit * 2;
+
         for (int ix = 0, nextStreamId = 3; ix < numStreams; ++ix, nextStreamId += 2)
         {
             EncoderWriteHeaders(nextStreamId, NewPromise());
+
             if (ix < initialLimit)
             {
                 WriteVerifyWriteHeaders(Times.Once(), nextStreamId);
@@ -445,6 +456,7 @@ public class StreamBufferingEncoderTest : IDisposable
                 WriteVerifyWriteHeaders(Times.Never(), nextStreamId);
             }
         }
+
         Assert.Equal(numStreams / 2, encoder.NumBufferedStreams());
 
         // Simulate that we received an empty SETTINGS frame.
@@ -540,6 +552,7 @@ public class StreamBufferingEncoderTest : IDisposable
         try
         {
             Http2Settings settings = new Http2Settings().MaxConcurrentStreams(newValue);
+
             // Mimic behavior of DefaultHttp2ConnectionDecoder.onSettingsRead:
             if (autoAckSettings)
             {
@@ -551,6 +564,7 @@ public class StreamBufferingEncoderTest : IDisposable
                 encoder.ConsumeReceivedSettings(settings);
                 encoder.WriteSettingsAckAsync(ctx.Object, NewPromise());
             }
+
             // Flush the remote flow controller to write data
             encoder.FlowController().WritePendingBytes();
         }
@@ -576,6 +590,7 @@ public class StreamBufferingEncoderTest : IDisposable
         {
             encoder.WriteHeadersAsync(ctx.Object, streamId, new DefaultHttp2Headers(), 0, false, promise);
         }
+
         try
         {
             encoder.FlowController().WritePendingBytes();
@@ -633,6 +648,7 @@ public class StreamBufferingEncoderTest : IDisposable
                     return ((TaskCompletionSource) a).Task;
                 }
             }
+
             return NewPromise().Task;
         });
     }
@@ -645,10 +661,12 @@ public class StreamBufferingEncoderTest : IDisposable
     private static ByteBuf Data()
     {
         ByteBuf buf = Unpooled.Buffer(10);
+
         for (int i = 0; i < buf.WritableBytes; i++)
         {
             buf.WriteByte(i);
         }
+
         return buf;
     }
 }

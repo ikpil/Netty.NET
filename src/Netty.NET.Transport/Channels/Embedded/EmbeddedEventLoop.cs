@@ -65,6 +65,7 @@ public sealed class EmbeddedEventLoop : AbstractScheduledEventExecutor, IEventLo
         // CLR: getCurrentTimeNanos() is [Obsolete] in favor of ticker() and returns ticker().nanoTime(); read the
         // ticker directly instead of overriding the obsolete member.
         long time = ticker.NanoTime();
+
         for (; ; )
         {
             Action task = PollScheduledTask(time);
@@ -180,6 +181,7 @@ public sealed class EmbeddedEventLoop : AbstractScheduledEventExecutor, IEventLo
             {
                 return frozenTimestamp;
             }
+
             return unchecked(unfrozen.NanoTime() - startTime);
         }
 

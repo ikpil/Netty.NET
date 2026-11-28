@@ -48,10 +48,13 @@ public class SharedSizeClassedChunkCacheTest
         public void Dispose()
         {
             Cache.Dispose();
+
             foreach (var c in Chunks)
                 c.Dispose();
+
             foreach (var a in Claims)
                 a.Release();
+
             Assert.Equal(0, Registry.TotalCapacity);
         }
     }
@@ -96,12 +99,14 @@ public class SharedSizeClassedChunkCacheTest
         var idle = f.Chunk(0);
         f.Cache.OfferChunk(working);
         f.Cache.OfferChunk(idle);
+
         for (int i = 0; i < 6; i++)
         {
             var selected = f.Cache.ForcePurge();
             if (selected != null)
                 f.Cache.OfferChunk(selected);
         }
+
         Assert.True(idle.IsDeallocated);
         Assert.False(working.IsDeallocated);
     }
@@ -148,14 +153,17 @@ public class SharedSizeClassedChunkCacheTest
         f.Cache.OfferChunk(working);
         f.Cache.OfferChunk(f.Chunk(32));
         var excess = Enumerable.Range(0, 10).Select(_ => f.Chunk(0)).ToArray();
+
         foreach (var chunk in excess)
             Assert.True(f.Cache.OfferChunk(chunk));
+
         for (int i = 0; i < 6; i++)
         {
             var selected = f.Cache.ForcePurge();
             if (selected != null)
                 f.Cache.OfferChunk(selected);
         }
+
         Assert.All(excess, chunk => Assert.True(chunk.IsDeallocated));
     }
 
@@ -169,6 +177,7 @@ public class SharedSizeClassedChunkCacheTest
         // Simulates short-lived buffers: chunk polled, used, all segments return before next purge.
         var active = f.Chunk(0);
         f.Cache.OfferChunk(active);
+
         for (int i = 0; i < 4; i++)
         {
             Assert.Same(active, f.Cache.ForcePurge());
@@ -177,6 +186,7 @@ public class SharedSizeClassedChunkCacheTest
             allocation.Release();
             f.Cache.OfferChunk(active);
         }
+
         Assert.False(active.IsDeallocated);
     }
 

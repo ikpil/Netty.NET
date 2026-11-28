@@ -16,10 +16,12 @@ public class ThreadFactoryContractTest
         {
             Assert.True(executor.AwaitInactivity(TimeSpan.FromSeconds(5)));
         }
+
         var local = new AsyncLocal<object>();
         var marker = new object();
         object observed = marker;
         local.Value = marker;
+
         try
         {
             using var finished = new CountdownEvent(1);
@@ -42,6 +44,7 @@ public class ThreadFactoryContractTest
     public void NullFactoryGroupInheritsEachCreatorRatherThanTheFactoryCreator()
     {
         var factory = new DefaultThreadFactory("inherited", true);
+
         foreach (var name in new[] { "first", "second" })
         {
             var group = new ThreadGroup(name);

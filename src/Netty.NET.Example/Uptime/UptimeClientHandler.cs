@@ -44,6 +44,7 @@ public class UptimeClientHandler : SimpleChannelInboundHandler<object>
         {
             startTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         }
+
         Println("Connected to: " + ctx.Channel.RemoteAddress);
     }
 

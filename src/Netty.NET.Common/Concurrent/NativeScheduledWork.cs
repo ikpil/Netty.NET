@@ -72,6 +72,7 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
         _enqueue = enqueue;
         _remove = remove;
         _registration = token.UnsafeRegister(static state => ((NativeScheduledWork<T>)state).Cancel(), this);
+
         // The callback can run before UnsafeRegister returns. The constructor and
         // published paths alone access the immutable registration handle.
         if (Completion.IsCompleted)
@@ -123,9 +124,11 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
     internal void Publish()
     {
         Volatile.Write(ref _published, 1);
+
         if (Completion.IsCompleted)
         {
             _registration.Unregister();
+
             if (IsCanceled)
             {
                 RemoveCanceled();
@@ -141,10 +144,12 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
             {
                 return;
             }
+
             _invocation = 2;
             ReleaseInvocation();
             _completion.TrySetCanceled(_token);
         }
+
         if (Volatile.Read(ref _published) != 0)
         {
             _registration.Unregister();
@@ -167,10 +172,12 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
             {
                 return;
             }
+
             _invocation = 2;
             ReleaseInvocation();
             _completion.TrySetCanceled();
         }
+
         _registration.Unregister();
     }
 
@@ -182,10 +189,12 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
             {
                 return;
             }
+
             _invocation = 2;
             ReleaseInvocation();
             _completion.TrySetException(error);
         }
+
         _registration.Unregister();
     }
 
@@ -197,16 +206,20 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
             {
                 RemoveCanceled();
             }
+
             return;
         }
+
         if (DelayNanos() > 0)
         {
             // Not yet expired, need to add or remove from queue
             _enqueue(this);
             return;
         }
+
         Invocation invocation;
         ExecutionContext context;
+
         lock (_gate)
         {
             // check if is done as it may was cancelled
@@ -214,14 +227,17 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
             {
                 return;
             }
+
             _invocation = 1;
             invocation = new Invocation(_function, _token);
             context = _context;
         }
+
         if (PeriodNanos == 0)
         {
             _registration.Unregister();
         }
+
         try
         {
             if (!_canRun())
@@ -229,13 +245,16 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
                 FinishCanceled();
                 return;
             }
+
             ExecutionContext.Run(context ?? CaptureExecutorContext(), static state => ((Invocation)state).Run(), invocation);
+
             lock (_gate)
             {
                 if (_invocation == 2)
                 {
                     return;
                 }
+
                 if (PeriodNanos == 0)
                 {
                     _invocation = 2;
@@ -247,6 +266,7 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
                     _invocation = 0;
                 }
             }
+
             if (PeriodNanos != 0 && !Completion.IsCompleted)
             {
                 if (!_canReschedule())
@@ -254,6 +274,7 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
                     CancelWithoutRemove();
                     return;
                 }
+
                 _deadlineNanos = PeriodNanos > 0 ? unchecked(_deadlineNanos + PeriodNanos) : unchecked(_clock() - PeriodNanos);
                 _enqueue(this);
             }
@@ -307,7 +328,9 @@ internal sealed class NativeScheduledWork<T> : ITaskScheduledWork, IPriorityQueu
         {
             return ExecutionContext.Capture();
         }
+
         ExecutionContext.RestoreFlow();
+
         try
         {
             return ExecutionContext.Capture();

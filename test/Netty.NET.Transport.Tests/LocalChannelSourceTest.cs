@@ -42,6 +42,7 @@ public class LocalChannelSourceTest
         var sb = new ServerBootstrap().Group(groups.Second).Channel<LocalServerChannel>()
             .ChildHandler(new ActionChannelInitializer<LocalChannel>(child => child.Pipeline.AddLast(new TestHandler())));
         IChannel server = null;
+
         try
         {
             // Start server
@@ -58,6 +59,7 @@ public class LocalChannelSourceTest
             {
                 Assert.StartsWith("   at " + typeof(AbstractChannel).FullName + ".", e.StackTrace);
             }
+
             // CLR: also observe the transport override itself.
             Assert.Equal(0, client.WriteAttempts);
         }
@@ -76,6 +78,7 @@ public class LocalChannelSourceTest
         var sb = new ServerBootstrap().Group(groups.Second).Channel<LocalServerChannel>()
             .ChildHandler(new ActionChannelInitializer<LocalChannel>(child => child.Pipeline.AddLast(new CloseOnRead(latch))));
         IChannel server = null, client = null;
+
         try
         {
             server = await sb.BindAsync(TestAddress);
@@ -99,6 +102,7 @@ public class LocalChannelSourceTest
         var clients = new LocalTaskGatedGroup(closeLatch);
         IChannel server = null;
         var client = new LocalChannel();
+
         try
         {
             server = await new ServerBootstrap().Group(groups.Second).Channel<LocalServerChannel>()
@@ -132,6 +136,7 @@ public class LocalChannelSourceTest
         var sb = new ServerBootstrap().Group(groups.Second).Channel<LocalServerChannel>()
             .ChildHandler(new ActionChannelInitializer<LocalChannel>(child => child.Pipeline.AddLast(new TestHandler())));
         IChannel server = null, client = null;
+
         try
         {
             // Start server
@@ -155,6 +160,7 @@ public class LocalChannelSourceTest
         var sb = new ServerBootstrap().Group(groups.Second).Channel<LocalServerChannel>()
             .ChildHandler(new ActionChannelInitializer<IChannel>(child => child.Pipeline.AddLast(new TestHandler())));
         IChannel server = null, client = null;
+
         try
         {
             // Start server
@@ -190,6 +196,7 @@ public class LocalChannelSourceTest
         var accepted = new TaskCompletionSource<LocalChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
         var server = await BindServerWithAutoReadDisabled(groups.Shared, accepted);
         var (client, connection) = ConnectPendingClient(groups.Shared);
+
         try
         {
             Assert.NotNull(await accepted.Task.WaitAsync(TimeSpan.FromSeconds(5)));
@@ -220,6 +227,7 @@ public class LocalChannelSourceTest
         var accepted = new TaskCompletionSource<LocalChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
         var server = await BindServerWithAutoReadDisabled(groups.Shared, accepted);
         var (client, connection) = ConnectPendingClient(groups.Shared);
+
         try
         {
             Assert.NotNull(await accepted.Task.WaitAsync(TimeSpan.FromSeconds(5)));
@@ -251,6 +259,7 @@ public class LocalChannelSourceTest
         var accepted = new TaskCompletionSource<LocalChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
         var server = await BindServerWithAutoReadDisabled(groups.Shared, accepted);
         var (client, connection) = ConnectPendingClient(groups.Shared);
+
         try
         {
             var child = await accepted.Task.WaitAsync(TimeSpan.FromSeconds(5));
@@ -285,6 +294,7 @@ public class LocalChannelSourceTest
         using var release = new ManualResetEventSlim();
         LocalChannel client = null;
         Task<IChannel> connection = null;
+
         try
         {
             // Block the server's event loop, so the close below is queued and the server stays in the registry.
@@ -310,6 +320,7 @@ public class LocalChannelSourceTest
             release.Set();
             await CloseChannel(client);
             await CloseChannel(server);
+
             if (connection != null)
                 await ObserveCompletion(connection, TimeSpan.FromSeconds(5));
         }
@@ -327,6 +338,7 @@ public class LocalChannelSourceTest
         var server = await new ServerBootstrap().Group(groups.Shared, children).Channel<LocalServerChannel>()
             .ChildHandler(new TestHandler()).BindAsync(TestAddress);
         var (client, connection) = ConnectPendingClient(groups.Shared);
+
         try
         {
             var error = await Assert.ThrowsAsync<SocketException>(() => connection.WaitAsync(TimeSpan.FromSeconds(5)));
@@ -420,6 +432,7 @@ public class LocalChannelSourceTest
         protected override LocalChannel NewLocalChannel(LocalChannel peer)
         {
             arrived.TrySetResult();
+
             return base.NewLocalChannel(peer);
         }
     }
@@ -461,6 +474,7 @@ public class LocalChannelSourceTest
             .ChildHandler(new ActionChannelInitializer<LocalChannel>(channel => channel.Pipeline.AddLast(new SplitEchoAndClose())));
         IChannel server = null;
         LocalChannel client = null;
+
         try
         {
             // Start server
@@ -503,6 +517,7 @@ public class LocalChannelSourceTest
             .ChildOption(ChannelOption.AUTO_READ, false)
             .ChildHandler(new ActionChannelInitializer<LocalChannel>(channel => channel.Pipeline.AddLast(new ManualEchoServer(counter))));
         IChannel server = null, client = null;
+
         try
         {
             // Start server
@@ -554,6 +569,7 @@ public class LocalChannelSourceTest
         var sb = new ServerBootstrap().Group(clientGroup).Channel<LocalServerChannel>()
             .ChildHandler(new ActionChannelInitializer<LocalChannel>(channel => channel.Pipeline.AddLast(new WriteTenMessages())));
         IChannel server = null, client = null;
+
         try
         {
             // Start server
@@ -608,10 +624,12 @@ public class LocalChannelSourceTest
             { /* NOOP */
             }));
         IChannel server = null, client = null;
+
         try
         {
             // Start server
             server = await sb.BindAsync(TestAddress);
+
             for (int i = 0; i < 5; i++)
             {
                 try
@@ -623,6 +641,7 @@ public class LocalChannelSourceTest
                     await CloseChannel(client);
                 }
             }
+
             await completed.Task.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken);
         }
         finally
@@ -660,11 +679,14 @@ public class LocalChannelSourceTest
             { /* NOOP */
             }));
         IChannel server = null;
+
         try
         {
             server = await sb.BindAsync(TestAddress);
+
             for (int i = 0; i < connections; i++)
                 connectFutures.Add(cb.ConnectAsync(TestAddress));
+
             await queued.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             server.Config.SetAutoRead(true);
             Assert.Equal(maxMessagesPerRead, await readCompletes.Reader.ReadAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(5)));
@@ -676,6 +698,7 @@ public class LocalChannelSourceTest
         {
             foreach (var client in clients)
                 await CloseChannel(client);
+
             await CloseChannel(server);
         }
     }
@@ -696,10 +719,12 @@ public class LocalChannelSourceTest
             }))
             .ChildOption(ChannelOption.RECVBUF_ALLOCATOR, new ReadCompleteRecvAllocator(childCompleted));
         IChannel server = null, client = null;
+
         try
         {
             // Start server
             server = await sb.BindAsync(TestAddress);
+
             try
             {
                 client = await cb.ConnectAsync(TestAddress);
@@ -709,6 +734,7 @@ public class LocalChannelSourceTest
             {
                 await CloseChannel(client);
             }
+
             await Task.WhenAll(serverCompleted.Task, childCompleted.Task).WaitAsync(TimeSpan.FromSeconds(5));
         }
         finally
@@ -738,6 +764,7 @@ public class LocalChannelSourceTest
                 // Fill the ChannelOutboundBuffer with multiple buffers
                 _ = ctx.WriteAsync(buffer.ReadRetainedSlice(1));
             }
+
             // Flush and so transfer the written buffers to the inboundBuffer of the remote peer.
             // After this point the remote peer is responsible to release all the buffers.
             ctx.Flush();
@@ -763,6 +790,7 @@ public class LocalChannelSourceTest
             {
                 return;
             }
+
             // CLR: a Task continuation does not confer ownership of the original executor.
             await ctx.Executor.SubmitAsync(() => ctx.Read()).ConfigureAwait(false);
         }
@@ -785,6 +813,7 @@ public class LocalChannelSourceTest
         {
             if (--remaining > 0)
                 return true;
+
             completed.TrySetResult();
             return false;
         }
@@ -808,6 +837,7 @@ public class LocalChannelSourceTest
         {
             for (int i = 0; i < 10; i++)
                 _ = ctx.WriteAsync(i);
+
             ctx.Flush();
         }
     }
@@ -819,6 +849,7 @@ public class LocalChannelSourceTest
         {
             if (!autoRead)
                 ctx.Read();
+
             ctx.FireChannelActive();
         }
 
@@ -832,8 +863,10 @@ public class LocalChannelSourceTest
         public override void ChannelReadComplete(IChannelHandlerContext ctx)
         {
             Assert.Equal(1, _read);
+
             if (_remaining > 0 && --_remaining == 0)
                 completed.TrySetResult();
+
             if (_remaining > 0)
             {
                 if (!autoRead)
@@ -851,6 +884,7 @@ public class LocalChannelSourceTest
             }
             else
                 _read = 0;
+
             ctx.FireChannelReadComplete();
         }
 
@@ -915,12 +949,14 @@ public class LocalChannelSourceTest
     public async Task TestLocalAddressReuse()
     {
         await using var groups = new Groups();
+
         for (int i = 0; i < 2; i++)
         {
             var clientBootstrap = new Bootstrap().Group(groups.First).Channel<LocalChannel>().Handler(new TestHandler());
             var serverBootstrap = new ServerBootstrap().Group(groups.Second).Channel<LocalServerChannel>()
                 .ChildHandler(new ActionChannelInitializer<LocalChannel>(channel => channel.Pipeline.AddLast(new TestHandler())));
             IChannel server = null, client = null;
+
             try
             {
                 // Start server
@@ -968,6 +1004,7 @@ public class LocalChannelSourceTest
         var serverBootstrap = new ServerBootstrap().Group(groups.Second).Channel<LocalServerChannel>()
             .ChildHandler(new ActionChannelInitializer<LocalChannel>(channel => channel.Pipeline.AddLast(new TestHandler())));
         IChannel server = null, client = null;
+
         try
         {
             // Start server
@@ -1025,6 +1062,7 @@ public class LocalChannelSourceTest
         var messages = new MessageCount(2);
         var data = Unpooled.WrappedBuffer(new byte[1024]);
         IChannel server = null, client = null;
+
         try
         {
             var cb = new Bootstrap().Group(groups.First).Channel<LocalChannel>().Handler(new TestHandler());
@@ -1057,6 +1095,7 @@ public class LocalChannelSourceTest
         var data = Unpooled.WrappedBuffer(new byte[1024]);
         var echo = new EchoThenClose(data, messages);
         IChannel server = null, client = null;
+
         try
         {
             var cb = new Bootstrap().Group(groups.Shared).Channel<LocalChannel>().Handler(new MatchRead(data, messages, writeOnActive: true));
@@ -1088,6 +1127,7 @@ public class LocalChannelSourceTest
         var data = Unpooled.Buffer().WriteInt(sizeof(int)).WriteInt(2);
         var data2 = Unpooled.Buffer().WriteInt(sizeof(int)).WriteInt(1);
         IChannel server = null, client = null;
+
         try
         {
             var cb = new Bootstrap().Group(groups.First).Channel<LocalChannel>().Handler(new TestHandler());
@@ -1133,6 +1173,7 @@ public class LocalChannelSourceTest
         var data2 = Unpooled.WrappedBuffer(new byte[512]);
         var accepted = new TaskCompletionSource<IChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
         IChannel server = null, client = null;
+
         try
         {
             var cb = new Bootstrap().Group(clients).Channel<LocalChannel>()
@@ -1172,6 +1213,7 @@ public class LocalChannelSourceTest
         var data = Unpooled.WrappedBuffer(new byte[1024]);
         var data2 = Unpooled.WrappedBuffer(new byte[512]);
         IChannel server = null, client = null;
+
         try
         {
             var cb = new Bootstrap().Group(groups.First).Channel<LocalChannel>().Handler(new TestHandler());
@@ -1196,6 +1238,7 @@ public class LocalChannelSourceTest
                     // The point of this test is to write while the peer is closed, so we should
                     // ensure the peer is actually closed before we write.
                     int waitCount = 0;
+
                     while (copy.IsOpen)
                     {
                         try
@@ -1206,8 +1249,10 @@ public class LocalChannelSourceTest
                         {
                             // ignored
                         }
+
                         Assert.True(++waitCount <= 5);
                     }
+
                     try
                     {
                         await peer.WriteAndFlushAsync(data2.RetainedDuplicate());
@@ -1224,8 +1269,10 @@ public class LocalChannelSourceTest
             await peer.CloseFuture.WaitAsync(TimeSpan.FromSeconds(5));
             await client.CloseFuture.WaitAsync(TimeSpan.FromSeconds(5));
             await completion;
+
             if (peerWrite != null)
                 await peerWrite;
+
             Assert.False(client.IsOpen);
             Assert.False(peer.IsOpen);
         }
@@ -1296,6 +1343,7 @@ public class LocalChannelSourceTest
         {
             if (inactive)
                 count.Signal();
+
             ctx.FireChannelInactive();
         }
     }
@@ -1330,10 +1378,12 @@ public class LocalChannelSourceTest
                 ctx.FireChannelRead(msg);
                 return;
             }
+
             while (buffer.IsReadable())
             {
                 int size = buffer.ReadInt();
                 var slice = buffer.ReadRetainedSlice(size);
+
                 try
                 {
                     if (slice.ReadInt() == count.Current)
@@ -1346,6 +1396,7 @@ public class LocalChannelSourceTest
                     slice.Release();
                 }
             }
+
             buffer.Release();
         }
     }

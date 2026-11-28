@@ -42,6 +42,7 @@ public class ArrayHeaderRedisMessage : IRedisMessage
             throw new RedisCodecException("length: " + length.ToString(CultureInfo.InvariantCulture) +
                     " (expected: >= " + RedisConstants.NULL_VALUE.ToString(CultureInfo.InvariantCulture) + ")");
         }
+
         this.length = length;
     }
 

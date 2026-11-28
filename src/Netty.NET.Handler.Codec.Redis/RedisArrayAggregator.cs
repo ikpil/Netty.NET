@@ -109,6 +109,7 @@ public sealed class RedisArrayAggregator : MessageToMessageDecoder<IRedisMessage
     private CodecException ClearAndCreateException(string msg)
     {
         ReleaseAndClearDepths();
+
         return new CodecException(msg);
     }
 
@@ -148,6 +149,7 @@ public sealed class RedisArrayAggregator : MessageToMessageDecoder<IRedisMessage
                 throw ClearAndCreateException(
                         "total outstanding array elements exceeds " + maxElements.ToString(CultureInfo.InvariantCulture));
             }
+
             pendingElements = newPendingElements;
 
             // start aggregating array
@@ -186,6 +188,7 @@ public sealed class RedisArrayAggregator : MessageToMessageDecoder<IRedisMessage
                 ReferenceCountUtil.SafeRelease(message);
             }
         }
+
         depths.Clear();
         pendingElements = 0;
     }
@@ -195,6 +198,7 @@ public sealed class RedisArrayAggregator : MessageToMessageDecoder<IRedisMessage
     public override void ChannelInactive(IChannelHandlerContext ctx)
     {
         base.ChannelInactive(ctx);
+
         if (depths.Count != 0)
         {
             ctx.FireExceptionCaught(new PrematureChannelClosureException(

@@ -56,14 +56,17 @@ public class UnpooledAsciiStringCopyingTest
         var text = new AsciiString(backing, offset ? 2 : 0, payload.Length, false);
         // CharAt widens octets; a cached ToString must not hide later borrowed-array changes.
         _ = text.ToString();
+
         if (payload.Length > 0)
         {
             backing[offset ? 2 : 0] = 255;
             payload = text.AsSpan().ToArray();
         }
+
         Encoding encoding = Encoder(kind);
         byte[] expected = !range && kind <= 1 ? payload : encoding.GetBytes(payload.Select(b => (char)b).ToArray());
         ByteBuf copy = range ? Unpooled.CopiedBuffer(text, 0, text.Length(), encoding) : Unpooled.CopiedBuffer(text, encoding);
+
         try
         {
             if (range && payload.Length == 0)
@@ -74,17 +77,20 @@ public class UnpooledAsciiStringCopyingTest
             {
                 Assert.NotSame(Unpooled.EmptyBuffer, copy);
             }
+
             Assert.Equal(expected.Length, copy.Capacity);
             Assert.Equal(range && payload.Length == 0 ? 0 : int.MaxValue, copy.MaxCapacity);
             Assert.Equal((0, expected.Length, 1), (copy.ReaderIndex, copy.WriterIndex, copy.RefCnt));
             Assert.False(copy.IsReadOnly);
             Assert.False(copy.IsDirect && expected.Length > 0);
             Assert.Equal(expected, ByteBufUtil.GetBytes(copy));
+
             if (payload.Length > 0)
             {
                 backing[offset ? 2 : 0] = 0;
                 Assert.Equal(expected, ByteBufUtil.GetBytes(copy));
             }
+
             if (range && payload.Length == 0)
             {
                 Assert.Throws<ArgumentOutOfRangeException>(() => copy.WriteByte(42));
@@ -108,6 +114,7 @@ public class UnpooledAsciiStringCopyingTest
         var text = new AsciiString(new byte[] { 9, 65, 128, 255, 66, 9 }, 1, 4, false);
         Encoding encoding = Encoder(kind);
         ByteBuf copy = Unpooled.CopiedBuffer(text, 1, 2, encoding);
+
         try
         {
             Assert.Equal(encoding.GetBytes(new[] { (char)128, (char)255 }), ByteBufUtil.GetBytes(copy));
@@ -126,6 +133,7 @@ public class UnpooledAsciiStringCopyingTest
             : EncoderFallback.ExceptionFallback, DecoderFallback.ExceptionFallback);
         var text = new AsciiString(new byte[] { 128, 255 }, false);
         ByteBuf whole = Unpooled.CopiedBuffer(text, encoding);
+
         try
         {
             Assert.Equal(new byte[] { 128, 255 }, ByteBufUtil.GetBytes(whole));
@@ -134,9 +142,11 @@ public class UnpooledAsciiStringCopyingTest
         {
             whole.Release();
         }
+
         if (ignore)
         {
             ByteBuf range = Unpooled.CopiedBuffer(text, 0, 2, encoding);
+
             try
             {
                 Assert.Equal(0, range.ReadableBytes);
@@ -161,6 +171,7 @@ public class UnpooledAsciiStringCopyingTest
         Assert.Throws<ArgumentNullException>(() => Unpooled.CopiedBuffer(text, null));
         Assert.Throws<ArgumentNullException>(() => Unpooled.CopiedBuffer((AsciiString)null, 0, 0, Encoding.UTF8));
         Assert.Throws<ArgumentNullException>(() => Unpooled.CopiedBuffer(text, 0, 0, null));
+
         foreach (var pair in new[] { (-1, 0), (3, 0), (0, -1), (1, int.MaxValue), (int.MaxValue, 1) })
             Assert.Throws<ArgumentOutOfRangeException>(() => Unpooled.CopiedBuffer(text, pair.Item1, pair.Item2, Encoding.UTF8));
     }

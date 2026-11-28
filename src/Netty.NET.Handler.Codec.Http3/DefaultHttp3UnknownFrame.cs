@@ -99,11 +99,13 @@ public sealed class DefaultHttp3UnknownFrame : DefaultByteBufHolder, IHttp3Unkno
         {
             return false;
         }
+
         DefaultHttp3UnknownFrame that = (DefaultHttp3UnknownFrame) o;
         if (type != that.type)
         {
             return false;
         }
+
         return base.Equals(o);
     }
 

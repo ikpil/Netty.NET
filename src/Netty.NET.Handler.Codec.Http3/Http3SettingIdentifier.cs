@@ -111,10 +111,12 @@ public sealed class Http3SettingIdentifier
     private static IReadOnlyDictionary<long, Http3SettingIdentifier> NewLookup()
     {
         Dictionary<long, Http3SettingIdentifier> map = new Dictionary<long, Http3SettingIdentifier>();
+
         foreach (Http3SettingIdentifier identifier in Values())
         {
             map.Add(identifier.Id(), identifier);
         }
+
         return new ReadOnlyDictionary<long, Http3SettingIdentifier>(map);
     }
 

@@ -197,6 +197,7 @@ public class DefaultAuthoritativeDnsServerCacheTest
                 cache = new DefaultAuthoritativeDnsServerCache(10000, 10000,
                                                                new UnresolvedLastComparator());
             }
+
             cache.Cache("netty.io", unresolved, 100, loop);
             cache.Cache("netty.io", resolved, 10000, loop);
 
@@ -228,6 +229,7 @@ public class DefaultAuthoritativeDnsServerCacheTest
             {
                 return 0;
             }
+
             if (o1 is DnsEndPoint)
             {
                 return 1;

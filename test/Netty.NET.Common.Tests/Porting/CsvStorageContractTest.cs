@@ -24,6 +24,7 @@ public class CsvStorageContractTest : IDisposable
     {
         string content = new string('x', 100_000) + "\"\0\ud800,\r\n";
         string encoded = "\"" + content.Replace("\"", "\"\"") + "\"";
+
         if (multiple)
         {
             var fields = StringUtil.UnescapeCsvFields(encoded + ",tail,");
@@ -41,6 +42,7 @@ public class CsvStorageContractTest : IDisposable
             Assert.Same(unchanged, StringUtil.UnescapeCsv(unchanged));
             Assert.Equal(content, decoded);
         }
+
         Assert.Null(InternalThreadLocalMap.GetIfSet());
         Assert.Equal(0, FastThreadLocal.Size());
     }

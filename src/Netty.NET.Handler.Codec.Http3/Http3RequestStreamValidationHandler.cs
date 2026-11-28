@@ -80,11 +80,13 @@ internal sealed class Http3RequestStreamValidationHandler : Http3FrameTypeDuplex
             {
                 return;
             }
+
             if (frame is IHttp3HeadersFrame)
             {
                 clientHeadRequest = HttpMethod.HEAD.AsciiName().Equals(((IHttp3HeadersFrame) frame).Headers().Method());
             }
         }
+
         Http3CodecUtils.Write(ctx, frame, promise);
     }
 
@@ -102,6 +104,7 @@ internal sealed class Http3RequestStreamValidationHandler : Http3FrameTypeDuplex
             {
                 ctx.FireChannelRead(frame);
             }
+
             return;
         }
 
@@ -147,6 +150,7 @@ internal sealed class Http3RequestStreamValidationHandler : Http3FrameTypeDuplex
                 return;
             }
         }
+
         ctx.FireUserEventTriggered(evt);
     }
 

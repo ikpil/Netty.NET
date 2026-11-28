@@ -235,6 +235,7 @@ public class DnsMessage
         }
 
         StringBuilder sb = new StringBuilder("[");
+
         for (int i = 0; i < list.Count; i++)
         {
             if (i > 0)

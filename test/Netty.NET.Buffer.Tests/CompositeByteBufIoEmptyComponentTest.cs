@@ -81,8 +81,10 @@ public class CompositeByteBufIoEmptyComponentTest
             ByteBuf Data(int start)
             {
                 ByteBuf b = direct ? Allocator.DirectBuffer(4, 4) : Allocator.HeapBuffer(4, 4);
+
                 for (int i = 0; i < 4; ++i)
                     b.WriteByte(start + i);
+
                 return b;
             }
 
@@ -121,6 +123,7 @@ public class CompositeByteBufIoEmptyComponentTest
         {
             if (_lifetimeOwner.RefCnt > 0)
                 _lifetimeOwner.Release();
+
             (Allocator as IDisposable)?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
         }
@@ -148,6 +151,7 @@ public class CompositeByteBufIoEmptyComponentTest
         using var pair = new Pair();
         pair.Send(bytes);
         string path = Path.GetTempFileName();
+
         try
         {
             using var file = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite, 1, FileOptions.Asynchronous);
@@ -156,11 +160,13 @@ public class CompositeByteBufIoEmptyComponentTest
             file.WriteByte(14);
             file.Position = 1;
             int total = 0;
+
             while (total < bytes.Length)
             {
                 int index = s.Index + total, length = bytes.Length - total;
                 var token = TestContext.Current.CancellationToken;
                 int count;
+
                 if (input == 0)
                     count = asynchronous ? relative ? await s.Owner.WriteBytesAsync(stream, length, token) : await s.Owner.SetBytesAsync(index, stream, length, token)
                         : relative ? s.Owner.WriteBytes(stream, length) : s.Owner.SetBytes(index, stream, length);
@@ -170,19 +176,23 @@ public class CompositeByteBufIoEmptyComponentTest
                 else
                     count = asynchronous ? relative ? await s.Owner.WriteBytesAsync(file.SafeFileHandle, 3 + total, length, token) : await s.Owner.SetBytesAsync(index, file.SafeFileHandle, 3 + total, length, token)
                         : relative ? s.Owner.WriteBytes(file.SafeFileHandle, 3 + total, length) : s.Owner.SetBytes(index, file.SafeFileHandle, 3 + total, length);
+
                 Assert.InRange(count, 1, length);
                 total += count;
                 Assert.Equal(s.Index, s.Owner.ReaderIndex);
                 Assert.Equal(s.Index + (relative ? total : 0), s.Owner.WriterIndex);
             }
+
             Assert.Equal(new byte[] { 1, 2, 91, 92, 93, 94, 95, 96, 97, 98, 11, 12 }, ByteBufUtil.GetBytes(s.Root, 0, 12));
             Assert.Equal(0, s.FirstEmpty.Writes);
             Assert.Equal(0, s.SecondEmpty.Writes);
             Assert.Equal(1, s.FirstEmpty.RefCnt);
             Assert.Equal(1, s.SecondEmpty.RefCnt);
             Assert.Equal(1, file.Position);
+
             if (input == 0)
                 Assert.Equal(8, stream.Position);
+
             s.Owner.ResetWriterIndex().ResetReaderIndex();
             Assert.Equal((s.Index, s.Index), (s.Owner.ReaderIndex, s.Owner.WriterIndex));
         }
@@ -190,6 +200,7 @@ public class CompositeByteBufIoEmptyComponentTest
         {
             File.Delete(path);
         }
+
         s.Dispose();
         Assert.Equal(facade is 2 or 3 or 8 or 12 ? 1 : 0, s.Tracker.Closes);
     }
@@ -203,6 +214,7 @@ public class CompositeByteBufIoEmptyComponentTest
     {
         using var s = new Storage(pooled, direct, 0);
         ByteBuf input = new UnpooledHeapByteBuf(8).WriteBytes(new byte[] { 91, 92, 93, 94, 95, 96, 97, 98 });
+
         try
         {
             Assert.Throws<NotSupportedException>(() => {

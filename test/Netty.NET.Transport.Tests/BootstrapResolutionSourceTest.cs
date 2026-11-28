@@ -42,6 +42,7 @@ public class BootstrapResolutionSourceTest
         using var cancellation = new CancellationTokenSource();
         NioSocketChannel channel = null;
         Task<IChannel> connecting = null;
+
         try
         {
             var bootstrap = new Bootstrap().Group(group).ChannelFactory(() => channel = new NioSocketChannel())
@@ -64,10 +65,12 @@ public class BootstrapResolutionSourceTest
         {
             cancellation.Cancel();
             resolver.Producer.TrySetException(new UnknownHostException("late resolver failure"));
+
             if (channel != null)
             {
                 await channel.CloseAsync();
             }
+
             await group.StopAsync();
         }
     }
@@ -81,6 +84,7 @@ public class BootstrapResolutionSourceTest
         using var release = new ManualResetEventSlim();
         var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         LocalChannel channel = null;
+
         try
         {
             group.Next().Execute(() =>
@@ -103,10 +107,12 @@ public class BootstrapResolutionSourceTest
         finally
         {
             release.Set();
+
             if (channel != null)
             {
                 await channel.CloseAsync();
             }
+
             await group.StopAsync();
         }
     }
@@ -119,6 +125,7 @@ public class BootstrapResolutionSourceTest
         using var resolver = new FailingResolverGroup();
         IChannel server = null;
         LocalChannel channel = null;
+
         try
         {
             var bootstrapA = new Bootstrap().Group(groupA).ChannelFactory(() => channel = new LocalChannel())
@@ -139,10 +146,12 @@ public class BootstrapResolutionSourceTest
             {
                 await channel.CloseAsync();
             }
+
             if (server != null)
             {
                 await server.CloseAsync();
             }
+
             await groupA.StopAsync();
             await groupB.StopAsync();
         }

@@ -76,6 +76,7 @@ public sealed class QuicConnectionAddress : EndPoint
             throw new ArgumentException("Connection ID can only be of max length "
                     + Quic.MAX_CONN_ID_LEN);
         }
+
         if (connId == null)
         {
             this.connId = null;
@@ -85,6 +86,7 @@ public sealed class QuicConnectionAddress : EndPoint
         {
             this.connId = connId;
             ByteBuf buffer = Unpooled.WrappedBuffer(connId);
+
             try
             {
                 toStr = "QuicConnectionAddress{" +
@@ -108,11 +110,14 @@ public sealed class QuicConnectionAddress : EndPoint
         {
             return RuntimeHelpers.GetHashCode(EPHEMERAL);
         }
+
         int h = 1;
+
         for (int i = connId.Length - 1; i >= 0; i--)
         {
             h = unchecked(31 * h + (sbyte) connId[i]);
         }
+
         return unchecked(31 + h);
     }
 
@@ -122,11 +127,13 @@ public sealed class QuicConnectionAddress : EndPoint
         {
             return false;
         }
+
         QuicConnectionAddress address = (QuicConnectionAddress) obj;
         if (obj == this)
         {
             return true;
         }
+
         return connId != null && address.connId != null && connId.AsSpan().SequenceEqual(address.connId);
     }
 
@@ -136,6 +143,7 @@ public sealed class QuicConnectionAddress : EndPoint
         {
             return ReadOnlyMemory<byte>.Empty;
         }
+
         return connId;
     }
 

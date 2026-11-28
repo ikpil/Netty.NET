@@ -129,6 +129,7 @@ public sealed class PerMessageDeflateClientExtensionHandshaker : IWebSocketClien
                     "compressionLevel: " + compressionLevel.ToString(CultureInfo.InvariantCulture) +
                     " (expected: 0-9)");
         }
+
         this.compressionLevel = compressionLevel;
         this.allowClientWindowSize = allowClientWindowSize;
         this.requestedServerWindowSize = requestedServerWindowSize;
@@ -141,22 +142,27 @@ public sealed class PerMessageDeflateClientExtensionHandshaker : IWebSocketClien
     public WebSocketExtensionData NewRequestData()
     {
         Dictionary<string, string> parameters = new Dictionary<string, string>(4);
+
         if (requestedServerNoContext)
         {
             parameters[SERVER_NO_CONTEXT] = null;
         }
+
         if (allowClientNoContext)
         {
             parameters[CLIENT_NO_CONTEXT] = null;
         }
+
         if (requestedServerWindowSize != MAX_WINDOW_SIZE)
         {
             parameters[SERVER_MAX_WINDOW] = requestedServerWindowSize.ToString(CultureInfo.InvariantCulture);
         }
+
         if (allowClientWindowSize)
         {
             parameters[CLIENT_MAX_WINDOW] = null;
         }
+
         return new WebSocketExtensionData(PERMESSAGE_DEFLATE_EXTENSION, parameters);
     }
 
@@ -175,6 +181,7 @@ public sealed class PerMessageDeflateClientExtensionHandshaker : IWebSocketClien
 
         IEnumerator<KeyValuePair<string, string>> parametersIterator =
                 extensionData.Parameters().GetEnumerator();
+
         while (succeed && parametersIterator.MoveNext())
         {
             KeyValuePair<string, string> parameter = parametersIterator.Current;

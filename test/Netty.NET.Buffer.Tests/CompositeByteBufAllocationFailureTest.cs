@@ -39,6 +39,7 @@ public class CompositeByteBufAllocationFailureTest
             observation.Visits.Add((source, sourceIndex, length));
             if (observation.FailAt == observation.Visits.Count)
                 throw observation.Failure;
+
             base.WriteBytes(source, sourceIndex, length);
             return this;
         }
@@ -93,21 +94,27 @@ public class CompositeByteBufAllocationFailureTest
         int[] starts = [2, 4, 1], lengths = [3, 4, 5];
         byte[] expected = new byte[operation == 3 ? 16 : 12];
         int offset = 0;
+
         try
         {
             for (int i = 0; i < 3; ++i)
             {
                 sources[i] = backing.Buffer(16, 16);
+
                 for (int j = 0; j < 16; ++j)
                     sources[i].WriteByte(i * 32 + j + 1);
+
                 sources[i].SetIndex(starts[i], starts[i] + lengths[i]);
                 sources[i].AsReadOnlyMemory(starts[i], lengths[i]).Span.CopyTo(expected.AsSpan(offset));
                 offset += lengths[i];
+
                 if (operation != 2 || i < 2)
                     composite.AddComponent(sources[i], true);
             }
+
             if (operation != 2)
                 composite.SetIndex(1, 10).MarkReaderIndex().MarkWriterIndex();
+
             int reader = composite.ReaderIndex, writer = operation == 2 ? 12 : composite.WriterIndex;
 
             void Run()
@@ -126,20 +133,24 @@ public class CompositeByteBufAllocationFailureTest
                 Assert.Same(observation.Failure, Assert.Throws<CopyFailure>(() => Run()));
             else
                 Run();
+
             int first = operation == 1 ? 1 : 0, count = operation == 1 ? 2 : operation == 3 ? 4 : 3;
             Assert.Equal(failAt == 0 ? count : failAt, observation.Visits.Count);
+
             for (int i = 0; i < Math.Min(observation.Visits.Count, 3 - first); ++i)
             {
                 Assert.Same(sources[first + i], observation.Visits[i].Source);
                 Assert.Equal(starts[first + i], observation.Visits[i].Index);
                 Assert.Equal(lengths[first + i], observation.Visits[i].Length);
             }
+
             ByteBuf destination = observation.Allocations[^1];
             Assert.Equal(failAt == 0 ? 1 : 0, destination.RefCnt);
             Assert.Equal(reader, composite.ReaderIndex);
             Assert.Equal(writer, composite.WriterIndex);
             Assert.Equal(expected, composite.AsReadOnlySequence(0, expected.Length).ToArray());
             Assert.Equal(failAt != 0 ? operation == 3 ? 4 : 3 : operation == 1 ? 2 : 1, composite.NumComponents);
+
             for (int i = 0; i < 3; ++i)
                 Assert.Equal(failAt != 0 || operation == 1 && i == 0 ? 1 : 0, sources[i].RefCnt);
         }
@@ -147,12 +158,15 @@ public class CompositeByteBufAllocationFailureTest
         {
             if (composite.RefCnt > 0)
                 composite.Release();
+
             foreach (ByteBuf source in sources)
             if (source?.RefCnt > 0)
                 source.Release();
+
             foreach (ByteBuf allocation in observation.Allocations)
             if (allocation.RefCnt > 0)
                 allocation.Release();
+
             (backing as IDisposable)?.Dispose();
             Assert.Equal(0, native.ReservedBytes);
         }

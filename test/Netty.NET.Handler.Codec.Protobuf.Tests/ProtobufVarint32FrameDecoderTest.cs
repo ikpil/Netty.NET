@@ -73,10 +73,12 @@ public class ProtobufVarint32FrameDecoderTest
     public void TestRegularDecode()
     {
         byte[] b = new byte[2048];
+
         for (int i = 2; i < 2048; i ++)
         {
             b[i] = 1;
         }
+
         b[0] = unchecked((byte) -2);
         b[1] = 15;
         Assert.False(ch.WriteInbound(WrappedBuffer(b, 0, 1)));
@@ -146,10 +148,12 @@ public class ProtobufVarint32FrameDecoderTest
         // Oversized frame: length=10, all data present
         byte[] oversized = new byte[11];
         oversized[0] = 10;
+
         for (int i = 1; i <= 10; i++)
         {
             oversized[i] = (byte) i;
         }
+
         Assert.Throws<TooLongFrameException>(() => channel.WriteInbound(WrappedBuffer(oversized)));
 
         // Valid frame after recovery
@@ -175,6 +179,7 @@ public class ProtobufVarint32FrameDecoderTest
                 16384, 2097151,
                 2097152, 2097152 + 5, 3 * 1024 * 1024, 4 * 1024 * 1024
         };
+
         foreach (int length in lengths)
         {
             ByteBuf wire = Unpooled.Buffer();
@@ -195,6 +200,7 @@ public class ProtobufVarint32FrameDecoderTest
                 Assert.True(channel.WriteInbound(wire.RetainedSlice(split, wire.ReadableBytes - split)), message);
 
                 ByteBuf actual = channel.ReadInbound<ByteBuf>();
+
                 try
                 {
                     Assert.Equal(length, actual.ReadableBytes, message);
@@ -204,9 +210,11 @@ public class ProtobufVarint32FrameDecoderTest
                 {
                     actual.Release();
                 }
+
                 Assert.Null(channel.ReadInbound(), message);
                 Assert.False(channel.Finish(), message);
             }
+
             wire.Release();
         }
     }
@@ -217,6 +225,7 @@ public class ProtobufVarint32FrameDecoderTest
         // 0x10000000 needs a 5 byte prefix: 80 80 80 80 01. Use a small maxFrameLength so we do not need to
         // allocate the whole frame, the TooLongFrameException proves the complete prefix was decoded.
         byte[] prefix = { (byte) 0x80, (byte) 0x80, (byte) 0x80, (byte) 0x80, 0x01 };
+
         for (int split = 1; split < prefix.Length; split++)
         {
             EmbeddedChannel channel = new EmbeddedChannel(new ProtobufVarint32FrameDecoder(1024));
@@ -239,6 +248,7 @@ public class ProtobufVarint32FrameDecoderTest
                 new byte[] { (byte) 0x80, (byte) 0x80, (byte) 0x80 },
                 new byte[] { (byte) 0x80, (byte) 0x80, (byte) 0x80, (byte) 0x80 }
         };
+
         foreach (byte[] bytes in incomplete)
         {
             ByteBuf buf = WrappedBuffer(bytes);

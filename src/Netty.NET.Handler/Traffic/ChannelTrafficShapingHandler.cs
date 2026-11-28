@@ -147,6 +147,7 @@ public class ChannelTrafficShapingHandler : AbstractTrafficShapingHandler
     public override void HandlerRemoved(IChannelHandlerContext ctx)
     {
         trafficCounter.Stop();
+
         // write order control
         lock (this)
         {
@@ -163,14 +164,18 @@ public class ChannelTrafficShapingHandler : AbstractTrafficShapingHandler
             else if (messagesQueue.Count != 0)
             {
                 ClosedChannelException cause = new ClosedChannelException();
+
                 foreach (ToSend toSend in messagesQueue)
                 {
                     ReleaseAndFailQueuedWrite(toSend.toSend, toSend.promise, cause);
                 }
+
                 queueSize = 0;
             }
+
             messagesQueue.Clear();
         }
+
         ReleaseWriteSuspended(ctx);
         ReleaseReadSuspended(ctx);
         base.HandlerRemoved(ctx);
@@ -199,19 +204,23 @@ public class ChannelTrafficShapingHandler : AbstractTrafficShapingHandler
             CancellationToken cancellationToken)
     {
         ToSend newToSend;
+
         // write order control
         lock (this)
         {
             if (delay == 0 && messagesQueue.Count == 0)
             {
                 trafficCounter.BytesRealWriteFlowControl(size);
+
                 return ctx.WriteAsync(msg, cancellationToken);
             }
+
             newToSend = new ToSend(delay + now, msg, NewPromise(cancellationToken), cancellationToken);
             messagesQueue.AddLast(newToSend);
             queueSize += size;
             CheckWriteSuspend(ctx, delay, queueSize);
         }
+
         long futureNow = newToSend.relativeTimeAction;
         _ = ctx.Executor.ScheduleAsync(() => SendAllValid(ctx, futureNow), TimeSpan.FromMilliseconds(delay));
         return newToSend.promise.Task;
@@ -223,6 +232,7 @@ public class ChannelTrafficShapingHandler : AbstractTrafficShapingHandler
         lock (this)
         {
             ToSend newToSend = PollFirst(messagesQueue);
+
             for (; newToSend != null; newToSend = PollFirst(messagesQueue))
             {
                 if (newToSend.relativeTimeAction <= now)
@@ -238,11 +248,13 @@ public class ChannelTrafficShapingHandler : AbstractTrafficShapingHandler
                     break;
                 }
             }
+
             if (messagesQueue.Count == 0)
             {
                 ReleaseWriteSuspended(ctx);
             }
         }
+
         ctx.Flush();
     }
 

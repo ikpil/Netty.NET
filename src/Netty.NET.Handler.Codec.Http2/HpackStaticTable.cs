@@ -187,6 +187,7 @@ internal sealed class HpackStaticTable
                 throw new InvalidOperationException("Hash bucket collision between " +
                   tableEntry.name + " and " + entry.name);
             }
+
             HEADER_NAMES[bucket] = new HeaderNameIndex(entry.name, index, entry.value.Length() == 0);
         }
     }
@@ -216,6 +217,7 @@ internal sealed class HpackStaticTable
                     throw new InvalidOperationException("Hash bucket collision between " +
                       tableEntry.value + " and " + entry.value);
                 }
+
                 HEADERS_WITH_NON_EMPTY_VALUES[bucket] = new HeaderIndex(entry.name, entry.value, index);
             }
         }
@@ -255,6 +257,7 @@ internal sealed class HpackStaticTable
             HeaderNameIndex entry = GetEntry(name);
             return entry == null || !entry.emptyValue ? NOT_FOUND : entry.index;
         }
+
         int bucket = HeaderBucket(value);
         HeaderIndex header = HEADERS_WITH_NON_EMPTY_VALUES[bucket];
         if (header == null)
@@ -265,6 +268,7 @@ internal sealed class HpackStaticTable
         {
             return header.index;
         }
+
         return NOT_FOUND;
     }
 
@@ -276,6 +280,7 @@ internal sealed class HpackStaticTable
         {
             return null;
         }
+
         return EqualsVariableTime(entry.name, name) ? entry : null;
     }
 

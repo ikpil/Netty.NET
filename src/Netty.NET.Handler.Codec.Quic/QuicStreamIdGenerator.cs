@@ -43,6 +43,7 @@ internal sealed class QuicStreamIdGenerator
             nextBidirectionalStreamId += 4;
             return stream;
         }
+
         long stream2 = nextUnidirectionalStreamId;
         nextUnidirectionalStreamId += 4;
         return stream2;

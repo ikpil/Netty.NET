@@ -72,6 +72,7 @@ internal class Bzip2BitReader
         {
             throw new ArgumentException("count: " + count.ToString(CultureInfo.InvariantCulture) + " (expected: 0-32 )");
         }
+
         int bitCount = this.bitCount;
         long bitBuffer = this.bitBuffer;
 
@@ -79,6 +80,7 @@ internal class Bzip2BitReader
         {
             long readData;
             int offset;
+
             switch (@in.ReadableBytes)
             {
                 case 1:
@@ -168,6 +170,7 @@ internal class Bzip2BitReader
             throw new ArgumentException("count: " + count.ToString(CultureInfo.InvariantCulture) +
                     " (expected value greater than 0)");
         }
+
         return bitCount >= count || (@in.ReadableBytes << 3 & int.MaxValue) >= count - bitCount;
     }
 
@@ -183,6 +186,7 @@ internal class Bzip2BitReader
             throw new ArgumentException("count: " + count.ToString(CultureInfo.InvariantCulture)
                     + " (expected: 0-" + MAX_COUNT_OF_READABLE_BYTES.ToString(CultureInfo.InvariantCulture) + ')');
         }
+
         return HasReadableBits(count << 3);
     }
 }

@@ -50,6 +50,7 @@ public class TelnetServerHandler : SimpleChannelInboundHandler<string>
         // Generate and write a response.
         string response;
         bool close = false;
+
         if (request.Length == 0)
         {
             response = "Please type something.\r\n";

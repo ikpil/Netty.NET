@@ -54,6 +54,7 @@ public sealed class RecordClass
     private static Dictionary<short, RecordClass> CreateMap()
     {
         Dictionary<short, RecordClass> reverseMap = new Dictionary<short, RecordClass>();
+
         foreach (RecordClass e in VALUES)
         {
             reverseMap[e.Convert()] = e;

@@ -39,6 +39,7 @@ public class ByteBufHexTest
         {
             return Unpooled.DirectBuffer(data.Length, data.Length).WriteBytes(data);
         }
+
         int split = Math.Min(7, data.Length);
         if (kind == 2)
         {
@@ -62,6 +63,7 @@ public class ByteBufHexTest
         {
             return Unpooled.WrappedBuffer(data).Duplicate();
         }
+
         throw new ArgumentOutOfRangeException(nameof(kind));
     }
 
@@ -72,6 +74,7 @@ public class ByteBufHexTest
         byte[] bytes = new byte[length];
         new Random(12345).NextBytes(bytes);
         string hexDump = ByteBufUtil.HexDump(bytes);
+
         for (int i = 0; i <= length; i++) // going over sub-strings of various lengths including empty byte[].
         {
             Assert.Equal(bytes[i..], ByteBufUtil.DecodeHexDump(hexDump, i * 2, (length - i) * 2));
@@ -96,6 +99,7 @@ public class ByteBufHexTest
     {
         byte[] data = Enumerable.Range(0, 256).Select(i => (byte)i).ToArray();
         ByteBuf b = Owner(kind, data);
+
         try
         {
             b.SetIndex(3, 200).MarkReaderIndex().MarkWriterIndex();
@@ -107,11 +111,13 @@ public class ByteBufHexTest
             Assert.Equal(expected[10..42], ByteBufUtil.HexDump(data, 5, 16));
             Assert.Equal(data, ByteBufUtil.DecodeHexDump(expected.ToUpperInvariant()));
             Assert.Equal(data, ByteBufUtil.DecodeHexDump("prefix" + expected + "suffix", 6, expected.Length));
+
             for (int i = 0; i < 256; i++)
             {
                 Assert.Equal(data[i], ByteBufUtil.DecodeHexByte(expected, i * 2));
                 Assert.Equal(data[i], ByteBufUtil.DecodeHexByte(expected.AsSpan(), i * 2));
             }
+
             Assert.Equal(3, b.ReaderIndex);
             Assert.Equal(200, b.WriterIndex);
             b.SetIndex(4, 201).ResetReaderIndex().ResetWriterIndex();
@@ -136,6 +142,7 @@ public class ByteBufHexTest
         string first = "|00000000| 20 21 41 7e 7f 80 00 1f 30 31 32 33 34 35 36 37 | !A~....01234567|";
         string last = "|00000010| 38 39 ff" + new string(' ', 39) + " |89." + new string(' ', 13) + "|";
         string expected = string.Join(nl, Header, Columns, Border, first, last, Border);
+
         try
         {
             Assert.Equal(expected, ByteBufUtil.PrettyHexDump(b));
@@ -164,11 +171,13 @@ public class ByteBufHexTest
     {
         ByteBuf b = Owner(2, Enumerable.Repeat((byte)'A', length + 9).ToArray());
         b.SetIndex(9, 9 + length);
+
         try
         {
             string[] lines = ByteBufUtil.PrettyHexDump(b).Split(StringUtil.NEWLINE);
             int rows = (length + 15) / 16;
             Assert.Equal(rows + 4, lines.Length);
+
             for (int i = 0; i < rows; i++)
             {
                 int count = Math.Min(16, length - i * 16);
@@ -178,6 +187,7 @@ public class ByteBufHexTest
                 Assert.Equal(string.Concat(Enumerable.Repeat(" 41", count)) + new string(' ', (16 - count) * 3), line[10..58]);
                 Assert.Equal(" |" + new string('A', count) + new string(' ', 16 - count) + "|", line[58..]);
             }
+
             Assert.Equal(9, b.ReaderIndex);
         }
         finally
@@ -191,6 +201,7 @@ public class ByteBufHexTest
     public void LargeDumpPreservesOriginalCachedAndFallbackRowLabels(int offset)
     {
         ByteBuf b = Unpooled.WrappedBuffer(new byte[65553 + offset]);
+
         try
         {
             string[] lines = ByteBufUtil.PrettyHexDump(b, offset, 65553).Split(StringUtil.NEWLINE);
@@ -210,6 +221,7 @@ public class ByteBufHexTest
     {
         ByteBuf b = Owner(kind, new byte[] { 1, 2, 3 });
         var builder = new StringBuilder("prefix");
+
         try
         {
             Assert.Equal("", ByteBufUtil.HexDump(b, 3, 0));
@@ -227,6 +239,7 @@ public class ByteBufHexTest
         {
             b.Release();
         }
+
         Assert.Throws<IllegalReferenceCountException>(() => ByteBufUtil.HexDump(b, 0, 0));
         Assert.Throws<IllegalReferenceCountException>(() => ByteBufUtil.PrettyHexDump(b, 0, 0));
         Assert.Throws<IllegalReferenceCountException>(() => ByteBufUtil.AppendPrettyHexDump(builder, b, 0, 0));

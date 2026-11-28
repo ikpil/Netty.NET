@@ -56,11 +56,14 @@ public class HpackTest
         FileInfo[] files = new DirectoryInfo(ResourcesUtil.GetFile(typeof(HpackTest), TEST_DIR.Substring(1)).FullName)
                 .GetFiles();
         ObjectUtil.CheckNotNull(files, "files");
+
         TheoryData<FileInfo> data = new TheoryData<FileInfo>();
+
         foreach (FileInfo file in files)
         {
             data.Add(file);
         }
+
         return data;
     }
 

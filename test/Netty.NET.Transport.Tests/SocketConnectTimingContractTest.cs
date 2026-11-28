@@ -23,6 +23,7 @@ public class SocketConnectTimingContractTest
         var address = Loopback();
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var channel = new PendingSocketConnect(address.AddressFamily);
+
         try
         {
             var bootstrap = PendingBootstrap(group, channel, adaptive, 2000);
@@ -47,6 +48,7 @@ public class SocketConnectTimingContractTest
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var channel = new PendingSocketConnect(address.AddressFamily);
         using var connectCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
+
         try
         {
             var connect = PendingBootstrap(group, channel, adaptive, 4000)

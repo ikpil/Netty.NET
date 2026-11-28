@@ -31,9 +31,11 @@ public class ByteBufCapacitySourceTest
         {
             if (provider == 2 && maximum != int.MaxValue)
                 throw new ArgumentOutOfRangeException(nameof(maximum));
+
             if (provider >= 3)
                 _pool = new PooledByteBufAllocator(nativeAllocator: Native, maxOrder: 1,
                     smallCacheSize: 0, normalCacheSize: 0);
+
             Root = provider switch
             {
                 0 => new UnpooledHeapByteBuf(length, maximum),
@@ -54,6 +56,7 @@ public class ByteBufCapacitySourceTest
             {
                 Root.Release();
             }
+
             Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
@@ -82,6 +85,7 @@ public class ByteBufCapacitySourceTest
                 {
                     continue;
                 }
+
             yield return [provider, scenario];
         }
     }
@@ -96,10 +100,12 @@ public class ByteBufCapacitySourceTest
         };
         using var s = new Storage(provider, initial, maximum);
         ByteBuf buffer = s.Root;
+
         if (scenario is CapacityCase.AboveMaximum or CapacityCase.NegativeCapacity or CapacityCase.Decrease or CapacityCase.Increase)
         {
             Assert.Equal(13, buffer.MaxCapacity);
             Assert.Equal(3, buffer.Capacity);
+
             switch (scenario)
             {
                 case CapacityCase.AboveMaximum:
@@ -115,6 +121,7 @@ public class ByteBufCapacitySourceTest
                     buffer.Capacity = 4;
                     break;
             }
+
             Assert.Equal(scenario is CapacityCase.AboveMaximum or CapacityCase.NegativeCapacity ? 3 : scenario == CapacityCase.Decrease ? 2 : 4, buffer.Capacity);
             Assert.Equal(13, buffer.MaxCapacity);
             Assert.Equal(0, buffer.ReaderIndex);
@@ -126,6 +133,7 @@ public class ByteBufCapacitySourceTest
             ByteBuf slice = retained ? buffer.RetainedSlice(buffer.ReaderIndex + 1, 3)
                 : buffer.Slice(buffer.ReaderIndex + 1, 3);
             int rootCount = buffer.RefCnt, sliceCount = slice.RefCnt;
+
             try
             {
                 Assert.Throws<NotSupportedException>(() => slice.Capacity = 10);
@@ -176,6 +184,7 @@ public class ByteBufCapacitySourceTest
             Assert.Equal(10, buffer.WriterIndex);
             Assert.Equal(Encoding.ASCII.GetBytes(content1 + content2), ByteBufUtil.GetBytes(buffer, 0, 10));
         }
+
         Assert.Equal(1, buffer.RefCnt);
     }
 }

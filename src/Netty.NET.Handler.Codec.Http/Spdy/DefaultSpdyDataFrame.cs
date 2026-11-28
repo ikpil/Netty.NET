@@ -67,6 +67,7 @@ public class DefaultSpdyDataFrame : DefaultSpdyStreamFrame, ISpdyDataFrame
             throw new ArgumentException("data payload cannot exceed "
                     + SpdyCodecUtil.SPDY_MAX_LENGTH.ToString(CultureInfo.InvariantCulture) + " bytes");
         }
+
         return data;
     }
 
@@ -154,6 +155,7 @@ public class DefaultSpdyDataFrame : DefaultSpdyStreamFrame, ISpdyDataFrame
             .Append(StreamId().ToString(CultureInfo.InvariantCulture))
             .Append(StringUtil.NEWLINE)
             .Append("--> Size = ");
+
         if (RefCnt == 0)
         {
             buf.Append("(freed)");
@@ -162,6 +164,7 @@ public class DefaultSpdyDataFrame : DefaultSpdyStreamFrame, ISpdyDataFrame
         {
             buf.Append(Content.ReadableBytes.ToString(CultureInfo.InvariantCulture));
         }
+
         return buf.ToString();
     }
 

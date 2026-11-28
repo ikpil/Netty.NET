@@ -14,8 +14,10 @@ public class IpSpanContractTest
         MethodInfo[] methods = typeof(NetUtil).GetMethods(BindingFlags.Public | BindingFlags.Static);
         Assert.False(methods.Any(m => m.Name is "GetIPv6ByName" or "ValidIpV4ToBytes"));
         Assert.False(methods.Any(m => m.GetParameters().Any(p => p.ParameterType == typeof(ICharSequence))));
+
         foreach (string name in new[] { "IsValidIpV4Address", "IsValidIpV6Address", "GetByName" })
             Assert.NotNull(typeof(NetUtil).GetMethod(name, new[] { typeof(ReadOnlySpan<char>) }));
+
         Assert.NotNull(typeof(NetUtil).GetMethod("GetByName", new[] { typeof(ReadOnlySpan<char>), typeof(bool) }));
     }
 
@@ -67,11 +69,13 @@ public class IpSpanContractTest
         IPAddress address = NetUtil.GetByName(view, mapped);
         IPAddress expectedFromString = NetUtil.GetByName(host, mapped);
         Assert.Equal(expectedFromString, address);
+
         if (hex == null)
         {
             Assert.Null(address);
             return;
         }
+
         Assert.NotNull(address);
         Assert.Equal(Convert.FromHexString(hex), address.GetAddressBytes());
         Array.Fill(buffer, 'x');
@@ -104,24 +108,29 @@ public class IpSpanContractTest
     {
         ReadOnlySpan<char> four = "001.002.003.004";
         ReadOnlySpan<char> six = "::ffff:192.0.2.1";
+
         for (int i = 0; i < 1000; i++)
         {
             NetUtil.IsValidIpV4Address(four);
             NetUtil.IsValidIpV6Address(six);
         }
+
         int valid = 0;
         long before = GC.GetAllocatedBytesForCurrentThread();
+
         for (int i = 0; i < 1000; i++)
         {
             if (NetUtil.IsValidIpV4Address(four))
             {
                 valid++;
             }
+
             if (NetUtil.IsValidIpV6Address(six))
             {
                 valid++;
             }
         }
+
         long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
         Assert.Equal(2000, valid);
         Assert.Equal(0L, allocated);

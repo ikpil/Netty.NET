@@ -38,6 +38,7 @@ public class WriteTimeoutHandlerTest
         IEventExecutorGroup group1 = new DefaultEventExecutorGroup(1);
         IEventExecutorGroup group2 = new DefaultEventExecutorGroup(1);
         EmbeddedChannel channel = new EmbeddedChannel(false, false);
+
         try
         {
             channel.Pipeline.AddLast(group1, null, new WriteTimeoutHandler(10000));

@@ -76,11 +76,13 @@ public sealed class DefaultMockTicker : MockTicker
 
             var sleeper = new Sleeper();
             var registration = registered.AddLast(sleeper);
+
             try
             {
                 long startTimeNanos = NanoTime();
                 sleepers.Add(Thread.CurrentThread);
                 Monitor.PulseAll(_lock);
+
                 while (true)
                 {
                     while (pendingTicks.First != sleeper.Tick)
@@ -93,6 +95,7 @@ public sealed class DefaultMockTicker : MockTicker
                     {
                         return;
                     }
+
                     Monitor.PulseAll(_lock);
                 }
             }
@@ -100,10 +103,12 @@ public sealed class DefaultMockTicker : MockTicker
             {
                 sleepers.Remove(Thread.CurrentThread);
                 registered.Remove(registration);
+
                 if (sleeper.Tick.List != null)
                 {
                     pendingTicks.Remove(sleeper.Tick);
                 }
+
                 Monitor.PulseAll(_lock);
             }
         }
@@ -133,6 +138,7 @@ public sealed class DefaultMockTicker : MockTicker
         }
 
         bool interrupted = false;
+
         try
         {
             // Java lock.lock is noninterruptible, while sleep/observation entry
@@ -150,6 +156,7 @@ public sealed class DefaultMockTicker : MockTicker
                         interrupted = true;
                     }
                 }
+
                 Interlocked.Add(ref _nanoTime, amountNanos);
 
                 foreach (var sleeper in registered)

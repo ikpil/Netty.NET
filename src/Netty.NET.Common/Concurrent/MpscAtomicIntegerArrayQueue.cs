@@ -35,20 +35,24 @@ public sealed class MpscAtomicIntegerArrayQueue : IMpscIntQueue
     public MpscAtomicIntegerArrayQueue(int capacity, int emptyValue)
     {
         elements = new int[MathUtil.SafeFindNextPositivePowerOfTwo(capacity)];
+
         if (emptyValue != 0)
         {
             this.emptyValue = emptyValue;
             int end = elements.Length - 1;
+
             for (int i = 0; i < end; i++)
             {
                 Volatile.Write(ref elements[i], emptyValue);
             }
+
             Interlocked.Exchange(ref elements[end], emptyValue); // 'getAndSet' acts as a full barrier, giving us initialization safety.
         }
         else
         {
             this.emptyValue = 0;
         }
+
         mask = elements.Length - 1;
     }
 
@@ -58,10 +62,12 @@ public sealed class MpscAtomicIntegerArrayQueue : IMpscIntQueue
         {
             throw new ArgumentException("Cannot offer the \"empty\" value: " + emptyValue.ToString(CultureInfo.InvariantCulture));
         }
+
         // use a cached view on consumer index (potentially updated in loop)
         int mask = this.mask;
         long producerLimit = Volatile.Read(ref this.producerLimit);
         long pIndex;
+
         do
         {
             pIndex = Volatile.Read(ref producerIndex);
@@ -82,6 +88,7 @@ public sealed class MpscAtomicIntegerArrayQueue : IMpscIntQueue
                 }
             }
         } while (Interlocked.CompareExchange(ref producerIndex, pIndex + 1, pIndex) != pIndex);
+
         /*
          * NOTE: the new producer index value is made visible BEFORE the element in the array. If we relied on
          * the index visibility to poll() we would need to handle the case where the element is not visible.
@@ -119,6 +126,7 @@ public sealed class MpscAtomicIntegerArrayQueue : IMpscIntQueue
                 return emptyValue;
             }
         }
+
         Volatile.Write(ref elements[offset], emptyValue);
         Volatile.Write(ref consumerIndex, cIndex + 1);
         return value;
@@ -132,8 +140,10 @@ public sealed class MpscAtomicIntegerArrayQueue : IMpscIntQueue
         {
             return 0;
         }
+
         int mask = this.mask;
         long cIndex = Volatile.Read(ref consumerIndex); // Note: could be weakened to plain-load.
+
         for (int i = 0; i < limit; i++)
         {
             long index = cIndex + i;
@@ -143,11 +153,13 @@ public sealed class MpscAtomicIntegerArrayQueue : IMpscIntQueue
             {
                 return i;
             }
+
             Volatile.Write(ref elements[offset], emptyValue); // Note: could be weakened to plain-store.
             // ordered store -> atomic and ordered for size()
             Volatile.Write(ref consumerIndex, index + 1);
             consumer(value);
         }
+
         return limit;
     }
 
@@ -159,11 +171,13 @@ public sealed class MpscAtomicIntegerArrayQueue : IMpscIntQueue
         {
             return 0;
         }
+
         int mask = this.mask;
         long capacity = mask + 1;
         long producerLimit = Volatile.Read(ref this.producerLimit);
         long pIndex;
         int actualLimit;
+
         do
         {
             pIndex = Volatile.Read(ref producerIndex);
@@ -184,8 +198,10 @@ public sealed class MpscAtomicIntegerArrayQueue : IMpscIntQueue
                     Volatile.Write(ref this.producerLimit, producerLimit);
                 }
             }
+
             actualLimit = Math.Min((int)available, limit);
         } while (Interlocked.CompareExchange(ref producerIndex, pIndex + actualLimit, pIndex) != pIndex);
+
         // right, now we claimed a few slots and can fill them with goodness
         for (int i = 0; i < actualLimit; i++)
         {
@@ -193,6 +209,7 @@ public sealed class MpscAtomicIntegerArrayQueue : IMpscIntQueue
             int offset = (int)(pIndex + i & mask);
             Volatile.Write(ref elements[offset], supplier());
         }
+
         return actualLimit;
     }
 
@@ -204,10 +221,12 @@ public sealed class MpscAtomicIntegerArrayQueue : IMpscIntQueue
         {
             return 0;
         }
+
         int result = initial;
 
         int mask = this.mask;
         long cIndex = Volatile.Read(ref consumerIndex); // Note: could be weakened to plain-load.
+
         for (int i = 0; i < limit; i++)
         {
             long index = cIndex + i;
@@ -217,9 +236,11 @@ public sealed class MpscAtomicIntegerArrayQueue : IMpscIntQueue
             {
                 return result;
             }
+
             // Do not remove the element or advance the consumer index.
             result = op(result, value);
         }
+
         return result;
     }
 
@@ -236,6 +257,7 @@ public sealed class MpscAtomicIntegerArrayQueue : IMpscIntQueue
         // Loop until we get a consistent read of both the consumer and producer indices.
         long after = Volatile.Read(ref consumerIndex);
         long size;
+
         for (;;)
         {
             long before = after;
@@ -247,6 +269,7 @@ public sealed class MpscAtomicIntegerArrayQueue : IMpscIntQueue
                 break;
             }
         }
+
         return size < 0 ? 0 : size > int.MaxValue ? int.MaxValue : (int) size;
     }
 }

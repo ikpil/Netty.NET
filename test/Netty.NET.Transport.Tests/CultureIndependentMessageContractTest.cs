@@ -17,6 +17,7 @@ public class CultureIndependentMessageContractTest
         var previous = CultureInfo.CurrentCulture;
         CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture);
         var channel = new EmbeddedChannel();
+
         try
         {
             var e = Assert.Throws<ArgumentException>(() => channel.OutboundBuffer.SetUserDefinedWritability(-1, true));
@@ -38,6 +39,7 @@ public class CultureIndependentMessageContractTest
     {
         var previous = CultureInfo.CurrentCulture;
         CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture);
+
         try
         {
             Assert.Equal("minimum : -1 (expected: > 0)",

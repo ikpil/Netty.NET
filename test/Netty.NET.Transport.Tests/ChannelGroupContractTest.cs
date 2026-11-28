@@ -117,18 +117,22 @@ public class ChannelGroupContractTest
         ByteBuf content = Unpooled.WrappedBuffer(new byte[] { 9, 1, 2 });
         content.ReaderIndex = 1;
         object message = holder ? new DefaultByteBufHolder(content) : content;
+
         try
         {
             Func<IChannel, bool> matcher = channel => !ReferenceEquals(channel, excluded);
             Task write = flush ? group.WriteAndFlushAsync(message, matcher) : group.WriteAsync(message, matcher);
+
             if (!flush)
             {
                 Assert.False(write.IsCompleted);
                 Assert.Null(first.ReadOutbound());
                 Assert.Same(group, group.Flush(matcher));
             }
+
             await write;
             object firstMessage = first.ReadOutbound(), secondMessage = second.ReadOutbound();
+
             try
             {
                 Assert.NotSame(message, firstMessage);
@@ -146,6 +150,7 @@ public class ChannelGroupContractTest
                 ReferenceCountUtil.Release(firstMessage);
                 ReferenceCountUtil.Release(secondMessage);
             }
+
             Assert.Equal(0, content.RefCnt);
             server.Verify(channel => channel.WriteAsync(It.IsAny<object>(), It.IsAny<CancellationToken>()), Times.Never);
             server.Verify(channel => channel.WriteAndFlushAsync(It.IsAny<object>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -166,11 +171,14 @@ public class ChannelGroupContractTest
     {
         var group = new DefaultChannelGroup();
         var channel = new EmbeddedChannel();
+
         if (!empty)
         {
             group.Add(channel);
         }
+
         var buffer = Unpooled.Buffer(1).WriteByte(1);
+
         try
         {
             Task write = group.WriteAndFlushAsync(buffer, _ => false);
@@ -199,6 +207,7 @@ public class ChannelGroupContractTest
         var group = new DefaultChannelGroup();
         group.Add(child.Object);
         group.Add(server.Object);
+
         switch (operation)
         {
             case "close":
@@ -211,12 +220,14 @@ public class ChannelGroupContractTest
                 server.Setup(channel => channel.DeregisterAsync(It.IsAny<CancellationToken>())).Callback(() => order.Add(server.Object)).Returns(Task.CompletedTask);
                 break;
         }
+
         Assert.Same(server.Object, group.First());
         await Operate(group, operation, channel => {
             if (ReferenceEquals(channel, child.Object))
             {
                 order.Add(channel);
             }
+
             return true; });
         Assert.Equal(2, order.Count);
         Assert.Same(server.Object, order[0]);
@@ -231,6 +242,7 @@ public class ChannelGroupContractTest
         var first = new EmbeddedChannel(DefaultChannelId.NewInstance());
         var removed = new EmbeddedChannel(DefaultChannelId.NewInstance());
         var later = new EmbeddedChannel(DefaultChannelId.NewInstance());
+
         try
         {
             group.Add(first);
@@ -280,6 +292,7 @@ public class ChannelGroupContractTest
     public void FailureCollectionIsValidatedAndCopied()
     {
         var child = new EmbeddedChannel();
+
         try
         {
             var cause = new IOException();

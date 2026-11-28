@@ -93,6 +93,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
         {
             throw new ArgumentException("A datagram socket is required.", nameof(socket));
         }
+
         return socket;
     }
 
@@ -126,6 +127,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
         {
             return DefaultFamily();
         }
+
         AddressFamily family = ipFamily.Value.ToJdkFamily();
         // CLR: DatagramChannel.open(family) throws UnsupportedOperationException for an unavailable family;
         // its API note states that Unix domain sockets are not supported.
@@ -133,6 +135,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
         {
             throw new NotSupportedException("ProtocolFamily is not supported: " + ipFamily);
         }
+
         return family;
     }
 
@@ -140,16 +143,19 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
     public NioDatagramChannel(AddressFamily family, bool dualMode) : base(null, NewSocket(family, dualMode), NioIoOps.READ, METADATA)
     {
         _linuxDualMode = OperatingSystem.IsLinux() && dualMode;
+
         try
         {
             if (dualMode)
             {
                 JavaChannel().DualMode = true;
             }
+
             if (OperatingSystem.IsLinux())
             {
                 if (Socket.OSSupportsIPv4 && (family == AddressFamily.InterNetwork || dualMode))
                     DisableMulticastAll(SocketOptionLevel.IP, 49); // IP_MULTICAST_ALL
+
                 if (family == AddressFamily.InterNetworkV6)
                     DisableMulticastAll(SocketOptionLevel.IPv6, 29); // IPV6_MULTICAST_ALL
             }
@@ -165,6 +171,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
     {
         if (dualMode && family != AddressFamily.InterNetworkV6)
             throw new ArgumentException("Dual mode requires an IPv6 socket.", nameof(family));
+
         try
         {
             return new Socket(family, SocketType.Dgram, ProtocolType.Udp);
@@ -181,6 +188,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
         // https://github.com/openjdk/jdk/blob/master/src/java.base/unix/native/libnio/ch/Net.c
         Span<byte> disabled = stackalloc byte[sizeof(int)];
         disabled.Clear();
+
         try
         {
             JavaChannel().SetRawSocketOption((int)level, option, disabled);
@@ -208,8 +216,10 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
     protected override Task DoBindAsync(EndPoint address, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
+
         if (JavaChannel().AddressFamily == AddressFamily.InterNetworkV6 && address is IPEndPoint ip && ip.Address.Equals(IPAddress.Any))
             address = new IPEndPoint(IPAddress.IPv6Any, ip.Port);
+
         JavaChannel().Bind(address);
         SetActive(true);
         return Task.CompletedTask;
@@ -223,16 +233,19 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
         }
 
         bool success = false;
+
         try
         {
             var bound = OperatingSystem.IsLinux() ? _linuxBoundAddress ?? (IPEndPoint)JavaChannel().LocalEndPoint : null;
             JavaChannel().Connect(remoteAddress);
+
             if (OperatingSystem.IsLinux())
             {
                 var connected = LinuxSocketOptions.GetLocalEndpoint(JavaChannel());
                 _linuxBoundAddress = bound ?? new IPEndPoint(AnyAddress, connected.Port);
                 Volatile.Write(ref _linuxLocalAddress, connected);
             }
+
             Volatile.Write(ref _connectedAddress, Normalize(remoteAddress));
             SetActive(true);
             success = true;
@@ -255,6 +268,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
     protected override Task DoDisconnectAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+
         if (IsConnected)
         {
             // Winsock DisconnectEx is for connection-oriented sockets. Connecting a datagram socket
@@ -266,9 +280,11 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
                 DisconnectLinux();
             else
                 JavaChannel().Disconnect(true);
+
             Volatile.Write(ref _connectedAddress, null);
             SetActive(JavaChannel().IsBound || ActiveOnRegistration);
         }
+
         return Task.CompletedTask;
     }
 
@@ -291,6 +307,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
                 JavaChannel().Bind(_linuxBoundAddress);
                 local = LinuxSocketOptions.GetLocalEndpoint(JavaChannel());
             }
+
             Volatile.Write(ref _linuxLocalAddress, local);
         }
         catch
@@ -394,6 +411,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
             {
                 return p;
             }
+
             return new DatagramPacket(NewDirectBuffer(p, content), p.Recipient);
         }
 
@@ -403,18 +421,21 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
             {
                 return buf;
             }
+
             return NewDirectBuffer(buf);
         }
 
         if (msg is IAddressedEnvelope<object, EndPoint> e)
         {
             CheckUnresolved(e);
+
             if (e.Content is ByteBuf content)
             {
                 if (IsSingleDirectBuffer(content))
                 {
                     return e;
                 }
+
                 return new DefaultAddressedEnvelope<ByteBuf, EndPoint>(NewDirectBuffer(e, content), e.Recipient);
             }
         }
@@ -437,6 +458,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
     {
         EndPoint remoteAddress;
         ByteBuf data;
+
         if (msg is IAddressedEnvelope<ByteBuf, EndPoint> envelope)
         {
             remoteAddress = envelope.Recipient;
@@ -460,9 +482,11 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
         }
 
         ReadOnlySequence<byte> nioData = data.ReadableSequence;
+
         if (msg is SegmentedDatagramPacket segmented && dataLen > segmented.SegmentSize)
         {
             int segmentSize = segmented.SegmentSize;
+
             // Each segment is a separate datagram. Resume at the last accepted byte
             // if the socket becomes non-writable partway through this message.
             for (int offset = (int)@in.CurrentProgress; offset < dataLen;)
@@ -472,11 +496,14 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
                 {
                     return false;
                 }
+
                 offset += count;
                 @in.Progress(count);
             }
+
             return true;
         }
+
         int writtenBytes = SendDatagram(nioData, remoteAddress);
         return writtenBytes > 0;
     }
@@ -486,9 +513,11 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
     private int SendDatagram(ReadOnlySequence<byte> sequence, EndPoint target)
     {
         byte[] staging = null;
+
         try
         {
             ReadOnlyMemory<byte> memory = sequence.First;
+
             if (!sequence.IsSingleSegment)
             {
                 int length = (int)sequence.Length;
@@ -496,6 +525,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
                 sequence.CopyTo(staging);
                 memory = staging.AsMemory(0, length);
             }
+
             try
             {
                 int sent = target != null
@@ -503,6 +533,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
                     : JavaChannel().Send(memory.Span, SocketFlags.None);
                 if (sent != memory.Length)
                     throw new IOException("A UDP datagram was only partially accepted.");
+
                 return sent;
             }
             catch (SocketException e) when (e.SocketErrorCode == SocketError.WouldBlock)
@@ -528,12 +559,14 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
         ByteBuf data = allocHandle.Allocate(config.GetAllocator());
         allocHandle.AttemptedBytesRead(data.WritableBytes);
         bool free = true;
+
         try
         {
             Memory<byte> nioData = data.AsMemory(data.WriterIndex, data.WritableBytes);
             IPEndPoint any = ch.AddressFamily == AddressFamily.InterNetworkV6
                 ? new IPEndPoint(IPAddress.IPv6Any, 0) : new IPEndPoint(IPAddress.Any, 0);
             SocketReceiveFromResult result;
+
             try
             {
                 result = ReceiveDatagram(nioData, any);
@@ -566,11 +599,13 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
         if (OperatingSystem.IsWindows() && memory.Length < 65536)
         {
             byte[] staging = ArrayPool<byte>.Shared.Rent(65536);
+
             try
             {
                 int received = JavaChannel().ReceiveFrom(staging, 0, 65536, SocketFlags.None, ref remote);
                 int count = Math.Min(received, memory.Length);
                 staging.AsMemory(0, count).CopyTo(memory);
+
                 return new SocketReceiveFromResult { ReceivedBytes = count, RemoteEndPoint = remote };
             }
             finally
@@ -578,6 +613,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
                 ArrayPool<byte>.Shared.Return(staging);
             }
         }
+
         int length = JavaChannel().ReceiveFrom(memory.Span, SocketFlags.None, ref remote);
         return new SocketReceiveFromResult { ReceivedBytes = length, RemoteEndPoint = remote };
     }
@@ -590,6 +626,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
             // as we read anything).
             return extendedHandle.ContinueReading(static () => true);
         }
+
         return allocHandle.ContinueReading();
     }
 
@@ -601,6 +638,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
         {
             return false;
         }
+
         return base.CloseOnReadError(cause);
     }
 
@@ -621,6 +659,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
             ArgumentNullException.ThrowIfNull(multicastAddress);
             if (multicastAddress.AddressFamily != AddressFamily.InterNetwork)
                 throw new NotSupportedException("Use the IPv6 interface-index or network-interface overload.");
+
             NetworkInterface networkInterface = interfaceAddress == null || interfaceAddress.Equals(IPAddress.Any)
                 ? ((DefaultDatagramChannelConfig)Config).GetNetworkInterface0() : FindInterface(interfaceAddress);
             var local = (LocalAddress as IPEndPoint)?.Address;
@@ -657,23 +696,27 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
     public Task JoinGroupAsync(IPEndPoint multicastAddress, NetworkInterface networkInterface)
     {
         ArgumentNullException.ThrowIfNull(multicastAddress);
+
         return ChangeMembershipAsync(multicastAddress.Address, networkInterface, true);
     }
 
     public Task LeaveGroupAsync(IPEndPoint multicastAddress, NetworkInterface networkInterface)
     {
         ArgumentNullException.ThrowIfNull(multicastAddress);
+
         return ChangeMembershipAsync(multicastAddress.Address, networkInterface, false);
     }
 
     private Task ChangeMembershipAsync(IPAddress address, NetworkInterface networkInterface, bool join)
     {
         ArgumentNullException.ThrowIfNull(networkInterface);
+
         return OnLoopAsync(() =>
         {
             var family = address.AddressFamily;
             if (!SupportsGroupFamily(family))
                 throw new ArgumentException("Multicast group and socket families differ.", nameof(address));
+
             ChangeMembership(address, InterfaceIndex(networkInterface, family),
                 family == AddressFamily.InterNetworkV6 ? null : InterfaceAddress(networkInterface, family), join);
         });
@@ -688,6 +731,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
     private void ChangeMembership(IPAddress group, long index, IPAddress address, bool join)
     {
         ArgumentNullException.ThrowIfNull(group);
+
         group = MembershipAddress(group);
         if (!SupportsGroupFamily(group.AddressFamily))
             throw new ArgumentException("Multicast group and socket families differ.", nameof(group));
@@ -697,18 +741,23 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
             throw new ArgumentException("A multicast address is required.", nameof(group));
         ArgumentOutOfRangeException.ThrowIfNegative(index);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(index, uint.MaxValue);
+
         var key = (group, index, (IPAddress)null);
         if (join && _memberships.Keys.Any(k => k.Group.Equals(group) && k.Index == index && k.Source != null))
             throw new InvalidOperationException("Cannot join all sources while a source-specific membership exists.");
         if (join ? _memberships.ContainsKey(key) : !_memberships.ContainsKey(key))
             return;
+
         if (!join)
             address = _memberships[key].Address;
+
         var option = join ? SocketOptionName.AddMembership : SocketOptionName.DropMembership;
+
         if (group.AddressFamily == AddressFamily.InterNetworkV6)
             JavaChannel().SetSocketOption(SocketOptionLevel.IPv6, option, new IPv6MulticastOption(group, index));
         else
             JavaChannel().SetSocketOption(SocketOptionLevel.IP, option, new MulticastOption(group, address ?? IPAddress.Any));
+
         if (join)
             _memberships.Add(key, new Membership(address));
         else
@@ -733,6 +782,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
         {
             return ChangeMembershipAsync(group, networkInterface, join);
         }
+
         return OnLoopAsync(() =>
         {
             ValidateSource(group, source);
@@ -746,9 +796,11 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
             {
                 return;
             }
+
             var address = group.AddressFamily == AddressFamily.InterNetwork
                 ? (join ? InterfaceAddress(networkInterface, group.AddressFamily) : _memberships[key].Address) : null;
             SetSourceOption(join ? SocketOptionName.AddSourceMembership : SocketOptionName.DropSourceMembership, group, index, address, source);
+
             if (join)
             {
                 _memberships.Add(key, new Membership(address));
@@ -768,6 +820,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
         ArgumentNullException.ThrowIfNull(multicastAddress);
         ArgumentNullException.ThrowIfNull(networkInterface);
         ArgumentNullException.ThrowIfNull(sourceToBlock);
+
         return OnLoopAsync(() =>
         {
             ValidateSource(multicastAddress, sourceToBlock);
@@ -776,6 +829,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
             int index = InterfaceIndex(networkInterface, multicastAddress.AddressFamily);
             if (_memberships.Keys.Any(k => k.Group.Equals(multicastAddress) && k.Index == index && k.Source != null))
                 throw new InvalidOperationException("A source-specific membership cannot block sources.");
+
             if (_memberships.TryGetValue((multicastAddress, index, null), out var membership) && !membership.Blocked.Contains(sourceToBlock))
             {
                 SetSourceOption(SocketOptionName.BlockSource, multicastAddress, index, membership.Address, sourceToBlock);
@@ -800,14 +854,17 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
     {
         if (!SupportsGroupFamily(group.AddressFamily) || source.AddressFamily != group.AddressFamily)
             throw new NotSupportedException("Source filtering requires matching group and source families supported by the socket.");
+
         if (group.AddressFamily == AddressFamily.InterNetworkV6)
         {
             if (!group.IsIPv6Multicast)
                 throw new ArgumentException("A multicast address is required.", nameof(group));
             if (MembershipAddress(source).Equals(IPAddress.IPv6Any) || source.IsIPv6Multicast || source.IsIPv4MappedToIPv6)
                 throw new ArgumentException("An IPv6 unicast source address is required.", nameof(source));
+
             return;
         }
+
         if (group.GetAddressBytes()[0] is < 224 or > 239)
             throw new ArgumentException("A multicast address is required.", nameof(group));
         if (source.Equals(IPAddress.Any) || source.Equals(IPAddress.Broadcast) || source.GetAddressBytes()[0] is >= 224 and <= 239)
@@ -829,12 +886,14 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
             SetIPv6SourceOption(option, group, index, source);
             return;
         }
+
         // IP_MREQ_SOURCE is group/source/interface on Windows, group/interface/source on Linux.
         // Keep addresses in network byte order; SocketOptionName supplies the platform option number.
         // https://learn.microsoft.com/windows/win32/api/ws2ipdef/ns-ws2ipdef-ip_mreq_source
         // https://github.com/torvalds/linux/blob/master/include/uapi/linux/in.h
         if (!OperatingSystem.IsWindows() && !OperatingSystem.IsLinux())
             throw new PlatformNotSupportedException("Source membership layout has not been reviewed for this platform.");
+
         var request = new byte[12];
         group.GetAddressBytes().CopyTo(request, 0);
         (OperatingSystem.IsLinux() ? address : source).GetAddressBytes().CopyTo(request, 4);
@@ -873,6 +932,7 @@ public class NioDatagramChannel : AbstractNioMessageChannel, IDatagramChannel
         {
             if (address.IsIPv6LinkLocal || (address.IsIPv6Multicast && (address.GetAddressBytes()[1] & 15) <= 2))
                 address = new IPAddress(address.GetAddressBytes(), index);
+
             SocketAddress serialized = new IPEndPoint(address, 0).Serialize();
             serialized.Buffer.Span[..serialized.Size].CopyTo(destination);
         }

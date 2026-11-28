@@ -87,6 +87,7 @@ public class WebSocket00FrameDecoder : ReplayingDecoder<object>, IWebSocketFrame
         // Decode a frame otherwise.
         byte type = @in.ReadByte();
         WebSocketFrame frame;
+
         if ((type & 0x80) == 0x80)
         {
             // If the MSB on type is set, decode the frame length
@@ -109,6 +110,7 @@ public class WebSocket00FrameDecoder : ReplayingDecoder<object>, IWebSocketFrame
         long frameSize = 0;
         int lengthFieldSize = 0;
         byte b;
+
         do
         {
             b = buffer.ReadByte();
@@ -120,6 +122,7 @@ public class WebSocket00FrameDecoder : ReplayingDecoder<object>, IWebSocketFrame
                         maxFrameSize.ToString(CultureInfo.InvariantCulture) + ": " +
                         frameSize.ToString(CultureInfo.InvariantCulture));
             }
+
             lengthFieldSize++;
             if (lengthFieldSize > 8)
             {
@@ -134,6 +137,7 @@ public class WebSocket00FrameDecoder : ReplayingDecoder<object>, IWebSocketFrame
             receivedClosingHandshake = true;
             return new CloseWebSocketFrame(true, 0, ctx.Alloc().Buffer(0));
         }
+
         ByteBuf payload = ReadBytes(ctx.Alloc(), buffer, (int) frameSize);
         return new BinaryWebSocketFrame(payload);
     }

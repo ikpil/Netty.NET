@@ -75,6 +75,7 @@ public sealed class HttpSnoopClient
         // Configure SSL context if necessary.
         bool ssl = "https".Equals(scheme, StringComparison.OrdinalIgnoreCase);
         SslContext sslCtx;
+
         if (ssl)
         {
             sslCtx = SslContextBuilder.ForClient()
@@ -87,6 +88,7 @@ public sealed class HttpSnoopClient
 
         // Configure the client.
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             Bootstrap b = new Bootstrap();

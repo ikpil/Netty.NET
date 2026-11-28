@@ -44,6 +44,7 @@ public abstract class AbstractCoalescingBufferQueue
     protected AbstractCoalescingBufferQueue(IChannel channel, int initialSize)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(initialSize);
+
         // BCL LinkedList has no capacity reservation; the source's initSize is only a sizing hint.
         _tracker = channel == null ? null : new PendingBytesTracker(channel);
     }
@@ -69,10 +70,13 @@ public abstract class AbstractCoalescingBufferQueue
     public void AddFirst(ByteBuf buffer, TaskCompletionSource producer = null)
     {
         ArgumentNullException.ThrowIfNull(buffer);
+
         // Touch the message to make it easier to debug buffer leaks.
         buffer.Touch();
+
         if (producer != null)
             _pairs.AddFirst(producer);
+
         _pairs.AddFirst(buffer);
         IncrementReadableBytes(buffer.ReadableBytes);
     }
@@ -94,6 +98,7 @@ public abstract class AbstractCoalescingBufferQueue
     public void Add(ByteBuf buffer, TaskCompletionSource producer)
     {
         ArgumentNullException.ThrowIfNull(producer);
+
         // buffers are added before promises so that we naturally 'consume' the entire buffer during removal
         // before we complete it's promise.
         AddCore(buffer, producer);
@@ -113,13 +118,16 @@ public abstract class AbstractCoalescingBufferQueue
     private void AddCore(ByteBuf buffer, object completion)
     {
         ArgumentNullException.ThrowIfNull(buffer);
+
         // Touch the message to make it easier to debug buffer leaks.
         buffer.Touch();
         // buffers are added before promises so that we naturally 'consume' the entire buffer during removal
         // before we complete it's promise.
         _pairs.AddLast(buffer);
+
         if (completion != null)
             _pairs.AddLast(completion);
+
         IncrementReadableBytes(buffer.ReadableBytes);
     }
 
@@ -128,6 +136,7 @@ public abstract class AbstractCoalescingBufferQueue
         var first = _pairs.First;
         if (first == null)
             return null;
+
         _pairs.RemoveFirst();
         return first.Value;
     }
@@ -142,9 +151,12 @@ public abstract class AbstractCoalescingBufferQueue
         ArgumentNullException.ThrowIfNull(aggregateProducer);
         if (Poll() is not ByteBuf result)
             return null;
+
         DecrementReadableBytes(result.ReadableBytes);
+
         if (_pairs.First?.Value is TaskCompletionSource or Action<Task>)
             Attach(aggregateProducer, Poll());
+
         ReconcileReadableBytes();
         return result;
     }
@@ -164,15 +176,19 @@ public abstract class AbstractCoalescingBufferQueue
     {
         ArgumentOutOfRangeException.ThrowIfNegative(bytes);
         ArgumentNullException.ThrowIfNull(aggregateProducer);
+
         // Use isEmpty rather than readableBytes==0 as we may have a promise associated with an empty buffer.
         if (_pairs.Count == 0)
         {
             ReconcileReadableBytes();
+
             return RemoveEmptyValue();
         }
+
         bytes = Math.Min(bytes, _readableBytes);
         ByteBuf result = null, entryBuffer = null;
         int originalBytes = bytes;
+
         try
         {
             for (; ; )
@@ -180,6 +196,7 @@ public abstract class AbstractCoalescingBufferQueue
                 object entry = Poll();
                 if (entry == null)
                     break;
+
                 // fast-path vs abstract type
                 if (entry is ByteBuf buffer)
                 {
@@ -189,6 +206,7 @@ public abstract class AbstractCoalescingBufferQueue
                     {
                         // Add the buffer back to the queue as we can't consume all of it.
                         _pairs.AddFirst(buffer);
+
                         if (bytes > 0)
                         {
                             // Take a slice of what we can consume and retain it.
@@ -197,9 +215,12 @@ public abstract class AbstractCoalescingBufferQueue
                             result = result == null ? entryBuffer : Compose(allocator, result, entryBuffer);
                             bytes = 0;
                         }
+
                         break;
                     }
+
                     bytes -= bufferBytes;
+
                     if (result == null)
                     {
                         // if there are no more bytes to read, there's no reason to compose
@@ -207,6 +228,7 @@ public abstract class AbstractCoalescingBufferQueue
                     }
                     else
                         result = Compose(allocator, result, buffer);
+
                     entryBuffer = null;
                 }
                 else
@@ -219,14 +241,17 @@ public abstract class AbstractCoalescingBufferQueue
             // to ensure that the state is consistent even if it would be accessed via a listener that is
             // attached to the promise that we fail below.
             DecrementReadableBytes(originalBytes - bytes);
+
             // Poll the next element if it's a listener that belongs to the ByteBuf.
             if (_pairs.First?.Value is TaskCompletionSource or Action<Task>)
                 Attach(aggregateProducer, Poll());
+
             ReferenceCountUtil.SafeRelease(entryBuffer);
             ReferenceCountUtil.SafeRelease(result);
             aggregateProducer.SetException(error);
             throw;
         }
+
         DecrementReadableBytes(originalBytes - bytes);
         ReconcileReadableBytes();
         return result;
@@ -239,7 +264,9 @@ public abstract class AbstractCoalescingBufferQueue
             callback(operation);
             return;
         }
+
         var producer = (TaskCompletionSource)completion;
+
         try
         {
             operation.GetAwaiter().GetResult();
@@ -259,6 +286,7 @@ public abstract class AbstractCoalescingBufferQueue
     {
         if (completion == null)
             return;
+
         try
         {
             Notify(completion, operation);
@@ -283,13 +311,16 @@ public abstract class AbstractCoalescingBufferQueue
     public void ReleaseAndFailAll(Exception cause)
     {
         ArgumentNullException.ThrowIfNull(cause);
+
         Task failed = Task.FromException(cause);
         Exception pending = null;
+
         for (; ; )
         {
             object entry = Poll();
             if (entry == null)
                 break;
+
             try
             {
                 if (entry is ByteBuf buffer)
@@ -310,6 +341,7 @@ public abstract class AbstractCoalescingBufferQueue
                     Logger.Info("Throwable being suppressed because another Throwable is already pending", error);
             }
         }
+
         _ = failed.Exception;
         ReconcileReadableBytes();
         if (pending != null)
@@ -323,8 +355,10 @@ public abstract class AbstractCoalescingBufferQueue
     public void CopyTo(AbstractCoalescingBufferQueue destination)
     {
         ArgumentNullException.ThrowIfNull(destination);
+
         foreach (var entry in _pairs)
             destination._pairs.AddLast(entry);
+
         destination.IncrementReadableBytes(_readableBytes);
     }
 
@@ -335,12 +369,15 @@ public abstract class AbstractCoalescingBufferQueue
     public Task WriteAndRemoveAllAsync(IChannelHandlerContext ctx)
     {
         ArgumentNullException.ThrowIfNull(ctx);
+
         Exception pending = null;
         ByteBuf previous = null;
         var writes = new List<Task>();
+
         for (; ; )
         {
             object entry = Poll();
+
             try
             {
                 if (entry == null)
@@ -350,8 +387,10 @@ public abstract class AbstractCoalescingBufferQueue
                         DecrementReadableBytes(previous.ReadableBytes);
                         writes.Add(Write(ctx, previous, null));
                     }
+
                     break;
                 }
+
                 if (entry is ByteBuf buffer)
                 {
                     if (previous != null)
@@ -359,6 +398,7 @@ public abstract class AbstractCoalescingBufferQueue
                         DecrementReadableBytes(previous.ReadableBytes);
                         writes.Add(Write(ctx, previous, null));
                     }
+
                     previous = buffer;
                 }
                 else
@@ -376,9 +416,11 @@ public abstract class AbstractCoalescingBufferQueue
                     Logger.Info("Throwable being suppressed because another Throwable is already pending", error);
             }
         }
+
         ReconcileReadableBytes();
         if (pending != null)
             throw new InvalidOperationException("Writing queued buffers failed.", pending);
+
         return Task.WhenAll(writes);
     }
 
@@ -389,12 +431,14 @@ public abstract class AbstractCoalescingBufferQueue
             ReferenceCountUtil.SafeRelease(buffer);
             return producer.Task;
         }
+
         Task operation = ctx.WriteAsync(buffer);
         if (operation.IsCompleted)
         {
             NotifySafely(completion, operation);
             return operation;
         }
+
         return CompleteWriteAsync();
 
         async Task CompleteWriteAsync()
@@ -407,6 +451,7 @@ public abstract class AbstractCoalescingBufferQueue
             {
                 /* Relay the original result below. */
             }
+
             if (completion != null)
             {
                 if (ctx.Executor.InEventLoop())
@@ -423,10 +468,12 @@ public abstract class AbstractCoalescingBufferQueue
                         // has already stopped. The returned write task also reports the dispatch failure.
                         if (completion is TaskCompletionSource producer)
                             producer.TrySetException(error);
+
                         throw;
                     }
                 }
             }
+
             await operation.ConfigureAwait(false);
         }
     }
@@ -444,6 +491,7 @@ public abstract class AbstractCoalescingBufferQueue
         // Create a composite buffer to accumulate this pair and potentially all the buffers
         // in the queue. Using +2 as we have already dequeued current and next.
         var composite = allocator.CompositeBuffer(Size + 2);
+
         try
         {
             composite.AddComponent(cumulation, true);
@@ -455,6 +503,7 @@ public abstract class AbstractCoalescingBufferQueue
             ReferenceCountUtil.SafeRelease(next);
             throw;
         }
+
         return composite;
     }
 
@@ -468,6 +517,7 @@ public abstract class AbstractCoalescingBufferQueue
     protected ByteBuf CopyAndCompose(IByteBufAllocator allocator, ByteBuf cumulation, ByteBuf next)
     {
         var result = allocator.IoBuffer(checked(cumulation.ReadableBytes + next.ReadableBytes));
+
         try
         {
             result.WriteBytes(cumulation).WriteBytes(next);
@@ -478,6 +528,7 @@ public abstract class AbstractCoalescingBufferQueue
             ReferenceCountUtil.SafeRelease(next);
             throw;
         }
+
         cumulation.Release();
         next.Release();
         return result;
@@ -520,6 +571,7 @@ public abstract class AbstractCoalescingBufferQueue
         long next = (long)_readableBytes + increment;
         if (next > int.MaxValue)
             throw new InvalidOperationException("buffer queue length overflow: " + _readableBytes.ToString(CultureInfo.InvariantCulture) + " + " + increment.ToString(CultureInfo.InvariantCulture));
+
         _readableBytes = (int)next;
         _tracker?.IncrementPendingOutboundBytes(increment);
     }

@@ -60,6 +60,7 @@ public class DefaultHttp2HeadersEncoderTest : IDisposable
     {
         IHttp2Headers headers = Headers();
         ByteBuf buf = Unpooled.Buffer();
+
         try
         {
             encoder.EncodeHeaders(3 /* randomly chosen */, headers, buf);
@@ -79,6 +80,7 @@ public class DefaultHttp2HeadersEncoderTest : IDisposable
         Assert.ThrowsAny<StreamException>(() =>
         {
             ByteBuf buf = Unpooled.Buffer();
+
             try
             {
                 encoder.EncodeHeaders(3 /* randomly chosen */, headers, buf);

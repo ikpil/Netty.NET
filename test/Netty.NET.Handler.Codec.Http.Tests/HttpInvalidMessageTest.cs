@@ -115,13 +115,16 @@ public class HttpInvalidMessageTest
         rnd.NextBytes(data);
 
         ByteBuf buf = Unpooled.WrappedBuffer(data);
+
         for (int i = 0; i < 4096; i ++)
         {
             buf.SetIndex(0, data.Length);
             ch.WriteInbound(buf.Retain());
             ch.CheckException();
+
             Assert.Null(ch.ReadInbound());
         }
+
         buf.Release();
     }
 }

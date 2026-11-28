@@ -67,6 +67,7 @@ public class NioSocketChannel : AbstractNioByteChannel, ISocketChannel
             // See https://github.com/netty/netty/issues/4449
             _ = ignore;
         }
+
         return null;
     }
 
@@ -74,6 +75,7 @@ public class NioSocketChannel : AbstractNioByteChannel, ISocketChannel
     private static Socket NewChannel(SocketProtocolFamily? family)
     {
         AddressFamily addressFamily;
+
         if (family == null)
         {
             // CLR: provider.openSocketChannel() uses the OS default, which prefers IPv6 when available.
@@ -90,6 +92,7 @@ public class NioSocketChannel : AbstractNioByteChannel, ISocketChannel
                 throw new NotSupportedException("ProtocolFamily is not supported: " + family);
             }
         }
+
         return NewIpChannel(addressFamily, SocketType.Stream, ProtocolType.Tcp);
     }
 
@@ -98,13 +101,16 @@ public class NioSocketChannel : AbstractNioByteChannel, ISocketChannel
     internal static Socket NewIpChannel(AddressFamily addressFamily, SocketType socketType, ProtocolType protocolType)
     {
         Socket channel = null;
+
         try
         {
             channel = new Socket(addressFamily, socketType, protocolType);
+
             if (addressFamily == AddressFamily.InterNetworkV6 && Socket.OSSupportsIPv4)
             {
                 channel.DualMode = true;
             }
+
             return channel;
         }
         catch (SocketException e)
@@ -172,6 +178,7 @@ public class NioSocketChannel : AbstractNioByteChannel, ISocketChannel
                 // Ignore.
             }
         }
+
         if (socket.IsBound)
         {
             RecordLocalAddress(socket);
@@ -221,6 +228,7 @@ public class NioSocketChannel : AbstractNioByteChannel, ISocketChannel
             {
                 local = Normalize(LinuxSocketOptions.GetLocalEndpoint(socket));
             }
+
             _localAddress = local;
         }
         catch (SocketException)
@@ -261,6 +269,7 @@ public class NioSocketChannel : AbstractNioByteChannel, ISocketChannel
             {
                 remoteAddress = new IPEndPoint(IPAddress.IPv6Loopback, target.Port);
             }
+
             _remoteAddress = Normalize(remoteAddress);
         }
 
@@ -276,18 +285,21 @@ public class NioSocketChannel : AbstractNioByteChannel, ISocketChannel
                 // The kernel does not support TCP_FASTOPEN_CONNECT; connect normally.
             }
         }
+
         bool connected = base.Connect(socket, remoteAddress);
         if (connected)
         {
             // CLR: endConnect records the local address of a connect that completed at once.
             RecordLocalAddress(socket);
         }
+
         return connected;
     }
 
     protected override void DoWrite(ChannelOutboundBuffer @in)
     {
         int writeSpinCount = Config.GetWriteSpinCount();
+
         do
         {
             if (@in.IsEmpty)
@@ -324,6 +336,7 @@ public class NioSocketChannel : AbstractNioByteChannel, ISocketChannel
                         IncompleteWrite(true);
                         return;
                     }
+
                     AdjustMaxBytesPerGatheringWrite(attemptedBytes, localWrittenBytes, maxBytesPerGatheringWrite);
                     @in.RemoveBytes(localWrittenBytes);
                     --writeSpinCount;
@@ -341,6 +354,7 @@ public class NioSocketChannel : AbstractNioByteChannel, ISocketChannel
                         IncompleteWrite(true);
                         return;
                     }
+
                     // Casting to int is safe because we limit the total amount of data in the nioBuffers to int above.
                     AdjustMaxBytesPerGatheringWrite((int)attemptedBytes, (int)localWrittenBytes,
                             maxBytesPerGatheringWrite);
@@ -365,6 +379,7 @@ public class NioSocketChannel : AbstractNioByteChannel, ISocketChannel
             // Socket.LocalEndPoint may cache the address-only bind. Connect assigns the kernel port.
             if (Volatile.Read(ref _assignedLocalAddress) is { } assigned)
                 return assigned;
+
             assigned = Normalize(LinuxSocketOptions.GetLocalEndpoint(JavaChannel()));
             Volatile.Write(ref _assignedLocalAddress, assigned);
             return assigned;

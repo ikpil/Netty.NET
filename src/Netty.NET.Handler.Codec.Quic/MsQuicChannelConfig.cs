@@ -34,10 +34,12 @@ internal sealed class MsQuicChannelConfig : DefaultChannelConfig, IQuicChannelCo
     public override IReadOnlyDictionary<ChannelOption, object> GetOptions()
     {
         Dictionary<ChannelOption, object> options = new Dictionary<ChannelOption, object>();
+
         foreach (KeyValuePair<ChannelOption, object> entry in base.GetOptions())
         {
             options[entry.Key] = entry.Value;
         }
+
         options[QuicChannelOption.QLOG] = null;
         return options;
     }
@@ -49,6 +51,7 @@ internal sealed class MsQuicChannelConfig : DefaultChannelConfig, IQuicChannelCo
             value = null;
             return true;
         }
+
         return base.TryGetValue(option, out value);
     }
 
@@ -60,8 +63,10 @@ internal sealed class MsQuicChannelConfig : DefaultChannelConfig, IQuicChannelCo
             {
                 throw new NotSupportedException("QLOG is not supported by System.Net.Quic (msquic)");
             }
+
             return true;
         }
+
         return base.SetValue(option, value);
     }
 }

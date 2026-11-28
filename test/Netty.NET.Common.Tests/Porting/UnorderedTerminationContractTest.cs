@@ -31,6 +31,7 @@ public class UnorderedTerminationContractTest
             return executor.SubmitAsync(() =>
             {
                 entered.Signal();
+
                 // Immediate shutdown can request interruption, but cannot force user
                 // code which deliberately defers cancellation to finish.
                 while (!release.IsSet)
@@ -47,10 +48,12 @@ public class UnorderedTerminationContractTest
         }
 
         Task first = Invoke(firstRelease), last = Invoke(lastRelease);
+
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             Task termination = executor.TerminationFuture;
+
             if (immediate)
             {
                 Assert.Same(executor.TerminationFuture, executor.StopAsync());
@@ -59,6 +62,7 @@ public class UnorderedTerminationContractTest
             {
                 Assert.Same(termination, executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero));
             }
+
             Assert.True(executor.IsShutdown());
             Assert.False(termination.IsCompleted);
             firstRelease.Set();
@@ -92,6 +96,7 @@ public class UnorderedTerminationContractTest
         using var cancellation = new CancellationTokenSource();
         Task work = executor.ScheduleAsync(() => Assert.Fail("Canceled deadline ran"),
             TimeSpan.FromDays(1), cancellation.Token);
+
         try
         {
             Assert.Equal(0, executor.WorkerCount);
@@ -132,6 +137,7 @@ public class UnorderedTerminationContractTest
     {
         var executor = new UnorderedThreadPoolEventExecutor(1, new Factory(_ => null));
         Task work = executor.ScheduleAsync(() => Assert.Fail("Removed deadline ran"), TimeSpan.FromDays(1));
+
         try
         {
             Task termination = executor.ShutdownGracefullyAsync();
@@ -154,6 +160,7 @@ public class UnorderedTerminationContractTest
         using var cancellation = new CancellationTokenSource();
         Task submitted = executor.SubmitAsync(() => Assert.Fail("Canceled invocation ran"), cancellation.Token);
         Task scheduled = executor.ScheduleAsync(() => Assert.Fail("Canceled deadline ran"), TimeSpan.FromDays(1), cancellation.Token);
+
         try
         {
             Task termination = executor.ShutdownGracefullyAsync();

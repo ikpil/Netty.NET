@@ -87,6 +87,7 @@ public abstract class Http3ConnectionHandler : ChannelInboundHandlerAdapter
     {
         this.unknownInboundStreamHandlerFactory = unknownInboundStreamHandlerFactory;
         this.disableQpackDynamicTable = disableQpackDynamicTable;
+
         if (nonStandardSettingsValidator != null)
         {
             this.nonStandardSettingsValidator = nonStandardSettingsValidator;
@@ -95,6 +96,7 @@ public abstract class Http3ConnectionHandler : ChannelInboundHandlerAdapter
         {
             this.nonStandardSettingsValidator = new IgnoreNonStandardSettings();
         }
+
         if (localSettings == null)
         {
             localSettings = new DefaultHttp3SettingsFrame(Http3Settings.DefaultSettings());
@@ -103,6 +105,7 @@ public abstract class Http3ConnectionHandler : ChannelInboundHandlerAdapter
         {
             localSettings = DefaultHttp3SettingsFrame.CopyOf(localSettings);
         }
+
         long maxFieldSectionSize = localSettings
                 .Settings()
                 .GetOrDefault(
@@ -191,6 +194,7 @@ public abstract class Http3ConnectionHandler : ChannelInboundHandlerAdapter
             return Http3RequestStreamValidationHandler.NewServerValidator(qpackAttributes, qpackDecoder,
                     encodeState, decodeState);
         }
+
         return Http3RequestStreamValidationHandler.NewClientValidator(localControlStreamHandler.IsGoAwayReceived,
                 qpackAttributes, qpackDecoder, encodeState, decodeState);
     }
@@ -202,8 +206,10 @@ public abstract class Http3ConnectionHandler : ChannelInboundHandlerAdapter
         {
             return Http3PushStreamServerValidationHandler.INSTANCE;
         }
+
         QpackAttributes qpackAttributes = Http3.GetQpackAttributes(forStream.Parent);
         Debug.Assert(qpackAttributes != null);
+
         return new Http3PushStreamClientValidationHandler(qpackAttributes, qpackDecoder, decodeState);
     }
 
@@ -211,6 +217,7 @@ public abstract class Http3ConnectionHandler : ChannelInboundHandlerAdapter
     {
         IQuicChannel channel = (IQuicChannel) ctx.Channel;
         Http3.SetQpackAttributes(channel, new QpackAttributes(channel, disableQpackDynamicTable));
+
         if (ctx.Channel.IsActive)
         {
             CreateControlStreamIfNeeded(ctx);
@@ -229,6 +236,7 @@ public abstract class Http3ConnectionHandler : ChannelInboundHandlerAdapter
         if (msg is IQuicStreamChannel)
         {
             IQuicStreamChannel channel = (IQuicStreamChannel) msg;
+
             switch (channel.Type())
             {
                 case QuicStreamType.BIDIRECTIONAL:
@@ -241,6 +249,7 @@ public abstract class Http3ConnectionHandler : ChannelInboundHandlerAdapter
                     throw new InvalidOperationException("Unexpected channel type: " + channel.Type());
             }
         }
+
         ctx.FireChannelRead(msg);
     }
 

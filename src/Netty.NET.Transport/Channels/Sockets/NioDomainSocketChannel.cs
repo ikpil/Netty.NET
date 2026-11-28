@@ -65,6 +65,7 @@ public sealed class NioDomainSocketChannel : AbstractNioByteChannel, IDuplexChan
         {
             // ignore
         }
+
         return null;
     }
 
@@ -78,6 +79,7 @@ public sealed class NioDomainSocketChannel : AbstractNioByteChannel, IDuplexChan
         {
             // ignore
         }
+
         return null;
     }
 
@@ -85,6 +87,7 @@ public sealed class NioDomainSocketChannel : AbstractNioByteChannel, IDuplexChan
     protected override void DoWrite(ChannelOutboundBuffer @in)
     {
         int writeSpinCount = Config.GetWriteSpinCount();
+
         do
         {
             if (@in.IsEmpty)
@@ -121,6 +124,7 @@ public sealed class NioDomainSocketChannel : AbstractNioByteChannel, IDuplexChan
                         IncompleteWrite(true);
                         return;
                     }
+
                     AdjustMaxBytesPerGatheringWrite(attemptedBytes, localWrittenBytes, maxBytesPerGatheringWrite);
                     @in.RemoveBytes(localWrittenBytes);
                     --writeSpinCount;
@@ -138,6 +142,7 @@ public sealed class NioDomainSocketChannel : AbstractNioByteChannel, IDuplexChan
                         IncompleteWrite(true);
                         return;
                     }
+
                     // Casting to int is safe because we limit the total amount of data in the nioBuffers to int above.
                     AdjustMaxBytesPerGatheringWrite((int)attemptedBytes, (int)localWrittenBytes,
                             maxBytesPerGatheringWrite);
@@ -169,6 +174,7 @@ public sealed class NioDomainSocketChannel : AbstractNioByteChannel, IDuplexChan
         ArgumentNullException.ThrowIfNull(socket);
         if (socket.AddressFamily != AddressFamily.Unix || socket.SocketType != SocketType.Stream)
             throw new ArgumentException("A Unix domain stream socket is required.", nameof(socket));
+
         return socket;
     }
 }

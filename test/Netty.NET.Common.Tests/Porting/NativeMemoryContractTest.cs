@@ -52,10 +52,12 @@ public class NativeMemoryContractTest
         // MemoryMarshal canonically represents any empty memory as an empty array
         // segment; that does not change the owner's native pin address.
         Assert.Equal(length == 0, hasArray);
+
         if (hasArray)
         {
             Assert.Equal(0, array.Count);
         }
+
         Assert.True(memory.Span.IndexOfAnyExcept((byte)0) < 0);
         owner.Dispose();
         owner.Dispose();
@@ -170,6 +172,7 @@ public class NativeMemoryContractTest
     public void ReallocationAndDisposalRaceTransfersOrReleasesExactlyOneAllocation()
     {
         var allocator = new NativeMemoryAllocator();
+
         for (int i = 0; i < 128; i++)
         {
             var original = allocator.Allocate(8, clear: true);
@@ -179,6 +182,7 @@ public class NativeMemoryContractTest
             Parallel.Invoke(() =>
             {
                 barrier.SignalAndWait();
+
                 try
                 {
                     replacement = allocator.Reallocate(original, 16);
@@ -191,9 +195,11 @@ public class NativeMemoryContractTest
                 barrier.SignalAndWait();
                 original.Dispose();
             });
+
             try
             {
                 Assert.Equal(replacement == null ? 0 : 16, allocator.ReservedBytes);
+
                 if (replacement != null)
                     Assert.True(replacement.Memory.Span.Slice(0, 8).IndexOfAnyExcept((byte)0xa3) < 0);
             }
@@ -202,6 +208,7 @@ public class NativeMemoryContractTest
                 replacement?.Dispose();
                 original.Dispose();
             }
+
             Assert.Equal(0, allocator.ReservedBytes);
         }
     }
@@ -210,6 +217,7 @@ public class NativeMemoryContractTest
     public void ConcurrentReallocationsHaveOnlyOneOwnershipTransfer()
     {
         var allocator = new NativeMemoryAllocator();
+
         for (int i = 0; i < 128; i++)
         {
             var original = allocator.Allocate(8, clear: true);
@@ -219,6 +227,7 @@ public class NativeMemoryContractTest
             Parallel.Invoke(() =>
             {
                 barrier.SignalAndWait();
+
                 try
                 {
                     first = allocator.Reallocate(original, 16);
@@ -229,6 +238,7 @@ public class NativeMemoryContractTest
             }, () =>
             {
                 barrier.SignalAndWait();
+
                 try
                 {
                     second = allocator.Reallocate(original, 32);
@@ -237,6 +247,7 @@ public class NativeMemoryContractTest
                 {
                 }
             });
+
             try
             {
                 Assert.True((first != null) != (second != null));
@@ -248,6 +259,7 @@ public class NativeMemoryContractTest
                 second?.Dispose();
                 original.Dispose();
             }
+
             Assert.Equal(0, allocator.ReservedBytes);
         }
     }
@@ -356,11 +368,13 @@ public class NativeMemoryContractTest
     {
         var allocator = new NativeMemoryAllocator();
         AsciiString text;
+
         using (var owner = allocator.Allocate(8))
         {
             new byte[] { 99, 0x80, 0xff, 65, 66, 0, 88, 77 }.CopyTo(owner.Memory);
             text = new AsciiString(owner.Memory.Slice(1, 5), copy: false);
         }
+
         Assert.Equal(0, allocator.ReservedBytes);
         Assert.Equal(new byte[] { 0x80, 0xff, 65, 66, 0 }, text.AsSpan().ToArray());
     }
@@ -385,11 +399,13 @@ public class NativeMemoryContractTest
         int attempts = 0;
         int accepted = 0;
         var work = new Task[32];
+
         for (int i = 0; i < work.Length; i++)
         {
             work[i] = Task.Run(async () =>
             {
                 NativeMemoryOwner owner = null;
+
                 try
                 {
                     try
@@ -407,6 +423,7 @@ public class NativeMemoryContractTest
                             ready.TrySetResult();
                         }
                     }
+
                     if (owner != null)
                     {
                         await release.Task;
@@ -418,6 +435,7 @@ public class NativeMemoryContractTest
                 }
             });
         }
+
         try
         {
             await ready.Task.WaitAsync(TimeSpan.FromSeconds(5));
@@ -429,6 +447,7 @@ public class NativeMemoryContractTest
             release.TrySetResult();
             await Task.WhenAll(work);
         }
+
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -436,6 +455,7 @@ public class NativeMemoryContractTest
     public void PinAndDisposeRaceEitherRejectsThePinOrReturnsARuntimeHandle()
     {
         var allocator = new NativeMemoryAllocator();
+
         for (int i = 0; i < 256; i++)
         {
             var owner = allocator.Allocate(16, clear: true);
@@ -445,6 +465,7 @@ public class NativeMemoryContractTest
             Parallel.Invoke(() =>
             {
                 barrier.SignalAndWait();
+
                 try
                 {
                     pin = memory.Pin();
@@ -457,6 +478,7 @@ public class NativeMemoryContractTest
                 barrier.SignalAndWait();
                 owner.Dispose();
             });
+
             try
             {
                 Assert.Equal(0, allocator.ReservedBytes);
@@ -466,6 +488,7 @@ public class NativeMemoryContractTest
                 pin.Dispose();
                 owner.Dispose();
             }
+
             Assert.Equal(0, allocator.ReservedBytes);
         }
     }
@@ -477,12 +500,14 @@ public class NativeMemoryContractTest
         WeakReference first = AbandonAllocation(allocator);
         WeakReference second = AbandonAllocation(allocator);
         var timeout = Stopwatch.StartNew();
+
         while (allocator.ReservedBytes != 0 && timeout.Elapsed < TimeSpan.FromSeconds(5))
         {
             GC.Collect();
             GC.WaitForPendingFinalizers();
             await Task.Delay(20);
         }
+
         Assert.Equal(0, allocator.ReservedBytes);
         Assert.False(first.IsAlive);
         Assert.False(second.IsAlive);

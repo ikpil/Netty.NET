@@ -56,6 +56,7 @@ public class HttpResponseClientHandler : SimpleChannelInboundHandler<IHttpObject
                         Console.WriteLine("HEADER: " + name + " = " + value);
                     }
                 }
+
                 Console.WriteLine();
             }
 
@@ -68,6 +69,7 @@ public class HttpResponseClientHandler : SimpleChannelInboundHandler<IHttpObject
                 Console.WriteLine("CONTENT {");
             }
         }
+
         if (msg is IHttpContent)
         {
             IHttpContent content = (IHttpContent) msg;

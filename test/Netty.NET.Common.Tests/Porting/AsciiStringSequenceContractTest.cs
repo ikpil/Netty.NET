@@ -56,24 +56,29 @@ public class AsciiStringSequenceContractTest
             source.CopyTo(backing, 2);
             var value = new AsciiString(backing, 2, source.Length, false);
             byte[] pattern = { (byte)character, 0 };
+
             for (int start = 0; start <= source.Length; start++)
             {
                 int first = -1, last = -1;
+
                 for (int candidate = 0; candidate <= source.Length - pattern.Length; candidate++)
                 {
                     if (source[candidate] != pattern[0] || source[candidate + 1] != pattern[1])
                     {
                         continue;
                     }
+
                     if (candidate >= start && first < 0)
                     {
                         first = candidate;
                     }
+
                     if (candidate <= start)
                     {
                         last = candidate;
                     }
                 }
+
                 int relative = value.AsSpan().Slice(start).IndexOf(pattern);
                 Assert.Equal(first, relative < 0 ? -1 : start + relative);
                 int end = Math.Min(start + pattern.Length, source.Length);
@@ -92,6 +97,7 @@ public class AsciiStringSequenceContractTest
         Assert.Equal(0, text.AsSpan().IndexOf("Ā".AsSpan(), StringComparison.Ordinal));
         Assert.Equal(1, text.AsSpan().IndexOf("😀".AsSpan(), StringComparison.Ordinal));
         CultureInfo previous = CultureInfo.CurrentCulture;
+
         try
         {
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("tr-TR");

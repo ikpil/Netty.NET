@@ -86,6 +86,7 @@ public sealed class LazyX509Certificate : X509Certificate2
         {
             wrapped.Dispose();
         }
+
         base.Dispose(disposing);
     }
 }

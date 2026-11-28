@@ -69,6 +69,7 @@ public static class HttpHeaderValidationUtil
         //
         // We scan for these based on the length, then double-check any matching name.
         int len = name.Length();
+
         switch (len)
         {
             case 2:
@@ -107,6 +108,7 @@ public static class HttpHeaderValidationUtil
             return ContentEqualsIgnoreCase(name, HttpHeaderNames.TE) &&
                     !ContentEqualsIgnoreCase(value, HttpHeaderValues.TRAILERS);
         }
+
         return false;
     }
 
@@ -128,6 +130,7 @@ public static class HttpHeaderValidationUtil
         {
             return VerifyValidHeaderValueAsciiString((AsciiString) value);
         }
+
         return VerifyValidHeaderValueCharSequence(value);
     }
 
@@ -149,7 +152,9 @@ public static class HttpHeaderValidationUtil
         {
             return 0;
         }
+
         int end = start + value.Length();
+
         for (int i = start + 1; i < end; i++)
         {
             b = array[i] & 0xFF;
@@ -158,6 +163,7 @@ public static class HttpHeaderValidationUtil
                 return i - start;
             }
         }
+
         return -1;
     }
 
@@ -177,7 +183,9 @@ public static class HttpHeaderValidationUtil
         {
             return 0;
         }
+
         int length = value.Length();
+
         for (int i = 1; i < length; i++)
         {
             b = value.CharAt(i);
@@ -186,6 +194,7 @@ public static class HttpHeaderValidationUtil
                 return i;
             }
         }
+
         return -1;
     }
 

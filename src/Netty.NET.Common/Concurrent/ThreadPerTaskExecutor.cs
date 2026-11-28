@@ -31,6 +31,7 @@ public sealed class ThreadPerTaskExecutor
     public void Execute(Action command)
     {
         ArgumentNullException.ThrowIfNull(command);
+
         var thread = _threadFactory.NewThread(command) ?? throw new InvalidOperationException("The thread factory returned no thread.");
         thread.Start();
     }

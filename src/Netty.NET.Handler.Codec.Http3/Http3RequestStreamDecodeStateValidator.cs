@@ -36,6 +36,7 @@ internal sealed class Http3RequestStreamDecodeStateValidator : ChannelInboundHan
             base.ChannelRead(ctx, msg);
             return;
         }
+
         IHttp3RequestStreamFrame frame = (IHttp3RequestStreamFrame) msg;
         State? nextState = EvaluateFrame(state, frame);
         if (nextState == null)
@@ -43,6 +44,7 @@ internal sealed class Http3RequestStreamDecodeStateValidator : ChannelInboundHan
             FrameTypeUnexpected(ctx, msg);
             return;
         }
+
         state = nextState.Value;
         base.ChannelRead(ctx, msg);
     }

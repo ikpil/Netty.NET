@@ -60,12 +60,14 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override CompositeByteBuf Retain(int increment = 1)
     {
         Leak.Record();
+
         return base.Retain(increment);
     }
 
     public override bool Release(int decrement = 1)
     {
         Leak.Record();
+
         return base.Release(decrement);
     }
 
@@ -80,6 +82,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
         {
             Leak.Record(hint);
         }
+
         return this;
     }
 
@@ -113,30 +116,35 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override int EnsureWritable(int minimumWritableBytes, bool force)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.EnsureWritable(minimumWritableBytes, force);
     }
 
     public override Memory<byte> AsMemory(int index, int length)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.AsMemory(index, length);
     }
 
     public override Span<byte> AsSpan(int index, int length)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.AsSpan(index, length);
     }
 
     public override byte GetByte(int index)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetByte(index);
     }
 
     public override bool GetBoolean(int index)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetBoolean(index);
     }
 
@@ -157,6 +165,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override short GetShort(int index)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetShort(index);
     }
 
@@ -170,6 +179,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override short GetShortLE(int index)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetShortLE(index);
     }
 
@@ -183,6 +193,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override int GetInt(int index)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetInt(index);
     }
 
@@ -196,6 +207,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override int GetIntLE(int index)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetIntLE(index);
     }
 
@@ -209,6 +221,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override long GetLong(int index)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetLong(index);
     }
 
@@ -222,6 +235,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override long GetLongLE(int index)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetLongLE(index);
     }
 
@@ -235,24 +249,28 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override int GetUnsignedMedium(int index)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetUnsignedMedium(index);
     }
 
     public override int GetUnsignedMediumLE(int index)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetUnsignedMediumLE(index);
     }
 
     public override int GetMedium(int index)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetMedium(index);
     }
 
     public override int GetMediumLE(int index)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetMediumLE(index);
     }
 
@@ -273,30 +291,35 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override ushort GetUnsignedShort(int index)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetUnsignedShort(index);
     }
 
     public override ushort GetUnsignedShortLE(int index)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetUnsignedShortLE(index);
     }
 
     public override uint GetUnsignedInt(int index)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetUnsignedInt(index);
     }
 
     public override uint GetUnsignedIntLE(int index)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetUnsignedIntLE(index);
     }
 
     public override char GetChar(int index)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetChar(index);
     }
 
@@ -310,24 +333,28 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override float GetFloat(int index)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetFloat(index);
     }
 
     public override float GetFloatLE(int index)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetFloatLE(index);
     }
 
     public override double GetDouble(int index)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetDouble(index);
     }
 
     public override double GetDoubleLE(int index)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetDoubleLE(index);
     }
 
@@ -362,6 +389,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override byte ReadByte()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadByte();
     }
 
@@ -375,6 +403,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override bool ReadBoolean()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadBoolean();
     }
 
@@ -388,6 +417,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override short ReadShort()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadShort();
     }
 
@@ -401,6 +431,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override short ReadShortLE()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadShortLE();
     }
 
@@ -414,6 +445,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override int ReadMedium()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadMedium();
     }
 
@@ -427,6 +459,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override int ReadMediumLE()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadMediumLE();
     }
 
@@ -440,6 +473,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override int ReadInt()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadInt();
     }
 
@@ -453,6 +487,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override int ReadIntLE()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadIntLE();
     }
 
@@ -466,6 +501,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override long ReadLong()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadLong();
     }
 
@@ -479,6 +515,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override long ReadLongLE()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadLongLE();
     }
 
@@ -492,6 +529,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override float ReadFloat()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadFloat();
     }
 
@@ -505,6 +543,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override float ReadFloatLE()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadFloatLE();
     }
 
@@ -518,6 +557,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override double ReadDouble()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadDouble();
     }
 
@@ -531,6 +571,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override double ReadDoubleLE()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadDoubleLE();
     }
 
@@ -544,42 +585,49 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override ushort ReadUnsignedShort()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadUnsignedShort();
     }
 
     public override ushort ReadUnsignedShortLE()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadUnsignedShortLE();
     }
 
     public override uint ReadUnsignedInt()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadUnsignedInt();
     }
 
     public override uint ReadUnsignedIntLE()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadUnsignedIntLE();
     }
 
     public override int ReadUnsignedMedium()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadUnsignedMedium();
     }
 
     public override int ReadUnsignedMediumLE()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadUnsignedMediumLE();
     }
 
     public override char ReadChar()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadChar();
     }
 
@@ -676,72 +724,84 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override ByteBuf Copy()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.Copy();
     }
 
     public override ByteBuf Copy(int index, int length)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.Copy(index, length);
     }
 
     public override ByteBuf ReadBytes(int length)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadBytes(length);
     }
 
     public override ByteBuf Slice()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return base.Slice();
     }
 
     public override ByteBuf Slice(int index, int length)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return base.Slice(index, length);
     }
 
     public override ByteBuf RetainedSlice()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return base.RetainedSlice();
     }
 
     public override ByteBuf RetainedSlice(int index, int length)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return base.RetainedSlice(index, length);
     }
 
     public override ByteBuf Duplicate()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return base.Duplicate();
     }
 
     public override ByteBuf RetainedDuplicate()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return base.RetainedDuplicate();
     }
 
     public override ByteBuf ReadSlice(int length)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return base.ReadSlice(length);
     }
 
     public override ByteBuf ReadRetainedSlice(int length)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return base.ReadRetainedSlice(length);
     }
 
     public override int GetBytes(int index, Socket destination, int length)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetBytes(index, destination, length);
     }
 
@@ -749,12 +809,14 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
         CancellationToken cancellationToken = default)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetBytesAsync(index, destination, length, cancellationToken);
     }
 
     public override int SetBytes(int index, Socket source, int length)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.SetBytes(index, source, length);
     }
 
@@ -762,12 +824,14 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
         CancellationToken cancellationToken = default)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.SetBytesAsync(index, source, length, cancellationToken);
     }
 
     public override int ReadBytes(Socket destination, int length)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadBytes(destination, length);
     }
 
@@ -775,12 +839,14 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
         CancellationToken cancellationToken = default)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadBytesAsync(destination, length, cancellationToken);
     }
 
     public override int WriteBytes(Socket source, int length)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.WriteBytes(source, length);
     }
 
@@ -788,30 +854,35 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
         CancellationToken cancellationToken = default)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.WriteBytesAsync(source, length, cancellationToken);
     }
 
     public override int GetBytes(int index, SafeFileHandle destination, long position, int length)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetBytes(index, destination, position, length);
     }
 
     public override int SetBytes(int index, SafeFileHandle source, long position, int length)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.SetBytes(index, source, position, length);
     }
 
     public override int ReadBytes(SafeFileHandle destination, long position, int length)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadBytes(destination, position, length);
     }
 
     public override int WriteBytes(SafeFileHandle source, long position, int length)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.WriteBytes(source, position, length);
     }
 
@@ -819,6 +890,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
         CancellationToken cancellationToken = default)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetBytesAsync(index, destination, position, length, cancellationToken);
     }
 
@@ -826,6 +898,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
         CancellationToken cancellationToken = default)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.SetBytesAsync(index, source, position, length, cancellationToken);
     }
 
@@ -833,6 +906,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
         CancellationToken cancellationToken = default)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadBytesAsync(destination, position, length, cancellationToken);
     }
 
@@ -840,30 +914,35 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
         CancellationToken cancellationToken = default)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.WriteBytesAsync(source, position, length, cancellationToken);
     }
 
     public override ByteBuf AsReadOnly()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return base.AsReadOnly();
     }
 
     public override ReadOnlyMemory<byte> AsReadOnlyMemory(int index, int length)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.AsReadOnlyMemory(index, length);
     }
 
     public override ReadOnlySpan<byte> AsReadOnlySpan(int index, int length)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.AsReadOnlySpan(index, length);
     }
 
     public override ReadOnlySequence<byte> AsReadOnlySequence(int index, int length)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.AsReadOnlySequence(index, length);
     }
 
@@ -877,6 +956,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override int SetBytes(int index, Stream source, int length)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.SetBytes(index, source, length);
     }
 
@@ -890,6 +970,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override int WriteBytes(Stream source, int length)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.WriteBytes(source, length);
     }
 
@@ -897,6 +978,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
         CancellationToken cancellationToken = default)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetBytesAsync(index, destination, length, cancellationToken);
     }
 
@@ -904,6 +986,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
         CancellationToken cancellationToken = default)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.SetBytesAsync(index, source, length, cancellationToken);
     }
 
@@ -911,6 +994,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
         CancellationToken cancellationToken = default)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadBytesAsync(destination, length, cancellationToken);
     }
 
@@ -918,96 +1002,112 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
         CancellationToken cancellationToken = default)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.WriteBytesAsync(source, length, cancellationToken);
     }
 
     public override string ToString(Encoding charset)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ToString(charset);
     }
 
     public override string ToString(int index, int length, Encoding charset)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ToString(index, length, charset);
     }
 
     public override ICharSequence GetCharSequence(int index, int length, Encoding charset)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetCharSequence(index, length, charset);
     }
 
     public override ICharSequence ReadCharSequence(int length, Encoding charset)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadCharSequence(length, charset);
     }
 
     public override string ReadString(int length, Encoding charset)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ReadString(length, charset);
     }
 
     public override int SetCharSequence(int index, ReadOnlySpan<char> sequence, Encoding charset)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.SetCharSequence(index, sequence, charset);
     }
 
     public override int WriteCharSequence(ReadOnlySpan<char> sequence, Encoding charset)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.WriteCharSequence(sequence, charset);
     }
 
     public override int IndexOf(int fromIndex, int toIndex, byte value)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.IndexOf(fromIndex, toIndex, value);
     }
 
     public override int BytesBefore(byte value)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.BytesBefore(value);
     }
 
     public override int BytesBefore(int length, byte value)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.BytesBefore(length, value);
     }
 
     public override int BytesBefore(int index, int length, byte value)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.BytesBefore(index, length, value);
     }
 
     public override int ForEachByte(Func<byte, bool> processor)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ForEachByte(processor);
     }
 
     public override int ForEachByte(int index, int length, Func<byte, bool> processor)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ForEachByte(index, length, processor);
     }
 
     public override int ForEachByteDesc(Func<byte, bool> processor)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ForEachByteDesc(processor);
     }
 
     public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.ForEachByteDesc(index, length, processor);
     }
 
@@ -1099,6 +1199,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override IReadOnlyList<ByteBuf> Decompose(int offset, int length)
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.Decompose(offset, length);
     }
 
@@ -1168,6 +1269,7 @@ internal sealed class AdvancedLeakAwareCompositeByteBuf : SimpleLeakAwareComposi
     public override IEnumerator<ByteBuf> GetEnumerator()
     {
         RecordLeakNonRefCountingOperation(Leak);
+
         return Wrapped.GetEnumerator();
     }
 }

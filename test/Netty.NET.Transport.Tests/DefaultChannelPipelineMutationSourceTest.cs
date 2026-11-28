@@ -172,16 +172,19 @@ public class DefaultChannelPipelineMutationSourceTest
         var handlers1 = NewHandlers(handlerNum);
         var handlers2 = NewHandlers(handlerNum);
         const string prefixX = "x";
+
         for (int i = 0; i < handlerNum; i++)
             if (i % 2 == 0)
                 pipeline.AddFirst(prefixX + i, handlers1[i]);
             else
                 pipeline.AddLast(prefixX + i, handlers1[i]);
+
         for (int i = 0; i < handlerNum; i++)
             if (i % 2 != 0)
                 pipeline.AddBefore(prefixX + i, i.ToString(), handlers2[i]);
             else
                 pipeline.AddAfter(prefixX + i, i.ToString(), handlers2[i]);
+
         VerifyContextNumber(pipeline, handlerNum * 2);
     }
 
@@ -195,15 +198,19 @@ public class DefaultChannelPipelineMutationSourceTest
         pipeline.AddBefore("1", "0", NewHandler()).AddAfter("10", "11", NewHandler());
         var context = (AbstractChannelHandlerContext)pipeline.FirstContext;
         Assert.NotNull(context);
+
         while (context != null)
         {
             int i = ToInt(context.Name), j = Next(context);
+
             if (j != -1)
                 Assert.True(i < j);
             else
                 Assert.Null(context.Next.Next);
+
             context = context.Next;
         }
+
         VerifyContextNumber(pipeline, 8);
     }
 
@@ -248,6 +255,7 @@ public class DefaultChannelPipelineMutationSourceTest
     public async Task TestPinExecutor()
     {
         var group = new MultiThreadIoEventLoopGroup(LocalIoHandler.NewFactory());
+
         try
         {
             var pipeline = new LocalChannel().Pipeline;
@@ -273,6 +281,7 @@ public class DefaultChannelPipelineMutationSourceTest
     public async Task TestNotPinExecutor()
     {
         var group = new MultiThreadIoEventLoopGroup(2, LocalIoHandler.NewFactory());
+
         try
         {
             var pipeline = new LocalChannel().Pipeline;
@@ -298,6 +307,7 @@ public class DefaultChannelPipelineMutationSourceTest
         var handlers = new List<LifeCycleAwareTestHandler>();
         const int COUNT = 20;
         var adds = new List<Task>();
+
         for (int i = 0; i < COUNT; i++)
         {
             var handler = new LifeCycleAwareTestHandler("handler-" + i);
@@ -311,10 +321,12 @@ public class DefaultChannelPipelineMutationSourceTest
                 handlers.Add(handler);
             }));
         }
+
         await Task.WhenAll(adds).WaitAsync(TestContext.Current.CancellationToken);
         // Change the order of remove operations over all handlers in the pipeline.
         Random.Shared.Shuffle(System.Runtime.InteropServices.CollectionsMarshal.AsSpan(handlers));
         var removes = new List<Task>();
+
         foreach (var handler in handlers)
         {
             Assert.Same(handler, p.Remove(handler.Name));
@@ -324,6 +336,7 @@ public class DefaultChannelPipelineMutationSourceTest
                 handler.Validate(true, true);
             }));
         }
+
         await Task.WhenAll(removes);
     }
 
@@ -423,6 +436,7 @@ public class DefaultChannelPipelineMutationSourceTest
     {
         var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         var channel = new LocalChannel();
+
         try
         {
             var loop = group.Next();
@@ -446,6 +460,7 @@ public class DefaultChannelPipelineMutationSourceTest
     {
         var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         var channel = new LocalChannel();
+
         try
         {
             var loop = group.Next();
@@ -474,6 +489,7 @@ public class DefaultChannelPipelineMutationSourceTest
         var pipeline = new LocalChannel().Pipeline;
         pipeline.AddFirst(handler);
         pipeline.Remove(handler);
+
         if (error != null)
             System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(error).Throw();
     }
@@ -486,6 +502,7 @@ public class DefaultChannelPipelineMutationSourceTest
         var pipeline = new LocalChannel().Pipeline;
         pipeline.AddFirst(handler);
         pipeline.Replace(handler, null, new ErrorChannelHandler(value => error = value));
+
         if (error != null)
             System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(error).Throw();
     }
@@ -495,6 +512,7 @@ public class DefaultChannelPipelineMutationSourceTest
     {
         var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         var channel = new LocalChannel();
+
         try
         {
             var handler = new CallbackCheckHandler();
@@ -520,6 +538,7 @@ public class DefaultChannelPipelineMutationSourceTest
     {
         var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         var channel = new LocalChannel();
+
         try
         {
             var handler = new CallbackCheckHandler();
@@ -555,6 +574,7 @@ public class DefaultChannelPipelineMutationSourceTest
         var group1 = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         var group2 = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         var channel = new LocalChannel();
+
         try
         {
             var added = Channel.CreateUnbounded<CheckOrderHandler>();
@@ -594,6 +614,7 @@ public class DefaultChannelPipelineMutationSourceTest
         var channel1 = new LocalChannel();
         var channel2 = new LocalChannel();
         var defaultGroup = new MultiThreadIoEventLoopGroup(2, LocalIoHandler.NewFactory());
+
         try
         {
             var loop1 = defaultGroup.Next();
@@ -601,11 +622,13 @@ public class DefaultChannelPipelineMutationSourceTest
             await channel1.RegisterAsync(loop1, TestContext.Current.CancellationToken);
             await channel2.RegisterAsync(loop2);
             var tasks = new List<Task>();
+
             for (int i = 0; i < 10; i++)
             {
                 tasks.Add(loop1.SubmitAsync(() => channel2.Pipeline.AddLast(new ChannelInboundHandlerAdapter())));
                 tasks.Add(loop2.SubmitAsync(() => channel1.Pipeline.AddLast(new ChannelInboundHandlerAdapter())));
             }
+
             await Task.WhenAll(tasks).WaitAsync(TestContext.Current.CancellationToken);
         }
         finally
@@ -643,6 +666,7 @@ public class DefaultChannelPipelineMutationSourceTest
     private static IChannelHandler[] NewHandlers(int number)
     {
         Assert.True(number > 0);
+
         return Enumerable.Range(0, number).Select(_ => (IChannelHandler)NewHandler()).ToArray();
     }
 
@@ -679,6 +703,7 @@ public class DefaultChannelPipelineMutationSourceTest
 
                 ctx.FireChannelReadComplete();
             }
+
             if (OutboundBuffer.Count != 0)
             {
                 foreach (var value in OutboundBuffer)
@@ -836,6 +861,7 @@ public class DefaultChannelPipelineMutationSourceTest
         internal static async Task<Connection> SetUp(params IChannelHandler[] handlers)
         {
             var connection = new Connection();
+
             try
             {
                 var peer = new TaskCompletionSource<IChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -858,10 +884,13 @@ public class DefaultChannelPipelineMutationSourceTest
         {
             if (Peer != null)
                 await Peer.CloseAsync();
+
             if (Self != null)
                 await Self.CloseAsync();
+
             if (_server != null)
                 await _server.CloseAsync();
+
             await _group.StopAsync();
         }
     }

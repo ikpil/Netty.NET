@@ -105,6 +105,7 @@ public sealed class AdaptiveByteBufAllocator : AbstractByteBufAllocator, IByteBu
     {
         using var events = BufferAllocatorEventSource.Log.BeginOperation();
         ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed), this);
+
         return ToLeakAwareBuffer(HeapPool.Allocate(initialCapacity, maxCapacity));
     }
 
@@ -112,18 +113,21 @@ public sealed class AdaptiveByteBufAllocator : AbstractByteBufAllocator, IByteBu
     {
         using var events = BufferAllocatorEventSource.Log.BeginOperation();
         ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed), this);
+
         return ToLeakAwareBuffer(DirectPool.Allocate(initialCapacity, maxCapacity));
     }
 
     public void Dispose()
     {
         using var events = BufferAllocatorEventSource.Log.BeginOperation();
+
         lock (_disposeLock)
         {
             if (_disposed)
             {
                 return;
             }
+
             Volatile.Write(ref _disposed, true);
             HeapPool.Dispose();
             DirectPool.Dispose();

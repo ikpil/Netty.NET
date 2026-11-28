@@ -113,15 +113,18 @@ public abstract class ZlibTest
         ByteBuf deflatedData = Unpooled.WrappedBuffer(Gzip(bytes));
 
         EmbeddedChannel chDecoderGZip = new EmbeddedChannel(CreateDecoder(ZlibWrapper.GZIP));
+
         try
         {
             while (deflatedData.IsReadable())
             {
                 chDecoderGZip.WriteInbound(deflatedData.ReadRetainedSlice(1));
             }
+
             deflatedData.Release();
             Assert.True(chDecoderGZip.Finish());
             ByteBuf buf = Unpooled.Buffer();
+
             for (;;)
             {
                 ByteBuf b = chDecoderGZip.ReadInbound<ByteBuf>();
@@ -129,9 +132,11 @@ public abstract class ZlibTest
                 {
                     break;
                 }
+
                 buf.WriteBytes(b);
                 b.Release();
             }
+
             Assert.Equal(buf, data);
             Assert.Null(chDecoderGZip.ReadInbound());
             data.Release();
@@ -167,15 +172,18 @@ public abstract class ZlibTest
         );
 
         EmbeddedChannel chDecoderGZip = new EmbeddedChannel(CreateDecoder(ZlibWrapper.GZIP));
+
         try
         {
             while (deflatedData.IsReadable())
             {
                 chDecoderGZip.WriteInbound(deflatedData.ReadRetainedSlice(1));
             }
+
             deflatedData.Release();
             Assert.True(chDecoderGZip.Finish());
             ByteBuf buf = Unpooled.Buffer();
+
             for (;;)
             {
                 ByteBuf b = chDecoderGZip.ReadInbound<ByteBuf>();
@@ -183,9 +191,11 @@ public abstract class ZlibTest
                 {
                     break;
                 }
+
                 buf.WriteBytes(b);
                 b.Release();
             }
+
             Assert.Equal(buf, data);
             Assert.Null(chDecoderGZip.ReadInbound());
             data.Release();
@@ -215,11 +225,13 @@ public abstract class ZlibTest
                 {
                     break;
                 }
+
                 chDecoderZlib.WriteInbound(deflatedData);
             }
 
             byte[] decompressed = new byte[data.ReadableBytes];
             int offset = 0;
+
             for (;;)
             {
                 ByteBuf buf = chDecoderZlib.ReadInbound<ByteBuf>();
@@ -227,6 +239,7 @@ public abstract class ZlibTest
                 {
                     break;
                 }
+
                 int length = buf.ReadableBytes;
                 buf.ReadBytes(decompressed.AsSpan(offset, length));
                 offset += length;
@@ -236,11 +249,13 @@ public abstract class ZlibTest
                     break;
                 }
             }
+
             Assert.Equal(data, Unpooled.WrappedBuffer(decompressed));
             Assert.Null(chDecoderZlib.ReadInbound());
 
             // Closing an encoder channel will generate a footer.
             Assert.True(chEncoder.Finish());
+
             for (;;)
             {
                 object msg = chEncoder.ReadOutbound();
@@ -248,8 +263,10 @@ public abstract class ZlibTest
                 {
                     break;
                 }
+
                 ReferenceCountUtil.Release(msg);
             }
+
             // But, the footer will be decoded into nothing. It's only for validation.
             Assert.False(chDecoderZlib.Finish());
 
@@ -279,11 +296,13 @@ public abstract class ZlibTest
                 {
                     break;
                 }
+
                 chDecoderZlib.WriteInbound(deflatedData);
             }
 
             // Decoder should not generate anything at all.
             bool decoded = false;
+
             for (;;)
             {
                 ByteBuf buf = chDecoderZlib.ReadInbound<ByteBuf>();
@@ -295,6 +314,7 @@ public abstract class ZlibTest
                 buf.Release();
                 decoded = true;
             }
+
             Assert.False(decoded, "should decode nothing");
 
             Assert.False(chDecoderZlib.Finish());
@@ -317,8 +337,10 @@ public abstract class ZlibTest
                 {
                     break;
                 }
+
                 ReferenceCountUtil.Release(msg);
             }
+
             for (;;)
             {
                 object msg = ch.ReadOutbound();
@@ -326,6 +348,7 @@ public abstract class ZlibTest
                 {
                     break;
                 }
+
                 ReferenceCountUtil.Release(msg);
             }
         }
@@ -347,9 +370,11 @@ public abstract class ZlibTest
             {
                 break;
             }
+
             decoded.WriteBytes(buf);
             buf.Release();
         }
+
         Assert.Equal(Unpooled.CopiedBuffer(data), decoded);
         decoded.Release();
     }
@@ -408,13 +433,16 @@ public abstract class ZlibTest
     private void TestGZIPCompressOnly0(byte[] data)
     {
         EmbeddedChannel chEncoder = new EmbeddedChannel(CreateEncoder(ZlibWrapper.GZIP));
+
         if (data != null)
         {
             chEncoder.WriteOutbound(Unpooled.WrappedBuffer(data));
         }
+
         Assert.True(chEncoder.Finish());
 
         ByteBuf encoded = Unpooled.Buffer();
+
         for (;;)
         {
             ByteBuf buf = chEncoder.ReadOutbound<ByteBuf>();
@@ -422,14 +450,17 @@ public abstract class ZlibTest
             {
                 break;
             }
+
             encoded.WriteBytes(buf);
             buf.Release();
         }
 
         ByteBuf decoded = Unpooled.Buffer();
+
         using (GZipStream stream = new GZipStream(new ByteBufInputStream(encoded, true), CompressionMode.Decompress))
         {
             byte[] buf = new byte[8192];
+
             for (;;)
             {
                 int readBytes = stream.Read(buf);
@@ -437,6 +468,7 @@ public abstract class ZlibTest
                 {
                     break;
                 }
+
                 decoded.WriteBytes(buf.AsSpan(0, readBytes));
             }
         }
@@ -559,24 +591,29 @@ public abstract class ZlibTest
         EmbeddedChannel channel = new EmbeddedChannel(CreateEncoder(wrapper));
         channel.WriteOutbound(Unpooled.WrappedBuffer(data));
         channel.Finish();
+
         return ReadAll(channel, false);
     }
 
     private static byte[] DecodeInChunks(ZlibDecoder decoder, byte[] compressed, int chunkSize)
     {
         EmbeddedChannel channel = new EmbeddedChannel(decoder);
+
         for (int offset = 0; offset < compressed.Length; offset += chunkSize)
         {
             int length = Math.Min(chunkSize, compressed.Length - offset);
             channel.WriteInbound(Unpooled.WrappedBuffer(compressed, offset, length));
         }
+
         channel.Finish();
+
         return ReadAll(channel, true);
     }
 
     private static byte[] ReadAll(EmbeddedChannel channel, bool inbound)
     {
         ByteBuf all = Unpooled.Buffer();
+
         for (;;)
         {
             ByteBuf buf = inbound ? channel.ReadInbound<ByteBuf>() : channel.ReadOutbound<ByteBuf>();
@@ -584,9 +621,11 @@ public abstract class ZlibTest
             {
                 break;
             }
+
             all.WriteBytes(buf);
             buf.Release();
         }
+
         byte[] bytes = new byte[all.ReadableBytes];
         all.ReadBytes(bytes.AsSpan());
         all.Release();
@@ -599,16 +638,19 @@ public abstract class ZlibTest
         GZipStream stream = new GZipStream(@out, CompressionMode.Compress);
         stream.Write(bytes);
         stream.Dispose();
+
         return @out.ToArray();
     }
 
     private static byte[] Deflate(byte[] bytes)
     {
         MemoryStream @out = new MemoryStream();
+
         using (Stream stream = new ZLibStream(@out, CompressionMode.Compress))
         {
             stream.Write(bytes);
         }
+
         return @out.ToArray();
     }
 

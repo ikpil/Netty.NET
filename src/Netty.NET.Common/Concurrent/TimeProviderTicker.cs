@@ -18,6 +18,7 @@ internal sealed class TimeProviderTicker : Ticker
         frequency = provider.TimestampFrequency;
         if (frequency <= 0)
             throw new ArgumentOutOfRangeException(nameof(timeProvider), "TimestampFrequency must be positive.");
+
         startTimestamp = provider.GetTimestamp();
         initialNanos = SystemTimer.ScaleTimestamp(startTimestamp, SystemTimer.NanosecondsPerSecond, frequency);
         nanosMultiplier = SystemTimer.NanosecondsPerSecond % frequency == 0 ?

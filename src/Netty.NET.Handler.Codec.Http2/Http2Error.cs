@@ -56,10 +56,12 @@ public sealed class Http2Error
     {
         Http2Error[] errors = VALUES;
         Http2Error[] map = new Http2Error[errors.Length];
+
         foreach (Http2Error error in errors)
         {
             map[(int) error.Code()] = error;
         }
+
         INT_TO_ENUM_MAP = map;
     }
 

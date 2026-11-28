@@ -74,6 +74,7 @@ public class OcspServerCertificateValidator : ByteToMessageDecoder, IChannelOutb
             // Ignore negative and extremely large values.
             configuredToleranceSeconds = defaultToleranceSeconds;
         }
+
         return (long) TimeSpan.FromSeconds(configuredToleranceSeconds).TotalMilliseconds;
     }
 
@@ -184,6 +185,7 @@ public class OcspServerCertificateValidator : ByteToMessageDecoder, IChannelOutb
             ReferenceCountUtil.Release(msg);
             return;
         }
+
         base.ChannelRead(ctx, msg);
     }
 
@@ -211,6 +213,7 @@ public class OcspServerCertificateValidator : ByteToMessageDecoder, IChannelOutb
                     ocspQueryInProgress = false;
                     // Assume revoked as default.
                     OcspResponse.Status status = OcspResponse.Status.REVOKED;
+
                     try
                     {
                         // If Future is success then we have successfully received OCSP response
@@ -230,10 +233,12 @@ public class OcspServerCertificateValidator : ByteToMessageDecoder, IChannelOutb
                                 nowLower > (nextUpdate == null ? thisUpdate : nextUpdate.Value))
                             {
                                 ctx.FireExceptionCaught(new InvalidOperationException("OCSP Response is out-of-date"));
+
                                 if (closeAndThrowIfNotValid)
                                 {
                                     _ = ctx.CloseAsync();
                                 }
+
                                 return;
                             }
 
@@ -267,6 +272,7 @@ public class OcspServerCertificateValidator : ByteToMessageDecoder, IChannelOutb
                         else
                         {
                             ctx.FireExceptionCaught(Cause(future));
+
                             if (closeAndThrowIfNotValid)
                             {
                                 _ = ctx.CloseAsync();
@@ -276,6 +282,7 @@ public class OcspServerCertificateValidator : ByteToMessageDecoder, IChannelOutb
                     catch (Exception th)
                     {
                         ctx.FireExceptionCaught(th);
+
                         if (closeAndThrowIfNotValid)
                         {
                             _ = ctx.CloseAsync();
@@ -300,6 +307,7 @@ public class OcspServerCertificateValidator : ByteToMessageDecoder, IChannelOutb
                             // This will also forward all the buffered bytes to the next handler.
                             ctx.Pipeline.Remove(this);
                         }
+
                         if (readPending)
                         {
                             readPending = false;
@@ -327,6 +335,7 @@ public class OcspServerCertificateValidator : ByteToMessageDecoder, IChannelOutb
         {
             return future.Exception.InnerExceptions.Count == 1 ? future.Exception.InnerException : future.Exception;
         }
+
         return future.IsCanceled ? new TaskCanceledException(future) : null;
     }
 

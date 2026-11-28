@@ -51,6 +51,7 @@ public class PooledBufferEventTest
         using var allocator = NewAllocator(native);
         using var listener = new Listener();
         ByteBuf buffer = Allocate(allocator, direct, 128, int.MaxValue);
+
         try
         {
             Record allocation = Assert.Single(listener.Events);
@@ -67,6 +68,7 @@ public class PooledBufferEventTest
         {
             buffer.Release();
         }
+
         Record release = listener.Events[1];
         Check(release, 2, 128, 128, int.MaxValue, direct);
         Assert.True(release.Number("address") == listener.Events[0].Number("address"));
@@ -102,6 +104,7 @@ public class PooledBufferEventTest
         using var allocator = NewAllocator(native);
         using var listener = new Listener();
         ByteBuf buffer = Allocate(allocator, direct, 17);
+
         try
         {
             buffer.SetIndex(2, 15).MarkReaderIndex().MarkWriterIndex();
@@ -122,6 +125,7 @@ public class PooledBufferEventTest
         {
             buffer.Release();
         }
+
         Check(listener.Events[3], 2, 16, 16, 40000, direct);
         Assert.True(listener.Events[2].Number("address") == listener.Events[3].Number("address"));
         allocator.Dispose();
@@ -207,6 +211,7 @@ public class PooledBufferEventTest
         using var allocator = NewAllocator(native);
         using var listener = new Listener();
         ByteBuf buffer = Allocate(allocator, true, 16);
+
         try
         {
             buffer.WriteInt(0x12345678);
@@ -225,6 +230,7 @@ public class PooledBufferEventTest
         {
             buffer.Release();
         }
+
         allocator.Dispose();
         Assert.Equal(0, native.ReservedBytes);
     }
@@ -253,6 +259,7 @@ public class PooledBufferEventTest
         var native = new NativeMemoryAllocator();
         using var allocator = NewAllocator(native);
         Allocate(allocator, true, 16).Release();
+
         using (var listener = new Listener())
         {
             Allocate(allocator, true, 16).Release();
@@ -264,6 +271,7 @@ public class PooledBufferEventTest
             Allocate(allocator, true, 16).Release();
             Assert.Equal(4, listener.Events.Length);
         }
+
         Assert.False(BufferAllocatorEventSource.Log.IsEnabled());
         allocator.Dispose();
         Assert.Equal(0, native.ReservedBytes);
@@ -281,6 +289,7 @@ public class PooledBufferEventTest
         listener.Callback = _ =>
         {
             held |= Monitor.IsEntered(sync);
+
             if (buffer != null)
             {
                 ByteBuf root = AllocatorLeakDetectionTest.UnwrapLeak(buffer);
@@ -305,6 +314,7 @@ public class PooledBufferEventTest
         using var listener = new Listener();
         ByteBuf first = Allocate(allocator, true, 128), second = Allocate(allocator, true, 128);
         ByteBuf view = second.RetainedSlice(3, 8).Duplicate();
+
         try
         {
             Assert.Equal((long)ManagedMemoryTest.Address(second.AsReadOnlyMemory(0, 128)), listener.Events[1].Number("address"));
@@ -319,6 +329,7 @@ public class PooledBufferEventTest
         {
             first.Release();
         }
+
         Assert.Equal(new[] { 1, 1, 2, 2 }, listener.Events.Select(e => e.Id));
         allocator.Dispose();
         Assert.Equal(0, native.ReservedBytes);
@@ -332,6 +343,7 @@ public class PooledBufferEventTest
         using var listener = new Listener();
         ByteBuf buffer = Allocate(allocator, true, 16);
         var lease = AllocatorLeakDetectionTest.UnwrapLeak(buffer).AcquireReadLease();
+
         try
         {
             buffer.Release();
@@ -343,6 +355,7 @@ public class PooledBufferEventTest
         {
             lease.Dispose();
         }
+
         Assert.Equal(0, native.ReservedBytes);
         Assert.Equal(2, listener.Events.Length);
     }
@@ -352,6 +365,7 @@ public class PooledBufferEventTest
     {
         using var mainListener = new Listener();
         var contexts = new[] { new AssemblyLoadContext("buffer tracing one", true), new AssemblyLoadContext("buffer tracing two", true) };
+
         try
         {
             var sources = new List<EventSource> { BufferAllocatorEventSource.Log };
@@ -366,11 +380,13 @@ public class PooledBufferEventTest
                 Type type = assembly.GetType(typeof(PooledByteBufAllocator).FullName);
                 var allocator = (IDisposable)Activator.CreateInstance(type,
                     new object[] { false, true, true, 8192, 1, 0, 0, null, 0, null, 32768, 8192, default(TimeSpan) });
+
                 using (allocator)
                 {
                     object buffer = type.GetMethod("HeapBuffer", new[] { typeof(int), typeof(int) }).Invoke(allocator, new object[] { 17, 23 });
                     buffer.GetType().GetMethod("Release").Invoke(buffer, new object[] { 1 });
                 }
+
                 Assert.Equal(new[] { 1, 2 }, listener.Events.Select(e => e.Id));
             }
 
@@ -446,6 +462,7 @@ public class PooledBufferEventTest
         {
             if (!ReferenceEquals(args.EventSource, _source))
                 return;
+
             var fields = args.PayloadNames.Zip(args.Payload).ToDictionary(x => x.First, x => x.Second);
             var record = new Record(args.EventId, args.EventName, fields);
             _events.Enqueue(record);

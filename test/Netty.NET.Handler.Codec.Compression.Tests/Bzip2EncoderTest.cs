@@ -45,11 +45,13 @@ public class Bzip2EncoderTest : AbstractEncoderTest
     {
 
         byte[] decompressed = new byte[originalLength];
+
         using (Stream @is = new ByteBufInputStream(compressed, true))
         using (BZip2InputStream bzip2Is = new BZip2InputStream(@is))
         {
 
             int remaining = originalLength;
+
             while (remaining > 0)
             {
                 int read = bzip2Is.Read(decompressed, originalLength - remaining, remaining);
@@ -62,6 +64,7 @@ public class Bzip2EncoderTest : AbstractEncoderTest
                     break;
                 }
             }
+
             Assert.Equal(-1, bzip2Is.ReadByte());
         }
 

@@ -121,6 +121,7 @@ public class ChunkedStream : IChunkedInput<ByteBuf>
 
         int availableBytes = Available();
         int chunkSize;
+
         if (availableBytes <= 0)
         {
             chunkSize = this.chunkSize;
@@ -132,6 +133,7 @@ public class ChunkedStream : IChunkedInput<ByteBuf>
 
         bool release = true;
         ByteBuf buffer = allocator.Buffer(chunkSize);
+
         try
         {
             // transfer to buffer
@@ -140,6 +142,7 @@ public class ChunkedStream : IChunkedInput<ByteBuf>
             {
                 return null;
             }
+
             offset += written;
             release = false;
             return buffer;
@@ -173,10 +176,12 @@ public class ChunkedStream : IChunkedInput<ByteBuf>
     private int Available()
     {
         long available = pushback >= 0 ? 1 : 0;
+
         if (@in.CanSeek)
         {
             available += Math.Max(0L, @in.Length - @in.Position);
         }
+
         return (int) Math.Min(available, int.MaxValue);
     }
 
@@ -188,6 +193,7 @@ public class ChunkedStream : IChunkedInput<ByteBuf>
     private int WriteBytes(ByteBuf buffer, int length)
     {
         int avail = 0;
+
         if (pushback >= 0)
         {
             buffer.WriteByte(pushback);
@@ -195,6 +201,7 @@ public class ChunkedStream : IChunkedInput<ByteBuf>
             avail = 1;
             length--;
         }
+
         if (length > 0)
         {
             int read = buffer.WriteBytes(@in, length);
@@ -202,8 +209,10 @@ public class ChunkedStream : IChunkedInput<ByteBuf>
             {
                 return avail == 0 ? -1 : avail;
             }
+
             return avail + read;
         }
+
         return avail;
     }
 }

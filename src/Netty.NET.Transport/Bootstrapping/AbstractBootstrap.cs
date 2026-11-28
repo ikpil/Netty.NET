@@ -73,7 +73,9 @@ public abstract class AbstractBootstrap
         {
             throw new ArgumentException("hostname can't be null");
         }
+
         IPAddress addr;
+
         try
         {
             addr = new DefaultNameResolver(ImmediateEventExecutor.INSTANCE).ResolveAsync(hostname).GetAwaiter().GetResult();
@@ -87,6 +89,7 @@ public abstract class AbstractBootstrap
         {
             return new DnsEndPoint(hostname, port);
         }
+
         return new IPEndPoint(addr, port);
     }
 
@@ -105,6 +108,7 @@ public abstract class AbstractBootstrap
             Func<IChannel, Task> register, out IChannel channel)
     {
         channel = null;
+
         try
         {
             channel = channelFactory();
@@ -116,8 +120,10 @@ public abstract class AbstractBootstrap
             {
                 // channel can be null if newChannel crashed (eg SocketException("too many open files"))
                 CloseForcibly(channel);
+
                 return Task.FromException(t);
             }
+
             return Task.FromException(t);
         }
 
@@ -242,6 +248,7 @@ public abstract class AbstractBootstrap
                 promise.TrySetResult(channel);
                 return;
             }
+
             if (closeOnFailure)
             {
                 FailAfterClose(channel, promise, future);
@@ -258,6 +265,7 @@ public abstract class AbstractBootstrap
     internal static void FailAfterClose(IChannel channel, TaskCompletionSource<IChannel> promise, Task failed)
     {
         Task close;
+
         try
         {
             close = channel.CloseAsync();
@@ -266,6 +274,7 @@ public abstract class AbstractBootstrap
         {
             close = Task.CompletedTask;
         }
+
         _ = close.ContinueWith(_ => SetFailure(promise, failed), CancellationToken.None,
             TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
     }

@@ -131,6 +131,7 @@ public class SocketSslEchoTest : AbstractSocketTest
         // the JDK pair remains, as in ParameterizedSslHandlerTest and CloseNotifyTest.
 
         List<object[]> @params = new List<object[]>();
+
         foreach (SslContext sc in serverContexts)
         {
             foreach (SslContext cc in clientContexts)
@@ -144,6 +145,7 @@ public class SocketSslEchoTest : AbstractSocketTest
                     // SslStream cannot run are skipped by TestSslEcho with the reason.
 
                     Renegotiation r;
+
                     switch (rt)
                     {
                         case RenegotiationType.NONE:
@@ -172,6 +174,7 @@ public class SocketSslEchoTest : AbstractSocketTest
                         {
                             continue;
                         }
+
                         @params.Add(new object[] {
                                 sc, cc, r,
                                 (i & 4) != 0, (i & 2) != 0, (i & 1) != 0 });
@@ -278,10 +281,12 @@ public class SocketSslEchoTest : AbstractSocketTest
             serverSslHandler.SetHandshakeTimeoutMillis(0);
 
             sch.Pipeline.AddLast("ssl", serverSslHandler);
+
             if (useChunkedWriteHandler)
             {
                 sch.Pipeline.AddLast(new ChunkedWriteHandler());
             }
+
             sch.Pipeline.AddLast("serverHandler", serverHandler);
         }));
 
@@ -297,10 +302,12 @@ public class SocketSslEchoTest : AbstractSocketTest
             clientSslHandler.SetHandshakeTimeoutMillis(0);
 
             sch.Pipeline.AddLast("ssl", clientSslHandler);
+
             if (useChunkedWriteHandler)
             {
                 sch.Pipeline.AddLast(new ChunkedWriteHandler());
             }
+
             sch.Pipeline.AddLast("clientHandler", clientHandler);
             sch.Pipeline.AddLast(new HandshakeEventLatchHandler(clientHandshakeEventLatch));
         }));
@@ -322,11 +329,13 @@ public class SocketSslEchoTest : AbstractSocketTest
         // CLR: new SplittableRandom(random.nextLong()) is a Random seeded from the shared random; Next(maxValue) keeps
         // nextInt(bound)'s exclusive upper bound (as SocketFixedLengthEchoTest).
         Random rng = new Random(random.Next());
+
         while (clientSendCounter.Get() < data.Length)
         {
             int clientSendCounterVal = clientSendCounter.Get();
             int length = Math.Min(rng.Next(1024 * 64), data.Length - clientSendCounterVal);
             ByteBuf buf = RandomBufferType(clientChannel.Alloc(), data, clientSendCounterVal, length);
+
             if (useCompositeByteBuf)
             {
                 // CLR: the Buffer port's addComponent(true, buf) is AddComponent(buf, true).
@@ -386,6 +395,7 @@ public class SocketSslEchoTest : AbstractSocketTest
         {
             await renegoFuture;
         }
+
         if (serverHandler.renegoFuture != null)
         {
             await serverHandler.renegoFuture;
@@ -514,6 +524,7 @@ public class SocketSslEchoTest : AbstractSocketTest
             {
                 clientHandshakeEventLatch.TrySetResult();
             }
+
             ctx.FireUserEventTriggered(evt);
         }
     }
@@ -549,6 +560,7 @@ public class SocketSslEchoTest : AbstractSocketTest
             {
                 ctx.Read();
             }
+
             ctx.FireChannelReadComplete();
         }
 
@@ -561,10 +573,12 @@ public class SocketSslEchoTest : AbstractSocketTest
                 {
                     logger.Warn("Handshake failed:", handshakeEvt.Cause());
                 }
+
                 Assert.Same(SslHandshakeCompletionEvent.SUCCESS, evt);
                 negoCounter.IncrementAndGet();
                 outer.LogStats("HANDSHAKEN");
             }
+
             ctx.FireUserEventTriggered(evt);
         }
 
@@ -608,6 +622,7 @@ public class SocketSslEchoTest : AbstractSocketTest
             @in.ReadBytes(actual);
 
             int lastIdx = recvCounter.Get();
+
             for (int i = 0; i < actual.Length; i ++)
             {
                 Assert.Equal(data[i + lastIdx], actual[i]);
@@ -639,6 +654,7 @@ public class SocketSslEchoTest : AbstractSocketTest
             {
                 ctx.Read();
             }
+
             ctx.FireChannelActive();
         }
 
@@ -648,16 +664,19 @@ public class SocketSslEchoTest : AbstractSocketTest
             @in.ReadBytes(actual);
 
             int lastIdx = recvCounter.Get();
+
             for (int i = 0; i < actual.Length; i ++)
             {
                 Assert.Equal(data[i + lastIdx], actual[i]);
             }
 
             ByteBuf buf = RandomBufferType(ctx.Alloc(), actual, 0, actual.Length);
+
             if (outer.useCompositeByteBuf)
             {
                 buf = Unpooled.CompositeBuffer().AddComponent(buf, true);
             }
+
             _ = ctx.WriteAndFlushAsync(buf);
 
             recvCounter.AddAndGet(actual.Length);

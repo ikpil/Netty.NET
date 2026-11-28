@@ -101,6 +101,7 @@ public class DnsServerAddressesTest
         // In theory, this test can fail at extremely low chance, but we don't really care.
         ISet<EndPoint> set = new HashSet<EndPoint>(ReferenceEqualityComparer.Instance);
         IDnsServerAddressStream i = seq.Stream();
+
         for (int j = 0; j < 1048576; j ++)
         {
             set.Add(i.Next());

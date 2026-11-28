@@ -52,6 +52,7 @@ public sealed class PendingWriteQueue
     public PendingWriteQueue(IChannelHandlerContext ctx)
     {
         ArgumentNullException.ThrowIfNull(ctx);
+
         _invoker = ctx;
         _executor = ctx.Executor;
         _tracker = new PendingBytesTracker(ctx.Channel);
@@ -60,6 +61,7 @@ public sealed class PendingWriteQueue
     public PendingWriteQueue(IChannel channel)
     {
         ArgumentNullException.ThrowIfNull(channel);
+
         _invoker = channel;
         _executor = channel.EventLoop;
         _tracker = new PendingBytesTracker(channel);
@@ -116,6 +118,7 @@ public sealed class PendingWriteQueue
         AssertOwner();
         ArgumentNullException.ThrowIfNull(msg);
         ArgumentNullException.ThrowIfNull(producer);
+
         // It is possible for writes to be triggered from removeAndFailAll(). To preserve ordering,
         // we should add them to the queue and let removeAndFailAll() fail them later.
         int estimate = _tracker.Size(msg);
@@ -124,7 +127,9 @@ public sealed class PendingWriteQueue
             // Size may be unknown so just use 0
             estimate = 0;
         }
+
         var entry = new Entry(msg, (long)estimate + PendingWriteOverhead, producer, cancellationToken);
+
         if (_tail == null)
         {
             _head = _tail = entry;
@@ -134,6 +139,7 @@ public sealed class PendingWriteQueue
             _tail.Next = entry;
             _tail = entry;
         }
+
         Size++;
         Bytes += entry.Size;
         _tracker.IncrementPendingOutboundBytes(entry.Size);
@@ -143,6 +149,7 @@ public sealed class PendingWriteQueue
         // and makes better use of virtual calls vs interface ones
         // CLR: ReferenceCountUtil dispatches to the native reference-counted object directly.
         ReferenceCountUtil.Touch(msg);
+
         if (cancellationToken.CanBeCanceled)
         {
             entry.Cancellation = cancellationToken.UnsafeRegister(_ =>
@@ -169,6 +176,7 @@ public sealed class PendingWriteQueue
                     }
                 }
             }, null);
+
             if (Volatile.Read(ref entry.Claim) == 1)
                 entry.Cancellation.Dispose();
         }
@@ -186,12 +194,15 @@ public sealed class PendingWriteQueue
         AssertOwner();
         if (_head == null)
             return null;
+
         var tasks = new List<Task>();
+
         // It is possible for some of the written promises to trigger more writes. The new writes
         // will "revive" the queue, so we need to write them up until the queue is empty.
         while (_head != null)
         {
             var entry = DetachAll();
+
             while (entry != null)
             {
                 var next = entry.Next;
@@ -201,7 +212,9 @@ public sealed class PendingWriteQueue
                 entry = next;
             }
         }
+
         AssertEmpty();
+
         return Task.WhenAll(tasks);
     }
 
@@ -213,24 +226,29 @@ public sealed class PendingWriteQueue
     {
         AssertOwner();
         ArgumentNullException.ThrowIfNull(cause);
+
         // It is possible for some of the failed promises to trigger more writes. The new writes
         // will "revive" the queue, so we need to clean them up until the queue is empty.
         while (_head != null)
         {
             var entry = DetachAll();
+
             while (entry != null)
             {
                 var next = entry.Next;
                 bool cancelled = StopCancellation(entry);
                 ReferenceCountUtil.SafeRelease(entry.Message);
                 _tracker.DecrementPendingOutboundBytes(entry.Size);
+
                 if (cancelled)
                     entry.Producer.TrySetCanceled(entry.Token);
                 else
                     SafeFail(entry.Producer, cause);
+
                 entry = next;
             }
         }
+
         AssertEmpty();
     }
 
@@ -242,13 +260,16 @@ public sealed class PendingWriteQueue
     {
         AssertOwner();
         ArgumentNullException.ThrowIfNull(cause);
+
         var entry = _head;
         if (entry == null)
             return;
+
         bool cancelled = StopCancellation(entry);
         ReferenceCountUtil.SafeRelease(entry.Message);
         // Unlink the write before failing the promise, as a listener may use the queue again.
         Unlink(entry);
+
         if (cancelled)
             entry.Producer.TrySetCanceled(entry.Token);
         else
@@ -268,8 +289,10 @@ public sealed class PendingWriteQueue
         var entry = _head;
         if (entry == null)
             return null;
+
         bool cancelled = StopCancellation(entry);
         Unlink(entry);
+
         return Write(entry, cancelled);
     }
 
@@ -285,11 +308,14 @@ public sealed class PendingWriteQueue
         var entry = _head;
         if (entry == null)
             return null;
+
         bool cancelled = StopCancellation(entry);
         ReferenceCountUtil.SafeRelease(entry.Message);
         Unlink(entry);
+
         if (cancelled)
             entry.Producer.TrySetCanceled(entry.Token);
+
         return entry.Producer;
     }
 
@@ -320,6 +346,7 @@ public sealed class PendingWriteQueue
             Bytes -= entry.Size;
             Debug.Assert(Size > 0 && Bytes >= 0);
         }
+
         _tracker.DecrementPendingOutboundBytes(entry.Size);
     }
 
@@ -338,7 +365,9 @@ public sealed class PendingWriteQueue
             entry.Producer.TrySetCanceled(entry.Token);
             return entry.Producer.Task;
         }
+
         Task operation;
+
         try
         {
             operation = _invoker.WriteAsync(entry.Message, entry.Token);
@@ -349,10 +378,12 @@ public sealed class PendingWriteQueue
             SafeFail(entry.Producer, error);
             return entry.Producer.Task;
         }
+
         if (operation.IsCompleted)
             Complete(operation, entry.Producer);
         else
             CompleteLater(operation, entry.Producer);
+
         return entry.Producer.Task;
     }
 
@@ -389,6 +420,7 @@ public sealed class PendingWriteQueue
             CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, CompletionScheduler());
         if (completion.IsCompleted && !completion.IsFaulted)
             return;
+
         _ = completion.ContinueWith(static (c, p) => SafeFail((TaskCompletionSource) p,
                 c.Exception.InnerException is TaskSchedulerException scheduling && scheduling.InnerException != null
                     ? scheduling.InnerException
@@ -405,6 +437,7 @@ public sealed class PendingWriteQueue
             IEventExecutor executor = _executor;
             _completionScheduler = new EventExecutorTaskScheduler(() => executor);
         }
+
         return _completionScheduler;
     }
 

@@ -30,6 +30,7 @@ public class AutoScalingEventExecutorChooserFactoryTest
     private static void BusyTask(TimeSpan duration)
     {
         long endTime = Ticker.SystemTicker().NanoTime() + AbstractScheduledEventExecutor.ToNanos(duration);
+
         while (Ticker.SystemTicker().NanoTime() < endTime)
         {
             // Spin-wait to simulate CPU usage
@@ -62,6 +63,7 @@ public class AutoScalingEventExecutorChooserFactoryTest
                     BusyTask(TimeSpan.FromMilliseconds(35));
                     long busyWorkEnd = Ticker().NanoTime();
                     ReportActiveIoTime(busyWorkEnd - busyWorkStart);
+
                     try
                     {
                         Thread.Sleep(10);
@@ -123,6 +125,7 @@ public class AutoScalingEventExecutorChooserFactoryTest
     public async Task TestScaleDown()
     {
         TestEventExecutorGroup group = new TestEventExecutorGroup(1, 3, TimeSpan.FromMilliseconds(50));
+
         try
         {
             StartAllExecutors(group);
@@ -142,6 +145,7 @@ public class AutoScalingEventExecutorChooserFactoryTest
     public async Task TestScaleUp()
     {
         TestEventExecutorGroup group = new TestEventExecutorGroup(1, 3, TimeSpan.FromMilliseconds(50));
+
         try
         {
             StartAllExecutors(group);
@@ -149,6 +153,7 @@ public class AutoScalingEventExecutorChooserFactoryTest
             Assert.Equal(1, group.ActiveExecutorCount());
 
             TestEventExecutor activeExecutor = null;
+
             foreach (IEventExecutor exec in group.Iterator())
             {
                 if (!exec.IsSuspended())
@@ -157,6 +162,7 @@ public class AutoScalingEventExecutorChooserFactoryTest
                     break;
                 }
             }
+
             if (activeExecutor == null)
             {
                 Assert.Fail("Could not find an active executor to stress.");
@@ -167,10 +173,12 @@ public class AutoScalingEventExecutorChooserFactoryTest
             // The monitor will see high utilization on the active thread. After 2 cycles (100 ms),
             // it will decide to scale up.
             long deadline = Ticker.SystemTicker().NanoTime() + 5_000_000_000L;
+
             while (group.ActiveExecutorCount() < 2 && Ticker.SystemTicker().NanoTime() < deadline)
             {
                 Thread.Sleep(50);
             }
+
             Assert.Equal(2, group.ActiveExecutorCount(),
                          "Should scale up to 2 after stressing one executor.");
 
@@ -186,6 +194,7 @@ public class AutoScalingEventExecutorChooserFactoryTest
             {
                 Thread.Sleep(50);
             }
+
             Assert.Equal(3, group.ActiveExecutorCount(),
                          "Should scale up to 3 after stressing two executors.");
         }
@@ -199,6 +208,7 @@ public class AutoScalingEventExecutorChooserFactoryTest
     public async Task TestScaleDownWhenExecutorIsNotStarted()
     {
         TestEventExecutorGroup group = new TestEventExecutorGroup(2, 4, TimeSpan.FromMilliseconds(50));
+
         try
         {
             // Do not start executors
@@ -215,6 +225,7 @@ public class AutoScalingEventExecutorChooserFactoryTest
     public async Task TestScaleDownDoesNotGoBelowMinThreads()
     {
         TestEventExecutorGroup group = new TestEventExecutorGroup(2, 4, TimeSpan.FromMilliseconds(50));
+
         try
         {
             StartAllExecutors(group);
@@ -231,6 +242,7 @@ public class AutoScalingEventExecutorChooserFactoryTest
     public async Task TestScaleUpDoesNotExceedMaxThreads()
     {
         TestEventExecutorGroup group = new TestEventExecutorGroup(1, 2, TimeSpan.FromMilliseconds(50));
+
         try
         {
             StartAllExecutors(group);
@@ -238,6 +250,7 @@ public class AutoScalingEventExecutorChooserFactoryTest
             Assert.Equal(1, group.ActiveExecutorCount());
 
             TestEventExecutor activeExecutor = null;
+
             foreach (IEventExecutor exec in group.Iterator())
             {
                 if (!exec.IsSuspended())
@@ -246,18 +259,22 @@ public class AutoScalingEventExecutorChooserFactoryTest
                     break;
                 }
             }
+
             if (activeExecutor == null)
             {
                 Assert.Fail("Could not find an active executor to stress.");
             }
+
             activeExecutor.SetHighLoad(true);
 
             // Wait for the UtilizationMonitor to react and scale up.
             long deadline = Ticker.SystemTicker().NanoTime() + 5_000_000_000L;
+
             while (group.ActiveExecutorCount() < 2 && Ticker.SystemTicker().NanoTime() < deadline)
             {
                 Thread.Sleep(50);
             }
+
             Assert.Equal(2, group.ActiveExecutorCount(), "Should scale up to maxThreads");
 
             // Now that we have scaled up, put all active executors under a high load
@@ -288,15 +305,18 @@ public class AutoScalingEventExecutorChooserFactoryTest
     public async Task TestSmarterPickingConsolidatesWorkOnActiveExecutor()
     {
         TestEventExecutorGroup group = new TestEventExecutorGroup(1, 3, TimeSpan.FromMilliseconds(50));
+
         try
         {
             StartAllExecutors(group);
 
             long deadline = Ticker.SystemTicker().NanoTime() + 5_000_000_000L;
+
             while (group.ActiveExecutorCount() > 1 && Ticker.SystemTicker().NanoTime() < deadline)
             {
                 Thread.Sleep(50);
             }
+
             Assert.Equal(1, group.ActiveExecutorCount(),
                          "Group should scale down to 1 active executor");
 
@@ -323,17 +343,21 @@ public class AutoScalingEventExecutorChooserFactoryTest
     public async Task TestMetricsProvideCorrectUtilizationAndActiveExecutorCount()
     {
         TestEventExecutorGroup group = new TestEventExecutorGroup(1, 3, TimeSpan.FromMilliseconds(50));
+
         try
         {
             StartAllExecutors(group);
             long deadline = Ticker.SystemTicker().NanoTime() + 5_000_000_000L;
+
             while (group.ActiveExecutorCount() > 1 && Ticker.SystemTicker().NanoTime() < deadline)
             {
                 Thread.Sleep(50);
             }
+
             Assert.Equal(1, group.ActiveExecutorCount(), "Should have scaled down to 1 active executor.");
 
             TestEventExecutor activeExecutor = null;
+
             foreach (IEventExecutor exec in group.Iterator())
             {
                 if (!exec.IsSuspended())
@@ -342,6 +366,7 @@ public class AutoScalingEventExecutorChooserFactoryTest
                     break;
                 }
             }
+
             if (activeExecutor == null)
             {
                 Assert.Fail("Could not find an active executor.");
@@ -358,6 +383,7 @@ public class AutoScalingEventExecutorChooserFactoryTest
                 {
                     break;
                 }
+
                 Thread.Sleep(50);
             }
 
@@ -373,6 +399,7 @@ public class AutoScalingEventExecutorChooserFactoryTest
                        "Was: " + activeUtilization);
 
             TestEventExecutor finalActiveExecutor1 = activeExecutor;
+
             foreach (var metric in utilizationMetrics.Where(metric => metric.Executor() != finalActiveExecutor1))
             {
                 Assert.True(metric.Executor().IsSuspended(), "Other executors should be suspended.");
@@ -389,10 +416,12 @@ public class AutoScalingEventExecutorChooserFactoryTest
     private static void StartAllExecutors(MultithreadEventExecutorGroup group)
     {
         using var startLatch = new CountdownEvent(group.ExecutorCount());
+
         foreach (IEventExecutor executor in group.Iterator())
         {
             executor.Execute(() => startLatch.Signal());
         }
+
         Assert.True(startLatch.Wait(TimeSpan.FromSeconds(5)));
     }
 }

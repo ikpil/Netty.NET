@@ -77,10 +77,12 @@ public class SegmentedDatagramSourceTest
         {
             Assert.Skip("Kernel UDP GRO and scattering are unavailable on the managed transport.");
         }
+
         var token = TestContext.Current.CancellationToken;
         using var adaptiveAllocator = adaptive ? new AdaptiveByteBufAllocator() : null;
         IByteBufAllocator allocator = adaptiveAllocator ?? (IByteBufAllocator)PooledByteBufAllocator.Default;
         var loop = new MultiThreadIoEventLoopGroup(2, NioIoHandler.NewFactory());
+
         try
         {
             var sender = await NewBootstrap(loop, allocator, new Discard()).BindAsync(new IPEndPoint(IPAddress.Loopback, 0), token);
@@ -95,11 +97,14 @@ public class SegmentedDatagramSourceTest
             Assert.Equal(gro, configured);
 
             ByteBuf buffer;
+
             if (composite)
             {
                 var parts = Unpooled.CompositeBuffer(numBuffers);
+
                 for (int i = 0; i < numBuffers; i++)
                     parts.AddComponent(Unpooled.DirectBuffer(segmentSize).WriteZero(segmentSize), true);
+
                 buffer = parts;
             }
             else
@@ -136,6 +141,7 @@ public class SegmentedDatagramSourceTest
         protected override void ChannelRead0(IChannelHandlerContext ctx, DatagramPacket packet)
         {
             Assert.Equal(segmentSize, packet.Content.ReadableBytes);
+
             if (++_received == expected)
             {
                 Completed.TrySetResult();

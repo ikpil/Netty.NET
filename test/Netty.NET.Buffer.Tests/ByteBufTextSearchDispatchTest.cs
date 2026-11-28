@@ -87,6 +87,7 @@ public class ByteBufTextSearchDispatchTest
             {
                 Assert.True(_owner.Release());
             }
+
             Assert.Equal(0, Root.RefCnt);
             Assert.Equal(1, Inner.Closes);
             Assert.Equal(_outerTracked ? 1 : 0, Outer.Closes);
@@ -150,6 +151,7 @@ public class ByteBufTextSearchDispatchTest
         storage.Root.SetIndex(1, 7);
 
         int before = storage.Inner.Records;
+
         if (operation >= 4)
             Assert.Throws<ArgumentNullException>(() => Invoke(buffer, operation, null));
         else
@@ -170,9 +172,11 @@ public class ByteBufTextSearchDispatchTest
                     break;
             }
         }
+
         Assert.Equal(before + 1, storage.Inner.Records);
         Assert.Equal(1, buffer.ReaderIndex);
         Assert.Equal(7, buffer.WriterIndex);
+
         // Decoding uses the supplied CLR fallback policy; failures must not advance the reader.
         if (operation is 4 or 5 or 6)
         {
@@ -199,6 +203,7 @@ public class ByteBufTextSearchDispatchTest
             Assert.Equal(1, buffer.ReaderIndex);
             Assert.Equal(7, buffer.WriterIndex);
         }
+
         Assert.Equal(0, storage.Outer.Records);
         Assert.Equal(0, storage.Inner.Closes);
         Assert.Equal(1, buffer.RefCnt);
@@ -207,11 +212,13 @@ public class ByteBufTextSearchDispatchTest
         Assert.Equal(7, buffer.WriterIndex);
         storage.Dispose();
         before = storage.Inner.Records;
+
         // IndexOf has an original zero-capacity fast path, including owners cleared by release.
         if (operation == 0 && storage.Root.Capacity == 0)
             Assert.Equal(-1, Invoke(buffer, operation, Encoding.UTF8));
         else
             Assert.Throws<IllegalReferenceCountException>(() => Invoke(buffer, operation, Encoding.UTF8));
+
         Assert.Equal(before + 1, storage.Inner.Records);
     }
 
@@ -352,6 +359,7 @@ public class ByteBufTextSearchDispatchTest
             1 => new WrappedCompositeByteBuf((CompositeByteBuf)root),
             _ => Unpooled.UnreleasableBuffer(root)
         };
+
         try
         {
             object expected = operation is 4 or 5 or 6 ? (40 + operation).ToString() : 40 + operation;

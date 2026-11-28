@@ -16,6 +16,7 @@ public class TempFileContractTest
     public void NullSuffixDefaultsToTmpWithoutAJavaFilePrefixLengthRule(string prefix)
     {
         FileInfo file = PlatformDependent.CreateTempFile(prefix, null, null);
+
         try
         {
             Assert.True(file.Exists);
@@ -41,6 +42,7 @@ public class TempFileContractTest
     public void InvalidNamePartsAreRejectedBeforeCreatingAFile(bool prefix, string value)
     {
         FileInfo created = null;
+
         try
         {
             var failure = Assert.Throws<ArgumentException>(() =>
@@ -79,6 +81,7 @@ public class TempFileContractTest
     public void DefaultDirectoryUsesTheClrTemporaryPath()
     {
         FileInfo file = PlatformDependent.CreateTempFile("netty-", ".tmp", null);
+
         try
         {
             Assert.Equal(Path.TrimEndingDirectorySeparator(Path.GetFullPath(Path.GetTempPath())), file.DirectoryName);
@@ -137,19 +140,23 @@ public class TempFileContractTest
             Parallel.For(0, 256, value =>
             {
                 FileInfo file = PlatformDependent.CreateTempFile("netty-", ".tmp", directory);
+
                 using (var stream = file.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None))
                     stream.WriteByte((byte)value);
+
                 files.Add(file);
             });
             Assert.Equal(256, files.Count);
             Assert.Equal(256, files.Select(file => file.FullName).Distinct().Count());
             Assert.Equal(257, directory.GetFiles().Length);
+
             foreach (FileInfo file in files)
             {
                 Assert.Equal(directory.FullName, file.DirectoryName);
                 Assert.Single(File.ReadAllBytes(file.FullName));
                 file.Delete();
             }
+
             Assert.Equal("keep me", File.ReadAllText(sentinel));
         });
     }
@@ -159,6 +166,7 @@ public class TempFileContractTest
     {
         if (OperatingSystem.IsWindows())
             return;
+
         WithDirectory(directory =>
         {
             FileInfo file = PlatformDependent.CreateTempFile("netty-", ".key", directory);
@@ -172,6 +180,7 @@ public class TempFileContractTest
     {
         var directory = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "netty-temp-test-" + Guid.NewGuid().ToString("N")));
         directory.Create();
+
         try
         {
             assertion(directory);

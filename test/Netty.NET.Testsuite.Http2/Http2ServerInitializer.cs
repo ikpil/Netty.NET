@@ -53,6 +53,7 @@ public class Http2ServerInitializer : ChannelInitializer<ISocketChannel>
     internal Http2ServerInitializer(int maxHttpContentLength)
     {
         CheckPositiveOrZero(maxHttpContentLength, "maxHttpContentLength");
+
         this.maxHttpContentLength = maxHttpContentLength;
     }
 

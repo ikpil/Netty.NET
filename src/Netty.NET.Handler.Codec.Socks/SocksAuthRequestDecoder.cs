@@ -49,6 +49,7 @@ public class SocksAuthRequestDecoder : ReplayingDecoder<SocksAuthRequestDecoder.
                     @out.Add(SocksCommonUtils.UNKNOWN_SOCKS_REQUEST);
                     break;
                 }
+
                 Checkpoint(State.READ_USERNAME);
                 goto case State.READ_USERNAME;
             }
@@ -77,6 +78,7 @@ public class SocksAuthRequestDecoder : ReplayingDecoder<SocksAuthRequestDecoder.
                 throw new InvalidOperationException("Unexpected request decoder state: " + base.State());
             }
         }
+
         ctx.Pipeline.Remove(this);
     }
 

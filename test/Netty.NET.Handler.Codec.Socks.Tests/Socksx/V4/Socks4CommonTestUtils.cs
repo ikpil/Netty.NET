@@ -34,6 +34,7 @@ internal sealed class Socks4CommonTestUtils
     public static void WriteMessageIntoEmbedder(EmbeddedChannel embedder, ISocks4Message msg)
     {
         EmbeddedChannel @out;
+
         if (msg is ISocks4CommandRequest)
         {
             @out = new EmbeddedChannel(Socks4ClientEncoder.INSTANCE);
@@ -42,6 +43,7 @@ internal sealed class Socks4CommonTestUtils
         {
             @out = new EmbeddedChannel(Socks4ServerEncoder.INSTANCE);
         }
+
         @out.WriteOutbound(msg);
         embedder.WriteInbound(@out.ReadOutbound<ByteBuf>());
         @out.Finish();

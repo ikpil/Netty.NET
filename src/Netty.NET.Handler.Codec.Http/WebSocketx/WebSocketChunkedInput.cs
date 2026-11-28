@@ -91,6 +91,7 @@ public sealed class WebSocketChunkedInput : IChunkedInput<WebSocketFrame>
         {
             return null;
         }
+
         return new ContinuationWebSocketFrame(input.IsEndOfInput(), rsv, buf);
     }
 

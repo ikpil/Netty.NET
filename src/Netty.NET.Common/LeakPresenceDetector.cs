@@ -43,6 +43,7 @@ public static class LeakPresenceDetector
                 return true;
             }
         }
+
         return false;
     }
 
@@ -75,7 +76,9 @@ public static class LeakPresenceDetector
         {
             throw new InvalidOperationException("Not in static initializer.");
         }
+
         Interlocked.Increment(ref staticInitializerCount);
+
         try
         {
             return supplier();
@@ -99,6 +102,7 @@ public static class LeakPresenceDetector
         if (detector is not LeakPresenceDetector<object> presence)
             throw new InvalidOperationException("LeakPresenceDetector not in use. Please register it using " +
                 "environment property io.netty.customResourceLeakDetector=" + typeof(LeakPresenceDetector<>).AssemblyQualifiedName);
+
         //noinspection resource
         presence.ScopeForCheck().Check();
     }
@@ -132,6 +136,7 @@ public static class LeakPresenceDetector
         {
             CheckOpen();
             Interlocked.Increment(ref openResourceCounter);
+
             if (TRACK_CREATION_STACK)
             {
                 creationStacks.TryAdd(tracker, new LeakCreation());
@@ -141,10 +146,12 @@ public static class LeakPresenceDetector
         internal void Release(object tracker)
         {
             Interlocked.Decrement(ref openResourceCounter);
+
             if (TRACK_CREATION_STACK)
             {
                 creationStacks.TryRemove(tracker, out _);
             }
+
             CheckOpen();
         }
 
@@ -156,14 +163,17 @@ public static class LeakPresenceDetector
             {
                 return;
             }
+
             string message = "Possible memory leak detected for resource scope '" + (name ?? "null") + "'. ";
             if (count < 0)
                 throw new InvalidOperationException(message + "Resource count was negative: A resource previously reported as a leak was released " +
                     "after all. Please ensure that that resource is released before its test finishes.");
+
             if (TRACK_CREATION_STACK)
             {
                 var failure = new InvalidOperationException(message + "Creation stack traces:");
                 int index = 0;
+
                 foreach (Exception creation in creationStacks.Values)
                 {
                     ThrowableUtil.AddSuppressed(failure, creation);
@@ -172,9 +182,11 @@ public static class LeakPresenceDetector
                         break;
                     }
                 }
+
                 creationStacks.Clear();
                 throw failure;
             }
+
             throw new InvalidOperationException(message + "Please use paranoid leak detection to get more information, or set " +
                 "environment property " + TRACK_CREATION_STACK_PROPERTY + "=true");
         }
@@ -219,6 +231,7 @@ public static class LeakPresenceDetector
             get
             {
                 using var held = UninterruptibleMonitor.Enter(this);
+
                 if (message == null)
                 {
                     if (InStaticInitializerSlow(trace))
@@ -228,6 +241,7 @@ public static class LeakPresenceDetector
                         message = "Resource created outside static initializer on thread '" +
                             (thread.Name ?? thread.ManagedThreadId.ToString(CultureInfo.InvariantCulture)) + "' (" + thread.ThreadState + "), likely leak.";
                 }
+
                 return message;
             }
         }
@@ -388,6 +402,7 @@ public class LeakPresenceDetector<T> : ResourceLeakDetector<T> where T : class
             {
                 return false;
             }
+
             scope.Release(this);
             return true;
         }

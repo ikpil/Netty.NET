@@ -86,6 +86,7 @@ public abstract class AbstractDecompressorTest : AbstractCompressionTest
                 data[i].Release();
             }
         }
+
         return data[dataIndex];
     }
 
@@ -125,6 +126,7 @@ public abstract class AbstractDecompressorTest : AbstractCompressionTest
             Assert.Equal(IDecompressor.Status.NEED_INPUT, decompressor.Status_());
             decompressor.AddInput(data);
             ByteBuf decompressed = ReadDecompressed(decompressor);
+
             try
             {
                 Assert.Equal(expected, decompressed);
@@ -144,17 +146,20 @@ public abstract class AbstractDecompressorTest : AbstractCompressionTest
         using (IDecompressor decompressor = CreateDecompressor().Build(IByteBufAllocator.Default))
         {
             CompositeByteBuf decompressed = IByteBufAllocator.Default.CompositeBuffer();
+
             try
             {
                 int compressedLength = data.ReadableBytes;
                 int written = 0;
                 int length = rand.Next(100);
+
                 while (written + length < compressedLength)
                 {
                     FeedInput(decompressor, decompressed, data.RetainedSlice(written, length));
                     written += length;
                     length = rand.Next(100);
                 }
+
                 FeedInput(decompressor, decompressed, data.RetainedSlice(written, compressedLength - written));
                 FinishDecompression(decompressor, decompressed);
                 Assert.Equal(expected, decompressed);
@@ -170,6 +175,7 @@ public abstract class AbstractDecompressorTest : AbstractCompressionTest
     private byte[] CompressToByteArray(byte[] data)
     {
         ByteBuf compressed = Compress(data);
+
         try
         {
             byte[] bytes = new byte[compressed.ReadableBytes];
@@ -190,6 +196,7 @@ public abstract class AbstractDecompressorTest : AbstractCompressionTest
         Assert.True(ch.Finish());
 
         CompositeByteBuf composite = ch.Alloc().CompositeBuffer();
+
         while (true)
         {
             ByteBuf b = ch.ReadOutbound<ByteBuf>();
@@ -197,14 +204,17 @@ public abstract class AbstractDecompressorTest : AbstractCompressionTest
             {
                 break;
             }
+
             composite.AddComponent(b, true);
         }
+
         return composite;
     }
 
     private static ByteBuf ReadDecompressed(IDecompressor decompressor)
     {
         CompositeByteBuf decompressed = IByteBufAllocator.Default.CompositeBuffer();
+
         try
         {
             FinishDecompression(decompressor, decompressed);
@@ -231,6 +241,7 @@ public abstract class AbstractDecompressorTest : AbstractCompressionTest
     private static void FinishDecompression(IDecompressor decompressor, CompositeByteBuf decompressed)
     {
         bool sentEof = false;
+
         while (true)
         {
             switch (decompressor.Status_())
@@ -271,6 +282,7 @@ public abstract class AbstractDecompressorTest : AbstractCompressionTest
             decompressor.AddInput(compressed);
 
             ByteBuf decompressed = ReadDecompressed(decompressor);
+
             try
             {
                 Assert.Equal("foo", decompressed.ToString(Encoding.UTF8));

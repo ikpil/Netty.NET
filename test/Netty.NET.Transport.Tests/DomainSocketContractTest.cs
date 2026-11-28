@@ -23,6 +23,7 @@ public class DomainSocketContractTest
         var child = new ExchangeHandler();
         var clientHandler = new ExchangeHandler();
         var cancellation = TestContext.Current.CancellationToken;
+
         try
         {
             var server = await new ServerBootstrap().Group(group).Channel<NioServerDomainSocketChannel>()
@@ -59,6 +60,7 @@ public class DomainSocketContractTest
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var accepted = new ExchangeHandler();
         var cancellation = TestContext.Current.CancellationToken;
+
         try
         {
             await new ServerBootstrap().Group(group).Channel<NioServerDomainSocketChannel>()
@@ -84,6 +86,7 @@ public class DomainSocketContractTest
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var client = new NioDomainSocketChannel();
         var server = new NioServerDomainSocketChannel();
+
         try
         {
             await group.RegisterAsync(client);

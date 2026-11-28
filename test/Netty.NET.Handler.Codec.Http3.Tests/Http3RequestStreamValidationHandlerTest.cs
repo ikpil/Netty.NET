@@ -287,10 +287,12 @@ public class Http3RequestStreamValidationHandlerTest : Http3FrameTypeValidationH
         responseHeadersFrame.Headers().SetLong(HttpHeaderNames.CONTENT_LENGTH, 10);
 
         Assert.True(channel.WriteInbound(responseHeadersFrame));
+
         if (!noData)
         {
             Assert.True(channel.WriteInbound(new DefaultHttp3DataFrame(Unpooled.Buffer().WriteZero(9))));
         }
+
         try
         {
             if (trailers)
@@ -307,6 +309,7 @@ public class Http3RequestStreamValidationHandlerTest : Http3FrameTypeValidationH
         {
             AssertException(Http3ErrorCode.H3_MESSAGE_ERROR, e);
         }
+
         Assert.True(channel.FinishAndReleaseAll());
     }
 
@@ -355,6 +358,7 @@ public class Http3RequestStreamValidationHandlerTest : Http3FrameTypeValidationH
         {
             Assert.True(channel.WriteInbound(new DefaultHttp3DataFrame(Unpooled.Buffer().WriteZero(9))));
         }
+
         try
         {
             if (trailers)
@@ -371,6 +375,7 @@ public class Http3RequestStreamValidationHandlerTest : Http3FrameTypeValidationH
         {
             AssertException(Http3ErrorCode.H3_MESSAGE_ERROR, e);
         }
+
         Assert.True(channel.FinishAndReleaseAll());
     }
 
@@ -547,11 +552,13 @@ public class Http3RequestStreamValidationHandlerTest : Http3FrameTypeValidationH
         {
             IHttp3Frame frame = frames[i];
             IHttp3Frame read = null;
+
             try
             {
                 if (server)
                 {
                     Assert.True(channel.WriteOutbound(frame));
+
                     if (expectFail && i == frames.Length - 1)
                     {
                         Assert.Fail();
@@ -564,6 +571,7 @@ public class Http3RequestStreamValidationHandlerTest : Http3FrameTypeValidationH
                 else
                 {
                     Assert.True(channel.WriteInbound(frame));
+
                     if (expectFail && i == frames.Length - 1)
                     {
                         Assert.Fail();
@@ -573,11 +581,13 @@ public class Http3RequestStreamValidationHandlerTest : Http3FrameTypeValidationH
                         read = channel.ReadInbound<IHttp3Frame>();
                     }
                 }
+
                 Assert.Equal(frame, read, (x, y) => object.Equals(x, y));
             }
             catch (Exception e) when (!(e is IAssertionException))
             {
                 AssertException(Http3ErrorCode.H3_FRAME_UNEXPECTED, e);
+
                 if (!server)
                 {
                     VerifyClose(Http3ErrorCode.H3_FRAME_UNEXPECTED, parent);
@@ -588,6 +598,7 @@ public class Http3RequestStreamValidationHandlerTest : Http3FrameTypeValidationH
                 ReferenceCountUtil.Release(read);
             }
         }
+
         Assert.False(parent.Finish());
         Assert.False(channel.Finish());
     }
@@ -595,9 +606,11 @@ public class Http3RequestStreamValidationHandlerTest : Http3FrameTypeValidationH
     private void TestHeadersFrame(IHttp3HeadersFrame headersFrame, Http3ErrorCode code)
     {
         EmbeddedQuicStreamChannel channel = NewServerStream();
+
         try
         {
             Assert.True(channel.WriteInbound(headersFrame));
+
             if (code != null)
             {
                 Assert.Fail();
@@ -609,9 +622,11 @@ public class Http3RequestStreamValidationHandlerTest : Http3FrameTypeValidationH
             {
                 throw;
             }
+
             AssertException(code, cause);
             Assert.Equal((int?) code.code, channel.OutputShutdownError());
         }
+
         // Only expect produced messages when there was no error.
         Assert.Equal(code == null, channel.FinishAndReleaseAll());
     }

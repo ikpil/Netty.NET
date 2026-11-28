@@ -102,10 +102,12 @@ public class SpdyFrameDecoderTest : IDisposable
 
         ByteBuf buf = Unpooled.Buffer(SPDY_HEADER_SIZE + length);
         EncodeDataFrameHeader(buf, streamId, flags, length);
+
         for (int i = 0; i < 256; i ++)
         {
             buf.WriteInt(NextInt());
         }
+
         decoder.Decode(buf);
         @delegate.Verify(d => d.ReadDataFrame(streamId, false, buf.Slice(SPDY_HEADER_SIZE, length)), Times.Once());
         Assert.False(buf.IsReadable());
@@ -407,6 +409,7 @@ public class SpdyFrameDecoderTest : IDisposable
         buf.WriteByte(0);
 
         ByteBuf headerBlock = Unpooled.Buffer(headerBlockLength);
+
         for (int i = 0; i < 256; i ++)
         {
             headerBlock.WriteInt(NextInt());
@@ -549,6 +552,7 @@ public class SpdyFrameDecoderTest : IDisposable
         buf.WriteInt(streamId);
 
         ByteBuf headerBlock = Unpooled.Buffer(headerBlockLength);
+
         for (int i = 0; i < 256; i ++)
         {
             headerBlock.WriteInt(NextInt());
@@ -699,6 +703,7 @@ public class SpdyFrameDecoderTest : IDisposable
         ByteBuf buf = Unpooled.Buffer(SPDY_HEADER_SIZE + length);
         EncodeControlFrameHeader(buf, type, flags, length);
         buf.WriteInt(numSettings);
+
         for (int i = 0; i < numSettings; i++)
         {
             buf.WriteByte(idFlags);
@@ -766,6 +771,7 @@ public class SpdyFrameDecoderTest : IDisposable
         ByteBuf buf = Unpooled.Buffer(SPDY_HEADER_SIZE + length);
         EncodeControlFrameHeader(buf, type, flags, length);
         buf.WriteInt(numSettings);
+
         for (int i = 0; i < numSettings; i++)
         {
             buf.WriteByte(idFlags);
@@ -795,6 +801,7 @@ public class SpdyFrameDecoderTest : IDisposable
         ByteBuf buf = Unpooled.Buffer(SPDY_HEADER_SIZE + length);
         EncodeControlFrameHeader(buf, type, flags, length);
         buf.WriteInt(numSettings);
+
         for (int i = 0; i < numSettings; i++)
         {
             buf.WriteByte(idFlags);
@@ -843,6 +850,7 @@ public class SpdyFrameDecoderTest : IDisposable
         ByteBuf buf = Unpooled.Buffer(SPDY_HEADER_SIZE + length);
         EncodeControlFrameHeader(buf, type, flags, length);
         buf.WriteInt(numSettings);
+
         for (int i = 0; i < numSettings; i++)
         {
             buf.WriteByte(idFlags);
@@ -872,6 +880,7 @@ public class SpdyFrameDecoderTest : IDisposable
         ByteBuf buf = Unpooled.Buffer(SPDY_HEADER_SIZE + length);
         EncodeControlFrameHeader(buf, type, flags, length);
         buf.WriteInt(numSettings);
+
         for (int i = 0; i < numSettings; i++)
         {
             buf.WriteByte(idFlags);
@@ -899,6 +908,7 @@ public class SpdyFrameDecoderTest : IDisposable
         ByteBuf buf = Unpooled.Buffer(SPDY_HEADER_SIZE + length);
         EncodeControlFrameHeader(buf, type, flags, length);
         buf.WriteInt(0); // invalid num_settings
+
         for (int i = 0; i < numSettings; i++)
         {
             buf.WriteByte(idFlags);
@@ -926,6 +936,7 @@ public class SpdyFrameDecoderTest : IDisposable
         ByteBuf buf = Unpooled.Buffer(SPDY_HEADER_SIZE + length);
         EncodeControlFrameHeader(buf, type, flags, length);
         buf.WriteInt(numSettings);
+
         for (int i = 0; i < numSettings; i++)
         {
             buf.WriteByte(idFlags);
@@ -1257,10 +1268,12 @@ public class SpdyFrameDecoderTest : IDisposable
         buf.WriteInt(streamId);
 
         ByteBuf headerBlock = Unpooled.Buffer(headerBlockLength);
+
         for (int i = 0; i < 256; i ++)
         {
             headerBlock.WriteInt(NextInt());
         }
+
         decoder.Decode(buf);
         decoder.Decode(headerBlock);
         @delegate.Verify(d => d.ReadHeadersFrame(streamId, false), Times.Once());

@@ -91,6 +91,7 @@ public sealed class MqttConnectReturnCode
     {
         MqttConnectReturnCode[] values = Values();
         VALUES = new MqttConnectReturnCode[160];
+
         foreach (MqttConnectReturnCode code in values)
         {
             int unsignedByte = code.byteValue & 0xFF;
@@ -117,6 +118,7 @@ public sealed class MqttConnectReturnCode
     {
         int unsignedByte = b & 0xFF;
         MqttConnectReturnCode mqttConnectReturnCode = null;
+
         try
         {
             mqttConnectReturnCode = VALUES[unsignedByte];
@@ -125,10 +127,12 @@ public sealed class MqttConnectReturnCode
         {
             // no op
         }
+
         if (mqttConnectReturnCode == null)
         {
             throw new ArgumentException("unknown connect return code: " + unsignedByte.ToString(CultureInfo.InvariantCulture));
         }
+
         return mqttConnectReturnCode;
     }
 

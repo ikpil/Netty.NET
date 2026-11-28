@@ -30,6 +30,7 @@ public class AbstractNioChannelSourceTest
     {
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var channel = new NioSocketChannel();
+
         try
         {
             await group.RegisterAsync(channel, TestContext.Current.CancellationToken);

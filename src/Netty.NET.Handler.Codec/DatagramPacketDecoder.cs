@@ -52,6 +52,7 @@ public class DatagramPacketDecoder : MessageToMessageDecoder<DatagramPacket>
         {
             return decoder.AcceptInboundMessage(((DatagramPacket) msg).Content);
         }
+
         return false;
     }
 

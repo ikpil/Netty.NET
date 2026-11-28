@@ -79,6 +79,7 @@ public class DefaultPromiseTest
         public override void Execute(Action command)
         {
             ArgumentNullException.ThrowIfNull(command);
+
             Interlocked.Increment(ref submissions);
             throw new InvalidOperationException("Cannot schedule commands");
         }
@@ -160,6 +161,7 @@ public class DefaultPromiseTest
     {
         using var service = new TestSingleThreadExecutor();
         IEventExecutor executor = new DefaultEventExecutor(service.Execute);
+
         try
         {
             TestStackOverFlowChainedFutures(StackOverflowTestDepth(), executor, true, false);
@@ -183,6 +185,7 @@ public class DefaultPromiseTest
     {
         using var service = new TestSingleThreadExecutor();
         IEventExecutor executor = new DefaultEventExecutor(service.Execute);
+
         try
         {
             TestStackOverFlowChainedFutures(StackOverflowTestDepth(), executor, true, true);
@@ -198,10 +201,12 @@ public class DefaultPromiseTest
     public void TestListenerNotifyOrder()
     {
         IEventExecutor executor = new TestEventExecutor();
+
         try
         {
             using var listeners = new BlockingCollection<Action<Task>>();
             int runs = 100000;
+
             for (int i = 0; i < runs; i++)
             {
                 var source = Source<object>();
@@ -220,11 +225,13 @@ public class DefaultPromiseTest
                 using var first = observer.Register(listener1);
                 using var second = observer.Register(listener2);
                 using var third = observer.Register(listener3);
+
                 foreach (var expected in new[] { listener1, listener2, listener3, listener4 })
                 {
                     Assert.True(listeners.TryTake(out var actual, TimeSpan.FromSeconds(5)), "Listener timeout during run " + i);
                     Assert.Same(expected, actual);
                 }
+
                 Assert.Empty(listeners);
                 // Await dispatch completion separately before disposing the queue/observer.
                 Assert.True(Task.WhenAll(first.NotificationCompleted, second.NotificationCompleted,
@@ -279,15 +286,18 @@ public class DefaultPromiseTest
         TimeSpan wait = TimeSpan.FromSeconds(10);
         IEventExecutor executor = new TestEventExecutor();
         var sources = new Dictionary<Thread, TaskCompletionSource<object>>();
+
         try
         {
             const int numberOfAttempts = 4096;
+
             for (int i = 0; i < numberOfAttempts; i++)
             {
                 var source = Source<object>();
                 var thread = new Thread(() => source.SetResult(null)) { IsBackground = true };
                 sources.Add(thread, source);
             }
+
             foreach (var pair in sources)
             {
                 pair.Key.Start();
@@ -332,6 +342,7 @@ public class DefaultPromiseTest
         using var cancellation = new CancellationTokenSource();
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
+
         try
         {
             Task<string> operation = executor.SubmitAsync(token =>
@@ -380,12 +391,14 @@ public class DefaultPromiseTest
                     {
                         sources[index + 1].SetResult(null);
                     }
+
                     latch.Signal();
                 };
                 observations[i].Register(lateListener
                     ? _ => observations[index].Register(completeNext)
                     : completeNext);
             }
+
             sources[0].SetResult(null);
         }
 
@@ -399,6 +412,7 @@ public class DefaultPromiseTest
             {
                 Initialize();
             }
+
             Assert.True(latch.Wait(TimeSpan.FromSeconds(2)));
 
             foreach (var source in sources)
@@ -428,6 +442,7 @@ public class DefaultPromiseTest
     private static void TestLateListenerIsOrderedCorrectly(Exception cause)
     {
         IEventExecutor executor = new TestEventExecutor();
+
         try
         {
             int state = 0;
@@ -437,6 +452,7 @@ public class DefaultPromiseTest
             using var observer = new ExecutorCompletion(executor, source.Task);
             // Add a listener before completion so "lateListener" is used next time we add a listener.
             observer.Register(_ => Assert.Equal(0, Interlocked.CompareExchange(ref state, 1, 0)));
+
             // Simulate write operation completing, which will execute listeners in another thread.
             if (cause == null)
             {
@@ -446,6 +462,7 @@ public class DefaultPromiseTest
             {
                 source.SetException(cause);
             }
+
             // Add a "late listener"
             observer.Register(_ =>
             {
@@ -483,6 +500,7 @@ public class DefaultPromiseTest
         var source = Source<object>();
         using var observer = new ExecutorCompletion(ImmediateEventExecutor.INSTANCE, source.Task);
         observer.Register(_ => observer.Register(_ => latch.Signal()));
+
         if (cause == null)
         {
             source.SetResult(null);
@@ -491,12 +509,14 @@ public class DefaultPromiseTest
         {
             source.SetException(cause);
         }
+
         Assert.True(latch.Wait(TimeSpan.FromSeconds(2)));
     }
 
     private static void RunListenerNotifyLater(int numListenersBefore)
     {
         IEventExecutor executor = new TestEventExecutor();
+
         try
         {
             int expectedCount = numListenersBefore + 2;
@@ -538,6 +558,7 @@ public class DefaultPromiseTest
                     task();
                     UpdateLastExecutionTime();
                 }
+
                 if (ConfirmShutdown())
                 {
                     break;

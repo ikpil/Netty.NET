@@ -4700,7 +4700,9 @@ internal sealed class HpackHuffmanDecoder
         {
             return AsciiString.EMPTY_STRING;
         }
+
         dest = new byte[length * 8 / 5];
+
         try
         {
             int readerIndex = buf.ReaderIndex;
@@ -4715,6 +4717,7 @@ internal sealed class HpackHuffmanDecoder
                 {
                     throw BAD_ENCODING;
                 }
+
                 return new AsciiString(dest, 0, k, false);
             }
 
@@ -4749,11 +4752,13 @@ internal sealed class HpackHuffmanDecoder
         {
             return false;
         }
+
         if ((state & HUFFMAN_EMIT_SYMBOL_SHIFT) != 0)
         {
             // state is always positive so can cast without mask here
             dest[k++] = (byte) state;
         }
+
         return true;
     }
 }

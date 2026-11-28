@@ -35,6 +35,7 @@ public class ByteBufZeroDispatchTest
                 ++Write;
             else
                 ++Set;
+
             Index = index;
             Length = length;
             if (ThrowOperation || RejectSet && !write)
@@ -73,12 +74,14 @@ public class ByteBufZeroDispatchTest
         public override ByteBuf SetZero(int index, int length)
         {
             calls.Before(false, index, length);
+
             return base.SetZero(index, length);
         }
 
         public override ByteBuf WriteZero(int length)
         {
             calls.Before(true, -1, length);
+
             return base.WriteZero(length);
         }
 
@@ -89,6 +92,7 @@ public class ByteBufZeroDispatchTest
                 base.SetZeroCore(index, 2);
                 throw calls.Error;
             }
+
             base.SetZeroCore(index, length);
         }
     }
@@ -104,12 +108,14 @@ public class ByteBufZeroDispatchTest
         public override ByteBuf SetZero(int index, int length)
         {
             calls.Before(false, index, length);
+
             return base.SetZero(index, length);
         }
 
         public override ByteBuf WriteZero(int length)
         {
             calls.Before(true, -1, length);
+
             return base.WriteZero(length);
         }
 
@@ -120,6 +126,7 @@ public class ByteBufZeroDispatchTest
                 base.SetZeroCore(index, 2);
                 throw calls.Error;
             }
+
             base.SetZeroCore(index, length);
         }
     }
@@ -135,12 +142,14 @@ public class ByteBufZeroDispatchTest
         public override ByteBuf SetZero(int index, int length)
         {
             calls.Before(false, index, length);
+
             return base.SetZero(index, length);
         }
 
         public override ByteBuf WriteZero(int length)
         {
             calls.Before(true, -1, length);
+
             return base.WriteZero(length);
         }
 
@@ -151,6 +160,7 @@ public class ByteBufZeroDispatchTest
                 base.SetZeroCore(index, 2);
                 throw calls.Error;
             }
+
             base.SetZeroCore(index, length);
         }
     }
@@ -166,6 +176,7 @@ public class ByteBufZeroDispatchTest
                 .AddComponent(new UnpooledDirectByteBuf(4, 4, native).SetIndex(0, 4), true)
         };
         result.SetBytes(0, new byte[] { 10, 11, 12, 13, 14, 15, 16, 17 });
+
         return result.SetIndex(1, 3).MarkReaderIndex().MarkWriterIndex();
     }
 
@@ -186,6 +197,7 @@ public class ByteBufZeroDispatchTest
         var native = new NativeMemoryAllocator();
         var calls = new Calls { RejectSet = true };
         ByteBuf owner = Create(direct ? 1 : 0, calls, native);
+
         try
         {
             if (length is < 0 or > 61)
@@ -196,6 +208,7 @@ public class ByteBufZeroDispatchTest
             {
                 Assert.Same(owner, owner.WriteZero(length));
             }
+
             Assert.Equal(1, calls.Write);
             Assert.Equal(0, calls.Set);
             Assert.Equal(1, calls.Ensure);
@@ -204,6 +217,7 @@ public class ByteBufZeroDispatchTest
             Assert.Equal(10, owner.GetByte(0));
             Assert.Equal(11, owner.GetByte(1));
             Assert.Equal(12, owner.GetByte(2));
+
             if (length is >= 0 and <= 61)
             {
                 for (int i = 0; i < length; ++i)
@@ -215,6 +229,7 @@ public class ByteBufZeroDispatchTest
             {
                 Assert.Equal(new byte[] { 10, 11, 12, 13, 14, 15, 16, 17 }, ByteBufUtil.GetBytes(owner, 0, 8));
             }
+
             owner.ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(1, owner.ReaderIndex);
             Assert.Equal(3, owner.WriterIndex);
@@ -224,6 +239,7 @@ public class ByteBufZeroDispatchTest
         {
             Assert.True(owner.Release());
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -234,6 +250,7 @@ public class ByteBufZeroDispatchTest
         var native = new NativeMemoryAllocator();
         var calls = new Calls { RejectSet = true, ThrowCore = true };
         ByteBuf owner = Create(direct ? 1 : 0, calls, native);
+
         try
         {
             Assert.Same(calls.Error, Assert.Throws<Failure>(() => owner.WriteZero(3)));
@@ -251,6 +268,7 @@ public class ByteBufZeroDispatchTest
         {
             Assert.True(owner.Release());
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -284,6 +302,7 @@ public class ByteBufZeroDispatchTest
             3 => new WrappedCompositeByteBuf((CompositeByteBuf)tracked),
             _ => new SimpleLeakAwareCompositeByteBuf((CompositeByteBuf)tracked, outer)
         };
+
         try
         {
             ByteBuf Invoke()
@@ -295,6 +314,7 @@ public class ByteBufZeroDispatchTest
                 Assert.Same(calls.Error, Assert.Throws<Failure>(() => Invoke()));
             else
                 Assert.Same(buffer, Invoke());
+
             Assert.Equal(write ? 1 : 0, calls.Write);
             Assert.Equal(write ? 0 : 1, calls.Set);
             Assert.Equal(write ? -1 : 1, calls.Index);
@@ -305,11 +325,13 @@ public class ByteBufZeroDispatchTest
             Assert.Equal(!failure && write ? 10 : 3, owner.WriterIndex);
             Assert.Equal(owner.ReaderIndex, buffer.ReaderIndex);
             Assert.Equal(owner.WriterIndex, buffer.WriterIndex);
+
             if (failure)
                 Assert.Equal(new byte[] { 10, 11, 12, 13, 14, 15, 16, 17 }, ByteBufUtil.GetBytes(owner, 0, 8));
             else
             for (int i = write ? 3 : 1; i < (write ? 10 : 6); ++i)
                 Assert.Equal(0, owner.GetByte(i));
+
             owner.SetIndex(0, Math.Min(11, owner.Capacity)).ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(1, buffer.ReaderIndex);
             Assert.Equal(3, buffer.WriterIndex);
@@ -319,6 +341,7 @@ public class ByteBufZeroDispatchTest
         {
             Assert.True(facade == 2 ? tracked.Release() : buffer.Release());
         }
+
         Assert.Equal(1, inner.Closes);
         Assert.Equal(facade is 1 or 4 ? 1 : 0, outer.Closes);
         Assert.Equal(0, native.ReservedBytes);
@@ -330,6 +353,7 @@ public class ByteBufZeroDispatchTest
         var native = new NativeMemoryAllocator(16);
         var calls = new Calls { RejectSet = true };
         ByteBuf owner = Create(1, calls, native);
+
         try
         {
             Assert.Throws<OutOfDirectMemoryError>(() => owner.WriteZero(17));
@@ -349,6 +373,7 @@ public class ByteBufZeroDispatchTest
         {
             Assert.True(owner.Release());
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 }

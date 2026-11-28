@@ -57,6 +57,7 @@ internal static class DirContextUtils
                 {
                     continue;
                 }
+
                 foreach (IPAddress server in networkInterface.GetIPProperties().DnsAddresses)
                 {
                     EndPoint address = new IPEndPoint(server, defaultPort);

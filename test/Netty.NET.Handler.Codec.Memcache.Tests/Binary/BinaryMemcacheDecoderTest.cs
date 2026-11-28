@@ -141,9 +141,11 @@ public class BinaryMemcacheDecoderTest : IDisposable
         request.Release();
 
         int expectedContentChunks = 4;
+
         for (int i = 1; i <= expectedContentChunks; i++)
         {
             IMemcacheContent content = channel.ReadInbound<IMemcacheContent>();
+
             if (i < expectedContentChunks)
             {
                 Assert.IsAssignableFrom<IMemcacheContent>(content);
@@ -152,9 +154,11 @@ public class BinaryMemcacheDecoderTest : IDisposable
             {
                 Assert.IsAssignableFrom<ILastMemcacheContent>(content);
             }
+
             Assert.Equal(2, content.Content.ReadableBytes);
             content.Release();
         }
+
         Assert.Null(channel.ReadInbound());
     }
 
@@ -166,10 +170,12 @@ public class BinaryMemcacheDecoderTest : IDisposable
     public void ShouldHandleNonUniformNetworkBatches()
     {
         ByteBuf incoming = Unpooled.CopiedBuffer(SET_REQUEST_WITH_CONTENT);
+
         while (incoming.IsReadable())
         {
             channel.WriteInbound(incoming.ReadBytes(5));
         }
+
         incoming.Release();
 
         IBinaryMemcacheRequest request = channel.ReadInbound<IBinaryMemcacheRequest>();
@@ -288,6 +294,7 @@ public class BinaryMemcacheDecoderTest : IDisposable
         IBinaryMemcacheRequest request = new DefaultBinaryMemcacheRequest(key, extras);
 
         Assert.True(channel.WriteOutbound(request));
+
         for (;;)
         {
             ByteBuf buffer = channel.ReadOutbound<ByteBuf>();
@@ -295,8 +302,10 @@ public class BinaryMemcacheDecoderTest : IDisposable
             {
                 break;
             }
+
             channel.WriteInbound(buffer);
         }
+
         IBinaryMemcacheRequest read = channel.ReadInbound<IBinaryMemcacheRequest>();
         read.Release();
         // tearDown will call "channel.finish()"

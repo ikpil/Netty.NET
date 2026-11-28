@@ -31,7 +31,9 @@ public class ByteBufSearchSourceTest
         {
             return new UnpooledDirectByteBuf(length, 64, native);
         }
+
         var result = new CompositeByteBuf(16, false, native);
+
         for (int index = 0; index < length; index += 5)
         {
             int size = Math.Min(5, length - index);
@@ -40,6 +42,7 @@ public class ByteBufSearchSourceTest
             component.WriterIndex = size;
             result.AddComponent(component, true);
         }
+
         return result.Clear();
     }
 
@@ -52,6 +55,7 @@ public class ByteBufSearchSourceTest
     {
         var native = new NativeMemoryAllocator();
         ByteBuf buffer = NewBuffer(provider, 16, native);
+
         try
         {
             buffer.Clear();
@@ -91,6 +95,7 @@ public class ByteBufSearchSourceTest
             {
                 buffer.Release();
             }
+
             Assert.Equal(0, native.ReservedBytes);
         }
     }
@@ -104,6 +109,7 @@ public class ByteBufSearchSourceTest
     {
         var native = new NativeMemoryAllocator();
         ByteBuf buffer = NewBuffer(provider, 15, native);
+
         try
         {
             buffer.Clear();
@@ -144,6 +150,7 @@ public class ByteBufSearchSourceTest
             {
                 buffer.Release();
             }
+
             Assert.Equal(0, native.ReservedBytes);
         }
     }
@@ -157,6 +164,7 @@ public class ByteBufSearchSourceTest
     {
         var native = new NativeMemoryAllocator();
         ByteBuf buffer = NewBuffer(provider, 16, native);
+
         try
         {
             buffer.Clear();
@@ -188,6 +196,7 @@ public class ByteBufSearchSourceTest
             {
                 buffer.Release();
             }
+
             Assert.Equal(0, native.ReservedBytes);
         }
     }
@@ -201,9 +210,11 @@ public class ByteBufSearchSourceTest
     {
         var native = new NativeMemoryAllocator();
         ByteBuf buffer = NewBuffer(provider, 16, native);
+
         try
         {
             buffer.Release();
+
             if (buffer.Capacity != 0)
             {
                 Assert.Throws<IllegalReferenceCountException>(() => buffer.IndexOf(0, 1, (byte) 1));
@@ -220,6 +231,7 @@ public class ByteBufSearchSourceTest
             {
                 buffer.Release();
             }
+
             Assert.Equal(0, native.ReservedBytes);
         }
     }
@@ -233,6 +245,7 @@ public class ByteBufSearchSourceTest
     {
         var native = new NativeMemoryAllocator();
         ByteBuf buffer = NewBuffer(provider, 16, native);
+
         try
         {
             buffer.Clear();
@@ -252,6 +265,7 @@ public class ByteBufSearchSourceTest
             {
                 buffer.Release();
             }
+
             Assert.Equal(0, native.ReservedBytes);
         }
     }
@@ -303,12 +317,15 @@ public class ByteBufSearchSourceTest
             3 => root.Slice(1, 14).Slice(1, 12),
             _ => root
         };
+
         if (form != 0)
         {
             view.SetIndex(1, view.Capacity - 1).MarkReaderIndex().MarkWriterIndex();
         }
+
         int offset = form == 2 ? 1 : form == 3 ? 2 : 0;
         int expected = -1;
+
         for (int i = 0; i < view.Capacity; ++i)
         {
             int index = descending ? view.Capacity - i - 1 : i;
@@ -318,6 +335,7 @@ public class ByteBufSearchSourceTest
                 break;
             }
         }
+
         try
         {
             Assert.Equal(expected, view.IndexOf(descending ? view.Capacity : 0, descending ? 0 : view.Capacity, value));
@@ -353,6 +371,7 @@ public class ByteBufSearchSourceTest
             Value = value;
             if (outcome == 2)
                 throw Error;
+
             return outcome == 0 ? 6 : -1;
         }
     }
@@ -405,6 +424,7 @@ public class ByteBufSearchSourceTest
             {
                 Assert.Equal(outcome == 1 ? -1 : overload == 2 ? 3 : 4, Invoke());
             }
+
             Assert.Equal(1, calls.Count);
             Assert.Equal(overload == 2 ? 3 : 2, calls.From);
             Assert.Equal(overload == 0 ? 12 : overload == 1 ? 7 : 11, calls.To);

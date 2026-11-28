@@ -85,6 +85,7 @@ public class DomainMappingNativeContractTest
     public void NativeIdnNormalizationIsIndependentOfCallerCulture(string culture)
     {
         var previous = CultureInfo.CurrentCulture;
+
         try
         {
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture);
@@ -128,6 +129,7 @@ public class DomainMappingNativeContractTest
             {
                 throw failure;
             }
+
             return input.ToString();
         };
         Func<string, object> selection = source;

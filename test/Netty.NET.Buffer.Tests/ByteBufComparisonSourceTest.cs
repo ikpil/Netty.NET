@@ -31,6 +31,7 @@ public class ByteBufComparisonSourceTest
             if (provider >= 3)
                 _pool = new PooledByteBufAllocator(nativeAllocator: Native, maxOrder: 1,
                     smallCacheSize: 0, normalCacheSize: 0);
+
             Root = provider switch
             {
                 0 => new UnpooledHeapByteBuf(length),
@@ -51,6 +52,7 @@ public class ByteBufComparisonSourceTest
             {
                 Root.Release();
             }
+
             Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
@@ -104,6 +106,7 @@ public class ByteBufComparisonSourceTest
         new Random(12345).NextBytes(value);
         buffer.SetBytes(0, value);
         ByteBuf expected = Unpooled.WrappedBuffer(value);
+
         try
         {
             Assert.True(buffer.Equals((object)expected));
@@ -134,13 +137,16 @@ public class ByteBufComparisonSourceTest
         // Fill the random stuff
         byte[] value = new byte[32];
         new Random(12345).NextBytes(value);
+
         // Prevent overflow / underflow
         if (value[0] == 0)
             ++value[0];
         else if (value[0] == 255)
             --value[0];
+
         buffer.SetIndex(0, value.Length).SetBytes(0, value);
         ByteBuf expected = Unpooled.WrappedBuffer(value);
+
         try
         {
             ByteBuf alternate = expected.Duplicate();
@@ -157,9 +163,11 @@ public class ByteBufComparisonSourceTest
             Assert.True(buffer.CompareTo(alternate.Slice(0, 31)) > 0);
             Assert.True(buffer.Slice(0, 31).CompareTo(expected) < 0);
             Assert.True(buffer.Slice(0, 31).CompareTo(alternate) < 0);
+
             foreach (ByteBuf comparison in new[] { expected, alternate })
             {
                 ByteBuf retained = buffer.RetainedSlice(0, 31);
+
                 try
                 {
                     Assert.True(retained.CompareTo(comparison) < 0);
@@ -169,6 +177,7 @@ public class ByteBufComparisonSourceTest
                     retained.Release();
                 }
             }
+
             Assert.Equal(value, ByteBufUtil.GetBytes(buffer, 0, 32));
             Assert.Equal(0, buffer.ReaderIndex);
             Assert.Equal(32, buffer.WriterIndex);
@@ -207,6 +216,7 @@ public class ByteBufComparisonSourceTest
         Assert.Equal(buf2.CompareTo(buf1), buf4.CompareTo(buf3));
         Assert.Equal(buf1.CompareTo(buf3), buf2.CompareTo(buf4));
         Assert.Equal(buf3.CompareTo(buf1), buf4.CompareTo(buf2));
+
         // CLR: comparison does not consume or release.
         foreach (ByteBuf buffer in new[] { buf1, buf2, buf3, buf4 })
         {

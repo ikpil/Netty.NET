@@ -97,6 +97,7 @@ public sealed class UnixResolverDnsServerAddressStreamProvider : IDnsServerAddre
             {
                 logger.Debug("failed to parse {} and/or {}", ETC_RESOLV_CONF_FILE, ETC_RESOLVER_DIR, e);
             }
+
             return DefaultDnsServerAddressStreamProvider.INSTANCE;
         }
     }
@@ -121,6 +122,7 @@ public sealed class UnixResolverDnsServerAddressStreamProvider : IDnsServerAddre
         domainToNameServerStreamMap = useEtcResolverFiles ? Parse(etcResolverFiles) : etcResolvConfMap;
 
         etcResolvConfMap.TryGetValue(etcResolvConf.Name, out DnsServerAddresses defaultNameServerAddresses);
+
         if (defaultNameServerAddresses == null)
         {
             ICollection<DnsServerAddresses> values = etcResolvConfMap.Values;
@@ -128,6 +130,7 @@ public sealed class UnixResolverDnsServerAddressStreamProvider : IDnsServerAddre
             {
                 throw new ArgumentException(etcResolvConf + " didn't provide any name servers");
             }
+
             using (IEnumerator<DnsServerAddresses> iterator = values.GetEnumerator())
             {
                 iterator.MoveNext();
@@ -213,14 +216,17 @@ public sealed class UnixResolverDnsServerAddressStreamProvider : IDnsServerAddre
         Dictionary<string, DnsServerAddresses> domainToNameServerStreamMap =
                 new Dictionary<string, DnsServerAddresses>(etcResolverFiles.Length << 1);
         bool rotateGlobal = RES_OPTIONS != null && RES_OPTIONS.Contains(OPTIONS_ROTATE_FLAG);
+
         foreach (FileInfo etcResolverFile in etcResolverFiles)
         {
             if (!etcResolverFile.Exists)
             {
                 continue;
             }
+
             FileStream fr = etcResolverFile.OpenRead();
             StreamReader br = null;
+
             try
             {
                 br = new StreamReader(fr);
@@ -229,9 +235,11 @@ public sealed class UnixResolverDnsServerAddressStreamProvider : IDnsServerAddre
                 bool rotate = rotateGlobal;
                 int port = DefaultDnsServerAddressStreamProvider.DNS_PORT;
                 string line;
+
                 while ((line = br.ReadLine()) != null)
                 {
                     line = ResolvConf.JavaTrim(line);
+
                     try
                     {
                         char c;
@@ -239,6 +247,7 @@ public sealed class UnixResolverDnsServerAddressStreamProvider : IDnsServerAddre
                         {
                             continue;
                         }
+
                         if (!rotate && line.StartsWith(OPTIONS_ROW_LABEL, StringComparison.Ordinal))
                         {
                             rotate = line.Contains(OPTIONS_ROTATE_FLAG);
@@ -251,6 +260,7 @@ public sealed class UnixResolverDnsServerAddressStreamProvider : IDnsServerAddre
                                 throw new ArgumentException("error parsing label " + NAMESERVER_ROW_LABEL +
                                         " in file " + etcResolverFile + ". value: " + line);
                             }
+
                             string maybeIP;
                             int x = StringUtil.IndexOfWhiteSpace(line, i);
                             if (x == -1)
@@ -266,6 +276,7 @@ public sealed class UnixResolverDnsServerAddressStreamProvider : IDnsServerAddre
                                     throw new ArgumentException("error parsing label " + NAMESERVER_ROW_LABEL +
                                             " in file " + etcResolverFile + ". value: " + line);
                                 }
+
                                 maybeIP = line.Substring(i, x - i);
                             }
 
@@ -278,9 +289,11 @@ public sealed class UnixResolverDnsServerAddressStreamProvider : IDnsServerAddre
                                     throw new ArgumentException("error parsing label " + NAMESERVER_ROW_LABEL +
                                             " in file " + etcResolverFile + ". invalid IP value: " + line);
                                 }
+
                                 port = ParseInt(maybeIP.Substring(i + 1));
                                 maybeIP = maybeIP.Substring(0, i);
                             }
+
                             EndPoint addr = DnsServerAddresses.SocketAddress(maybeIP, port);
                             // Check if the address is resolved and only if this is the case use it. Otherwise just
                             // ignore it. This is needed to filter out invalid entries, as if for example an ipv6
@@ -299,11 +312,14 @@ public sealed class UnixResolverDnsServerAddressStreamProvider : IDnsServerAddre
                                 throw new ArgumentException("error parsing label " + DOMAIN_ROW_LABEL +
                                         " in file " + etcResolverFile + " value: " + line);
                             }
+
                             domainName = line.Substring(i);
+
                             if (addresses.Count != 0)
                             {
                                 PutIfAbsent(domainToNameServerStreamMap, domainName, addresses, rotate);
                             }
+
                             addresses = new List<EndPoint>(2);
                         }
                         else if (line.StartsWith(PORT_ROW_LABEL, StringComparison.Ordinal))
@@ -314,6 +330,7 @@ public sealed class UnixResolverDnsServerAddressStreamProvider : IDnsServerAddre
                                 throw new ArgumentException("error parsing label " + PORT_ROW_LABEL +
                                         " in file " + etcResolverFile + " value: " + line);
                             }
+
                             port = ParseInt(line.Substring(i));
                         }
                         else if (line.StartsWith(SORTLIST_ROW_LABEL, StringComparison.Ordinal))
@@ -326,6 +343,7 @@ public sealed class UnixResolverDnsServerAddressStreamProvider : IDnsServerAddre
                         logger.Warn("Could not parse entry. Ignoring line: {}", line, e);
                     }
                 }
+
                 if (addresses.Count != 0)
                 {
                     PutIfAbsent(domainToNameServerStreamMap, domainName, addresses, rotate);
@@ -343,6 +361,7 @@ public sealed class UnixResolverDnsServerAddressStreamProvider : IDnsServerAddre
                 }
             }
         }
+
         return domainToNameServerStreamMap;
     }
 
@@ -365,9 +384,11 @@ public sealed class UnixResolverDnsServerAddressStreamProvider : IDnsServerAddre
     {
         domainToNameServerStreamMap.TryGetValue(domainName, out DnsServerAddresses existingAddresses);
         domainToNameServerStreamMap[domainName] = addresses;
+
         if (existingAddresses != null)
         {
             domainToNameServerStreamMap[domainName] = existingAddresses;
+
             if (logger.IsDebugEnabled())
             {
                 logger.Debug("Domain name {} already maps to addresses {} so new addresses {} will be discarded",
@@ -400,10 +421,12 @@ public sealed class UnixResolverDnsServerAddressStreamProvider : IDnsServerAddre
 
         FileStream fr = etcResolvConf.OpenRead();
         StreamReader br = null;
+
         try
         {
             br = new StreamReader(fr);
             string line;
+
             while ((line = br.ReadLine()) != null)
             {
                 if (line.StartsWith(OPTIONS_ROW_LABEL, StringComparison.Ordinal))
@@ -437,6 +460,7 @@ public sealed class UnixResolverDnsServerAddressStreamProvider : IDnsServerAddre
     private static void ParseResOptions(string line, UnixResolverOptions.Builder builder)
     {
         string[] opts = SplitWhitespace(line);
+
         foreach (string opt in opts)
         {
             try
@@ -492,10 +516,12 @@ public sealed class UnixResolverDnsServerAddressStreamProvider : IDnsServerAddre
 
         FileStream fr = etcResolvConf.OpenRead();
         StreamReader br = null;
+
         try
         {
             br = new StreamReader(fr);
             string line;
+
             while ((line = br.ReadLine()) != null)
             {
                 if (localDomain == null && line.StartsWith(DOMAIN_ROW_LABEL, StringComparison.Ordinal))
@@ -552,16 +578,20 @@ public sealed class UnixResolverDnsServerAddressStreamProvider : IDnsServerAddre
         {
             return new[] { input };
         }
+
         string[] parts = WHITESPACE_PATTERN.Split(input);
         int size = parts.Length;
+
         while (size > 0 && parts[size - 1].Length == 0)
         {
             size--;
         }
+
         if (size == parts.Length)
         {
             return parts;
         }
+
         string[] result = new string[size];
         Array.Copy(parts, result, size);
         return result;

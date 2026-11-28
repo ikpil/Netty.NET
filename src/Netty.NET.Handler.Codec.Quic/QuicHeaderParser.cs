@@ -95,6 +95,7 @@ public sealed class QuicHeaderParser : IDisposable
         int readable = packet.ReadableBytes;
 
         CheckReadable(offset, readable, sizeof(byte));
+
         byte first = packet.GetByte(offset);
         offset += sizeof(byte);
 
@@ -149,6 +150,7 @@ public sealed class QuicHeaderParser : IDisposable
             type = TypeOfLongHeader(first, version);
 
             CheckReadable(offset, readable, sizeof(byte));
+
             int dcidLen = packet.GetByte(offset);
             CheckCidLength(dcidLen);
             offset += sizeof(byte);
@@ -156,6 +158,7 @@ public sealed class QuicHeaderParser : IDisposable
             offset += dcidLen;
 
             CheckReadable(offset, readable, sizeof(byte));
+
             int scidLen = packet.GetByte(offset);
             CheckCidLength(scidLen);
             offset += sizeof(byte);
@@ -163,6 +166,7 @@ public sealed class QuicHeaderParser : IDisposable
             offset += scidLen;
             token = SliceToken(type, packet, offset, readable);
         }
+
         callback.Process(sender, recipient, packet, type, version, scid, dcid, token);
     }
 
@@ -185,16 +189,19 @@ public sealed class QuicHeaderParser : IDisposable
             case var _ when type == QuicPacketType.INITIAL:
                 // See
                 CheckReadable(offset, readable, sizeof(byte));
+
                 int numBytes = NumBytesForVariableLengthInteger(packet.GetByte(offset));
                 int len = (int) GetVariableLengthInteger(packet, offset, numBytes);
                 offset += numBytes;
 
                 CheckReadable(offset, readable, len);
+
                 return packet.Slice(offset, len);
             case var _ when type == QuicPacketType.RETRY:
                 // Exclude the integrity tag from the token.
                 // See https://www.rfc-editor.org/rfc/rfc9000.html#section-17.2.5
                 CheckReadable(offset, readable, AES_128_GCM_TAG_LENGTH);
+
                 int tokenLen = readable - offset - AES_128_GCM_TAG_LENGTH;
                 return packet.Slice(offset, tokenLen);
             default:
@@ -211,6 +218,7 @@ public sealed class QuicHeaderParser : IDisposable
     internal static ByteBuf SliceCid(ByteBuf buffer, int offset, int len)
     {
         CheckReadable(offset, buffer.ReadableBytes, len);
+
         return buffer.Slice(offset, len);
     }
 
@@ -232,6 +240,7 @@ public sealed class QuicHeaderParser : IDisposable
     private static long GetVariableLengthInteger(ByteBuf @in, int offset, int len)
     {
         CheckReadable(offset, @in.ReadableBytes, len);
+
         switch (len)
         {
             case 1:
@@ -261,12 +270,15 @@ public sealed class QuicHeaderParser : IDisposable
             {
                 return 8;
             }
+
             return 2;
         }
+
         if ((val & 2) != 0)
         {
             return 4;
         }
+
         return 1;
     }
 
@@ -285,7 +297,9 @@ public sealed class QuicHeaderParser : IDisposable
             // This also means we should ignore everything that is left in 'first'.
             return QuicPacketType.VERSION_NEGOTIATION;
         }
+
         int packetType = (first & 0x30) >> 4;
+
         switch (packetType)
         {
             case 0x00:

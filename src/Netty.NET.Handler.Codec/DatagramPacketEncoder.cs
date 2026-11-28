@@ -73,6 +73,7 @@ public class DatagramPacketEncoder<M> : MessageToMessageEncoder<IAddressedEnvelo
                     && (envelope.Sender is IPEndPoint || envelope.Sender == null)
                     && envelope.Recipient is IPEndPoint;
         }
+
         return false;
     }
 
@@ -87,6 +88,7 @@ public class DatagramPacketEncoder<M> : MessageToMessageEncoder<IAddressedEnvelo
             throw new EncoderException(
                     StringUtil.SimpleClassName(encoder) + " must produce only one message.");
         }
+
         object content = @out[0];
         if (content is ByteBuf)
         {

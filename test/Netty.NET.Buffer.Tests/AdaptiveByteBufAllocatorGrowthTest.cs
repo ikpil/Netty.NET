@@ -41,6 +41,7 @@ public class AdaptiveByteBufAllocatorGrowthTest(AdaptiveByteBufAllocatorGrowthTe
         public State()
         {
             ResourceLeakDetector.SetLevel(ResourceLeakDetectorLevel.DISABLED);
+
             try
             {
                 Allocator = new AdaptiveByteBufAllocator(false);
@@ -89,6 +90,7 @@ public class AdaptiveByteBufAllocatorGrowthTest(AdaptiveByteBufAllocatorGrowthTe
         int bufSizeBase;
         int bufSizeAdditional;
         int bufSizeGrowth;
+
         if ((repetition & 1) == 0)
         {
             // Target large buffers.
@@ -108,19 +110,23 @@ public class AdaptiveByteBufAllocatorGrowthTest(AdaptiveByteBufAllocatorGrowthTe
         int threadCount = 20;
         using var startLatch = new ManualResetEventSlim();
         var futures = new List<Task>(Math.Max(4, Environment.ProcessorCount * 2));
+
         for (int t = 0; t < threadCount; ++t)
         {
             futures.Add(state.Threads.StartNew(() =>
             {
                 startLatch.Wait(cancellationToken);
+
                 // CLR Random.Shared supplies independently generated values on pool threads.
                 for (int i = 0; i < 2000; ++i)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
+
                     // Allocate buffers in various sizes.
                     // In the BuddyChunk, we'll exercise different buddy tree levels.
                     int initialSize = bufSizeBase + Random.Shared.Next(bufSizeAdditional);
                     ByteBuf buf = state.Allocator.HeapBuffer(initialSize);
+
                     try
                     {
                         // Grow the buffer, which will allocate more space, and deallocate the old space.
@@ -136,6 +142,7 @@ public class AdaptiveByteBufAllocatorGrowthTest(AdaptiveByteBufAllocatorGrowthTe
         }
 
         startLatch.Set();
+
         try
         {
             foreach (Task future in futures)

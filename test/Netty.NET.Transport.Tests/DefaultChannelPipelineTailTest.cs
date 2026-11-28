@@ -53,6 +53,7 @@ public class DefaultChannelPipelineTailTest : IAsyncLifetime
     {
         using var latch = new CountdownEvent(1);
         IChannel channel = await Connect(new MyChannel { Active = () => latch.Signal() });
+
         try
         {
             Assert.True(latch.Wait(TimeSpan.FromSeconds(1)));
@@ -83,6 +84,7 @@ public class DefaultChannelPipelineTailTest : IAsyncLifetime
             latch.Signal();
         }
         });
+
         try
         {
             var error = new IOException("testOnUnhandledInboundException");
@@ -101,6 +103,7 @@ public class DefaultChannelPipelineTailTest : IAsyncLifetime
     {
         using var latch = new CountdownEvent(1);
         IChannel channel = await Connect(new MyChannel { Message = _ => latch.Signal() });
+
         try
         {
             channel.Pipeline.FireChannelRead("testOnUnhandledInboundMessage");
@@ -117,6 +120,7 @@ public class DefaultChannelPipelineTailTest : IAsyncLifetime
     {
         using var latch = new CountdownEvent(1);
         IChannel channel = await Connect(new MyChannel { ReadComplete = () => latch.Signal() });
+
         try
         {
             channel.Pipeline.FireChannelReadComplete();
@@ -133,6 +137,7 @@ public class DefaultChannelPipelineTailTest : IAsyncLifetime
     {
         using var latch = new CountdownEvent(1);
         IChannel channel = await Connect(new MyChannel { UserEvent = _ => latch.Signal() });
+
         try
         {
             channel.Pipeline.FireUserEventTriggered("testOnUnhandledInboundUserEventTriggered");
@@ -149,6 +154,7 @@ public class DefaultChannelPipelineTailTest : IAsyncLifetime
     {
         using var latch = new CountdownEvent(1);
         IChannel channel = await Connect(new MyChannel { Writability = () => latch.Signal() });
+
         try
         {
             channel.Pipeline.FireChannelWritabilityChanged();

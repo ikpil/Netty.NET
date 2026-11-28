@@ -65,6 +65,7 @@ internal sealed class ContentSigner
         {
             throw new NotSupportedException(algorithm);
         }
+
         this.algorithm = algorithm;
         this.key = key;
     }
@@ -72,6 +73,7 @@ internal sealed class ContentSigner
     internal void WriteAlgorithmIdentifier(AsnWriter writer)
     {
         writer.PushSequence();
+
         if (algorithm == "SHA256withRSA")
         {
             writer.WriteObjectIdentifier("1.2.840.113549.1.1.11");
@@ -81,6 +83,7 @@ internal sealed class ContentSigner
         {
             writer.WriteObjectIdentifier("1.2.840.10045.4.3.2");
         }
+
         writer.PopSequence();
     }
 
@@ -128,10 +131,12 @@ internal sealed class BasicOcspRespBuilder
         tbs.PopSequence(byName);
         tbs.WriteGeneralizedTime(producedAt, true);
         tbs.PushSequence();
+
         foreach ((CertificateId id, object status, DateTimeOffset thisUpdate, DateTimeOffset? nextUpdate) in responses)
         {
             tbs.PushSequence();
             id.Write(tbs);
+
             if (status == null)
             {
                 tbs.WriteNull(new Asn1Tag(TagClass.ContextSpecific, 0));
@@ -147,7 +152,9 @@ internal sealed class BasicOcspRespBuilder
             {
                 tbs.WriteNull(new Asn1Tag(TagClass.ContextSpecific, 2));
             }
+
             tbs.WriteGeneralizedTime(thisUpdate, true);
+
             if (nextUpdate != null)
             {
                 Asn1Tag nextUpdateTag = new Asn1Tag(TagClass.ContextSpecific, 0, true);
@@ -155,8 +162,10 @@ internal sealed class BasicOcspRespBuilder
                 tbs.WriteGeneralizedTime(nextUpdate.Value, true);
                 tbs.PopSequence(nextUpdateTag);
             }
+
             tbs.PopSequence();
         }
+
         tbs.PopSequence();
         tbs.PopSequence();
         byte[] tbsResponseData = tbs.Encode();
@@ -166,19 +175,24 @@ internal sealed class BasicOcspRespBuilder
         writer.WriteEncodedValue(tbsResponseData);
         signer.WriteAlgorithmIdentifier(writer);
         writer.WriteBitString(signer.Sign(tbsResponseData));
+
         if (chain != null)
         {
             Asn1Tag certsTag = new Asn1Tag(TagClass.ContextSpecific, 0, true);
             writer.PushSequence(certsTag);
             writer.PushSequence();
+
             foreach (X509Certificate2 certificate in chain)
             {
                 writer.WriteEncodedValue(certificate.RawData);
             }
+
             writer.PopSequence();
             writer.PopSequence(certsTag);
         }
+
         writer.PopSequence();
+
         return new BasicOcspResp(writer.Encode());
     }
 }
@@ -198,6 +212,7 @@ internal static class OcspRespBuilder
         AsnWriter writer = new AsnWriter(AsnEncodingRules.DER);
         writer.PushSequence();
         writer.WriteEnumeratedValue(status);
+
         if (responseType != null)
         {
             Asn1Tag responseBytesTag = new Asn1Tag(TagClass.ContextSpecific, 0, true);
@@ -208,7 +223,9 @@ internal static class OcspRespBuilder
             writer.PopSequence();
             writer.PopSequence(responseBytesTag);
         }
+
         writer.PopSequence();
+
         return writer.Encode();
     }
 }

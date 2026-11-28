@@ -366,9 +366,11 @@ public class PerMessageDeflateEncoderTest
         EmbeddedChannel decoderChannel = new EmbeddedChannel(new PerMessageDeflateDecoder(noContext, 0));
 
         StringBuilder messages = new StringBuilder();
+
         foreach (WebSocketFrame frame in EncodeMessageWithEmptyFinalFragmentThenMessage(encoderChannel, text))
         {
             decoderChannel.WriteInbound(frame);
+
             for (;;)
             {
                 WebSocketFrame decoded = decoderChannel.ReadInbound<WebSocketFrame>();
@@ -376,14 +378,18 @@ public class PerMessageDeflateEncoderTest
                 {
                     break;
                 }
+
                 messages.Append(decoded.Content.ToString(Encoding.UTF8));
+
                 if (decoded.IsFinalFragment())
                 {
                     messages.Append('|');
                 }
+
                 decoded.Release();
             }
         }
+
         Assert.Equal(text + '|' + text + '|', messages.ToString());
 
         Assert.False(encoderChannel.Finish());
@@ -402,11 +408,13 @@ public class PerMessageDeflateEncoderTest
         Assert.True(encoderChannel.WriteOutbound(new ContinuationWebSocketFrame(true, 0, Unpooled.EmptyBuffer)));
         Assert.True(encoderChannel.WriteOutbound(new TextWebSocketFrame(true, 0, text)));
         WebSocketFrame[] frames = new WebSocketFrame[3];
+
         for (int i = 0; i < frames.Length; i++)
         {
             frames[i] = encoderChannel.ReadOutbound<WebSocketFrame>();
             Assert.NotNull(frames[i]);
         }
+
         Assert.True(ByteBufUtil.Equals(EMPTY_DEFLATE_BLOCK, frames[1].Content));
         return frames;
     }

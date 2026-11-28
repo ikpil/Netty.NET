@@ -36,9 +36,11 @@ public class PooledAllocatorDiagnosticsTest
     private static string Model(PooledByteBufAllocator allocator)
     {
         var text = new StringBuilder();
+
         foreach (var entry in new[] { (allocator.Metric.HeapArenas, "heap"), (allocator.Metric.DirectArenas, "direct") })
         {
             text.Append(FormattableString.Invariant($"{entry.Item1.Count} {entry.Item2} arena(s):")).Append(Environment.NewLine);
+
             foreach (IPoolArenaMetric arena in entry.Item1)
             {
                 for (int i = 0; i < Labels.Length; i++)
@@ -57,17 +59,22 @@ public class PooledAllocatorDiagnosticsTest
                             {
                                 text.Append(Environment.NewLine);
                             }
+
                         IPoolChunkMetric chunk = chunks[j];
                         int usage = chunk.FreeBytes == 0 ? 100 : Math.Min(99, 100 - (int)(100L * chunk.FreeBytes / chunk.ChunkSize));
                         text.Append(FormattableString.Invariant($"Chunk(<id>: {usage}%, {chunk.ChunkSize - chunk.FreeBytes}/{chunk.ChunkSize})"));
                     }
                     }
+
                     text.Append(Environment.NewLine);
                 }
+
                 text.Append("small subpages:");
+
                 foreach (var group in arena.SmallSubpages.GroupBy(s => arena.Size2SizeIdx(s.ElementSize)).OrderBy(g => g.Key))
                 {
                     text.Append(Environment.NewLine).Append(group.Key.ToString(CultureInfo.InvariantCulture)).Append(": ");
+
                     foreach (IPoolSubpageMetric page in group)
                     {
                         var subpage = (PoolSubpage)page;
@@ -76,9 +83,11 @@ public class PooledAllocatorDiagnosticsTest
                         text.Append(FormattableString.Invariant($"({offset}: {page.MaxNumElements - page.NumAvailable}/{page.MaxNumElements}, offset: {offset}, length: {subpage.RunSize}, elemSize: {page.ElementSize})"));
                     }
                 }
+
                 text.Append(Environment.NewLine);
             }
         }
+
         return text.ToString();
     }
 
@@ -92,26 +101,32 @@ public class PooledAllocatorDiagnosticsTest
         Assert.Equal(0, allocator.Metric.NumThreadLocalCaches);
         Assert.Equal(0, native.ReservedBytes);
         var live = new List<ByteBuf>();
+
         try
         {
             foreach (int size in new[] { 16, 64, 128, 768, 4096, 8192, 20000 })
             {
                 if (heaps > 0)
                     live.Add(allocator.HeapBuffer(size, size));
+
                 if (directs > 0)
                     live.Add(allocator.DirectBuffer(size, size));
             }
+
             string before = Model(allocator);
             Assert.Equal(before, Normalize(allocator.DumpStats()));
             Assert.Equal(before, Normalize(allocator.DumpStats()));
+
             foreach (ByteBuf b in live)
             {
                 Assert.Equal(0, b.ReaderIndex);
                 Assert.Equal(0, b.WriterIndex);
                 Assert.Equal(1, b.RefCnt);
             }
+
             foreach (ByteBuf b in live)
                 b.Release();
+
             live.Clear();
             Assert.Equal(Model(allocator), Normalize(allocator.DumpStats()));
             allocator.Dispose();
@@ -134,6 +149,7 @@ public class PooledAllocatorDiagnosticsTest
         var native = new NativeMemoryAllocator();
         using var allocator = new PooledByteBufAllocator(nativeAllocator: native, pageSize: 4096, maxOrder: 2);
         var live = new List<ByteBuf>();
+
         try
         {
             for (int i = 0; i < 513; i++)
@@ -154,8 +170,10 @@ public class PooledAllocatorDiagnosticsTest
         {
             b.Release();
         }
+
             allocator.Dispose();
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -166,6 +184,7 @@ public class PooledAllocatorDiagnosticsTest
         var native = new NativeMemoryAllocator();
         using var allocator = new PooledByteBufAllocator(nativeAllocator: native, pageSize: 4096, maxOrder: 2);
         var live = new List<ByteBuf>();
+
         try
         {
             for (int i = 0; i < 12; i++)
@@ -189,8 +208,10 @@ public class PooledAllocatorDiagnosticsTest
         {
             b.Release();
         }
+
             allocator.Dispose();
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -244,6 +265,7 @@ public class PooledAllocatorDiagnosticsTest
         CultureInfo before = CultureInfo.CurrentCulture;
         var culture = (CultureInfo)CultureInfo.InvariantCulture.Clone();
         culture.NumberFormat.NegativeSign = "minus";
+
         try
         {
             CultureInfo.CurrentCulture = culture;
@@ -259,6 +281,7 @@ public class PooledAllocatorDiagnosticsTest
             b.Release();
             allocator.Dispose();
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -272,11 +295,13 @@ public class PooledAllocatorDiagnosticsTest
         var worker = new Thread(() =>
         {
             start.Wait();
+
             try
             {
                 for (int i = 0; i < 200; i++)
                 {
                     ByteBuf b;
+
                     try
                     {
                         b = allocator.DirectBuffer(i % 2 == 0 ? 16 : 4096, 4096);
@@ -285,6 +310,7 @@ public class PooledAllocatorDiagnosticsTest
                     {
                         break;
                     }
+
                     b.Release();
                 }
             }
@@ -295,14 +321,17 @@ public class PooledAllocatorDiagnosticsTest
         });
         worker.Start();
         start.Set();
+
         for (int i = 0; i < 100; i++)
         {
             string report = allocator.DumpStats();
             Assert.StartsWith("1 heap arena(s):" + Environment.NewLine, report);
             Assert.Equal(2, Regex.Matches(report, "small subpages:").Count);
+
             if (i == 50)
                 allocator.Dispose();
         }
+
         Assert.True(worker.Join(TimeSpan.FromSeconds(10)));
         Assert.Null(failure);
         allocator.Dispose();
@@ -332,6 +361,7 @@ public class PooledAllocatorDiagnosticsTest
         Assert.Equal(16384, metric.ChunkSize);
         Assert.Equal(0, metric.NumThreadLocalCaches);
         ByteBuf heap = allocator.HeapBuffer(16, 16), direct = allocator.DirectBuffer(4096, 4096);
+
         try
         {
             Assert.Equal(heaps == 0 ? -1 : 16384, metric.UsedHeapMemory);
@@ -347,6 +377,7 @@ public class PooledAllocatorDiagnosticsTest
             direct.Release();
             allocator.Dispose();
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 }

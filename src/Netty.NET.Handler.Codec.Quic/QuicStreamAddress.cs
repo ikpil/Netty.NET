@@ -50,6 +50,7 @@ public sealed class QuicStreamAddress : EndPoint
         {
             return false;
         }
+
         QuicStreamAddress that = (QuicStreamAddress) o;
         return streamId == that.streamId;
     }

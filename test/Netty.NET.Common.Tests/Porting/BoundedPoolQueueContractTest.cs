@@ -33,6 +33,7 @@ public class BoundedPoolQueueContractTest
         {
             items[index] = pool.Get();
         }
+
         for (int index = 0; index < (enqueue ? 32 : 65); index++)
         {
             items[index].Handle.Recycle(items[index]);
@@ -69,6 +70,7 @@ public class BoundedPoolQueueContractTest
                 {
                     claimed = pool.Get();
                 }
+
                 try
                 {
                     Thread.Sleep(0);
@@ -86,6 +88,7 @@ public class BoundedPoolQueueContractTest
         bool started = false;
         bool waited = false;
         Monitor.Enter(segmentGate);
+
         try
         {
             worker.Start();
@@ -99,15 +102,18 @@ public class BoundedPoolQueueContractTest
         finally
         {
             Monitor.Exit(segmentGate);
+
             if (started)
             {
                 Assert.True(worker.Join(TimeSpan.FromSeconds(5)));
             }
         }
+
         Assert.True(waited);
         Assert.Null(failure);
         Assert.True(pendingInterrupt);
         Assert.Equal(enqueue ? 33 : 32, pool.ThreadLocalSize());
+
         if (enqueue)
         {
             for (int index = 0; index < 33; index++)
@@ -138,6 +144,7 @@ public class BoundedPoolQueueContractTest
         {
             items[index] = pool.Get();
         }
+
         foreach (Item item in items)
         {
             item.Handle.Recycle(item);
@@ -176,12 +183,14 @@ public class BoundedPoolQueueContractTest
         {
             items[index] = pool.Get();
         }
+
         for (int index = 0; index < 4; index++)
         {
             items[index].Handle.Recycle(items[index]);
         }
 
         var workers = new Task[4];
+
         for (int producer = 0; producer < workers.Length; producer++)
         {
             int first = 4 + producer;
@@ -191,6 +200,7 @@ public class BoundedPoolQueueContractTest
                     items[index].Handle.Recycle(items[index]);
             }, TestContext.Current.CancellationToken);
         }
+
         await Task.WhenAll(workers).WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
         Assert.Equal(expectedCapacity, pool.ThreadLocalSize());
 
@@ -201,12 +211,14 @@ public class BoundedPoolQueueContractTest
 
         var accepted = new HashSet<Item>(ReferenceEqualityComparer.Instance);
         var borrowed = new Item[expectedCapacity - 4];
+
         for (int index = 0; index < borrowed.Length; index++)
         {
             Item item = borrowed[index] = pool.Get();
             Assert.True(accepted.Add(item));
             Assert.Contains(item, items);
         }
+
         Assert.Equal(0, pool.ThreadLocalSize());
         Item fresh = pool.Get();
 
@@ -214,6 +226,7 @@ public class BoundedPoolQueueContractTest
         {
             Assert.NotSame(item, fresh);
         }
+
         foreach (Item item in borrowed)
         {
             item.Handle.Recycle(item);
@@ -237,6 +250,7 @@ public class BoundedPoolQueueContractTest
                 return field.GetValue(instance);
             }
         }
+
         throw new InvalidOperationException($"Missing schedule-control field {name} on {instance.GetType()}.");
     }
 }

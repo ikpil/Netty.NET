@@ -61,6 +61,7 @@ public class DefaultDnsCache : IDnsCache
             {
                 return false;
             }
+
             return entry.Cause().Equals(otherEntry.Cause());
         }
     }
@@ -93,6 +94,7 @@ public class DefaultDnsCache : IDnsCache
                     "minTtl: " + minTtl.ToString(CultureInfo.InvariantCulture) + ", maxTtl: " +
                     maxTtl.ToString(CultureInfo.InvariantCulture) + " (expected: 0 <= minTtl <= maxTtl)");
         }
+
         this.negativeTtl = Math.Min(Cache<DefaultDnsCacheEntry>.MAX_SUPPORTED_TTL_SECS, ObjectUtil.CheckPositiveOrZero(negativeTtl, "negativeTtl"));
     }
 
@@ -133,6 +135,7 @@ public class DefaultDnsCache : IDnsCache
     public bool Clear(string hostname)
     {
         ObjectUtil.CheckNotNull(hostname, "hostname");
+
         return resolveCache.Clear(AppendDot(hostname));
     }
 
@@ -154,6 +157,7 @@ public class DefaultDnsCache : IDnsCache
         {
             return entries;
         }
+
         return new DnsCacheEntryList(entries);
     }
 
@@ -163,11 +167,13 @@ public class DefaultDnsCache : IDnsCache
         ObjectUtil.CheckNotNull(hostname, "hostname");
         ObjectUtil.CheckNotNull(address, "address");
         ObjectUtil.CheckNotNull(loop, "loop");
+
         DefaultDnsCacheEntry e = new DefaultDnsCacheEntry(hostname, address);
         if (maxTtl == 0 || !EmptyAdditionals(additionals))
         {
             return e;
         }
+
         resolveCache.Cache_(AppendDot(hostname), e, Math.Max(minTtl, (int) Math.Min(maxTtl, originalTtl)), loop);
         return e;
     }
@@ -228,6 +234,7 @@ public class DefaultDnsCache : IDnsCache
         private DefaultDnsCacheEntry(DefaultDnsCacheEntry entry)
         {
             this.hostname = entry.hostname;
+
             if (entry.cause == null)
             {
                 this.address = entry.address;
@@ -238,6 +245,7 @@ public class DefaultDnsCache : IDnsCache
                 this.address = null;
                 this.cause = CopyThrowable(entry.cause);
             }
+
             this.hash = entry.hash;
         }
 
@@ -284,6 +292,7 @@ public class DefaultDnsCache : IDnsCache
             {
                 return this;
             }
+
             return new DefaultDnsCacheEntry(this);
         }
     }
@@ -318,6 +327,7 @@ public class DefaultDnsCache : IDnsCache
             {
                 ExceptionDispatchInfo.SetRemoteStackTrace(copy, stackTrace);
             }
+
             return copy;
         }
 
@@ -385,10 +395,12 @@ public class DefaultDnsCache : IDnsCache
             // Just delegate to super to make checkstyle happy
             // CLR: AbstractList.hashCode(): 31 * h + element hash over the elements.
             int hashCode = 1;
+
             foreach (IDnsCacheEntry e in this)
             {
                 hashCode = unchecked(31 * hashCode + (e == null ? 0 : e.GetHashCode()));
             }
+
             return hashCode;
         }
 
@@ -399,6 +411,7 @@ public class DefaultDnsCache : IDnsCache
                 // Fast-path.
                 return ListEquals(entries, ((DnsCacheEntryList) o).entries);
             }
+
             return o is IReadOnlyList<IDnsCacheEntry> other && ListEquals(this, other);
         }
 
@@ -413,6 +426,7 @@ public class DefaultDnsCache : IDnsCache
             {
                 return false;
             }
+
             for (int i = 0; i < a.Count; i++)
             {
                 if (!Equals(a[i], b[i]))
@@ -420,6 +434,7 @@ public class DefaultDnsCache : IDnsCache
                     return false;
                 }
             }
+
             return true;
         }
     }

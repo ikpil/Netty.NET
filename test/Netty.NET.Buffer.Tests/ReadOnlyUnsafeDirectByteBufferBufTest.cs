@@ -39,6 +39,7 @@ public class ReadOnlyUnsafeDirectByteBufferBufTest : ReadOnlyDirectByteBufferBuf
     {
         Memory<byte> memory = Allocate(8);
         ByteBuf buf = Buffer(memory);
+
         try
         {
             // CLR: hasMemoryAddress()/memoryAddress() become a scoped pin of the borrowed range;

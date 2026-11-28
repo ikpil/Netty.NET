@@ -41,6 +41,7 @@ public abstract class AbstractAddressResolver<T> : IAddressResolver<T> where T :
     protected AbstractAddressResolver(IEventExecutor executor)
     {
         ArgumentNullException.ThrowIfNull(executor);
+
         Executor = executor;
     }
 
@@ -59,6 +60,7 @@ public abstract class AbstractAddressResolver<T> : IAddressResolver<T> where T :
     {
         if (!IsSupported(address))
             throw new UnsupportedAddressTypeException();
+
         return DoIsResolved(address);
     }
 
@@ -84,6 +86,7 @@ public abstract class AbstractAddressResolver<T> : IAddressResolver<T> where T :
             // Resolved already; no need to perform a lookup
             return Task.FromResult((T)address);
         }
+
         try
         {
             return DoResolveAsync(address, cancellationToken);
@@ -113,6 +116,7 @@ public abstract class AbstractAddressResolver<T> : IAddressResolver<T> where T :
             // Resolved already; no need to perform a lookup
             return Task.FromResult<IReadOnlyList<T>>(new[] { (T)address });
         }
+
         try
         {
             return DoResolveAllAsync(address, cancellationToken);

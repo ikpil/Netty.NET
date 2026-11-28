@@ -133,10 +133,12 @@ public class JdkSslContext : SslContext
     {
         // Choose the sensible default list of protocols that respects JDK flags, eg. jdk.tls.client.protocols
         ISet<string> supportedProtocolsSet = new HashSet<string>();
+
         if (SslUtils.IsTLSv13EnabledByJDK())
         {
             supportedProtocolsSet.Add(SslProtocols.TLS_v1_3);
         }
+
         supportedProtocolsSet.Add(SslProtocols.TLS_v1_2);
         List<string> protocols = new List<string>();
         SslUtils.AddIfSupported(
@@ -156,11 +158,13 @@ public class JdkSslContext : SslContext
         // Choose the sensible default list of cipher suites.
         string[] supportedCiphers = Enum.GetNames<TlsCipherSuite>();
         ISet<string> supportedCiphersSet = new HashSet<string>(supportedCiphers.Length);
+
         for (int i = 0; i < supportedCiphers.Length; ++i)
         {
             string supportedCipher = supportedCiphers[i];
             supportedCiphersSet.Add(supportedCipher);
         }
+
         return supportedCiphersSet;
     }
 
@@ -183,16 +187,19 @@ public class JdkSslContext : SslContext
                 return true;
             }
         }
+
         return false;
     }
 
     private static Dictionary<string, TlsCipherSuite> NewTlsCipherSuites()
     {
         Dictionary<string, TlsCipherSuite> suites = new Dictionary<string, TlsCipherSuite>(StringComparer.Ordinal);
+
         foreach (string name in Enum.GetNames<TlsCipherSuite>())
         {
             suites[name] = Enum.Parse<TlsCipherSuite>(name);
         }
+
         return suites;
     }
 
@@ -245,6 +252,7 @@ public class JdkSslContext : SslContext
         ISet<string> supportedCiphers;
         defaultProtocols = protocols == null;
         this.protocols = protocols == null? DEFAULT_PROTOCOLS : protocols;
+
         if (IsTlsV13Supported(this.protocols))
         {
             supportedCiphers = SUPPORTED_CIPHERS;
@@ -305,6 +313,7 @@ public class JdkSslContext : SslContext
         {
             throw new AuthenticationException("failed to initialize the server-side SSL context", e);
         }
+
         return new JdkSslContext(trustManagerFactory, trustManager, keyManagerFactory, keyManager, null, false,
                 ciphers, cipherFilter, ToNegotiator(apn, true), clientAuth, protocols, startTls, null, null);
     }
@@ -327,6 +336,7 @@ public class JdkSslContext : SslContext
             {
                 trustManagerFactory = BuildTrustManagerFactory(trustCertCollection, trustManagerFactory, keyStore);
             }
+
             if (keyCertChain != null)
             {
                 keyManagerFactory = BuildKeyManagerFactory(keyCertChain, null,
@@ -337,6 +347,7 @@ public class JdkSslContext : SslContext
         {
             throw new AuthenticationException("failed to initialize the client-side SSL context", e);
         }
+
         return new JdkSslContext(trustManagerFactory, trustManager, keyManagerFactory, null, keyManager, true,
                 ciphers, cipherFilter, ToNegotiator(apn, false), ClientAuth.NONE,
                 protocols, false, endpointIdentificationAlgorithm, serverNames);
@@ -370,6 +381,7 @@ public class JdkSslContext : SslContext
         {
             return new SslHandler(ConfigureAndWrapEngine(new SslServerAuthenticationOptions()), startTls);
         }
+
         return new SslHandler(ConfigureAndWrapEngine(new SslClientAuthenticationOptions(), peerHost), startTls);
     }
 
@@ -386,14 +398,17 @@ public class JdkSslContext : SslContext
         {
             SetCipherSuitesPolicy(engine);
         }
+
         engine.EnabledSslProtocols = defaultProtocols ? AuthSslProtocols.None : ToSslProtocols(protocols);
         ConfigureSSLParameters(engine, peerHost);
         engine.ApplicationProtocols = ApplicationProtocols();
         engine.CertificateChainPolicy = trustManagerFactory?.Clone();
+
         if (trustManager != null || endpointIdentificationAlgorithm == null || trustManagerFactory != null)
         {
             engine.RemoteCertificateValidationCallback = VerifyRemoteCertificate;
         }
+
         engine.ClientCertificateContext = keyManagerFactory;
         engine.LocalCertificateSelectionCallback = clientKeyManager;
         return engine;
@@ -412,7 +427,9 @@ public class JdkSslContext : SslContext
         {
             SetCipherSuitesPolicy(engine);
         }
+
         engine.EnabledSslProtocols = defaultProtocols ? AuthSslProtocols.None : ToSslProtocols(protocols);
+
         switch (clientAuth)
         {
             case ClientAuth.OPTIONAL:
@@ -426,6 +443,7 @@ public class JdkSslContext : SslContext
             default:
                 throw new UnreachableException("Unexpected auth " + clientAuth);
         }
+
         engine.ApplicationProtocols = ApplicationProtocols();
         engine.CertificateChainPolicy = trustManagerFactory?.Clone();
         // CLR: installed for every server, ClientAuth.NONE included: a server renegotiates on SslStream only through
@@ -447,6 +465,7 @@ public class JdkSslContext : SslContext
     private void ConfigureSSLParameters(SslClientAuthenticationOptions engine, string peerHost)
     {
         engine.TargetHost = peerHost;
+
         if (serverNames != null && serverNames.Count != 0)
         {
             engine.TargetHost = serverNames[0];
@@ -475,18 +494,22 @@ public class JdkSslContext : SslContext
         {
             return !isClient && clientAuth != ClientAuth.REQUIRE;
         }
+
         if (endpointIdentificationAlgorithm == null)
         {
             sslPolicyErrors &= ~SslPolicyErrors.RemoteCertificateNameMismatch;
         }
+
         if (trustManager != null)
         {
             return trustManager(sender, certificate, chain, sslPolicyErrors);
         }
+
         if ((sslPolicyErrors & SslPolicyErrors.RemoteCertificateChainErrors) != 0 && OnlyTrustAnchorsExpired(chain))
         {
             sslPolicyErrors &= ~SslPolicyErrors.RemoteCertificateChainErrors;
         }
+
         return sslPolicyErrors == SslPolicyErrors.None;
     }
 
@@ -506,6 +529,7 @@ public class JdkSslContext : SslContext
         {
             return false;
         }
+
         foreach (X509ChainStatus status in chain.ChainStatus)
         {
             if (status.Status != X509ChainStatusFlags.NotTimeValid)
@@ -513,14 +537,18 @@ public class JdkSslContext : SslContext
                 return false;
             }
         }
+
         bool anchorExpired = false;
+
         foreach (X509ChainElement element in chain.ChainElements)
         {
             X509ChainStatusFlags flags = X509ChainStatusFlags.NoError;
+
             foreach (X509ChainStatus status in element.ChainElementStatus)
             {
                 flags |= status.Status;
             }
+
             if (flags == X509ChainStatusFlags.NoError)
             {
                 continue;
@@ -529,8 +557,10 @@ public class JdkSslContext : SslContext
             {
                 return false;
             }
+
             anchorExpired = true;
         }
+
         return anchorExpired;
     }
 
@@ -543,6 +573,7 @@ public class JdkSslContext : SslContext
                 return true;
             }
         }
+
         return false;
     }
 
@@ -554,11 +585,14 @@ public class JdkSslContext : SslContext
         {
             return null;
         }
+
         List<SslApplicationProtocol> protocols = new List<SslApplicationProtocol>(names.Count);
+
         foreach (string name in names)
         {
             protocols.Add(new SslApplicationProtocol(name));
         }
+
         return protocols;
     }
 
@@ -616,6 +650,7 @@ public class JdkSslContext : SslContext
         {
             throw new PlatformNotSupportedException("CipherSuitesPolicy is not supported on this platform.");
         }
+
         engine.CipherSuitesPolicy = new CipherSuitesPolicy(suites);
     }
 
@@ -627,20 +662,24 @@ public class JdkSslContext : SslContext
         {
             throw new PlatformNotSupportedException("CipherSuitesPolicy is not supported on this platform.");
         }
+
         engine.CipherSuitesPolicy = new CipherSuitesPolicy(suites);
     }
 
     private static List<TlsCipherSuite> ToTlsCipherSuites(string[] cipherSuites)
     {
         List<TlsCipherSuite> suites = new List<TlsCipherSuite>(cipherSuites.Length);
+
         foreach (string cipherSuite in cipherSuites)
         {
             if (!TLS_CIPHER_SUITES.TryGetValue(cipherSuite, out TlsCipherSuite suite))
             {
                 throw new ArgumentException("Unsupported CipherSuite: " + cipherSuite);
             }
+
             suites.Add(suite);
         }
+
         return suites;
     }
 

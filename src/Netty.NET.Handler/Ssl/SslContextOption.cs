@@ -55,6 +55,7 @@ public abstract class SslContextOption : AbstractConstant<SslContextOption>
     {
         ObjectUtil.CheckNotNull(firstNameComponent, "firstNameComponent");
         ObjectUtil.CheckNotNull(secondNameComponent, "secondNameComponent");
+
         string firstName = firstNameComponent.FullName ?? throw new ArgumentException(
                 "A type with a full name is required.", nameof(firstNameComponent));
         return ValueOf<T>(firstName + '#' + secondNameComponent);

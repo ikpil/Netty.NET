@@ -55,10 +55,12 @@ internal sealed class DnsQueryEncoder
         buf.WriteShort(query.Id());
         int flags = 0;
         flags |= (query.OpCode().ByteValue() & 0xF) << 11;
+
         if (query.IsRecursionDesired())
         {
             flags |= 1 << 8;
         }
+
         buf.WriteShort(flags);
         buf.WriteShort(query.Count(DnsSection.QUESTION));
         buf.WriteShort(0); // answerCount
@@ -69,6 +71,7 @@ internal sealed class DnsQueryEncoder
     private void EncodeQuestions(IDnsQuery query, ByteBuf buf)
     {
         int count = query.Count(DnsSection.QUESTION);
+
         for (int i = 0; i < count; i++)
         {
             recordEncoder.EncodeQuestion(query.RecordAt<IDnsQuestion>(DnsSection.QUESTION, i), buf);
@@ -78,6 +81,7 @@ internal sealed class DnsQueryEncoder
     private void EncodeRecords(IDnsQuery query, DnsSection section, ByteBuf buf)
     {
         int count = query.Count(section);
+
         for (int i = 0; i < count; i++)
         {
             recordEncoder.EncodeRecord(query.RecordAt<IDnsRecord>(section, i), buf);

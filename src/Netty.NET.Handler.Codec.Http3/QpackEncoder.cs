@@ -98,16 +98,19 @@ internal sealed class QpackEncoder
         // Allocate a new buffer as we have to go back and write a variable length base and required insert count
         // later.
         ByteBuf tmp = allocator.Buffer();
+
         try
         {
             int maxDynamicTblIdx = -1;
             int requiredInsertCount = 0;
             Indices dynamicTableIndices = null;
+
             foreach (IEntry<ICharSequence, ICharSequence> header in headers)
             {
                 ICharSequence name = header.GetKey();
                 ICharSequence value = header.GetValue();
                 int dynamicTblIdx;
+
                 if (sensitivityDetector.IsSensitive(name, value))
                 {
                     EncodeSensitiveHeader(tmp, name, value);
@@ -117,18 +120,22 @@ internal sealed class QpackEncoder
                 {
                     dynamicTblIdx = EncodeHeader(qpackAttributes, tmp, @base, name, value);
                 }
+
                 if (dynamicTblIdx >= 0)
                 {
                     int req = dynamicTable.AddReferenceToEntry(name, value, dynamicTblIdx);
+
                     if (dynamicTblIdx > maxDynamicTblIdx)
                     {
                         maxDynamicTblIdx = dynamicTblIdx;
                         requiredInsertCount = req;
                     }
+
                     if (dynamicTableIndices == null)
                     {
                         dynamicTableIndices = new Indices();
                     }
+
                     dynamicTableIndices.Add(dynamicTblIdx);
                 }
             }
@@ -137,11 +144,13 @@ internal sealed class QpackEncoder
             if (dynamicTableIndices != null)
             {
                 Debug.Assert(streamSectionTrackers != null);
+
                 if (!streamSectionTrackers.TryGetValue(streamId, out Queue<Indices> tracker))
                 {
                     tracker = new Queue<Indices>();
                     streamSectionTrackers.Add(streamId, tracker);
                 }
+
                 tracker.Enqueue(dynamicTableIndices);
                 outstandingSections++;
             }
@@ -154,6 +163,7 @@ internal sealed class QpackEncoder
             // | S |      Delta Base (7+)      |
             // +---+---------------------------+
             EncodePrefixedInteger(@out, 0b0, 8, dynamicTable.EncodedRequiredInsertCount(requiredInsertCount));
+
             if (@base >= requiredInsertCount)
             {
                 EncodePrefixedInteger(@out, 0b0, 7, @base - requiredInsertCount);
@@ -162,6 +172,7 @@ internal sealed class QpackEncoder
             {
                 EncodePrefixedInteger(@out, 0b1000_0000, 7, requiredInsertCount - @base - 1);
             }
+
             @out.WriteBytes(tmp);
         }
         finally
@@ -223,6 +234,7 @@ internal sealed class QpackEncoder
         {
             throw INVALID_SECTION_ACKNOWLEDGMENT;
         }
+
         outstandingSections--;
 
         dynamicTableIndices.ForEach(new ActionIndexConsumer(dynamicTable.AcknowledgeInsertCountOnAck));
@@ -243,6 +255,7 @@ internal sealed class QpackEncoder
         {
             return;
         }
+
         if (streamSectionTrackers.Remove(streamId, out Queue<Indices> tracker))
         {
             for (;;)
@@ -251,6 +264,7 @@ internal sealed class QpackEncoder
                 {
                     break;
                 }
+
                 outstandingSections--;
                 dynamicTableIndices.ForEach(new ActionIndexConsumer(dynamicTable.AcknowledgeInsertCountOnCancellation));
             }
@@ -320,6 +334,7 @@ internal sealed class QpackEncoder
                 EncodeLiteral(@out, name, value, false);
                 return DYNAMIC_TABLE_ENCODE_NOT_POSSIBLE;
             }
+
             return EncodeWithDynamicTable(qpackAttributes, @out, @base, name, value);
         }
         else if ((index & QpackStaticTable.MASK_NAME_REF) == QpackStaticTable.MASK_NAME_REF)
@@ -329,6 +344,7 @@ internal sealed class QpackEncoder
             {
                 return dynamicTblIdx;
             }
+
             int nameIdx = index ^ QpackStaticTable.MASK_NAME_REF;
             dynamicTblIdx = TryAddToDynamicTable(qpackAttributes, true, nameIdx, name, value);
             if (dynamicTblIdx >= 0)
@@ -341,14 +357,17 @@ internal sealed class QpackEncoder
                 {
                     EncodeIndexedDynamicTable(@out, @base, dynamicTblIdx);
                 }
+
                 return dynamicTblIdx;
             }
+
             EncodeLiteralWithNameRefStaticTable(@out, nameIdx, value, false);
         }
         else
         {
             EncodeIndexedStaticTable(@out, index);
         }
+
         return IsDynamicTableUnavailable(qpackAttributes) ? DYNAMIC_TABLE_ENCODE_NOT_POSSIBLE :
                 DYNAMIC_TABLE_ENCODE_NOT_DONE;
     }
@@ -386,9 +405,11 @@ internal sealed class QpackEncoder
                 {
                     EncodeIndexedDynamicTable(@out, @base, idx);
                 }
+
                 return idx;
             }
         }
+
         EncodeLiteral(@out, name, value, false);
         return idx;
     }
@@ -412,6 +433,7 @@ internal sealed class QpackEncoder
         {
             return DYNAMIC_TABLE_ENCODE_NOT_POSSIBLE;
         }
+
         Debug.Assert(qpackAttributes.EncoderStreamAvailable());
         IQuicStreamChannel encoderStream = qpackAttributes.EncoderStream();
 
@@ -420,6 +442,7 @@ internal sealed class QpackEncoder
         {
             return DYNAMIC_TABLE_ENCODE_NOT_DONE;
         }
+
         if (idx >= 0)
         {
             if (dynamicTable.RequiresDuplication(idx, SizeOf(name, value)))
@@ -441,6 +464,7 @@ internal sealed class QpackEncoder
                     return DYNAMIC_TABLE_ENCODE_NOT_POSSIBLE;
                 }
             }
+
             if (idx >= @base)
             {
                 EncodePostBaseIndexed(@out, @base, idx);
@@ -459,6 +483,7 @@ internal sealed class QpackEncoder
             {
                 return DYNAMIC_TABLE_ENCODE_NOT_POSSIBLE;
             }
+
             idx = addIdx;
 
             if (idx >= @base)
@@ -470,6 +495,7 @@ internal sealed class QpackEncoder
                 EncodeLiteralWithNameRefDynamicTable(@out, @base, idx, value);
             }
         }
+
         return idx;
     }
 
@@ -491,6 +517,7 @@ internal sealed class QpackEncoder
         {
             return DYNAMIC_TABLE_ENCODE_NOT_POSSIBLE;
         }
+
         Debug.Assert(qpackAttributes.EncoderStreamAvailable());
         IQuicStreamChannel encoderStream = qpackAttributes.EncoderStream();
 
@@ -498,6 +525,7 @@ internal sealed class QpackEncoder
         if (idx >= 0)
         {
             ByteBuf insert = null;
+
             try
             {
                 if (nameIdx >= 0)
@@ -529,6 +557,7 @@ internal sealed class QpackEncoder
                     // matching literal field line.
                     EncodeLengthPrefixedHuffmanEncodedLiteral(insert, 0b0110_0000, 5, name);
                 }
+
                 //    0   1   2   3   4   5   6   7
                 // +---+---+-----------------------+
                 // | H |     Value Length (7+)     |
@@ -542,14 +571,17 @@ internal sealed class QpackEncoder
                 ReferenceCountUtil.Release(insert);
                 return DYNAMIC_TABLE_ENCODE_NOT_DONE;
             }
+
             CloseOnFailure(encoderStream, encoderStream.WriteAndFlushAsync(insert));
             if (MayNotBlockStream())
             {
                 // Add to the table but do not use the entry in the header block to avoid blocking.
                 return DYNAMIC_TABLE_ENCODE_NOT_DONE;
             }
+
             blockedStreams++;
         }
+
         return idx;
     }
 
@@ -725,6 +757,7 @@ internal sealed class QpackEncoder
                 // Double it if needed.
                 Array.Resize(ref array, array.Length << 1);
             }
+
             array[idx++] = index;
         }
 

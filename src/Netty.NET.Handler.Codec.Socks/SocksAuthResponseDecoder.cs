@@ -46,6 +46,7 @@ public class SocksAuthResponseDecoder : ReplayingDecoder<SocksAuthResponseDecode
                     @out.Add(SocksCommonUtils.UNKNOWN_SOCKS_RESPONSE);
                     break;
                 }
+
                 Checkpoint(State.READ_AUTH_RESPONSE);
                 goto case State.READ_AUTH_RESPONSE;
             }
@@ -60,6 +61,7 @@ public class SocksAuthResponseDecoder : ReplayingDecoder<SocksAuthResponseDecode
                 throw new InvalidOperationException("Unexpected response decoder state: " + base.State());
             }
         }
+
         channelHandlerContext.Pipeline.Remove(this);
     }
 

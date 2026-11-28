@@ -81,6 +81,7 @@ public class UnreleasableByteBufComparisonTest
             {
                 Assert.True(_tracked.Release());
             }
+
             Assert.Equal(0, Root.RefCnt);
             Assert.Equal(_expectedCloses, Tracker.Closes);
             Assert.Equal(0, Native.ReservedBytes);
@@ -107,6 +108,7 @@ public class UnreleasableByteBufComparisonTest
     {
         using var storage = new Storage(backing, parent);
         ByteBuf peer = Peer(), facade = storage.Facade;
+
         try
         {
             Assert.Equal(608462917, facade.GetHashCode());
@@ -151,6 +153,7 @@ public class UnreleasableByteBufComparisonTest
     {
         using var storage = new Storage(backing, parent);
         ByteBuf peer = Peer(), facade = storage.Facade;
+
         try
         {
             storage.Dispose();
@@ -216,6 +219,7 @@ public class UnreleasableByteBufComparisonTest
     {
         var root = new ObservedHeap();
         ByteBuf facade = Unpooled.UnreleasableBuffer(root), peer = Peer();
+
         try
         {
             switch (operation)
@@ -233,6 +237,7 @@ public class UnreleasableByteBufComparisonTest
                     Assert.Equal(0, facade.CompareTo(peer));
                     break;
             }
+
             Assert.Equal(operation == 0 ? 1 : 0, root.HashCalls);
             Assert.Equal(operation == 2 ? 1 : 0, root.ObjectCalls);
             Assert.Equal(operation is 1 or 2 ? 1 : 0, root.TypedCalls);

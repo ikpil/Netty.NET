@@ -33,6 +33,7 @@ internal sealed class FixedCompositeByteBuf : AbstractReferenceCountedByteBuf
         {
             return this;
         }
+
         Component component = _components[FindComponent(index)];
         if (destination.Length <= component.EndOffset - index)
             component.Source.GetBytes(index - component.Offset, destination);
@@ -43,6 +44,7 @@ internal sealed class FixedCompositeByteBuf : AbstractReferenceCountedByteBuf
             GetBytesCore(index, bytes);
             bytes.AsSpan().CopyTo(destination);
         }
+
         return this;
     }
 
@@ -54,9 +56,11 @@ internal sealed class FixedCompositeByteBuf : AbstractReferenceCountedByteBuf
         destination.CheckIndex(destinationIndex, length);
         if (length == 0)
             return this;
+
         if (BulkRangesOverlap(this, index, destination, destinationIndex, length))
         {
             ByteBuf snapshot = new UnpooledHeapByteBuf(length);
+
             try
             {
                 GetBufferComponents(index, snapshot, 0, length);
@@ -69,12 +73,14 @@ internal sealed class FixedCompositeByteBuf : AbstractReferenceCountedByteBuf
         }
         else
             GetBufferComponents(index, destination, destinationIndex, length);
+
         return this;
     }
 
     private void GetBufferComponents(int index, ByteBuf destination, int destinationIndex, int length)
     {
         CheckIndex(index, length);
+
         int componentIndex = FindComponent(index);
 
         while (length > 0)
@@ -122,8 +128,10 @@ internal sealed class FixedCompositeByteBuf : AbstractReferenceCountedByteBuf
     private static Component[] Capture(ByteBuf[] buffers)
     {
         ArgumentNullException.ThrowIfNull(buffers);
+
         var components = new Component[buffers.Length];
         int offset = 0;
+
         for (int i = 0; i < buffers.Length; ++i)
         {
             ByteBuf source = buffers[i] ?? throw new ArgumentException("A component is null.", nameof(buffers));
@@ -131,9 +139,11 @@ internal sealed class FixedCompositeByteBuf : AbstractReferenceCountedByteBuf
             {
                 throw new IllegalReferenceCountException(source.RefCnt);
             }
+
             int length = source.ReadableBytes;
             if (length > int.MaxValue - offset)
                 throw new ArgumentException("The combined capacity exceeds Int32.MaxValue.", nameof(buffers));
+
             // Create a new component and store it in the array so it not create a new object
             // on the next access.
             // CLR: capture immutable descriptors once, without slicing or rewriting the caller's array.
@@ -141,6 +151,7 @@ internal sealed class FixedCompositeByteBuf : AbstractReferenceCountedByteBuf
             components[i] = new Component(source, offset, offset + length);
             offset += length;
         }
+
         return components;
     }
 
@@ -159,6 +170,7 @@ internal sealed class FixedCompositeByteBuf : AbstractReferenceCountedByteBuf
     public override ByteBuf DiscardReadBytes()
     {
         EnsureCanWrite();
+
         return this;
     }
 
@@ -180,9 +192,11 @@ internal sealed class FixedCompositeByteBuf : AbstractReferenceCountedByteBuf
             memory = ReadOnlyMemory<byte>.Empty;
             return true;
         }
+
         Component component = _components[FindComponent(index)];
         if (length <= component.EndOffset - index)
             return component.Source.TryGetReadOnlyMemory(index - component.Offset, length, out memory);
+
         memory = default;
         return false;
     }
@@ -191,12 +205,14 @@ internal sealed class FixedCompositeByteBuf : AbstractReferenceCountedByteBuf
     internal override byte ReadByteCore(int index)
     {
         CheckIndex(index, 1);
+
         return (byte)ReadComponentWord(index, 1, false);
     }
 
     internal override ulong ReadWord(int index, int width, bool littleEndian)
     {
         CheckIndex(index, width);
+
         return ReadComponentWord(index, width, littleEndian);
     }
 
@@ -217,6 +233,7 @@ internal sealed class FixedCompositeByteBuf : AbstractReferenceCountedByteBuf
                 _ => throw new ArgumentOutOfRangeException(nameof(width))
             };
         }
+
         int firstWidth = width == 3 ? 2 : width / 2;
         ulong first = ReadComponentWord(index, firstWidth, littleEndian);
         ulong second = ReadComponentWord(index + firstWidth, width - firstWidth, littleEndian);
@@ -229,7 +246,9 @@ internal sealed class FixedCompositeByteBuf : AbstractReferenceCountedByteBuf
         {
             return;
         }
+
         int componentIndex = FindComponent(index);
+
         while (!destination.IsEmpty)
         {
             Component component = _components[componentIndex++];
@@ -244,6 +263,7 @@ internal sealed class FixedCompositeByteBuf : AbstractReferenceCountedByteBuf
     internal override ReadOnlySequence<byte> BorrowCopySequence(int index, int length)
     {
         CheckIndex(index, length);
+
         return CreateReadOnlySequence(index, length, true);
     }
 
@@ -258,8 +278,10 @@ internal sealed class FixedCompositeByteBuf : AbstractReferenceCountedByteBuf
         {
             return ReadOnlySequence<byte>.Empty;
         }
+
         SequenceSegment first = null, last = null;
         int componentIndex = FindComponent(index);
+
         //noinspection ForLoopReplaceableByForEach
         // CLR: flatten borrowed segments instead of allocating a merged NIO ByteBuffer.
         while (length > 0)
@@ -268,13 +290,16 @@ internal sealed class FixedCompositeByteBuf : AbstractReferenceCountedByteBuf
             int count = Math.Min(component.EndOffset - index, length);
             ReadOnlySequence<byte> sequence = copying ? component.Source.BorrowCopySequence(index - component.Offset, count)
                 : component.Source.AsReadOnlySequence(index - component.Offset, count);
+
             foreach (ReadOnlyMemory<byte> memory in sequence)
             {
                 if (memory.IsEmpty)
                 {
                     continue;
                 }
+
                 var next = new SequenceSegment(memory);
+
                 if (last == null)
                 {
                     first = next;
@@ -283,19 +308,24 @@ internal sealed class FixedCompositeByteBuf : AbstractReferenceCountedByteBuf
                 {
                     last.Append(next);
                 }
+
                 last = next;
             }
+
             index += count;
             length -= count;
         }
+
         return new ReadOnlySequence<byte>(first, 0, last, last.Memory.Length);
     }
 
     public override ByteBuf Copy(int index, int length)
     {
         CheckIndex(index, length);
+
         // CLR: Unpooled's heap allocation policy, with the original allocator's default maximum.
         ByteBuf result = Unpooled.Buffer(length);
+
         try
         {
             result.SetBytes(0, this, index, length);
@@ -312,8 +342,10 @@ internal sealed class FixedCompositeByteBuf : AbstractReferenceCountedByteBuf
     internal override BufferMemoryLease AcquireReadLease()
     {
         EnsureAccessible();
+
         var leases = new BufferMemoryLease[_components.Length];
         int acquired = 0;
+
         try
         {
             for (; acquired < leases.Length; ++acquired)
@@ -354,6 +386,7 @@ internal sealed class FixedCompositeByteBuf : AbstractReferenceCountedByteBuf
     {
         // CLR: bounded binary search skips empty components, including repeated boundaries.
         int low = 0, high = _components.Length - 1;
+
         while (low <= high)
         {
             int mid = low + ((high - low) >>> 1);
@@ -371,6 +404,7 @@ internal sealed class FixedCompositeByteBuf : AbstractReferenceCountedByteBuf
                 return mid;
             }
         }
+
         throw new ArgumentOutOfRangeException(nameof(index));
     }
 

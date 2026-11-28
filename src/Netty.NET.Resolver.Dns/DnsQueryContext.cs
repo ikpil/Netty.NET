@@ -153,6 +153,7 @@ internal abstract class DnsQueryContext
                 }
             }
         }
+
         return false;
     }
 
@@ -293,6 +294,7 @@ internal abstract class DnsQueryContext
                     OnQueryWriteCompletion(queryTimeoutMillis, future),
                     CancellationToken.None, TaskContinuationOptions.None, listenerScheduler);
         }
+
         return writeFuture;
     }
 
@@ -350,6 +352,7 @@ internal abstract class DnsQueryContext
             {
                 return; // Ownership transferred, don't release
             }
+
             envelope.Release();
         }
     }
@@ -368,6 +371,7 @@ internal abstract class DnsQueryContext
         {
             return false;
         }
+
         IDnsQuestion question = Question();
 
         StringBuilder buf = new StringBuilder(message.Length + 128);
@@ -382,6 +386,7 @@ internal abstract class DnsQueryContext
            .Append(" (no stack trace available)");
 
         DnsNameResolverException e;
+
         if (timeout)
         {
             // This was caused by a timeout so use DnsNameResolverTimeoutException to allow the user to
@@ -397,6 +402,7 @@ internal abstract class DnsQueryContext
         {
             e = new DnsNameResolverException(nameServerAddr, question, buf.ToString(), cause);
         }
+
         return promise.TrySetException(e);
     }
 
@@ -427,6 +433,7 @@ internal abstract class DnsQueryContext
                 FinishOriginal(originalResult, future);
                 return;
             }
+
             IChannel tcpCh = future.Result;
             TaskCompletionSource<IAddressedEnvelope<IDnsResponse, IPEndPoint>> promise =
                     new TaskCompletionSource<IAddressedEnvelope<IDnsResponse, IPEndPoint>>(
@@ -451,6 +458,7 @@ internal abstract class DnsQueryContext
                     // TCP fallback failed, just use the truncated response or error.
                     FinishOriginal(originalResult, future1);
                 }
+
                 _ = tcpCh.CloseAsync();
             }, CancellationToken.None, TaskContinuationOptions.None, listenerScheduler);
             tcpCtx.WriteQuery(true);
@@ -500,6 +508,7 @@ internal abstract class DnsQueryContext
             {
                 response.Release();
                 tcpCtx.FinishFailure("Received TCP DNS response with unexpected ID", null, false);
+
                 if (logger.IsDebugEnabled())
                 {
                     logger.Debug("{} Received a DNS response with an unexpected ID: TCP [{}: {}]",
@@ -607,6 +616,7 @@ internal abstract class DnsQueryContext
             }
 
             IAddressedEnvelope<object, EndPoint> that = (IAddressedEnvelope<object, EndPoint>) obj;
+
             if (Sender == null)
             {
                 if (that.Sender != null)
@@ -637,14 +647,17 @@ internal abstract class DnsQueryContext
         public override int GetHashCode()
         {
             int hashCode = response.GetHashCode();
+
             if (Sender != null)
             {
                 hashCode = hashCode * 31 + Sender.GetHashCode();
             }
+
             if (Recipient != null)
             {
                 hashCode = hashCode * 31 + Recipient.GetHashCode();
             }
+
             return hashCode;
         }
     }

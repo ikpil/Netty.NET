@@ -243,6 +243,7 @@ public sealed class WebSocketCloseStatus : IComparable<WebSocketCloseStatus>
                 "WebSocket close status code does NOT comply with RFC-6455: " +
                 statusCode.ToString(CultureInfo.InvariantCulture));
         }
+
         this.statusCode = statusCode;
         this.reasonText = ObjectUtil.CheckNotNull(reasonText, "reasonText");
     }
@@ -297,6 +298,7 @@ public sealed class WebSocketCloseStatus : IComparable<WebSocketCloseStatus>
             // E.g.: "1000 Bye", "1009 Message too big"
             this.text = text = Code().ToString(CultureInfo.InvariantCulture) + " " + ReasonText();
         }
+
         return text;
     }
 

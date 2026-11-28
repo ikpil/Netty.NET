@@ -28,6 +28,7 @@ public class UnorderedThreadPoolEventExecutorTest
     public void TestNotEndlessExecute()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
+
         try
         {
             // Having the first task wait on an exchanger allow us to make sure that the lister on the second task
@@ -47,6 +48,7 @@ public class UnorderedThreadPoolEventExecutorTest
                 {
                     throw new InvalidOperationException("interrupted", e);
                 }
+
                 latch.Signal();
             });
             var future = executor.SubmitAsync(() => latch.Signal());
@@ -84,6 +86,7 @@ public class UnorderedThreadPoolEventExecutorTest
                 latch.Signal();
             }
         }, TimeSpan.FromMilliseconds(1), TimeSpan.FromMilliseconds(1), cancellation.Token);
+
         try
         {
             Assert.True(latch.Wait(TimeSpan.FromSeconds(5)));
@@ -99,6 +102,7 @@ public class UnorderedThreadPoolEventExecutorTest
     public void TestGetReturnsCorrectValueOnSuccess()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
+
         try
         {
             const string expected = "expected";
@@ -115,6 +119,7 @@ public class UnorderedThreadPoolEventExecutorTest
     public void TestGetReturnsCorrectValueOnFailure()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
+
         try
         {
             var cause = new InvalidOperationException();
@@ -132,6 +137,7 @@ public class UnorderedThreadPoolEventExecutorTest
     public void TasksRunningInUnorderedExecutorAreInEventLoop()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
+
         try
         {
             var future = executor.SubmitAsync<bool>(() => executor.InEventLoop());
@@ -146,10 +152,12 @@ public class UnorderedThreadPoolEventExecutorTest
     private static void Stop(UnorderedThreadPoolEventExecutor executor)
     {
         executor.ShutdownGracefullyAsync();
+
         if (!executor.AwaitTermination(TimeSpan.FromSeconds(5)))
         {
             _ = executor.StopAsync();
         }
+
         Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
     }
 }

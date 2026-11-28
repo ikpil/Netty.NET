@@ -127,6 +127,7 @@ public sealed class Socks5PrivateAuthStatus : IComparable<Socks5PrivateAuthStatu
         {
             this.text = text = name + '(' + (byteValue & 0xFF).ToString(CultureInfo.InvariantCulture) + ')';
         }
+
         return text;
     }
 }

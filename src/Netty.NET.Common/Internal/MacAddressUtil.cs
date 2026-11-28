@@ -45,6 +45,7 @@ public static class MacAddressUtil
     internal static byte[] BestAvailableMac(IReadOnlyList<NetworkInterface> interfaces)
     {
         ArgumentNullException.ThrowIfNull(interfaces);
+
         // Find the best MAC address available.
         byte[] bestMacAddr = EmptyArrays.EMPTY_BYTES;
         IPAddress bestInetAddr = NetUtil.LOCALHOST4;
@@ -52,6 +53,7 @@ public static class MacAddressUtil
         // Retrieve the list of available network interfaces.
         // Each native snapshot object is a candidate; provider value equality cannot merge peers.
         var ifaces = new OrderedDictionary<NetworkInterface, IPAddress>(ReferenceEqualityComparer.Instance);
+
         foreach (NetworkInterface iface in interfaces)
         {
             // Use the interface with proper INET addresses only.
@@ -79,6 +81,7 @@ public static class MacAddressUtil
             IPAddress inetAddr = entry.Value;
             // CLR exposes no parent/subinterface flag equivalent to Java isVirtual().
             byte[] macAddr;
+
             try
             {
                 macAddr = iface.GetPhysicalAddress().GetAddressBytes();
@@ -180,8 +183,10 @@ public static class MacAddressUtil
     public static byte[] ParseMAC(string value)
     {
         ArgumentNullException.ThrowIfNull(value);
+
         byte[] machineId;
         char separator;
+
         switch (value.Length)
         {
             case 17:
@@ -200,6 +205,7 @@ public static class MacAddressUtil
 
         int end = machineId.Length - 1;
         int j = 0;
+
         for (int i = 0; i < end; ++i, j += 3)
         {
             int sIndex = j + 2;
@@ -240,12 +246,14 @@ public static class MacAddressUtil
         {
             const string digits = "0123456789abcdef";
             int position = 0;
+
             foreach (byte value in bytes)
             {
                 if (position != 0)
                 {
                     chars[position++] = ':';
                 }
+
                 chars[position++] = digits[value >> 4];
                 chars[position++] = digits[value & 15];
             }
@@ -265,6 +273,7 @@ public static class MacAddressUtil
 
         // Must not be filled with only 0 and 1.
         bool onlyZeroAndOne = true;
+
         foreach (byte b in candidate)
         {
             if (b != 0 && b != 1)
@@ -326,6 +335,7 @@ public static class MacAddressUtil
     {
         Span<byte> buffer = stackalloc byte[16];
         addr.TryWriteBytes(buffer, out int written);
+
         // Java InetAddress normalizes IPv4-mapped IPv6 inputs to IPv4.
         if (written == 4 || addr.IsIPv4MappedToIPv6)
         {
@@ -360,6 +370,7 @@ public static class MacAddressUtil
             {
                 return 3;
             }
+
             return 4;
         }
 
@@ -380,6 +391,7 @@ public static class MacAddressUtil
         {
             return 3; // obsolete, but available
         }
+
         return 4;
     }
 }

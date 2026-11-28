@@ -83,12 +83,15 @@ public class GlobalChannelTrafficCounter : TrafficCounter
             {
                 return;
             }
+
             long newLastTime = MilliSecondFromNano();
             counter.ResetAccounting(newLastTime);
+
             foreach (PerChannel perChannel in trafficShapingHandler1.channelQueues.Values)
             {
                 perChannel.channelTrafficCounter.ResetAccounting(newLastTime);
             }
+
             trafficShapingHandler1.DoAccounting(counter);
         }
     }
@@ -104,6 +107,7 @@ public class GlobalChannelTrafficCounter : TrafficCounter
             {
                 return;
             }
+
             lastTime.Set(MilliSecondFromNano());
             long localCheckInterval = checkInterval.Get();
             if (localCheckInterval > 0)
@@ -129,9 +133,11 @@ public class GlobalChannelTrafficCounter : TrafficCounter
             {
                 return;
             }
+
             monitorActive = false;
             ResetAccounting(MilliSecondFromNano());
             trafficShapingHandler.DoAccounting(this);
+
             if (scheduledFuture != null)
             {
                 scheduledFuture.Cancel();
@@ -146,6 +152,7 @@ public class GlobalChannelTrafficCounter : TrafficCounter
         {
             perChannel.channelTrafficCounter.ResetCumulativeTime();
         }
+
         base.ResetCumulativeTime();
     }
 

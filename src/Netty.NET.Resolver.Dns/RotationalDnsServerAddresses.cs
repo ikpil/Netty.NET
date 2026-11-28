@@ -42,6 +42,7 @@ internal sealed class RotationalDnsServerAddresses : DefaultDnsServerAddresses
             {
                 nextStartIdx = 0;
             }
+
             if (Interlocked.CompareExchange(ref startIdx, nextStartIdx, curStartIdx) == curStartIdx)
             {
                 return new SequentialDnsServerAddressStream(addresses, curStartIdx);

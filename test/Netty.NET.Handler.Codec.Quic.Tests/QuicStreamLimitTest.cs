@@ -73,6 +73,7 @@ public class QuicStreamLimitTest : AbstractQuicTest
         using CountdownEvent latch = new CountdownEvent(1);
         using CountdownEvent latch2 = new CountdownEvent(1);
         QuicChannelValidationHandler clientHandler = new StreamLimitChangedHandler(latch, latch2);
+
         try
         {
             IQuicChannel quicChannel = await QuicTestUtils.NewQuicChannelBootstrap(channel)
@@ -150,6 +151,7 @@ public class QuicStreamLimitTest : AbstractQuicTest
                     CountDown(latch);
                 }
             }
+
             base.UserEventTriggered(ctx, evt);
         }
     }

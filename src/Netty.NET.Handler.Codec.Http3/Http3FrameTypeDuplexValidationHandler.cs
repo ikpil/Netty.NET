@@ -51,6 +51,7 @@ internal class Http3FrameTypeDuplexValidationHandler<T> : Http3FrameTypeInboundV
         {
             WriteFrameDiscarded(msg, promise);
         }
+
         return promise.Task;
     }
 

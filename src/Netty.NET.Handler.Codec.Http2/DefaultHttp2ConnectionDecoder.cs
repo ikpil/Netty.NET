@@ -178,6 +178,7 @@ public class DefaultHttp2ConnectionDecoder : IHttp2ConnectionDecoder
         this.validateHeaders = validateHeaders;
         this.validateRequiredPseudoHeaders = validateRequiredPseudoHeaders;
         this.autoAckPing = autoAckPing;
+
         if (autoAckSettings)
         {
             settingsReceivedConsumer = null;
@@ -189,17 +190,21 @@ public class DefaultHttp2ConnectionDecoder : IHttp2ConnectionDecoder
                 throw new ArgumentException("disabling autoAckSettings requires the encoder to be a " +
                         typeof(IHttp2SettingsReceivedConsumer));
             }
+
             settingsReceivedConsumer = (IHttp2SettingsReceivedConsumer) encoder;
         }
+
         this.connection = CheckNotNull(connection, "connection");
         contentLengthKey = this.connection.NewKey();
         this.frameReader = CheckNotNull(frameReader, "frameReader");
         this.encoder = CheckNotNull(encoder, "encoder");
         this.requestVerifier = CheckNotNull(requestVerifier, "requestVerifier");
+
         if (connection.Local().FlowController() == null)
         {
             connection.Local().FlowController(new DefaultHttp2LocalFlowController(connection));
         }
+
         connection.Local().FlowController().FrameWriter(encoder.FrameWriter());
     }
 
@@ -249,11 +254,13 @@ public class DefaultHttp2ConnectionDecoder : IHttp2ConnectionDecoder
         settings.HeaderTableSize(headersConfig.MaxHeaderTableSize());
         settings.MaxFrameSize(frameSizePolicy.MaxFrameSize());
         settings.MaxHeaderListSize(headersConfig.MaxHeaderListSize());
+
         if (!connection.IsServer())
         {
             // Only set the pushEnabled flag if this is a client endpoint.
             settings.PushEnabled(connection.Local().AllowPushTo());
         }
+
         return settings;
     }
 
@@ -323,6 +330,7 @@ public class DefaultHttp2ConnectionDecoder : IHttp2ConnectionDecoder
                 throw StreamError(streamId, PROTOCOL_ERROR,
                         "Request is missing mandatory :method pseudo-header field.");
             }
+
             // CONNECT (RFC 9113, 8.5) omits :scheme/:path and carries :authority; extended CONNECT (RFC 8441),
             // identified by :protocol, follows the regular :scheme/:path rules.
             if (HttpMethod.CONNECT.AsciiName().ContentEquals(method) &&
@@ -341,6 +349,7 @@ public class DefaultHttp2ConnectionDecoder : IHttp2ConnectionDecoder
                     throw StreamError(streamId, PROTOCOL_ERROR,
                             "Request is missing mandatory :scheme pseudo-header field.");
                 }
+
                 ICharSequence path = headers.Path();
                 if (path == null || path.Length() == 0)
                 {
@@ -382,6 +391,7 @@ public class DefaultHttp2ConnectionDecoder : IHttp2ConnectionDecoder
             int bytesToReturn = readable + padding;
 
             bool shouldIgnore;
+
             try
             {
                 shouldIgnore = ShouldIgnoreHeadersOrDataFrame(ctx, streamId, stream, endOfStream, "DATA");
@@ -412,6 +422,7 @@ public class DefaultHttp2ConnectionDecoder : IHttp2ConnectionDecoder
                 // All bytes have been consumed.
                 return bytesToReturn;
             }
+
             Http2Exception error = null;
             IHttp2Stream.State state = stream.State_();
             if (state == IHttp2Stream.State.OPEN || state == IHttp2Stream.State.HALF_CLOSED_LOCAL)
@@ -429,6 +440,7 @@ public class DefaultHttp2ConnectionDecoder : IHttp2ConnectionDecoder
             }
 
             int unconsumedBytes = decoder.UnconsumedBytes(stream);
+
             try
             {
                 flowController.ReceiveFlowControlledFrame(stream, data, padding, endOfStream);
@@ -483,6 +495,7 @@ public class DefaultHttp2ConnectionDecoder : IHttp2ConnectionDecoder
             IHttp2Stream stream = connection.Stream(streamId);
             bool allowHalfClosedRemote = false;
             bool isTrailers = false;
+
             if (stream == null && !connection.StreamMayHaveExisted(streamId))
             {
                 stream = connection.Remote().CreateStream(streamId, endOfStream);
@@ -544,6 +557,7 @@ public class DefaultHttp2ConnectionDecoder : IHttp2ConnectionDecoder
                     // Reject initial request/response HEADERS that omit a mandatory pseudo-header (RFC 9113, 8.3).
                     ValidateRequiredPseudoHeaders(connection.IsServer(), stream.Id(), headers);
                 }
+
                 // extract the content-length header
                 IList<ICharSequence> contentLength = headers.GetAll(HttpHeaderNames.CONTENT_LENGTH);
                 if (contentLength != null && contentLength.Count != 0)
@@ -587,6 +601,7 @@ public class DefaultHttp2ConnectionDecoder : IHttp2ConnectionDecoder
             decoder.encoder.FlowController().UpdateDependencyTree(streamId, streamDependency, weight, exclusive);
             decoder.listener.OnHeadersRead(ctx, streamId, headers, streamDependency,
                     weight, exclusive, padding, endOfStream);
+
             // If the headers completes this stream, close it.
             if (endOfStream)
             {
@@ -651,12 +666,14 @@ public class DefaultHttp2ConnectionDecoder : IHttp2ConnectionDecoder
             IHttp2FrameReader.IConfiguration config = decoder.frameReader.Configuration();
             IHttp2HeadersDecoder.IConfiguration headerConfig = config.HeadersConfiguration();
             IHttp2FrameSizePolicy frameSizePolicy = config.FrameSizePolicy();
+
             if (pushEnabled != null)
             {
                 if (connection.IsServer())
                 {
                     throw ConnectionError(PROTOCOL_ERROR, "Server sending SETTINGS frame with ENABLE_PUSH specified");
                 }
+
                 connection.Local().AllowPushTo(pushEnabled.Value);
             }
 
@@ -718,6 +735,7 @@ public class DefaultHttp2ConnectionDecoder : IHttp2ConnectionDecoder
                 // Send an ack back to the remote client.
                 decoder.encoder.WritePingAsync(ctx, true, data, NewPromise());
             }
+
             decoder.listener.OnPingRead(ctx, data);
         }
 
@@ -863,6 +881,7 @@ public class DefaultHttp2ConnectionDecoder : IHttp2ConnectionDecoder
                 throw StreamError(streamId, STREAM_CLOSED, "Received %s frame for an unknown stream %d",
                                   frameName, streamId);
             }
+
             if (stream.IsResetSent() || StreamCreatedAfterGoAwaySent(streamId))
             {
                 // If we have sent a reset stream it is assumed the stream will be closed after the write completes.
@@ -880,6 +899,7 @@ public class DefaultHttp2ConnectionDecoder : IHttp2ConnectionDecoder
 
                 return true;
             }
+
             return false;
         }
 
@@ -940,6 +960,7 @@ public class DefaultHttp2ConnectionDecoder : IHttp2ConnectionDecoder
         public int OnDataRead(IChannelHandlerContext ctx, int streamId, ByteBuf data, int padding, bool endOfStream)
         {
             VerifyPrefaceReceived();
+
             return decoder.internalFrameListener.OnDataRead(ctx, streamId, data, padding, endOfStream);
         }
 
@@ -985,6 +1006,7 @@ public class DefaultHttp2ConnectionDecoder : IHttp2ConnectionDecoder
             {
                 decoder.internalFrameListener = new FrameReadListener(decoder);
             }
+
             decoder.internalFrameListener.OnSettingsRead(ctx, settings);
         }
 

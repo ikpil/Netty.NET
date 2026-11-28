@@ -12,6 +12,7 @@ public class ClrExceptionOriginContractTest
     {
         var original = new InvalidOperationException("initializer failure");
         var local = new FailingLocal(original, failRemoval: false);
+
         try
         {
             Assert.Same(original, Assert.Throws<InvalidOperationException>(() => local.Get()));
@@ -79,6 +80,7 @@ public class ClrExceptionOriginContractTest
         protected override void OnRemoval(string value)
         {
             Removals++;
+
             if (failRemoval)
             {
                 ThrowAtOrigin(original);

@@ -55,6 +55,7 @@ internal static class TestUtils
                 Socket channel = (Socket) typeof(Socket)
                     .GetConstructor(new[] { typeof(SocketType), typeof(ProtocolType) })!
                     .Invoke(new object[] { SocketType.Stream, (ProtocolType) 132 });
+
                 try
                 {
                     channel.Close();
@@ -80,8 +81,10 @@ internal static class TestUtils
                     return false;
                 }
             }
+
             return true;
         }
+
         return false;
     }
 
@@ -99,6 +102,7 @@ internal static class TestUtils
         {
             testMethodName = testMethodName.Substring(0, testMethodName.IndexOf('['));
         }
+
         return testMethodName;
     }
 }

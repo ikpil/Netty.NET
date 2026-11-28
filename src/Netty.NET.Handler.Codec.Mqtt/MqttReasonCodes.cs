@@ -95,6 +95,7 @@ public sealed class MqttReasonCodes
         {
             Disconnect[] values = Values();
             VALUES = new Disconnect[163];
+
             foreach (Disconnect code in values)
             {
                 int unsignedByte = code.byteValue & 0xFF;
@@ -191,6 +192,7 @@ public sealed class MqttReasonCodes
         {
             Auth[] values = Values();
             VALUES = new Auth[26];
+
             foreach (Auth code in values)
             {
                 int unsignedByte = code.byteValue & 0xFF;
@@ -267,6 +269,7 @@ public sealed class MqttReasonCodes
         {
             PubAck[] values = Values();
             VALUES = new PubAck[154];
+
             foreach (PubAck code in values)
             {
                 int unsignedByte = code.byteValue & 0xFF;
@@ -349,6 +352,7 @@ public sealed class MqttReasonCodes
         {
             PubRec[] values = Values();
             VALUES = new PubRec[154];
+
             foreach (PubRec code in values)
             {
                 int unsignedByte = code.byteValue & 0xFF;
@@ -424,6 +428,7 @@ public sealed class MqttReasonCodes
         {
             PubRel[] values = Values();
             VALUES = new PubRel[147];
+
             foreach (PubRel code in values)
             {
                 int unsignedByte = code.byteValue & 0xFF;
@@ -492,6 +497,7 @@ public sealed class MqttReasonCodes
         {
             PubComp[] values = Values();
             VALUES = new PubComp[147];
+
             foreach (PubComp code in values)
             {
                 int unsignedByte = code.byteValue & 0xFF;
@@ -570,6 +576,7 @@ public sealed class MqttReasonCodes
         {
             SubAck[] values = Values();
             VALUES = new SubAck[163];
+
             foreach (SubAck code in values)
             {
                 int unsignedByte = code.byteValue & 0xFF;
@@ -653,6 +660,7 @@ public sealed class MqttReasonCodes
         {
             UnsubAck[] values = Values();
             VALUES = new UnsubAck[146];
+
             foreach (UnsubAck code in values)
             {
                 int unsignedByte = code.byteValue & 0xFF;

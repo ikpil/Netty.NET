@@ -126,6 +126,7 @@ public class LoggingHandler : ChannelDuplexHandler
     public LoggingHandler(Type clazz, LogLevel level, ByteBufFormat byteBufFormat)
     {
         ObjectUtil.CheckNotNull(clazz, "clazz");
+
         this.level = ObjectUtil.CheckNotNull(level, "level");
         this.byteBufFormat = byteBufFormat;
         logger = InternalLoggerFactory.GetInstance(clazz);
@@ -190,6 +191,7 @@ public class LoggingHandler : ChannelDuplexHandler
         {
             logger.Log(internalLevel, Format(ctx, "REGISTERED"));
         }
+
         ctx.FireChannelRegistered();
     }
 
@@ -199,6 +201,7 @@ public class LoggingHandler : ChannelDuplexHandler
         {
             logger.Log(internalLevel, Format(ctx, "UNREGISTERED"));
         }
+
         ctx.FireChannelUnregistered();
     }
 
@@ -208,6 +211,7 @@ public class LoggingHandler : ChannelDuplexHandler
         {
             logger.Log(internalLevel, Format(ctx, "ACTIVE"));
         }
+
         ctx.FireChannelActive();
     }
 
@@ -217,6 +221,7 @@ public class LoggingHandler : ChannelDuplexHandler
         {
             logger.Log(internalLevel, Format(ctx, "INACTIVE"));
         }
+
         ctx.FireChannelInactive();
     }
 
@@ -226,6 +231,7 @@ public class LoggingHandler : ChannelDuplexHandler
         {
             logger.Log(internalLevel, Format(ctx, "EXCEPTION", cause), cause);
         }
+
         ctx.FireExceptionCaught(cause);
     }
 
@@ -235,6 +241,7 @@ public class LoggingHandler : ChannelDuplexHandler
         {
             logger.Log(internalLevel, Format(ctx, "USER_EVENT", evt));
         }
+
         ctx.FireUserEventTriggered(evt);
     }
 
@@ -244,6 +251,7 @@ public class LoggingHandler : ChannelDuplexHandler
         {
             logger.Log(internalLevel, Format(ctx, "BIND", localAddress));
         }
+
         return ctx.BindAsync(localAddress, cancellationToken);
     }
 
@@ -255,6 +263,7 @@ public class LoggingHandler : ChannelDuplexHandler
         {
             logger.Log(internalLevel, Format(ctx, "CONNECT", remoteAddress, localAddress));
         }
+
         return ctx.ConnectAsync(remoteAddress, localAddress, cancellationToken);
     }
 
@@ -264,6 +273,7 @@ public class LoggingHandler : ChannelDuplexHandler
         {
             logger.Log(internalLevel, Format(ctx, "DISCONNECT"));
         }
+
         return ctx.DisconnectAsync(cancellationToken);
     }
 
@@ -273,6 +283,7 @@ public class LoggingHandler : ChannelDuplexHandler
         {
             logger.Log(internalLevel, Format(ctx, "CLOSE"));
         }
+
         return ctx.CloseAsync(cancellationToken);
     }
 
@@ -282,6 +293,7 @@ public class LoggingHandler : ChannelDuplexHandler
         {
             logger.Log(internalLevel, Format(ctx, "DEREGISTER"));
         }
+
         return ctx.DeregisterAsync(cancellationToken);
     }
 
@@ -291,6 +303,7 @@ public class LoggingHandler : ChannelDuplexHandler
         {
             logger.Log(internalLevel, Format(ctx, "READ COMPLETE"));
         }
+
         ctx.FireChannelReadComplete();
     }
 
@@ -300,6 +313,7 @@ public class LoggingHandler : ChannelDuplexHandler
         {
             logger.Log(internalLevel, Format(ctx, "READ", msg));
         }
+
         ctx.FireChannelRead(msg);
     }
 
@@ -309,6 +323,7 @@ public class LoggingHandler : ChannelDuplexHandler
         {
             logger.Log(internalLevel, Format(ctx, "WRITE", msg));
         }
+
         return ctx.WriteAsync(msg, cancellationToken);
     }
 
@@ -318,6 +333,7 @@ public class LoggingHandler : ChannelDuplexHandler
         {
             logger.Log(internalLevel, Format(ctx, "WRITABILITY CHANGED"));
         }
+
         ctx.FireChannelWritabilityChanged();
     }
 
@@ -327,6 +343,7 @@ public class LoggingHandler : ChannelDuplexHandler
         {
             logger.Log(internalLevel, Format(ctx, "FLUSH"));
         }
+
         ctx.Flush();
     }
 
@@ -395,6 +412,7 @@ public class LoggingHandler : ChannelDuplexHandler
         StringBuilder buf = new StringBuilder(
                 chStr.Length + 1 + eventName.Length + 2 + arg1Str.Length + 2 + arg2Str.Length);
         buf.Append(chStr).Append(' ').Append(eventName).Append(": ").Append(arg1Str).Append(", ").Append(arg2Str);
+
         return buf.ToString();
     }
 
@@ -409,20 +427,24 @@ public class LoggingHandler : ChannelDuplexHandler
         {
             StringBuilder buf = new StringBuilder(chStr.Length + 1 + eventName.Length + 4);
             buf.Append(chStr).Append(' ').Append(eventName).Append(": 0B");
+
             return buf.ToString();
         }
         else
         {
             int outputLength = chStr.Length + 1 + eventName.Length + 2 + 10 + 1;
+
             if (byteBufFormat == Logging.ByteBufFormat.HEX_DUMP)
             {
                 int rows = length / 16 + (length % 15 == 0? 0 : 1) + 4;
                 int hexDumpLength = 2 + rows * 80;
                 outputLength += hexDumpLength;
             }
+
             StringBuilder buf = new StringBuilder(outputLength);
             buf.Append(chStr).Append(' ').Append(eventName).Append(": ")
                .Append(length.ToString(CultureInfo.InvariantCulture)).Append('B');
+
             if (byteBufFormat == Logging.ByteBufFormat.HEX_DUMP)
             {
                 buf.Append(StringUtil.NEWLINE);
@@ -447,20 +469,24 @@ public class LoggingHandler : ChannelDuplexHandler
         {
             StringBuilder buf = new StringBuilder(chStr.Length + 1 + eventName.Length + 2 + msgStr.Length + 4);
             buf.Append(chStr).Append(' ').Append(eventName).Append(", ").Append(msgStr).Append(", 0B");
+
             return buf.ToString();
         }
         else
         {
             int outputLength = chStr.Length + 1 + eventName.Length + 2 + msgStr.Length + 2 + 10 + 1;
+
             if (byteBufFormat == Logging.ByteBufFormat.HEX_DUMP)
             {
                 int rows = length / 16 + (length % 15 == 0? 0 : 1) + 4;
                 int hexDumpLength = 2 + rows * 80;
                 outputLength += hexDumpLength;
             }
+
             StringBuilder buf = new StringBuilder(outputLength);
             buf.Append(chStr).Append(' ').Append(eventName).Append(": ")
                .Append(msgStr).Append(", ").Append(length.ToString(CultureInfo.InvariantCulture)).Append('B');
+
             if (byteBufFormat == Logging.ByteBufFormat.HEX_DUMP)
             {
                 buf.Append(StringUtil.NEWLINE);

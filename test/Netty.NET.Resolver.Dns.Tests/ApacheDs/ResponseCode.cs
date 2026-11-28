@@ -56,6 +56,7 @@ public sealed class ResponseCode
     private static Dictionary<byte, ResponseCode> CreateMap()
     {
         Dictionary<byte, ResponseCode> reverseMap = new Dictionary<byte, ResponseCode>();
+
         foreach (ResponseCode e in VALUES)
         {
             reverseMap[e.Convert()] = e;

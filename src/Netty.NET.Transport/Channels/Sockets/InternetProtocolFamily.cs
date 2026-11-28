@@ -126,6 +126,7 @@ public static class InternetProtocolFamilyExtensions
             {
                 return InternetProtocolFamily.IPv6;
             }
+
             // CLR: Java concatenation renders a null address as "null".
             throw new ArgumentException("address " + (address?.ToString() ?? "null") + " not supported");
         }

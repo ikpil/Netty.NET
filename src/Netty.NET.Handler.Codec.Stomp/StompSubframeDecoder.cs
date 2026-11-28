@@ -140,6 +140,7 @@ public class StompSubframeDecoder : ReplayingDecoder<StompSubframeDecoder.State>
             case State.READ_HEADERS:
                 StompCommand command = StompCommand.UNKNOWN;
                 IStompHeadersSubframe frame = null;
+
                 try
                 {
                     command = ReadCommand(@in);
@@ -153,16 +154,19 @@ public class StompSubframeDecoder : ReplayingDecoder<StompSubframeDecoder.State>
                     {
                         frame = new DefaultStompHeadersSubframe(command);
                     }
+
                     frame.SetDecoderResult(DecoderResult.Failure(e));
                     @out.Add(frame);
                     Checkpoint(State.BAD_FRAME);
                     return;
                 }
+
                 break;
             case State.BAD_FRAME:
                 @in.SkipBytes(ActualReadableBytes());
                 return;
         }
+
         try
         {
             switch (base.State())
@@ -173,10 +177,12 @@ public class StompSubframeDecoder : ReplayingDecoder<StompSubframeDecoder.State>
                     {
                         return;
                     }
+
                     if (toRead > maxChunkSize)
                     {
                         toRead = maxChunkSize;
                     }
+
                     if (contentLength >= 0)
                     {
                         int remainingLength = (int) (contentLength - alreadyReadChunkSize);
@@ -184,7 +190,9 @@ public class StompSubframeDecoder : ReplayingDecoder<StompSubframeDecoder.State>
                         {
                             toRead = remainingLength;
                         }
+
                         ByteBuf chunkBuffer = ReadBytes(ctx.Alloc(), @in, toRead);
+
                         if ((alreadyReadChunkSize += toRead) >= contentLength)
                         {
                             lastContent = new DefaultLastStompContentSubframe(chunkBuffer);
@@ -214,8 +222,10 @@ public class StompSubframeDecoder : ReplayingDecoder<StompSubframeDecoder.State>
                             {
                                 toRead = InternalBuffer().WriterIndex - @in.ReaderIndex;
                             }
+
                             ByteBuf chunkBuffer = ReadBytes(ctx.Alloc(), @in, toRead);
                             alreadyReadChunkSize += toRead;
+
                             if (nulIndex > 0)
                             {
                                 lastContent = new DefaultLastStompContentSubframe(chunkBuffer);
@@ -228,14 +238,17 @@ public class StompSubframeDecoder : ReplayingDecoder<StompSubframeDecoder.State>
                             }
                         }
                     }
+
                     // Fall through.
                     goto case State.FINALIZE_FRAME_READ;
                 case State.FINALIZE_FRAME_READ:
                     SkipNullCharacter(@in);
+
                     if (lastContent == null)
                     {
                         lastContent = ILastStompContentSubframe.EMPTY_LAST_CONTENT;
                     }
+
                     @out.Add(lastContent);
                     ResetDecoder();
                     break;
@@ -279,7 +292,9 @@ public class StompSubframeDecoder : ReplayingDecoder<StompSubframeDecoder.State>
         {
             throw new DecoderException("Failed to read command from channel");
         }
+
         string commandStr = commandSequence.ToString();
+
         try
         {
             return Enum.IsDefined(typeof(StompCommand), commandStr)
@@ -298,6 +313,7 @@ public class StompSubframeDecoder : ReplayingDecoder<StompSubframeDecoder.State>
         // If the headers were not complete before, ReplayingDecoder parses all of them again,
         // so count them from zero.
         headerParser.ResetNumHeaders();
+
         for (;;)
         {
             bool headerRead = headerParser.ParseHeader(headersSubframe, buffer);
@@ -311,6 +327,7 @@ public class StompSubframeDecoder : ReplayingDecoder<StompSubframeDecoder.State>
                         return State.FINALIZE_FRAME_READ;
                     }
                 }
+
                 return State.READ_CONTENT;
             }
         }
@@ -329,6 +346,7 @@ public class StompSubframeDecoder : ReplayingDecoder<StompSubframeDecoder.State>
             throw new TooLongFrameException(IStompHeaders.CONTENT_LENGTH + " exceeds the maximum allowed value: "
                     + contentLength.ToString(CultureInfo.InvariantCulture));
         }
+
         return contentLength;
     }
 
@@ -348,12 +366,14 @@ public class StompSubframeDecoder : ReplayingDecoder<StompSubframeDecoder.State>
     private static void SkipControlCharacters(ByteBuf buffer)
     {
         byte b;
+
         for (;;)
         {
             if (!buffer.IsReadable())
             {
                 return;
             }
+
             b = buffer.ReadByte();
             if (b != StompConstants.CR && b != StompConstants.LF)
             {
@@ -528,6 +548,7 @@ public class StompSubframeDecoder : ReplayingDecoder<StompSubframeDecoder.State>
                 throw new TooLongFrameException("maximum number of headers exceeded: " +
                         maxNumHeaders.ToString(CultureInfo.InvariantCulture));
             }
+
             if (valid)
             {
                 headersSubframe.Headers().Add(new StringCharSequence(name), new StringCharSequence(value.ToString()));
@@ -538,10 +559,12 @@ public class StompSubframeDecoder : ReplayingDecoder<StompSubframeDecoder.State>
                 {
                     throw new ArgumentException("received an invalid header line '" + value + '\'');
                 }
+
                 string line = name + ':' + value;
                 throw new ArgumentException("a header value or name contains a prohibited character ':'"
                                                    + ", " + line);
             }
+
             return true;
         }
 
@@ -592,6 +615,7 @@ public class StompSubframeDecoder : ReplayingDecoder<StompSubframeDecoder.State>
                 {
                     unescapeInProgress = true;
                 }
+
                 return;
             }
 

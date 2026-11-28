@@ -83,6 +83,7 @@ public class MultipleContentLengthHeadersTest
         {
             AssertInvalid(request);
         }
+
         Assert.False(channel.Finish());
     }
 
@@ -96,6 +97,7 @@ public class MultipleContentLengthHeadersTest
         string firstValue = "1";
         string secondValue = sameValue ? firstValue : "2";
         string contentLength;
+
         if (singleField)
         {
             contentLength = "Content-Length: " + firstValue + ", " + secondValue + "\r\n\r\n";
@@ -105,6 +107,7 @@ public class MultipleContentLengthHeadersTest
             contentLength = "Content-Length: " + firstValue + "\r\n" +
                             "Content-Length: " + secondValue + "\r\n\r\n";
         }
+
         return "PUT /some/path " + version + "\r\n" +
                contentLength +
                "ab";

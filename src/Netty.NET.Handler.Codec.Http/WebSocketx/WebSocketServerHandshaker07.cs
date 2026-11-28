@@ -133,6 +133,7 @@ public class WebSocketServerHandshaker07 : WebSocketServerHandshaker
         {
             throw new WebSocketServerHandshakeException("Invalid WebSocket handshake method: " + method, req);
         }
+
         HttpHeaders reqHeaders = req.Headers();
         if (!reqHeaders.ContainsValue(HttpHeaderNames.CONNECTION, HttpHeaderValues.UPGRADE, true))
         {
@@ -144,6 +145,7 @@ public class WebSocketServerHandshaker07 : WebSocketServerHandshaker
             throw new WebSocketServerHandshakeException(
                     "not a WebSocket request: an |Upgrade| header must containing the value 'websocket'", req);
         }
+
         string key = reqHeaders.Get(HttpHeaderNames.SEC_WEBSOCKET_KEY);
         if (key == null)
         {
@@ -188,6 +190,7 @@ public class WebSocketServerHandshaker07 : WebSocketServerHandshaker
                 res.Headers().Set(HttpHeaderNames.SEC_WEBSOCKET_PROTOCOL, selectedSubprotocol);
             }
         }
+
         return res;
     }
 

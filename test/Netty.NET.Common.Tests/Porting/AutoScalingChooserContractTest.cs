@@ -77,6 +77,7 @@ public class AutoScalingChooserContractTest
                 try
                 {
                     start.SignalAndWait();
+
                     for (int i = 0; i < reports; ++i)
                         if (taskTime)
                         {
@@ -158,12 +159,14 @@ public class AutoScalingChooserContractTest
             {
                 return false;
             }
+
             return suspended = true;
         }
 
         public override void Execute(Action command)
         {
             ArgumentNullException.ThrowIfNull(command);
+
             suspended = false;
             ++wakes;
         }
@@ -219,12 +222,15 @@ public class AutoScalingChooserContractTest
                 clock.Advance(long.MaxValue);
                 clock.Advance(unchecked(initialTime - long.MaxValue));
             }
+
             children = Enumerable.Range(0, max).Select(_ => new ManualExecutor(clock)).ToArray();
+
             if (initialTime != 0)
                 foreach (ManualExecutor child in children)
                 {
                     child.lastActivity = clock.NanoTime();
                 }
+
             var factory = new AutoScalingEventExecutorChooserFactory(min, max, TimeSpan.FromHours(1),
                 0.4, 0.6, rampUp, rampDown, patience);
             chooser = (IObservableEventExecutorChooser)factory.NewChooser(children);
@@ -280,13 +286,17 @@ public class AutoScalingChooserContractTest
         Assert.Equal(1, h.children[0].wakes);
         Assert.Equal(0, active.BusyCycles());
         Assert.Equal(0, active.IdleCycles());
+
         foreach (ManualExecutor child in h.children.Where(c => !c.suspended))
             child.activeTime = Period;
+
         h.Tick();
         Assert.Equal(3, h.chooser.ActiveExecutorCount());
         Assert.Equal(1, h.children[1].wakes);
+
         foreach (ManualExecutor child in h.children.Where(c => !c.suspended))
             child.activeTime = Period;
+
         h.Tick();
         Assert.Equal(4, h.chooser.ActiveExecutorCount());
         Assert.Equal(1, h.children[2].wakes);
@@ -365,11 +375,15 @@ public class AutoScalingChooserContractTest
     public void ShortCatchUpCallbacksDoNotInventIdleMonitoringWindows()
     {
         using var h = new Harness(1, 2, patience: 2);
+
         foreach (ManualExecutor child in h.children)
             child.activeTime = Period;
+
         h.Tick();
+
         for (int callback = 0; callback < 8; ++callback)
             h.Tick(1);
+
         Assert.Equal(2, h.chooser.ActiveExecutorCount());
         Assert.All(h.children, child => Assert.Equal(1, child.metricReads));
         Assert.All(h.chooser.ExecutorUtilizations(), metric => Assert.Equal(1.0, metric.Utilization()));
@@ -394,17 +408,20 @@ public class AutoScalingChooserContractTest
         }
 
         h.Tick();
+
         for (int quarter = 1; quarter <= 4; ++quarter)
         {
             h.children[0].activeTime += Period / 8;
             h.children[1].activeTime += Period / 4;
             h.Tick(Period / 4);
+
             if (quarter < 4)
             {
                 Assert.All(h.children, child => Assert.Equal(1, child.metricReads));
                 Assert.All(h.chooser.ExecutorUtilizations(), metric => Assert.Equal(1.0, metric.Utilization()));
             }
         }
+
         Assert.All(h.children, child => Assert.Equal(2, child.metricReads));
         Assert.Equal(0.5, h.chooser.ExecutorUtilizations()[0].Utilization());
         Assert.Equal(1.0, h.chooser.ExecutorUtilizations()[1].Utilization());
@@ -487,6 +504,7 @@ public class AutoScalingChooserContractTest
         using var h = new Harness(1, 2, patience: 2, initialTime: initialTime);
         ManualExecutor resumed = ResumeOneChild(h);
         ManualExecutor busy = h.children.Single(c => c != resumed);
+
         // Exercise a short post-resume interval followed by two idle windows, as in the retained trace.
         // The resumed child has not published its first batched I/O report yet.
         foreach (long delta in new[] { Period * 94 / 100, Period * 96 / 100, Period * 128 / 100 })
@@ -496,6 +514,7 @@ public class AutoScalingChooserContractTest
             Assert.Equal(2, h.chooser.ActiveExecutorCount());
             Assert.False(resumed.suspended);
         }
+
         resumed.activeTime = Period * 7 / 10;
         busy.activeTime = Period;
         h.Tick(Period * 96 / 100);
@@ -509,6 +528,7 @@ public class AutoScalingChooserContractTest
         using var h = new Harness(1, 2, patience: 2);
         ManualExecutor resumed = ResumeOneChild(h);
         ManualExecutor busy = h.children.Single(c => c != resumed);
+
         foreach (long delta in new[] { Period * 94 / 100, Period * 96 / 100, Period * 128 / 100 })
         {
             // Brief tasks remain low utilization; their recent timestamp does not imply a busy window.
@@ -518,6 +538,7 @@ public class AutoScalingChooserContractTest
             h.Tick(delta);
             Assert.False(resumed.suspended);
         }
+
         resumed.activeTime = Period / 100;
         busy.activeTime = Period;
         h.Tick(Period * 96 / 100);
@@ -547,11 +568,13 @@ public class AutoScalingChooserContractTest
         using var h = new Harness(1, 2, patience: 2);
         ManualExecutor resumed = ResumeOneChild(h);
         ManualExecutor busy = h.children.Single(c => c != resumed);
+
         foreach (long delta in new[] { Period * 94 / 100, Period * 96 / 100, Period * 128 / 100, Period * 96 / 100 })
         {
             busy.activeTime = Period;
             h.Tick(delta);
         }
+
         Assert.True(resumed.suspended);
         busy.activeTime = Period;
         h.Tick(Period + Period / 10);

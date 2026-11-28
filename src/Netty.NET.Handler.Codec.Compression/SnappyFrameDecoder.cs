@@ -169,12 +169,14 @@ public class SnappyFrameDecoder : ByteToMessageDecoder
 
                     int skipBytes = Math.Min(chunkLength, @in.ReadableBytes);
                     @in.SkipBytes(skipBytes);
+
                     if (skipBytes != chunkLength)
                     {
                         // We could skip all bytes, let's store the remaining so we can do so once we receive more
                         // data.
                         numBytesToSkip = chunkLength - skipBytes;
                     }
+
                     break;
                 case ChunkType.RESERVED_UNSKIPPABLE:
                     // The spec mandates that reserved unskippable chunks must immediately
@@ -205,6 +207,7 @@ public class SnappyFrameDecoder : ByteToMessageDecoder
                     }
 
                     @in.SkipBytes(4);
+
                     if (validateChecksums)
                     {
                         int checksum = @in.ReadIntLE();
@@ -214,6 +217,7 @@ public class SnappyFrameDecoder : ByteToMessageDecoder
                     {
                         @in.SkipBytes(4);
                     }
+
                     @out.Add(@in.ReadRetainedSlice(chunkLength - 4));
                     break;
                 case ChunkType.COMPRESSED_DATA:
@@ -252,11 +256,13 @@ public class SnappyFrameDecoder : ByteToMessageDecoder
                     }
 
                     ByteBuf uncompressed = ctx.Alloc().Buffer(uncompressedSize, MAX_DECOMPRESSED_DATA_SIZE);
+
                     try
                     {
                         if (validateChecksums)
                         {
                             int oldWriterIndex = @in.WriterIndex;
+
                             try
                             {
                                 @in.WriterIndex = @in.ReaderIndex + chunkLength - 4;
@@ -266,12 +272,14 @@ public class SnappyFrameDecoder : ByteToMessageDecoder
                             {
                                 @in.WriterIndex = oldWriterIndex;
                             }
+
                             ValidateChecksum(checksum, uncompressed, 0, uncompressed.WriterIndex);
                         }
                         else
                         {
                             snappy.Decode(@in.ReadSlice(chunkLength - 4), uncompressed);
                         }
+
                         @out.Add(uncompressed);
                         uncompressed = null;
                     }
@@ -282,6 +290,7 @@ public class SnappyFrameDecoder : ByteToMessageDecoder
                             uncompressed.Release();
                         }
                     }
+
                     snappy.Reset();
                     break;
                 }

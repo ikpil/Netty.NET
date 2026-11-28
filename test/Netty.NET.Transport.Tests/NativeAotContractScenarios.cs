@@ -82,6 +82,7 @@ internal static class NativeAotContractScenarios
     private static void Read(IChannelHandler handler, Func<int> reads, int expected)
     {
         var channel = new EmbeddedChannel(handler);
+
         try
         {
             Check(channel.WriteInbound("message"), "Inbound data was lost.");
@@ -123,6 +124,7 @@ internal static class NativeAotContractScenarios
     {
         var handler = new ActiveWrite();
         var channel = new EmbeddedChannel(handler);
+
         try
         {
             channel.WriteAndFlushAsync("message").GetAwaiter().GetResult();
@@ -156,6 +158,7 @@ internal static class NativeAotContractScenarios
     private static void ExclusionsKeepUnusedPublicAndPrivateMethods()
     {
         ResourceLeakDetector.AddExclusions(typeof(Exclusions), "UnusedPublic", "UnusedPrivate");
+
         try
         {
             ResourceLeakDetector.AddExclusions(typeof(Exclusions), "MissingMethod");
@@ -164,6 +167,7 @@ internal static class NativeAotContractScenarios
         {
             return;
         }
+
         throw new InvalidOperationException("Missing exclusion methods must still be rejected.");
     }
 
@@ -172,6 +176,7 @@ internal static class NativeAotContractScenarios
         var handler = new ErrorHandler();
         var channel = new EmbeddedChannel(new ChannelInboundHandlerAdapter(), handler);
         var cause = new Exception("native exception");
+
         try
         {
             channel.Pipeline.FireExceptionCaught(cause);
@@ -187,6 +192,7 @@ internal static class NativeAotContractScenarios
     {
         var inherited = new DerivedSocket(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp));
         var overridden = new CovariantSocket(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp));
+
         try
         {
             Check(inherited.HasDoWriteLoop, "Inherited native stream writes were lost.");

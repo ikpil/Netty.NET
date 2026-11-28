@@ -53,6 +53,7 @@ public sealed class EchoClient
 
         // Configure the client.
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             Bootstrap b = new Bootstrap();
@@ -62,10 +63,12 @@ public sealed class EchoClient
              .Handler(new ActionChannelInitializer<ISocketChannel>(ch =>
              {
                  IChannelPipeline p = ch.Pipeline;
+
                  if (sslCtx != null)
                  {
                      p.AddLast(sslCtx.NewHandler(ch.Alloc(), HOST, PORT));
                  }
+
                  //p.addLast(new LoggingHandler(LogLevel.INFO));
                  p.AddLast(new EchoClientHandler());
              }));

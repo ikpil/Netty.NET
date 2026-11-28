@@ -47,6 +47,7 @@ public class DefaultAddressedEnvelope<T, TAddress> : IAddressedEnvelope<T, TAddr
         {
             throw new ArgumentNullException("recipient and sender");
         }
+
         Content = message;
         Recipient = recipient;
         Sender = sender;
@@ -93,6 +94,7 @@ public class DefaultAddressedEnvelope<T, TAddress> : IAddressedEnvelope<T, TAddr
     public override string ToString()
     {
         string recipient = Recipient?.ToString() ?? "null";
+
         if (Sender != null)
         {
             return StringUtil.SimpleClassName(this) +

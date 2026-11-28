@@ -43,24 +43,28 @@ public class DerivedByteBufBulkTest
         public override ByteBuf GetBytes(int index, Span<byte> destination)
         {
             o.Record("get-span", index, destination.Length);
+
             return base.GetBytes(index, destination);
         }
 
         public override ByteBuf SetBytes(int index, ReadOnlySpan<byte> source)
         {
             o.Record("set-span", index, source.Length);
+
             return base.SetBytes(index, source);
         }
 
         public override ByteBuf GetBytes(int index, ByteBuf destination, int destinationIndex, int length)
         {
             o.Record("get-buffer", index, length, destination, destinationIndex);
+
             return base.GetBytes(index, destination, destinationIndex, length);
         }
 
         public override ByteBuf SetBytes(int index, ByteBuf source, int sourceIndex, int length)
         {
             o.Record("set-buffer", index, length, source, sourceIndex);
+
             return base.SetBytes(index, source, sourceIndex, length);
         }
     }
@@ -69,24 +73,28 @@ public class DerivedByteBufBulkTest
         public override ByteBuf GetBytes(int index, Span<byte> destination)
         {
             o.Record("get-span", index, destination.Length);
+
             return base.GetBytes(index, destination);
         }
 
         public override ByteBuf SetBytes(int index, ReadOnlySpan<byte> source)
         {
             o.Record("set-span", index, source.Length);
+
             return base.SetBytes(index, source);
         }
 
         public override ByteBuf GetBytes(int index, ByteBuf destination, int destinationIndex, int length)
         {
             o.Record("get-buffer", index, length, destination, destinationIndex);
+
             return base.GetBytes(index, destination, destinationIndex, length);
         }
 
         public override ByteBuf SetBytes(int index, ByteBuf source, int sourceIndex, int length)
         {
             o.Record("set-buffer", index, length, source, sourceIndex);
+
             return base.SetBytes(index, source, sourceIndex, length);
         }
     }
@@ -106,9 +114,11 @@ public class DerivedByteBufBulkTest
             }
 
             Root.SetIndex(2, 14).MarkReaderIndex().MarkWriterIndex();
+
             if (kind is >= 5 and <= 9)
                 Owner = kind is 6 or 8 ? PooledDerivedByteBuf.NewDuplicate(Root, Root, 2, 14)
                     : PooledDerivedByteBuf.NewSlice(Root, Root, 3, 10);
+
             View = kind switch
             {
                 0 => Root.Duplicate(),
@@ -132,10 +142,12 @@ public class DerivedByteBufBulkTest
             {
                 Assert.True(Owner.Release());
             }
+
             if (Root.RefCnt > 0)
             {
                 Assert.True(Root.Release());
             }
+
             Assert.Equal(0, Native.ReservedBytes);
         }
     }
@@ -161,6 +173,7 @@ public class DerivedByteBufBulkTest
             {
                 return;
             }
+
             _owner.SetBytes(0, Bytes);
             Buffer = storage == 2 && input ? _owner.AsReadOnly() : _owner;
             Buffer.SetIndex(2, 9).MarkReaderIndex().MarkWriterIndex();
@@ -190,12 +203,15 @@ public class DerivedByteBufBulkTest
             {
                 return relative ? b.WriteBytes(p.Bytes.AsSpan(peerIndex, length)) : b.SetBytes(index, p.Bytes.AsSpan(peerIndex, length));
             }
+
             return relative ? b.ReadBytes(p.Bytes.AsSpan(peerIndex, length)) : b.GetBytes(index, p.Bytes.AsSpan(peerIndex, length));
         }
+
         if (input)
         {
             return relative ? b.WriteBytes(p.Buffer, length) : b.SetBytes(index, p.Buffer, peerIndex, length);
         }
+
         return relative ? b.ReadBytes(p.Buffer, length) : b.GetBytes(index, p.Buffer, peerIndex, length);
     }
 
@@ -231,6 +247,7 @@ public class DerivedByteBufBulkTest
         s.View.SetIndex(1, 4).MarkReaderIndex().MarkWriterIndex();
         s.Observation.Visits.Clear();
         byte[] expected = Snapshot(s), peer = p.Snapshot();
+
         if (input && s.View.IsReadOnly)
         {
             Assert.Throws<NotSupportedException>(() => Transfer(s.View, p, true, false));
@@ -240,13 +257,16 @@ public class DerivedByteBufBulkTest
             Assert.Equal(peer, p.Snapshot());
             return;
         }
+
         int refs = s.Root.RefCnt;
         Assert.Same(s.View, Transfer(s.View, p, input, false));
         Observed(s, p, input, s.Offset + 2, 4);
+
         if (input)
             peer.AsSpan(4, 3).CopyTo(expected.AsSpan(s.Offset + 2));
         else
             expected.AsSpan(s.Offset + 2, 3).CopyTo(peer.AsSpan(4));
+
         Assert.Equal(expected, Snapshot(s));
         Assert.Equal(peer, p.Snapshot());
         Assert.Equal(1, s.View.ReaderIndex);
@@ -254,6 +274,7 @@ public class DerivedByteBufBulkTest
         s.View.SetIndex(0, s.View.Capacity).ResetReaderIndex().ResetWriterIndex();
         Assert.Equal(1, s.View.ReaderIndex);
         Assert.Equal(4, s.View.WriterIndex);
+
         if (p.Buffer != null)
         {
             Assert.Equal(2, p.Buffer.ReaderIndex);
@@ -262,25 +283,31 @@ public class DerivedByteBufBulkTest
             Assert.Equal(2, p.Buffer.ReaderIndex);
             Assert.Equal(9, p.Buffer.WriterIndex);
         }
+
         s.View.SetIndex(1, input ? 3 : 4);
         s.Observation.Visits.Clear();
         int peerIndex = p.Buffer == null ? 4 : input ? 2 : 9;
         Assert.Same(s.View, Transfer(s.View, p, input, true));
         Observed(s, p, input, s.Offset + (input ? 3 : 1), peerIndex);
+
         if (input)
             peer.AsSpan(peerIndex, 3).CopyTo(expected.AsSpan(s.Offset + 3));
         else
             expected.AsSpan(s.Offset + 1, 3).CopyTo(peer.AsSpan(peerIndex));
+
         Assert.Equal(expected, Snapshot(s));
         Assert.Equal(peer, p.Snapshot());
         Assert.Equal(input ? 1 : 4, s.View.ReaderIndex);
         Assert.Equal(input ? 6 : 4, s.View.WriterIndex);
+
         if (p.Buffer != null)
         {
             Assert.Equal(input ? 5 : 2, p.Buffer.ReaderIndex);
             Assert.Equal(input ? 9 : 12, p.Buffer.WriterIndex);
         }
+
         Assert.Equal(refs, s.Root.RefCnt);
+
         for (int attempt = 0; attempt < 2; attempt++)
         {
             s.View.SetIndex(1, input ? 3 : 4);
@@ -293,29 +320,35 @@ public class DerivedByteBufBulkTest
             Assert.Equal(input ? 3 : 4, s.View.WriterIndex);
             Assert.Equal(expected, Snapshot(s));
             Assert.Equal(peer, p.Snapshot());
+
             if (p.Buffer != null)
             {
                 Assert.Equal(2, p.Buffer.ReaderIndex);
                 Assert.Equal(9, p.Buffer.WriterIndex);
             }
         }
+
         s.Observation.Fail = false;
         s.Observation.Visits.Clear();
         Assert.Throws<ArgumentOutOfRangeException>(() => Transfer(s.View, p, input, false, index: s.View.Capacity, length: 1));
         Assert.Empty(s.Observation.Visits);
         Assert.Same(s.View, Transfer(s.View, p, input, false, index: s.View.Capacity, peerIndex: 12, length: 0));
         Observed(s, p, input, s.Offset + s.View.Capacity, 12, 0);
+
         if (p.Buffer != null)
         {
             s.Observation.Visits.Clear();
+
             if (input)
                 Assert.Throws<ArgumentNullException>(() => s.View.SetBytes(2, (ByteBuf)null, 0, 1));
             else
                 Assert.Throws<ArgumentNullException>(() => s.View.GetBytes(2, (ByteBuf)null, 0, 1));
+
             Assert.Empty(s.Observation.Visits);
             // Peer validation belongs to the parent overload, as in the original delegates.
             Assert.Throws<ArgumentOutOfRangeException>(() => Transfer(s.View, p, input, false, peerIndex: 12, length: 1));
             Observed(s, p, input, s.Offset + 2, 12, 1);
+
             if (!input)
             {
                 s.Observation.Visits.Clear();
@@ -328,6 +361,7 @@ public class DerivedByteBufBulkTest
                 Assert.Equal(4, rejected.PeerIndex);
             }
         }
+
         if (s.Owner != null)
         {
             s.Observation.Visits.Clear();
@@ -365,6 +399,7 @@ public class DerivedByteBufBulkTest
         {
             if (buffer)
                 return input ? s.View.SetBytes(2, peer, 0, 3) : s.View.GetBytes(2, peer, 0, 3);
+
             return input ? s.View.SetBytes(2, s.Root.AsReadOnlySpan(peerIndex, 3))
                 : s.View.GetBytes(2, s.Root.AsSpan(peerIndex, 3));
         }
@@ -386,6 +421,7 @@ public class DerivedByteBufBulkTest
             byte[] snapshot = expected.AsSpan(input ? peerIndex : s.Offset + 2, 3).ToArray();
             snapshot.CopyTo(expected.AsSpan(input ? s.Offset + 2 : peerIndex));
         }
+
         Assert.Equal(expected, Snapshot(s));
         Assert.Equal(1, s.View.ReaderIndex);
         Assert.Equal(4, s.View.WriterIndex);

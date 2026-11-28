@@ -124,6 +124,7 @@ public class SpdyFrameDecoder
                     bool control = (buffer.GetByte(frameOffset) & 0x80) != 0;
 
                     int version;
+
                     if (control)
                     {
                         // Decode control frame common header
@@ -161,6 +162,7 @@ public class SpdyFrameDecoder
                     {
                         state = GetNextState(frameType, length);
                     }
+
                     break;
 
                 case State.READ_DATA_FRAME:
@@ -218,6 +220,7 @@ public class SpdyFrameDecoder
                         state = State.READ_HEADER_BLOCK;
                         @delegate.ReadSynStreamFrame(streamId, associatedToStreamId, priority, last, unidirectional);
                     }
+
                     break;
 
                 case State.READ_SYN_REPLY_FRAME:
@@ -242,6 +245,7 @@ public class SpdyFrameDecoder
                         state = State.READ_HEADER_BLOCK;
                         @delegate.ReadSynReplyFrame(streamId, last);
                     }
+
                     break;
 
                 case State.READ_RST_STREAM_FRAME:
@@ -264,6 +268,7 @@ public class SpdyFrameDecoder
                         state = State.READ_COMMON_HEADER;
                         @delegate.ReadRstStreamFrame(streamId, statusCode);
                     }
+
                     break;
 
                 case State.READ_SETTINGS_FRAME:
@@ -296,6 +301,7 @@ public class SpdyFrameDecoder
                         state = State.READ_SETTING;
                         @delegate.ReadSettingsFrame(clear);
                     }
+
                     break;
 
                 case State.READ_SETTING:
@@ -372,6 +378,7 @@ public class SpdyFrameDecoder
                         state = State.READ_HEADER_BLOCK;
                         @delegate.ReadHeadersFrame(streamId, last);
                     }
+
                     break;
 
                 case State.READ_WINDOW_UPDATE_FRAME:
@@ -394,6 +401,7 @@ public class SpdyFrameDecoder
                         state = State.READ_COMMON_HEADER;
                         @delegate.ReadWindowUpdateFrame(streamId, deltaWindowSize);
                     }
+
                     break;
 
                 case State.READ_UNKNOWN_FRAME:
@@ -402,6 +410,7 @@ public class SpdyFrameDecoder
                         state = State.READ_COMMON_HEADER;
                         break;
                     }
+
                     return;
 
                 case State.READ_HEADER_BLOCK:
@@ -433,6 +442,7 @@ public class SpdyFrameDecoder
                         state = State.READ_COMMON_HEADER;
                         break;
                     }
+
                     return;
 
                 case State.FRAME_ERROR:
@@ -504,10 +514,12 @@ public class SpdyFrameDecoder
             @delegate.ReadUnknownFrame(frameType, flags, Unpooled.EmptyBuffer);
             return true;
         }
+
         if (buffer.ReadableBytes < length)
         {
             return false;
         }
+
         ByteBuf data = buffer.ReadRetainedSlice(length);
         @delegate.ReadUnknownFrame(frameType, flags, data);
         return true;

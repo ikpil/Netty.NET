@@ -146,10 +146,12 @@ public abstract class AbstractDnsMessage : AbstractReferenceCounted, IDnsMessage
     public virtual int Count()
     {
         int count = 0;
+
         for (int i = 0; i < SECTION_COUNT; i ++)
         {
             count += Count(i);
         }
+
         return count;
     }
 
@@ -246,6 +248,7 @@ public abstract class AbstractDnsMessage : AbstractReferenceCounted, IDnsMessage
             if (index == 0)
             {
                 SetSection(section, record);
+
                 return CastRecord<T>(records);
             }
             else
@@ -317,6 +320,7 @@ public abstract class AbstractDnsMessage : AbstractReferenceCounted, IDnsMessage
         if (records is IDnsRecord)
         {
             List<IDnsRecord> recordList;
+
             if (index == 0)
             {
                 recordList = NewRecordList();
@@ -334,6 +338,7 @@ public abstract class AbstractDnsMessage : AbstractReferenceCounted, IDnsMessage
                 throw new ArgumentOutOfRangeException(null, "index: " + index.ToString(CultureInfo.InvariantCulture) +
                                                             " (expected: 0 or 1)");
             }
+
             SetSection(section, recordList);
             return;
         }
@@ -373,6 +378,7 @@ public abstract class AbstractDnsMessage : AbstractReferenceCounted, IDnsMessage
         List<IDnsRecord> recordList = (List<IDnsRecord>) records;
         IDnsRecord removed = recordList[index];
         recordList.RemoveAt(index);
+
         return CastRecord<T>(removed);
     }
 
@@ -388,6 +394,7 @@ public abstract class AbstractDnsMessage : AbstractReferenceCounted, IDnsMessage
         {
             Clear(i);
         }
+
         return this;
     }
 
@@ -395,6 +402,7 @@ public abstract class AbstractDnsMessage : AbstractReferenceCounted, IDnsMessage
     {
         object recordOrList = SectionAt(section);
         SetSection(section, null);
+
         if (recordOrList is IReferenceCounted)
         {
             ((IReferenceCounted) recordOrList).Release();
@@ -423,6 +431,7 @@ public abstract class AbstractDnsMessage : AbstractReferenceCounted, IDnsMessage
         {
             leak.Record(hint);
         }
+
         return this;
     }
 
@@ -544,6 +553,7 @@ public abstract class AbstractDnsMessage : AbstractReferenceCounted, IDnsMessage
             throw new ArgumentException(
                     "record: " + record + " (expected: " + StringUtil.SimpleClassName(typeof(IDnsQuestion)) + ')');
         }
+
         return record;
     }
 

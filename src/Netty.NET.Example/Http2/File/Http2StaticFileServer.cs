@@ -61,6 +61,7 @@ public sealed class Http2StaticFileServer
                 .Build();
 
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             ServerBootstrap b = new ServerBootstrap();

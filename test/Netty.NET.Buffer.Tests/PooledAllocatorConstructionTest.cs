@@ -30,6 +30,7 @@ public class PooledAllocatorConstructionTest
         for (int direct = 0; direct < 3; ++direct)
         {
             yield return [preferDirect, alignment, heap, direct, false];
+
             if (heap < 2 && direct < 2)
                         {
                             yield return [preferDirect, alignment, heap, direct, true];
@@ -58,11 +59,13 @@ public class PooledAllocatorConstructionTest
         Assert.Equal(0, native.ReservedBytes);
         Assert.Equal(direct != 0, allocator.IsDirectBufferPooled);
         ByteBuf selected = allocator.Buffer(17, 64), h = allocator.HeapBuffer(17, 64), d = allocator.DirectBuffer(17, 64);
+
         try
         {
             Assert.Equal(preferDirect, selected.IsDirect);
             Assert.False(h.IsDirect);
             Assert.True(d.IsDirect);
+
             foreach (ByteBuf buffer in new[] { selected, h, d })
             {
                 Assert.Same(allocator, buffer.Alloc());
@@ -71,10 +74,12 @@ public class PooledAllocatorConstructionTest
                 buffer.WriteLongLE(0x0102030405060708L);
                 Assert.Equal(new byte[] { 8, 7, 6, 5, 4, 3, 2, 1 }, buffer.AsSpan(0, 8).ToArray());
             }
+
             if (direct != 0 && alignment != 0)
             {
                 Assert.Equal(0UL, (ulong)ManagedMemoryTest.Address(d.AsMemory(0, 17)) % (uint)alignment);
             }
+
             Assert.Equal(heap + direct == 0 ? 0 : 1, allocator.Metric.NumThreadLocalCaches);
         }
         finally
@@ -83,6 +88,7 @@ public class PooledAllocatorConstructionTest
             h.Release();
             d.Release();
         }
+
         allocator.Dispose();
         Assert.Equal(0, native.ReservedBytes);
     }

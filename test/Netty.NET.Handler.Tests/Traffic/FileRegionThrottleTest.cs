@@ -52,12 +52,14 @@ public class FileRegionThrottleTest : IClassFixture<FileRegionThrottleTest.Befor
     private static void BeforeClass()
     {
         Random r = new Random();
+
         for (int i = 0; i < BYTES.Length; i++)
         {
             BYTES[i] = (byte)r.Next(255);
         }
 
         tmp = PlatformDependent.CreateTempFile("netty-traffic", ".tmp", null);
+
         try
         {
             using FileStream @out = new FileStream(tmp.FullName, FileMode.Create, FileAccess.Write);
@@ -68,6 +70,7 @@ public class FileRegionThrottleTest : IClassFixture<FileRegionThrottleTest.Befor
         {
             throw new Exception(e.Message, e);
         }
+
         // CLR: FileInfo caches the file state, so Length is refreshed after the write.
         tmp.Refresh();
     }
@@ -134,6 +137,7 @@ public class FileRegionThrottleTest : IClassFixture<FileRegionThrottleTest.Befor
         {
             server = new IPEndPoint(IPAddress.Loopback, address.Port);
         }
+
         return bc.ConnectAsync(server);
     }
 
@@ -178,6 +182,7 @@ public class FileRegionThrottleTest : IClassFixture<FileRegionThrottleTest.Befor
                 ByteBuf buf = (ByteBuf)msg;
                 string message = buf.ToString(Encoding.Default);
                 buf.Release();
+
                 if (message.Equals("send-file"))
                 {
                     FileStream raf = new FileStream(tmp.FullName, FileMode.Open, FileAccess.Read);
@@ -204,6 +209,7 @@ public class FileRegionThrottleTest : IClassFixture<FileRegionThrottleTest.Befor
                 ByteBuf buf = (ByteBuf)msg;
                 bytesTransferred += buf.ReadableBytes;
                 buf.Release();
+
                 if (bytesTransferred == tmp.Length)
                 {
                     latch.Signal();

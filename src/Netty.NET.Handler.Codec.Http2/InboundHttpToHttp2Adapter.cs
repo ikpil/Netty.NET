@@ -68,21 +68,25 @@ public class InboundHttpToHttp2Adapter : ChannelInboundHandlerAdapter
             {
                 stream = connection.Remote().CreateStream(streamId, false);
             }
+
             message.Headers().Set(HttpConversionUtil.ExtensionHeaderNames.SCHEME.Text(), HttpScheme.HTTP.Name());
             IHttp2Headers messageHeaders = HttpConversionUtil.ToHttp2Headers(message, true);
             bool hasContent = message.Content.IsReadable();
             bool hasTrailers = !message.TrailingHeaders().IsEmpty();
             listener.OnHeadersRead(
                     ctx, streamId, messageHeaders, 0, !(hasContent || hasTrailers));
+
             if (hasContent)
             {
                 listener.OnDataRead(ctx, streamId, message.Content, 0, !hasTrailers);
             }
+
             if (hasTrailers)
             {
                 IHttp2Headers headers = HttpConversionUtil.ToHttp2Headers(message.TrailingHeaders(), true);
                 listener.OnHeadersRead(ctx, streamId, headers, 0, true);
             }
+
             stream.CloseRemoteSide();
         }
         finally

@@ -88,6 +88,7 @@ public sealed class ClientCookieDecoder : CookieDecoder
                 {
                     goto loop;
                 }
+
                 char c = header[i];
                 if (c == ',')
                 {
@@ -102,6 +103,7 @@ public sealed class ClientCookieDecoder : CookieDecoder
                     i++;
                     continue;
                 }
+
                 break;
             }
 
@@ -126,6 +128,7 @@ public sealed class ClientCookieDecoder : CookieDecoder
                     // NAME=VALUE
                     nameEnd = i;
                     i++;
+
                     if (i == headerLen)
                     {
                         // NAME= (empty value, i.e. nothing after '=')
@@ -220,6 +223,7 @@ public sealed class ClientCookieDecoder : CookieDecoder
                     return maxAgeMillis / 1000 + (maxAgeMillis % 1000 != 0 ? 1 : 0);
                 }
             }
+
             return long.MinValue;
         }
 

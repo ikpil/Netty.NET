@@ -40,10 +40,12 @@ public class TraceSourceLoggerInterfaceTest : AbstractInternalLoggerTest<TraceSo
         string message = format == null
             ? args.Length == 0 ? "Unexpected exception:" : (string)args[0]
             : MessageFormatter.ArrayFormat(format, args).GetMessage();
+
         if (t != null)
         {
             message += Environment.NewLine + t;
         }
+
         Assert.Equal(message, result["message"]);
     }
 

@@ -54,6 +54,7 @@ public static class Http2ExampleUtil
         {
             return int.Parse(@string, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture);
         }
+
         return defaultValue;
     }
 
@@ -67,10 +68,12 @@ public static class Http2ExampleUtil
     {
         ByteBuf buf = Unpooled.Buffer();
         int n = 0;
+
         do
         {
             n = buf.WriteBytes(input, BLOCK_SIZE);
         } while (n > 0);
+
         return buf;
     }
 
@@ -86,6 +89,7 @@ public static class Http2ExampleUtil
         {
             return null;
         }
+
         return values[0];
     }
 

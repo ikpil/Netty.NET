@@ -50,6 +50,7 @@ internal sealed class PoolSubpage : IPoolSubpageMetric
         ArgumentNullException.ThrowIfNull(sizeClass);
         if (headIndex < 0 || headIndex >= sizeClass.NSubpages)
             throw new ArgumentOutOfRangeException(nameof(headIndex));
+
         SizeClass = sizeClass;
         HeadIndex = headIndex;
         Head = this;
@@ -70,6 +71,7 @@ internal sealed class PoolSubpage : IPoolSubpageMetric
             throw new ArgumentOutOfRangeException(nameof(runSize));
         if (elemSize <= 0 || elemSize > runSize)
             throw new ArgumentOutOfRangeException(nameof(elemSize));
+
         Debug.Assert(Monitor.IsEntered(head.SyncRoot));
         Head = head;
         SyncRoot = head.SyncRoot;
@@ -90,9 +92,12 @@ internal sealed class PoolSubpage : IPoolSubpageMetric
     internal static PoolSubpage[] CreatePoolHeads(SizeClasses sizes)
     {
         ArgumentNullException.ThrowIfNull(sizes);
+
         var heads = new PoolSubpage[sizes.NSubpages];
+
         for (int i = 0; i < heads.Length; i++)
             heads[i] = new PoolSubpage(i, sizes);
+
         return heads;
     }
 
@@ -104,6 +109,7 @@ internal sealed class PoolSubpage : IPoolSubpageMetric
         Debug.Assert(Monitor.IsEntered(SyncRoot));
         if (_numAvail == 0 || !DoNotDestroy)
             return -1;
+
         int bitmapIdx = GetNextAvail();
         if (bitmapIdx < 0)
         {
@@ -111,12 +117,15 @@ internal sealed class PoolSubpage : IPoolSubpageMetric
             throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"No next available bitmap index found (bitmapIdx = {bitmapIdx}), ") +
                 string.Create(CultureInfo.InvariantCulture, $"even though there are supposed to be (numAvail = {_numAvail}) out of (maxNumElems = {_maxNumElems}) available indexes."));
         }
+
         int q = bitmapIdx >> 6;
         int r = bitmapIdx & 63;
         Debug.Assert((_bitmap[q] >> r & 1) == 0);
         _bitmap[q] |= 1UL << r;
+
         if (--_numAvail == 0)
             RemoveFromPool();
+
         return ToHandle(bitmapIdx);
     }
 
@@ -129,12 +138,15 @@ internal sealed class PoolSubpage : IPoolSubpageMetric
         Debug.Assert(Monitor.IsEntered(SyncRoot));
         if (bitmapIdx < 0 || bitmapIdx >= _maxNumElems)
             throw new ArgumentOutOfRangeException(nameof(bitmapIdx));
+
         int q = bitmapIdx >> 6;
         int r = bitmapIdx & 63;
         if (!DoNotDestroy || (_bitmap[q] >> r & 1) == 0)
             throw new InvalidOperationException("The subpage slot is not allocated.");
+
         _bitmap[q] ^= 1UL << r;
         _nextAvail = bitmapIdx;
+
         if (_numAvail++ == 0)
         {
             AddToPool();
@@ -145,6 +157,7 @@ internal sealed class PoolSubpage : IPoolSubpageMetric
             if (_maxNumElems > 1)
                 return true;
         }
+
         if (_numAvail != _maxNumElems)
             return true;
 
@@ -154,6 +167,7 @@ internal sealed class PoolSubpage : IPoolSubpageMetric
             // Do not remove if this subpage is the only one left in the pool.
             return true;
         }
+
         // Remove this subpage from the pool if there are other subpages left in the pool.
         DoNotDestroy = false;
         RemoveFromPool();
@@ -185,20 +199,25 @@ internal sealed class PoolSubpage : IPoolSubpageMetric
             _nextAvail = -1;
             return nextAvail;
         }
+
         for (int i = 0; i < _bitmap.Length; i++)
         {
             ulong bits = _bitmap[i];
             if (~bits == 0)
                 continue;
+
             int baseVal = i << 6;
+
             for (int j = 0; j < 64; j++, bits >>= 1)
             {
                 if ((bits & 1) != 0)
                     continue;
+
                 int val = baseVal | j;
                 return val < _maxNumElems ? val : -1;
             }
         }
+
         return -1;
     }
 
@@ -212,6 +231,7 @@ internal sealed class PoolSubpage : IPoolSubpageMetric
     public override string ToString()
     {
         int numAvail;
+
         if (Chunk == null)
         {
             // This is the head so there is no need to synchronize at all as these never change.
@@ -220,17 +240,20 @@ internal sealed class PoolSubpage : IPoolSubpageMetric
         else
         {
             bool doNotDestroy;
+
             lock (SyncRoot)
             {
                 doNotDestroy = DoNotDestroy;
                 numAvail = _numAvail;
             }
+
             if (!doNotDestroy)
             {
                 // Not used for creating the String.
                 return FormattableString.Invariant($"({_runOffset}: not in use)");
             }
         }
+
         return FormattableString.Invariant($"({_runOffset}: {_maxNumElems - numAvail}/{_maxNumElems}, offset: {_runOffset}, length: {_runSize}, elemSize: {ElementSize})");
     }
 
@@ -245,6 +268,7 @@ internal sealed class PoolSubpage : IPoolSubpageMetric
                 // It's the head.
                 return 0;
             }
+
             lock (SyncRoot)
                 return _numAvail;
         }
@@ -261,6 +285,7 @@ internal sealed class PoolSubpage : IPoolSubpageMetric
                 // It's the head.
                 return true;
             }
+
             lock (SyncRoot)
                 return DoNotDestroy;
         }

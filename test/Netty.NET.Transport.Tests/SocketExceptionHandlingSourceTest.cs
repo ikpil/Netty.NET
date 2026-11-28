@@ -38,6 +38,7 @@ public class SocketExceptionHandlingSourceTest : AbstractSocketTest
     {
         IChannel serverChannel = null;
         IChannel clientChannel = null;
+
         try
         {
             MyInitializer serverInitializer = new MyInitializer();
@@ -66,6 +67,7 @@ public class SocketExceptionHandlingSourceTest : AbstractSocketTest
             {
                 await serverChannel.CloseAsync();
             }
+
             if (clientChannel != null)
             {
                 await clientChannel.CloseAsync();
@@ -128,6 +130,7 @@ public class SocketExceptionHandlingSourceTest : AbstractSocketTest
             {
                 latch2.TrySetResult();
             }
+
             // This should not throw any exception.
             _ = ctx.CloseAsync();
         }

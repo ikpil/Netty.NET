@@ -56,6 +56,7 @@ public class ThreadDeathWatcherTest
         };
         Assert.Throws<ArgumentException>(() => ThreadDeathWatcher.Watch(thread, task));
         thread.Start();
+
         try
         {
             ThreadDeathWatcher.Watch(thread, task);
@@ -72,6 +73,7 @@ public class ThreadDeathWatcherTest
             {
                 thread.Interrupt();
             }
+
             Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
             Assert.True(ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromSeconds(5)));
         }
@@ -84,6 +86,7 @@ public class ThreadDeathWatcherTest
         Thread thread = CreateThread();
         Action task = () => Interlocked.Exchange(ref run, 1);
         thread.Start();
+
         try
         {
             // Watch and then unwatch.
@@ -104,6 +107,7 @@ public class ThreadDeathWatcherTest
             {
                 thread.Interrupt();
             }
+
             Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
         }
     }

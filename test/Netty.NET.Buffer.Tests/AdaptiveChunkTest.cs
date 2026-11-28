@@ -49,20 +49,24 @@ public class AdaptiveChunkTest
     public void FixedSlotsExhaustReuseAndRetireWithOriginalOffsetOrder(int segment, bool local, bool direct)
     {
         int capacity;
+
         using (var pool = TestChunkAllocator.Pool())
             capacity = TestChunkAllocator.SizeClassController(pool, AdaptivePoolingAllocator.SizeClassIndexOf(segment)).ChunkSize;
+
         int count = capacity / segment, remainder = capacity % segment;
         var native = new NativeMemoryAllocator();
         var registry = new ChunkRegistry();
         ByteBuf storage = Storage(direct, capacity, native);
         using var chunk = new SizeClassedChunk(storage, registry, segment, local);
         var live = new List<AdaptiveChunkAllocation>();
+
         try
         {
             Assert.Equal(capacity, registry.TotalCapacity);
             Assert.Equal(direct, chunk.IsDirect);
             Assert.True(chunk.Pooled);
             Assert.True(chunk.HasFullCapacity);
+
             for (int i = 0; i < count; i++)
             {
                 var allocation = chunk.TryAllocate(segment);
@@ -71,17 +75,23 @@ public class AdaptiveChunkTest
                 Assert.Equal(i * segment + (local ? remainder : 0), allocation.Offset);
                 allocation.Memory.Span[0] = (byte)(i % 251);
             }
+
             Assert.Null(chunk.TryAllocate(segment));
             Assert.Equal(0, chunk.RemainingCapacity);
             Assert.False(chunk.HasFullCapacity);
             Assert.False(chunk.HasRemainingCapacity);
+
             for (int i = 0; i < count; i++)
                 Assert.Equal((byte)(i % 251), live[i].Memory.Span[0]);
+
             Assert.Equal(!direct, MemoryMarshal.TryGetArray((ReadOnlyMemory<byte>)live[0].Memory, out var array));
+
             if (!direct)
                 Assert.Equal(live[0].Offset, array.Offset);
+
             for (int i = count - 1; i >= 0; i--)
                 live[i].Release();
+
             Assert.True(chunk.HasFullCapacity);
             Assert.Equal(count * segment, chunk.RemainingCapacity);
             var reused = chunk.TryAllocate(Math.Min(7, segment));
@@ -129,15 +139,18 @@ public class AdaptiveChunkTest
         Assert.Throws<NotSupportedException>(() => borrowed.Pin());
         Assert.Throws<ObjectDisposedException>(() => held.AcquireLease());
         var live = new List<AdaptiveChunkAllocation>();
+
         try
         {
             AdaptiveChunkAllocation next;
+
             while ((next = chunk.TryAllocate(16896)) != null)
             {
                 Assert.NotEqual(held.Offset, next.Offset);
                 live.Add(next);
                 next.Memory.Span.Fill(99);
             }
+
             lease.Dispose();
             leaseCopy.Dispose();
             Assert.Null(chunk.TryAllocate(16896));
@@ -155,6 +168,7 @@ public class AdaptiveChunkTest
                 allocation.Release();
             }
         }
+
         chunk.Dispose();
         Assert.Equal(0, registry.TotalCapacity);
         Assert.Equal(0, native.ReservedBytes);
@@ -244,9 +258,11 @@ public class AdaptiveChunkTest
         Assert.Equal(1, storage.RefCnt);
         storage.Fail = false;
         var live = new List<AdaptiveChunkAllocation>();
+
         try
         {
             AdaptiveChunkAllocation a;
+
             while ((a = chunk.TryAllocate(size)) != null)
                 live.Add(a);
         }
@@ -257,6 +273,7 @@ public class AdaptiveChunkTest
                 a.Release();
             }
         }
+
         Assert.Equal(kind == 1 ? 7 : 4, live.Count);
         chunk.Dispose();
         Assert.Equal(0, registry.TotalCapacity);
@@ -280,8 +297,10 @@ public class AdaptiveChunkTest
         var native = new NativeMemoryAllocator();
         using var chunk = new SizeClassedChunk(Storage(direct, 131072, native), registry, 16896, true);
         var live = new List<AdaptiveChunkAllocation>();
+
         for (int i = 0; i < 7; i++)
             live.Add(chunk.TryAllocate(16896));
+
         Exception error = null;
         var thread = new Thread(() =>
         {
@@ -305,8 +324,10 @@ public class AdaptiveChunkTest
         Assert.Equal(live[0].Offset, external.Offset);
         local.Release();
         external.Release();
+
         foreach (var a in live)
             a.Release();
+
         chunk.Dispose();
         Assert.Equal(0, registry.TotalCapacity);
         Assert.Equal(0, native.ReservedBytes);
@@ -320,6 +341,7 @@ public class AdaptiveChunkTest
     {
         var registry = new ChunkRegistry();
         var native = new NativeMemoryAllocator();
+
         for (int iteration = 0; iteration < 100; iteration++)
         {
             ByteBuf storage = Storage(direct, 131072, native);
@@ -328,11 +350,14 @@ public class AdaptiveChunkTest
             var live = new List<AdaptiveChunkAllocation>();
             int size = kind == 2 ? 32768 : 16896;
             AdaptiveChunkAllocation a;
+
             while ((a = chunk.TryAllocate(size)) != null)
                 live.Add(a);
+
             using var start = new ManualResetEventSlim();
             Exception error = null;
             var threads = new Thread[3];
+
             for (int i = 0; i < threads.Length; i++)
             {
                 int worker = i;
@@ -341,6 +366,7 @@ public class AdaptiveChunkTest
                     try
                     {
                         start.Wait();
+
                         for (int j = worker; j < live.Count; j += threads.Length)
                             live[j].Release();
                     }
@@ -351,10 +377,13 @@ public class AdaptiveChunkTest
                 });
                 threads[i].Start();
             }
+
             start.Set();
             chunk.Dispose();
+
             foreach (var t in threads)
                 Assert.True(t.Join(TimeSpan.FromSeconds(10)));
+
             Assert.Null(error);
             Assert.True(chunk.IsDeallocated);
             Assert.Equal(0, storage.RefCnt);
@@ -368,6 +397,7 @@ public class AdaptiveChunkTest
     {
         ByteBuf storage = new UnpooledHeapByteBuf(131073, 131073);
         var registry = new ChunkRegistry();
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => new SizeClassedChunk(storage, registry, 7));
@@ -390,11 +420,13 @@ public class AdaptiveChunkTest
         using var chunk = new SizeClassedChunk(Storage(direct, 131072, native), registry, 16896);
         AbandonLease(chunk);
         chunk.Dispose();
+
         for (int i = 0; i < 10 && !chunk.IsDeallocated; i++)
         {
             GC.Collect();
             GC.WaitForPendingFinalizers();
         }
+
         Assert.True(chunk.IsDeallocated);
         Assert.Equal(0, registry.TotalCapacity);
         Assert.Equal(0, native.ReservedBytes);

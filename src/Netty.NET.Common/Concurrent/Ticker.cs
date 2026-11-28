@@ -32,6 +32,7 @@ public abstract class Ticker
     public static Ticker FromTimeProvider(TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(timeProvider);
+
         return ReferenceEquals(timeProvider, TimeProvider.System) ? SystemTicker() :
             new TimeProviderTicker(timeProvider);
     }

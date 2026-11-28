@@ -58,9 +58,11 @@ public class ByteBufAsciiCopyTest
         byte[] padded = new byte[] { 90, 91 }.Concat(data).Concat(new byte[] { 92, 93 }).ToArray();
         AsciiString source = new AsciiString(padded, false).SubSequence(1, 259, false).SubSequence(1, 257, false);
         var (b, owner) = Destination(kind, 272);
+
         try
         {
             b.SetIndex(1, 4).MarkReaderIndex().MarkWriterIndex();
+
             if (mode == 0)
             {
                 ByteBufUtil.Copy(source, b);
@@ -73,6 +75,7 @@ public class ByteBufAsciiCopyTest
             {
                 ByteBufUtil.Copy(source, 0, b, 8, 256);
             }
+
             int start = mode == 2 ? 8 : 4;
             Assert.Equal(data, ByteBufUtil.GetBytes(b, start, 256));
             Assert.Equal(1, b.ReaderIndex);
@@ -81,10 +84,12 @@ public class ByteBufAsciiCopyTest
             b.ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(1, b.ReaderIndex);
             Assert.Equal(4, b.WriterIndex);
+
             if (kind == 5)
             {
                 Assert.Equal(4, owner.WriterIndex);
             }
+
             if (kind == 3 || kind == 4)
             {
                 Assert.Equal(kind == 3 ? 276 : 272, owner.WriterIndex);
@@ -101,6 +106,7 @@ public class ByteBufAsciiCopyTest
     public void RelativeCopyGrowsAndRetainsIndicesAndMarks(int kind)
     {
         ByteBuf b = kind switch { 0 => Unpooled.Buffer(4, 64), 1 => Unpooled.DirectBuffer(4, 64), _ => Unpooled.CompositeBuffer().AddComponent(Unpooled.WrappedBuffer(new byte[4]), true) };
+
         try
         {
             b.SetBytes(0, new byte[] { 1, 2, 3, 4 }).SetIndex(1, 4).MarkReaderIndex().MarkWriterIndex();
@@ -126,6 +132,7 @@ public class ByteBufAsciiCopyTest
     {
         AsciiString source = new(new byte[] { 8, 1, 2, 3, 9 }, 1, 3, false);
         ByteBuf b = Unpooled.Buffer(2, 32).WriteBytes(new byte[] { 5, 6 });
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.Copy(source, start, b, length));
@@ -148,6 +155,7 @@ public class ByteBufAsciiCopyTest
     public void InvalidAbsoluteDestinationNeverGrowsOrChangesBytes(int start, int length)
     {
         ByteBuf b = Unpooled.Buffer(8, 64).WriteBytes(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.Copy(new AsciiString(new byte[8], false), 0, b, start, length));
@@ -169,6 +177,7 @@ public class ByteBufAsciiCopyTest
         ByteBuf b = kind == 2
             ? Unpooled.WrappedUnmodifiableBuffer(Unpooled.WrappedBuffer(new byte[4]), Unpooled.WrappedBuffer(new byte[4]))
             : (kind == 0 ? Unpooled.Buffer(8, 8) : Unpooled.DirectBuffer(8, 8)).AsReadOnly();
+
         try
         {
             AsciiString source = new(new byte[length], false);
@@ -205,6 +214,7 @@ public class ByteBufAsciiCopyTest
         int sourceIndex = forward ? 0 : 3, destinationIndex = forward ? 3 : 0;
         byte[] expected = data.ToArray();
         data.AsSpan(sourceIndex, 9).CopyTo(expected.AsSpan(destinationIndex));
+
         try
         {
             b.SetIndex(0, destinationIndex);
@@ -212,9 +222,11 @@ public class ByteBufAsciiCopyTest
             ByteBufUtil.Copy(source, sourceIndex, b, 9);
             Assert.Equal(expected, data);
             Assert.Equal(destinationIndex + 9, b.WriterIndex);
+
             // Repeat the same aliasing contract through the absolute overload.
             for (int i = 0; i < data.Length; i++)
                 data[i] = (byte)i;
+
             ByteBufUtil.Copy(source, sourceIndex, b, destinationIndex, 9);
             Assert.Equal(expected, data);
             Assert.Equal(destinationIndex + 9, b.WriterIndex);
@@ -229,6 +241,7 @@ public class ByteBufAsciiCopyTest
     public void SourceAliasingOldHeapArrayRemainsValidDuringGrowth()
     {
         ByteBuf b = Unpooled.Buffer(4, 16).WriteBytes(new byte[] { 1, 2, 128, 255 });
+
         try
         {
             byte[] old = ByteBufUtil.GetBytes(b, 0, 4, false);
@@ -247,6 +260,7 @@ public class ByteBufAsciiCopyTest
     public void ExhaustionDoesNotAdvanceWriterAndValidEndEmptyRangeDoesNothing()
     {
         ByteBuf b = Unpooled.WrappedBuffer(new byte[] { 1, 2, 3, 4 });
+
         try
         {
             AsciiString source = new(new byte[] { 9 }, false);
@@ -274,10 +288,12 @@ public class ByteBufAsciiCopyTest
     {
         ByteBuf b = Unpooled.CompositeBuffer().AddComponent(Unpooled.WrappedBuffer(new byte[] { 1, 2 }), true)
             .AddComponent(Unpooled.WrappedBuffer(new byte[] { 3, 4 }).AsReadOnly(), true);
+
         try
         {
             b.SetIndex(0, 0);
             AsciiString source = new(new byte[] { 9, 8, 7, 6, 5 }, false);
+
             if (relative)
             {
                 Assert.Throws<NotSupportedException>(() => ByteBufUtil.Copy(source, b));
@@ -286,9 +302,11 @@ public class ByteBufAsciiCopyTest
             {
                 Assert.Throws<NotSupportedException>(() => ByteBufUtil.Copy(source, 0, b, 0, 4));
             }
+
             Assert.Equal(new byte[] { 9, 8, 3, 4 }, ByteBufUtil.GetBytes(b, 0, 4));
             Assert.Equal(0, b.WriterIndex);
             Assert.Equal(0, b.ReaderIndex);
+
             if (relative)
             {
                 Assert.True(b.Capacity >= 5);
@@ -309,6 +327,7 @@ public class ByteBufAsciiCopyTest
         AsciiString name = new(Encoding.ASCII.GetBytes("!Content-Type!"), 1, 12, false);
         AsciiString value = new(Encoding.ASCII.GetBytes("!application/octet-stream!"), 1, 24, false);
         var (b, owner) = Destination(kind, 48);
+
         try
         {
             b.WriteByte(99);

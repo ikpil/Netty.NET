@@ -178,6 +178,7 @@ internal sealed class SizeClasses : ISizeClassesMetric
         int lookupMaxSize = 0;
         int nPSizes = 0;
         int nSubpages = 0;
+
         for (int idx = 0; idx < nSizes; idx++)
         {
             short[] sz = sizeClasses[idx];
@@ -185,16 +186,19 @@ internal sealed class SizeClasses : ISizeClassesMetric
             {
                 nPSizes++;
             }
+
             if (sz[SUBPAGE_IDX] == Yes)
             {
                 nSubpages++;
                 smallMaxSizeIdx = idx;
             }
+
             if (sz[LOG2_DELTA_LOOKUP_IDX] != No)
             {
                 lookupMaxSize = SizeOf(sz, directMemoryCacheAlignment);
             }
         }
+
         this.SmallMaxSizeIdx = smallMaxSizeIdx;
         this.LookupMaxSize = lookupMaxSize;
         this.NPSizes = nPSizes;
@@ -216,6 +220,7 @@ internal sealed class SizeClasses : ISizeClassesMetric
     private static short[] NewSizeClass(int index, int log2Group, int log2Delta, int nDelta, int pageShifts)
     {
         short isMultiPageSize;
+
         if (log2Delta >= pageShifts)
         {
             isMultiPageSize = Yes;
@@ -259,6 +264,7 @@ internal sealed class SizeClasses : ISizeClassesMetric
             short[] sizeClass = sizeClasses[i];
             sizeIdx2SizeTab[i] = SizeOf(sizeClass, directMemoryCacheAlignment);
         }
+
         return sizeIdx2SizeTab;
     }
 
@@ -283,6 +289,7 @@ internal sealed class SizeClasses : ISizeClassesMetric
     {
         int[] pageIdx2SizeTab = new int[nPSizes];
         int pageIdx = 0;
+
         for (int i = 0; i < nSizes; i++)
         {
             short[] sizeClass = sizeClasses[i];
@@ -291,6 +298,7 @@ internal sealed class SizeClasses : ISizeClassesMetric
                 pageIdx2SizeTab[pageIdx++] = SizeOf(sizeClass, directMemoryCacheAlignment);
             }
         }
+
         return pageIdx2SizeTab;
     }
 
@@ -311,6 +319,7 @@ internal sealed class SizeClasses : ISizeClassesMetric
                 size = idx + 1 << LOG2_QUANTUM;
             }
         }
+
         return size2IdxTab;
     }
 
@@ -318,6 +327,7 @@ internal sealed class SizeClasses : ISizeClassesMetric
     {
         if (sizeIdx < 0 || sizeIdx >= NSizes)
             throw new ArgumentOutOfRangeException(nameof(sizeIdx));
+
         return sizeIdx2SizeTab[sizeIdx];
     }
 
@@ -325,6 +335,7 @@ internal sealed class SizeClasses : ISizeClassesMetric
     {
         if (sizeIdx < 0 || sizeIdx >= NSizes)
             throw new ArgumentOutOfRangeException(nameof(sizeIdx));
+
         int group = sizeIdx >> LOG2_SIZE_CLASS_GROUP;
         int mod = sizeIdx & (1 << LOG2_SIZE_CLASS_GROUP) - 1;
 
@@ -342,6 +353,7 @@ internal sealed class SizeClasses : ISizeClassesMetric
     {
         if (pageIdx < 0 || pageIdx >= NPSizes)
             throw new ArgumentOutOfRangeException(nameof(pageIdx));
+
         return pageIdx2SizeTab[pageIdx];
     }
 
@@ -349,6 +361,7 @@ internal sealed class SizeClasses : ISizeClassesMetric
     {
         if (pageIdx < 0 || pageIdx >= NPSizes)
             throw new ArgumentOutOfRangeException(nameof(pageIdx));
+
         int group = pageIdx >> LOG2_SIZE_CLASS_GROUP;
         int mod = pageIdx & (1 << LOG2_SIZE_CLASS_GROUP) - 1;
 
@@ -409,6 +422,7 @@ internal sealed class SizeClasses : ISizeClassesMetric
     private int Pages2PageIdxCompute(int pages, bool floor)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(pages);
+
         long pageSize = (long)pages << PageShifts;
         if (pageSize > ChunkSize)
         {
@@ -444,6 +458,7 @@ internal sealed class SizeClasses : ISizeClassesMetric
         {
             return size;
         }
+
         int delta = size & directMemoryCacheAlignment - 1;
         return delta == 0 ? size : checked(size + directMemoryCacheAlignment - delta);
     }
@@ -455,6 +470,7 @@ internal sealed class SizeClasses : ISizeClassesMetric
         {
             return sizeIdx2SizeTab[0];
         }
+
         size = AlignSizeIfNeeded(size, DirectMemoryCacheAlignment);
         if (size <= LookupMaxSize)
         {
@@ -462,6 +478,7 @@ internal sealed class SizeClasses : ISizeClassesMetric
             Debug.Assert(ret == NormalizeSizeCompute(size));
             return ret;
         }
+
         return NormalizeSizeCompute(size);
     }
 

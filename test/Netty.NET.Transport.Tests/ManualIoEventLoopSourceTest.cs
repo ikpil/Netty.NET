@@ -45,6 +45,7 @@ public class ManualIoEventLoopSourceTest
         Assert.Equal(1, eventLoop.RunNow());
         Assert.True(runnable.IsDone());
         eventLoop.StopAsync();
+
         while (!eventLoop.IsTerminated())
         {
             eventLoop.RunNow();
@@ -82,6 +83,7 @@ public class ManualIoEventLoopSourceTest
         {
             eventLoop.RunNow();
         }
+
         eventLoop.TerminationFuture.GetAwaiter().GetResult();
     }
 
@@ -129,6 +131,7 @@ public class ManualIoEventLoopSourceTest
         {
             eventLoop.RunNow();
         }
+
         eventLoop.TerminationFuture.GetAwaiter().GetResult();
     }
 
@@ -144,6 +147,7 @@ public class ManualIoEventLoopSourceTest
             {
                 eventLoop.SetOwningThread(Thread.CurrentThread);
                 Assert.True(eventLoop.InEventLoop());
+
                 while (!eventLoop.IsTerminated())
                 {
                     eventLoop.RunNow();
@@ -289,11 +293,13 @@ public class ManualIoEventLoopSourceTest
     {
         var termination = loop.StopAsync();
         var deadline = DateTime.UtcNow.AddSeconds(5);
+
         while (!loop.IsTerminated())
         {
             Assert.True(DateTime.UtcNow < deadline, "The manual loop did not terminate.");
             loop.RunNow();
         }
+
         termination.GetAwaiter().GetResult();
     }
 
@@ -388,6 +394,7 @@ public class ManualIoEventLoopSourceTest
                     // high-resolution clock reaches the deadline (testRun failed once at its >= waitTime assertion),
                     // so wait again for the remainder until a permit arrives or the deadline passed.
                     long deadline = SystemTimer.NanoTime() + delay;
+
                     for (long remaining = delay; remaining > 0; remaining = deadline - SystemTimer.NanoTime())
                     {
                         if (_semaphore.Wait(TimeSpan.FromMilliseconds(Math.Ceiling(Math.Min(remaining, TimeSpan.FromDays(1).Ticks * 100L) / 1_000_000d))))
@@ -397,6 +404,7 @@ public class ManualIoEventLoopSourceTest
                     }
                 }
             }
+
             return 0;
         }
 

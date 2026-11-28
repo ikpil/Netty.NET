@@ -85,6 +85,7 @@ public class ChunkedNioStream : IChunkedInput<ByteBuf>
             // A previous read was not over, so there is a next chunk in the buffer at least
             return false;
         }
+
         if (@in.CanRead)
         {
             // Try to read a new part, and keep this part (no rewind)
@@ -99,6 +100,7 @@ public class ChunkedNioStream : IChunkedInput<ByteBuf>
                 return false;
             }
         }
+
         return true;
     }
 
@@ -113,8 +115,10 @@ public class ChunkedNioStream : IChunkedInput<ByteBuf>
         {
             return null;
         }
+
         // buffer cannot be not be empty from there
         int readBytes = byteBufferPosition;
+
         for (;;)
         {
             int localReadBytes = Read();
@@ -122,6 +126,7 @@ public class ChunkedNioStream : IChunkedInput<ByteBuf>
             {
                 break;
             }
+
             readBytes += localReadBytes;
             offset += localReadBytes;
             if (readBytes == chunkSize)
@@ -129,9 +134,11 @@ public class ChunkedNioStream : IChunkedInput<ByteBuf>
                 break;
             }
         }
+
         // CLR: byteBuffer.flip(): the filled prefix is byteBuffer[0, byteBufferPosition).
         bool release = true;
         ByteBuf buffer = allocator.Buffer(byteBufferPosition);
+
         try
         {
             buffer.WriteBytes(byteBuffer.AsSpan(0, byteBufferPosition));
@@ -171,11 +178,13 @@ public class ChunkedNioStream : IChunkedInput<ByteBuf>
         {
             return 0;
         }
+
         int read = @in.Read(byteBuffer, byteBufferPosition, remaining);
         if (read == 0)
         {
             return -1;
         }
+
         byteBufferPosition += read;
         return read;
     }

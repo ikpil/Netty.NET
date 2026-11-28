@@ -61,10 +61,12 @@ public class CompositeByteBufLookupTest
         ByteBuf first = storage.Allocator.Buffer(5, 5).WriteBytes(new byte[] { 1, 2, 3, 4, 5 });
         ByteBuf second = storage.Allocator.Buffer(7, 7).WriteBytes(new byte[] { 4, 5, 6, 7, 8, 9, 26 });
         CompositeByteBuf composite = storage.Allocator.CompositeBuffer().AddComponents(new[] { first, second }, true);
+
         try
         {
             //Ensure that a random place will be fine
             Assert.Equal(5, composite.ComponentAtOffset(2).Capacity);
+
             //Loop through each byte
             for (int offset = 0; offset < composite.Capacity; ++offset)
             {
@@ -82,6 +84,7 @@ public class CompositeByteBufLookupTest
                 Assert.Equal(0, source.ReaderIndex);
                 Assert.Equal(1, source.RefCnt);
             }
+
             Assert.Equal(0, composite.ReaderIndex);
             Assert.Equal(12, composite.WriterIndex);
         }
@@ -89,6 +92,7 @@ public class CompositeByteBufLookupTest
         {
             composite.Release();
         }
+
         Assert.Equal(0, first.RefCnt);
         Assert.Equal(0, second.RefCnt);
     }
@@ -100,10 +104,12 @@ public class CompositeByteBufLookupTest
     private static CompositeByteBuf NewIndexBuffer(Storage storage)
     {
         CompositeByteBuf composite = storage.Allocator.CompositeBuffer();
+
         try
         {
             foreach (byte[] data in IndexBytes)
                 composite.AddComponent(storage.Allocator.Buffer(data.Length, data.Length).WriteBytes(data), true);
+
             return composite;
         }
         catch
@@ -119,6 +125,7 @@ public class CompositeByteBufLookupTest
     {
         using var storage = new Storage(pooled, direct);
         CompositeByteBuf buf = NewIndexBuffer(storage);
+
         try
         {
             // spot checks
@@ -139,6 +146,7 @@ public class CompositeByteBufLookupTest
                 Assert.Equal(offset < 5 ? 0 : offset < 12 ? 1 : 2, cindex);
                 Assert.Equal(IndexBytes[cindex][offset - buf.ToByteIndex(cindex)], buf.GetByte(offset));
             }
+
             // CLR: negative and end offsets are rejected with ArgumentOutOfRangeException.
             Assert.Throws<ArgumentOutOfRangeException>(() => buf.ToComponentIndex(-1));
             Assert.Throws<ArgumentOutOfRangeException>(() => buf.ToComponentIndex(19));
@@ -155,15 +163,18 @@ public class CompositeByteBufLookupTest
     {
         using var storage = new Storage(pooled, direct);
         CompositeByteBuf buf = NewIndexBuffer(storage);
+
         try
         {
             // spot checks
             Assert.Equal(0, buf.ToByteIndex(0));
             Assert.Equal(5, buf.ToByteIndex(1));
             Assert.Equal(12, buf.ToByteIndex(2));
+
             // CLR: every component start maps back to its component.
             for (int cindex = 0; cindex < buf.NumComponents; ++cindex)
                 Assert.Equal(cindex, buf.ToComponentIndex(buf.ToByteIndex(cindex)));
+
             Assert.Throws<ArgumentOutOfRangeException>(() => buf.ToByteIndex(-1));
             // CLR rejects the missing component explicitly; pinned Java dereferences a null slot here.
             Assert.Throws<ArgumentOutOfRangeException>(() => buf.ToByteIndex(3));
@@ -178,17 +189,20 @@ public class CompositeByteBufLookupTest
     {
         // Ensure that we are really testing a CompositeByteBuf
         CompositeByteBuf composite = allocator.CompositeBuffer(int.MaxValue);
+
         try
         {
             for (int offset = 0; offset < length + 45; offset += 45)
             {
                 composite.AddComponent(Unpooled.EmptyBuffer);
+
                 for (int size = 1; size <= 9; ++size)
                 {
                     composite.AddComponent(allocator.Buffer(size, size).WriteZero(size), true);
                     composite.AddComponent(Unpooled.EmptyBuffer);
                 }
             }
+
             // Truncate to the requested capacity.
             composite.Capacity = length;
             Assert.Equal(length, composite.Capacity);
@@ -210,6 +224,7 @@ public class CompositeByteBufLookupTest
     {
         using var storage = new Storage(pooled, direct);
         CompositeByteBuf composite = NewFragmentedBuffer(storage.Allocator, 4);
+
         try
         {
             Assert.False(composite.IsContiguous);
@@ -227,6 +242,7 @@ public class CompositeByteBufLookupTest
         using var storage = new Storage(pooled, direct);
         CompositeByteBuf composite = storage.Allocator.CompositeBuffer();
         var sources = new List<ByteBuf>();
+
         try
         {
             foreach (byte value in new byte[] { (byte)'a', (byte)'b', (byte)'c' })
@@ -236,6 +252,7 @@ public class CompositeByteBufLookupTest
                 sources.Add(source);
                 composite.AddComponent(source, true);
             }
+
             Assert.Equal((byte)'a', composite.ReadByte());
             composite.SkipBytes(1);
             Assert.Equal((byte)'c', composite.ReadByte());
@@ -247,6 +264,7 @@ public class CompositeByteBufLookupTest
         {
             composite.Release();
         }
+
         Assert.All(sources, source => Assert.Equal(0, source.RefCnt));
     }
 

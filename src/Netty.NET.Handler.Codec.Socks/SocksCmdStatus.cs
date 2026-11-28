@@ -65,6 +65,7 @@ public sealed class SocksCmdStatus
                 return code;
             }
         }
+
         return UNASSIGNED;
     }
 

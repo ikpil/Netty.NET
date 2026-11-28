@@ -26,7 +26,9 @@ internal sealed class PooledHeapByteBuf : PooledByteBuf
     public override ByteBuf Copy(int index, int length)
     {
         CheckIndex(index, length);
+
         ByteBuf copy = Alloc().HeapBuffer(length, MaxCapacity);
+
         // CLR: Span preserves the original array-write extension point without
         // exposing the pooled backing array. Release the new owner on failure.
         try

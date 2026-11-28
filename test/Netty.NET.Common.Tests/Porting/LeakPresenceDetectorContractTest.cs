@@ -29,6 +29,7 @@ public class LeakPresenceDetectorContractTest
     private static void WithFactory(ResourceLeakDetectorFactory factory, Action action)
     {
         var previous = ResourceLeakDetectorFactory.Instance();
+
         try
         {
             ResourceLeakDetectorFactory.SetResourceLeakDetectorFactory(factory);
@@ -66,6 +67,7 @@ public class LeakPresenceDetectorContractTest
         var previous = ResourceLeakDetector.GetLevel();
         using var scope = new ResourceScope("count-all");
         var detector = new Scoped<object>(scope);
+
         try
         {
             ResourceLeakDetector.SetLevel(ResourceLeakDetectorLevel.DISABLED);
@@ -152,6 +154,7 @@ public class LeakPresenceDetectorContractTest
     {
         string key = "io.netty.customResourceLeakDetector";
         string previous = Environment.GetEnvironmentVariable(key);
+
         try
         {
             Environment.SetEnvironmentVariable(key, null);
@@ -266,6 +269,7 @@ public class LeakPresenceDetectorContractTest
         Assert.NotNull(tracker);
         var failure = Assert.Throws<InvalidOperationException>(scope.Check);
         Exception[] creation = ThrowableUtil.GetSuppressed(failure);
+
         if (LeakPresenceDetector.TRACK_CREATION_STACK)
         {
             Assert.Single(creation);
@@ -276,6 +280,7 @@ public class LeakPresenceDetectorContractTest
         {
             Assert.Empty(creation);
         }
+
         Assert.True(tracker.Close(null));
         Assert.Throws<InvalidOperationException>(scope.Check);
         diagnosticInitializerScope = null;
@@ -295,6 +300,7 @@ public class LeakPresenceDetectorContractTest
 
         var leak = Assert.Throws<InvalidOperationException>(scope.Check);
         Exception[] creation = ThrowableUtil.GetSuppressed(leak);
+
         if (LeakPresenceDetector.TRACK_CREATION_STACK)
         {
             Assert.Equal(7, creation.Length);

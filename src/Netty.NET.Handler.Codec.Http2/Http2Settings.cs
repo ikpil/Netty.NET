@@ -111,6 +111,7 @@ public sealed class Http2Settings : Dictionary<char, long>
         {
             return null;
         }
+
         return TRUE.Equals(value.Value);
     }
 
@@ -209,6 +210,7 @@ public sealed class Http2Settings : Dictionary<char, long>
         {
             return null;
         }
+
         return TRUE.Equals(value.Value);
     }
 
@@ -228,10 +230,12 @@ public sealed class Http2Settings : Dictionary<char, long>
     public Http2Settings CopyFrom(Http2Settings settings)
     {
         Clear();
+
         foreach (KeyValuePair<char, long> entry in settings)
         {
             Put(entry.Key, entry.Value);
         }
+
         return this;
     }
 
@@ -247,6 +251,7 @@ public sealed class Http2Settings : Dictionary<char, long>
         {
             return null;
         }
+
         return unchecked((int) value.Value);
     }
 
@@ -266,6 +271,7 @@ public sealed class Http2Settings : Dictionary<char, long>
                     throw new ArgumentException("Setting HEADER_TABLE_SIZE is invalid: " + Str(value) +
                             ", expected [" + Str(MIN_HEADER_TABLE_SIZE) + ", " + Str(MAX_HEADER_TABLE_SIZE) + ']');
                 }
+
                 break;
             case SETTINGS_ENABLE_PUSH:
                 if (value != 0L && value != 1L)
@@ -273,6 +279,7 @@ public sealed class Http2Settings : Dictionary<char, long>
                     throw new ArgumentException("Setting ENABLE_PUSH is invalid: " + Str(value) +
                             ", expected [0, 1]");
                 }
+
                 break;
             case SETTINGS_MAX_CONCURRENT_STREAMS:
                 if (value < MIN_CONCURRENT_STREAMS || value > MAX_CONCURRENT_STREAMS)
@@ -280,6 +287,7 @@ public sealed class Http2Settings : Dictionary<char, long>
                     throw new ArgumentException("Setting MAX_CONCURRENT_STREAMS is invalid: " + Str(value) +
                             ", expected [" + Str(MIN_CONCURRENT_STREAMS) + ", " + Str(MAX_CONCURRENT_STREAMS) + ']');
                 }
+
                 break;
             case SETTINGS_INITIAL_WINDOW_SIZE:
                 if (value < MIN_INITIAL_WINDOW_SIZE || value > MAX_INITIAL_WINDOW_SIZE)
@@ -287,6 +295,7 @@ public sealed class Http2Settings : Dictionary<char, long>
                     throw new ArgumentException("Setting INITIAL_WINDOW_SIZE is invalid: " + Str(value) +
                             ", expected [" + Str(MIN_INITIAL_WINDOW_SIZE) + ", " + Str(MAX_INITIAL_WINDOW_SIZE) + ']');
                 }
+
                 break;
             case SETTINGS_MAX_FRAME_SIZE:
                 if (!IsMaxFrameSizeValid(unchecked((int) value)))
@@ -294,6 +303,7 @@ public sealed class Http2Settings : Dictionary<char, long>
                     throw new ArgumentException("Setting MAX_FRAME_SIZE is invalid: " + Str(value) +
                             ", expected [" + Str(MAX_FRAME_SIZE_LOWER_BOUND) + ", " + Str(MAX_FRAME_SIZE_UPPER_BOUND) + ']');
                 }
+
                 break;
             case SETTINGS_MAX_HEADER_LIST_SIZE:
                 if (value < MIN_HEADER_LIST_SIZE || value > MAX_HEADER_LIST_SIZE)
@@ -301,6 +311,7 @@ public sealed class Http2Settings : Dictionary<char, long>
                     throw new ArgumentException("Setting MAX_HEADER_LIST_SIZE is invalid: " + Str(value) +
                             ", expected [" + Str(MIN_HEADER_LIST_SIZE) + ", " + Str(MAX_HEADER_LIST_SIZE) + ']');
                 }
+
                 break;
             case SETTINGS_ENABLE_CONNECT_PROTOCOL:
                 if (value != 0L && value != 1L)
@@ -308,6 +319,7 @@ public sealed class Http2Settings : Dictionary<char, long>
                     throw new ArgumentException("Setting ENABLE_CONNECT_PROTOCOL is invalid: " + Str(value) +
                             ", expected [0, 1]");
                 }
+
                 break;
             default:
                 // Non-standard HTTP/2 setting
@@ -316,6 +328,7 @@ public sealed class Http2Settings : Dictionary<char, long>
                     throw new ArgumentException("Non-standard setting 0x" + key.ToString("x", CultureInfo.InvariantCulture) +
                             " is invalid: " + Str(value) + ", expected unsigned 32-bit value");
                 }
+
                 break;
         }
     }
@@ -354,18 +367,22 @@ public sealed class Http2Settings : Dictionary<char, long>
         {
             return "{}";
         }
+
         StringBuilder sb = new StringBuilder(4 * Count);
         sb.Append('{');
         bool first = true;
+
         foreach (KeyValuePair<char, long> entry in this)
         {
             if (!first)
             {
                 sb.Append(", ");
             }
+
             sb.Append(KeyToString(entry.Key)).Append('=').Append(Str(entry.Value));
             first = false;
         }
+
         return sb.Append('}').ToString();
     }
 
@@ -385,6 +402,7 @@ public sealed class Http2Settings : Dictionary<char, long>
         {
             return false;
         }
+
         foreach (KeyValuePair<char, long> entry in this)
         {
             if (!other.TryGetValue(entry.Key, out long otherValue) || entry.Value != otherValue)
@@ -392,6 +410,7 @@ public sealed class Http2Settings : Dictionary<char, long>
                 return false;
             }
         }
+
         return true;
     }
 
@@ -400,10 +419,12 @@ public sealed class Http2Settings : Dictionary<char, long>
     public override int GetHashCode()
     {
         int hash = Count;
+
         foreach (char key in Keys)
         {
             hash ^= key;
         }
+
         return hash;
     }
 

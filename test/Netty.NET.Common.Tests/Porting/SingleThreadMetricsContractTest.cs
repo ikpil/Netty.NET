@@ -185,12 +185,14 @@ public class SingleThreadMetricsContractTest
         var executor = new ManualExecutor();
         executor.clock.Advance(320);
         int calls = 0;
+
         for (int i = 0; i < 100; i++)
             executor.Execute(() =>
             {
                 calls++;
                 executor.clock.Advance(5);
             });
+
         Assert.True(executor.Drain(budget));
         Assert.Equal(expectedCalls, calls);
         Assert.Equal(expectedCalls * 5, executor.ResetActive());

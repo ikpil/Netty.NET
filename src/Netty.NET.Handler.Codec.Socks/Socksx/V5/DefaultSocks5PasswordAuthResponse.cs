@@ -59,6 +59,7 @@ public class DefaultSocks5PasswordAuthResponse : AbstractSocks5Message, ISocks5P
         {
             buf.Append("(status: ");
         }
+
         buf.Append(Status());
         buf.Append(')');
 

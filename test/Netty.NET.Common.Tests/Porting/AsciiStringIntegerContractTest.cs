@@ -40,6 +40,7 @@ public class AsciiStringIntegerContractTest
     public void InvalidSlicesAreArgumentErrorsForEveryWidth(int start, int end)
     {
         var value = new AsciiString("12");
+
         foreach (int width in new[] { 16, 32, 64 })
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => Parse(value, width, start, end));
@@ -73,9 +74,11 @@ public class AsciiStringIntegerContractTest
         {
             BigInteger minimum = -(BigInteger.One << (width - 1));
             BigInteger maximum = -minimum - 1;
+
             foreach (BigInteger expected in new[] { minimum, minimum + 1, -BigInteger.One, BigInteger.Zero, BigInteger.One, maximum })
             {
                 string text = Format(expected, radix);
+
                 foreach (string input in new[] { text, text.ToUpperInvariant(), text.Insert(text[0] == '-' ? 1 : 0, "0000") })
                 {
                     // Nonzero backing offset and numeric subrange. Sentinels must never be consumed.
@@ -107,10 +110,12 @@ public class AsciiStringIntegerContractTest
                 int expected = "0123456789abcdefghijklmnopqrstuvwxyz".IndexOf(char.ToLowerInvariant((char)b));
                 bool valid = expected >= 0 && expected < radix;
                 var value = new AsciiString(new byte[] { 255, (byte)b, 255 }, 1, 1, false);
+
                 foreach (int width in new[] { 16, 32, 64 })
                 {
                     Assert.Equal(valid, TryParse(value, width, 0, 1, out long result, radix));
                     Assert.Equal(valid ? expected : 0L, result);
+
                     if (valid)
                     {
                         Assert.Equal(expected, Parse(value, width, 0, 1, radix));
@@ -162,6 +167,7 @@ public class AsciiStringIntegerContractTest
         Assert.Equal((short)0, value.ParseShort());
         Assert.Equal(0, value.ParseInt());
         Assert.Equal(0L, value.ParseLong());
+
         foreach (int width in new[] { 16, 32, 64 })
         {
             Assert.True(TryParse(value, width, 0, 2, out long result));
@@ -176,6 +182,7 @@ public class AsciiStringIntegerContractTest
     public void ParsingIsIndependentOfCurrentCultureAndTheExistingConsumerUsesTheNativeApi()
     {
         CultureInfo previous = CultureInfo.CurrentCulture;
+
         try
         {
             var culture = (CultureInfo)CultureInfo.InvariantCulture.Clone();
@@ -234,14 +241,17 @@ public class AsciiStringIntegerContractTest
         {
             return "0";
         }
+
         bool negative = value.Sign < 0;
         value = BigInteger.Abs(value);
         string result = "";
+
         while (value > 0)
         {
             value = BigInteger.DivRem(value, radix, out BigInteger remainder);
             result = "0123456789abcdefghijklmnopqrstuvwxyz"[(int)remainder] + result;
         }
+
         return negative ? "-" + result : result;
     }
 
@@ -263,12 +273,14 @@ public class AsciiStringIntegerContractTest
             result = parsed;
             return success;
         }
+
         if (width == 32)
         {
             bool success = value.TryParseInt32(start, end, out int parsed, radix);
             result = parsed;
             return success;
         }
+
         return value.TryParseInt64(start, end, out result, radix);
     }
 }

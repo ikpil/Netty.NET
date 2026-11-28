@@ -82,9 +82,11 @@ internal sealed class HpackHuffmanEncoder
     public void Encode(ByteBuf @out, ICharSequence data)
     {
         ObjectUtil.CheckNotNull(@out, "out");
+
         if (data is AsciiString)
         {
             AsciiString @string = (AsciiString) data;
+
             try
             {
                 encodeProcessor.@out = @out;
@@ -144,6 +146,7 @@ internal sealed class HpackHuffmanEncoder
             AsciiString @string = (AsciiString) data;
             encodedLengthProcessor.Reset();
             @string.ForEachByte(encodedLengthProcessor.processor);
+
             return encodedLengthProcessor.Length();
         }
         else
@@ -155,10 +158,12 @@ internal sealed class HpackHuffmanEncoder
     private int GetEncodedLengthSlowPath(ICharSequence data)
     {
         long len = 0;
+
         for (int i = 0; i < data.Length(); i++)
         {
             len += lengths[AsciiString.C2b(data.CharAt(i)) & 0xFF];
         }
+
         return (int) (len + 7 >> 3);
     }
 
@@ -190,6 +195,7 @@ internal sealed class HpackHuffmanEncoder
                 n -= 8;
                 @out.WriteByte((int) (current >> n));
             }
+
             return true;
         }
 

@@ -17,6 +17,7 @@ public class NativeProducerConsumerContractTest
         internal Task<object> Resolve(Action<TaskCompletionSource<object>> start)
         {
             _source = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+
             try
             {
                 start(_source);
@@ -25,6 +26,7 @@ public class NativeProducerConsumerContractTest
             {
                 _source.TrySetException(error);
             }
+
             return _source.Task;
         }
 
@@ -60,6 +62,7 @@ public class NativeProducerConsumerContractTest
                 throw error;
             }
         });
+
         try
         {
             using var observation = new ExecutorCompletion(executor, result);
@@ -70,6 +73,7 @@ public class NativeProducerConsumerContractTest
                 observed = task;
                 onLoop = executor.InEventLoop();
             });
+
             if (outcome == 1)
             {
                 using var waiterCancellation = new CancellationTokenSource();
@@ -79,9 +83,11 @@ public class NativeProducerConsumerContractTest
                 Assert.False(result.IsCompleted);
                 provider.Complete(value);
             }
+
             await registration.NotificationCompleted.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.Same(result, observed);
             Assert.True(onLoop);
+
             if (outcome < 2)
             {
                 Assert.Same(value, await result);
@@ -89,6 +95,7 @@ public class NativeProducerConsumerContractTest
             else
             {
                 Exception caught = null;
+
                 try
                 {
                     await result;
@@ -97,6 +104,7 @@ public class NativeProducerConsumerContractTest
                 {
                     caught = failure;
                 }
+
                 Assert.Same(error, caught);
                 Assert.True(result.IsFaulted);
                 Assert.False(result.IsCanceled);
@@ -137,6 +145,7 @@ public class NativeProducerConsumerContractTest
             callerPending = pending;
             events.Add("caller completed");
         });
+
         try
         {
             backend.SetResult();

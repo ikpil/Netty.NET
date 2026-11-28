@@ -52,6 +52,7 @@ public sealed class SocksServerConnectHandler : SimpleChannelInboundHandler<ISoc
                     future =>
                     {
                         IChannel outboundChannel = future.IsCompletedSuccessfully ? future.Result : null;
+
                         if (future.IsCompletedSuccessfully)
                         {
                             Task responseFuture = ctx.Channel.WriteAndFlushAsync(
@@ -106,6 +107,7 @@ public sealed class SocksServerConnectHandler : SimpleChannelInboundHandler<ISoc
                     future =>
                     {
                         IChannel outboundChannel = future.IsCompletedSuccessfully ? future.Result : null;
+
                         if (future.IsCompletedSuccessfully)
                         {
                             Task responseFuture =

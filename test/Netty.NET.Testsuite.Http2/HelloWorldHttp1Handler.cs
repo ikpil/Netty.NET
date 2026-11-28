@@ -51,6 +51,7 @@ public class HelloWorldHttp1Handler : SimpleChannelInboundHandler<IFullHttpReque
         {
             _ = ctx.WriteAsync(new DefaultFullHttpResponse(HTTP_1_1, CONTINUE, ctx.Alloc().Buffer(0)));
         }
+
         bool keepAlive = HttpUtil.IsKeepAlive(req);
 
         ByteBuf content = ctx.Alloc().Buffer();

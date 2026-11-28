@@ -180,16 +180,20 @@ public sealed class HostsFileEntriesProvider
         {
             ArgumentNullException.ThrowIfNull(file);
             ArgumentNullException.ThrowIfNull(charsets);
+
             if (charsets.Length == 0)
                 charsets = new[] { Encoding.Default };
+
             // CLR: FileInfo caches Exists; refresh so each call checks the file system like File.exists().
             // Exists is false for a directory, as file.exists() && file.isFile() requires.
             file.Refresh();
+
             if (file.Exists)
             {
                 foreach (Encoding charset in charsets)
                 {
                     ArgumentNullException.ThrowIfNull(charset);
+
                     // CLR: decode the whole file like InputStreamReader (see Decode for the BOM rules).
                     using (var reader = new StringReader(Decode(File.ReadAllBytes(file.FullName), charset)))
                     {
@@ -201,30 +205,37 @@ public sealed class HostsFileEntriesProvider
                     }
                 }
             }
+
             return Empty;
         }
 
         public HostsFileEntriesProvider Parse(TextReader reader)
         {
             ArgumentNullException.ThrowIfNull(reader);
+
             using (reader)
             {
                 var ipv4Entries = new Dictionary<string, IReadOnlyList<IPAddress>>();
                 var ipv6Entries = new Dictionary<string, IReadOnlyList<IPAddress>>();
                 string line;
+
                 while ((line = reader.ReadLine()) != null)
                 {
                     // remove comment
                     int commentPosition = line.IndexOf('#');
                     if (commentPosition != -1)
                         line = line[..commentPosition];
+
                     // skip empty lines
                     // CLR: Java trim removes code units <= U+0020, not all Unicode whitespace.
                     int start = 0, end = line.Length;
+
                     while (start < end && line[start] <= ' ')
                         start++;
+
                     while (end > start && line[end - 1] <= ' ')
                         end--;
+
                     line = line[start..end];
                     if (line.Length == 0)
                         continue;
@@ -237,12 +248,14 @@ public sealed class HostsFileEntriesProvider
                         // skip invalid line
                         continue;
                     }
+
                     byte[] ipBytes = NetUtil.CreateByteArrayFromIpAddressString(lineParts[0]);
                     if (ipBytes == null)
                     {
                         // skip invalid IP
                         continue;
                     }
+
                     // loop over hostname and aliases
                     for (int i = 1; i < lineParts.Length; i++)
                     {
@@ -256,6 +269,7 @@ public sealed class HostsFileEntriesProvider
                         {
                             address = address.MapToIPv4();
                         }
+
                         Dictionary<string, IReadOnlyList<IPAddress>> entries =
                             address.AddressFamily == AddressFamily.InterNetwork ? ipv4Entries : ipv6Entries;
                         if (!entries.TryGetValue(hostnameLower, out var addresses))
@@ -263,9 +277,11 @@ public sealed class HostsFileEntriesProvider
                             addresses = new List<IPAddress>();
                             entries.Add(hostnameLower, addresses);
                         }
+
                         ((List<IPAddress>)addresses).Add(address);
                     }
                 }
+
                 return ipv4Entries.Count == 0 && ipv6Entries.Count == 0 ? Empty : new HostsFileEntriesProvider(ipv4Entries, ipv6Entries);
             }
         }
@@ -302,6 +318,7 @@ public sealed class HostsFileEntriesProvider
         private static FileInfo LocateHostsFile()
         {
             FileInfo hostsFile;
+
             if (OperatingSystem.IsWindows())
             {
                 // CLR: as System.getenv("SystemRoot") + path, a missing variable yields the "null" path segment.
@@ -315,6 +332,7 @@ public sealed class HostsFileEntriesProvider
             {
                 hostsFile = new FileInfo(X_PLATFORMS_HOSTS_FILE_PATH);
             }
+
             return hostsFile;
         }
 
@@ -330,8 +348,10 @@ public sealed class HostsFileEntriesProvider
                 {
                     return new UnicodeEncoding(bigEndian: true, byteOrderMark: false).GetString(bytes, 2, bytes.Length - 2);
                 }
+
                 return new UnicodeEncoding(bigEndian: true, byteOrderMark: false).GetString(bytes);
             }
+
             // An Encoding that declares a preamble consumes it, as Java's BOM-consuming UTF-16 charsets do. A
             // preamble-less Encoding keeps a leading BOM as U+FEFF, as Java UTF_8, UTF_16LE and UTF_16BE do.
             ReadOnlySpan<byte> preamble = charset.Preamble;
@@ -339,6 +359,7 @@ public sealed class HostsFileEntriesProvider
             {
                 return charset.GetString(bytes, preamble.Length, bytes.Length - preamble.Length);
             }
+
             return charset.GetString(bytes);
         }
     }

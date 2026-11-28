@@ -36,13 +36,16 @@ public class IpLiteralViewContractTest
                 NetUtil.CreateByteArrayFromIpAddressString(host);
                 NetUtil.CreateInetAddressFromIpAddressString(host);
             }
+
             long sum = 0;
             long before = GC.GetAllocatedBytesForCurrentThread();
+
             for (int i = 0; i < 1000; i++)
             {
                 sum += NetUtil.CreateByteArrayFromIpAddressString(host)[15];
                 sum += NetUtil.CreateInetAddressFromIpAddressString(host).ScopeId;
             }
+
             return (GC.GetAllocatedBytesForCurrentThread() - before, sum);
         }
 
@@ -79,18 +82,22 @@ public class IpLiteralViewContractTest
         Assert.Equal(NetUtil.CreateInetAddressFromIpAddressString(host), address);
         Array.Fill(buffer, 'x');
         Assert.Equal(expected, bytes);
+
         if (scope < 0)
         {
             Assert.Null(address);
             return;
         }
+
         Assert.NotNull(address);
         Assert.Equal(expected, address.GetAddressBytes());
         Assert.Equal(expected.Length == 4 ? AddressFamily.InterNetwork : AddressFamily.InterNetworkV6, address.AddressFamily);
+
         if (expected.Length == 16)
         {
             Assert.Equal(scope, address.ScopeId);
         }
+
         Array.Fill(bytes, (byte)0xCC);
         Assert.Equal(expected, address.GetAddressBytes());
     }
@@ -143,10 +150,12 @@ public class IpLiteralViewContractTest
         CultureInfo previous = CultureInfo.CurrentCulture;
         var culture = (CultureInfo)CultureInfo.InvariantCulture.Clone();
         culture.NumberFormat.PositiveSign = "POS";
+
         try
         {
             CultureInfo.CurrentCulture = culture;
             Assert.Equal(42L, NetUtil.CreateInetAddressFromIpAddressString("[fe80::1%+42]".AsSpan()).ScopeId);
+
             foreach (string zone in new[] { "POS42", " 42", "42 ", "\u0664\u0662", "42\0" })
             {
                 ReadOnlySpan<char> selected = ("[fe80::1%" + zone + "]").AsSpan();

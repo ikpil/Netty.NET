@@ -95,6 +95,7 @@ public class ObjectCleanerNativeContractTest
         var observed = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
         int before = ObjectCleaner.PendingCount;
         ambient.Value = "registrar";
+
         try
         {
             RegisterTemporary(() => observed.TrySetResult(ambient.Value));
@@ -119,6 +120,7 @@ public class ObjectCleanerNativeContractTest
             entered.Set();
             release.Wait();
         });
+
         try
         {
             await CollectUntil(() => entered.IsSet);
@@ -130,18 +132,21 @@ public class ObjectCleanerNativeContractTest
         {
             release.Set();
         }
+
         await CollectUntil(() => ObjectCleaner.PendingCount == before);
     }
 
     internal static async Task CollectUntil(Func<bool> completed)
     {
         var clock = Stopwatch.StartNew();
+
         while (!completed() && clock.Elapsed < TimeSpan.FromSeconds(4))
         {
             GC.Collect();
             GC.WaitForPendingFinalizers();
             await Task.Delay(20);
         }
+
         Assert.True(completed(), "The expected GC notification/callback did not complete.");
     }
 
@@ -150,6 +155,7 @@ public class ObjectCleanerNativeContractTest
     {
         object target = new object();
         ObjectCleaner.Register(target, cleanup);
+
         return new WeakReference(target);
     }
 
@@ -162,6 +168,7 @@ public class ObjectCleanerNativeContractTest
             GC.KeepAlive(target);
             Interlocked.Increment(ref counter.Value);
         });
+
         return new WeakReference(target);
     }
 
@@ -175,6 +182,7 @@ public class ObjectCleanerNativeContractTest
             Assert.Equal(4096, payload.Length);
             Interlocked.Increment(ref counter.Value);
         });
+
         return new WeakReference(payload);
     }
 

@@ -178,6 +178,7 @@ public class FlushConsolidationHandler : ChannelDuplexHandler
     {
         // Try to flush one last time if flushes are pending before disconnect the channel.
         ResetReadAndFlushIfNeeded(ctx);
+
         return ctx.DisconnectAsync(cancellationToken);
     }
 
@@ -185,6 +186,7 @@ public class FlushConsolidationHandler : ChannelDuplexHandler
     {
         // Try to flush one last time if flushes are pending before close the channel.
         ResetReadAndFlushIfNeeded(ctx);
+
         return ctx.CloseAsync(cancellationToken);
     }
 
@@ -195,6 +197,7 @@ public class FlushConsolidationHandler : ChannelDuplexHandler
             // The writability of the channel changed to false, so flush all consolidated flushes now to free up memory.
             FlushIfNeeded(ctx);
         }
+
         ctx.FireChannelWritabilityChanged();
     }
 

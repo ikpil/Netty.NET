@@ -52,6 +52,7 @@ internal sealed class CertificateList
     {
         CertificateRevocationListBuilder vec = new CertificateRevocationListBuilder();
         X509Certificate2 cert = issuer.GetCertificate();
+
         // Version 2
         // CLR: the builder writes the version (v2, INTEGER 1), the signature AlgorithmIdentifier from the generator, the
         // issuer name and the times; Signed(X509Bundle) uses the algorithm of cert.getSigAlgOID() as Java does.
@@ -59,6 +60,7 @@ internal sealed class CertificateList
         {
             vec.AddEntry(revokedCert.Key.ToByteArray(isUnsigned: false, isBigEndian: true), revokedCert.Value);
         }
+
         X509AuthorityKeyIdentifierExtension authorityKeyIdentifier =
             X509AuthorityKeyIdentifierExtension.CreateFromIssuerNameAndSerialNumber(cert.IssuerName,
                                                                                    cert.SerialNumberBytes.Span);

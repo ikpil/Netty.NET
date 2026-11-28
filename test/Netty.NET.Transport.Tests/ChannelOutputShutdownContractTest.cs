@@ -38,6 +38,7 @@ public class ChannelOutputShutdownContractTest
         Exception cause = kind switch { 0 => new IOException("original"), 1 => new SocketException((int)SocketError.ConnectionReset), _ => new InvalidOperationException("original") };
         var buffers = new[] { Unpooled.Buffer(1).WriteByte(1), Unpooled.Buffer(1).WriteByte(2), Unpooled.Buffer(1).WriteByte(3) };
         Task first = null, second = null, unflushed = null;
+
         try
         {
             await channel.RegisterAsync(loop);
@@ -68,9 +69,11 @@ public class ChannelOutputShutdownContractTest
             {
                 foreach (Exception error in new[] { firstCause, secondCause, thirdCause })
                     Assert.Same(cause, Assert.IsType<ChannelOutputShutdownException>(error).InnerException);
+
                 Assert.Equal(1, channel.OutputAttempts);
                 Assert.Equal(1, events.Count);
             }
+
             Assert.Equal(!autoClosed && halfClose, channel.IsOpen);
             Assert.Equal(!autoClosed && halfClose, channel.IsActive);
             Assert.False(channel.IsWritable);
@@ -100,6 +103,7 @@ public class ChannelOutputShutdownContractTest
         var message = Unpooled.Buffer(1).WriteByte(1);
         Task reentrant = null;
         channel.DuringShutdown = () => reentrant = channel.WriteAndFlushAsync(message);
+
         try
         {
             await channel.RegisterAsync(loop);
@@ -125,6 +129,7 @@ public class ChannelOutputShutdownContractTest
         var events = new OutputEvents();
         channel.Pipeline.AddLast(events);
         var buffer = Unpooled.Buffer(1).WriteByte(1);
+
         try
         {
             await channel.RegisterAsync(loop);
@@ -214,6 +219,7 @@ public class ChannelOutputShutdownContractTest
             {
                 throw ShutdownFailure;
             }
+
             if (!_halfClose)
             {
                 base.DoShutdownOutput();

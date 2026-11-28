@@ -53,6 +53,7 @@ internal sealed class LocalChannelRegistry
         {
             throw new ChannelException("address already in use by: " + boundChannel);
         }
+
         return addr;
     }
 

@@ -69,6 +69,7 @@ public class QueryStringEncoder
     public QueryStringEncoder(string uri, Encoding charset)
     {
         ObjectUtil.CheckNotNull(charset, "charset");
+
         uriBuilder = new StringBuilder(uri);
         this.charset = Encoding.UTF8.CodePage == charset.CodePage ? null : charset;
     }
@@ -79,6 +80,7 @@ public class QueryStringEncoder
     public void AddParam(string name, string value)
     {
         ObjectUtil.CheckNotNull(name, "name");
+
         if (hasParams)
         {
             uriBuilder.Append('&');
@@ -90,6 +92,7 @@ public class QueryStringEncoder
         }
 
         EncodeComponent(name);
+
         if (value != null)
         {
             uriBuilder.Append('=');
@@ -155,6 +158,7 @@ public class QueryStringEncoder
             else
             {
                 int index = 0;
+
                 if (buf == null)
                 {
                     buf = new char[s.Length - i];
@@ -191,6 +195,7 @@ public class QueryStringEncoder
                 return;
             }
         }
+
         uriBuilder.Append(s);
     }
 
@@ -201,6 +206,7 @@ public class QueryStringEncoder
             // Append non-encoded characters directly first.
             uriBuilder.Append(s, 0, encodingStart);
         }
+
         EncodeUtf8ComponentSlow(s, encodingStart, len);
     }
 
@@ -232,12 +238,14 @@ public class QueryStringEncoder
                     AppendEncoded(WRITE_UTF_UNKNOWN);
                     continue;
                 }
+
                 // Surrogate Pair consumes 2 characters.
                 if (++i == s.Length)
                 {
                     AppendEncoded(WRITE_UTF_UNKNOWN);
                     break;
                 }
+
                 // Extra method to allow inlining the rest of writeUtf8 which is the most likely code path.
                 WriteUtf8Surrogate(c, s[i]);
             }
@@ -258,6 +266,7 @@ public class QueryStringEncoder
             AppendEncoded(char.IsHighSurrogate(c2) ? WRITE_UTF_UNKNOWN : c2);
             return;
         }
+
         int codePoint = char.ConvertToUtf32(c, c2);
         // See https://www.unicode.org/versions/Unicode7.0.0/ch03.pdf#G2630.
         AppendEncoded(0xf0 | (codePoint >> 18));

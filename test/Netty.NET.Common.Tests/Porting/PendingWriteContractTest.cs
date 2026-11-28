@@ -93,6 +93,7 @@ public class PendingWriteContractTest
         var source = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
+
         if (canceled)
         {
             source.SetCanceled(cancellation.Token);
@@ -101,6 +102,7 @@ public class PendingWriteContractTest
         {
             source.SetResult();
         }
+
         var node = PendingWrite.Rent(message, source);
         Assert.True(node.FailAndRecycle(new InvalidOperationException("late failure")));
         Assert.Equal(1, message.Deallocations);

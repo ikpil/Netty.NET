@@ -46,11 +46,13 @@ public sealed class ExecutorCompletion : IDisposable
     {
         ArgumentNullException.ThrowIfNull(executor);
         ArgumentNullException.ThrowIfNull(operation);
+
         _executor = executor;
         _operation = operation;
         // Task has no detachable continuation. Retain only a weak dispatcher reference
         // in its continuation, so an abandoned observation does not retain its owners.
         var weak = new WeakReference<ExecutorCompletion>(this);
+
         if (!operation.IsCompleted)
             operation.ConfigureAwait(false).GetAwaiter().UnsafeOnCompleted(() =>
             {
@@ -79,19 +81,24 @@ public sealed class ExecutorCompletion : IDisposable
     public CompletionRegistration Register(Action<Task> callback)
     {
         ArgumentNullException.ThrowIfNull(callback);
+
         CompletionRegistration registration;
         DrainReservation schedule;
+
         lock (_gate)
         {
             ObjectDisposedException.ThrowIf(_closed, this);
+
             registration = new CompletionRegistration(this, callback);
             registration.Node = _pending.AddLast(registration);
             schedule = PrepareDrain();
         }
+
         if (schedule != null)
         {
             ScheduleDrain(schedule);
         }
+
         return registration;
     }
 
@@ -101,16 +108,19 @@ public sealed class ExecutorCompletion : IDisposable
         {
             return null;
         }
+
         return _drain = new DrainReservation(this);
     }
 
     private void OperationCompleted()
     {
         DrainReservation schedule;
+
         lock (_gate)
         {
             schedule = PrepareDrain();
         }
+
         if (schedule != null)
         {
             ScheduleDrain(schedule);
@@ -120,14 +130,17 @@ public sealed class ExecutorCompletion : IDisposable
     private void ScheduleDrain(DrainReservation reservation)
     {
         IEventExecutor executor;
+
         lock (_gate)
         {
             if (_closed || _drain != reservation)
             {
                 return;
             }
+
             executor = _executor;
         }
+
         try
         {
             // The shared CLR thread counter also bounds chains between different observations.
@@ -150,10 +163,12 @@ public sealed class ExecutorCompletion : IDisposable
     private void Drain(DrainReservation reservation)
     {
         using var scope = new ExecutorNotificationScope();
+
         for (;;)
         {
             CompletionRegistration[] batch;
             Task operation;
+
             lock (_gate)
             {
                 // Only proceed if there are listeners to notify and we are not already notifying listeners.
@@ -164,8 +179,10 @@ public sealed class ExecutorCompletion : IDisposable
                     {
                         _drain = null;
                     }
+
                     return;
                 }
+
                 batch = new CompletionRegistration[_pending.Count];
                 _pending.CopyTo(batch, 0);
                 _pending.Clear();
@@ -177,6 +194,7 @@ public sealed class ExecutorCompletion : IDisposable
 
                 operation = _operation;
             }
+
             foreach (var registration in batch)
             {
                 /**
@@ -197,6 +215,7 @@ public sealed class ExecutorCompletion : IDisposable
                         Logger.Warn("An exception was thrown by a completion observer.", error);
                     }
                 }
+
                 registration.Finish(null, false);
             }
             // Nothing can throw from within this method, so setting notifyingListeners back to false does not
@@ -213,6 +232,7 @@ public sealed class ExecutorCompletion : IDisposable
             {
                 return; // Claimed snapshots retain their invocation right.
             }
+
             _pending.Remove(registration.Node);
             registration.Node = null;
             registration.Finish(null, true);
@@ -227,6 +247,7 @@ public sealed class ExecutorCompletion : IDisposable
             {
                 return;
             }
+
             Close(error);
         }
     }
@@ -245,13 +266,16 @@ public sealed class ExecutorCompletion : IDisposable
         {
             return;
         }
+
         _closed = true;
         _drain = null;
+
         foreach (var registration in _pending)
         {
             registration.Node = null;
             registration.Finish(error, error == null);
         }
+
         _pending.Clear();
         _executor = null;
         _operation = null;
@@ -314,6 +338,7 @@ public sealed class CompletionRegistration : IDisposable
     {
         Callback = null;
         Volatile.Write(ref _owner, null);
+
         if (error != null)
         {
             _notification.TrySetException(error);

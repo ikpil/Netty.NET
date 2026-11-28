@@ -70,11 +70,13 @@ internal abstract class Http3UnidirectionalStreamInboundHandler : ByteToMessageD
         this.remoteControlStreamHandler = remoteControlStreamHandler;
         this.qpackEncoderHandlerFactory = qpackEncoderHandlerFactory;
         this.qpackDecoderHandlerFactory = qpackDecoderHandlerFactory;
+
         if (unknownStreamHandlerFactory == null)
         {
             // If the user did not specify an own factory just drop all bytes on the floor.
             unknownStreamHandlerFactory = type => ReleaseHandler.INSTANCE;
         }
+
         this.unknownStreamHandlerFactory = unknownStreamHandlerFactory;
     }
 
@@ -84,12 +86,15 @@ internal abstract class Http3UnidirectionalStreamInboundHandler : ByteToMessageD
         {
             return;
         }
+
         int len = Http3CodecUtils.NumBytesForVariableLengthInteger(@in.GetByte(@in.ReaderIndex));
         if (@in.ReadableBytes < len)
         {
             return;
         }
+
         long type = Http3CodecUtils.ReadVariableLengthInteger(@in, len);
+
         switch ((int) type)
         {
             case HTTP3_CONTROL_STREAM_TYPE:
@@ -101,6 +106,7 @@ internal abstract class Http3UnidirectionalStreamInboundHandler : ByteToMessageD
                 {
                     return;
                 }
+
                 long pushId = Http3CodecUtils.ReadVariableLengthInteger(@in, pushIdLen);
                 InitPushStream(ctx, pushId);
                 break;

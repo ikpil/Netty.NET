@@ -100,10 +100,12 @@ public class SniHandlerTest
 
         SslContextBuilder sslCtxBuilder = SslContextBuilder.ForServer(crtFile, keyFile, "12345")
                 .SslProvider(provider);
+
         if (alpn)
         {
             sslCtxBuilder.ApplicationProtocolConfig(NewAlpnConfig());
         }
+
         return sslCtxBuilder.Build();
     }
 
@@ -120,10 +122,12 @@ public class SniHandlerTest
                 .TrustManager(crtFile)
                 .EndpointIdentificationAlgorithm(null)
                 .SslProvider(provider);
+
         if (alpn)
         {
             sslCtxBuilder.ApplicationProtocolConfig(NewAlpnConfig());
         }
+
         return sslCtxBuilder.Build();
     }
 
@@ -139,6 +143,7 @@ public class SniHandlerTest
     public void TestNonSslRecord(SslProvider provider)
     {
         SslContext nettyContext = MakeSslContext(provider, false);
+
         try
         {
             AtomicReference<SslHandshakeCompletionEvent> evtRef =
@@ -162,6 +167,7 @@ public class SniHandlerTest
             {
                 ch.FinishAndReleaseAll();
             }
+
             Assert.IsAssignableFrom<NotSslRecordException>(evtRef.Get().Cause());
         }
         finally
@@ -414,6 +420,7 @@ public class SniHandlerTest
             AtomicReference<Exception> clientHelloLookupFailure = new AtomicReference<Exception>();
             SniHandler handler = new LookupFailureRecordingSniHandler(mapping, clientHelloLookupFailure);
             EmbeddedChannel ch = new EmbeddedChannel(handler);
+
             try
             {
                 // A single, non-fragmented ClientHello record whose SessionID length field (0xFF)
@@ -457,6 +464,7 @@ public class SniHandlerTest
                     {
                         break;
                     }
+
                     buf.Release();
                 }
 
@@ -515,6 +523,7 @@ public class SniHandlerTest
 
             // invalid
             byte[] message = {22, 2, 0, 0, 0};
+
             try
             {
                 // Push the handshake message.
@@ -538,6 +547,7 @@ public class SniHandlerTest
                 {
                     break;
                 }
+
                 buf.Release();
             }
 
@@ -549,6 +559,7 @@ public class SniHandlerTest
         {
             ReleaseAll(nettyContext);
         }
+
         return Task.CompletedTask;
     }
 
@@ -565,6 +576,7 @@ public class SniHandlerTest
         SslContext nettyContext = null;
         SslContext sniContext = null;
         SslContext clientContext;
+
         try
         {
             nettyContext = MakeSslContext(provider, true);
@@ -577,6 +589,7 @@ public class SniHandlerTest
             ReferenceCountUtil.SafeRelease(sniContext);
             throw;
         }
+
         try
         {
             AtomicBoolean serverAlpnCtx = new AtomicBoolean(false);
@@ -591,6 +604,7 @@ public class SniHandlerTest
             IEventLoopGroup group = new MultiThreadIoEventLoopGroup(2, NioIoHandler.NewFactory());
             IChannel serverChannel = null;
             IChannel clientChannel = null;
+
             try
             {
                 ServerBootstrap sb = new ServerBootstrap();
@@ -623,10 +637,12 @@ public class SniHandlerTest
                 {
                     await serverChannel.CloseAsync(TestContext.Current.CancellationToken);
                 }
+
                 if (clientChannel != null)
                 {
                     await clientChannel.CloseAsync(TestContext.Current.CancellationToken);
                 }
+
                 await group.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(5000));
             }
         }
@@ -735,6 +751,7 @@ public class SniHandlerTest
         {
             return Task.CompletedTask;
         }
+
         throw new UnreachableException("Unexpected ssl provider: " + provider);
     }
 #pragma warning restore xUnit1069
@@ -765,6 +782,7 @@ public class SniHandlerTest
     public static IEnumerable<object[]> TinyFragmentData()
     {
         List<object[]> args = new List<object[]>();
+
         foreach (object[] provider in Data())
         {
             // Fragment sizes smaller than the 4-byte handshake header, so the header itself is
@@ -774,6 +792,7 @@ public class SniHandlerTest
                 args.Add(new object[] { provider[0], size });
             }
         }
+
         return args;
     }
 
@@ -802,6 +821,7 @@ public class SniHandlerTest
             ByteBuf last = fragments[fragments.Count - 1];
             fragments.RemoveAt(fragments.Count - 1);
             ReferenceCountUtil.Release(last);
+
             foreach (ByteBuf fragment in fragments)
             {
                 Assert.False(server.WriteInbound(fragment));
@@ -854,6 +874,7 @@ public class SniHandlerTest
         public override ByteBuf WriteBytes(ByteBuf src, int srcIndex, int length)
         {
             copiedBytes.AddAndGet(length);
+
             return base.WriteBytes(src, srcIndex, length);
         }
     }
@@ -886,11 +907,13 @@ public class SniHandlerTest
             Assert.Skip("SslStream (SChannel) rejects a ClientHello whose first TLS record carries " + firstFragmentSize +
                     " byte(s) of it: \"The message received was unexpected or badly formatted\" (measured on Windows)");
         }
+
         string sni = "netty.io";
         X509Bundle cert = CachedSelfSignedCertificate();
         SslContext context = SslContextBuilder.ForServer((AsymmetricAlgorithm) cert.GetKeyPair(), cert.GetCertificate())
                 .SslProvider(provider)
                 .Build();
+
         try
         {
             EmbeddedChannel server = new EmbeddedChannel(
@@ -898,10 +921,12 @@ public class SniHandlerTest
 
             List<ByteBuf> buffers =
                     ClientHelloInMultipleFragments(provider, sni, firstFragmentSize, maxFragmentSize);
+
             foreach (ByteBuf buffer in buffers)
             {
                 server.WriteInbound(buffer);
             }
+
             Assert.True(server.FinishAndReleaseAll());
         }
         finally
@@ -925,6 +950,7 @@ public class SniHandlerTest
         protected override Task<SslContext> Lookup(IChannelHandlerContext ctx, string hostname)
         {
             Assert.Equal(sni, hostname);
+
             return Task.FromResult(context);
         }
     }
@@ -937,6 +963,7 @@ public class SniHandlerTest
                 .SslProvider(provider)
                 .TrustManager(InsecureTrustManagerFactory.INSTANCE)
                 .Build();
+
         try
         {
             SslHandler sslHandler = ctx.NewHandler(client.Alloc(), hostname, -1);
@@ -962,6 +989,7 @@ public class SniHandlerTest
         Assert.Equal(length, clientHello.ReadableBytes);
 
         List<ByteBuf> result = new List<ByteBuf>();
+
         while (clientHello.ReadableBytes > 0)
         {
             int toRead = Math.Min(result.Count == 0 ? firstSize : maxSize, clientHello.ReadableBytes);
@@ -972,6 +1000,7 @@ public class SniHandlerTest
             bb.WriteBytes(clientHello, toRead);
             result.Add(bb);
         }
+
         clientHello.Release();
         return result;
     }
@@ -1003,6 +1032,7 @@ public class SniHandlerTest
         {
             ch.WriteInbound(buffer);
         });
+
         try
         {
             while (completionEventRef.Get() == null)
@@ -1011,6 +1041,7 @@ public class SniHandlerTest
                 // We need to run all pending tasks as the handshake timeout is scheduled on the EventLoop.
                 ch.RunPendingTasks();
             }
+
             SniCompletionEvent completionEvent = completionEventRef.Get();
             Assert.NotNull(completionEvent);
             Assert.NotNull(completionEvent.Cause());
@@ -1051,6 +1082,7 @@ public class SniHandlerTest
         AtomicReference<SniCompletionEvent> completionEventRef =
             new AtomicReference<SniCompletionEvent>();
         EmbeddedChannel ch = new EmbeddedChannel(handler, new SniEventSetter(completionEventRef));
+
         try
         {
             while (completionEventRef.Get() == null)
@@ -1059,6 +1091,7 @@ public class SniHandlerTest
                 // We need to run all pending tasks as the handshake timeout is scheduled on the EventLoop.
                 ch.RunPendingTasks();
             }
+
             SniCompletionEvent completionEvent = completionEventRef.Get();
             Assert.NotNull(completionEvent);
             Assert.NotNull(completionEvent.Cause());
@@ -1083,6 +1116,7 @@ public class SniHandlerTest
             new AtomicReference<SslHandshakeCompletionEvent>();
         EmbeddedChannel ch = new EmbeddedChannel(handler,
                 new CompletionEventSetter(sniCompletionEventRef, handshakeCompletionEventRef));
+
         try
         {
             // Send enough data to add the SslHandler and let the handshake incomplete
@@ -1105,6 +1139,7 @@ public class SniHandlerTest
                 // We need to run all pending tasks as the handshake timeout is scheduled on the EventLoop.
                 ch.RunPendingTasks();
             }
+
             SniCompletionEvent sniCompletionEvent = sniCompletionEventRef.Get();
             Assert.NotNull(sniCompletionEvent);
             Assert.Equal("host1", sniCompletionEvent.Hostname());

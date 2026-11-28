@@ -93,6 +93,7 @@ public static class SniClientJava8TestUtil
             {
                 Assert.Fail();
             }
+
             AssertSSLSession(!sslEngine.IsServer, sslEngine, name);
             return true;
         }

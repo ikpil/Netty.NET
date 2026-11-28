@@ -74,13 +74,16 @@ public class CharacterSequenceComparerContractTest
     {
         ICharSequence[] bytes = new ICharSequence[256];
         ICharSequence[] characters = new ICharSequence[256];
+
         for (int i = 0; i < bytes.Length; i++)
         {
             bytes[i] = new AsciiString(new byte[] { 17, (byte)i, 19 }, 1, 1, false);
             characters[i] = new StringCharSequence("!" + (char)i + "?", 1, 1);
         }
+
         IEqualityComparer<ICharSequence> insensitive = AsciiString.CASE_INSENSITIVE_HASHER;
         IEqualityComparer<ICharSequence> sensitive = AsciiString.CASE_SENSITIVE_HASHER;
+
         for (int a = 0; a < 256; a++)
         {
             for (int b = 0; b < 256; b++)
@@ -92,6 +95,7 @@ public class CharacterSequenceComparerContractTest
                 Assert.Equal(equal, insensitive.Equals(characters[b], bytes[a]));
                 Assert.Equal(a == b, sensitive.Equals(bytes[a], characters[b]));
                 Assert.Equal(a == b, sensitive.Equals(characters[b], bytes[a]));
+
                 if (equal)
                     Assert.Equal(insensitive.GetHashCode(bytes[a]), insensitive.GetHashCode(characters[b]));
             }

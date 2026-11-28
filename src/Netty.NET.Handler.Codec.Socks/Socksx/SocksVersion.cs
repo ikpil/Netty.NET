@@ -55,6 +55,7 @@ public sealed class SocksVersion
         {
             return SOCKS5;
         }
+
         return UNKNOWN;
     }
 

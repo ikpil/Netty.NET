@@ -52,6 +52,7 @@ public sealed class TcpDnsClient
             IDnsQuestion question = msg.RecordAt<IDnsQuestion>(DnsSection.QUESTION, 0);
             Console.WriteLine("name: {0}", question.Name());
         }
+
         for (int i = 0, count = msg.Count(DnsSection.ANSWER); i < count; i++)
         {
             IDnsRecord record = msg.RecordAt<IDnsRecord>(DnsSection.ANSWER, i);
@@ -67,6 +68,7 @@ public sealed class TcpDnsClient
     public static async Task Main(string[] args)
     {
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             Bootstrap b = new Bootstrap();

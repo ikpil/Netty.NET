@@ -41,6 +41,7 @@ public class SocksCmdResponseTest
         {
             Assert.IsType<ArgumentNullException>(e, exactMatch: false);
         }
+
         try
         {
             new SocksCmdResponse(SocksCmdStatus.UNASSIGNED, null);

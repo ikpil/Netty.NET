@@ -98,6 +98,7 @@ public abstract class AbstractSearchProcessorFactory : ISearchProcessorFactory
     public static KmpSearchProcessorFactory NewKmpSearchProcessorFactory(byte[] needle)
     {
         ArgumentNullException.ThrowIfNull(needle);
+
         return NewKmpSearchProcessorFactory(needle.AsSpan());
     }
 
@@ -126,6 +127,7 @@ public abstract class AbstractSearchProcessorFactory : ISearchProcessorFactory
     public static BitapSearchProcessorFactory NewBitapSearchProcessorFactory(byte[] needle)
     {
         ArgumentNullException.ThrowIfNull(needle);
+
         return NewBitapSearchProcessorFactory(needle.AsSpan());
     }
 

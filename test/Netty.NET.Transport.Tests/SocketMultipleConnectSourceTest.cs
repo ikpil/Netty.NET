@@ -41,6 +41,7 @@ public class SocketMultipleConnectSourceTest : AbstractSocketTest
     {
         IChannel sc = null;
         IChannel cc = null;
+
         try
         {
             sb.ChildHandler(new ChannelInboundHandlerAdapter());
@@ -61,6 +62,7 @@ public class SocketMultipleConnectSourceTest : AbstractSocketTest
             {
                 _ = cc.CloseAsync();
             }
+
             if (sc != null)
             {
                 _ = sc.CloseAsync();
@@ -72,6 +74,7 @@ public class SocketMultipleConnectSourceTest : AbstractSocketTest
     {
         List<TestsuitePermutation.IBootstrapComboFactory<ServerBootstrap, Bootstrap>> factories
                 = new List<TestsuitePermutation.IBootstrapComboFactory<ServerBootstrap, Bootstrap>>();
+
         foreach (TestsuitePermutation.IBootstrapComboFactory<ServerBootstrap, Bootstrap> comboFactory
                 in SocketTestPermutation.INSTANCE.SocketWithFastOpen())
         {
@@ -81,6 +84,7 @@ public class SocketMultipleConnectSourceTest : AbstractSocketTest
                 factories.Add(comboFactory);
             }
         }
+
         return factories;
     }
 

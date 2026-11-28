@@ -40,15 +40,18 @@ internal sealed class MsQuicStreamChannelConfig : DefaultChannelConfig, IQuicStr
     public override IReadOnlyDictionary<ChannelOption, object> GetOptions()
     {
         Dictionary<ChannelOption, object> options = new Dictionary<ChannelOption, object>();
+
         foreach (KeyValuePair<ChannelOption, object> entry in base.GetOptions())
         {
             options[entry.Key] = entry.Value;
         }
+
         if (IsHalfClosureSupported())
         {
             options[ChannelOption.ALLOW_HALF_CLOSURE] = IsAllowHalfClosure();
             options[QuicChannelOption.READ_FRAMES] = IsReadFrames();
         }
+
         return options;
     }
 
@@ -59,11 +62,13 @@ internal sealed class MsQuicStreamChannelConfig : DefaultChannelConfig, IQuicStr
             value = IsAllowHalfClosure();
             return true;
         }
+
         if (option == QuicChannelOption.READ_FRAMES)
         {
             value = IsReadFrames();
             return true;
         }
+
         return base.TryGetValue(option, out value);
     }
 
@@ -76,13 +81,16 @@ internal sealed class MsQuicStreamChannelConfig : DefaultChannelConfig, IQuicStr
                 SetAllowHalfClosure((bool) value);
                 return true;
             }
+
             return false;
         }
+
         if (option == QuicChannelOption.READ_FRAMES)
         {
             SetReadFrames((bool) value);
             return true;
         }
+
         return base.SetValue(option, value);
     }
 
@@ -103,6 +111,7 @@ internal sealed class MsQuicStreamChannelConfig : DefaultChannelConfig, IQuicStr
         {
             throw new NotSupportedException("Undirectional streams don't support half-closure");
         }
+
         this.allowHalfClosure = allowHalfClosure;
         return this;
     }

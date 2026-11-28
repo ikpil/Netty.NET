@@ -41,6 +41,7 @@ public class SocketConnectSourceTest : AbstractSocketTest
     {
         IChannel serverChannel = null;
         IChannel clientChannel = null;
+
         try
         {
             serverChannel = await sb.ChildHandler(new ChannelInboundHandlerAdapter()).BindAsync();
@@ -65,6 +66,7 @@ public class SocketConnectSourceTest : AbstractSocketTest
             {
                 await clientChannel.CloseAsync();
             }
+
             if (serverChannel != null)
             {
                 await serverChannel.CloseAsync();
@@ -83,6 +85,7 @@ public class SocketConnectSourceTest : AbstractSocketTest
     {
         IChannel serverChannel = null;
         IChannel clientChannel = null;
+
         try
         {
             // CLR: ImmediateEventExecutor.INSTANCE.newPromise() is a TaskCompletionSource; this port completes Tasks
@@ -109,6 +112,7 @@ public class SocketConnectSourceTest : AbstractSocketTest
             {
                 await clientChannel.CloseAsync();
             }
+
             if (serverChannel != null)
             {
                 await serverChannel.CloseAsync();
@@ -130,6 +134,7 @@ public class SocketConnectSourceTest : AbstractSocketTest
 
         IChannel sc = null;
         IChannel cc = null;
+
         try
         {
             sb.ChildHandler(new ChannelInboundHandlerAdapter());
@@ -158,6 +163,7 @@ public class SocketConnectSourceTest : AbstractSocketTest
             {
                 _ = cc.CloseAsync();
             }
+
             if (sc != null)
             {
                 _ = sc.CloseAsync();
@@ -261,10 +267,12 @@ public class SocketConnectSourceTest : AbstractSocketTest
     {
         CompositeByteBuf buffer = channel.Alloc().CompositeDirectBuffer(parts.Length + 1);
         buffer.AddComponent(DirectBuffer(channel, prefix), true);
+
         foreach (string part in parts)
         {
             buffer.AddComponent(DirectBuffer(channel, part), true);
         }
+
         buffer.ReaderIndex = Encoding.ASCII.GetBytes(prefix).Length;
         return buffer;
     }
@@ -272,10 +280,12 @@ public class SocketConnectSourceTest : AbstractSocketTest
     private static ByteBuf CompositeBuffer(IChannel channel, params string[] parts)
     {
         CompositeByteBuf buffer = channel.Alloc().CompositeDirectBuffer(parts.Length);
+
         foreach (string part in parts)
         {
             buffer.AddComponent(DirectBuffer(channel, part), true);
         }
+
         return buffer;
     }
 
@@ -353,10 +363,12 @@ public class SocketConnectSourceTest : AbstractSocketTest
             {
                 ByteBuf buf = (ByteBuf) msg;
                 int readableBytes = buf.ReadableBytes;
+
                 lock (streamBuffer)
                 {
                     buf.ReadBytes(streamBuffer, readableBytes);
                 }
+
                 semaphore.Release(readableBytes);
                 buf.Release();
             }
@@ -375,12 +387,15 @@ public class SocketConnectSourceTest : AbstractSocketTest
             {
                 await semaphore.WaitAsync();
             }
+
             byte[] bytes;
+
             lock (streamBuffer)
             {
                 bytes = streamBuffer.ToArray();
                 streamBuffer.SetLength(0);
             }
+
             return Encoding.ASCII.GetString(bytes);
         }
     }

@@ -104,12 +104,14 @@ public class Http3SettingsTest
                 .QpackBlockedStreams(2);
 
         int count = 0;
+
         foreach (KeyValuePair<long, long> e in settings)
         {
             Assert.NotNull((object) e.Key);
             Assert.NotNull((object) e.Value);
             count++;
         }
+
         Assert.True(count == 2);
     }
 
@@ -146,10 +148,12 @@ public class Http3SettingsTest
                 .MaxFieldSectionSize(1);
 
         List<long> keys = new List<long>();
+
         foreach (KeyValuePair<long, long> entry in settings)
         {
             keys.Add(entry.Key);
         }
+
         Assert.True(keys.Contains(Http3SettingIdentifier.HTTP3_SETTINGS_QPACK_MAX_TABLE_CAPACITY.Id()));
         Assert.True(keys.Contains(Http3SettingIdentifier.HTTP3_SETTINGS_QPACK_BLOCKED_STREAMS.Id()));
         Assert.True(keys.Contains(Http3SettingIdentifier.HTTP3_SETTINGS_H3_DATAGRAM.Id()));

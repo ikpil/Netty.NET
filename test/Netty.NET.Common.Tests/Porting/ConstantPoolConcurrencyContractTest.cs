@@ -17,11 +17,13 @@ public class ConstantPoolConcurrencyContractTest
         {
             var value = new Constant(id, name);
             Created.Add(value);
+
             // Both calls must reach construction before either can publish.
             if (rendezvous != null)
             {
                 Assert.True(rendezvous.SignalAndWait(TimeSpan.FromSeconds(5)));
             }
+
             return value;
         }
     }
@@ -53,6 +55,7 @@ public class ConstantPoolConcurrencyContractTest
         Assert.Equal(2, pool.Created.Count);
         Constant published = pool.ValueOf("shared");
         Assert.True(pool.Exists("shared"));
+
         if (createOnly)
         {
             Assert.Single(returned, value => value != null);
@@ -62,6 +65,7 @@ public class ConstantPoolConcurrencyContractTest
         {
             Assert.All(returned, value => Assert.Same(published, value));
         }
+
         Assert.Equal(3, pool.NextId());
     }
 

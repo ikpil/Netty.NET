@@ -59,6 +59,7 @@ public class SniClientTest
         providers.Remove(SslProvider.OPENSSL_REFCNT);
 
         List<object[]> @params = new List<object[]>();
+
         foreach (SslProvider sp in providers)
         {
             foreach (SslProvider cp in providers)
@@ -66,6 +67,7 @@ public class SniClientTest
                 @params.Add(new object[] { sp, cp });
             }
         }
+
         return @params;
     }
 
@@ -90,6 +92,7 @@ public class SniClientTest
 
         IChannel sc = null;
         IChannel cc = null;
+
         try
         {
             if ((sslServerProvider == SslProvider.OPENSSL || sslServerProvider == SslProvider.OPENSSL_REFCNT))
@@ -142,10 +145,12 @@ public class SniClientTest
             {
                 await cc.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             if (sc != null)
             {
                 await sc.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             ReferenceCountUtil.Release(sslServerContext);
             ReferenceCountUtil.Release(sslClientContext);
 

@@ -23,6 +23,7 @@ public class EnvironmentSettingsContractTest : IDisposable
         var custom = (CultureInfo)CultureInfo.GetCultureInfo(cultureName).Clone();
         custom.NumberFormat.NegativeSign = "NEG";
         custom.NumberFormat.PositiveSign = "POS";
+
         try
         {
             CultureInfo.CurrentCulture = custom;
@@ -79,6 +80,7 @@ public class EnvironmentSettingsContractTest : IDisposable
             ("1,234", 17, 19), ("1.2", 17, 19), ("1e3", 17, 19),
             ("0x10", 17, 19), ("+", 17, 19), ("--1", 17, 19)
         };
+
         foreach (var item in cases)
         {
             Set(item.Text);
@@ -106,11 +108,13 @@ public class EnvironmentSettingsContractTest : IDisposable
             Set(token);
             Assert.True(SystemPropertyUtil.GetBoolean(key, false));
         }
+
         foreach (string token in new[] { "false", "FALSE", " No ", "0" })
         {
             Set(token);
             Assert.False(SystemPropertyUtil.GetBoolean(key, true));
         }
+
         foreach (string token in new[] { " ", "invalid", "2", "\u0661" })
         {
             Set(token);

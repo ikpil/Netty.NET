@@ -142,6 +142,7 @@ public class LocalServerChannel : AbstractServerChannel
     protected override Task DoBindAsync(EndPoint address, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+
         _local = LocalChannelRegistry.Register(this, _local, address);
         state = 1;
         SetActive(true);
@@ -158,8 +159,10 @@ public class LocalServerChannel : AbstractServerChannel
                 LocalChannelRegistry.Unregister(_local);
                 _local = null;
             }
+
             state = 2;
         }
+
         // Close connections that were queued but never accepted, so their connect attempt fails instead of
         // never completing.
         while (_inbound.TryDequeue(out var child))
@@ -178,6 +181,7 @@ public class LocalServerChannel : AbstractServerChannel
     internal LocalChannel Serve(LocalChannel peer)
     {
         LocalChannel child = NewLocalChannel(peer);
+
         if (EventLoop.InEventLoop())
         {
             Serve0(child);
@@ -186,6 +190,7 @@ public class LocalServerChannel : AbstractServerChannel
         {
             EventLoop.Execute(() => Serve0(child));
         }
+
         return child;
     }
 
@@ -211,15 +216,18 @@ public class LocalServerChannel : AbstractServerChannel
         IRecvByteBufAllocator.IHandle handle = RecvBufAllocHandle();
         handle.Reset(Config);
         IChannelPipeline pipeline = Pipeline;
+
         do
         {
             if (!_inbound.TryDequeue(out LocalChannel m))
             {
                 break;
             }
+
             handle.IncMessagesRead(1);
             pipeline.FireChannelRead(m);
         } while (handle.ContinueReading());
+
         handle.ReadComplete();
         pipeline.FireChannelReadComplete();
     }
@@ -231,7 +239,9 @@ public class LocalServerChannel : AbstractServerChannel
             child.CloseForcibly();
             return;
         }
+
         _inbound.Enqueue(child);
+
         if (_acceptPending)
         {
             _acceptPending = false;

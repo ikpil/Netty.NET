@@ -126,12 +126,14 @@ public class DefaultHttpRequestTest
                     string path;
                     string query;
                     string fragment;
+
                     if (rng.Next(2) == 0)
                     {
                         string scheme = rng.Next(2) == 0 ? "http://" : "HTTP://";
                         string userinfo = rng.Next(2) == 0 ? "" : Pick(rng, userinfochars, 1, 8) + '@';
                         string host;
                         string port;
+
                         switch (rng.Next(3))
                         {
                             case 0:
@@ -147,6 +149,7 @@ public class DefaultHttpRequestTest
                                 host = '[' + Pick(rng, digitcolon, 1, 8) + ']';
                                 break;
                         }
+
                         if (rng.Next(2) == 0)
                         {
                             port = ':' + Pick(rng, pdigit, 1, 1) + Pick(rng, digit, 0, 4);
@@ -155,13 +158,16 @@ public class DefaultHttpRequestTest
                         {
                             port = "";
                         }
+
                         start = scheme + userinfo + host + port;
                     }
                     else
                     {
                         start = "";
                     }
+
                     path = '/' + Pick(rng, pathchars, 0, 8);
+
                     if (rng.Next(2) == 0)
                     {
                         query = '?' + Pick(rng, querychars, 0, 8);
@@ -170,6 +176,7 @@ public class DefaultHttpRequestTest
                     {
                         query = "";
                     }
+
                     if (rng.Next(2) == 0)
                     {
                         fragment = '#' + Pick(rng, querychars, 0, 8);
@@ -178,6 +185,7 @@ public class DefaultHttpRequestTest
                     {
                         fragment = "";
                     }
+
                     return new object[] { start + path + query + fragment };
                 }).ToList();
     }
@@ -200,10 +208,12 @@ public class DefaultHttpRequestTest
     {
         int length = rng.Next(lowerBound, upperBound + 1);
         StringBuilder sb = new StringBuilder(length);
+
         for (int i = 0; i < length; i++)
         {
             sb.Append(cs[rng.Next(cs.Length)]);
         }
+
         return sb.ToString();
     }
 

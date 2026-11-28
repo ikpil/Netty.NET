@@ -63,10 +63,12 @@ public class WebSocketClientExtensionHandler : ChannelDuplexHandler
             string headerValue = request.Headers().GetAsString(HttpHeaderNames.SEC_WEBSOCKET_EXTENSIONS);
             IList<WebSocketExtensionData> extraExtensions =
               new List<WebSocketExtensionData>(extensionHandshakers.Count);
+
             foreach (IWebSocketClientExtensionHandshaker extensionHandshaker in extensionHandshakers)
             {
                 extraExtensions.Add(extensionHandshaker.NewRequestData());
             }
+
             string newHeaderValue = WebSocketExtensionUtil
               .ComputeMergeExtensionsHeaderValue(headerValue, extraExtensions);
 

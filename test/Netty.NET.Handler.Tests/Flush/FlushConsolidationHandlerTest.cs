@@ -57,12 +57,14 @@ public class FlushConsolidationHandlerTest
     {
         AtomicInteger flushCount = new AtomicInteger();
         EmbeddedChannel channel = NewChannel(flushCount, true);
+
         // After a given threshold, the async task should be bypassed and a flush should be triggered immediately
         for (int i = 0; i < EXPLICIT_FLUSH_AFTER_FLUSHES; i++)
         {
             // To ensure we not run the async task directly we will call trigger the flush() via the pipeline.
             channel.Pipeline.Flush();
         }
+
         Assert.Equal(1, flushCount.Get());
         Assert.False(channel.Finish());
     }

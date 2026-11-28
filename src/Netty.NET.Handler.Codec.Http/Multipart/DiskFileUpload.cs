@@ -102,6 +102,7 @@ public class DiskFileUpload : AbstractDiskHttpData, IFileUpload
             throw new InvalidCastException("Cannot compare " + GetHttpDataType() +
                     " with " + o.GetHttpDataType());
         }
+
         return CompareTo((IFileUpload) o);
     }
 
@@ -133,6 +134,7 @@ public class DiskFileUpload : AbstractDiskHttpData, IFileUpload
     public override string ToString()
     {
         FileInfo file = null;
+
         try
         {
             file = GetFile();
@@ -198,6 +200,7 @@ public class DiskFileUpload : AbstractDiskHttpData, IFileUpload
         {
             content = content.RetainedDuplicate();
             bool success = false;
+
             try
             {
                 IFileUpload duplicate = Replace(content);
@@ -223,6 +226,7 @@ public class DiskFileUpload : AbstractDiskHttpData, IFileUpload
         DiskFileUpload upload = new DiskFileUpload(
                 GetName(), GetFilename(), GetContentType(), GetContentTransferEncoding(), GetCharset(), size,
                 baseDir, deleteOnExit);
+
         if (content != null)
         {
             try
@@ -234,6 +238,7 @@ public class DiskFileUpload : AbstractDiskHttpData, IFileUpload
                 throw new ChannelException(e);
             }
         }
+
         upload.SetCompleted(IsCompleted());
         return upload;
     }

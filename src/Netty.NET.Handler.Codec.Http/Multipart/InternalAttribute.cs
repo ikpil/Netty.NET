@@ -54,6 +54,7 @@ internal sealed class InternalAttribute : AbstractReferenceCounted, IInterfaceHt
     public void AddValue(string value)
     {
         ObjectUtil.CheckNotNull(value, "value");
+
         ByteBuf buf = Unpooled.CopiedBuffer(value, charset);
         this.value.Add(buf);
         size += buf.ReadableBytes;
@@ -62,6 +63,7 @@ internal sealed class InternalAttribute : AbstractReferenceCounted, IInterfaceHt
     public void AddValue(string value, int rank)
     {
         ObjectUtil.CheckNotNull(value, "value");
+
         ByteBuf buf = Unpooled.CopiedBuffer(value, charset);
         this.value.Insert(rank, buf);
         size += buf.ReadableBytes;
@@ -70,14 +72,17 @@ internal sealed class InternalAttribute : AbstractReferenceCounted, IInterfaceHt
     public void SetValue(string value, int rank)
     {
         ObjectUtil.CheckNotNull(value, "value");
+
         ByteBuf buf = Unpooled.CopiedBuffer(value, charset);
         ByteBuf old = this.value[rank];
         this.value[rank] = buf;
+
         if (old != null)
         {
             size -= old.ReadableBytes;
             old.Release();
         }
+
         size += buf.ReadableBytes;
     }
 
@@ -92,6 +97,7 @@ internal sealed class InternalAttribute : AbstractReferenceCounted, IInterfaceHt
         {
             return false;
         }
+
         InternalAttribute attribute = (InternalAttribute) o;
         return string.Equals(GetName(), attribute.GetName(), StringComparison.OrdinalIgnoreCase);
     }
@@ -103,6 +109,7 @@ internal sealed class InternalAttribute : AbstractReferenceCounted, IInterfaceHt
             throw new InvalidCastException("Cannot compare " + GetHttpDataType() +
                     " with " + o.GetHttpDataType());
         }
+
         return CompareTo((InternalAttribute) o);
     }
 
@@ -114,10 +121,12 @@ internal sealed class InternalAttribute : AbstractReferenceCounted, IInterfaceHt
     public override string ToString()
     {
         StringBuilder result = new StringBuilder();
+
         foreach (ByteBuf elt in value)
         {
             result.Append(elt.ToString(charset));
         }
+
         return result.ToString();
     }
 
@@ -150,6 +159,7 @@ internal sealed class InternalAttribute : AbstractReferenceCounted, IInterfaceHt
         {
             buf.Retain();
         }
+
         return this;
     }
 
@@ -159,6 +169,7 @@ internal sealed class InternalAttribute : AbstractReferenceCounted, IInterfaceHt
         {
             buf.Retain(increment);
         }
+
         return this;
     }
 
@@ -168,6 +179,7 @@ internal sealed class InternalAttribute : AbstractReferenceCounted, IInterfaceHt
         {
             buf.Touch();
         }
+
         return this;
     }
 
@@ -177,6 +189,7 @@ internal sealed class InternalAttribute : AbstractReferenceCounted, IInterfaceHt
         {
             buf.Touch(hint);
         }
+
         return this;
     }
 }

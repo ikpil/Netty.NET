@@ -38,6 +38,7 @@ public abstract class AbstractChannelPoolMap<TKey, TPool> : IChannelPoolMap<TKey
         {
             return pool;
         }
+
         pool = NewPool(key);
         var winner = _pools.GetOrAdd(key, pool);
         if (!ReferenceEquals(pool, winner))
@@ -45,6 +46,7 @@ public abstract class AbstractChannelPoolMap<TKey, TPool> : IChannelPoolMap<TKey
             // We need to destroy the newly created pool as we not use it.
             _ = ObserveCloseAsync(pool);
         }
+
         return winner;
     }
 
@@ -64,6 +66,7 @@ public abstract class AbstractChannelPoolMap<TKey, TPool> : IChannelPoolMap<TKey
         {
             return false;
         }
+
         _ = ObserveCloseAsync(pool);
         return true;
     }
@@ -82,6 +85,7 @@ public abstract class AbstractChannelPoolMap<TKey, TPool> : IChannelPoolMap<TKey
         {
             return false;
         }
+
         await pool.CloseAsync().ConfigureAwait(false);
         return true;
     }
@@ -116,6 +120,7 @@ public abstract class AbstractChannelPoolMap<TKey, TPool> : IChannelPoolMap<TKey
     public bool Contains(TKey key)
     {
         ArgumentNullException.ThrowIfNull(key);
+
         return _pools.ContainsKey(key);
     }
 

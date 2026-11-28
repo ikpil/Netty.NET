@@ -91,6 +91,7 @@ public class ReferenceCountUtilContractTest : IDisposable
             {
                 throw Failure;
             }
+
             Count -= decrement;
             return Count == 0;
         }
@@ -170,6 +171,7 @@ public class ReferenceCountUtilContractTest : IDisposable
             }
         }) { IsBackground = true };
         caller.Start();
+
         try
         {
             Assert.True(queued.Wait(TimeSpan.FromSeconds(5)));
@@ -183,6 +185,7 @@ public class ReferenceCountUtilContractTest : IDisposable
             stop.Set();
             Assert.True(caller.Join(TimeSpan.FromSeconds(5)));
         }
+
         Assert.True(ThreadDeathWatcher.AwaitInactivity(TimeSpan.FromSeconds(5)));
         Assert.Equal(0, first.RefCnt);
         Assert.Equal(1, first.Deallocations);

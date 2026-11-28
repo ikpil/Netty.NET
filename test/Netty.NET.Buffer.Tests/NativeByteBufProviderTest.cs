@@ -44,6 +44,7 @@ public class NativeByteBufProviderTest
                     maxOrder: 1, nativeAllocator: Native)
                 : new UnpooledByteBufAllocator(true, Native);
             Left = Allocator.DirectBuffer(128, 128);
+
             if (provider == 4)
             {
                 _borrowed = Native.Allocate(160);
@@ -55,18 +56,21 @@ public class NativeByteBufProviderTest
             else
                 Target = provider == 3 ? new UnpooledDirectByteBuf(Allocator, Initial, 32768, Native)
                 : Allocator.DirectBuffer(Initial, 32768);
+
             Right = Allocator.DirectBuffer(128, 128);
             Left.SetBytes(0, Filled(128, 0xa5));
             Right.SetBytes(0, Filled(128, 0x5a));
             Assert.True(Target.IsDirect);
             Assert.True(Target.IsContiguous);
             Assert.Same(Allocator, Target.Alloc());
+
             if (provider < 2)
             {
                 var a = Assert.IsAssignableFrom<PooledByteBuf>(Owner(Left)).Allocation;
                 var b = Assert.IsAssignableFrom<PooledByteBuf>(Owner(Target)).Allocation;
                 var c = Assert.IsAssignableFrom<PooledByteBuf>(Owner(Right)).Allocation;
                 Assert.Equal(provider == 0, b.IsPooled);
+
                 if (provider == 0)
                 {
                     Assert.Same(a.Storage, b.Storage);
@@ -95,6 +99,7 @@ public class NativeByteBufProviderTest
             {
                 return;
             }
+
             Assert.Equal(Filled(11, 0x7e), _borrowed.Memory[..11].ToArray());
             Assert.Equal(Filled(21, 0x7e), _borrowed.Memory[139..].ToArray());
         }
@@ -106,6 +111,7 @@ public class NativeByteBufProviderTest
             {
                 Assert.True(b.Release());
             }
+
             // Release/detach never disposes the caller's borrowed owner.
             BorrowedGuards();
             _borrowed?.Dispose();
@@ -172,6 +178,7 @@ public class NativeByteBufProviderTest
     {
         using var s = new Storage(provider);
         int[] widths = [1, 2, 2, 3, 3, 4, 4, 8, 8];
+
         foreach (ulong value in new ulong[] { 0, 0x1122334455667788, 0xffeeddcc8000fedc })
         for (int operation = 0; operation < widths.Length; ++operation)
         {
@@ -180,8 +187,10 @@ public class NativeByteBufProviderTest
             s.Target.SetBytes(0, expected).SetIndex(3, 100).MarkReaderIndex().MarkWriterIndex();
             int width = widths[operation];
                 bool little = operation != 0 && (operation & 1) == 0;
+
             for (int i = 0; i < width; ++i)
                 expected[index + i] = unchecked((byte)(value >> (8 * (little ? i : width - i - 1))));
+
             ByteBuf receiver = operation switch
             {
                 0 => s.Target.SetByte(index, unchecked((int)value)),
@@ -216,6 +225,7 @@ public class NativeByteBufProviderTest
                 Assert.Equal(100, s.Target.WriterIndex);
             s.Neighbors();
         }
+
         Assert.Throws<ArgumentOutOfRangeException>(() => s.Target.GetLong(s.Initial - 7));
         Assert.Throws<ArgumentOutOfRangeException>(() => s.Target.SetLong(s.Initial - 7, 1));
     }
@@ -237,6 +247,7 @@ public class NativeByteBufProviderTest
         byte[] expected = Filled(s.Initial, 0xcc);
         s.Target.SetBytes(0, expected).SetIndex(3, 100).MarkReaderIndex().MarkWriterIndex();
         int index = length >= 0 ? s.Initial - length : 0;
+
         if (length < 0)
             Assert.Throws<ArgumentOutOfRangeException>(() => s.Target.SetZero(index, length));
         else
@@ -244,6 +255,7 @@ public class NativeByteBufProviderTest
             Array.Clear(expected, index, length);
             Assert.Same(s.Target, s.Target.SetZero(index, length));
         }
+
         Assert.Equal(expected, ByteBufUtil.GetBytes(s.Target, 0, s.Initial));
         IndicesAndMarks(s.Target);
         s.Neighbors();
@@ -282,6 +294,7 @@ public class NativeByteBufProviderTest
         using var s = new Storage(provider);
         s.Target.SetBytes(0, Filled(s.Initial, 0x42)).SetIndex(3, 100).MarkReaderIndex().MarkWriterIndex();
         ByteBuf copy = s.Target.Copy(s.Initial - length, length);
+
         try
         {
             Assert.Same(s.Allocator, copy.Alloc());
@@ -291,15 +304,18 @@ public class NativeByteBufProviderTest
             Assert.Equal(0, copy.ReaderIndex);
             Assert.Equal(length, copy.WriterIndex);
             Assert.Equal(Filled(length, 0x42), ByteBufUtil.GetBytes(copy));
+
             if (length > 0)
             {
                 copy.SetByte(0, 99);
             }
+
             Assert.Equal(0x42, s.Target.GetByte(s.Initial - 1));
             IndicesAndMarks(s.Target);
             s.Neighbors();
             Assert.True(s.Target.Release());
             Assert.Equal(1, copy.RefCnt);
+
             if (length > 0)
             {
                 Assert.Equal(99, copy.GetByte(0));
@@ -330,12 +346,14 @@ public class NativeByteBufProviderTest
             ? new UnpooledDirectByteBuf(32, 32, s.Native)
             : new CompositeByteBuf().AddComponent(Unpooled.WrappedBuffer(new byte[8]), true)
                 .AddComponent(Unpooled.WrappedBuffer(new byte[24]), true);
+
         try
         {
             byte[] root = Filled(s.Initial, 0xcc), other = Enumerable.Range(0, 32).Select(i => (byte)i).ToArray();
             s.Target.SetBytes(0, root).SetIndex(3, 100).MarkReaderIndex().MarkWriterIndex();
             peer.SetBytes(0, other).SetIndex(2, 20).MarkReaderIndex().MarkWriterIndex();
             int index = s.Initial - 23;
+
             if (output)
             {
                 Assert.Same(s.Target, s.Target.GetBytes(index, peer, 5, 17));
@@ -346,6 +364,7 @@ public class NativeByteBufProviderTest
                 Assert.Same(s.Target, s.Target.SetBytes(index, peer, 5, 17));
                 other.AsSpan(5, 17).CopyTo(root.AsSpan(index));
             }
+
             Assert.Equal(root, ByteBufUtil.GetBytes(s.Target, 0, s.Initial));
             Assert.Equal(other, ByteBufUtil.GetBytes(peer, 0, 32));
             IndicesAndMarks(s.Target);
@@ -372,6 +391,7 @@ public class NativeByteBufProviderTest
         byte[] root = Filled(s.Initial, 0xcc), other = Filled(32, 0x42);
         s.Target.SetBytes(0, root).SetIndex(3, 100).MarkReaderIndex().MarkWriterIndex();
         int index = s.Initial - 23;
+
         if (output)
         {
             Assert.Same(s.Target, s.Target.GetBytes(index, other.AsSpan(5, 17)));
@@ -382,6 +402,7 @@ public class NativeByteBufProviderTest
             Assert.Same(s.Target, s.Target.SetBytes(index, other.AsSpan(5, 17)));
             Array.Fill(root, (byte)0x42, index, 17);
         }
+
         Assert.Equal(root, ByteBufUtil.GetBytes(s.Target, 0, s.Initial));
         Assert.Equal(output ? Filled(5, 0x42).Concat(Filled(17, 0xcc)).Concat(Filled(10, 0x42)) : Filled(32, 0x42), other);
         Memory<byte> memory = s.Target.AsMemory(index, 17);
@@ -397,11 +418,13 @@ public class NativeByteBufProviderTest
         public override int Read(Span<byte> destination)
         {
             Calls++;
+
             if (mode == 2)
             {
                 destination.Fill(0x99);
                 throw new IOException("input failure");
             }
+
             return mode == 1 ? 0 : base.Read(destination[..Math.Min(3, destination.Length)]);
         }
     }
@@ -422,6 +445,7 @@ public class NativeByteBufProviderTest
         byte[] root = Filled(s.Initial, 0xcc);
         s.Target.SetBytes(0, root).SetIndex(3, 100).MarkReaderIndex().MarkWriterIndex();
         int index = s.Initial - 23;
+
         if (mode == 3)
         {
             using var output = new MemoryStream();
@@ -434,14 +458,17 @@ public class NativeByteBufProviderTest
         else
         {
             using var input = new Input(mode);
+
             if (mode == 2)
                 Assert.Throws<IOException>(() => s.Target.SetBytes(index, input, 17));
             else
             {
                 Assert.Equal(mode == 0 ? 3 : 0, s.Target.SetBytes(index, input, 17));
+
                 if (mode == 0)
                     new byte[] { 1, 2, 3 }.CopyTo(root.AsSpan(index));
             }
+
             Assert.Equal(1, input.Calls);
             Assert.True(input.CanRead);
             Assert.Equal(0, s.Target.SetBytes(s.Initial, input, 0));
@@ -449,6 +476,7 @@ public class NativeByteBufProviderTest
             Assert.Throws<ArgumentOutOfRangeException>(() => s.Target.SetBytes(s.Initial, input, 1));
             Assert.Equal(1, input.Calls);
         }
+
         Assert.Equal(root, ByteBufUtil.GetBytes(s.Target, 0, s.Initial));
         IndicesAndMarks(s.Target);
         s.Neighbors();
@@ -462,6 +490,7 @@ public class NativeByteBufProviderTest
         ByteBuf old = Owner(s.Target);
         Assert.True(s.Target.Release());
         ByteBuf next = s.Allocator.DirectBuffer(s.Initial, 32768);
+
         try
         {
             Assert.NotSame(old, Owner(next));

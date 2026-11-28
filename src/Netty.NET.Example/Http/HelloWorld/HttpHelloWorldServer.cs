@@ -50,6 +50,7 @@ public sealed class HttpHelloWorldServer
 
         // Configure the server.
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             ServerBootstrap b = new ServerBootstrap();

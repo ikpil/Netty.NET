@@ -67,11 +67,15 @@ public class ChannelInitializerTest : IAsyncLifetime
         var error = new Exception();
         Exception cause = null;
         var pipeline = new LocalChannel().Pipeline;
+
         if (registerFirst)
             await _group.RegisterAsync(pipeline.Channel);
+
         pipeline.AddFirst(new ThrowingInitializer(error, value => cause = value));
+
         if (!registerFirst)
             await _group.RegisterAsync(pipeline.Channel);
+
         await pipeline.Channel.CloseAsync();
         await pipeline.Channel.CloseFuture;
         Assert.Same(error, cause);
@@ -95,6 +99,7 @@ public class ChannelInitializerTest : IAsyncLifetime
             channel.Pipeline.AddLast(handler4);
         })).LocalAddress(LocalAddress.ANY);
         IChannel channel = await _client.BindAsync();
+
         try
         {
             // Execute some task on the EventLoop and wait until its done to be sure all handlers are added to the
@@ -133,6 +138,7 @@ public class ChannelInitializerTest : IAsyncLifetime
         }))
             .LocalAddress(LocalAddress.ANY);
         IChannel channel = await _client.BindAsync();
+
         try
         {
             // Execute some task on the EventLoop and wait until its done to be sure all handlers are added to the
@@ -182,6 +188,7 @@ public class ChannelInitializerTest : IAsyncLifetime
         var channel = new EmbeddedChannel(new ActionChannelInitializer<IChannel>(ch =>
         {
             var handler = new ActionChannelInitializer<IChannel>(_ => called = true);
+
             if (first)
                 ch.Pipeline.AddFirst(handler);
             else
@@ -194,6 +201,7 @@ public class ChannelInitializerTest : IAsyncLifetime
     private async Task TestChannelRegisteredEventPropagation(ChannelInitializer<LocalChannel> initializer)
     {
         IChannel clientChannel = null, serverChannel = null;
+
         try
         {
             serverChannel = await _server.ChildHandler(initializer).BindAsync();
@@ -216,6 +224,7 @@ public class ChannelInitializerTest : IAsyncLifetime
         var executor = new AlternatingExecutor();
         using var latch = new CountdownEvent(1);
         IChannel server = null, client = null;
+
         try
         {
             var bootstrap = new ServerBootstrap().Channel<LocalServerChannel>().Group(_group).LocalAddress(address)
@@ -235,6 +244,7 @@ public class ChannelInitializerTest : IAsyncLifetime
             Assert.True(latch.Wait(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
             Assert.Equal(1, invokeCount);
             Assert.Equal(invokeCount, completeCount);
+
             if (error != null)
                 System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(error).Throw();
         }
@@ -244,6 +254,7 @@ public class ChannelInitializerTest : IAsyncLifetime
             await CloseChannel(server);
             await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
         }
+
         Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
     }
 

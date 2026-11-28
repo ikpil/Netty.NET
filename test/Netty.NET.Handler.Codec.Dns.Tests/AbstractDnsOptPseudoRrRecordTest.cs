@@ -142,6 +142,7 @@ public class AbstractDnsOptPseudoRrRecordTest
                                       int extendedRcode, int version, int flags)
     {
         ByteBuf @out = Unpooled.Buffer();
+
         try
         {
             new DefaultDnsRecordEncoder().EncodeRecord(record, @out);

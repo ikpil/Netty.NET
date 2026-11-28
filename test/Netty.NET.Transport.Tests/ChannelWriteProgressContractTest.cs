@@ -46,6 +46,7 @@ public class ChannelWriteProgressContractTest
         queue.Progress(3);
         Assert.Equal(5, queue.CurrentProgress);
         Assert.Equal(new long[] { 2, 5 }, reports.Select(r => r.Progress.Completed));
+
         foreach (var report in reports)
         {
             Assert.Same(channel, report.Channel);
@@ -53,6 +54,7 @@ public class ChannelWriteProgressContractTest
             Assert.False(report.Operation.IsCompleted);
             Assert.Equal(total < 0 ? (long?)null : total, report.Progress.Total);
         }
+
         queue.Remove();
         await operation;
         Assert.True(reports[0].Operation.IsCompletedSuccessfully);
@@ -243,11 +245,13 @@ public class ChannelWriteProgressContractTest
         Assert.Equal(3, groups.Length);
         Assert.Equal(new long[] { 3, 5, 4 }, groups.Select(g => g.Last().Progress.Completed));
         Assert.Equal(new long?[] { 3, 5, 4 }, groups.Select(g => g.Last().Progress.Total));
+
         foreach (var group in groups)
         {
             Assert.True(group.Key.IsCompletedSuccessfully);
             Assert.Equal(group.Select(r => r.Progress.Completed).OrderBy(n => n), group.Select(r => r.Progress.Completed));
         }
+
         Assert.True(connection.Channel.GatheredCalls >= 2);
     }
 
@@ -260,6 +264,7 @@ public class ChannelWriteProgressContractTest
         string path = Path.GetTempFileName();
         var bytes = new byte[1024 * 1024 + 31];
         Random.Shared.NextBytes(bytes);
+
         try
         {
             await File.WriteAllBytesAsync(path, bytes, TestContext.Current.CancellationToken);
@@ -272,6 +277,7 @@ public class ChannelWriteProgressContractTest
                 {
                     wrongOwner = true;
                 }
+
                 reports.Enqueue(value); });
             var region = new DefaultFileRegion(file, 7, bytes.Length - 7);
             Task write = connection.Channel.WriteAndFlushAsync(region, TestContext.Current.CancellationToken);
@@ -301,6 +307,7 @@ public class ChannelWriteProgressContractTest
     {
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         using var peer = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0));
+
         try
         {
             var channel = (NioDatagramChannel)await new Bootstrap().Group(group).ChannelFactory(() => new NioDatagramChannel(AddressFamily.InterNetwork))
@@ -326,6 +333,7 @@ public class ChannelWriteProgressContractTest
         var extra = new DefaultEventExecutorGroup(1);
         ExecutorProgress observation = null;
         var notifications = new ConcurrentQueue<string>();
+
         try
         {
             connection.Channel.Pipeline.AddLast(extra, "encode", new Encode());
@@ -375,12 +383,14 @@ public class ChannelWriteProgressContractTest
             GatheredCalls++;
             int remaining = 4;
             var prefix = new List<ReadOnlyMemory<byte>>();
+
             for (int i = offset; i < offset + length && remaining > 0; i++)
             {
                 int count = Math.Min(remaining, buffers[i].Length);
                 prefix.Add(buffers[i][..count]);
                 remaining -= count;
             }
+
             return base.WriteSocket(prefix.ToArray(), 0, prefix.Count);
         }
     }
@@ -396,6 +406,7 @@ public class ChannelWriteProgressContractTest
             var result = new Connected();
             result._listener.Start();
             result.Channel = new ProbeChannel();
+
             try
             {
                 await new Bootstrap().Group(result._fixture.Client.Config.Group).ChannelFactory(() => result.Channel)
@@ -414,9 +425,12 @@ public class ChannelWriteProgressContractTest
         {
             if (_disposed)
                 return;
+
             _disposed = true;
+
             if (Channel != null)
                 await Channel.CloseAsync();
+
             Peer?.Dispose();
             _listener.Stop();
             await _fixture.DisposeAsync();

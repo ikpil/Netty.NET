@@ -55,12 +55,14 @@ public class ByteBufDiscardDispatchTest
         public override ByteBuf DiscardReadBytes()
         {
             calls.BeforeFull();
+
             return base.DiscardReadBytes();
         }
 
         public override ByteBuf SetBytes(int index, ByteBuf source, int sourceIndex, int length)
         {
             calls.BeforeCopy(this, index, source, sourceIndex, length);
+
             return base.SetBytes(index, source, sourceIndex, length);
         }
     }
@@ -70,12 +72,14 @@ public class ByteBufDiscardDispatchTest
         public override ByteBuf DiscardReadBytes()
         {
             calls.BeforeFull();
+
             return base.DiscardReadBytes();
         }
 
         public override ByteBuf SetBytes(int index, ByteBuf source, int sourceIndex, int length)
         {
             calls.BeforeCopy(this, index, source, sourceIndex, length);
+
             return base.SetBytes(index, source, sourceIndex, length);
         }
     }
@@ -97,6 +101,7 @@ public class ByteBufDiscardDispatchTest
         var native = new NativeMemoryAllocator(8);
         var calls = new Calls { ThrowOnFull = true };
         ByteBuf buffer = direct ? new Direct(calls, native) : new Heap(calls);
+
         try
         {
             buffer.WriteBytes(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7 });
@@ -110,10 +115,12 @@ public class ByteBufDiscardDispatchTest
             bool compact = reader >= 4;
             Assert.Equal(0, calls.Full);
             Assert.Equal(reader is 4 or 5 ? 1 : 0, calls.Copy);
+
             if (calls.Copy != 0)
             {
                 Assert.Equal((0, reader, 8 - reader), calls.Range);
             }
+
             Assert.Equal(compact ? 0 : reader, buffer.ReaderIndex);
             Assert.Equal(compact ? 8 - reader : 8, buffer.WriterIndex);
             Assert.Equal(8, buffer.Capacity);
@@ -130,6 +137,7 @@ public class ByteBufDiscardDispatchTest
         {
             Assert.True(buffer.Release());
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -141,6 +149,7 @@ public class ByteBufDiscardDispatchTest
         var native = new NativeMemoryAllocator(8);
         var calls = new Calls { ThrowOnCopy = true };
         ByteBuf buffer = direct ? new Direct(calls, native) : new Heap(calls);
+
         try
         {
             buffer.WriteBytes(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7 });
@@ -168,6 +177,7 @@ public class ByteBufDiscardDispatchTest
         {
             Assert.True(buffer.Release());
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 }

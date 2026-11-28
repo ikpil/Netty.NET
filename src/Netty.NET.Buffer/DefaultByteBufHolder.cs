@@ -31,6 +31,7 @@ public class DefaultByteBufHolder : IByteBufHolder
     public DefaultByteBufHolder(ByteBuf data)
     {
         ArgumentNullException.ThrowIfNull(data);
+
         _data = data;
     }
 
@@ -165,6 +166,7 @@ public class DefaultByteBufHolder : IByteBufHolder
         {
             return true;
         }
+
         return obj is not null && GetType() == obj.GetType() && _data.Equals(((DefaultByteBufHolder)obj)._data);
     }
 

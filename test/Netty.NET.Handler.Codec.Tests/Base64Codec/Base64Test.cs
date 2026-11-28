@@ -116,6 +116,7 @@ public class Base64Test
     private static void TestEncode(ByteBuf src, ByteBuf expectedEncoded)
     {
         ByteBuf encoded = Base64.Encode(src, true, Base64Dialect.STANDARD);
+
         try
         {
             Assert.Equal(expectedEncoded, encoded);
@@ -186,6 +187,7 @@ public class Base64Test
         ByteBuf expectedBuf = null;
         byte[] jdKEncoded;
         byte[] jdkDecoded;
+
         try
         {
             jdKEncoded = breakLines ? InsertNewLines(jdkEncoder(bytes)) : jdkEncoder(bytes);
@@ -253,10 +255,12 @@ public class Base64Test
         {
             byte[] encoded = encoder(src);
             int length = encoded.Length;
+
             while (length > 0 && encoded[length - 1] == '=')
             {
                 length--;
             }
+
             return encoded.AsSpan(0, length).ToArray();
         };
     }
@@ -294,11 +298,13 @@ public class Base64Test
             for (int i = 0; i < src.Length; i++)
             {
                 os.WriteByte(src[i]);
+
                 if (i + 1 < src.Length && (i + 1) % 76 == 0)
                 {
                     os.WriteByte((byte) '\n');
                 }
             }
+
             return os.ToArray();
         }
     }
@@ -319,6 +325,7 @@ public class Base64Test
                     os.WriteByte(b);
                 }
             }
+
             return os.ToArray();
         }
     }
@@ -340,9 +347,11 @@ public class Base64Test
     public void DecodingFailsOnInvalidInputByte()
     {
         char[] invalidChars = {'\u007F', '\u0080', '½', 'ÿ'};
+
         foreach (char invalidChar in invalidChars)
         {
             ByteBuf buf = CopiedBuffer("eHh4" + invalidChar, Encoding.Latin1);
+
             try
             {
                 // CLR: IllegalArgumentException is ArgumentException.

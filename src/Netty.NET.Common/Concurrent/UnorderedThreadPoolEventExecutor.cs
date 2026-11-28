@@ -119,6 +119,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         }
         ArgumentNullException.ThrowIfNull(threadFactory);
         ArgumentNullException.ThrowIfNull(handler);
+
         configuredWorkerCount = corePoolSize;
         this.threadFactory = threadFactory;
         rejectedHandler = handler;
@@ -197,9 +198,11 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     {
         AdvanceGracefulShutdown();
         Monitor.PulseAll(gate);
+
         if (shutdownRequested && workers.Count == 0 && startingWorkers == 0 && queue.Count == 0 && shutdownReservations == 0 && !termination.Task.IsCompleted)
         {
             stopSource.Dispose();
+
             if (stopCallbackFailure != null)
             {
                 termination.TrySetException(backendFailure == null ? stopCallbackFailure.InnerExceptions :
@@ -283,18 +286,22 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     private void StopCore()
     {
         Task notifications = null;
+
         using (UninterruptibleMonitor.Enter(gate))
         {
             shutdownRequested = stopping = true;
             DisposeGracefulTimer();
+
             if (!stopToken.IsCancellationRequested && !termination.Task.IsCompleted)
             {
                 ++shutdownReservations;
+
                 // CancelAsync requests the token now, but never invokes arbitrary
                 // registered code inline under this gate (including factory reentry).
                 using (ExecutionContext.IsFlowSuppressed() ? default : ExecutionContext.SuppressFlow())
                     notifications = stopSource.CancelAsync();
             }
+
             Work[] pending = queue.UnorderedItems.Select(item => item.Element).ToArray();
             // Queue handles are membership, not results. Every removed reservation
             // settles cancellation or releases its raw callback before termination.
@@ -313,6 +320,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
 
             PublishPoolState();
         }
+
         if (notifications != null)
         {
             using (ExecutionContext.IsFlowSuppressed() ? default : ExecutionContext.SuppressFlow())
@@ -323,6 +331,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     private async Task ObserveStopCallbacksAsync(Task notifications)
     {
         AggregateException failure = null;
+
         try
         {
             await notifications.ConfigureAwait(false);
@@ -331,6 +340,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         {
             failure = notifications.Exception ?? new AggregateException(error);
         }
+
         using (UninterruptibleMonitor.Enter(gate))
         {
             stopCallbackFailure = failure;
@@ -363,6 +373,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         {
             throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be at least the quiet period.");
         }
+
         using (UninterruptibleMonitor.Enter(gate))
         {
             if (!gracefulRequested && !shutdownRequested)
@@ -370,15 +381,18 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                 gracefulStartNanos = gracefulActivityNanos = Ticker().NanoTime();
                 gracefulQuietNanos = AbstractScheduledEventExecutor.ToNanos(quietPeriod);
                 gracefulTimeoutNanos = AbstractScheduledEventExecutor.ToNanos(timeout);
+
                 // A lifecycle timer must work even with no worker (or a factory
                 // returning null), without retaining the caller's ExecutionContext.
                 using (ExecutionContext.IsFlowSuppressed() ? default : ExecutionContext.SuppressFlow())
                     gracefulTimer = new Timer(static state => ((UnorderedThreadPoolEventExecutor)state).CheckGracefulShutdown(),
                         this, Timeout.Infinite, Timeout.Infinite);
+
                 gracefulRequested = true;
                 PublishPoolState();
             }
         }
+
         return TerminationFuture;
     }
 
@@ -398,6 +412,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         {
             return;
         }
+
         long now = Ticker().NanoTime();
         long timeoutRemaining = gracefulTimeoutNanos - unchecked(now - gracefulStartNanos);
         long quietRemaining = gracefulQuietNanos - unchecked(now - gracefulActivityNanos);
@@ -407,6 +422,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
             CloseAdmission();
             return;
         }
+
         long remaining = activeWorkers.Count != 0 || startingWorkers != 0 ? timeoutRemaining :
             Math.Min(timeoutRemaining, quietRemaining);
         // Timer's millisecond range is smaller than TimeSpan's; long periods
@@ -444,7 +460,9 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         {
             return IsTerminated();
         }
+
         var elapsed = Stopwatch.StartNew();
+
         using (UninterruptibleMonitor.Enter(gate))
         {
             while (!shutdownRequested || workers.Count != 0 || startingWorkers != 0 || queue.Count != 0 || shutdownReservations != 0)
@@ -454,10 +472,12 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                 {
                     return false;
                 }
+
                 int milliseconds = (int)Math.Min(int.MaxValue,
                     (remaining.Ticks - 1) / TimeSpan.TicksPerMillisecond + 1);
                 Monitor.Wait(gate, milliseconds);
             }
+
             return true;
         }
     }
@@ -465,6 +485,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     public void Execute(Action command)
     {
         ArgumentNullException.ThrowIfNull(command);
+
         if (ExecutorWork.GetNativeSubmission(command) is { } native)
         {
             ExecuteNativeSubmission(native);
@@ -472,6 +493,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         }
 
         var work = new RawWork(this, command);
+
         try
         {
             Enqueue(work);
@@ -493,9 +515,11 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     private void Enqueue(Work work)
     {
         Action<Action, UnorderedThreadPoolEventExecutor> handler;
+
         using (UninterruptibleMonitor.Enter(gate))
         {
             AdvanceGracefulShutdown();
+
             if (!shutdownRequested)
             {
                 queue.Enqueue(work, (work.deadline, work.sequence));
@@ -504,10 +528,13 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                 PublishPoolState();
                 return;
             }
+
             if (work is NativeSubmissionBackend or NativeBackend)
                 throw new RejectedExecutionException("Executor has been shut down.");
+
             handler = rejectedHandler;
         }
+
         // Keep callback claiming/cancellation with the existing queue membership.
         // A bound Action needs no additional result or replay-envelope object.
         handler(work.Run, this);
@@ -524,9 +551,11 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         {
             return true;
         }
+
         ++startingWorkers;
         ++workerCount;
         bool started = false;
+
         try
         {
             Thread thread = threadFactory.NewThread(WorkerLoop);
@@ -534,7 +563,9 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
             {
                 return false;
             }
+
             workers.Add(thread);
+
             try
             {
                 thread.Start();
@@ -544,16 +575,19 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                 workers.Remove(thread);
                 throw;
             }
+
             started = true;
             return true;
         }
         finally
         {
             --startingWorkers;
+
             if (!started)
             {
                 --workerCount;
             }
+
             PublishPoolState();
         }
     }
@@ -562,6 +596,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     {
         bool idleStarted = false;
         long idleDeadline = 0;
+
         using (UninterruptibleMonitor.Enter(gate))
         {
             for (;;)
@@ -571,6 +606,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                     --workerCount;
                     return null;
                 }
+
                 long now = Ticker().NanoTime();
                 long waitNanos = long.MaxValue;
                 bool hasHead = queue.TryPeek(out Work work, out _);
@@ -584,6 +620,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                         return work;
                     }
                 }
+
                 // Zero retains the constructor's transient single-worker behavior.
                 // A future reservation needs that worker until its deadline or
                 // cancellation; only an empty queue starts the idle retirement.
@@ -594,18 +631,21 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                         idleDeadline = unchecked(now + ZeroWorkerIdleNanos);
                         idleStarted = true;
                     }
+
                     long remaining = unchecked(idleDeadline - now);
                     if (remaining <= 0)
                     {
                         --workerCount;
                         return null;
                     }
+
                     waitNanos = Math.Min(waitNanos, remaining);
                 }
                 else
                 {
                     idleStarted = false;
                 }
+
                 try
                 {
                     if (configuredWorkerCount != 0 && !hasHead)
@@ -631,6 +671,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         // its Thread. A stateful constructor factory cannot bypass native callback affinity.
         eventLoopThreads.TryAdd(Thread.CurrentThread, 0);
         bool countReleased = false;
+
         try
         {
             for (;;)
@@ -641,6 +682,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                     countReleased = true;
                     return;
                 }
+
                 try
                 {
                     work.Run();
@@ -672,6 +714,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                     {
                         --workerCount;
                     }
+
                     try
                     {
                         if (!stopping && (!shutdownRequested || queue.Count != 0))
@@ -681,6 +724,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                             {
                                 minimum = 1;
                             }
+
                             if (workerCount < minimum)
                             {
                                 try
@@ -772,6 +816,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                 return;
             }
         }
+
         work.CancelOuter();
     }
 
@@ -783,8 +828,10 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
             PublishPoolState();
             return;
         }
+
         var pending = queue.UnorderedItems.ToArray();
         ++shutdownReservations;
+
         try
         {
             // Rebuild once from stored priorities, retaining only accepted one-shots.
@@ -792,6 +839,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
             // reenter; the batch still owns drain until every result is settled.
             queue.Clear();
             queue.EnqueueRange(pending.Where(item => item.Element.period == 0 && !item.Element.IsCancelled()));
+
             foreach (var item in pending)
             {
                 Work work = item.Element;
@@ -805,6 +853,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         {
             --shutdownReservations;
         }
+
         PublishPoolState();
     }
 
@@ -821,15 +870,18 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     private long TriggerTime(long delay)
     {
         delay = Math.Max(0, delay);
+
         using (UninterruptibleMonitor.Enter(gate))
         {
             long now = Ticker().NanoTime();
+
             if (delay >= (long.MaxValue >> 1) && queue.TryPeek(out Work head, out _))
             {
                 long headDelay = unchecked(head.deadline - now);
                 if (headDelay < 0 && unchecked(delay - headDelay) < 0)
                     delay = long.MaxValue + headDelay;
             }
+
             return unchecked(now + delay);
         }
     }
@@ -852,6 +904,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
     internal void ExecuteNativeSubmission(INativeSubmission submission)
     {
         var backend = new NativeSubmissionBackend(this, submission);
+
         using (UninterruptibleMonitor.Enter(gate))
         {
             // A discard handler must not leave the producer-owned Task pending.
@@ -859,12 +912,15 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
             {
                 throw new RejectedExecutionException("Executor has been shut down.");
             }
+
             if (submission is ICancelableNativeSubmission cancelable)
                 cancelable.SetCancellationRemoval(() => RemoveCanceledSubmission(backend));
+
             if (submission.IsCanceled)
             {
                 return;
             }
+
             try
             {
                 Enqueue(backend);
@@ -902,10 +958,12 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         {
             this.owner = owner;
             _submission = submission;
+
             if (submission is IQueueBoundNativeSubmission runner)
             {
                 runner.BindQueueOwner(owner);
             }
+
             sequence = Interlocked.Increment(ref nextSequence) - 1;
             deadline = owner.TriggerTime(0);
         }
@@ -932,6 +990,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
             {
                 return;
             }
+
             if (!owner.CanRun(this))
             {
                 submission.CancelForShutdown();
@@ -958,6 +1017,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
         {
             return Task.FromCanceled<T>(token);
         }
+
         NativeBackend backend = null;
         var task = new NativeScheduledWork<T>(function, token, TriggerTime(AbstractScheduledEventExecutor.ToNanos(delay)),
             period, () => Ticker().NanoTime(), () => CanRun(backend),
@@ -969,6 +1029,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                     {
                         return;
                     }
+
                     try
                     {
                         ReExecutePeriodic(backend);
@@ -989,6 +1050,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                 }
             });
         backend = new NativeBackend(this, task);
+
         try
         {
             // Native result publication must not depend on a JDK rejection handler
@@ -999,6 +1061,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                 {
                     throw new RejectedExecutionException("Executor has been shut down.");
                 }
+
                 if (!task.Completion.IsCompleted)
                 {
                     Enqueue(backend);
@@ -1012,8 +1075,10 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
                 Remove(backend);
                 PublishPoolState();
             }
+
             task.Reject(error);
         }
+
         task.Publish();
         return task.ResultTask;
     }
@@ -1095,6 +1160,7 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
             {
                 return;
             }
+
             try
             {
                 callback();

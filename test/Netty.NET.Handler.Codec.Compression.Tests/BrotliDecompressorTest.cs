@@ -94,6 +94,7 @@ public class BrotliDecompressorTest : AbstractDecompressorTest
             {
                 truncated.Release();
             }
+
             foreach (ByteBuf buffer in data)
             {
                 buffer.Release();

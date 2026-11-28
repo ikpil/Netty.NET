@@ -52,10 +52,12 @@ internal sealed class Signed : X509SignatureGenerator
     public override byte[] GetSignatureAlgorithmIdentifier(HashAlgorithmName hashAlgorithm)
     {
         AsnWriter writer = new AsnWriter(AsnEncodingRules.DER);
+
         using (writer.PushSequence())
         {
             writer.WriteObjectIdentifier(Algorithms.OidForAlgorithmName(algorithmIdentifier));
         }
+
         return writer.Encode();
     }
 

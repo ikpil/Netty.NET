@@ -81,10 +81,12 @@ public class HttpCorsServerInitializer : ChannelInitializer<ISocketChannel>
     {
         CorsConfig corsConfig = CorsConfigBuilder.ForAnyOrigin().AllowNullOrigin().AllowCredentials().Build();
         IChannelPipeline pipeline = ch.Pipeline;
+
         if (sslCtx != null)
         {
             pipeline.AddLast(sslCtx.NewHandler(ch.Alloc()));
         }
+
         pipeline.AddLast(new HttpResponseEncoder());
         pipeline.AddLast(new HttpRequestDecoder());
         pipeline.AddLast(new HttpObjectAggregator(65536));

@@ -116,6 +116,7 @@ internal sealed class Bzip2HuffmanStageDecoder
         codeLimits = new int[totalTables][];
         codeSymbols = new int[totalTables][];
         tableCodeLengths = new byte[totalTables][];
+
         for (int table = 0; table < totalTables; table++)
         {
             codeBases[table] = new int[HUFFMAN_DECODE_MAX_CODE_LENGTH + 2];
@@ -156,6 +157,7 @@ internal sealed class Bzip2HuffmanStageDecoder
                 maximumLength = Math.Max(currLength, maximumLength);
                 minimumLength = Math.Min(currLength, minimumLength);
             }
+
             minimumLengths[table] = minimumLength;
 
             // Calculate the first output symbol for each code length
@@ -163,6 +165,7 @@ internal sealed class Bzip2HuffmanStageDecoder
             {
                 tableBases[(sbyte) codeLengths[i] + 1]++;
             }
+
             for (int i = 1, b = tableBases[0]; i < HUFFMAN_DECODE_MAX_CODE_LENGTH + 2; i++)
             {
                 b += tableBases[i];
@@ -214,6 +217,7 @@ internal sealed class Bzip2HuffmanStageDecoder
             {
                 throw new DecompressionException("error decoding block");
             }
+
             this.currentTable = selectors[groupIndex] & 0xff;
         }
 
@@ -227,6 +231,7 @@ internal sealed class Bzip2HuffmanStageDecoder
         // Starting with the minimum bit length for the table, read additional bits one at a time
         // until a complete code is recognised
         int codeBits = reader.ReadBits(codeLength);
+
         for (; codeLength <= HUFFMAN_DECODE_MAX_CODE_LENGTH; codeLength++)
         {
             if (codeBits <= tableLimits[codeLength])
@@ -234,6 +239,7 @@ internal sealed class Bzip2HuffmanStageDecoder
                 // Convert the code to a symbol index and return
                 return tableSymbols[codeBits - tableBases[codeLength]];
             }
+
             codeBits = codeBits << 1 | reader.ReadBits(1);
         }
 

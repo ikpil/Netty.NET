@@ -97,9 +97,11 @@ public static class SocketProtocolFamilyExtensions
                     {
                         return SocketProtocolFamily.Unix;
                     }
+
                     // Fall-through
                     break;
             }
+
             throw new NotSupportedException("ProtocolFamily is not supported: " + family);
         }
     }

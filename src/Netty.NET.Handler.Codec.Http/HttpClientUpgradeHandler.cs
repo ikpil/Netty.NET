@@ -174,6 +174,7 @@ public class HttpClientUpgradeHandler : HttpObjectAggregator, IChannelOutboundHa
         {
             // Release message before failing the promise.
             ReferenceCountUtil.Release(msg);
+
             return Task.FromException(new InvalidOperationException(
                     "Attempting to write HTTP request with upgrade in progress"));
         }
@@ -198,6 +199,7 @@ public class HttpClientUpgradeHandler : HttpObjectAggregator, IChannelOutboundHa
     protected override void Decode(IChannelHandlerContext ctx, IHttpObject msg, IList<object> @out)
     {
         IFullHttpResponse response = null;
+
         try
         {
             if (currentUpgradeEvent != UpgradeEvent.UPGRADE_ISSUED)
@@ -298,11 +300,13 @@ public class HttpClientUpgradeHandler : HttpObjectAggregator, IChannelOutboundHa
 
         // Set the CONNECTION header from the set of all protocol-specific headers that were added.
         StringBuilder builder = new StringBuilder();
+
         foreach (ICharSequence part in connectionParts)
         {
             builder.Append(part);
             builder.Append(',');
         }
+
         builder.Append(HttpHeaderValues.UPGRADE);
         request.Headers().Add(HttpHeaderNames.CONNECTION, builder.ToString());
     }

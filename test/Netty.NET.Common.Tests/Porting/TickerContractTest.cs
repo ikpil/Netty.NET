@@ -36,6 +36,7 @@ public class TickerContractTest
     public void NativeTimestampScalingPreservesIntegerPrecisionAndSignedWrap(long timestamp)
     {
         long frequency = TimeProvider.System.TimestampFrequency;
+
         foreach (long units in new[] { 1_000L, SystemTimer.NanosecondsPerSecond, frequency + 1 })
         {
             BigInteger scaled = (BigInteger)timestamp * units / frequency;
@@ -111,6 +112,7 @@ public class TickerContractTest
         var thread = new Thread(() =>
         {
             entered.Set();
+
             try
             {
                 if (delay == -1)
@@ -132,6 +134,7 @@ public class TickerContractTest
             }
         }) { IsBackground = true };
         thread.Start();
+
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -148,6 +151,7 @@ public class TickerContractTest
             {
                 thread.Interrupt();
             }
+
             Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
         }
     }

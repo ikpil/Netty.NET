@@ -57,6 +57,7 @@ public class SocketAddressesSourceTest : AbstractSocketTest
             Assert.NotNull(((UnixDomainSocketEndPoint) address).ToString());
             return;
         }
+
         // CLR: EpollSocketAddressesTest's body. InetAddress.isAnyLocalAddress() checks "if the InetAddress is a
         // wildcard address" (https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/net/InetAddress.html);
         // the CLR wildcard addresses are IPAddress.Any and IPAddress.IPv6Any, which make a socket "listen for client
@@ -72,6 +73,7 @@ public class SocketAddressesSourceTest : AbstractSocketTest
     {
         IChannel serverChannel = null;
         IChannel clientChannel = null;
+
         try
         {
             // CLR: ImmediateEventExecutor.INSTANCE.newPromise() is a TaskCompletionSource<EndPoint>; setSuccess(...)
@@ -109,6 +111,7 @@ public class SocketAddressesSourceTest : AbstractSocketTest
             {
                 await clientChannel.CloseAsync();
             }
+
             if (serverChannel != null)
             {
                 await serverChannel.CloseAsync();
@@ -139,7 +142,9 @@ public class SocketAddressesSourceTest : AbstractSocketTest
         {
             return SocketTestPermutation.INSTANCE.SocketWithFastOpen();
         }
+
         DomainSocketSourceTest.RequireDomainSockets();
+
         return DomainSocketTestPermutation.INSTANCE.DomainSocket();
     }
 

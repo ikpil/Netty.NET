@@ -43,6 +43,7 @@ public class UnorderedGracefulShutdownContractTest
             {
                 return;
             }
+
             Interlocked.Exchange(ref _remove, null)?.Invoke();
             observe();
         }
@@ -81,6 +82,7 @@ public class UnorderedGracefulShutdownContractTest
             executor.ScheduleWithFixedDelayAsync(() => Assert.Fail("Removed delay ran"), TimeSpan.FromDays(1), TimeSpan.FromDays(1), owner.Token)];
         Task retained = retainOneShot ? executor.ScheduleAsync(() => 7, TimeSpan.FromDays(1), owner.Token) : Task.CompletedTask;
         canceled.CancelResult();
+
         try
         {
             Task closing = executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
@@ -91,6 +93,7 @@ public class UnorderedGracefulShutdownContractTest
             Assert.All(periodic, task => Assert.True(task.IsCanceled));
             Assert.False(executor.StopToken.IsCancellationRequested);
             Assert.False(owner.IsCancellationRequested);
+
             if (retainOneShot)
             {
                 Assert.False(retained.IsCompleted);
@@ -99,6 +102,7 @@ public class UnorderedGracefulShutdownContractTest
                 owner.Cancel();
                 Assert.True(retained.IsCanceled);
             }
+
             await closing.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             Assert.True(executor.IsTerminated());
             Assert.Equal(0, executor.PendingTaskCount);
@@ -130,9 +134,11 @@ public class UnorderedGracefulShutdownContractTest
             entered.Set();
             release.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         }, TestContext.Current.CancellationToken);
+
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
+
             for (int i = 0; i < count; ++i)
             {
                 int index = i;
@@ -148,7 +154,9 @@ public class UnorderedGracefulShutdownContractTest
                     ? executor.ScheduleAtFixedRateAsync(() => Assert.Fail("Removed rate ran"), TimeSpan.FromDays(1), TimeSpan.FromDays(1), TestContext.Current.CancellationToken)
                     : executor.ScheduleWithFixedDelayAsync(() => Assert.Fail("Removed delay ran"), TimeSpan.FromDays(1), TimeSpan.FromDays(1), TestContext.Current.CancellationToken);
             }
+
             Task deadline = executor.ScheduleAsync(() => Assert.Fail("Canceled retained deadline ran"), TimeSpan.FromDays(2), owner.Token);
+
             if (legacyShutdown)
             {
                 executor.Shutdown();
@@ -157,6 +165,7 @@ public class UnorderedGracefulShutdownContractTest
             {
                 Assert.Same(executor.TerminationFuture, executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero));
             }
+
             Assert.Equal(count * 3 + 2, executor.PendingTaskCount);
             Assert.All(periodic, task => Assert.True(task.IsCanceled));
             Assert.All(oneShots, task => Assert.False(task.IsCompleted));
@@ -199,6 +208,7 @@ public class UnorderedGracefulShutdownContractTest
     public void InvalidPeriodsDoNotStartShutdown(int quietMilliseconds, int timeoutMilliseconds)
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => executor.ShutdownGracefullyAsync(
@@ -225,6 +235,7 @@ public class UnorderedGracefulShutdownContractTest
             entered.Set();
             release.Wait();
         });
+
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -275,6 +286,7 @@ public class UnorderedGracefulShutdownContractTest
             release.Wait();
             return 17;
         });
+
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -310,6 +322,7 @@ public class UnorderedGracefulShutdownContractTest
         var executor = new UnorderedThreadPoolEventExecutor(1, new WorkerlessFactory());
         using var cancellation = new CancellationTokenSource();
         Task scheduled = executor.ScheduleAsync(() => Assert.Fail("Canceled deadline ran"), TimeSpan.FromDays(1), cancellation.Token);
+
         try
         {
             Task termination = executor.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(5));
@@ -334,6 +347,7 @@ public class UnorderedGracefulShutdownContractTest
     {
         var executor = new UnorderedThreadPoolEventExecutor(1, new WorkerlessFactory());
         using var cancellation = new CancellationTokenSource();
+
         try
         {
             Task termination = executor.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(500), TimeSpan.FromSeconds(5));
@@ -365,11 +379,13 @@ public class UnorderedGracefulShutdownContractTest
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
         Task termination = executor.ShutdownGracefullyAsync(TimeSpan.MaxValue, TimeSpan.MaxValue);
+
         try
         {
             Assert.Same(termination, executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero));
             Assert.True(executor.IsShuttingDown());
             Assert.False(executor.IsShutdown());
+
             if (immediate)
             {
                 _ = executor.StopAsync();
@@ -378,6 +394,7 @@ public class UnorderedGracefulShutdownContractTest
             {
                 executor.Shutdown();
             }
+
             await termination.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.True(executor.IsTerminated());
         }
@@ -393,6 +410,7 @@ public class UnorderedGracefulShutdownContractTest
         var executor = new UnorderedThreadPoolEventExecutor(1, new WorkerlessFactory());
         using var cancellation = new CancellationTokenSource();
         Task retained = executor.ScheduleAsync(() => 1, TimeSpan.FromDays(1), cancellation.Token);
+
         try
         {
             Task termination = executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
@@ -415,15 +433,18 @@ public class UnorderedGracefulShutdownContractTest
     public void LifecycleTimerDoesNotRetainAmbientExecutionContext(bool alreadySuppressed)
     {
         var executor = new UnorderedThreadPoolEventExecutor(1, new WorkerlessFactory());
+
         try
         {
             WeakReference value = RequestWithAmbientValue(executor, alreadySuppressed);
+
             for (int attempt = 0; attempt < 3 && value.IsAlive; ++attempt)
             {
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
                 GC.Collect();
             }
+
             Assert.False(value.IsAlive);
             Assert.True(executor.IsShuttingDown());
             Assert.False(executor.IsShutdown());
@@ -443,6 +464,7 @@ public class UnorderedGracefulShutdownContractTest
         {
         }, TimeSpan.Zero, TimeSpan.FromDays(1));
         Assert.Same(executor.TerminationFuture, executor.StopAsync());
+
         try
         {
             Task termination = executor.TerminationFuture;
@@ -464,6 +486,7 @@ public class UnorderedGracefulShutdownContractTest
     {
         var ambient = new AsyncLocal<object> { Value = new object() };
         var value = new WeakReference(ambient.Value);
+
         try
         {
             using (suppress ? ExecutionContext.SuppressFlow() : default)
@@ -476,6 +499,7 @@ public class UnorderedGracefulShutdownContractTest
         {
             ambient.Value = null;
         }
+
         return value;
     }
 }

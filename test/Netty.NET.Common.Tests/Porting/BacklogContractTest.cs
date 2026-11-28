@@ -95,6 +95,7 @@ public class BacklogContractTest
     public void KernelNumbersIgnoreCallerCultureAndOversizedInputIsClosed()
     {
         CultureInfo previous = CultureInfo.CurrentCulture;
+
         try
         {
             var culture = (CultureInfo)CultureInfo.InvariantCulture.Clone();
@@ -122,6 +123,7 @@ public class BacklogContractTest
     {
         Process observer = null;
         SafeProcessHandle handle = null;
+
         try
         {
             Assert.Equal(expected, NetUtil.SysctlGetInt("kern.ipc.somaxconn", info => StartFixture(info, line, out observer, out handle)));
@@ -139,6 +141,7 @@ public class BacklogContractTest
     {
         Process observer = null;
         SafeProcessHandle handle = null;
+
         try
         {
             Assert.Throws<OverflowException>(() => NetUtil.SysctlGetInt("kern.ipc.somaxconn",
@@ -150,6 +153,7 @@ public class BacklogContractTest
         {
             StopObserver(observer);
         }
+
         var error = new Win32Exception(2);
         Assert.Same(error, Assert.Throws<Win32Exception>(() => NetUtil.SysctlGetInt("kern.ipc.somaxconn", _ => throw error)));
         Assert.Throws<Win32Exception>(() => NetUtil.SysctlGetInt("kern.ipc.somaxconn",
@@ -173,6 +177,7 @@ public class BacklogContractTest
             Assert.True(info.CreateNoWindow);
             var child = FixtureInfo();
             child.ArgumentList.Add(OperatingSystem.IsWindows() ? "exit /b 0" : "exit 0");
+
             return Process.Start(child);
         }));
     }
@@ -197,10 +202,12 @@ public class BacklogContractTest
             UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardInput = true
         };
         info.ArgumentList.Add(OperatingSystem.IsWindows() ? "/d" : "-c");
+
         if (OperatingSystem.IsWindows())
         {
             info.ArgumentList.Add("/c");
         }
+
         return info;
     }
 
@@ -210,6 +217,7 @@ public class BacklogContractTest
         {
             return;
         }
+
         try
         {
             if (!observer.HasExited)
@@ -235,6 +243,7 @@ public class BacklogContractTest
         {
             if (disposing)
                 DisposeCount++;
+
             base.Dispose(disposing);
         }
     }

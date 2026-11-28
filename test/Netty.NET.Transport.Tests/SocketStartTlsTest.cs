@@ -89,6 +89,7 @@ public class SocketStartTlsTest : AbstractSocketTest, IClassFixture<SocketStartT
                 .Build());
 
         List<object[]> @params = new List<object[]>();
+
         foreach (SslContext sc in serverContexts)
         {
             foreach (SslContext cc in clientContexts)
@@ -96,6 +97,7 @@ public class SocketStartTlsTest : AbstractSocketTest, IClassFixture<SocketStartT
                 @params.Add(new object[] { sc, cc });
             }
         }
+
         return @params;
     }
 
@@ -272,6 +274,7 @@ public class SocketStartTlsTest : AbstractSocketTest, IClassFixture<SocketStartT
             {
                 ctx.Read();
             }
+
             _ = ctx.WriteAndFlushAsync("StartTlsRequest\n");
         }
 
@@ -331,6 +334,7 @@ public class SocketStartTlsTest : AbstractSocketTest, IClassFixture<SocketStartT
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
             channel = ctx.Channel;
+
             if (!autoRead)
             {
                 ctx.Read();

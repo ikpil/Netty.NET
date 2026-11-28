@@ -48,6 +48,7 @@ public class SocketAutoReadSourceTest : AbstractSocketTest
     {
         IChannel serverChannel = null;
         IChannel clientChannel = null;
+
         try
         {
             AutoReadInitializer serverInitializer = new AutoReadInitializer(!readOutsideEventLoopThread);
@@ -84,12 +85,14 @@ public class SocketAutoReadSourceTest : AbstractSocketTest
             {
                 serverInitializer.channel.Read();
             }
+
             await serverInitializer.autoReadHandler.AssertSingleReadSecondTry();
 
             if (readOutsideEventLoopThread)
             {
                 clientChannel.Read();
             }
+
             await clientInitializer.autoReadHandler.AssertSingleReadSecondTry();
         }
         finally
@@ -98,6 +101,7 @@ public class SocketAutoReadSourceTest : AbstractSocketTest
             {
                 await clientChannel.CloseAsync();
             }
+
             if (serverChannel != null)
             {
                 await serverChannel.CloseAsync();
@@ -152,10 +156,12 @@ public class SocketAutoReadSourceTest : AbstractSocketTest
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             ReferenceCountUtil.Release(msg);
+
             if (count.IncrementAndGet() == 1)
             {
                 ctx.Channel.Config.SetAutoRead(false);
             }
+
             if (callRead)
             {
                 // Test calling read in the EventLoop thread to ensure a read is eventually done.
@@ -166,6 +172,7 @@ public class SocketAutoReadSourceTest : AbstractSocketTest
         public override void ChannelReadComplete(IChannelHandlerContext ctx)
         {
             latch.TrySetResult();
+
             if (latch2Count.DecrementAndGet() == 0)
             {
                 latch2.TrySetResult();

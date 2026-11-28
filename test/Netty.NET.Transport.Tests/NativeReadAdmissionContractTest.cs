@@ -26,6 +26,7 @@ public class NativeReadAdmissionContractTest
         using var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
         IChannel channel = null;
+
         try
         {
             Task<TcpClient> accepting = listener.AcceptTcpClientAsync(TestContext.Current.CancellationToken).AsTask();
@@ -50,6 +51,7 @@ public class NativeReadAdmissionContractTest
             {
                 await channel.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             await Stop(group);
         }
     }
@@ -60,6 +62,7 @@ public class NativeReadAdmissionContractTest
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var received = new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
         IChannel channel = null;
+
         try
         {
             channel = await new Bootstrap().Group(group).Channel<NioDatagramChannel>().Handler(new CapturePacket(received))
@@ -81,6 +84,7 @@ public class NativeReadAdmissionContractTest
             {
                 await channel.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             await Stop(group);
         }
     }
@@ -91,6 +95,7 @@ public class NativeReadAdmissionContractTest
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var accepted = new TaskCompletionSource<IChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
         IChannel server = null, child = null;
+
         try
         {
             server = await new ServerBootstrap().Group(group).Channel<NioServerSocketChannel>()
@@ -112,8 +117,10 @@ public class NativeReadAdmissionContractTest
         {
             if (child != null)
                 await child.CloseAsync(TestContext.Current.CancellationToken);
+
             if (server != null)
                 await server.CloseAsync(TestContext.Current.CancellationToken);
+
             await Stop(group);
         }
     }
@@ -126,6 +133,7 @@ public class NativeReadAdmissionContractTest
         using var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
         IChannel channel = null;
+
         try
         {
             Task<TcpClient> accepting = listener.AcceptTcpClientAsync(TestContext.Current.CancellationToken).AsTask();
@@ -139,6 +147,7 @@ public class NativeReadAdmissionContractTest
             var next = group.Next();
             if (ReferenceEquals(next, oldLoop))
                 next = group.Next();
+
             Assert.NotSame(oldLoop, next);
             await channel.DeregisterAsync(TestContext.Current.CancellationToken);
             await peer.GetStream().WriteAsync(new byte[] { 7, 8, 9 }, TestContext.Current.CancellationToken);
@@ -154,6 +163,7 @@ public class NativeReadAdmissionContractTest
             {
                 await channel.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             await Stop(group);
         }
     }
@@ -172,6 +182,7 @@ public class NativeReadAdmissionContractTest
             Assert.True(ctx.Executor.InEventLoop());
             Interlocked.Increment(ref ReadCalls);
             _bytes.AddRange(msg.ReadableMemory.ToArray());
+
             if (_bytes.Count >= expectedLength)
                 received.TrySetResult(_bytes.ToArray());
         }

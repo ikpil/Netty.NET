@@ -141,11 +141,13 @@ public class DefaultHeadersTest
 
         List<ICharSequence> values = new List<ICharSequence>();
         IIterator<ICharSequence> itr = headers.ValueIterator(Of("name1"));
+
         while (itr.HasNext())
         {
             values.Add(itr.Next());
             itr.Remove();
         }
+
         Assert.Equal(3, values.Count);
         Assert.Equal(1, headers.Size());
         Assert.False(headers.IsEmpty());
@@ -168,11 +170,13 @@ public class DefaultHeadersTest
 
         List<ICharSequence> values = new List<ICharSequence>();
         IIterator<ICharSequence> itr = headers.ValueIterator(Of("name1"));
+
         while (itr.HasNext())
         {
             values.Add(itr.Next());
             itr.Remove();
         }
+
         Assert.Equal(2, values.Count);
         Assert.Equal(0, headers.Size());
         Assert.True(headers.IsEmpty());
@@ -200,11 +204,13 @@ public class DefaultHeadersTest
 
         List<ICharSequence> values = new List<ICharSequence>();
         IIterator<ICharSequence> itr = headers.ValueIterator(Of("name"));
+
         while (itr.HasNext())
         {
             values.Add(itr.Next());
             itr.Remove();
         }
+
         Assert.Equal(1, values.Count);
         Assert.Equal(0, headers.Size());
         Assert.True(headers.IsEmpty());
@@ -219,10 +225,12 @@ public class DefaultHeadersTest
 
         List<ICharSequence> values = new List<ICharSequence>();
         IIterator<ICharSequence> itr = headers.ValueIterator(Of("name"));
+
         while (itr.HasNext())
         {
             values.Add(itr.Next());
         }
+
         Assert.Equal(0, values.Count);
         Assert.Throws<InvalidOperationException>(() => itr.Next());
     }
@@ -507,6 +515,7 @@ public class DefaultHeadersTest
         Assert.Equal(8, headers1.Size());
 
         TestDefaultHeaders headers2 = NewInstance();
+
         foreach (IEntry<ICharSequence, ICharSequence> entry in headers1)
         {
             headers2.Add(entry.GetKey(), entry.GetValue());
@@ -524,6 +533,7 @@ public class DefaultHeadersTest
         Assert.Equal(4, headers.Size());
 
         IIterator<IEntry<ICharSequence, ICharSequence>> iter = headers.Iterator();
+
         while (iter.HasNext())
         {
             IEntry<ICharSequence, ICharSequence> header = iter.Next();
@@ -532,6 +542,7 @@ public class DefaultHeadersTest
                 header.SetValue(Of("updatedvalue2"));
                 Assert.Equal(Of("updatedvalue2"), header.GetValue());
             }
+
             if (Of("name1").Equals(header.GetKey()) && Of("value3").Equals(header.GetValue()))
             {
                 header.SetValue(Of("updatedvalue3"));
@@ -869,9 +880,11 @@ public class DefaultHeadersTest
         {
             return;
         }
+
         // We want to avoid "concurrent modifications" of the headers while we are iterating. So we insert crumbs
         // into an intermediate collection and insert them after the split process concludes.
         List<ICharSequence> cookiesToAdd = new List<ICharSequence>();
+
         while (cookieItr.HasNext())
         {
             //noinspection DynamicRegexReplaceableByCompiledPattern
@@ -879,6 +892,7 @@ public class DefaultHeadersTest
             cookiesToAdd.AddRange(cookies.Select(cookie => new StringCharSequence(cookie)));
             cookieItr.Remove();
         }
+
         foreach (ICharSequence crumb in cookiesToAdd)
         {
             headers.Add(new StringCharSequence("Cookie"), crumb);

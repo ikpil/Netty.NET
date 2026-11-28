@@ -70,12 +70,15 @@ public sealed class IpSubnetFilterRule : IIpFilterRule, IComparable<IpSubnetFilt
             if (ipAndCidr.Length > 1)
             {
                 int count = ipAndCidr.Length;
+
                 while (count > 0 && ipAndCidr[count - 1].Length == 0)
                 {
                     count--;
                 }
+
                 Array.Resize(ref ipAndCidr, count);
             }
+
             if (ipAndCidr.Length != 2)
             {
                 throw new ArgumentException("ipAddressWithCidr: " + ipAddressWithCidr +
@@ -144,20 +147,25 @@ public sealed class IpSubnetFilterRule : IIpFilterRule, IComparable<IpSubnetFilt
         {
             return address.ToString();
         }
+
         byte[] src = address.GetAddressBytes();
         StringBuilder sb = new StringBuilder(39);
+
         for (int i = 0; i < 16 / 2; i++)
         {
             sb.Append((((src[i << 1] << 8) & 0xff00) | (src[(i << 1) + 1] & 0xff)).ToString("x", CultureInfo.InvariantCulture));
+
             if (i < 16 / 2 - 1)
             {
                 sb.Append(':');
             }
         }
+
         if (address.ScopeId != 0)
         {
             sb.Append('%').Append(address.ScopeId.ToString(CultureInfo.InvariantCulture));
         }
+
         return sb.ToString();
     }
 
@@ -259,6 +267,7 @@ public sealed class IpSubnetFilterRule : IIpFilterRule, IComparable<IpSubnetFilt
             return (parent.subnetMask & child.subnetMask) == parent.subnetMask &&
                     (child.networkAddress & parent.subnetMask) == parent.networkAddress;
         }
+
         Ip6SubnetFilterRule parent6 = (Ip6SubnetFilterRule) filterRule;
         Ip6SubnetFilterRule child6 = (Ip6SubnetFilterRule) other.filterRule;
         return (parent6.subnetMask & child6.subnetMask).Equals(parent6.subnetMask) &&
@@ -311,6 +320,7 @@ public sealed class IpSubnetFilterRule : IIpFilterRule, IComparable<IpSubnetFilt
                 int ipAddress = NetUtil.Ipv4AddressToInt(inetAddress);
                 return (ipAddress & subnetMask) == networkAddress;
             }
+
             return false;
         }
 
@@ -382,6 +392,7 @@ public sealed class IpSubnetFilterRule : IIpFilterRule, IComparable<IpSubnetFilt
                 BigInteger ipAddress = IpToInt(inetAddress);
                 return (ipAddress & subnetMask).Equals(subnetMask) || (ipAddress & subnetMask).Equals(networkAddress);
             }
+
             return false;
         }
 

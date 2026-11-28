@@ -161,6 +161,7 @@ public class Http2ClientUpgradeCodec : HttpClientUpgradeHandler.IUpgradeCodec
     {
         ByteBuf buf = null;
         ByteBuf encodedBuf = null;
+
         try
         {
             // Get the local settings for the handler.
@@ -169,6 +170,7 @@ public class Http2ClientUpgradeCodec : HttpClientUpgradeHandler.IUpgradeCodec
             // Serialize the payload of the SETTINGS frame.
             int payloadLength = SETTING_ENTRY_LENGTH * settings.Count;
             buf = ctx.Alloc().Buffer(payloadLength);
+
             // CLR: CharObjectMap.PrimitiveEntry<Long> is KeyValuePair<char, long>: Http2Settings is a
             // Dictionary<char, long> (owner decision 2026-11-19, confirmed 2026-11-25), whose entries enumerate in
             // insertion order where Java's CharObjectHashMap enumerates in hash-slot order, so the entries of the

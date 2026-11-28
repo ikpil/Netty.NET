@@ -204,6 +204,7 @@ public class EmbeddedChannel : AbstractChannel
         _recordExceptionListener = RecordException;
         _loop = new EmbeddedEventLoop(builder.ticker == null ? new EmbeddedEventLoop.FreezableTicker() : builder.ticker);
         _config = builder.config == null ? new DefaultChannelConfig(this) : builder.config;
+
         if (builder.handler == null)
         {
             Setup(builder.register, builder.handlers);
@@ -218,6 +219,7 @@ public class EmbeddedChannel : AbstractChannel
     {
         IChannelPipeline p = Pipeline;
         p.AddLast(new SetupInitializer(handlers));
+
         if (register)
         {
             Task future = _loop.RegisterAsync(this);
@@ -229,6 +231,7 @@ public class EmbeddedChannel : AbstractChannel
     {
         IChannelPipeline p = Pipeline;
         p.AddLast(handler);
+
         if (register)
         {
             Task future = _loop.RegisterAsync(this);
@@ -249,12 +252,14 @@ public class EmbeddedChannel : AbstractChannel
         protected override void InitChannel(IChannel ch)
         {
             IChannelPipeline pipeline = ch.Pipeline;
+
             foreach (IChannelHandler h in _handlers)
             {
                 if (h == null)
                 {
                     break;
                 }
+
                 pipeline.AddLast(h);
             }
         }
@@ -267,6 +272,7 @@ public class EmbeddedChannel : AbstractChannel
     {
         Task future = _loop.RegisterAsync(this);
         Debug.Assert(future.IsCompleted);
+
         if (future.IsFaulted)
         {
             ExceptionDispatchInfo.Throw(future.Exception!.InnerException!);
@@ -312,6 +318,7 @@ public class EmbeddedChannel : AbstractChannel
         {
             ReferenceCountUtil.Touch(message, "Caller of readInbound() will handle the message from this point");
         }
+
         return message;
     }
 
@@ -326,6 +333,7 @@ public class EmbeddedChannel : AbstractChannel
         {
             ReferenceCountUtil.Touch(message, "Caller of readOutbound() will handle the message from this point.");
         }
+
         return message;
     }
 
@@ -356,9 +364,11 @@ public class EmbeddedChannel : AbstractChannel
         }
 
         _executingStackCnt++;
+
         try
         {
             IChannelPipeline p = Pipeline;
+
             foreach (object m in msgs)
             {
                 p.FireChannelRead(m);
@@ -371,6 +381,7 @@ public class EmbeddedChannel : AbstractChannel
             _executingStackCnt--;
             MaybeRunPendingTasks();
         }
+
         return IsNotEmpty(_inboundMessages);
     }
 
@@ -384,6 +395,7 @@ public class EmbeddedChannel : AbstractChannel
     public Task WriteOneInboundAsync(object msg)
     {
         _executingStackCnt++;
+
         try
         {
             if (CheckOpen(true))
@@ -396,6 +408,7 @@ public class EmbeddedChannel : AbstractChannel
             _executingStackCnt--;
             MaybeRunPendingTasks();
         }
+
         return CheckException(false);
     }
 
@@ -414,6 +427,7 @@ public class EmbeddedChannel : AbstractChannel
     private void FlushInbound(bool recordException)
     {
         _executingStackCnt++;
+
         try
         {
             if (CheckOpen(recordException))
@@ -447,6 +461,7 @@ public class EmbeddedChannel : AbstractChannel
 
         _executingStackCnt++;
         RecyclableArrayList futures = RecyclableArrayList.NewInstance(msgs.Length);
+
         try
         {
             try
@@ -457,12 +472,14 @@ public class EmbeddedChannel : AbstractChannel
                     {
                         break;
                     }
+
                     futures.Add(WriteAsync(m));
                 }
 
                 FlushOutbound0();
 
                 int size = futures.Count;
+
                 for (int i = 0; i < size; i++)
                 {
                     Task future = (Task)futures[i];
@@ -483,7 +500,9 @@ public class EmbeddedChannel : AbstractChannel
                 _executingStackCnt--;
                 MaybeRunPendingTasks();
             }
+
             CheckException();
+
             return IsNotEmpty(_outboundMessages);
         }
         finally
@@ -502,6 +521,7 @@ public class EmbeddedChannel : AbstractChannel
     public Task WriteOneOutboundAsync(object msg)
     {
         _executingStackCnt++;
+
         try
         {
             if (CheckOpen(true))
@@ -526,6 +546,7 @@ public class EmbeddedChannel : AbstractChannel
     public EmbeddedChannel FlushOutbound()
     {
         _executingStackCnt++;
+
         try
         {
             if (CheckOpen(true))
@@ -538,7 +559,9 @@ public class EmbeddedChannel : AbstractChannel
             _executingStackCnt--;
             MaybeRunPendingTasks();
         }
+
         CheckException(true);
+
         return this;
     }
 
@@ -583,6 +606,7 @@ public class EmbeddedChannel : AbstractChannel
     private bool Finish(bool releaseAll)
     {
         _executingStackCnt++;
+
         try
         {
             _ = CloseAsync();
@@ -592,9 +616,11 @@ public class EmbeddedChannel : AbstractChannel
             _executingStackCnt--;
             MaybeRunPendingTasks();
         }
+
         try
         {
             CheckException();
+
             return IsNotEmpty(_inboundMessages) || IsNotEmpty(_outboundMessages);
         }
         finally
@@ -636,10 +662,13 @@ public class EmbeddedChannel : AbstractChannel
                 {
                     break;
                 }
+
                 ReferenceCountUtil.Release(msg);
             }
+
             return true;
         }
+
         return false;
     }
 
@@ -650,6 +679,7 @@ public class EmbeddedChannel : AbstractChannel
         // that needs to be run before the actual close takes place.
         _executingStackCnt++;
         Task future;
+
         try
         {
             RunPendingTasks();
@@ -662,6 +692,7 @@ public class EmbeddedChannel : AbstractChannel
             _executingStackCnt--;
             MaybeRunPendingTasks();
         }
+
         return future;
     }
 
@@ -669,6 +700,7 @@ public class EmbeddedChannel : AbstractChannel
     {
         _executingStackCnt++;
         Task future;
+
         try
         {
             future = base.DisconnectAsync(cancellationToken);
@@ -683,12 +715,14 @@ public class EmbeddedChannel : AbstractChannel
             _executingStackCnt--;
             MaybeRunPendingTasks();
         }
+
         return future;
     }
 
     public override Task BindAsync(EndPoint address, CancellationToken cancellationToken = default)
     {
         _executingStackCnt++;
+
         try
         {
             return base.BindAsync(address, cancellationToken);
@@ -703,6 +737,7 @@ public class EmbeddedChannel : AbstractChannel
     public override Task ConnectAsync(EndPoint remote, EndPoint localAddress = null, CancellationToken cancellationToken = default)
     {
         _executingStackCnt++;
+
         try
         {
             return base.ConnectAsync(remote, localAddress, cancellationToken);
@@ -717,6 +752,7 @@ public class EmbeddedChannel : AbstractChannel
     public override Task DeregisterAsync(CancellationToken cancellationToken = default)
     {
         _executingStackCnt++;
+
         try
         {
             return base.DeregisterAsync(cancellationToken);
@@ -731,6 +767,7 @@ public class EmbeddedChannel : AbstractChannel
     public override IChannelOutboundInvoker Flush()
     {
         _executingStackCnt++;
+
         try
         {
             return base.Flush();
@@ -745,6 +782,7 @@ public class EmbeddedChannel : AbstractChannel
     public override IChannelOutboundInvoker Read()
     {
         _executingStackCnt++;
+
         try
         {
             return base.Read();
@@ -759,6 +797,7 @@ public class EmbeddedChannel : AbstractChannel
     public override Task WriteAsync(object msg, CancellationToken cancellationToken = default)
     {
         _executingStackCnt++;
+
         try
         {
             return base.WriteAsync(msg, cancellationToken);
@@ -773,6 +812,7 @@ public class EmbeddedChannel : AbstractChannel
     public override Task WriteAndFlushAsync(object msg, CancellationToken cancellationToken = default)
     {
         _executingStackCnt++;
+
         try
         {
             return base.WriteAndFlushAsync(msg, cancellationToken);
@@ -860,6 +900,7 @@ public class EmbeddedChannel : AbstractChannel
         catch (Exception e)
         {
             RecordException(e);
+
             return EmbeddedEventLoop().NextScheduledTask();
         }
     }
@@ -980,6 +1021,7 @@ public class EmbeddedChannel : AbstractChannel
             {
                 RecordException(new ClosedChannelException());
             }
+
             return false;
         }
 
@@ -1228,6 +1270,7 @@ public class EmbeddedChannel : AbstractChannel
     public override Task RegisterAsync(IEventLoop eventLoop, CancellationToken cancellationToken = default)
     {
         _executingStackCnt++;
+
         try
         {
             return base.RegisterAsync(eventLoop, cancellationToken);
@@ -1242,6 +1285,7 @@ public class EmbeddedChannel : AbstractChannel
     protected internal override Task BindTransportAsync(EndPoint address, CancellationToken cancellationToken)
     {
         _executingStackCnt++;
+
         try
         {
             return base.BindTransportAsync(address, cancellationToken);
@@ -1256,6 +1300,7 @@ public class EmbeddedChannel : AbstractChannel
     protected internal override Task ConnectTransportAsync(EndPoint remote, EndPoint local, CancellationToken cancellationToken)
     {
         _executingStackCnt++;
+
         try
         {
             return base.ConnectTransportAsync(remote, local, cancellationToken);
@@ -1270,6 +1315,7 @@ public class EmbeddedChannel : AbstractChannel
     protected internal override Task DisconnectTransportAsync(CancellationToken cancellationToken)
     {
         _executingStackCnt++;
+
         try
         {
             return base.DisconnectTransportAsync(cancellationToken);
@@ -1284,6 +1330,7 @@ public class EmbeddedChannel : AbstractChannel
     protected internal override Task Close()
     {
         _executingStackCnt++;
+
         try
         {
             return base.Close();
@@ -1298,6 +1345,7 @@ public class EmbeddedChannel : AbstractChannel
     protected internal override void CloseForcibly()
     {
         _executingStackCnt++;
+
         try
         {
             base.CloseForcibly();
@@ -1312,6 +1360,7 @@ public class EmbeddedChannel : AbstractChannel
     protected internal override Task DeregisterTransportAsync()
     {
         _executingStackCnt++;
+
         try
         {
             return base.DeregisterTransportAsync();
@@ -1326,6 +1375,7 @@ public class EmbeddedChannel : AbstractChannel
     protected internal override void BeginRead()
     {
         _executingStackCnt++;
+
         try
         {
             base.BeginRead();
@@ -1340,6 +1390,7 @@ public class EmbeddedChannel : AbstractChannel
     protected internal override Task WriteTransportAsync(object msg, CancellationToken cancellationToken)
     {
         _executingStackCnt++;
+
         try
         {
             return base.WriteTransportAsync(msg, cancellationToken);
@@ -1354,6 +1405,7 @@ public class EmbeddedChannel : AbstractChannel
     protected internal override void FlushTransport()
     {
         _executingStackCnt++;
+
         try
         {
             base.FlushTransport();

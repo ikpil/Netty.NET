@@ -29,8 +29,10 @@ public class UnorderedQueueOwnershipContractTest
             {
                 throw expected;
             }
+
             return new Thread(task.Invoke) { IsBackground = true };
         }));
+
         try
         {
             Assert.Same(expected, Assert.Throws<InvalidOperationException>(() =>
@@ -57,6 +59,7 @@ public class UnorderedQueueOwnershipContractTest
         using var cancellation = new CancellationTokenSource();
         var result = owner.ScheduleAsync(() => 7, TimeSpan.FromDays(1), cancellation.Token);
         var otherResult = other.ScheduleAsync(() => 8, TimeSpan.FromDays(1));
+
         try
         {
             Assert.Equal(1, owner.PendingTaskCount);
@@ -82,6 +85,7 @@ public class UnorderedQueueOwnershipContractTest
     {
         var executor = new UnorderedThreadPoolEventExecutor(1, new Factory(_ => null));
         int calls = 0;
+
         try
         {
             executor.Execute(() => ++calls);
@@ -104,6 +108,7 @@ public class UnorderedQueueOwnershipContractTest
     public async Task CancellationRacingAdmissionAndClaimLeavesNoPendingReservation()
     {
         var executor = new UnorderedThreadPoolEventExecutor(1);
+
         try
         {
             for (int attempt = 0; attempt < 256; ++attempt)
@@ -120,6 +125,7 @@ public class UnorderedQueueOwnershipContractTest
                     }, cancellation.Token);
                 });
                 await Task.WhenAll(admission, Task.Run(cancellation.Cancel)).WaitAsync(TimeSpan.FromSeconds(5));
+
                 try
                 {
                     Assert.Equal(17, await operation.WaitAsync(TimeSpan.FromSeconds(5)));
@@ -129,6 +135,7 @@ public class UnorderedQueueOwnershipContractTest
                     Assert.Equal(cancellation.Token, error.CancellationToken);
                     Assert.True(operation.IsCanceled);
                 }
+
                 Assert.Equal(operation.IsCanceled ? 0 : 1, calls);
                 Assert.Equal(0, executor.PendingTaskCount);
             }
@@ -145,12 +152,14 @@ public class UnorderedQueueOwnershipContractTest
     {
         using var cancellation = new CancellationTokenSource();
         var retained = CreateCanceledWorkerlessSubmission(cancellation);
+
         for (int attempt = 0; attempt < 3 && retained.Pool.IsAlive; ++attempt)
         {
             GC.Collect();
             GC.WaitForPendingFinalizers();
             GC.Collect();
         }
+
         Assert.True(retained.Operation.IsCanceled);
         Assert.False(retained.Pool.IsAlive);
         GC.KeepAlive(cancellation);
@@ -167,6 +176,7 @@ public class UnorderedQueueOwnershipContractTest
         var owners = new CancellationTokenSource[count];
         var operations = new Task[count];
         var canceled = new bool[count];
+
         try
         {
             for (int i = 0; i < count; ++i)
@@ -176,7 +186,9 @@ public class UnorderedQueueOwnershipContractTest
                     ? executor.ScheduleAsync(() => Assert.Fail("Workerless schedule ran"), TimeSpan.FromHours(1 + i % 7), owners[i].Token)
                     : executor.SubmitAsync(() => Assert.Fail("Workerless submission ran"), owners[i].Token);
             }
+
             Assert.Equal(count, executor.PendingTaskCount);
+
             for (int step = 0; step < count / 2; ++step)
             {
                 // A permutation crosses heap positions and equal delay groups;
@@ -186,11 +198,14 @@ public class UnorderedQueueOwnershipContractTest
                 owners[index].Cancel();
                 canceled[index] = true;
                 Assert.Equal(count - step - 1, executor.PendingTaskCount);
+
                 for (int i = 0; i < count; ++i)
                     Assert.Equal(canceled[i], operations[i].IsCompleted);
+
                 OperationCanceledException error = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => operations[index]);
                 Assert.Equal(owners[index].Token, error.CancellationToken);
             }
+
             await executor.StopAsync().WaitAsync(TimeSpan.FromSeconds(5));
             Assert.All(operations, task => Assert.True(task.IsCanceled));
             Assert.Equal(0, executor.PendingTaskCount);
@@ -220,9 +235,11 @@ public class UnorderedQueueOwnershipContractTest
             entered.Set();
             Assert.True(release.Wait(TimeSpan.FromSeconds(5)));
         });
+
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
+
             for (int i = 0; i < operations.Length; ++i)
             {
                 int index = i;
@@ -236,6 +253,7 @@ public class UnorderedQueueOwnershipContractTest
                     ? executor.ScheduleAsync(action, TimeSpan.Zero, owners[i].Token)
                     : executor.SubmitAsync(action, owners[i].Token);
             }
+
             int[] canceled = { 0, 31, 13, 7, 24, 16 };
 
             foreach (int i in canceled)
@@ -252,6 +270,7 @@ public class UnorderedQueueOwnershipContractTest
             {
                 Assert.Equal(i, await operations[i].WaitAsync(TimeSpan.FromSeconds(5)));
             }
+
             foreach (int i in canceled)
             {
                 Assert.True(operations[i].IsCanceled);

@@ -91,6 +91,7 @@ public class DefaultSpdySynStreamFrame : DefaultSpdyHeadersFrame, ISpdySynStream
     public virtual ISpdySynStreamFrame SetAssociatedStreamId(int associatedStreamId)
     {
         CheckPositiveOrZero(associatedStreamId, "associatedStreamId");
+
         this.associatedStreamId = associatedStreamId;
         return this;
     }
@@ -108,6 +109,7 @@ public class DefaultSpdySynStreamFrame : DefaultSpdyHeadersFrame, ISpdySynStream
                     "Priority must be between 0 and 7 inclusive: "
                     + unchecked((sbyte) priority).ToString(CultureInfo.InvariantCulture));
         }
+
         this.priority = priority;
         return this;
     }
@@ -136,12 +138,14 @@ public class DefaultSpdySynStreamFrame : DefaultSpdyHeadersFrame, ISpdySynStream
             .Append("--> Stream-ID = ")
             .Append(StreamId().ToString(CultureInfo.InvariantCulture))
             .Append(StringUtil.NEWLINE);
+
         if (associatedStreamId != 0)
         {
             buf.Append("--> Associated-To-Stream-ID = ")
                .Append(AssociatedStreamId().ToString(CultureInfo.InvariantCulture))
                .Append(StringUtil.NEWLINE);
         }
+
         buf.Append("--> Priority = ")
            .Append(Priority().ToString(CultureInfo.InvariantCulture))
            .Append(StringUtil.NEWLINE)

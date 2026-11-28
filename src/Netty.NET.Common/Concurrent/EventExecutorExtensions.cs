@@ -15,6 +15,7 @@ public static class EventExecutorExtensions
     public static Task SubmitAsync(this IEventExecutorGroup executor, Action action, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(action);
+
         return SubmitCoreAsync<object>(executor, _ =>
         {
             action();
@@ -26,6 +27,7 @@ public static class EventExecutorExtensions
     public static Task<T> SubmitAsync<T>(this IEventExecutorGroup executor, Func<T> function, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(function);
+
         return SubmitCoreAsync(executor, _ => function(), cancellationToken);
     }
 
@@ -33,6 +35,7 @@ public static class EventExecutorExtensions
     public static Task SubmitAsync(this IEventExecutorGroup executor, Action<CancellationToken> action, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(action);
+
         return SubmitCoreAsync<object>(executor, token =>
         {
             action(token);
@@ -64,14 +67,17 @@ public static class EventExecutorExtensions
         {
             return Task.FromCanceled<T>(cancellationToken);
         }
+
         var submitted = new SubmittedTask<T>(function, cancellationToken);
         if (!submitted.Task.IsCompleted)
         {
             try
             {
                 IEventExecutorGroup targetGroup = executor;
+
                 while (targetGroup is NonStickyEventExecutorGroup nonSticky)
                     targetGroup = nonSticky.DelegatedGroup;
+
                 IEventExecutor target = targetGroup as IEventExecutor ?? targetGroup.Next();
                 target.Execute(submitted);
             }
@@ -80,6 +86,7 @@ public static class EventExecutorExtensions
                 submitted.Reject(error);
             }
         }
+
         return submitted.Task;
     }
 
@@ -93,6 +100,7 @@ public static class EventExecutorExtensions
     public static Task SubmitAsync(this IEventExecutorGroup executor, Func<Task> function, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(function);
+
         return SubmitCoreAsync(executor, _ => function() ?? throw new InvalidOperationException("The submitted delegate returned a null Task."), cancellationToken).Unwrap();
     }
 
@@ -100,6 +108,7 @@ public static class EventExecutorExtensions
     public static Task<T> SubmitAsync<T>(this IEventExecutorGroup executor, Func<Task<T>> function, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(function);
+
         return SubmitCoreAsync(executor, _ => function() ?? throw new InvalidOperationException("The submitted delegate returned a null Task."), cancellationToken).Unwrap();
     }
 
@@ -108,6 +117,7 @@ public static class EventExecutorExtensions
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(function);
+
         return SubmitCoreAsync(executor, token => function(token) ?? throw new InvalidOperationException("The submitted delegate returned a null Task."), cancellationToken).Unwrap();
     }
 
@@ -116,6 +126,7 @@ public static class EventExecutorExtensions
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(function);
+
         return SubmitCoreAsync(executor, token => function(token) ?? throw new InvalidOperationException("The submitted delegate returned a null Task."), cancellationToken).Unwrap();
     }
 
@@ -140,6 +151,7 @@ public static class EventExecutorExtensions
             _context = ExecutionContext.Capture();
             _cancellationToken = cancellationToken;
             _registration = cancellationToken.UnsafeRegister(static state => ((SubmittedTask<T>)state).CancelBeforeStart(), this);
+
             // Registration can synchronously call CancelBeforeStart before its
             // returned handle is assigned. The constructor and paths invoked after
             // construction unregister that immutable handle, avoiding a publication race.
@@ -155,6 +167,7 @@ public static class EventExecutorExtensions
         public void SetCancellationRemoval(Action remove)
         {
             Volatile.Write(ref _removeCanceled, remove);
+
             // Cancellation may have won before binding, or race the publication.
             // Either binder or canceler consumes this single membership hook.
             if (Task.IsCanceled)
@@ -179,6 +192,7 @@ public static class EventExecutorExtensions
             {
                 return;
             }
+
             ReleaseInvocation();
             _completion.SetCanceled(_cancellationToken);
             RemoveCanceled();
@@ -192,11 +206,13 @@ public static class EventExecutorExtensions
         public void Reject(Exception error)
         {
             Interlocked.Exchange(ref _removeCanceled, null);
+
             if (Interlocked.CompareExchange(ref _claimed, 1, 0) == 0)
             {
                 ReleaseInvocation();
                 _completion.SetException(error);
             }
+
             _registration.Unregister();
         }
 
@@ -211,6 +227,7 @@ public static class EventExecutorExtensions
             {
                 return;
             }
+
             try
             {
                 ExecutionContext context = Interlocked.Exchange(ref _context, null) ?? CaptureExecutorContext();
@@ -253,7 +270,9 @@ public static class EventExecutorExtensions
             {
                 return ExecutionContext.Capture();
             }
+
             ExecutionContext.RestoreFlow();
+
             try
             {
                 return ExecutionContext.Capture();

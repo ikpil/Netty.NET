@@ -108,6 +108,7 @@ public class Http3InteropTest
                                             Func<HttpClient, int, Task> clientPart, CancellationToken cancellationToken)
     {
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+
         try
         {
             SelfSignedCertificate cert = new SelfSignedCertificate();
@@ -133,6 +134,7 @@ public class Http3InteropTest
                     .Channel<QuicEndpointChannel>()
                     .Handler(codec)
                     .BindAsync(new IPEndPoint(IPAddress.Loopback, 0), cancellationToken);
+
             try
             {
                 int port = ((IPEndPoint) server.LocalAddress).Port;

@@ -106,6 +106,7 @@ public class ProtobufVarint32FrameDecoder : ByteToMessageDecoder
                 bytesToDiscard = discard;
                 @in.SkipBytes(@in.ReadableBytes);
             }
+
             throw new TooLongFrameException(
                     "Frame length exceeds " + maxFrameLength.ToString(CultureInfo.InvariantCulture)
                     + ": " + length.ToString(CultureInfo.InvariantCulture));
@@ -148,12 +149,14 @@ public class ProtobufVarint32FrameDecoder : ByteToMessageDecoder
         {
             return ReadRawVarint24(buffer);
         }
+
         int wholeOrMore = buffer.GetIntLE(buffer.ReaderIndex);
         int firstOneOnStop = ~wholeOrMore & unchecked((int) 0x80808080);
         if (firstOneOnStop == 0)
         {
             return ReadRawVarint40(buffer, wholeOrMore);
         }
+
         int bitsToKeep = BitOperations.TrailingZeroCount(firstOneOnStop) + 1;
         buffer.SkipBytes(bitsToKeep >> 3);
         int thisVarintMask = firstOneOnStop ^ (firstOneOnStop - 1);
@@ -188,11 +191,13 @@ public class ProtobufVarint32FrameDecoder : ByteToMessageDecoder
             // Leave the readerIndex untouched so the caller waits for more data.
             return 0;
         }
+
         sbyte lastByte = (sbyte) buffer.GetByte(buffer.ReaderIndex + 4);
         if (lastByte < 0)
         {
             throw new CorruptedFrameException("malformed varint.");
         }
+
         buffer.SkipBytes(5);
         // add it to wholeOrMore
         return wholeOrMore & 0x7F |
@@ -217,6 +222,7 @@ public class ProtobufVarint32FrameDecoder : ByteToMessageDecoder
         {
             return 0;
         }
+
         buffer.MarkReaderIndex();
 
         sbyte tmp = (sbyte) buffer.ReadByte();
@@ -224,26 +230,33 @@ public class ProtobufVarint32FrameDecoder : ByteToMessageDecoder
         {
             return tmp;
         }
+
         int result = tmp & 127;
+
         if (!buffer.IsReadable())
         {
             buffer.ResetReaderIndex();
             return 0;
         }
+
         if ((tmp = (sbyte) buffer.ReadByte()) >= 0)
         {
             return result | tmp << 7;
         }
+
         result |= (tmp & 127) << 7;
+
         if (!buffer.IsReadable())
         {
             buffer.ResetReaderIndex();
             return 0;
         }
+
         if ((tmp = (sbyte) buffer.ReadByte()) >= 0)
         {
             return result | tmp << 14;
         }
+
         // All 3 readable bytes have the continuation bit set, which means at least one more byte is needed to
         // complete the varint. We only end up here if less than 4 bytes were readable, so wait for more data.
         buffer.ResetReaderIndex();

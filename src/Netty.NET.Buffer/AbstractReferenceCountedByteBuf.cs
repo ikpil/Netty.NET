@@ -67,6 +67,7 @@ public abstract class AbstractReferenceCountedByteBuf : ByteBuf
         {
             Deallocate();
         }
+
         return final;
     }
 

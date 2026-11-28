@@ -105,6 +105,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestByteArrayTransfer()
     {
         byte[] value = new byte[BLOCK_SIZE * 2];
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(value);
@@ -113,11 +114,13 @@ public abstract class AbstractByteBufTest : IDisposable
 
         random = new Random(seed);
         byte[] expectedValue = new byte[BLOCK_SIZE * 2];
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(expectedValue);
             int valueOffset = random.Next(BLOCK_SIZE);
             buffer.GetBytes(i, value.AsSpan(valueOffset, BLOCK_SIZE));
+
             for (int j = valueOffset; j < valueOffset + BLOCK_SIZE; j++)
             {
                 Assert.Equal(expectedValue[j], value[j]);
@@ -129,6 +132,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestRandomByteArrayTransfer1()
     {
         byte[] value = new byte[BLOCK_SIZE];
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(value);
@@ -138,10 +142,12 @@ public abstract class AbstractByteBufTest : IDisposable
         random = new Random(seed);
         byte[] expectedValueContent = new byte[BLOCK_SIZE];
         ByteBuf expectedValue = WrappedBuffer(expectedValueContent);
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(expectedValueContent);
             buffer.GetBytes(i, value);
+
             for (int j = 0; j < BLOCK_SIZE; j++)
             {
                 Assert.Equal(expectedValue.GetByte(j), value[j]);
@@ -153,6 +159,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestRandomByteArrayTransfer2()
     {
         byte[] value = new byte[BLOCK_SIZE * 2];
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(value);
@@ -162,11 +169,13 @@ public abstract class AbstractByteBufTest : IDisposable
         random = new Random(seed);
         byte[] expectedValueContent = new byte[BLOCK_SIZE * 2];
         ByteBuf expectedValue = WrappedBuffer(expectedValueContent);
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(expectedValueContent);
             int valueOffset = random.Next(BLOCK_SIZE);
             buffer.GetBytes(i, value.AsSpan(valueOffset, BLOCK_SIZE));
+
             for (int j = valueOffset; j < valueOffset + BLOCK_SIZE; j++)
             {
                 Assert.Equal(expectedValue.GetByte(j), value[j]);
@@ -179,6 +188,7 @@ public abstract class AbstractByteBufTest : IDisposable
     {
         byte[] value = new byte[BLOCK_SIZE];
         buffer.WriterIndex = 0;
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(value);
@@ -189,12 +199,14 @@ public abstract class AbstractByteBufTest : IDisposable
 
         random = new Random(seed);
         byte[] expectedValue = new byte[BLOCK_SIZE];
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(expectedValue);
             Assert.Equal(i, buffer.ReaderIndex);
             Assert.Equal(CAPACITY, buffer.WriterIndex);
             buffer.ReadBytes(value);
+
             for (int j = 0; j < BLOCK_SIZE; j++)
             {
                 Assert.Equal(expectedValue[j], value[j]);
@@ -207,6 +219,7 @@ public abstract class AbstractByteBufTest : IDisposable
     {
         byte[] value = new byte[BLOCK_SIZE * 2];
         buffer.WriterIndex = 0;
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(value);
@@ -218,6 +231,7 @@ public abstract class AbstractByteBufTest : IDisposable
 
         random = new Random(seed);
         byte[] expectedValue = new byte[BLOCK_SIZE * 2];
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(expectedValue);
@@ -225,6 +239,7 @@ public abstract class AbstractByteBufTest : IDisposable
             Assert.Equal(i, buffer.ReaderIndex);
             Assert.Equal(CAPACITY, buffer.WriterIndex);
             buffer.ReadBytes(value.AsSpan(valueOffset, BLOCK_SIZE));
+
             for (int j = valueOffset; j < valueOffset + BLOCK_SIZE; j++)
             {
                 Assert.Equal(expectedValue[j], value[j]);
@@ -355,6 +370,7 @@ public abstract class AbstractByteBufTest : IDisposable
         ByteBuf buffer = NewBuffer(3, 13);
         Assert.Equal(13, buffer.MaxCapacity);
         Assert.Equal(3, buffer.Capacity);
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() =>
@@ -373,6 +389,7 @@ public abstract class AbstractByteBufTest : IDisposable
         ByteBuf buffer = NewBuffer(3, 13);
         Assert.Equal(13, buffer.MaxCapacity);
         Assert.Equal(3, buffer.Capacity);
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() =>
@@ -391,6 +408,7 @@ public abstract class AbstractByteBufTest : IDisposable
         ByteBuf buffer = NewBuffer(3, 13);
         Assert.Equal(13, buffer.MaxCapacity);
         Assert.Equal(3, buffer.Capacity);
+
         try
         {
             buffer.Capacity = 2;
@@ -408,6 +426,7 @@ public abstract class AbstractByteBufTest : IDisposable
         ByteBuf buffer = NewBuffer(3, 13);
         Assert.Equal(13, buffer.MaxCapacity);
         Assert.Equal(3, buffer.Capacity);
+
         try
         {
             buffer.Capacity = 4;
@@ -447,6 +466,7 @@ public abstract class AbstractByteBufTest : IDisposable
         ByteBuf buf = NewBuffer(8);
         ByteBuf slice = retainedSlice ? buf.RetainedSlice(buf.ReaderIndex + 1, 3)
                                       : buf.Slice(buf.ReaderIndex + 1, 3);
+
         try
         {
             slice.Capacity = 10;
@@ -457,6 +477,7 @@ public abstract class AbstractByteBufTest : IDisposable
             {
                 slice.Release();
             }
+
             buf.Release();
         }
     }
@@ -468,6 +489,7 @@ public abstract class AbstractByteBufTest : IDisposable
         random.NextBytes(bytes);
         ByteBuf buffer = NewBuffer(8);
         buffer.WriteBytes(bytes);
+
         try
         {
             AssertReadGatheringByteChannelMultipleThreads(buffer, bytes, false);
@@ -485,6 +507,7 @@ public abstract class AbstractByteBufTest : IDisposable
         random.NextBytes(bytes);
         ByteBuf buffer = NewBuffer(8);
         buffer.WriteBytes(bytes);
+
         try
         {
             AssertReadGatheringByteChannelMultipleThreads(buffer, bytes, true);
@@ -504,6 +527,7 @@ public abstract class AbstractByteBufTest : IDisposable
         using var barrier = new Barrier(11);
         var threads = new List<Thread>();
         var clock = Stopwatch.StartNew();
+
         for (int i = 0; i < 10; i++)
         {
             var thread = new Thread(() =>
@@ -513,9 +537,11 @@ public abstract class AbstractByteBufTest : IDisposable
                     // One private TCP connection per worker avoids sharing channel state.
                     // Every iteration still captures a fresh complete output array.
                     using var channel = new ConcurrentGatheringChannel();
+
                     while (Volatile.Read(ref remaining) > 0)
                     {
                         ByteBuf buf;
+
                         if (slice)
                         {
                             buf = buffer.Slice();
@@ -524,20 +550,25 @@ public abstract class AbstractByteBufTest : IDisposable
                         {
                             buf = buffer.Duplicate();
                         }
+
                         while (buf.IsReadable())
                         {
                             if (clock.Elapsed >= TimeSpan.FromSeconds(30))
                                 throw new TimeoutException("The original concurrent channel timeout expired.");
+
                             // Never happens
                             // CLR: unexpected I/O errors reach the outer worker catch immediately.
                             buf.ReadBytes(channel.Socket, buf.ReadableBytes);
                         }
+
                         Assert.Equal(expectedBytes, channel.WrittenBytes(expectedBytes.Length));
+
                         if (Interlocked.Decrement(ref remaining) <= 0)
                         {
                             completed.Set();
                         }
                     }
+
                     channel.AssertNoTrailingBytes();
                 }
                 catch (Exception cause)
@@ -564,6 +595,7 @@ public abstract class AbstractByteBufTest : IDisposable
             threads.Add(thread);
             thread.Start();
         }
+
         try
         {
             Assert.True(completed.Wait(TimeSpan.FromSeconds(30)));
@@ -581,6 +613,7 @@ public abstract class AbstractByteBufTest : IDisposable
                 thread.Join();
             }
         }
+
         // Ensure failures in worker threads are propagated to the test thread.
         if (!errors.IsEmpty)
         {
@@ -599,6 +632,7 @@ public abstract class AbstractByteBufTest : IDisposable
             listener.Bind(new IPEndPoint(IPAddress.Loopback, 0));
             listener.Listen(1);
             Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
             try
             {
                 Socket.NoDelay = true;
@@ -619,12 +653,14 @@ public abstract class AbstractByteBufTest : IDisposable
         {
             byte[] bytes = new byte[length];
             int offset = 0;
+
             while (offset < bytes.Length)
             {
                 int count = _peer.Receive(bytes.AsSpan(offset), SocketFlags.None);
                 Assert.True(count > 0, "The channel closed before a complete output was received.");
                 offset += count;
             }
+
             return bytes;
         }
 
@@ -673,6 +709,7 @@ public abstract class AbstractByteBufTest : IDisposable
         // returns a full writer index).
         int[] readerIndices = new int[bufs.Length], writerIndices = new int[bufs.Length];
         Exception failure = null;
+
         try
         {
             for (int i = 0; i < bufs.Length; i++)
@@ -683,6 +720,7 @@ public abstract class AbstractByteBufTest : IDisposable
                 readerIndices[i] = bufs[i].ReaderIndex;
                 writerIndices[i] = bufs[i].WriterIndex;
             }
+
             char[] cs = new char[bufSize / maxBytesPerChar];
             Array.Fill(cs, 'a');
             string text = charSeqType switch
@@ -691,6 +729,7 @@ public abstract class AbstractByteBufTest : IDisposable
                 CharSequenceType.AsciiString => new AsciiString(cs).ToString(),
                 _ => throw new ArgumentException("Unknown original sequence type", nameof(charSeqType))
             };
+
             for (int i = 0; i < bufs.Length; i++)
             {
                 ByteBuf buf = bufs[i];
@@ -705,6 +744,7 @@ public abstract class AbstractByteBufTest : IDisposable
                     }
                 }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default));
             }
+
             CancellationToken token = TestContext.Current.CancellationToken;
 
             for (int i = 0; i < bufs.Length; i++)
@@ -714,6 +754,7 @@ public abstract class AbstractByteBufTest : IDisposable
 
             start.Release(bufs.Length);
             Task all = Task.WhenAll(tasks);
+
             try
             {
                 await all.WaitAsync(token);
@@ -732,6 +773,7 @@ public abstract class AbstractByteBufTest : IDisposable
             // Original success means all Futures completed. Also verify actual bytes and absolute indices.
             byte[] expected = new byte[cs.Length];
             Array.Fill(expected, (byte)'a');
+
             for (int i = 0; i < bufs.Length; i++)
             {
                 ByteBuf buf = bufs[i];
@@ -748,6 +790,7 @@ public abstract class AbstractByteBufTest : IDisposable
         finally
         {
             start.Release(bufs.Length);
+
             try
             {
                 await Task.WhenAll(tasks);
@@ -779,6 +822,7 @@ public abstract class AbstractByteBufTest : IDisposable
         using var startBarrier = new Barrier(10);
         var errors = new ConcurrentQueue<Exception>();
         var threads = new List<Thread>();
+
         for (int i = 0; i < 10; i++)
         {
             var thread = new Thread(() =>
@@ -787,6 +831,7 @@ public abstract class AbstractByteBufTest : IDisposable
                 {
                     Assert.True(startBarrier.SignalAndWait(TimeSpan.FromSeconds(10)));
                     int counter = 3000;
+
                     while (errors.IsEmpty && counter-- > 0)
                         Assert.Equal(expected, buffer.ToString(Encoding.Latin1));
                 }
@@ -810,6 +855,7 @@ public abstract class AbstractByteBufTest : IDisposable
         ConcurrentQueue<Exception> errors, TimeSpan timeout)
     {
         var clock = Stopwatch.StartNew();
+
         try
         {
             foreach (Thread thread in threads)
@@ -822,6 +868,7 @@ public abstract class AbstractByteBufTest : IDisposable
         catch (Exception cause)
         {
             errors.Enqueue(cause);
+
             // CLR: interruption wakes managed waits; publishing the error also stops the read loops.
             foreach (Thread thread in threads)
                 if (thread.IsAlive)
@@ -837,6 +884,7 @@ public abstract class AbstractByteBufTest : IDisposable
                 thread.Join();
             }
         }
+
         if (!errors.IsEmpty)
         {
             throw new AggregateException(errors);
@@ -856,11 +904,13 @@ public abstract class AbstractByteBufTest : IDisposable
     private static void AssertCopyMultipleThreads(ByteBuf buffer)
     {
         ByteBuf expected = buffer.Copy();
+
         try
         {
             using var startBarrier = new Barrier(10);
             var errors = new ConcurrentQueue<Exception>();
             var threads = new List<Thread>();
+
             for (int i = 0; i < 10; i++)
             {
                 var thread = new Thread(() =>
@@ -869,9 +919,11 @@ public abstract class AbstractByteBufTest : IDisposable
                     {
                         Assert.True(startBarrier.SignalAndWait(TimeSpan.FromSeconds(10)));
                         int counter = 3000;
+
                         while (errors.IsEmpty && counter-- > 0)
                         {
                             ByteBuf copy = buffer.Copy();
+
                             try
                             {
                                 Assert.Equal(expected, copy);
@@ -910,6 +962,7 @@ public abstract class AbstractByteBufTest : IDisposable
         random.NextBytes(bytes);
         ByteBuf buffer = NewBuffer(8);
         buffer.WriteBytes(bytes);
+
         try
         {
             AssertReadOutputStreamMultipleThreads(buffer, bytes, false);
@@ -927,6 +980,7 @@ public abstract class AbstractByteBufTest : IDisposable
         random.NextBytes(bytes);
         ByteBuf buffer = NewBuffer(8);
         buffer.WriteBytes(bytes);
+
         try
         {
             AssertReadOutputStreamMultipleThreads(buffer, bytes, true);
@@ -944,6 +998,7 @@ public abstract class AbstractByteBufTest : IDisposable
         using var completed = new ManualResetEventSlim();
         using var barrier = new Barrier(11);
         var threads = new List<Thread>();
+
         for (int i = 0; i < 10; i++)
         {
             var thread = new Thread(() =>
@@ -953,6 +1008,7 @@ public abstract class AbstractByteBufTest : IDisposable
                     while (Volatile.Read(ref remaining) > 0)
                     {
                         ByteBuf buf;
+
                         if (slice)
                         {
                             buf = buffer.Slice();
@@ -961,14 +1017,18 @@ public abstract class AbstractByteBufTest : IDisposable
                         {
                             buf = buffer.Duplicate();
                         }
+
                         using var output = new MemoryStream();
+
                         while (buf.IsReadable())
                         {
                             // Never happens
                             // CLR: an unexpected IOException is reported by the outer worker catch.
                             buf.ReadBytes(output, buf.ReadableBytes);
                         }
+
                         Assert.Equal(expectedBytes, output.ToArray());
+
                         // CountDownLatch saturates at zero; at most nine already-started iterations may finish later.
                         if (Interlocked.Decrement(ref remaining) <= 0)
                         {
@@ -1000,6 +1060,7 @@ public abstract class AbstractByteBufTest : IDisposable
             threads.Add(thread);
             thread.Start();
         }
+
         try
         {
             Assert.True(completed.Wait(TimeSpan.FromSeconds(30)));
@@ -1017,6 +1078,7 @@ public abstract class AbstractByteBufTest : IDisposable
                 thread.Join();
             }
         }
+
         // Ensure failures in worker threads are propagated to the test thread.
         if (!errors.IsEmpty)
         {
@@ -1031,6 +1093,7 @@ public abstract class AbstractByteBufTest : IDisposable
         random.NextBytes(bytes);
         ByteBuf buffer = NewBuffer(8);
         buffer.WriteBytes(bytes);
+
         try
         {
             await AssertBytesInArrayMultipleThreads(buffer, bytes, false);
@@ -1048,6 +1111,7 @@ public abstract class AbstractByteBufTest : IDisposable
         random.NextBytes(bytes);
         ByteBuf buffer = NewBuffer(8);
         buffer.WriteBytes(bytes);
+
         try
         {
             await AssertBytesInArrayMultipleThreads(buffer, bytes, true);
@@ -1065,11 +1129,13 @@ public abstract class AbstractByteBufTest : IDisposable
         Action callable = () =>
         {
             startBarrier.SignalAndWait();
+
             try
             {
                 for (int i = 0; i < 6000; i++)
                 {
                     ByteBuf buf;
+
                     if (slice)
                     {
                         buf = buffer.Slice();
@@ -1078,6 +1144,7 @@ public abstract class AbstractByteBufTest : IDisposable
                     {
                         buf = buffer.Duplicate();
                     }
+
                     byte[] array = new byte[8];
                     buf.ReadBytes(array);
                     Assert.Equal(expectedBytes, array);
@@ -1092,12 +1159,14 @@ public abstract class AbstractByteBufTest : IDisposable
             }
         };
         var tasks = new List<Task>();
+
         for (int i = 0; i < 10; i++)
         {
             // FutureTask plus a dedicated Thread maps to a LongRunning Task on the default scheduler.
             tasks.Add(Task.Factory.StartNew(callable, CancellationToken.None,
                 TaskCreationOptions.LongRunning, TaskScheduler.Default));
         }
+
         try
         {
             Assert.True(endBarrier.SignalAndWait(TimeSpan.FromSeconds(30)));
@@ -1119,6 +1188,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestReadBytesAndWriteBytesWithFileChannel()
     {
         string file = Path.GetTempFileName();
+
         try
         {
             using var channel = new FileStream(file, FileMode.Open, FileAccess.ReadWrite);
@@ -1128,6 +1198,7 @@ public abstract class AbstractByteBufTest : IDisposable
             int len = bytes.Length;
             ByteBuf buffer = NewBuffer(len);
             ByteBuf buffer2 = null;
+
             try
             {
                 buffer.ResetReaderIndex();
@@ -1165,6 +1236,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestGetBytesAndSetBytesWithFileChannel()
     {
         string file = Path.GetTempFileName();
+
         try
         {
             using var channel = new FileStream(file, FileMode.Open, FileAccess.ReadWrite);
@@ -1174,6 +1246,7 @@ public abstract class AbstractByteBufTest : IDisposable
             int len = bytes.Length;
             ByteBuf buffer = NewBuffer(len);
             ByteBuf buffer2 = null;
+
             try
             {
                 buffer.ResetReaderIndex();
@@ -1264,6 +1337,7 @@ public abstract class AbstractByteBufTest : IDisposable
             {
                 Assert.True(buffer.Release());
                 Assert.Equal(0, buffer.RefCnt);
+
                 try
                 {
                     buffer.Release();
@@ -1272,6 +1346,7 @@ public abstract class AbstractByteBufTest : IDisposable
                 {
                     // Ignore.
                 }
+
                 buffer = null;
             }
         }
@@ -1281,6 +1356,7 @@ public abstract class AbstractByteBufTest : IDisposable
             foreach (ByteBuf peer in _peers)
                 if (peer.RefCnt > 0)
                     peer.Release();
+
             (Allocator as IDisposable)?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
         }
@@ -1291,6 +1367,7 @@ public abstract class AbstractByteBufTest : IDisposable
     {
         byte[] valueContent = new byte[BLOCK_SIZE];
         ByteBuf value = WrappedBuffer(valueContent);
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(valueContent);
@@ -1303,6 +1380,7 @@ public abstract class AbstractByteBufTest : IDisposable
         random = new Random(seed);
         byte[] expectedValueContent = new byte[BLOCK_SIZE];
         ByteBuf expectedValue = WrappedBuffer(expectedValueContent);
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(expectedValueContent);
@@ -1310,6 +1388,7 @@ public abstract class AbstractByteBufTest : IDisposable
             buffer.GetBytes(i, value);
             Assert.Equal(0, value.ReaderIndex);
             Assert.Equal(BLOCK_SIZE, value.WriterIndex);
+
             for (int j = 0; j < BLOCK_SIZE; j++)
             {
                 Assert.Equal(expectedValue.GetByte(j), value.GetByte(j));
@@ -1323,6 +1402,7 @@ public abstract class AbstractByteBufTest : IDisposable
     {
         byte[] valueContent = new byte[BLOCK_SIZE * 2];
         ByteBuf value = WrappedBuffer(valueContent);
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(valueContent);
@@ -1332,11 +1412,13 @@ public abstract class AbstractByteBufTest : IDisposable
         random = new Random(seed);
         byte[] expectedValueContent = new byte[BLOCK_SIZE * 2];
         ByteBuf expectedValue = WrappedBuffer(expectedValueContent);
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(expectedValueContent);
             int valueOffset = random.Next(BLOCK_SIZE);
             buffer.GetBytes(i, value, valueOffset, BLOCK_SIZE);
+
             for (int j = valueOffset; j < valueOffset + BLOCK_SIZE; j++)
             {
                 Assert.Equal(expectedValue.GetByte(j), value.GetByte(j));
@@ -1350,6 +1432,7 @@ public abstract class AbstractByteBufTest : IDisposable
     {
         byte[] tmp = new byte[BLOCK_SIZE * 2];
         ByteBuf value = DirectBuffer(BLOCK_SIZE * 2);
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(tmp);
@@ -1359,17 +1442,20 @@ public abstract class AbstractByteBufTest : IDisposable
 
         random = new Random(seed);
         ByteBuf expectedValue = DirectBuffer(BLOCK_SIZE * 2);
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(tmp);
             expectedValue.SetBytes(0, tmp.AsSpan(0, expectedValue.Capacity));
             int valueOffset = random.Next(BLOCK_SIZE);
             buffer.GetBytes(i, value, valueOffset, BLOCK_SIZE);
+
             for (int j = valueOffset; j < valueOffset + BLOCK_SIZE; j++)
             {
                 Assert.Equal(expectedValue.GetByte(j), value.GetByte(j));
             }
         }
+
         value.Release();
         expectedValue.Release();
 
@@ -1381,6 +1467,7 @@ public abstract class AbstractByteBufTest : IDisposable
         byte[] valueContent = new byte[BLOCK_SIZE * 2];
         ByteBuf value = WrappedBuffer(valueContent);
         buffer.WriterIndex = 0;
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(valueContent);
@@ -1394,6 +1481,7 @@ public abstract class AbstractByteBufTest : IDisposable
         random = new Random(seed);
         byte[] expectedValueContent = new byte[BLOCK_SIZE * 2];
         ByteBuf expectedValue = WrappedBuffer(expectedValueContent);
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(expectedValueContent);
@@ -1401,10 +1489,12 @@ public abstract class AbstractByteBufTest : IDisposable
             Assert.Equal(i, buffer.ReaderIndex);
             Assert.Equal(CAPACITY, buffer.WriterIndex);
             buffer.ReadBytes(value, valueOffset, BLOCK_SIZE);
+
             for (int j = valueOffset; j < valueOffset + BLOCK_SIZE; j++)
             {
                 Assert.Equal(expectedValue.GetByte(j), value.GetByte(j));
             }
+
             Assert.Equal(0, value.ReaderIndex);
             Assert.Equal(valueContent.Length, value.WriterIndex);
         }
@@ -1417,6 +1507,7 @@ public abstract class AbstractByteBufTest : IDisposable
         byte[] valueContent = new byte[BLOCK_SIZE * 2];
         ByteBuf value = WrappedBuffer(valueContent);
         buffer.WriterIndex = 0;
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(valueContent);
@@ -1433,6 +1524,7 @@ public abstract class AbstractByteBufTest : IDisposable
         random = new Random(seed);
         byte[] expectedValueContent = new byte[BLOCK_SIZE * 2];
         ByteBuf expectedValue = WrappedBuffer(expectedValueContent);
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(expectedValueContent);
@@ -1442,10 +1534,12 @@ public abstract class AbstractByteBufTest : IDisposable
             value.ReaderIndex = valueOffset;
             value.WriterIndex = valueOffset;
             buffer.ReadBytes(value, BLOCK_SIZE);
+
             for (int j = valueOffset; j < valueOffset + BLOCK_SIZE; j++)
             {
                 Assert.Equal(expectedValue.GetByte(j), value.GetByte(j));
             }
+
             Assert.Equal(valueOffset, value.ReaderIndex);
             Assert.Equal(valueOffset + BLOCK_SIZE, value.WriterIndex);
         }
@@ -1458,6 +1552,7 @@ public abstract class AbstractByteBufTest : IDisposable
         byte[] valueContent = new byte[BLOCK_SIZE * 2];
         ByteBuf value = DirectBuffer(BLOCK_SIZE * 2);
         buffer.WriterIndex = 0;
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(valueContent);
@@ -1472,6 +1567,7 @@ public abstract class AbstractByteBufTest : IDisposable
         random = new Random(seed);
         byte[] expectedValueContent = new byte[BLOCK_SIZE * 2];
         ByteBuf expectedValue = WrappedBuffer(expectedValueContent);
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(expectedValueContent);
@@ -1480,13 +1576,16 @@ public abstract class AbstractByteBufTest : IDisposable
             Assert.Equal(i, buffer.ReaderIndex);
             Assert.Equal(CAPACITY, buffer.WriterIndex);
             buffer.ReadBytes(value, valueOffset, BLOCK_SIZE);
+
             for (int j = valueOffset; j < valueOffset + BLOCK_SIZE; j++)
             {
                 Assert.Equal(expectedValue.GetByte(j), value.GetByte(j));
             }
+
             Assert.Equal(0, value.ReaderIndex);
             Assert.Equal(0, value.WriterIndex);
         }
+
         value.Release();
         expectedValue.Release();
 
@@ -1498,6 +1597,7 @@ public abstract class AbstractByteBufTest : IDisposable
         byte[] valueContent = new byte[BLOCK_SIZE * 2];
         ByteBuf value = DirectBuffer(BLOCK_SIZE * 2);
         buffer.WriterIndex = 0;
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(valueContent);
@@ -1516,6 +1616,7 @@ public abstract class AbstractByteBufTest : IDisposable
         random = new Random(seed);
         byte[] expectedValueContent = new byte[BLOCK_SIZE * 2];
         ByteBuf expectedValue = WrappedBuffer(expectedValueContent);
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(expectedValueContent);
@@ -1526,13 +1627,16 @@ public abstract class AbstractByteBufTest : IDisposable
             value.ReaderIndex = valueOffset;
             value.WriterIndex = valueOffset;
             buffer.ReadBytes(value, BLOCK_SIZE);
+
             for (int j = valueOffset; j < valueOffset + BLOCK_SIZE; j++)
             {
                 Assert.Equal(expectedValue.GetByte(j), value.GetByte(j));
             }
+
             Assert.Equal(valueOffset, value.ReaderIndex);
             Assert.Equal(valueOffset + BLOCK_SIZE, value.WriterIndex);
         }
+
         value.Release();
         expectedValue.Release();
 
@@ -1545,6 +1649,7 @@ public abstract class AbstractByteBufTest : IDisposable
         ByteBuf value = WrappedMemory(new byte[BLOCK_SIZE * 2].AsMemory());
         value.WriterIndex = 0;
         buffer.WriterIndex = 0;
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(valueContent);
@@ -1559,6 +1664,7 @@ public abstract class AbstractByteBufTest : IDisposable
         random = new Random(seed);
         byte[] expectedValueContent = new byte[BLOCK_SIZE * 2];
         ByteBuf expectedValue = WrappedBuffer(expectedValueContent);
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(expectedValueContent);
@@ -1567,10 +1673,12 @@ public abstract class AbstractByteBufTest : IDisposable
             Assert.Equal(i, buffer.ReaderIndex);
             Assert.Equal(CAPACITY, buffer.WriterIndex);
             buffer.ReadBytes(value, valueOffset, BLOCK_SIZE);
+
             for (int j = valueOffset; j < valueOffset + BLOCK_SIZE; j++)
             {
                 Assert.Equal(expectedValue.GetByte(j), value.GetByte(j));
             }
+
             Assert.Equal(0, value.ReaderIndex);
             Assert.Equal(0, value.WriterIndex);
         }
@@ -1584,6 +1692,7 @@ public abstract class AbstractByteBufTest : IDisposable
         ByteBuf value = WrappedMemory(new byte[BLOCK_SIZE * 2].AsMemory());
         value.WriterIndex = 0;
         buffer.WriterIndex = 0;
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(valueContent);
@@ -1602,6 +1711,7 @@ public abstract class AbstractByteBufTest : IDisposable
         random = new Random(seed);
         byte[] expectedValueContent = new byte[BLOCK_SIZE * 2];
         ByteBuf expectedValue = WrappedBuffer(expectedValueContent);
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(expectedValueContent);
@@ -1612,10 +1722,12 @@ public abstract class AbstractByteBufTest : IDisposable
             value.ReaderIndex = valueOffset;
             value.WriterIndex = valueOffset;
             buffer.ReadBytes(value, BLOCK_SIZE);
+
             for (int j = valueOffset; j < valueOffset + BLOCK_SIZE; j++)
             {
                 Assert.Equal(expectedValue.GetByte(j), value.GetByte(j));
             }
+
             Assert.Equal(valueOffset, value.ReaderIndex);
             Assert.Equal(valueOffset + BLOCK_SIZE, value.WriterIndex);
         }
@@ -1626,6 +1738,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestSequentialCopiedBufferTransfer1()
     {
         buffer.WriterIndex = 0;
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             byte[] value = new byte[BLOCK_SIZE];
@@ -1637,6 +1750,7 @@ public abstract class AbstractByteBufTest : IDisposable
 
         random = new Random(seed);
         byte[] expectedValue = new byte[BLOCK_SIZE];
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(expectedValue);
@@ -1658,6 +1772,7 @@ public abstract class AbstractByteBufTest : IDisposable
     {
         byte[] expected = new byte[buffer.Capacity];
         random.NextBytes(expected);
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             using var input = new MemoryStream(expected, i, BLOCK_SIZE, false);
@@ -1666,11 +1781,14 @@ public abstract class AbstractByteBufTest : IDisposable
             Assert.Equal(0, buffer.SetBytes(i, input, 0));
             Assert.Equal(-1, input.ReadByte());
         }
+
         using var output = new MemoryStream();
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             buffer.GetBytes(i, output, BLOCK_SIZE);
         }
+
         Assert.Equal(expected, output.ToArray());
     }
 
@@ -1680,6 +1798,7 @@ public abstract class AbstractByteBufTest : IDisposable
         byte[] expected = new byte[buffer.Capacity];
         random.NextBytes(expected);
         buffer.Clear();
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             using var input = new MemoryStream(expected, i, BLOCK_SIZE, false);
@@ -1687,13 +1806,16 @@ public abstract class AbstractByteBufTest : IDisposable
             buffer.WriteBytes(input, BLOCK_SIZE);
             Assert.Equal(i + BLOCK_SIZE, buffer.WriterIndex);
         }
+
         using var output = new MemoryStream();
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             Assert.Equal(i, buffer.ReaderIndex);
             buffer.ReadBytes(output, BLOCK_SIZE);
             Assert.Equal(i + BLOCK_SIZE, buffer.ReaderIndex);
         }
+
         Assert.Equal(expected, output.ToArray());
     }
 
@@ -1832,12 +1954,14 @@ public abstract class AbstractByteBufTest : IDisposable
             byte[] allocation = GC.AllocateUninitializedArray<byte>(buffer.Capacity, pinned: direct);
             Span<byte> reference = allocation;
             short expected = unchecked((short)(NextSignedInt32() & 0xFFFF));
+
             if (testBigEndian)
                 BinaryPrimitives.WriteInt16BigEndian(reference, expected);
             else
                 BinaryPrimitives.WriteInt16LittleEndian(reference, expected);
 
             int bufferIndex = buffer.Capacity - 2;
+
             if (testBigEndian)
                 buffer.SetShort(bufferIndex, expected);
             else
@@ -1861,12 +1985,14 @@ public abstract class AbstractByteBufTest : IDisposable
             byte[] allocation = GC.AllocateUninitializedArray<byte>(buffer.Capacity, pinned: direct);
             Span<byte> reference = allocation;
             int expected = NextSignedInt32() & 0x00FFFFFF;
+
             if (testBigEndian)
                 BinaryPrimitives.WriteInt32BigEndian(reference, expected);
             else
                 BinaryPrimitives.WriteInt32LittleEndian(reference, expected);
 
             int bufferIndex = buffer.Capacity - 3;
+
             if (testBigEndian)
                 buffer.SetMedium(bufferIndex, expected);
             else
@@ -1890,12 +2016,14 @@ public abstract class AbstractByteBufTest : IDisposable
             byte[] allocation = GC.AllocateUninitializedArray<byte>(buffer.Capacity, pinned: direct);
             Span<byte> reference = allocation;
             int expected = NextSignedInt32();
+
             if (testBigEndian)
                 BinaryPrimitives.WriteInt32BigEndian(reference, expected);
             else
                 BinaryPrimitives.WriteInt32LittleEndian(reference, expected);
 
             int bufferIndex = buffer.Capacity - 4;
+
             if (testBigEndian)
                 buffer.SetInt(bufferIndex, expected);
             else
@@ -1919,12 +2047,14 @@ public abstract class AbstractByteBufTest : IDisposable
             byte[] allocation = GC.AllocateUninitializedArray<byte>(buffer.Capacity, pinned: direct);
             Span<byte> reference = allocation;
             long expected = NextSignedInt64();
+
             if (testBigEndian)
                 BinaryPrimitives.WriteInt64BigEndian(reference, expected);
             else
                 BinaryPrimitives.WriteInt64LittleEndian(reference, expected);
 
             int bufferIndex = buffer.Capacity - 8;
+
             if (testBigEndian)
                 buffer.SetLong(bufferIndex, expected);
             else
@@ -1943,6 +2073,7 @@ public abstract class AbstractByteBufTest : IDisposable
     {
         Span<byte> bits = stackalloc byte[sizeof(int)];
         random.NextBytes(bits);
+
         return BinaryPrimitives.ReadInt32BigEndian(bits);
     }
 
@@ -1950,6 +2081,7 @@ public abstract class AbstractByteBufTest : IDisposable
     {
         Span<byte> bits = stackalloc byte[sizeof(long)];
         random.NextBytes(bits);
+
         return BinaryPrimitives.ReadInt64BigEndian(bits);
     }
 
@@ -2092,6 +2224,7 @@ public abstract class AbstractByteBufTest : IDisposable
     {
         ByteBuf buf = NewBuffer(8);
         ByteBuf dup = retainedDuplicate ? buf.RetainedDuplicate() : buf.Duplicate();
+
         try
         {
             dup.Capacity = 10;
@@ -2105,6 +2238,7 @@ public abstract class AbstractByteBufTest : IDisposable
             {
                 dup.Release();
             }
+
             buf.Release();
         }
     }
@@ -2118,6 +2252,7 @@ public abstract class AbstractByteBufTest : IDisposable
         expected.WriteBytes(new byte[] { 4, 5, 6 });
         ByteBuf slice = retainedSlice ? buf.RetainedSlice(buf.ReaderIndex + 3, 3)
                                       : buf.Slice(buf.ReaderIndex + 3, 3);
+
         try
         {
             Assert.Equal(0, slice.CompareTo(expected));
@@ -2133,6 +2268,7 @@ public abstract class AbstractByteBufTest : IDisposable
             {
                 slice.Release();
             }
+
             buf.Release();
             expected.Release();
         }
@@ -2304,6 +2440,7 @@ public abstract class AbstractByteBufTest : IDisposable
         ByteBuf buf = NewBuffer(8).ResetWriterIndex();
         buf.WriteBytes(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
         ByteBuf dup = retainedDuplicate ? buf.RetainedDuplicate() : buf.Duplicate();
+
         try
         {
             Assert.Equal(0, dup.CompareTo(buf));
@@ -2319,6 +2456,7 @@ public abstract class AbstractByteBufTest : IDisposable
             {
                 dup.Release();
             }
+
             buf.Release();
         }
     }
@@ -2344,10 +2482,12 @@ public abstract class AbstractByteBufTest : IDisposable
         // each slice reads the parent's wire bytes in both byte orders.
         byte[] bytes = new byte[buffer.Capacity];
         random.NextBytes(bytes);
+
         for (int i = 0; i < bytes.Length; ++i)
         {
             buffer.SetByte(i, bytes[i]);
         }
+
         AssertSliceEndianness(bytes, buffer.Slice(0, buffer.Capacity), 0, buffer.Capacity);
         AssertSliceEndianness(bytes, buffer.Slice(0, buffer.Capacity - 1), 0, buffer.Capacity - 1);
         AssertSliceEndianness(bytes, buffer.Slice(1, buffer.Capacity - 1), 1, buffer.Capacity - 1);
@@ -2375,6 +2515,7 @@ public abstract class AbstractByteBufTest : IDisposable
         ByteBuf buf2 = NewBuffer(4).Clear().WriteBytes(bytesReversed);
         ByteBuf buf3 = NewBuffer(4).Clear().WriteBytes(bytes);
         ByteBuf buf4 = NewBuffer(4).Clear().WriteBytes(bytesReversed);
+
         try
         {
             Assert.Equal(0x04030201, buf1.GetIntLE(0));
@@ -2411,6 +2552,7 @@ public abstract class AbstractByteBufTest : IDisposable
         {
             Assert.Fail();
         }
+
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
             buffer.ReaderIndex = -1;
@@ -2428,6 +2570,7 @@ public abstract class AbstractByteBufTest : IDisposable
         {
             Assert.Fail();
         }
+
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
             buffer.ReaderIndex = buffer.Capacity + 1;
@@ -2445,6 +2588,7 @@ public abstract class AbstractByteBufTest : IDisposable
         {
             Assert.Fail();
         }
+
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
             buffer.ReaderIndex = CAPACITY * 3 / 2;
@@ -2481,6 +2625,7 @@ public abstract class AbstractByteBufTest : IDisposable
         {
             Assert.Fail();
         }
+
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
             buffer.WriterIndex = buffer.Capacity + 1;
@@ -2499,6 +2644,7 @@ public abstract class AbstractByteBufTest : IDisposable
         {
             Assert.Fail();
         }
+
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
             buffer.WriterIndex = CAPACITY / 4;
@@ -2560,10 +2706,12 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestDiscardReadBytes()
     {
         buffer.WriterIndex = 0;
+
         for (int i = 0; i < buffer.Capacity; i += 4)
         {
             buffer.WriteInt(i);
         }
+
         ByteBuf copy = Own(Unpooled.CopiedBuffer(buffer));
 
         // Make sure there's no effect if called when readerIndex is 0.
@@ -2618,10 +2766,12 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestDiscardReadBytes2()
     {
         buffer.WriterIndex = 0;
+
         for (int i = 0; i < buffer.Capacity; i ++)
         {
             buffer.WriteByte(unchecked((byte)i));
         }
+
         ByteBuf copy = Own(Unpooled.CopiedBuffer(buffer));
 
         // Discard the first (CAPACITY / 2 - 1) bytes.
@@ -2629,10 +2779,12 @@ public abstract class AbstractByteBufTest : IDisposable
         buffer.DiscardReadBytes();
         Assert.Equal(0, buffer.ReaderIndex);
         Assert.Equal(CAPACITY / 2, buffer.WriterIndex);
+
         for (int i = 0; i < CAPACITY / 2; i ++)
         {
             Assert.Equal(copy.Slice(CAPACITY / 2 - 1 + i, CAPACITY / 2 - i), buffer.Slice(i, CAPACITY / 2 - i));
         }
+
         copy.Release();
     }
 
@@ -2680,6 +2832,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestGetBytesAfterRelease()
     {
         ByteBuf buffer = Unpooled.Buffer(8);
+
         try
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -2697,6 +2850,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestGetBytesAfterRelease2()
     {
         ByteBuf buffer = Unpooled.Buffer();
+
         try
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -2714,6 +2868,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestGetBytesAfterRelease3()
     {
         ByteBuf buffer = Unpooled.Buffer();
+
         try
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -2760,6 +2915,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestSetBytesAfterRelease()
     {
         ByteBuf buffer = Unpooled.Buffer();
+
         try
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -2777,6 +2933,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestSetBytesAfterRelease2()
     {
         ByteBuf buffer = Unpooled.Buffer();
+
         try
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -2794,6 +2951,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestSetBytesAfterRelease3()
     {
         ByteBuf buffer = Unpooled.Buffer();
+
         try
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -2849,6 +3007,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestReadBytesAfterRelease2()
     {
         ByteBuf buffer = Unpooled.Buffer(8);
+
         try
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -2866,6 +3025,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestReadBytesAfterRelease3()
     {
         ByteBuf buffer = Unpooled.Buffer(8);
+
         try
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -2883,6 +3043,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestReadBytesAfterRelease4()
     {
         ByteBuf buffer = Unpooled.Buffer(8);
+
         try
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -2939,6 +3100,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestWriteBytesAfterRelease()
     {
         ByteBuf buffer = Unpooled.Buffer(8);
+
         try
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -2956,6 +3118,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestWriteBytesAfterRelease2()
     {
         ByteBuf buffer = Unpooled.CopiedBuffer(new byte[8]);
+
         try
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -2973,6 +3136,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestWriteBytesAfterRelease3()
     {
         ByteBuf buffer = Unpooled.Buffer(8);
+
         try
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -3456,6 +3620,7 @@ public abstract class AbstractByteBufTest : IDisposable
                 buf.Release();
             }
         }
+
         foreach (ByteBuf buf in bufs)
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -3475,6 +3640,7 @@ public abstract class AbstractByteBufTest : IDisposable
                 buf.Release();
             }
         }
+
         foreach (ByteBuf buf in bufs)
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -3494,6 +3660,7 @@ public abstract class AbstractByteBufTest : IDisposable
                 buf.Release();
             }
         }
+
         foreach (ByteBuf buf in bufs)
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -3513,6 +3680,7 @@ public abstract class AbstractByteBufTest : IDisposable
                 buf.Release();
             }
         }
+
         foreach (ByteBuf buf in bufs)
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -3599,6 +3767,7 @@ public abstract class AbstractByteBufTest : IDisposable
         tmpBuf.Release();
 
         ByteBuf slice3 = doSlice1 ? slice2.Slice(slice2.ReaderIndex + 1, 2) : slice2.Duplicate();
+
         if (doSlice1)
         {
             Assert.Equal(0, slice3.CompareTo(expected3));
@@ -3609,6 +3778,7 @@ public abstract class AbstractByteBufTest : IDisposable
         }
 
         ByteBuf slice4 = doSlice2 ? slice3.Slice(slice3.ReaderIndex + 1, 1) : slice3.Duplicate();
+
         if (doSlice1 && doSlice2)
         {
             Assert.Equal(0, slice4.CompareTo(expected4SliceSlice));
@@ -3677,6 +3847,7 @@ public abstract class AbstractByteBufTest : IDisposable
                 }
             });
             releaser.Start();
+
             try
             {
                 Assert.True(latch.Wait(TimeSpan.FromSeconds(30)));
@@ -3688,6 +3859,7 @@ public abstract class AbstractByteBufTest : IDisposable
                 innerLatch.Set();
                 releaser.Join();
                 reader?.Join();
+
                 if (buffer.RefCnt > 0)
                     buffer.Release();
             }
@@ -3757,6 +3929,7 @@ public abstract class AbstractByteBufTest : IDisposable
         byte[] value = new byte[BLOCK_SIZE * 2];
         int readerIndex = buffer.ReaderIndex;
         int writerIndex = buffer.WriterIndex;
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(value);
@@ -3766,6 +3939,7 @@ public abstract class AbstractByteBufTest : IDisposable
 
         random = new Random(seed);
         byte[] expectedValue = new byte[BLOCK_SIZE * 2];
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(expectedValue);
@@ -3773,6 +3947,7 @@ public abstract class AbstractByteBufTest : IDisposable
             Memory<byte> window = value.AsMemory(valueOffset, BLOCK_SIZE);
             byte[] before = (byte[])value.Clone();
             buffer.GetBytes(i, window.Span);
+
             for (int j = valueOffset; j < valueOffset + BLOCK_SIZE; j++)
                 Assert.Equal(expectedValue[j], value[j]);
 
@@ -3789,6 +3964,7 @@ public abstract class AbstractByteBufTest : IDisposable
     {
         buffer.WriterIndex = 0;
         byte[] value = new byte[BLOCK_SIZE * 2];
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(value);
@@ -3799,6 +3975,7 @@ public abstract class AbstractByteBufTest : IDisposable
 
         random = new Random(seed);
         byte[] expectedValue = new byte[BLOCK_SIZE * 2];
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(expectedValue);
@@ -3806,6 +3983,7 @@ public abstract class AbstractByteBufTest : IDisposable
             Memory<byte> window = value.AsMemory(valueOffset, BLOCK_SIZE);
             byte[] before = (byte[])value.Clone();
             buffer.ReadBytes(window.Span);
+
             for (int j = valueOffset; j < valueOffset + BLOCK_SIZE; j++)
                 Assert.Equal(expectedValue[j], value[j]);
 
@@ -3820,6 +3998,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public virtual void TestNioBufferExposeOnlyRegion()
     {
         ByteBuf buffer = NewBuffer(8);
+
         try
         {
             byte[] data = new byte[8];
@@ -3828,6 +4007,7 @@ public abstract class AbstractByteBufTest : IDisposable
             var reader = new SequenceReader<byte>(buffer.AsReadOnlySequence(1, data.Length - 2));
             Assert.Equal(0, reader.Consumed);
             Assert.Equal(6, reader.Remaining);
+
             for (int i = 1; reader.TryRead(out byte actual); i++)
                 Assert.Equal(data[i], actual);
         }
@@ -3841,6 +4021,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestEmptyNioBuffers()
     {
         ByteBuf buffer = NewBuffer(8);
+
         try
         {
             buffer.Clear();
@@ -3861,6 +4042,7 @@ public abstract class AbstractByteBufTest : IDisposable
     {
         ByteBuf buffer = NewBuffer(8);
         ByteBuf buffer2 = null;
+
         try
         {
             byte[] bytes = new byte[8];
@@ -3879,6 +4061,7 @@ public abstract class AbstractByteBufTest : IDisposable
             {
                 buffer.Release();
             }
+
             if (buffer2?.RefCnt > 0)
             {
                 buffer2.Release();
@@ -3893,6 +4076,7 @@ public abstract class AbstractByteBufTest : IDisposable
         // Ensure destination buffer is bigger then what is in the ByteBuf.
         byte[] nioBuffer = new byte[bytes.Length + 1];
         ByteBuf buffer = NewBuffer(bytes.Length);
+
         try
         {
             buffer.WriteBytes(bytes);
@@ -3908,6 +4092,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestSetZero()
     {
         buffer.Clear();
+
         while (buffer.IsWritable())
         {
             buffer.WriteByte((byte)0xFF);
@@ -3932,12 +4117,14 @@ public abstract class AbstractByteBufTest : IDisposable
         Assert.Throws<ArgumentOutOfRangeException>(() => buffer.WriteZero(-1));
 
         buffer.Clear();
+
         while (buffer.IsWritable())
         {
             buffer.WriteByte((byte)0xFF);
         }
 
         buffer.Clear();
+
         for (int i = 0; i < buffer.Capacity;)
         {
             int length = Math.Min(buffer.Capacity - i, random.Next(32));
@@ -3976,6 +4163,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestForEachByte()
     {
         buffer.Clear();
+
         for (int i = 0; i < CAPACITY; i++)
         {
             buffer.WriteByte(i + 1);
@@ -3999,6 +4187,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestForEachByteAbort()
     {
         buffer.Clear();
+
         for (int i = 0; i < CAPACITY; i++)
         {
             buffer.WriteByte(i + 1);
@@ -4023,6 +4212,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestForEachByteDesc()
     {
         buffer.Clear();
+
         for (int i = 0; i < CAPACITY; i++)
         {
             buffer.WriteByte(i + 1);
@@ -4046,6 +4236,7 @@ public abstract class AbstractByteBufTest : IDisposable
     {
         byte[] expected = new byte[] { 1, 2, 3, 4 };
         ByteBuf buf = NewBuffer(expected.Length);
+
         try
         {
             buf.WriteBytes(expected);
@@ -4070,6 +4261,7 @@ public abstract class AbstractByteBufTest : IDisposable
     {
         byte[] expected = new byte[] { 1, 2, 3, 4 };
         ByteBuf buf = NewBuffer(expected.Length);
+
         try
         {
             buf.WriteBytes(expected);
@@ -4281,6 +4473,7 @@ public abstract class AbstractByteBufTest : IDisposable
         random.NextBytes(value);
         buffer.Clear();
         buffer.WriteBytes(value);
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
             AssertRemainingEquals(value.AsSpan(i, BLOCK_SIZE), buffer.AsReadOnlyMemory(i, BLOCK_SIZE));
     }
@@ -4323,6 +4516,7 @@ public abstract class AbstractByteBufTest : IDisposable
     private void AssertInternalBorrowAfterGrowth(int a)
     {
         ByteBuf buffer = NewBuffer(2);
+
         try
         {
             ReadOnlyMemory<byte> buf = buffer.AsReadOnlyMemory(buffer.ReaderIndex, 1);
@@ -4335,10 +4529,12 @@ public abstract class AbstractByteBufTest : IDisposable
             buf = buffer.AsReadOnlyMemory(buffer.ReaderIndex, a);
             Assert.Equal(a, buf.Length);
             var reader = new SequenceReader<byte>(new ReadOnlySequence<byte>(buf));
+
             for (int i = 0; i < a; i++)
             {
                 byte actual = reader.UnreadSpan[0];
                 reader.Advance(1);
+
                 // Preserve every original byte comparison and first-failure order;
                 // avoid generic assertion dispatch for hundreds of millions of equal bytes.
                 if (data[i] != actual)
@@ -4346,6 +4542,7 @@ public abstract class AbstractByteBufTest : IDisposable
                     Assert.Equal(data[i], actual);
                 }
             }
+
             Assert.True(reader.End);
         }
         finally
@@ -4370,6 +4567,7 @@ public abstract class AbstractByteBufTest : IDisposable
     {
         byte[] bytes = { (byte)'a', (byte)'b', (byte)'c', (byte)'d' };
         ByteBuf buffer = NewBuffer(bytes.Length);
+
         try
         {
             buffer.WriteBytes(bytes);
@@ -4500,6 +4698,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void Test_internalNioBuffer()
     {
         ByteBuf buf = Unpooled.Buffer(8, 16);
+
         // CLR: Unpooled.Buffer never returns a SimpleLeakAwareByteBuf here and every CLR ByteBuf
         // derives from ByteBuf, so the original unwrap and AbstractByteBuf assumption always hold.
         try
@@ -4555,6 +4754,7 @@ public abstract class AbstractByteBufTest : IDisposable
         ByteBuf buffer = NewBuffer(CAPACITY);
         buffer.WriterIndex = buffer.ReaderIndex;
         buffer.WriteByte(1);
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => buffer.EnsureWritable(int.MaxValue));
@@ -5181,6 +5381,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void ReadByteThrowsIndexOutOfBoundsException()
     {
         ByteBuf buffer = NewBuffer(8);
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() =>
@@ -5222,6 +5423,7 @@ public abstract class AbstractByteBufTest : IDisposable
         }
 
         random = new Random(seed);
+
         for (int i = 0; i < buffer.Capacity; i ++)
         {
             byte value = unchecked((byte)NextSignedInt32());
@@ -5239,6 +5441,7 @@ public abstract class AbstractByteBufTest : IDisposable
         }
 
         random = new Random(seed);
+
         for (int i = 0; i < buffer.Capacity; i ++)
         {
             int value = NextSignedInt32() & 0xFF;
@@ -5358,6 +5561,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestSequentialByteAccess()
     {
         buffer.WriterIndex = 0;
+
         for (int i = 0; i < buffer.Capacity; i ++)
         {
             byte value = unchecked((byte)NextSignedInt32());
@@ -5371,6 +5575,7 @@ public abstract class AbstractByteBufTest : IDisposable
         Assert.False(buffer.IsWritable());
 
         random = new Random(seed);
+
         for (int i = 0; i < buffer.Capacity; i ++)
         {
             byte value = unchecked((byte)NextSignedInt32());
@@ -5389,6 +5594,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestSequentialUnsignedByteAccess()
     {
         buffer.WriterIndex = 0;
+
         for (int i = 0; i < buffer.Capacity; i ++)
         {
             byte value = unchecked((byte)NextSignedInt32());
@@ -5402,6 +5608,7 @@ public abstract class AbstractByteBufTest : IDisposable
         Assert.False(buffer.IsWritable());
 
         random = new Random(seed);
+
         for (int i = 0; i < buffer.Capacity; i ++)
         {
             int value = NextSignedInt32() & 0xFF;
@@ -5505,6 +5712,7 @@ public abstract class AbstractByteBufTest : IDisposable
         for (int i = 0; i < buffer.Capacity - 1; i += 2)
         {
             short value = unchecked((short)NextSignedInt32());
+
             if (testBigEndian)
             {
                 buffer.SetShort(i, value);
@@ -5516,9 +5724,11 @@ public abstract class AbstractByteBufTest : IDisposable
         }
 
         random = new Random(seed);
+
         for (int i = 0; i < buffer.Capacity - 1; i += 2)
         {
             short value = unchecked((short)NextSignedInt32());
+
             if (testBigEndian)
             {
                 Assert.Equal(value, buffer.GetShort(i));
@@ -5535,6 +5745,7 @@ public abstract class AbstractByteBufTest : IDisposable
         for (int i = 0; i < buffer.Capacity - 1; i += 2)
         {
             short value = unchecked((short)NextSignedInt32());
+
             if (testBigEndian)
             {
                 buffer.SetShort(i, value);
@@ -5546,9 +5757,11 @@ public abstract class AbstractByteBufTest : IDisposable
         }
 
         random = new Random(seed);
+
         for (int i = 0; i < buffer.Capacity - 1; i += 2)
         {
             int value = NextSignedInt32() & 0xFFFF;
+
             if (testBigEndian)
             {
                 Assert.Equal(value, buffer.GetUnsignedShort(i));
@@ -5565,6 +5778,7 @@ public abstract class AbstractByteBufTest : IDisposable
         for (int i = 0; i < buffer.Capacity - 2; i += 3)
         {
             int value = NextSignedInt32();
+
             if (testBigEndian)
             {
                 buffer.SetMedium(i, value);
@@ -5576,9 +5790,11 @@ public abstract class AbstractByteBufTest : IDisposable
         }
 
         random = new Random(seed);
+
         for (int i = 0; i < buffer.Capacity - 2; i += 3)
         {
             int value = NextSignedInt32() << 8 >> 8;
+
             if (testBigEndian)
             {
                 Assert.Equal(value, buffer.GetMedium(i));
@@ -5595,6 +5811,7 @@ public abstract class AbstractByteBufTest : IDisposable
         for (int i = 0; i < buffer.Capacity - 2; i += 3)
         {
             int value = NextSignedInt32();
+
             if (testBigEndian)
             {
                 buffer.SetMedium(i, value);
@@ -5606,9 +5823,11 @@ public abstract class AbstractByteBufTest : IDisposable
         }
 
         random = new Random(seed);
+
         for (int i = 0; i < buffer.Capacity - 2; i += 3)
         {
             int value = NextSignedInt32() & 0x00FFFFFF;
+
             if (testBigEndian)
             {
                 Assert.Equal(value, buffer.GetUnsignedMedium(i));
@@ -5625,6 +5844,7 @@ public abstract class AbstractByteBufTest : IDisposable
         for (int i = 0; i < buffer.Capacity - 3; i += 4)
         {
             int value = NextSignedInt32();
+
             if (testBigEndian)
             {
                 buffer.SetInt(i, value);
@@ -5636,9 +5856,11 @@ public abstract class AbstractByteBufTest : IDisposable
         }
 
         random = new Random(seed);
+
         for (int i = 0; i < buffer.Capacity - 3; i += 4)
         {
             int value = NextSignedInt32();
+
             if (testBigEndian)
             {
                 Assert.Equal(value, buffer.GetInt(i));
@@ -5655,6 +5877,7 @@ public abstract class AbstractByteBufTest : IDisposable
         for (int i = 0; i < buffer.Capacity - 3; i += 4)
         {
             int value = NextSignedInt32();
+
             if (testBigEndian)
             {
                 buffer.SetInt(i, value);
@@ -5666,9 +5889,11 @@ public abstract class AbstractByteBufTest : IDisposable
         }
 
         random = new Random(seed);
+
         for (int i = 0; i < buffer.Capacity - 3; i += 4)
         {
             long value = NextSignedInt32() & 0xFFFFFFFFL;
+
             if (testBigEndian)
             {
                 Assert.Equal(value, buffer.GetUnsignedInt(i));
@@ -5685,6 +5910,7 @@ public abstract class AbstractByteBufTest : IDisposable
         for (int i = 0; i < buffer.Capacity - 7; i += 8)
         {
             long value = NextSignedInt64();
+
             if (testBigEndian)
             {
                 buffer.SetLong(i, value);
@@ -5696,9 +5922,11 @@ public abstract class AbstractByteBufTest : IDisposable
         }
 
         random = new Random(seed);
+
         for (int i = 0; i < buffer.Capacity - 7; i += 8)
         {
             long value = NextSignedInt64();
+
             if (testBigEndian)
             {
                 Assert.Equal(value, buffer.GetLong(i));
@@ -5715,6 +5943,7 @@ public abstract class AbstractByteBufTest : IDisposable
         for (int i = 0; i < buffer.Capacity - 7; i += 8)
         {
             float value = random.NextSingle();
+
             if (testBigEndian)
             {
                 buffer.SetFloat(i, value);
@@ -5726,6 +5955,7 @@ public abstract class AbstractByteBufTest : IDisposable
         }
 
         random = new Random(seed);
+
         for (int i = 0; i < buffer.Capacity - 7; i += 8)
         {
             float expected = random.NextSingle();
@@ -5739,6 +5969,7 @@ public abstract class AbstractByteBufTest : IDisposable
         for (int i = 0; i < buffer.Capacity - 7; i += 8)
         {
             double value = random.NextDouble();
+
             if (testBigEndian)
             {
                 buffer.SetDouble(i, value);
@@ -5750,6 +5981,7 @@ public abstract class AbstractByteBufTest : IDisposable
         }
 
         random = new Random(seed);
+
         for (int i = 0; i < buffer.Capacity - 7; i += 8)
         {
             double expected = random.NextDouble();
@@ -5761,11 +5993,13 @@ public abstract class AbstractByteBufTest : IDisposable
     private void AssertSequentialShortAccess(bool testBigEndian)
     {
         buffer.WriterIndex = 0;
+
         for (int i = 0; i < buffer.Capacity; i += 2)
         {
             short value = unchecked((short)NextSignedInt32());
             Assert.Equal(i, buffer.WriterIndex);
             Assert.True(buffer.IsWritable());
+
             if (testBigEndian)
             {
                 buffer.WriteShort(value);
@@ -5781,11 +6015,13 @@ public abstract class AbstractByteBufTest : IDisposable
         Assert.False(buffer.IsWritable());
 
         random = new Random(seed);
+
         for (int i = 0; i < buffer.Capacity; i += 2)
         {
             short value = unchecked((short)NextSignedInt32());
             Assert.Equal(i, buffer.ReaderIndex);
             Assert.True(buffer.IsReadable());
+
             if (testBigEndian)
             {
                 Assert.Equal(value, buffer.ReadShort());
@@ -5805,11 +6041,13 @@ public abstract class AbstractByteBufTest : IDisposable
     private void AssertSequentialUnsignedShortAccess(bool testBigEndian)
     {
         buffer.WriterIndex = 0;
+
         for (int i = 0; i < buffer.Capacity; i += 2)
         {
             short value = unchecked((short)NextSignedInt32());
             Assert.Equal(i, buffer.WriterIndex);
             Assert.True(buffer.IsWritable());
+
             if (testBigEndian)
             {
                 buffer.WriteShort(value);
@@ -5825,11 +6063,13 @@ public abstract class AbstractByteBufTest : IDisposable
         Assert.False(buffer.IsWritable());
 
         random = new Random(seed);
+
         for (int i = 0; i < buffer.Capacity; i += 2)
         {
             int value = NextSignedInt32() & 0xFFFF;
             Assert.Equal(i, buffer.ReaderIndex);
             Assert.True(buffer.IsReadable());
+
             if (testBigEndian)
             {
                 Assert.Equal(value, buffer.ReadUnsignedShort());
@@ -5849,11 +6089,13 @@ public abstract class AbstractByteBufTest : IDisposable
     private void AssertSequentialMediumAccess(bool testBigEndian)
     {
         buffer.WriterIndex = 0;
+
         for (int i = 0; i < buffer.Capacity / 3 * 3; i += 3)
         {
             int value = NextSignedInt32();
             Assert.Equal(i, buffer.WriterIndex);
             Assert.True(buffer.IsWritable());
+
             if (testBigEndian)
             {
                 buffer.WriteMedium(value);
@@ -5869,11 +6111,13 @@ public abstract class AbstractByteBufTest : IDisposable
         Assert.Equal(buffer.Capacity % 3, buffer.WritableBytes);
 
         random = new Random(seed);
+
         for (int i = 0; i < buffer.Capacity / 3 * 3; i += 3)
         {
             int value = NextSignedInt32() << 8 >> 8;
             Assert.Equal(i, buffer.ReaderIndex);
             Assert.True(buffer.IsReadable());
+
             if (testBigEndian)
             {
                 Assert.Equal(value, buffer.ReadMedium());
@@ -5893,11 +6137,13 @@ public abstract class AbstractByteBufTest : IDisposable
     private void AssertSequentialUnsignedMediumAccess(bool testBigEndian)
     {
         buffer.WriterIndex = 0;
+
         for (int i = 0; i < buffer.Capacity / 3 * 3; i += 3)
         {
             int value = NextSignedInt32() & 0x00FFFFFF;
             Assert.Equal(i, buffer.WriterIndex);
             Assert.True(buffer.IsWritable());
+
             if (testBigEndian)
             {
                 buffer.WriteMedium(value);
@@ -5913,11 +6159,13 @@ public abstract class AbstractByteBufTest : IDisposable
         Assert.Equal(buffer.Capacity % 3, buffer.WritableBytes);
 
         random = new Random(seed);
+
         for (int i = 0; i < buffer.Capacity / 3 * 3; i += 3)
         {
             int value = NextSignedInt32() & 0x00FFFFFF;
             Assert.Equal(i, buffer.ReaderIndex);
             Assert.True(buffer.IsReadable());
+
             if (testBigEndian)
             {
                 Assert.Equal(value, buffer.ReadUnsignedMedium());
@@ -5937,11 +6185,13 @@ public abstract class AbstractByteBufTest : IDisposable
     private void AssertSequentialIntAccess(bool testBigEndian)
     {
         buffer.WriterIndex = 0;
+
         for (int i = 0; i < buffer.Capacity; i += 4)
         {
             int value = NextSignedInt32();
             Assert.Equal(i, buffer.WriterIndex);
             Assert.True(buffer.IsWritable());
+
             if (testBigEndian)
             {
                 buffer.WriteInt(value);
@@ -5957,11 +6207,13 @@ public abstract class AbstractByteBufTest : IDisposable
         Assert.False(buffer.IsWritable());
 
         random = new Random(seed);
+
         for (int i = 0; i < buffer.Capacity; i += 4)
         {
             int value = NextSignedInt32();
             Assert.Equal(i, buffer.ReaderIndex);
             Assert.True(buffer.IsReadable());
+
             if (testBigEndian)
             {
                 Assert.Equal(value, buffer.ReadInt());
@@ -5981,11 +6233,13 @@ public abstract class AbstractByteBufTest : IDisposable
     private void AssertSequentialUnsignedIntAccess(bool testBigEndian)
     {
         buffer.WriterIndex = 0;
+
         for (int i = 0; i < buffer.Capacity; i += 4)
         {
             int value = NextSignedInt32();
             Assert.Equal(i, buffer.WriterIndex);
             Assert.True(buffer.IsWritable());
+
             if (testBigEndian)
             {
                 buffer.WriteInt(value);
@@ -6001,11 +6255,13 @@ public abstract class AbstractByteBufTest : IDisposable
         Assert.False(buffer.IsWritable());
 
         random = new Random(seed);
+
         for (int i = 0; i < buffer.Capacity; i += 4)
         {
             long value = NextSignedInt32() & 0xFFFFFFFFL;
             Assert.Equal(i, buffer.ReaderIndex);
             Assert.True(buffer.IsReadable());
+
             if (testBigEndian)
             {
                 Assert.Equal(value, buffer.ReadUnsignedInt());
@@ -6025,11 +6281,13 @@ public abstract class AbstractByteBufTest : IDisposable
     private void AssertSequentialLongAccess(bool testBigEndian)
     {
         buffer.WriterIndex = 0;
+
         for (int i = 0; i < buffer.Capacity; i += 8)
         {
             long value = NextSignedInt64();
             Assert.Equal(i, buffer.WriterIndex);
             Assert.True(buffer.IsWritable());
+
             if (testBigEndian)
             {
                 buffer.WriteLong(value);
@@ -6045,11 +6303,13 @@ public abstract class AbstractByteBufTest : IDisposable
         Assert.False(buffer.IsWritable());
 
         random = new Random(seed);
+
         for (int i = 0; i < buffer.Capacity; i += 8)
         {
             long value = NextSignedInt64();
             Assert.Equal(i, buffer.ReaderIndex);
             Assert.True(buffer.IsReadable());
+
             if (testBigEndian)
             {
                 Assert.Equal(value, buffer.ReadLong());
@@ -6127,6 +6387,7 @@ public abstract class AbstractByteBufTest : IDisposable
         buffer.WriteByte((byte)13);
         buffer.WriteByte((byte)14); // 14
         Assert.Equal(15, buffer.Capacity);
+
         for (int i = 0; i < 14; ++i)
         {
             Assert.Equal(i, buffer.IndexOf(i, buffer.Capacity, (byte)i));
@@ -6137,6 +6398,7 @@ public abstract class AbstractByteBufTest : IDisposable
         {
             Assert.Equal(i, buffer.IndexOf(buffer.Capacity, 0, (byte)i));
         }
+
         buffer.Release();
     }
 
@@ -6221,6 +6483,7 @@ public abstract class AbstractByteBufTest : IDisposable
         // Fill the random stuff
         byte[] value = new byte[32];
         random.NextBytes(value);
+
         // Prevent overflow / underflow
         if (value[0] == 0)
         {
@@ -6330,6 +6593,7 @@ public abstract class AbstractByteBufTest : IDisposable
         Assert.Equal(0, copy.ReaderIndex);
         Assert.Equal(buffer.ReadableBytes, copy.WriterIndex);
         Assert.Equal(buffer.ReadableBytes, copy.Capacity);
+
         // CLR BE/LE interpretation is fixed by each accessor; no mutable byte-order identity exists.
         for (int i = 0; i < copy.Capacity; i ++)
         {
@@ -6564,6 +6828,7 @@ public abstract class AbstractByteBufTest : IDisposable
     private void TestWriteCharSequenceExpand(Encoding charset)
     {
         ByteBuf buf = NewBuffer(1);
+
         try
         {
             int writerIndex = buf.Capacity - 1;
@@ -6620,6 +6885,7 @@ public abstract class AbstractByteBufTest : IDisposable
     private void TestSetCharSequenceNoExpand(Encoding charset)
     {
         ByteBuf buf = NewBuffer(1);
+
         try
         {
             buf.SetCharSequence(0, "AB", charset);
@@ -6659,10 +6925,12 @@ public abstract class AbstractByteBufTest : IDisposable
     static AbstractByteBufTest()
     {
         char[] chars = new char[256];
+
         for (char c = (char)0; c < chars.Length; c++)
         {
             chars[c] = c;
         }
+
         EXTENDED_ASCII_CHARS = new string(chars);
         ASCII_CHARS = new string(chars, 0, 128);
     }
@@ -7035,16 +7303,19 @@ public abstract class AbstractByteBufTest : IDisposable
         {
             buffer.SetByte(i, i);
         }
+
         // a writer index below the capacity, and a reader index at zero or above
         for (int readerIndex = 0; readerIndex <= 1; readerIndex++)
         {
             buffer.SetIndex(readerIndex, buffer.Capacity - 2);
             ByteBuf retainedDuplicate = null;
             ByteBuf retainedSlice = null;
+
             try
             {
                 retainedDuplicate = buffer.RetainedDuplicate();
                 retainedSlice = buffer.RetainedSlice();
+
                 foreach (ByteBuf derived in new ByteBuf[] { retainedDuplicate, retainedSlice })
                 {
                     AssertRetainedSliceBeforeAndAfterRead(derived.Duplicate());
@@ -7059,11 +7330,13 @@ public abstract class AbstractByteBufTest : IDisposable
                 {
                     retainedDuplicate.Release();
                 }
+
                 if (retainedSlice != null)
                 {
                     retainedSlice.Release();
                 }
             }
+
             Assert.Equal(1, buffer.RefCnt);
         }
     }
@@ -7072,6 +7345,7 @@ public abstract class AbstractByteBufTest : IDisposable
     public void TestSequentialSlice1()
     {
         buffer.WriterIndex = 0;
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             byte[] value = new byte[BLOCK_SIZE];
@@ -7083,6 +7357,7 @@ public abstract class AbstractByteBufTest : IDisposable
 
         random = new Random(seed);
         byte[] expectedValue = new byte[BLOCK_SIZE];
+
         for (int i = 0; i < buffer.Capacity - BLOCK_SIZE + 1; i += BLOCK_SIZE)
         {
             random.NextBytes(expectedValue);
@@ -7103,12 +7378,14 @@ public abstract class AbstractByteBufTest : IDisposable
         ByteBuf buf = NewBuffer(8);
         ByteBuf slice = initRetainedSlice ? buf.RetainedSlice(buf.ReaderIndex + 1, 2)
                                           : buf.Slice(buf.ReaderIndex + 1, 2);
+
         try
         {
             Assert.Equal(2, slice.Capacity);
             Assert.Equal(2, slice.MaxCapacity);
             int index = indexOutOfBounds ? 3 : 0;
             int length = indexOutOfBounds ? 0 : 3;
+
             if (finalRetainedSlice)
             {
                 // This is expected to fail ... so no need to release.
@@ -7125,6 +7402,7 @@ public abstract class AbstractByteBufTest : IDisposable
             {
                 slice.Release();
             }
+
             buf.Release();
         }
     }
@@ -7132,9 +7410,11 @@ public abstract class AbstractByteBufTest : IDisposable
     private void AssertReadSliceOutOfBounds(bool retainedSlice)
     {
         ByteBuf buf = NewBuffer(100);
+
         try
         {
             buf.WriteZero(50);
+
             if (retainedSlice)
             {
                 buf.ReadRetainedSlice(51);
@@ -7143,6 +7423,7 @@ public abstract class AbstractByteBufTest : IDisposable
             {
                 buf.ReadSlice(51);
             }
+
             Assert.Fail();
         }
         finally
@@ -7161,6 +7442,7 @@ public abstract class AbstractByteBufTest : IDisposable
     private static void AssertRetainedSliceMatchesTheReadableBytes(ByteBuf buf)
     {
         ByteBuf retainedSlice = buf.RetainedSlice();
+
         try
         {
             Assert.Equal(buf.ReadableBytes, retainedSlice.ReadableBytes);

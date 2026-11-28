@@ -54,9 +54,11 @@ public class UnpooledHeapByteBuf : AbstractReferenceCountedByteBuf
         UnpooledByteBufAllocator.UnpooledByteBufAllocatorMetric metric) : base(maxCapacity)
     {
         ArgumentNullException.ThrowIfNull(allocator);
+
         _bufferAllocator = allocator;
         if (initialCapacity < 0 || initialCapacity > maxCapacity)
             throw new ArgumentOutOfRangeException(nameof(initialCapacity));
+
         _array = new byte[initialCapacity];
         _metric = metric;
         _metric?.AddHeap(_array.Length);
@@ -78,6 +80,7 @@ public class UnpooledHeapByteBuf : AbstractReferenceCountedByteBuf
     private static int GetLength(byte[] array)
     {
         ArgumentNullException.ThrowIfNull(array);
+
         return array.Length;
     }
 
@@ -97,6 +100,7 @@ public class UnpooledHeapByteBuf : AbstractReferenceCountedByteBuf
             {
                 return;
             }
+
             byte[] replacement = new byte[value];
             _array.AsSpan(0, Math.Min(value, _array.Length)).CopyTo(replacement);
             // Publish only after successful allocation/copy; failure retains old data and indices.
@@ -109,7 +113,9 @@ public class UnpooledHeapByteBuf : AbstractReferenceCountedByteBuf
     public override ByteBuf Copy(int index, int length)
     {
         CheckIndex(index, length);
+
         ByteBuf result = Alloc().HeapBuffer(length, MaxCapacity);
+
         // CLR spans preserve the original array-write extension point without exposing the backing array.
         try
         {

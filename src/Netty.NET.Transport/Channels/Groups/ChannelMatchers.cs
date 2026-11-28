@@ -115,6 +115,7 @@ public static class ChannelMatchers
         {
             return matchers[0];
         }
+
         return new CompositeMatcher(matchers).Matches;
     }
 
@@ -136,6 +137,7 @@ public static class ChannelMatchers
                     return false;
                 }
             }
+
             return true;
         }
     }

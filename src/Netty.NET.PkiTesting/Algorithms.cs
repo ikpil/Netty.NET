@@ -186,6 +186,7 @@ internal static class Algorithms
             return ecdsa.VerifyData(data, signature, SignatureHash(algorithmIdentifier),
                                     DSASignatureFormat.Rfc3279DerSequence);
         }
+
         if (name.EndsWith("withrsa", StringComparison.Ordinal))
         {
             using RSA rsa = publicKey.GetRSAPublicKey() ?? throw new CryptographicException("Not an RSA key");
@@ -197,6 +198,7 @@ internal static class Algorithms
             using MLDsa mlDsa = publicKey.GetMLDsaPublicKey() ?? throw new CryptographicException("Not an ML-DSA key");
             return mlDsa.VerifyData(data, signature);
         }
+
         if (name.StartsWith("slh-dsa-", StringComparison.Ordinal))
         {
             using SlhDsa slhDsa = publicKey.GetSlhDsaPublicKey() ?? throw new CryptographicException("Not an SLH-DSA key");
@@ -220,6 +222,7 @@ internal static class Algorithms
         {
             return HashAlgorithmName.SHA512;
         }
+
         return HashAlgorithmName.SHA256;
     }
 
@@ -303,6 +306,7 @@ internal static class Algorithms
     internal static string GetSigAlgName(X509Certificate2 certificate)
     {
         string oid = certificate.SignatureAlgorithm.Value;
+
         foreach (string name in SIGNATURE_ALGORITHM_NAMES)
         {
             if (OidForAlgorithmName(name) == oid)
@@ -310,6 +314,7 @@ internal static class Algorithms
                 return name;
             }
         }
+
         return oid;
     }
 
@@ -332,9 +337,11 @@ internal static class Algorithms
                 {
                     return -1;
                 }
+
                 return basicConstraints.HasPathLengthConstraint ? basicConstraints.PathLengthConstraint : int.MaxValue;
             }
         }
+
         return -1;
     }
 
@@ -352,6 +359,7 @@ internal static class Algorithms
         AsnReader certificateSequence = new AsnReader(certificate.RawData, AsnEncodingRules.DER).ReadSequence();
         certificateSequence.ReadEncodedValue();
         certificateSequence.ReadEncodedValue();
+
         return certificateSequence.ReadBitString(out _);
     }
 
@@ -365,11 +373,14 @@ internal static class Algorithms
         {
             tbs.ReadEncodedValue(); // version
         }
+
         for (int i = 0; i < 6; i++)
         {
             tbs.ReadEncodedValue(); // serialNumber, signature, issuer, validity, subject, subjectPublicKeyInfo
         }
+
         Asn1Tag uniqueIdTag = new Asn1Tag(TagClass.ContextSpecific, tagNumber);
+
         while (tbs.HasData)
         {
             if (tbs.PeekTag().HasSameClassAndValue(uniqueIdTag))
@@ -380,8 +391,10 @@ internal static class Algorithms
                 value[bits.Length] = (byte) unusedBitCount;
                 return value;
             }
+
             tbs.ReadEncodedValue();
         }
+
         return null;
     }
 }

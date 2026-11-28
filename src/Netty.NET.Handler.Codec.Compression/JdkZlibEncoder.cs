@@ -231,6 +231,7 @@ public class JdkZlibEncoder : ZlibEncoder
         {
             throw new InvalidOperationException("not added to a pipeline");
         }
+
         return ctx;
     }
 
@@ -262,6 +263,7 @@ public class JdkZlibEncoder : ZlibEncoder
         {
             int heapBufferSize = Math.Min(len, MAX_INPUT_BUFFER_SIZE);
             ByteBuf heapBuf = ctx.Alloc().HeapBuffer(heapBufferSize, heapBufferSize);
+
             try
             {
                 while (uncompressed.IsReadable())
@@ -276,6 +278,7 @@ public class JdkZlibEncoder : ZlibEncoder
                 heapBuf.Release();
             }
         }
+
         // clear input so that we don't keep an unnecessary reference to the input array
         deflater.SetInput(EmptyArrays.EMPTY_BYTES);
     }
@@ -291,6 +294,7 @@ public class JdkZlibEncoder : ZlibEncoder
         if (writeHeader)
         {
             writeHeader = false;
+
             if (wrapper == ZlibWrapper.GZIP)
             {
                 @out.WriteBytes(gzipHeader);
@@ -298,15 +302,18 @@ public class JdkZlibEncoder : ZlibEncoder
         }
 
         int len = @in.ReadableBytes;
+
         if (wrapper == ZlibWrapper.GZIP)
         {
             crc.Append(new ReadOnlySpan<byte>(inAry, offset, len));
         }
 
         deflater.SetInput(inAry, offset, len);
+
         for (;;)
         {
             Deflate(@out);
+
             if (!@out.IsWritable())
             {
                 // The buffer is not writable anymore. Increase the capacity to make more room.
@@ -319,6 +326,7 @@ public class JdkZlibEncoder : ZlibEncoder
                 break;
             }
         }
+
         @in.SkipBytes(len);
     }
 
@@ -326,6 +334,7 @@ public class JdkZlibEncoder : ZlibEncoder
                                                      bool preferDirect)
     {
         int sizeEstimate = (int) Math.Ceiling(msg.ReadableBytes * 1.001) + 12;
+
         if (writeHeader)
         {
             switch (wrapper)
@@ -341,12 +350,14 @@ public class JdkZlibEncoder : ZlibEncoder
                     break;
             }
         }
+
         // sizeEstimate might overflow if close to 2G
         if (sizeEstimate < 0 || sizeEstimate > MAX_INITIAL_OUTPUT_BUFFER_SIZE)
         {
             // can always expand later
             return ctx.Alloc().HeapBuffer(MAX_INITIAL_OUTPUT_BUFFER_SIZE);
         }
+
         return ctx.Alloc().HeapBuffer(sizeEstimate);
     }
 
@@ -365,6 +376,7 @@ public class JdkZlibEncoder : ZlibEncoder
 
         finished = true;
         ByteBuf footer = ctx.Alloc().HeapBuffer();
+
         if (writeHeader && wrapper == ZlibWrapper.GZIP)
         {
             // Write the GZIP header first if not written yet. (i.e. user wrote nothing.)
@@ -377,6 +389,7 @@ public class JdkZlibEncoder : ZlibEncoder
         while (!deflater.Finished())
         {
             Deflate(footer);
+
             if (!footer.IsWritable())
             {
                 // no more space so write it to the channel and continue
@@ -384,6 +397,7 @@ public class JdkZlibEncoder : ZlibEncoder
                 footer = ctx.Alloc().HeapBuffer();
             }
         }
+
         if (wrapper == ZlibWrapper.GZIP)
         {
             int crcValue = unchecked((int) crc.GetCurrentHashAsUInt32());
@@ -391,13 +405,16 @@ public class JdkZlibEncoder : ZlibEncoder
             footer.WriteIntLE(crcValue);
             footer.WriteIntLE(uncBytes);
         }
+
         deflater.End();
+
         return ctx.WriteAndFlushAsync(footer, cancellationToken);
     }
 
     private void Deflate(ByteBuf @out)
     {
         int numBytes;
+
         do
         {
             int writerIndex = @out.WriterIndex;
@@ -433,6 +450,7 @@ public class JdkZlibEncoder : ZlibEncoder
         {
             return array;
         }
+
         throw new NotSupportedException("the buffer range is not backed by one managed array");
     }
 }

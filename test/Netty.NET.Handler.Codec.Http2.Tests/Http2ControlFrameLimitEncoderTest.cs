@@ -92,10 +92,12 @@ public class Http2ControlFrameLimitEncoderTest : IDisposable
                 .Returns<IChannelHandlerContext, bool, long, TaskCompletionSource>((c, ack, data, p) =>
                 {
                     TaskCompletionSource promise = HandlePromise(p);
+
                     if (!ack)
                     {
                         promise.TrySetResult();
                     }
+
                     return promise.Task;
                 });
         writer.Setup(w => w.WriteGoAwayAsync(It.IsAny<IChannelHandlerContext>(), It.IsAny<int>(), It.IsAny<long>(),
@@ -143,6 +145,7 @@ public class Http2ControlFrameLimitEncoderTest : IDisposable
         {
             promise.SetResult();
         }
+
         return promise;
     }
 
@@ -159,6 +162,7 @@ public class Http2ControlFrameLimitEncoderTest : IDisposable
             {
                 break;
             }
+
             promise.SetResult();
         }
     }
@@ -251,7 +255,9 @@ public class Http2ControlFrameLimitEncoderTest : IDisposable
         {
             ctxMock.Verify(c => c.Flush(), Times.AtLeast(invocations));
         }
+
         ctxMock.Verify(c => c.CloseAsync(It.IsAny<CancellationToken>()), Times.Exactly(invocations));
+
         if (failed)
         {
             writer.Verify(w => w.WriteGoAwayAsync(ctx, int.MaxValue, ENHANCE_YOUR_CALM.Code(),

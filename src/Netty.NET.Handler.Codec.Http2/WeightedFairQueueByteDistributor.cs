@@ -104,6 +104,7 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
     public WeightedFairQueueByteDistributor(IHttp2Connection connection, int maxStateOnlySize)
     {
         CheckPositiveOrZero(maxStateOnlySize, "maxStateOnlySize");
+
         if (maxStateOnlySize == 0)
         {
             stateOnlyMap = new Dictionary<int, State>(0);
@@ -116,6 +117,7 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
             // to create the State objects to put them into the dependency tree, which then impacts priority.
             stateOnlyRemovalQueue = new DefaultPriorityQueue<State>(StateOnlyComparator.INSTANCE, maxStateOnlySize + 2);
         }
+
         this.maxStateOnlySize = maxStateOnlySize;
 
         this.connection = connection;
@@ -140,6 +142,7 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
         public override void OnStreamAdded(IHttp2Stream stream)
         {
             distributor.stateOnlyMap.Remove(stream.Id(), out State state);
+
             if (state == null)
             {
                 state = new State(distributor, stream);
@@ -153,6 +156,7 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
                 distributor.stateOnlyRemovalQueue.Remove(state);
                 state.stream = stream;
             }
+
             IHttp2Stream.State streamState = stream.State_();
             if (streamState == IHttp2Stream.State.RESERVED_REMOTE || streamState == IHttp2Stream.State.RESERVED_LOCAL)
             {
@@ -160,6 +164,7 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
                 // wasStreamReservedOrActivated is part of the comparator for stateOnlyRemovalQueue there is no
                 // need to reprioritize here because it will not be in stateOnlyRemovalQueue.
             }
+
             stream.SetProperty(distributor.stateKey, state);
         }
 
@@ -192,6 +197,7 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
                 state.parent.RemoveChild(state);
                 return;
             }
+
             if (distributor.stateOnlyRemovalQueue.Count == distributor.maxStateOnlySize)
             {
                 State stateToRemove = Peek(distributor.stateOnlyRemovalQueue);
@@ -202,10 +208,12 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
                     state.parent.RemoveChild(state);
                     return;
                 }
+
                 Poll(distributor.stateOnlyRemovalQueue);
                 stateToRemove.parent.RemoveChild(stateToRemove);
                 distributor.stateOnlyMap.Remove(stateToRemove.streamId);
             }
+
             distributor.stateOnlyRemovalQueue.TryEnqueue(state);
             distributor.stateOnlyMap[state.streamId] = state;
         }
@@ -229,6 +237,7 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
             {
                 return;
             }
+
             state = new State(this, childStreamId);
             stateOnlyRemovalQueue.TryEnqueue(state);
             stateOnlyMap[childStreamId] = state;
@@ -244,6 +253,7 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
             {
                 return;
             }
+
             newParent = new State(this, parentStreamId);
             stateOnlyRemovalQueue.TryEnqueue(newParent);
             stateOnlyMap[parentStreamId] = newParent;
@@ -259,11 +269,13 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
         {
             state.parent.totalQueuedWeights += weight - state.weight;
         }
+
         state.weight = weight;
 
         if (newParent != state.parent || exclusive && newParent.children.Count != 1)
         {
             List<ParentChangedEvent> events;
+
             if (newParent.IsDescendantOf(state))
             {
                 events = new List<ParentChangedEvent>(2 + (exclusive ? newParent.children.Count : 0));
@@ -273,6 +285,7 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
             {
                 events = new List<ParentChangedEvent>(1 + (exclusive ? newParent.children.Count : 0));
             }
+
             newParent.TakeChild(state, exclusive, events);
             NotifyParentChanged(events);
         }
@@ -300,6 +313,7 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
         // We still attempt to write even after the number of allocated bytes has been exhausted to allow empty frames
         // to be sent. Making progress means the active streams rooted at the connection stream has changed.
         int oldIsActiveCountForTree;
+
         do
         {
             oldIsActiveCountForTree = connectionState.activeCountForTree;
@@ -318,6 +332,7 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
     public void AllocationQuantum(int allocationQuantum)
     {
         CheckPositive(allocationQuantum, "allocationQuantum");
+
         this.allocationQuantum = allocationQuantum;
     }
 
@@ -327,6 +342,7 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
         {
             int nsent = Math.Min(maxBytes, state.streamableBytes);
             state.Write(nsent, writer);
+
             if (nsent == 0 && maxBytes != 0)
             {
                 // If a stream sends zero bytes, then we gave it a chance to write empty frames and it is now
@@ -335,6 +351,7 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
                 // stream's flow control window being 0.
                 state.UpdateStreamableBytes(state.streamableBytes, false);
             }
+
             return nsent;
         }
 
@@ -357,6 +374,7 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
         State childState = state.PollPseudoTimeQueue();
         State nextChildState = state.PeekPseudoTimeQueue();
         childState.SetDistributing();
+
         try
         {
             Debug.Assert(nextChildState == null || nextChildState.pseudoTimeToWrite >= childState.pseudoTimeToWrite,
@@ -377,6 +395,7 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
         finally
         {
             childState.UnsetDistributing();
+
             // Do in finally to ensure the internal flags is not corrupted if an exception is thrown.
             // The offer operation is delayed until we unroll up the recursive stack, so we don't have to remove from
             // the priority pseudoTimeQueue due to a write operation.
@@ -428,6 +447,7 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
         {
             ParentChangedEvent @event = events[i];
             stateOnlyRemovalQueue.PriorityChanged(@event.state);
+
             if (@event.state.parent != null && @event.state.activeCountForTree != 0)
             {
                 @event.state.parent.OfferAndInitializePseudoTime(@event.state);
@@ -469,6 +489,7 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
             {
                 return o1Actived ? -1 : 1;
             }
+
             // Numerically greater depth is higher priority.
             int x = o2.dependencyTreeDepth - o1.dependencyTreeDepth;
 
@@ -562,14 +583,17 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
         internal bool IsDescendantOf(State state)
         {
             State next = parent;
+
             while (next != null)
             {
                 if (next == state)
                 {
                     return true;
                 }
+
                 next = next.parent;
             }
+
             return false;
         }
 
@@ -593,6 +617,7 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
             {
                 events.Add(new ParentChangedEvent(child, oldParent));
                 child.SetParent(this);
+
                 // If the childItr is not null we are iterating over the oldParent.children collection and should
                 // use the iterator to remove from the collection to avoid concurrent modification. Otherwise it is
                 // assumed we are not iterating over this collection and it is safe to call remove directly.
@@ -618,6 +643,7 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
                 // If it was requested that this child be the exclusive dependency of this node,
                 // move any previous children to the child node, becoming grand children of this node.
                 Dictionary<int, State> prevChildren = RemoveAllChildrenExcept(child);
+
                 foreach (KeyValuePair<int, State> entry in prevChildren)
                 {
                     child.TakeChild(prevChildren, entry.Value, false, events);
@@ -641,6 +667,7 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
                     // Move up any grand children to be directly dependent on this node.
                     Dictionary<int, State> itr = child.children;
                     long totalWeight = child.GetTotalWeight();
+
                     foreach (KeyValuePair<int, State> entry in itr)
                     {
                         // Redistribute the weight of child to its dependency proportionally.
@@ -657,10 +684,12 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
         private long GetTotalWeight()
         {
             long totalWeight = 0L;
+
             foreach (State state in children.Values)
             {
                 totalWeight += state.weight;
             }
+
             return totalWeight;
         }
 
@@ -676,10 +705,12 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
             // This map should be re-initialized in anticipation for the 1 exclusive child which will be added.
             // It will either be added directly in this method, or after this method is called...but it will be added.
             InitChildren();
+
             if (stateToRetain != null)
             {
                 children[stateToRetain.streamId] = stateToRetain;
             }
+
             return prevChildren;
         }
 
@@ -691,6 +722,7 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
                 parent.RemovePseudoTimeQueue(this);
                 parent.ActiveCountChangeForTree(-activeCountForTree);
             }
+
             parent = newParent;
             // Use MAX_VALUE if no parent because lower depth is considered higher priority by StateOnlyComparator.
             dependencyTreeDepth = newParent == null ? int.MaxValue : newParent.dependencyTreeDepth + 1;
@@ -712,6 +744,7 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
         internal void Write(int numBytes, IStreamByteDistributor.IWriter writer)
         {
             Debug.Assert(stream != null);
+
             try
             {
                 writer.Write(stream, numBytes);
@@ -726,6 +759,7 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
         {
             Debug.Assert(activeCountForTree + increment >= 0);
             activeCountForTree += increment;
+
             if (parent != null)
             {
                 Debug.Assert(activeCountForTree != increment ||
@@ -735,6 +769,7 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
                      increment.ToString(CultureInfo.InvariantCulture) + " is in a " +
                      "pseudoTimeQueue, but not in parent[ " + parent.streamId.ToString(CultureInfo.InvariantCulture) +
                      "]'s pseudoTimeQueue");
+
                 if (activeCountForTree == 0)
                 {
                     parent.RemovePseudoTimeQueue(this);
@@ -751,6 +786,7 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
                     // not blocked and finished writing all data).
                     parent.OfferAndInitializePseudoTime(this);
                 }
+
                 parent.ActiveCountChangeForTree(increment);
             }
         }
@@ -894,6 +930,7 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
             // Use activeCountForTree as a rough estimate for how many nodes are in this subtree.
             StringBuilder sb = new StringBuilder(256 * (activeCountForTree > 0 ? activeCountForTree : 1));
             ToString(sb);
+
             return sb.ToString();
         }
 
@@ -918,9 +955,11 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
                     s.ToString(sb);
                     sb.Append(", ");
                 }
+
                 // Remove the last ", "
                 sb.Length = sb.Length - 2;
             }
+
             sb.Append(']');
         }
     }

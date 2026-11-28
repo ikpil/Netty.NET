@@ -144,6 +144,7 @@ internal static class Http3CodecUtils
         {
             return 8;
         }
+
         throw new ArgumentException();
     }
 
@@ -168,6 +169,7 @@ internal static class Http3CodecUtils
     internal static void WriteVariableLengthInteger(ByteBuf @out, long value, int numBytes)
     {
         int writerIndex = @out.WriterIndex;
+
         switch (numBytes)
         {
             case 1:
@@ -233,12 +235,15 @@ internal static class Http3CodecUtils
             {
                 return 8;
             }
+
             return 2;
         }
+
         if ((val & 2) != 0)
         {
             return 4;
         }
+
         return 1;
     }
 
@@ -264,6 +269,7 @@ internal static class Http3CodecUtils
         {
             ctx.FireExceptionCaught(exception);
         }
+
         ConnectionError(ctx.Channel, exception.ErrorCode(), exception.Message);
     }
 
@@ -282,6 +288,7 @@ internal static class Http3CodecUtils
          {
              ctx.FireExceptionCaught(new Http3Exception(errorCode, msg));
          }
+
          ConnectionError(ctx.Channel, errorCode, msg);
     }
 
@@ -299,6 +306,7 @@ internal static class Http3CodecUtils
             _ = channel.CloseAsync();
             return;
         }
+
         _ = future.ContinueWith(static (t, state) =>
         {
             if (!t.IsCompletedSuccessfully)
@@ -327,7 +335,9 @@ internal static class Http3CodecUtils
         {
             quicChannel = (IQuicChannel) channel.Parent;
         }
+
         ByteBuf buffer;
+
         if (msg != null)
         {
             // As we call an operation on the parent we should also use the parents allocator to allocate the buffer.
@@ -338,6 +348,7 @@ internal static class Http3CodecUtils
         {
             buffer = Unpooled.EmptyBuffer;
         }
+
         _ = quicChannel.CloseAsync(true, errorCode.code, buffer);
     }
 
@@ -370,6 +381,7 @@ internal static class Http3CodecUtils
                     StringUtil.SimpleClassName(typeof(Http3ConnectionHandler)) + " of the parent Channel");
             return null;
         }
+
         return connectionHandler;
     }
 
@@ -421,6 +433,7 @@ internal static class Http3CodecUtils
             promise.TrySetFromTask(future);
             return;
         }
+
         _ = future.ContinueWith(static (t, state) => ((TaskCompletionSource) state).TrySetFromTask(t), promise,
                 CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously,
                 new EventExecutorTaskScheduler(() => ctx.Executor));
@@ -448,6 +461,7 @@ internal static class Http3CodecUtils
         {
             return new TaskCanceledException(future);
         }
+
         return null;
     }
 }

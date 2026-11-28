@@ -48,10 +48,12 @@ public abstract class AbstractWeightedFairQueueByteDistributorDependencyTest
             state.pendingBytes -= numBytes;
             state.hasFrame = state.pendingBytes > 0;
             state.isWriteAllowed = state.hasFrame;
+
             if (closeIfNoFrame && !state.hasFrame)
             {
                 stream.Close();
             }
+
             distributor.UpdateStreamableBytes(state);
         };
     }

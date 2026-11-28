@@ -101,6 +101,7 @@ public class Http2FrameCodecTest : IDisposable
             inboundHandler.FinishAndReleaseAll();
             inboundHandler = null;
         }
+
         if (channel != null)
         {
             channel.FinishAndReleaseAll();
@@ -344,6 +345,7 @@ public class Http2FrameCodecTest : IDisposable
         Assert.Equal(Http2Error.PROTOCOL_ERROR, e.Error());
         // It must not be delivered as a HEADERS frame.
         object msg;
+
         while ((msg = inboundHandler.ReadInboundMessageOrUserEvent<object>()) != null)
         {
             Assert.False(msg is IHttp2HeadersFrame);
@@ -504,6 +506,7 @@ public class Http2FrameCodecTest : IDisposable
             {
                 accumulate = ctx.Alloc().CompositeBuffer();
             }
+
             accumulate.AddComponent((ByteBuf) msg, true);
         }
 
@@ -1087,6 +1090,7 @@ public class Http2FrameCodecTest : IDisposable
                             }
                         });
             }
+
             ReferenceCountUtil.Release(msg);
         }
     }

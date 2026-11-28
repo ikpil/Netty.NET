@@ -29,6 +29,7 @@ public class ByteBufDecoderPolicyTest
     public void OriginalFastWritableScenariosTrackWritesAndCompaction(bool direct)
     {
         ByteBuf buffer = direct ? Unpooled.DirectBuffer(150, 500) : Unpooled.Buffer(150, 500);
+
         try
         {
             buffer.WriterIndex = 100;
@@ -73,6 +74,7 @@ public class ByteBufDecoderPolicyTest
             8 => Unpooled.Buffer(0, 32),
             _ => Unpooled.Buffer(8, 32).WriteZero(8)
         };
+
         try
         {
             int capacity = owner.Capacity, reader = capacity == 0 ? 0 : 2, writer = capacity == 0 ? 0 : 6;
@@ -98,6 +100,7 @@ public class ByteBufDecoderPolicyTest
                 Assert.False(owner.IsContiguous);
                 Assert.False(owner.Slice(0, 4).IsContiguous);
             }
+
             ByteBuf readOnly = owner.AsReadOnly();
             Assert.Equal(capacity - writer, readOnly.MaxFastWritableBytes);
             Assert.False(readOnly.IsWritable(0));
@@ -115,6 +118,7 @@ public class ByteBufDecoderPolicyTest
     public void CompositeHintRemainsConservativeAcrossStructuralChanges(bool direct)
     {
         CompositeByteBuf buffer = new(16, direct);
+
         try
         {
             Assert.False(buffer.IsContiguous);
@@ -147,6 +151,7 @@ public class ByteBufDecoderPolicyTest
     public void TransparentWrappersForwardHiddenReservationWhileDerivedViewsUseTheirOwnBounds()
     {
         ByteBuf owner = new ReservedBuffer().SetIndex(1, 6);
+
         try
         {
             ByteBuf wrapped = new SimpleLeakAwareByteBuf(owner, new Tracker());
@@ -214,6 +219,7 @@ public class ByteBufDecoderPolicyTest
         buffer.SetIndex(1, 5).MarkReaderIndex().MarkWriterIndex();
         byte[] expected = ByteBufUtil.GetBytes(buffer, 1, 3);
         long heap = allocator.Metric.UsedHeapMemory, direct = allocator.Metric.UsedDirectMemory;
+
         try
         {
             read = buffer.ReadBytes(3);
@@ -249,6 +255,7 @@ public class ByteBufDecoderPolicyTest
         finally
         {
             read?.Release();
+
             if (owner.RefCnt > 0)
             {
                 owner.Release();
@@ -262,6 +269,7 @@ public class ByteBufDecoderPolicyTest
     {
         var allocator = new ProbeAllocator(preferDirect) { FailAllocation = true };
         ByteBuf source = new UnpooledHeapByteBuf(allocator, 8, 32).WriteZero(8).SetIndex(2, 5);
+
         try
         {
             Assert.Same(Unpooled.EmptyBuffer, source.ReadBytes(0));
@@ -289,6 +297,7 @@ public class ByteBufDecoderPolicyTest
         var allocator = new ProbeAllocator(preferDirect) { ExtraCapacity = 5 };
         ByteBuf source = new UnpooledHeapByteBuf(allocator, 8, 32).WriteBytes(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 }).SetIndex(2, 7);
         ByteBuf read = null;
+
         try
         {
             read = source.ReadBytes(3);
@@ -307,6 +316,7 @@ public class ByteBufDecoderPolicyTest
             read?.Release();
             source.Release();
         }
+
         Assert.Equal(0, allocator.Native.ReservedBytes);
     }
 
@@ -318,6 +328,7 @@ public class ByteBufDecoderPolicyTest
         var allocator = new ProbeAllocator(preferDirect) { FailAllocation = failure == 0, ReadOnly = failure == 1 };
         ByteBuf source = failure == 2 ? new FailingReadBuffer(allocator) : new UnpooledHeapByteBuf(allocator, 8, 32);
         source.WriteZero(8).SetIndex(2, 7);
+
         try
         {
             if (failure == 1)
@@ -328,11 +339,13 @@ public class ByteBufDecoderPolicyTest
             {
                 Assert.Throws<InvalidOperationException>(() => source.ReadBytes(3));
             }
+
             Assert.Equal(1, allocator.Calls);
             Assert.Equal((3, 32), allocator.Requested);
             Assert.Equal(2, source.ReaderIndex);
             Assert.Equal(7, source.WriterIndex);
             Assert.Equal(1, source.RefCnt);
+
             if (failure == 0)
             {
                 Assert.Null(allocator.Last);
@@ -341,6 +354,7 @@ public class ByteBufDecoderPolicyTest
             {
                 Assert.Equal(0, allocator.Last.RefCnt);
             }
+
             Assert.Equal(0, allocator.Native.ReservedBytes);
         }
         finally
@@ -355,6 +369,7 @@ public class ByteBufDecoderPolicyTest
         using var manager = new ArrayManager();
         ByteBuf writable = Unpooled.WrappedBuffer(manager.Memory);
         ByteBuf readOnly = new ReadOnlyMemoryByteBuf(UnpooledByteBufAllocator.Default, manager.Memory);
+
         try
         {
             Assert.True(writable.IsContiguous);
@@ -371,6 +386,7 @@ public class ByteBufDecoderPolicyTest
             writable.Release();
             readOnly.Release();
         }
+
         Assert.Equal(77, manager.GetSpan()[2]);
         Assert.False(manager.Disposed);
     }
@@ -390,6 +406,7 @@ public class ByteBufDecoderPolicyTest
             set
             {
                 CheckNewCapacity(value);
+
                 _capacity = value;
                 TrimIndicesToCapacity(value);
             }
@@ -428,6 +445,7 @@ public class ByteBufDecoderPolicyTest
             Requested = (initial, maximum);
             if (FailAllocation)
                 throw new InvalidOperationException("Deliberate allocation failure.");
+
             ByteBuf result = direct ? new UnpooledDirectByteBuf(this, initial + ExtraCapacity, maximum, Native)
                 : new UnpooledHeapByteBuf(this, initial + ExtraCapacity, maximum);
             Last = ReadOnly ? result.AsReadOnly() : result;

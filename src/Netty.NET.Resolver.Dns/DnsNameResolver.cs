@@ -160,9 +160,11 @@ public class DnsNameResolver : InetNameResolver
                 DEFAULT_RESOLVE_ADDRESS_TYPES = Netty.NET.Resolver.ResolvedAddressTypes.Ipv4Preferred;
             }
         }
+
         logger.Debug("Default ResolvedAddressTypes: {}", DEFAULT_RESOLVE_ADDRESS_TYPES);
 
         string hostName;
+
         try
         {
             hostName = PlatformDependent.IsWindows() ? System.Net.Dns.GetHostName() : null;
@@ -171,10 +173,12 @@ public class DnsNameResolver : InetNameResolver
         {
             hostName = null;
         }
+
         WINDOWS_HOST_NAME = hostName;
         logger.Debug("Windows hostname: {}", WINDOWS_HOST_NAME);
 
         string[] searchDomains;
+
         try
         {
             IReadOnlyList<string> list = PlatformDependent.IsWindows()
@@ -187,10 +191,12 @@ public class DnsNameResolver : InetNameResolver
             // Failed to get the system name search domain list.
             searchDomains = EmptyArrays.EMPTY_STRINGS;
         }
+
         DEFAULT_SEARCH_DOMAINS = searchDomains;
         logger.Debug("Default search domains: {}", ArraysToString(DEFAULT_SEARCH_DOMAINS));
 
         UnixResolverOptions options;
+
         try
         {
             options = UnixResolverDnsServerAddressStreamProvider.ParseEtcResolverOptions();
@@ -199,11 +205,13 @@ public class DnsNameResolver : InetNameResolver
         {
             options = UnixResolverOptions.NewBuilder().Build();
         }
+
         DEFAULT_OPTIONS = options;
         logger.Debug("Default {}", DEFAULT_OPTIONS);
 
         resolveLocalhostWithoutDns =
                 SystemPropertyUtil.GetBoolean(RESOLVE_LOCALHOST_WITHOUT_DNS_PROPERTY, true);
+
         if (logger.IsDebugEnabled())
         {
             logger.Debug("-D{}: {}", RESOLVE_LOCALHOST_WITHOUT_DNS_PROPERTY, resolveLocalhostWithoutDns);
@@ -236,6 +244,7 @@ public class DnsNameResolver : InetNameResolver
                 }
             }
         }
+
         return false;
     }
 
@@ -255,6 +264,7 @@ public class DnsNameResolver : InetNameResolver
         protected override IDnsResponse DecodeResponse(IChannelHandlerContext ctx, DatagramPacket packet)
         {
             IDnsResponse response = base.DecodeResponse(ctx, packet);
+
             if (packet.Content.IsReadable())
             {
                 // If there is still something to read we did stop parsing because of a truncated message.
@@ -269,6 +279,7 @@ public class DnsNameResolver : InetNameResolver
                             StringUtil.SimpleClassName(typeof(DnsNameResolver)));
                 }
             }
+
             return response;
         }
     }
@@ -389,6 +400,7 @@ public class DnsNameResolver : InetNameResolver
         this.decodeIdn = decodeIdn;
         this.completeOncePreferredResolved = completeOncePreferredResolved;
         this.retryWithTcpOnTimeout = retryWithTcpOnTimeout;
+
         if (socketChannelFactory == null)
         {
             socketBootstrap = null;
@@ -401,6 +413,7 @@ public class DnsNameResolver : InetNameResolver
                     .ChannelFactory(socketChannelFactory)
                     .Attr(DNS_PIPELINE_ATTRIBUTE, (object) true)
                     .Handler(NOOP_HANDLER);
+
             if (queryTimeoutMillis > 0 && queryTimeoutMillis <= int.MaxValue)
             {
                 // Set the connect timeout to the same as queryTimeout as otherwise it might take a long
@@ -408,6 +421,7 @@ public class DnsNameResolver : InetNameResolver
                 socketBootstrap.Option(ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) queryTimeoutMillis);
             }
         }
+
         switch (this.resolvedAddressTypes)
         {
             case Netty.NET.Resolver.ResolvedAddressTypes.Ipv4Only:
@@ -437,11 +451,13 @@ public class DnsNameResolver : InetNameResolver
             default:
                 throw new ArgumentException("Unknown ResolvedAddressTypes " + resolvedAddressTypes);
         }
+
         preferredAddressType = PreferredAddressType(this.resolvedAddressTypes);
         this.authoritativeDnsServerCache =
                 ObjectUtil.CheckNotNull(authoritativeDnsServerCache, "authoritativeDnsServerCache");
         nameServerComparator = new NameServerComparator(AddressType(preferredAddressType).Value);
         this.maxNumConsolidation = maxNumConsolidation;
+
         if (maxNumConsolidation > 0)
         {
             inflightLookups =
@@ -458,6 +474,7 @@ public class DnsNameResolver : InetNameResolver
                 .Group(eventLoop)
                 .Attr(DNS_PIPELINE_ATTRIBUTE, (object) true)
                 .Handler(new DatagramChannelInitializer(maxPayloadSize, responseHandler));
+
         if (localAddress == null)
         {
             // CLR: the constructor's @SuppressWarnings("deprecation") covers the deprecated
@@ -466,6 +483,7 @@ public class DnsNameResolver : InetNameResolver
             bootstrap.Option(ChannelOption.DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION, true);
 #pragma warning restore CS0612
         }
+
         this.resolveChannelProvider = NewProvider(datagramChannelStrategy, bootstrap, localAddress, listenerScheduler);
     }
 
@@ -557,8 +575,10 @@ public class DnsNameResolver : InetNameResolver
             // If there is no cache hit (which may be the case for example when a NoopAuthoritativeDnsServerCache
             // is used), we will just directly use the provided nameservers.
             SortStable(nameservers, nameServerComparator);
+
             return new SequentialDnsServerAddressStream(nameservers, 0);
         }
+
         return cached;
     }
 
@@ -566,6 +586,7 @@ public class DnsNameResolver : InetNameResolver
     internal static void SortStable<T>(List<T> list, IComparer<T> comparator)
     {
         List<T> sorted = list.OrderBy(e => e, comparator).ToList();
+
         for (int i = 0; i < sorted.Count; i++)
         {
             list[i] = sorted[i];
@@ -730,6 +751,7 @@ public class DnsNameResolver : InetNameResolver
         {
             return null;
         }
+
         IPAddress address = hostsFileEntriesResolver.Address(hostname, resolvedAddressTypes);
         return address == null && IsLocalHostAddress(hostname)? GetLocalHostAddress() : address;
     }
@@ -740,7 +762,9 @@ public class DnsNameResolver : InetNameResolver
         {
             return null;
         }
+
         IReadOnlyList<IPAddress> addresses;
+
         if (hostsFileEntriesResolver is DefaultHostsFileEntriesResolver)
         {
             addresses = ((DefaultHostsFileEntriesResolver) hostsFileEntriesResolver)
@@ -751,6 +775,7 @@ public class DnsNameResolver : InetNameResolver
             IPAddress address = hostsFileEntriesResolver.Address(hostname, resolvedAddressTypes);
             addresses = address != null? SingletonList(address) : null;
         }
+
         return addresses == null && IsLocalHostAddress(hostname)?
                 SingletonList(GetLocalHostAddress()) : addresses;
     }
@@ -795,6 +820,7 @@ public class DnsNameResolver : InetNameResolver
         {
             hostname = hostname.Substring(0, hostname.Length - 1);
         }
+
         return string.Equals(hostname, LOCALHOST, StringComparison.OrdinalIgnoreCase)
                 || hostname.ToLowerInvariant().EndsWith(DOT_LOCALHOST, StringComparison.Ordinal);
     }
@@ -841,7 +867,9 @@ public class DnsNameResolver : InetNameResolver
         {
             return Task.FromCanceled<IPAddress>(cancellationToken);
         }
+
         IDnsRecord[] additionalsArray = ToArray(additionals, true);
+
         try
         {
             return DoResolveAsync(inetHost, additionalsArray, resolveCache, cancellationToken);
@@ -877,7 +905,9 @@ public class DnsNameResolver : InetNameResolver
         {
             return Task.FromCanceled<IReadOnlyList<IPAddress>>(cancellationToken);
         }
+
         IDnsRecord[] additionalsArray = ToArray(additionals, true);
+
         try
         {
             return DoResolveAllAsync(inetHost, additionalsArray, resolveCache, cancellationToken);
@@ -959,9 +989,11 @@ public class DnsNameResolver : InetNameResolver
             if (hostsFileEntries != null)
             {
                 List<IDnsRecord> result = new List<IDnsRecord>();
+
                 foreach (IPAddress hostsFileEntry in hostsFileEntries)
                 {
                     ByteBuf content = null;
+
                     if (hostsFileEntry.AddressFamily == AddressFamily.InterNetwork)
                     {
                         if (type == DnsRecordType.A)
@@ -976,6 +1008,7 @@ public class DnsNameResolver : InetNameResolver
                             content = Unpooled.WrappedBuffer(hostsFileEntry.GetAddressBytes());
                         }
                     }
+
                     if (content != null)
                     {
                         // Our current implementation does not support reloading the hosts file,
@@ -994,6 +1027,7 @@ public class DnsNameResolver : InetNameResolver
                             ReferenceCountUtil.SafeRelease(r);
                         }
                     }
+
                     return promise.Task;
                 }
             }
@@ -1008,6 +1042,7 @@ public class DnsNameResolver : InetNameResolver
         {
             AddListener(f, f1 => ResolveAllNow(f1, hostname, question, additionals, promise));
         }
+
         return promise.Task;
     }
 
@@ -1042,10 +1077,12 @@ public class DnsNameResolver : InetNameResolver
         {
             ReferenceCountUtil.Release(question);
         }
+
         foreach (IDnsRecord record in additionals)
         {
             ReferenceCountUtil.Release(record);
         }
+
         return e;
     }
 
@@ -1054,13 +1091,16 @@ public class DnsNameResolver : InetNameResolver
     private static IDnsRecord[] ToArray(IEnumerable<IDnsRecord> additionals, bool validateType)
     {
         ObjectUtil.CheckNotNull(additionals, "additionals");
+
         if (additionals is ICollection<IDnsRecord>)
         {
             ICollection<IDnsRecord> records = (ICollection<IDnsRecord>) additionals;
+
             foreach (IDnsRecord r in additionals)
             {
                 ValidateAdditional(r, validateType);
             }
+
             IDnsRecord[] array = new IDnsRecord[records.Count];
             records.CopyTo(array, 0);
             return array;
@@ -1071,7 +1111,9 @@ public class DnsNameResolver : InetNameResolver
         {
             return EMPTY_ADDITIONALS;
         }
+
         List<IDnsRecord> recordList = new List<IDnsRecord>();
+
         do
         {
             IDnsRecord r = additionalsIt.Current;
@@ -1116,12 +1158,14 @@ public class DnsNameResolver : InetNameResolver
                              CancellationToken cancellationToken)
     {
         TaskCompletionSource<IPAddress> promise = NewPromise<IPAddress>(cancellationToken);
+
         if (inetHost == null || inetHost.Length == 0)
         {
             // If an empty hostname is used we should use "localhost", just like InetAddress.getByName(...) does.
             promise.SetResult(LoopbackAddress());
             return promise.Task;
         }
+
         IPAddress address = NetUtil.CreateInetAddressFromIpAddressString(inetHost);
         if (address != null)
         {
@@ -1152,6 +1196,7 @@ public class DnsNameResolver : InetNameResolver
                         DoResolveNow(f1, hostname, additionals, promise, resolveCache));
             }
         }
+
         return promise.Task;
     }
 
@@ -1186,6 +1231,7 @@ public class DnsNameResolver : InetNameResolver
         if (cause == null)
         {
             int numEntries = cachedEntries.Count;
+
             // Find the first entry with the preferred address type.
             foreach (SocketProtocolFamily f in resolvedInternetProtocolFamilies)
             {
@@ -1200,6 +1246,7 @@ public class DnsNameResolver : InetNameResolver
                     }
                 }
             }
+
             return false;
         }
         else
@@ -1235,6 +1282,7 @@ public class DnsNameResolver : InetNameResolver
             // wants to better understand what happened.
             logger.Trace("Failed to notify success ({}) to a promise: {}", result, promise);
         }
+
         return notifiedRecords;
     }
 
@@ -1290,12 +1338,14 @@ public class DnsNameResolver : InetNameResolver
     {
         TaskCompletionSource<IReadOnlyList<IPAddress>> promise =
                 NewPromise<IReadOnlyList<IPAddress>>(cancellationToken);
+
         if (inetHost == null || inetHost.Length == 0)
         {
             // If an empty hostname is used we should use "localhost", just like InetAddress.getAllByName(...) does.
             promise.SetResult(SingletonList(LoopbackAddress()));
             return promise.Task;
         }
+
         IPAddress address = NetUtil.CreateInetAddressFromIpAddressString(inetHost);
         if (address != null)
         {
@@ -1327,6 +1377,7 @@ public class DnsNameResolver : InetNameResolver
                         DoResolveAllNow(f1, hostname, additionals, promise, resolveCache));
             }
         }
+
         return promise.Task;
     }
 
@@ -1373,6 +1424,7 @@ public class DnsNameResolver : InetNameResolver
                 }
             }
         }
+
         if (!HasEntries(cachedEntries))
         {
             return false;
@@ -1383,6 +1435,7 @@ public class DnsNameResolver : InetNameResolver
         {
             List<IPAddress> result = null;
             int numEntries = cachedEntries.Count;
+
             foreach (SocketProtocolFamily f in resolvedInternetProtocolFamilies)
             {
                 for (int i = 0; i < numEntries; i++)
@@ -1395,15 +1448,18 @@ public class DnsNameResolver : InetNameResolver
                         {
                             result = new List<IPAddress>(numEntries);
                         }
+
                         result.Add(e.Address());
                     }
                 }
             }
+
             if (result != null)
             {
                 TrySuccess<IReadOnlyList<IPAddress>>(promise, result);
                 return true;
             }
+
             return false;
         }
         else
@@ -1464,6 +1520,7 @@ public class DnsNameResolver : InetNameResolver
         {
             hostname += ".";
         }
+
         return hostname;
     }
 
@@ -1520,6 +1577,7 @@ public class DnsNameResolver : InetNameResolver
 
         Task<IChannel> f = resolveChannelProvider.NextResolveChannel(promise.Task);
         IDnsRecord[] additionalsArray = ToArray(additionals, false);
+
         if (f.IsCompleted)
         {
             if (f.IsCompletedSuccessfully)
@@ -1532,6 +1590,7 @@ public class DnsNameResolver : InetNameResolver
             {
                 UnknownHostException e = ToException(f, question.Name(), question, additionalsArray);
                 promise.SetException(e);
+
                 return Task.FromException<IAddressedEnvelope<IDnsResponse, IPEndPoint>>(e);
             }
         }
@@ -1592,6 +1651,7 @@ public class DnsNameResolver : InetNameResolver
         if (inflightLookups != null && (additionals == null || additionals.Length == 0))
         {
             inflightLookups.TryGetValue(question, out TaskCompletionSource<IAddressedEnvelope<IDnsResponse, IPEndPoint>> inflight);
+
             if (inflight != null)
             {
                 // We have a query / response inflight, let's just cascade on it to reduce the network traffic.
@@ -1674,6 +1734,7 @@ public class DnsNameResolver : InetNameResolver
                 return castPromise;
             }
         }
+
         DoQueryNow(channel, nameServerAddr, question, queryLifecycleObserver,
                 additionals, flush, payloadSize, castPromise);
         return castPromise;
@@ -1712,6 +1773,7 @@ public class DnsNameResolver : InetNameResolver
         {
             return new TaskCanceledException(future);
         }
+
         return null;
     }
 
@@ -1726,6 +1788,7 @@ public class DnsNameResolver : InetNameResolver
     internal static TaskCompletionSource<T> NewPromise<T>(CancellationToken cancellationToken)
     {
         TaskCompletionSource<T> promise = NewPromise<T>();
+
         if (cancellationToken.CanBeCanceled)
         {
             CancellationTokenRegistration registration =
@@ -1734,6 +1797,7 @@ public class DnsNameResolver : InetNameResolver
                     registration, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously,
                     TaskScheduler.Default);
         }
+
         return promise;
     }
 
@@ -1762,6 +1826,7 @@ public class DnsNameResolver : InetNameResolver
         {
             return "null";
         }
+
         return "[" + string.Join(", ", a.Select(e => e == null ? "null" : e.ToString())) + "]";
     }
 

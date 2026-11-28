@@ -81,21 +81,27 @@ public class PoolThreadCacheTest
         Assert.Equal(3, a.Metric.NormalCacheSize);
         var buffers = Enumerable.Range(0, 5).Select(_ => Allocate(a, direct, size)).ToArray();
         var originals = buffers.Select(b => PooledStorage(b).Allocation).ToArray();
+
         foreach (var b in buffers)
             b.Release();
+
         Assert.Equal(5, m.NumAllocations);
         Assert.Equal(1, m.NumDeallocations);
         Assert.Equal(0, ((PoolArena)m).NumPinnedBytes);
         var reused = Enumerable.Range(0, 4).Select(_ => Allocate(a, direct, size)).ToArray();
+
         for (int i = 0; i < 4; ++i)
         {
             Assert.Same(originals[i].Storage, PooledStorage(reused[i]).Allocation.Storage);
             Assert.Equal(originals[i].Handle, PooledStorage(reused[i]).Allocation.Handle);
             Assert.NotSame(originals[i], PooledStorage(reused[i]).Allocation);
         }
+
         Assert.Equal(5, m.NumAllocations);
+
         foreach (var b in reused)
             b.Release();
+
         a.ReleaseCurrentThreadBinding();
         Assert.Equal(5, m.NumDeallocations);
     }
@@ -130,10 +136,13 @@ public class PoolThreadCacheTest
         Assert.False(a.TrimCurrentThreadCache());
         Assert.Equal(0, a.Metric.NumThreadLocalCaches);
         var buffers = Enumerable.Range(0, 4).Select(_ => Allocate(a, direct, size)).ToArray();
+
         foreach (var b in buffers)
             b.Release();
+
         for (int i = 0; i < 4; ++i)
             Allocate(a, direct, size).Release();
+
         Assert.True(a.TrimCurrentThreadCache());
         Assert.Equal(0, m.NumDeallocations);
         // No hits after the previous trim: the next trim returns all four handles.
@@ -192,6 +201,7 @@ public class PoolThreadCacheTest
         using var a = NewAllocator(native: native, alignment: 64);
         var b = Allocate(a, true, 48);
         var original = PooledStorage(b).Allocation;
+
         using (var pin = b.AsMemory(0, 1).Pin())
         {
             b.Release();
@@ -204,6 +214,7 @@ public class PoolThreadCacheTest
             Assert.Equal(0, a.Metric.UsedDirectMemory);
             Assert.Equal(0, native.ReservedBytes);
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -274,12 +285,14 @@ public class PoolThreadCacheTest
     {
         using var a = NewAllocator();
         ByteBuf live = null;
+
         using (var worker = new Worker())
             await worker.InvokeAsync(() =>
             {
                 live = Allocate(a, direct, 48);
                 Allocate(a, direct, 64).Release();
             });
+
         var m = Arena(a, direct);
         Assert.Equal(2, m.NumActiveAllocations);
         Assert.Equal(1, a.ReleaseTerminatedThreadBindings());
@@ -300,20 +313,25 @@ public class PoolThreadCacheTest
         var returns = Enumerable.Range(0, 8).Select(w => Task.Run(() =>
         {
             Assert.True(start.Wait(TimeSpan.FromSeconds(10)));
+
             for (int i = w; i < buffers.Length; i += 8)
                 buffers[i].Release();
         })).ToArray();
         start.Set();
+
         for (int i = 0; i < 8; ++i)
             a.TrimCurrentThreadCache();
+
         a.Dispose();
         await Task.WhenAll(returns).WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+
         foreach (var m in a.Metric.HeapArenas.Concat(a.Metric.DirectArenas))
         {
             Assert.Equal(0, m.NumActiveAllocations);
             Assert.Equal(0, m.NumActiveChunks);
             Assert.Equal(m.NumAllocations, m.NumDeallocations);
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -391,12 +409,14 @@ public class PoolThreadCacheTest
     public void InvalidCacheConfigurationFailsBeforeNativeReservation()
     {
         var native = new NativeMemoryAllocator();
+
         // The source passes cache sizes to PoolThreadCache unchecked; a nonpositive size disables that cache.
         using (var disabled = new PooledByteBufAllocator(nativeAllocator: native, smallCacheSize: -1, normalCacheSize: -1))
         {
             Assert.Equal(-1, disabled.Metric.SmallCacheSize);
             Assert.Equal(-1, disabled.Metric.NormalCacheSize);
         }
+
         // CLR: explicit overrides of the process-wide capacity/trim defaults are validated eagerly.
         Assert.Throws<ArgumentOutOfRangeException>(() => new PooledByteBufAllocator(nativeAllocator: native, maxCachedBufferCapacity: -1));
         Assert.Throws<ArgumentOutOfRangeException>(() => new PooledByteBufAllocator(nativeAllocator: native, cacheTrimInterval: 0));
@@ -431,6 +451,7 @@ public class PoolThreadCacheTest
         {
             var done = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             _queue.Add((action, done));
+
             return done.Task.WaitAsync(TimeSpan.FromSeconds(10));
         }
 

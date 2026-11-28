@@ -144,6 +144,7 @@ public class EmbeddedChannelTest
         var channel = new EmbeddedChannel(handler);
         Assert.False(channel.Finish());
         Assert.True(latch.Wait(TimeSpan.FromSeconds(3)));
+
         if (error != null)
             System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(error).Throw();
     }
@@ -242,6 +243,7 @@ public class EmbeddedChannelTest
     {
         var input = Unpooled.Buffer();
         var output = Unpooled.Buffer();
+
         try
         {
             var channel = new EmbeddedChannel();
@@ -266,6 +268,7 @@ public class EmbeddedChannelTest
     {
         var input = Unpooled.Buffer();
         var output = Unpooled.Buffer();
+
         try
         {
             var channel = new EmbeddedChannel();
@@ -294,6 +297,7 @@ public class EmbeddedChannelTest
     {
         var input = Unpooled.Buffer();
         var output = Unpooled.Buffer();
+
         try
         {
             var channel = new EmbeddedChannel();
@@ -476,6 +480,7 @@ public class EmbeddedChannelTest
         var channel = new EmbeddedChannel(false, false);
         Assert.Equal(-1, channel.RunScheduledPendingTasks());
         channel.CheckException();
+
         channel.RunPendingTasks();
         channel.CheckException();
     }
@@ -701,6 +706,7 @@ public class EmbeddedChannelTest
                     {
                         await ctx.WriteAndFlushAsync(msg, token);
                     }
+
                     completion.TrySetResult();
                 }
                 catch (Exception error)
@@ -713,6 +719,7 @@ public class EmbeddedChannelTest
                 ctx.Executor.Execute(() => _ = WriteLater());
             else
                 ctx.Executor.ScheduleAsync(() => _ = WriteLater(), TimeSpan.FromMilliseconds(delayMillis));
+
             return completion.Task;
         }
     }
@@ -768,6 +775,7 @@ public class EmbeddedChannelTest
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             _runningRead = true;
+
             try
             {
                 _ = ctx.Channel.CloseAsync();

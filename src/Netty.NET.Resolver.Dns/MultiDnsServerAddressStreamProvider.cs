@@ -57,6 +57,7 @@ public sealed class MultiDnsServerAddressStreamProvider : IDnsServerAddressStrea
                 return stream;
             }
         }
+
         return null;
     }
 }

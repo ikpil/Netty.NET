@@ -123,6 +123,7 @@ public abstract class SslContext
                                 "will use \"HTTPS\" instead.",
                         DEFAULT_ENDPOINT_VERIFICATION_ALGORITHM_PROPERTY, defaultEndpointVerification);
             }
+
             defaultEndpointVerificationAlgorithm = "HTTPS";
         }
     }
@@ -185,15 +186,18 @@ public abstract class SslContext
             {
                 throw new ArgumentException("OCSP is not supported with this SslProvider: " + provider);
             }
+
             return JdkSslContext.NewJdkSslServerContext(
                     trustCertCollection, trustManagerFactory, trustManager, keyCertChain, key, keyPassword,
                     keyManagerFactory, keyManager, ciphers, cipherFilter, apn, sessionCacheSize, sessionTimeout,
                     clientAuth, protocols, startTls, secureRandom, keyStoreType);
         }
+
         if (provider == SslProvider.OPENSSL || provider == SslProvider.OPENSSL_REFCNT)
         {
             throw new NotSupportedException("OpenSSL is not available (netty-tcnative is not ported): " + provider);
         }
+
         throw new UnreachableException("Unexpected provider: " + provider);
     }
 
@@ -241,16 +245,19 @@ public abstract class SslContext
             {
                 throw new ArgumentException("OCSP is not supported with this SslProvider: " + provider);
             }
+
             return JdkSslContext.NewJdkSslClientContext(
                     trustCert, trustManagerFactory, trustManager, keyCertChain, key, keyPassword,
                     keyManagerFactory, keyManager, ciphers, cipherFilter, apn, protocols, sessionCacheSize,
                     sessionTimeout, secureRandom, keyStoreType, endpointIdentificationAlgorithm,
                     serverNames);
         }
+
         if (provider == SslProvider.OPENSSL || provider == SslProvider.OPENSSL_REFCNT)
         {
             throw new NotSupportedException("OpenSSL is not available (netty-tcnative is not ported): " + provider);
         }
+
         throw new UnreachableException("Unexpected provider: " + provider);
     }
 
@@ -377,6 +384,7 @@ public abstract class SslContext
         }
 
         CryptographicException failure = null;
+
         foreach (Func<AsymmetricAlgorithm> factory in KEY_FACTORIES)
         {
             using (AsymmetricAlgorithm candidate = factory())
@@ -384,6 +392,7 @@ public abstract class SslContext
                 try
                 {
                     candidate.ImportEncryptedPkcs8PrivateKey(password, key, out _);
+
                     return candidate.ExportPkcs8PrivateKey();
                 }
                 catch (CryptographicException e)
@@ -392,6 +401,7 @@ public abstract class SslContext
                 }
             }
         }
+
         throw failure;
     }
 
@@ -428,10 +438,12 @@ public abstract class SslContext
     {
         X509Certificate2Collection ks = new X509Certificate2Collection();
         ks.Add(CopyWithPrivateKey(X509CertificateLoader.LoadCertificate(certChain[0].RawData), key));
+
         for (int i = 1; i < certChain.Length; i++)
         {
             ks.Add(certChain[i]);
         }
+
         return ks.Export(X509ContentType.Pkcs12, keyPasswordChars == null ? null : new string(keyPasswordChars));
     }
 
@@ -500,12 +512,14 @@ public abstract class SslContext
             buffered.Position = 0;
             keyInputStream = buffered;
         }
+
         long mark = keyInputStream.Position; // Be able to reset up to 1 MiB of data.
         AsymmetricAlgorithm pk = ReadPemPrivateKey(keyInputStream, keyPassword);
         if (pk != null)
         {
             return pk;
         }
+
         // BouncyCastle could not read the key. Reset the input stream in case the input position changed.
         keyInputStream.Position = mark;
 
@@ -517,6 +531,7 @@ public abstract class SslContext
     private static AsymmetricAlgorithm ReadPemPrivateKey(FileInfo keyFile, string keyPassword)
     {
         string pem;
+
         try
         {
             pem = File.ReadAllText(keyFile.FullName, Encoding.ASCII);
@@ -525,6 +540,7 @@ public abstract class SslContext
         {
             return null;
         }
+
         return ReadPemPrivateKey(pem, keyPassword);
     }
 
@@ -533,6 +549,7 @@ public abstract class SslContext
     private static AsymmetricAlgorithm ReadPemPrivateKey(System.IO.Stream keyInputStream, string keyPassword)
     {
         string pem;
+
         try
         {
             using (StreamReader reader = new StreamReader(keyInputStream, Encoding.ASCII, false, 4096, true))
@@ -544,6 +561,7 @@ public abstract class SslContext
         {
             return null;
         }
+
         return ReadPemPrivateKey(pem, keyPassword);
     }
 
@@ -559,9 +577,11 @@ public abstract class SslContext
         {
             return null;
         }
+
         foreach (Func<AsymmetricAlgorithm> factory in KEY_FACTORIES)
         {
             AsymmetricAlgorithm candidate = factory();
+
             try
             {
                 if (keyPassword == null)
@@ -572,6 +592,7 @@ public abstract class SslContext
                 {
                     candidate.ImportFromEncryptedPem(pem, keyPassword);
                 }
+
                 return candidate;
             }
             catch (Exception e) when (e is CryptographicException || e is ArgumentException)
@@ -579,6 +600,7 @@ public abstract class SslContext
                 candidate.Dispose();
             }
         }
+
         return null;
     }
 
@@ -598,6 +620,7 @@ public abstract class SslContext
                 keyPassword == null ? null : keyPassword.ToCharArray(), encodedKey);
 #pragma warning restore CS0612
         AsymmetricAlgorithm rsa = RSA.Create();
+
         try
         {
             rsa.ImportPkcs8PrivateKey(encodedKeySpec, out _);
@@ -607,6 +630,7 @@ public abstract class SslContext
         {
             rsa.Dispose();
             AsymmetricAlgorithm dsa = DSA.Create();
+
             try
             {
                 dsa.ImportPkcs8PrivateKey(encodedKeySpec, out _);
@@ -616,6 +640,7 @@ public abstract class SslContext
             {
                 dsa.Dispose();
                 AsymmetricAlgorithm ec = ECDsa.Create();
+
                 try
                 {
                     ec.ImportPkcs8PrivateKey(encodedKeySpec, out _);
@@ -666,6 +691,7 @@ public abstract class SslContext
         {
             return null;
         }
+
         return GetCertificatesFromBuffers(PemReader.ReadCertificates(file));
     }
 
@@ -675,6 +701,7 @@ public abstract class SslContext
         {
             return null;
         }
+
         return GetCertificatesFromBuffers(PemReader.ReadCertificates(@in));
     }
 
@@ -714,6 +741,7 @@ public abstract class SslContext
                 buf.Release();
             }
         }
+
         return x509Certs;
     }
 
@@ -740,6 +768,7 @@ public abstract class SslContext
         {
             trustManagerFactory = new X509ChainPolicy();
         }
+
         trustManagerFactory.TrustMode = X509ChainTrustMode.CustomRootTrust;
         trustManagerFactory.CustomTrustStore.Clear();
         trustManagerFactory.CustomTrustStore.AddRange(ks);
@@ -780,6 +809,7 @@ public abstract class SslContext
                 X509CertificateLoader.LoadPkcs12Collection(ks, new string(keyPasswordChars));
         X509Certificate2 target = null;
         X509Certificate2Collection additionalCertificates = new X509Certificate2Collection();
+
         foreach (X509Certificate2 cert in entries)
         {
             if (target == null && cert.HasPrivateKey)
@@ -791,6 +821,7 @@ public abstract class SslContext
                 additionalCertificates.Add(cert);
             }
         }
+
         if (target == null)
         {
             throw new CryptographicException("The key store has no private key entry.");

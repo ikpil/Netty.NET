@@ -100,6 +100,7 @@ public sealed class BrotliEncoder : MessageToByteEncoder<ByteBuf>
     public override void HandlerAdded(IChannelHandlerContext ctx)
     {
         Writer writer = new Writer(parameters, ctx);
+
         if (isSharable)
         {
             ctx.Channel.Attr(ATTR).Set(writer);
@@ -108,6 +109,7 @@ public sealed class BrotliEncoder : MessageToByteEncoder<ByteBuf>
         {
             this.writer = writer;
         }
+
         base.HandlerAdded(ctx);
     }
 
@@ -130,6 +132,7 @@ public sealed class BrotliEncoder : MessageToByteEncoder<ByteBuf>
         }
 
         Writer writer;
+
         if (isSharable)
         {
             writer = ctx.Channel.Attr(ATTR).Get();
@@ -183,6 +186,7 @@ public sealed class BrotliEncoder : MessageToByteEncoder<ByteBuf>
             this.writer = null;
             return writer.closeFuture.Task;
         }
+
         return Task.CompletedTask;
     }
 
@@ -261,6 +265,7 @@ public sealed class BrotliEncoder : MessageToByteEncoder<ByteBuf>
                 ReadOnlyMemory<byte> nioBuffer = CompressionUtil.SafeReadableNioBuffer(msg);
                 int position = 0;
                 OperationStatus status;
+
                 do
                 {
                     status = brotliEncoderChannel.Compress(nioBuffer.Span.Slice(position), outputBuffer,
@@ -268,16 +273,20 @@ public sealed class BrotliEncoder : MessageToByteEncoder<ByteBuf>
                     position += bytesConsumed;
                     Write(outputBuffer.AsSpan(0, bytesWritten));
                 } while (status == OperationStatus.DestinationTooSmall);
+
                 if (status == OperationStatus.InvalidData)
                 {
                     throw new IOException("encoding failed");
                 }
+
                 msg.SkipBytes(position);
+
                 do
                 {
                     status = brotliEncoderChannel.Flush(outputBuffer, out int bytesWritten);
                     Write(outputBuffer.AsSpan(0, bytesWritten));
                 } while (status == OperationStatus.DestinationTooSmall);
+
                 if (status == OperationStatus.InvalidData)
                 {
                     throw new IOException("encoding failed");
@@ -325,6 +334,7 @@ public sealed class BrotliEncoder : MessageToByteEncoder<ByteBuf>
             {
                 return;
             }
+
             closeInitiated = true;
             ctx.Executor.Execute(() =>
             {
@@ -358,12 +368,14 @@ public sealed class BrotliEncoder : MessageToByteEncoder<ByteBuf>
                     try
                     {
                         OperationStatus status;
+
                         do
                         {
                             status = brotliEncoderChannel.Compress(ReadOnlySpan<byte>.Empty, outputBuffer,
                                     out _, out int bytesWritten, true);
                             Write(outputBuffer.AsSpan(0, bytesWritten));
                         } while (status == OperationStatus.DestinationTooSmall);
+
                         if (status == OperationStatus.InvalidData)
                         {
                             throw new IOException("encoding failed");
@@ -373,6 +385,7 @@ public sealed class BrotliEncoder : MessageToByteEncoder<ByteBuf>
                     {
                         brotliEncoderChannel.Dispose();
                     }
+
                     isClosed = true;
                 }
                 catch (Exception ex)

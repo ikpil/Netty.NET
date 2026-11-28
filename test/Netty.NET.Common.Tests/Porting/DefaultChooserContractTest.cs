@@ -108,6 +108,7 @@ public class DefaultChooserContractTest
         var chooser = DefaultEventExecutorChooserFactory.INSTANCE.NewChooser(children);
         const int seed = int.MaxValue - 1;
         Seed(chooser, seed);
+
         for (uint offset = 0; offset < 6; offset++)
         {
             uint ticket = unchecked((uint)seed + offset);
@@ -141,6 +142,7 @@ public class DefaultChooserContractTest
         var chooser = DefaultEventExecutorChooserFactory.INSTANCE.NewChooser(children);
         const long seed = long.MaxValue - 1;
         Seed(chooser, seed);
+
         for (int offset = 0; offset < 6; offset++)
         {
             long ticket = unchecked(seed + offset);

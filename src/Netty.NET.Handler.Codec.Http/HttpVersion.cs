@@ -102,6 +102,7 @@ public class HttpVersion : IComparable<HttpVersion>
         {
             version = new HttpVersion(text, strict, true);
         }
+
         return version;
     }
 
@@ -115,6 +116,7 @@ public class HttpVersion : IComparable<HttpVersion>
         {
             return HTTP_1_0;
         }
+
         return null;
     }
 
@@ -151,6 +153,7 @@ public class HttpVersion : IComparable<HttpVersion>
         {
             throw new ArgumentException("text must not be empty");
         }
+
         text = text.ToUpperInvariant();
 
         if (strict)
@@ -163,6 +166,7 @@ public class HttpVersion : IComparable<HttpVersion>
             {
                 throw new ArgumentException("invalid version format: " + text);
             }
+
             protocolName = "HTTP";
             majorVersion = ToDecimal(text[5]);
             minorVersion = ToDecimal(text[7]);
@@ -199,6 +203,7 @@ public class HttpVersion : IComparable<HttpVersion>
                 return true;
             }
         }
+
         return false;
     }
 
@@ -223,6 +228,7 @@ public class HttpVersion : IComparable<HttpVersion>
             case ' ':
                 return false;
         }
+
         UnicodeCategory category = char.GetUnicodeCategory(c);
         return category == UnicodeCategory.SpaceSeparator || category == UnicodeCategory.LineSeparator ||
                category == UnicodeCategory.ParagraphSeparator;
@@ -231,11 +237,13 @@ public class HttpVersion : IComparable<HttpVersion>
     private static int ParseInt(string text, int start, int end)
     {
         int result = 0;
+
         for (int i = start; i < end; i++)
         {
             char ch = text[i];
             result = result * 10 + ToDecimal(ch);
         }
+
         return result;
     }
 
@@ -246,6 +254,7 @@ public class HttpVersion : IComparable<HttpVersion>
             throw new ArgumentException("Invalid version number, only 0-9 (0x30-0x39) allowed," +
                     " but received a '" + (char) value + "' (0x" + value.ToString("x", CultureInfo.InvariantCulture) + ")");
         }
+
         return value - '0';
     }
 
@@ -277,6 +286,7 @@ public class HttpVersion : IComparable<HttpVersion>
         {
             throw new ArgumentException("protocolName must not be empty");
         }
+
         protocolName = protocolName.ToUpperInvariant();
 
         if (HasControlOrWhitespace(protocolName, protocolName.Length))

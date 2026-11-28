@@ -59,10 +59,12 @@ public class OcspClientTest : AbstractOcspTest
                 (sender, certificate, chain, errors) =>
                 {
                     certs = new X509Certificate2[chain.ChainElements.Count];
+
                     for (int i = 0; i < certs.Length; i++)
                     {
                         certs[i] = X509CertificateLoader.LoadCertificate(chain.ChainElements[i].Certificate.RawData);
                     }
+
                     return errors == SslPolicyErrors.None;
                 });
         await stream.AuthenticateAsClientAsync(new SslClientAuthenticationOptions { TargetHost = url.Host },
@@ -284,6 +286,7 @@ public class OcspClientTest : AbstractOcspTest
 
         byte[] forgedResponseEncoded = ForgedResponse(scenario, caRoot);
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+
         try
         {
             IoTransport transport = IoTransport.Create(group.Next(), () =>
@@ -350,6 +353,7 @@ public class OcspClientTest : AbstractOcspTest
         {
             return OcspRespBuilder.Encode(OcspResponseStatus.Unauthorized, null, null);
         }
+
         X509Certificate2 caHolder = caRoot.GetCertificate();
         BasicOcspResp forgedBasicResp = CreateBasicOcspResponse(caRoot, new X509Certificate2[] { caHolder });
         return OcspRespBuilder.Build(OcspResponseStatus.Successful, forgedBasicResp);

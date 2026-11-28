@@ -51,6 +51,7 @@ public sealed class NameServerComparator : IComparer<EndPoint>
         {
             return 0;
         }
+
         if (!(addr1 is DnsEndPoint) && !(addr2 is DnsEndPoint))
         {
             AddressFamily family1 = ((IPEndPoint) addr1).Address.AddressFamily;
@@ -58,12 +59,15 @@ public sealed class NameServerComparator : IComparer<EndPoint>
             {
                 return 0;
             }
+
             return preferredAddressType == family1 ? -1 : 1;
         }
+
         if (addr1 is DnsEndPoint && addr2 is DnsEndPoint)
         {
             return 0;
         }
+
         return addr1 is DnsEndPoint ? 1 : -1;
     }
 }

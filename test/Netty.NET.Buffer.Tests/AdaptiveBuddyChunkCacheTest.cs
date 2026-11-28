@@ -65,6 +65,7 @@ public class AdaptiveBuddyChunkCacheTest
         using var cache = new ConcurrentSkipListChunkCache(2);
         var chunks = new List<BuddyChunk>();
         var allocations = new List<AdaptiveChunkAllocation>();
+
         try
         {
             for (int i = 0; i < 4; i++)
@@ -74,6 +75,7 @@ public class AdaptiveBuddyChunkCacheTest
                 allocations.Add(chunk.TryAllocate(32768));
                 cache.OfferChunk(chunk);
             }
+
             Assert.Equal(4, cache.Count);
             Assert.Equal(524288, registry.TotalCapacity);
             allocations[0].Release();
@@ -89,11 +91,14 @@ public class AdaptiveBuddyChunkCacheTest
         finally
         {
             cache.Dispose();
+
             foreach (var a in allocations)
                 a.Release();
+
             foreach (var c in chunks)
                 c.Dispose();
         }
+
         Assert.Equal(0, registry.TotalCapacity);
     }
 

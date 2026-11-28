@@ -53,6 +53,7 @@ public sealed class Http2Server
     {
         // Configure SSL.
         SslContext sslCtx;
+
         if (SSL)
         {
             SslProvider provider = SslProvider.IsAlpnSupported(SslProvider.OPENSSL) ? SslProvider.OPENSSL : SslProvider.JDK;
@@ -79,8 +80,10 @@ public sealed class Http2Server
         {
             sslCtx = null;
         }
+
         // Configure the server.
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             ServerBootstrap b = new ServerBootstrap();

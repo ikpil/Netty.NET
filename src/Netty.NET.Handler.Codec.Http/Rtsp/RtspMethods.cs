@@ -133,6 +133,7 @@ public static class RtspMethods
         {
             return result;
         }
+
         return HttpMethod.ValueOf(name);
     }
 }

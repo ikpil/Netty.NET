@@ -60,6 +60,7 @@ public sealed class HttpScheme
         {
             return false;
         }
+
         HttpScheme other = (HttpScheme) o;
         return other.Port() == port && other.Name().Equals(name);
     }

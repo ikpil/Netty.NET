@@ -9,6 +9,7 @@ using Netty.NET.Common.Internal;
 const int samples = 7;
 bool indexedOnly = args.Skip(1).Contains("--indexed");
 var rows = new List<Row>();
+
 foreach (int count in new[] { 64, 1024, 16384 })
 {
     Entry[] entries = Enumerable.Range(0, count).Select(i => new Entry(i, (i * 7919 % count) / 4)).ToArray();
@@ -18,6 +19,7 @@ foreach (int count in new[] { 64, 1024, 16384 })
     Entry[] withdrawn = order.Take(Math.Min(32, count / 2)).Select(i => entries[i]).ToArray();
     Entry[] expected = entries.Except(withdrawn, ReferenceEqualityComparer.Instance)
         .Cast<Entry>().OrderBy(e => e.Offset).ThenBy(e => e.Id).ToArray();
+
     foreach (string candidate in indexedOnly
                  ? new[] { "indexed-heap", "priority-queue-remove", "sorted-set" }
                  : new[] { "snapshot-rebuild", "priority-queue-remove", "sorted-set" })
@@ -36,12 +38,14 @@ foreach (int count in new[] { 64, 1024, 16384 })
                 throw new Exception("Removal identity failed");
             }
         }
+
         // Equality is deliberately hostile: a distinct equal-valued reference must
         // never remove a reservation, including equal-deadline members.
         if (verified.Remove(new Entry(expected[0].Id, expected[0].Offset)))
         {
             throw new Exception("Alien removal");
         }
+
         if (indexedOnly)
         {
             IQueue other = Create(candidate);
@@ -51,13 +55,16 @@ foreach (int count in new[] { 64, 1024, 16384 })
             {
                 throw new Exception("Foreign indexed owner removal");
             }
+
             other.Pop();
         }
+
         foreach (Entry entry in expected)
             if (!ReferenceEquals(verified.Pop(), entry))
             {
                 throw new Exception("Remaining deadline order failed");
             }
+
         if (verified.Count != 0)
         {
             throw new Exception("Drain failed");
@@ -70,6 +77,7 @@ foreach (int count in new[] { 64, 1024, 16384 })
                 {
                     q.Add(entry);
                 }
+
                 while (q.Count != 0)
                 {
                     q.Pop();
@@ -84,6 +92,7 @@ foreach (int count in new[] { 64, 1024, 16384 })
                 {
                     q.Add(entry);
                 }
+
                 while (q.Count != 0)
                 {
                     q.Pop();
@@ -96,6 +105,7 @@ foreach (int count in new[] { 64, 1024, 16384 })
                 {
                     q.Add(entry);
                 }
+
                 while (q.Count != 0)
                 {
                     q.Pop();
@@ -118,6 +128,7 @@ foreach (int count in new[] { 64, 1024, 16384 })
                 {
                     q.Remove(entry);
                 }
+
                 foreach (Entry entry in withdrawn)
                 {
                     q.Remove(entry);
@@ -125,17 +136,20 @@ foreach (int count in new[] { 64, 1024, 16384 })
             });
     }
 }
+
 foreach (int count in indexedOnly ? Array.Empty<int>() : new[] { 64, 1024, 4096 })
 {
     // Admission/CTS/delegate creation and stop/cleanup are outside this interval.
     // A null-returning constructor factory retains work without introducing worker
     // scheduling noise. This measures the real public cancellation ownership path.
     var values = new List<(double Ns, double Bytes)>();
+
     for (int round = -2; round < samples; ++round)
     {
         var pool = new UnorderedThreadPoolEventExecutor(1, new NoWorker());
         var owners = new CancellationTokenSource[count];
         var tasks = new Task[count];
+
         try
         {
             for (int i = 0; i < count; ++i)
@@ -145,6 +159,7 @@ foreach (int count in indexedOnly ? Array.Empty<int>() : new[] { 64, 1024, 4096 
                 {
                 }, TimeSpan.FromDays(1), owners[i].Token);
             }
+
             int cancelCount = Math.Min(32, count / 2);
             int[] indices = Enumerable.Range(0, count).ToArray();
             new Random(42).Shuffle(indices);
@@ -159,6 +174,7 @@ foreach (int count in indexedOnly ? Array.Empty<int>() : new[] { 64, 1024, 4096 
             long allocated = GC.GetAllocatedBytesForCurrentThread() - bytes;
             if (pool.PendingTaskCount != count - cancelCount || indices.Take(cancelCount).Any(i => !tasks[i].IsCanceled))
                 throw new Exception("Public cancellation ownership failed");
+
             if (round >= 0)
             {
                 values.Add((ticks * 1e9 / Stopwatch.Frequency / cancelCount, (double)allocated / cancelCount));
@@ -174,8 +190,10 @@ foreach (int count in indexedOnly ? Array.Empty<int>() : new[] { 64, 1024, 4096 
             }
         }
     }
+
     Record("public-executor", "scheduled-owner-cancel", count, values);
 }
+
 var result = new
 {
     runtime = RuntimeInformation.FrameworkDescription,
@@ -191,6 +209,7 @@ var result = new
     rows
 };
 File.WriteAllText(args[0], JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));
+
 foreach (Row row in rows)
 {
     Console.WriteLine($"{row.Candidate},{row.Phase},{row.Count},{row.MedianNs:F1},{row.MedianBytes:F1}");
@@ -199,6 +218,7 @@ foreach (Row row in rows)
 void Measure(string candidate, string phase, int count, int operations, Func<IQueue> setup, Action<IQueue> action)
 {
     var values = new List<(double Ns, double Bytes)>();
+
     for (int round = -2; round < samples; ++round)
     {
         IQueue queue = setup();
@@ -206,6 +226,7 @@ void Measure(string candidate, string phase, int count, int operations, Func<IQu
         action(queue);
         long ticks = Stopwatch.GetTimestamp() - start;
         long allocated = GC.GetAllocatedBytesForCurrentThread() - bytes;
+
         if (round >= 0)
         {
             values.Add((ticks * 1e9 / Stopwatch.Frequency / operations, (double)allocated / operations));
@@ -218,6 +239,7 @@ void Measure(string candidate, string phase, int count, int operations, Func<IQu
             queue.Pop();
         }
     }
+
     Record(candidate, phase, count, values);
 }
 
@@ -302,12 +324,15 @@ sealed class Heap(bool rebuild) : IQueue
         {
             return false;
         }
+
         queue.Clear();
+
         foreach (var item in items)
             if (!ReferenceEquals(item.Element, entry))
             {
                 queue.Enqueue(item.Element, item.Priority);
             }
+
         return true;
     }
 }

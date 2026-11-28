@@ -58,6 +58,7 @@ public class ResolverJdkSemanticsContractTest
     public void JavaUtf16DetectsTheByteOrderMarkAndDefaultsToBigEndian()
     {
         string path = Path.GetTempFileName();
+
         try
         {
             File.WriteAllBytes(path, Bytes("127.0.0.1 host\n", new UnicodeEncoding(true, false)));
@@ -78,6 +79,7 @@ public class ResolverJdkSemanticsContractTest
     public void Utf8KeepsAByteOrderMarkLikeJavaUtf8()
     {
         string path = Path.GetTempFileName();
+
         try
         {
             File.WriteAllBytes(path, Bom(new byte[] { 0xEF, 0xBB, 0xBF }, Bytes("127.0.0.1 first\n127.0.0.2 second\n", new UTF8Encoding(false))));
@@ -108,6 +110,7 @@ public class ResolverJdkSemanticsContractTest
     {
         string path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
         var file = new FileInfo(path);
+
         try
         {
             Assert.Same(HostsFileEntriesProvider.Empty, HostsFileEntriesProvider.Parser().Parse(file));

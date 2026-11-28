@@ -131,6 +131,7 @@ public sealed class DefaultHttp2UnknownFrame : DefaultByteBufHolder, IHttp2Unkno
         {
             return false;
         }
+
         DefaultHttp2UnknownFrame other = (DefaultHttp2UnknownFrame) o;
         IHttp2FrameStream otherStream = other.Stream();
         return (ReferenceEquals(stream, otherStream) || otherStream != null && otherStream.Equals(stream))
@@ -144,10 +145,12 @@ public sealed class DefaultHttp2UnknownFrame : DefaultByteBufHolder, IHttp2Unkno
         int hash = base.GetHashCode();
         hash = hash * 31 + (sbyte) frameType;
         hash = hash * 31 + flags.GetHashCode();
+
         if (stream != null)
         {
             hash = hash * 31 + stream.GetHashCode();
         }
+
         return hash;
     }
 }

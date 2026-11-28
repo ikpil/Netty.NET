@@ -52,6 +52,7 @@ public class InsecureQuicTokenHandlerTest : AbstractQuicTest
     {
         ByteBuf token = Unpooled.Buffer().WriteInt(1);
         ByteBuf dcid = Unpooled.WrappedBuffer(new byte[] { 1, 2, 3, 4 });
+
         try
         {
             IQuicTokenHandler.TokenValidationResult result =
@@ -73,10 +74,12 @@ public class InsecureQuicTokenHandlerTest : AbstractQuicTest
         ByteBuf dcid = Unpooled.WrappedBuffer(bytes);
         ByteBuf @out = Unpooled.Buffer();
         IQuicTokenHandler handler = InsecureQuicTokenHandler.INSTANCE;
+
         try
         {
             IPEndPoint validAddress;
             IPEndPoint invalidAddress;
+
             if (ipv4)
             {
                 validAddress = new IPEndPoint(

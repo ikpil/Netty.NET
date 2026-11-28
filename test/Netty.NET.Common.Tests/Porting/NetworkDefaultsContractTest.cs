@@ -29,10 +29,12 @@ public class NetworkDefaultsContractTest
             Assert.True(property.GetMethod.IsStatic);
             Assert.Null(property.SetMethod);
         }
+
         foreach (string name in new[] { "LOOPBACK_IF", "NETWORK_INTERFACES", "SOMAXCONN" })
         {
             Assert.Null(typeof(NetUtil).GetField(name));
         }
+
         foreach (string name in new[] { "LoopbackInterface", "NetworkInterfaces", "DefaultListenBacklog" })
         {
             Assert.Null(typeof(NetUtil).GetProperty(name));
@@ -49,6 +51,7 @@ public class NetworkDefaultsContractTest
             Assert.True(mutable.IsReadOnly);
             Assert.Throws<NotSupportedException>(() => mutable.Clear());
             Assert.Same(interfaces, Read(type, "NETWORK_INTERFACES"));
+
             for (int i = 0; i < interfaces.Count; i++)
                 Assert.Same(interfaces[i], ((IReadOnlyList<NetworkInterface>)Read(type, "NETWORK_INTERFACES"))[i]);
         });
@@ -81,6 +84,7 @@ public class NetworkDefaultsContractTest
         const string ipv6Key = "java.net.preferIPv6Addresses";
         string saved4 = Environment.GetEnvironmentVariable(ipv4Key);
         string saved6 = Environment.GetEnvironmentVariable(ipv6Key);
+
         try
         {
             Environment.SetEnvironmentVariable(ipv4Key, "true");
@@ -105,6 +109,7 @@ public class NetworkDefaultsContractTest
     public void ReentrantLoggerFactoryReadsDefaultsWithoutPoisoningInitialization()
     {
         var context = new AssemblyLoadContext("Netty network default callback probe", isCollectible: true);
+
         try
         {
             // Both assemblies must use this context's still-uninitialized NetUtil and logger factory.
@@ -126,6 +131,7 @@ public class NetworkDefaultsContractTest
     {
         var observations = new List<string>();
         IInternalLoggerFactory original = InternalLoggerFactory.GetDefaultFactory();
+
         try
         {
             InternalLoggerFactory.SetDefaultFactory(new ReadingFactory(original, () =>
@@ -136,6 +142,7 @@ public class NetworkDefaultsContractTest
             IPAddress address = NetUtil.LOCALHOST;
             observations.Add($"initialized|{address != null}|{Read(typeof(NetUtil), "NETWORK_INTERFACES") != null}|{observations.Count == 1}");
             observations.Add($"later|{address.Equals(NetUtil.LOCALHOST)}");
+
             return observations.ToArray();
         }
         finally
@@ -152,6 +159,7 @@ public class NetworkDefaultsContractTest
             {
                 readDefaults();
             }
+
             return original.NewInstance(name);
         }
     }
@@ -164,6 +172,7 @@ public class NetworkDefaultsContractTest
     private static void WithFreshNetUtil(Action<Type> assertion)
     {
         var context = new AssemblyLoadContext("Netty network default probe", isCollectible: true);
+
         try
         {
             Assembly assembly = context.LoadFromAssemblyPath(typeof(NetUtil).Assembly.Location);

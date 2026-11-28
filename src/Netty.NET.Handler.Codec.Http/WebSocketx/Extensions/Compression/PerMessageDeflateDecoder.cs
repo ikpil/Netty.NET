@@ -72,6 +72,7 @@ internal class PerMessageDeflateDecoder : DeflateDecoder
             {
                 throw new InvalidOperationException("Cannot skip per message deflate decoder, compression in progress");
             }
+
             return false;
         }
 

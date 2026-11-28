@@ -172,6 +172,7 @@ public class TaskWhenAllPortTest
             Assert.True(executor.InEventLoop());
             Task all = Task.WhenAll(new Task[] { first.Task, second.Task });
             ready.SetResult();
+
             try
             {
                 await all.ConfigureAwait(false);
@@ -180,12 +181,14 @@ public class TaskWhenAllPortTest
             {
                 /* Transfer the complete native status, not the await exception alone. */
             }
+
             await executor.SubmitAsync(() =>
             {
                 Assert.True(executor.InEventLoop());
                 Assert.True(aggregate.TrySetFromTask(all));
             });
         });
+
         try
         {
             await ready.Task.WaitAsync(TimeSpan.FromSeconds(5));
@@ -230,15 +233,19 @@ public class TaskWhenAllPortTest
         var failed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var error = new InvalidOperationException("write failed");
         Task result = Task.WhenAll(canceled.Task, failed.Task);
+
         if (cancelFirst)
         {
             canceled.SetCanceled(cancellation.Token);
         }
+
         failed.SetException(error);
+
         if (!cancelFirst)
         {
             canceled.SetCanceled(cancellation.Token);
         }
+
         Assert.Same(error, await Assert.ThrowsAsync<InvalidOperationException>(async () => await result));
         Assert.True(result.IsFaulted);
     }
@@ -267,6 +274,7 @@ public class TaskWhenAllPortTest
         var executor = new DefaultEventExecutor();
         var first = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var revived = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
         try
         {
             Task batch = await executor.SubmitAsync<Task>(() =>
@@ -285,6 +293,7 @@ public class TaskWhenAllPortTest
                 }
 
                 Assert.Equal(2, writes.Count);
+
                 return Task.WhenAll(writes);
             });
             first.SetResult();

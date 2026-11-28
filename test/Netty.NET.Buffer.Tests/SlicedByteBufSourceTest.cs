@@ -37,6 +37,7 @@ public class SlicedByteBufSourceTest
             {
                 Pool = new PooledByteBufAllocator(nativeAllocator: Native, maxOrder: 1);
             }
+
             Root = path switch
             {
                 0 => new UnpooledHeapByteBuf(32, 64),
@@ -58,10 +59,12 @@ public class SlicedByteBufSourceTest
             {
                 Parent.Release(Parent.RefCnt);
             }
+
             if (Root.RefCnt > 0)
             {
                 Root.Release(Root.RefCnt);
             }
+
             Pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
         }
@@ -91,8 +94,10 @@ public class SlicedByteBufSourceTest
             s.Root.SetBytes(0, expected);
             int width = widths[operation];
             bool little = operation != 0 && (operation & 1) == 0;
+
             for (int i = 0; i < width; ++i)
                 expected[offset + 7 + i] = unchecked((byte)(value >> (8 * (little ? i : width - i - 1))));
+
             switch (operation)
             {
                 case 0:
@@ -123,6 +128,7 @@ public class SlicedByteBufSourceTest
                     s.View.SetLongLE(7, unchecked((long)value));
                     break;
             }
+
             byte[] actual = new byte[32];
             s.Root.GetBytes(0, actual);
             Assert.Equal(expected, actual);

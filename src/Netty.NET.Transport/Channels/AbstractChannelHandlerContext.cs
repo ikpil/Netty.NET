@@ -113,6 +113,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
             {
                 contextExecutor = ex = childExecutor ?? Channel.EventLoop;
             }
+
             return ex;
         }
     }
@@ -159,6 +160,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
         {
             next.Executor.Execute(() => FireChannelRegistered());
         }
+
         return this;
     }
 
@@ -200,6 +202,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
         {
             next.Executor.Execute(() => FireChannelUnregistered());
         }
+
         return this;
     }
 
@@ -241,6 +244,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
         {
             next.Executor.Execute(() => FireChannelActive());
         }
+
         return this;
     }
 
@@ -282,6 +286,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
         {
             next.Executor.Execute(() => FireChannelInactive());
         }
+
         return this;
     }
 
@@ -289,6 +294,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
     {
         AbstractChannelHandlerContext next = FindContextInbound(ChannelHandlerMask.MaskExceptionCaught);
         ObjectUtil.CheckNotNull(cause, "cause");
+
         if (next.Executor.InEventLoop())
         {
             next.InvokeExceptionCaught(cause);
@@ -308,6 +314,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
                 }
             }
         }
+
         return this;
     }
 
@@ -346,6 +353,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
     public IChannelInboundInvoker FireUserEventTriggered(object @event)
     {
         ObjectUtil.CheckNotNull(@event, "event");
+
         AbstractChannelHandlerContext next = FindContextInbound(ChannelHandlerMask.MaskUserEventTriggered);
         if (next.Executor.InEventLoop())
         {
@@ -382,6 +390,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
         {
             next.Executor.Execute(() => FireUserEventTriggered(@event));
         }
+
         return this;
     }
 
@@ -391,6 +400,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
         if (next.Executor.InEventLoop())
         {
             object m = _pipeline.Touch(msg, next);
+
             if (next.InvokeHandler())
             {
                 try
@@ -424,6 +434,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
         {
             next.Executor.Execute(() => FireChannelRead(msg));
         }
+
         return this;
     }
 
@@ -465,6 +476,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
         {
             next.Executor.Execute(GetInvokeTasks().fireChannelReadCompleteTask);
         }
+
         return this;
     }
 
@@ -506,6 +518,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
         {
             next.Executor.Execute(GetInvokeTasks().fireChannelWritabilityChangedTask);
         }
+
         return this;
     }
 
@@ -539,6 +552,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
                     {
                         return headContext.BindAsync(next, localAddress, cancellationToken);
                     }
+
                     return ((IChannelOutboundHandler)handler).BindAsync(next, localAddress, cancellationToken);
                 }
                 catch (Exception t)
@@ -546,8 +560,10 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
                     return NotifyOutboundHandlerException(t);
                 }
             }
+
             return next.BindAsync(localAddress, cancellationToken);
         }
+
         TaskCompletionSource p = new(TaskCreationOptions.RunContinuationsAsynchronously);
         SafeExecute(executor, () => Cascade(BindAsync(localAddress, cancellationToken), p), p, null, false);
         return p.Task;
@@ -581,6 +597,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
                     {
                         return headContext.ConnectAsync(next, remoteAddress, localAddress, cancellationToken);
                     }
+
                     return ((IChannelOutboundHandler)handler).ConnectAsync(next, remoteAddress, localAddress, cancellationToken);
                 }
                 catch (Exception t)
@@ -588,8 +605,10 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
                     return NotifyOutboundHandlerException(t);
                 }
             }
+
             return next.ConnectAsync(remoteAddress, localAddress, cancellationToken);
         }
+
         TaskCompletionSource p = new(TaskCreationOptions.RunContinuationsAsynchronously);
         SafeExecute(executor, () => Cascade(ConnectAsync(remoteAddress, localAddress, cancellationToken), p), p, null, false);
         return p.Task;
@@ -627,6 +646,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
                     {
                         return headContext.DisconnectAsync(next, cancellationToken);
                     }
+
                     return ((IChannelOutboundHandler)handler).DisconnectAsync(next, cancellationToken);
                 }
                 catch (Exception t)
@@ -634,8 +654,10 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
                     return NotifyOutboundHandlerException(t);
                 }
             }
+
             return next.DisconnectAsync(cancellationToken);
         }
+
         TaskCompletionSource p = new(TaskCreationOptions.RunContinuationsAsynchronously);
         SafeExecute(executor, () => Cascade(DisconnectAsync(cancellationToken), p), p, null, false);
         return p.Task;
@@ -667,6 +689,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
                     {
                         return headContext.CloseAsync(next, cancellationToken);
                     }
+
                     return ((IChannelOutboundHandler)handler).CloseAsync(next, cancellationToken);
                 }
                 catch (Exception t)
@@ -674,8 +697,10 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
                     return NotifyOutboundHandlerException(t);
                 }
             }
+
             return next.CloseAsync(cancellationToken);
         }
+
         TaskCompletionSource p = new(TaskCreationOptions.RunContinuationsAsynchronously);
         SafeExecute(executor, () => Cascade(CloseAsync(cancellationToken), p), p, null, false);
         return p.Task;
@@ -707,6 +732,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
                     {
                         return headContext.DeregisterAsync(next, cancellationToken);
                     }
+
                     return ((IChannelOutboundHandler)handler).DeregisterAsync(next, cancellationToken);
                 }
                 catch (Exception t)
@@ -714,10 +740,12 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
                     return NotifyOutboundHandlerException(t);
                 }
             }
+
             // CLR: forwards from next as the other operations do. The pinned source calls deregister(promise) on this
             // context here, which would select the same not-yet-invokable next context again.
             return next.DeregisterAsync(cancellationToken);
         }
+
         TaskCompletionSource p = new(TaskCreationOptions.RunContinuationsAsynchronously);
         SafeExecute(executor, () => Cascade(DeregisterAsync(cancellationToken), p), p, null, false);
         return p.Task;
@@ -761,6 +789,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
         {
             next.Executor.Execute(GetInvokeTasks().readTask);
         }
+
         return this;
     }
 
@@ -810,6 +839,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
             // CLR: a null promise is channel().voidPromise() (see SafeExecute).
             SafeExecute(executor, GetInvokeTasks().flushTask, null, null, false);
         }
+
         return this;
     }
 
@@ -832,6 +862,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
                 if (next.InvokeHandler())
                 {
                     Task promise;
+
                     try
                     {
                         // DON'T CHANGE
@@ -853,6 +884,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
                     {
                         promise = NotifyOutboundHandlerException(t);
                     }
+
                     if (flush)
                     {
                         try
@@ -877,10 +909,13 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
                             next.InvokeExceptionCaught(t);
                         }
                     }
+
                     return promise;
                 }
+
                 return next.Write(msg, flush, cancellationToken);
             }
+
             TaskCompletionSource p = new(TaskCreationOptions.RunContinuationsAsynchronously);
             WriteTask task = WriteTask.NewInstance(this, m, p, flush, cancellationToken);
             if (!SafeExecute(executor, task.run, p, m, !flush))
@@ -891,14 +926,17 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
                 // See https://github.com/netty/netty/issues/8343.
                 task.Cancel();
             }
+
             return p.Task;
         }
+
         return Task.FromCanceled(cancellationToken);
     }
 
     private static bool ValidateWrite(object msg, CancellationToken cancellationToken)
     {
         ObjectUtil.CheckNotNull(msg, "msg");
+
         // CLR: IsNotValidPromise only reads the CancellationToken and cannot throw, so the source's
         // release-and-rethrow guard for its RuntimeException has nothing to guard.
         if (IsNotValidPromise(cancellationToken))
@@ -906,6 +944,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
             ReferenceCountUtil.Release(msg);
             return false; // cancelled
         }
+
         return true;
     }
 
@@ -931,10 +970,12 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
     {
         AbstractChannelHandlerContext ctx = this;
         IEventExecutor currentExecutor = Executor;
+
         do
         {
             ctx = ctx.Next;
         } while (SkipContext(ctx, currentExecutor, mask, ChannelHandlerMask.MaskOnlyInbound));
+
         return ctx;
     }
 
@@ -942,10 +983,12 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
     {
         AbstractChannelHandlerContext ctx = this;
         IEventExecutor currentExecutor = Executor;
+
         do
         {
             ctx = ctx.Prev;
         } while (SkipContext(ctx, currentExecutor, mask, ChannelHandlerMask.MaskOnlyOutbound));
+
         return ctx;
     }
 
@@ -1064,6 +1107,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
             {
                 executor.Execute(runnable);
             }
+
             return true;
         }
         catch (Exception cause)
@@ -1086,6 +1130,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
                     Channel.Pipeline.FireExceptionCaught(cause);
                 }
             }
+
             return false;
         }
     }
@@ -1099,6 +1144,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
             SetOutcome(future, promise);
             return;
         }
+
         future.ContinueWith(static (completed, state) => SetOutcome(completed, (TaskCompletionSource)state), promise,
             CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
     }
@@ -1145,6 +1191,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
         {
             _invokeTasks = tasks = new Tasks(this);
         }
+
         return tasks;
     }
 
@@ -1200,6 +1247,7 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
             {
                 task.size = 0;
             }
+
             if (flush)
             {
                 task.size |= int.MinValue;

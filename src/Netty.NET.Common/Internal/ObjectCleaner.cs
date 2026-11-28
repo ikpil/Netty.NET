@@ -51,7 +51,9 @@ public static class ObjectCleaner
     {
         ArgumentNullException.ThrowIfNull(target);
         ArgumentNullException.ThrowIfNull(cleanup);
+
         Interlocked.Increment(ref _pending);
+
         try
         {
             CollectedObjectWatch.Register(target, () => QueueCleanup(cleanup));
@@ -61,6 +63,7 @@ public static class ObjectCleaner
             Interlocked.Decrement(ref _pending);
             throw;
         }
+
         GC.KeepAlive(target);
     }
 

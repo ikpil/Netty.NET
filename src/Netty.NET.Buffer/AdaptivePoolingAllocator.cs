@@ -91,6 +91,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             ArgumentNullException.ThrowIfNull(allocate);
             if (initialCapacity < 0 || initialCapacity > maxCapacity)
                 throw new ArgumentOutOfRangeException(nameof(initialCapacity));
+
             _allocate = allocate;
             _reallocate = reallocate;
             _allocation = Allocate(initialCapacity);
@@ -108,6 +109,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             {
                 return allocation;
             }
+
             allocation.Release();
             throw new InvalidOperationException("The adaptive reservation is smaller than the requested capacity.");
         }
@@ -115,6 +117,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         public override IByteBufAllocator Alloc()
         {
             EnsureAccessible();
+
             return _allocation.Allocator;
         }
         public override bool IsDirect
@@ -122,6 +125,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             get
             {
                 EnsureAccessible();
+
                 return _allocation.IsDirect;
             }
         }
@@ -130,6 +134,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             get
             {
                 EnsureAccessible();
+
                 return _allocation.Root.IsContiguous;
             }
         }
@@ -145,6 +150,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         internal override BufferMemoryLease AcquireReadLease()
         {
             EnsureAccessible();
+
             return _allocation.AcquireLease();
         }
 
@@ -155,11 +161,13 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             {
                 using var events = BufferAllocatorEventSource.Log.BeginOperation();
                 CheckNewCapacity(value);
+
                 if (_length <= value && value <= _allocation.Length)
                 {
                     _length = value;
                     return;
                 }
+
                 if (value < _length)
                 {
                     _length = value;
@@ -171,6 +179,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                 BufferAllocatorEventSource.Log.Reallocated(CaptureEvent(BufferAllocatorEventSource.Keywords.ReallocateBuffer), value);
                 AdaptiveChunkAllocation previous = _allocation;
                 AdaptiveChunkAllocation replacement = Allocate(value);
+
                 try
                 {
                     // CLR: copy before publishing, so allocation/copy failure preserves the
@@ -185,6 +194,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                     replacement.Release();
                     throw;
                 }
+
                 _allocation = replacement;
                 _maxFastCapacity = replacement.Length;
                 _length = value;
@@ -196,6 +206,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         public override ByteBuf Copy(int index, int length)
         {
             CheckIndex(index, length);
+
             // Preserve the raw chunk delegate's copy policy, including its maximum
             // capacity and storage kind, rather than the outer buffer's maximum.
             return _allocation.Copy(index, length);
@@ -222,6 +233,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         internal override byte ReadByteCore(int index)
         {
             CheckIndex(index, 1);
+
             return _allocation.Root.ReadByteCore(_allocation.Offset + index);
         }
 
@@ -229,12 +241,14 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         {
             EnsureCanWrite();
             CheckIndex(index, 1);
+
             _allocation.Root.WriteByteCore(_allocation.Offset + index, value);
         }
 
         internal override ulong ReadWord(int index, int width, bool littleEndian)
         {
             CheckIndex(index, width);
+
             return _allocation.Root.ReadWord(_allocation.Offset + index, width, littleEndian);
         }
 
@@ -242,6 +256,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         {
             EnsureCanWrite();
             CheckIndex(index, width);
+
             _allocation.Root.SetWord(_allocation.Offset + index, value, width, littleEndian);
             return this;
         }
@@ -249,6 +264,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         public override ByteBuf GetBytes(int index, Span<byte> destination)
         {
             CheckIndex(index, destination.Length);
+
             _allocation.Root.GetBytes(_allocation.Offset + index, destination);
             return this;
         }
@@ -257,6 +273,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         {
             ArgumentNullException.ThrowIfNull(destination);
             CheckIndex(index, length);
+
             _allocation.Root.GetBytes(_allocation.Offset + index, destination, destinationIndex, length);
             return this;
         }
@@ -277,6 +294,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         {
             ArgumentNullException.ThrowIfNull(processor);
             CheckIndex(index, length);
+
             AdaptiveChunkAllocation allocation = _allocation;
             // CLR: a callback can return or resize this buffer. Hold the old region
             // until the root iteration finishes so it cannot be reused mid-operation.
@@ -289,6 +307,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         {
             ArgumentNullException.ThrowIfNull(processor);
             CheckIndex(index, length);
+
             AdaptiveChunkAllocation allocation = _allocation;
             using var lease = allocation.AcquireLease();
             int result = allocation.Root.ForEachByteDesc(allocation.Offset + index, length, processor);
@@ -314,6 +333,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             get
             {
                 ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
+
                 return _chunk.Root;
             }
         }
@@ -330,6 +350,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             {
                 throw new ArgumentOutOfRangeException(nameof(index));
             }
+
             return _chunk.Copy(Offset + index, length);
         }
 
@@ -346,12 +367,14 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         public override Span<byte> GetSpan()
         {
             ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
+
             return _memory.Span;
         }
 
         protected override bool TryGetArray(out ArraySegment<byte> segment)
         {
             ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
+
             return MemoryMarshal.TryGetArray((ReadOnlyMemory<byte>)_memory, out segment);
         }
 
@@ -365,12 +388,14 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             // Allocate first so failure cannot strand a reference count increment.
             var claim = new Claim();
             ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
+
             ReferenceCountUpdater.Retain(ref _references);
             claim.Activate(this);
             if (Volatile.Read(ref _disposed) == 0)
             {
                 return claim;
             }
+
             claim.Dispose();
             throw new ObjectDisposedException(nameof(AdaptiveChunkAllocation));
         }
@@ -415,6 +440,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             {
                 return;
             }
+
             Chunk chunk = _chunk;
             _chunk = null;
             _memory = default;
@@ -469,6 +495,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             // CLR: reject shapes the byte flags cannot describe before the chunk is registered.
             if (Capacity < MIN_BUDDY_SIZE || Capacity > 8 * 1024 * 1024 || !BitOperations.IsPow2(Capacity))
                 throw new ArgumentOutOfRangeException("capacity");
+
             _freeListCapacity = Capacity / MIN_BUDDY_SIZE;
             int maxShift = BitOperations.TrailingZeroCount((uint)_freeListCapacity);
             System.Diagnostics.Debug.Assert(maxShift <= 30); // The top 2 bits are used for marking.
@@ -479,9 +506,11 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             int index = 1;
             int runLength = 1;
             int currentRun = 0;
+
             while (maxShift > 0)
             {
                 _buddies[index++] = (byte)maxShift;
+
                 if (++currentRun == runLength)
                 {
                     currentRun = 0;
@@ -489,6 +518,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                     maxShift--;
                 }
             }
+
             Register();
         }
 
@@ -496,10 +526,12 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         internal override AdaptiveChunkAllocation TryAllocate(int startingCapacity)
         {
             ThrowIfRetired();
+
             if (!_freeList.IsEmpty)
             {
                 ProcessFreelistEntries();
             }
+
             // A magazine may offer the residual capacity, which need not be a power of
             // two. The Java search returns no matching buddy in that case; return that
             // outcome before walking the tree.
@@ -507,12 +539,15 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             {
                 return null;
             }
+
             int startIndex = ChooseFirstFreeBuddy(1, startingCapacity, 0);
             if (startIndex == -1)
             {
                 return null;
             }
+
             Retain();
+
             try
             {
                 var allocation = new AdaptiveChunkAllocation(this, Storage.AsMemory(startIndex, startingCapacity), startIndex);
@@ -563,6 +598,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             get
             {
                 int capacityInFreeList = 0;
+
                 if (!_freeList.IsEmpty)
                 {
                     // A concurrent snapshot, like weakPeekReduce, is not a transaction with allocation.
@@ -571,6 +607,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                         capacityInFreeList += UnpackSize(entry);
                     }
                 }
+
                 return base.RemainingCapacity + capacityInFreeList;
             }
         }
@@ -592,6 +629,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         private int ChooseFirstFreeBuddy(int index, int size, int currOffset)
         {
             byte[] buddies = _buddies;
+
             while (index < buddies.Length)
             {
                 byte buddy = buddies[index];
@@ -600,20 +638,24 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                 {
                     return -1;
                 }
+
                 if (currValue == size && (buddy & HAS_CLAIMED_CHILDREN) == 0)
                 {
                     buddies[index] |= IS_CLAIMED;
                     return currOffset;
                 }
+
                 int found = ChooseFirstFreeBuddy(index << 1, size, currOffset);
                 if (found != -1)
                 {
                     buddies[index] |= HAS_CLAIMED_CHILDREN;
                     return found;
                 }
+
                 index = (index << 1) + 1;
                 currOffset += currValue >> 1; // Bump offset to skip first half of this layer.
             }
+
             return -1;
         }
 
@@ -628,6 +670,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             {
                 return false;
             }
+
             byte buddy = buddies[index];
             int currSize = MIN_BUDDY_SIZE << (buddy & SHIFT_MASK);
 
@@ -640,6 +683,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                     buddies[index] &= SHIFT_MASK;
                     return false;
                 }
+
                 throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture,
                     $"The intended segment was not found at index {index}, for size {size} and offset {offset}"));
             }
@@ -647,6 +691,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             // We're at a parent size level. Use the target offset to guide our drill-down path.
             bool claims;
             int siblingIndex;
+
             if (offset < currOffset + (currSize >> 1))
             {
                 // Must be down the left path.
@@ -659,6 +704,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                 claims = UnreserveMatchingBuddy((index << 1) + 1, size, offset, currOffset + (currSize >> 1));
                 siblingIndex = index << 1;
             }
+
             if (!claims)
             {
                 // No other claims down the path we took. Check if the sibling has claims.
@@ -670,6 +716,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                     return false;
                 }
             }
+
             return true;
         }
 
@@ -747,6 +794,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             ArgumentNullException.ThrowIfNull(chunkRegistry);
             if (@delegate.RefCnt != 1)
                 throw new ArgumentException("The raw chunk delegate must have one live reference.", nameof(@delegate));
+
             _delegate = @delegate;
             _chunkRegistry = chunkRegistry;
             Capacity = @delegate.Capacity;
@@ -790,6 +838,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             // We can therefor put them in the shared queue as soon as the magazine is done with this chunk.
             Magazine mag = _magazine;
             DetachFromMagazine();
+
             if (!mag.OfferToQueue(this))
             {
                 MarkToDeallocate();
@@ -809,6 +858,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         internal virtual void MarkToDeallocate()
         {
             using var events = BufferAllocatorEventSource.Log.BeginOperation();
+
             if (TryRetire())
             {
                 Release();
@@ -852,6 +902,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             {
                 return;
             }
+
             OnRelease(@delegate);
             _chunkRegistry.Remove(this);
             @delegate.Release();
@@ -876,9 +927,11 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             {
                 return null;
             }
+
             int startIndex = AllocatedBytes;
             AllocatedBytes = startIndex + startingCapacity;
             Retain();
+
             try
             {
                 return new AdaptiveChunkAllocation(this, Storage.AsMemory(startIndex, startingCapacity), startIndex);
@@ -1044,6 +1097,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             {
                 throw new ArgumentOutOfRangeException(nameof(maxCapacity));
             }
+
             return Math.Min(SegmentSize, maxCapacity);
         }
 
@@ -1054,6 +1108,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             // CLR: thread-local magazines have no allocation lock; their chunks keep the physical owner.
             bool threadLocal = magazine.AllocationLock == null;
             SizeClassedChunk chunk;
+
             try
             {
                 chunk = new SizeClassedChunk(chunkBuffer, _chunkRegistry, SegmentSize, threadLocal);
@@ -1064,6 +1119,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                 chunkBuffer.Release();
                 throw;
             }
+
             chunk.AttachToMagazine(magazine);
             return chunk;
         }
@@ -1115,6 +1171,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             {
                 throw new ArgumentOutOfRangeException(nameof(maxCapacity));
             }
+
             // Buddy reservations stay powers of two even when the buffer maximum is smaller.
             // The public MaxFastWritableBytes contract clamps that reservation to maxCapacity.
             return MathUtil.SafeFindNextPositivePowerOfTwo(requestedSize);
@@ -1125,6 +1182,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             using var events = BufferAllocatorEventSource.Log.BeginOperation();
             // CLR: argument guard before the remembered size can change.
             ArgumentOutOfRangeException.ThrowIfNegative(promptingSize);
+
             int maxChunkSize = Volatile.Read(ref _maxChunkSize.Value);
             int proposedChunkSize = MathUtil.SafeFindNextPositivePowerOfTwo(BUFS_PER_CHUNK * promptingSize);
             int chunkSize = Math.Min(_allocator.MaxChunkSize, Math.Max(maxChunkSize, proposedChunkSize));
@@ -1133,9 +1191,11 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                 // Update our stored max chunk size. It's fine that this is racy.
                 Volatile.Write(ref _maxChunkSize.Value, chunkSize);
             }
+
             ByteBuf chunkBuffer = _chunkAllocator.Allocate(chunkSize, chunkSize);
             bool threadLocal = magazine.AllocationLock == null;
             BuddyChunk chunk;
+
             try
             {
                 chunk = new BuddyChunk(chunkBuffer, _chunkRegistry);
@@ -1146,6 +1206,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                 chunkBuffer.Release();
                 throw;
             }
+
             chunk.AttachToMagazine(magazine);
             return chunk;
         }
@@ -1196,6 +1257,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             {
                 _chunks.Add(key, list = new());
             }
+
             list.Insert(0, chunk);
             _count++;
         }
@@ -1205,6 +1267,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             List<Chunk> list = _chunks[key];
             list.Remove(chunk);
             _count--;
+
             if (list.Count == 0)
             {
                 _chunks.Remove(key);
@@ -1229,14 +1292,17 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         public Chunk PollChunk(int size)
         {
             using var events = BufferAllocatorEventSource.Log.BeginOperation();
+
             lock (_sync)
             {
                 if (_disposed || _count == 0)
                 {
                     return null;
                 }
+
                 Chunk ceiling = null;
                 int key = 0;
+
                 foreach (var pair in _chunks)
                 {
                     if (pair.Key >= size)
@@ -1246,6 +1312,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                         break;
                     }
                 }
+
                 if (ceiling != null)
                 {
                     Remove(key, ceiling);
@@ -1254,11 +1321,13 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                     {
                         chunk.ProcessFreelistEntries();
                     }
+
                     return chunk;
                 }
 
                 Chunk bestChunk = null;
                 int bestRemainingCapacity = 0;
+
                 foreach (var entry in Entries())
                 {
                     Chunk chunk = entry.Chunk;
@@ -1274,6 +1343,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                             {
                                 Put(bestRemainingCapacity, bestChunk);
                             }
+
                             bestChunk = chunk;
                             bestRemainingCapacity = remainingCapacity;
                         }
@@ -1291,19 +1361,23 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         public bool OfferChunk(Chunk chunk)
         {
             using var events = BufferAllocatorEventSource.Log.BeginOperation();
+
             lock (_sync)
             {
                 if (_disposed)
                 {
                     return false;
                 }
+
                 Put(chunk.RemainingCapacity, chunk);
 
                 int size = _count;
+
                 while (size > _chunkReuseQueue)
                 {
                     int key = -1;
                     Chunk toDeallocate = null;
+
                     foreach (var entry in _chunks)
                     {
                         foreach (Chunk candidate in entry.Value)
@@ -1315,19 +1389,23 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                                 break;
                             }
                         }
+
                         if (toDeallocate != null)
                         {
                             break;
                         }
                     }
+
                     if (toDeallocate == null)
                     {
                         break;
                     }
+
                     Remove(key, toDeallocate);
                     toDeallocate.MarkToDeallocate();
                     size = _count;
                 }
+
                 return true;
             }
         }
@@ -1335,13 +1413,16 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         public void Dispose()
         {
             using var events = BufferAllocatorEventSource.Log.BeginOperation();
+
             lock (_sync)
             {
                 _disposed = true;
+
                 foreach (var entry in Entries())
                 {
                     entry.Chunk.MarkToDeallocate();
                 }
+
                 _chunks.Clear();
                 _count = 0;
             }
@@ -1408,6 +1489,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
     {
         var indexes = new byte[SIZE_CLASSES[SIZE_CLASSES_COUNT - 1] / 32 + 1];
         int lastIndex = 0;
+
         for (int i = 0; i < SIZE_CLASSES_COUNT; i++)
         {
             int sizeClass = SIZE_CLASSES[i];
@@ -1417,6 +1499,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             Array.Fill(indexes, (byte)i, lastIndex + 1, sizeIndex - lastIndex);
             lastIndex = sizeIndex;
         }
+
         return indexes;
     }
 
@@ -1493,6 +1576,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         int threadLocalCacheMaxBytes = 8 * 1024 * 1024, int threadLocalCacheMinBytes = 4 * 1024 * 1024)
     {
         ArgumentNullException.ThrowIfNull(chunkAllocator);
+
         _chunkAllocator = chunkAllocator;
         if (chunkReuseQueue < 2 || chunkReuseQueue > 1 << 28)
         {
@@ -1504,6 +1588,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         ArgumentOutOfRangeException.ThrowIfLessThan(chunkPurgePollsThreadLocal, 1);
         ArgumentOutOfRangeException.ThrowIfLessThan(threadLocalCacheMaxBytes, 1);
         ArgumentOutOfRangeException.ThrowIfLessThan(threadLocalCacheMinBytes, 1);
+
         _isLowMem = lowMemory;
         _maxStripes = lowMemory ? 1 : maxStripes;
         MaxChunkSize = lowMemory
@@ -1531,12 +1616,14 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             AdaptivePoolingAllocator allocator, bool isThreadLocal)
     {
         MagazineGroup[] groups = new MagazineGroup[SIZE_CLASSES.Length];
+
         for (int i = 0; i < SIZE_CLASSES.Length; i++)
         {
             int segmentSize = SIZE_CLASSES[i];
             groups[i] = new MagazineGroup(allocator, allocator._chunkAllocator,
                     new SizeClassChunkManagementStrategy(allocator, segmentSize), isThreadLocal);
         }
+
         return groups;
     }
 
@@ -1551,11 +1638,14 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
     {
         using var events = BufferAllocatorEventSource.Log.BeginOperation();
         _lifetime.EnterReadLock();
+
         try
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
+
             bool reallocate = buf != null;
             AdaptiveChunkAllocation allocated = null;
+
             if (size <= MaxPooledBufSize)
             {
                 int index = SizeClassIndexOf(size);
@@ -1566,6 +1656,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                 {
                     magazineGroups = _sizeClassedMagazineGroups;
                 }
+
                 if (index < magazineGroups.Length)
                 {
                     allocated = magazineGroups[index].Allocate(size, maxCapacity, reallocate);
@@ -1575,10 +1666,12 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                     allocated = _largeBufferMagazineGroup.Allocate(size, maxCapacity, reallocate);
                 }
             }
+
             if (allocated == null)
             {
                 allocated = AllocateFallback(size, maxCapacity, buf);
             }
+
             return allocated;
         }
         finally
@@ -1597,11 +1690,13 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
     internal static int SizeClassIndexOf(int size)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(size);
+
         int sizeIndex = SizeIndexOf(size);
         if (sizeIndex < SIZE_INDEXES.Length)
         {
             return SIZE_INDEXES[sizeIndex];
         }
+
         return SIZE_CLASSES_COUNT;
     }
 
@@ -1621,6 +1716,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         // Create a one-off chunk for this allocation.
         ByteBuf innerChunk = _chunkAllocator.Allocate(size, maxCapacity);
         Chunk chunk;
+
         try
         {
             chunk = new Chunk(innerChunk, _chunkRegistry);
@@ -1632,6 +1728,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             innerChunk.Release();
             throw;
         }
+
         try
         {
             return chunk.TryAllocate(size) ?? throw new InvalidOperationException("A dedicated chunk was exhausted.");
@@ -1664,13 +1761,16 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         // very confusing for users.
         // CLR: IDisposable drains all groups; SafeHandle-backed delegates cover unreachable native storage.
         _lifetime.EnterWriteLock();
+
         try
         {
             if (_disposed)
             {
                 return;
             }
+
             _disposed = true;
+
             lock (_localBindings)
             {
                 foreach (var groups in _localBindings)
@@ -1708,12 +1808,15 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             if (useCacheForNonEventLoopThreads || ThreadExecutorMap.CurrentExecutor() != null)
             {
                 MagazineGroup[] groups = CreateMagazineGroupSizeClasses(allocator, true);
+
                 lock (allocator._localBindings)
                 {
                     allocator._localBindings.Add(groups);
                 }
+
                 return groups;
             }
+
             return null;
         }
 
@@ -1724,9 +1827,11 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             {
                 return;
             }
+
             // CLR: cleanup and allocator Dispose may run on different physical threads.
             // The write gate quiesces allocations/inspection before owner handoff.
             allocator._lifetime.EnterWriteLock();
+
             try
             {
                 lock (allocator._localBindings)
@@ -1817,6 +1922,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                     Monitor.Exit(AllocationLock);
                 }
             }
+
             return AllocateWithoutLock(size, maxCapacity);
         }
 
@@ -1829,6 +1935,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                 RestoreMagazineFreed();
                 return null;
             }
+
             Chunk curr = (Chunk)next;
             if (curr == null)
             {
@@ -1837,18 +1944,23 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                 {
                     return null;
                 }
+
                 curr.AttachToMagazine(this);
             }
+
             AdaptiveChunkAllocation allocated = null;
+
             try
             {
                 int remainingCapacity = curr.RemainingCapacity;
                 int startingCapacity = _chunkController.ComputeBufferCapacity(
                         size, maxCapacity, true /* never update stats as we don't hold the magazine lock */);
+
                 if (remainingCapacity >= size)
                 {
                     allocated = curr.TryAllocate(Math.Min(remainingCapacity, startingCapacity));
                 }
+
                 return allocated;
             }
             catch
@@ -1888,6 +2000,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                     _current = null;
                     curr.ReleaseFromMagazine();
                 }
+
                 if (success != null)
                 {
                     return success;
@@ -1911,9 +2024,11 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                     RestoreMagazineFreed();
                     return null;
                 }
+
                 curr = (Chunk)next;
 
                 bool kept = false;
+
                 try
                 {
                     int remainingCapacity = curr.RemainingCapacity;
@@ -1969,11 +2084,13 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                         // This method will release curr if this is not the case
                         TransferToNextInLineOrRelease(curr);
                     }
+
                     curr = _chunkController.NewChunkAllocation(size, this);
                 }
             }
 
             _current = curr;
+
             try
             {
                 int remainingCapacity = curr.RemainingCapacity;
@@ -1983,6 +2100,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                     curr = null;
                     return success;
                 }
+
                 return curr.TryAllocate(remainingCapacity);
             }
             finally
@@ -2023,6 +2141,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                     return;
                 }
             }
+
             // Next-in-line is occupied. We don't try to add it to the central queue yet as it might still be used
             // by some buffers and so is attached to a Magazine.
             // Once a Chunk is completely released by Chunk.release() it will try to move itself to the queue
@@ -2042,6 +2161,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             {
                 Monitor.Enter(allocationLock);
             }
+
             try
             {
                 if (_current != null)
@@ -2094,6 +2214,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             _chunkAllocator = chunkAllocator;
             _chunkManagementStrategy = chunkManagementStrategy;
             _chunkCache = chunkManagementStrategy.CreateChunkCache(isThreadLocal);
+
             if (isThreadLocal)
             {
                 _magazineExpandLock = null;
@@ -2105,10 +2226,12 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                 _magazineExpandLock = new object();
                 _threadLocalMagazine = null;
                 Magazine[] mags = new Magazine[INITIAL_MAGAZINES];
+
                 for (int i = 0; i < mags.Length; i++)
                 {
                     mags[i] = new Magazine(this, true, chunkManagementStrategy.CreateController(this));
                 }
+
                 _magazines = mags;
             }
         }
@@ -2128,11 +2251,13 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             int threadId = Environment.CurrentManagedThreadId;
             Magazine[] mags;
             int expansions = 0;
+
             do
             {
                 mags = Magazines;
                 int mask = mags.Length - 1;
                 int index = threadId & mask;
+
                 for (int i = 0, m = mags.Length << 1; i < m; i++)
                 {
                     Magazine mag = mags[(index + i) & mask];
@@ -2143,6 +2268,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                         return allocation;
                     }
                 }
+
                 expansions++;
             } while (expansions <= EXPANSION_ATTEMPTS && TryExpandMagazines(mags.Length));
 
@@ -2157,7 +2283,9 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             {
                 return true;
             }
+
             Magazine[] mags;
+
             // CLR: Monitor.TryEnter replaces StampedLock.tryWriteLock.
             if (Monitor.TryEnter(_magazineExpandLock))
             {
@@ -2168,22 +2296,27 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                     {
                         return true;
                     }
+
                     Magazine[] expanded = new Magazine[mags.Length * 2];
+
                     for (int i = 0, l = expanded.Length; i < l; i++)
                     {
                         expanded[i] = new Magazine(this, true, _chunkManagementStrategy.CreateController(this));
                     }
+
                     Volatile.Write(ref _magazines, expanded);
                 }
                 finally
                 {
                     Monitor.Exit(_magazineExpandLock);
                 }
+
                 foreach (Magazine magazine in mags)
                 {
                     magazine.Dispose();
                 }
             }
+
             return true;
         }
 
@@ -2203,6 +2336,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             {
                 chunk.ProcessFreelistEntries();
             }
+
             bool isAdded = _chunkCache.OfferChunk(chunk);
 
             if (Freed && isAdded)
@@ -2210,6 +2344,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                 // Help to free the reuse queue.
                 FreeChunkReuseQueue();
             }
+
             return isAdded;
         }
 
@@ -2217,6 +2352,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         {
             using var events = BufferAllocatorEventSource.Log.BeginOperation();
             Volatile.Write(ref _freed, true);
+
             if (_threadLocalMagazine != null)
             {
                 _threadLocalMagazine.Dispose();
@@ -2226,12 +2362,14 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                 lock (_magazineExpandLock)
                 {
                     Magazine[] mags = Magazines;
+
                     foreach (Magazine magazine in mags)
                     {
                         magazine.Dispose();
                     }
                 }
             }
+
             FreeChunkReuseQueue();
         }
 
@@ -2299,6 +2437,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             }
             ArgumentOutOfRangeException.ThrowIfLessThan(chunkPurgePollsShared, 1);
             ArgumentOutOfRangeException.ThrowIfLessThan(chunkPurgeThreshold, 1);
+
             _chunkReuseQueue = chunkReuseQueue;
             // Must exceed CHUNK_REUSE_QUEUE (the retention floor) to leave room for burst absorption.
             // TODO replace with an unbounded concurrent collection once available.
@@ -2341,17 +2480,20 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         public override SizeClassedChunk PollChunk(int size)
         {
             using var events = BufferAllocatorEventSource.Log.BeginOperation();
+
             lock (_sync)
             {
                 if (_disposed)
                 {
                     return null;
                 }
+
                 long budget = --_purgeBudget;
                 if (budget == 0)
                 {
                     RunPurgeScan();
                 }
+
                 return ScanForCapacity();
             }
         }
@@ -2366,13 +2508,16 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             {
                 return first;
             }
+
             long generation = _scanGeneration = unchecked(_scanGeneration + 1);
             first.LastScanGeneration = generation;
             if (first.HasRemainingCapacity)
             {
                 return ScanForCapacitySlow(generation, first);
             }
+
             OfferOrDeallocate(first);
+
             return ScanForCapacitySlow(generation, null);
         }
 
@@ -2385,6 +2530,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                     OfferOrDeallocate(chunk);
                     break;
                 }
+
                 if (chunk.HasRemainingCapacity)
                 {
                     if (chunk.PurgeEpoch == 0)
@@ -2393,22 +2539,27 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                         {
                             OfferOrDeallocate(fallback);
                         }
+
                         return chunk;
                     }
+
                     if (fallback == null)
                     {
                         fallback = chunk;
                         continue;
                     }
                 }
+
                 chunk.LastScanGeneration = generation;
                 OfferOrDeallocate(chunk);
             }
+
             if (fallback != null)
             {
                 fallback.PurgeEpoch = 0;
                 return fallback;
             }
+
             return null;
         }
 
@@ -2419,6 +2570,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                 chunk.MarkToDeallocate();
                 return false;
             }
+
             _queue.Enqueue(chunk);
             return true;
         }
@@ -2434,6 +2586,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             long generation = _purgeGeneration = unchecked(_purgeGeneration + 1);
             int retained = 0;
             List<SizeClassedChunk> deferred = _deferredBuffer;
+
             while (_queue.TryDequeue(out SizeClassedChunk chunk))
             {
                 if (chunk.LastPurgeGeneration == generation)
@@ -2441,10 +2594,13 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                     OfferOrDeallocate(chunk, generation);
                     break;
                 }
+
                 retained++;
+
                 if (chunk.HasFullCapacity)
                 {
                     chunk.PurgeEpoch = unchecked(chunk.PurgeEpoch + 1);
+
                     if (chunk.PurgeEpoch > _chunkPurgeThreshold)
                     {
                         deferred.Add(chunk);
@@ -2455,6 +2611,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                 {
                     chunk.PurgeEpoch = 0;
                 }
+
                 int remaining = chunk.RemainingCapacity;
                 if (remaining > 0)
                 {
@@ -2468,6 +2625,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                     deferred.Add(chunk);
                 }
             }
+
             for (int i = 0, size = deferred.Count; i < size; i++)
             {
                 SizeClassedChunk chunk = deferred[i];
@@ -2484,6 +2642,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                     }
                 }
             }
+
             deferred.Clear();
             _purgeBudget = _chunkPurgePollsShared;
         }
@@ -2491,12 +2650,14 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         public override bool OfferChunk(Chunk chunk)
         {
             using var events = BufferAllocatorEventSource.Log.BeginOperation();
+
             lock (_sync)
             {
                 if (_disposed || _queue.Count == _sharedCacheCapacity)
                 {
                     return false;
                 }
+
                 _queue.Enqueue((SizeClassedChunk)chunk);
                 return true;
             }
@@ -2505,9 +2666,11 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         public override void Dispose()
         {
             using var events = BufferAllocatorEventSource.Log.BeginOperation();
+
             lock (_sync)
             {
                 _disposed = true;
+
                 while (_queue.TryDequeue(out SizeClassedChunk chunk))
                 {
                     chunk.MarkToDeallocate();
@@ -2600,8 +2763,10 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         {
             if (Array.IndexOf(SIZE_CLASSES, segmentSize) < 0 || segmentSize > Capacity)
                 throw new ArgumentOutOfRangeException(nameof(segmentSize));
+
             _segmentSize = segmentSize;
             _segments = Capacity / segmentSize;
+
             if (!threadLocal)
             {
                 _externalFreeList = CreateFreeList();
@@ -2613,6 +2778,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                 _externalFreeList = CreateEmptyFreeList();
                 _localFreeList = CreateLocalFreeList();
             }
+
             Register();
         }
 
@@ -2626,11 +2792,13 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             int segmentsCount = _segments;
             var freeList = new ConcurrentQueue<int>();
             int segmentOffset = 0;
+
             for (int i = 0; i < segmentsCount; i++)
             {
                 freeList.Enqueue(segmentOffset);
                 segmentOffset += _segmentSize;
             }
+
             return freeList;
         }
 
@@ -2641,11 +2809,13 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             // all local offsets by the remainder; shared FIFO offsets start at zero.
             int segmentOffset = Capacity;
             int[] offsets = new int[segmentsCount];
+
             for (int i = 0; i < segmentsCount; i++)
             {
                 segmentOffset -= _segmentSize;
                 offsets[i] = segmentOffset;
             }
+
             return new IntStack(offsets);
         }
 
@@ -2662,12 +2832,15 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             ThrowIfRetired();
             if (startingCapacity < 0 || startingCapacity > _segmentSize)
                 throw new ArgumentOutOfRangeException(nameof(startingCapacity));
+
             int startIndex = NextAvailableSegmentOffset();
             if (startIndex == FREE_LIST_EMPTY)
             {
                 return null;
             }
+
             AllocatedBytes += _segmentSize;
+
             try
             {
                 return new AdaptiveChunkAllocation(this, Storage.AsMemory(startIndex, startingCapacity), startIndex);
@@ -2700,6 +2873,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             {
                 startIndex = _externalFreeList.TryDequeue(out int polled) ? polled : FREE_LIST_EMPTY;
             }
+
             return startIndex;
         }
 
@@ -2720,6 +2894,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                 {
                     return !_localFreeList.IsEmpty();
                 }
+
                 return !_externalFreeList.IsEmpty;
             }
         }
@@ -2735,6 +2910,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                 {
                     free += local.Size();
                 }
+
                 return free == _segments;
             }
         }
@@ -2757,11 +2933,13 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             {
                 freeSegments += localFreeList.Size();
             }
+
             int updated = freeSegments * _segmentSize;
             if (updated != snapshotted)
             {
                 AllocatedBytes = Capacity - updated;
             }
+
             return updated;
         }
 
@@ -2794,10 +2972,12 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                         {
                             UpdateStateOnLocalReleaseSegment(state, localFreeList);
                         }
+
                         return;
                     }
                 }
             }
+
             _externalFreeList.Enqueue(startIndex);
             // implicit StoreLoad barrier from MPSC offer()
             // CLR ConcurrentQueue does not promise that barrier; supply it explicitly.
@@ -2830,6 +3010,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         internal override void MarkToDeallocate()
         {
             using var events = BufferAllocatorEventSource.Log.BeginOperation();
+
             if (_localFreeList != null)
             {
                 lock (_localReturnLock)
@@ -2852,6 +3033,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             {
                 return;
             }
+
             IntStack localFreeList = _localFreeList;
             int localSize = localFreeList != null ? localFreeList.Size() : 0;
             // Exchange publishes retirement with the StoreLoad ordering used by the Java volatile write.
@@ -2976,6 +3158,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             ArgumentOutOfRangeException.ThrowIfLessThan(chunkPurgeThreshold, 1);
             ArgumentOutOfRangeException.ThrowIfLessThan(threadLocalCacheMaxBytes, 1);
             ArgumentOutOfRangeException.ThrowIfLessThan(threadLocalCacheMinBytes, 1);
+
             _chunkPurgePollsThreadLocal = chunkPurgePollsThreadLocal;
             _chunkPurgeThreshold = chunkPurgeThreshold;
             _chunks = new SizeClassedChunk[8];
@@ -2998,10 +3181,12 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             {
                 return null;
             }
+
             if (--_purgeBudget == 0)
             {
                 RunPurgeScan();
             }
+
             return ScanForCapacity();
         }
 
@@ -3018,6 +3203,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                 _notEmptyCount--;
                 return chunk;
             }
+
             return ScanForCapacityFallback();
         }
 
@@ -3026,6 +3212,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             int mask = _chunks.Length - 1;
             int emptyCount = _count - _notEmptyCount;
             int pos = (_head + _notEmptyCount) & mask;
+
             for (int i = 0; i < emptyCount; i++)
             {
                 SizeClassedChunk chunk = _chunks[pos];
@@ -3039,8 +3226,10 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                     _count--;
                     return chunk;
                 }
+
                 pos = (pos + 1) & mask;
             }
+
             return null;
         }
 
@@ -3049,6 +3238,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             int mask = _chunks.Length - 1;
             int kept = 0;
             int survivors = _count;
+
             for (int i = 0; i < _count; i++)
             {
                 int readIdx = (_head + i) & mask;
@@ -3057,6 +3247,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                 {
                     Debug.Assert(chunk.HasFullCapacity);
                     chunk.PurgeEpoch = unchecked(chunk.PurgeEpoch + 1);
+
                     if (chunk.PurgeEpoch > _chunkPurgeThreshold && survivors > PurgeRetentionFloor)
                     {
                         chunk.MarkToDeallocate();
@@ -3069,14 +3260,17 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                 {
                     chunk.PurgeEpoch = 1;
                 }
+
                 int writeIdx = (_head + kept) & mask;
                 if (writeIdx != readIdx)
                 {
                     _chunks[writeIdx] = chunk;
                     _chunks[readIdx] = null;
                 }
+
                 kept++;
             }
+
             _tail = (_head + kept) & mask;
             _count = kept;
             Partition(kept);
@@ -3089,6 +3283,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             // Pass 1: hasCapacity to front, noCapacity to back.
             int lo = 0;
             int hi = size - 1;
+
             while (lo <= hi)
             {
                 int loIdx = (_head + lo) & mask;
@@ -3105,6 +3300,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                     hi--;
                 }
             }
+
             _notEmptyCount = lo;
             // Pass 2: three-way Dutch-flag within notEmpty:
             //   [epoch=0 | 0<epoch<threshold | epoch>=threshold]
@@ -3120,6 +3316,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             int elo = 0;
             int emid = 0;
             int ehi = lo - 1;
+
             while (emid <= ehi)
             {
                 int emidIdx = (_head + emid) & mask;
@@ -3132,6 +3329,7 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
                         _chunks[emidIdx] = _chunks[eloIdx];
                         _chunks[eloIdx] = c;
                     }
+
                     elo++;
                     emid++;
                 }
@@ -3156,17 +3354,21 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             {
                 return false;
             }
+
             if (_count == _chunks.Length)
             {
                 SizeClassedChunk[] newChunks = new SizeClassedChunk[_chunks.Length * 2];
+
                 for (int i = 0; i < _count; i++)
                 {
                     newChunks[i] = _chunks[(_head + i) & (_chunks.Length - 1)];
                 }
+
                 _chunks = newChunks;
                 _head = 0;
                 _tail = _count;
             }
+
             _chunks[_tail] = (SizeClassedChunk)chunk;
             _tail = (_tail + 1) & (_chunks.Length - 1);
             _count++;
@@ -3180,22 +3382,26 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             sb.Append("ThreadLocalCache[head=").Append(_head.ToString(CultureInfo.InvariantCulture)).Append(", tail=").Append(_tail.ToString(CultureInfo.InvariantCulture))
                 .Append(", count=").Append(_count.ToString(CultureInfo.InvariantCulture)).Append(", notEmpty=").Append(_notEmptyCount.ToString(CultureInfo.InvariantCulture))
                 .Append(", length=").Append(_chunks.Length.ToString(CultureInfo.InvariantCulture)).Append("]\n  ");
+
             for (int i = 0; i < _count; i++)
             {
                 if (i > 0)
                 {
                     sb.Append(", ");
                 }
+
                 if (i == _notEmptyCount)
                 {
                     sb.Append("| ");
                 }
+
                 SizeClassedChunk c = _chunks[(_head + i) & mask];
                 string region = i < _notEmptyCount ? "notEmpty" : "empty";
                 string actual = c == null ? "null" : c.HasRemainingCapacity ? "hasCap" : "noCap";
                 sb.Append('[').Append(region).Append(':').Append(actual)
                     .Append(",ep=").Append((c == null ? -1 : c.PurgeEpoch).ToString(CultureInfo.InvariantCulture)).Append(']');
             }
+
             return sb.ToString();
         }
 
@@ -3204,12 +3410,14 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             using var events = BufferAllocatorEventSource.Log.BeginOperation();
             _disposed = true;
             int mask = _chunks.Length - 1;
+
             for (int i = 0; i < _count; i++)
             {
                 int idx = (_head + i) & mask;
                 _chunks[idx].MarkToDeallocate();
                 _chunks[idx] = null;
             }
+
             _head = 0;
             _tail = 0;
             _count = 0;

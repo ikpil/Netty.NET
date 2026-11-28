@@ -200,6 +200,7 @@ public class MultiThreadIoEventLoopGroup : MultithreadEventLoopGroup, IIoEventLo
     {
         IIoHandlerFactory handlerFactory = (IIoHandlerFactory)args[0];
         object[] argsCopy;
+
         if (args.Length > 1)
         {
             argsCopy = new object[args.Length - 1];
@@ -209,6 +210,7 @@ public class MultiThreadIoEventLoopGroup : MultithreadEventLoopGroup, IIoEventLo
         {
             argsCopy = EmptyArrays.EMPTY_OBJECTS;
         }
+
         return NewChild(executor, handlerFactory, argsCopy);
     }
 
@@ -235,6 +237,7 @@ public class MultiThreadIoEventLoopGroup : MultithreadEventLoopGroup, IIoEventLo
     public void SetIoRatio(int ioRatio)
     {
         ObjectUtil.CheckInRange(ioRatio, 1, 100, "ioRatio");
+
         foreach (IEventExecutor e in Iterator())
         {
             if (!(e is SingleThreadIoEventLoop))
@@ -243,6 +246,7 @@ public class MultiThreadIoEventLoopGroup : MultithreadEventLoopGroup, IIoEventLo
                     nameof(SingleThreadIoEventLoop) + ": " + e);
             }
         }
+
         foreach (IEventExecutor e in Iterator())
         {
             ((SingleThreadIoEventLoop)e).SetIoRatio(ioRatio);
@@ -277,10 +281,12 @@ public class MultiThreadIoEventLoopGroup : MultithreadEventLoopGroup, IIoEventLo
     {
         List<object> combinedList = new List<object>();
         combinedList.Add(handlerFactory);
+
         if (args != null)
         {
             combinedList.AddRange(args);
         }
+
         return combinedList.ToArray();
     }
 }

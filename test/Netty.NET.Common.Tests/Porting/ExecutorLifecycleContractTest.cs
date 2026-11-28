@@ -46,6 +46,7 @@ public class ExecutorLifecycleContractTest
         {
             if (++executions == rejectExecution)
                 throw new RejectedExecutionException("Simulated queue full");
+
             if (queued)
                 tasks.Enqueue(command);
             else
@@ -59,6 +60,7 @@ public class ExecutorLifecycleContractTest
         internal void Run(Action command)
         {
             running = true;
+
             try
             {
                 command();
@@ -74,10 +76,12 @@ public class ExecutorLifecycleContractTest
             shuttingDown = true;
             this.quietPeriod = quietPeriod;
             this.timeout = timeout;
+
             if (completeOnShutdown)
             {
                 termination.TrySetResult();
             }
+
             return termination.Task;
         }
 
@@ -94,6 +98,7 @@ public class ExecutorLifecycleContractTest
             {
                 throw stopFailure;
             }
+
             return TerminationFuture;
         }
 
@@ -229,6 +234,7 @@ public class ExecutorLifecycleContractTest
             {
                 throw (Exception)args[1];
             }
+
             var child = new Child(this) { completeOnShutdown = true };
             created.Add(child);
             return child;
@@ -285,6 +291,7 @@ public class ExecutorLifecycleContractTest
             entered.Set();
             release.Wait();
         });
+
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -316,6 +323,7 @@ public class ExecutorLifecycleContractTest
     {
         var executor = new DefaultEventExecutor();
         Task termination = executor.TerminationFuture;
+
         try
         {
             await Assert.ThrowsAsync<TimeoutException>(() => termination.WaitAsync(TimeSpan.Zero));
@@ -335,6 +343,7 @@ public class ExecutorLifecycleContractTest
     public async Task AnAsyncDelegateCanRequestAndAwaitItsOwnExecutorShutdown()
     {
         var executor = new DefaultEventExecutor();
+
         try
         {
             Task operation = executor.SubmitAsync(async () =>
@@ -361,6 +370,7 @@ public class ExecutorLifecycleContractTest
         var executor = new DefaultEventExecutor();
         Task continuation = executor.TerminationFuture.ContinueWith(_ => Assert.False(executor.InEventLoop()),
             CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+
         try
         {
             await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TimeSpan.FromSeconds(5));
@@ -389,6 +399,7 @@ public class ExecutorLifecycleContractTest
         var context = new DormantSynchronizationContext();
         SynchronizationContext previous = SynchronizationContext.Current;
         ManualGroup group;
+
         try
         {
             SynchronizationContext.SetSynchronizationContext(context);
@@ -398,6 +409,7 @@ public class ExecutorLifecycleContractTest
         {
             SynchronizationContext.SetSynchronizationContext(previous);
         }
+
         first.termination.SetResult();
         second.termination.SetResult();
         await group.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(5));
@@ -445,6 +457,7 @@ public class ExecutorLifecycleContractTest
     public async Task InvalidShutdownArgumentsDoNotStartShutdown()
     {
         var executor = new DefaultEventExecutor();
+
         try
         {
             Assert.Throws<ArgumentException>(() => executor.ShutdownGracefullyAsync(TimeSpan.FromTicks(-1), TimeSpan.Zero));
@@ -553,16 +566,19 @@ public class ExecutorLifecycleContractTest
             Assert.True(release.Wait(TimeSpan.FromSeconds(5)));
             return 7;
         });
+
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
             Task<int> queued = executor.SubmitAsync(() => 8);
             Task delayed = executor.ScheduleAsync(() => Assert.Fail("Stopped schedule ran"), TimeSpan.FromDays(1));
+
             if (gracefulFirst)
             {
                 executor.ShutdownGracefullyAsync(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2));
                 Assert.False(executor.IsShutdown());
             }
+
             Task stopping = executor.StopAsync();
             Assert.Same(executor.TerminationFuture, stopping);
             Assert.Same(stopping, executor.StopAsync());
@@ -603,6 +619,7 @@ public class ExecutorLifecycleContractTest
             entered.Set();
             Assert.True(release.Wait(TimeSpan.FromSeconds(5)));
         });
+
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -666,6 +683,7 @@ public class ExecutorLifecycleContractTest
     public async Task NativeStopCanBeAwaitedFromItsYieldedOrderedInvocation()
     {
         IEventExecutorGroup executor = new DefaultEventExecutor();
+
         try
         {
             await executor.SubmitAsync(async () => await executor.StopAsync()).WaitAsync(TimeSpan.FromSeconds(5));
@@ -791,6 +809,7 @@ public class ExecutorLifecycleContractTest
     {
         var group = new DefaultEventExecutorGroup(2, new DefaultThreadFactory("group-contract", true),
             16, RejectedExecutionHandlers.Reject());
+
         try
         {
             var children = group.Iterator().ToArray();
@@ -879,6 +898,7 @@ public class ExecutorLifecycleContractTest
         var child = new Child { queued = true };
         var executor = new NonStickyEventExecutorGroup(new SingleChildGroup(child), 1).Next();
         var values = new List<int>();
+
         for (int i = 0; i < 3; ++i)
         {
             int value = i;
@@ -888,7 +908,9 @@ public class ExecutorLifecycleContractTest
                 values.Add(value);
             });
         }
+
         Assert.Single(child.tasks);
+
         for (int i = 0; i < 3; ++i)
         {
             child.Run(child.tasks.Dequeue());
@@ -896,6 +918,7 @@ public class ExecutorLifecycleContractTest
             Assert.False(executor.InEventLoop());
             Assert.Single(child.tasks);
         }
+
         child.Run(child.tasks.Dequeue());
         Assert.Empty(child.tasks);
         Assert.False(executor.InEventLoop());
@@ -984,6 +1007,7 @@ public class ExecutorLifecycleContractTest
             }
         }) { IsBackground = true };
         waiter.Start();
+
         try
         {
             Assert.True(waiter.Join(TimeSpan.FromSeconds(5)));
@@ -994,6 +1018,7 @@ public class ExecutorLifecycleContractTest
         {
             release.Signal();
         }
+
         Assert.True(waiter.Join(TimeSpan.FromSeconds(5)));
         Assert.True(executor.AwaitInactivity(TimeSpan.FromSeconds(5)));
     }
@@ -1023,6 +1048,7 @@ public class ExecutorLifecycleContractTest
             }
         }) { IsBackground = true };
         waiter.Start();
+
         try
         {
             Assert.False(waiter.Join(TimeSpan.FromMilliseconds(50)));
@@ -1036,6 +1062,7 @@ public class ExecutorLifecycleContractTest
         {
             release.Signal();
         }
+
         Assert.True(executor.AwaitInactivity(TimeSpan.FromSeconds(5)));
     }
 
@@ -1067,9 +1094,11 @@ public class ExecutorLifecycleContractTest
             }
         }) { IsBackground = true };
         waiter.Start();
+
         try
         {
             Assert.False(waiter.Join(TimeSpan.FromMilliseconds(50)));
+
             if (interrupt)
             {
                 waiter.Interrupt();
@@ -1082,6 +1111,7 @@ public class ExecutorLifecycleContractTest
             Assert.True(waiter.Join(TimeSpan.FromSeconds(5)));
             Assert.True(executor.AwaitInactivity(TimeSpan.FromSeconds(5)));
         }
+
         if (interrupt)
         {
             Assert.IsType<ThreadInterruptedException>(failure);
@@ -1099,6 +1129,7 @@ public class ExecutorLifecycleContractTest
     public async Task NativeTerminationObserversUseGlobalExecutorAfterTheOwnedWorkerStops(bool unordered)
     {
         IEventExecutor executor = unordered ? new UnorderedThreadPoolEventExecutor(1) : new DefaultEventExecutor();
+
         try
         {
             await executor.SubmitAsync(() =>

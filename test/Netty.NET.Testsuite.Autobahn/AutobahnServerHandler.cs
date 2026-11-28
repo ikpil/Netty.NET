@@ -152,6 +152,7 @@ public class AutobahnServerHandler : ChannelInboundHandlerAdapter
         // Send the response and close the connection if necessary.
         IChannel channel = ctx.Channel;
         Task f = channel.WriteAndFlushAsync(res);
+
         if (!IsKeepAlive(req) || res.Status().Code() != 200)
         {
             _ = f.ContinueWith(_ => channel.CloseAsync(), CancellationToken.None,

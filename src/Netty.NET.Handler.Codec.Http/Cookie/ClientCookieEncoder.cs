@@ -94,6 +94,7 @@ public sealed class ClientCookieEncoder : CookieEncoder
     {
         StringBuilder buf = CookieUtil.StringBuilder();
         Encode(buf, CheckNotNull(cookie, "cookie"));
+
         return StripTrailingSeparator(buf);
     }
 
@@ -139,6 +140,7 @@ public sealed class ClientCookieEncoder : CookieEncoder
         }
 
         StringBuilder buf = CookieUtil.StringBuilder();
+
         if (strict)
         {
             if (cookies.Length == 1)
@@ -148,6 +150,7 @@ public sealed class ClientCookieEncoder : CookieEncoder
             else
             {
                 ICookie[] cookiesSorted = cookies.OrderBy(c => c, COOKIE_COMPARATOR).ToArray();
+
                 foreach (ICookie c in cookiesSorted)
                 {
                     Encode(buf, c);
@@ -161,6 +164,7 @@ public sealed class ClientCookieEncoder : CookieEncoder
                 Encode(buf, c);
             }
         }
+
         return StripTrailingSeparatorOrNull(buf);
     }
 
@@ -179,6 +183,7 @@ public sealed class ClientCookieEncoder : CookieEncoder
         }
 
         StringBuilder buf = CookieUtil.StringBuilder();
+
         if (strict)
         {
             if (cookies.Count == 1)
@@ -188,6 +193,7 @@ public sealed class ClientCookieEncoder : CookieEncoder
             else
             {
                 ICookie[] cookiesSorted = cookies.OrderBy(c => c, COOKIE_COMPARATOR).ToArray();
+
                 foreach (ICookie c in cookiesSorted)
                 {
                     Encode(buf, c);
@@ -201,6 +207,7 @@ public sealed class ClientCookieEncoder : CookieEncoder
                 Encode(buf, c);
             }
         }
+
         return StripTrailingSeparatorOrNull(buf);
     }
 
@@ -219,9 +226,11 @@ public sealed class ClientCookieEncoder : CookieEncoder
         }
 
         StringBuilder buf = CookieUtil.StringBuilder();
+
         if (strict)
         {
             ICookie firstCookie = cookiesIt.Current;
+
             if (!cookiesIt.MoveNext())
             {
                 Encode(buf, firstCookie);
@@ -230,12 +239,15 @@ public sealed class ClientCookieEncoder : CookieEncoder
             {
                 List<ICookie> cookiesList = new List<ICookie>();
                 cookiesList.Add(firstCookie);
+
                 do
                 {
                     cookiesList.Add(cookiesIt.Current);
                 }
                 while (cookiesIt.MoveNext());
+
                 ICookie[] cookiesSorted = cookiesList.OrderBy(c => c, COOKIE_COMPARATOR).ToArray();
+
                 foreach (ICookie c in cookiesSorted)
                 {
                     Encode(buf, c);
@@ -250,6 +262,7 @@ public sealed class ClientCookieEncoder : CookieEncoder
             }
             while (cookiesIt.MoveNext());
         }
+
         return StripTrailingSeparatorOrNull(buf);
     }
 

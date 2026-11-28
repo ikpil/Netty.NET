@@ -52,9 +52,11 @@ public class ByteBufAllocatedUtilTest
         var (source, owner) = Source(sourceKind);
         var a = new ProbeAllocator(destinationKind);
         byte[] expected = ByteBufUtil.GetBytes(source, 2, 5);
+
         try
         {
             ByteBuf result = ByteBufUtil.ReadBytes(a, source, 5);
+
             try
             {
                 Assert.Same(a, result.Alloc());
@@ -77,6 +79,7 @@ public class ByteBufAllocatedUtilTest
             {
                 result.Release();
             }
+
             Assert.Equal(0, a.Native.ReservedBytes);
         }
         finally
@@ -91,6 +94,7 @@ public class ByteBufAllocatedUtilTest
     {
         var a = new ProbeAllocator(kind);
         ByteBuf source = Unpooled.WrappedBuffer(new byte[] { 1, 2, 3 });
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.ReadBytes(a, source, 4));
@@ -98,6 +102,7 @@ public class ByteBufAllocatedUtilTest
             Assert.Equal(0, a.Native.ReservedBytes);
             Assert.Equal(0, source.ReaderIndex);
             ByteBuf empty = ByteBufUtil.ReadBytes(a, source, 0);
+
             try
             {
                 Assert.Equal(0, empty.Capacity);
@@ -109,6 +114,7 @@ public class ByteBufAllocatedUtilTest
             {
                 empty.Release();
             }
+
             source.Release();
             Assert.Throws<IllegalReferenceCountException>(() => ByteBufUtil.ReadBytes(a, source, 0));
             Assert.Equal(0, a.Last.RefCnt);
@@ -128,6 +134,7 @@ public class ByteBufAllocatedUtilTest
     {
         var a = new ProbeAllocator(1) { ReadOnly = true };
         ByteBuf source = Unpooled.WrappedBuffer(new byte[] { 1, 2, 3 });
+
         try
         {
             Assert.Throws<NotSupportedException>(() => ByteBufUtil.ReadBytes(a, source, 3));
@@ -147,9 +154,11 @@ public class ByteBufAllocatedUtilTest
     {
         var a = new ProbeAllocator(0) { ExtraCapacity = 4 };
         ByteBuf source = Unpooled.WrappedBuffer(new byte[] { 1, 2, 3 });
+
         try
         {
             ByteBuf result = ByteBufUtil.ReadBytes(a, source, 3);
+
             try
             {
                 Assert.Equal(7, result.Capacity);
@@ -173,6 +182,7 @@ public class ByteBufAllocatedUtilTest
     public void Utf8AndAsciiFactoriesUseOriginalWireAndReservationRules(int kind)
     {
         var a = new ProbeAllocator(kind);
+
         foreach (var (text, utf8, ascii) in new[]
         {
             ("", Array.Empty<byte>(), Array.Empty<byte>()),
@@ -183,6 +193,7 @@ public class ByteBufAllocatedUtilTest
         })
         {
             ByteBuf u = ByteBufUtil.WriteUtf8(a, text);
+
             try
             {
                 Assert.Equal(text.Length * 3, a.RequestedCapacity);
@@ -194,7 +205,9 @@ public class ByteBufAllocatedUtilTest
             {
                 u.Release();
             }
+
             ByteBuf s = ByteBufUtil.WriteAscii(a, text);
+
             try
             {
                 Assert.Equal(text.Length, a.RequestedCapacity);
@@ -206,9 +219,11 @@ public class ByteBufAllocatedUtilTest
                 s.Release();
             }
         }
+
         byte[] padded = new byte[] { 7 }.Concat(Enumerable.Range(0, 256).Select(i => (byte)i)).Append((byte)9).ToArray();
         AsciiString raw = new(padded, 1, 256, false);
         ByteBuf asciiBytes = ByteBufUtil.WriteAscii(a, raw);
+
         try
         {
             Assert.Equal(256, a.RequestedCapacity);
@@ -219,8 +234,10 @@ public class ByteBufAllocatedUtilTest
         {
             asciiBytes.Release();
         }
+
         int callsBeforeGrowth = a.Calls;
         ByteBuf utf8Bytes = ByteBufUtil.WriteUtf8(a, raw);
+
         try
         {
             Assert.Equal(256, a.RequestedCapacities[callsBeforeGrowth]);
@@ -231,6 +248,7 @@ public class ByteBufAllocatedUtilTest
         {
             utf8Bytes.Release();
         }
+
         Assert.Equal(0, a.Native.ReservedBytes);
     }
 
@@ -272,11 +290,13 @@ public class ByteBufAllocatedUtilTest
     {
         var a = new ProbeAllocator(kind);
         Encoding[] encodings = { Encoding.UTF8, Encoding.ASCII, Encoding.Latin1, Encoding.Unicode, Encoding.BigEndianUnicode, Encoding.UTF32 };
+
         foreach (Encoding encoding in encodings)
         foreach (string text in new[] { "", "NettyRocks", "A\u00e9\ud83d\ude00", "\ud800" })
         {
             byte[] expected = encoding.GetBytes(text);
                 ByteBuf b = ByteBufUtil.EncodeString(a, text, encoding, 3);
+
             try
             {
                 Assert.Equal(expected.Length + 3, a.RequestedCapacity);
@@ -294,6 +314,7 @@ public class ByteBufAllocatedUtilTest
                 b.Release();
             }
         }
+
         Assert.Equal(0, a.Native.ReservedBytes);
     }
 
@@ -306,6 +327,7 @@ public class ByteBufAllocatedUtilTest
         var a = new ProbeAllocator(kind);
         string text = "!a\u00e9\ud83d\ude00!";
         ByteBuf b = ByteBufUtil.EncodeString(a, text.AsSpan(1, text.Length - 2), new UTF8Encoding(true), 2);
+
         try
         {
             Assert.Equal(9, b.Capacity);
@@ -317,7 +339,9 @@ public class ByteBufAllocatedUtilTest
         {
             b.Release();
         }
+
         ByteBuf empty = ByteBufUtil.EncodeString(a, ReadOnlySpan<char>.Empty, Encoding.UTF8);
+
         try
         {
             Assert.Equal(0, empty.Capacity);
@@ -349,6 +373,7 @@ public class ByteBufAllocatedUtilTest
         Assert.Throws<ArgumentNullException>(() => ByteBufUtil.ReadBytes(null, null, 0));
         Assert.Throws<ArgumentNullException>(() => ByteBufUtil.ReadBytes(a, null, 0));
         ByteBuf source = Unpooled.WrappedBuffer(new byte[] { 1 });
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.ReadBytes(a, source, -1));
@@ -420,18 +445,23 @@ public class ByteBufAllocatedUtilTest
             RequestedCapacities.Add(initial);
             if (FailAllocation)
                 throw new InvalidOperationException("Deliberate allocation failure.");
+
             int capacity = checked(initial + ExtraCapacity);
             ByteBuf b;
+
             if (_kind == 2)
             {
                 var composite = new CompositeByteBuf(this, false);
+
                 if (capacity > 0)
                     composite.AddComponent(Unpooled.WrappedBuffer(new byte[capacity / 2]), true)
                     .AddComponent(Unpooled.WrappedBuffer(new byte[capacity - capacity / 2]), true);
+
                 b = composite.SetIndex(0, 0);
             }
             else
                 b = direct ? new UnpooledDirectByteBuf(this, capacity, max, Native) : new UnpooledHeapByteBuf(this, capacity, max);
+
             Last = ReadOnly ? b.AsReadOnly() : b;
             return Last;
         }

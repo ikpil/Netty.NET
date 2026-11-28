@@ -201,6 +201,7 @@ public static class CipherSuiteConverter
     internal static bool IsO2JCached(string key, string protocol, string value)
     {
         o2j.TryGetValue(key, out IDictionary<string, string> p2j);
+
         if (p2j == null)
         {
             return false;
@@ -223,6 +224,7 @@ public static class CipherSuiteConverter
         {
             return converted.value;
         }
+
         return CacheFromJava(javaCipherSuite, boringSSL);
     }
 
@@ -274,6 +276,7 @@ public static class CipherSuiteConverter
         string handshakeAlgo = ToOpenSslHandshakeAlgo(Group(m, 1));
         string bulkCipher = ToOpenSslBulkCipher(Group(m, 2));
         string hmacAlgo = ToOpenSslHmacAlgo(Group(m, 3));
+
         if (handshakeAlgo.Length == 0)
         {
             return bulkCipher + '-' + hmacAlgo;
@@ -380,6 +383,7 @@ public static class CipherSuiteConverter
     public static string ToJava(string openSslCipherSuite, string protocol)
     {
         o2j.TryGetValue(openSslCipherSuite, out IDictionary<string, string> p2j);
+
         if (p2j == null)
         {
             p2j = CacheFromOpenSsl(openSslCipherSuite);
@@ -399,6 +403,7 @@ public static class CipherSuiteConverter
             {
                 return null;
             }
+
             // CLR: string concatenation of a null protocol gives "" where Java gives "null".
             javaCipherSuite = (protocol ?? "null") + '_' + cipher;
         }
@@ -465,6 +470,7 @@ public static class CipherSuiteConverter
 
         string handshakeAlgo = Group(m, 1);
         bool export;
+
         if (handshakeAlgo == null)
         {
             handshakeAlgo = "";
@@ -513,6 +519,7 @@ public static class CipherSuiteConverter
         }
 
         handshakeAlgo = handshakeAlgo.Replace('-', '_');
+
         if (export)
         {
             return handshakeAlgo + "_EXPORT";

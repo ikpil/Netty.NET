@@ -159,6 +159,7 @@ public class WebSocketServerHandshakerFactory
                                                               WebSocketDecoderConfig decoderConfig)
     {
         ObjectUtil.CheckNotNull(decoderConfig, "decoderConfig");
+
         return ResolveHandshaker0(req, webSocketURL, subprotocols, decoderConfig);
     }
 

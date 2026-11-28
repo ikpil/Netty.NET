@@ -26,6 +26,7 @@ public class DatagramTransportContractTest
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         IChannel channel = null;
         var received = new TaskCompletionSource<(byte[], IPEndPoint)>(TaskCreationOptions.RunContinuationsAsynchronously);
+
         try
         {
             channel = await new Bootstrap().Group(group).Channel<NioDatagramChannel>().Handler(new CaptureHandler(received))
@@ -41,6 +42,7 @@ public class DatagramTransportContractTest
         {
             if (channel != null)
                 await channel.CloseAsync();
+
             await group.StopAsync().WaitAsync(TimeSpan.FromSeconds(10));
         }
     }
@@ -54,6 +56,7 @@ public class DatagramTransportContractTest
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         IChannel channel = null;
         using var peer = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0));
+
         try
         {
             channel = await new Bootstrap().Group(group).Channel<NioDatagramChannel>().Handler(new ChannelInboundHandlerAdapter())
@@ -69,23 +72,28 @@ public class DatagramTransportContractTest
             // NioDatagramChannel.doWriteMessage completes an empty buffer without a native send.
             // A following marker must therefore be the first received packet, including after an owned empty buffer.
             byte[] expected = bytes;
+
             if (length == 0)
             {
                 expected = new byte[] { 42 };
                 await channel.WriteAndFlushAsync(new DatagramPacket(Unpooled.CopiedBuffer(expected), (IPEndPoint)peer.Client.LocalEndPoint));
             }
+
             var packet = await peer.ReceiveAsync().WaitAsync(TimeSpan.FromSeconds(10));
             Assert.Equal(expected, packet.Buffer);
+
             if (length == 0)
             {
                 Assert.False(peer.Client.Poll(10_000, SelectMode.SelectRead));
             }
+
             Assert.Equal(0, buffer.RefCnt);
         }
         finally
         {
             if (channel != null)
                 await channel.CloseAsync();
+
             await group.StopAsync().WaitAsync(TimeSpan.FromSeconds(10));
         }
     }

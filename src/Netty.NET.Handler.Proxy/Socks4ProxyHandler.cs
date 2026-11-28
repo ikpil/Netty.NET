@@ -48,6 +48,7 @@ public sealed class Socks4ProxyHandler : ProxyHandler
         {
             username = null;
         }
+
         this.username = username;
     }
 
@@ -97,6 +98,7 @@ public sealed class Socks4ProxyHandler : ProxyHandler
         EndPoint raddr = CastToInetSocketAddress(DestinationAddress<EndPoint>());
         string rhost;
         int port;
+
         if (raddr is DnsEndPoint unresolved)
         {
             rhost = unresolved.Host;
@@ -108,6 +110,7 @@ public sealed class Socks4ProxyHandler : ProxyHandler
             rhost = GetHostAddress(resolved.Address);
             port = resolved.Port;
         }
+
         return new DefaultSocks4CommandRequest(
                 Socks4CommandType.CONNECT, rhost, port, username != null? username : "");
     }

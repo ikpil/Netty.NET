@@ -101,6 +101,7 @@ public class ResourceLeakDetectorContractTest : IDisposable
             {
                 return;
             }
+
             Thread.Sleep(10);
         } while (elapsed.Elapsed < TimeSpan.FromSeconds(5));
 
@@ -170,6 +171,7 @@ public class ResourceLeakDetectorContractTest : IDisposable
         Assert.Null(tracker.GetCloseStackTraceIfAny());
         Assert.True(tracker.Close(resource));
         Exception close = tracker.GetCloseStackTraceIfAny();
+
         if (ResourceLeakDetector.TRACK_CLOSE)
         {
             Assert.NotNull(close);
@@ -177,6 +179,7 @@ public class ResourceLeakDetectorContractTest : IDisposable
         }
         else
             Assert.Null(close);
+
         Assert.False(tracker.Close(resource));
         Assert.Same(close, tracker.GetCloseStackTraceIfAny());
         tracker.Record(new ThrowingHint());
@@ -229,6 +232,7 @@ public class ResourceLeakDetectorContractTest : IDisposable
             }
         }) { IsBackground = true };
         holder.Start();
+
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -279,6 +283,7 @@ public class ResourceLeakDetectorContractTest : IDisposable
         using var release = new ManualResetEventSlim();
         Task record = Task.Run(() => tracker.Record(new BlockingHint(entered, release)));
         Exception close = null;
+
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -290,6 +295,7 @@ public class ResourceLeakDetectorContractTest : IDisposable
             release.Set();
             Assert.True(record.Wait(TimeSpan.FromSeconds(5)));
         }
+
         Assert.Same(close, tracker.GetCloseStackTraceIfAny());
     }
 
@@ -299,8 +305,10 @@ public class ResourceLeakDetectorContractTest : IDisposable
         var detector = new Detector();
         detector.SetLeakListener(detector);
         IResourceLeakTracker<object> first = null;
+
         for (int i = 0; i < 2; i++)
             first = CreateLeak(detector, out _);
+
         CollectUntil(detector.Flush, () => detector.Reports.Count == 1);
         GC.Collect();
         GC.WaitForPendingFinalizers();

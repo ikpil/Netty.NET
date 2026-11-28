@@ -410,6 +410,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
             // CLR: Java dereferences o and throws NullPointerException; the argument check reports it as
             // ArgumentNullException.
             ArgumentNullException.ThrowIfNull(o);
+
             return _key.CompareTo(o._key);
         }
     }
@@ -449,6 +450,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
         if (b != null && n != null)
         {
             Node f, p;
+
             for (;;)
             {
                 if ((f = n.next) != null && f.key == noKey)
@@ -463,6 +465,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                     break;
                 }
             }
+
             Interlocked.CompareExchange(ref b.next, p, n);
         }
     }
@@ -501,6 +504,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
     {
         Index q;
         AcquireFence();
+
         if ((q = _head) == null || key == _noKey)
         {
             return null;
@@ -560,7 +564,9 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
         {
             throw new ArgumentException(); // don't postpone errors
         }
+
         Node b;
+
         while ((b = FindPredecessor(key)) != null)
         {
             for (;;)
@@ -568,6 +574,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                 Node n;
                 int k;
                 int c;
+
                 if ((n = b.next) == null)
                 {
                     goto outer;               // empty
@@ -614,7 +621,9 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
         {
             throw new ArgumentException();
         }
+
         V result = null;
+
         if ((q = _head) != null)
         {
             for (Index r, d; ;)
@@ -625,6 +634,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                     int k;
                     V v;
                     int c;
+
                     if ((p = r.node) == null || (k = p.key) == _noKey ||
                         (v = p.val) == null)
                     {
@@ -652,6 +662,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                 else
                 {
                     Node b, n;
+
                     if ((b = q.node) != null)
                     {
                         while ((n = b.next) != null)
@@ -670,10 +681,12 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                                 {
                                     result = v;
                                 }
+
                                 break;
                             }
                         }
                     }
+
                     break;
                 }
             }
@@ -705,6 +718,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
             Node b;
             AcquireFence();
             int levels = 0;                    // number of levels descended
+
             if ((h = _head) == null)           // try to initialize
             {
                 Node @base = new Node(_noKey, null, null);
@@ -746,6 +760,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                     }
                 }
             }
+
             if (b != null)
             {
                 Node z = null;              // new node, if inserted
@@ -756,12 +771,14 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                     int k;
                     V v;
                     int c;
+
                     if ((n = b.next) == null)
                     {
                         if (b.key == _noKey)       // if empty, type check key now TODO: remove?
                         {
                             Cpr(key, key);
                         }
+
                         c = -1;
                     }
                     else if ((k = n.key) == _noKey)
@@ -802,9 +819,11 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                         long rnd = ((long) hr << 32) | ((long) lr & 0xffffffffL);
                         int skips = levels;      // levels to descend before add
                         Index x = null;
+
                         for (;;)                 // create at most 62 indices
                         {
                             x = new Index(z, x, null);
+
                             if (rnd >= 0L || --skips < 0)
                             {
                                 break;
@@ -814,6 +833,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                                 rnd <<= 1;
                             }
                         }
+
                         if (AddIndices(h, skips, x, _noKey) && skips < 0 &&
                             _head == h)          // try to add new level
                         {
@@ -821,11 +841,13 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                             Index nh = new Index(h.node, h, hx);
                             Interlocked.CompareExchange(ref _head, nh, h);
                         }
+
                         if (z.val == null)        // deleted while adding indices
                         {
                             FindPredecessor(key); // clean
                         }
                     }
+
                     AddCount(1L);
                     return null;
                 }
@@ -852,10 +874,12 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
             q != null)                              // hoist checks
         {
             bool retrying = false;
+
             for (;;)                                // find splice point
             {
                 Index r, d;
                 int c;
+
                 if ((r = q.right) != null)
                 {
                     Node p;
@@ -895,6 +919,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                     else
                     {
                         x.right = r;
+
                         if (Interlocked.CompareExchange(ref q.right, x, r) == r)
                         {
                             return true;
@@ -907,6 +932,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                 }
             }
         }
+
         return false;
     }
 
@@ -928,8 +954,10 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
         {
             throw new ArgumentException();
         }
+
         V result = null;
         Node b;
+
         while ((b = FindPredecessor(key)) != null &&
                result == null)
         {
@@ -939,6 +967,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                 int k;
                 V v;
                 int c;
+
                 if ((n = b.next) == null)
                 {
                     goto outer;
@@ -1004,6 +1033,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
     private void TryReduceLevel()
     {
         Index h, d, e;
+
         if ((h = _head) != null && h.right == null &&
             (d = h.down) != null && d.right == null &&
             (e = d.down) != null && e.right == null &&
@@ -1023,6 +1053,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
     internal Node FindFirst()
     {
         Node b, n;
+
         if ((b = BaseHead()) != null)
         {
             while ((n = b.next) != null)
@@ -1037,6 +1068,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                 }
             }
         }
+
         return null;
     }
 
@@ -1047,6 +1079,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
     {
         Node b, n;
         V v;
+
         if ((b = BaseHead()) != null)
         {
             while ((n = b.next) != null)
@@ -1061,6 +1094,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                 }
             }
         }
+
         return null;
     }
 
@@ -1072,6 +1106,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
     {
         Node b, n;
         V v;
+
         if ((b = BaseHead()) != null)
         {
             while ((n = b.next) != null)
@@ -1080,16 +1115,19 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                 {
                     int k = n.key;
                     UnlinkNode(b, n, _noKey);
+
                     if (v != null)
                     {
                         TryReduceLevel();
                         FindPredecessor(k); // clean index
                         AddCount(-1L);
+
                         return new IntEntry(k, v);
                     }
                 }
             }
         }
+
         return null;
     }
 
@@ -1110,6 +1148,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
             {
                 break;
             }
+
             for (Index r, d; ;)
             {
                 while ((r = q.right) != null)
@@ -1124,6 +1163,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                         q = r;
                     }
                 }
+
                 if ((d = q.down) != null)
                 {
                     q = d;
@@ -1134,6 +1174,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                     break;
                 }
             }
+
             if (b != null)
             {
                 for (;;)
@@ -1212,6 +1253,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
             {
                 Index d, r;
                 Node p;
+
                 while ((r = q.right) != null)
                 {
                     if ((p = r.node) == null || p.val == null)
@@ -1227,6 +1269,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                         break;
                     }
                 }
+
                 if ((d = q.down) != null)
                 {
                     q = d;
@@ -1245,6 +1288,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                     Node n;
                     int k;
                     V v;
+
                     if ((n = b.next) == null)
                     {
                         if (b.key == _noKey) // empty
@@ -1274,6 +1318,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                         TryReduceLevel();
                         FindPredecessor(k); // clean index
                         AddCount(-1L);
+
                         return new IntEntry(k, v);
                     }
                 }
@@ -1327,7 +1372,9 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
         {
             throw new ArgumentException();
         }
+
         Node result;
+
         for (Node b; ;)
         {
             if ((b = FindPredecessor(key)) == null)
@@ -1341,6 +1388,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                 Node n;
                 int k;
                 int c;
+
                 if ((n = b.next) == null)
                 {
                     result = (rel & LT) != 0 && b.key != _noKey ? b : null;
@@ -1455,6 +1503,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
     public void Put(int key, V value)
     {
         ArgumentNullException.ThrowIfNull(value);
+
         DoPut(key, value, false);
     }
 
@@ -1488,8 +1537,10 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
     public bool ContainsValue(object value)
     {
         ArgumentNullException.ThrowIfNull(value);
+
         Node b, n;
         V v;
+
         if ((b = BaseHead()) != null)
         {
             while ((n = b.next) != null)
@@ -1504,6 +1555,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                 }
             }
         }
+
         return false;
     }
 
@@ -1534,6 +1586,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
         Index h, r, d;
         Node b;
         AcquireFence();
+
         while ((h = _head) != null)
         {
             if ((r = h.right) != null)        // remove indices
@@ -1547,10 +1600,12 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
             else
             {
                 long count = 0L;
+
                 if ((b = h.node) != null)      // remove nodes
                 {
                     Node n;
                     V v;
+
                     while ((n = b.next) != null)
                     {
                         if ((v = n.val) != null &&
@@ -1559,12 +1614,14 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                             --count;
                             v = null;
                         }
+
                         if (v == null)
                         {
                             UnlinkNode(b, n, _noKey);
                         }
                     }
                 }
+
                 if (count != 0L)
                 {
                     AddCount(count);
@@ -1592,6 +1649,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
         {
             throw new ArgumentException();
         }
+
         return value != null && DoRemove(key, value) != null;
     }
 
@@ -1620,6 +1678,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
             {
                 return false;
             }
+
             if ((v = n.val) != null)
             {
                 if (!oldValue.Equals(v))
@@ -1643,6 +1702,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
         {
             return _noKey;
         }
+
         return n.key;
     }
 
@@ -1653,6 +1713,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
         {
             return _noKey;
         }
+
         return n.key;
     }
 
@@ -1799,6 +1860,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
         // TODO optimize this
         Node node;
         V val;
+
         do
         {
             node = FindNear(key, GT | EQ);
@@ -1806,8 +1868,10 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
             {
                 return null;
             }
+
             val = node.val;
         } while (val == null || !Remove(node.key, val));
+
         return new IntEntry(node.key, val);
     }
 
@@ -1850,6 +1914,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
         {
             Node n = null;
             V v = null;
+
             if ((lastReturned = b) != null)
             {
                 while ((n = b.next) != null && (v = n.val) == null)
@@ -1857,6 +1922,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                     b = n;
                 }
             }
+
             nextValue = v;
             next = n;
         }
@@ -1869,6 +1935,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
             {
                 throw new InvalidOperationException();
             }
+
             // It would not be worth all of the overhead to directly
             // unlink from here. Using remove is fast enough.
             _map.Remove(k, n.val); // TODO: inline and optimize this
@@ -1886,6 +1953,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
             {
                 return false;
             }
+
             _current = Next();
             return true;
         }
@@ -1915,9 +1983,11 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                 // the end of a sequence.
                 throw new InvalidOperationException();
             }
+
             int k = n.key;
             V v = nextValue;
             Advance(n);
+
             return new IntEntry(k, v);
         }
     }
@@ -1943,8 +2013,10 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
     public void ForEach(Action<int, V> action)
     {
         ArgumentNullException.ThrowIfNull(action);
+
         Node b, n;
         V v;
+
         if ((b = BaseHead()) != null)
         {
             while ((n = b.next) != null)
@@ -1953,6 +2025,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                 {
                     action(n.key, v);
                 }
+
                 b = n;
             }
         }
@@ -1961,8 +2034,10 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
     public void ReplaceAll(Func<int, V, V> function)
     {
         ArgumentNullException.ThrowIfNull(function);
+
         Node b, n;
         V v;
+
         if ((b = BaseHead()) != null)
         {
             while ((n = b.next) != null)
@@ -1976,6 +2051,7 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
                         break;
                     }
                 }
+
                 b = n;
             }
         }

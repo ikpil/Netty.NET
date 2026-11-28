@@ -49,6 +49,7 @@ public class SocketShutdownOutputBySelfSourceTest : AbstractClientSocketTest
         TcpListener ss = new TcpListener((IPEndPoint) NewSocketAddress());
         TcpClient s = null;
         ISocketChannel ch = null;
+
         try
         {
             ss.Start();
@@ -84,10 +85,12 @@ public class SocketShutdownOutputBySelfSourceTest : AbstractClientSocketTest
             {
                 s.Close();
             }
+
             if (ch != null)
             {
                 _ = ch.CloseAsync();
             }
+
             ss.Stop();
         }
     }
@@ -104,6 +107,7 @@ public class SocketShutdownOutputBySelfSourceTest : AbstractClientSocketTest
         TestHandler h = new TestHandler();
         TcpListener ss = new TcpListener((IPEndPoint) NewSocketAddress());
         TcpClient s = null;
+
         try
         {
             ss.Start();
@@ -123,6 +127,7 @@ public class SocketShutdownOutputBySelfSourceTest : AbstractClientSocketTest
             {
                 s.Close();
             }
+
             ss.Stop();
         }
     }
@@ -145,6 +150,7 @@ public class SocketShutdownOutputBySelfSourceTest : AbstractClientSocketTest
         TcpListener ss = new TcpListener((IPEndPoint) NewSocketAddress());
         TcpClient s = null;
         ISocketChannel ch = null;
+
         try
         {
             ss.Start();
@@ -163,6 +169,7 @@ public class SocketShutdownOutputBySelfSourceTest : AbstractClientSocketTest
             ch.Flush();
             await writeFuture;
             h.AssertWritability(true);
+
             for (int i = 0; i < expectedBytes.Length; ++i)
             {
                 Assert.Equal(expectedBytes[i], await ReadAsync(s.GetStream(), cancellation));
@@ -199,10 +206,12 @@ public class SocketShutdownOutputBySelfSourceTest : AbstractClientSocketTest
             {
                 s.Close();
             }
+
             if (ch != null)
             {
                 _ = ch.CloseAsync();
             }
+
             ss.Stop();
         }
     }
@@ -238,6 +247,7 @@ public class SocketShutdownOutputBySelfSourceTest : AbstractClientSocketTest
         TcpClient s = null;
 
         Task<IChannel> cf = null;
+
         try
         {
             ss.Start();
@@ -263,12 +273,14 @@ public class SocketShutdownOutputBySelfSourceTest : AbstractClientSocketTest
             {
                 s.Close();
             }
+
             // CLR: the source assigns cf only after connect(...).sync() succeeded; a failed connect Task has no
             // channel to close (Bootstrap.ConnectAsync already closed it).
             if (cf != null && cf.IsCompletedSuccessfully)
             {
                 _ = (await cf).CloseAsync();
             }
+
             ss.Stop();
         }
     }
@@ -404,6 +416,7 @@ internal sealed class ShutdownFixture : IAsyncDisposable
         Client = new Bootstrap().Group(_group).Option(ChannelOption.ALLOCATOR, allocator);
         Server = new ServerBootstrap().Group(_group)
             .Option(ChannelOption.ALLOCATOR, allocator).ChildOption(ChannelOption.ALLOCATOR, allocator);
+
         if (domain)
         {
             Client.Channel<NioDomainSocketChannel>();

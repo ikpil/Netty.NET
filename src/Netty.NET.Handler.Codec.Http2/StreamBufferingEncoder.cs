@@ -198,6 +198,7 @@ public class StreamBufferingEncoder : DecoratingHttp2ConnectionEncoder
             promise.SetException(new Http2ChannelClosedException());
             return promise.Task;
         }
+
         if (IsExistingStream(streamId) || CanCreateStream())
         {
             if (hasPriority)
@@ -205,19 +206,24 @@ public class StreamBufferingEncoder : DecoratingHttp2ConnectionEncoder
                 return base.WriteHeadersAsync(ctx, streamId, headers, streamDependency, weight,
                                           exclusive, padding, endOfStream, promise);
             }
+
             return base.WriteHeadersAsync(ctx, streamId, headers, padding, endOfStream, promise);
         }
+
         if (goAwayDetail != null)
         {
             promise.SetException(new Http2GoAwayException(goAwayDetail));
             return promise.Task;
         }
+
         pendingStreams.TryGetValue(streamId, out PendingStream pendingStream);
+
         if (pendingStream == null)
         {
             pendingStream = new PendingStream(ctx, streamId);
             pendingStreams[streamId] = pendingStream;
         }
+
         pendingStream.frames.Enqueue(new HeadersFrame(this, headers, hasPriority, streamDependency, weight, exclusive,
                 padding, endOfStream, promise));
         return promise.Task;
@@ -230,9 +236,11 @@ public class StreamBufferingEncoder : DecoratingHttp2ConnectionEncoder
         {
             return base.WriteRstStreamAsync(ctx, streamId, errorCode, promise);
         }
+
         // Since the delegate doesn't know about any buffered streams we have to handle cancellation
         // of the promises and releasing of the ByteBufs here.
         pendingStreams.Remove(streamId, out PendingStream stream);
+
         if (stream != null)
         {
             // Sending a RST_STREAM to a buffered stream will succeed the promise of all frames
@@ -246,6 +254,7 @@ public class StreamBufferingEncoder : DecoratingHttp2ConnectionEncoder
         {
             promise.SetException(ConnectionError(PROTOCOL_ERROR, "Stream does not exist %d", streamId));
         }
+
         return promise.Task;
     }
 
@@ -256,7 +265,9 @@ public class StreamBufferingEncoder : DecoratingHttp2ConnectionEncoder
         {
             return base.WriteDataAsync(ctx, streamId, data, padding, endOfStream, promise);
         }
+
         pendingStreams.TryGetValue(streamId, out PendingStream pendingStream);
+
         if (pendingStream != null)
         {
             pendingStream.frames.Enqueue(new DataFrame(this, data, padding, endOfStream, promise));
@@ -266,6 +277,7 @@ public class StreamBufferingEncoder : DecoratingHttp2ConnectionEncoder
             ReferenceCountUtil.SafeRelease(data);
             promise.SetException(ConnectionError(PROTOCOL_ERROR, "Stream does not exist %d", streamId));
         }
+
         return promise.Task;
     }
 
@@ -305,6 +317,7 @@ public class StreamBufferingEncoder : DecoratingHttp2ConnectionEncoder
 
                 // Fail all buffered streams.
                 Http2ChannelClosedException e = new Http2ChannelClosedException();
+
                 while (pendingStreams.Count != 0)
                 {
                     PendingStream stream = PollFirstEntry().Value;
@@ -324,6 +337,7 @@ public class StreamBufferingEncoder : DecoratingHttp2ConnectionEncoder
         {
             KeyValuePair<int, PendingStream> entry = PollFirstEntry();
             PendingStream pendingStream = entry.Value;
+
             try
             {
                 pendingStream.SendFrames();
@@ -347,6 +361,7 @@ public class StreamBufferingEncoder : DecoratingHttp2ConnectionEncoder
     {
         IEnumerator<PendingStream> iter = pendingStreams.Values.ToList().GetEnumerator();
         Exception e = new Http2GoAwayException(goAwayDetail);
+
         while (iter.MoveNext())
         {
             PendingStream stream = iter.Current;

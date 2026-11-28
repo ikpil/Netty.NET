@@ -112,6 +112,7 @@ public class LineBasedFrameDecoder : ByteToMessageDecoder
     protected internal virtual object Decode(IChannelHandlerContext ctx, ByteBuf buffer)
     {
         int eol = FindEndOfLine(buffer);
+
         if (!discarding)
         {
             if (eol >= 0)
@@ -148,11 +149,13 @@ public class LineBasedFrameDecoder : ByteToMessageDecoder
                     buffer.ReaderIndex = buffer.WriterIndex;
                     discarding = true;
                     offset = 0;
+
                     if (failFast)
                     {
                         Fail(ctx, "over " + discardedBytes.ToString(CultureInfo.InvariantCulture));
                     }
                 }
+
                 return null;
             }
         }
@@ -165,6 +168,7 @@ public class LineBasedFrameDecoder : ByteToMessageDecoder
                 buffer.ReaderIndex = eol + delimLength;
                 discardedBytes = 0;
                 discarding = false;
+
                 if (!failFast)
                 {
                     Fail(ctx, length);
@@ -177,6 +181,7 @@ public class LineBasedFrameDecoder : ByteToMessageDecoder
                 // We skip everything in the buffer, we need to set the offset to 0 again.
                 offset = 0;
             }
+
             return null;
         }
     }
@@ -206,6 +211,7 @@ public class LineBasedFrameDecoder : ByteToMessageDecoder
         if (i >= 0)
         {
             offset = 0;
+
             if (i > 0 && buffer.GetByte(i - 1) == '\r')
             {
                 i--;
@@ -215,6 +221,7 @@ public class LineBasedFrameDecoder : ByteToMessageDecoder
         {
             offset = totalLength;
         }
+
         return i;
     }
 }

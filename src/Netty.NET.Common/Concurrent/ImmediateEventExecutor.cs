@@ -105,9 +105,11 @@ public sealed class ImmediateEventExecutor : AbstractEventExecutor
     public override void Execute(Action command)
     {
         ArgumentNullException.ThrowIfNull(command);
+
         if (StrongFalse == RUNNING.Get())
         {
             RUNNING.Set(StrongTrue);
+
             try
             {
                 command();
@@ -120,6 +122,7 @@ public sealed class ImmediateEventExecutor : AbstractEventExecutor
             {
                 var delayedRunnables = DELAYED_RUNNABLES.Get();
                 Action runnable;
+
                 while (delayedRunnables.TryDequeue(out runnable) && null != runnable)
                 {
                     try

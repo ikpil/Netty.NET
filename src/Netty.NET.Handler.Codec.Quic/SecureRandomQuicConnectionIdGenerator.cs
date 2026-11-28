@@ -37,6 +37,7 @@ internal sealed class SecureRandomQuicConnectionIdGenerator : IQuicConnectionIdG
     public ReadOnlyMemory<byte> NewId(int length)
     {
         ObjectUtil.CheckInRange(length, 0, MaxConnectionIdLength(), "length");
+
         byte[] bytes = new byte[length];
         RandomNumberGenerator.Fill(bytes);
         return bytes;

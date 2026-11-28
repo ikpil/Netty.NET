@@ -79,6 +79,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     public void ShouldIndicateNotWritable()
     {
         ByteBuf buf = Buffer(Allocate(8)).Clear();
+
         try
         {
             Assert.False(buf.IsWritable());
@@ -93,6 +94,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     public void ShouldIndicateNotWritableAnyNumber()
     {
         ByteBuf buf = Buffer(Allocate(8)).Clear();
+
         try
         {
             Assert.False(buf.IsWritable(1));
@@ -107,6 +109,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     public void EnsureWritableIntStatusShouldFailButNotThrow()
     {
         ByteBuf buf = Buffer(Allocate(8)).Clear();
+
         try
         {
             int result = buf.EnsureWritable(1, false);
@@ -122,6 +125,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     public void EnsureWritableForceIntStatusShouldFailButNotThrow()
     {
         ByteBuf buf = Buffer(Allocate(8)).Clear();
+
         try
         {
             int result = buf.EnsureWritable(1, true);
@@ -137,6 +141,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     public void EnsureWritableShouldThrow()
     {
         ByteBuf buf = Buffer(Allocate(8)).Clear();
+
         try
         {
             Assert.Throws<NotSupportedException>(() =>
@@ -154,6 +159,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     public void TestSetByte()
     {
         ByteBuf buf = Buffer(Allocate(8));
+
         try
         {
             Assert.Throws<NotSupportedException>(() =>
@@ -171,6 +177,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     public void TestSetInt()
     {
         ByteBuf buf = Buffer(Allocate(8));
+
         try
         {
             Assert.Throws<NotSupportedException>(() =>
@@ -188,6 +195,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     public void TestSetShort()
     {
         ByteBuf buf = Buffer(Allocate(8));
+
         try
         {
             Assert.Throws<NotSupportedException>(() =>
@@ -205,6 +213,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     public void TestSetMedium()
     {
         ByteBuf buf = Buffer(Allocate(8));
+
         try
         {
             Assert.Throws<NotSupportedException>(() =>
@@ -222,6 +231,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     public void TestSetLong()
     {
         ByteBuf buf = Buffer(Allocate(8));
+
         try
         {
             Assert.Throws<NotSupportedException>(() =>
@@ -239,6 +249,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     public void TestSetBytesViaArray()
     {
         ByteBuf buf = Buffer(Allocate(8));
+
         try
         {
             Assert.Throws<NotSupportedException>(() =>
@@ -258,6 +269,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     {
         ByteBuf buf = Buffer(Allocate(8));
         ByteBuf copy = Unpooled.CopyInt(1);
+
         try
         {
             Assert.Throws<NotSupportedException>(() =>
@@ -276,6 +288,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     public void TestSetBytesViaStream()
     {
         ByteBuf buf = Buffer(AllocateDirect(8));
+
         try
         {
             Assert.Throws<NotSupportedException>(() =>
@@ -370,6 +383,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
         Memory<byte> source = Allocate(bytes.Length);
         bytes.CopyTo(source.Span);
         ByteBuf buffer = Buffer(source[..bytes.Length]);
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() =>
@@ -491,22 +505,27 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
             {
                 b1.Release();
             }
+
             if (b2 != null)
             {
                 b2.Release();
             }
+
             if (output != null)
             {
                 output.Dispose();
             }
+
             // CLR: the mapping is released explicitly before the input channel closes; the JVM
             // unmaps a MappedByteBuffer only when it is garbage collected.
             view?.Dispose();
             map?.Dispose();
+
             if (input != null)
             {
                 input.Dispose();
             }
+
             file.Delete();
         }
     }
@@ -515,6 +534,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     public void TestDuplicate()
     {
         ByteBuf buf = Buffer(Allocate(8));
+
         try
         {
             Assert.True(buf.Duplicate().IsReadOnly);
@@ -529,6 +549,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     public void TestSlice()
     {
         ByteBuf buf = Buffer(Allocate(8));
+
         try
         {
             Assert.True(buf.Slice().IsReadOnly);
@@ -569,6 +590,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
                 buf.WriterIndex = 8;
                 break;
         }
+
         try
         {
             Assert.False(buf.IsWritable());
@@ -589,6 +611,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
         Memory<byte> nioBuffer = Allocate(bytes.Length);
         bytes.CopyTo(nioBuffer.Span);
         ByteBuf buffer = Buffer(nioBuffer[..bytes.Length]);
+
         try
         {
             TestReadGatheringByteChannelMultipleThreads(buffer, bytes, false);
@@ -608,6 +631,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
         Memory<byte> nioBuffer = Allocate(bytes.Length);
         bytes.CopyTo(nioBuffer.Span);
         ByteBuf buffer = Buffer(nioBuffer[..bytes.Length]);
+
         try
         {
             TestReadGatheringByteChannelMultipleThreads(buffer, bytes, true);
@@ -627,6 +651,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
         Memory<byte> nioBuffer = Allocate(bytes.Length);
         bytes.CopyTo(nioBuffer.Span);
         ByteBuf buffer = Buffer(nioBuffer[..bytes.Length]);
+
         try
         {
             TestReadOutputStreamMultipleThreads(buffer, bytes, false);
@@ -646,6 +671,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
         Memory<byte> nioBuffer = Allocate(bytes.Length);
         bytes.CopyTo(nioBuffer.Span);
         ByteBuf buffer = Buffer(nioBuffer[..bytes.Length]);
+
         try
         {
             TestReadOutputStreamMultipleThreads(buffer, bytes, true);
@@ -664,6 +690,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
         Memory<byte> nioBuffer = Allocate(bytes.Length);
         bytes.CopyTo(nioBuffer.Span);
         ByteBuf buffer = Buffer(nioBuffer[..bytes.Length]);
+
         try
         {
             await TestBytesInArrayMultipleThreads(buffer, bytes, false);
@@ -682,6 +709,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
         Memory<byte> nioBuffer = Allocate(bytes.Length);
         bytes.CopyTo(nioBuffer.Span);
         ByteBuf buffer = Buffer(nioBuffer[..bytes.Length]);
+
         try
         {
             await TestBytesInArrayMultipleThreads(buffer, bytes, true);
@@ -701,6 +729,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
         Memory<byte> nioBuffer = Allocate(bytes.Length);
         bytes.CopyTo(nioBuffer.Span);
         ByteBuf buffer = Buffer(nioBuffer[..bytes.Length]);
+
         try
         {
             TestToStringMultipleThreads0(buffer);
@@ -716,6 +745,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     public void TestCopyMultipleThreads()
     {
         ByteBuf buffer = NewRandomReadOnlyBuffer();
+
         try
         {
             TestCopyMultipleThreads0(buffer);
@@ -812,6 +842,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     public void TestReadyOnlyNioBuffer()
     {
         ByteBuf buffer = NewRandomReadOnlyBuffer();
+
         try
         {
             AssertReadyOnlyNioBuffer(buffer);
@@ -826,6 +857,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     public void TestReadyOnlySliceNioBuffer()
     {
         ByteBuf buffer = NewRandomReadOnlyBuffer();
+
         try
         {
             AssertReadyOnlyNioBuffer(buffer.Slice());
@@ -840,6 +872,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     public void TestReadyOnlyDuplicateNioBuffer()
     {
         ByteBuf buffer = NewRandomReadOnlyBuffer();
+
         try
         {
             AssertReadyOnlyNioBuffer(buffer.Duplicate());
@@ -854,6 +887,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     public void TestReadyOnlyNioBufferWithPositionLength()
     {
         ByteBuf buffer = NewRandomReadOnlyBuffer();
+
         try
         {
             AssertReadyOnlyNioBufferWithPositionLength(buffer);
@@ -868,6 +902,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     public void TestReadyOnlySliceNioBufferWithPositionLength()
     {
         ByteBuf buffer = NewRandomReadOnlyBuffer();
+
         try
         {
             AssertReadyOnlyNioBufferWithPositionLength(buffer.Slice());
@@ -882,6 +917,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     public void TestReadyOnlyDuplicateNioBufferWithPositionLength()
     {
         ByteBuf buffer = NewRandomReadOnlyBuffer();
+
         try
         {
             AssertReadyOnlyNioBufferWithPositionLength(buffer.Duplicate());
@@ -896,6 +932,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     public void TestReadyOnlyNioBuffers()
     {
         ByteBuf buffer = NewRandomReadOnlyBuffer();
+
         try
         {
             AssertReadyOnlyNioBuffers(buffer);
@@ -910,6 +947,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     public void TestReadyOnlySliceNioBuffers()
     {
         ByteBuf buffer = NewRandomReadOnlyBuffer();
+
         try
         {
             AssertReadyOnlyNioBuffers(buffer.Slice());
@@ -924,6 +962,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     public void TestReadyOnlyDuplicateNioBuffers()
     {
         ByteBuf buffer = NewRandomReadOnlyBuffer();
+
         try
         {
             AssertReadyOnlyNioBuffers(buffer.Duplicate());
@@ -938,6 +977,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     public void TestReadyOnlyNioBuffersWithPositionLength()
     {
         ByteBuf buffer = NewRandomReadOnlyBuffer();
+
         try
         {
             AssertReadyOnlyNioBuffersWithPositionLength(buffer);
@@ -952,6 +992,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     public void TestReadyOnlySliceNioBuffersWithPositionLength()
     {
         ByteBuf buffer = NewRandomReadOnlyBuffer();
+
         try
         {
             AssertReadyOnlyNioBuffersWithPositionLength(buffer.Slice());
@@ -966,6 +1007,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
     public void TestReadyOnlyDuplicateNioBuffersWithPositionLength()
     {
         ByteBuf buffer = NewRandomReadOnlyBuffer();
+
         try
         {
             AssertReadyOnlyNioBuffersWithPositionLength(buffer.Duplicate());
@@ -982,6 +1024,7 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
         Random.Shared.NextBytes(bytes);
         Memory<byte> nioBuffer = Allocate(bytes.Length);
         bytes.CopyTo(nioBuffer.Span);
+
         return Buffer(nioBuffer[..bytes.Length]);
     }
 

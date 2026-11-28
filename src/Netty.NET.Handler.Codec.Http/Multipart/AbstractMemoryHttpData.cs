@@ -50,7 +50,9 @@ public abstract class AbstractMemoryHttpData : AbstractHttpData
     public override void SetContent(ByteBuf buffer)
     {
         ObjectUtil.CheckNotNull(buffer, "buffer");
+
         long localsize = buffer.ReadableBytes;
+
         try
         {
             CheckSize(localsize);
@@ -60,16 +62,19 @@ public abstract class AbstractMemoryHttpData : AbstractHttpData
             buffer.Release();
             throw;
         }
+
         if (definedSize > 0 && definedSize < localsize)
         {
             buffer.Release();
             throw new IOException("Out of size: " + localsize + " > " +
                     definedSize);
         }
+
         if (byteBuf != null)
         {
             byteBuf.Release();
         }
+
         byteBuf = buffer;
         size = localsize;
         SetCompleted();
@@ -82,9 +87,11 @@ public abstract class AbstractMemoryHttpData : AbstractHttpData
         byte[] bytes = new byte[4096 * 4];
         ByteBuf buffer = Unpooled.Buffer();
         int written = 0;
+
         try
         {
             int read = inputStream.Read(bytes, 0, bytes.Length);
+
             while (read > 0)
             {
                 buffer.WriteBytes(new ReadOnlySpan<byte>(bytes, 0, read));
@@ -98,16 +105,19 @@ public abstract class AbstractMemoryHttpData : AbstractHttpData
             buffer.Release();
             throw;
         }
+
         size = written;
         if (definedSize > 0 && definedSize < size)
         {
             buffer.Release();
             throw new IOException("Out of size: " + size + " > " + definedSize);
         }
+
         if (byteBuf != null)
         {
             byteBuf.Release();
         }
+
         byteBuf = buffer;
         SetCompleted();
     }
@@ -117,6 +127,7 @@ public abstract class AbstractMemoryHttpData : AbstractHttpData
         if (buffer != null)
         {
             long localsize = buffer.ReadableBytes;
+
             try
             {
                 CheckSize(size + localsize);
@@ -126,13 +137,16 @@ public abstract class AbstractMemoryHttpData : AbstractHttpData
                 buffer.Release();
                 throw;
             }
+
             if (definedSize > 0 && definedSize < size + localsize)
             {
                 buffer.Release();
                 throw new IOException("Out of size: " + (size + localsize) +
                         " > " + definedSize);
             }
+
             size += localsize;
+
             if (byteBuf == null)
             {
                 byteBuf = buffer;
@@ -160,6 +174,7 @@ public abstract class AbstractMemoryHttpData : AbstractHttpData
                 byteBuf = cbb;
             }
         }
+
         if (last)
         {
             SetCompleted();
@@ -179,14 +194,17 @@ public abstract class AbstractMemoryHttpData : AbstractHttpData
         {
             throw new ArgumentException("File too big to be loaded in memory");
         }
+
         CheckSize(newsize);
         FileStream accessFile = AbstractDiskHttpData.OpenFile(file, FileMode.Open, FileAccess.Read);
         byte[] byteBuffer;
+
         try
         {
             byte[] array = new byte[(int) newsize];
             byteBuffer = array;
             int read = 0;
+
             while (read < newsize)
             {
                 read += accessFile.Read(array, read, (int) newsize - read);
@@ -196,10 +214,12 @@ public abstract class AbstractMemoryHttpData : AbstractHttpData
         {
             accessFile.Dispose();
         }
+
         if (byteBuf != null)
         {
             byteBuf.Release();
         }
+
         byteBuf = Unpooled.WrappedBuffer(int.MaxValue, byteBuffer);
         size = newsize;
         SetCompleted();
@@ -220,6 +240,7 @@ public abstract class AbstractMemoryHttpData : AbstractHttpData
         {
             return EmptyArrays.EMPTY_BYTES;
         }
+
         byte[] array = new byte[byteBuf.ReadableBytes];
         byteBuf.GetBytes(byteBuf.ReaderIndex, array);
         return array;
@@ -236,10 +257,12 @@ public abstract class AbstractMemoryHttpData : AbstractHttpData
         {
             return "";
         }
+
         if (encoding == null)
         {
             encoding = HttpConstants.DEFAULT_CHARSET;
         }
+
         return byteBuf.ToString(encoding);
     }
 
@@ -260,17 +283,21 @@ public abstract class AbstractMemoryHttpData : AbstractHttpData
             chunkPosition = 0;
             return Unpooled.EmptyBuffer;
         }
+
         int sizeLeft = byteBuf.ReadableBytes - chunkPosition;
         if (sizeLeft == 0)
         {
             chunkPosition = 0;
             return Unpooled.EmptyBuffer;
         }
+
         int sliceLength = length;
+
         if (sizeLeft < length)
         {
             sliceLength = sizeLeft;
         }
+
         ByteBuf chunk = byteBuf.RetainedSlice(chunkPosition, sliceLength);
         chunkPosition += sliceLength;
         return chunk;
@@ -293,6 +320,7 @@ public abstract class AbstractMemoryHttpData : AbstractHttpData
     public override bool RenameTo(FileInfo dest)
     {
         ObjectUtil.CheckNotNull(dest, "dest");
+
         if (byteBuf == null)
         {
             // empty file
@@ -300,11 +328,14 @@ public abstract class AbstractMemoryHttpData : AbstractHttpData
             {
                 throw new IOException("file exists already: " + dest);
             }
+
             return true;
         }
+
         int length = byteBuf.ReadableBytes;
         long written = 0;
         FileStream accessFile = AbstractDiskHttpData.OpenFile(dest, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+
         try
         {
             while (written < length)
@@ -312,12 +343,14 @@ public abstract class AbstractMemoryHttpData : AbstractHttpData
                 byteBuf.GetBytes(byteBuf.ReaderIndex, accessFile, length);
                 written += length;
             }
+
             accessFile.Flush(true);
         }
         finally
         {
             accessFile.Dispose();
         }
+
         return written == length;
     }
 
@@ -337,6 +370,7 @@ public abstract class AbstractMemoryHttpData : AbstractHttpData
         {
             byteBuf.Touch(hint);
         }
+
         return this;
     }
 }

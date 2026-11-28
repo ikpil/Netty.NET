@@ -69,11 +69,13 @@ public class SpdyHttpDecoderTest
                 {
                     ISpdyHeadersFrame headers = new DefaultSpdyHeadersFrame(1);
                     headers.SetLast(false);
+
                     for (int i = 0; i < 100; i++)
                     {
                         headers.Headers().Add(Of("x-pad-" + frame.ToString(CultureInfo.InvariantCulture)
                                 + '-' + i.ToString(CultureInfo.InvariantCulture)), Of("v"));
                     }
+
                     ch.WriteInbound(headers);
                 }
             });

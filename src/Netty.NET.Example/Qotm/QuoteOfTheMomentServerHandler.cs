@@ -43,16 +43,19 @@ public class QuoteOfTheMomentServerHandler : SimpleChannelInboundHandler<Datagra
     private static string NextQuote()
     {
         int quoteId;
+
         lock (random)
         {
             quoteId = random.Next(quotes.Length);
         }
+
         return quotes[quoteId];
     }
 
     protected override void ChannelRead0(IChannelHandlerContext ctx, DatagramPacket packet)
     {
         Console.Error.WriteLine(packet);
+
         if ("QOTM?".Equals(packet.Content.ToString(Encoding.UTF8)))
         {
             _ = ctx.WriteAsync(new DatagramPacket(

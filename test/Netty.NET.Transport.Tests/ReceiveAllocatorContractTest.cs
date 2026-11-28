@@ -57,11 +57,13 @@ public class ReceiveAllocatorContractTest
         var old = (IRecvByteBufAllocator.IExtendedHandle)allocator.NewHandle();
         Assert.Same(allocator, allocator.RespectMaybeMoreData(false));
         var next = (IRecvByteBufAllocator.IExtendedHandle)allocator.NewHandle();
+
         foreach (var handle in new[] { old, next })
         {
             handle.Reset(config.Object);
             handle.LastBytesRead(1);
         }
+
         Assert.False(old.ContinueReading(() => false));
         Assert.True(next.ContinueReading(() => throw new Exception("ignored supplier")));
         next.IncMessagesRead(1);
@@ -104,6 +106,7 @@ public class ReceiveAllocatorContractTest
         var alloc = new Mock<IByteBufAllocator>();
         ByteBuf buffer = Unpooled.Buffer(513);
         alloc.Setup(a => a.IoBuffer(513, int.MaxValue)).Returns(buffer);
+
         try
         {
             Assert.Same(buffer, first.Allocate(alloc.Object));
@@ -239,6 +242,7 @@ public class ReceiveAllocatorContractTest
         handle.Setup(h => h.ContinueReading()).Returns(true);
         handle.Setup(h => h.ReadComplete());
         var wrapper = new IRecvByteBufAllocator.DelegatingHandle(handle.Object);
+
         try
         {
             Assert.Same(buffer, wrapper.Allocate(alloc));
@@ -257,6 +261,7 @@ public class ReceiveAllocatorContractTest
         {
             buffer.Release();
         }
+
         Assert.Throws<ArgumentNullException>(() => new IRecvByteBufAllocator.DelegatingHandle(null));
     }
 

@@ -121,18 +121,23 @@ public class AdaptiveAllocatorEventTest
         int size = 16896;
         int minSegmentsPerChunk = 32; // See AdaptivePoolingAllocator.SizeClassChunkController.
         var buffers = new List<ByteBuf>();
+
         for (int i = 0; i < (twoChunks ? minSegmentsPerChunk + 1 : minSegmentsPerChunk - 2); i++)
             buffers.Add(Allocate(allocator, direct, size, size));
+
         if (!twoChunks)
         {
             // we still have 2 available segments in the chunk, so we should not allocate a new one
             for (int i = 0; i < 128; i++)
                 Allocate(allocator, direct, size, size).Release();
         }
+
         Assert.Equal(twoChunks ? 2 : 1, listener.Events.Count(e => e.Id == 4));
+
         // release all buffers
         foreach (ByteBuf buffer in buffers)
             buffer.Release();
+
         allocator.Dispose();
         Assert.Equal(twoChunks ? 2 : 1, listener.Events.Count(e => e.Id == 5));
         Assert.Equal(0, native.ReservedBytes);
@@ -170,12 +175,15 @@ public class AdaptiveAllocatorEventTest
         OnThread(true, () =>
         {
             var buffers = new List<ByteBuf>();
+
             for (int i = 0; i < 128; i++)
                 buffers.Add(Allocate(allocator, direct, 1024));
+
             Assert.All(listener.Events.Where(e => e.Id == 1), e => Assert.True(e.Flag("chunkThreadLocal")));
             Assert.Equal(128, listener.Events.Count(e => e.Id == 1));
             Assert.Single(listener.Events, e => e.Id == 4);
             Assert.False(AdaptiveByteBufAllocatorTest.Root(buffers[^1]).Allocation.CurrentThreadLocalAssociation);
+
             // release all buffers
             foreach (ByteBuf buffer in buffers)
                 buffer.Release();
@@ -312,6 +320,7 @@ public class AdaptiveAllocatorEventTest
             }
         });
         gate.EnterWriteLock();
+
         try
         {
             worker.Start();
@@ -324,7 +333,9 @@ public class AdaptiveAllocatorEventTest
         {
             gate.ExitWriteLock();
         }
+
         worker.Join();
+
         using (listener)
         {
             Assert.Null(failure);
@@ -332,6 +343,7 @@ public class AdaptiveAllocatorEventTest
             Assert.False(held);
             Assert.Equal(new[] { 4, 1, 2, 5 }, listener.Events.Select(e => e.Id));
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 

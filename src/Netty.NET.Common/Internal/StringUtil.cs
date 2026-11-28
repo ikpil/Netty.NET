@@ -103,6 +103,7 @@ public static class StringUtil
     public static string SubstringAfter(string value, char delim)
     {
         ArgumentNullException.ThrowIfNull(value);
+
         int pos = value.IndexOf(delim);
         if (pos >= 0)
         {
@@ -120,6 +121,7 @@ public static class StringUtil
     public static string SubstringBefore(string value, char delim)
     {
         ArgumentNullException.ThrowIfNull(value);
+
         int pos = value.IndexOf(delim);
         if (pos >= 0)
         {
@@ -157,6 +159,7 @@ public static class StringUtil
     public static StringBuilder ByteToHexStringPadded(StringBuilder buf, int value)
     {
         ArgumentNullException.ThrowIfNull(buf);
+
         buf.Append(ByteToHexStringPadded(value));
 
         return buf;
@@ -168,6 +171,7 @@ public static class StringUtil
     public static string ToHexStringPadded(byte[] src)
     {
         ArgumentNullException.ThrowIfNull(src);
+
         return ToHexStringPadded(src, 0, src.Length);
     }
 
@@ -186,6 +190,7 @@ public static class StringUtil
     {
         ArgumentNullException.ThrowIfNull(dst);
         ArgumentNullException.ThrowIfNull(src);
+
         return ToHexStringPadded(dst, src, 0, src.Length);
     }
 
@@ -195,6 +200,7 @@ public static class StringUtil
     public static StringBuilder ToHexStringPadded(StringBuilder dst, byte[] src, int offset, int length)
     {
         ArgumentNullException.ThrowIfNull(dst);
+
         foreach (byte value in HexSlice(src, offset, length))
         {
             ByteToHexStringPadded(dst, value);
@@ -217,6 +223,7 @@ public static class StringUtil
     public static StringBuilder ByteToHexString(StringBuilder buf, int value)
     {
         ArgumentNullException.ThrowIfNull(buf);
+
         buf.Append(ByteToHexString(value));
 
         return buf;
@@ -228,6 +235,7 @@ public static class StringUtil
     public static string ToHexString(byte[] src)
     {
         ArgumentNullException.ThrowIfNull(src);
+
         return ToHexString(src, 0, src.Length);
     }
 
@@ -241,6 +249,7 @@ public static class StringUtil
         {
             return EMPTY_STRING;
         }
+
         int firstDigits = bytes[0] < 16 ? 1 : 2;
         int outputLength = checked((bytes.Length - 1) * 2 + firstDigits);
         // Populate only the final immutable string, including the first byte's optional high nibble.
@@ -249,6 +258,7 @@ public static class StringUtil
             string first = BYTE2HEX_NOPAD[state.src[state.offset]];
             first.AsSpan().CopyTo(destination);
             int written = first.Length;
+
             for (int i = 1; i < state.length; i++)
             {
                 BYTE2HEX_PAD[state.src[state.offset + i]].AsSpan().CopyTo(destination[written..]);
@@ -264,6 +274,7 @@ public static class StringUtil
     {
         ArgumentNullException.ThrowIfNull(dst);
         ArgumentNullException.ThrowIfNull(src);
+
         return ToHexString(dst, src, 0, src.Length);
     }
 
@@ -273,16 +284,20 @@ public static class StringUtil
     public static StringBuilder ToHexString(StringBuilder dst, byte[] src, int offset, int length)
     {
         ArgumentNullException.ThrowIfNull(dst);
+
         ReadOnlySpan<byte> bytes = SkipLeadingZeroBytes(HexSlice(src, offset, length));
         if (bytes.IsEmpty)
         {
             return dst;
         }
+
         ByteToHexString(dst, bytes[0]);
+
         foreach (byte value in bytes[1..])
         {
             ByteToHexStringPadded(dst, value);
         }
+
         return dst;
     }
 
@@ -297,6 +312,7 @@ public static class StringUtil
         {
             throw new ArgumentOutOfRangeException(nameof(length));
         }
+
         return src.AsSpan(offset, length);
     }
 
@@ -306,6 +322,7 @@ public static class StringUtil
         {
             return bytes;
         }
+
         // Skip preceding zeroes.
         int first = bytes.IndexOfAnyExcept((byte)0);
         return bytes[(first < 0 ? bytes.Length - 1 : first)..];
@@ -349,6 +366,7 @@ public static class StringUtil
         {
             throw new ArgumentOutOfRangeException(nameof(pos));
         }
+
         int hi = DecodeHexNibble(s.CharAt(pos));
         int lo = DecodeHexNibble(s.CharAt(pos + 1));
         if (hi == -1 || lo == -1)
@@ -367,6 +385,7 @@ public static class StringUtil
         {
             throw new ArgumentOutOfRangeException(nameof(index));
         }
+
         // HexNumber permits surrounding whitespace; the wire format requires exactly two ASCII hex digits.
         int hi = DecodeHexNibble(str[index]);
         int lo = DecodeHexNibble(str[index + 1]);
@@ -375,6 +394,7 @@ public static class StringUtil
             // CLR: String.format formats with the default locale; CurrentCulture is its counterpart.
             throw new ArgumentException(string.Create(CultureInfo.CurrentCulture, $"invalid hex byte '{str.Substring(index, 2)}' at index {index} of '{str}'"));
         }
+
         return (byte)((hi << 4) + lo);
     }
 
@@ -398,6 +418,7 @@ public static class StringUtil
         }
 
         ArgumentNullException.ThrowIfNull(hexDump);
+
         int inputLength = hexDump.Length();
         if (fromIndex < 0 || fromIndex > inputLength)
         {
@@ -407,7 +428,9 @@ public static class StringUtil
         {
             throw new ArgumentOutOfRangeException(nameof(length));
         }
+
         byte[] bytes = new byte[length >>> 1];
+
         for (int i = 0; i < length; i += 2)
         {
             bytes[i >>> 1] = DecodeHexByte(hexDump, fromIndex + i);
@@ -422,12 +445,14 @@ public static class StringUtil
     public static byte[] DecodeHexDump(ICharSequence hexDump)
     {
         ArgumentNullException.ThrowIfNull(hexDump);
+
         return DecodeHexDump(hexDump, 0, hexDump.Length());
     }
 
     public static byte[] DecodeHexDump(string hexDump)
     {
         ArgumentNullException.ThrowIfNull(hexDump);
+
         int length = hexDump.Length;
         if ((length & 1) != 0)
         {
@@ -437,6 +462,7 @@ public static class StringUtil
         {
             return EmptyArrays.EMPTY_BYTES;
         }
+
         // Read the native immutable string directly; only the owned byte result is allocated on success.
         byte[] bytes = new byte[length / 2];
 
@@ -457,6 +483,7 @@ public static class StringUtil
         {
             return "null_object";
         }
+
         Type type = o.GetType();
         return type.FullName ?? type.Name;
     }
@@ -496,12 +523,14 @@ public static class StringUtil
         {
             return t.ToString();
         }
+
         // Type.Name keeps assembly-qualified generic arguments out of diagnostics. Element suffixes are CLR metadata.
         if (t.HasElementType)
         {
             Type element = t.GetElementType();
             return SimpleClassName(element) + t.Name[element.Name.Length..];
         }
+
         string name = t.Name;
         int arity = name.LastIndexOf('`');
         if (t.IsGenericType && arity >= 0 && arity < name.Length - 1 &&
@@ -509,6 +538,7 @@ public static class StringUtil
         {
             name = name[..arity];
         }
+
         return t.IsNested ? SimpleClassName(t.DeclaringType) + '+' + name : name;
     }
 
@@ -540,6 +570,7 @@ public static class StringUtil
         int length = ObjectUtil.CheckNotNull(value, "value").Length;
         int start;
         int last;
+
         if (trimWhiteSpace)
         {
             start = IndexOfFirstNonOwsChar(value, length);
@@ -558,6 +589,7 @@ public static class StringUtil
 
         int firstUnescapedSpecial = -1;
         bool quoted = false;
+
         if (IsDoubleQuote(value[start]))
         {
             quoted = IsDoubleQuote(value[last]) && last > start;
@@ -625,12 +657,14 @@ public static class StringUtil
 
         StringBuilder result = new StringBuilder(last - start + 1 + CSV_NUMBER_ESCAPE_CHARACTERS);
         result.Append(DOUBLE_QUOTE).Append(value, start, firstUnescapedSpecial - start);
+
         for (int i = firstUnescapedSpecial; i <= last; i++)
         {
             char c = value[i];
             if (IsDoubleQuote(c))
             {
                 result.Append(DOUBLE_QUOTE);
+
                 if (i < last && IsDoubleQuote(value[i + 1]))
                 {
                     i++;
@@ -668,6 +702,7 @@ public static class StringUtil
         }
 
         int escapedQuotes = 0;
+
         for (int i = 1; i < last; i++)
         {
             char current = value[i];
@@ -702,15 +737,18 @@ public static class StringUtil
     public static List<string> UnescapeCsvFields(string value)
     {
         ArgumentNullException.ThrowIfNull(value);
+
         List<string> unescaped = new List<string>(2);
         // Each returned field owns its string; only offsets/counts live during parsing.
         int start = 0;
         int escapedQuotes = 0;
         bool quoted = false;
         int last = value.Length - 1;
+
         for (int i = 0; i <= last; i++)
         {
             char c = value[i];
+
             if (quoted)
             {
                 switch (c)
@@ -762,6 +800,7 @@ public static class StringUtil
                             quoted = true;
                             break;
                         }
+
                         throw NewInvalidEscapedCsvFieldException(value, i);
                     // double-quote appears without being enclosed with double-quotes
                     // fall through
@@ -791,15 +830,18 @@ public static class StringUtil
         {
             return value.Substring(start, length);
         }
+
         // Validation counted each doubled quote; allocate and populate only the final immutable string.
         return string.Create(length - escapedQuotes, (value, start, length), static (destination, state) =>
         {
             ReadOnlySpan<char> source = state.value.AsSpan(state.start, state.length);
             int written = 0;
+
             for (int index = 0; index < source.Length; index++)
             {
                 char current = source[index];
                 destination[written++] = current;
+
                 if (current == DOUBLE_QUOTE)
                 {
                     index++;
@@ -816,6 +858,7 @@ public static class StringUtil
     private static void ValidateCsvFormat(string value)
     {
         int length = value.Length;
+
         for (int i = 0; i < length; i++)
         {
             switch (value[i])
@@ -868,6 +911,7 @@ public static class StringUtil
         {
             return -1;
         }
+
         int relative = seq.AsSpan(offset).IndexOfAnyExcept(TOKEN_WHITESPACE);
         return relative < 0 ? -1 : offset + relative;
     }
@@ -887,6 +931,7 @@ public static class StringUtil
         {
             return -1;
         }
+
         int relative = seq.AsSpan(offset).IndexOfAny(TOKEN_WHITESPACE);
         return relative < 0 ? -1 : offset + relative;
     }
@@ -919,6 +964,7 @@ public static class StringUtil
     public static bool EndsWith(string s, char c)
     {
         ArgumentNullException.ThrowIfNull(s);
+
         return s.EndsWith(c);
     }
 
@@ -932,6 +978,7 @@ public static class StringUtil
     public static string TrimOws(string value)
     {
         ArgumentNullException.ThrowIfNull(value);
+
         ReadOnlySpan<char> trimmed = value.AsSpan().Trim(" \t".AsSpan());
         return trimmed.Length == value.Length ? value : trimmed.ToString();
     }

@@ -29,11 +29,13 @@ public static class Arrays
     public static T[] CopyOfRange<T>(T[] original, int from, int to) where T : struct
     {
         ArgumentNullException.ThrowIfNull(original);
+
         int newLength = to - from;
         if (newLength < 0)
         {
             throw new ArgumentException(from.ToString(CultureInfo.InvariantCulture) + " > " + to.ToString(CultureInfo.InvariantCulture));
         }
+
         T[] copy = new T[newLength];
         Arraycopy(original, from, copy, 0, Math.Min(original.Length - from, newLength));
         return copy;

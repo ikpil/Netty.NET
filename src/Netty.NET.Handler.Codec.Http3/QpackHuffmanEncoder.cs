@@ -65,9 +65,11 @@ internal sealed class QpackHuffmanEncoder
     public void Encode(ByteBuf @out, ICharSequence data)
     {
         ObjectUtil.CheckNotNull(@out, "out");
+
         if (data is AsciiString)
         {
             AsciiString @string = (AsciiString) data;
+
             try
             {
                 encodeProcessor.@out = @out;
@@ -129,10 +131,12 @@ internal sealed class QpackHuffmanEncoder
         if (data is AsciiString)
         {
             AsciiString @string = (AsciiString) data;
+
             try
             {
                 encodedLengthProcessor.Reset();
                 @string.ForEachByte(encodedLengthProcessor.processor);
+
                 return encodedLengthProcessor.Length();
             }
             catch (Exception e)
@@ -149,10 +153,12 @@ internal sealed class QpackHuffmanEncoder
     private int GetEncodedLengthSlowPath(ICharSequence data)
     {
         long len = 0;
+
         for (int i = 0; i < data.Length(); i++)
         {
             len += lengths[data.CharAt(i) & 0xFF];
         }
+
         return (int) ((len + 7) >> 3);
     }
 
@@ -184,6 +190,7 @@ internal sealed class QpackHuffmanEncoder
                 n -= 8;
                 @out.WriteByte((int) (current >> n));
             }
+
             return true;
         }
 

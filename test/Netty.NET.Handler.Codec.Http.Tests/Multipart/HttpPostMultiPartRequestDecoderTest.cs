@@ -38,6 +38,7 @@ public class HttpPostMultiPartRequestDecoderTest
     public void TestDecodeFullHttpRequestWithNoContentTypeHeader()
     {
         IFullHttpRequest req = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, "/");
+
         try
         {
             Assert.Throws<HttpPostRequestDecoder.ErrorDataDecoderException>(() =>
@@ -109,6 +110,7 @@ public class HttpPostMultiPartRequestDecoderTest
 
         HttpPostMultipartRequestDecoder test = new HttpPostMultipartRequestDecoder(req);
         IFileUpload httpData = (IFileUpload) test.GetBodyHttpDatas("file")[0];
+
         try
         {
             Assert.Equal("dirfile  ÷.txt", httpData.GetFilename());
@@ -135,6 +137,7 @@ public class HttpPostMultiPartRequestDecoderTest
 
         HttpPostMultipartRequestDecoder test = new HttpPostMultipartRequestDecoder(req);
         IFileUpload httpData = (IFileUpload) test.GetBodyHttpDatas("file")[0];
+
         try
         {
             Assert.Equal("dirfile   ÷.txt", httpData.GetFilename());
@@ -174,10 +177,12 @@ public class HttpPostMultiPartRequestDecoderTest
         // Chunk less than Delimiter size but containing part of delimiter
         byte[] body = new byte[bytesLastChunk + bsuffix1.Length];
         Array.Fill(body, (byte) 2);
+
         for (int i = 0; i < bsuffix1.Length; i++)
         {
             body[bytesLastChunk + i] = bsuffix1[i];
         }
+
         ByteBuf content = Unpooled.WrappedBuffer(body);
         httpContent = new DefaultHttpContent(content);
         decoder.Offer(httpContent); // Ouf of range before here
@@ -194,16 +199,21 @@ public class HttpPostMultiPartRequestDecoderTest
         Assert.Equal(true, data.IsInMemory());
 
         IInterfaceHttpData[] httpDatas = ToArray(decoder);
+
         foreach (IInterfaceHttpData httpData in httpDatas)
         {
             Assert.Equal(1, httpData.RefCnt, "Before cleanAllHttpData should be 1");
         }
+
         factory.CleanAllHttpData();
+
         foreach (IInterfaceHttpData httpData in httpDatas)
         {
             Assert.Equal(1, httpData.RefCnt, "After cleanAllHttpData should be 1 if in Memory");
         }
+
         decoder.Destroy();
+
         foreach (IInterfaceHttpData httpData in httpDatas)
         {
             Assert.Equal(0, httpData.RefCnt, "RefCnt should be 0");
@@ -245,6 +255,7 @@ public class HttpPostMultiPartRequestDecoderTest
         // Set first bytes as CRLF to ensure it is correctly getting the last CRLF
         body[0] = HttpConstants.CR;
         body[1] = HttpConstants.LF;
+
         for (int i = 0; i < nbChunks; i++)
         {
             ByteBuf content = Unpooled.WrappedBuffer(body, 0, bytesPerChunk);
@@ -262,13 +273,16 @@ public class HttpPostMultiPartRequestDecoderTest
         previousLastbody[0] = HttpConstants.CR;
         previousLastbody[1] = HttpConstants.LF;
         Array.Fill(lastbody, (byte) 1);
+
         // put somewhere a not valid delimiter
         for (int i = 0; i < bdelimiter.Length; i++)
         {
             previousLastbody[i + 10] = bdelimiter[i];
         }
+
         lastbody[0] = HttpConstants.CR;
         lastbody[1] = HttpConstants.LF;
+
         for (int i = 0; i < bsuffix1.Length; i++)
         {
             lastbody[bsuffix1.Length + i] = bsuffix1[i];
@@ -294,25 +308,32 @@ public class HttpPostMultiPartRequestDecoderTest
         IFileUpload data = (IFileUpload) decoder.GetBodyHttpDatas()[0];
         Assert.Equal(data.Length(), fileSize);
         Assert.Equal(inMemory, data.IsInMemory());
+
         if (data.IsInMemory())
         {
             // To be done only if not inMemory: assertEquals(data.get().length, fileSize);
             Assert.False(data.GetByteBuf().Capacity < 1024 * 1024,
                     "Capacity should be higher than 1M");
         }
+
         Assert.True(decoder.GetCurrentAllocatedCapacity() < 1024 * 1024,
                 "Capacity should be less than 1M");
         IInterfaceHttpData[] httpDatas = ToArray(decoder);
+
         foreach (IInterfaceHttpData httpData in httpDatas)
         {
             Assert.Equal(1, httpData.RefCnt, "Before cleanAllHttpData should be 1");
         }
+
         factory.CleanAllHttpData();
+
         foreach (IInterfaceHttpData httpData in httpDatas)
         {
             Assert.Equal(inMemory? 1 : 0, httpData.RefCnt, "After cleanAllHttpData should be 1 if in Memory");
         }
+
         decoder.Destroy();
+
         foreach (IInterfaceHttpData httpData in httpDatas)
         {
             Assert.Equal(0, httpData.RefCnt, "RefCnt should be 0");
@@ -411,22 +432,27 @@ public class HttpPostMultiPartRequestDecoderTest
                 + suffix.Length);
         HttpPostMultipartRequestDecoder decoder = new HttpPostMultipartRequestDecoder(factory, request);
         decoder.SetDiscardThreshold(maxMemory);
+
         for (int rank = 0; rank < nbItems; rank++)
         {
             byte[] bp1 = Encoding.UTF8.GetBytes(prefix1);
             byte[] bp2 = Encoding.UTF8.GetBytes(prefix2);
             byte[] prefix = new byte[bp1.Length + 2 + bp2.Length];
+
             for (int i = 0; i < bp1.Length; i++)
             {
                 prefix[i] = bp1[i];
             }
+
             byte[] brank = Encoding.UTF8.GetBytes((10 + rank).ToString(CultureInfo.InvariantCulture));
             prefix[bp1.Length] = brank[0];
             prefix[bp1.Length + 1] = brank[1];
+
             for (int i = 0; i < bp2.Length; i++)
             {
                 prefix[bp1.Length + 2 + i] = bp2[i];
             }
+
             ByteBuf buf = Unpooled.WrappedBuffer(prefix);
             DefaultHttpContent httpContent = new DefaultHttpContent(buf);
             decoder.Offer(httpContent);
@@ -438,6 +464,7 @@ public class HttpPostMultiPartRequestDecoderTest
             decoder.Offer(httpContent);
             httpContent.Release();
         }
+
         byte[] lastbody = Encoding.UTF8.GetBytes(suffix);
         ByteBuf content2 = Unpooled.WrappedBuffer(lastbody, 0, lastbody.Length);
         DefaultHttpContent httpContent2 = new DefaultHttpContent(content2);
@@ -454,6 +481,7 @@ public class HttpPostMultiPartRequestDecoderTest
             Array.Fill(body, (byte) rank);
             Assert.True(body.AsSpan().SequenceEqual(data.Get()));
         }
+
         // To not be done since will load full file on memory: assertEquals(data.get().length, fileSize);
         // Not mandatory since implicitly called during destroy of decoder
         foreach (IInterfaceHttpData httpData in decoder.GetBodyHttpDatas())
@@ -461,6 +489,7 @@ public class HttpPostMultiPartRequestDecoderTest
             httpData.Release();
             factory.RemoveHttpDataFromClean(request, httpData);
         }
+
         factory.CleanAllHttpData();
         decoder.Destroy();
     }
@@ -483,10 +512,12 @@ public class HttpPostMultiPartRequestDecoderTest
         string suffix = "--861fbeab-cd20-470c-9609-d40a0f704466--";
         byte[] bsuffix = Encoding.UTF8.GetBytes(suffix);
         byte[] bsuffixReal = new byte[bsuffix.Length + 2];
+
         for (int i = 0; i < bsuffix.Length; i++)
         {
             bsuffixReal[1 + i] = bsuffix[i];
         }
+
         bsuffixReal[0] = HttpConstants.LF;
         bsuffixReal[bsuffixReal.Length - 1] = HttpConstants.CR;
         byte[] lastbody = {HttpConstants.LF};
@@ -508,6 +539,7 @@ public class HttpPostMultiPartRequestDecoderTest
         // Set first bytes as CRLF to ensure it is correctly getting the last CRLF
         body[0] = HttpConstants.CR;
         body[1] = HttpConstants.LF;
+
         for (int i = 0; i < nbChunks; i++)
         {
             ByteBuf content = Unpooled.WrappedBuffer(body, 0, bytesPerChunk);
@@ -516,6 +548,7 @@ public class HttpPostMultiPartRequestDecoderTest
             Assert.NotNull(((IHttpData) decoder.CurrentPartialHttpData()).Content);
             httpContent.Release();
         }
+
         // Last -2 body = content + CR but no delimiter
         byte[] previousLastbody = new byte[bytesLastChunk + 1];
         Array.Fill(previousLastbody, (byte) 1);
@@ -543,25 +576,32 @@ public class HttpPostMultiPartRequestDecoderTest
         IFileUpload data = (IFileUpload) decoder.GetBodyHttpDatas()[0];
         Assert.Equal(data.Length(), fileSize);
         Assert.Equal(inMemory, data.IsInMemory());
+
         if (data.IsInMemory())
         {
             // To be done only if not inMemory: assertEquals(data.get().length, fileSize);
             Assert.False(data.GetByteBuf().Capacity < fileSize,
                         "Capacity should be at least file size");
         }
+
         Assert.True(decoder.GetCurrentAllocatedCapacity() < fileSize,
                    "Capacity should be less than 1M");
         IInterfaceHttpData[] httpDatas = ToArray(decoder);
+
         foreach (IInterfaceHttpData httpData in httpDatas)
         {
             Assert.Equal(1, httpData.RefCnt, "Before cleanAllHttpData should be 1");
         }
+
         factory.CleanAllHttpData();
+
         foreach (IInterfaceHttpData httpData in httpDatas)
         {
             Assert.Equal(inMemory? 1 : 0, httpData.RefCnt, "After cleanAllHttpData should be 1 if in Memory");
         }
+
         decoder.Destroy();
+
         foreach (IInterfaceHttpData httpData in httpDatas)
         {
             Assert.Equal(0, httpData.RefCnt, "RefCnt should be 0");

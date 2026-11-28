@@ -104,6 +104,7 @@ public sealed class Socks5PrivateAuthResponseDecoder : ByteToMessageDecoder
                     {
                         @out.Add(@in.ReadRetainedSlice(readableBytes));
                     }
+
                     break;
                 case State.FAILURE:
                     @in.SkipBytes(@in.ReadableBytes);

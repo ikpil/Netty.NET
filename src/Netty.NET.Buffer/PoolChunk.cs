@@ -170,15 +170,18 @@ internal sealed class PoolChunk : IPoolChunkMetric
         // The original allocator limits maxOrder to 14; larger offsets make signed handles negative.
         if (sizeClass.ChunkSize / sizeClass.PageSize > 1 << 14)
             throw new ArgumentException("A pooled chunk must contain at most 16384 pages.", nameof(sizeClass));
+
         if (smallSubpagePools != null)
         {
             if (smallSubpagePools.Length != sizeClass.NSubpages)
                 throw new ArgumentException("Incorrect number of subpage heads.", nameof(smallSubpagePools));
+
             for (int i = 0; i < smallSubpagePools.Length; i++)
                 if (smallSubpagePools[i] == null || smallSubpagePools[i].Chunk != null ||
                     smallSubpagePools[i].HeadIndex != i || !ReferenceEquals(smallSubpagePools[i].SizeClass, sizeClass))
                     throw new ArgumentException("Subpage heads must share this size-class domain.", nameof(smallSubpagePools));
         }
+
         _sizeClass = sizeClass;
         _freeBytes = ChunkSize;
         _runsAvail = NewRunsAvailQueueArray(sizeClass.NPSizes);
@@ -215,8 +218,10 @@ internal sealed class PoolChunk : IPoolChunkMetric
     private static PriorityQueue<int, int>[] NewRunsAvailQueueArray(int size)
     {
         var queueArray = new PriorityQueue<int, int>[size];
+
         for (int i = 0; i < queueArray.Length; i++)
             queueArray[i] = new PriorityQueue<int, int>();
+
         return queueArray;
     }
 
@@ -231,6 +236,7 @@ internal sealed class PoolChunk : IPoolChunkMetric
 
         //insert first page of run
         InsertAvailRun0(runOffset, handle);
+
         if (pages > 1)
         {
             //insert last page of run
@@ -258,6 +264,7 @@ internal sealed class PoolChunk : IPoolChunkMetric
         int pages = RunPages(handle);
         //remove first page of run
         _runsAvailMap.Remove(runOffset);
+
         if (pages > 1)
         {
             //remove last page of run
@@ -288,6 +295,7 @@ internal sealed class PoolChunk : IPoolChunkMetric
     {
         if (freeBytes == 0)
             return 100;
+
         int freePercentage = (int)(freeBytes * 100L / ChunkSize);
         return freePercentage == 0 ? 99 : 100 - freePercentage;
     }
@@ -311,8 +319,10 @@ internal sealed class PoolChunk : IPoolChunkMetric
     {
         if (runSize <= 0 || runSize > ChunkSize || runSize % PageSize != 0)
             throw new ArgumentOutOfRangeException(nameof(runSize));
+
         int pages = runSize >> PageShifts;
         int pageIdx = _sizeClass.Pages2PageIdx(pages);
+
         lock (_runsAvailLock)
         {
             //find first queue which has at least one big enough run
@@ -335,9 +345,11 @@ internal sealed class PoolChunk : IPoolChunkMetric
     {
         if (_freeBytes == ChunkSize)
             return _sizeClass.NPSizes - 1;
+
         for (int i = pageIdx; i < _sizeClass.NPSizes; i++)
             if (_runsAvail[i].Count != 0)
                 return i;
+
         return -1;
     }
 
@@ -372,7 +384,9 @@ internal sealed class PoolChunk : IPoolChunkMetric
         if (handle < 0 || !IsUsed(handle) || !IsRun(handle) || BitmapIdx(handle) != 0 || pages == 0 ||
             offset + pages > ChunkSize / PageSize)
             throw new ArgumentOutOfRangeException(nameof(handle));
+
         int runSize = RunSize(PageShifts, handle);
+
         //start free run
         lock (_runsAvailLock)
         {
@@ -403,6 +417,7 @@ internal sealed class PoolChunk : IPoolChunkMetric
             long pastRun = GetAvailRunByOffset(runOffset - 1);
             if (pastRun == -1)
                 return handle;
+
             int pastOffset = RunOffset(pastRun);
             int pastPages = RunPages(pastRun);
 
@@ -427,6 +442,7 @@ internal sealed class PoolChunk : IPoolChunkMetric
             long nextRun = GetAvailRunByOffset(runOffset + runPages);
             if (nextRun == -1)
                 return handle;
+
             int nextOffset = RunOffset(nextRun);
             int nextPages = RunPages(nextRun);
 
@@ -493,8 +509,10 @@ internal sealed class PoolChunk : IPoolChunkMetric
     {
         if (sizeIdx < 0 || sizeIdx > _sizeClass.SmallMaxSizeIdx)
             throw new ArgumentOutOfRangeException(nameof(sizeIdx));
+
         owner = null;
         PoolSubpage head = _smallSubpagePools[sizeIdx];
+
         // small
         // Obtain the head of the PoolSubPage pool that is owned by the PoolArena and synchronize on it.
         // This is need as we may add it back and so alter the linked-list structure.
@@ -509,9 +527,11 @@ internal sealed class PoolChunk : IPoolChunkMetric
                 owner = nextSub.Chunk;
                 return handle;
             }
+
             long result = AllocateSubpage(sizeIdx, head);
             if (result >= 0)
                 owner = this;
+
             return result;
         }
     }
@@ -520,6 +540,7 @@ internal sealed class PoolChunk : IPoolChunkMetric
     {
         if (sizeIdx < 0 || sizeIdx > _sizeClass.SmallMaxSizeIdx)
             throw new ArgumentOutOfRangeException(nameof(sizeIdx));
+
         int maxElements = 1 << PageShifts - SizeClasses.LOG2_QUANTUM;
         long runSize = 0;
         long nElements;
@@ -531,11 +552,13 @@ internal sealed class PoolChunk : IPoolChunkMetric
             runSize += PageSize;
             nElements = runSize / elemSize;
         } while (nElements < maxElements && runSize != nElements * elemSize);
+
         while (nElements > maxElements)
         {
             runSize -= PageSize;
             nElements = runSize / elemSize;
         }
+
         Debug.Assert(nElements > 0 && runSize >= elemSize);
         // CLR: fail if the chunk cannot fit the calculated LCM run, rather than accepting a shorter run.
         return runSize > ChunkSize ? -1 : checked((int)runSize);
@@ -556,14 +579,17 @@ internal sealed class PoolChunk : IPoolChunkMetric
         int runSize = CalculateRunSize(sizeIdx);
         if (runSize < 0)
             return -1;
+
         //runSize must be multiples of pageSize
         long runHandle = AllocateRun(runSize);
         if (runHandle < 0)
             return -1;
+
         int runOffset = RunOffset(runHandle);
         Debug.Assert(_subpages[runOffset] == null);
         int elemSize = _sizeClass.SizeIdx2Size(sizeIdx);
         PoolSubpage subpage;
+
         try
         {
             subpage = new PoolSubpage(head, this, runOffset, RunSize(PageShifts, runHandle), elemSize);
@@ -573,6 +599,7 @@ internal sealed class PoolChunk : IPoolChunkMetric
             FreeRun(runHandle);
             throw;
         }
+
         _subpages[runOffset] = subpage;
         return subpage.Allocate();
     }
@@ -589,10 +616,13 @@ internal sealed class PoolChunk : IPoolChunkMetric
         int offset = RunOffset(handle);
         if (handle < 0 || !IsUsed(handle) || !IsSubpage(handle) || offset >= _subpages.Length)
             throw new ArgumentOutOfRangeException(nameof(handle));
+
         PoolSubpage subpage = _subpages[offset];
         if (subpage == null)
             throw new InvalidOperationException("The subpage run is not allocated.");
+
         PoolSubpage head = subpage.Head;
+
         // Obtain the head of the PoolSubPage pool that is owned by the PoolArena and synchronize on it.
         // This is need as we may add it back and so alter the linked-list structure.
         lock (head.SyncRoot)
@@ -605,10 +635,12 @@ internal sealed class PoolChunk : IPoolChunkMetric
                 //the subpage is still used, do not free it
                 return;
             }
+
             Debug.Assert(!subpage.DoNotDestroy);
             // Null out slot in the array as it was freed and we should not use it anymore.
             _subpages[offset] = null;
         }
+
         // The page-run path expects the used run with neither a subpage flag nor a bitmap index.
         FreeRun(handle & ~(1L << IS_SUBPAGE_SHIFT | 0xffffffffL));
     }
@@ -617,6 +649,7 @@ internal sealed class PoolChunk : IPoolChunkMetric
     {
         if (runOffset < 0 || runOffset >= _subpages.Length)
             throw new ArgumentOutOfRangeException(nameof(runOffset));
+
         return _subpages[runOffset];
     }
 }

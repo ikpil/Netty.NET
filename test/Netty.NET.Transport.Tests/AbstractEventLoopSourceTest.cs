@@ -39,6 +39,7 @@ public class AbstractEventLoopSourceTest
         var group2 = new MultiThreadIoEventLoopGroup(2, NioIoHandler.NewFactory());
         var executors = new DefaultEventExecutorGroup(2);
         IChannel server = null;
+
         try
         {
             server = await new ServerBootstrap().Channel<NioServerSocketChannel>().Group(group)
@@ -62,6 +63,7 @@ public class AbstractEventLoopSourceTest
             {
                 await server.CloseAsync();
             }
+
             await group.StopAsync();
             await group2.StopAsync();
             await executors.StopAsync();
@@ -79,6 +81,7 @@ public class AbstractEventLoopSourceTest
         var group = new MultiThreadIoEventLoopGroup(2, NioIoHandler.NewFactory());
         Exception failure = null;
         IChannel server = null, client = null;
+
         try
         {
             server = await new ServerBootstrap().Group(group).Channel<NioServerSocketChannel>()
@@ -100,10 +103,12 @@ public class AbstractEventLoopSourceTest
             {
                 await client.CloseAsync();
             }
+
             if (server != null)
             {
                 await server.CloseAsync();
             }
+
             await group.StopAsync();
         }
     }
@@ -124,6 +129,7 @@ public class AbstractEventLoopSourceTest
         private async Task ReRegister(IChannelHandlerContext outCtx, object msg)
         {
             bool handedOff = false;
+
             try
             {
                 var oldLoop = outCtx.Channel.EventLoop;
@@ -143,6 +149,7 @@ public class AbstractEventLoopSourceTest
                 {
                     await outCtx.DeregisterAsync();
                 }
+
                 await oldLoop.SubmitAsync(() => outCtx.Channel.Pipeline.FireUserEventTriggered("Unregistered user event"));
                 await next.RegisterAsync(outCtx.Channel);
                 await next.SubmitAsync(() =>
@@ -158,6 +165,7 @@ public class AbstractEventLoopSourceTest
                 {
                     ((ByteBuf)msg).Release();
                 }
+
                 failed(error);
                 await outCtx.CloseAsync();
             }
@@ -197,6 +205,7 @@ public class AbstractEventLoopSourceTest
     public async Task TestShutdownGracefullyNoQuietPeriod()
     {
         var group = new MultiThreadIoEventLoopGroup(2, NioIoHandler.NewFactory());
+
         try
         {
             // Not close the Channel to ensure the EventLoop is still shutdown in time.

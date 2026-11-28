@@ -20,6 +20,7 @@ public class PipelineMaskAndTaskContractTest
     {
         var handler = new ActiveOverride();
         var channel = new EmbeddedChannel(handler);
+
         try
         {
             Assert.True(channel.WriteInbound("message"));
@@ -37,6 +38,7 @@ public class PipelineMaskAndTaskContractTest
     {
         var handler = new ExplicitSkippedRead();
         var channel = new EmbeddedChannel(handler);
+
         try
         {
             Assert.True(channel.WriteInbound("message"));
@@ -61,6 +63,7 @@ public class PipelineMaskAndTaskContractTest
         var lastRemoved = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var received = Channel.CreateUnbounded<string>();
         bool installed = false;
+
         try
         {
             await channel.RegisterAsync(group.Next());
@@ -81,9 +84,11 @@ public class PipelineMaskAndTaskContractTest
         {
             release.Set();
             await channel.CloseAsync();
+
             // Close completion precedes cross-executor destruction. Finish both owners' callbacks before stopping them.
             if (installed)
                 await Task.WhenAll(firstRemoved.Task, lastRemoved.Task).WaitAsync(TimeSpan.FromSeconds(5));
+
             await group.StopAsync();
             await executor.StopAsync();
         }
@@ -96,6 +101,7 @@ public class PipelineMaskAndTaskContractTest
         var producer = new DefaultEventExecutor();
         var channel = new LocalChannel();
         var callbacks = Channel.CreateBounded<bool>(6);
+
         try
         {
             channel.Pipeline.AddLast(new ForeignCompletion(producer), new OwnerObserver(callbacks.Writer));
@@ -112,12 +118,15 @@ public class PipelineMaskAndTaskContractTest
             // Remove the handlers before closing so we don't intercept it.
             while (channel.Pipeline.LastContext != null)
                 channel.Pipeline.RemoveLast();
+
             await channel.CloseAsync();
             await group.StopAsync();
             await producer.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
         }
+
         for (int i = 0; i < 6; i++)
             Assert.True(await callbacks.Reader.ReadAsync(TestContext.Current.CancellationToken));
+
         Assert.False(callbacks.Reader.TryPeek(out _));
     }
 
@@ -127,6 +136,7 @@ public class PipelineMaskAndTaskContractTest
         var error = new InvalidOperationException();
         var handler = new ThrowWrite(error);
         var channel = new EmbeddedChannel(handler);
+
         try
         {
             var observed = await Assert.ThrowsAsync<InvalidOperationException>(() => channel.WriteAsync("test"));

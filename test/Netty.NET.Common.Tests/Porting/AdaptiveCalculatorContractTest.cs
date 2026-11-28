@@ -15,6 +15,7 @@ public class AdaptiveCalculatorContractTest
     public void OriginalReceiveBufferRampKeepsFourBucketGrowthAndMaximumRounding()
     {
         var calculator = new AdaptiveCalculator(64, 512, 10 * 1024 * 1024);
+
         foreach (int expected in new[] { 512, 8192, 131072, 2097152, 8388608, 8388608 })
         {
             Assert.Equal(expected, ReadNext(calculator));
@@ -67,6 +68,7 @@ public class AdaptiveCalculatorContractTest
         int maximum = int.Parse(bounds[2], CultureInfo.InvariantCulture);
         var row = new StringBuilder(FormattableString.Invariant($"{minimum},{initial},{maximum}"));
         AdaptiveCalculator calculator;
+
         try
         {
             calculator = new AdaptiveCalculator(minimum, initial, maximum);
@@ -81,10 +83,12 @@ public class AdaptiveCalculatorContractTest
         row.Append(' ').Append(ReadNext(calculator).ToString(CultureInfo.InvariantCulture));
         // -2 stands for "record the current nextSize".
         int[] feedback = { -2, -2, 0, 0, 0, 0, 700, 16, 15, 1, maximum, int.MinValue, -1, -2, -2, 0, 0, maximum, maximum, 0, 0, 0, 0 };
+
         foreach (int f in feedback)
         {
             int size = f == -2 ? ReadNext(calculator) : f;
             row.Append(" r").Append(size.ToString(CultureInfo.InvariantCulture));
+
             try
             {
                 calculator.Record(size);
@@ -94,8 +98,10 @@ public class AdaptiveCalculatorContractTest
                 row.Append('!').Append(e.GetType().Name);
                 break;
             }
+
             row.Append('>').Append(ReadNext(calculator).ToString(CultureInfo.InvariantCulture));
         }
+
         Assert.Equal(expected, row.ToString());
     }
 
@@ -119,6 +125,7 @@ public class AdaptiveCalculatorContractTest
     {
         var previous = CultureInfo.CurrentCulture;
         CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("ar-SA");
+
         try
         {
             var e = Assert.Throws<ArgumentException>(() => new AdaptiveCalculator(minimum, initial, maximum));

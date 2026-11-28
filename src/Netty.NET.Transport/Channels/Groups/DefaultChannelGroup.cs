@@ -235,6 +235,7 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<IChannel>
     public bool Add(IChannel channel)
     {
         ArgumentNullException.ThrowIfNull(channel);
+
         bool added = _channels.TryAdd(channel.Id, channel);
         if (added)
         {
@@ -246,6 +247,7 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<IChannel>
                     owner.Remove(value);
             });
         }
+
         // First add channel, than check if closed.
         // Seems inefficient at first, but this way a volatile
         // gives us enough synchronization to be thread-safe.
@@ -259,6 +261,7 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<IChannel>
         // See https://github.com/netty/netty/issues/4020
         if (_stayClosed && Volatile.Read(ref _closed) != 0)
             _ = channel.CloseAsync();
+
         return added;
     }
 
@@ -340,6 +343,7 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<IChannel>
             // See https://github.com/netty/netty/issues/4020
             Volatile.Write(ref _closed, 1);
         }
+
         return OperateAsync(async channel =>
         {
             await channel.CloseAsync().ConfigureAwait(false);
@@ -478,11 +482,14 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<IChannel>
     private Task WriteCoreAsync(object message, Func<IChannel, bool> matcher, bool flush, out IReadOnlyDictionary<IChannel, Task> operations)
     {
         ArgumentNullException.ThrowIfNull(message);
+
         var tasks = new List<KeyValuePair<IChannel, Task>>();
+
         foreach (var channel in _channels.Values)
         {
             if (channel is IServerChannel || matcher != null && !matcher(channel))
                 continue;
+
             // Create a safe duplicate of the message to write it to a channel but not affect other writes.
             // See https://github.com/netty/netty/issues/1461
             object copy = message switch
@@ -491,6 +498,7 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<IChannel>
                 IByteBufHolder holder => holder.RetainedDuplicate(),
                 _ => ReferenceCountUtil.Retain(message)
             };
+
             try
             {
                 tasks.Add(new(channel, flush ? channel.WriteAndFlushAsync(copy) : channel.WriteAsync(copy)));
@@ -501,6 +509,7 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<IChannel>
                 tasks.Add(new(channel, Task.FromException(error)));
             }
         }
+
         ReferenceCountUtil.Release(message);
         operations = Snapshot(tasks);
         return CompleteAsync(tasks);
@@ -537,16 +546,19 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<IChannel>
         foreach (var channel in _channels.Values)
         if (channel is not IServerChannel && (matcher == null || matcher(channel)))
             channel.Flush();
+
         return this;
     }
 
     private Task OperateAsync(Func<IChannel, Task> operation, Func<IChannel, bool> matcher, bool includeServers, out IReadOnlyDictionary<IChannel, Task> operations)
     {
         var tasks = new List<KeyValuePair<IChannel, Task>>();
+
         foreach (var channel in _channels.Values.OrderBy(channel => channel is IServerChannel ? 0 : 1))
         {
             if ((!includeServers && channel is IServerChannel) || matcher != null && !matcher(channel))
                 continue;
+
             try
             {
                 tasks.Add(new(channel, operation(channel)));
@@ -556,6 +568,7 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<IChannel>
                 tasks.Add(new(channel, Task.FromException(error)));
             }
         }
+
         operations = Snapshot(tasks);
         return CompleteAsync(tasks);
     }
@@ -634,6 +647,7 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<IChannel>
         // Done on arrival?
         if (operations.Count == 0)
             return;
+
         try
         {
             await Task.WhenAll(operations.Select(pair => pair.Value)).ConfigureAwait(false);
@@ -643,12 +657,14 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<IChannel>
             // WhenAll waits for every selected channel. Keep the complete set of channel/cause pairs,
             // including canceled child tasks, rather than exposing just the exception rethrown by await.
             var failures = new List<KeyValuePair<IChannel, Exception>>();
+
             foreach (var pair in operations)
             {
                 if (pair.Value.IsCompletedSuccessfully)
                 {
                     continue;
                 }
+
                 try
                 {
                     pair.Value.GetAwaiter().GetResult();
@@ -658,6 +674,7 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<IChannel>
                     failures.Add(new(pair.Key, pair.Value.Exception is { InnerExceptions.Count: > 1 } multiple ? multiple : error));
                 }
             }
+
             throw new ChannelGroupException(failures);
         }
     }
@@ -686,11 +703,13 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<IChannel>
         {
             throw new ArgumentOutOfRangeException(nameof(arrayIndex));
         }
+
         var snapshot = ToArray();
         if (snapshot.Length > array.Length - arrayIndex)
         {
             throw new ArgumentException("Destination array is too small.", nameof(array));
         }
+
         snapshot.CopyTo(array, arrayIndex);
     }
 
@@ -711,6 +730,7 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<IChannel>
     public void ExceptWith(IEnumerable<IChannel> other)
     {
         ArgumentNullException.ThrowIfNull(other);
+
         if (ReferenceEquals(other, this))
         {
             Clear();
@@ -730,7 +750,9 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<IChannel>
         {
             return;
         }
+
         var keep = Members(other);
+
         foreach (var channel in ToArray())
         if (!keep.Contains(channel))
         {
@@ -741,11 +763,13 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<IChannel>
     public void SymmetricExceptWith(IEnumerable<IChannel> other)
     {
         ArgumentNullException.ThrowIfNull(other);
+
         if (ReferenceEquals(other, this))
         {
             Clear();
             return;
         }
+
         foreach (var channel in Members(other))
         if (!Remove(channel))
         {
@@ -786,6 +810,7 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<IChannel>
     private static IEnumerable<IChannel> Checked(IEnumerable<IChannel> other)
     {
         ArgumentNullException.ThrowIfNull(other);
+
         return other;
     }
 
@@ -802,6 +827,7 @@ public class DefaultChannelGroup : IReadOnlyCollection<IChannel>, ISet<IChannel>
         {
             return 1;
         }
+
         int byName = string.CompareOrdinal(Name, other.Name);
         return byName != 0 ? byName : RuntimeHelpers.GetHashCode(this).CompareTo(RuntimeHelpers.GetHashCode(other));
     }

@@ -39,6 +39,7 @@ public class IoLifecycleContractTest
         var group = new DefaultEventLoopGroup(1);
         var loop = (DefaultEventLoop)group.Next();
         var channel = new LocalChannel();
+
         try
         {
             await loop.RegisterAsync(channel, TestContext.Current.CancellationToken);
@@ -60,6 +61,7 @@ public class IoLifecycleContractTest
         var group = new DefaultEventLoopGroup(1);
         var loop = (DefaultEventLoop)group.Next();
         var channel = new BrokenRegistration();
+
         try
         {
             await Assert.ThrowsAsync<IOException>(() => loop.RegisterAsync(channel));
@@ -85,21 +87,26 @@ public class IoLifecycleContractTest
     public async Task AListenerCanOwnAnExistingUnboundOrListeningSocket(bool bound)
     {
         var raw = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
         if (bound)
         {
             raw.Bind(new IPEndPoint(IPAddress.Loopback, 0));
             raw.Listen(128);
         }
+
         var server = new NioServerSocketChannel(raw);
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var collector = new CollectChildren();
         server.Pipeline.AddLast(collector);
         Assert.Equal(bound, server.IsActive);
+
         try
         {
             await group.RegisterAsync(server);
+
             if (!bound)
                 await server.BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
+
             using var peer = new TcpClient();
             await peer.ConnectAsync((IPEndPoint)server.LocalAddress, TestContext.Current.CancellationToken);
             await collector.First.Task.WaitAsync(TestContext.Current.CancellationToken);
@@ -127,13 +134,16 @@ public class IoLifecycleContractTest
         var child = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var server = new FaultingAccept(error);
         IChannel listener = null;
+
         try
         {
             listener = await new ServerBootstrap().Group(group).ChannelFactory(() => server).Handler(observer)
                 .Option(ChannelOption.AUTO_READ, autoRead).ChildHandler(new ActionChannelInitializer<IChannel>(_ => child.TrySetResult()))
                 .BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
+
             if (!autoRead)
                 listener.Read();
+
             // OP_ACCEPT readiness needs a pending connection; the first accept attempt then fails.
             using var peer = new TcpClient();
             await peer.ConnectAsync((IPEndPoint)listener.LocalAddress, TestContext.Current.CancellationToken);
@@ -150,6 +160,7 @@ public class IoLifecycleContractTest
             {
                 await listener.CloseAsync();
             }
+
             await group.StopAsync();
         }
     }
@@ -162,6 +173,7 @@ public class IoLifecycleContractTest
         var observer = new ObserveParent();
         var server = new FaultingAccept(error);
         Assert.True(server.ShouldClose(new IOException("inactive listener")));
+
         try
         {
             var listener = await new ServerBootstrap().Group(group).ChannelFactory(() => server).Handler(observer)
@@ -239,15 +251,18 @@ public class IoLifecycleContractTest
         var allocator = Assert.IsType<ServerChannelRecvByteBufAllocator>(server.Config.GetRecvByteBufAllocator());
         allocator.MaxMessagesPerRead(2);
         var peers = new List<TcpClient>();
+
         try
         {
             await group.RegisterAsync(server);
+
             for (int i = 0; i < 3; i++)
             {
                 var peer = new TcpClient();
                 peers.Add(peer);
                 await peer.ConnectAsync((IPEndPoint)server.LocalAddress, TestContext.Current.CancellationToken);
             }
+
             server.Config.SetAutoRead(true);
             await collector.Done.Task.WaitAsync(TestContext.Current.CancellationToken);
             Assert.Equal(new[] { 2, 1 }, collector.Batches);
@@ -276,6 +291,7 @@ public class IoLifecycleContractTest
             _batch++;
             _ = RegisterAndClose(child, ctx.Channel.EventLoop);
             First.TrySetResult();
+
             if (_total == expected)
                 ctx.Channel.Config.SetAutoRead(false);
         }
@@ -290,6 +306,7 @@ public class IoLifecycleContractTest
         {
             Batches.Add(_batch);
             _batch = 0;
+
             if (_total == expected)
                 Done.TrySetResult();
         }
@@ -308,6 +325,7 @@ public class IoLifecycleContractTest
         server.Config.SetAutoRead(false);
         using var first = new TcpClient();
         using var second = new TcpClient();
+
         try
         {
             await group.RegisterAsync(server);
@@ -363,6 +381,7 @@ public class IoLifecycleContractTest
         public override void ChannelReadComplete(IChannelHandlerContext ctx)
         {
             Events.Add("complete");
+
             if (_read == 2)
                 Done.TrySetResult();
         }
@@ -380,6 +399,7 @@ public class IoLifecycleContractTest
         var group = new DefaultEventLoopGroup(1);
         var loop = group.Next();
         int worker = 0, count = 0;
+
         try
         {
             await loop.SubmitAsync(() =>
@@ -414,6 +434,7 @@ public class IoLifecycleContractTest
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var server = new NioServerSocketChannel();
         server.Pipeline.AddLast(new CollectChildren());
+
         try
         {
             await group.RegisterAsync(server);
@@ -434,6 +455,7 @@ public class IoLifecycleContractTest
     {
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var server = new NioServerSocketChannel();
+
         try
         {
             Assert.False(server.Config.TryGetOption(ChannelOption.IP_MULTICAST_IF, out var value));

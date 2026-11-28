@@ -104,6 +104,7 @@ public static class ConstantTimeUtils
         {
             return 1;
         }
+
         // CLR adaptation: validate equal-length slices before calling the BCL's
         // fixed-time primitive. Its timing contract depends on length, not bytes.
         return CryptographicOperations.FixedTimeEquals(
@@ -134,6 +135,7 @@ public static class ConstantTimeUtils
 
         // Benchmarking demonstrates that using an int to accumulate is faster than other data types.
         int c = 0;
+
         for (int i = 0; i < s1.Count; ++i)
         {
             c |= s1[i] ^ s2[i];

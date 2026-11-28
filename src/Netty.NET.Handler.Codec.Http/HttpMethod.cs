@@ -162,12 +162,14 @@ public class HttpMethod : IComparable<HttpMethod>
         {
             throw new ArgumentException("name cannot be empty");
         }
+
         int index = HttpHeaderValidationUtil.ValidateToken(new StringCharSequence(name));
         if (index != -1)
         {
             throw new ArgumentException(
                     "Illegal character in HTTP Method: 0x" + ((int) name[index]).ToString("x", CultureInfo.InvariantCulture));
         }
+
         this.name = AsciiString.Cached(name);
     }
 
@@ -218,6 +220,7 @@ public class HttpMethod : IComparable<HttpMethod>
         {
             return 0;
         }
+
         return string.CompareOrdinal(Name(), o.Name());
     }
 

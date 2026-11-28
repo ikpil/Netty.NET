@@ -64,6 +64,7 @@ public class DnsQueryContextTest
     public void WriteQueryMustNotSendWhenIdSpaceExhausted()
     {
         EmbeddedChannel channel = new EmbeddedChannel();
+
         try
         {
             IPEndPoint nameServerAddr =

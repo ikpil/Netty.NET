@@ -397,10 +397,12 @@ public class HttpRequestEncoderTest
         HttpRequestEncoder encoder = new HttpRequestEncoder();
         EmbeddedChannel channel = new EmbeddedChannel(encoder);
         IHttpRequest request = new DefaultHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, "/");
+
         if (chunked)
         {
             HttpUtil.SetTransferEncodingChunked(request, true);
         }
+
         Assert.True(channel.WriteOutbound(request));
 
         ByteBuf contentBuffer = Unpooled.Buffer();
@@ -408,10 +410,12 @@ public class HttpRequestEncoderTest
 
         ByteBuf lastContentBuffer = Unpooled.Buffer();
         ILastHttpContent last = new DefaultLastHttpContent(lastContentBuffer);
+
         if (trailers)
         {
             last.TrailingHeaders().Set("X-Netty-Test", "true");
         }
+
         Assert.True(channel.WriteOutbound(last));
 
         // Ensure we only produce ByteBuf instances.

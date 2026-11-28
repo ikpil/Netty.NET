@@ -53,6 +53,7 @@ public class QuicStreamFrameTest : AbstractQuicTest
         IChannel channel = null;
         QuicChannelValidationHandler serverHandler = new QuicChannelValidationHandler();
         QuicChannelValidationHandler clientHandler = new StreamCreationHandler(type);
+
         try
         {
             StreamHandler handler = new StreamHandler();
@@ -130,11 +131,13 @@ public class QuicStreamFrameTest : AbstractQuicTest
             if (evt == ChannelInputShutdownReadComplete.INSTANCE)
             {
                 queue.Add(2);
+
                 if (((IQuicStreamChannel) ctx.Channel).Type() == QuicStreamType.BIDIRECTIONAL)
                 {
                     // Let's write back a fin which will also close the channel and so call channelInactive(...)
                     ctx.WriteAndFlushAsync(new DefaultQuicStreamFrame(Unpooled.EmptyBuffer, true));
                 }
+
                 ctx.Channel.Parent.CloseAsync();
             }
         }
@@ -146,6 +149,7 @@ public class QuicStreamFrameTest : AbstractQuicTest
             {
                 queue.Add(1);
             }
+
             frame.Release();
         }
 

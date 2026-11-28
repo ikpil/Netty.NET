@@ -63,6 +63,7 @@ public sealed class MqttVersion
     public static MqttVersion FromProtocolNameAndLevel(string protocolName, byte protocolLevel)
     {
         MqttVersion mv;
+
         switch (protocolLevel)
         {
         case 3:
@@ -80,10 +81,12 @@ public sealed class MqttVersion
             // as an empty string (https://learn.microsoft.com/dotnet/csharp/language-reference/operators/addition-operator).
             throw new MqttUnacceptableProtocolVersionException((protocolName ?? "null") + " is an unknown protocol name");
         }
+
         if (mv.name.Equals(protocolName))
         {
             return mv;
         }
+
         // CLR: the Java byte is signed (-128..127, https://docs.oracle.com/javase/specs/jls/se17/html/jls-4.html#jls-4.2.1)
         // and the C# byte is not, so the message prints the level through sbyte to keep the Java text.
         throw new MqttUnacceptableProtocolVersionException((protocolName ?? "null") + " and " +

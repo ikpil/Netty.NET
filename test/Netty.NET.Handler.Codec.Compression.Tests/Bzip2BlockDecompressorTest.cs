@@ -62,11 +62,14 @@ public class Bzip2BlockDecompressorTest
         BitWriter writer = new BitWriter();
         writer.WriteBits(2, literalSymbol);
         writer.WriteBits(2, literalSymbol);
+
         for (int i = 0; i < 30; i++)
         {
             writer.WriteBits(2, HUFFMAN_SYMBOL_RUNB);
         }
+
         writer.WriteBits(2, endOfBlockSymbol);
+
         // Trailing padding so hasReadableBits() lookahead never runs dry before EOB is decoded.
         for (int i = 0; i < 8; i++)
         {
@@ -109,6 +112,7 @@ public class Bzip2BlockDecompressorTest
         {
             bitBuf = bitBuf << count | value & ((1L << count) - 1);
             bitCount += count;
+
             while (bitCount >= 8)
             {
                 bitCount -= 8;
@@ -123,6 +127,7 @@ public class Bzip2BlockDecompressorTest
                 buf.WriteByte((int) (bitBuf << 8 - bitCount) & 0xFF);
                 bitCount = 0;
             }
+
             return buf;
         }
     }

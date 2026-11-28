@@ -42,6 +42,7 @@ public class QuicStreamShutdownTest : AbstractQuicTest
         IChannel server = null;
         IChannel channel = null;
         CountdownEvent latch = new CountdownEvent(2);
+
         try
         {
             server = await QuicTestUtils.NewServer(executor, new ChannelInboundHandlerAdapter(),
@@ -105,6 +106,7 @@ public class QuicStreamShutdownTest : AbstractQuicTest
         IChannel channel = null;
         CountdownEvent latch = new CountdownEvent(2);
         StrongBox<Exception> errorRef = new StrongBox<Exception>();
+
         try
         {
             server = await QuicTestUtils.NewServer(executor, new ChannelInboundHandlerAdapter(),
@@ -126,6 +128,7 @@ public class QuicStreamShutdownTest : AbstractQuicTest
             {
                 Assert.Fail("Timeout while waiting for completion: " + Volatile.Read(ref errorRef.Value));
             }
+
             Exception error = Volatile.Read(ref errorRef.Value);
             if (error != null)
             {
@@ -160,6 +163,7 @@ public class QuicStreamShutdownTest : AbstractQuicTest
                     .ContinueWith(f =>
                     {
                         ByteBuf buffer = (ByteBuf) msg;
+
                         if (!f.IsCompletedSuccessfully)
                         {
                             Interlocked.CompareExchange(ref errorRef.Value, f.Exception?.InnerException, null);
@@ -175,6 +179,7 @@ public class QuicStreamShutdownTest : AbstractQuicTest
                                     Interlocked.CompareExchange(ref errorRef.Value,
                                             channelFuture.Exception?.InnerException, null);
                                 }
+
                                 CountDown(latch);
                             }, TaskScheduler.Default);
                         }
@@ -212,6 +217,7 @@ public class QuicStreamShutdownTest : AbstractQuicTest
         CountdownEvent latch = new CountdownEvent(2);
         StrongBox<Exception> errorRef = new StrongBox<Exception>();
         StrongBox<long> applicationErrorCode = new StrongBox<long>(-1);
+
         try
         {
             server = await QuicTestUtils.NewServer(executor, new ChannelInboundHandlerAdapter(),
@@ -233,11 +239,13 @@ public class QuicStreamShutdownTest : AbstractQuicTest
             {
                 Assert.Fail("Timeout while waiting for completion: " + Volatile.Read(ref errorRef.Value));
             }
+
             Exception error = Volatile.Read(ref errorRef.Value);
             if (error != null)
             {
                 Assert.Fail("Failure during execution: " + error);
             }
+
             Assert.Equal(100, Interlocked.Read(ref applicationErrorCode.Value));
         }
         finally
@@ -273,6 +281,7 @@ public class QuicStreamShutdownTest : AbstractQuicTest
                         {
                             Interlocked.CompareExchange(ref errorRef.Value, f.Exception?.InnerException, null);
                         }
+
                         CountDown(latch);
                     }, TaskScheduler.Default);
         }
@@ -303,6 +312,7 @@ public class QuicStreamShutdownTest : AbstractQuicTest
             {
                 Volatile.Write(ref errorRef.Value, cause);
             }
+
             CountDown(latch);
         }
     }

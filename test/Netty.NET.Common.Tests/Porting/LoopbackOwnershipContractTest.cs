@@ -13,6 +13,7 @@ public class LoopbackOwnershipContractTest
     public void LoopbackAddressesAreReadOnlyPropertiesWithTheSourceNames()
     {
         Type type = typeof(NetUtil);
+
         // Owner decision 2026-11-14: the source names LOCALHOST4/LOCALHOST6/LOCALHOST are kept; each read is a copy.
         foreach (string name in new[] { "LOCALHOST4", "LOCALHOST6", "LOCALHOST" })
         {
@@ -23,10 +24,12 @@ public class LoopbackOwnershipContractTest
             Assert.True(property.GetMethod.IsPublic);
             Assert.Null(property.SetMethod);
         }
+
         foreach (string name in new[] { "LOCALHOST4", "LOCALHOST6", "LOCALHOST" })
         {
             Assert.Null(type.GetField(name));
         }
+
         foreach (string name in new[] { "LoopbackAddress", "IPv4Loopback", "IPv6Loopback" })
         {
             Assert.Null(type.GetProperty(name));
@@ -45,10 +48,12 @@ public class LoopbackOwnershipContractTest
             Mutate(first, scope + 7);
             IPAddress later = Read(type, member);
             Assert.Equal(expected, later.GetAddressBytes());
+
             if (later.AddressFamily == AddressFamily.InterNetworkV6)
             {
                 Assert.Equal(scope, later.ScopeId);
             }
+
             Assert.NotSame(first, later);
         });
     }
@@ -65,10 +70,12 @@ public class LoopbackOwnershipContractTest
             long scope = second.Address.AddressFamily == AddressFamily.InterNetworkV6 ? second.Address.ScopeId : 0;
             Mutate(first.Address, scope + 42);
             Assert.Equal(expected, second.Address.GetAddressBytes());
+
             if (second.Address.AddressFamily == AddressFamily.InterNetworkV6)
             {
                 Assert.Equal(scope, second.Address.ScopeId);
             }
+
             Assert.NotSame(first.Address, second.Address);
             Assert.Equal(second.Address, Read(type, member));
         });
@@ -88,10 +95,12 @@ public class LoopbackOwnershipContractTest
                 Mutate(address, scope + index + 1);
                 IPAddress later = Read(type, "LOCALHOST");
                 Assert.Equal(bytes, later.GetAddressBytes());
+
                 if (later.AddressFamily == AddressFamily.InterNetworkV6)
                 {
                     Assert.Equal(scope, later.ScopeId);
                 }
+
                 Assert.NotSame(address, later);
             });
         });
@@ -152,6 +161,7 @@ public class LoopbackOwnershipContractTest
     private static void WithFreshNetUtil(Action<Type> assertion)
     {
         var context = new AssemblyLoadContext("Netty loopback ownership probe", isCollectible: true);
+
         try
         {
             Assembly assembly = context.LoadFromAssemblyPath(typeof(NetUtil).Assembly.Location);

@@ -29,6 +29,7 @@ public class AbstractSniHandlerTest
     public void TestExtractSniHostnameParsesWellFormedClientHello()
     {
         ByteBuf buffer = ValidClientHelloBody("netty.io");
+
         try
         {
             Assert.Equal("netty.io", AbstractSniHandler<object>.ExtractSniHostname(buffer));
@@ -47,6 +48,7 @@ public class AbstractSniHandlerTest
     public void TestExtractSniHostnameDoesNotThrowOnOversizedSessionIdLength()
     {
         ByteBuf buffer = Unpooled.Buffer();
+
         try
         {
             buffer.WriteZero(34); // client_version (2) + random (32)
@@ -67,6 +69,7 @@ public class AbstractSniHandlerTest
     public void TestExtractSniHostnameDoesNotThrowOnOversizedCipherSuitesLength()
     {
         ByteBuf buffer = Unpooled.Buffer();
+
         try
         {
             buffer.WriteZero(34); // client_version (2) + random (32)
@@ -87,6 +90,7 @@ public class AbstractSniHandlerTest
     public void TestExtractSniHostnameDoesNotThrowOnOversizedCompressionMethodLength()
     {
         ByteBuf buffer = Unpooled.Buffer();
+
         try
         {
             buffer.WriteZero(34); // client_version (2) + random (32)

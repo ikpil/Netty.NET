@@ -53,6 +53,7 @@ public class HttpRequestDecoderTest
     {
         string lineDelimiter;
         string lineDelimiter2;
+
         if (lineDelimiters.Length == 2)
         {
             lineDelimiter = lineDelimiters[0];
@@ -63,6 +64,7 @@ public class HttpRequestDecoderTest
             lineDelimiter = lineDelimiters[0];
             lineDelimiter2 = lineDelimiters[0];
         }
+
         return Encoding.ASCII.GetBytes("GET /some/path?foo=bar&wibble=eek HTTP/1.1" + "\r\n" +
                 "Upgrade: WebSocket" + lineDelimiter2 +
                 "Connection: Upgrade" + lineDelimiter +
@@ -128,6 +130,7 @@ public class HttpRequestDecoderTest
         Assert.True(channel.WriteInbound(Unpooled.CopiedBuffer(content)));
         IHttpRequest req = channel.ReadInbound<IHttpRequest>();
         Assert.NotNull(req);
+
         if (expectFailure)
         {
             Assert.True(req.DecoderResult().IsFailure());
@@ -238,12 +241,14 @@ public class HttpRequestDecoderTest
 
         IHttpRequest req = channel.ReadInbound<IHttpRequest>();
         Assert.NotNull(req);
+
         if (expectFailure)
         {
             Assert.True(req.DecoderResult().IsFailure());
             Assert.IsAssignableFrom<InvalidLineSeparatorException>(req.DecoderResult().Cause());
             return; // No more messages will be produced.
         }
+
         Assert.False(req.DecoderResult().IsFailure());
         CheckHeaders(req.Headers());
 
@@ -1105,6 +1110,7 @@ public class HttpRequestDecoderTest
         {
             Console.Error.WriteLine(content.DecoderResult().Cause());
         }
+
         Assert.False(content.DecoderResult().IsFailure()); // Must accept valid multi-extension token values.
         content.Release();
         ILastHttpContent last = channel.ReadInbound<ILastHttpContent>();
@@ -1183,6 +1189,7 @@ public class HttpRequestDecoderTest
         Assert.True(request.Headers().Contains("Transfer-Encoding", "chunked", false));
         int contentLength = 0;
         IHttpContent content;
+
         do
         {
             content = channel.ReadInbound<IHttpContent>();
@@ -1191,10 +1198,12 @@ public class HttpRequestDecoderTest
             {
                 throw new Exception(decoderResult.Cause().Message, decoderResult.Cause());
             }
+
             Assert.False(decoderResult.IsFailure()); // And we parse the chunk.
             contentLength += content.Content.ReadableBytes;
             content.Release();
         } while (!(content is ILastHttpContent));
+
         Assert.Equal(chars.Length, contentLength);
         Assert.False(channel.Finish()); // And there are no other chunks parsed.
     }
@@ -1301,10 +1310,12 @@ public class HttpRequestDecoderTest
         Assert.True(channel.WriteInbound(Unpooled.CopiedBuffer(requestStr, Encoding.ASCII)));
         IHttpRequest request = channel.ReadInbound<IHttpRequest>();
         List<string> headers = new List<string>();
+
         foreach (IEntry<string, string> header in request.Headers())
         {
             headers.Add(header.GetKey());
         }
+
         Assert.Equal(new List<string> { "Host", "Content-Length", "Connection" }, headers, "ordered headers");
     }
 
@@ -1477,6 +1488,7 @@ public class HttpRequestDecoderTest
             {
                 Assert.IsAssignableFrom<ILastHttpContent>(msg);
             }
+
             ReferenceCountUtil.Release(msg);
 
             if (++i == 1)

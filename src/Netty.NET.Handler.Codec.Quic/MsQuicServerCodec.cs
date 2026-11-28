@@ -97,12 +97,15 @@ internal sealed class MsQuicServerCodec : MsQuicCodec
         {
             throw new ArgumentException("A QUIC server binds an IPEndPoint: " + localAddress);
         }
+
         (MsQuicChannel Channel, MsQuicSslEngine Engine) first = NewChannel(endpoint);
         List<SslApplicationProtocol> protocols = first.Engine.ServerAuthenticationOptions().ApplicationProtocols;
+
         lock (this)
         {
             nextChannel = first;
         }
+
         QuicListenerOptions options = new QuicListenerOptions
         {
             ListenEndPoint = listenEndPoint,
@@ -129,11 +132,13 @@ internal sealed class MsQuicServerCodec : MsQuicCodec
             channel.ForceClose();
             throw new ArgumentException("QuicSslEngine is not of type " + nameof(MsQuicSslEngine));
         }
+
         if (engine.GetUseClientMode())
         {
             channel.ForceClose();
             throw new ArgumentException("QuicSslEngine is not created in server mode");
         }
+
         return (channel, quicSslEngine);
     }
 
@@ -142,11 +147,13 @@ internal sealed class MsQuicServerCodec : MsQuicCodec
                                                              SslClientHelloInfo clientHello)
     {
         (MsQuicChannel Channel, MsQuicSslEngine Engine) next;
+
         lock (this)
         {
             next = nextChannel ?? NewChannel(endpoint);
             nextChannel = null;
         }
+
         MsQuicSslEngine engine = next.Engine;
         Func<string, QuicSslContext> mapping = engine.Context.Mapping;
         if (mapping != null && !string.IsNullOrEmpty(clientHello.ServerName) &&
@@ -155,6 +162,7 @@ internal sealed class MsQuicServerCodec : MsQuicCodec
             // The SNI callback selects the QuicSslContext of the server name.
             engine = (MsQuicSslEngine) selected.NewEngine(next.Channel.Alloc());
         }
+
         QuicServerConnectionOptions options = next.Channel.AttachServerConnection(connection, engine);
         connecting.AddOrUpdate(connection, next.Channel);
         return options;
@@ -163,6 +171,7 @@ internal sealed class MsQuicServerCodec : MsQuicCodec
     internal override void BeginRead(QuicEndpointChannel endpoint)
     {
         readPending = true;
+
         if (listener != null && !acceptInFlight)
         {
             acceptInFlight = true;
@@ -174,6 +183,7 @@ internal sealed class MsQuicServerCodec : MsQuicCodec
     {
         QuicConnection connection = null;
         Exception error = null;
+
         try
         {
             connection = await quicListener.AcceptConnectionAsync().ConfigureAwait(false);
@@ -182,6 +192,7 @@ internal sealed class MsQuicServerCodec : MsQuicCodec
         {
             error = e;
         }
+
         try
         {
             endpoint.EventLoop.Execute(() => Accepted(endpoint, connection, error));
@@ -198,12 +209,14 @@ internal sealed class MsQuicServerCodec : MsQuicCodec
     private void Accepted(QuicEndpointChannel endpoint, QuicConnection connection, Exception error)
     {
         acceptInFlight = false;
+
         if (connection == null)
         {
             if (error is ObjectDisposedException || !endpoint.IsOpen || listener == null)
             {
                 return;
             }
+
             // A connection whose handshake failed: the listener drops it.
             LOGGER.Debug("A QUIC connection failed before it was accepted on {}", endpoint, error);
         }
@@ -219,6 +232,7 @@ internal sealed class MsQuicServerCodec : MsQuicCodec
             endpoint.Pipeline.FireChannelRead(channel);
             endpoint.Pipeline.FireChannelReadComplete();
         }
+
         if (readPending && endpoint.IsOpen)
         {
             BeginRead(endpoint);
@@ -240,8 +254,10 @@ internal sealed class MsQuicServerCodec : MsQuicCodec
                 _ = registration.ContinueWith(t => channel.EventLoop.Execute(() => Registered(t, channel)),
                         CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
             }
+
             return;
         }
+
         ctx.FireChannelRead(msg);
     }
 
@@ -262,15 +278,18 @@ internal sealed class MsQuicServerCodec : MsQuicCodec
     {
         QuicListener quicListener = listener;
         listener = null;
+
         lock (this)
         {
             nextChannel?.Channel.ForceClose();
             nextChannel = null;
         }
+
         if (quicListener != null)
         {
             _ = DisposeListenerAsync(quicListener);
         }
+
         base.EndpointClosed(endpoint);
     }
 

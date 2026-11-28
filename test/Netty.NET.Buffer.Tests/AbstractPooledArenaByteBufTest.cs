@@ -42,6 +42,7 @@ public abstract class AbstractPooledArenaByteBufTest
     {
         using var allocator = NewAllocator();
         ByteBuf buffer = allocator.Buffer(length, int.MaxValue);
+
         try
         {
             // Testing if the writerIndex and readerIndex are correct when allocate and also after we reset the mark.
@@ -68,6 +69,7 @@ public abstract class AbstractPooledArenaByteBufTest
     {
         using var allocator = NewAllocator();
         ByteBuf buffer = allocator.Buffer(1, 10);
+
         try
         {
             buffer.EnsureWritable(3);
@@ -84,6 +86,7 @@ public abstract class AbstractPooledArenaByteBufTest
     {
         using var allocator = NewAllocator();
         ByteBuf buffer = allocator.Buffer(1, 10);
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => buffer.EnsureWritable(11));
@@ -99,6 +102,7 @@ public abstract class AbstractPooledArenaByteBufTest
     {
         using var allocator = NewAllocator();
         var buffer = (PooledByteBuf)allocator.Buffer(150, 500).SetIndex(0, 100);
+
         try
         {
             Assert.Equal(50, buffer.WritableBytes);
@@ -133,12 +137,14 @@ public abstract class AbstractPooledArenaByteBufTest
     {
         using var allocator = NewAllocator();
         var buffer = (PooledByteBuf)allocator.Buffer(150, 500).SetIndex(0, 100);
+
         try
         {
             Assert.Equal(50, buffer.WritableBytes);
             int fastWritable = buffer.MaxFastWritableBytes;
             Assert.True(fastWritable > 50);
             var before = buffer.Allocation;
+
             // capacity expansion should not cause reallocation
             // (should grow precisely the specified amount)
             if (statusOverload)
@@ -149,6 +155,7 @@ public abstract class AbstractPooledArenaByteBufTest
             {
                 buffer.EnsureWritable(fastWritable);
             }
+
             Assert.Same(before, buffer.Allocation);
             Assert.Equal(100 + fastWritable, buffer.Capacity);
             Assert.Equal(buffer.WritableBytes, buffer.MaxFastWritableBytes);
@@ -165,6 +172,7 @@ public abstract class AbstractPooledArenaByteBufTest
     {
         using var allocator = NewAllocator();
         ByteBuf a = allocator.Buffer(16384), b = allocator.Buffer(65536);
+
         try
         {
             a.SetByte(a.Capacity - 1, 1);
@@ -194,6 +202,7 @@ public abstract class AbstractPooledArenaByteBufTest
         buffer.MarkReaderIndex();
         buffer.MarkWriterIndex();
         var before = buffer.Allocation;
+
         try
         {
             buffer.Capacity = newCapacity;
@@ -203,6 +212,7 @@ public abstract class AbstractPooledArenaByteBufTest
             Assert.Equal(Math.Min(oldCapacity / 3, newCapacity), buffer.ReaderIndex);
             Assert.Equal(bytes.AsSpan(0, Math.Min(oldCapacity, newCapacity)).ToArray(),
                 buffer.AsSpan(0, Math.Min(oldCapacity, newCapacity)).ToArray());
+
             if (oldCapacity <= newCapacity)
             {
                 buffer.ResetReaderIndex();
@@ -223,11 +233,13 @@ public abstract class AbstractPooledArenaByteBufTest
     {
         using var allocator = NewAllocator(shifts, order);
         var buffers = new List<PooledByteBuf>();
+
         try
         {
             for (int i = 0; i < allocator.Arena.SizeClass.NSizes; ++i)
             {
                 int size = allocator.Arena.SizeClass.SizeIdx2Size(i);
+
                 for (int j = 0; j < 3; ++j)
                 {
                     var b = (PooledByteBuf)allocator.Buffer(size);
@@ -235,12 +247,14 @@ public abstract class AbstractPooledArenaByteBufTest
                     b.AsSpan(0, size).Fill((byte)(i * 3 + j));
                     var region = b.Allocation;
                     Assert.True(region.Offset >= 0 && region.Offset <= region.Memory.Length - region.ReservedLength);
+
                     foreach (var previous in buffers.Take(buffers.Count - 1))
                         if (ReferenceEquals(previous.Allocation.Storage, region.Storage))
                             Assert.True(previous.Allocation.Offset + previous.Allocation.ReservedLength <= region.Offset ||
                                 region.Offset + region.ReservedLength <= previous.Allocation.Offset);
                 }
             }
+
             for (int i = 0; i < buffers.Count; ++i)
                 Assert.All(buffers[i].AsSpan(0, buffers[i].Capacity).ToArray(), value => Assert.Equal((byte)i, value));
         }
@@ -261,6 +275,7 @@ public abstract class AbstractPooledArenaByteBufTest
         var region = first.Allocation;
         Assert.True(first.Release());
         var second = (PooledByteBuf)allocator.Buffer(48);
+
         try
         {
             Assert.NotSame(first, second);
@@ -289,6 +304,7 @@ public abstract class AbstractPooledArenaByteBufTest
         var first = (PooledByteBuf)allocator.Buffer(48);
         var second = (PooledByteBuf)allocator.Buffer(48);
         PoolChunk fullChunk = full.Allocation.Chunk;
+
         try
         {
             Assert.NotSame(fullChunk, first.Allocation.Chunk);
@@ -306,6 +322,7 @@ public abstract class AbstractPooledArenaByteBufTest
             first.Release();
             second.Release();
         }
+
         Assert.Equal(fullChunk.ChunkSize, fullChunk.FreeBytes);
     }
 
@@ -337,6 +354,7 @@ public abstract class AbstractPooledArenaByteBufTest
         var root = (PooledByteBuf)allocator.Buffer(17, 500).WriteBytes(new byte[] { 10, 20, 30, 40 });
         ByteBuf slice = root.RetainedSlice(1, 2), duplicate = root.RetainedDuplicate();
         ByteBuf copy = slice.Copy();
+
         try
         {
             Assert.Same(allocator, copy.Alloc());
@@ -359,14 +377,17 @@ public abstract class AbstractPooledArenaByteBufTest
         finally
         {
             copy.Release();
+
             if (slice.RefCnt > 0)
             {
                 slice.Release();
             }
+
             if (duplicate.RefCnt > 0)
             {
                 duplicate.Release();
             }
+
             if (root.RefCnt > 0)
             {
                 root.Release(root.RefCnt);
@@ -382,6 +403,7 @@ public abstract class AbstractPooledArenaByteBufTest
         var root = (PooledByteBuf)allocator.Buffer(48);
         root.AsSpan(0, 48).Fill(0xA5);
         var old = root.Allocation;
+
         using (var lease = root.AsReadOnly().AcquireReadLease())
         {
             if (replace)
@@ -392,7 +414,9 @@ public abstract class AbstractPooledArenaByteBufTest
             {
                 Assert.True(root.Release());
             }
+
             var other = (PooledByteBuf)allocator.Buffer(48);
+
             try
             {
                 Assert.NotEqual(old.Handle, other.Allocation.Handle);
@@ -404,7 +428,9 @@ public abstract class AbstractPooledArenaByteBufTest
                 other.Release();
             }
         }
+
         var reused = (PooledByteBuf)allocator.Buffer(48);
+
         try
         {
             Assert.Equal(old.Handle, reused.Allocation.Handle);
@@ -413,6 +439,7 @@ public abstract class AbstractPooledArenaByteBufTest
         finally
         {
             reused.Release();
+
             if (root.RefCnt != 0)
             {
                 root.Release();
@@ -428,11 +455,13 @@ public abstract class AbstractPooledArenaByteBufTest
         byte[] bytes = Enumerable.Range(1, 48).Select(i => (byte)i).ToArray();
         buffer.WriteBytes(bytes);
         var old = buffer.Allocation;
+
         try
         {
             buffer.WriteBytes(buffer.AsSpan(0, 48));
             Assert.Equal(bytes.Concat(bytes).ToArray(), ByteBufUtil.GetBytes(buffer));
             var reused = (PooledByteBuf)allocator.Buffer(48);
+
             try
             {
                 Assert.Same(old.Chunk, reused.Allocation.Chunk);
@@ -456,11 +485,13 @@ public abstract class AbstractPooledArenaByteBufTest
         var component = (PooledByteBuf)allocator.Buffer(48).WriteBytes(new byte[48]);
         var old = component.Allocation;
         var composite = allocator.CompositeBuffer(1).AddComponent(component, true);
+
         using (var lease = composite.AcquireReadLease())
         {
             composite.Capacity = 96;
             Assert.Equal(0, component.RefCnt);
             var other = (PooledByteBuf)allocator.Buffer(48);
+
             try
             {
                 Assert.NotEqual(old.Handle, other.Allocation.Handle);
@@ -470,7 +501,9 @@ public abstract class AbstractPooledArenaByteBufTest
                 other.Release();
             }
         }
+
         var reused = (PooledByteBuf)allocator.Buffer(48);
+
         try
         {
             Assert.Equal(old.Handle, reused.Allocation.Handle);
@@ -489,6 +522,7 @@ public abstract class AbstractPooledArenaByteBufTest
         ByteBuf guard = allocator.Buffer(128).WriteBytes(Enumerable.Repeat((byte)0xCC, 128).ToArray());
         var b = (PooledByteBuf)allocator.Buffer(128);
         Assert.True(b.Allocation.Offset > 0);
+
         try
         {
             b.WriteLong(0x0102030405060708).WriteIntLE(0x11223344).WriteShort(0x5566).WriteMediumLE(0x778899);
@@ -525,6 +559,7 @@ public abstract class AbstractPooledArenaByteBufTest
             {
                 int size = new[] { 16, 48, 150, 16384, 65536, 131073 }[i % 6];
                 ByteBuf b = allocator.Buffer(size);
+
                 try
                 {
                     b.AsSpan(0, size).Fill((byte)(worker + 1));
@@ -545,13 +580,16 @@ public abstract class AbstractPooledArenaByteBufTest
         using var allocator = NewAllocator();
         Assert.Throws<ArgumentOutOfRangeException>(() => allocator.Arena.Allocate(-1, 100));
         Assert.Throws<ArgumentOutOfRangeException>(() => allocator.Arena.Allocate(101, 100));
+
         if (!Direct)
         {
             Assert.Throws<ArgumentException>(() => new PoolHeapArena(allocator, new SizeClasses(8192, 13, 131072, 64)));
         }
+
         Assert.Throws<ArgumentException>(() => new PoolHeapArena(allocator, new SizeClasses(8192, 12, 131072, 0)));
         var buffer = (PooledByteBuf)allocator.Buffer(48, 100);
         var before = buffer.Allocation;
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => buffer.Capacity = 101);

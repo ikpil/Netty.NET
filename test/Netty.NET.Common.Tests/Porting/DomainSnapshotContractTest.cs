@@ -103,12 +103,15 @@ public class DomainSnapshotContractTest
         var previous = CultureInfo.CurrentCulture;
         var policy = new IdnMapping { AllowUnassigned = true, UseStd3AsciiRules = false };
         string[] corpus = { "NETTY.IO", "", "_SERVICE.NETTY.IO", "a..b", "BÜCHER.example", "faß.de", "βόλος.example", "ｅｘａｍｐｌｅ.com", "a\u3002b", "😀.example", "a\u200cb.example", "\u00ad", "\uD800.example" };
+
         try
         {
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture);
+
             foreach (string input in corpus)
             {
                 string expected;
+
                 try
                 {
                     expected = (input.Any(value => value > 127) ? policy.GetAscii(input) : input).ToLowerInvariant();
@@ -118,6 +121,7 @@ public class DomainSnapshotContractTest
                     Assert.Throws<ArgumentException>(() => DomainNameMapping<object>.NormalizeHostname(input));
                     continue;
                 }
+
                 Assert.Equal(expected, DomainNameMapping<object>.NormalizeHostname(input));
             }
         }

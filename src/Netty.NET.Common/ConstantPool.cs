@@ -41,6 +41,7 @@ public abstract class ConstantPool<T> where T : class, IConstant<T>
     {
         CheckNotNull(firstNameComponent, nameof(firstNameComponent));
         CheckNotNull(secondNameComponent, nameof(secondNameComponent));
+
         // Java Class.getName is always present; CLR generic parameters and
         // partially constructed types can lack FullName and must not alias "#name".
         string firstName = firstNameComponent.FullName ?? throw new ArgumentException(
@@ -103,6 +104,7 @@ public abstract class ConstantPool<T> where T : class, IConstant<T>
     private T CreateOrThrow(string name)
     {
         _constants.TryGetValue(name, out var constant);
+
         if (constant == null)
         {
             T tempConstant = NewConstant(NextId(), name) ?? throw new InvalidOperationException(

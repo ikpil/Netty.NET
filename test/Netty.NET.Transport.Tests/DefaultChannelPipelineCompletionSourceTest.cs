@@ -57,11 +57,13 @@ public class DefaultChannelPipelineCompletionSourceTest
                 completion.GetAwaiter().GetResult();
                 var handler = new ListenerAdded(captured);
                 channel.Pipeline.AddLast(handler);
+
                 if (!handler.Added)
                 {
                     captured.TrySetException(new InvalidOperationException("handlerAdded(...) should have been called"));
                     return;
                 }
+
                 // This event must be captured by the added handler.
                 channel.Pipeline.FireUserEventTriggered(value);
             }), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default).Unwrap();
@@ -82,6 +84,7 @@ public class DefaultChannelPipelineCompletionSourceTest
         var outbound = new OutboundCalledHandler();
         var skip = new SkipHandler();
         var inbound = new InboundCalledHandler();
+
         try
         {
             pipeline.AddLast(outbound, skip, inbound);
@@ -146,6 +149,7 @@ public class DefaultChannelPipelineCompletionSourceTest
         public override Task BindAsync(IChannelHandlerContext c, EndPoint address, CancellationToken token)
         {
             Fail();
+
             return c.BindAsync(address, token);
         }
 
@@ -153,6 +157,7 @@ public class DefaultChannelPipelineCompletionSourceTest
         public override Task ConnectAsync(IChannelHandlerContext c, EndPoint remote, EndPoint local, CancellationToken token)
         {
             Fail();
+
             return c.ConnectAsync(remote, local, token);
         }
 
@@ -160,6 +165,7 @@ public class DefaultChannelPipelineCompletionSourceTest
         public override Task DisconnectAsync(IChannelHandlerContext c, CancellationToken token)
         {
             Fail();
+
             return c.DisconnectAsync(token);
         }
 
@@ -167,6 +173,7 @@ public class DefaultChannelPipelineCompletionSourceTest
         public override Task CloseAsync(IChannelHandlerContext c, CancellationToken token)
         {
             Fail();
+
             return c.CloseAsync(token);
         }
 
@@ -174,6 +181,7 @@ public class DefaultChannelPipelineCompletionSourceTest
         public override Task DeregisterAsync(IChannelHandlerContext c, CancellationToken token)
         {
             Fail();
+
             return c.DeregisterAsync(token);
         }
 
@@ -181,6 +189,7 @@ public class DefaultChannelPipelineCompletionSourceTest
         public override Task WriteAsync(IChannelHandlerContext c, object msg, CancellationToken token)
         {
             Fail();
+
             return c.WriteAsync(msg, token);
         }
 
@@ -274,6 +283,7 @@ public class DefaultChannelPipelineCompletionSourceTest
         internal void AssertSkipped()
         {
             Assert.Equal(0, _state);
+
             if (_error != null)
                 System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(_error).Throw();
         }

@@ -54,6 +54,7 @@ public class SpdyServerHandler : SimpleChannelInboundHandler<object>
             {
                 _ = ctx.WriteAsync(new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.CONTINUE, Unpooled.EmptyBuffer));
             }
+
             bool keepAlive = IsKeepAlive(req);
 
             ByteBuf content = Unpooled.CopiedBuffer("Hello World " + DateTimeOffset.Now.ToString("ddd MMM dd HH:mm:ss zzz yyyy", CultureInfo.InvariantCulture), Encoding.UTF8);
@@ -68,6 +69,7 @@ public class SpdyServerHandler : SimpleChannelInboundHandler<object>
                 {
                     response.Headers().Set(CONNECTION, KEEP_ALIVE);
                 }
+
                 _ = ctx.WriteAsync(response);
             }
             else

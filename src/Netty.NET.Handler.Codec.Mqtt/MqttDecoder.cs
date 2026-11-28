@@ -140,6 +140,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
                 @out.Add(InvalidMessage(cause));
                 return;
             }
+
             goto case DecoderState.READ_VARIABLE_HEADER;
 
             case DecoderState.READ_VARIABLE_HEADER:
@@ -147,6 +148,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
             {
                 int bytesRemainingBeforeVariableHeader = bytesRemainingInVariablePart;
                 bool bailOut = false;
+
                 try
                 {
                     variableHeader = DecodeVariableHeader(ctx, buffer, mqttFixedHeader, maxAllowedRemainingBytes);
@@ -167,6 +169,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
                         throw;
                     }
                 }
+
                 if (bailOut || bytesRemainingBeforeVariableHeader > maxBytesInMessage)
                 {
                     buffer.SkipBytes(ActualReadableBytes());
@@ -174,6 +177,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
                             maxBytesInMessage.ToString(CultureInfo.InvariantCulture) + ": " +
                             bytesRemainingBeforeVariableHeader.ToString(CultureInfo.InvariantCulture));
                 }
+
                 Checkpoint(DecoderState.READ_PAYLOAD);
                 // fall through
             }
@@ -182,6 +186,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
                 @out.Add(InvalidMessage(cause));
                 return;
             }
+
             goto case DecoderState.READ_PAYLOAD;
 
             case DecoderState.READ_PAYLOAD:
@@ -232,6 +237,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
     private MqttMessage InvalidMessage(Exception cause)
     {
       Checkpoint(DecoderState.BAD_MESSAGE);
+
       return MqttMessageFactory.NewInvalidMessage(mqttFixedHeader, variableHeader, cause);
     }
 
@@ -258,6 +264,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
                                                      int maxAllowedRemainingBytes)
     {
         CheckMaxMessageLengthRemaining(maxAllowedRemainingBytes - 1);
+
         short b1 = buffer.ReadByte();
         maxAllowedRemainingBytes--;
 
@@ -274,6 +281,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
                     throw new DecoderException("Illegal QOS Level in fixed header of PUBLISH message ("
                             + qosLevel.ToString(CultureInfo.InvariantCulture) + ')');
                 }
+
                 break;
 
             case var _ when messageType == MqttMessageType.PUBREL:
@@ -294,6 +302,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
                     throw new DecoderException("Illegal BIT 0 in fixed header of " + messageType
                             + " message, must be 0, found 1");
                 }
+
                 break;
 
             case var _ when messageType == MqttMessageType.AUTH:
@@ -322,6 +331,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
                     throw new DecoderException("Illegal BIT 0 in fixed header of " + messageType
                             + " message, must be 0, found 1");
                 }
+
                 break;
             default:
                 throw new DecoderException("Unknown message type, do not know how to validate fixed header");
@@ -341,6 +351,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
         for (int i = 0; i < 4; i++)
         {
             CheckMaxMessageLengthRemaining(--maxAllowedRemainingBytes);
+
             short digit = buffer.ReadByte();
             remainingLength += (digit & 127) * multiplier;
 
@@ -368,6 +379,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
                                         int maxAllowedRemainingBytes)
     {
         MqttMessageType messageType = mqttFixedHeader.MessageType();
+
         switch (messageType)
         {
             case var _ when messageType == MqttMessageType.CONNECT:
@@ -412,6 +424,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
         int numberOfBytesConsumed = protoString.numberOfBytesConsumed;
 
         CheckMaxMessageLengthRemaining(maxAllowedRemainingBytes - numberOfBytesConsumed - 1);
+
         byte protocolLevel = buffer.ReadByte();
         numberOfBytesConsumed += 1;
 
@@ -419,10 +432,12 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
         MqttCodecUtil.SetMqttVersion(ctx, version);
 
         CheckMaxMessageLengthRemaining(maxAllowedRemainingBytes - numberOfBytesConsumed - 1);
+
         int b1 = buffer.ReadByte();
         numberOfBytesConsumed += 1;
 
         CheckMaxMessageLengthRemaining(maxAllowedRemainingBytes - numberOfBytesConsumed - 2);
+
         int keepAlive = DecodeMsbLsb(buffer);
         numberOfBytesConsumed += 2;
 
@@ -432,6 +447,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
         int willQos = (b1 & 0x18) >> 3;
         bool willFlag = (b1 & 0x04) == 0x04;
         bool cleanSession = (b1 & 0x02) == 0x02;
+
         if (version == MqttVersion.MQTT_3_1_1 || version == MqttVersion.MQTT_5)
         {
             bool zeroReservedFlag = (b1 & 0x01) == 0x0;
@@ -445,6 +461,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
         }
 
         MqttProperties properties;
+
         if (version == MqttVersion.MQTT_5)
         {
             Result<MqttProperties> propertiesResult = DecodeProperties(buffer,
@@ -478,10 +495,12 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
     {
         MqttVersion mqttVersion = MqttCodecUtil.GetMqttVersion(ctx);
         CheckMaxMessageLengthRemaining(maxAllowedRemainingBytes -= 2);
+
         bool sessionPresent = (buffer.ReadByte() & 0x01) == 0x01;
         byte returnCode = buffer.ReadByte();
 
         MqttProperties properties;
+
         if (mqttVersion == MqttVersion.MQTT_5)
         {
             Result<MqttProperties> propertiesResult = DecodeProperties(buffer, maxAllowedRemainingBytes);
@@ -494,6 +513,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
             properties = MqttProperties.NO_PROPERTIES;
             bytesRemainingInVariablePart -= 2;
         }
+
         this.maxAllowedRemainingBytes = maxAllowedRemainingBytes;
 
         return new MqttConnAckVariableHeader(MqttConnectReturnCode.ValueOf(returnCode), sessionPresent, properties);
@@ -505,6 +525,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
     {
         MqttVersion mqttVersion = MqttCodecUtil.GetMqttVersion(ctx);
         CheckMaxMessageLengthRemaining(maxAllowedRemainingBytes -= 2);
+
         int packetId = DecodeMessageId(buffer);
 
         if (mqttVersion == MqttVersion.MQTT_5)
@@ -527,11 +548,13 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
     {
         const int packetIdNumberOfBytesConsumed = 2;
         CheckMaxMessageLengthRemaining(maxAllowedRemainingBytes -= packetIdNumberOfBytesConsumed);
+
         int packetId = DecodeMessageId(buffer);
 
         if (bytesRemainingInVariablePart > 3)
         {
             CheckMaxMessageLengthRemaining(--maxAllowedRemainingBytes);
+
             byte reasonCode = buffer.ReadByte();
             Result<MqttProperties> properties = DecodeProperties(buffer, maxAllowedRemainingBytes);
             bytesRemainingInVariablePart -= packetIdNumberOfBytesConsumed + 1 + properties.numberOfBytesConsumed;
@@ -543,6 +566,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
         else if (bytesRemainingInVariablePart > 2)
         {
             CheckMaxMessageLengthRemaining(--maxAllowedRemainingBytes);
+
             byte reasonCode = buffer.ReadByte();
             bytesRemainingInVariablePart -= packetIdNumberOfBytesConsumed + 1;
             this.maxAllowedRemainingBytes = maxAllowedRemainingBytes;
@@ -565,9 +589,11 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
     {
         byte reasonCode;
         MqttProperties properties;
+
         if (bytesRemainingInVariablePart > 1)
         {
             CheckMaxMessageLengthRemaining(--maxAllowedRemainingBytes);
+
             reasonCode = buffer.ReadByte();
             Result<MqttProperties> propertiesResult = DecodeProperties(buffer, maxAllowedRemainingBytes);
             properties = propertiesResult.value;
@@ -577,6 +603,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
         else if (bytesRemainingInVariablePart > 0)
         {
             CheckMaxMessageLengthRemaining(--maxAllowedRemainingBytes);
+
             reasonCode = buffer.ReadByte();
             properties = MqttProperties.NO_PROPERTIES;
             --bytesRemainingInVariablePart;
@@ -603,18 +630,22 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
             throw new DecoderException("invalid publish topic name: " + (decodedTopic.value ?? "null") +
                     " (contains wildcards)");
         }
+
         int numberOfBytesConsumed = decodedTopic.numberOfBytesConsumed;
         maxAllowedRemainingBytes -= decodedTopic.numberOfBytesConsumed;
 
         int messageId = -1;
+
         if (mqttFixedHeader.QosLevel().Value() > 0)
         {
             CheckMaxMessageLengthRemaining(maxAllowedRemainingBytes -= 2);
+
             messageId = DecodeMessageId(buffer);
             numberOfBytesConsumed += 2;
         }
 
         MqttProperties properties;
+
         if (mqttVersion == MqttVersion.MQTT_5)
         {
             Result<MqttProperties> propertiesResult = DecodeProperties(buffer, maxAllowedRemainingBytes);
@@ -642,6 +673,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
         {
             throw new DecoderException("invalid messageId: " + messageId.ToString(CultureInfo.InvariantCulture));
         }
+
         return messageId;
     }
 
@@ -705,6 +737,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
         {
             throw new MqttIdentifierRejectedException("invalid clientIdentifier");
         }
+
         int numberOfBytesConsumed = decodedClientId.numberOfBytesConsumed;
         maxAllowedRemainingBytes -= decodedClientId.numberOfBytesConsumed;
 
@@ -712,6 +745,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
         byte[] decodedWillMessage = null;
 
         MqttProperties willProperties;
+
         if (mqttConnectVariableHeader.IsWillFlag())
         {
             if (mqttVersion == MqttVersion.MQTT_5)
@@ -725,6 +759,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
             {
                 willProperties = MqttProperties.NO_PROPERTIES;
             }
+
             decodedWillTopic = DecodeString(buffer, 0, 32767, maxAllowedRemainingBytes);
             numberOfBytesConsumed += decodedWillTopic.numberOfBytesConsumed;
             maxAllowedRemainingBytes -= decodedWillTopic.numberOfBytesConsumed;
@@ -736,14 +771,17 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
         {
             willProperties = MqttProperties.NO_PROPERTIES;
         }
+
         Result<string> decodedUserName = null;
         byte[] decodedPassword = null;
+
         if (mqttConnectVariableHeader.HasUserName())
         {
             decodedUserName = DecodeString(buffer, maxAllowedRemainingBytes);
             numberOfBytesConsumed += decodedUserName.numberOfBytesConsumed;
             maxAllowedRemainingBytes -= decodedUserName.numberOfBytesConsumed;
         }
+
         if (mqttConnectVariableHeader.HasPassword())
         {
             decodedPassword = DecodeByteArray(buffer, maxAllowedRemainingBytes);
@@ -767,6 +805,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
     {
         List<MqttTopicSubscription> subscribeTopics = new List<MqttTopicSubscription>();
         int numberOfBytesConsumed = 0;
+
         while (numberOfBytesConsumed < bytesRemainingInVariablePart)
         {
             Result<string> decodedTopicName = DecodeString(buffer, maxAllowedRemainingBytes);
@@ -774,6 +813,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
             maxAllowedRemainingBytes -= decodedTopicName.numberOfBytesConsumed;
             //See 3.8.3.1 Subscription Options of MQTT 5.0 specification for optionByte details
             CheckMaxMessageLengthRemaining(--maxAllowedRemainingBytes);
+
             short optionByte = buffer.ReadByte();
 
             MqttQoS qos = MqttQoS.ValueOf(optionByte & 0x03);
@@ -789,6 +829,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
             numberOfBytesConsumed++;
             subscribeTopics.Add(new MqttTopicSubscription(decodedTopicName.value, subscriptionOption));
         }
+
         ValidateNoBytesRemain(numberOfBytesConsumed);
         this.maxAllowedRemainingBytes = maxAllowedRemainingBytes;
         return new MqttSubscribePayload(subscribeTopics);
@@ -800,13 +841,16 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
         int bytesRemainingInVariablePart = this.bytesRemainingInVariablePart;
         List<int> grantedQos = new List<int>(bytesRemainingInVariablePart);
         int numberOfBytesConsumed = 0;
+
         while (numberOfBytesConsumed < bytesRemainingInVariablePart)
         {
             CheckMaxMessageLengthRemaining(--maxAllowedRemainingBytes);
+
             int reasonCode = buffer.ReadByte();
             numberOfBytesConsumed++;
             grantedQos.Add(reasonCode);
         }
+
         ValidateNoBytesRemain(numberOfBytesConsumed);
         this.maxAllowedRemainingBytes = maxAllowedRemainingBytes;
         return new MqttSubAckPayload(grantedQos);
@@ -818,13 +862,16 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
         int bytesRemainingInVariablePart = this.bytesRemainingInVariablePart;
         List<short> reasonCodes = new List<short>(bytesRemainingInVariablePart);
         int numberOfBytesConsumed = 0;
+
         while (numberOfBytesConsumed < bytesRemainingInVariablePart)
         {
             CheckMaxMessageLengthRemaining(--maxAllowedRemainingBytes);
+
             short reasonCode = buffer.ReadByte();
             numberOfBytesConsumed++;
             reasonCodes.Add(reasonCode);
         }
+
         ValidateNoBytesRemain(numberOfBytesConsumed);
         this.maxAllowedRemainingBytes = maxAllowedRemainingBytes;
         return new MqttUnsubAckPayload(reasonCodes);
@@ -835,6 +882,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
     {
         List<string> unsubscribeTopics = new List<string>();
         int numberOfBytesConsumed = 0;
+
         while (numberOfBytesConsumed < bytesRemainingInVariablePart)
         {
             Result<string> decodedTopicName = DecodeString(buffer, maxAllowedRemainingBytes);
@@ -842,6 +890,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
             maxAllowedRemainingBytes -= decodedTopicName.numberOfBytesConsumed;
             unsubscribeTopics.Add(decodedTopicName.value);
         }
+
         ValidateNoBytesRemain(numberOfBytesConsumed);
         this.maxAllowedRemainingBytes = maxAllowedRemainingBytes;
         return new MqttUnsubscribePayload(unsubscribeTopics);
@@ -850,6 +899,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
     private ByteBuf DecodePublishPayload(ByteBuf buffer, int maxAllowedRemainingBytes)
     {
         CheckMaxMessageLengthRemaining(maxAllowedRemainingBytes - bytesRemainingInVariablePart);
+
         ByteBuf payload = buffer.ReadRetainedSlice(bytesRemainingInVariablePart); // May throw REPLAY
         this.maxAllowedRemainingBytes = maxAllowedRemainingBytes - bytesRemainingInVariablePart;
         return payload;
@@ -875,16 +925,20 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
     private Result<string> DecodeString(ByteBuf buffer, int minBytes, int maxBytes, int maxAllowedRemainingBytes)
     {
         CheckMaxMessageLengthRemaining(maxAllowedRemainingBytes -= 2);
+
         int size = DecodeMsbLsb(buffer);
         int numberOfBytesConsumed = 2;
         CheckMaxMessageLengthRemaining(maxAllowedRemainingBytes - size);
+
         if (size < minBytes || size > maxBytes)
         {
             buffer.SkipBytes(size);
             numberOfBytesConsumed += size;
             return new Result<string>(null, numberOfBytesConsumed);
         }
+
         string s;
+
         if (strictUtf8Validation)
         {
             s = ReadStrictUtf8(buffer, size);
@@ -893,6 +947,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
         {
             s = buffer.ReadString(size, Encoding.UTF8);
         }
+
         numberOfBytesConsumed += size;
         return new Result<string>(s, numberOfBytesConsumed);
     }
@@ -913,6 +968,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
         {
             return "";
         }
+
         int readerIndex = buffer.ReaderIndex;
         ReadOnlySequence<byte> nioBuf = buffer.AsReadOnlySequence(readerIndex, length);
         if (!nioBuf.IsSingleSegment)
@@ -923,11 +979,14 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
             buffer.GetBytes(readerIndex, tmp);
             nioBuf = new ReadOnlySequence<byte>(tmp);
         }
+
         if (utf8Decoder == null)
         {
             utf8Decoder = new UTF8Encoding(false, true);
         }
+
         string s;
+
         try
         {
             s = utf8Decoder.GetString(nioBuf.FirstSpan);
@@ -937,6 +996,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
             buffer.SkipBytes(length);
             throw new DecoderException("invalid UTF-8 string in MQTT packet", e);
         }
+
         buffer.SkipBytes(length);
         // The UTF-8 Encoded String MUST NOT include an encoding
         // of the null character U+0000. If received, this is a Malformed Packet.
@@ -944,6 +1004,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
         {
             throw new DecoderException("MQTT UTF-8 Encoded String must not contain U+0000");
         }
+
         return s;
     }
 
@@ -954,8 +1015,10 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
     private byte[] DecodeByteArray(ByteBuf buffer, int maxAllowedRemainingBytes)
     {
         CheckMaxMessageLengthRemaining(maxAllowedRemainingBytes -= 2);
+
         int size = DecodeMsbLsb(buffer);
         CheckMaxMessageLengthRemaining(maxAllowedRemainingBytes - size);
+
         byte[] bytes = new byte[size];
         buffer.ReadBytes(bytes);
         return bytes;
@@ -993,6 +1056,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
         {
             result = -1;
         }
+
         return result;
     }
 
@@ -1011,6 +1075,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
         for (int i = 0; i < 4; i++)
         {
             CheckMaxMessageLengthRemaining(maxAllowedRemainingBytes - (i + 1));
+
             short digit = buffer.ReadByte();
             remainingLength += (digit & 127) * multiplier;
 
@@ -1052,10 +1117,12 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
         int propertiesLengthNumBytes = UnpackB(propertiesLength);
         int numberOfBytesConsumed = UnpackB(propertiesLength);
         CheckMaxMessageLengthRemaining(maxAllowedRemainingBytes - numberOfBytesConsumed);
+
         if (totalPropertiesLength > 0)
         {
             CheckMaxMessageLengthRemaining(
                 maxAllowedRemainingBytes - numberOfBytesConsumed - totalPropertiesLength);
+
             // Force an early REPLAY when the buffer does not yet have the full properties block,
             // so we don't repeatedly parse partial properties as data arrives. A direct
             // buffer.readableBytes() check is unusable here because ReplayingDecoderByteBuf
@@ -1066,12 +1133,14 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
         }
 
         MqttProperties decodedProperties = new MqttProperties();
+
         while (numberOfBytesConsumed - propertiesLengthNumBytes < totalPropertiesLength)
         {
             long propertyId = DecodeVariableByteInteger(buffer, maxAllowedRemainingBytes - numberOfBytesConsumed);
             int propertyIdValue = UnpackA(propertyId);
             numberOfBytesConsumed += UnpackB(propertyId);
             CheckMaxMessageLengthRemaining(maxAllowedRemainingBytes - numberOfBytesConsumed);
+
             switch (propertyIdValue)
             {
                 case PAYLOAD_FORMAT_INDICATOR:
@@ -1083,6 +1152,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
                 case SUBSCRIPTION_IDENTIFIER_AVAILABLE:
                 case SHARED_SUBSCRIPTION_AVAILABLE:
                     CheckMaxMessageLengthRemaining(maxAllowedRemainingBytes - numberOfBytesConsumed - 1);
+
                     int b1 = buffer.ReadByte();
                     numberOfBytesConsumed++;
                     decodedProperties.Add(new IntegerProperty(propertyIdValue, b1));
@@ -1092,6 +1162,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
                 case TOPIC_ALIAS_MAXIMUM:
                 case TOPIC_ALIAS:
                     CheckMaxMessageLengthRemaining(maxAllowedRemainingBytes - numberOfBytesConsumed - 2);
+
                     int int2BytesResult = DecodeMsbLsb(buffer);
                     numberOfBytesConsumed += 2;
                     decodedProperties.Add(new IntegerProperty(propertyIdValue, int2BytesResult));
@@ -1101,6 +1172,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
                 case WILL_DELAY_INTERVAL:
                 case MAXIMUM_PACKET_SIZE:
                     CheckMaxMessageLengthRemaining(maxAllowedRemainingBytes - numberOfBytesConsumed - 4);
+
                     int maxPacketSize = buffer.ReadInt();
                     numberOfBytesConsumed += 4;
                     decodedProperties.Add(new IntegerProperty(propertyIdValue, maxPacketSize));
@@ -1144,6 +1216,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
                     throw new DecoderException("Unknown property type: " +
                             propertyIdValue.ToString(CultureInfo.InvariantCulture));
             }
+
             if (numberOfBytesConsumed - propertiesLengthNumBytes > totalPropertiesLength)
             {
                 // The typed value of the last decoded property read past the declared Property

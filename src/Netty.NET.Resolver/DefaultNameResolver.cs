@@ -74,8 +74,10 @@ public class DefaultNameResolver : InetNameResolver
         {
             return new[] { IPAddress.Loopback };
         }
+
         string host = hostname;
         bool ipv6Expected = false;
+
         if (host[0] == '[')
         {
             // This is supposed to be an IPv6 literal
@@ -89,10 +91,12 @@ public class DefaultNameResolver : InetNameResolver
                 throw InvalidIPv6LiteralException(host, false);
             }
         }
+
         // Check and try to parse host string as an IP address literal
         if (Uri.IsHexDigit(host[0]) || CharUnicodeInfo.GetDecimalDigitValue(host[0]) >= 0 || host[0] == ':')
         {
             IPAddress addr = null;
+
             if (!ipv6Expected)
             {
                 // check if it is IPv4 address only if host is not wrapped in '[]'
@@ -104,6 +108,7 @@ public class DefaultNameResolver : InetNameResolver
                     throw new UnknownHostException(hostname);
                 }
             }
+
             if (addr == null)
             {
                 // Try to parse host string as an IPv6 literal
@@ -117,6 +122,7 @@ public class DefaultNameResolver : InetNameResolver
                     throw InvalidIPv6LiteralException(host, ipv6Expected);
                 }
             }
+
             if (addr != null)
             {
                 return new[] { addr };
@@ -127,7 +133,9 @@ public class DefaultNameResolver : InetNameResolver
             // We were expecting an IPv6 Literal, but got something else
             throw InvalidIPv6LiteralException(host, true);
         }
+
         IPAddress[] addresses;
+
         try
         {
             addresses = await Dns.GetHostAddressesAsync(host, cancellationToken).ConfigureAwait(false);
@@ -136,10 +144,12 @@ public class DefaultNameResolver : InetNameResolver
         {
             throw new UnknownHostException(hostname, e);
         }
+
         if (addresses.Length == 0)
         {
             throw new UnknownHostException(hostname);
         }
+
         return PREFER_IPV6_ADDRESSES switch
         {
             "true" => addresses.OrderBy(a => a.AddressFamily == AddressFamily.InterNetworkV6 ? 0 : 1).ToArray(),
@@ -163,10 +173,12 @@ public class DefaultNameResolver : InetNameResolver
         {
             return null;
         }
+
         byte[] res = new byte[4];
         long tmpValue = 0;
         int currByte = 0;
         bool newOctet = true;
+
         foreach (char c in src)
         {
             if (c == '.')
@@ -175,6 +187,7 @@ public class DefaultNameResolver : InetNameResolver
                 {
                     return null;
                 }
+
                 res[currByte++] = (byte)(tmpValue & 0xff);
                 tmpValue = 0;
                 newOctet = true;
@@ -186,19 +199,23 @@ public class DefaultNameResolver : InetNameResolver
                 {
                     return null;
                 }
+
                 tmpValue *= 10;
                 tmpValue += digit;
                 if (tmpValue > 0xffffffffL)
                 {
                     return null;
                 }
+
                 newOctet = false;
             }
         }
+
         if (newOctet || tmpValue < 0 || tmpValue >= 1L << ((4 - currByte) * 8))
         {
             return null;
         }
+
         switch (currByte)
         {
             case 0:
@@ -214,6 +231,7 @@ public class DefaultNameResolver : InetNameResolver
                 res[3] = (byte)(tmpValue & 0xff);
                 break;
         }
+
         return new IPAddress(res);
     }
 }

@@ -167,6 +167,7 @@ public sealed class AppendableCharSequence : ICharSequence
     public AppendableCharSequence Append(ICharSequence csq)
     {
         CheckNotNull(csq, nameof(csq));
+
         return Append(csq, 0, csq.Count);
     }
     
@@ -184,6 +185,7 @@ public sealed class AppendableCharSequence : ICharSequence
             throw new ArgumentOutOfRangeException(null, "expected: csq.length() >= ("
                     + end.ToString(CultureInfo.InvariantCulture) + "),but actual is (" + csq.Count.ToString(CultureInfo.InvariantCulture) + ")");
         }
+
         int length = end - start;
         if (length > chars.Length - pos)
         {
@@ -243,6 +245,7 @@ public sealed class AppendableCharSequence : ICharSequence
             throw new ArgumentOutOfRangeException(null, "expected: start and length <= ("
                     + pos.ToString(CultureInfo.InvariantCulture) + ")");
         }
+
         return new string(chars, start, length);
     }
 
@@ -259,6 +262,7 @@ public sealed class AppendableCharSequence : ICharSequence
     private static char[] Expand(char[] array, int neededSpace, int size)
     {
         int newCapacity = array.Length;
+
         do
         {
             // double capacity until it is big enough

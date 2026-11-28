@@ -148,6 +148,7 @@ public class JdkZlibDecoder : ZlibDecoder
         this.maxForwardBytes = maxAllocation > 0 ? maxAllocation : DEFAULT_MAX_FORWARD_BYTES;
 
         this.decompressConcatenated = decompressConcatenated;
+
         switch (wrapper)
         {
             case ZlibWrapper.GZIP:
@@ -170,6 +171,7 @@ public class JdkZlibDecoder : ZlibDecoder
             default:
                 throw new ArgumentException("Only GZIP or ZLIB is supported, but you used " + wrapper);
         }
+
         this.dictionary = dictionary;
     }
 
@@ -181,6 +183,7 @@ public class JdkZlibDecoder : ZlibDecoder
     protected override void Decode(IChannelHandlerContext ctx, ByteBuf @in, IList<object> @out)
     {
         needsRead = true;
+
         if (finished)
         {
             // Skip data received after finished.
@@ -218,14 +221,17 @@ public class JdkZlibDecoder : ZlibDecoder
                         // Either there was not enough data or the input is finished.
                         return;
                     }
+
                     // If we consumed the footer we will start with the header again.
                     Debug.Assert(gzipState == GzipState.HEADER_START);
                 }
+
                 if (!ReadGZIPHeader(@in))
                 {
                     // There was not enough data readable to read the GZIP header.
                     return;
                 }
+
                 // Some bytes may have been consumed, and so we must re-set the number of readable bytes.
                 readableBytes = @in.ReadableBytes;
                 if (readableBytes == 0)
@@ -250,6 +256,7 @@ public class JdkZlibDecoder : ZlibDecoder
         }
 
         ByteBuf decompressed = PrepareDecompressBuffer(ctx, null, PreferredOutputBufferSize());
+
         try
         {
             bool readFooter = false;
@@ -258,6 +265,7 @@ public class JdkZlibDecoder : ZlibDecoder
             // was consumed, not that all output was produced, so on its own it would end the loop too early and
             // the pending bytes would be dropped together with the input we skip below.
             bool pendingOutput = false;
+
             while (pendingOutput || !inflater.NeedsInput())
             {
                 int writerIndex = decompressed.WriterIndex;
@@ -267,13 +275,16 @@ public class JdkZlibDecoder : ZlibDecoder
                 int outIndex = outSegment.Offset;
                 int outputLength = inflater.Inflate(outArray, outIndex, writable);
                 pendingOutput = outputLength == writable;
+
                 if (outputLength > 0)
                 {
                     decompressed.WriterIndex = writerIndex + outputLength;
+
                     if (crc != null)
                     {
                         crc.Update(outArray, outIndex, outputLength);
                     }
+
                     if (maxAllocation == 0 && decompressed.ReadableBytes >= maxForwardBytes)
                     {
                         // Forward the buffer once it exceeds the threshold to bound memory
@@ -291,6 +302,7 @@ public class JdkZlibDecoder : ZlibDecoder
                         throw new DecompressionException(
                                 "decompression failure, unable to set dictionary as non was specified");
                     }
+
                     inflater.SetDictionary(dictionary);
                 }
 
@@ -304,6 +316,7 @@ public class JdkZlibDecoder : ZlibDecoder
                     {
                         readFooter = true;
                     }
+
                     break;
                 }
                 else
@@ -367,6 +380,7 @@ public class JdkZlibDecoder : ZlibDecoder
                 return true;
             }
         }
+
         return false;
     }
 
@@ -378,6 +392,7 @@ public class JdkZlibDecoder : ZlibDecoder
     protected override void HandlerRemoved0(IChannelHandlerContext ctx)
     {
         base.HandlerRemoved0(ctx);
+
         if (inflater != null)
         {
             inflater.End();
@@ -393,6 +408,7 @@ public class JdkZlibDecoder : ZlibDecoder
                 {
                     return false;
                 }
+
                 // read magic numbers
                 int magic0 = unchecked((sbyte) @in.ReadByte());
                 int magic1 = unchecked((sbyte) @in.ReadByte());
@@ -401,6 +417,7 @@ public class JdkZlibDecoder : ZlibDecoder
                 {
                     throw new DecompressionException("Input is not in the GZIP format");
                 }
+
                 crc.Update(magic0);
                 crc.Update(magic1);
 
@@ -410,6 +427,7 @@ public class JdkZlibDecoder : ZlibDecoder
                     throw new DecompressionException("Unsupported compression method "
                             + method.ToString(CultureInfo.InvariantCulture) + " in the GZIP header");
                 }
+
                 crc.Update(method);
 
                 flags = @in.ReadByte();
@@ -438,6 +456,7 @@ public class JdkZlibDecoder : ZlibDecoder
                     {
                         return false;
                     }
+
                     int xlen1 = @in.ReadByte();
                     int xlen2 = @in.ReadByte();
                     crc.Update(xlen1);
@@ -449,6 +468,7 @@ public class JdkZlibDecoder : ZlibDecoder
                     // would leave it -1, so the extra field was never skipped.
                     xlen = xlen2 << 8 | xlen1;
                 }
+
                 gzipState = GzipState.XLEN_READ;
                 // fall through
                 goto case GzipState.XLEN_READ;
@@ -459,9 +479,11 @@ public class JdkZlibDecoder : ZlibDecoder
                     {
                         return false;
                     }
+
                     crc.Update(@in, @in.ReaderIndex, xlen);
                     @in.SkipBytes(xlen);
                 }
+
                 gzipState = GzipState.SKIP_FNAME;
                 // fall through
                 goto case GzipState.SKIP_FNAME;
@@ -470,6 +492,7 @@ public class JdkZlibDecoder : ZlibDecoder
                 {
                     return false;
                 }
+
                 gzipState = GzipState.SKIP_COMMENT;
                 // fall through
                 goto case GzipState.SKIP_COMMENT;
@@ -478,6 +501,7 @@ public class JdkZlibDecoder : ZlibDecoder
                 {
                     return false;
                 }
+
                 gzipState = GzipState.PROCESS_FHCRC;
                 // fall through
                 goto case GzipState.PROCESS_FHCRC;
@@ -489,6 +513,7 @@ public class JdkZlibDecoder : ZlibDecoder
                         return false;
                     }
                 }
+
                 crc.Reset();
                 gzipState = GzipState.HEADER_END;
                 // fall through
@@ -518,6 +543,7 @@ public class JdkZlibDecoder : ZlibDecoder
                     // We didnt find the end yet, need to retry again once more data is readable
                     return false;
                 }
+
                 int b = @in.ReadByte();
                 crc.Update(b);
                 if (b == 0x00)
@@ -526,6 +552,7 @@ public class JdkZlibDecoder : ZlibDecoder
                 }
             }
         }
+
         // Skip is handled, we can move to the next processing state.
         return true;
     }
@@ -556,6 +583,7 @@ public class JdkZlibDecoder : ZlibDecoder
                     "Number of bytes mismatch. Expected: " + dataLength.ToString(CultureInfo.InvariantCulture) +
                     ", Got: " + readLength.ToString(CultureInfo.InvariantCulture));
         }
+
         return true;
     }
 
@@ -572,6 +600,7 @@ public class JdkZlibDecoder : ZlibDecoder
         {
             return false;
         }
+
         long crcValue = @in.ReadUnsignedIntLE();
 
         long readCrc = crc.GetValue();
@@ -581,6 +610,7 @@ public class JdkZlibDecoder : ZlibDecoder
                     "CRC value mismatch. Expected: " + crcValue.ToString(CultureInfo.InvariantCulture) +
                     ", Got: " + readCrc.ToString(CultureInfo.InvariantCulture));
         }
+
         return true;
     }
 
@@ -601,6 +631,7 @@ public class JdkZlibDecoder : ZlibDecoder
                     "CRC16 value mismatch. Expected: " + crc16Value.ToString(CultureInfo.InvariantCulture) +
                     ", Got: " + readCrc16.ToString(CultureInfo.InvariantCulture));
         }
+
         return true;
     }
 
@@ -627,6 +658,7 @@ public class JdkZlibDecoder : ZlibDecoder
         {
             ctx.Read();
         }
+
         ctx.FireChannelReadComplete();
     }
 
@@ -641,6 +673,7 @@ public class JdkZlibDecoder : ZlibDecoder
         {
             return true;
         }
+
         array = default;
         return false;
     }
@@ -655,6 +688,7 @@ public class JdkZlibDecoder : ZlibDecoder
         {
             return array;
         }
+
         throw new NotSupportedException("the buffer range is not backed by one managed array");
     }
 }

@@ -64,14 +64,17 @@ public class AdvancedLeakRecordingPolicyTest
             RedirectStandardOutput = true, RedirectStandardError = true,
             WorkingDirectory = Path.GetDirectoryName(typeof(AdvancedLeakRecordingPolicyTest).Assembly.Location)!
         };
+
         foreach (string argument in new[] { typeof(AdvancedLeakRecordingPolicyTest).Assembly.Location, "-method",
                      typeof(AdvancedLeakRecordingPolicyTest).FullName + ".RecordingPolicyProbe", "-noLogo", "-noAutoReporters", "-result-xml", report })
             start.ArgumentList.Add(argument);
+
         start.Environment[Property] = referenceOnly ? "true" : "false";
         using var process = new Process { StartInfo = start };
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         timeout.CancelAfter(TimeSpan.FromSeconds(30));
         bool started = false;
+
         try
         {
             started = process.Start();
@@ -94,6 +97,7 @@ public class AdvancedLeakRecordingPolicyTest
             {
                 process.Kill(entireProcessTree: true);
             }
+
             File.Delete(report);
         }
     }
@@ -119,8 +123,10 @@ public class AdvancedLeakRecordingPolicyTest
         ByteBuf Data(int count)
         {
             ByteBuf b = (provider & 1) != 0 ? allocator.DirectBuffer(count, 64) : allocator.HeapBuffer(count, 64);
+
             for (int i = 0; i < count; ++i)
                 b.WriteByte(i + 1);
+
             return b;
         }
 
@@ -128,15 +134,18 @@ public class AdvancedLeakRecordingPolicyTest
         root.SetIndex(2, 32);
         ByteBuf b = root;
         var trackers = new List<Tracker>();
+
         for (int i = 0; i < depth; ++i)
         {
             var tracker = new Tracker(b);
             trackers.Add(tracker);
             b = composite ? new AdvancedLeakAwareCompositeByteBuf((CompositeByteBuf)b, tracker) : new AdvancedLeakAwareByteBuf(b, tracker);
         }
+
         using var output = new MemoryStream();
         using var input = new MemoryStream(new byte[] { 65, 66, 67, 68 });
         object hint = new();
+
         try
         {
             switch (operation)
@@ -164,6 +173,7 @@ public class AdvancedLeakRecordingPolicyTest
                     break;
                 case 7:
                     ByteBuf copy = b.Copy(3, 4);
+
                     try
                     {
                         Assert.Equal(4, copy.ReadableBytes);
@@ -172,6 +182,7 @@ public class AdvancedLeakRecordingPolicyTest
                     {
                         copy.Release();
                     }
+
                     break;
                 case 8:
                     Assert.Equal(4, b.Slice(3, 4).Capacity);
@@ -212,16 +223,20 @@ public class AdvancedLeakRecordingPolicyTest
                     Assert.False(b.IsReadOnly);
                     break;
             }
+
             int expected = operation is >= 9 and <= 13 ? 1 : operation == 19 && !composite || referenceOnly ? 0 : 1;
+
             // Touch describes the outer facade only; it intentionally does not delegate.
             for (int i = 0; i < trackers.Count; ++i)
             {
                 int records = operation is 12 or 13 && i < depth - 1 ? 0 : expected;
                 Assert.Equal(records, trackers[i].Records);
                 Assert.Equal(0, trackers[i].Closes);
+
                 if (operation == 13 && i == depth - 1)
                     Assert.Same(hint, trackers[i].Hint);
             }
+
             Assert.Equal((operation == 3 ? 3 : 2, operation == 4 ? 33 : 32, operation == 9 ? 2 : 1),
                 (root.ReaderIndex, root.WriterIndex, root.RefCnt));
         }
@@ -231,8 +246,10 @@ public class AdvancedLeakRecordingPolicyTest
             {
                 b.Release(root.RefCnt);
             }
+
             Assert.Equal(0, native.ReservedBytes);
         }
+
         Assert.All(trackers, t => Assert.Equal(1, t.Closes));
     }
 }

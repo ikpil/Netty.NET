@@ -22,11 +22,13 @@ public class MacAddressCodecContractTest
     {
         var bytes = new byte[256];
         var expected = new string[256];
+
         for (int value = 0; value < bytes.Length; value++)
         {
             bytes[value] = (byte)value;
             expected[value] = Convert.ToString(value, 16).PadLeft(2, '0');
         }
+
         Assert.Equal(string.Join(':', expected), MacAddressUtil.FormatAddress(bytes));
     }
 
@@ -64,6 +66,7 @@ public class MacAddressCodecContractTest
     public void FormattingAndParsingDoNotDependOnTheCurrentCulture()
     {
         CultureInfo prior = CultureInfo.CurrentCulture;
+
         try
         {
             foreach (string name in new[] { "ar-SA", "tr-TR", "en-US" })

@@ -64,6 +64,7 @@ public class SocketSpdyEchoTest : AbstractSocketTest
         frames.WriteInt(NextInt() & 0x7FFFFFFF | 0x01);
         frames.WriteByte(0x01);
         frames.WriteMedium(1024);
+
         for (int i = 0; i < 256; i ++)
         {
             frames.WriteInt(NextInt());
@@ -78,6 +79,7 @@ public class SocketSpdyEchoTest : AbstractSocketTest
         frames.WriteInt(NextInt() & 0x7FFFFFFF | 0x01);
         frames.WriteInt(NextInt() & 0x7FFFFFFF);
         frames.WriteShort(0x8000);
+
         if (version < 3)
         {
             frames.WriteShort(0);
@@ -90,6 +92,7 @@ public class SocketSpdyEchoTest : AbstractSocketTest
         frames.WriteByte(0x01);
         frames.WriteMedium(4);
         frames.WriteInt(NextInt() & 0x7FFFFFFF | 0x01);
+
         if (version < 3)
         {
             frames.WriteInt(0);
@@ -180,6 +183,7 @@ public class SocketSpdyEchoTest : AbstractSocketTest
     {
 
         ByteBuf frames;
+
         // CLR: SpdyVersion is a sealed class with static readonly instances (the Java enum, see SpdyVersion.cs), and a
         // case label's constant pattern takes only "any constant expression" (an enum value, a const field, ...;
         // https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/patterns), so case SPDY_3_1 is a
@@ -322,6 +326,7 @@ public class SocketSpdyEchoTest : AbstractSocketTest
             @in.ReadBytes(actual);
 
             int lastIdx = counter;
+
             for (int i = 0; i < actual.Length; i ++)
             {
                 Assert.Equal(frames.GetByte(ignoredBytes + i + lastIdx), actual[i]);

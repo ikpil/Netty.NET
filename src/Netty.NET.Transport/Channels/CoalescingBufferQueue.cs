@@ -62,6 +62,7 @@ public sealed class CoalescingBufferQueue : AbstractCoalescingBufferQueue
             composite.AddComponent(next, true);
             return composite;
         }
+
         return ComposeIntoComposite(allocator, cumulation, next);
     }
 

@@ -50,6 +50,7 @@ public class CharSequenceValueConverter : IValueConverter<ICharSequence>
         {
             return new StringCharSequence(formattable.ToString(null, CultureInfo.InvariantCulture));
         }
+
         return new StringCharSequence(value.ToString());
     }
 
@@ -105,6 +106,7 @@ public class CharSequenceValueConverter : IValueConverter<ICharSequence>
             // CLR: AsciiString.ByteAt returns the unsigned octet; the Java byte is that octet reinterpreted as signed.
             return unchecked((sbyte) ((AsciiString) value).ByteAt(0));
         }
+
         return sbyte.Parse(value.ToString(), NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture);
     }
 
@@ -124,6 +126,7 @@ public class CharSequenceValueConverter : IValueConverter<ICharSequence>
         {
             return ((AsciiString) value).ParseShort();
         }
+
         return short.Parse(value.ToString(), NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture);
     }
 
@@ -133,6 +136,7 @@ public class CharSequenceValueConverter : IValueConverter<ICharSequence>
         {
             return ((AsciiString) value).ParseInt();
         }
+
         return int.Parse(value.ToString(), NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture);
     }
 
@@ -142,6 +146,7 @@ public class CharSequenceValueConverter : IValueConverter<ICharSequence>
         {
             return ((AsciiString) value).ParseLong();
         }
+
         return long.Parse(value.ToString(), NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture);
     }
 
@@ -163,6 +168,7 @@ public class CharSequenceValueConverter : IValueConverter<ICharSequence>
             // unreachable "return 0;" after it is omitted.
             throw new FormatException("header can't be parsed into a Date: " + value);
         }
+
         // CLR: Date.getTime() is DateTimeOffset.ToUnixTimeMilliseconds().
         return date.Value.ToUnixTimeMilliseconds();
     }
@@ -176,6 +182,7 @@ public class CharSequenceValueConverter : IValueConverter<ICharSequence>
         {
             return ((AsciiString) value).ParseFloat();
         }
+
         return float.Parse(value.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture);
     }
 
@@ -185,6 +192,7 @@ public class CharSequenceValueConverter : IValueConverter<ICharSequence>
         {
             return ((AsciiString) value).ParseDouble();
         }
+
         return double.Parse(value.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture);
     }
 }

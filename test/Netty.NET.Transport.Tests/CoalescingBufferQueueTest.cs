@@ -331,6 +331,7 @@ public class CoalescingBufferQueueTest : IDisposable
         _queue.Add(Unpooled.WrappedBuffer(new byte[] { 4, 5 }));
         Assert.False(_channel.IsWritable);
         Assert.Equal(5, _queue.ReadableBytes);
+
         if (fail)
             _queue.ReleaseAndFailAll(new InvalidOperationException());
         else
@@ -349,6 +350,7 @@ public class CoalescingBufferQueueTest : IDisposable
             Assert.False(buffer.IsReadable());
             buffer.Release();
         }
+
         Assert.True(_channel.IsWritable);
         Assert.True(_queue.IsEmpty);
     }
@@ -361,6 +363,7 @@ public class CoalescingBufferQueueTest : IDisposable
     private void AssertQueueSize(int size, bool isEmpty)
     {
         Assert.Equal(size, _queue.ReadableBytes);
+
         if (isEmpty)
             Assert.True(_queue.IsEmpty);
         else

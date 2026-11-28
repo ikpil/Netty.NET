@@ -59,6 +59,7 @@ public class WebSocketRequestBuilder
         {
             this.uri = uri.ToString();
         }
+
         return this;
     }
 
@@ -72,6 +73,7 @@ public class WebSocketRequestBuilder
         {
             this.host = host.ToString();
         }
+
         return this;
     }
 
@@ -85,6 +87,7 @@ public class WebSocketRequestBuilder
         {
             this.upgrade = upgrade.ToString();
         }
+
         return this;
     }
 
@@ -98,6 +101,7 @@ public class WebSocketRequestBuilder
         {
             this.connection = connection.ToString();
         }
+
         return this;
     }
 
@@ -111,6 +115,7 @@ public class WebSocketRequestBuilder
         {
             this.key = key.ToString();
         }
+
         return this;
     }
 
@@ -124,6 +129,7 @@ public class WebSocketRequestBuilder
         {
             this.origin = origin.ToString();
         }
+
         return this;
     }
 
@@ -159,18 +165,22 @@ public class WebSocketRequestBuilder
         {
             headers.Set(HttpHeaderNames.HOST, host);
         }
+
         if (upgrade != null)
         {
             headers.Set(HttpHeaderNames.UPGRADE, upgrade);
         }
+
         if (connection != null)
         {
             headers.Set(HttpHeaderNames.CONNECTION, connection);
         }
+
         if (key != null)
         {
             headers.Set(HttpHeaderNames.SEC_WEBSOCKET_KEY, key);
         }
+
         if (origin != null)
         {
             if (version == WebSocketVersion.V13 || version == WebSocketVersion.V00)
@@ -182,10 +192,12 @@ public class WebSocketRequestBuilder
                 headers.Set(HttpHeaderNames.SEC_WEBSOCKET_ORIGIN, origin);
             }
         }
+
         if (version != null)
         {
             headers.Set(HttpHeaderNames.SEC_WEBSOCKET_VERSION, version.ToHttpHeaderValue());
         }
+
         return req;
     }
 

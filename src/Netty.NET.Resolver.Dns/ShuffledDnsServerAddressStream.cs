@@ -52,6 +52,7 @@ internal sealed class ShuffledDnsServerAddressStream : IDnsServerAddressStream
     private void Shuffle()
     {
         Random rnd = Random.Shared;
+
         for (int i = addresses.Count; i > 1; i--)
         {
             int j = rnd.Next(i);
@@ -63,6 +64,7 @@ internal sealed class ShuffledDnsServerAddressStream : IDnsServerAddressStream
     {
         int i = this.i;
         EndPoint next = addresses[i];
+
         if (++ i < addresses.Count)
         {
             this.i = i;
@@ -72,6 +74,7 @@ internal sealed class ShuffledDnsServerAddressStream : IDnsServerAddressStream
             this.i = 0;
             Shuffle();
         }
+
         return next;
     }
 

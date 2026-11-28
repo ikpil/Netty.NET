@@ -47,6 +47,7 @@ public class NumberEncoder : MessageToByteEncoder<object>
     {
         // Convert to a BigInteger first for easier implementation.
         BigInteger v;
+
         if (msg is BigInteger)
         {
             v = (BigInteger) msg;

@@ -214,6 +214,7 @@ public class HttpPostRequestDecoder : IInterfaceHttpPostRequestDecoder
         {
             return GetMultipartDataBoundary(mimeType) != null;
         }
+
         return false;
     }
 
@@ -249,11 +250,13 @@ public class HttpPostRequestDecoder : IInterfaceHttpPostRequestDecoder
             {
                 return null;
             }
+
             string boundary = StringUtil.SubstringAfter(headerContentType[mrank], '=');
             if (boundary == null)
             {
                 throw new ErrorDataDecoderException("Needs a boundary value");
             }
+
             if (boundary[0] == '"')
             {
                 string bound = HttpUtil.TrimJava(boundary);
@@ -263,6 +266,7 @@ public class HttpPostRequestDecoder : IInterfaceHttpPostRequestDecoder
                     boundary = bound.Substring(1, index - 1);
                 }
             }
+
             string charsetHeader = HttpHeaderValues.CHARSET.ToString();
             if (string.Compare(headerContentType[crank], 0, charsetHeader, 0, charsetHeader.Length,
                     StringComparison.OrdinalIgnoreCase) == 0)
@@ -273,8 +277,10 @@ public class HttpPostRequestDecoder : IInterfaceHttpPostRequestDecoder
                     return new string[] {"--" + boundary, charset};
                 }
             }
+
             return new string[] {"--" + boundary};
         }
+
         return null;
     }
 
@@ -362,22 +368,28 @@ public class HttpPostRequestDecoder : IInterfaceHttpPostRequestDecoder
         {
             return new string[] { sb, "", "" };
         }
+
         bStart = HttpPostBodyUtil.FindNonWhitespace(sb, aEnd + 1);
+
         if (sb[aEnd - 1] == ' ')
         {
             aEnd--;
         }
+
         bEnd =  sb.IndexOf(';', bStart);
         if (bEnd == -1)
         {
             bEnd = HttpPostBodyUtil.FindEndOfString(sb);
             return new string[] { sb.Substring(aStart, aEnd - aStart), sb.Substring(bStart, bEnd - bStart), "" };
         }
+
         cStart = HttpPostBodyUtil.FindNonWhitespace(sb, bEnd + 1);
+
         if (sb[bEnd - 1] == ' ')
         {
             bEnd--;
         }
+
         cEnd = HttpPostBodyUtil.FindEndOfString(sb);
         return new string[] { sb.Substring(aStart, aEnd - aStart), sb.Substring(bStart, bEnd - bStart),
                 sb.Substring(cStart, cEnd - cStart) };

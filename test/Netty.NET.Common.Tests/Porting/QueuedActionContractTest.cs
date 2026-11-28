@@ -51,10 +51,12 @@ public class QueuedActionContractTest
             depth++;
             maximumDepth = Math.Max(maximumDepth, depth);
             callerOnly &= ReferenceEquals(caller, Thread.CurrentThread);
+
             if (++runs < 100000)
             {
                 executor.Execute(next);
             }
+
             depth--;
         };
         executor.Execute(next);
@@ -74,6 +76,7 @@ public class QueuedActionContractTest
         int canceledRuns = 0;
         Task<string> captured = null;
         Task canceled = null;
+
         try
         {
             executor.Execute(() =>
@@ -134,6 +137,7 @@ public class QueuedActionContractTest
         protected override bool WakesUpForTask(Action task)
         {
             Interlocked.Increment(ref WakeChecks);
+
             return base.WakesUpForTask(task);
         }
 
@@ -147,6 +151,7 @@ public class QueuedActionContractTest
                     RunTask(task);
                     UpdateLastExecutionTime();
                 }
+
                 if (ConfirmShutdown())
                 {
                     return;
@@ -161,6 +166,7 @@ public class QueuedActionContractTest
         Type[] types = [typeof(IExecutor), typeof(AbstractEventExecutor), typeof(AbstractEventExecutorGroup),
             typeof(SingleThreadEventExecutor), typeof(UnorderedThreadPoolEventExecutor), typeof(ImmediateExecutor),
             typeof(ImmediateEventExecutor), typeof(GlobalEventExecutor), typeof(NonStickyEventExecutorGroup)];
+
         foreach (Type type in types)
         {
             var methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
@@ -235,6 +241,7 @@ public class QueuedActionContractTest
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
         using var cancellation = new CancellationTokenSource();
+
         try
         {
             executor.Execute(() =>
@@ -279,6 +286,7 @@ public class QueuedActionContractTest
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
         using var cancellation = new CancellationTokenSource();
+
         try
         {
             owner.Execute(() =>
@@ -329,6 +337,7 @@ public class QueuedActionContractTest
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
         int calls = 0, tailCalls = 0, prefixes = 0;
+
         try
         {
             owner.Execute(() =>
@@ -341,6 +350,7 @@ public class QueuedActionContractTest
             Action callback = () => calls++;
             callback += () => throw new InvalidOperationException("raw multicast failure");
             callback += () => tailCalls++;
+
             if (throwPolicy)
             {
                 Assert.Same(policyFailure, Assert.Throws<InvalidOperationException>(() => owner.Execute(callback)));
@@ -349,6 +359,7 @@ public class QueuedActionContractTest
             {
                 owner.Execute(callback);
             }
+
             Assert.Same(Thread.CurrentThread, policyThread);
             Assert.NotNull(rejected);
             Action replay = (Action)rejected.Clone();
@@ -377,6 +388,7 @@ public class QueuedActionContractTest
     {
         int prefixes = 0;
         var executor = new HookLoop { Prefix = () => prefixes++ };
+
         try
         {
             int result = await executor.SubmitAsync(() => 42, TestContext.Current.CancellationToken)
@@ -399,9 +411,11 @@ public class QueuedActionContractTest
     {
         var executor = new HookLoop();
         var completion = new TaskCompletionSource<Thread>(TaskCreationOptions.RunContinuationsAsynchronously);
+
         try
         {
             Action command = () => completion.SetResult(Thread.CurrentThread);
+
             if (lazy)
             {
                 executor.LazyExecute(command);
@@ -410,6 +424,7 @@ public class QueuedActionContractTest
             {
                 executor.Execute(command);
             }
+
             Thread worker = await completion.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             Assert.True(executor.InEventLoop(worker));
             Assert.Equal(lazy ? 0 : 1, executor.Executions);

@@ -145,6 +145,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
         {
             writeResumptionListener.Drain();
         }
+
         base.ChannelInactive(ctx);
     }
 
@@ -155,6 +156,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
             // drain everything so we are sure we never leak anything.
             writeResumptionListener.Drain();
         }
+
         AbandonIfBlocked(ctx);
         base.HandlerRemoved0(ctx);
     }
@@ -165,12 +167,14 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
         {
             return;
         }
+
         // https://www.rfc-editor.org/rfc/rfc9204.html#section-2.2.2.2
         long streamId = ((IQuicStreamChannel) ctx.Channel).StreamId();
         if (!qpackDecoder.ReleaseBlockedStream(streamId))
         {
             return;
         }
+
         if (qpackAttributes.DecoderStreamAvailable())
         {
             qpackDecoder.SendStreamCancellation(qpackAttributes.DecoderStream(), streamId);
@@ -190,6 +194,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
     public override void ChannelRead(IChannelHandlerContext ctx, object msg)
     {
         ByteBuf buffer;
+
         if (msg is IQuicStreamFrame)
         {
             IQuicStreamFrame streamFrame = (IQuicStreamFrame) msg;
@@ -200,12 +205,14 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
         {
             buffer = (ByteBuf) msg;
         }
+
         base.ChannelRead(ctx, buffer);
     }
 
     public override void ChannelReadComplete(IChannelHandlerContext ctx)
     {
         Debug.Assert(readResumptionListener != null);
+
         if (readResumptionListener.ReadCompleted())
         {
             base.ChannelReadComplete(ctx);
@@ -231,11 +238,13 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
         {
             return;
         }
+
         if (error)
         {
             @in.SkipBytes(@in.ReadableBytes);
             return;
         }
+
         if (type == -1)
         {
             int typeLen = NumBytesForVariableLengthInteger(@in.GetByte(@in.ReaderIndex));
@@ -243,6 +252,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
             {
                 return;
             }
+
             long localType = ReadVariableLengthInteger(@in, typeLen);
             if (Http3CodecUtils.IsReservedHttp2FrameType(localType))
             {
@@ -251,6 +261,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                         "Reserved type for HTTP/2 received.", true);
                 return;
             }
+
             try
             {
                 // Validate if the type is valid for the current stream first.
@@ -261,6 +272,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                 ConnectionError(ctx, e, true);
                 return;
             }
+
             type = localType;
             firstFrame = false;
             if (!@in.IsReadable())
@@ -268,6 +280,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                 return;
             }
         }
+
         if (payLoadLength == -1)
         {
             int payloadLen = NumBytesForVariableLengthInteger(@in.GetByte(@in.ReaderIndex));
@@ -276,6 +289,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
             {
                 return;
             }
+
             long len = ReadVariableLengthInteger(@in, payloadLen);
             if (len > int.MaxValue)
             {
@@ -283,8 +297,10 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                         "Received an invalid frame len.", true);
                 return;
             }
+
             payLoadLength = (int) len;
         }
+
         int read = DecodeFrame(ctx, type, payLoadLength, @in, @out);
         if (read >= 0)
         {
@@ -314,7 +330,9 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
         {
             return SkipBytes(@in, payLoadLength);
         }
+
         int type = (int) longType;
+
         // See https://tools.ietf.org/html/draft-ietf-quic-http-32#section-11.2.1
         switch (type)
         {
@@ -326,6 +344,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                 {
                     return 0;
                 }
+
                 int length = Math.Min(readable, payLoadLength);
                 @out.Add(new DefaultHttp3DataFrame(@in.ReadRetainedSlice(length)));
                 return length;
@@ -340,7 +359,9 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                 {
                     return 0;
                 }
+
                 Debug.Assert(qpackAttributes != null);
+
                 if (!qpackAttributes.DynamicTableDisabled() && !qpackAttributes.DecoderStreamAvailable())
                 {
                     Debug.Assert(readResumptionListener != null);
@@ -354,6 +375,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                     @out.Add(headersFrame);
                     return payLoadLength;
                 }
+
                 return -1;
             case HTTP3_CANCEL_PUSH_FRAME_TYPE:
                 // CANCEL_PUSH
@@ -364,11 +386,13 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                 {
                     return 0;
                 }
+
                 int pushIdLen = NumBytesForVariableLengthInteger(@in.GetByte(@in.ReaderIndex));
                 if (!EnforceExactIdLength(ctx, type, payLoadLength, pushIdLen))
                 {
                     return 0;
                 }
+
                 @out.Add(new DefaultHttp3CancelPushFrame(ReadVariableLengthInteger(@in, pushIdLen)));
                 return payLoadLength;
             case HTTP3_SETTINGS_FRAME_TYPE:
@@ -381,11 +405,13 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                 {
                     return 0;
                 }
+
                 IHttp3SettingsFrame settingsFrame = DecodeSettings(ctx, @in, payLoadLength);
                 if (settingsFrame != null)
                 {
                     @out.Add(settingsFrame);
                 }
+
                 return payLoadLength;
             case HTTP3_PUSH_PROMISE_FRAME_TYPE:
                 // PUSH_PROMISE
@@ -401,12 +427,14 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                 }
 
                 Debug.Assert(qpackAttributes != null);
+
                 if (!qpackAttributes.DynamicTableDisabled() && !qpackAttributes.DecoderStreamAvailable())
                 {
                     Debug.Assert(readResumptionListener != null);
                     readResumptionListener.Suspended();
                     return 0;
                 }
+
                 int readerIdx = @in.ReaderIndex;
                 int pushPromiseIdLen = NumBytesForVariableLengthInteger(@in.GetByte(@in.ReaderIndex));
                 if (pushPromiseIdLen > payLoadLength)
@@ -417,6 +445,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                             true);
                     return 0;
                 }
+
                 IHttp3PushPromiseFrame pushPromiseFrame = new DefaultHttp3PushPromiseFrame(
                         ReadVariableLengthInteger(@in, pushPromiseIdLen));
                 if (DecodeHeaders(ctx, pushPromiseFrame.Headers(), @in, payLoadLength - pushPromiseIdLen, false))
@@ -424,6 +453,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                     @out.Add(pushPromiseFrame);
                     return payLoadLength;
                 }
+
                 @in.ReaderIndex = readerIdx;
                 return -1;
             case HTTP3_GO_AWAY_FRAME_TYPE:
@@ -435,11 +465,13 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                 {
                     return 0;
                 }
+
                 int idLen = NumBytesForVariableLengthInteger(@in.GetByte(@in.ReaderIndex));
                 if (!EnforceExactIdLength(ctx, type, payLoadLength, idLen))
                 {
                     return 0;
                 }
+
                 @out.Add(new DefaultHttp3GoAwayFrame(ReadVariableLengthInteger(@in, idLen)));
                 return payLoadLength;
             case HTTP3_MAX_PUSH_ID_FRAME_TYPE:
@@ -451,11 +483,13 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                 {
                     return 0;
                 }
+
                 int pidLen = NumBytesForVariableLengthInteger(@in.GetByte(@in.ReaderIndex));
                 if (!EnforceExactIdLength(ctx, type, payLoadLength, pidLen))
                 {
                     return 0;
                 }
+
                 @out.Add(new DefaultHttp3MaxPushIdFrame(ReadVariableLengthInteger(@in, pidLen)));
                 return payLoadLength;
             default:
@@ -470,6 +504,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                 {
                     return 0;
                 }
+
                 @out.Add(new DefaultHttp3UnknownFrame(longType, @in.ReadRetainedSlice(payLoadLength)));
                 return payLoadLength;
         }
@@ -486,6 +521,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                     " for frame of type " + type.ToString(CultureInfo.InvariantCulture) + '.', true);
             return false;
         }
+
         return @in.ReadableBytes >= payLoadLength;
     }
 
@@ -505,6 +541,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                     " for frame of type " + type.ToString(CultureInfo.InvariantCulture) + '.', true);
             return false;
         }
+
         return true;
     }
 
@@ -517,6 +554,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                 " for frame of type " + type.ToString(CultureInfo.InvariantCulture) + '.', true);
             return false;
         }
+
         return true;
     }
 
@@ -524,6 +562,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
     {
         IHttp3SettingsFrame settingsFrame = new DefaultHttp3SettingsFrame(
                 new Http3Settings(nonStandardSettingsValidator));
+
         while (payLoadLength > 0)
         {
             int keyLen = NumBytesForVariableLengthInteger(@in.GetByte(@in.ReaderIndex));
@@ -533,6 +572,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                         "Received an invalid settings frame length.", true);
                 return null;
             }
+
             long key = ReadVariableLengthInteger(@in, keyLen);
             if (Http3CodecUtils.IsReservedHttp2Setting(key))
             {
@@ -542,6 +582,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                         "Received a settings key that is reserved for HTTP/2.", true);
                 return null;
             }
+
             payLoadLength -= keyLen;
             if (payLoadLength == 0)
             {
@@ -549,6 +590,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                     "Received a settings key without a value.", true);
                 return null;
             }
+
             int valueLen = NumBytesForVariableLengthInteger(@in.GetByte(@in.ReaderIndex));
             if (valueLen > payLoadLength)
             {
@@ -556,6 +598,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                         "Received an invalid settings frame length.", true);
                 return null;
             }
+
             long value = ReadVariableLengthInteger(@in, valueLen);
             payLoadLength -= valueLen;
 
@@ -568,6 +611,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                 return null;
             }
         }
+
         return settingsFrame;
     }
 
@@ -591,6 +635,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
             Http3HeadersSink sink = new Http3HeadersSink(headers, maxHeaderListSize, true, trailer);
             Debug.Assert(qpackAttributes != null);
             Debug.Assert(readResumptionListener != null);
+
             if (qpackDecoder.Decode(qpackAttributes,
                     ((IQuicStreamChannel) ctx.Channel).StreamId(), @in, length, sink.Accept, readResumptionListener.Run))
             {
@@ -598,6 +643,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                 sink.Finish();
                 return true;
             }
+
             readResumptionListener.Suspended();
         }
         catch (Http3Exception e)
@@ -618,6 +664,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
             // See https://tools.ietf.org/html/draft-ietf-quic-http-32#section-4.1.3
             Http3CodecUtils.StreamError(ctx, Http3ErrorCode.H3_MESSAGE_ERROR);
         }
+
         return false;
     }
 
@@ -625,6 +672,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
     {
         TaskCompletionSource promise = Http3CodecUtils.NewPromise();
         Debug.Assert(qpackAttributes != null);
+
         if (writeResumptionListener != null)
         {
             writeResumptionListener.Enqueue(msg, promise);
@@ -734,12 +782,14 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                     Http3CodecUtils.ConnectionError(ctx, exception, false);
                     return false;
                 }
+
                 long value = e.Value;
                 int keyLen = NumBytesForVariableLengthInteger(key);
                 int valueLen = NumBytesForVariableLengthInteger(value);
                 WriteVariableLengthInteger(@out, key, keyLen);
                 WriteVariableLengthInteger(@out, value, valueLen);
             }
+
             return true;
         }, promise);
     }
@@ -825,6 +875,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
             ConnectionError(ctx, exception.ErrorCode(), exception.Message, false);
             return;
         }
+
         if (!Http3CodecUtils.IsReservedFrameType(type))
         {
             Http3Exception exception = new Http3Exception(Http3ErrorCode.H3_FRAME_UNEXPECTED,
@@ -832,6 +883,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
             promise.SetException(exception);
             return;
         }
+
         ByteBuf @out = ctx.Alloc().DirectBuffer();
         WriteVariableLengthInteger(@out, type);
         WriteVariableLengthInteger(@out, frame.Content.ReadableBytes);
@@ -881,6 +933,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
     public void Read(IChannelHandlerContext ctx)
     {
         Debug.Assert(readResumptionListener != null);
+
         if (readResumptionListener.ReadRequested())
         {
             ctx.Read();
@@ -914,6 +967,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
             this.ctx = ctx;
             this.codec = codec;
             Debug.Assert(codec.qpackAttributes != null);
+
             if (!codec.qpackAttributes.DynamicTableDisabled() && !codec.qpackAttributes.DecoderStreamAvailable())
             {
                 codec.qpackAttributes.WhenDecoderStreamAvailable(OperationComplete);
@@ -933,6 +987,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                 SetState(STATE_READ_COMPLETE_PENDING);
                 return false;
             }
+
             return true;
         }
 
@@ -943,6 +998,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                 SetState(STATE_READ_PENDING);
                 return false;
             }
+
             return true;
         }
 
@@ -979,14 +1035,17 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
         private void Resume()
         {
             UnsetState(STATE_SUSPENDED);
+
             try
             {
                 codec.ChannelRead(ctx, Unpooled.EmptyBuffer);
+
                 if (HasState(STATE_READ_COMPLETE_PENDING))
                 {
                     UnsetState(STATE_READ_COMPLETE_PENDING);
                     codec.ChannelReadComplete(ctx);
                 }
+
                 if (HasState(STATE_READ_PENDING))
                 {
                     UnsetState(STATE_READ_PENDING);
@@ -1060,6 +1119,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
         {
             Debug.Assert(ctx.Channel.EventLoop.InEventLoop());
             bool flushSeen = false;
+
             try
             {
                 for (;;)
@@ -1069,6 +1129,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                     {
                         break;
                     }
+
                     if (entry == FLUSH)
                     {
                         flushSeen = true;
@@ -1080,6 +1141,7 @@ internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHa
                         codec.Write0(ctx, ReferenceCountUtil.Retain(entry), queue.Remove());
                     }
                 }
+
                 // indicate that writes do not need to be enqueued. As we are on the eventloop, no other writes can
                 // happen while we are draining, hence we would not write out of order.
                 codec.writeResumptionListener = null;

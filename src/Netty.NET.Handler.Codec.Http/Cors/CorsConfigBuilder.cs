@@ -67,6 +67,7 @@ public sealed class CorsConfigBuilder
         {
             return new CorsConfigBuilder();
         }
+
         return new CorsConfigBuilder(origin);
     }
 
@@ -202,6 +203,7 @@ public sealed class CorsConfigBuilder
         {
             exposeHeaders.Add(header.ToString());
         }
+
         return this;
     }
 
@@ -298,6 +300,7 @@ public sealed class CorsConfigBuilder
         {
             requestHeaders.Add(header.ToString());
         }
+
         return this;
     }
 
@@ -321,6 +324,7 @@ public sealed class CorsConfigBuilder
         {
             PreflightResponseHeader(name, (IEnumerable<object>) values);
         }
+
         return this;
     }
 
@@ -415,6 +419,7 @@ public sealed class CorsConfigBuilder
             preflightHeaders[HttpHeaderNames.DATE] = () => DateValueGenerator.INSTANCE.Call();
             preflightHeaders[HttpHeaderNames.CONTENT_LENGTH] = new ConstantValueGenerator("0").Call;
         }
+
         return new CorsConfig(this);
     }
 

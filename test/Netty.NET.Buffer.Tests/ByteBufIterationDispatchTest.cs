@@ -86,6 +86,7 @@ public class ByteBufIterationDispatchTest
             {
                 Assert.True(_owner.Release());
             }
+
             Assert.Equal(0, Root.RefCnt);
             Assert.Equal(1, Inner.Closes);
             Assert.Equal(_outerTracked ? 1 : 0, Outer.Closes);
@@ -149,6 +150,7 @@ public class ByteBufIterationDispatchTest
         {
             if (++calls == 2)
                 throw failure;
+
             return true;
         })));
         Assert.Equal(2, calls);
@@ -163,6 +165,7 @@ public class ByteBufIterationDispatchTest
             Assert.Throws<ArgumentOutOfRangeException>(() => Scan(buffer, operation, _ => throw failure, 7, 2));
             Assert.Equal(before + 1, storage.Inner.Records);
         }
+
         Assert.Equal(0, storage.Outer.Records);
         Assert.Equal(0, storage.Inner.Closes);
         Assert.Equal(1, storage.Root.RefCnt);
@@ -253,6 +256,7 @@ public class ByteBufIterationDispatchTest
             _ => Unpooled.UnreleasableBuffer(root)
         };
         Func<byte, bool> processor = _ => throw new InvalidOperationException("override owns iteration");
+
         try
         {
             Assert.Equal(40 + operation, Scan(buffer, operation, processor));
@@ -282,11 +286,13 @@ public class ByteBufIterationDispatchTest
         int result = Scan(storage.Facade, descending ? 3 : 1, value =>
         {
             visited.Add(value);
+
             if (visited.Count == 1)
             {
                 storage.Root.Capacity = 32;
                 storage.Root.SetByte(descending ? 4 : 3, 42);
             }
+
             return value != 42;
         });
         Assert.Equal(descending ? 4 : 3, result);

@@ -41,6 +41,7 @@ public sealed class ReadOnlyMemoryByteBuf : AbstractReferenceCountedByteBuf
         : base(memory.Length)
     {
         ArgumentNullException.ThrowIfNull(allocator);
+
         _allocator = allocator;
         // Use buffer as the super class will slice the passed in ByteBuffer which means the memoryAddress
         // may be different if the position != 0.
@@ -80,18 +81,21 @@ public sealed class ReadOnlyMemoryByteBuf : AbstractReferenceCountedByteBuf
     internal override BufferMemoryLease AcquireReadLease()
     {
         EnsureAccessible();
+
         return BufferMemoryLease.ForBorrowedMemory(_memory);
     }
 
     public override ByteBuf Copy(int index, int length)
     {
         CheckIndex(index, length);
+
         // Always duplicate the buffer so it's safe to call copy from multiple threads.
         // CLR: a local immutable range replaces Java's per-copy ByteBuffer cursor.
         ReadOnlyMemory<byte> source = _memory.Slice(index, length);
         // The original optimized native provider retains this captured range's maximum.
         // Managed/opaque memory follows the original generic read-only provider's factory default.
         ByteBuf result = IsDirect ? Alloc().DirectBuffer(length, MaxCapacity) : Alloc().HeapBuffer(length);
+
         try
         {
             // The native provider does not touch either range for an empty copy.
@@ -99,6 +103,7 @@ public sealed class ReadOnlyMemoryByteBuf : AbstractReferenceCountedByteBuf
             {
                 result.WriteBytes(source.Span);
             }
+
             return result;
         }
         catch

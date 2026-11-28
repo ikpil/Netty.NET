@@ -86,6 +86,7 @@ public abstract class QuicPathEvent : IQuicEvent
         {
             return false;
         }
+
         return Equals(remote, that.remote);
     }
 
@@ -185,6 +186,7 @@ public abstract class QuicPathEvent : IQuicEvent
             {
                 return false;
             }
+
             return base.Equals(o);
         }
 
@@ -282,6 +284,7 @@ public abstract class QuicPathEvent : IQuicEvent
             {
                 return false;
             }
+
             return Equals(oldRemote, that.oldRemote);
         }
 

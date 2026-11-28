@@ -72,6 +72,7 @@ public class WebSocketServerHandshaker13Test : WebSocketServerHandshakerTest
             TestUpgrade0(ch, new WebSocketServerHandshaker13(
                     "ws://example.com/chat", null, false, int.MaxValue, false));
         }
+
         Assert.False(ch.Finish());
     }
 
@@ -135,6 +136,7 @@ public class WebSocketServerHandshaker13Test : WebSocketServerHandshakerTest
         {
             Assert.Null(res.Headers().Get(HttpHeaderNames.SEC_WEBSOCKET_PROTOCOL));
         }
+
         ReferenceCountUtil.Release(res);
         req.Release();
     }

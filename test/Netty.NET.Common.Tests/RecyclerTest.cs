@@ -185,12 +185,14 @@ public class RecyclerTest
             WeakReference<Thread> thread = StartCollectibleThread(ownerType, unguarded, value => retained = value);
             // Loop until the Thread was collected. If we can not collect it the Test will fail due of a timeout.
             var deadline = Stopwatch.StartNew();
+
             while (!Collected(thread) && deadline.Elapsed < TimeSpan.FromSeconds(5))
             {
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
                 Thread.Sleep(50);
             }
+
             Assert.True(Collected(thread));
             // Now call recycle after the Thread was collected to ensure this still works...
             retained?.Recycle();
@@ -214,6 +216,7 @@ public class RecyclerTest
             // This test makes only sense for guarded recyclers
             HandledObject value = NewRecycler(ownerType, false, 1024).Get();
             value.Recycle();
+
             if (IsPooling(ownerType))
             {
                 Assert.Throws<InvalidOperationException>(value.Recycle);
@@ -262,6 +265,7 @@ public class RecyclerTest
             second.Start();
             Join(second);
             Assert.NotSame(recycler.Get(), recycler.Get());
+
             if (IsPooling(ownerType))
             {
                 Assert.NotNull(failure);
@@ -304,10 +308,12 @@ public class RecyclerTest
             Thread first = Worker(recycle), second = Worker(recycle);
             first.Start();
             second.Start();
+
             try
             {
                 Assert.True(done.Wait(TimeSpan.FromSeconds(5)));
                 Assert.NotSame(recycler.Get(), recycler.Get());
+
                 if (failure != null)
                 {
                     Assert.Contains("recycled already", failure.Message);
@@ -349,6 +355,7 @@ public class RecyclerTest
                 }
             });
             first.Start();
+
             try
             {
                 value.Recycle();
@@ -357,10 +364,12 @@ public class RecyclerTest
             {
                 Interlocked.Exchange(ref failure, e);
             }
+
             try
             {
                 Assert.True(done.Wait(TimeSpan.FromSeconds(5)));
                 Assert.NotSame(recycler.Get(), recycler.Get());
+
                 if (IsPooling(ownerType))
                 {
                     Assert.NotNull(failure); // Object got recycled twice, so at least one of the calls must throw.
@@ -387,6 +396,7 @@ public class RecyclerTest
             HandledObject value = recycler.Get();
             value.Recycle();
             HandledObject other = recycler.Get();
+
             if (IsPooling(ownerType))
             {
                 Assert.Same(value, other);
@@ -395,6 +405,7 @@ public class RecyclerTest
             {
                 Assert.NotSame(value, other);
             }
+
             other.Recycle();
         });
     }
@@ -462,6 +473,7 @@ public class RecyclerTest
         {
             values[i] = recycler.Get();
         }
+
         for (int i = 0; i < values.Length; i++)
         {
             values[i].Recycle();
@@ -511,6 +523,7 @@ public class RecyclerTest
                 }
             });
             single.Start();
+
             try
             {
                 using var latch1 = new CountdownEvent(1);
@@ -560,6 +573,7 @@ public class RecyclerTest
             {
                 values[i] = recycler.Get();
             }
+
             for (int i = 0; i < maxCapacity; i++)
             {
                 values[i].Recycle();

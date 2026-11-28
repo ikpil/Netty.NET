@@ -67,6 +67,7 @@ internal sealed class QpackEncoderHandler : ByteToMessageDecoder
         {
             return;
         }
+
         if (discard)
         {
             @in.SkipBytes(@in.ReadableBytes);
@@ -99,6 +100,7 @@ internal sealed class QpackEncoderHandler : ByteToMessageDecoder
             {
                 HandleDecodeFailure(ctx, e, "setDynamicTableCapacity failed.");
             }
+
             return;
         }
 
@@ -109,6 +111,7 @@ internal sealed class QpackEncoderHandler : ByteToMessageDecoder
             // We need the decoder stream to update the decoder with these instructions.
             return;
         }
+
         IQuicStreamChannel decoderStream = qpackAttributes.DecoderStream();
 
         // 4.3.2. Insert With Name Reference
@@ -144,6 +147,7 @@ internal sealed class QpackEncoderHandler : ByteToMessageDecoder
                     // Not enough readable bytes
                     return;
                 }
+
                 qpackDecoder.InsertWithNameReference(decoderStream, isStaticTableIndex, nameIdx,
                         value);
             }
@@ -151,8 +155,10 @@ internal sealed class QpackEncoderHandler : ByteToMessageDecoder
             {
                 HandleDecodeFailure(ctx, e, "insertWithNameReference failed.");
             }
+
             return;
         }
+
         // 4.3.3. Insert With Literal Name
         //
         //      0   1   2   3   4   5   6   7
@@ -181,6 +187,7 @@ internal sealed class QpackEncoderHandler : ByteToMessageDecoder
             try
             {
                 CheckStringLiteralLength(nameHuffEncoded, nameLength);
+
                 if (@in.ReadableBytes < nameLength)
                 {
                     // Reset readerIndex
@@ -198,14 +205,17 @@ internal sealed class QpackEncoderHandler : ByteToMessageDecoder
                     // Not enough readable bytes
                     return;
                 }
+
                 qpackDecoder.InsertLiteral(decoderStream, name, value);
             }
             catch (QpackException e)
             {
                 HandleDecodeFailure(ctx, e, "insertLiteral failed.");
             }
+
             return;
         }
+
         // 4.3.4. Duplicate
         //
         //      0   1   2   3   4   5   6   7
@@ -223,6 +233,7 @@ internal sealed class QpackEncoderHandler : ByteToMessageDecoder
                 // Not enough readable bytes
                 return;
             }
+
             try
             {
                 qpackDecoder.Duplicate(decoderStream, index);
@@ -231,6 +242,7 @@ internal sealed class QpackEncoderHandler : ByteToMessageDecoder
             {
                 HandleDecodeFailure(ctx, e, "duplicate failed.");
             }
+
             return;
         }
 
@@ -255,6 +267,7 @@ internal sealed class QpackEncoderHandler : ByteToMessageDecoder
             // See https://www.rfc-editor.org/rfc/rfc9204.html#name-encoder-and-decoder-streams
             Http3CodecUtils.CriticalStreamClosed(ctx);
         }
+
         ctx.FireUserEventTriggered(evt);
     }
 
@@ -280,6 +293,7 @@ internal sealed class QpackEncoderHandler : ByteToMessageDecoder
             // Not enough readable bytes
             return null;
         }
+
         bool valueHuffEncoded = QpackUtil.ByteEquals(@in, readerIndex, 0b1000_0000);
         CheckStringLiteralLength(valueHuffEncoded, valueLength);
         if (@in.ReadableBytes < valueLength)
@@ -287,6 +301,7 @@ internal sealed class QpackEncoderHandler : ByteToMessageDecoder
             // Not enough readable bytes
             return null;
         }
+
         return DecodeStringLiteral(@in, valueHuffEncoded, valueLength);
     }
 
@@ -317,8 +332,10 @@ internal sealed class QpackEncoderHandler : ByteToMessageDecoder
         {
             throw INVALID_LENGTH_STRING_LITERAL;
         }
+
         byte[] buf = new byte[length];
         @in.ReadBytes(buf);
+
         return new AsciiString(buf, false);
     }
 }

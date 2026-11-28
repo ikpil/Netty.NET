@@ -68,6 +68,7 @@ public class SslUtilsTest
     private static SslStream NewEngine(CaptureStream cTOs)
     {
         SslStream engine = new SslStream(cTOs, false);
+
         try
         {
             engine.AuthenticateAsClient(new SslClientAuthenticationOptions { TargetHost = "netty.io" });
@@ -76,6 +77,7 @@ public class SslUtilsTest
         {
             // CLR: the capture stream ends after the ClientHello was written.
         }
+
         return engine;
     }
 
@@ -195,6 +197,7 @@ public class SslUtilsTest
     {
         ByteBuf buf = Unpooled.WrappedBuffer(new byte[] { 0x30, 0x82, 0x0c, 0x48, 0x02, 0x01, 0x01, 0x01 });
         int packetLength = SslUtils.GetEncryptedPacketLength(buf, 0, probeSSLv2);
+
         if (probeSSLv2)
         {
             Assert.NotEqual(SslUtils.NOT_ENCRYPTED, packetLength);
@@ -203,6 +206,7 @@ public class SslUtilsTest
         {
             Assert.Equal(SslUtils.NOT_ENCRYPTED, packetLength);
         }
+
         buf.Release();
     }
 

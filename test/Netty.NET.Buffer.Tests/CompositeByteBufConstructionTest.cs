@@ -48,6 +48,7 @@ public class CompositeByteBufConstructionTest
         first.MarkReaderIndex().MarkWriterIndex();
         second.MarkReaderIndex().MarkWriterIndex();
         CompositeByteBuf composite = Construct(allocator, direct, limit, [first, empty, second], enumerable);
+
         try
         {
             Assert.Same(allocator, composite.Alloc());
@@ -68,6 +69,7 @@ public class CompositeByteBufConstructionTest
             Assert.Equal(limit == 1 && direct, composite.IsDirect);
             external[1] = 99;
             Assert.Equal(limit == 1 ? 1 : 99, composite.GetByte(0));
+
             if (limit == 1)
             {
                 composite.SetByte(0, 7);
@@ -91,6 +93,7 @@ public class CompositeByteBufConstructionTest
         {
             composite.Release();
         }
+
         Assert.Equal(0, first.RefCnt);
         Assert.Equal(0, empty.RefCnt);
         Assert.Equal(0, second.RefCnt);
@@ -131,6 +134,7 @@ public class CompositeByteBufConstructionTest
         ByteBuf tail = Unpooled.Buffer(1, 1).WriteByte(3);
         CompositeByteBuf composite = Construct(UnpooledByteBufAllocator.Default, false, 8,
             [prefix, null, tail, null], enumerable);
+
         try
         {
             Assert.Equal(1, composite.NumComponents);
@@ -142,6 +146,7 @@ public class CompositeByteBufConstructionTest
         {
             composite.Release();
         }
+
         Assert.Equal(0, prefix.RefCnt);
     }
 
@@ -150,6 +155,7 @@ public class CompositeByteBufConstructionTest
     public void InvalidConstructorArgumentsLeaveInputsCallerOwned(bool enumerable)
     {
         ByteBuf input = Unpooled.WrappedBuffer(new byte[] { 1 });
+
         try
         {
             Assert.Throws<ArgumentNullException>(() => Construct(null, false, 8, [input], enumerable));
@@ -171,6 +177,7 @@ public class CompositeByteBufConstructionTest
         ByteBuf a = allocator.HeapBuffer(1, 1).WriteByte(1), b = allocator.HeapBuffer(1, 1).WriteByte(2);
         var inner = new CompositeByteBuf(allocator, false, 8, a, b);
         CompositeByteBuf outer = new(allocator, false, 8, (IEnumerable<ByteBuf>)inner);
+
         try
         {
             Assert.Equal(2, inner.NumComponents);
@@ -184,6 +191,7 @@ public class CompositeByteBufConstructionTest
         {
             outer.Release();
         }
+
         Assert.Equal(0, inner.RefCnt);
         Assert.Equal(0, a.RefCnt);
         Assert.Equal(0, b.RefCnt);
@@ -216,13 +224,16 @@ public class CompositeByteBufConstructionTest
         ByteBuf[] inputs = [allocator.DirectBuffer(1, 1).WriteByte(1), allocator.DirectBuffer(1, 1).WriteByte(2),
             allocator.DirectBuffer(1, 1).WriteByte(3)];
         Assert.Throws<OutOfDirectMemoryError>(() => Construct(allocator, true, 1, inputs, enumerable));
+
         foreach (ByteBuf input in inputs)
             Assert.Equal(0, input.RefCnt);
+
         Assert.Equal(0, native.ReservedBytes);
         Assert.Equal(0, allocator.Metric.UsedDirectMemory);
         ByteBuf[] retryInputs = [allocator.DirectBuffer(1, 1).WriteByte(1), allocator.DirectBuffer(1, 1).WriteByte(2),
             allocator.DirectBuffer(1, 1).WriteByte(3)];
         CompositeByteBuf retry = Construct(allocator, true, 8, retryInputs, enumerable);
+
         try
         {
             Assert.Equal("010203", ByteBufUtil.HexDump(retry));
@@ -231,6 +242,7 @@ public class CompositeByteBufConstructionTest
         {
             retry.Release();
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -243,11 +255,13 @@ public class CompositeByteBufConstructionTest
         ByteBuf first = allocator.DirectBuffer(2, 4).WriteBytes(new byte[] { 1, 2 });
         ByteBuf second = allocator.DirectBuffer(2, 4).WriteBytes(new byte[] { 3, 4 });
         var stream = new ShrinkingEnumerable(first, second);
+
         if (!enumerable)
         {
             // Array insertion can also observe mutation while capturing the next component's range.
             second = new ObservingBuffer(second, () => first.Capacity = 1);
         }
+
         Assert.Throws<ArgumentOutOfRangeException>(() =>
         {
             if (enumerable)
@@ -266,6 +280,7 @@ public class CompositeByteBufConstructionTest
     public void OverflowIsDetectedWithoutLargeAllocationsAndRespectsInputForm(bool enumerable)
     {
         ByteBuf first = new LogicalBuffer(int.MaxValue), second = new LogicalBuffer(1);
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => Construct(UnpooledByteBufAllocator.Default, false,
@@ -279,6 +294,7 @@ public class CompositeByteBufConstructionTest
             {
                 first.Release();
             }
+
             if (second.RefCnt > 0)
             {
                 second.Release();
@@ -308,6 +324,7 @@ public class CompositeByteBufConstructionTest
         ByteBuf first = allocator.HeapBuffer(1, 1).WriteByte(1), tail = allocator.HeapBuffer(1, 1).WriteByte(2);
         var failure = new InvalidOperationException("iteration failed");
         var stream = new FailingEnumerable(first, tail, failure, true);
+
         try
         {
             Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => new CompositeByteBuf(allocator, false, 8, stream)));
@@ -319,6 +336,7 @@ public class CompositeByteBufConstructionTest
         {
             tail.Release();
         }
+
         Assert.Equal(0, allocator.Metric.UsedHeapMemory);
     }
 
@@ -399,6 +417,7 @@ public class CompositeByteBufConstructionTest
                 _observed = true;
                 _action();
             }
+
             return _source.AsMemory(index, length);
         }
     }
@@ -443,6 +462,7 @@ public class CompositeByteBufConstructionTest
                     _failed = true;
                     throw failure;
                 }
+
                 return ++_position <= 2;
             }
 

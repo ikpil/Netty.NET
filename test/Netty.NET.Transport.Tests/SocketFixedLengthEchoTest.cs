@@ -89,6 +89,7 @@ public class SocketFixedLengthEchoTest : AbstractSocketTest
         // CLR: new SplittableRandom(random.nextLong()) is a Random seeded from the shared random; Next(maxValue) keeps
         // nextInt(bound)'s exclusive upper bound.
         Random rng = new Random(random.Next());
+
         for (int i = 0; i < data.Length;)
         {
             int length = Math.Min(rng.Next(1024 * 3), data.Length - i);
@@ -162,6 +163,7 @@ public class SocketFixedLengthEchoTest : AbstractSocketTest
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
             channel = ctx.Channel;
+
             if (!autoRead)
             {
                 ctx.Read();
@@ -176,6 +178,7 @@ public class SocketFixedLengthEchoTest : AbstractSocketTest
             msg.GetBytes(msg.ReaderIndex, actual);
 
             int lastIdx = counter;
+
             for (int i = 0; i < actual.Length; i ++)
             {
                 Assert.Equal(data[i + lastIdx], actual[i]);

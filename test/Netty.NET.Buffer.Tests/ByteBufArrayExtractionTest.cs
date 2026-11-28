@@ -45,6 +45,7 @@ public class ByteBufArrayExtractionTest
     public void OriginalGetBytesScenarios(int kind)
     {
         ByteBuf b = Owner(kind, new byte[] { 1, 2, 3, 4 });
+
         try
         {
             CheckOriginalRanges(b);
@@ -59,12 +60,14 @@ public class ByteBufArrayExtractionTest
     {
         Assert.Equal(new byte[] { 1, 2, 3, 4 }, ByteBufUtil.GetBytes(b));
         Assert.Equal(new byte[] { 1, 2, 3, 4 }, ByteBufUtil.GetBytes(b, 0, b.ReadableBytes, false));
+
         foreach (bool copy in new[] { true, false })
         {
             Assert.Equal(new byte[] { 1, 2, 3 }, ByteBufUtil.GetBytes(b, 0, 3, copy));
             Assert.Equal(new byte[] { 2, 3, 4 }, ByteBufUtil.GetBytes(b, 1, 3, copy));
             Assert.Equal(new byte[] { 2, 3 }, ByteBufUtil.GetBytes(b, 1, 2, copy));
         }
+
         Assert.Equal(new byte[] { 1, 2, 3 }, ByteBufUtil.GetBytes(b, 0, 3));
         Assert.Equal(new byte[] { 2, 3, 4 }, ByteBufUtil.GetBytes(b, 1, 3));
         Assert.Equal(new byte[] { 2, 3 }, ByteBufUtil.GetBytes(b, 1, 2));
@@ -76,6 +79,7 @@ public class ByteBufArrayExtractionTest
     {
         byte[] storage = { 5, 0, 0, 0, 5 };
         ByteBuf owner = Unpooled.WrappedBuffer(storage);
+
         try
         {
             ByteBuf slice = owner.Slice(offset, 4);
@@ -102,6 +106,7 @@ public class ByteBufArrayExtractionTest
     {
         byte[] data = Enumerable.Range(0, 32).Select(i => unchecked((byte)(i * 17))).ToArray();
         ByteBuf b = Owner(kind, data);
+
         try
         {
             b.SetIndex(3, 20).MarkReaderIndex().MarkWriterIndex();
@@ -142,6 +147,7 @@ public class ByteBufArrayExtractionTest
         byte[] storage = Enumerable.Range(1, 8).Select(i => (byte)i).ToArray();
         ByteBuf root = kind == 12 ? Unpooled.DirectBuffer(8, 8).WriteBytes(storage) : Unpooled.WrappedBuffer(storage);
         ByteBuf owner = root, b = root;
+
         switch (kind)
         {
             case 1:
@@ -182,6 +188,7 @@ public class ByteBufArrayExtractionTest
                 b = Unpooled.UnreleasableBuffer(root.AsReadOnly());
                 break;
         }
+
         try
         {
             byte first = b.GetByte(0);
@@ -190,11 +197,13 @@ public class ByteBufArrayExtractionTest
             Assert.Equal(b.Capacity, extracted.Length);
             extracted[0] ^= 128;
             Assert.Equal(shared ? extracted[0] : first, b.GetByte(0));
+
             if (shared)
             {
                 b.SetByte(0, 42);
                 Assert.Equal(42, extracted[0]);
             }
+
             byte[] copy = ByteBufUtil.GetBytes(b, 0, b.Capacity, true);
             Assert.NotSame(extracted, copy);
             Assert.Equal(extracted.Length, copy.Length);
@@ -219,12 +228,15 @@ public class ByteBufArrayExtractionTest
     public void EmptyBoundsAndReleasedRequestsAreAlwaysChecked(int kind)
     {
         ByteBuf b = Owner(kind, new byte[8]);
+
         foreach (bool copy in new[] { true, false })
         {
             Assert.Same(Array.Empty<byte>(), ByteBufUtil.GetBytes(b, 8, 0, copy));
+
             foreach (var (index, length) in new[] { (-1, 0), (0, -1), (9, 0), (8, 1), (1, 8), (0, int.MaxValue), (int.MaxValue, 0) })
                 Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.GetBytes(b, index, length, copy));
         }
+
         b.Release();
         Assert.Throws<IllegalReferenceCountException>(() => ByteBufUtil.GetBytes(b));
         Assert.Throws<IllegalReferenceCountException>(() => ByteBufUtil.GetBytes(b, 0, 0));

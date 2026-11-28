@@ -57,6 +57,7 @@ public class DefaultThreadFactory : IThreadFactory
         ArgumentNullException.ThrowIfNull(poolType);
 
         string poolName = StringUtil.SimpleClassName(poolType);
+
         switch (poolName.Length)
         {
             case 0:
@@ -96,6 +97,7 @@ public class DefaultThreadFactory : IThreadFactory
     public virtual Thread NewThread(Action r)
     {
         Thread t = NewThread(FastThreadLocalRunnable.Wrap(r), _prefix + Interlocked.Increment(ref _nextId).ToString(CultureInfo.InvariantCulture));
+
         try
         {
             if (t.IsBackground != _daemon)

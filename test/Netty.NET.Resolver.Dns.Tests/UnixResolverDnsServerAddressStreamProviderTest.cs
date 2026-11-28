@@ -301,6 +301,7 @@ public class UnixResolverDnsServerAddressStreamProviderTest : IDisposable
     {
         string path = Path.Combine(tempDir, "netty-dns-" + Guid.NewGuid().ToString().Substring(24) + ".txt");
         File.WriteAllBytes(path, Encoding.UTF8.GetBytes(contents));
+
         return new FileInfo(path);
     }
 

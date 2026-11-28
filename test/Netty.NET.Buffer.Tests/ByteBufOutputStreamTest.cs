@@ -51,12 +51,14 @@ public class ByteBufOutputStreamTest : IDisposable
         {
             return Unpooled.DirectBuffer(0, maximum);
         }
+
         if (kind is 3 or 4)
         {
             _pooled ??= new PooledByteBufAllocator(nativeAllocator: _native, maxOrder: 1,
                 smallCacheSize: 32, normalCacheSize: 32);
             return kind == 3 ? _pooled.HeapBuffer(0, maximum) : _pooled.DirectBuffer(0, maximum);
         }
+
         return Unpooled.CompositeBuffer(2);
     }
 
@@ -121,8 +123,10 @@ public class ByteBufOutputStreamTest : IDisposable
         byte[] text = new byte[13];
         input.ReadFully(text);
         Assert.Equal("Hello, World!", Encoding.Latin1.GetString(text));
+
         foreach (char character in "Hello, World!")
             Assert.Equal(character, input.ReadChar());
+
         Assert.Equal(42, input.ReadDouble());
         Assert.Equal(42, input.ReadSingle());
         Assert.Equal(42, input.ReadInt32());
@@ -144,6 +148,7 @@ public class ByteBufOutputStreamTest : IDisposable
         // buffer.
         // CLR: the transferred reference belongs to the input adapter here; output is borrowed.
         buffer.Retain();
+
         try
         {
             input.Dispose();
@@ -178,11 +183,13 @@ public class ByteBufOutputStreamTest : IDisposable
         // When releaseOnClose is set to true, ByteBuf will be automatically released after calling the close method of
         // ByteBufOutputStream.
         Assert.Equal(release ? 0 : 1, output.Buffer.RefCnt);
+
         if (!release)
         {
             // When releaseOnClose is not set or releaseOnClose is false, ByteBuf must be released manually.
             buffer.Release();
         }
+
         Assert.Equal(0, buffer.RefCnt);
         Assert.False(output.CanWrite);
     }
@@ -260,6 +267,7 @@ public class ByteBufOutputStreamTest : IDisposable
             () => output.WriteInt32(1), () => output.WriteInt64(1), () => output.WriteSingle(1),
             () => output.WriteDouble(1), () => output.WriteBytes(""), () => output.WriteChars(""), () => output.WriteUtf("")
         };
+
         try
         {
             Assert.Throws<ObjectDisposedException>(writes[operation]);
@@ -394,8 +402,10 @@ public class ByteBufOutputStreamTest : IDisposable
         Assert.Equal(0, buffer.WriterIndex);
         await output.WriteAsync(bytes.AsMemory(1, 2), TestContext.Current.CancellationToken);
         await output.WriteAsync(bytes, 0, 1, TestContext.Current.CancellationToken);
+
         using (var writer = new BinaryWriter(output, Encoding.UTF8, true))
             writer.Write(0x04030201);
+
         Assert.Equal(Convert.FromHexString("02030101020304"), buffer.ReadableSequence.ToArray());
         await output.FlushAsync(TestContext.Current.CancellationToken);
         output.Dispose();

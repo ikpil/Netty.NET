@@ -75,6 +75,7 @@ public abstract class WebSocketServerHandshakerTest
         }
 
         IFullHttpResponse response = null;
+
         try
         {
             response = serverHandshaker.InvokeNewHandshakeResponse(request, customResponseHeaders);
@@ -101,6 +102,7 @@ public abstract class WebSocketServerHandshakerTest
         finally
         {
             request.Release();
+
             if (response != null)
             {
                 response.Release();
@@ -117,6 +119,7 @@ public abstract class WebSocketServerHandshakerTest
         IFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET,
                                                              "ws://example.com/chat");
         request.Headers().Set("x-client-header", "value");
+
         try
         {
             _ = serverHandshaker.HandshakeAsync((IChannel) null, request, null, null);
@@ -184,6 +187,7 @@ public abstract class WebSocketServerHandshakerTest
         Assert.True(response.Headers().ContainsValue(HttpHeaderNames.UPGRADE, HttpHeaderValues.WEBSOCKET, true));
 
         ILastHttpContent lastHttpContent = channel.ReadInbound<ILastHttpContent>();
+
         if (WebSocketVersion() != Http.WebSocketx.WebSocketVersion.V00)
         {
             Assert.Equal(ILastHttpContent.EMPTY_LAST_CONTENT, lastHttpContent);

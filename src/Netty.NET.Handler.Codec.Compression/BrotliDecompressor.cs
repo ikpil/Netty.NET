@@ -99,6 +99,7 @@ public sealed class BrotliDecompressor : IDecompressor
                     {
                         throw new DecompressionException("Brotli error status");
                     }
+
                     return IDecompressor.Status.COMPLETE;
                 case OperationStatus.NeedMoreData:
                     if (outputLength != 0)
@@ -109,12 +110,15 @@ public sealed class BrotliDecompressor : IDecompressor
                     {
                         return IDecompressor.Status.NEED_INPUT;
                     }
+
                     AddSomeInput(unusedInput);
+
                     if (!unusedInput.IsReadable())
                     {
                         unusedInput.Release();
                         unusedInput = null;
                     }
+
                     break;
                 case OperationStatus.DestinationTooSmall:
                     return IDecompressor.Status.NEED_OUTPUT;
@@ -132,6 +136,7 @@ public sealed class BrotliDecompressor : IDecompressor
             {
                 throw new InvalidOperationException("Not in state NEED_INPUT");
             }
+
             AddSomeInput(buf);
         }
         catch (Exception)
@@ -139,6 +144,7 @@ public sealed class BrotliDecompressor : IDecompressor
             buf.Release();
             throw;
         }
+
         if (buf.IsReadable())
         {
             this.unusedInput = buf;
@@ -186,6 +192,7 @@ public sealed class BrotliDecompressor : IDecompressor
     public void Close()
     {
         decoder.Dispose();
+
         if (unusedInput != null)
         {
             unusedInput.Release();
@@ -209,9 +216,11 @@ public sealed class BrotliDecompressor : IDecompressor
             inputOffset = 0;
             inputLength = length;
         }
+
         lastStatus = decoder.Decompress(inputBuffer.AsSpan(inputOffset, inputLength - inputOffset), outputBuffer,
                 out int bytesConsumed, out outputLength);
         inputOffset += bytesConsumed;
+
         if (lastStatus == OperationStatus.NeedMoreData && outputLength == outputBuffer.Length)
         {
             lastStatus = OperationStatus.DestinationTooSmall;
@@ -222,6 +231,7 @@ public sealed class BrotliDecompressor : IDecompressor
     private void Pull()
     {
         outputLength = 0;
+
         if (lastStatus == OperationStatus.DestinationTooSmall)
         {
             Push(0);

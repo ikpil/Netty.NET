@@ -49,6 +49,7 @@ internal sealed class MaxCapacityQueue<E> : IEnumerable<E>
         {
             return true;
         }
+
         throw new InvalidOperationException();
     }
 
@@ -58,6 +59,7 @@ internal sealed class MaxCapacityQueue<E> : IEnumerable<E>
         {
             return false;
         }
+
         queue.Enqueue(element);
         return true;
     }
@@ -111,10 +113,12 @@ internal sealed class MaxCapacityQueue<E> : IEnumerable<E>
     {
         object[] array = new object[queue.Count];
         int i = 0;
+
         foreach (E e in queue)
         {
             array[i++] = e;
         }
+
         return array;
     }
 
@@ -123,14 +127,17 @@ internal sealed class MaxCapacityQueue<E> : IEnumerable<E>
         int size = queue.Count;
         T[] array = a.Length >= size ? a : new T[size];
         int i = 0;
+
         foreach (E e in queue)
         {
             array[i++] = (T) (object) e;
         }
+
         if (array.Length > size)
         {
             array[size] = default;
         }
+
         return array;
     }
 
@@ -149,6 +156,7 @@ internal sealed class MaxCapacityQueue<E> : IEnumerable<E>
                 return false;
             }
         }
+
         return true;
     }
 
@@ -157,13 +165,16 @@ internal sealed class MaxCapacityQueue<E> : IEnumerable<E>
         if (maxCapacity >= Size() + c.Count)
         {
             bool modified = false;
+
             foreach (E e in c)
             {
                 queue.Enqueue(e);
                 modified = true;
             }
+
             return modified;
         }
+
         throw new InvalidOperationException();
     }
 
@@ -187,6 +198,7 @@ internal sealed class MaxCapacityQueue<E> : IEnumerable<E>
     {
         int count = queue.Count;
         bool modified = false;
+
         for (int i = 0; i < count; i++)
         {
             E e = queue.Dequeue();
@@ -199,6 +211,7 @@ internal sealed class MaxCapacityQueue<E> : IEnumerable<E>
                 queue.Enqueue(e);
             }
         }
+
         return modified;
     }
 
@@ -211,6 +224,7 @@ internal sealed class MaxCapacityQueue<E> : IEnumerable<E>
                 return true;
             }
         }
+
         return false;
     }
 }

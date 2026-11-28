@@ -44,6 +44,7 @@ public sealed class LocalEcho
 
         IEventLoopGroup serverGroup = new MultiThreadIoEventLoopGroup(LocalIoHandler.NewFactory());
         IEventLoopGroup clientGroup =  new MultiThreadIoEventLoopGroup(LocalIoHandler.NewFactory());
+
         try
         {
             // Note that we can use any event loop to ensure certain local channels
@@ -83,6 +84,7 @@ public sealed class LocalEcho
             Console.WriteLine("Enter text (quit to end)");
             Task lastWriteFuture = null;
             TextReader @in = Console.In;
+
             for (;;)
             {
                 string line = @in.ReadLine();

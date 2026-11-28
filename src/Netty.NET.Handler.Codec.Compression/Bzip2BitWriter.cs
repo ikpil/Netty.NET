@@ -52,6 +52,7 @@ internal sealed class Bzip2BitWriter
         {
             throw new ArgumentException("count: " + count.ToString(CultureInfo.InvariantCulture) + " (expected: 0-32)");
         }
+
         int bitCount = this.bitCount;
         long bitBuffer = this.bitBuffer | value << 64 - count >>> bitCount;
         bitCount += count;
@@ -62,6 +63,7 @@ internal sealed class Bzip2BitWriter
             bitBuffer <<= 32;
             bitCount -= 32;
         }
+
         this.bitBuffer = bitBuffer;
         this.bitCount = bitCount;
     }
@@ -81,6 +83,7 @@ internal sealed class Bzip2BitWriter
             bitBuffer = 0;
             bitCount = 0;
         }
+
         this.bitBuffer = bitBuffer;
         this.bitCount = bitCount;
     }
@@ -97,10 +100,12 @@ internal sealed class Bzip2BitWriter
             throw new ArgumentException("value: " + value.ToString(CultureInfo.InvariantCulture) +
                     " (expected 0 or more)");
         }
+
         while (value-- > 0)
         {
             WriteBoolean(@out, true);
         }
+
         WriteBoolean(@out, false);
     }
 

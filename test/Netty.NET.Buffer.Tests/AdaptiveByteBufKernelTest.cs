@@ -39,6 +39,7 @@ public class AdaptiveByteBufKernelTest
             {
                 return;
             }
+
             Calls.Add((method, index, width, peer));
             if (Fail)
             {
@@ -52,12 +53,14 @@ public class AdaptiveByteBufKernelTest
         public override byte GetByte(int index)
         {
             o.Visit("PublicByte", index, 1);
+
             return base.GetByte(index);
         }
 
         internal override byte ReadByteCore(int index)
         {
             o.Visit("Byte", index, 1);
+
             return base.ReadByteCore(index);
         }
 
@@ -70,29 +73,34 @@ public class AdaptiveByteBufKernelTest
         internal override ulong ReadWord(int index, int width, bool little)
         {
             o.Visit("Word", index, width);
+
             return base.ReadWord(index, width, little);
         }
 
         internal override ByteBuf SetWord(int index, ulong value, int width, bool little)
         {
             o.Visit("SetWord", index, width);
+
             return base.SetWord(index, value, width, little);
         }
 
         public override ByteBuf GetBytes(int index, Span<byte> destination)
         {
             o.Visit("Span", index, destination.Length);
+
             if (o.ReadFill is byte fill)
             {
                 destination.Fill(fill);
                 return this;
             }
+
             return base.GetBytes(index, destination);
         }
 
         public override ByteBuf GetBytes(int index, ByteBuf destination, int destinationIndex, int length)
         {
             o.Visit("Buffer", index, length, destination);
+
             return base.GetBytes(index, destination, destinationIndex, length);
         }
 
@@ -111,6 +119,7 @@ public class AdaptiveByteBufKernelTest
         public override ByteBuf SetZero(int index, int length)
         {
             o.Visit("Zero", index, length);
+
             return base.SetZero(index, length);
         }
     }
@@ -120,12 +129,14 @@ public class AdaptiveByteBufKernelTest
         public override byte GetByte(int index)
         {
             o.Visit("PublicByte", index, 1);
+
             return base.GetByte(index);
         }
 
         internal override byte ReadByteCore(int index)
         {
             o.Visit("Byte", index, 1);
+
             return base.ReadByteCore(index);
         }
 
@@ -138,29 +149,34 @@ public class AdaptiveByteBufKernelTest
         internal override ulong ReadWord(int index, int width, bool little)
         {
             o.Visit("Word", index, width);
+
             return base.ReadWord(index, width, little);
         }
 
         internal override ByteBuf SetWord(int index, ulong value, int width, bool little)
         {
             o.Visit("SetWord", index, width);
+
             return base.SetWord(index, value, width, little);
         }
 
         public override ByteBuf GetBytes(int index, Span<byte> destination)
         {
             o.Visit("Span", index, destination.Length);
+
             if (o.ReadFill is byte fill)
             {
                 destination.Fill(fill);
                 return this;
             }
+
             return base.GetBytes(index, destination);
         }
 
         public override ByteBuf GetBytes(int index, ByteBuf destination, int destinationIndex, int length)
         {
             o.Visit("Buffer", index, length, destination);
+
             return base.GetBytes(index, destination, destinationIndex, length);
         }
 
@@ -179,6 +195,7 @@ public class AdaptiveByteBufKernelTest
         public override ByteBuf SetZero(int index, int length)
         {
             o.Visit("Zero", index, length);
+
             return base.SetZero(index, length);
         }
     }
@@ -215,10 +232,13 @@ public class AdaptiveByteBufKernelTest
         public void Dispose()
         {
             Observation.Enabled = false;
+
             if (Buffer.RefCnt > 0)
                 Buffer.Release();
+
             if (Guard.RefCnt > 0)
                 Guard.Release();
+
             Allocator.Dispose();
             Assert.Equal(0, Allocator.Native.ReservedBytes);
         }
@@ -242,15 +262,18 @@ public class AdaptiveByteBufKernelTest
         int offset = s.Buffer.Allocation.Offset;
         ByteBuf peer = new UnpooledHeapByteBuf(8);
         Func<byte, bool> visitor = _ => true;
+
         if (operation is 9 or 13)
             b.SetIndex(1, 3);
         else if (operation >= 10)
             b.SetIndex(3, 7);
         else
             b.SetIndex(1, 2);
+
         int reader = b.ReaderIndex, writer = b.WriterIndex;
         b.MarkReaderIndex().MarkWriterIndex();
         s.Observation.Enabled = true;
+
         try
         {
             void Request()
@@ -319,10 +342,13 @@ public class AdaptiveByteBufKernelTest
             Assert.Equal(expected, call.Method);
             Assert.Equal(offset + 3, call.Index);
             Assert.Equal(operation is 0 or 2 or 12 ? 1 : operation is 1 or 13 ? 8 : 4, call.Width);
+
             if (operation is 5 or 11)
                 Assert.Same(peer, call.Peer);
+
             if (operation is 6 or 7)
                 Assert.Same(visitor, call.Peer);
+
             Assert.Equal(reader, b.ReaderIndex);
             Assert.Equal(writer, b.WriterIndex);
             Assert.Equal(0, peer.ReaderIndex);
@@ -362,10 +388,12 @@ public class AdaptiveByteBufKernelTest
         s.Allocator.AfterReservation = (_, allocation) => replacement = allocation;
         s.Observation.Enabled = true;
         s.Observation.Fail = mode == 0;
+
         if (mode == 1)
         {
             s.Observation.ReadFill = 0xA5;
         }
+
         try
         {
             if (mode == 0)
@@ -387,16 +415,19 @@ public class AdaptiveByteBufKernelTest
                 Assert.NotSame(old, b.Allocation);
                 Assert.Equal(target, b.Capacity);
                 byte[] expected = mode == 1 ? new byte[capacity] : original;
+
                 if (mode == 1)
                 {
                     Array.Fill(expected, (byte)0xA5);
                 }
+
                 Assert.Equal(expected, b.AsSpan(0, capacity).ToArray());
                 Assert.Throws<ObjectDisposedException>(() =>
                 {
                     _ = old.GetSpan().Length;
                 });
             }
+
             var call = Assert.Single(s.Observation.Calls);
             Assert.Equal(("Span", old.Offset, capacity), (call.Method, call.Index, call.Width));
             Assert.Equal((3, 8), (b.ReaderIndex, b.WriterIndex));
@@ -405,6 +436,7 @@ public class AdaptiveByteBufKernelTest
             Assert.Equal(guard, s.Guard.AsSpan(0, s.Guard.Capacity).ToArray());
             Assert.Equal(1, b.RefCnt);
             Assert.Equal(1, s.Guard.RefCnt);
+
             if (mode == 0)
             {
                 // The failed destination has been returned. Retrying must still read the old prefix.
@@ -453,12 +485,14 @@ public class AdaptiveByteBufKernelTest
             : new byte[] { (byte)((offset + 3) % 251), (byte)((offset + 4) % 251) }, seen);
         var delegates = s.Observation.Calls.Where(x => x.Method is "Asc" or "Desc").ToArray();
         Assert.Equal(indexed ? 1 : 0, delegates.Length);
+
         if (indexed)
         {
             Assert.Equal(offset + 3, delegates[0].Index);
             Assert.Equal(4, delegates[0].Width);
             Assert.Same(visitor, delegates[0].Peer);
         }
+
         Assert.DoesNotContain(s.Observation.Calls, x => x.Method == "PublicByte");
         Assert.Equal(3, b.ReaderIndex);
         Assert.Equal(7, b.WriterIndex);
@@ -516,6 +550,7 @@ public class AdaptiveByteBufKernelTest
         byte first = memory.Span[0];
         using var lease = b.AcquireReadLease();
         ReadOnlySpan<byte> bytes = memory.Span;
+
         try
         {
             b.Release();
@@ -530,6 +565,7 @@ public class AdaptiveByteBufKernelTest
         {
             lease.Dispose();
         }
+
         Assert.Equal(0, s.Allocator.UsedHeapMemory + s.Allocator.UsedDirectMemory);
         Assert.Equal(0, s.Allocator.Native.ReservedBytes);
     }
@@ -561,6 +597,7 @@ public class AdaptiveByteBufKernelTest
         Func<byte, bool> visitor = value =>
         {
             seen.Add(value);
+
             if (seen.Count == 1)
             {
                 if (resize)
@@ -574,10 +611,13 @@ public class AdaptiveByteBufKernelTest
                     Assert.True(!ReferenceEquals(raw, region.Root) || offset != region.Offset);
                     replacement.SetBytes(0, new byte[] { 0xEE, 0xEE, 0xEE, 0xEE });
                 }
+
                 Assert.Equal(1, raw.RefCnt);
             }
+
             return seen.Count < 2;
         };
+
         try
         {
             int result = descending ? b.ForEachByteDesc(3, 4, visitor) : b.ForEachByte(3, 4, visitor);
@@ -614,10 +654,12 @@ public class AdaptiveByteBufKernelTest
         Array.Copy(expected, source, expected, destination, 4);
         s.Observation.Enabled = true;
         s.Observation.Fail = false;
+
         if (typed)
             b.GetBytes(source, b, destination, 4);
         else
             b.GetBytes(source, b.AsSpan(destination, 4));
+
         Assert.Equal(expected, b.AsReadOnlyMemory(0, 8).ToArray());
         Assert.Equal(0, b.ReaderIndex);
         Assert.Equal(0, b.WriterIndex);
@@ -639,6 +681,7 @@ public class AdaptiveByteBufKernelTest
         b.GetBytes(3, bytes.AsSpan());
         Assert.Equal(new byte[] { 0x7F, 2, 3, 4 }, bytes);
         ByteBuf peer = new UnpooledHeapByteBuf(8);
+
         try
         {
             b.GetBytes(3, peer, 1, 4);
@@ -648,6 +691,7 @@ public class AdaptiveByteBufKernelTest
         {
             peer.Release();
         }
+
         b.SetIndex(1, 3);
         b.WriteZero(4);
         Assert.Equal(7, b.WriterIndex);

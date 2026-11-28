@@ -118,6 +118,7 @@ public class ContextPipelineEmbeddedAlignmentContractTest
         {
             Assert.Skip("Resource leak detection is disabled, so the pipeline does not touch messages.");
         }
+
         var forwarder = new ReadForwarder();
         var channel = new EmbeddedChannel(forwarder);
         var msg = new HintRecordingMessage();
@@ -295,8 +296,10 @@ public class ContextPipelineEmbeddedAlignmentContractTest
             {
                 throw new RejectedExecutionException();
             }
+
             Thread previous = _running;
             _running = Thread.CurrentThread;
+
             try
             {
                 task();

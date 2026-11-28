@@ -67,6 +67,7 @@ internal abstract class ByteBufChecksum : NonCryptographicHashAlgorithm
         {
             return (ByteBufChecksum) checksum;
         }
+
         return new JdkByteBufChecksum(checksum);
     }
 
@@ -86,6 +87,7 @@ internal abstract class ByteBufChecksum : NonCryptographicHashAlgorithm
     public override void Append(ReadOnlySpan<byte> source)
     {
         byte[] b = new byte[Math.Min(source.Length, 4096)];
+
         while (!source.IsEmpty)
         {
             int length = Math.Min(source.Length, b.Length);
@@ -122,6 +124,7 @@ internal abstract class ByteBufChecksum : NonCryptographicHashAlgorithm
         {
             return true;
         }
+
         array = default;
         return false;
     }

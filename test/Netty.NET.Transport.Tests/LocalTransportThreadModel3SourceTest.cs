@@ -64,18 +64,22 @@ public class LocalTransportThreadModel3SourceTest
             .Select(i => new DefaultEventExecutorGroup(4, new DefaultThreadFactory($"e{i}"))).ToArray();
         using var stopModifier = CancellationTokenSource.CreateLinkedTokenSource(token);
         Task modifier = Task.CompletedTask;
+
         try
         {
             // Configure a test server
             var server = await new ServerBootstrap().Group(servers).Channel<LocalServerChannel>()
                 .ChildHandler(new DiscardInput()).BindAsync(LocalAddress.ANY, token);
             var channel = new LocalChannel();
+
             if (!inbound)
             {
                 channel.Config.SetAutoRead(false);
             }
+
             for (int i = 0; i < 5; i++)
                 channel.Pipeline.AddLast(executors[0], $"h{i + 1}", new EventForwarder());
+
             var recorder = new EventRecorder(inbound);
             channel.Pipeline.AddLast(executors[0], "recorder", recorder);
             await clients.RegisterAsync(channel, token);
@@ -95,6 +99,7 @@ public class LocalTransportThreadModel3SourceTest
                     {
                         continue;
                     }
+
                     //EventForwardHandler forwardHandler = forwarders[random.nextInt(forwarders.length)];
                     var handler = channel.Pipeline.RemoveFirst();
                     channel.Pipeline.AddBefore(executors[Random.Shared.Next(executors.Length)], "recorder", Guid.NewGuid().ToString(), handler);
@@ -134,6 +139,7 @@ public class LocalTransportThreadModel3SourceTest
         finally
         {
             stopModifier.Cancel();
+
             try
             {
                 await modifier;
@@ -223,6 +229,7 @@ public class LocalTransportThreadModel3SourceTest
             {
                 Events.Enqueue(EventType.Write);
             }
+
             return Task.CompletedTask;
         }
 

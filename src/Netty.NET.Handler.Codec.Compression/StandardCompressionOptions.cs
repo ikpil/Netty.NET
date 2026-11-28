@@ -58,6 +58,7 @@ public sealed class StandardCompressionOptions
     {
         ObjectUtil.CheckInRange(quality, 0, 11, "quality");
         ObjectUtil.CheckInRange(window, 10, 24, "window");
+
         return new BrotliOptions(quality, window, mode);
     }
 

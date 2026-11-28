@@ -198,6 +198,7 @@ public class Http2FrameCodec : Http2ConnectionHandler
     internal void ForEachActiveStream(IHttp2FrameStreamVisitor streamVisitor)
     {
         Debug.Assert(ctx.Executor.InEventLoop());
+
         if (Connection().NumActiveStreams() > 0)
         {
             Connection().ForEachActiveStream(new FrameStreamVisitorAdapter(this, streamVisitor));
@@ -297,6 +298,7 @@ public class Http2FrameCodec : Http2ConnectionHandler
         else if (evt is HttpServerUpgradeHandler.UpgradeEvent)
         {
             HttpServerUpgradeHandler.UpgradeEvent upgrade = (HttpServerUpgradeHandler.UpgradeEvent) evt;
+
             try
             {
                 OnUpgradeEvent(ctx, upgrade.Retain());
@@ -308,6 +310,7 @@ public class Http2FrameCodec : Http2ConnectionHandler
                     // https://github.com/netty/netty/issues/4942
                     OnStreamActive0(stream);
                 }
+
                 upgrade.UpgradeRequest().Headers().SetInt(
                         HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.Text(), HTTP_UPGRADE_STREAM_ID);
                 stream.SetProperty<object>(upgradeKey, true);
@@ -338,6 +341,7 @@ public class Http2FrameCodec : Http2ConnectionHandler
     public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken)
     {
         TaskCompletionSource promise = NewPromise();
+
         if (msg is IHttp2DataFrame)
         {
             IHttp2DataFrame dataFrame = (IHttp2DataFrame) msg;
@@ -352,6 +356,7 @@ public class Http2FrameCodec : Http2ConnectionHandler
         {
             IHttp2WindowUpdateFrame frame = (IHttp2WindowUpdateFrame) msg;
             IHttp2FrameStream frameStream = frame.Stream();
+
             // It is legit to send a WINDOW_UPDATE frame for the connection stream. The parent channel doesn't attempt
             // to set the Http2FrameStream so we assume if it is null the WINDOW_UPDATE is for the connection stream.
             try
@@ -364,6 +369,7 @@ public class Http2FrameCodec : Http2ConnectionHandler
                 {
                     ConsumeBytes(frameStream.Id(), frame.WindowSizeIncrement());
                 }
+
                 promise.SetResult();
             }
             catch (Exception t)
@@ -433,6 +439,7 @@ public class Http2FrameCodec : Http2ConnectionHandler
             ReferenceCountUtil.Release(msg);
             throw new UnsupportedMessageTypeException(msg, SUPPORTED_MESSAGES);
         }
+
         return promise.Task;
     }
 
@@ -474,6 +481,7 @@ public class Http2FrameCodec : Http2ConnectionHandler
         {
             lastStreamId = int.MaxValue;
         }
+
         GoAwayAsync(ctx, (int) lastStreamId, frame.ErrorCode(), frame.Content, promise);
     }
 
@@ -562,6 +570,7 @@ public class Http2FrameCodec : Http2ConnectionHandler
 
             return false;
         }
+
         http2FrameStream.id = streamId;
 
         // Use a Map to store all pending streams as we may have multiple. This is needed as if we would store the
@@ -653,6 +662,7 @@ public class Http2FrameCodec : Http2ConnectionHandler
             // We only forward non outbound errors as outbound errors will already be reflected by failing the promise.
             ctx.FireExceptionCaught(cause);
         }
+
         base.OnConnectionError(ctx, outbound, cause, http2Ex);
     }
 
@@ -724,6 +734,7 @@ public class Http2FrameCodec : Http2ConnectionHandler
                 // Ignore unknown frames on connection stream, for example: HTTP/2 GREASE testing
                 return;
             }
+
             IHttp2FrameStream stream = RequireStream(streamId);
             codec.OnHttp2Frame(ctx, codec.NewHttp2UnknownFrame(frameType, streamId, flags, payload.Retain()).Stream(stream));
         }
@@ -756,6 +767,7 @@ public class Http2FrameCodec : Http2ConnectionHandler
                 // Ignore connection window updates.
                 return;
             }
+
             IHttp2FrameStream stream = RequireStream(streamId);
             codec.OnHttp2Frame(ctx, new DefaultHttp2WindowUpdateFrame(windowSizeIncrement).Stream(stream));
         }
@@ -779,6 +791,7 @@ public class Http2FrameCodec : Http2ConnectionHandler
         {
             IHttp2FrameStream stream = RequireStream(streamId);
             IHttp2DataFrame dataframe;
+
             try
             {
                 dataframe = new DefaultHttp2DataFrame(data.Retain(), endOfStream, padding);
@@ -789,6 +802,7 @@ public class Http2FrameCodec : Http2ConnectionHandler
                 data.Release();
                 throw;
             }
+
             dataframe.Stream(stream);
             codec.OnHttp2Frame(ctx, dataframe);
             // We return the bytes in consumeBytes() once the stream channel consumed the bytes.
@@ -810,6 +824,7 @@ public class Http2FrameCodec : Http2ConnectionHandler
                 // The stream was not opened yet, let's just ignore this for now.
                 return;
             }
+
             IHttp2FrameStream frameStream = RequireStream(streamId);
             codec.OnHttp2Frame(ctx, new DefaultHttp2PriorityFrame(streamDependency, weight, exclusive)
                     .Stream(frameStream));
@@ -838,6 +853,7 @@ public class Http2FrameCodec : Http2ConnectionHandler
                 throw new InvalidOperationException("Stream object required for identifier: " +
                         streamId.ToString(CultureInfo.InvariantCulture));
             }
+
             return stream;
         }
     }
@@ -893,6 +909,7 @@ public class Http2FrameCodec : Http2ConnectionHandler
             {
                 return;
             }
+
             codec.OnHttp2StreamWritabilityChanged(
                     codec.ctx, frameStream, codec.Connection().Remote().FlowController().IsWritable(stream));
         }

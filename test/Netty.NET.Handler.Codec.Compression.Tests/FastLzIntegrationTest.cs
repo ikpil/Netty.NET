@@ -86,6 +86,7 @@ public class FastLzIntegrationTest : AbstractIntegrationTest
             Random rng = new Random(rand.Next());
             int written = 0, length = rng.Next(100);
             ByteBuf @in;
+
             while (written + length < data.Length)
             {
                 @in = Unpooled.WrappedBuffer(data, written, length);
@@ -93,11 +94,13 @@ public class FastLzIntegrationTest : AbstractIntegrationTest
                 written += length;
                 length = rng.Next(100);
             }
+
             @in = Unpooled.WrappedBuffer(data, written, data.Length - written);
             encoder.WriteOutbound(@in);
             encoder.Finish();
 
             ByteBuf msg;
+
             while ((msg = encoder.ReadOutbound<ByteBuf>()) != null)
             {
                 compressed.AddComponent(msg, true);
@@ -107,6 +110,7 @@ public class FastLzIntegrationTest : AbstractIntegrationTest
             compressed.ReadBytes(compressedArray);
             written = 0;
             length = rng.Next(100);
+
             while (written + length < compressedArray.Length)
             {
                 @in = Unpooled.WrappedBuffer(compressedArray, written, length);
@@ -114,14 +118,17 @@ public class FastLzIntegrationTest : AbstractIntegrationTest
                 written += length;
                 length = rng.Next(100);
             }
+
             @in = Unpooled.WrappedBuffer(compressedArray, written, compressedArray.Length - written);
             decoder.WriteInbound(@in);
 
             Assert.False(compressed.IsReadable());
+
             while ((msg = decoder.ReadInbound<ByteBuf>()) != null)
             {
                 decompressed.AddComponent(msg, true);
             }
+
             Assert.Equal(original, decompressed);
         }
         finally

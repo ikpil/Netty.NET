@@ -39,6 +39,7 @@ public class LocalTransportThreadModelSourceTest
         var clients = new MultiThreadIoEventLoopGroup(4, new DefaultThreadFactory("l"), LocalIoHandler.NewFactory());
         var executors = Enumerable.Range(1, 5)
             .Select(i => new DefaultEventExecutorGroup(4, new DefaultThreadFactory($"e{i}"))).ToArray();
+
         try
         {
             var server = await new ServerBootstrap().Group(servers).Channel<LocalServerChannel>()
@@ -50,6 +51,7 @@ public class LocalTransportThreadModelSourceTest
                 new MessageStage(Conversion.Forward), new MessageStage(Conversion.Encode),
                 new MessageStage(Conversion.Decode), new MessageStage(Conversion.Discard) };
             channel.Pipeline.AddLast(handlers[0]);
+
             for (int i = 1; i < handlers.Length; i++)
                 channel.Pipeline.AddLast(executors[i - 1], $"stage{i + 1}", handlers[i]);
 
@@ -68,9 +70,11 @@ public class LocalTransportThreadModelSourceTest
                         channel.Pipeline.FireChannelRead(i);
                 });
             }
+
             await WaitForCountsAsync(handlers, total, inbound: true, token);
 
             var lastExecutor = channel.Pipeline.Context(handlers[^1]).Executor;
+
             for (int offset = 0; offset < total; offset += elementsPerRound)
             {
                 int start = offset;
@@ -78,9 +82,11 @@ public class LocalTransportThreadModelSourceTest
                 {
                     for (int i = start; i < start + elementsPerRound; i++)
                         _ = channel.WriteAsync(i);
+
                     channel.Flush();
                 });
             }
+
             await WaitForCountsAsync(handlers, total, inbound: false, token);
             await channel.CloseAsync(token);
         }
@@ -100,6 +106,7 @@ public class LocalTransportThreadModelSourceTest
                 {
                     throw error;
                 }
+
             await Task.Delay(10, token);
         }
     }
@@ -138,12 +145,15 @@ public class LocalTransportThreadModelSourceTest
         {
             _thread ??= Thread.CurrentThread;
             Assert.Same(_thread, Thread.CurrentThread);
+
             if (conversion == Conversion.Decode)
             {
                 var input = (ByteBuf)msg;
+
                 try
                 {
                     int count = input.ReadableBytes / 4;
+
                     for (int i = 0; i < count; i++)
                     {
                         int value = input.ReadInt();
@@ -155,11 +165,13 @@ public class LocalTransportThreadModelSourceTest
                 {
                     input.Release();
                 }
+
                 return;
             }
 
             int number = (int)msg;
             Assert.Equal(_inboundCount++, number);
+
             if (conversion == Conversion.Encode)
             {
                 ctx.FireChannelRead(ctx.Alloc().Buffer(4).WriteInt(number));
@@ -173,23 +185,28 @@ public class LocalTransportThreadModelSourceTest
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
         {
             Assert.Same(_thread, Thread.CurrentThread);
+
             if (conversion == Conversion.Encode)
             {
                 // Don't let the write request go to the server-side channel - just swallow.
                 bool swallow = ReferenceEquals(this, ctx.Pipeline.First);
                 var input = (ByteBuf)msg;
+
                 try
                 {
                     int count = input.ReadableBytes / 4;
+
                     for (int i = 0; i < count; i++)
                     {
                         int value = input.ReadInt();
                         Assert.Equal(_outboundCount++, value);
+
                         if (!swallow)
                         {
                             _ = ctx.WriteAsync(value, token);
                         }
                     }
+
                     return ctx.WriteAndFlushAsync(Unpooled.EmptyBuffer, token);
                 }
                 finally
@@ -200,18 +217,21 @@ public class LocalTransportThreadModelSourceTest
 
             int number = (int)msg;
             Assert.Equal(_outboundCount++, number);
+
             return ctx.WriteAsync(conversion == Conversion.Decode ? ctx.Alloc().Buffer(4).WriteInt(number) : msg, token);
         }
 
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
         {
             Interlocked.CompareExchange(ref _error, cause, null);
+
             //System.err.print("[" + Thread.currentThread().getName() + "] ");
             //cause.printStackTrace();
             if (conversion == Conversion.Forward)
             {
                 Console.Error.WriteLine($"[{Thread.CurrentThread.Name}] {cause}");
             }
+
             ctx.FireExceptionCaught(cause);
         }
     }
@@ -237,6 +257,7 @@ public class LocalTransportThreadModelSourceTest
         var clients = new MultiThreadIoEventLoopGroup(4, new DefaultThreadFactory("l"), LocalIoHandler.NewFactory());
         var first = new DefaultEventExecutorGroup(4, new DefaultThreadFactory("e1"));
         var second = new DefaultEventExecutorGroup(4, new DefaultThreadFactory("e2"));
+
         try
         {
             // Configure a test server
@@ -275,6 +296,7 @@ public class LocalTransportThreadModelSourceTest
                 {
                     throw error;
                 }
+
                 await Task.Delay(10, token);
             }
 
@@ -330,6 +352,7 @@ public class LocalTransportThreadModelSourceTest
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             Inbound.Enqueue(Thread.CurrentThread);
+
             if (!discard)
             {
                 ctx.FireChannelRead(msg);
@@ -339,6 +362,7 @@ public class LocalTransportThreadModelSourceTest
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
         {
             Outbound.Enqueue(Thread.CurrentThread);
+
             return ctx.WriteAsync(msg, token);
         }
 

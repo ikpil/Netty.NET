@@ -78,6 +78,7 @@ public class ParameterizedSslHandlerTest
                 @params.Add(new object[] { cp, sp });
             }
         }
+
         return @params;
     }
 
@@ -126,6 +127,7 @@ public class ParameterizedSslHandlerTest
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
         IChannel sc = null;
         IChannel cc = null;
+
         try
         {
             TaskCompletionSource donePromise = NewPromise();
@@ -160,10 +162,12 @@ public class ParameterizedSslHandlerTest
             {
                 await cc.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             if (sc != null)
             {
                 await sc.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             _ = group.ShutdownGracefullyAsync();
 
             ReferenceCountUtil.Release(sslServerCtx);
@@ -197,10 +201,12 @@ public class ParameterizedSslHandlerTest
             SslHandler handler = letHandlerCreateServerEngine
                     ? sslServerCtx.NewHandler(ch.Alloc())
                     : sslServerCtx.NewHandler(ch.Alloc(), false);
+
             if (serverDisableWrapSize)
             {
                 handler.SetWrapDataSize(-1);
             }
+
             ch.Pipeline.AddLast(handler);
             ch.Pipeline.AddLast(new CompositeServerHandler(donePromise, numComponents, singleComponentSize));
         }
@@ -229,12 +235,14 @@ public class ParameterizedSslHandlerTest
                 if (sslEvt.IsSuccess())
                 {
                     CompositeByteBuf content = ctx.Alloc().CompositeDirectBuffer(numComponents);
+
                     for (int i = 0; i < numComponents; ++i)
                     {
                         ByteBuf buf = ctx.Alloc().DirectBuffer(singleComponentSize);
                         buf.WriterIndex = buf.WriterIndex + singleComponentSize;
                         content.AddComponent(buf, true);
                     }
+
                     _ = ctx.WriteAndFlushAsync(content).ContinueWith(future =>
                     {
                         writeCause = CauseOf(future);
@@ -249,6 +257,7 @@ public class ParameterizedSslHandlerTest
                     donePromise.TrySetException(sslEvt.Cause());
                 }
             }
+
             ctx.FireUserEventTriggered(evt);
         }
 
@@ -291,6 +300,7 @@ public class ParameterizedSslHandlerTest
             {
                 ch.Pipeline.AddLast(sslClientCtx.NewHandler(ch.Alloc(), false));
             }
+
             ch.Pipeline.AddLast(new CompositeClientHandler(donePromise, expectedBytes));
         }
     }
@@ -317,6 +327,7 @@ public class ParameterizedSslHandlerTest
                     donePromise.TrySetResult();
                 }
             }
+
             ReferenceCountUtil.Release(msg);
         }
 
@@ -376,6 +387,7 @@ public class ParameterizedSslHandlerTest
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
         IChannel sc = null;
         IChannel cc = null;
+
         try
         {
             TaskCompletionSource promise = NewPromise();
@@ -399,10 +411,12 @@ public class ParameterizedSslHandlerTest
             {
                 await cc.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             if (sc != null)
             {
                 await sc.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             _ = group.ShutdownGracefullyAsync();
 
             ReferenceCountUtil.Release(sslServerCtx);
@@ -419,6 +433,7 @@ public class ParameterizedSslHandlerTest
             // Fail verification which should produce an alert that is send back to the client.
             return false;
         }
+
         // CLR: checkServerTrusted(x509Certificates, s).
         // NOOP
         return true;
@@ -534,6 +549,7 @@ public class ParameterizedSslHandlerTest
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
         IChannel sc = null;
         IChannel cc = null;
+
         try
         {
             TaskCompletionSource<IChannel> clientPromise = NewChannelPromise();
@@ -576,10 +592,12 @@ public class ParameterizedSslHandlerTest
             {
                 await cc.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             if (sc != null)
             {
                 await sc.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             _ = group.ShutdownGracefullyAsync();
 
             ReferenceCountUtil.Release(sslServerCtx);
@@ -639,6 +657,7 @@ public class ParameterizedSslHandlerTest
         protected override void InitChannel(IChannel ch)
         {
             AtomicBoolean closeSent = new AtomicBoolean();
+
             if (timeout)
             {
                 ch.Pipeline.AddFirst(new DropAfterCloseHandler(closeSent));
@@ -693,6 +712,7 @@ public class ParameterizedSslHandlerTest
     public async Task ReentryOnHandshakeCompleteNioChannel(SslProvider clientProvider, SslProvider serverProvider)
     {
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             Type serverClass = typeof(NioServerSocketChannel);
@@ -718,6 +738,7 @@ public class ParameterizedSslHandlerTest
     public async Task ReentryOnHandshakeCompleteLocalChannel(SslProvider clientProvider, SslProvider serverProvider)
     {
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(LocalIoHandler.NewFactory());
+
         try
         {
             Type serverClass = typeof(LocalServerChannel);
@@ -757,6 +778,7 @@ public class ParameterizedSslHandlerTest
 
         IChannel sc = null;
         IChannel cc = null;
+
         try
         {
             string expectedContent = "HelloWorld";
@@ -790,6 +812,7 @@ public class ParameterizedSslHandlerTest
             {
                 await cc.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             if (sc != null)
             {
                 await sc.CloseAsync(TestContext.Current.CancellationToken);
@@ -859,6 +882,7 @@ public class ParameterizedSslHandlerTest
         protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf msg)
         {
             readQueue.Append(msg.ToString(Encoding.ASCII));
+
             if (readQueue.Length >= toWrite.Length)
             {
                 CountDown(doneLatch);
@@ -880,6 +904,7 @@ public class ParameterizedSslHandlerTest
                     AppendError(sslEvt.Cause());
                 }
             }
+
             ctx.FireUserEventTriggered(evt);
         }
 
@@ -895,12 +920,14 @@ public class ParameterizedSslHandlerTest
             readQueue.Append("failed to write '").Append(toWrite).Append("': ");
 
             MemoryStream @out = new MemoryStream();
+
             try
             {
                 using (StreamWriter printStream = new StreamWriter(@out, Encoding.ASCII, -1, true))
                 {
                     printStream.Write(cause.ToString());
                 }
+
                 readQueue.Append(Encoding.GetEncoding("US-ASCII").GetString(@out.ToArray()));
             }
             catch (ArgumentException)
@@ -942,6 +969,7 @@ public class ParameterizedSslHandlerTest
         {
             return future.Exception.InnerException;
         }
+
         return future.IsCanceled ? new TaskCanceledException(future) : null;
     }
 
@@ -981,6 +1009,7 @@ public class ParameterizedSslHandlerTest
                 return new IPEndPoint(IPAddress.IPv6Loopback, address.Port);
             }
         }
+
         return server;
     }
 

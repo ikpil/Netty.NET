@@ -48,14 +48,17 @@ public class CompositeByteBufAddTest
         ByteBuf first = Unpooled.WrappedBuffer(new byte[] { 8, 1, 2, 9 }).SetIndex(1, 3);
         ByteBuf second = Unpooled.WrappedBuffer(new byte[] { 3, 4 });
         ByteBuf[] batch = { first, Unpooled.EmptyBuffer, second };
+
         try
         {
             buffer.AddComponent(Unpooled.WrappedBuffer(new byte[] { 0 }), true)
                 .AddComponent(Unpooled.WrappedBuffer(new byte[] { 5 }), true);
+
             if (enumerable)
                 buffer.AddComponents(1, (IEnumerable<ByteBuf>)batch, increaseWriterIndex);
             else
                 buffer.AddComponents(1, batch, increaseWriterIndex);
+
             Assert.Equal(5, buffer.NumComponents);
             Assert.Equal(6, buffer.Capacity);
             Assert.Equal(increaseWriterIndex ? 6 : 2, buffer.WriterIndex);
@@ -71,6 +74,7 @@ public class CompositeByteBufAddTest
         {
             buffer.Release();
         }
+
         Assert.Equal(0, first.RefCnt);
         Assert.Equal(0, second.RefCnt);
     }
@@ -80,6 +84,7 @@ public class CompositeByteBufAddTest
     {
         CompositeByteBuf buffer = new();
         ByteBuf empty = Unpooled.Buffer(0);
+
         try
         {
             buffer.AddComponents(Unpooled.WrappedBuffer(new byte[] { 1 }), empty);
@@ -96,6 +101,7 @@ public class CompositeByteBufAddTest
         {
             buffer.Release();
         }
+
         Assert.Equal(0, empty.RefCnt);
     }
 
@@ -110,6 +116,7 @@ public class CompositeByteBufAddTest
         ByteBuf[] batch = { first, null, tail, null };
         var stream = new TrackingEnumerable(batch);
         CompositeByteBuf buffer = new();
+
         try
         {
             if (enumerable)
@@ -120,6 +127,7 @@ public class CompositeByteBufAddTest
             {
                 buffer.AddComponents(batch, true);
             }
+
             Assert.Equal(1, buffer.NumComponents);
             Assert.Equal(8, buffer.WriterIndex);
             Assert.Equal(new byte[8], Bytes(buffer));
@@ -131,6 +139,7 @@ public class CompositeByteBufAddTest
         {
             buffer.Release();
         }
+
         Assert.Equal(0, first.RefCnt);
     }
 
@@ -145,12 +154,14 @@ public class CompositeByteBufAddTest
         ByteBuf tail = Unpooled.WrappedBuffer(new byte[] { 2 });
         ByteBuf[] batch = { prefix, null, dead, tail };
         CompositeByteBuf buffer = new();
+
         try
         {
             if (enumerable)
                 buffer.AddComponents((IEnumerable<ByteBuf>)batch, true);
             else
                 buffer.AddComponents(batch, true);
+
             Assert.Equal(new byte[] { 1 }, Bytes(buffer));
             Assert.Equal(0, dead.RefCnt);
             Assert.Equal(0, tail.RefCnt);
@@ -173,6 +184,7 @@ public class CompositeByteBufAddTest
         ByteBuf tail = Unpooled.WrappedBuffer(new byte[] { 4 });
         ByteBuf[] batch = { first, dead, tail };
         var stream = new TrackingEnumerable(batch);
+
         try
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -203,6 +215,7 @@ public class CompositeByteBufAddTest
         ByteBuf first = Unpooled.WrappedBuffer(new byte[] { 1 });
         ByteBuf second = Unpooled.WrappedBuffer(new byte[] { 2 });
         var stream = new TrackingEnumerable(new[] { first, second });
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => buffer.AddComponents(1, new[] { first, second }, true));
@@ -240,6 +253,7 @@ public class CompositeByteBufAddTest
         ByteBuf second = owner.RetainedDuplicate();
         ByteBuf tail = Unpooled.WrappedBuffer(new byte[] { 7 });
         ByteBuf[] batch = { first, second, tail };
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() =>
@@ -266,9 +280,11 @@ public class CompositeByteBufAddTest
                 second.Release();
                 tail.Release();
             }
+
             buffer.Release();
             owner.Release();
         }
+
         Assert.Equal(0, owner.RefCnt);
     }
 
@@ -288,6 +304,7 @@ public class CompositeByteBufAddTest
             Assert.Equal(1, second.RefCnt);
         });
         CompositeByteBuf buffer = new(1, true, allocator);
+
         try
         {
             if (enumerable)
@@ -298,6 +315,7 @@ public class CompositeByteBufAddTest
             {
                 buffer.AddComponents(new[] { first, second, third }, true);
             }
+
             Assert.Equal(1, buffer.NumComponents);
             Assert.Equal(new byte[] { 1, 2, 3 }, Bytes(buffer));
             Assert.Equal(0, first.RefCnt);
@@ -309,6 +327,7 @@ public class CompositeByteBufAddTest
         {
             buffer.Release();
         }
+
         Assert.Equal(0, allocator.ReservedBytes);
 
         allocator = new NativeMemoryAllocator(3);
@@ -316,6 +335,7 @@ public class CompositeByteBufAddTest
         second = Segment(new byte[] { 2 }, true, allocator);
         third = Segment(new byte[] { 3 }, true, allocator);
         buffer = new(1, true, allocator);
+
         try
         {
             Assert.Throws<OutOfDirectMemoryError>(() =>
@@ -340,6 +360,7 @@ public class CompositeByteBufAddTest
         {
             buffer.Release();
         }
+
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -351,6 +372,7 @@ public class CompositeByteBufAddTest
         ByteBuf tail = Unpooled.WrappedBuffer(new byte[] { 2 });
         var stream = new TrackingEnumerable(new[] { first, tail }, failure);
         CompositeByteBuf buffer = new();
+
         try
         {
             Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => buffer.AddComponents(stream, true)));
@@ -370,6 +392,7 @@ public class CompositeByteBufAddTest
     {
         var source = new EnumerableHeapByteBuf(new byte[] { 1, 2 });
         CompositeByteBuf buffer = new();
+
         try
         {
             buffer.AddComponents((IEnumerable<ByteBuf>)source, true);
@@ -381,6 +404,7 @@ public class CompositeByteBufAddTest
         {
             buffer.Release();
         }
+
         Assert.Equal(0, source.RefCnt);
     }
 
@@ -401,6 +425,7 @@ public class CompositeByteBufAddTest
         source.SetIndex(1, 5);
         target.AddComponent(Segment(new byte[] { 0 }, direct, allocator), true);
         target.AddFlattenedComponents(source, true);
+
         try
         {
             // verify that added range matches
@@ -424,6 +449,7 @@ public class CompositeByteBufAddTest
         {
             target.Release();
         }
+
         // releasing composite should release the remaining components
         Assert.Equal(0, first.RefCnt);
         Assert.Equal(0, second.RefCnt);
@@ -438,6 +464,7 @@ public class CompositeByteBufAddTest
         nested.AddComponents(new[] { Unpooled.WrappedBuffer(new byte[] { 1 }), Unpooled.WrappedBuffer(new byte[] { 2 }) }, true);
         source.AddComponent(nested, true);
         target.AddFlattenedComponents(source, true);
+
         try
         {
             Assert.Equal(1, target.NumComponents);
@@ -449,6 +476,7 @@ public class CompositeByteBufAddTest
         {
             target.Release();
         }
+
         Assert.Equal(0, nested.RefCnt);
 
         source = new();
@@ -456,6 +484,7 @@ public class CompositeByteBufAddTest
         source.AddComponents(new[] { Unpooled.WrappedBuffer(new byte[] { 1, 2 }), Unpooled.WrappedBuffer(new byte[] { 3, 4 }) }, true);
         ByteBuf view = source.Slice(1, 2).AsReadOnly();
         target.AddFlattenedComponents(view, true);
+
         try
         {
             Assert.Equal(1, source.RefCnt);
@@ -468,6 +497,7 @@ public class CompositeByteBufAddTest
         {
             target.Release();
         }
+
         Assert.Equal(0, source.RefCnt);
     }
 
@@ -489,6 +519,7 @@ public class CompositeByteBufAddTest
         source.Retain();
         source.SetIndex(1, 3);
         target.AddFlattenedComponents(source);
+
         try
         {
             Assert.Equal(1, source.RefCnt);
@@ -506,6 +537,7 @@ public class CompositeByteBufAddTest
         {
             target.Release();
         }
+
         Assert.Equal(0, owner.RefCnt);
         Assert.Equal(0, allocator.ReservedBytes);
     }
@@ -519,6 +551,7 @@ public class CompositeByteBufAddTest
         ByteBuf source = composite ? new CompositeByteBuf().AddComponent(child, true) : child;
         source.ReaderIndex = source.WriterIndex;
         CompositeByteBuf target = new();
+
         try
         {
             target.AddFlattenedComponents(source, true);
@@ -549,6 +582,7 @@ public class CompositeByteBufAddTest
         target.MarkReaderIndex();
         target.MarkWriterIndex();
         source.AddComponent(incoming, true);
+
         try
         {
             Assert.Throws<OutOfDirectMemoryError>(() => target.AddFlattenedComponents(source, true));
@@ -571,6 +605,7 @@ public class CompositeByteBufAddTest
             source.Release();
             target.Release();
         }
+
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -582,6 +617,7 @@ public class CompositeByteBufAddTest
         var second = new FailingRetainByteBuf(Unpooled.WrappedBuffer(new byte[] { 2 }), failure);
         CompositeByteBuf source = new(), target = new();
         source.AddComponents(new ByteBuf[] { first, second }, true);
+
         try
         {
             Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => target.AddFlattenedComponents(source, true)));
@@ -608,6 +644,7 @@ public class CompositeByteBufAddTest
         target.AddComponent(Segment(new byte[] { 1 }, true, allocator), true);
         // The source layout captured two bytes; external shrink makes its range invalid.
         incoming.Capacity = 1;
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => target.AddFlattenedComponents(source, true));
@@ -630,8 +667,10 @@ public class CompositeByteBufAddTest
             {
                 source.Release();
             }
+
             target.Release();
         }
+
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -644,6 +683,7 @@ public class CompositeByteBufAddTest
         source.AddComponent(child, true);
         target.AddComponent(source, true);
         source.Retain().SetIndex(1, 2);
+
         try
         {
             target.AddFlattenedComponents(source, true);
@@ -657,6 +697,7 @@ public class CompositeByteBufAddTest
         {
             target.Release();
         }
+
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -673,6 +714,7 @@ public class CompositeByteBufAddTest
         }
 
         source.AddComponent(owner.RetainedDuplicate(), true);
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => target.AddFlattenedComponents(source, true));
@@ -687,6 +729,7 @@ public class CompositeByteBufAddTest
             target.Release();
             owner.Release();
         }
+
         Assert.Equal(0, owner.RefCnt);
     }
 
@@ -696,6 +739,7 @@ public class CompositeByteBufAddTest
         CompositeByteBuf target = new();
         ByteBuf prefix = Unpooled.WrappedBuffer(new byte[] { 1 });
         ByteBuf tail = Unpooled.WrappedBuffer(new byte[] { 2 });
+
         try
         {
             Assert.Throws<ArgumentException>(() => target.AddComponents(new ByteBuf[] { prefix, null, target, tail }, true));
@@ -715,6 +759,7 @@ public class CompositeByteBufAddTest
         {
             target.Release();
         }
+
         Assert.Equal(0, prefix.RefCnt);
     }
 
@@ -726,6 +771,7 @@ public class CompositeByteBufAddTest
         CompositeByteBuf target = new();
         target.AddFlattenedComponents(Segment(new byte[] { 9, 9, 1, 1, 1, 1 }, true, allocator).SetIndex(2, 6), true);
         target.AddFlattenedComponents(Segment(new byte[] { 8, 8, 8, 2, 2, 2, 2 }, true, allocator).SetIndex(3, 7), true);
+
         try
         {
             target.SkipBytes(5);
@@ -741,6 +787,7 @@ public class CompositeByteBufAddTest
         {
             target.Release();
         }
+
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -772,6 +819,7 @@ public class CompositeByteBufAddTest
                     _failed = true;
                     throw owner._failure;
                 }
+
                 return ++_index < owner._buffers.Length;
             }
 

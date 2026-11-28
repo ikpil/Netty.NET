@@ -105,6 +105,7 @@ public sealed class QuicConnectionCloseEvent : IQuicEvent
         {
             return -1;
         }
+
         return tlsError;
     }
 
@@ -118,15 +119,19 @@ public sealed class QuicConnectionCloseEvent : IQuicEvent
         {
             return "null";
         }
+
         StringBuilder b = new StringBuilder("[");
+
         for (int i = 0; i < a.Length; i++)
         {
             if (i > 0)
             {
                 b.Append(", ");
             }
+
             b.Append(((sbyte) a[i]).ToString(CultureInfo.InvariantCulture));
         }
+
         return b.Append(']').ToString();
     }
 }

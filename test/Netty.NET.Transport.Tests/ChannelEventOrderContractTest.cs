@@ -60,6 +60,7 @@ public class ChannelEventOrderContractTest
         var events = new List<string>();
         var server = new LocalServerChannel();
         server.Pipeline.AddLast(new InboundRecorder(events));
+
         try
         {
             await group.RegisterAsync(server);
@@ -87,6 +88,7 @@ public class ChannelEventOrderContractTest
         var events = new List<string>();
         var server = new LocalServerChannel();
         server.Pipeline.AddLast(new InboundRecorder(events));
+
         try
         {
             await group.RegisterAsync(server);
@@ -117,6 +119,7 @@ public class ChannelEventOrderContractTest
         var events = new List<string>();
         var channel = new LocalChannel();
         channel.Pipeline.AddLast(new InboundRecorder(events));
+
         try
         {
             await group.RegisterAsync(channel);
@@ -144,6 +147,7 @@ public class ChannelEventOrderContractTest
     {
         var group = new DefaultEventLoopGroup(1);
         var events = new List<string>();
+
         try
         {
             IChannel server = await new ServerBootstrap().Group(group).Channel<LocalServerChannel>()
@@ -160,11 +164,13 @@ public class ChannelEventOrderContractTest
             await server.EventLoop.SubmitAsync(() => server.Pipeline.FireExceptionCaught(new Exception("boom")));
             Assert.False(server.Config.IsAutoRead());
             Assert.Equal(new[] { "parentException:boom" }, Snapshot(events));
+
             while (!server.Config.IsAutoRead())
             {
                 Assert.True(paused.Elapsed < TimeSpan.FromSeconds(5), "Auto-read was not re-enabled.");
                 await Task.Delay(20, TestContext.Current.CancellationToken);
             }
+
             Assert.True(paused.Elapsed >= TimeSpan.FromMilliseconds(900), "Auto-read resumed after " + paused.Elapsed);
             await server.CloseAsync();
         }
@@ -181,6 +187,7 @@ public class ChannelEventOrderContractTest
         var deadChildGroup = new DefaultEventLoopGroup(1);
         await deadChildGroup.StopAsync();
         var events = new List<string>();
+
         try
         {
             var address = new LocalAddress(typeof(ChannelEventOrderContractTest));
@@ -190,6 +197,7 @@ public class ChannelEventOrderContractTest
                 .BindAsync(address);
             Task<IChannel> connect = new Bootstrap().Group(group).Channel<LocalChannel>()
                 .Handler(new ChannelInboundHandlerAdapter()).ConnectAsync(address);
+
             try
             {
                 (await connect).CloseAsync().GetAwaiter().GetResult();
@@ -197,6 +205,7 @@ public class ChannelEventOrderContractTest
             catch (Exception)
             {
             } // The accepted peer was closed; the source reports a refused connection.
+
             await Task.Delay(300, TestContext.Current.CancellationToken);
             await server.EventLoop.SubmitAsync(() =>
             {
@@ -232,6 +241,7 @@ public class ChannelEventOrderContractTest
     private static async Task WaitFor(IChannel channel, List<string> events, string value)
     {
         var watch = Stopwatch.StartNew();
+
         while (Array.IndexOf(Snapshot(events), value) < 0)
         {
             Assert.True(watch.Elapsed < TimeSpan.FromSeconds(5), value + " was not observed.");
@@ -258,6 +268,7 @@ public class ChannelEventOrderContractTest
             {
                 Record(events, "registered");
             }
+
             ctx.FireChannelRegistered();
         }
 

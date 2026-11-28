@@ -50,6 +50,7 @@ public sealed class QuicClientExample
         QuicSslContext context = QuicSslContextBuilder.ForClient().TrustManager(InsecureTrustManagerFactory.INSTANCE).
                 ApplicationProtocols("http/0.9").Build();
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+
         try
         {
             IChannelHandler codec = new QuicClientCodecBuilder()

@@ -31,6 +31,7 @@ public class ByteBufDiscardSourceTest
             if (provider >= 3)
                 _pool = new PooledByteBufAllocator(nativeAllocator: Native, maxOrder: 1,
                     smallCacheSize: 0, normalCacheSize: 0);
+
             Root = provider switch
             {
                 0 => new UnpooledHeapByteBuf(length),
@@ -51,6 +52,7 @@ public class ByteBufDiscardSourceTest
             {
                 Root.Release();
             }
+
             Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
@@ -79,12 +81,14 @@ public class ByteBufDiscardSourceTest
         const int capacity = 4096;
         using var s = new Storage(provider, scenario is DiscardCase.ReadBytesAfterRelease or DiscardCase.SomeReadBytesAfterRelease ? 8 : capacity);
         ByteBuf buffer = s.Root;
+
         if (scenario is DiscardCase.ReadBytesAfterRelease or DiscardCase.SomeReadBytesAfterRelease)
         {
             // Clear the buffer so we are sure the reader and writer indices are 0.
             // This is important as we may return a slice from newBuffer(...).
             buffer.Clear();
             Assert.True(buffer.Release());
+
             if (scenario == DiscardCase.ReadBytesAfterRelease)
             {
                 Assert.Throws<IllegalReferenceCountException>(() => buffer.DiscardReadBytes());
@@ -93,8 +97,10 @@ public class ByteBufDiscardSourceTest
             {
                 Assert.Throws<IllegalReferenceCountException>(() => buffer.DiscardSomeReadBytes());
             }
+
             return;
         }
+
         if (scenario == DiscardCase.AllReadable)
         {
             // Test case for https://github.com/netty/netty/issues/325
@@ -105,7 +111,9 @@ public class ByteBufDiscardSourceTest
             Assert.Equal(0, buffer.WriterIndex);
             return;
         }
+
         buffer.WriterIndex = 0;
+
         if (scenario == DiscardCase.SmallPrefix)
         {
             for (int i = 0; i < buffer.Capacity; i += 4)
@@ -120,8 +128,10 @@ public class ByteBufDiscardSourceTest
                 buffer.WriteByte(unchecked((byte)i));
             }
         }
+
         // CLR: independent managed bytes replace the original allocated comparison buffer.
         byte[] copy = ByteBufUtil.GetBytes(buffer, 0, capacity);
+
         if (scenario == DiscardCase.SmallPrefix)
         {
             // Make sure there's no effect if called when readerIndex is 0.
@@ -148,6 +158,7 @@ public class ByteBufDiscardSourceTest
             Assert.Equal(capacity / 2 - 1, buffer.WriterIndex);
             Assert.Equal(copy[1..(capacity / 2)], ByteBufUtil.GetBytes(buffer, 0, capacity / 2 - 1));
             byte[] writable = ByteBufUtil.GetBytes(buffer, capacity / 2 - 1, capacity / 2);
+
             if (provider != 2)
             {
                 // If writable bytes were copied, the test should fail to avoid unnecessary memory bandwidth consumption.
@@ -159,6 +170,7 @@ public class ByteBufDiscardSourceTest
                 // the test will fail in strict mode.
                 Assert.Equal(copy[(capacity / 2)..], writable);
             }
+
             // Marks also should be relocated.
             buffer.ResetReaderIndex();
             Assert.Equal(capacity / 4 - 1, buffer.ReaderIndex);
@@ -172,10 +184,12 @@ public class ByteBufDiscardSourceTest
             buffer.DiscardReadBytes();
             Assert.Equal(0, buffer.ReaderIndex);
             Assert.Equal(capacity / 2, buffer.WriterIndex);
+
             for (int i = 0; i < capacity / 2; ++i)
                 Assert.Equal(copy[(capacity / 2 - 1 + i)..(capacity - 1)],
                     ByteBufUtil.GetBytes(buffer, i, capacity / 2 - i));
         }
+
         Assert.Equal(1, buffer.RefCnt);
     }
 
@@ -215,10 +229,12 @@ public class ByteBufDiscardSourceTest
             ? some ? reader / 8 * 8 : reader
             : !some || reader == writer || reader >= 8 ? reader : 0;
         byte[] expected = (byte[])bytes.Clone();
+
         if (provider == 2)
             expected = bytes[removed..];
         else if (removed != 0)
             bytes.AsSpan(reader, writer - reader).CopyTo(expected);
+
         byte[] unread = bytes[reader..writer];
         Assert.Same(buffer, some ? buffer.DiscardSomeReadBytes() : buffer.DiscardReadBytes());
         Assert.Equal(reader - removed, buffer.ReaderIndex);
@@ -255,6 +271,7 @@ public class ByteBufDiscardSourceTest
         public override ByteBuf SetBytes(int index, ByteBuf source, int sourceIndex, int length)
         {
             calls.Copy(this, index, source, sourceIndex, length);
+
             return base.SetBytes(index, source, sourceIndex, length);
         }
     }
@@ -263,6 +280,7 @@ public class ByteBufDiscardSourceTest
         public override ByteBuf SetBytes(int index, ByteBuf source, int sourceIndex, int length)
         {
             calls.Copy(this, index, source, sourceIndex, length);
+
             return base.SetBytes(index, source, sourceIndex, length);
         }
     }
@@ -277,10 +295,12 @@ public class ByteBufDiscardSourceTest
         var native = new NativeMemoryAllocator(8);
         var calls = new Calls { Fail = fail };
         ByteBuf buffer = direct ? new Direct(calls, native) : new Heap(calls);
+
         try
         {
             byte[] bytes = [13, 29, 47, 61, 83, 101, 127, 139];
             buffer.SetBytes(0, bytes).SetIndex(5, 7).MarkReaderIndex().MarkWriterIndex().SetIndex(4, 8);
+
             if (fail)
             {
                 Assert.Same(calls.Error, Assert.Throws<Failure>(() => buffer.DiscardReadBytes()));
@@ -289,6 +309,7 @@ public class ByteBufDiscardSourceTest
             {
                 Assert.Same(buffer, buffer.DiscardReadBytes());
             }
+
             Assert.Equal(1, calls.Count);
             Assert.Equal(fail ? 4 : 0, buffer.ReaderIndex);
             Assert.Equal(fail ? 8 : 4, buffer.WriterIndex);
@@ -304,6 +325,7 @@ public class ByteBufDiscardSourceTest
         {
             Assert.True(buffer.Release());
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 }

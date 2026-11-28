@@ -61,11 +61,13 @@ public class WeightedFairQueueByteDistributorDependencyTreeTest :
         // concurrent modification exception while promoting all children to the connection stream.
         IHttp2Stream streamA = connection.Local().CreateStream(1, false);
         int numStreams = INITIAL_CHILDREN_MAP_SIZE - 1;
+
         for (int i = 0, streamId = 3; i < numStreams; ++i, streamId += INITIAL_CHILDREN_MAP_SIZE)
         {
             IHttp2Stream stream = connection.Local().CreateStream(streamId, false);
             SetPriority(stream.Id(), streamA.Id(), DEFAULT_PRIORITY_WEIGHT, false);
         }
+
         Assert.Equal(INITIAL_CHILDREN_MAP_SIZE, connection.NumActiveStreams());
         streamA.Close();
         Assert.Equal(numStreams, connection.NumActiveStreams());

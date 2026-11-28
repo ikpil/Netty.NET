@@ -37,6 +37,7 @@ public class ByteRangeComparisonContractTest
         Assert.True(PlatformDependent.Equals(left, 3, right, 5, length));
         Assert.Equal(1, PlatformDependent.EqualsConstantTime(left, 3, right, 5, length));
         Assert.Equal(1, ConstantTimeUtils.EqualsConstantTime(left, 3, right, 5, length));
+
         for (int i = 0; i < length; i++)
         {
             right[i + 5] ^= 0x80;
@@ -45,8 +46,10 @@ public class ByteRangeComparisonContractTest
             Assert.Equal(0, ConstantTimeUtils.EqualsConstantTime(left, 3, right, 5, length));
             right[i + 5] ^= 0x80;
         }
+
         left.AsSpan(3, length).Clear();
         Assert.True(PlatformDependent.IsZero(left, 3, length));
+
         for (int i = 0; i < length; i++)
         {
             left[i + 3] = 0x80;
@@ -85,6 +88,7 @@ public class ByteRangeComparisonContractTest
     public void NonPositiveComparisonLengthsRetainTheExistingEmptyResult()
     {
         byte[] bytes = new byte[16];
+
         foreach (int length in new[] { 0, -1, int.MinValue })
         {
             Assert.True(PlatformDependent.Equals(bytes, 0, bytes, 0, length));
@@ -92,6 +96,7 @@ public class ByteRangeComparisonContractTest
             Assert.Equal(1, ConstantTimeUtils.EqualsConstantTime(bytes, 0, bytes, 0, length));
             Assert.True(PlatformDependent.IsZero(bytes, 0, length));
         }
+
         Assert.Equal(PlatformDependent.HashCodeAscii(Array.Empty<byte>(), 0, 0),
             PlatformDependent.HashCodeAscii(bytes, bytes.Length, 0));
     }
@@ -109,6 +114,7 @@ public class ByteRangeComparisonContractTest
     {
         foreach (string operation in new[] { "Equality", "FixedTime", "UtilityFixedTime", "Zero", "Hash" })
             Assert.Throws<ArgumentNullException>(() => Invoke(operation, null, 0, 0));
+
         Assert.Throws<ArgumentNullException>(() => PlatformDependent.Equals(new byte[1], 0, null, 0, 0));
         Assert.Throws<ArgumentNullException>(() => PlatformDependent.EqualsConstantTime(new byte[1], 0, null, 0, 0));
         Assert.Throws<ArgumentNullException>(() => ConstantTimeUtils.EqualsConstantTime(new byte[1], 0, null, 0, 0));

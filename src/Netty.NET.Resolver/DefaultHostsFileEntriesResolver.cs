@@ -76,6 +76,7 @@ public sealed class DefaultHostsFileEntriesResolver : IHostsFileEntriesResolver
         HostsFileEntriesProvider entries = Volatile.Read(ref _entries);
         IReadOnlyDictionary<string, IReadOnlyList<IPAddress>> inet4Entries = entries.Ipv4Entries();
         IReadOnlyDictionary<string, IReadOnlyList<IPAddress>> inet6Entries = entries.Ipv6Entries();
+
         switch (resolvedAddressTypes)
         {
             case ResolvedAddressTypes.Ipv4Only:
@@ -102,6 +103,7 @@ public sealed class DefaultHostsFileEntriesResolver : IHostsFileEntriesResolver
         {
             return;
         }
+
         long last = Volatile.Read(ref _lastRefresh);
         long currentTime = Ticker.SystemTicker().NanoTime();
         if (unchecked(currentTime - last) > interval)
@@ -117,6 +119,7 @@ public sealed class DefaultHostsFileEntriesResolver : IHostsFileEntriesResolver
     internal string Normalize(string inetHost)
     {
         ArgumentNullException.ThrowIfNull(inetHost);
+
         // CLR: ToLowerInvariant equals toLowerCase(Locale.ENGLISH) for ASCII host names; for non-ASCII input Java also
         // applies special casing (for example U+0130 and final sigma) that the CLR simple case mapping does not.
         return inetHost.ToLowerInvariant();
@@ -126,8 +129,10 @@ public sealed class DefaultHostsFileEntriesResolver : IHostsFileEntriesResolver
     {
         var result = new List<IPAddress>(a.Count + (b?.Count ?? 0));
         result.AddRange(a);
+
         if (b != null)
             result.AddRange(b);
+
         return result;
     }
 
@@ -146,6 +151,7 @@ public sealed class DefaultHostsFileEntriesResolver : IHostsFileEntriesResolver
             // CLR: CharsetUtil.UTF_8 keeps a BOM as U+FEFF, which a preamble-less UTF8Encoding reproduces.
             return parser.ParseSilently(Encoding.Default, HostsFileEntriesProvider.UTF_16, new UTF8Encoding(false));
         }
+
         return parser.ParseSilently();
     }
 }

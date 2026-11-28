@@ -47,6 +47,7 @@ public sealed class Launcher
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
         Http2Server http2 = new Http2Server(group);
         HttpServer http = new HttpServer(group);
+
         try
         {
             await http2.StartAsync();

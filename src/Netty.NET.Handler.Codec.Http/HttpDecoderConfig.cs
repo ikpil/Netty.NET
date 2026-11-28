@@ -57,6 +57,7 @@ public sealed class HttpDecoderConfig : ICloneable
     public HttpDecoderConfig SetInitialBufferSize(int initialBufferSize)
     {
         CheckPositive(initialBufferSize, "initialBufferSize");
+
         this.initialBufferSize = initialBufferSize;
         return this;
     }
@@ -77,6 +78,7 @@ public sealed class HttpDecoderConfig : ICloneable
     public HttpDecoderConfig SetMaxInitialLineLength(int maxInitialLineLength)
     {
         CheckPositive(maxInitialLineLength, "maxInitialLineLength");
+
         this.maxInitialLineLength = maxInitialLineLength;
         return this;
     }
@@ -100,6 +102,7 @@ public sealed class HttpDecoderConfig : ICloneable
     public HttpDecoderConfig SetMaxHeaderSize(int maxHeaderSize)
     {
         CheckPositive(maxHeaderSize, "maxHeaderSize");
+
         this.maxHeaderSize = maxHeaderSize;
         return this;
     }
@@ -121,6 +124,7 @@ public sealed class HttpDecoderConfig : ICloneable
     public HttpDecoderConfig SetMaxChunkSize(int maxChunkSize)
     {
         CheckPositive(maxChunkSize, "maxChunkSize");
+
         this.maxChunkSize = maxChunkSize;
         return this;
     }
@@ -178,6 +182,7 @@ public sealed class HttpDecoderConfig : ICloneable
     public HttpDecoderConfig SetHeadersFactory(IHttpHeadersFactory headersFactory)
     {
         CheckNotNull(headersFactory, "headersFactory");
+
         this.headersFactory = headersFactory;
         return this;
     }
@@ -240,6 +245,7 @@ public sealed class HttpDecoderConfig : ICloneable
     public HttpDecoderConfig SetTrailersFactory(IHttpHeadersFactory trailersFactory)
     {
         CheckNotNull(trailersFactory, "trailersFactory");
+
         this.trailersFactory = trailersFactory;
         return this;
     }

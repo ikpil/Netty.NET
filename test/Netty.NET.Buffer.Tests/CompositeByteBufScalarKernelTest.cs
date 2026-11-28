@@ -253,6 +253,7 @@ public class CompositeByteBufScalarKernelTest
         ByteBuf second = direct ? new NativeProbe(observation, native) : new HeapProbe(observation);
         ByteBuf owner = null;
         ByteBuf retained = null;
+
         try
         {
             byte[] a = new byte[32], b = new byte[32];
@@ -273,12 +274,15 @@ public class CompositeByteBufScalarKernelTest
                 5 => PooledDerivedByteBuf.NewSlice(owner, owner, 4, 24),
                 6 => PooledDerivedByteBuf.NewDuplicate(owner, owner, 0, 32), _ => owner
             };
+
             if (form >= 5)
             {
                 retained = caller;
             }
+
             int rootIndex = boundary ? 15 : 8, index = rootIndex - (form is 1 or 5 ? 4 : 0);
             int width = Widths[operation];
+
             if (relative)
             {
                 caller.SetIndex(index, write ? index : index + width);
@@ -287,6 +291,7 @@ public class CompositeByteBufScalarKernelTest
             {
                 caller.SetIndex(1, 2);
             }
+
             caller.MarkReaderIndex().MarkWriterIndex();
             int reader = caller.ReaderIndex, writer = caller.WriterIndex;
             Action request = () =>
@@ -300,6 +305,7 @@ public class CompositeByteBufScalarKernelTest
                     Read(caller, operation, index, relative);
                 }
             };
+
             if (write && caller.IsReadOnly)
             {
                 Assert.Throws<NotSupportedException>(request);
@@ -311,6 +317,7 @@ public class CompositeByteBufScalarKernelTest
                 string method = (write ? "Set" : "Get") + (boundary && width > 1 ? "Byte" : (write ? Setters : Getters)[operation]);
                 Assert.Equal((method, rootIndex + (form == 4 ? 0 : 5)), Assert.Single(observation.Visits));
             }
+
             // CLR keeps relative cursors unchanged when a child callback fails; Java WriteByte increments first.
             Assert.Equal(reader, caller.ReaderIndex);
             Assert.Equal(writer, caller.WriterIndex);
@@ -333,18 +340,22 @@ public class CompositeByteBufScalarKernelTest
             {
                 retained.Release();
             }
+
             if (owner?.RefCnt > 0)
             {
                 owner.Release();
             }
+
             if (first.RefCnt > 0)
             {
                 first.Release();
             }
+
             if (second.RefCnt > 0)
             {
                 second.Release();
             }
+
             Assert.Equal(0, native.ReservedBytes);
         }
     }

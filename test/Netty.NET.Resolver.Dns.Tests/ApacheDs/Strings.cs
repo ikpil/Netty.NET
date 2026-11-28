@@ -16,6 +16,7 @@ internal static class Strings
     private static char[] CreateToLowerCase()
     {
         char[] table = new char[256];
+
         for (int i = 0; i < table.Length; i++)
         {
             table[i] = i >= 'A' && i <= 'Z' ? (char)(i + ('a' - 'A')) : (char)i;

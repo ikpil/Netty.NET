@@ -93,6 +93,7 @@ public abstract class SingleThreadEventLoop : SingleThreadEventExecutor, IEventL
     public Task RegisterAsync(IChannel channel, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(channel);
+
         return channel.RegisterAsync(this, cancellationToken);
     }
 
@@ -104,15 +105,19 @@ public abstract class SingleThreadEventLoop : SingleThreadEventExecutor, IEventL
     public void ExecuteAfterEventLoopIteration(Action task)
     {
         ArgumentNullException.ThrowIfNull(task);
+
         if (IsShutdown())
             Reject();
+
         if (!_tailTasks.TryEnqueue(task))
             Reject(task);
+
         if (WakesUpForTask(task))
         {
             bool inEventLoop = InEventLoop();
             if (!inEventLoop && IsSuspensionSupported())
                 StartThread();
+
             Wakeup(inEventLoop);
         }
     }
@@ -127,6 +132,7 @@ public abstract class SingleThreadEventLoop : SingleThreadEventExecutor, IEventL
     public bool RemoveAfterEventLoopIterationTask(Action task)
     {
         ArgumentNullException.ThrowIfNull(task);
+
         return _tailTasks.TryRemove(task);
     }
 
@@ -137,6 +143,7 @@ public abstract class SingleThreadEventLoop : SingleThreadEventExecutor, IEventL
         {
             throw new InvalidOperationException("Native close must be reserved by the event-loop owner.");
         }
+
         _pendingCloseCompletions++;
         return completion =>
         {

@@ -147,6 +147,7 @@ internal sealed class HpackEncoder
                                                        IHttp2HeadersEncoder.ISensitivityDetector sensitivityDetector)
                                                        {
         long headerSize = 0;
+
         // To ensure we stay consistent with our peer check the size is valid before we potentially modify HPACK state.
         foreach (IEntry<ICharSequence, ICharSequence> header in headers)
         {
@@ -160,6 +161,7 @@ internal sealed class HpackEncoder
                 HeaderListSizeExceeded(streamId, maxHeaderListSize, false);
             }
         }
+
         EncodeHeadersIgnoreMaxHeaderListSize(@out, headers, sensitivityDetector);
     }
 
@@ -169,6 +171,7 @@ internal sealed class HpackEncoder
         if (this.pendingHeaderTableSizeUpdate)
         {
             this.pendingHeaderTableSizeUpdate = false;
+
             // Casting to integer is safe as we verified the table size is a valid unsigned int in
             // setMaxHeaderTableSize().
             if (this.pendingMinHeaderTableSize < this.maxHeaderTableSize)
@@ -176,9 +179,11 @@ internal sealed class HpackEncoder
                 // The table size shrunk and increased again.
                 EncodeInteger(@out, 0x20, 5, this.pendingMinHeaderTableSize);
             }
+
             this.pendingMinHeaderTableSize = long.MaxValue;
             EncodeInteger(@out, 0x20, 5, this.maxHeaderTableSize);
         }
+
         foreach (IEntry<ICharSequence, ICharSequence> header in headers)
         {
             ICharSequence name = header.GetKey();
@@ -216,6 +221,7 @@ internal sealed class HpackEncoder
             {
                 EncodeInteger(@out, 0x80, 7, staticTableIndex);
             }
+
             return;
         }
 
@@ -256,6 +262,7 @@ internal sealed class HpackEncoder
     {
         int staticTableIndex = HpackStaticTable.GetIndex(name);
         int nextCounter = LatestCounter() - 1;
+
         if (staticTableIndex == HpackStaticTable.NOT_FOUND)
         {
             NameEntry e = GetEntry(name, nameHash);
@@ -293,6 +300,7 @@ internal sealed class HpackEncoder
             throw ConnectionError(PROTOCOL_ERROR, "Header Table Size must be >= %d and <= %d but was %d",
               MIN_HEADER_TABLE_SIZE, MAX_HEADER_TABLE_SIZE, maxHeaderTableSize);
         }
+
         // While the receiver may allow a larger table, it is important to cap the local impact of
         // hash collisions and memory use. This allows the default 4 KiB table when using the
         // default 64 arraySizeHint.
@@ -301,6 +309,7 @@ internal sealed class HpackEncoder
         {
             return;
         }
+
         this.pendingHeaderTableSizeUpdate = true;
         this.pendingMinHeaderTableSize = Math.Min(this.pendingMinHeaderTableSize, maxHeaderTableSize);
         this.maxHeaderTableSize = maxHeaderTableSize;
@@ -322,6 +331,7 @@ internal sealed class HpackEncoder
             throw ConnectionError(PROTOCOL_ERROR, "Header List Size must be >= %d and <= %d but was %d",
               MIN_HEADER_LIST_SIZE, MAX_HEADER_LIST_SIZE, maxHeaderListSize);
         }
+
         this.maxHeaderListSize = maxHeaderListSize;
     }
 
@@ -353,10 +363,12 @@ internal sealed class HpackEncoder
         {
             @out.WriteByte(mask | nbits);
             long length = i - nbits;
+
             for (; (length & ~0x7F) != 0; length >>>= 7)
             {
                 @out.WriteByte((int) (length & 0x7F | 0x80));
             }
+
             @out.WriteByte((int) length);
         }
     }
@@ -376,6 +388,7 @@ internal sealed class HpackEncoder
         else
         {
             EncodeInteger(@out, 0x00, 7, @string.Length());
+
             if (@string is AsciiString)
             {
                 // Fast-path
@@ -398,6 +411,7 @@ internal sealed class HpackEncoder
                                int nameIndex)
                                {
         bool nameIndexValid = nameIndex != NOT_FOUND;
+
         switch (indexType)
         {
             case IndexType.INCREMENTAL:
@@ -412,10 +426,12 @@ internal sealed class HpackEncoder
             default:
                 throw new UnreachableException("Unexpected index type: " + indexType);
         }
+
         if (!nameIndexValid)
         {
             EncodeStringLiteral(@out, name);
         }
+
         EncodeStringLiteral(@out, value);
     }
 
@@ -426,6 +442,7 @@ internal sealed class HpackEncoder
         {
             return index;
         }
+
         NameEntry e = GetEntry(name, AsciiString.HashCode(name));
         return e == null ? NOT_FOUND : GetIndexPlusOffset(e.counter);
     }
@@ -464,10 +481,12 @@ internal sealed class HpackEncoder
     internal HpackHeaderField GetHeaderField(int index)
     {
         NameValueEntry entry = head;
+
         while (index++ < Length())
         {
             entry = entry.after;
         }
+
         return entry;
     }
 
@@ -478,6 +497,7 @@ internal sealed class HpackEncoder
     private NameValueEntry GetEntryInsensitive(ICharSequence name, int nameHash, ICharSequence value, int valueHash)
     {
         int h = Hash(nameHash, valueHash);
+
         for (NameValueEntry e = nameValueEntries[Bucket(h)]; e != null; e = e.next)
         {
             if (e.hash == h && EqualsVariableTime(value, e.value) && EqualsVariableTime(name, e.name))
@@ -485,6 +505,7 @@ internal sealed class HpackEncoder
                 return e;
             }
         }
+
         return null;
     }
 
@@ -501,6 +522,7 @@ internal sealed class HpackEncoder
                 return e;
             }
         }
+
         return null;
     }
 
@@ -550,6 +572,7 @@ internal sealed class HpackEncoder
         head.after = eldest.after;
         eldest.Unlink();
         size -= eldest.Size();
+
         if (IsEmpty())
         {
             latest = head;
@@ -575,6 +598,7 @@ internal sealed class HpackEncoder
             {
                 e = e.next;
             }
+
             e.next = eldest.next;
         }
     }
@@ -588,6 +612,7 @@ internal sealed class HpackEncoder
         {
             return;
         }
+
         if (counter == e.counter)
         {
             nameEntries[bucket] = e.next;
@@ -597,6 +622,7 @@ internal sealed class HpackEncoder
         {
             NameEntry prev = e;
             e = e.next;
+
             while (e != null)
             {
                 if (counter == e.counter)
@@ -605,6 +631,7 @@ internal sealed class HpackEncoder
                     e.Unlink();
                     break;
                 }
+
                 prev = e;
                 e = e.next;
             }

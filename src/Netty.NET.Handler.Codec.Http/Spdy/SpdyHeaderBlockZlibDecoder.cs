@@ -75,6 +75,7 @@ internal sealed class SpdyHeaderBlockZlibDecoder : SpdyHeaderBlockRawDecoder
         int len = SetInput(headerBlock);
 
         int numBytes;
+
         do
         {
             numBytes = Decompress(alloc, frame);
@@ -122,6 +123,7 @@ internal sealed class SpdyHeaderBlockZlibDecoder : SpdyHeaderBlockRawDecoder
         ArraySegment<byte> outSegment = ArrayOf(decompressed, decompressed.WriterIndex, decompressed.WritableBytes);
         byte[] @out = outSegment.Array;
         int off = outSegment.Offset;
+
         try
         {
             int numBytes = decompressor.Inflate(@out, off, decompressed.WritableBytes);
@@ -135,8 +137,10 @@ internal sealed class SpdyHeaderBlockZlibDecoder : SpdyHeaderBlockRawDecoder
                 {
                     throw INVALID_HEADER_BLOCK;
                 }
+
                 numBytes = decompressor.Inflate(@out, off, decompressed.WritableBytes);
             }
+
             if (frame != null)
             {
                 decompressed.WriterIndex = decompressed.WriterIndex + numBytes;
@@ -158,6 +162,7 @@ internal sealed class SpdyHeaderBlockZlibDecoder : SpdyHeaderBlockRawDecoder
         {
             decompressed = alloc.HeapBuffer(DEFAULT_BUFFER_CAPACITY);
         }
+
         decompressed.EnsureWritable(1);
     }
 
@@ -194,6 +199,7 @@ internal sealed class SpdyHeaderBlockZlibDecoder : SpdyHeaderBlockRawDecoder
         {
             return true;
         }
+
         array = default;
         return false;
     }
@@ -209,6 +215,7 @@ internal sealed class SpdyHeaderBlockZlibDecoder : SpdyHeaderBlockRawDecoder
         {
             return array;
         }
+
         throw new NotSupportedException("the buffer range is not backed by one managed array");
     }
 }

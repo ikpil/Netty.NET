@@ -42,7 +42,9 @@ internal sealed class PoolDirectArena : PoolArena
         {
             throw new OutOfMemoryException("Aligned native reservation is too large.");
         }
+
         owner = _nativeAllocator.Allocate((int)reservation);
+
         try
         {
             return alignment == 0 ? owner.Memory : owner.GetAlignedMemory(alignment).Slice(0, length);

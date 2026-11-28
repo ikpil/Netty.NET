@@ -138,27 +138,32 @@ public class DefaultHttp2ConnectionDecoderTest
             {
                 return stream;
             }
+
             for (;;)
             {
                 int current = Volatile.Read(ref headersReceivedState);
                 int next = current;
+
                 if ((current & STATE_RECV_HEADERS) != 0)
                 {
                     if ((current & STATE_RECV_TRAILERS) != 0)
                     {
                         throw new InvalidOperationException("already sent headers!");
                     }
+
                     next |= STATE_RECV_TRAILERS;
                 }
                 else
                 {
                     next |= STATE_RECV_HEADERS;
                 }
+
                 if (Interlocked.CompareExchange(ref headersReceivedState, next, current) == current)
                 {
                     break;
                 }
             }
+
             return stream;
         });
         Mock<IHttp2Connection> connectionMock = Mock.Get(connection);
@@ -169,6 +174,7 @@ public class DefaultHttp2ConnectionDecoderTest
                     {
                         return stream;
                     }
+
                     return null;
                 });
         connectionMock.Setup(c => c.Stream(STREAM_ID)).Returns(stream);
@@ -220,6 +226,7 @@ public class DefaultHttp2ConnectionDecoderTest
         int padding = 10;
         int processedBytes = data.ReadableBytes + padding;
         MockFlowControl(processedBytes);
+
         try
         {
             Decode().OnDataRead(ctx, STREAM_ID, data, padding, true);
@@ -245,6 +252,7 @@ public class DefaultHttp2ConnectionDecoderTest
         int padding = 10;
         int processedBytes = data.ReadableBytes + padding;
         MockFlowControl(processedBytes);
+
         try
         {
             Decode().OnDataRead(ctx, STREAM_ID, data, padding, true);
@@ -270,6 +278,7 @@ public class DefaultHttp2ConnectionDecoderTest
         int padding = 10;
         int processedBytes = data.ReadableBytes + padding;
         Assert.ThrowsAny<Http2Exception.StreamException>(() => Decode().OnDataRead(ctx, STREAM_ID, data, padding, true));
+
         try
         {
             Mock.Get(localFlow)
@@ -306,6 +315,7 @@ public class DefaultHttp2ConnectionDecoderTest
                 throw;
             }
         });
+
         try
         {
             Mock.Get(localFlow)
@@ -329,6 +339,7 @@ public class DefaultHttp2ConnectionDecoderTest
         ByteBuf data = DummyData();
         int padding = 10;
         int processedBytes = data.ReadableBytes + padding;
+
         try
         {
             Assert.ThrowsAny<Http2Exception>(() => Decode().OnDataRead(ctx, STREAM_ID, data, padding, true));
@@ -354,6 +365,7 @@ public class DefaultHttp2ConnectionDecoderTest
         ByteBuf data = EmptyBuffer;
         int padding = 0;
         MockFlowControl(0);
+
         try
         {
             Decode().OnDataRead(ctx, STREAM_ID, data, padding, true);
@@ -388,6 +400,7 @@ public class DefaultHttp2ConnectionDecoderTest
         Mock.Get(stream).Setup(s => s.State_()).Returns(IHttp2Stream.State.CLOSED);
         MockGoAwaySent();
         ByteBuf data = DummyData();
+
         try
         {
             Decode().OnDataRead(ctx, STREAM_ID, data, 10, true);
@@ -408,6 +421,7 @@ public class DefaultHttp2ConnectionDecoderTest
         Mock.Get(connection).Setup(c => c.Stream(STREAM_ID)).Returns((IHttp2Stream) null);
         MockGoAwaySent();
         ByteBuf data = DummyData();
+
         try
         {
             Decode().OnDataRead(ctx, STREAM_ID, data, 10, true);
@@ -428,6 +442,7 @@ public class DefaultHttp2ConnectionDecoderTest
         Mock.Get(stream).Setup(s => s.State_()).Returns(IHttp2Stream.State.CLOSED);
         Mock.Get(stream).Setup(s => s.IsResetSent()).Returns(true);
         ByteBuf data = DummyData();
+
         try
         {
             Decode().OnDataRead(ctx, STREAM_ID, data, 10, true);
@@ -445,6 +460,7 @@ public class DefaultHttp2ConnectionDecoderTest
     public void DataReadWithEndOfStreamShouldcloseStreamRemote()
     {
         ByteBuf data = DummyData();
+
         try
         {
             Decode().OnDataRead(ctx, STREAM_ID, data, 10, true);
@@ -472,6 +488,7 @@ public class DefaultHttp2ConnectionDecoderTest
             {
                 throw new Exception("Returned too many bytes");
             }
+
             return false;
         });
         // When the listener callback is called, process a few bytes and then throw.
@@ -481,6 +498,7 @@ public class DefaultHttp2ConnectionDecoderTest
                     localFlow.ConsumeBytes(stream, 4);
                     throw Http2TestUtil.FAKE_EXCEPTION;
                 });
+
         try
         {
             Assert.ThrowsAny<Exception>(() => Decode().OnDataRead(ctx, STREAM_ID, data, padding, true));
@@ -597,6 +615,7 @@ public class DefaultHttp2ConnectionDecoderTest
         strict.LifecycleManager(lifecycleManager);
         strict.FrameListener(listener);
         Decode(strict).OnSettingsRead(ctx, new Http2Settings());
+
         return Decode(strict);
     }
 
@@ -801,7 +820,9 @@ public class DefaultHttp2ConnectionDecoderTest
         {
             Decode().OnHeadersRead(ctx, STREAM_ID, InformationalHeaders(), 0, false);
         }
+
         Decode().OnHeadersRead(ctx, STREAM_ID, EmptyHttp2Headers.INSTANCE, 0, false);
+
         if (eos)
         {
             Decode().OnHeadersRead(ctx, STREAM_ID, EmptyHttp2Headers.INSTANCE, 0, eos);
@@ -1173,6 +1194,7 @@ public class DefaultHttp2ConnectionDecoderTest
         int padding = 10;
         int processedBytes = data.ReadableBytes + padding;
         MockFlowControl(processedBytes);
+
         try
         {
             if (negative)
@@ -1194,6 +1216,7 @@ public class DefaultHttp2ConnectionDecoderTest
                         It.IsAny<IHttp2Headers>(), 0, DEFAULT_PRIORITY_WEIGHT, false,
                         padding, false), Times.Exactly(1));
             }
+
             // Verify that the event was absorbed and not propagated to the observer.
             Mock.Get(listener).Verify(l => l.OnDataRead(ctx, It.IsAny<int>(), It.IsAny<ByteBuf>(), It.IsAny<int>(),
                     It.IsAny<bool>()), Times.Never());
@@ -1274,6 +1297,7 @@ public class DefaultHttp2ConnectionDecoderTest
         int padding = 10;
         Mock.Get(connection).Setup(c => c.IsServer()).Returns(true);
         IHttp2Headers headers = new DefaultHttp2Headers();
+
         if (same)
         {
             headers.AddLong(HttpHeaderNames.CONTENT_LENGTH, 0);

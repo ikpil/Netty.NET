@@ -127,19 +127,23 @@ public class DiskAttribute : AbstractDiskHttpData, IAttribute
     public virtual void SetValue(string value)
     {
         ObjectUtil.CheckNotNull(value, "value");
+
         byte [] bytes = GetCharset().GetBytes(value);
         CheckSize(bytes.Length);
         ByteBuf buffer = Unpooled.WrappedBuffer(bytes);
+
         if (definedSize > 0)
         {
             definedSize = buffer.ReadableBytes;
         }
+
         SetContent(buffer);
     }
 
     public override void AddContent(ByteBuf buffer, bool last)
     {
         long newDefinedSize = size + buffer.ReadableBytes;
+
         try
         {
             CheckSize(newDefinedSize);
@@ -149,10 +153,12 @@ public class DiskAttribute : AbstractDiskHttpData, IAttribute
             buffer.Release();
             throw;
         }
+
         if (definedSize > 0 && definedSize < newDefinedSize)
         {
             definedSize = newDefinedSize;
         }
+
         base.AddContent(buffer, last);
     }
 
@@ -167,6 +173,7 @@ public class DiskAttribute : AbstractDiskHttpData, IAttribute
         {
             return false;
         }
+
         IAttribute attribute = (IAttribute) o;
         return string.Equals(GetName(), attribute.GetName(), StringComparison.OrdinalIgnoreCase);
     }
@@ -178,6 +185,7 @@ public class DiskAttribute : AbstractDiskHttpData, IAttribute
             throw new InvalidCastException("Cannot compare " + GetHttpDataType() +
                     " with " + o.GetHttpDataType());
         }
+
         return CompareTo((IAttribute) o);
     }
 
@@ -242,6 +250,7 @@ public class DiskAttribute : AbstractDiskHttpData, IAttribute
         {
             content = content.RetainedDuplicate();
             bool success = false;
+
             try
             {
                 IAttribute duplicate = Replace(content);
@@ -266,6 +275,7 @@ public class DiskAttribute : AbstractDiskHttpData, IAttribute
     {
         DiskAttribute attr = new DiskAttribute(GetName(), baseDir, deleteOnExit);
         attr.SetCharset(GetCharset());
+
         if (content != null)
         {
             try
@@ -277,6 +287,7 @@ public class DiskAttribute : AbstractDiskHttpData, IAttribute
                 throw new ChannelException(e);
             }
         }
+
         attr.SetCompleted(IsCompleted());
         return attr;
     }

@@ -61,6 +61,7 @@ public class DefaultHttp2PingFrame : IHttp2PingFrame
         {
             return false;
         }
+
         IHttp2PingFrame other = (IHttp2PingFrame) o;
         return ack == other.Ack() &&  content == other.Content();
     }

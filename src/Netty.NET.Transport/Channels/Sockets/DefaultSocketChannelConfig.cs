@@ -79,14 +79,18 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig, ISocketChannelCo
     public override IReadOnlyDictionary<ChannelOption, object> GetOptions()
     {
         var values = new Dictionary<ChannelOption, object>(base.GetOptions());
+
         foreach (var option in SupportedSocketOptions)
             if (TryGetValue(option, out var value))
                 values[option] = value;
+
         foreach (var option in LinuxOptions)
             if (TryGetValue(option.Option, out var value))
                 values[option.Option] = value;
+
         if (IsTcpStream)
             values[ChannelOption.TCP_FASTOPEN_CONNECT] = Volatile.Read(ref _tcpFastOpenConnect);
+
         return values;
     }
 
@@ -112,18 +116,22 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig, ISocketChannelCo
                 value = IsAllowHalfClosure();
             else
                 return base.TryGetValue(option, out value);
+
             return true;
         }
+
         if (ReferenceEquals(option, ChannelOption.TCP_FASTOPEN_CONNECT) && IsTcpStream)
         {
             value = Volatile.Read(ref _tcpFastOpenConnect);
             return true;
         }
+
         if (FindLinuxOption(option) is { } native)
         {
             value = LinuxSocketOptions.GetOptionValue(JavaSocket, option, native.Level, native.Name);
             return true;
         }
+
         return base.TryGetValue(option, out value);
     }
 
@@ -141,6 +149,7 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig, ISocketChannelCo
             keys.Replace((IReadOnlyDictionary<IPAddress, byte[]>)value);
             return true;
         }
+
         if (Array.IndexOf(SupportedSocketOptions, option) >= 0)
         {
             if (ReferenceEquals(option, ChannelOption.SO_RCVBUF))
@@ -161,18 +170,22 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig, ISocketChannelCo
                 SetAllowHalfClosure((bool)value);
             else
                 return base.SetValue(option, value);
+
             return true;
         }
+
         if (ReferenceEquals(option, ChannelOption.TCP_FASTOPEN_CONNECT) && IsTcpStream)
         {
             Volatile.Write(ref _tcpFastOpenConnect, (bool)value);
             return true;
         }
+
         if (FindLinuxOption(option) is { } native)
         {
             LinuxSocketOptions.SetOptionValue(JavaSocket, native.Level, native.Name, value);
             return true;
         }
+
         return base.SetValue(option, value);
     }
 
@@ -224,6 +237,7 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig, ISocketChannelCo
         {
             if (OperatingSystem.IsLinux() && JavaSocket.AddressFamily == AddressFamily.InterNetworkV6)
                 return LinuxSocketOptions.GetInt(JavaSocket, (int)SocketOptionLevel.IPv6, LinuxIPv6TrafficClass);
+
             return (int)JavaSocket.GetSocketOption(SocketOptionLevel.IP, SocketOptionName.TypeOfService);
         }
         catch (SocketException e)
@@ -281,6 +295,7 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig, ISocketChannelCo
         {
             throw new ChannelException(e);
         }
+
         return this;
     }
 
@@ -299,6 +314,7 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig, ISocketChannelCo
     public virtual ISocketChannelConfig SetReceiveBufferSize(int receiveBufferSize)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(receiveBufferSize);
+
         try
         {
             JavaSocket.ReceiveBufferSize = receiveBufferSize;
@@ -307,6 +323,7 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig, ISocketChannelCo
         {
             throw new ChannelException(e);
         }
+
         return this;
     }
 
@@ -320,6 +337,7 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig, ISocketChannelCo
         {
             throw new ChannelException(e);
         }
+
         return this;
     }
 
@@ -329,9 +347,11 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig, ISocketChannelCo
     public virtual ISocketChannelConfig SetSendBufferSize(int sendBufferSize)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sendBufferSize);
+
         try
         {
             JavaSocket.SendBufferSize = sendBufferSize;
+
             if (Channel is AbstractNioByteChannel stream)
             {
                 stream.CalculateMaxBytesPerGatheringWrite();
@@ -341,6 +361,7 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig, ISocketChannelCo
         {
             throw new ChannelException(e);
         }
+
         return this;
     }
 
@@ -355,6 +376,7 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig, ISocketChannelCo
         {
             throw new ChannelException(e);
         }
+
         return this;
     }
 
@@ -368,6 +390,7 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig, ISocketChannelCo
         {
             throw new ChannelException(e);
         }
+
         return this;
     }
 
@@ -377,11 +400,13 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig, ISocketChannelCo
     {
         ArgumentOutOfRangeException.ThrowIfNegative(trafficClass);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(trafficClass, 255);
+
         try
         {
             if (OperatingSystem.IsLinux() && JavaSocket.AddressFamily == AddressFamily.InterNetworkV6)
             {
                 LinuxSocketOptions.SetInt(JavaSocket, (int)SocketOptionLevel.IPv6, LinuxIPv6TrafficClass, trafficClass);
+
                 if (JavaSocket.DualMode)
                     JavaSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.TypeOfService, trafficClass);
             }
@@ -392,6 +417,7 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig, ISocketChannelCo
         {
             throw new ChannelException(e);
         }
+
         return this;
     }
 
@@ -415,6 +441,7 @@ public class DefaultSocketChannelConfig : DefaultChannelConfig, ISocketChannelCo
         foreach (var candidate in LinuxOptions)
             if (ReferenceEquals(option, candidate.Option))
                 return (candidate.Level, candidate.Name);
+
         return null;
     }
 }

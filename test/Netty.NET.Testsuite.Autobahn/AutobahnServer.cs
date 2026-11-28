@@ -48,6 +48,7 @@ public class AutobahnServer
     public async Task RunAsync()
     {
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             ServerBootstrap b = new ServerBootstrap();
@@ -70,6 +71,7 @@ public class AutobahnServer
     public static async Task Main(string[] args)
     {
         int port;
+
         if (args.Length > 0)
         {
             port = int.Parse(args[0], NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture);
@@ -78,6 +80,7 @@ public class AutobahnServer
         {
             port = 9000;
         }
+
         await new AutobahnServer(port).RunAsync();
     }
 }

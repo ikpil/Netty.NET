@@ -69,6 +69,7 @@ public class Socks5CommandResponseDecoder : ReplayingDecoder<Socks5CommandRespon
                             "unsupported version: " + ((sbyte) version).ToString(CultureInfo.InvariantCulture) +
                             " (expected: " + SocksVersion.SOCKS5.ByteValue().ToString(CultureInfo.InvariantCulture) + ')');
                 }
+
                 Socks5CommandStatus status = Socks5CommandStatus.ValueOf(@in.ReadByte());
                 @in.SkipBytes(1); // Reserved
                 Socks5AddressType addrType = Socks5AddressType.ValueOf(@in.ReadByte());
@@ -86,6 +87,7 @@ public class Socks5CommandResponseDecoder : ReplayingDecoder<Socks5CommandRespon
                 {
                     @out.Add(@in.ReadRetainedSlice(readableBytes));
                 }
+
                 break;
             }
             case State.FAILURE:

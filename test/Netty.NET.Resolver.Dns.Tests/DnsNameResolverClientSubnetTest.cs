@@ -42,6 +42,7 @@ public class DnsNameResolverClientSubnetTest
     {
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         DnsNameResolver resolver = NewResolver(group).Build();
+
         try
         {
             // Same as:
@@ -54,6 +55,7 @@ public class DnsNameResolverClientSubnetTest
                             new DefaultDnsOptEcsRecord(1024, 24,
                                                        IPAddress.Parse("157.88.0.0").GetAddressBytes())
                     }, TestContext.Current.CancellationToken);
+
             foreach (IPAddress address in await future)
             {
                 Console.WriteLine(address);

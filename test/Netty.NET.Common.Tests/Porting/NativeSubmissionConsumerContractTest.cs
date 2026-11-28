@@ -15,6 +15,7 @@ public class NativeSubmissionConsumerContractTest
         internal void RunOwned(Action action)
         {
             _running = true;
+
             try
             {
                 action();
@@ -38,6 +39,7 @@ public class NativeSubmissionConsumerContractTest
         public override void Execute(Action task)
         {
             ArgumentNullException.ThrowIfNull(task);
+
             _queue.Enqueue(task);
         }
 
@@ -98,6 +100,7 @@ public class NativeSubmissionConsumerContractTest
             events.Add("write one");
             ++pendingWrites;
             events.Add("write two");
+
             if (flushImmediately)
             {
                 cancellation.Cancel();
@@ -108,6 +111,7 @@ public class NativeSubmissionConsumerContractTest
         });
         Assert.Equal(flushImmediately ? 1 : 0, flushes);
         executor.RunAll();
+
         if (flushImmediately)
         {
             await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await scheduled);
@@ -118,6 +122,7 @@ public class NativeSubmissionConsumerContractTest
             await scheduled;
             Assert.Equal(new[] { "write one", "write two", "scheduled flush:2" }, events);
         }
+
         Assert.Equal(1, flushes);
         Assert.Equal(0, pendingWrites);
     }
@@ -157,6 +162,7 @@ public class NativeSubmissionConsumerContractTest
                 failure = error;
             }
         }) { IsBackground = true };
+
         try
         {
             caller.Start();
@@ -186,6 +192,7 @@ public class NativeSubmissionConsumerContractTest
             {
                 throw failure;
             }
+
             return new Thread(task.Invoke) { IsBackground = true };
         }
     }
@@ -195,6 +202,7 @@ public class NativeSubmissionConsumerContractTest
     {
         var failure = new ThreadInterruptedException("worker creation failed");
         var executor = new DefaultEventExecutor(new FailingFactory(failure));
+
         try
         {
             Assert.Same(failure, Assert.Throws<ThreadInterruptedException>(() => executor.ThreadProperties()));

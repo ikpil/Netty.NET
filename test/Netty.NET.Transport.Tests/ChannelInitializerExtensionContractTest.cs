@@ -21,11 +21,13 @@ public class ChannelInitializerExtensionContractTest
     {
         Assert.Empty(ChannelInitializerExtensions.Snapshot());
         var extension = new Recording(0, "extension", []);
+
         using (ChannelInitializerExtension.Register(extension, invoke: false))
         {
             Assert.Empty(ChannelInitializerExtensions.Snapshot());
             Assert.Throws<ArgumentException>(() => ChannelInitializerExtension.Register(extension));
         }
+
         var registration = ChannelInitializerExtension.Register(extension);
         var snapshot = ChannelInitializerExtensions.Snapshot();
         Assert.Same(extension, Assert.Single(snapshot));
@@ -42,6 +44,7 @@ public class ChannelInitializerExtensionContractTest
         var registrations = new List<IDisposable>();
         var group = new DefaultEventLoopGroup(1);
         IChannel channel = null;
+
         try
         {
             foreach (var extension in new[] { new Recording(double.NaN, "nan", calls), new Recording(0.0, "positive-zero", calls),
@@ -60,6 +63,7 @@ public class ChannelInitializerExtensionContractTest
             {
                 await channel.CloseAsync();
             }
+
             await group.StopAsync();
 
             foreach (var registration in registrations)
@@ -77,6 +81,7 @@ public class ChannelInitializerExtensionContractTest
         IChannel server = null, client = null;
         var extension = new ChildObserver(() => childCalls++);
         var registration = ChannelInitializerExtension.Register(extension);
+
         try
         {
             server = await new ServerBootstrap().Group(group).Channel<LocalServerChannel>().ChildHandler(new ChannelInboundHandlerAdapter())
@@ -89,14 +94,17 @@ public class ChannelInitializerExtensionContractTest
         finally
         {
             registration.Dispose();
+
             if (client != null)
             {
                 await client.CloseAsync();
             }
+
             if (server != null)
             {
                 await server.CloseAsync();
             }
+
             await group.StopAsync();
         }
     }
@@ -113,6 +121,7 @@ public class ChannelInitializerExtensionContractTest
         Assert.Equal("old", Assert.Single(clone.NewAttributesArray()).Value);
         var group = new DefaultEventLoopGroup(1);
         IChannel channel = null;
+
         try
         {
             channel = await original.Group(group).Channel<LocalChannel>().Handler(new ChannelInboundHandlerAdapter()).RegisterAsync();
@@ -130,14 +139,17 @@ public class ChannelInitializerExtensionContractTest
             {
                 await channel.CloseAsync();
             }
+
             if (client != null)
             {
                 await client.CloseAsync();
             }
+
             if (listener != null)
             {
                 await listener.CloseAsync();
             }
+
             await group.StopAsync();
         }
     }

@@ -78,6 +78,7 @@ public sealed class BiDnsQueryLifecycleObserver : IDnsQueryLifecycleObserver
         {
             b.QueryRedirected(nameServers);
         }
+
         return this;
     }
 
@@ -91,6 +92,7 @@ public sealed class BiDnsQueryLifecycleObserver : IDnsQueryLifecycleObserver
         {
             b.QueryCNAMEd(cnameQuestion);
         }
+
         return this;
     }
 
@@ -104,6 +106,7 @@ public sealed class BiDnsQueryLifecycleObserver : IDnsQueryLifecycleObserver
         {
             b.QueryNoAnswer(code);
         }
+
         return this;
     }
 

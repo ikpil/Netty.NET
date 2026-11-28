@@ -45,10 +45,12 @@ public class WebSocket08FrameDecoderTest
         forbiddenIanaCodes.Add(1005);
         forbiddenIanaCodes.Add(1006);
         ISet<int> validIanaCodes = new HashSet<int>();
+
         for (int i = 1000; i < 1015; i++)
         {
             validIanaCodes.Add(i);
         }
+
         validIanaCodes.ExceptWith(forbiddenIanaCodes);
 
         foreach (int statusCode in validIanaCodes)
@@ -66,6 +68,7 @@ public class WebSocket08FrameDecoderTest
 
             CloseWebSocketFrame outputFrame = decoderChannel.ReadInbound<CloseWebSocketFrame>();
             Assert.Null(decoderChannel.ReadOutbound<object>());
+
             try
             {
                 Assert.Equal(statusCode, outputFrame.StatusCode());

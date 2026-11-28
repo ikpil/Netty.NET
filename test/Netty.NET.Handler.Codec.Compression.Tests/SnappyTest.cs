@@ -102,6 +102,7 @@ public class SnappyTest : IDisposable
             0x00 // INVALID offset (< 1)
         });
         ByteBuf @out = Unpooled.Buffer(10);
+
         try
         {
             Assert.Throws<DecompressionException>(() =>
@@ -127,6 +128,7 @@ public class SnappyTest : IDisposable
             0x0b // INVALID offset (greater than chunk size)
         });
         ByteBuf @out = Unpooled.Buffer(10);
+
         try
         {
             Assert.Throws<DecompressionException>(() =>
@@ -150,6 +152,7 @@ public class SnappyTest : IDisposable
             0x6e, 0x65, 0x74, 0x74, 0x79, // "netty"
         });
         ByteBuf @out = Unpooled.Buffer(10);
+
         try
         {
             Assert.Throws<DecompressionException>(() =>
@@ -309,6 +312,7 @@ public class SnappyTest : IDisposable
         ByteBuf input = Unpooled.WrappedBuffer(new byte[] {
                 (byte) 'y', (byte) 't', (byte) 't', (byte) 'e', (byte) 'n'
         });
+
         try
         {
             Assert.Throws<DecompressionException>(() =>
@@ -332,12 +336,14 @@ public class SnappyTest : IDisposable
             0x100000, // case 62
             0x1000001 // case 63
         };
+
         foreach (int len in lengths)
         {
             ByteBuf @in = Unpooled.WrappedBuffer(new byte[len]);
             ByteBuf encoded = Unpooled.Buffer(10);
             ByteBuf decoded = Unpooled.Buffer(10);
             ByteBuf expected = Unpooled.WrappedBuffer(new byte[len]);
+
             try
             {
                 EncodeLiteral(@in, encoded, len);
@@ -361,6 +367,7 @@ public class SnappyTest : IDisposable
         ByteBuf compressed = Unpooled.Buffer();
         ByteBuf actualDecompressed = Unpooled.Buffer();
         ByteBuf expectedDecompressed = Unpooled.Buffer().WriteByte(0x01).WriteZero(0x8000).WriteByte(0x01);
+
         try
         {
             // Generate a Snappy-encoded buffer that can only be decompressed correctly if

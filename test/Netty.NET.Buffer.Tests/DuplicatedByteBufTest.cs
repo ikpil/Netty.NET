@@ -82,6 +82,7 @@ public class DuplicatedByteBufTest : AbstractContiguousByteBufTest
     public void TestMarksInitialized()
     {
         ByteBuf wrapped = Unpooled.Buffer(8);
+
         try
         {
             wrapped.WriterIndex = 6;

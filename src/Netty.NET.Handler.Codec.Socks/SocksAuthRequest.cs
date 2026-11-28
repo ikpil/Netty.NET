@@ -58,6 +58,7 @@ public sealed class SocksAuthRequest : SocksRequest
         {
             throw new ArgumentException("password: **** exceeds 255 char limit");
         }
+
         this.username = username;
         this.password = password;
     }

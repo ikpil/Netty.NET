@@ -52,11 +52,13 @@ public abstract class InputBufferingDecompressor : IDecompressor
             buf.Release();
             return;
         }
+
         if (this.cumulation != null)
         {
             buf = ByteToMessageDecoder.MERGE_CUMULATOR.Cumulate(allocator, this.cumulation, buf);
             this.cumulation = null;
         }
+
         try
         {
             ProcessInput(buf);
@@ -66,6 +68,7 @@ public abstract class InputBufferingDecompressor : IDecompressor
             buf.Release();
             throw;
         }
+
         if (buf.IsReadable())
         {
             this.cumulation = buf;
@@ -80,6 +83,7 @@ public abstract class InputBufferingDecompressor : IDecompressor
     {
         ByteBuf buf = cumulation == null ? Unpooled.EmptyBuffer : cumulation;
         ByteBuf output = ProcessOutput(buf);
+
         try
         {
             if (Status_() == IDecompressor.Status.NEED_INPUT && buf.IsReadable())
@@ -92,11 +96,13 @@ public abstract class InputBufferingDecompressor : IDecompressor
             output.Release();
             throw;
         }
+
         if (this.cumulation != null && !this.cumulation.IsReadable())
         {
             this.cumulation.Release();
             this.cumulation = null;
         }
+
         return output;
     }
 

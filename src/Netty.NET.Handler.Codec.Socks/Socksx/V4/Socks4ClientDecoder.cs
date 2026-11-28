@@ -82,6 +82,7 @@ public class Socks4ClientDecoder : ReplayingDecoder<Socks4ClientDecoder.State>
                 {
                     @out.Add(@in.ReadRetainedSlice(readableBytes));
                 }
+
                 break;
             }
             case State.FAILURE:

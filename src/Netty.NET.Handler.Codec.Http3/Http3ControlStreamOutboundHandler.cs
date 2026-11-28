@@ -91,6 +91,7 @@ internal sealed class Http3ControlStreamOutboundHandler
             // See https://tools.ietf.org/html/draft-ietf-quic-http-32#section-6.2.1
             Http3CodecUtils.CriticalStreamClosed(ctx);
         }
+
         ctx.FireUserEventTriggered(evt);
     }
 

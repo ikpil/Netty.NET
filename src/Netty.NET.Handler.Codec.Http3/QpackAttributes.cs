@@ -98,6 +98,7 @@ internal sealed class QpackAttributes
         Debug.Assert(decoderStreamPromise != null);
         Debug.Assert(this.decoderStream == null);
         ArgumentNullException.ThrowIfNull(decoderStream);
+
         this.decoderStream = decoderStream;
         decoderStreamPromise.SetResult(decoderStream);
     }
@@ -109,6 +110,7 @@ internal sealed class QpackAttributes
         Debug.Assert(encoderStreamPromise != null);
         Debug.Assert(this.encoderStream == null);
         ArgumentNullException.ThrowIfNull(encoderStream);
+
         this.encoderStream = encoderStream;
         encoderStreamPromise.SetResult(encoderStream);
     }

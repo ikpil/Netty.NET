@@ -108,6 +108,7 @@ public abstract class HttpHeaders : IEnumerable<IEntry<string, string>>, IEquata
         {
             return defaultValue;
         }
+
         return value;
     }
 
@@ -316,10 +317,12 @@ public abstract class HttpHeaders : IEnumerable<IEntry<string, string>>, IEquata
     public virtual HttpHeaders Add(HttpHeaders headers)
     {
         ObjectUtil.CheckNotNull(headers, "headers");
+
         foreach (IEntry<string, string> e in headers)
         {
             Add(e.GetKey(), e.GetValue());
         }
+
         return this;
     }
 
@@ -411,6 +414,7 @@ public abstract class HttpHeaders : IEnumerable<IEntry<string, string>>, IEquata
         {
             Add(entry.GetKey(), entry.GetValue());
         }
+
         return this;
     }
 
@@ -433,6 +437,7 @@ public abstract class HttpHeaders : IEnumerable<IEntry<string, string>>, IEquata
         {
             Set(entry.GetKey(), entry.GetValue());
         }
+
         return this;
     }
 
@@ -481,6 +486,7 @@ public abstract class HttpHeaders : IEnumerable<IEntry<string, string>>, IEquata
     public virtual bool Contains(string name, string value, bool ignoreCase)
     {
         IIterator<string> valueIterator = ValueStringIterator(new StringCharSequence(name));
+
         if (ignoreCase)
         {
             while (valueIterator.HasNext())
@@ -501,6 +507,7 @@ public abstract class HttpHeaders : IEnumerable<IEntry<string, string>>, IEquata
                 }
             }
         }
+
         return false;
     }
 
@@ -517,6 +524,7 @@ public abstract class HttpHeaders : IEnumerable<IEntry<string, string>>, IEquata
     public virtual bool ContainsValue(ICharSequence name, ICharSequence value, bool ignoreCase)
     {
         IIterator<ICharSequence> itr = ValueCharSequenceIterator(name);
+
         while (itr.HasNext())
         {
             if (ContainsCommaSeparatedTrimmed(itr.Next(), value, ignoreCase))
@@ -524,6 +532,7 @@ public abstract class HttpHeaders : IEnumerable<IEntry<string, string>>, IEquata
                 return true;
             }
         }
+
         return false;
     }
 
@@ -532,6 +541,7 @@ public abstract class HttpHeaders : IEnumerable<IEntry<string, string>>, IEquata
     {
         int begin = 0;
         int end;
+
         if (ignoreCase)
         {
             if ((end = AsciiString.IndexOf(rawNext, ',', begin)) == -1)
@@ -549,6 +559,7 @@ public abstract class HttpHeaders : IEnumerable<IEntry<string, string>>, IEquata
                     {
                         return true;
                     }
+
                     begin = end + 1;
                 } while ((end = AsciiString.IndexOf(rawNext, ',', begin)) != -1);
 
@@ -578,6 +589,7 @@ public abstract class HttpHeaders : IEnumerable<IEntry<string, string>>, IEquata
                     {
                         return true;
                     }
+
                     begin = end + 1;
                 } while ((end = AsciiString.IndexOf(rawNext, ',', begin)) != -1);
 
@@ -590,6 +602,7 @@ public abstract class HttpHeaders : IEnumerable<IEntry<string, string>>, IEquata
                 }
             }
         }
+
         return false;
     }
 
@@ -679,6 +692,7 @@ public abstract class HttpHeaders : IEnumerable<IEntry<string, string>>, IEquata
             {
                 throw new InvalidOperationException();
             }
+
             last = next;
             return list[next++];
         }
@@ -689,6 +703,7 @@ public abstract class HttpHeaders : IEnumerable<IEntry<string, string>>, IEquata
             {
                 throw new InvalidOperationException();
             }
+
             list.RemoveAt(last);
             next = last;
             last = -1;
@@ -704,6 +719,7 @@ public abstract class HttpHeaders : IEnumerable<IEntry<string, string>>, IEquata
             {
                 return false;
             }
+
             current = Next();
             return true;
         }
@@ -756,6 +772,7 @@ public abstract class HttpHeaders : IEnumerable<IEntry<string, string>>, IEquata
             {
                 return false;
             }
+
             current = Next();
             return true;
         }

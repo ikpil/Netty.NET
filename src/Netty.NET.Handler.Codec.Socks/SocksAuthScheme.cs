@@ -54,6 +54,7 @@ public sealed class SocksAuthScheme
                 return code;
             }
         }
+
         return UNKNOWN;
     }
 

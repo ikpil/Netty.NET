@@ -64,6 +64,7 @@ public class DefaultHttp2Headers
                     throw ConnectionError(
                             PROTOCOL_ERROR, "Invalid HTTP/2 pseudo-header '%s' encountered.", name);
                 }
+
                 // no need for lower-case validation, we trust our own pseudo header constants
                 return;
             }
@@ -81,6 +82,7 @@ public class DefaultHttp2Headers
             if (name is AsciiString)
             {
                 int index;
+
                 try
                 {
                     index = ((AsciiString) name).ForEachByte(HTTP2_NAME_VALIDATOR_PROCESSOR);
@@ -193,6 +195,7 @@ public class DefaultHttp2Headers
                                          ICharSequence name)
     {
         base.ValidateName(validator, forAdd, name);
+
         if (NameValidator() == HTTP2_NAME_VALIDATOR && forAdd &&
             IHttp2Headers.PseudoHeaderName.HasPseudoHeaderFormat(name))
         {
@@ -327,11 +330,13 @@ public class DefaultHttp2Headers
             {
                 after = headers.head;
                 before = headers.head.Before();
+
                 if (headers.firstNonPseudo == headers.head)
                 {
                     headers.firstNonPseudo = this;
                 }
             }
+
             PointNeighborsToThis();
         }
 
@@ -341,6 +346,7 @@ public class DefaultHttp2Headers
             {
                 headers.firstNonPseudo = headers.firstNonPseudo.After();
             }
+
             base.Remove();
         }
     }

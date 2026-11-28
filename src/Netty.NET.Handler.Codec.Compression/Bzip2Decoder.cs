@@ -120,17 +120,20 @@ public class Bzip2Decoder : ByteToMessageDecoder
                 {
                     return;
                 }
+
                 int magicNumber = @in.ReadUnsignedMedium();
                 if (magicNumber != MAGIC_NUMBER)
                 {
                     throw new DecompressionException("Unexpected stream identifier contents. Mismatched bzip2 " +
                             "protocol version?");
                 }
+
                 int blockSize = @in.ReadByte() - '0';
                 if (blockSize < MIN_BLOCK_SIZE || blockSize > MAX_BLOCK_SIZE)
                 {
                     throw new DecompressionException("block size is invalid");
                 }
+
                 this.blockSize = blockSize * BASE_BLOCK_SIZE;
 
                 streamCRC = 0;
@@ -142,6 +145,7 @@ public class Bzip2Decoder : ByteToMessageDecoder
                 {
                     return;
                 }
+
                 // Get the block magic bytes.
                 int magic1 = reader.ReadBits(24);
                 int magic2 = reader.ReadBits(24);
@@ -153,13 +157,16 @@ public class Bzip2Decoder : ByteToMessageDecoder
                     {
                         throw new DecompressionException("stream CRC error");
                     }
+
                     currentState = State.EOF;
                     break;
                 }
+
                 if (magic1 != BLOCK_HEADER_MAGIC_1 || magic2 != BLOCK_HEADER_MAGIC_2)
                 {
                     throw new DecompressionException("bad block header");
                 }
+
                 blockCRC = reader.ReadInt();
                 currentState = State.INIT_BLOCK_PARAMS;
                 // fall through
@@ -169,6 +176,7 @@ public class Bzip2Decoder : ByteToMessageDecoder
                 {
                     return;
                 }
+
                 bool blockRandomised = reader.ReadBoolean();
                 int bwtStartPointer = reader.ReadBits(24);
 
@@ -182,6 +190,7 @@ public class Bzip2Decoder : ByteToMessageDecoder
                 {
                     return;
                 }
+
                 this.blockDecompressor.huffmanInUse16 = reader.ReadBits(16);
                 currentState = State.RECEIVE_HUFFMAN_USED_BITMAPS;
                 // fall through
@@ -198,6 +207,7 @@ public class Bzip2Decoder : ByteToMessageDecoder
                 }
 
                 int huffmanSymbolCount = 0;
+
                 if (bitNumber > 0)
                 {
                     for (int i = 0; i < 16; i++)
@@ -214,6 +224,7 @@ public class Bzip2Decoder : ByteToMessageDecoder
                         }
                     }
                 }
+
                 blockDecompressor.huffmanEndOfBlockSymbol = huffmanSymbolCount + 1;
 
                 int totalTables = reader.ReadBits(3);
@@ -221,11 +232,13 @@ public class Bzip2Decoder : ByteToMessageDecoder
                 {
                     throw new DecompressionException("incorrect huffman groups number");
                 }
+
                 int alphaSize = huffmanSymbolCount + 2;
                 if (alphaSize > HUFFMAN_MAX_ALPHABET_SIZE)
                 {
                     throw new DecompressionException("incorrect alphabet size");
                 }
+
                 this.huffmanStageDecoder = new Bzip2HuffmanStageDecoder(reader, totalTables, alphaSize);
                 currentState = State.RECEIVE_SELECTORS_NUMBER;
                 // fall through
@@ -235,11 +248,13 @@ public class Bzip2Decoder : ByteToMessageDecoder
                 {
                     return;
                 }
+
                 int totalSelectors = reader.ReadBits(15);
                 if (totalSelectors < 1 || totalSelectors > MAX_SELECTORS)
                 {
                     throw new DecompressionException("incorrect selectors number");
                 }
+
                 this.huffmanStageDecoder.selectors = new byte[totalSelectors];
 
                 currentState = State.RECEIVE_SELECTORS;
@@ -252,6 +267,7 @@ public class Bzip2Decoder : ByteToMessageDecoder
                 Bzip2MoveToFrontTable tableMtf = huffmanStageDecoder.tableMTF;
 
                 int currSelector;
+
                 // Get zero-terminated bit runs (0..62) of MTF'ed Huffman table. length = 1..6
                 for (currSelector = huffmanStageDecoder.currentSelector;
                             currSelector < totalSelectors; currSelector++)
@@ -262,7 +278,9 @@ public class Bzip2Decoder : ByteToMessageDecoder
                         huffmanStageDecoder.currentSelector = currSelector;
                         return;
                     }
+
                     int index = 0;
+
                     while (reader.ReadBoolean())
                     {
                         index++;
@@ -272,6 +290,7 @@ public class Bzip2Decoder : ByteToMessageDecoder
                                     index.ToString(CultureInfo.InvariantCulture));
                         }
                     }
+
                     selectors[currSelector] = tableMtf.IndexToFront(index);
                 }
 
@@ -290,6 +309,7 @@ public class Bzip2Decoder : ByteToMessageDecoder
                 int currAlpha = 0;
                 bool modifyLength = huffmanStageDecoder.modifyLength;
                 bool saveStateAndReturn = false;
+
                 for (currGroup = huffmanStageDecoder.currentGroup; currGroup < totalTables; currGroup++)
                 {
                     // start_huffman_length
@@ -298,10 +318,12 @@ public class Bzip2Decoder : ByteToMessageDecoder
                         saveStateAndReturn = true;
                         break;
                     }
+
                     if (currLength < 0)
                     {
                         currLength = reader.ReadBits(5);
                     }
+
                     for (currAlpha = huffmanStageDecoder.currentAlpha; currAlpha < alphaSize; currAlpha++)
                     {
                         // delta_bit_length: 1..40
@@ -310,6 +332,7 @@ public class Bzip2Decoder : ByteToMessageDecoder
                             saveStateAndReturn = true;
                             goto saveStateCheck;
                         }
+
                         while (modifyLength || reader.ReadBoolean())  // 0=>next symbol; 1=>alter length
                         {
                             if (!reader.IsReadable())
@@ -318,17 +341,21 @@ public class Bzip2Decoder : ByteToMessageDecoder
                                 saveStateAndReturn = true;
                                 goto saveStateCheck;
                             }
+
                             // 1=>decrement length;  0=>increment length
                             currLength += reader.ReadBoolean() ? -1 : 1;
                             modifyLength = false;
+
                             if (!reader.IsReadable())
                             {
                                 saveStateAndReturn = true;
                                 goto saveStateCheck;
                             }
                         }
+
                         codeLength[currGroup][currAlpha] = (byte) currLength;
                     }
+
                     currLength = -1;
                     currAlpha = huffmanStageDecoder.currentAlpha = 0;
                     modifyLength = false;
@@ -357,6 +384,7 @@ public class Bzip2Decoder : ByteToMessageDecoder
                 {
                     return;
                 }
+
                 // It used to avoid "Bzip2Decoder.decode() did not read anything but decoded a message" exception.
                 // Because previous operation may read only a few bits from Bzip2BitReader.bitBuffer and
                 // don't read incoming ByteBuf.
@@ -367,13 +395,16 @@ public class Bzip2Decoder : ByteToMessageDecoder
 
                 int blockLength = blockDecompressor.BlockLength();
                 ByteBuf uncompressed = ctx.Alloc().Buffer(blockLength);
+
                 try
                 {
                     int uncByte;
+
                     while ((uncByte = blockDecompressor.Read()) >= 0)
                     {
                         uncompressed.WriteByte(uncByte);
                     }
+
                     // We did read all the data, lets reset the state and do the CRC check.
                     currentState = State.INIT_BLOCK;
                     int currentBlockCRC = blockDecompressor.CheckCRC();
@@ -389,6 +420,7 @@ public class Bzip2Decoder : ByteToMessageDecoder
                         uncompressed.Release();
                     }
                 }
+
                 // Return here so the ByteBuf that was put in the List will be forwarded to the user and so can be
                 // released as soon as possible.
                 return;

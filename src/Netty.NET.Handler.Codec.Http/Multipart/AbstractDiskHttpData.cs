@@ -108,7 +108,9 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
         {
             newpostfix = GetPostfix();
         }
+
         FileInfo tmpFile;
+
         if (GetBaseDirectory() == null)
         {
             // create a temporary file
@@ -119,17 +121,20 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
             tmpFile = PlatformDependent.CreateTempFile(GetPrefix(), newpostfix, new DirectoryInfo(
                     GetBaseDirectory()));
         }
+
         if (DeleteOnExit())
         {
             // See https://github.com/netty/netty/issues/10351
             DeleteFileOnExitHook.Add(tmpFile.FullName);
         }
+
         return tmpFile;
     }
 
     public override void SetContent(ByteBuf buffer)
     {
         ObjectUtil.CheckNotNull(buffer, "buffer");
+
         try
         {
             size = buffer.ReadableBytes;
@@ -138,10 +143,12 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
             {
                 throw new IOException("Out of size: " + size + " > " + definedSize);
             }
+
             if (file == null)
             {
                 file = TempFile();
             }
+
             if (buffer.ReadableBytes == 0)
             {
                 // empty file
@@ -159,19 +166,24 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
                         }
                     }
                 }
+
                 return;
             }
+
             FileStream accessFile = OpenFile(file, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+
             try
             {
                 accessFile.SetLength(0);
                 FileStream localfileChannel = accessFile;
                 int written = 0;
+
                 while (written < size)
                 {
                     buffer.GetBytes(buffer.ReaderIndex, localfileChannel, (int) size);
                     written += (int) size;
                 }
+
                 buffer.ReaderIndex = buffer.ReaderIndex + written;
                 localfileChannel.Flush(true);
             }
@@ -179,6 +191,7 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
             {
                 accessFile.Dispose();
             }
+
             SetCompleted();
         }
         finally
@@ -204,17 +217,21 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
                     throw new IOException("Out of size: " + (size + localsize) +
                             " > " + definedSize);
                 }
+
                 if (file == null)
                 {
                     file = TempFile();
                 }
+
                 if (fileChannel == null)
                 {
                     fileChannel = OpenFile(file, FileMode.OpenOrCreate, FileAccess.ReadWrite);
                 }
+
                 int remaining = localsize;
                 long position = fileChannel.Position;
                 int index = buffer.ReaderIndex;
+
                 while (remaining > 0)
                 {
                     buffer.GetBytes(index, fileChannel, remaining);
@@ -223,6 +240,7 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
                     position += written;
                     index += written;
                 }
+
                 fileChannel.Position = position;
                 buffer.ReaderIndex = index;
                 size += localsize - remaining;
@@ -234,16 +252,19 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
                 buffer.Release();
             }
         }
+
         if (last)
         {
             if (file == null)
             {
                 file = TempFile();
             }
+
             if (fileChannel == null)
             {
                 fileChannel = OpenFile(file, FileMode.OpenOrCreate, FileAccess.ReadWrite);
             }
+
             try
             {
                 fileChannel.Flush(true);
@@ -252,6 +273,7 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
             {
                 fileChannel.Dispose();
             }
+
             fileChannel = null;
             SetCompleted();
         }
@@ -266,10 +288,12 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
         long size = FileLength(file);
         CheckSize(size);
         this.size = size;
+
         if (this.file != null)
         {
             Delete();
         }
+
         this.file = file;
         isRenamed = true;
         SetCompleted();
@@ -278,19 +302,23 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
     public override void SetContent(System.IO.Stream inputStream)
     {
         ObjectUtil.CheckNotNull(inputStream, "inputStream");
+
         if (file != null)
         {
             Delete();
         }
+
         file = TempFile();
         FileStream accessFile = OpenFile(file, FileMode.OpenOrCreate, FileAccess.ReadWrite);
         long written = 0;
+
         try
         {
             accessFile.SetLength(0);
             FileStream localfileChannel = accessFile;
             byte[] bytes = new byte[4096 * 4];
             int read = inputStream.Read(bytes, 0, bytes.Length);
+
             while (read > 0)
             {
                 localfileChannel.Write(bytes, 0, read);
@@ -298,12 +326,14 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
                 CheckSize(written);
                 read = inputStream.Read(bytes, 0, bytes.Length);
             }
+
             localfileChannel.Flush(true);
         }
         finally
         {
             accessFile.Dispose();
         }
+
         size = written;
         if (definedSize > 0 && definedSize < size)
         {
@@ -311,9 +341,11 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
             {
                 logger.Warn("Failed to delete: {}", file);
             }
+
             file = null;
             throw new IOException("Out of size: " + size + " > " + definedSize);
         }
+
         isRenamed = true;
         SetCompleted();
     }
@@ -341,8 +373,10 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
                     logger.Warn("Failed to close a file.", e);
                 }
             }
+
             fileChannel = null;
         }
+
         if (!isRenamed)
         {
             string filePath = null;
@@ -350,6 +384,7 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
             if (file != null && FileExists(file))
             {
                 filePath = file.FullName;
+
                 if (!DeleteFile(file))
                 {
                     filePath = null;
@@ -362,6 +397,7 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
             {
                 DeleteFileOnExitHook.Remove(filePath);
             }
+
             file = null;
         }
     }
@@ -372,6 +408,7 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
         {
             return EmptyArrays.EMPTY_BYTES;
         }
+
         return ReadFrom(file);
     }
 
@@ -381,6 +418,7 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
         {
             return Unpooled.EmptyBuffer;
         }
+
         byte[] array = ReadFrom(file);
         return Unpooled.WrappedBuffer(array);
     }
@@ -393,12 +431,15 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
         {
             return Unpooled.EmptyBuffer;
         }
+
         if (fileChannel == null)
         {
             fileChannel = OpenFile(file, FileMode.Open, FileAccess.Read);
         }
+
         int read = 0;
         byte[] byteBuffer = new byte[length];
+
         try
         {
             while (read < length)
@@ -410,6 +451,7 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
                     fileChannel = null;
                     break;
                 }
+
                 read += readnow;
             }
         }
@@ -419,10 +461,12 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
             fileChannel = null;
             throw;
         }
+
         if (read == 0)
         {
             return Unpooled.EmptyBuffer;
         }
+
         ByteBuf buffer = Unpooled.WrappedBuffer(byteBuffer, 0, read);
         buffer.ReaderIndex = 0;
         buffer.WriterIndex = read;
@@ -440,11 +484,13 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
         {
             return "";
         }
+
         if (encoding == null)
         {
             byte[] array = ReadFrom(file);
             return HttpConstants.DEFAULT_CHARSET.GetString(array);
         }
+
         byte[] array2 = ReadFrom(file);
         return encoding.GetString(array2);
     }
@@ -468,6 +514,7 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
         {
             throw new IOException("No file defined so cannot be renamed");
         }
+
         if (!RenameFile(file, dest))
         {
             // must copy
@@ -476,18 +523,21 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
             FileStream outputAccessFile = null;
             long chunkSize = 8196;
             long position = 0;
+
             try
             {
                 inputAccessFile = OpenFile(file, FileMode.Open, FileAccess.Read);
                 outputAccessFile = OpenFile(dest, FileMode.OpenOrCreate, FileAccess.ReadWrite);
                 FileStream @in = inputAccessFile;
                 FileStream @out = outputAccessFile;
+
                 while (position < size)
                 {
                     if (chunkSize < size - position)
                     {
                         chunkSize = size - position;
                     }
+
                     position += TransferTo(@in, position, chunkSize, @out);
                 }
             }
@@ -515,6 +565,7 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
                         }
                     }
                 }
+
                 if (outputAccessFile != null)
                 {
                     try
@@ -534,16 +585,19 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
                     }
                 }
             }
+
             if (exception != null)
             {
                 throw exception;
             }
+
             if (position == size)
             {
                 if (!DeleteFile(file))
                 {
                     logger.Warn("Failed to delete: {}", file);
                 }
+
                 file = dest;
                 isRenamed = true;
                 return true;
@@ -554,9 +608,11 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
                 {
                     logger.Warn("Failed to delete: {}", dest);
                 }
+
                 return false;
             }
         }
+
         file = dest;
         isRenamed = true;
         return true;
@@ -575,12 +631,15 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
             throw new ArgumentException(
                     "File too big to be loaded in memory");
         }
+
         FileStream accessFile = OpenFile(src, FileMode.Open, FileAccess.Read);
         byte[] array = new byte[(int) srcsize];
+
         try
         {
             FileStream fileChannel = accessFile;
             int read = 0;
+
             while (read < srcsize)
             {
                 read += fileChannel.Read(array, read, (int) srcsize - read);
@@ -590,6 +649,7 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
         {
             accessFile.Dispose();
         }
+
         return array;
     }
 
@@ -616,6 +676,7 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
         long saved = @in.Position;
         @in.Position = position;
         long transferred = 0;
+
         try
         {
             while (transferred < count)
@@ -625,6 +686,7 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
                 {
                     break;
                 }
+
                 target.Write(buffer, 0, read);
                 transferred += read;
             }
@@ -633,6 +695,7 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
         {
             @in.Position = saved;
         }
+
         return transferred;
     }
 
@@ -640,10 +703,12 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
     private static int JavaHashCode(string s)
     {
         int h = 0;
+
         foreach (char c in s)
         {
             h = 31 * h + c;
         }
+
         return h;
     }
 
@@ -714,6 +779,7 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
         {
             return false;
         }
+
         try
         {
             file.Delete();
@@ -726,6 +792,7 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
         {
             return false;
         }
+
         return !FileExists(file);
     }
 

@@ -86,6 +86,7 @@ public sealed class DefaultHttp2DataFrame : AbstractHttp2StreamFrame, IHttp2Data
         {
             throw new ArgumentException("content + padding must be <= Integer.MAX_VALUE");
         }
+
         initialFlowControlledBytes = Content.ReadableBytes + padding;
     }
 
@@ -245,6 +246,7 @@ public sealed class DefaultHttp2DataFrame : AbstractHttp2StreamFrame, IHttp2Data
         {
             return false;
         }
+
         DefaultHttp2DataFrame other = (DefaultHttp2DataFrame) o;
         return base.Equals(other) && content.Equals(other.Content)
             && endStream == other.endStream && padding == other.padding;

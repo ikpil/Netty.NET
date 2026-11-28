@@ -194,6 +194,7 @@ public class HAProxyMessageDecoderTest
     public void TestFailSlowHeaderTooLong()
     {
         EmbeddedChannel slowFailCh = new EmbeddedChannel(new HAProxyMessageDecoder(false));
+
         try
         {
             string headerPart1 = "PROXY TCP4 192.168.0.1 192.168.0.11 56324 " +
@@ -218,6 +219,7 @@ public class HAProxyMessageDecoderTest
     public void TestFailFastHeaderTooLong()
     {
         EmbeddedChannel fastFailCh = new EmbeddedChannel(new HAProxyMessageDecoder(true));
+
         try
         {
             string headerPart1 = "PROXY TCP4 192.168.0.1 192.168.0.11 56324 " +
@@ -246,6 +248,7 @@ public class HAProxyMessageDecoderTest
     {
         Task closeFuture = ch.CloseFuture;
         string header = "GET / HTTP/1.1\r\n";
+
         try
         {
             ch.WriteInbound(CopiedBuffer(header, Encoding.ASCII));
@@ -254,6 +257,7 @@ public class HAProxyMessageDecoderTest
         {
             // swallow this exception since we're just testing to be sure the channel was closed
         }
+
         bool isComplete = await Task.WhenAny(closeFuture,
                 Task.Delay(5000, TestContext.Current.CancellationToken)) == closeFuture;
         if (!isComplete || !closeFuture.IsCompleted || !closeFuture.IsCompletedSuccessfully)
@@ -857,6 +861,7 @@ public class HAProxyMessageDecoderTest
         Assert.Equal(3, tlvs.Count);
 
         Assert.Equal(1, msg.RefCnt);
+
         foreach (HAProxyTLV tlv in tlvs)
         {
             Assert.Equal(3, tlv.RefCnt);
@@ -865,6 +870,7 @@ public class HAProxyMessageDecoderTest
         // Retain the haproxy message
         msg.Retain();
         Assert.Equal(2, msg.RefCnt);
+
         foreach (HAProxyTLV tlv in tlvs)
         {
             Assert.Equal(3, tlv.RefCnt);
@@ -873,6 +879,7 @@ public class HAProxyMessageDecoderTest
         // Decrease the haproxy message refCnt
         msg.Release();
         Assert.Equal(1, msg.RefCnt);
+
         foreach (HAProxyTLV tlv in tlvs)
         {
             Assert.Equal(3, tlv.RefCnt);
@@ -881,6 +888,7 @@ public class HAProxyMessageDecoderTest
         // Release haproxy message, TLVs will be released with it
         msg.Release();
         Assert.Equal(0, msg.RefCnt);
+
         foreach (HAProxyTLV tlv in tlvs)
         {
             Assert.Equal(0, tlv.RefCnt);
@@ -1280,6 +1288,7 @@ public class HAProxyMessageDecoderTest
         int countOfTLVs = 8100;
         byte[] tlvLengthBuf = new byte[2];
         short totalLength = (short) (countOfTLVs * (1 + 2 + 1 + 4));
+
         for (int i = 0; i < countOfTLVs; i++)
         {
             //write PP2_TYPE_SSL TLV
@@ -1297,6 +1306,7 @@ public class HAProxyMessageDecoderTest
             //subtract the client and verify fields
             totalLength -= 1 + 4;
         }
+
         byte[] header = headerWriter.ToArray();
         byte[] numsWrite = new byte[2];
         BinaryPrimitives.WriteInt16BigEndian(numsWrite, (short) header.Length);

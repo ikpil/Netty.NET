@@ -20,6 +20,7 @@ public class BootstrapInitContractTest
     public async Task ValidationAndBuilderMessagesFollowTheSource()
     {
         var group = new DefaultEventLoopGroup(1);
+
         try
         {
             Assert.Equal("group not set", Assert.Throws<InvalidOperationException>(() => new Bootstrap().Validate()).Message);
@@ -62,6 +63,7 @@ public class BootstrapInitContractTest
     public async Task AnUnknownOptionIsLoggedAndRegistrationStillSucceeds()
     {
         var group = new DefaultEventLoopGroup(1);
+
         try
         {
             // DefaultChannelConfig.setOption returns false for SO_BROADCAST on a local channel.
@@ -82,6 +84,7 @@ public class BootstrapInitContractTest
     public async Task ConnectWithOnlyARemoteAddressUsesTheConfiguredLocalAddress()
     {
         var group = new DefaultEventLoopGroup(1);
+
         try
         {
             var serverAddress = new LocalAddress(typeof(BootstrapInitContractTest));
@@ -110,6 +113,7 @@ public class BootstrapInitContractTest
     public async Task ToStringWrapsTheConfig()
     {
         var group = new DefaultEventLoopGroup(1);
+
         try
         {
             var bootstrap = new Bootstrap().Group(group).Channel<LocalChannel>();

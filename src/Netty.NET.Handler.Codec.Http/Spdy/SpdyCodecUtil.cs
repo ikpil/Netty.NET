@@ -309,6 +309,7 @@ internal static class SpdyCodecUtil
             throw new ArgumentException(
                     "name exceeds allowable length: " + name);
         }
+
         for (int i = 0; i < name.Length(); i ++)
         {
             char c = name.CharAt(i);
@@ -335,6 +336,7 @@ internal static class SpdyCodecUtil
     internal static void ValidateHeaderValue(ICharSequence value)
     {
         CheckNotNull(value, "value");
+
         for (int i = 0; i < value.Length(); i ++)
         {
             char c = value.CharAt(i);

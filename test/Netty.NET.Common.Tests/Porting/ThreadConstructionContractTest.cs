@@ -124,6 +124,7 @@ public class ThreadConstructionContractTest
             Item first = pool.Get();
             first.Handle.Recycle(first);
             Item second = pool.Get();
+
             if (cleanup)
             {
                 Assert.Same(first, second);
@@ -132,6 +133,7 @@ public class ThreadConstructionContractTest
             {
                 Assert.NotSame(first, second);
             }
+
             second.Handle.Recycle(second);
         }, cleanup);
         Assert.Equal(cleanup, FastThreadLocalThread.WillCleanupFastThreadLocals(worker.Thread));

@@ -73,6 +73,7 @@ public class Socks5PasswordAuthResponseDecoder : ReplayingDecoder<Socks5Password
                 {
                     @out.Add(@in.ReadRetainedSlice(readableBytes));
                 }
+
                 break;
             }
             case State.FAILURE:

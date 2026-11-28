@@ -52,6 +52,7 @@ public static class ExampleLauncher
                 return value;
             }
         }
+
         return key == "user.dir" ? Environment.CurrentDirectory : def;
     }
 
@@ -61,14 +62,17 @@ public static class ExampleLauncher
             .Where(type => type != typeof(ExampleLauncher) && FindMain(type) != null)
             .OrderBy(type => type.FullName, StringComparer.Ordinal)
             .ToArray();
+
         if (args.Length == 0)
         {
             Console.Error.WriteLine("Usage: <program class, e.g. example.Http3ServerExample> [-Dname=value ...] [arguments]");
             Console.Error.WriteLine("Programs:");
+
             foreach (var type in examples)
             {
                 Console.Error.WriteLine("  " + JavaName(type));
             }
+
             return 1;
         }
 
@@ -86,18 +90,22 @@ public static class ExampleLauncher
             {
                 return true;
             }
+
             int separator = arg.IndexOf('=');
             // "-Dssl" alone sets the property to an empty value, as the JVM does.
             string key = separator < 0 ? arg.Substring(2) : arg.Substring(2, separator - 2);
             string value = separator < 0 ? string.Empty : arg.Substring(separator + 1);
+
             lock (Properties)
             {
                 Properties[key] = value;
             }
+
             if (key.StartsWith(LibraryPropertyPrefix, StringComparison.Ordinal))
             {
                 Environment.SetEnvironmentVariable(key, value);
             }
+
             return false;
         }).ToArray();
 
@@ -107,6 +115,7 @@ public static class ExampleLauncher
         {
             await task;
         }
+
         return 0;
     }
 

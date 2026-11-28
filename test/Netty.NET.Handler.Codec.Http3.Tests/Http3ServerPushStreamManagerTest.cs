@@ -235,6 +235,7 @@ public class Http3ServerPushStreamManagerTest : IDisposable
             {
                 framesWritten.Add((IHttp3PushStreamFrame) msg);
             }
+
             return base.WriteAsync(ctx, msg, cancellationToken);
         }
     }

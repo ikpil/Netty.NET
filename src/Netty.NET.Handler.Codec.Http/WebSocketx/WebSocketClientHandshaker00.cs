@@ -224,6 +224,7 @@ public class WebSocketClientHandshaker00 : WebSocketClientHandshaker
         if (customHeaders != null)
         {
             headers.Add(customHeaders);
+
             if (!headers.Contains(HttpHeaderNames.HOST))
             {
                 // Only add HOST header if customHeaders did not contain it.
@@ -315,6 +316,7 @@ public class WebSocketClientHandshaker00 : WebSocketClientHandshaker
 
         char[] randomChars = new char[count];
         int randCount = 0;
+
         while (randCount < count)
         {
             int rand = Random.Shared.Next(0x7e) + 0x21;

@@ -64,6 +64,7 @@ public sealed class HttpUploadClient
     public static async Task Main(string[] args)
     {
         string postSimple, postFile, get;
+
         if (BASE_URL.EndsWith("/", StringComparison.Ordinal))
         {
             postSimple = BASE_URL + "formpost";
@@ -101,6 +102,7 @@ public sealed class HttpUploadClient
 
         bool ssl = "https".Equals(scheme, StringComparison.OrdinalIgnoreCase);
         SslContext sslCtx;
+
         if (ssl)
         {
             sslCtx = SslContextBuilder.ForClient()
@@ -273,6 +275,7 @@ public sealed class HttpUploadClient
             // either do it through ChunkedWriteHandler
             _ = channel.WriteAsync(bodyRequestEncoder);
         }
+
         channel.Flush();
 
         // Do not clear here since we will reuse the InterfaceHttpData on the next request
@@ -327,6 +330,7 @@ public sealed class HttpUploadClient
         {
             _ = channel.WriteAsync(bodyRequestEncoder);
         }
+
         channel.Flush();
 
         // Now no more use of file representation (and list of HttpData)

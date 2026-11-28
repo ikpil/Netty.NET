@@ -110,6 +110,7 @@ public sealed class DeflateFrameServerExtensionHandshaker : IWebSocketServerExte
                     "compressionLevel: " + compressionLevel.ToString(CultureInfo.InvariantCulture) +
                     " (expected: 0-9)");
         }
+
         this.compressionLevel = compressionLevel;
         this.windowSize = CheckInRange(windowSize, MIN_WINDOW_SIZE, MAX_WINDOW_SIZE, "windowSize");
         this.memLevel = CheckInRange(memLevel, MIN_MEM_LEVEL, MAX_MEM_LEVEL, "memLevel");

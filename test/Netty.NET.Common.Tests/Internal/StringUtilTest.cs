@@ -390,6 +390,7 @@ public class StringUtilTest
     private static void EscapeCsv(string value, string expected, bool trimOws)
     {
         string escapedValue = value;
+
         for (int i = 0; i < 10; ++i)
         {
             escapedValue = StringUtil.EscapeCsv(escapedValue, trimOws);
@@ -587,6 +588,7 @@ public class StringUtilTest
     {
         var pkg = clazz.Namespace;
         string name;
+
         if (pkg != null)
         {
             name = clazz.FullName[(pkg.Length + 1)..];

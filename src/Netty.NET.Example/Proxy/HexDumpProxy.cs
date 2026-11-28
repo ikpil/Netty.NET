@@ -44,6 +44,7 @@ public sealed class HexDumpProxy
 
         // Configure the bootstrap.
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             ServerBootstrap b = new ServerBootstrap();

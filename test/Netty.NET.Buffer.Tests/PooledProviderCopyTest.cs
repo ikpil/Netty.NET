@@ -36,8 +36,10 @@ public class PooledProviderCopyTest
             Source = source;
             SourceIndex = index;
             Length = length;
+
             if (mode == 2 && length > 0)
                 target.SetByte(0, 0xCC);
+
             if (mode != 0)
                 throw Failure;
         }
@@ -48,6 +50,7 @@ public class PooledProviderCopyTest
         public override ByteBuf WriteBytes(ReadOnlySpan<byte> source)
         {
             o.Visit(this, "Span", source.Length);
+
             return base.WriteBytes(source);
         }
     }
@@ -57,6 +60,7 @@ public class PooledProviderCopyTest
         public override ByteBuf WriteBytes(ByteBuf source, int sourceIndex, int length)
         {
             o.Visit(this, "Buffer", length, source, sourceIndex);
+
             return base.WriteBytes(source, sourceIndex, length);
         }
     }
@@ -109,18 +113,24 @@ public class PooledProviderCopyTest
         using PoolArena arena = direct ? new PoolDirectArena(allocator, sizes, native) : new PoolHeapArena(allocator, sizes);
         ByteBuf guard = arena.Allocate(capacity, 262144), root = arena.Allocate(capacity, 262144);
         ByteBuf target = root, result = null;
+
         try
         {
             byte[] data = new byte[capacity];
+
             for (int i = 0; i < capacity; ++i)
                 data[i] = (byte)(i % 251);
+
             root.SetBytes(0, data);
             guard.SetZero(0, capacity);
             root.SetIndex(3, 10).MarkReaderIndex().MarkWriterIndex();
+
             if (view == 2)
                 target = root.Slice(2, 9);
+
             if (view == 3)
                 target = root.RetainedSlice(2, 9);
+
             int reader = root.ReaderIndex, writer = root.WriterIndex, claims = root.RefCnt;
 
             ByteBuf Copy()
@@ -132,18 +142,22 @@ public class PooledProviderCopyTest
                 Assert.Same(observation.Failure, Assert.Throws<CopyFailure>(() => Copy()));
             else
                 result = Copy();
+
             ByteBuf destination = Assert.Single(allocator.Created);
             Assert.Equal(direct, allocator.RequestedDirect);
             Assert.Equal((7, 262144), (allocator.RequestedCapacity, allocator.RequestedMaximum));
             Assert.Equal(direct ? "Buffer" : "Span", observation.Method);
             Assert.Equal(1, observation.Calls);
             Assert.Equal(7, observation.Length);
+
             if (direct)
             {
                 Assert.Same(root, observation.Source);
                 Assert.Equal(3, observation.SourceIndex);
             }
+
             Assert.Equal(mode == 0 ? 1 : 0, destination.RefCnt);
+
             if (mode == 0)
             {
                 Assert.Same(destination, result);
@@ -154,6 +168,7 @@ public class PooledProviderCopyTest
                 result.SetByte(0, 77);
                 Assert.Equal(3, root.GetByte(3));
             }
+
             Assert.Equal((reader, writer, claims), (root.ReaderIndex, root.WriterIndex, root.RefCnt));
             root.SetIndex(4, 11).ResetWriterIndex().ResetReaderIndex();
             Assert.Equal((3, 10), (root.ReaderIndex, root.WriterIndex));
@@ -164,11 +179,14 @@ public class PooledProviderCopyTest
         {
             if (view == 3 && !ReferenceEquals(target, root))
                 target.Release();
+
             root.Release();
             guard.Release();
+
             foreach (ByteBuf b in allocator.Created)
             if (b.RefCnt > 0)
                 b.Release();
+
             arena.Dispose();
             Assert.Equal(0, native.ReservedBytes);
         }

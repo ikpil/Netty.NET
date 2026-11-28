@@ -237,6 +237,7 @@ public class DelimiterBasedFrameDecoderTest
                 Unpooled.CopiedBuffer("b", Encoding.ASCII)));
         byte[] bytes = new byte[byteCount];
         Array.Fill(bytes, (byte) 'a');
+
         try
         {
             long start = Stopwatch.GetTimestamp();
@@ -276,6 +277,7 @@ public class DelimiterBasedFrameDecoderTest
     {
         char[] chars = new char[count];
         Array.Fill(chars, c);
+
         return new string(chars);
     }
 
@@ -284,6 +286,7 @@ public class DelimiterBasedFrameDecoderTest
         EmbeddedChannel ch = new EmbeddedChannel(new DelimiterBasedFrameDecoder(
                 int.MaxValue, Unpooled.CopiedBuffer("abc", Encoding.ASCII),
                 Unpooled.CopiedBuffer("x", Encoding.ASCII)));
+
         try
         {
             ch.WriteInbound(Unpooled.CopiedBuffer(input, Encoding.ASCII));
@@ -303,9 +306,11 @@ public class DelimiterBasedFrameDecoderTest
         EmbeddedChannel ch = new EmbeddedChannel(new DelimiterBasedFrameDecoder(
                 int.MaxValue, Delimiters.NulDelimiter()));
         ByteBuf single = Unpooled.Buffer(1);
+
         try
         {
             long start = Stopwatch.GetTimestamp();
+
             for (int i = 0; i < byteCount; i++)
             {
                 single.SetIndex(0, 0);
@@ -313,6 +318,7 @@ public class DelimiterBasedFrameDecoderTest
                 ch.WriteInbound(single.RetainedDuplicate());
                 ReferenceCountUtil.Release(ch.ReadInbound());
             }
+
             return (long) Stopwatch.GetElapsedTime(start).TotalNanoseconds;
         }
         finally

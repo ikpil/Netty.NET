@@ -41,6 +41,7 @@ public class FastThreadLocalTestRunnerContractTest
                 throw cause;
             }
         };
+
         if (fail)
         {
             Assert.Same(cause, Assert.Throws<InvalidOperationException>(() =>
@@ -51,6 +52,7 @@ public class FastThreadLocalTestRunnerContractTest
         {
             RunInFastThreadLocalThreadExtension.Run(invocation);
         }
+
         Assert.Equal(1, local.Removals);
         Assert.False(worker.IsAlive);
         Assert.False(local.IsSet());

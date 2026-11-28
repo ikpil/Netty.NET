@@ -192,6 +192,7 @@ public class WebSocketServerExtensionHandler : ChannelDuplexHandler
                         {
                             validExtensionsList = new List<IWebSocketServerExtension>(1);
                         }
+
                         rsv = rsv | validExtension.Rsv();
                         validExtensionsList.Add(validExtension);
                     }
@@ -203,6 +204,7 @@ public class WebSocketServerExtensionHandler : ChannelDuplexHandler
         {
             validExtensionsList = Array.Empty<IWebSocketServerExtension>();
         }
+
         validExtensions.Enqueue(validExtensionsList);
 
         base.ChannelRead(ctx, request);
@@ -262,11 +264,13 @@ public class WebSocketServerExtensionHandler : ChannelDuplexHandler
     {
         validExtensions.TryDequeue(out IList<IWebSocketServerExtension> validExtensionsList);
         TaskCompletionSource promise = new TaskCompletionSource();
+
         // checking the status is faster than looking at headers so we do this first
         if (HttpResponseStatus.SWITCHING_PROTOCOLS.Equals(response.Status()))
         {
             HandlePotentialUpgrade(ctx, promise, response, validExtensionsList);
         }
+
         Task future = base.WriteAsync(ctx, response, cancellationToken);
         _ = future.ContinueWith(static (f, state) => ((TaskCompletionSource) state).TrySetFromTask(f), promise,
                 CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously,
@@ -300,10 +304,12 @@ public class WebSocketServerExtensionHandler : ChannelDuplexHandler
                 string headerValue = headers.GetAsString(HttpHeaderNames.SEC_WEBSOCKET_EXTENSIONS);
                 IList<WebSocketExtensionData> extraExtensions =
                   new List<WebSocketExtensionData>(extensionHandshakers.Count);
+
                 foreach (IWebSocketServerExtension extension in validExtensionsList)
                 {
                     extraExtensions.Add(extension.NewReponseData());
                 }
+
                 string newHeaderValue = WebSocketExtensionUtil
                   .ComputeMergeExtensionsHeaderValue(headerValue, extraExtensions);
                 _ = promise.Task.ContinueWith(future =>

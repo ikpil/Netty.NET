@@ -62,6 +62,7 @@ public class ByteBufTextSearchTest
         Assert.Equal(0, empty.WriteCharSequence("", Encoding.UTF8));
         Assert.Equal("", empty.ReadString(0, Encoding.UTF8));
         ByteBuf owned = Unpooled.Buffer(0, 1);
+
         try
         {
             Assert.Equal(-1, owned.IndexOf(0, 1, 1));
@@ -78,6 +79,7 @@ public class ByteBufTextSearchTest
     public void OriginalDirectionalSearchAndClampingScenarios(bool direct)
     {
         ByteBuf buffer = NewBuffer(direct, 5);
+
         try
         {
             // Ensure the buffer is completely zero'ed.
@@ -109,6 +111,7 @@ public class ByteBufTextSearchTest
     public void SearchesAgreeWithIndependentScalarLoopsAcrossAllOctetsAndDirections(bool direct)
     {
         ByteBuf buffer = NewBuffer(direct, 515, 515);
+
         try
         {
             byte[] bytes = new byte[515];
@@ -119,11 +122,13 @@ public class ByteBufTextSearchTest
             }
 
             buffer.WriteBytes(bytes);
+
             for (int value = 0; value <= byte.MaxValue; ++value)
                 for (int start = 0; start < bytes.Length; start += 17)
                 {
                     int end = Math.Min(start + 123, bytes.Length);
                     int first = -1, last = -1;
+
                     for (int i = start; i < end; ++i)
                         if (bytes[i] == value)
                         {
@@ -131,8 +136,10 @@ public class ByteBufTextSearchTest
                             {
                                 first = i;
                             }
+
                             last = i;
                         }
+
                     Assert.Equal(first, buffer.IndexOf(start, end, (byte)value));
                     Assert.Equal(last, buffer.IndexOf(end, start, (byte)value));
                 }
@@ -149,6 +156,7 @@ public class ByteBufTextSearchTest
     public void SearchReadableRangesAndSliceCoordinatesDoNotChangeIndices(bool direct)
     {
         ByteBuf buffer = NewBuffer(direct, 10);
+
         try
         {
             buffer.WriteBytes(new byte[] { 1, 2, 3, 2, 1 });
@@ -179,6 +187,7 @@ public class ByteBufTextSearchTest
     public void OriginalProcessorOrderAbortAndCapacityRangeScenarios(bool direct)
     {
         ByteBuf buffer = NewBuffer(direct, 4096, 4096);
+
         try
         {
             for (int i = 0; i < 4096; ++i)
@@ -236,10 +245,12 @@ public class ByteBufTextSearchTest
         Func<byte, bool> visitor = value =>
         {
             seen.Add(value);
+
             if (seen.Count == 1)
             {
                 buffer.Capacity = 64;
             }
+
             return true;
         };
         Assert.Equal(-1, reverse ? buffer.ForEachByteDesc(visitor) : buffer.ForEachByte(visitor));
@@ -295,6 +306,7 @@ public class ByteBufTextSearchTest
         };
         string text = kind == 5 ? "A?" : "Aé";
         ByteBuf buffer = NewBuffer(direct, 1);
+
         try
         {
             buffer.WriteByte(0x7f);
@@ -324,6 +336,7 @@ public class ByteBufTextSearchTest
     {
         ByteBuf buffer = NewBuffer(direct, 1, 1);
         Encoding strict = new UTF8Encoding(false, true);
+
         try
         {
             Assert.Throws<EncoderFallbackException>(() => buffer.WriteCharSequence("\ud800", strict));
@@ -343,6 +356,7 @@ public class ByteBufTextSearchTest
         }
 
         buffer = NewBuffer(direct);
+
         try
         {
             buffer.WriteBytes(new byte[] { 0xff, 65 });
@@ -367,6 +381,7 @@ public class ByteBufTextSearchTest
         {
             buffer.Release();
         }
+
         Assert.Throws<IllegalReferenceCountException>(() => buffer.ToString(0, 0, strict));
         Assert.Throws<IllegalReferenceCountException>(() => buffer.SetCharSequence(0, "", strict));
         Assert.Throws<IllegalReferenceCountException>(() => buffer.ForEachByte(_ => true));
@@ -386,6 +401,7 @@ public class ByteBufTextSearchTest
             ("\ud800\udbff\udfff", new byte[] { 63, 63, 63 }),
             ("\udbff\udfff", new byte[] { 0xf4, 0x8f, 0xbf, 0xbf })
         };
+
         foreach (bool direct in new[] { false, true })
             foreach (var item in cases)
                 // Transport numeric UTF-16 units: test discovery can replace lone surrogates in serialized strings.
@@ -398,6 +414,7 @@ public class ByteBufTextSearchTest
     {
         string text = new(Array.ConvertAll(units, unit => (char)unit));
         ByteBuf buffer = NewBuffer(direct, 1);
+
         try
         {
             buffer.WriteByte(0x7f);
@@ -420,6 +437,7 @@ public class ByteBufTextSearchTest
     public void NettyUtf8ReservationsAndAsciiOctetMappingRemainDistinctFromEncoding(bool direct)
     {
         ByteBuf buffer = NewBuffer(direct, 1, 1);
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.WriteUtf8(buffer, "A"));
@@ -430,7 +448,9 @@ public class ByteBufTextSearchTest
         {
             buffer.Release();
         }
+
         buffer = NewBuffer(direct);
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.ReserveAndWriteUtf8(buffer, "€", 2));
@@ -458,6 +478,7 @@ public class ByteBufTextSearchTest
     {
         var allocator = new NativeMemoryAllocator();
         ByteBuf buffer = new UnpooledDirectByteBuf(2, 64, allocator);
+
         try
         {
             MemoryMarshal.Cast<byte, char>(buffer.AsSpan(0, 2))[0] = 'A';
@@ -478,6 +499,7 @@ public class ByteBufTextSearchTest
         {
             buffer.Release();
         }
+
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -488,6 +510,7 @@ public class ByteBufTextSearchTest
     {
         ByteBuf haystack = NewBuffer(direct);
         ByteBuf needle = NewBuffer(direct);
+
         try
         {
             haystack.WriteBytes(new byte[] { 7, 8, 1, 2, 1, 2, 3, 8 });

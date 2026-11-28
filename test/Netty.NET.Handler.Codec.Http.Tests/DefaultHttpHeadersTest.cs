@@ -326,6 +326,7 @@ public class DefaultHttpHeadersTest
         Assert.Equal(expected.Count, actual.Count);
         using IEnumerator<ICharSequence> eItr = expected.GetEnumerator();
         using IEnumerator<string> aItr = actual.GetEnumerator();
+
         while (eItr.MoveNext())
         {
             aItr.MoveNext();

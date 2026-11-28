@@ -50,10 +50,12 @@ internal sealed class Bzip2MalformedStreams
         bits.WriteBits(0x8000, 16);  // symbol sub-bitmap: only 0xF0 is used
         bits.WriteBits(2, 3);        // totalTables = 2 (minimum allowed -> valid indices 0 or 1)
         bits.WriteBits(1, 15);       // totalSelectors = 1
+
         for (int i = 0; i < 9; i++)
         {
             bits.WriteBit(1);
         }
+
         bits.WriteBit(0);            // unary-coded selector index = 9 (out of range)
 
         MemoryStream @out = new MemoryStream();
@@ -64,6 +66,7 @@ internal sealed class Bzip2MalformedStreams
         WriteInt(@out, 0);            // block CRC (irrelevant, the fault triggers earlier)
         byte[] bitBytes = bits.ToByteArray();
         @out.Write(bitBytes, 0, bitBytes.Length);
+
         return @out.ToArray();
     }
 
@@ -94,6 +97,7 @@ internal sealed class Bzip2MalformedStreams
         internal void WriteBit(int bit)
         {
             currentByte = currentByte << 1 | bit & 1;
+
             if (++bitsInCurrentByte == 8)
             {
                 @out.WriteByte((byte) currentByte);
@@ -116,6 +120,7 @@ internal sealed class Bzip2MalformedStreams
             {
                 WriteBit(0);
             }
+
             return @out.ToArray();
         }
     }

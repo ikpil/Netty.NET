@@ -131,6 +131,7 @@ public class ConcurrentSkipListIntObjMultimapContractTest
         var consumers = Enumerable.Range(0, 16).Select(_ => Task.Run(() =>
         {
             ConcurrentSkipListIntObjMultimap<object>.IntEntry entry;
+
             while ((entry = map.PollCeilingEntry(0)) != null)
                 Assert.True(claimed.TryAdd((int) entry.GetValue(), 0));
         }, TestContext.Current.CancellationToken)).ToArray();
@@ -144,8 +145,10 @@ public class ConcurrentSkipListIntObjMultimapContractTest
     public async Task CompetingIteratorRemoversGrantOneOwnerPerValue()
     {
         var map = new ConcurrentSkipListIntObjMultimap<object>(-1);
+
         for (int i = 0; i < 1000; i++)
             map.Put(i % 31, i);
+
         var owned = new ConcurrentDictionary<int, byte>();
         await Task.WhenAll(Enumerable.Range(0, 8).Select(_ => Task.Run(() =>
         {
@@ -168,9 +171,11 @@ public class ConcurrentSkipListIntObjMultimapContractTest
         var producers = Enumerable.Range(0, 8).Select(p => Task.Run(async () =>
         {
             await start.Task;
+
             for (int i = 0; i < 250; i++)
             {
                 map.Put(i % 17, p * 250 + i);
+
                 if ((i & 15) == 0)
                 {
                     await Task.Yield();
@@ -181,6 +186,7 @@ public class ConcurrentSkipListIntObjMultimapContractTest
         var consumers = Enumerable.Range(0, 8).Select(_ => Task.Run(async () =>
         {
             start.TrySetResult();
+
             while (true)
             {
                 var entry = map.PollFirstEntry();
@@ -217,6 +223,7 @@ public class ConcurrentSkipListIntObjMultimapContractTest
         Chunk bestChunk = null;
         int bestRemainingCapacity = 0;
         var itr = map.Iterator();
+
         while (itr.HasNext())
         {
             var entry = itr.Next();
@@ -227,6 +234,7 @@ public class ConcurrentSkipListIntObjMultimapContractTest
                 {
                     continue;
                 }
+
                 chunk.ProcessFreelistEntries();
                 int remainingCapacity = chunk.RemainingCapacity();
                 if (remainingCapacity >= size &&
@@ -236,6 +244,7 @@ public class ConcurrentSkipListIntObjMultimapContractTest
                     {
                         map.Put(bestRemainingCapacity, bestChunk);
                     }
+
                     bestChunk = chunk;
                     bestRemainingCapacity = remainingCapacity;
                 }
@@ -245,6 +254,7 @@ public class ConcurrentSkipListIntObjMultimapContractTest
                 }
             }
         }
+
         Assert.Same(larger, bestChunk);
         Assert.Equal(1, smaller.ProcessCount);
         Assert.Equal(1, larger.ProcessCount);

@@ -126,6 +126,7 @@ public class FlowControlHandler : ChannelDuplexHandler
                 if (releaseMessages)
                 {
                     object msg;
+
                     while ((msg = Poll(queue)) != null)
                     {
                         ReferenceCountUtil.SafeRelease(msg);
@@ -146,12 +147,14 @@ public class FlowControlHandler : ChannelDuplexHandler
     public override void HandlerRemoved(IChannelHandlerContext ctx)
     {
         base.HandlerRemoved(ctx);
+
         if (!IsQueueEmpty())
         {
             unsatisfiedReads = queue.Count;
             Dequeue(ctx);
             ctx.FireChannelReadComplete();
         }
+
         Destroy();
     }
 
@@ -234,6 +237,7 @@ public class FlowControlHandler : ChannelDuplexHandler
 
         bool wasDequeuing = dequeuing;
         dequeuing = true;
+
         try
         {
             // fireChannelRead(...) may call ctx.read() and so this method may be re-entered. Because of that
@@ -250,6 +254,7 @@ public class FlowControlHandler : ChannelDuplexHandler
                 {
                     unsatisfiedReads--;
                 }
+
                 ctx.FireChannelRead(msg);
 
                 didSatisfyARead = true;

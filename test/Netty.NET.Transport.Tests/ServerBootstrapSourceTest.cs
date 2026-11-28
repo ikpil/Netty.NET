@@ -34,6 +34,7 @@ public class ServerBootstrapSourceTest
     {
         var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         SourceTestChannel created = null;
+
         try
         {
             var registered = new ServerBootstrap().Group(group).ChannelFactory(() => created = new SourceTestChannel())
@@ -53,12 +54,14 @@ public class ServerBootstrapSourceTest
     {
         var added = new TaskCompletionSource<Exception>(TaskCreationOptions.RunContinuationsAsynchronously);
         var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
+
         try
         {
             var bootstrap = new ServerBootstrap().Channel<LocalServerChannel>().Group(group)
                 .ChildHandler(new ChannelInboundHandlerAdapter()).Handler(new ParentHandler(ctx =>
                 {
                     Exception error = null;
+
                     try
                     {
                         Assert.True(ctx.Executor.InEventLoop());
@@ -101,6 +104,7 @@ public class ServerBootstrapSourceTest
         var handler = new ParentHandler(_ => init.TrySetResult(), (_, _) => read.TrySetResult());
         var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         IChannel server = null, client = null;
+
         try
         {
             var sb = new ServerBootstrap().Channel<LocalServerChannel>().Group(group).ChildHandler(new ChannelInboundHandlerAdapter());
@@ -117,10 +121,12 @@ public class ServerBootstrapSourceTest
             {
                 await server.CloseAsync();
             }
+
             if (client != null)
             {
                 await client.CloseAsync();
             }
+
             await group.StopAsync();
         }
     }
@@ -133,6 +139,7 @@ public class ServerBootstrapSourceTest
         var key = AttributeKey<string>.ValueOf(Guid.NewGuid().ToString());
         bool requestServed = false;
         IChannel server = null, client = null;
+
         try
         {
             var sb = new ServerBootstrap().Group(group).Channel<LocalServerChannel>()
@@ -153,12 +160,15 @@ public class ServerBootstrapSourceTest
             {
                 await server.CloseAsync();
             }
+
             if (client != null)
             {
                 await client.CloseAsync();
             }
+
             await group.StopAsync();
         }
+
         Assert.True(Volatile.Read(ref requestServed));
     }
     private sealed class ParentHandler(Action<IChannelHandlerContext> added, Action<IChannelHandlerContext, object> read = null) : ChannelInboundHandlerAdapter
@@ -183,6 +193,7 @@ public class ServerBootstrapSourceTest
         var address = new LocalAddress(nameof(ServerBootstrapSourceTest));
         IChannel expectedServer = null, expectedChild = null, server = null, client = null;
         var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
+
         try
         {
             var sb = new ServerBootstrap().Group(group).Channel<LocalServerChannel>()
@@ -207,10 +218,12 @@ public class ServerBootstrapSourceTest
             {
                 server.CloseAsync().GetAwaiter().GetResult();
             }
+
             if (client != null)
             {
                 client.CloseAsync().GetAwaiter().GetResult();
             }
+
             group.StopAsync().GetAwaiter().GetResult();
         }
     }

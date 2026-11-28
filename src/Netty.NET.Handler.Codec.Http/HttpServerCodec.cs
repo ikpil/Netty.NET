@@ -161,6 +161,7 @@ public sealed class HttpServerCodec : CombinedChannelDuplexHandler<HttpRequestDe
         }
 
         byte flag;
+
         if (HttpMethod.HEAD.Equals(method))
         {
             flag = METHOD_FLAG_HEAD;
@@ -192,6 +193,7 @@ public sealed class HttpServerCodec : CombinedChannelDuplexHandler<HttpRequestDe
             overflowQueue.Enqueue(flag);
             methodOverflowQueue = overflowQueue;
         }
+
         return true;
     }
 
@@ -210,10 +212,12 @@ public sealed class HttpServerCodec : CombinedChannelDuplexHandler<HttpRequestDe
         if (overflowQueue != null)
         {
             bool polled = overflowQueue.TryDequeue(out byte flag);
+
             if (overflowQueue.Count == 0)
             {
                 methodOverflowQueue = null;
             }
+
             return polled ? flag : METHOD_FLAG_OTHER;
         }
 
@@ -237,9 +241,11 @@ public sealed class HttpServerCodec : CombinedChannelDuplexHandler<HttpRequestDe
                 buffer.SkipBytes(buffer.ReadableBytes);
                 return;
             }
+
             int oldSize = @out.Count;
             base.Decode(ctx, buffer, @out);
             int size = @out.Count;
+
             for (int i = oldSize; i < size; i++)
             {
                 object obj = @out[i];
@@ -252,10 +258,12 @@ public sealed class HttpServerCodec : CombinedChannelDuplexHandler<HttpRequestDe
                         codec.mustCloseAfterResponse = true;
                         discard = true;
                         ReferenceCountUtil.Release(obj);
+
                         while (++i < size)
                         {
                             ReferenceCountUtil.Release(@out[i]);
                         }
+
                         @out.Clear();
                         throw new System.InvalidOperationException("maxPipelineDepth exceeded: " +
                                 codec.maxPipelineDepth.ToString(CultureInfo.InvariantCulture));
@@ -289,6 +297,7 @@ public sealed class HttpServerCodec : CombinedChannelDuplexHandler<HttpRequestDe
                 codec.mustCloseAfterResponse = false;
                 IChannel channel = ctx.Channel;
                 Task future;
+
                 try
                 {
                     future = base.WriteAsync(ctx, msg, cancellationToken);
@@ -298,6 +307,7 @@ public sealed class HttpServerCodec : CombinedChannelDuplexHandler<HttpRequestDe
                     _ = channel.CloseAsync();
                     throw;
                 }
+
                 // CLR: the scheduler's lambda captures this branch's copy of ctx, so the other writes allocate no
                 // closure (see EventExecutorTaskScheduler).
                 IChannelHandlerContext listenerCtx = ctx;
@@ -306,6 +316,7 @@ public sealed class HttpServerCodec : CombinedChannelDuplexHandler<HttpRequestDe
                         new EventExecutorTaskScheduler(() => listenerCtx.Executor));
                 return future;
             }
+
             return base.WriteAsync(ctx, msg, cancellationToken);
         }
 
@@ -332,6 +343,7 @@ public sealed class HttpServerCodec : CombinedChannelDuplexHandler<HttpRequestDe
                 // left behind goes away with it. Just delegate to super method which has all the needed handling.
                 return base.IsContentAlwaysEmpty(msg);
             }
+
             methodFlag = codec.PollMethod();
             return methodFlag == METHOD_FLAG_HEAD || base.IsContentAlwaysEmpty(msg);
         }

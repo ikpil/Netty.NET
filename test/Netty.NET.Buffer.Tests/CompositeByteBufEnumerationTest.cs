@@ -40,6 +40,7 @@ public class CompositeByteBufEnumerationTest
         cbuf.AddComponent(Unpooled.EmptyBuffer);
 
         using IEnumerator<ByteBuf> it = cbuf.GetEnumerator();
+
         try
         {
             // CLR: MoveNext/Current replace hasNext/next; Current is invalid before the first MoveNext.
@@ -62,6 +63,7 @@ public class CompositeByteBufEnumerationTest
         {
             cbuf.Release();
         }
+
         Assert.Equal(1, Unpooled.EmptyBuffer.RefCnt);
     }
 
@@ -83,6 +85,7 @@ public class CompositeByteBufEnumerationTest
     public void TestEmptyIteratorClrEnumeratorContract()
     {
         var buffer = new CompositeByteBuf();
+
         try
         {
             using IEnumerator<ByteBuf> iterator = buffer.GetEnumerator();
@@ -149,6 +152,7 @@ public class CompositeByteBufEnumerationTest
         buffer.AddComponent(first);
         using IEnumerator<ByteBuf> iterator = buffer.GetEnumerator();
         buffer.RemoveComponent(0).AddComponent(second);
+
         try
         {
             Assert.True(iterator.MoveNext());
@@ -159,6 +163,7 @@ public class CompositeByteBufEnumerationTest
         {
             buffer.Release();
         }
+
         Assert.Equal(0, first.RefCnt);
         Assert.Equal(0, second.RefCnt);
     }
@@ -173,6 +178,7 @@ public class CompositeByteBufEnumerationTest
         source.WriteBytes(new byte[] { 9, 1, 2, 8 }).SetIndex(1, 3);
         var buffer = new CompositeByteBuf();
         buffer.AddComponent(source, true);
+
         try
         {
             using (IEnumerator<ByteBuf> iterator = buffer.GetEnumerator())
@@ -184,16 +190,19 @@ public class CompositeByteBufEnumerationTest
                 Assert.False(iterator.MoveNext());
                 Assert.Throws<InvalidOperationException>(() => iterator.Current);
             }
+
             foreach (ByteBuf component in buffer)
             {
                 component.SetByte(0, 7);
                 break;
             }
+
             Assert.Equal(7, buffer.GetByte(0));
             Assert.Equal(1, source.RefCnt);
             Assert.Equal(1, source.ReaderIndex);
             Assert.Equal(3, source.WriterIndex);
             IEnumerator nongeneric = ((IEnumerable)buffer).GetEnumerator();
+
             try
             {
                 Assert.True(nongeneric.MoveNext());
@@ -208,6 +217,7 @@ public class CompositeByteBufEnumerationTest
         {
             buffer.Release();
         }
+
         Assert.Equal(0, source.RefCnt);
         Assert.Equal(0, allocator.ReservedBytes);
     }
@@ -231,6 +241,7 @@ public class CompositeByteBufEnumerationTest
         ByteBuf partial = Unpooled.WrappedBuffer(new byte[] { 9, 3, 4, 8 }).SetIndex(1, 3);
         var buffer = new CompositeByteBuf();
         buffer.AddComponents(new[] { whole, partial }, true);
+
         try
         {
             Assert.Same(whole, buffer.ComponentSlice(0));
@@ -266,6 +277,7 @@ public class CompositeByteBufEnumerationTest
         ByteBuf a = Unpooled.WrappedBuffer(new byte[] { 1 });
         ByteBuf b = Unpooled.WrappedBuffer(new byte[] { 2 });
         buffer.AddComponents(new[] { Unpooled.EmptyBuffer, a, Unpooled.EmptyBuffer, b, Unpooled.EmptyBuffer }, true);
+
         try
         {
             Assert.Same(Unpooled.EmptyBuffer, buffer.InternalComponent(2));
@@ -292,12 +304,15 @@ public class CompositeByteBufEnumerationTest
         var allocator = new NativeMemoryAllocator(64);
         ByteBuf source = direct ? new UnpooledDirectByteBuf(6, allocator: allocator) : Unpooled.Buffer(6);
         source.WriteBytes(new byte[] { 9, 1, 2, 3, 4, 8 });
+
         if (partial)
         {
             source.SetIndex(1, 5);
         }
+
         var buffer = new CompositeByteBuf();
         buffer.AddComponent(source, true);
+
         try
         {
             ByteBuf original = buffer.InternalComponent(0);
@@ -324,6 +339,7 @@ public class CompositeByteBufEnumerationTest
         {
             buffer.Release();
         }
+
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -333,6 +349,7 @@ public class CompositeByteBufEnumerationTest
         ByteBuf source = Unpooled.WrappedBuffer(new byte[] { 9, 1, 2, 3, 4, 8 }).SetIndex(1, 5);
         var buffer = new CompositeByteBuf();
         buffer.AddComponent(source, true);
+
         try
         {
             buffer.Capacity = 3;
@@ -380,6 +397,7 @@ public class CompositeByteBufEnumerationTest
         ByteBuf input = nested.AsReadOnly().SetIndex(1, 3);
         var buffer = new CompositeByteBuf();
         buffer.AddComponent(input, true);
+
         try
         {
             ByteBuf cached = buffer.InternalComponent(0);
@@ -397,6 +415,7 @@ public class CompositeByteBufEnumerationTest
         {
             buffer.Release();
         }
+
         Assert.Equal(0, nested.RefCnt);
     }
 
@@ -409,6 +428,7 @@ public class CompositeByteBufEnumerationTest
         Assert.Same(source, from.ComponentSlice(0));
         var target = new CompositeByteBuf();
         target.AddFlattenedComponents(from, true);
+
         try
         {
             ByteBuf cached = target.ComponentSlice(0);
@@ -433,6 +453,7 @@ public class CompositeByteBufEnumerationTest
         source.AddComponents(new[] { Unpooled.WrappedBuffer(new byte[] { 1 }), Unpooled.WrappedBuffer(new byte[] { 2 }) }, true);
         var target = new CompositeByteBuf();
         target.AddComponents((IEnumerable<ByteBuf>)source, true);
+
         try
         {
             Assert.Equal(1, target.NumComponents);
@@ -444,6 +465,7 @@ public class CompositeByteBufEnumerationTest
         {
             target.Release();
         }
+
         Assert.Equal(0, source.RefCnt);
     }
 
@@ -453,6 +475,7 @@ public class CompositeByteBufEnumerationTest
         ByteBuf source = Unpooled.WrappedBuffer(new byte[] { 9, 1, 2, 8 }).SetIndex(1, 3);
         var buffer = new CompositeByteBuf();
         buffer.AddComponent(source, true);
+
         try
         {
             ByteBuf cached = buffer.InternalComponent(0);
@@ -481,6 +504,7 @@ public class CompositeByteBufEnumerationTest
         Assert.True(iterator.MoveNext());
         ByteBuf retained = iterator.Current.Retain();
         ByteBuf borrowed = buffer.InternalComponent(1);
+
         try
         {
             buffer.AddComponent(Unpooled.WrappedBuffer(new byte[] { 3 }), true);
@@ -506,6 +530,7 @@ public class CompositeByteBufEnumerationTest
         ByteBuf source = Unpooled.Buffer(4).WriteBytes(new byte[] { 9, 1, 2, 8 }).SetIndex(1, 3);
         var buffer = new CompositeByteBuf();
         buffer.AddComponent(source, true);
+
         try
         {
             source.Capacity = 1;
@@ -538,6 +563,7 @@ public class CompositeByteBufEnumerationTest
             : direct ? new UnpooledDirectByteBuf(32, allocator: allocator) : Unpooled.Buffer(32);
         CompositeByteBuf first = null, second = null;
         ByteBuf component = null;
+
         try
         {
             source.WriteBytes(Encoding.ASCII.GetBytes("---01234"));
@@ -571,6 +597,7 @@ public class CompositeByteBufEnumerationTest
             second?.Release();
             component?.Release();
         }
+
         pool?.Dispose();
         Assert.Equal(0, allocator.ReservedBytes);
     }

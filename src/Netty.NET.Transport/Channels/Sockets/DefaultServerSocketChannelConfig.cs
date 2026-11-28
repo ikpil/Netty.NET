@@ -71,14 +71,18 @@ public class DefaultServerSocketChannelConfig : DefaultChannelConfig, IServerSoc
     public override IReadOnlyDictionary<ChannelOption, object> GetOptions()
     {
         var values = new Dictionary<ChannelOption, object>(base.GetOptions());
+
         foreach (var option in SupportedSocketOptions)
             if (TryGetValue(option, out var value))
                 values[option] = value;
+
         foreach (var option in LinuxOptions)
             if (TryGetValue(option.Option, out var value))
                 values[option.Option] = value;
+
         if (IsLinuxTcp)
             values[ChannelOption.TCP_FASTOPEN] = Volatile.Read(ref _tcpFastOpen);
+
         return values;
     }
 
@@ -94,18 +98,22 @@ public class DefaultServerSocketChannelConfig : DefaultChannelConfig, IServerSoc
                 value = GetBacklog();
             else
                 return base.TryGetValue(option, out value);
+
             return true;
         }
+
         if (ReferenceEquals(option, ChannelOption.TCP_FASTOPEN) && IsLinuxTcp)
         {
             value = Volatile.Read(ref _tcpFastOpen);
             return true;
         }
+
         if (FindLinuxOption(option) is { } native)
         {
             value = LinuxSocketOptions.GetOptionValue(JavaSocket, option, native.Level, native.Name);
             return true;
         }
+
         return base.TryGetValue(option, out value);
     }
 
@@ -123,6 +131,7 @@ public class DefaultServerSocketChannelConfig : DefaultChannelConfig, IServerSoc
             keys.Replace((IReadOnlyDictionary<IPAddress, byte[]>)value);
             return true;
         }
+
         if (Array.IndexOf(SupportedSocketOptions, option) >= 0)
         {
             if (ReferenceEquals(option, ChannelOption.SO_RCVBUF))
@@ -133,20 +142,25 @@ public class DefaultServerSocketChannelConfig : DefaultChannelConfig, IServerSoc
                 SetBacklog((int)value);
             else
                 return base.SetValue(option, value);
+
             return true;
         }
+
         if (ReferenceEquals(option, ChannelOption.TCP_FASTOPEN) && IsLinuxTcp)
         {
             int queue = (int)value;
             ArgumentOutOfRangeException.ThrowIfNegative(queue);
+
             Volatile.Write(ref _tcpFastOpen, queue);
             return true;
         }
+
         if (FindLinuxOption(option) is { } native)
         {
             LinuxSocketOptions.SetOptionValue(JavaSocket, native.Level, native.Name, value);
             return true;
         }
+
         return base.SetValue(option, value);
     }
 
@@ -173,6 +187,7 @@ public class DefaultServerSocketChannelConfig : DefaultChannelConfig, IServerSoc
         {
             throw new ChannelException(e);
         }
+
         return this;
     }
 
@@ -195,6 +210,7 @@ public class DefaultServerSocketChannelConfig : DefaultChannelConfig, IServerSoc
     public virtual IServerSocketChannelConfig SetReceiveBufferSize(int receiveBufferSize)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(receiveBufferSize);
+
         try
         {
             JavaSocket.ReceiveBufferSize = receiveBufferSize;
@@ -203,6 +219,7 @@ public class DefaultServerSocketChannelConfig : DefaultChannelConfig, IServerSoc
         {
             throw new ChannelException(e);
         }
+
         return this;
     }
 
@@ -223,6 +240,7 @@ public class DefaultServerSocketChannelConfig : DefaultChannelConfig, IServerSoc
     public virtual IServerSocketChannelConfig SetBacklog(int backlog)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(backlog);
+
         Volatile.Write(ref _backlog, backlog);
         return this;
     }
@@ -232,6 +250,7 @@ public class DefaultServerSocketChannelConfig : DefaultChannelConfig, IServerSoc
         foreach (var candidate in LinuxOptions)
             if (ReferenceEquals(option, candidate.Option))
                 return (candidate.Level, candidate.Name);
+
         return null;
     }
 }

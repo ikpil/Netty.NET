@@ -87,7 +87,9 @@ public class LinuxServerSocketConfigSourceTest
         {
             Assert.Skip("Linux socket options require Linux.");
         }
+
         var loop = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+
         try
         {
             var channel = await new ServerBootstrap().Group(loop).ChannelFactory(static () => new NioServerSocketChannel())

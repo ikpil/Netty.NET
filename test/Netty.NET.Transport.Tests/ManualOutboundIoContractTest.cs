@@ -25,16 +25,21 @@ public class ManualOutboundIoContractTest
         var loop = new ManualIoEventLoop(Thread.CurrentThread, NioIoHandler.NewFactory());
         using var listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         listener.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+
         if (!refused)
         {
             listener.Listen(1);
         }
+
         var target = listener.LocalEndPoint;
+
         if (refused)
         {
             listener.Close();
         }
+
         var channel = new NioSocketChannel(AddressFamily.InterNetwork);
+
         try
         {
             loop.RegisterAsync(channel).GetAwaiter().GetResult();
@@ -43,6 +48,7 @@ public class ManualOutboundIoContractTest
             loop.Execute(() => ordinary = true);
             PumpUntil(loop, () => connect.IsCompleted, TimeSpan.FromSeconds(10));
             Assert.False(ordinary);
+
             if (refused)
             {
                 var error = Assert.Throws<SocketException>(() => connect.GetAwaiter().GetResult());
@@ -53,6 +59,7 @@ public class ManualOutboundIoContractTest
                 Assert.True(connect.IsCompletedSuccessfully);
                 Assert.True(channel.IsActive);
             }
+
             Assert.Equal(1, loop.RunNonBlockingTasks(0));
             Assert.True(ordinary);
         }
@@ -70,6 +77,7 @@ public class ManualOutboundIoContractTest
         listener.Bind(new IPEndPoint(IPAddress.Loopback, 0));
         listener.Listen(1);
         var channel = new NeverConnecting(AddressFamily.InterNetwork);
+
         try
         {
             loop.RegisterAsync(channel).GetAwaiter().GetResult();
@@ -97,6 +105,7 @@ public class ManualOutboundIoContractTest
         listener.Listen(1);
         var channel = new NeverConnecting(AddressFamily.InterNetwork);
         using var cancellation = new CancellationTokenSource();
+
         try
         {
             loop.RegisterAsync(channel).GetAwaiter().GetResult();
@@ -124,6 +133,7 @@ public class ManualOutboundIoContractTest
         var channel = new NioSocketChannel(listener.Accept());
         channel.Config.SetAutoRead(false);
         const int Length = 8 * 1024 * 1024;
+
         try
         {
             loop.RegisterAsync(channel).GetAwaiter().GetResult();
@@ -133,14 +143,17 @@ public class ManualOutboundIoContractTest
             var buffer = new byte[64 * 1024];
             long received = 0;
             var clock = Stopwatch.StartNew();
+
             while (received < Length)
             {
                 Assert.True(clock.Elapsed < TimeSpan.FromSeconds(15), "The backpressured write did not progress.");
                 // Only the I/O phase runs: OP_WRITE readiness resumes the flush through forceFlush().
                 loop.RunNow(-1);
+
                 if (peer.Poll(1000, SelectMode.SelectRead))
                     received += peer.Receive(buffer);
             }
+
             PumpUntil(loop, () => write.IsCompleted, TimeSpan.FromSeconds(5));
             Assert.True(write.IsCompletedSuccessfully);
             Assert.Equal(Length, received);
@@ -154,6 +167,7 @@ public class ManualOutboundIoContractTest
     private static void PumpUntil(ManualIoEventLoop loop, Func<bool> condition, TimeSpan timeout, bool tasks = false)
     {
         var clock = Stopwatch.StartNew();
+
         while (!condition())
         {
             Assert.True(clock.Elapsed < timeout, "The pending socket operation did not settle during the I/O phase.");

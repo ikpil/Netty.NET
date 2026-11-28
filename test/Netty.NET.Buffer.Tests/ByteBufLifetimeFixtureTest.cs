@@ -51,7 +51,9 @@ public class ByteBufLifetimeFixtureTest
 
             if (_provider < 6)
                 return Part(capacity);
+
             CompositeByteBuf result = direct ? Allocator.CompositeDirectBuffer() : Allocator.CompositeHeapBuffer();
+
             try
             {
                 int first = (capacity + 1) / 2;
@@ -95,6 +97,7 @@ public class ByteBufLifetimeFixtureTest
     {
         using var scope = new Scope(provider);
         ByteBuf buffer = Unpooled.Buffer(8);
+
         try
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -114,6 +117,7 @@ public class ByteBufLifetimeFixtureTest
     {
         using var scope = new Scope(provider);
         ByteBuf buffer = Unpooled.Buffer();
+
         try
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -133,6 +137,7 @@ public class ByteBufLifetimeFixtureTest
     {
         using var scope = new Scope(provider);
         ByteBuf buffer = Unpooled.Buffer();
+
         try
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -187,6 +192,7 @@ public class ByteBufLifetimeFixtureTest
     {
         using var scope = new Scope(provider);
         ByteBuf buffer = Unpooled.Buffer();
+
         try
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -206,6 +212,7 @@ public class ByteBufLifetimeFixtureTest
     {
         using var scope = new Scope(provider);
         ByteBuf buffer = Unpooled.Buffer();
+
         try
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -225,6 +232,7 @@ public class ByteBufLifetimeFixtureTest
     {
         using var scope = new Scope(provider);
         ByteBuf buffer = Unpooled.Buffer();
+
         try
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -290,6 +298,7 @@ public class ByteBufLifetimeFixtureTest
     {
         using var scope = new Scope(provider);
         ByteBuf buffer = Unpooled.Buffer(8);
+
         try
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -309,6 +318,7 @@ public class ByteBufLifetimeFixtureTest
     {
         using var scope = new Scope(provider);
         ByteBuf buffer = Unpooled.Buffer(8);
+
         try
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -328,6 +338,7 @@ public class ByteBufLifetimeFixtureTest
     {
         using var scope = new Scope(provider);
         ByteBuf buffer = Unpooled.Buffer(8);
+
         try
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -394,6 +405,7 @@ public class ByteBufLifetimeFixtureTest
     {
         using var scope = new Scope(provider);
         ByteBuf buffer = Unpooled.Buffer(8);
+
         try
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -413,6 +425,7 @@ public class ByteBufLifetimeFixtureTest
     {
         using var scope = new Scope(provider);
         ByteBuf buffer = Unpooled.CopiedBuffer(new byte[8]);
+
         try
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -432,6 +445,7 @@ public class ByteBufLifetimeFixtureTest
     {
         using var scope = new Scope(provider);
         ByteBuf buffer = Unpooled.Buffer(8);
+
         try
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -1108,6 +1122,7 @@ public class ByteBufLifetimeFixtureTest
                 buf.Release();
             }
         }
+
         foreach (ByteBuf buf in bufs)
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -1127,6 +1142,7 @@ public class ByteBufLifetimeFixtureTest
                 buf.Release();
             }
         }
+
         foreach (ByteBuf buf in bufs)
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -1146,6 +1162,7 @@ public class ByteBufLifetimeFixtureTest
                 buf.Release();
             }
         }
+
         foreach (ByteBuf buf in bufs)
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -1165,6 +1182,7 @@ public class ByteBufLifetimeFixtureTest
                 buf.Release();
             }
         }
+
         foreach (ByteBuf buf in bufs)
         {
             Assert.Throws<IllegalReferenceCountException>(() =>
@@ -1271,6 +1289,7 @@ public class ByteBufLifetimeFixtureTest
         tmpBuf.Release();
 
         ByteBuf slice3 = doSlice1 ? slice2.Slice(slice2.ReaderIndex + 1, 2) : slice2.Duplicate();
+
         if (doSlice1)
         {
             Assert.Equal(0, slice3.CompareTo(expected3));
@@ -1281,6 +1300,7 @@ public class ByteBufLifetimeFixtureTest
         }
 
         ByteBuf slice4 = doSlice2 ? slice3.Slice(slice3.ReaderIndex + 1, 1) : slice3.Duplicate();
+
         if (doSlice1 && doSlice2)
         {
             Assert.Equal(0, slice4.CompareTo(expected4SliceSlice));
@@ -1359,6 +1379,7 @@ public class ByteBufLifetimeFixtureTest
                 }
             });
             releaser.Start();
+
             try
             {
                 Assert.True(latch.Wait(TimeSpan.FromSeconds(30)));
@@ -1370,6 +1391,7 @@ public class ByteBufLifetimeFixtureTest
                 innerLatch.Set();
                 releaser.Join();
                 reader?.Join();
+
                 if (buffer.RefCnt > 0)
                     buffer.Release();
             }

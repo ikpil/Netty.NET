@@ -110,6 +110,7 @@ internal sealed class FastLz
                         ByteBuf output, int outOffset, int proposedLevel)
     {
         int level;
+
         if (proposedLevel == LEVEL_AUTO)
         {
             level = inLength < MIN_RECOMENDED_LENGTH_FOR_LEVEL_2 ? LEVEL_1 : LEVEL_2;
@@ -144,12 +145,15 @@ internal sealed class FastLz
                 // *op++ = length-1;
                 output.SetByte(outOffset + op++, (byte) (inLength - 1));
                 ipBound++;
+
                 while (ip <= ipBound)
                 {
                     output.SetByte(outOffset + op++, input.GetByte(inOffset + ip++));
                 }
+
                 return inLength + 1;
             }
+
             // else
             return 0;
         }
@@ -202,6 +206,7 @@ internal sealed class FastLz
                     matchLabel = true;
                 }
             }
+
             if (!matchLabel)
             {
                 /* find potential match */
@@ -232,11 +237,13 @@ internal sealed class FastLz
                     output.SetByte(outOffset + op++, input.GetByte(inOffset + anchor++));
                     ip = anchor;
                     copy++;
+
                     if (copy == MAX_COPY)
                     {
                         copy = 0;
                         output.SetByte(outOffset + op++, MAX_COPY - 1);
                     }
+
                     continue;
                 }
 
@@ -254,17 +261,21 @@ internal sealed class FastLz
                             output.SetByte(outOffset + op++, input.GetByte(inOffset + anchor++));
                             ip = anchor;
                             copy++;
+
                             if (copy == MAX_COPY)
                             {
                                 copy = 0;
                                 output.SetByte(outOffset + op++, MAX_COPY - 1);
                             }
+
                             continue;
                         }
+
                         len += 2;
                     }
                 }
             } // end if(!matchLabel)
+
             /*
              * match:
              */
@@ -279,6 +290,7 @@ internal sealed class FastLz
                 /* zero distance means a run */
                 //flzuint8 x = ip[-1];
                 byte x = input.GetByte(inOffset + ip - 1);
+
                 while (ip < ipBound)
                 {
                     if (input.GetByte(inOffset + @ref++) != x)
@@ -295,6 +307,7 @@ internal sealed class FastLz
             {
                 /* safe because the outer check against ip limit */
                 bool missMatch = false;
+
                 for (int i = 0; i < 8; i++)
                 {
                     if (input.GetByte(inOffset + @ref++) != input.GetByte(inOffset + ip++))
@@ -303,6 +316,7 @@ internal sealed class FastLz
                         break;
                     }
                 }
+
                 if (!missMatch)
                 {
                     while (ip < ipBound)
@@ -348,10 +362,12 @@ internal sealed class FastLz
                     else
                     {
                         output.SetByte(outOffset + op++, (byte) ((7 << 5) + (distance >>> 8)));
+
                         for (len -= 7; len >= 255; len -= 255)
                         {
                             output.SetByte(outOffset + op++, (byte) 255);
                         }
+
                         output.SetByte(outOffset + op++, (byte) len);
                         output.SetByte(outOffset + op++, (byte) (distance & 255));
                     }
@@ -371,10 +387,12 @@ internal sealed class FastLz
                     {
                         distance -= MAX_DISTANCE;
                         output.SetByte(outOffset + op++, (byte) ((7 << 5) + 31));
+
                         for (len -= 7; len >= 255; len -= 255)
                         {
                             output.SetByte(outOffset + op++, (byte) 255);
                         }
+
                         output.SetByte(outOffset + op++, (byte) len);
                         output.SetByte(outOffset + op++, (byte) 255);
                         output.SetByte(outOffset + op++, (byte) (distance >>> 8));
@@ -438,10 +456,12 @@ internal sealed class FastLz
 
         /* left-over as literal copy */
         ipBound++;
+
         while (ip <= ipBound)
         {
             output.SetByte(outOffset + op++, input.GetByte(inOffset + ip++));
             copy++;
+
             if (copy == MAX_COPY)
             {
                 copy = 0;
@@ -509,6 +529,7 @@ internal sealed class FastLz
         long ctrl = input.GetByte(inOffset + ip++) & 31;
 
         int loop = 1;
+
         do
         {
             //  const flzuint8* ref = op;
@@ -525,6 +546,7 @@ internal sealed class FastLz
                 @ref = (int) (@ref - ofs);
 
                 int code;
+
                 if (len == 6)
                 {
                     if (level == LEVEL_1)
@@ -533,6 +555,7 @@ internal sealed class FastLz
                         {
                             return 0;
                         }
+
                         // len += *ip++;
                         len += input.GetByte(inOffset + ip++);
                     }
@@ -544,17 +567,20 @@ internal sealed class FastLz
                             {
                                 return 0;
                             }
+
                             code = input.GetByte(inOffset + ip++);
                             len += code;
                         } while (code == 255);
                     }
                 }
+
                 if (level == LEVEL_1)
                 {
                     if (ip >= inLength)
                     {
                         return 0;
                     }
+
                     //  ref -= *ip++;
                     @ref -= input.GetByte(inOffset + ip++);
                 }
@@ -564,6 +590,7 @@ internal sealed class FastLz
                     {
                         return 0;
                     }
+
                     code = input.GetByte(inOffset + ip++);
                     @ref -= code;
 
@@ -576,6 +603,7 @@ internal sealed class FastLz
                         {
                             return 0;
                         }
+
                         ofs = input.GetByte(inOffset + ip++) << 8;
                         ofs += input.GetByte(inOffset + ip++);
 
@@ -614,6 +642,7 @@ internal sealed class FastLz
                     output.SetByte(outOffset + op++, b);
                     output.SetByte(outOffset + op++, b);
                     output.SetByte(outOffset + op++, b);
+
                     while (len != 0)
                     {
                         output.SetByte(outOffset + op++, b);
@@ -688,6 +717,7 @@ internal sealed class FastLz
         {
             return data.GetByte(offset);
         }
+
         return data.GetByte(offset + 1) << 8 | data.GetByte(offset);
     }
 

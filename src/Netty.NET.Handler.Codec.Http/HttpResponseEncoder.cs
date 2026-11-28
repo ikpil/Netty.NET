@@ -42,6 +42,7 @@ public class HttpResponseEncoder : HttpObjectEncoder<IHttpResponse>
         {
             return true;
         }
+
         return base.AcceptOutboundMessage(msg) && !(msg is IHttpRequest);
     }
 
@@ -99,8 +100,10 @@ public class HttpResponseEncoder : HttpObjectEncoder<IHttpResponse>
                 // See https://tools.ietf.org/html/draft-ietf-hybi-thewebsocketprotocol-00#section-1.2
                 return msg.Headers().Contains(HttpHeaderNames.SEC_WEBSOCKET_VERSION);
             }
+
             return true;
         }
+
         return status.Code() == HttpResponseStatus.NO_CONTENT.Code() ||
                 status.Code() == HttpResponseStatus.NOT_MODIFIED.Code() ||
                 status.Code() == HttpResponseStatus.RESET_CONTENT.Code();

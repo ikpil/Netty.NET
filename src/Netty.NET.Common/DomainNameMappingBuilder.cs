@@ -105,12 +105,14 @@ public class DomainNameMappingBuilder<T> where T : class
             entries = new KeyValuePair<string, T>[mappings.Count];
             var copy = new OrderedDictionary<string, T>(mappings.Count, StringComparer.Ordinal);
             int index = 0;
+
             foreach (var entry in mappings)
             {
                 string hostname = NormalizeHostname(entry.Key);
                 entries[index++] = new KeyValuePair<string, T>(hostname, entry.Value);
                 copy[hostname] = entry.Value;
             }
+
             map = new ReadOnlyDictionary<string, T>(copy);
         }
 
@@ -124,12 +126,14 @@ public class DomainNameMappingBuilder<T> where T : class
             if (hostname != null)
             {
                 hostname = NormalizeHostname(hostname);
+
                 foreach (var entry in entries)
                     if (Matches(entry.Key, hostname))
                     {
                         return entry.Value;
                     }
             }
+
             return _defaultValue;
         }
 
@@ -143,15 +147,18 @@ public class DomainNameMappingBuilder<T> where T : class
             var text = new StringBuilder();
             text.Append("ImmutableDomainNameMapping(default: ").Append(_defaultValue).Append(", map: {");
             bool first = true;
+
             foreach (var entry in entries)
             {
                 if (!first)
                 {
                     text.Append(", ");
                 }
+
                 first = false;
                 text.Append(entry.Key).Append('=').Append(entry.Value);
             }
+
             return text.Append("})").ToString();
         }
     }

@@ -25,12 +25,14 @@ public class ThreadLocalCacheContractTest : IDisposable
     {
         var map = InternalThreadLocalMap.Get();
         WeakReference type = CacheCollectibleType(map);
+
         for (int attempt = 0; attempt < 12 && type.IsAlive; attempt++)
         {
             GC.Collect();
             GC.WaitForPendingFinalizers();
             GC.Collect();
         }
+
         GC.KeepAlive(map);
         Assert.False(type.IsAlive, "A live thread-local cache must not retain a collectible handler type.");
     }
@@ -43,6 +45,7 @@ public class ThreadLocalCacheContractTest : IDisposable
         Type type = assembly.DefineDynamicModule("Handlers")
             .DefineType("Handler", TypeAttributes.Public).CreateTypeInfo().AsType();
         map.HandlerSharableCache().Add(type, new StrongBox<bool>(true));
+
         return new WeakReference(type);
     }
 

@@ -253,11 +253,14 @@ public class Http2FrameCodecBuilder :
                 frameWriter = new Http2OutboundFrameLogger(frameWriter, FrameLogger());
                 frameReader = new Http2InboundFrameLogger(frameReader, FrameLogger());
             }
+
             IHttp2ConnectionEncoder encoder = new DefaultHttp2ConnectionEncoder(connection, frameWriter);
+
             if (EncoderEnforceMaxConcurrentStreams())
             {
                 encoder = new StreamBufferingEncoder(encoder);
             }
+
             IHttp2ConnectionDecoder decoder = new DefaultHttp2ConnectionDecoder(connection, encoder, frameReader,
                     PromisedRequestVerifier(), IsAutoAckSettingsFrame(), IsAutoAckPingFrame(), IsValidateHeaders(),
                     IsValidateRequiredPseudoHeaders());
@@ -266,8 +269,10 @@ public class Http2FrameCodecBuilder :
             {
                 decoder = new Http2EmptyDataFrameConnectionDecoder(decoder, maxConsecutiveEmptyDataFrames);
             }
+
             return Build(decoder, encoder, InitialSettings());
         }
+
         return base.Build();
     }
 

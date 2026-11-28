@@ -43,6 +43,7 @@ internal sealed class CaseIgnoringComparator : IComparer<ICharSequence>, ICompar
         int o1Length = o1.Length();
         int o2Length = o2.Length();
         int min = Math.Min(o1Length, o2Length);
+
         for (int i = 0; i < min; i++)
         {
             char c1 = o1.CharAt(i);
@@ -62,6 +63,7 @@ internal sealed class CaseIgnoringComparator : IComparer<ICharSequence>, ICompar
                 }
             }
         }
+
         return o1Length - o2Length;
     }
 
@@ -71,6 +73,7 @@ internal sealed class CaseIgnoringComparator : IComparer<ICharSequence>, ICompar
         int o1Length = o1.Length;
         int o2Length = o2.Length;
         int min = Math.Min(o1Length, o2Length);
+
         for (int i = 0; i < min; i++)
         {
             char c1 = o1[i];
@@ -90,6 +93,7 @@ internal sealed class CaseIgnoringComparator : IComparer<ICharSequence>, ICompar
                 }
             }
         }
+
         return o1Length - o2Length;
     }
 }

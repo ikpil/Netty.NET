@@ -47,6 +47,7 @@ public sealed class DefaultHttpHeadersFactory : IHttpHeadersFactory
             {
                 throw new ArgumentException("empty headers are not allowed [" + (name?.ToString() ?? "null") + ']');
             }
+
             int index = HttpHeaderValidationUtil.ValidateToken(name);
             if (index != -1)
             {
@@ -148,6 +149,7 @@ public sealed class DefaultHttpHeadersFactory : IHttpHeadersFactory
         {
             return new CombinedHttpHeaders(GetNameValidator(), GetValueValidator());
         }
+
         return new DefaultHttpHeaders(GetNameValidator(), GetValueValidator());
     }
 
@@ -157,6 +159,7 @@ public sealed class DefaultHttpHeadersFactory : IHttpHeadersFactory
         {
             return new CombinedHttpHeaders(GetNameValidator(), GetValueValidator(), 2);
         }
+
         return new DefaultHttpHeaders(GetNameValidator(), GetValueValidator(), 2);
     }
 
@@ -205,6 +208,7 @@ public sealed class DefaultHttpHeadersFactory : IHttpHeadersFactory
         {
             return combiningHeaders ? DEFAULT_COMBINING : DEFAULT;
         }
+
         return new DefaultHttpHeadersFactory(validator, valueValidator, combiningHeaders);
     }
 
@@ -253,6 +257,7 @@ public sealed class DefaultHttpHeadersFactory : IHttpHeadersFactory
         {
             return combiningHeaders ? DEFAULT_COMBINING : DEFAULT;
         }
+
         return new DefaultHttpHeadersFactory(nameValidator, validator, combiningHeaders);
     }
 
@@ -281,6 +286,7 @@ public sealed class DefaultHttpHeadersFactory : IHttpHeadersFactory
         {
             return DEFAULT;
         }
+
         return WithNameValidation(validation).WithValueValidation(validation);
     }
 
@@ -297,6 +303,7 @@ public sealed class DefaultHttpHeadersFactory : IHttpHeadersFactory
         {
             return this;
         }
+
         return new DefaultHttpHeadersFactory(nameValidator, valueValidator, combiningHeaders);
     }
 

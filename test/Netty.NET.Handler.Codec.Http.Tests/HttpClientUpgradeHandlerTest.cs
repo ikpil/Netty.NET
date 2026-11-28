@@ -146,6 +146,7 @@ public class HttpClientUpgradeHandlerTest
             {
                 promise = ctx.WriteAndFlushAsync(afterUpgradeMessage);
             }
+
             base.UserEventTriggered(ctx, evt);
         }
     }

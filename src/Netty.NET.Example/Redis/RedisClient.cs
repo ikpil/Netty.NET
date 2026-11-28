@@ -53,6 +53,7 @@ public class RedisClient
     public static async Task Main(string[] args)
     {
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             Bootstrap b = new Bootstrap();
@@ -75,6 +76,7 @@ public class RedisClient
             Console.WriteLine("Enter Redis commands (quit to end)");
             Task lastWriteFuture = null;
             TextReader @in = Console.In;
+
             for (;;)
             {
                 string input = @in.ReadLine();
@@ -88,6 +90,7 @@ public class RedisClient
                 { // skip `enter` or `enter` with spaces.
                     continue;
                 }
+
                 // Sends the received line to the server.
                 lastWriteFuture = ch.WriteAndFlushAsync(line);
                 _ = lastWriteFuture.ContinueWith(future =>
@@ -116,10 +119,12 @@ public class RedisClient
     private static char[] CreateJavaTrimChars()
     {
         char[] chars = new char[0x21];
+
         for (int i = 0; i < chars.Length; i++)
         {
             chars[i] = (char) i;
         }
+
         return chars;
     }
 }

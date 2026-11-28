@@ -35,10 +35,12 @@ public class Socks4ClientDecoderTest
 
         msg = embedder.ReadInbound<ISocks4CommandResponse>();
         Assert.Equal(msg.Status(), cmdStatus);
+
         if (dstAddr != null)
         {
             Assert.Equal(msg.DstAddr(), dstAddr);
         }
+
         Assert.Equal(msg.DstPort(), dstPort);
         Assert.Null(embedder.ReadInbound());
     }

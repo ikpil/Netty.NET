@@ -28,18 +28,23 @@ public class NativeLibraryUtilContractTest
     public void LoadsNativeLibraryByNameOrAbsolutePathAndInvokesItsExport(bool absolute)
     {
         string name = library;
+
         if (absolute)
         {
             using var process = Process.GetCurrentProcess();
+
             foreach (ProcessModule module in process.Modules)
                 if (string.Equals(Path.GetFileName(module.FileName), library, StringComparison.OrdinalIgnoreCase))
                 {
                     name = module.FileName;
                     break;
                 }
+
             Assert.True(Path.IsPathFullyQualified(name));
         }
+
         IntPtr handle = NativeLibraryUtil.LoadLibrary(name, absolute);
+
         try
         {
             VerifyExport(handle);
@@ -66,6 +71,7 @@ public class NativeLibraryUtilContractTest
     {
         IntPtr first = NativeLibraryUtil.LoadLibrary(library, false);
         IntPtr second;
+
         try
         {
             second = NativeLibraryUtil.LoadLibrary(library, false);
@@ -74,6 +80,7 @@ public class NativeLibraryUtilContractTest
         {
             NativeLibrary.Free(first);
         }
+
         try
         {
             VerifyExport(second);

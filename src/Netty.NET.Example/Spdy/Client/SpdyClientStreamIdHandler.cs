@@ -49,6 +49,7 @@ public class SpdyClientStreamIdHandler : ChannelOutboundHandlerAdapter
                 currentStreamId += 2;
             }
         }
+
         return ctx.WriteAsync(msg, cancellationToken);
     }
 }

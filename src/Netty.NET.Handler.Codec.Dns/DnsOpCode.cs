@@ -140,6 +140,7 @@ public class DnsOpCode : IComparable<DnsOpCode>
         {
             this.text = text = name + '(' + byteValue.ToString(CultureInfo.InvariantCulture) + ')';
         }
+
         return text;
     }
 }

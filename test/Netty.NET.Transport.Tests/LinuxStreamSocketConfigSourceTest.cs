@@ -33,6 +33,7 @@ public class LinuxStreamSocketConfigSourceTest
         return WithChannel(channel =>
         {
             long expected = Random.Shared.NextInt64() & uint.MaxValue;
+
             try
             {
                 Assert.True(channel.Config.SetOption(ChannelOption.TCP_NOTSENT_LOWAT, expected));
@@ -42,6 +43,7 @@ public class LinuxStreamSocketConfigSourceTest
             {
                 Assert.Skip("The kernel does not support TCP_NOTSENT_LOWAT.");
             }
+
             return Task.CompletedTask;
         });
     }
@@ -132,7 +134,9 @@ public class LinuxStreamSocketConfigSourceTest
         {
             Assert.Skip("Linux socket options require Linux.");
         }
+
         var loop = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+
         try
         {
             var channel = await new Bootstrap().Group(loop).ChannelFactory(static () => new NioSocketChannel())

@@ -46,6 +46,7 @@ internal sealed class DefensiveDecompressor : IDecompressor
     public IDecompressor.Status Status_()
     {
         CheckReady();
+
         try
         {
             status = @delegate.Status_();
@@ -55,6 +56,7 @@ internal sealed class DefensiveDecompressor : IDecompressor
             failed = true;
             throw;
         }
+
         return status.Value;
     }
 
@@ -70,6 +72,7 @@ internal sealed class DefensiveDecompressor : IDecompressor
             buf.Release();
             throw;
         }
+
         try
         {
             @delegate.AddInput(buf);
@@ -79,6 +82,7 @@ internal sealed class DefensiveDecompressor : IDecompressor
             failed = true;
             throw;
         }
+
         status = null;
     }
 
@@ -86,6 +90,7 @@ internal sealed class DefensiveDecompressor : IDecompressor
     {
         CheckReady();
         CheckState(IDecompressor.Status.NEED_INPUT);
+
         try
         {
             @delegate.EndOfInput();
@@ -95,6 +100,7 @@ internal sealed class DefensiveDecompressor : IDecompressor
             failed = true;
             throw;
         }
+
         status = null;
     }
 
@@ -102,7 +108,9 @@ internal sealed class DefensiveDecompressor : IDecompressor
     {
         CheckReady();
         CheckState(IDecompressor.Status.NEED_OUTPUT);
+
         ByteBuf @out;
+
         try
         {
             @out = @delegate.TakeOutput();
@@ -112,6 +120,7 @@ internal sealed class DefensiveDecompressor : IDecompressor
             failed = true;
             throw;
         }
+
         status = null;
         return @out;
     }

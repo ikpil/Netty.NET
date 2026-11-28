@@ -82,6 +82,7 @@ public abstract class AbstractBinaryMemcacheDecoder<M>
                 {
                     return;
                 }
+
                 ResetDecoder();
 
                 currentMessage = DecodeHeader(@in);
@@ -94,6 +95,7 @@ public abstract class AbstractBinaryMemcacheDecoder<M>
                 @out.Add(InvalidMessage(e));
                 return;
             }
+
                 goto case State.READ_EXTRAS;
             case State.READ_EXTRAS:
                 try
@@ -117,6 +119,7 @@ public abstract class AbstractBinaryMemcacheDecoder<M>
                 @out.Add(InvalidMessage(e));
                 return;
             }
+
                 goto case State.READ_KEY;
             case State.READ_KEY:
                 try
@@ -131,6 +134,7 @@ public abstract class AbstractBinaryMemcacheDecoder<M>
 
                     currentMessage.SetKey(@in.ReadRetainedSlice(keyLength));
                 }
+
                 @out.Add(currentMessage.Retain());
                 state = State.READ_CONTENT;
             }
@@ -140,6 +144,7 @@ public abstract class AbstractBinaryMemcacheDecoder<M>
                 @out.Add(InvalidMessage(e));
                 return;
             }
+
                 goto case State.READ_CONTENT;
             case State.READ_CONTENT:
                 try
@@ -148,6 +153,7 @@ public abstract class AbstractBinaryMemcacheDecoder<M>
                     - (currentMessage.KeyLength() & 0xFFFF)
                     - (currentMessage.ExtrasLength() & 0xFF);
                 int toRead = @in.ReadableBytes;
+
                 if (valueLength > 0)
                 {
                     if (toRead == 0)
@@ -169,6 +175,7 @@ public abstract class AbstractBinaryMemcacheDecoder<M>
                     ByteBuf chunkBuffer = @in.ReadRetainedSlice(toRead);
 
                     IMemcacheContent chunk;
+
                     if ((alreadyReadChunkSize += toRead) >= valueLength)
                     {
                         chunk = new DefaultLastMemcacheContent(chunkBuffer);
@@ -233,6 +240,7 @@ public abstract class AbstractBinaryMemcacheDecoder<M>
                 int.MaxValue.ToString(CultureInfo.InvariantCulture) + ", but was: "
                     + (totalBodyLength & 0xFFFFFFFFL).ToString(CultureInfo.InvariantCulture));
         }
+
         // The protocol defines totalBodyLength as the "Length in bytes of extra + key + value", so the extras and
         // the key on their own can never be longer than the total body.
         int extrasAndKeyLength = (header.ExtrasLength() & 0xFF) + (header.KeyLength() & 0xFFFF);
@@ -296,6 +304,7 @@ public abstract class AbstractBinaryMemcacheDecoder<M>
             currentMessage.Release();
             currentMessage = default;
         }
+
         alreadyReadChunkSize = 0;
     }
 

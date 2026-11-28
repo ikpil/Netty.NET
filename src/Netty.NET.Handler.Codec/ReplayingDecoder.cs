@@ -339,6 +339,7 @@ public abstract class ReplayingDecoder<S> : ByteToMessageDecoder
         try
         {
             replayable.Terminate();
+
             if (cumulation != null)
             {
                 CallDecode(ctx, InternalBuffer(), @out);
@@ -347,6 +348,7 @@ public abstract class ReplayingDecoder<S> : ByteToMessageDecoder
             {
                 replayable.SetCumulation(Unpooled.EmptyBuffer);
             }
+
             DecodeLast(ctx, replayable, @out);
         }
         catch (Signal replay)
@@ -359,6 +361,7 @@ public abstract class ReplayingDecoder<S> : ByteToMessageDecoder
     protected override void CallDecode(IChannelHandlerContext ctx, ByteBuf @in, IList<object> @out)
     {
         replayable.SetCumulation(@in);
+
         try
         {
             while (@in.IsReadable())
@@ -380,11 +383,13 @@ public abstract class ReplayingDecoder<S> : ByteToMessageDecoder
                     {
                         break;
                     }
+
                     outSize = 0;
                 }
 
                 S oldState = state;
                 int oldInputLength = @in.ReadableBytes;
+
                 try
                 {
                     DecodeRemovalReentryProtection(ctx, replayable, @out);
@@ -441,6 +446,7 @@ public abstract class ReplayingDecoder<S> : ByteToMessageDecoder
                         // Called by cleanup() - no need to maintain the readerIndex
                         // anymore because the buffer has been released already.
                     }
+
                     break;
                 }
 

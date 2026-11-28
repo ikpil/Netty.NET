@@ -204,11 +204,13 @@ public class RedisEncoderTest : IDisposable
     {
         ByteBuf buf = Unpooled.Buffer();
         ByteBuf read;
+
         while ((read = channel.ReadOutbound<ByteBuf>()) != null)
         {
             buf.WriteBytes(read);
             read.Release();
         }
+
         return buf;
     }
 }

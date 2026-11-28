@@ -106,6 +106,7 @@ public class ResolveAddressHandlerTest : IClassFixture<ResolveAddressHandlerTest
         IChannel sc = await sb.BindAsync(RESOLVED, TestContext.Current.CancellationToken);
         Task<IChannel> future = cb.ConnectAsync(UNRESOLVED, TestContext.Current.CancellationToken);
         await ((Task) future).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+
         try
         {
             if (fail)
@@ -116,6 +117,7 @@ public class ResolveAddressHandlerTest : IClassFixture<ResolveAddressHandlerTest
             {
                 Assert.True(future.IsCompletedSuccessfully);
             }
+
             if (future.IsCompletedSuccessfully)
             {
                 await future.Result.CloseAsync(TestContext.Current.CancellationToken);
@@ -127,6 +129,7 @@ public class ResolveAddressHandlerTest : IClassFixture<ResolveAddressHandlerTest
             {
                 await future.Result.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             await sc.CloseAsync(TestContext.Current.CancellationToken);
             resolverGroup.Dispose();
         }
@@ -172,6 +175,7 @@ public class ResolveAddressHandlerTest : IClassFixture<ResolveAddressHandlerTest
         protected override Task<EndPoint> DoResolveAsync(EndPoint unresolvedAddress, CancellationToken cancellationToken)
         {
             Assert.Same(UNRESOLVED, unresolvedAddress);
+
             if (fail)
             {
                 return Task.FromException<EndPoint>(ERROR);

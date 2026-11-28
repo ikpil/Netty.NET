@@ -46,6 +46,7 @@ public class ManualIoEventLoopContractTest
         owner.Start();
 
         var echo = new EchoByte(loop);
+
         try
         {
             var listener = await new ServerBootstrap().Group(loop).Channel<NioServerSocketChannel>()
@@ -78,6 +79,7 @@ public class ManualIoEventLoopContractTest
         var cancellation = TestContext.Current.CancellationToken;
         var ticker = Ticker.NewMockTicker();
         var loop = new ManualIoEventLoop(null, Thread.CurrentThread, NioIoHandler.NewFactory(), ticker);
+
         try
         {
             var scheduled = loop.ScheduleAsync(() => Assert.Fail("Future work ran during shutdown."),
@@ -112,6 +114,7 @@ public class ManualIoEventLoopContractTest
     public void BlockingRunReturnsAtTheScheduledDeadline()
     {
         var loop = new ManualIoEventLoop(Thread.CurrentThread, NioIoHandler.NewFactory());
+
         try
         {
             var watch = Stopwatch.StartNew();
@@ -133,6 +136,7 @@ public class ManualIoEventLoopContractTest
         var first = new ManualIoEventLoop(Thread.CurrentThread, LocalIoHandler.NewFactory());
         var second = new ManualIoEventLoop(Thread.CurrentThread, LocalIoHandler.NewFactory());
         var channel = new LocalChannel();
+
         try
         {
             first.RegisterAsync(channel, cancellation).GetAwaiter().GetResult();

@@ -52,10 +52,12 @@ public class AbstractCoalescingBufferQueueTest
             Assert.Equal(bytes.Length, queue.ReadableBytes);
         });
         Assert.Equal(bytes.Length, queue.ReadableBytes);
+
         if (write)
             await queue.WriteAndRemoveAllAsync(channel.Pipeline.LastContext);
         else
             queue.ReleaseAndFailAll(new ClosedChannelException());
+
         var buffer = queue.Remove(channel.Alloc(), 128, new TaskCompletionSource());
         Assert.False(buffer.IsReadable());
         buffer.Release();
@@ -107,6 +109,7 @@ public class AbstractCoalescingBufferQueueTest
                 // Simulate throwing an IllegalReferenceCountException.
                 throw error;
             }
+
             return ComposeIntoComposite(allocator, cumulation, next);
         }
 
@@ -117,6 +120,7 @@ public class AbstractCoalescingBufferQueueTest
                 // Simulate throwing an IllegalReferenceCountException.
                 throw error;
             }
+
             return base.ComposeFirst(allocator, first, bufferSize);
         }
 

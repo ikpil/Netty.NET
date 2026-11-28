@@ -33,6 +33,7 @@ public class WritableMemoryByteBufTest
         using var storage = new ExternalStorage(kind, 16);
         storage.Memory.Span.Fill(0xee);
         ByteBuf b = Unpooled.WrappedBuffer(storage.Memory.Slice(4, 8));
+
         try
         {
             Assert.False(b.IsReadOnly);
@@ -59,6 +60,7 @@ public class WritableMemoryByteBufTest
         {
             b.Release();
         }
+
         Assert.Equal(9, storage.Memory.Span[4]);
     }
 
@@ -68,6 +70,7 @@ public class WritableMemoryByteBufTest
     {
         using var storage = new ExternalStorage(kind, 32);
         ByteBuf b = Unpooled.WrappedBuffer(storage.Memory.Slice(2, 24));
+
         try
         {
             b.Clear().WriteByte(0xff).WriteShortLE(0xfedc).WriteMedium(0xabcdef)
@@ -109,6 +112,7 @@ public class WritableMemoryByteBufTest
 
         ByteBuf b = Unpooled.WrappedBuffer(storage.Memory.Slice(2, 8));
         ByteBuf retained = b.RetainedSlice(1, 5);
+
         try
         {
             retained.ReaderIndex = 1;
@@ -119,6 +123,7 @@ public class WritableMemoryByteBufTest
             b.SetByte(0, 99);
             Assert.Equal(99, readOnly.GetByte(0));
             ByteBuf copy = retained.Copy();
+
             try
             {
                 Assert.Same(b.Alloc(), copy.Alloc());
@@ -132,6 +137,7 @@ public class WritableMemoryByteBufTest
             {
                 copy.Release();
             }
+
             Assert.False(b.Release());
             Assert.Equal(3, retained.GetByte(0));
         }
@@ -141,8 +147,10 @@ public class WritableMemoryByteBufTest
             {
                 b.Release();
             }
+
             retained.Release();
         }
+
         Assert.Throws<IllegalReferenceCountException>(() => b.GetByte(0));
         Assert.Equal(99, storage.Memory.Span[2]);
     }
@@ -153,6 +161,7 @@ public class WritableMemoryByteBufTest
     {
         using var storage = new ExternalStorage(kind, 12);
         ByteBuf b = Unpooled.WrappedBuffer(storage.Memory.Slice(2, 8));
+
         try
         {
             using var input = new MemoryStream(new byte[] { 1, 2, 3, 4 });
@@ -163,6 +172,7 @@ public class WritableMemoryByteBufTest
             Assert.Equal(0, b.ReaderIndex);
             Assert.Equal(8, b.WriterIndex);
             CompositeByteBuf composite = Unpooled.CompositeBuffer();
+
             try
             {
                 composite.AddComponent(b.RetainedSlice(0, 4), true).AddComponent(b.RetainedSlice(4, 4), true);
@@ -199,6 +209,7 @@ public class WritableMemoryByteBufTest
         var native = new NativeMemoryAllocator(16);
         using NativeMemoryOwner owner = native.Allocate(16);
         ByteBuf b = Unpooled.WrappedBuffer(owner.Memory.Slice(4, 8));
+
         try
         {
             Assert.Equal(ManagedMemoryTest.Address(owner.Memory) + 4, ManagedMemoryTest.Address(b.AsMemory(0, 8)));
@@ -209,6 +220,7 @@ public class WritableMemoryByteBufTest
         {
             b.Release();
         }
+
         Assert.Equal(16, native.ReservedBytes);
     }
 
@@ -217,9 +229,12 @@ public class WritableMemoryByteBufTest
     {
         var external = new NativeMemoryAllocator(16);
         using NativeMemoryOwner owner = external.Allocate(12);
+
         for (int i = 0; i < 12; i++)
             owner.Memory.Span[i] = (byte)i;
+
         ByteBuf b = Unpooled.WrappedBuffer(owner.Memory.Slice(2, 8));
+
         try
         {
             Memory<byte> original = b.AsMemory(0, 8);
@@ -242,6 +257,7 @@ public class WritableMemoryByteBufTest
         {
             b.Release();
         }
+
         Assert.Equal(12, external.ReservedBytes);
         Assert.Equal(77, owner.Memory.Span[3]);
     }
@@ -254,6 +270,7 @@ public class WritableMemoryByteBufTest
         var native = new NativeMemoryAllocator(64);
         var a = new UnpooledByteBufAllocator(true, native);
         ByteBuf b = new UnpooledDirectByteBuf(a, owner.Memory, 16, native);
+
         try
         {
             b.Capacity = 8;
@@ -265,6 +282,7 @@ public class WritableMemoryByteBufTest
             Assert.Equal(12, native.ReservedBytes);
             Assert.Equal(0, a.Metric.UsedDirectMemory);
             ByteBuf copy = b.Copy(0, 4);
+
             try
             {
                 Assert.Same(a, copy.Alloc());
@@ -277,6 +295,7 @@ public class WritableMemoryByteBufTest
             {
                 copy.Release();
             }
+
             b.Capacity = 0;
             Assert.Equal(1, native.ReservedBytes);
             Assert.Equal(0, b.ReaderIndex);
@@ -286,6 +305,7 @@ public class WritableMemoryByteBufTest
         {
             b.Release();
         }
+
         Assert.Equal(0, native.ReservedBytes);
         Assert.Equal(0, a.Metric.UsedDirectMemory);
         Assert.Equal(8, external.ReservedBytes);
@@ -300,6 +320,7 @@ public class WritableMemoryByteBufTest
         owner.Memory.Span.Fill(7);
         var native = new NativeMemoryAllocator(0);
         ByteBuf b = new UnpooledDirectByteBuf(new UnpooledByteBufAllocator(), owner.Memory, 16, native);
+
         try
         {
             b.SetIndex(6, 8);
@@ -328,6 +349,7 @@ public class WritableMemoryByteBufTest
         var a = new UnpooledByteBufAllocator(true, native);
         ByteBuf b = new UnpooledDirectByteBuf(a, owner.Memory, 16, native);
         owner.Dispose();
+
         try
         {
             Assert.Throws<ObjectDisposedException>(() => b.Capacity = 12);
@@ -340,6 +362,7 @@ public class WritableMemoryByteBufTest
         {
             b.Release();
         }
+
         Assert.Equal(0, external.ReservedBytes);
         Assert.Equal(0, a.Metric.UsedDirectMemory);
     }
@@ -353,6 +376,7 @@ public class WritableMemoryByteBufTest
         var native = new NativeMemoryAllocator(32);
         ByteBuf b = new UnpooledDirectByteBuf(new UnpooledByteBufAllocator(), owner.Memory, 16, native);
         ReadOnlySpan<byte> original = b.AsReadOnlySpan(0, 8), replacement = default;
+
         try
         {
             b.Capacity = 12;
@@ -373,8 +397,10 @@ public class WritableMemoryByteBufTest
             {
                 b.Release();
             }
+
             owner.Dispose();
         }
+
         Assert.Equal(0, external.ReservedBytes);
         Assert.Equal(0, native.ReservedBytes);
     }
@@ -388,6 +414,7 @@ public class WritableMemoryByteBufTest
         new byte[] { 1, 2, 3, 4 }.CopyTo(owner.Memory.Span);
         var native = new NativeMemoryAllocator(32);
         ByteBuf b = new UnpooledDirectByteBuf(new UnpooledByteBufAllocator(), owner.Memory, 16, native);
+
         try
         {
             if (detachFirst)
@@ -395,6 +422,7 @@ public class WritableMemoryByteBufTest
                 b.Capacity = 8;
                 b.Capacity = 4;
             }
+
             ReadOnlySpan<byte> source = b.AsSpan(0, 4);
             b.Duplicate().WriteBytes(source);
             Assert.Equal(new byte[] { 1, 2, 3, 4, 1, 2, 3, 4 }, b.AsMemory(0, 8).ToArray());
@@ -405,6 +433,7 @@ public class WritableMemoryByteBufTest
         {
             b.Release();
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 

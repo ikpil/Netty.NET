@@ -61,6 +61,7 @@ public class FixedCompositeByteBufOriginalTest
             for (int i = _buffers.Count - 1; i >= 0; --i)
             if (_buffers[i].RefCnt > 0)
                 _buffers[i].Release();
+
             (_allocator as IDisposable)?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
         }
@@ -277,17 +278,21 @@ public class FixedCompositeByteBufOriginalTest
         ByteBuf first = s.Data(firstDirect, scenario == 0 ? new byte[] { 1, 2 } : new byte[] { 1, 2, 3, 4 });
         ByteBuf second = scenario == 2 ? null : s.Data(secondDirect, scenario == 0 ? new byte[] { 1, 2 } : new byte[] { 1, 2, 3, 4 });
         ByteBuf b;
+
         if (scenario == 0)
             b = s.Own(new CompositeByteBuf(s.Allocator, false)).AddComponent(first).AddComponent(second).SetIndex(1, 3);
         else
             b = s.Fixed(scenario == 2 ? [first] : [first, second]);
+
         if (scenario == 2)
             b.ReaderIndex = 1;
+
         b.MarkReaderIndex().MarkWriterIndex();
         int reader = b.ReaderIndex, writer = b.WriterIndex;
         byte[] expected = scenario == 1 ? new byte[] { 1, 2, 3, 4, 1, 2, 3, 4 } : scenario == 0 ? [2, 1] : [2, 3];
         using var pair = new Pair();
         int sent = 0;
+
         while (sent < expected.Length)
         {
             // Socket is sealed and has no Java test-channel write quota. Bounded
@@ -301,11 +306,14 @@ public class FixedCompositeByteBufOriginalTest
             Assert.Equal(reader + sent, b.ReaderIndex);
             Assert.Equal(writer, b.WriterIndex);
         }
+
         Assert.Equal(expected, pair.Receive(expected.Length));
         Assert.Equal(expected, ByteBufUtil.GetBytes(b, reader, expected.Length));
         Assert.Equal(0, first.ReaderIndex);
+
         if (second != null)
             Assert.Equal(0, second.ReaderIndex);
+
         b.ResetReaderIndex().ResetWriterIndex();
         Assert.Equal((reader, writer), (b.ReaderIndex, b.WriterIndex));
     }
@@ -334,6 +342,7 @@ public class FixedCompositeByteBufOriginalTest
         ByteBuf buf1 = s.Data(true, 97), buf2 = s.Data(false, 98), buf3 = s.Data(true, 99);
         ByteBuf composite = s.Fixed(buf1, buf2, buf3);
         ByteBuf copy = s.Own(s.Allocator.DirectBuffer(3)), copy2 = s.Own(s.Allocator.HeapBuffer(3));
+
         using (var copyStream = new ByteBufOutputStream(copy))
         using (var copy2Stream = new ByteBufOutputStream(copy2))
         {
@@ -343,6 +352,7 @@ public class FixedCompositeByteBufOriginalTest
             Assert.Equal(0, ByteBufUtil.Compare(copy2, composite));
             Assert.Equal(0, ByteBufUtil.Compare(copy, copy2));
         }
+
         AssertCopiedWithoutConsumingInputs(copy, composite, buf1, buf2, buf3);
     }
 
@@ -363,11 +373,13 @@ public class FixedCompositeByteBufOriginalTest
         ReadOnlySequence<byte> sequence = b.AsReadOnlySequence(0, 3);
         Assert.Equal(3, sequence.ToArray().Length);
         int segments = 0;
+
         foreach (ReadOnlyMemory<byte> memory in sequence)
         {
             Assert.Equal(1, memory.Length);
             ++segments;
         }
+
         Assert.Equal(3, segments);
         Assert.Equal(new byte[] { 97, 98, 99 }, sequence.ToArray());
     }
@@ -444,11 +456,13 @@ public class FixedCompositeByteBufOriginalTest
         ReadOnlyMemory<byte> memory = b.AsReadOnlyMemory(0, written);
         Assert.Equal(written, memory.Length);
         Assert.Equal(direct, b.IsDirect);
+
         if (written == 0)
         {
             Assert.True(memory.IsEmpty);
             return;
         }
+
         if (!direct)
         {
             Assert.True(MemoryMarshal.TryGetArray(source.AsReadOnlyMemory(0, written), out var original));
@@ -468,13 +482,16 @@ public class FixedCompositeByteBufOriginalTest
     {
         using var s = new Storage();
         ByteBuf b = s.Fixed(s.Data(direct, new byte[written]), s.Data(direct, new byte[written]));
+
         if (written == 0)
         {
             Assert.True(b.AsReadOnlyMemory(0, 0).IsEmpty);
             return;
         }
+
         Assert.Throws<NotSupportedException>(() => b.AsReadOnlyMemory(0, written * 2));
         int segments = 0;
+
         foreach (ReadOnlyMemory<byte> memory in b.ReadableSequence)
         {
             Assert.Equal(written, memory.Length);
@@ -482,6 +499,7 @@ public class FixedCompositeByteBufOriginalTest
             using var pin = memory.Pin();
             ++segments;
         }
+
         Assert.Equal(2, segments);
     }
 

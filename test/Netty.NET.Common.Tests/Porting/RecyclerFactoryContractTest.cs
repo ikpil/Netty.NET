@@ -83,6 +83,7 @@ public class RecyclerFactoryContractTest
             var impostor = new Item(first.Handle);
             Assert.True(first.Equals(impostor));
             Assert.Throws<ArgumentException>(() => first.Handle.Recycle(impostor));
+
             if (externalReturn)
             {
                 Exception failure = null;
@@ -104,6 +105,7 @@ public class RecyclerFactoryContractTest
             {
                 first.Handle.Recycle(first);
             }
+
             Assert.Throws<InvalidOperationException>(() => first.Handle.Recycle(first));
             Assert.Equal(1, pool.ThreadLocalSize());
             Item next = pool.Get();

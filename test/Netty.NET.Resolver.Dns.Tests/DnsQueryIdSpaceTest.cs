@@ -45,6 +45,7 @@ public class DnsQueryIdSpaceTest
             Assert.True(id >= 0);
             Assert.True(producedIdRound1.Add(id));
         }
+
         Assert.Equal(0, ids.UsableIds());
         Assert.Equal(-1, ids.NextId());
 
@@ -66,15 +67,18 @@ public class DnsQueryIdSpaceTest
         using IEnumerator<int> producedIdRound2It = producedIdRound2.GetEnumerator();
 
         bool notSame = false;
+
         while (producedIdRoundIt.MoveNext())
         {
             producedIdRound2It.MoveNext();
+
             if (producedIdRoundIt.Current != producedIdRound2It.Current)
             {
                 notSame = true;
                 break;
             }
         }
+
         Assert.True(notSame);
     }
 
@@ -92,6 +96,7 @@ public class DnsQueryIdSpaceTest
             {
                 return false;
             }
+
             order.Add(value);
             return true;
         }

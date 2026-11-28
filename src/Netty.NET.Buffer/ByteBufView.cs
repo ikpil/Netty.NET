@@ -120,6 +120,7 @@ internal sealed class ByteBufView : ByteBuf
          */
         // CLR: the base constructor stores the length; no empty initLength override hook is needed.
         ArgumentNullException.ThrowIfNull(parent);
+
         _parent = parent;
         _offset = offset;
         _fixedCapacity = true;
@@ -134,6 +135,7 @@ internal sealed class ByteBufView : ByteBuf
     internal override byte ReadByteCore(int index)
     {
         CheckIndex(index, 1);
+
         return _parent.ReadByteCore(_offset + index);
     }
 
@@ -141,12 +143,14 @@ internal sealed class ByteBufView : ByteBuf
     {
         EnsureCanWrite();
         CheckIndex(index, 1);
+
         _parent.WriteByteCore(_offset + index, value);
     }
 
     internal override ulong ReadWord(int index, int width, bool littleEndian)
     {
         CheckIndex(index, width);
+
         return _parent.ReadWord(_offset + index, width, littleEndian);
     }
 
@@ -154,6 +158,7 @@ internal sealed class ByteBufView : ByteBuf
     {
         EnsureCanWrite();
         CheckIndex(index, width);
+
         _parent.SetWord(_offset + index, value, width, littleEndian);
         return this;
     }
@@ -192,6 +197,7 @@ internal sealed class ByteBufView : ByteBuf
     internal override ReadOnlySequence<byte> BorrowCopySequence(int index, int length)
     {
         CheckIndex(index, length);
+
         return _parent.BorrowCopySequence(_offset + index, length);
     }
 
@@ -214,6 +220,7 @@ internal sealed class ByteBufView : ByteBuf
     {
         EnsureCanWrite();
         CheckIndex(index, source.Length);
+
         _parent.SetBytesFromIoCore(_offset + index, source);
     }
 
@@ -239,6 +246,7 @@ internal sealed class ByteBufView : ByteBuf
             {
                 throw new NotSupportedException("A slice has fixed capacity.");
             }
+
             _parent.Capacity = value;
         }
     }
@@ -258,6 +266,7 @@ internal sealed class ByteBufView : ByteBuf
         }
         ArgumentNullException.ThrowIfNull(charset);
         CheckIndex(index, length);
+
         return _parent.GetCharSequence(_offset + index, length, charset);
     }
 
@@ -282,6 +291,7 @@ internal sealed class ByteBufView : ByteBuf
         {
             EnsureAccessible();
         }
+
         int result = _parent.ForEachByte(_offset + index, length, processor);
         return _fixedCapacity ? result < _offset ? -1 : result - _offset : result;
     }
@@ -296,6 +306,7 @@ internal sealed class ByteBufView : ByteBuf
         {
             EnsureAccessible();
         }
+
         int result = _parent.ForEachByteDesc(_offset + index, length, processor);
         return _fixedCapacity ? result < _offset ? -1 : result - _offset : result;
     }
@@ -303,6 +314,7 @@ internal sealed class ByteBufView : ByteBuf
     public override ByteBuf Slice(int index, int length)
     {
         CheckIndex(index, length);
+
         // AbstractUnpooledSlicedByteBuf composes the adjustment on its parent.
         // Dispatch through that parent so read-only and lifetime-aware views
         // keep their own factory/ownership rules instead of being unpeeled.
@@ -312,6 +324,7 @@ internal sealed class ByteBufView : ByteBuf
     public override ByteBuf Duplicate()
     {
         EnsureAccessible();
+
         // A slice duplicates as another fixed slice with fresh zero marks;
         // an ordinary duplicate snapshots its current indices as initial marks.
         return _fixedCapacity ? Slice(0, Capacity).SetIndex(ReaderIndex, WriterIndex) : new ByteBufView(this);
@@ -320,6 +333,7 @@ internal sealed class ByteBufView : ByteBuf
     public override ByteBuf Copy(int index, int length)
     {
         CheckIndex(index, length);
+
         // AbstractUnpooledSlicedByteBuf/DuplicatedByteBuf preserve the parent's
         // allocation policy and maximum; only the source coordinates are adjusted.
         return _parent.Copy(_offset + index, length);
@@ -331,6 +345,7 @@ internal sealed class ByteBufView : ByteBuf
     {
         ArgumentNullException.ThrowIfNull(destination);
         CheckIndex(index, length);
+
         _parent.GetBytes(_offset + index, destination, length);
         return this;
     }
@@ -340,6 +355,7 @@ internal sealed class ByteBufView : ByteBuf
     {
         ArgumentNullException.ThrowIfNull(destination);
         CheckIndex(index, length);
+
         await _parent.GetBytesAsync(_offset + index, destination, length, cancellationToken).ConfigureAwait(false);
     }
 
@@ -348,6 +364,7 @@ internal sealed class ByteBufView : ByteBuf
         EnsureCanWrite();
         ArgumentNullException.ThrowIfNull(source);
         CheckIndex(index, length);
+
         return _parent.SetBytes(_offset + index, source, length);
     }
 
@@ -357,6 +374,7 @@ internal sealed class ByteBufView : ByteBuf
         EnsureCanWrite();
         ArgumentNullException.ThrowIfNull(source);
         CheckIndex(index, length);
+
         return await _parent.SetBytesAsync(_offset + index, source, length, cancellationToken).ConfigureAwait(false);
     }
 
@@ -366,6 +384,7 @@ internal sealed class ByteBufView : ByteBuf
     {
         ArgumentNullException.ThrowIfNull(destination);
         CheckIndex(index, length);
+
         return _parent.GetBytes(_offset + index, destination, length);
     }
 
@@ -375,6 +394,7 @@ internal sealed class ByteBufView : ByteBuf
         ArgumentNullException.ThrowIfNull(destination);
         CheckIndex(index, length);
         cancellationToken.ThrowIfCancellationRequested();
+
         return await _parent.GetBytesAsync(_offset + index, destination, length, cancellationToken).ConfigureAwait(false);
     }
 
@@ -383,6 +403,7 @@ internal sealed class ByteBufView : ByteBuf
         EnsureCanWrite();
         ArgumentNullException.ThrowIfNull(source);
         CheckIndex(index, length);
+
         return _parent.SetBytes(_offset + index, source, length);
     }
 
@@ -393,6 +414,7 @@ internal sealed class ByteBufView : ByteBuf
         ArgumentNullException.ThrowIfNull(source);
         CheckIndex(index, length);
         cancellationToken.ThrowIfCancellationRequested();
+
         return await _parent.SetBytesAsync(_offset + index, source, length, cancellationToken).ConfigureAwait(false);
     }
 
@@ -400,6 +422,7 @@ internal sealed class ByteBufView : ByteBuf
     {
         CheckIndex(index, length);
         CheckFileTransfer(destination, position, length);
+
         return _parent.GetBytes(_offset + index, destination, position, length);
     }
 
@@ -409,6 +432,7 @@ internal sealed class ByteBufView : ByteBuf
         CheckIndex(index, length);
         CheckFileTransfer(destination, position, length);
         cancellationToken.ThrowIfCancellationRequested();
+
         return await _parent.GetBytesAsync(_offset + index, destination, position, length, cancellationToken).ConfigureAwait(false);
     }
 
@@ -417,6 +441,7 @@ internal sealed class ByteBufView : ByteBuf
         EnsureCanWrite();
         CheckIndex(index, length);
         CheckFileTransfer(source, position, length);
+
         return _parent.SetBytes(_offset + index, source, position, length);
     }
 
@@ -427,6 +452,7 @@ internal sealed class ByteBufView : ByteBuf
         CheckIndex(index, length);
         CheckFileTransfer(source, position, length);
         cancellationToken.ThrowIfCancellationRequested();
+
         return await _parent.SetBytesAsync(_offset + index, source, position, length, cancellationToken).ConfigureAwait(false);
     }
 
@@ -435,6 +461,7 @@ internal sealed class ByteBufView : ByteBuf
     public override ByteBuf GetBytes(int index, Span<byte> destination)
     {
         CheckIndex(index, destination.Length);
+
         _parent.GetBytes(_offset + index, destination);
         return this;
     }
@@ -443,6 +470,7 @@ internal sealed class ByteBufView : ByteBuf
     {
         EnsureCanWrite();
         CheckIndex(index, source.Length);
+
         _parent.SetBytes(_offset + index, source);
         return this;
     }
@@ -451,6 +479,7 @@ internal sealed class ByteBufView : ByteBuf
     {
         ArgumentNullException.ThrowIfNull(destination);
         CheckIndex(index, length);
+
         _parent.GetBytes(_offset + index, destination, destinationIndex, length);
         return this;
     }
@@ -460,6 +489,7 @@ internal sealed class ByteBufView : ByteBuf
         EnsureCanWrite();
         ArgumentNullException.ThrowIfNull(source);
         CheckIndex(index, length);
+
         _parent.SetBytes(_offset + index, source, sourceIndex, length);
         return this;
     }
@@ -473,6 +503,7 @@ internal sealed class ByteBufView : ByteBuf
         {
             return base.GetByte(index);
         }
+
         return _parent.GetByte(_offset + index);
     }
 
@@ -484,6 +515,7 @@ internal sealed class ByteBufView : ByteBuf
         {
             return base.SetByte(index, value);
         }
+
         _parent.SetByte(_offset + index, value);
         return this;
     }
@@ -495,6 +527,7 @@ internal sealed class ByteBufView : ByteBuf
         {
             return base.GetShort(index);
         }
+
         return _parent.GetShort(_offset + index);
     }
 
@@ -506,6 +539,7 @@ internal sealed class ByteBufView : ByteBuf
         {
             return base.SetShort(index, value);
         }
+
         _parent.SetShort(_offset + index, value);
         return this;
     }
@@ -517,6 +551,7 @@ internal sealed class ByteBufView : ByteBuf
         {
             return base.GetShortLE(index);
         }
+
         return _parent.GetShortLE(_offset + index);
     }
 
@@ -528,6 +563,7 @@ internal sealed class ByteBufView : ByteBuf
         {
             return base.SetShortLE(index, value);
         }
+
         _parent.SetShortLE(_offset + index, value);
         return this;
     }
@@ -539,6 +575,7 @@ internal sealed class ByteBufView : ByteBuf
         {
             return base.GetUnsignedMedium(index);
         }
+
         return _parent.GetUnsignedMedium(_offset + index);
     }
 
@@ -550,6 +587,7 @@ internal sealed class ByteBufView : ByteBuf
         {
             return base.SetMedium(index, value);
         }
+
         _parent.SetMedium(_offset + index, value);
         return this;
     }
@@ -561,6 +599,7 @@ internal sealed class ByteBufView : ByteBuf
         {
             return base.GetUnsignedMediumLE(index);
         }
+
         return _parent.GetUnsignedMediumLE(_offset + index);
     }
 
@@ -572,6 +611,7 @@ internal sealed class ByteBufView : ByteBuf
         {
             return base.SetMediumLE(index, value);
         }
+
         _parent.SetMediumLE(_offset + index, value);
         return this;
     }
@@ -583,6 +623,7 @@ internal sealed class ByteBufView : ByteBuf
         {
             return base.GetInt(index);
         }
+
         return _parent.GetInt(_offset + index);
     }
 
@@ -594,6 +635,7 @@ internal sealed class ByteBufView : ByteBuf
         {
             return base.SetInt(index, value);
         }
+
         _parent.SetInt(_offset + index, value);
         return this;
     }
@@ -605,6 +647,7 @@ internal sealed class ByteBufView : ByteBuf
         {
             return base.GetIntLE(index);
         }
+
         return _parent.GetIntLE(_offset + index);
     }
 
@@ -616,6 +659,7 @@ internal sealed class ByteBufView : ByteBuf
         {
             return base.SetIntLE(index, value);
         }
+
         _parent.SetIntLE(_offset + index, value);
         return this;
     }
@@ -627,6 +671,7 @@ internal sealed class ByteBufView : ByteBuf
         {
             return base.GetLong(index);
         }
+
         return _parent.GetLong(_offset + index);
     }
 
@@ -638,6 +683,7 @@ internal sealed class ByteBufView : ByteBuf
         {
             return base.SetLong(index, value);
         }
+
         _parent.SetLong(_offset + index, value);
         return this;
     }
@@ -649,6 +695,7 @@ internal sealed class ByteBufView : ByteBuf
         {
             return base.GetLongLE(index);
         }
+
         return _parent.GetLongLE(_offset + index);
     }
 
@@ -660,6 +707,7 @@ internal sealed class ByteBufView : ByteBuf
         {
             return base.SetLongLE(index, value);
         }
+
         _parent.SetLongLE(_offset + index, value);
         return this;
     }

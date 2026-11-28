@@ -105,6 +105,7 @@ public sealed class Http3FrameToHttpObjectCodec : Http3RequestStreamInboundHandl
             {
                 req.Headers().Add(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED);
             }
+
             inboundTranslationInProgress = true;
             ctx.FireChannelRead(req);
         }
@@ -140,7 +141,9 @@ public sealed class Http3FrameToHttpObjectCodec : Http3RequestStreamInboundHandl
         {
             throw new UnsupportedMessageTypeException(msg, typeof(IHttpObject));
         }
+
         TaskCompletionSource promise = Http3CodecUtils.NewPromise();
+
         // 100-continue is typically a FullHttpResponse, but the decoded
         // Http3HeadersFrame should not handles as a end of stream.
         if (msg is IHttpResponse)
@@ -180,12 +183,14 @@ public sealed class Http3FrameToHttpObjectCodec : Http3RequestStreamInboundHandl
             {
                 combiner = new List<Task>();
             }
+
             promise = WriteWithOptionalCombiner(ctx, frame, promise, combiner, isLast);
         }
 
         if (isLast)
         {
             ILastHttpContent last = (ILastHttpContent) msg;
+
             try
             {
                 bool readable = last.Content.IsReadable();
@@ -202,6 +207,7 @@ public sealed class Http3FrameToHttpObjectCodec : Http3RequestStreamInboundHandl
                     promise = WriteWithOptionalCombiner(
                             ctx, new DefaultHttp3DataFrame(last.Content.Retain()), promise, combiner, true);
                 }
+
                 if (hasTrailers)
                 {
                     IHttp3Headers headers = HttpConversionUtil.ToHttp3Headers(last.TrailingHeaders(), validateHeaders);
@@ -217,6 +223,7 @@ public sealed class Http3FrameToHttpObjectCodec : Http3RequestStreamInboundHandl
                                 ctx, new DefaultHttp3DataFrame(last.Content.Retain()), promise, combiner, true);
                     }
                 }
+
                 // The shutdown is always done via the listener to ensure previous written data is correctly drained
                 // before QuicStreamChannel.shutdownOutput() is called. Missing to do so might cause previous queued
                 // data to be failed with a ClosedChannelException.
@@ -239,6 +246,7 @@ public sealed class Http3FrameToHttpObjectCodec : Http3RequestStreamInboundHandl
         {
             ExecutorPromiseCombiner.Combine(ctx, combiner, promise);
         }
+
         return promise.Task;
     }
 
@@ -263,6 +271,7 @@ public sealed class Http3FrameToHttpObjectCodec : Http3RequestStreamInboundHandl
         {
             combiner.Add(ctx.WriteAsync(msg));
         }
+
         return outerPromise;
     }
 

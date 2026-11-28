@@ -80,9 +80,11 @@ public sealed class RedisMessageType
             {
                 throw new RedisCodecException("Decoding of inline commands is disabled");
             }
+
             // reset index to make content readable again
             @in.ReaderIndex = initialIndex;
         }
+
         return type;
     }
 
@@ -95,6 +97,7 @@ public sealed class RedisMessageType
         {
             return;
         }
+
         @out.WriteByte(value.Value);
     }
 

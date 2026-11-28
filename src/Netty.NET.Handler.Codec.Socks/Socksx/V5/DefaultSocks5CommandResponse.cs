@@ -81,6 +81,7 @@ public sealed class DefaultSocks5CommandResponse : AbstractSocks5Message, ISocks
         {
             throw new ArgumentException("bndPort: " + bndPort.ToString(CultureInfo.InvariantCulture) + " (expected: 0~65535)");
         }
+
         this.status = status;
         this.bndAddrType = bndAddrType;
         this.bndAddr = bndAddr;
@@ -123,6 +124,7 @@ public sealed class DefaultSocks5CommandResponse : AbstractSocks5Message, ISocks
         {
             buf.Append("(status: ");
         }
+
         buf.Append(Status());
         buf.Append(", bndAddrType: ");
         buf.Append(BndAddrType());

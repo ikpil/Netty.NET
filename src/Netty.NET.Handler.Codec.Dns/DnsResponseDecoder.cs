@@ -60,6 +60,7 @@ internal abstract class DnsResponseDecoder<A> where A : EndPoint
         response.SetZ(flags >> 4 & 0x7);
 
         bool success = false;
+
         try
         {
             int questionCount = DnsCodecUtil.CheckRecordCount(DnsSection.QUESTION, buffer.ReadUnsignedShort());
@@ -70,11 +71,13 @@ internal abstract class DnsResponseDecoder<A> where A : EndPoint
                     DnsCodecUtil.CheckRecordCount(DnsSection.ADDITIONAL, buffer.ReadUnsignedShort());
 
             DecodeQuestions(response, buffer, questionCount);
+
             if (!DecodeRecords(response, DnsSection.ANSWER, buffer, answerCount))
             {
                 success = true;
                 return response;
             }
+
             if (!DecodeRecords(response, DnsSection.AUTHORITY, buffer, authorityRecordCount))
             {
                 success = true;
@@ -119,6 +122,7 @@ internal abstract class DnsResponseDecoder<A> where A : EndPoint
 
             response.AddRecord(section, r);
         }
+
         return true;
     }
 }

@@ -52,6 +52,7 @@ public class WorkerBootstrapContractTest
             return thread;
         }));
         int caller = Environment.CurrentManagedThreadId;
+
         try
         {
             for (int i = 0; i < 2; i++)
@@ -64,6 +65,7 @@ public class WorkerBootstrapContractTest
                     release.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
                 });
             }
+
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
             Assert.Equal(2, creations);
             Assert.NotEqual(caller, ids[0]);
@@ -74,6 +76,7 @@ public class WorkerBootstrapContractTest
         finally
         {
             release.Set();
+
             foreach (Thread thread in threads)
                 if (thread != null)
                 {
@@ -132,6 +135,7 @@ public class WorkerBootstrapContractTest
             try
             {
                 ThreadExecutorMap.SetCurrentExecutor(previous);
+
                 if (fail)
                 {
                     Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => entry()));
@@ -140,6 +144,7 @@ public class WorkerBootstrapContractTest
                 {
                     entry();
                 }
+
                 Assert.Same(previous, ThreadExecutorMap.CurrentExecutor());
             }
             catch (Exception error)
@@ -181,21 +186,26 @@ public class WorkerBootstrapContractTest
         });
         Thread worker = null;
         int counter = 0;
+
         try
         {
             Task<int>[] work = new Task<int>[12];
+
             for (int i = 0; i < work.Length; i++)
                 work[i] = executor.SubmitAsync(() =>
                 {
                     Assert.Same(executor, ThreadExecutorMap.CurrentExecutor());
                     Assert.True(executor.InEventLoop());
+
                     if (worker == null)
                     {
                         worker = Thread.CurrentThread;
                     }
+
                     Assert.Same(worker, Thread.CurrentThread);
                     return ++counter;
                 }, TestContext.Current.CancellationToken);
+
             int[] results = await Task.WhenAll(work).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
             for (int i = 0; i < results.Length; i++)
@@ -213,6 +223,7 @@ public class WorkerBootstrapContractTest
             await executor.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero)
                 .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         }
+
         Assert.True(worker.Join(TimeSpan.FromSeconds(5)));
     }
 
@@ -234,6 +245,7 @@ public class WorkerBootstrapContractTest
             Interlocked.Increment(ref starts);
             starter.Execute(command);
         });
+
         try
         {
             IEventExecutor first = group.Next();

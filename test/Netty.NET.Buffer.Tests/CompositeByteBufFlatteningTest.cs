@@ -78,6 +78,7 @@ public class CompositeByteBufFlatteningTest
         ByteBuf root = null, copy = null, prefix = null;
         ByteBuf s1 = null, s2 = null, s3 = null, s4 = null;
         bool rootOwned = false;
+
         try
         {
             prefix = compositeAllocator.Buffer(3, 3).WriteBytes(new byte[] { 1, 2, 3 });
@@ -138,14 +139,17 @@ public class CompositeByteBufFlatteningTest
         finally
         {
             copy?.Release(); // CLR: the original temporary copy must also release its owned storage.
+
             if (target.RefCnt > 0)
             {
                 target.Release();
             }
+
             if (source?.RefCnt > 0)
             {
                 source.Release();
             }
+
             if (rootOwned)
             {
                 root.Release();
@@ -161,6 +165,7 @@ public class CompositeByteBufFlatteningTest
         CompositeByteBuf inner = storage.Allocator.CompositeBuffer(), outer = storage.Allocator.CompositeBuffer();
         ByteBuf first = storage.Allocator.Buffer(2, 2).WriteBytes(new byte[] { 1, 2 });
         ByteBuf second = storage.Allocator.Buffer(2, 2).WriteBytes(new byte[] { 3, 4 });
+
         try
         {
             inner.AddComponent(first).AddComponent(second);
@@ -188,11 +193,13 @@ public class CompositeByteBufFlatteningTest
         finally
         {
             outer.Release();
+
             if (inner.RefCnt > 0)
             {
                 inner.Release();
             }
         }
+
         Assert.Equal(0, first.RefCnt);
         Assert.Equal(0, second.RefCnt);
         Assert.Equal(0, inner.RefCnt);
@@ -204,6 +211,7 @@ public class CompositeByteBufFlatteningTest
     {
         using var storage = new Storage(pooled, direct);
         CompositeByteBuf inner = storage.Allocator.CompositeBuffer(), outer = storage.Allocator.CompositeBuffer();
+
         try
         {
             inner.AddComponents(new[]
@@ -237,11 +245,13 @@ public class CompositeByteBufFlatteningTest
         finally
         {
             outer.Release();
+
             if (inner.RefCnt > 0)
             {
                 inner.Release();
             }
         }
+
         Assert.Equal(0, inner.RefCnt);
     }
 }

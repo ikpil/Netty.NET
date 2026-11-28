@@ -15,6 +15,7 @@ public class IpPreferenceContractTest
     public void PreferencesAreReadOnlyNativePropertiesWithoutGetterAliases()
     {
         Type type = typeof(NetUtil);
+
         foreach (string name in new[] { "IsIpV4StackPreferred", "IsIpV6AddressesPreferred" })
         {
             PropertyInfo property = type.GetProperty(name);
@@ -24,6 +25,7 @@ public class IpPreferenceContractTest
             Assert.True(property.GetMethod.IsPublic);
             Assert.Null(property.SetMethod);
         }
+
         Assert.Null(type.GetProperty("PreferIPv4Stack"));
         Assert.Null(type.GetProperty("PreferIPv6Addresses"));
     }
@@ -80,6 +82,7 @@ public class IpPreferenceContractTest
         string saved4 = Environment.GetEnvironmentVariable(IPv4Key);
         string saved6 = Environment.GetEnvironmentVariable(IPv6Key);
         var context = new AssemblyLoadContext("Netty IP preference probe", isCollectible: true);
+
         try
         {
             Environment.SetEnvironmentVariable(IPv4Key, ipv4);

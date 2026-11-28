@@ -248,11 +248,13 @@ public sealed class QuicChannelBootstrap
         {
             throw new InvalidOperationException("handler and streamHandler not set");
         }
+
         EndPoint local = this.local;
         if (local == null)
         {
             local = parent.LocalAddress;
         }
+
         if (local == null)
         {
             local = new IPEndPoint(IPAddress.Any, 0);
@@ -263,6 +265,7 @@ public sealed class QuicChannelBootstrap
         {
             remote = parent.RemoteAddress;
         }
+
         if (remote == null)
         {
             throw new InvalidOperationException("remote not set");

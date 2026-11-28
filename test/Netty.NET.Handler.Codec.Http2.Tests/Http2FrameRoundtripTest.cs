@@ -91,15 +91,18 @@ public class Http2FrameRoundtripTest : IDisposable
             {
                 buf.Release();
             }
+
             // Now verify that all of the reference counts are zero.
             foreach (ByteBuf buf in needReleasing)
             {
                 int expectedFinalRefCount = 0;
+
                 if (buf.IsReadOnly || buf.GetType().Name == "EmptyByteBuf")
                 {
                     // Special case for when we're writing slices of the padding buffer.
                     expectedFinalRefCount = 1;
                 }
+
                 Assert.Equal(expectedFinalRefCount, buf.RefCnt);
             }
         }
@@ -172,15 +175,18 @@ public class Http2FrameRoundtripTest : IDisposable
             ByteBuf originalChunk = originalData.ReadSlice(chunk.ReadableBytes);
             Assert.Equal(originalChunk, chunk);
         }
+
         Assert.False(originalData.IsReadable());
 
         // Make sure the padding matches the original.
         int totalReadPadding = 0;
+
         foreach (object[] args in dataReads)
         {
             int framePadding = (int) args[3];
             totalReadPadding += framePadding;
         }
+
         Assert.Equal(originalPadding, totalReadPadding);
     }
 
@@ -429,12 +435,14 @@ public class Http2FrameRoundtripTest : IDisposable
     private static ByteBuf Data(int size)
     {
         byte[] data = new byte[size];
+
         for (int ix = 0; ix < data.Length;)
         {
             int length = Math.Min(MESSAGE.Length, data.Length - ix);
             Array.Copy(MESSAGE, 0, data, ix, length);
             ix += length;
         }
+
         return Buf(data);
     }
 
@@ -453,12 +461,14 @@ public class Http2FrameRoundtripTest : IDisposable
     {
         ctx.Verify(c => c.WriteAsync(It.IsAny<ByteBuf>(), It.IsAny<CancellationToken>()), Times.AtLeastOnce());
         CompositeByteBuf composite = ReleaseLater(Unpooled.CompositeBuffer());
+
         foreach (object[] args in Captured(ctx, nameof(IChannelHandlerContext.WriteAsync)))
         {
             ByteBuf buf = (ByteBuf) args[0];
             buf = ReleaseLater(buf.Retain());
             composite.AddComponent(buf, true);
         }
+
         return composite;
     }
 
@@ -479,12 +489,14 @@ public class Http2FrameRoundtripTest : IDisposable
     private static IHttp2Headers LargeHeaders()
     {
         DefaultHttp2Headers headers = new DefaultHttp2Headers(false);
+
         for (int i = 0; i < 100; ++i)
         {
             string key = "this-is-a-test-header-key-" + i.ToString(CultureInfo.InvariantCulture);
             string value = "this-is-a-test-header-value-" + i.ToString(CultureInfo.InvariantCulture);
             headers.Add(new AsciiString(key), new AsciiString(value));
         }
+
         return headers;
     }
 
@@ -492,20 +504,24 @@ public class Http2FrameRoundtripTest : IDisposable
     {
         AsciiString singleByte = new AsciiString(new byte[]{0}, false);
         DefaultHttp2Headers headers = new DefaultHttp2Headers(false);
+
         for (int size = 0; size < minSize; size += 2)
         {
             headers.Add(singleByte, singleByte);
         }
+
         return headers;
     }
 
     private static IHttp2Headers BinaryHeaders()
     {
         DefaultHttp2Headers headers = new DefaultHttp2Headers(false);
+
         for (int ix = 0; ix < 10; ++ix)
         {
             headers.Add(RandomString(), RandomString());
         }
+
         return headers;
     }
 }

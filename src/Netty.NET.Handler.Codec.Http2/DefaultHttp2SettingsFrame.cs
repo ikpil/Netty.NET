@@ -49,6 +49,7 @@ public class DefaultHttp2SettingsFrame : IHttp2SettingsFrame
         {
             return false;
         }
+
         IHttp2SettingsFrame other = (IHttp2SettingsFrame) o;
         return settings.Equals(other.Settings());
     }

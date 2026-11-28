@@ -71,6 +71,7 @@ public class HpackDecoderTest
     {
         byte[] b = StringUtil.DecodeHexDump(encoded);
         ByteBuf @in = Unpooled.WrappedBuffer(b);
+
         try
         {
             hpackDecoder.Decode(0, @in, mockHeaders.Object, true);
@@ -97,6 +98,7 @@ public class HpackDecoderTest
     {
         byte[] input = {(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0x07};
         ByteBuf @in = Unpooled.WrappedBuffer(input);
+
         try
         {
             Assert.Equal(int.MaxValue, DecodeULE128(@in, 0));
@@ -113,6 +115,7 @@ public class HpackDecoderTest
         byte[] input = {(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0x07};
         ByteBuf @in = Unpooled.WrappedBuffer(input);
         int readerIndex = @in.ReaderIndex;
+
         try
         {
             Assert.ThrowsAny<Http2Exception>(() =>
@@ -133,6 +136,7 @@ public class HpackDecoderTest
         byte[] input = {(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0x08};
         ByteBuf @in = Unpooled.WrappedBuffer(input);
         int readerIndex = @in.ReaderIndex;
+
         try
         {
             Assert.ThrowsAny<Http2Exception>(() =>
@@ -153,6 +157,7 @@ public class HpackDecoderTest
         byte[] input = {(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
                         (byte) 0xFF, (byte) 0x7F};
         ByteBuf @in = Unpooled.WrappedBuffer(input);
+
         try
         {
             Assert.Equal(long.MaxValue, DecodeULE128(@in, 0L));
@@ -170,6 +175,7 @@ public class HpackDecoderTest
                         (byte) 0xFF, (byte) 0xFF};
         ByteBuf @in = Unpooled.WrappedBuffer(input);
         int readerIndex = @in.ReaderIndex;
+
         try
         {
             Assert.ThrowsAny<Http2Exception>(() =>
@@ -191,6 +197,7 @@ public class HpackDecoderTest
                         (byte) 0xFF, (byte) 0x7F};
         ByteBuf @in = Unpooled.WrappedBuffer(input);
         int readerIndex = @in.ReaderIndex;
+
         try
         {
             Assert.ThrowsAny<Http2Exception>(() =>
@@ -210,6 +217,7 @@ public class HpackDecoderTest
     {
         byte[] input = {(byte) 0x3F, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0x0E};
         ByteBuf @in = Unpooled.WrappedBuffer(input);
+
         try
         {
             long expectedHeaderSize = 4026531870L; // based on the input above
@@ -228,6 +236,7 @@ public class HpackDecoderTest
     {
         byte[] input = {(byte) 0x3F, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0x0E};
         ByteBuf @in = Unpooled.WrappedBuffer(input);
+
         try
         {
             hpackDecoder.SetMaxHeaderTableSize(4026531870L - 1); // based on the input above ... 1 less than is above.
@@ -247,6 +256,7 @@ public class HpackDecoderTest
     {
         byte[] input = {0, (byte) 0x80, 0};
         ByteBuf @in = Unpooled.WrappedBuffer(input);
+
         try
         {
             hpackDecoder.Decode(0, @in, mockHeaders.Object, true);
@@ -264,6 +274,7 @@ public class HpackDecoderTest
         // CLR: the Java byte literal -1 is the octet 0xFF, written as unchecked((byte) -1).
         byte[] input = {0, (byte) 0x81, unchecked((byte) -1)};
         ByteBuf @in = Unpooled.WrappedBuffer(input);
+
         try
         {
             Assert.ThrowsAny<Http2Exception>(() =>
@@ -282,6 +293,7 @@ public class HpackDecoderTest
     {
         byte[] input = {0, (byte) 0x84, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF};
         ByteBuf @in = Unpooled.WrappedBuffer(input);
+
         try
         {
             Assert.ThrowsAny<Http2Exception>(() =>
@@ -300,6 +312,7 @@ public class HpackDecoderTest
     {
         byte[] input = {0, (byte) 0x81, 0};
         ByteBuf @in = Unpooled.WrappedBuffer(input);
+
         try
         {
             Assert.ThrowsAny<Http2Exception>(() =>
@@ -318,6 +331,7 @@ public class HpackDecoderTest
     {
         byte[] compressed = StringUtil.DecodeHexDump("FFF0");
         ByteBuf @in = Unpooled.WrappedBuffer(compressed);
+
         try
         {
             Assert.Equal(2, @in.ReadableBytes);
@@ -405,6 +419,7 @@ public class HpackDecoderTest
     {
         hpackDecoder.SetMaxHeaderTableSize(int.MaxValue);
         string baseValue = "3FE1FFFFFF0";
+
         for (int i = 0; i < 7; ++i)
         {
             Decode(baseValue + i);
@@ -471,17 +486,21 @@ public class HpackDecoderTest
 
         mockHeaders.Reset();
         StringBuilder sb = new StringBuilder();
+
         for (int i = 0; i < 4096; i++)
         {
             sb.Append('a');
         }
+
         string value = sb.ToString();
         sb = new StringBuilder();
         sb.Append("417F811F");
+
         for (int i = 0; i < 4096; i++)
         {
             sb.Append("61"); // 'a'
         }
+
         Decode(sb.ToString());
         mockHeaders.Verify(m => m.Add(Of(":authority"), Of(value)));
         // CLR: Mockito's loop over mockingDetails(...).getInvocations() marks the calls of authority() and of
@@ -506,10 +525,12 @@ public class HpackDecoderTest
         sb.Append("4004");
         sb.Append(Hex("name"));
         sb.Append("7F813F");
+
         for (int i = 0; i < 8192; i++)
         {
             sb.Append("61"); // 'a'
         }
+
         Assert.ThrowsAny<Http2Exception>(() =>
         {
             Decode(sb.ToString());
@@ -529,10 +550,12 @@ public class HpackDecoderTest
         // Ignore header name that exceeds max header size
         StringBuilder sb = new StringBuilder();
         sb.Append("007F817F");
+
         for (int i = 0; i < 16384; i++)
         {
             sb.Append("61"); // 'a'
         }
+
         sb.Append("00");
         Assert.ThrowsAny<Http2Exception>(() =>
         {
@@ -548,10 +571,12 @@ public class HpackDecoderTest
         sb.Append("0004");
         sb.Append(Hex("name"));
         sb.Append("7F813F");
+
         for (int i = 0; i < 8192; i++)
         {
             sb.Append("61"); // 'a'
         }
+
         Assert.ThrowsAny<Http2Exception>(() =>
         {
             Decode(sb.ToString());
@@ -571,10 +596,12 @@ public class HpackDecoderTest
         // Ignore header name that exceeds max header size
         StringBuilder sb = new StringBuilder();
         sb.Append("107F817F");
+
         for (int i = 0; i < 16384; i++)
         {
             sb.Append("61"); // 'a'
         }
+
         sb.Append("00");
         Assert.ThrowsAny<Http2Exception>(() =>
         {
@@ -590,10 +617,12 @@ public class HpackDecoderTest
         sb.Append("1004");
         sb.Append(Hex("name"));
         sb.Append("7F813F");
+
         for (int i = 0; i < 8192; i++)
         {
             sb.Append("61"); // 'a'
         }
+
         Assert.ThrowsAny<Http2Exception>(() =>
         {
             Decode(sb.ToString());
@@ -604,6 +633,7 @@ public class HpackDecoderTest
     public void TestDecodeLargerThanMaxHeaderListSizeUpdatesDynamicTable()
     {
         ByteBuf @in = Unpooled.Buffer(300);
+
         try
         {
             hpackDecoder.SetMaxHeaderListSize(200);
@@ -647,6 +677,7 @@ public class HpackDecoderTest
     public void TestDecodeCountsNamesOnlyOnce()
     {
         ByteBuf @in = Unpooled.Buffer(200);
+
         try
         {
             hpackDecoder.SetMaxHeaderListSize(3500);
@@ -672,6 +703,7 @@ public class HpackDecoderTest
     public void TestAccountForHeaderOverhead()
     {
         ByteBuf @in = Unpooled.Buffer(100);
+
         try
         {
             string headerName = "12345";
@@ -707,6 +739,7 @@ public class HpackDecoderTest
         // Incomplete Literal Header Field with Incremental Indexing
         byte[] input = {(byte) 0x40};
         ByteBuf @in = Unpooled.WrappedBuffer(input);
+
         try
         {
             Assert.ThrowsAny<Http2Exception>(() =>
@@ -724,6 +757,7 @@ public class HpackDecoderTest
     public void UnknownPseudoHeader()
     {
         ByteBuf @in = Unpooled.Buffer(200);
+
         try
         {
             HpackEncoder hpackEncoder = new HpackEncoder(true);
@@ -749,6 +783,7 @@ public class HpackDecoderTest
     public void DisableHeaderValidation()
     {
         ByteBuf @in = Unpooled.Buffer(200);
+
         try
         {
             HpackEncoder hpackEncoder = new HpackEncoder(true);
@@ -777,6 +812,7 @@ public class HpackDecoderTest
     public void RequestPseudoHeaderInResponse()
     {
         ByteBuf @in = Unpooled.Buffer(200);
+
         try
         {
             HpackEncoder hpackEncoder = new HpackEncoder(true);
@@ -803,6 +839,7 @@ public class HpackDecoderTest
     public void ResponsePseudoHeaderInRequest()
     {
         ByteBuf @in = Unpooled.Buffer(200);
+
         try
         {
             HpackEncoder hpackEncoder = new HpackEncoder(true);
@@ -829,6 +866,7 @@ public class HpackDecoderTest
     public void PseudoHeaderAfterRegularHeader()
     {
         ByteBuf @in = Unpooled.Buffer(200);
+
         try
         {
             HpackEncoder hpackEncoder = new HpackEncoder(true);
@@ -863,6 +901,7 @@ public class HpackDecoderTest
     public void ReceivedConnectionHeader(string name, string value)
     {
         ByteBuf @in = Unpooled.Buffer(200);
+
         try
         {
             HpackEncoder hpackEncoder = new HpackEncoder(true);
@@ -892,6 +931,7 @@ public class HpackDecoderTest
     {
         ByteBuf in1 = Unpooled.Buffer(200);
         ByteBuf in2 = Unpooled.Buffer(200);
+
         try
         {
             HpackEncoder hpackEncoder = new HpackEncoder(true);
@@ -936,6 +976,7 @@ public class HpackDecoderTest
     public void TestPseudoHeaderEmptyValidationEnabled(string name, string value)
     {
         ByteBuf @in = Unpooled.Buffer(200);
+
         try
         {
             HpackEncoder hpackEncoder = new HpackEncoder(true);
@@ -967,6 +1008,7 @@ public class HpackDecoderTest
     public void TestPseudoHeaderEmptyValidationDisabled(string name, string value)
     {
         ByteBuf @in = Unpooled.Buffer(200);
+
         try
         {
             HpackEncoder hpackEncoder = new HpackEncoder(true);

@@ -48,6 +48,7 @@ public sealed class WebSocketExtensionTestUtil
         req.Headers().Set(HttpHeaderNames.UPGRADE, HttpHeaderValues.WEBSOCKET.ToString().ToLowerInvariant());
         req.Headers().Set(HttpHeaderNames.CONNECTION, "Upgrade");
         req.Headers().Set(HttpHeaderNames.ORIGIN, "http://example.com");
+
         if (ext != null)
         {
             req.Headers().Set(HttpHeaderNames.SEC_WEBSOCKET_EXTENSIONS, ext);
@@ -63,6 +64,7 @@ public sealed class WebSocketExtensionTestUtil
         res.Headers().Set(HttpHeaderNames.UPGRADE, HttpHeaderValues.WEBSOCKET.ToString().ToLowerInvariant());
         res.Headers().Set(HttpHeaderNames.CONNECTION, "Upgrade");
         res.Headers().Set(HttpHeaderNames.ORIGIN, "http://example.com");
+
         if (ext != null)
         {
             res.Headers().Set(HttpHeaderNames.SEC_WEBSOCKET_EXTENSIONS, ext);

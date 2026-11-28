@@ -65,8 +65,10 @@ public class NestedLeakAwareDerivedOwnershipTest
         ByteBuf Data(int count)
         {
             ByteBuf b = direct ? allocator.DirectBuffer(count, 64) : allocator.HeapBuffer(count, 64);
+
             for (int i = 0; i < count; ++i)
                 b.WriteByte(i + 1);
+
             return b;
         }
 
@@ -74,14 +76,17 @@ public class NestedLeakAwareDerivedOwnershipTest
         root.SetIndex(2, 24);
         ByteBuf parent = root;
         var trackers = new List<Tracker>();
+
         for (int i = 0; i < depth; ++i)
         {
             var tracker = new Tracker(parent);
             trackers.Add(tracker);
             parent = (mask & 1 << i) != 0 ? new AdvancedLeakAwareByteBuf(parent, tracker) : new SimpleLeakAwareByteBuf(parent, tracker);
         }
+
         ByteBuf child = null;
         bool childReleased = false, parentReleased = false;
+
         try
         {
             child = factory switch
@@ -95,14 +100,18 @@ public class NestedLeakAwareDerivedOwnershipTest
             Assert.Equal(pooled ? 1 : 2, child.RefCnt);
             Assert.All(trackers, t => Assert.Equal(0, t.Closes));
             IResourceLeakTracker<ByteBuf> childTracker = AllocatorLeakDetectionTest.Tracker(child);
+
             if (pooled)
                 Assert.All(trackers, t => Assert.NotSame(t, childTracker));
             else
                 Assert.Same(trackers[^1], childTracker);
+
             int[] records = trackers.ConvertAll(t => t.Records).ToArray();
             byte expected = child.GetByte(child.ReaderIndex);
+
             if (pooled)
                 Assert.Equal(records, trackers.ConvertAll(t => t.Records).ToArray());
+
             if (parentFirst)
             {
                 Assert.False(parent.Release());
@@ -112,8 +121,10 @@ public class NestedLeakAwareDerivedOwnershipTest
                 Assert.All(trackers, t => Assert.Equal(0, t.Closes));
                 records = trackers.ConvertAll(t => t.Records).ToArray();
                 Assert.Equal(expected, child.GetByte(child.ReaderIndex));
+
                 if (pooled)
                     Assert.Equal(records, trackers.ConvertAll(t => t.Records).ToArray());
+
                 Assert.True(child.Release());
                 childReleased = true;
             }
@@ -128,6 +139,7 @@ public class NestedLeakAwareDerivedOwnershipTest
                 Assert.True(parent.Release());
                 parentReleased = true;
             }
+
             Assert.Equal(0, root.RefCnt);
             Assert.Equal(0, child.RefCnt);
             Assert.All(trackers, t => Assert.Equal(1, t.Closes));
@@ -136,8 +148,10 @@ public class NestedLeakAwareDerivedOwnershipTest
         {
             if (!childReleased && child is { RefCnt: > 0 })
                 child.Release();
+
             if (!parentReleased && parent.RefCnt > 0)
                 parent.Release();
+
             (allocator as IDisposable)?.Dispose();
             Assert.Equal(0, native.ReservedBytes);
         }

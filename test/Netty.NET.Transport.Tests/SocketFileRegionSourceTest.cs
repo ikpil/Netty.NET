@@ -52,7 +52,9 @@ public class SocketFileRegionSourceTest : AbstractSocketTest
         {
             return base.NewFactories();
         }
+
         DomainSocketSourceTest.RequireDomainSockets();
+
         return DomainSocketTestPermutation.INSTANCE.DomainSocket();
     }
 
@@ -193,6 +195,7 @@ public class SocketFileRegionSourceTest : AbstractSocketTest
 
         IChannel sc = await sb.BindAsync();
         IChannel cc = await cb.ConnectAsync(sc.LocalAddress);
+
         try
         {
             // OioByteStreamChannel#doWriteFileRegion drains using a locally-tracked
@@ -243,6 +246,7 @@ public class SocketFileRegionSourceTest : AbstractSocketTest
 
         // Prepend random data which will not be transferred, so that we can test non-zero start offset
         int startOffset = random.Next(8192);
+
         for (int i = 0; i < startOffset; i ++)
         {
             @out.WriteByte((byte) random.Next());
@@ -277,6 +281,7 @@ public class SocketFileRegionSourceTest : AbstractSocketTest
             region = new FileRegionWrapper(region);
             emptyRegion = new FileRegionWrapper(emptyRegion);
         }
+
         // Do write ByteBuf and then FileRegion to ensure that mixed writes work
         // Also, write an empty FileRegion to test if writing an empty FileRegion does not cause any issues.
         //
@@ -414,6 +419,7 @@ public class SocketFileRegionSourceTest : AbstractSocketTest
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
             channel = ctx.Channel;
+
             if (!autoRead)
             {
                 ctx.Read();
@@ -426,10 +432,12 @@ public class SocketFileRegionSourceTest : AbstractSocketTest
             @in.ReadBytes(actual);
 
             int lastIdx = counter;
+
             for (int i = 0; i < actual.Length; i ++)
             {
                 Assert.Equal(data[i + lastIdx], actual[i]);
             }
+
             counter += actual.Length;
         }
 
@@ -518,12 +526,14 @@ public class SocketFileRegionSourceTest : AbstractSocketTest
                 throw new IOException("transferTo position " + position + " != transferred() "
                         + transferred);
             }
+
             if (transferred < count)
             {
                 target.WriteByte(0x42);
                 transferred = count;
                 return 1;
             }
+
             Interlocked.Increment(ref transferToCallsPastCompletion);
             target.WriteByte(0xFF);
             return 1;

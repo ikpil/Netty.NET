@@ -143,6 +143,7 @@ internal sealed class EmbeddedQuicChannel : EmbeddedChannel, IQuicChannel
         {
             peerAllowedStreams = MAX_PEER_STREAMS_PER_STREAM_TYPE;
         }
+
         this.peerAllowedStreams[type] = peerAllowedStreams;
     }
 
@@ -163,12 +164,15 @@ internal sealed class EmbeddedQuicChannel : EmbeddedChannel, IQuicChannel
         {
             reason.Release();
         }
+
         Task future = CloseAsync(cancellationToken);
+
         if (first)
         {
             _ = future.ContinueWith(_ => reason.Release(), CancellationToken.None,
                     TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
+
         return future;
     }
 

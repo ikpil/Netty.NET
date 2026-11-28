@@ -70,10 +70,12 @@ public sealed class Socks5ProxyHandler : ProxyHandler
         {
             username = null;
         }
+
         if (password != null && password.Length == 0)
         {
             password = null;
         }
+
         this.username = username;
         this.password = password;
         this.privateToken = null;
@@ -99,6 +101,7 @@ public sealed class Socks5ProxyHandler : ProxyHandler
             throw new ArgumentException(
                     "privateAuthMethod: " + (privateAuthMethod & 0xFF) + " (expected: 0x80-0xFE)");
         }
+
         this.username = this.password = null;
         this.privateToken = privateToken;
         this.privateAuthMethod = privateAuthMethod;
@@ -121,6 +124,7 @@ public sealed class Socks5ProxyHandler : ProxyHandler
         {
             return AUTH_PASSWORD;
         }
+
         return AUTH_NONE;
     }
 
@@ -174,6 +178,7 @@ public sealed class Socks5ProxyHandler : ProxyHandler
             return new DefaultSocks5InitialRequest(new List<Socks5AuthMethod> { Socks5AuthMethod.NO_AUTH,
                 authMethod });
         }
+
         return INIT_REQUEST_NO_AUTH;
     }
 
@@ -258,6 +263,7 @@ public sealed class Socks5ProxyHandler : ProxyHandler
     private Socks5AuthMethod SocksAuthMethod()
     {
         Socks5AuthMethod authMethod;
+
         if (privateToken != null && privateToken.Length > 0)
         {
             authMethod = new Socks5AuthMethod(privateAuthMethod & 0xFF, "PRIVATE_" + (privateAuthMethod & 0xFF));
@@ -270,6 +276,7 @@ public sealed class Socks5ProxyHandler : ProxyHandler
         {
             authMethod = Socks5AuthMethod.PASSWORD;
         }
+
         return authMethod;
     }
 
@@ -279,6 +286,7 @@ public sealed class Socks5ProxyHandler : ProxyHandler
         Socks5AddressType addrType;
         string rhost;
         int port;
+
         if (raddr is DnsEndPoint unresolved)
         {
             addrType = Socks5AddressType.DOMAIN;
@@ -290,6 +298,7 @@ public sealed class Socks5ProxyHandler : ProxyHandler
             IPEndPoint resolved = (IPEndPoint) raddr;
             rhost = GetHostAddress(resolved.Address);
             port = resolved.Port;
+
             if (NetUtil.IsValidIpV4Address(rhost))
             {
                 addrType = Socks5AddressType.IPv4;

@@ -207,6 +207,7 @@ public class ResourceRecordImpl : IResourceRecord
 
         StringBuilder sb = new StringBuilder("{");
         bool first = true;
+
         foreach (KeyValuePair<string, object> e in map)
         {
             if (!first)

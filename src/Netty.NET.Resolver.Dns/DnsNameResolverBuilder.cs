@@ -243,6 +243,7 @@ public sealed class DnsNameResolverBuilder
         {
             return SocketChannelFactory(null, retryOnTimeout);
         }
+
         return SocketChannelFactory(new ReflectiveChannelFactory<ISocketChannel>(channelType).NewChannel, retryOnTimeout);
     }
 
@@ -554,6 +555,7 @@ public sealed class DnsNameResolverBuilder
         {
             return this.resolveCache;
         }
+
         return new DefaultDnsCache(ObjectUtil.IntValue(minTtl, 0), ObjectUtil.IntValue(maxTtl, int.MaxValue),
                 ObjectUtil.IntValue(negativeTtl, 0));
     }
@@ -564,6 +566,7 @@ public sealed class DnsNameResolverBuilder
         {
             return this.authoritativeDnsServerCache;
         }
+
         return new DefaultAuthoritativeDnsServerCache(
                 ObjectUtil.IntValue(minTtl, 0), ObjectUtil.IntValue(maxTtl, int.MaxValue),
                 // Let us use the sane ordering as DnsNameResolver will be used when returning
@@ -584,6 +587,7 @@ public sealed class DnsNameResolverBuilder
         {
             return this.cnameCache;
         }
+
         return new DefaultDnsCnameCache(
                 ObjectUtil.IntValue(minTtl, 0), ObjectUtil.IntValue(maxTtl, int.MaxValue));
     }
@@ -723,6 +727,7 @@ public sealed class DnsNameResolverBuilder
         {
             copiedBuilder.CnameCache(cnameCache);
         }
+
         if (maxTtl != null && minTtl != null)
         {
             copiedBuilder.Ttl(minTtl.Value, maxTtl.Value);

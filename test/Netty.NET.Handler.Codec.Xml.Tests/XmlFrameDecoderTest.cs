@@ -306,11 +306,13 @@ public class XmlFrameDecoderTest
         int contentBytes = 200_000;
         XmlFrameDecoder decoder = new XmlFrameDecoder(contentBytes + 1024);
         EmbeddedChannel ch = new EmbeddedChannel(decoder);
+
         try
         {
             Task execution = Task.Run(() =>
             {
                 ch.WriteInbound(Unpooled.CopiedBuffer("<a>", Encoding.UTF8));
+
                 for (int i = 0; i < contentBytes; i++)
                 {
                     ch.WriteInbound(Unpooled.CopiedBuffer("x", Encoding.UTF8));
@@ -353,10 +355,12 @@ public class XmlFrameDecoderTest
         //    frame boundary: "</b><c" is emitted instead of "</b>", swallowing the start
         //    of the next element, and chunk 4 ("/>") then looks like leading garbage.
         StringBuilder content = new StringBuilder();
+
         for (int i = 0; i < 53; i++)
         {
             content.Append('x');
         }
+
         string frame = "<a>" + content + "</a>";
         Assert.Equal(60, frame.Length);
 
@@ -372,6 +376,7 @@ public class XmlFrameDecoderTest
     {
         EmbeddedChannel ch = new EmbeddedChannel(new XmlFrameDecoder(1048576));
         Exception cause = null;
+
         try
         {
             foreach (string xmlFrame in xmlFrames)
@@ -383,7 +388,9 @@ public class XmlFrameDecoderTest
         {
             cause = e;
         }
+
         List<object> actual = new List<object>();
+
         for (;;)
         {
             ByteBuf buf = ch.ReadInbound<ByteBuf>();
@@ -391,6 +398,7 @@ public class XmlFrameDecoderTest
             {
                 break;
             }
+
             actual.Add(buf.ToString(Encoding.UTF8));
             buf.Release();
         }
@@ -438,8 +446,10 @@ public class XmlFrameDecoderTest
         {
             throw new ArgumentException("file not found: " + path);
         }
+
         using MemoryStream buf = new MemoryStream();
         url.CopyTo(buf);
+
         return Encoding.UTF8.GetString(buf.ToArray());
     }
 }

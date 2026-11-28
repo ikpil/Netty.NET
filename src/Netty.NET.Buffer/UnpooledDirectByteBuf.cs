@@ -74,9 +74,11 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
         : base(maxCapacity)
     {
         ArgumentNullException.ThrowIfNull(bufferAllocator);
+
         _bufferAllocator = bufferAllocator;
         if (initialCapacity < 0 || initialCapacity > maxCapacity)
             throw new ArgumentOutOfRangeException(nameof(initialCapacity));
+
         _allocator = nativeAllocator ?? NativeMemoryAllocator.Shared;
         _owner = _allocator.Allocate(initialCapacity, clear: true);
         _memory = _owner.Memory;
@@ -113,6 +115,7 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
             throw new ArgumentException("The memory must be backed by NativeMemoryOwner.", nameof(initialBuffer));
         if (initialBuffer.Length > maxCapacity)
             throw new ArgumentOutOfRangeException(nameof(maxCapacity));
+
         _bufferAllocator = bufferAllocator;
         _allocator = nativeAllocator ?? NativeMemoryAllocator.Shared;
         _memory = initialBuffer;
@@ -128,6 +131,7 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
     internal override BufferMemoryLease AcquireReadLease()
     {
         EnsureAccessible();
+
         return BufferMemoryLease.ForBorrowedMemory(_memory);
     }
     public override bool IsContiguous => true;
@@ -142,11 +146,13 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
             {
                 return;
             }
+
             // CLR replacement for the JVM NoCleaner reallocation specialization:
             // allocate/copy before publishing preserves old pins and failure state.
             // The reservation limit must cover both allocations, even when shrinking.
             NativeMemoryOwner previous = _owner;
             NativeMemoryOwner replacement = _allocator.Allocate(value, clear: true);
+
             try
             {
                 _memory.Span.Slice(0, Math.Min(value, _capacity)).CopyTo(replacement.Memory.Span);
@@ -156,6 +162,7 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
                 replacement.Dispose();
                 throw;
             }
+
             int previousCapacity = _capacity;
             _owner = replacement;
             _memory = replacement.Memory;
@@ -172,6 +179,7 @@ public class UnpooledDirectByteBuf : AbstractReferenceCountedByteBuf
         using BufferMemoryLease lease = AcquireReadLease();
         ReadOnlySpan<byte> source = AsReadOnlySpan(index, length);
         ByteBuf result = Alloc().DirectBuffer(length, MaxCapacity);
+
         try
         {
             return result.WriteBytes(source);

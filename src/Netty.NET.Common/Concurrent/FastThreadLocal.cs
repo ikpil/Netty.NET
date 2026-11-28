@@ -64,6 +64,7 @@ public static class FastThreadLocal
                 HashSet<IFastThreadLocal> variablesToRemove = (HashSet<IFastThreadLocal>)v;
                 // Snapshot before callbacks: each removal mutates this identity set.
                 IFastThreadLocal[] variablesToRemoveArray = variablesToRemove.ToArray();
+
                 foreach (IFastThreadLocal tlv in variablesToRemoveArray)
                 {
                     tlv.Remove(threadLocalMap);
@@ -108,6 +109,7 @@ public static class FastThreadLocal
     {
         object v = threadLocalMap.IndexedVariable(InternalThreadLocalMap.VARIABLES_TO_REMOVE_INDEX);
         HashSet<IFastThreadLocal> variablesToRemove;
+
         if (v == InternalThreadLocalMap.UNSET || v == null)
         {
             // CLR has a native set; no Java IdentityHashMap or dummy boolean values are needed.

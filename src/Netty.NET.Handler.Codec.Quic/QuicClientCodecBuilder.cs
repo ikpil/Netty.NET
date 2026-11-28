@@ -55,6 +55,7 @@ public sealed class QuicClientCodecBuilder : QuicCodecBuilder<QuicClientCodecBui
         {
             throw new PlatformNotSupportedException("System.Net.Quic is not supported on this platform");
         }
+
         return new MsQuicClientCodec(config, sslEngineProvider, sslTaskExecutor, localConnIdLength, flushStrategy);
     }
 }

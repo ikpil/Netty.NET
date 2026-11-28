@@ -29,24 +29,30 @@ public class DatagramLifecycleContractTest
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var channel = new NioDatagramChannel(family);
         var socket = (Socket)typeof(AbstractNioChannel).GetMethod("JavaChannel", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(channel, null)!;
+
         try
         {
             Assert.True(channel.Config.SetOption(ChannelOption.IP_MULTICAST_IF, iface));
             Assert.True(channel.Config.TryGetOption(ChannelOption.IP_MULTICAST_IF, out var actual));
             Assert.Equal(iface.Id, actual.Id);
+
             if (ipv6)
                 Assert.Equal(iface.GetIPProperties().GetIPv6Properties().Index, (int)socket.GetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.MulticastInterface));
             else
                 Assert.Equal(address, new IPAddress(socket.GetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface, 4)));
+
             Assert.True(channel.Config.SetOption(ChannelOption.IP_MULTICAST_ADDR, address));
             Assert.True(channel.Config.TryGetOption(ChannelOption.IP_MULTICAST_ADDR, out var selected));
             Assert.Equal(address, selected);
+
             foreach (bool disabled in new[] { false, true })
             {
                 channel.Config.SetOption(ChannelOption.IP_MULTICAST_LOOP_DISABLED, disabled);
                 Assert.Equal(!disabled, socket.MulticastLoopback);
             }
+
             var options = channel.Config.GetOptions();
+
             if (ipv6 && OperatingSystem.IsLinux())
             {
                 Assert.True(channel.Config.SetOption(ChannelOption.IP_TOS, 184));
@@ -57,6 +63,7 @@ public class DatagramLifecycleContractTest
                 Assert.True(channel.Config.TryGetOption(ChannelOption.IP_TOS, out int actualTrafficClass));
                 Assert.Equal(32, actualTrafficClass);
             }
+
             Assert.Throws<ArgumentOutOfRangeException>(() => channel.Config.SetOption(ChannelOption.IP_TOS, -1));
             Assert.Throws<ArgumentOutOfRangeException>(() => channel.Config.SetOption(ChannelOption.IP_TOS, 256));
 
@@ -87,6 +94,7 @@ public class DatagramLifecycleContractTest
             {
                 socket.Dispose();
             }
+
             await group.StopAsync();
         }
     }
@@ -101,6 +109,7 @@ public class DatagramLifecycleContractTest
             n.GetIPProperties().UnicastAddresses.Any(a => a.Address.AddressFamily == family));
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         NioDatagramChannel channel = null;
+
         try
         {
             channel = (NioDatagramChannel)await new Bootstrap().Group(group).ChannelFactory(() => new NioDatagramChannel(family))
@@ -110,13 +119,16 @@ public class DatagramLifecycleContractTest
             await channel.LeaveGroupAsync(multicast, iface);
             await channel.JoinGroupAsync(multicast, iface);
             await channel.JoinGroupAsync(multicast, iface);
+
             if (ipv6)
                 await channel.LeaveGroupAsync(multicast.Address, (long)iface.GetIPProperties().GetIPv6Properties().Index);
             else
                 await channel.LeaveGroupAsync(multicast.Address, iface.GetIPProperties().UnicastAddresses.First(a => a.Address.AddressFamily == family).Address);
+
             await channel.LeaveGroupAsync(multicast, iface);
             await channel.JoinGroupAsync(multicast, iface);
             await channel.LeaveGroupAsync(multicast, iface);
+
             if (!ipv6)
             {
                 await channel.JoinGroupAsync(multicast.Address, IPAddress.Any);
@@ -129,6 +141,7 @@ public class DatagramLifecycleContractTest
             {
                 await channel.CloseAsync();
             }
+
             await group.StopAsync();
         }
     }
@@ -153,12 +166,14 @@ public class DatagramLifecycleContractTest
         using var otherPeer = new Socket(family, SocketType.Dgram, ProtocolType.Udp);
         peer.Bind(new IPEndPoint(loopback, 0));
         otherPeer.Bind(new IPEndPoint(loopback, 0));
+
         try
         {
             var bootstrap = new Bootstrap().Group(group).ChannelFactory(() => new NioDatagramChannel(family))
                 .Handler(new Capture(messages.Writer)).Option(ChannelOption.IP_MULTICAST_TTL, 23);
             channel = implicitBind ? await bootstrap.RegisterAsync() : await bootstrap.BindAsync(new IPEndPoint(wildcard ? any : loopback, 0));
             int port = (channel.LocalAddress as IPEndPoint)?.Port ?? 0;
+
             for (int i = 0; i < 5; i++)
             {
                 bool connected = i % 2 == 0;
@@ -170,15 +185,20 @@ public class DatagramLifecycleContractTest
                 {
                     await channel.DisconnectAsync(cancellation);
                 }
+
                 var local = Assert.IsType<IPEndPoint>(channel.LocalAddress);
+
                 if (port == 0)
                 {
                     port = local.Port;
                 }
+
                 Assert.NotEqual(0, port);
                 Assert.Equal(port, local.Port);
+
                 if (!wildcard || OperatingSystem.IsLinux())
                     Assert.Equal(!connected && wildcard ? any : loopback, local.Address);
+
                 Assert.True(channel.IsActive);
                 Assert.Equal(connected, ((NioDatagramChannel)channel).IsConnected);
                 Assert.True(channel.Config.TryGetOption(ChannelOption.IP_MULTICAST_TTL, out var ttl));
@@ -194,6 +214,7 @@ public class DatagramLifecycleContractTest
             {
                 await channel.CloseAsync();
             }
+
             await group.StopAsync();
         }
     }
@@ -205,8 +226,10 @@ public class DatagramLifecycleContractTest
         {
             Assert.Skip("Linux rejects UDP connect to broadcast without SO_BROADCAST.");
         }
+
         var cancellation = TestContext.Current.CancellationToken;
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+
         try
         {
             var channel = await new Bootstrap().Group(group).Channel<NioDatagramChannel>()
@@ -236,6 +259,7 @@ public class DatagramLifecycleContractTest
         var address = iface.GetIPProperties().UnicastAddresses.First(a => a.Address.AddressFamily == family).Address;
         var channel = new NioDatagramChannel(family);
         var socket = (Socket)typeof(AbstractNioChannel).GetMethod("JavaChannel", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(channel, null)!;
+
         try
         {
             var config = Assert.IsType<DefaultDatagramChannelConfig>(channel.Config);
@@ -288,10 +312,12 @@ public class DatagramLifecycleContractTest
             Assert.Same(config, config.SetNetworkInterface(iface));
             Assert.Equal(iface.Id, config.GetNetworkInterface().Id);
             Assert.Equal(iface.Id, Get(config, ChannelOption.IP_MULTICAST_IF).Id);
+
             if (ipv6)
                 Assert.Equal(iface.GetIPProperties().GetIPv6Properties().Index, (int)socket.GetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.MulticastInterface));
             else
                 Assert.Equal(address, new IPAddress(socket.GetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface, 4)));
+
             Assert.Same(config, config.SetInterface(address));
             Assert.Equal(address, config.GetInterface());
             Assert.Equal(address, Get(config, ChannelOption.IP_MULTICAST_ADDR));
@@ -310,6 +336,7 @@ public class DatagramLifecycleContractTest
         var channel = new NioDatagramChannel();
         var socket = (Socket)typeof(AbstractNioChannel).GetMethod("JavaChannel", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(channel, null)!;
         using var tcp = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
         try
         {
             var config = new DefaultDatagramChannelConfig(channel, tcp);

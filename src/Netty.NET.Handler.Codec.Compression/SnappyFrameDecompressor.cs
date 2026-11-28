@@ -84,6 +84,7 @@ public sealed class SnappyFrameDecompressor : InputBufferingDecompressor
     public override void Close()
     {
         base.Close();
+
         if (pendingOutput != null)
         {
             pendingOutput.Release();
@@ -101,6 +102,7 @@ public sealed class SnappyFrameDecompressor : InputBufferingDecompressor
         {
             return IDecompressor.Status.COMPLETE;
         }
+
         return IDecompressor.Status.NEED_INPUT;
     }
 
@@ -110,6 +112,7 @@ public sealed class SnappyFrameDecompressor : InputBufferingDecompressor
         {
             throw new DecompressionException("Unexpected end of input");
         }
+
         eof = true;
     }
 
@@ -178,12 +181,14 @@ public sealed class SnappyFrameDecompressor : InputBufferingDecompressor
 
                     int skipBytes = Math.Min(chunkLength, @in.ReadableBytes);
                     @in.SkipBytes(skipBytes);
+
                     if (skipBytes != chunkLength)
                     {
                         // We could skip all bytes, let's store the remaining so we can do so once we receive more
                         // data.
                         numBytesToSkip = chunkLength - skipBytes;
                     }
+
                     break;
                 case ChunkType.RESERVED_UNSKIPPABLE:
                     // The spec mandates that reserved unskippable chunks must immediately
@@ -214,6 +219,7 @@ public sealed class SnappyFrameDecompressor : InputBufferingDecompressor
                     }
 
                     @in.SkipBytes(4);
+
                     if (validateChecksums)
                     {
                         int checksum = @in.ReadIntLE();
@@ -223,6 +229,7 @@ public sealed class SnappyFrameDecompressor : InputBufferingDecompressor
                     {
                         @in.SkipBytes(4);
                     }
+
                     pendingOutput = @in.ReadRetainedSlice(chunkLength - 4);
                     return;
                 case ChunkType.COMPRESSED_DATA:
@@ -261,11 +268,13 @@ public sealed class SnappyFrameDecompressor : InputBufferingDecompressor
                     }
 
                     ByteBuf uncompressed = allocator.Buffer(uncompressedSize, MAX_DECOMPRESSED_DATA_SIZE);
+
                     try
                     {
                         if (validateChecksums)
                         {
                             int oldWriterIndex = @in.WriterIndex;
+
                             try
                             {
                                 @in.WriterIndex = @in.ReaderIndex + chunkLength - 4;
@@ -275,12 +284,14 @@ public sealed class SnappyFrameDecompressor : InputBufferingDecompressor
                             {
                                 @in.WriterIndex = oldWriterIndex;
                             }
+
                             ValidateChecksum(checksum, uncompressed, 0, uncompressed.WriterIndex);
                         }
                         else
                         {
                             snappy.Decode(@in.ReadSlice(chunkLength - 4), uncompressed);
                         }
+
                         pendingOutput = uncompressed;
                         uncompressed = null;
                     }
@@ -291,6 +302,7 @@ public sealed class SnappyFrameDecompressor : InputBufferingDecompressor
                             uncompressed.Release();
                         }
                     }
+
                     snappy.Reset();
                     return;
                 }

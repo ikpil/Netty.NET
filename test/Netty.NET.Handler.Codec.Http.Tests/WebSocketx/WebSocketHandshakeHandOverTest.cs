@@ -77,6 +77,7 @@ public class WebSocketHandshakeHandOverTest
                 test.serverReceivedCloseHandshake = true;
                 return;
             }
+
             base.Decode(ctx, frame, @out);
         }
     }
@@ -193,9 +194,11 @@ public class WebSocketHandshakeHandOverTest
             // We need to run all pending tasks as the handshake timeout is scheduled on the EventLoop.
             clientChannel.RunScheduledPendingTasks();
         }
+
         Assert.True(clientHandshakeTimeout);
         Assert.False(clientReceivedHandshake);
         Assert.False(clientReceivedMessage);
+
         // Should throw WebSocketHandshakeException
         try
         {
@@ -334,6 +337,7 @@ public class WebSocketHandshakeHandOverTest
     private static void TransferAllDataWithMerge(EmbeddedChannel srcChannel, EmbeddedChannel dstChannel)
     {
         ByteBuf mergedBuffer = null;
+
         for (;;)
         {
             object srcData = srcChannel.ReadOutbound<object>();
@@ -342,12 +346,14 @@ public class WebSocketHandshakeHandOverTest
             {
                 Assert.IsAssignableFrom<ByteBuf>(srcData);
                 ByteBuf srcBuf = (ByteBuf) srcData;
+
                 try
                 {
                     if (mergedBuffer == null)
                     {
                         mergedBuffer = Unpooled.Buffer();
                     }
+
                     mergedBuffer.WriteBytes(srcBuf);
                 }
                 finally

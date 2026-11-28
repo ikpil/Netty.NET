@@ -44,13 +44,16 @@ public abstract class AddressResolverGroup<T> : IDisposable where T : EndPoint
     public IAddressResolver<T> GetResolver(IEventExecutor executor)
     {
         ArgumentNullException.ThrowIfNull(executor);
+
         lock (_resolvers)
         {
             if (executor.IsShuttingDown())
                 throw new InvalidOperationException("executor not accepting a task");
             if (_resolvers.TryGetValue(executor, out var r))
                 return r.Resolver;
+
             IAddressResolver<T> newResolver;
+
             try
             {
                 newResolver = NewResolver(executor);
@@ -59,6 +62,7 @@ public abstract class AddressResolverGroup<T> : IDisposable where T : EndPoint
             {
                 throw new InvalidOperationException("failed to create a new resolver", e);
             }
+
             var entry = new Entry(this, executor, newResolver);
             _resolvers.Add(executor, entry);
             // CLR lifecycle cleanup does not submit work to an executor that has already terminated.
@@ -81,12 +85,15 @@ public abstract class AddressResolverGroup<T> : IDisposable where T : EndPoint
     public void Dispose()
     {
         var rArray = new List<IAddressResolver<T>>();
+
         lock (_resolvers)
         {
             foreach (var entry in _resolvers.Values)
                 rArray.Add(entry.Detach());
+
             _resolvers.Clear();
         }
+
         foreach (IAddressResolver<T> r in rArray)
             CloseResolver(r);
     }
@@ -94,13 +101,16 @@ public abstract class AddressResolverGroup<T> : IDisposable where T : EndPoint
     private void OnTermination(Entry entry)
     {
         IAddressResolver<T> resolver;
+
         lock (_resolvers)
         {
             if (entry.Executor == null)
                 return;
+
             _resolvers.Remove(entry.Executor);
             resolver = entry.Detach();
         }
+
         CloseResolver(resolver);
     }
 

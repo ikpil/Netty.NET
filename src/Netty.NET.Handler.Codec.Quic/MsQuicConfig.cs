@@ -152,22 +152,27 @@ internal sealed class MsQuicConfig
         options.MaxInboundBidirectionalStreams = (int) (initialMaxStreamsBidi ?? 0);
         options.MaxInboundUnidirectionalStreams = (int) (initialMaxStreamsUni ?? 0);
         QuicReceiveWindowSizes windows = new QuicReceiveWindowSizes();
+
         if (initialMaxData != null)
         {
             windows.Connection = Window(initialMaxData.Value);
         }
+
         if (initialMaxStreamDataBidiLocal != null)
         {
             windows.LocallyInitiatedBidirectionalStream = Window(initialMaxStreamDataBidiLocal.Value);
         }
+
         if (initialMaxStreamDataBidiRemote != null)
         {
             windows.RemotelyInitiatedBidirectionalStream = Window(initialMaxStreamDataBidiRemote.Value);
         }
+
         if (initialMaxStreamDataUni != null)
         {
             windows.UnidirectionalStream = Window(initialMaxStreamDataUni.Value);
         }
+
         options.InitialReceiveWindowSizes = windows;
         options.DefaultStreamErrorCode = 0;
         options.DefaultCloseErrorCode = 0;

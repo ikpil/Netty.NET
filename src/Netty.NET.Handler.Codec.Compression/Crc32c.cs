@@ -124,6 +124,7 @@ internal class Crc32c : ByteBufChecksum
     public override void Update(byte[] buffer, int offset, int length)
     {
         int end = offset + length;
+
         for (int i = offset; i < end; i++)
         {
             Update(buffer[i]);

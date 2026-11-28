@@ -127,6 +127,7 @@ internal sealed class PcapWriter : IDisposable
                 outputStream.Flush();
                 outputStream.Close();
             }
+
             pcapWriteHandler.MarkClosed();
             logger.Debug("PcapWriter is now closed");
         }

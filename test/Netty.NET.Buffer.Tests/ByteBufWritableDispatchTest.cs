@@ -130,6 +130,7 @@ public class ByteBufWritableDispatchTest
             {
                 Assert.True(_tracked.Release());
             }
+
             Assert.Equal(0, Owner.RefCnt);
             Assert.Equal(1, Tracker.Closes);
             Assert.Equal(0, Native.ReservedBytes);
@@ -155,6 +156,7 @@ public class ByteBufWritableDispatchTest
         int expectedCapacity = operation is 1 or 5 ? 64
             : operation is 2 or 6 or 7 && backing == 2 ? 128
             : operation == 7 ? 64 : 8;
+
         if (operation is 3 or 8 || operation == 2 && backing != 2)
         {
             Assert.Throws<ArgumentOutOfRangeException>(() =>
@@ -179,6 +181,7 @@ public class ByteBufWritableDispatchTest
                 : operation == 7 && backing != 2 ? 3 : 2;
             Assert.Equal(expectedCode, storage.Facade.EnsureWritable(minimum, operation == 7));
         }
+
         Assert.Equal(1, storage.Calls);
         Assert.Equal(1, storage.Tracker.Records);
         Assert.Equal(expectedCapacity, storage.Owner.Capacity);

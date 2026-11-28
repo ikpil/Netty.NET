@@ -41,6 +41,7 @@ public class BulkStringHeaderRedisMessage : IRedisMessage
             throw new RedisCodecException("bulkStringLength: " + bulkStringLength.ToString(CultureInfo.InvariantCulture) +
                     " (expected: > 0)");
         }
+
         this.bulkStringLength = bulkStringLength;
     }
 

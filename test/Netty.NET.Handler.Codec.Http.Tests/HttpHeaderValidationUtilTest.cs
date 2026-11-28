@@ -243,6 +243,7 @@ public class HttpHeaderValidationUtilTest
         {
             AsciiStrings(new byte[]{i, (byte) 'a'}, list);
         }
+
         AsciiStrings(new byte[]{0x7F, (byte) 'a'}, list);
 
         return Rows(list);
@@ -303,6 +304,7 @@ public class HttpHeaderValidationUtilTest
             {
                 continue;
             }
+
             AsciiStrings(new byte[]{(byte) i, (byte) 'a'}, list);
         }
 
@@ -333,8 +335,10 @@ public class HttpHeaderValidationUtilTest
             {
                 continue; // Space and horizontal tab are only illegal as first chars.
             }
+
             AsciiStrings(new byte[]{(byte) 'a', i}, list);
         }
+
         AsciiStrings(new byte[]{(byte) 'a', 0x7F}, list);
 
         return Rows(list);
@@ -364,6 +368,7 @@ public class HttpHeaderValidationUtilTest
             {
                 continue;
             }
+
             AsciiStrings(new byte[] {(byte) 'a', (byte) i}, list);
         }
 
@@ -529,6 +534,7 @@ public class HttpHeaderValidationUtilTest
             do
             {
                 BinaryPrimitives.WriteInt32BigEndian(array, i);
+
                 if (!OldHeaderValueValidationAlgorithm(asciiString))
                 {
                     int r = ValidateValidHeaderValue(asciiString);
@@ -536,12 +542,14 @@ public class HttpHeaderValidationUtilTest
                     {
                         Assert.NotEqual(-1, r, failureMessageSupplier());
                     }
+
                     r = ValidateValidHeaderValue(charSequence);
                     if (r == -1)
                     {
                         Assert.NotEqual(-1, r, failureMessageSupplier());
                     }
                 }
+
                 i++;
             } while (i != end);
         });
@@ -550,6 +558,7 @@ public class HttpHeaderValidationUtilTest
     private static bool OldHeaderValueValidationAlgorithm(ICharSequence seq)
     {
         int state = 0;
+
         // Start looping through each of the character
         for (int index = 0; index < seq.Length(); index++)
         {
@@ -564,6 +573,7 @@ public class HttpHeaderValidationUtilTest
         {
             return false;
         }
+
         return true;
     }
 
@@ -604,12 +614,14 @@ public class HttpHeaderValidationUtilTest
                     default:
                         break;
                 }
+
                 break;
             case 1:
                 if (character == '\n')
                 {
                     return 2;
                 }
+
                 return -1;
             case 2:
                 switch (character)
@@ -623,6 +635,7 @@ public class HttpHeaderValidationUtilTest
             default:
                 break;
         }
+
         return state;
     }
 
@@ -644,6 +657,7 @@ public class HttpHeaderValidationUtilTest
             do
             {
                 BinaryPrimitives.WriteInt32BigEndian(array, i);
+
                 if (!OldHeaderNameValidationAlgorithmAsciiString(asciiString))
                 {
                     int r = ValidateToken(asciiString);
@@ -651,12 +665,14 @@ public class HttpHeaderValidationUtilTest
                     {
                         Assert.NotEqual(-1, r, failureMessageSupplier());
                     }
+
                     r = ValidateToken(charSequence);
                     if (r == -1)
                     {
                         Assert.NotEqual(-1, r, failureMessageSupplier());
                     }
                 }
+
                 i++;
             } while (i != end);
         });
@@ -665,6 +681,7 @@ public class HttpHeaderValidationUtilTest
     private static bool OldHeaderNameValidationAlgorithmAsciiString(AsciiString name)
     {
         byte[] array = name.Array();
+
         for (int i = name.ArrayOffset(), len = name.ArrayOffset() + name.Length(); i < len; i++)
         {
             if (!ValidateHeaderNameElement(array[i]))
@@ -672,6 +689,7 @@ public class HttpHeaderValidationUtilTest
                 return false;
             }
         }
+
         return true;
     }
 
@@ -701,6 +719,7 @@ public class HttpHeaderValidationUtilTest
                 {
                     return false;
                 }
+
                 return true;
         }
     }
@@ -708,14 +727,17 @@ public class HttpHeaderValidationUtilTest
     public static IEnumerable<object[]> ValidTokenChars()
     {
         List<char> charList = new List<char>();
+
         for (char c = '0'; c <= '9'; c++)
         {
             charList.Add(c);
         }
+
         for (char c = 'a'; c <= 'z'; c++)
         {
             charList.Add(c);
         }
+
         for (char c = 'A'; c <= 'Z'; c++)
         {
             charList.Add(c);
@@ -749,10 +771,12 @@ public class HttpHeaderValidationUtilTest
             {
                 asciiStrings.Clear();
                 AsciiStrings(cs, asciiStrings);
+
                 foreach (AsciiString asciiString in asciiStrings)
                 {
                     list.Add(Args(asciiString, Encoding.ASCII.GetString(cs)));
                 }
+
                 foreach (AsciiString asciiString in asciiStrings)
                 {
                     list.Add(Args(asciiString, asciiString.ToString()));

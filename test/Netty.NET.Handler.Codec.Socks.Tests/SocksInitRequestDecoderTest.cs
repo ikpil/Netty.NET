@@ -44,6 +44,7 @@ public class SocksInitRequestDecoderTest
         ByteBuf buf = Unpooled.Buffer();
         buf.WriteByte(SocksProtocolVersion.SOCKS5.ByteValue());
         buf.WriteByte(authSchemeNum);
+
         for (int i = 0; i < authSchemeNum; i++)
         {
             buf.WriteByte(SocksAuthScheme.NO_AUTH.ByteValue());
@@ -55,6 +56,7 @@ public class SocksInitRequestDecoderTest
         SocksInitRequest req = Assert.IsType<SocksInitRequest>(o, exactMatch: false);
         IList<SocksAuthScheme> schemes = req.AuthSchemes();
         Assert.Equal(authSchemeNum, schemes.Count);
+
         foreach (SocksAuthScheme scheme in schemes)
         {
             Assert.Equal(SocksAuthScheme.NO_AUTH, scheme);
@@ -74,6 +76,7 @@ public class SocksInitRequestDecoderTest
         ByteBuf buf = Unpooled.Buffer();
         buf.WriteByte(SocksProtocolVersion.SOCKS5.ByteValue());
         buf.WriteByte(authSchemeNum);
+
         for (int i = 0; i < authSchemeNum; i++)
         {
             buf.WriteByte(SocksAuthScheme.NO_AUTH.ByteValue());

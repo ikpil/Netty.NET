@@ -50,16 +50,20 @@ internal static class CookieUtil
     private static BitArray ValidCookieNameOctets()
     {
         BitArray bits = new BitArray(0x80);
+
         for (int i = 32; i < 127; i++)
         {
             bits.Set(i, true);
         }
+
         int[] separators = new int[]
                 { '(', ')', '<', '>', '@', ',', ';', ':', '\\', '"', '/', '[', ']', '?', '=', '{', '}', ' ', '\t' };
+
         foreach (int separator in separators)
         {
             bits.Set(separator, false);
         }
+
         return bits;
     }
 
@@ -69,22 +73,27 @@ internal static class CookieUtil
     {
         BitArray bits = new BitArray(0x80);
         bits.Set(0x21, true);
+
         for (int i = 0x23; i <= 0x2B; i++)
         {
             bits.Set(i, true);
         }
+
         for (int i = 0x2D; i <= 0x3A; i++)
         {
             bits.Set(i, true);
         }
+
         for (int i = 0x3C; i <= 0x5B; i++)
         {
             bits.Set(i, true);
         }
+
         for (int i = 0x5D; i <= 0x7E; i++)
         {
             bits.Set(i, true);
         }
+
         return bits;
     }
 
@@ -92,10 +101,12 @@ internal static class CookieUtil
     private static BitArray ValidCookieAttributeValueOctets()
     {
         BitArray bits = new BitArray(0x80);
+
         for (int i = 32; i < 127; i++)
         {
             bits.Set(i, true);
         }
+
         bits.Set(';', false);
         return bits;
     }
@@ -124,6 +135,7 @@ internal static class CookieUtil
         {
             buf.Length = buf.Length - 2;
         }
+
         return buf.ToString();
     }
 
@@ -188,6 +200,7 @@ internal static class CookieUtil
                 return i;
             }
         }
+
         return -1;
     }
 
@@ -206,6 +219,7 @@ internal static class CookieUtil
                 return null;
             }
         }
+
         return cs;
     }
 
@@ -215,16 +229,19 @@ internal static class CookieUtil
         {
             return null;
         }
+
         value = HttpUtil.TrimJava(value);
         if (value.Length == 0)
         {
             return null;
         }
+
         int i = FirstInvalidOctet(new StringCharSequence(value), VALID_COOKIE_ATTRIBUTE_VALUE_OCTETS);
         if (i != -1)
         {
             throw new ArgumentException(name + " contains the prohibited characters: " + value[i]);
         }
+
         return value;
     }
 

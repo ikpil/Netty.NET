@@ -29,12 +29,15 @@ public class UnpooledMemoryCopyingTest
     public void OriginalSingleCopyCapturesRangeAndCreatesIndependentWritableHeap(int kind, bool arrayOverload)
     {
         using var storage = new ExternalStorage(kind, 16);
+
         for (int i = 0; i < 16; i++)
             storage.Memory.Span[i] = (byte)i;
+
         ByteBuf source = Unpooled.WrappedBuffer(storage.Memory);
         source.SetIndex(1, 15).MarkReaderIndex().MarkWriterIndex();
         ReadOnlyMemory<byte> range = storage.Memory.Slice(2, 8);
         ByteBuf copy = arrayOverload ? Unpooled.CopiedBuffer(new[] { range }) : Unpooled.CopiedBuffer(storage.Memory.Slice(2, 8));
+
         try
         {
             Assert.IsType<UnpooledHeapByteBuf>(copy);
@@ -66,6 +69,7 @@ public class UnpooledMemoryCopyingTest
             copy.Release();
             source.Release();
         }
+
         Assert.Equal(99, storage.Memory.Span[2]);
     }
 
@@ -84,6 +88,7 @@ public class UnpooledMemoryCopyingTest
         c.Memory.Span[3] = 6;
         ReadOnlyMemory<byte>[] inputs = { default, a.Memory.Slice(1, 2), b.Memory.Slice(6, 0), b.Memory.Slice(2, 3), c.Memory.Slice(3, 1), default };
         ByteBuf copy = Unpooled.CopiedBuffer(inputs);
+
         try
         {
             Assert.IsType<UnpooledHeapByteBuf>(copy);
@@ -115,6 +120,7 @@ public class UnpooledMemoryCopyingTest
         ByteBuf expected = Unpooled.CopiedBuffer(new byte[] { 1, 2, 3 });
         ByteBuf one = Unpooled.CopiedBuffer(single);
         ByteBuf many = Unpooled.CopiedBuffer(a, b, c);
+
         try
         {
             Assert.True(ByteBufUtil.Equals(expected, one));
@@ -151,6 +157,7 @@ public class UnpooledMemoryCopyingTest
         Assert.Same(Unpooled.EmptyBuffer, Unpooled.CopiedBuffer(empty, empty));
         ReadOnlyMemory<byte> bytes = new byte[] { 1, 2 };
         ByteBuf copy = Unpooled.CopiedBuffer(empty, bytes, empty);
+
         try
         {
             Assert.Equal(new byte[] { 1, 2 }, ByteBufUtil.GetBytes(copy));
@@ -159,6 +166,7 @@ public class UnpooledMemoryCopyingTest
         {
             copy.Release();
         }
+
         Assert.Equal(0, manager.SpanCalls);
     }
 
@@ -198,6 +206,7 @@ public class UnpooledMemoryCopyingTest
         Assert.Equal(new byte[] { 7, 7, 7, 7 }, valid.ToArray());
         Assert.Equal(0, native.ReservedBytes);
         ByteBuf recovered = Unpooled.CopiedBuffer(valid);
+
         try
         {
             Assert.Equal(new byte[] { 7, 7, 7, 7 }, ByteBufUtil.GetBytes(recovered));
@@ -224,6 +233,7 @@ public class UnpooledMemoryCopyingTest
         Assert.Equal(0, second.PinCalls);
         second.FailAccess = false;
         ByteBuf recovered = Unpooled.CopiedBuffer(a, b);
+
         try
         {
             Assert.Equal(new byte[] { 1, 1, 1, 1, 2, 2, 2, 2 }, ByteBufUtil.GetBytes(recovered));
@@ -244,6 +254,7 @@ public class UnpooledMemoryCopyingTest
         source.WriteLong(0x0102030405060708L);
         ReadOnlyMemory<byte> memory = source.AsReadOnlyMemory(0, 8);
         ByteBuf copy = Unpooled.CopiedBuffer(memory, memory);
+
         try
         {
             Assert.Equal(1, source.RefCnt);
@@ -260,6 +271,7 @@ public class UnpooledMemoryCopyingTest
             {
                 source.Release();
             }
+
             copy.Release();
         }
     }
@@ -270,6 +282,7 @@ public class UnpooledMemoryCopyingTest
     {
         ReadOnlyMemory<byte> a = new byte[] { 1, 2, 3, 4 }, b = new byte[] { 5, 6, 7, 8 };
         ByteBuf copy = multiple ? Unpooled.CopiedBuffer(a, b) : Unpooled.CopiedBuffer((ReadOnlyMemory<byte>)new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
+
         try
         {
             copy.SetIndex(6, 8);
@@ -292,6 +305,7 @@ public class UnpooledMemoryCopyingTest
     {
         ReadOnlyMemory<byte> bytes = new byte[] { 1, 2, 3, 4 };
         ByteBuf copy = Unpooled.CopiedBuffer(bytes, bytes);
+
         try
         {
             Assert.Equal(0x01020304, copy.GetInt(0));
@@ -351,6 +365,7 @@ public class UnpooledMemoryCopyingTest
             {
                 throw new InvalidOperationException("Source access failed.");
             }
+
             return _array ?? throw new ObjectDisposedException(nameof(ArrayMemoryManager));
         }
 

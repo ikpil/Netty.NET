@@ -129,6 +129,7 @@ public class WebSocketFrameAggregatorTest
                 channel.WriteInbound(new ContinuationWebSocketFrame(false, 0, Unpooled.WrappedBuffer(content2))));
         channel.WriteInbound(new ContinuationWebSocketFrame(false, 0, Unpooled.WrappedBuffer(content2)));
         channel.WriteInbound(new ContinuationWebSocketFrame(true, 0, Unpooled.WrappedBuffer(content2)));
+
         for (;;)
         {
             object msg = channel.ReadInbound<object>();
@@ -136,8 +137,10 @@ public class WebSocketFrameAggregatorTest
             {
                 break;
             }
+
             ReferenceCountUtil.Release(msg);
         }
+
         channel.Finish();
     }
 

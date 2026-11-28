@@ -41,12 +41,14 @@ public class PkiTestingTlsTest
     public static IEnumerable<object[]> ClassicalAlgorithms()
     {
         List<SslProvider> providers = new List<SslProvider>();
+
         if (SslProvider.IsTlsv13Supported(SslProvider.JDK))
         {
             providers.Add(SslProvider.JDK);
         }
 
         List<object[]> args = new List<object[]>();
+
         foreach (SslProvider provider in providers)
         {
             List<CertificateBuilder.Algorithm> algs =  new List<CertificateBuilder.Algorithm>();
@@ -58,6 +60,7 @@ public class PkiTestingTlsTest
                 args.Add(new object[] { provider, alg });
             }
         }
+
         return args;
     }
 
@@ -169,6 +172,7 @@ public class PkiTestingTlsTest
 
         IChannel serverChannel = null;
         IChannel clientChannel = null;
+
         try
         {
             serverChannel = await new ServerBootstrap()
@@ -195,18 +199,22 @@ public class PkiTestingTlsTest
             {
                 _ = clientChannel.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             if (serverChannel != null)
             {
                 _ = serverChannel.CloseAsync(TestContext.Current.CancellationToken);
             }
+
             if (clientChannel != null)
             {
                 await clientChannel.CloseFuture;
             }
+
             if (serverChannel != null)
             {
                 await serverChannel.CloseFuture;
             }
+
             await group.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(1000));
             // Release contexts created for this test to avoid leak failures with OPENSSL_REFCNT.
             ReferenceCountUtil.Release(clientContext);
@@ -272,8 +280,10 @@ public class PkiTestingTlsTest
                 {
                     promise.SetException(shce.Cause());
                 }
+
                 return;
             }
+
             base.UserEventTriggered(ctx, evt);
         }
 

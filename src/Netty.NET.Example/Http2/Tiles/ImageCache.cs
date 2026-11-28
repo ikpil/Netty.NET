@@ -64,6 +64,7 @@ public sealed class ImageCache
             for (int x = 0; x < 20; x++)
             {
                 string name = Name(x, y);
+
                 try
                 {
                     using (Stream resourceAsStream = GetType().Assembly.GetManifestResourceStream(RESOURCE_PACKAGE + name))

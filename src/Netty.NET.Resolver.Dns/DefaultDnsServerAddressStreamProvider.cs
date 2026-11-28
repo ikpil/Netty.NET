@@ -56,6 +56,7 @@ public sealed class DefaultDnsServerAddressStreamProvider : IDnsServerAddressStr
     static DefaultDnsServerAddressStreamProvider()
     {
         List<EndPoint> defaultNameServers = new List<EndPoint>(2);
+
         if (!PlatformDependent.IsAndroid())
         {
             // Skip this on Android; it has neither /etc/resolv.conf nor JNDI classes.
@@ -70,6 +71,7 @@ public sealed class DefaultDnsServerAddressStreamProvider : IDnsServerAddressStr
                 catch (InvalidOperationException e)
                 {
                     string fallbackMessage = "Failed to get name servers from /etc/resolv.conf; will fall back to JNDI";
+
                     if (logger.IsDebugEnabled())
                     {
                         // Always log at INFO, but only include stack trace if DEBUG is enabled.
@@ -79,6 +81,7 @@ public sealed class DefaultDnsServerAddressStreamProvider : IDnsServerAddressStr
                     {
                         logger.Info(fallbackMessage);
                     }
+
                     DirContextUtils.AddNameServers(defaultNameServers, DNS_PORT);
                 }
             }
@@ -109,8 +112,10 @@ public sealed class DefaultDnsServerAddressStreamProvider : IDnsServerAddressStr
                         throw new InvalidOperationException(DEFAULT_FALLBACK_SERVER_PROPERTY + " doesn't" +
                                 " contain a valid list of NameServers: " + defaultNameserverString);
                     }
+
                     defaultNameServers.Add(DnsServerAddresses.SocketAddress(ResolvConf.JavaTrim(server), DNS_PORT));
                 }
+
                 if (defaultNameServers.Count == 0)
                 {
                     throw new InvalidOperationException(DEFAULT_FALLBACK_SERVER_PROPERTY + " doesn't" +
@@ -208,11 +213,14 @@ public sealed class DefaultDnsServerAddressStreamProvider : IDnsServerAddressStr
         {
             return parts;
         }
+
         int size = parts.Length;
+
         while (size > 0 && parts[size - 1].Length == 0)
         {
             size--;
         }
+
         Array.Resize(ref parts, size);
         return parts;
     }

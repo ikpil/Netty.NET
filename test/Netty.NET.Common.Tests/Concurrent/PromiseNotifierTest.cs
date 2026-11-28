@@ -189,6 +189,7 @@ public class TaskCompletionTransferPortTest
             started.SetResult();
             return await pendingIo.Task.WaitAsync(token).ConfigureAwait(false);
         }, linked.Token);
+
         try
         {
             await started.Task.WaitAsync(TimeSpan.FromSeconds(5));

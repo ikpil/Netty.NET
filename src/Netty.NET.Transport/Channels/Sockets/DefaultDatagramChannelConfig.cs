@@ -65,6 +65,7 @@ public class DefaultDatagramChannelConfig : DefaultChannelConfig, IDatagramChann
     public override IReadOnlyDictionary<ChannelOption, object> GetOptions()
     {
         var options = new Dictionary<ChannelOption, object>(base.GetOptions());
+
         foreach (var option in new ChannelOption[] { ChannelOption.SO_BROADCAST, ChannelOption.SO_RCVBUF,
             ChannelOption.SO_SNDBUF, ChannelOption.SO_REUSEADDR, ChannelOption.IP_MULTICAST_LOOP_DISABLED,
             ChannelOption.IP_MULTICAST_ADDR, ChannelOption.IP_MULTICAST_IF, ChannelOption.IP_MULTICAST_TTL,
@@ -75,6 +76,7 @@ public class DefaultDatagramChannelConfig : DefaultChannelConfig, IDatagramChann
             {
                 options[option] = value;
             }
+
         return options;
     }
 
@@ -120,6 +122,7 @@ public class DefaultDatagramChannelConfig : DefaultChannelConfig, IDatagramChann
             value = LinuxSocketOptions.GetFlag(_javaSocket, LinuxSocketOptions.SolSocket, LinuxSocketOptions.SoReusePort);
         else
             return base.TryGetValue(option, out value);
+
         return true;
     }
 
@@ -161,6 +164,7 @@ public class DefaultDatagramChannelConfig : DefaultChannelConfig, IDatagramChann
             LinuxSocketOptions.SetFlag(_javaSocket, LinuxSocketOptions.SolSocket, LinuxSocketOptions.SoReusePort, (bool)value);
         else
             return base.SetValue(option, value);
+
         return true;
     }
 
@@ -168,6 +172,7 @@ public class DefaultDatagramChannelConfig : DefaultChannelConfig, IDatagramChann
     {
         if (Channel.IsRegistered)
             throw new InvalidOperationException("Can only changed before channel was registered");
+
         _activeOnOpen = activeOnOpen;
     }
 
@@ -209,6 +214,7 @@ public class DefaultDatagramChannelConfig : DefaultChannelConfig, IDatagramChann
         {
             throw new ChannelException(e);
         }
+
         return this;
     }
 
@@ -266,6 +272,7 @@ public class DefaultDatagramChannelConfig : DefaultChannelConfig, IDatagramChann
         {
             throw new ChannelException(e);
         }
+
         return this;
     }
 
@@ -290,6 +297,7 @@ public class DefaultDatagramChannelConfig : DefaultChannelConfig, IDatagramChann
             var address = new IPAddress(_javaSocket.GetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface, 4));
             return address.Equals(IPAddress.Any) ? null : NioDatagramChannel.FindInterface(address);
         }
+
         int index = (int)_javaSocket.GetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.MulticastInterface);
         return index == 0 ? null : NetworkInterface.GetAllNetworkInterfaces()
             .FirstOrDefault(n => n.Supports(NetworkInterfaceComponent.IPv6) && n.GetIPProperties().GetIPv6Properties()?.Index == index);
@@ -298,6 +306,7 @@ public class DefaultDatagramChannelConfig : DefaultChannelConfig, IDatagramChann
     public virtual IDatagramChannelConfig SetNetworkInterface(NetworkInterface networkInterface)
     {
         ArgumentNullException.ThrowIfNull(networkInterface);
+
         try
         {
             if (_javaSocket.AddressFamily == AddressFamily.InterNetwork)
@@ -307,6 +316,7 @@ public class DefaultDatagramChannelConfig : DefaultChannelConfig, IDatagramChann
             {
                 _javaSocket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.MulticastInterface,
                     NioDatagramChannel.InterfaceIndex(networkInterface, AddressFamily.InterNetworkV6));
+
                 if (_linuxDualMode && networkInterface.GetIPProperties().UnicastAddresses
                     .FirstOrDefault(info => info.Address.AddressFamily == AddressFamily.InterNetwork) is { } ipv4)
                     _javaSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface, ipv4.Address.GetAddressBytes());
@@ -316,6 +326,7 @@ public class DefaultDatagramChannelConfig : DefaultChannelConfig, IDatagramChann
         {
             throw new ChannelException(e);
         }
+
         return this;
     }
 
@@ -342,6 +353,7 @@ public class DefaultDatagramChannelConfig : DefaultChannelConfig, IDatagramChann
         {
             throw new ChannelException(e);
         }
+
         return this;
     }
 
@@ -369,12 +381,14 @@ public class DefaultDatagramChannelConfig : DefaultChannelConfig, IDatagramChann
             {
                 throw new ArgumentOutOfRangeException(nameof(receiveBufferSize), receiveBufferSize, "Invalid receive size");
             }
+
             _javaSocket.ReceiveBufferSize = receiveBufferSize;
         }
         catch (SocketException e)
         {
             throw new ChannelException(e);
         }
+
         return this;
     }
 
@@ -400,12 +414,14 @@ public class DefaultDatagramChannelConfig : DefaultChannelConfig, IDatagramChann
             {
                 throw new ArgumentOutOfRangeException(nameof(sendBufferSize), sendBufferSize, "Invalid send size");
             }
+
             _javaSocket.SendBufferSize = sendBufferSize;
         }
         catch (SocketException e)
         {
             throw new ChannelException(e);
         }
+
         return this;
     }
 
@@ -429,6 +445,7 @@ public class DefaultDatagramChannelConfig : DefaultChannelConfig, IDatagramChann
     {
         ArgumentOutOfRangeException.ThrowIfNegative(ttl);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(ttl, 255);
+
         try
         {
             _javaSocket.SetSocketOption(MulticastOptionLevel, SocketOptionName.MulticastTimeToLive, ttl);
@@ -438,6 +455,7 @@ public class DefaultDatagramChannelConfig : DefaultChannelConfig, IDatagramChann
         {
             throw new ChannelException(e);
         }
+
         return this;
     }
 
@@ -451,6 +469,7 @@ public class DefaultDatagramChannelConfig : DefaultChannelConfig, IDatagramChann
                 int written = _javaSocket.GetRawSocketOption((int)SocketOptionLevel.IPv6, LinuxIPv6TrafficClass, value);
                 return BitConverter.ToInt32(value[..written]);
             }
+
             return (int)_javaSocket.GetSocketOption(MulticastOptionLevel, SocketOptionName.TypeOfService);
         }
         catch (SocketException e)
@@ -464,6 +483,7 @@ public class DefaultDatagramChannelConfig : DefaultChannelConfig, IDatagramChann
     {
         ArgumentOutOfRangeException.ThrowIfNegative(trafficClass);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(trafficClass, 255);
+
         try
         {
             if (OperatingSystem.IsLinux() && _javaSocket.AddressFamily == AddressFamily.InterNetworkV6)
@@ -480,6 +500,7 @@ public class DefaultDatagramChannelConfig : DefaultChannelConfig, IDatagramChann
         {
             throw new ChannelException(e);
         }
+
         return this;
     }
 

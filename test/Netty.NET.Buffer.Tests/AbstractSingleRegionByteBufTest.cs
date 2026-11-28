@@ -51,6 +51,7 @@ public abstract class AbstractSingleRegionByteBufTest : AbstractByteBufTest
     {
         // Keep every original 32/64-MiB input, but bound simultaneous test allocations.
         await InternalBorrowGrowthGate.WaitAsync(TestContext.Current.CancellationToken);
+
         try
         {
             AssertOriginalInternalNioBufferGrowth();

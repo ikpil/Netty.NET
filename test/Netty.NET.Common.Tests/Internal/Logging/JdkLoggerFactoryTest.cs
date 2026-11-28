@@ -24,6 +24,7 @@ public class JdkLoggerFactoryTest
     public void TestCreation()
     {
         var factory = new InternalDefaultLoggerFactory();
+
         try
         {
             IInternalLogger logger = factory.NewInstance("foo");

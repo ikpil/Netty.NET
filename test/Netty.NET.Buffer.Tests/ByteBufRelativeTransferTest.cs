@@ -74,6 +74,7 @@ public class ByteBufRelativeTransferTest
             int writer = operation is 0 or 4 ? 21 : 4;
             source.SetIndex(2, 9).MarkReaderIndex().MarkWriterIndex();
             destination.SetIndex(1, writer).MarkReaderIndex().MarkWriterIndex();
+
             try
             {
                 int length = operation is 2 or 6 ? 7 : 3;
@@ -105,6 +106,7 @@ public class ByteBufRelativeTransferTest
                 source.Release();
                 destination.Release();
             }
+
             Assert.Equal(0, sourceOwner.RefCnt);
             Assert.Equal(0, destinationOwner.RefCnt);
         }
@@ -122,6 +124,7 @@ public class ByteBufRelativeTransferTest
             _ => Unpooled.Buffer(2, 64)
         };
         destination.SetIndex(1, 2).MarkReaderIndex().MarkWriterIndex();
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => source.GetBytes(0, destination, 3));
@@ -157,6 +160,7 @@ public class ByteBufRelativeTransferTest
     {
         ByteBuf source = Unpooled.WrappedBuffer(new byte[] { 1, 2, 3, 4 }).SetIndex(1, 2);
         ByteBuf destination = Unpooled.Buffer(4, 64).WriteByte(99);
+
         try
         {
             if (operation == 0)
@@ -176,9 +180,11 @@ public class ByteBufRelativeTransferTest
                 {
                     Assert.Throws<ArgumentOutOfRangeException>(() => source.GetBytes(2, destination));
                 }
+
                 Assert.Equal(1, destination.WriterIndex);
                 Assert.Equal(99, destination.GetByte(0));
             }
+
             Assert.Equal(4, destination.Capacity);
             Assert.Equal(1, source.ReaderIndex);
         }
@@ -196,12 +202,15 @@ public class ByteBufRelativeTransferTest
     {
         ByteBuf source = Unpooled.Buffer(24, 64).WriteZero(24).SetIndex(2, 9);
         ByteBuf destination = Unpooled.Buffer(24, 64).WriteZero(24).SetIndex(1, 24);
+
         try
         {
             if (operation is 1 or 3 or 5 or 7)
                 Assert.Throws<ArgumentOutOfRangeException>(() => Invoke(operation, source, destination, -1));
+
             ByteBuf readOnly = destination.AsReadOnly();
             Assert.Throws<NotSupportedException>(() => Invoke(operation, source, readOnly, 0));
+
             if (operation is 0 or 1 or 4 or 5)
             {
                 Assert.Throws<ArgumentNullException>(() => Invoke(operation, source, null));
@@ -210,6 +219,7 @@ public class ByteBufRelativeTransferTest
             {
                 Assert.Throws<ArgumentNullException>(() => Invoke(operation, null, destination));
             }
+
             Assert.Equal(2, source.ReaderIndex);
             Assert.Equal(9, source.WriterIndex);
             Assert.Equal(1, destination.ReaderIndex);
@@ -224,6 +234,7 @@ public class ByteBufRelativeTransferTest
             {
                 source.Release();
             }
+
             destination.Release();
         }
     }
@@ -242,6 +253,7 @@ public class ByteBufRelativeTransferTest
         var (buffer, owner) = Backing(kind, Enumerable.Range(0, 24).Select(i => (byte)i).ToArray());
         int writer = operation is 0 or 4 ? 21 : 9;
         buffer.SetIndex(2, writer);
+
         try
         {
             int length = operation is 2 or 6 ? writer - 2 : 3;
@@ -258,6 +270,7 @@ public class ByteBufRelativeTransferTest
         {
             buffer.Release();
         }
+
         Assert.Equal(0, owner.RefCnt);
     }
 
@@ -273,6 +286,7 @@ public class ByteBufRelativeTransferTest
             _ => Unpooled.Buffer(1, 64)
         };
         destination.SetIndex(0, 1);
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => destination.WriteBytes(source, int.MaxValue, 4));
@@ -293,6 +307,7 @@ public class ByteBufRelativeTransferTest
             {
                 source.Release();
             }
+
             destination.Release();
         }
     }
@@ -304,6 +319,7 @@ public class ByteBufRelativeTransferTest
     {
         ByteBuf source = Unpooled.Buffer(24, 24).SetIndex(2, 2);
         ByteBuf destination = Unpooled.Buffer(24, 24).SetIndex(1, 24);
+
         try
         {
             Assert.Same(operation is 0 or 1 or 4 or 5 ? source : destination, Invoke(operation, source, destination, 0));
@@ -318,6 +334,7 @@ public class ByteBufRelativeTransferTest
         finally
         {
             source.Release();
+
             if (destination.RefCnt > 0)
             {
                 destination.Release();
@@ -336,6 +353,7 @@ public class ByteBufRelativeTransferTest
         ByteBuf destination = Unpooled.CompositeBuffer().AddComponent(first, true).AddComponent(last, true);
         int writer = operation is 0 or 4 ? 21 : 4;
         destination.SetIndex(0, writer);
+
         try
         {
             // For default Get/Read, move the boundary into the destination's writable range.
@@ -346,6 +364,7 @@ public class ByteBufRelativeTransferTest
                 last = new FailingHeapBuffer(2);
                 destination = Unpooled.CompositeBuffer().AddComponent(first, true).AddComponent(last, true).SetIndex(0, writer);
             }
+
             Assert.Throws<InvalidOperationException>(() => Invoke(operation, source, destination));
             Assert.Equal(2, source.ReaderIndex);
             Assert.Equal(5, source.WriterIndex);
@@ -360,6 +379,7 @@ public class ByteBufRelativeTransferTest
             source.Release();
             destination.Release();
         }
+
         Assert.Equal(0, first.RefCnt);
         Assert.Equal(0, last.RefCnt);
     }
@@ -369,6 +389,7 @@ public class ByteBufRelativeTransferTest
     {
         var allocator = new NativeMemoryAllocator();
         ByteBuf owner = new UnpooledDirectByteBuf(8, 64, allocator).WriteBytes(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
+
         try
         {
             ByteBuf source = owner.Duplicate().SetIndex(1, 3);
@@ -388,6 +409,7 @@ public class ByteBufRelativeTransferTest
         {
             owner.Release();
         }
+
         Assert.Equal(0, allocator.ReservedBytes);
     }
 

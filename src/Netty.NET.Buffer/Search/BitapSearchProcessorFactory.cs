@@ -34,12 +34,15 @@ public class BitapSearchProcessorFactory : AbstractSearchProcessorFactory
     {
         if (needle.IsEmpty || needle.Length > 64)
             throw new ArgumentException("Search pattern length must be between 1 and 64 bytes.", nameof(needle));
+
         ulong bit = 1;
+
         foreach (byte value in needle)
         {
             _bitMasks[value] |= bit;
             bit <<= 1;
         }
+
         _successBit = 1UL << (needle.Length - 1);
     }
 

@@ -20,6 +20,7 @@ public class ScalableEventLoopGroupContractTest
         var cancellation = TestContext.Current.CancellationToken;
         using var workload = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
         var group = NewGroup(minimum: 1);
+
         try
         {
             StartAllExecutors(group);
@@ -46,6 +47,7 @@ public class ScalableEventLoopGroupContractTest
     {
         var cancellation = TestContext.Current.CancellationToken;
         var group = NewGroup();
+
         try
         {
             StartAllExecutors(group);
@@ -73,6 +75,7 @@ public class ScalableEventLoopGroupContractTest
     {
         var cancellation = TestContext.Current.CancellationToken;
         var group = NewGroup();
+
         try
         {
             StartAllExecutors(group);

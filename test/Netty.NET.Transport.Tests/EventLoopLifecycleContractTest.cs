@@ -29,6 +29,7 @@ public class EventLoopLifecycleContractTest
     public async Task ATaskConsumerObservesRegistrationFailureEvenWhenTheOwnerHasStopped()
     {
         var loop = new DefaultEventLoop();
+
         try
         {
             await loop.StopAsync();
@@ -58,6 +59,7 @@ public class EventLoopLifecycleContractTest
     public async Task RegistrationFailuresKeepTheSourceMessages()
     {
         var loop = new DefaultEventLoop();
+
         try
         {
             var channel = new LocalChannel();
@@ -85,11 +87,13 @@ public class EventLoopLifecycleContractTest
         var loop = new SingleThreadEventLoopSourceTest.LoopB();
         using var release = new ManualResetEventSlim();
         var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
         try
         {
             loop.Execute(() =>
             {
                 started.TrySetResult();
+
                 while (!release.IsSet)
                     try
                     {
@@ -125,6 +129,7 @@ public class EventLoopLifecycleContractTest
         var loop = new SingleThreadEventLoopSourceTest.LoopB();
         var ran = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         loop.ExecuteAfterEventLoopIteration(() => ran.TrySetResult(loop.InEventLoop()));
+
         try
         {
             await loop.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero).WaitAsync(TestContext.Current.CancellationToken);
@@ -160,6 +165,7 @@ public class EventLoopLifecycleContractTest
     {
         var loop = new SingleThreadEventLoopSourceTest.LoopB();
         var ran = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
         try
         {
             loop.ExecuteAfterEventLoopIteration(() => throw new InvalidOperationException("tail failure"));

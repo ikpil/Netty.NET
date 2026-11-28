@@ -89,12 +89,15 @@ public class CompositeByteBufGatheringTest : IDisposable
             using var output = new MemoryStream();
             byte[] chunk = new byte[256];
             int count;
+
             while ((count = _peer.Receive(chunk)) != 0)
             {
                 output.Write(chunk, 0, count);
                 Assert.InRange(output.Length, 0, length);
             }
+
             Assert.Equal(length, output.Length);
+
             return output.ToArray();
         }
 
@@ -121,8 +124,10 @@ public class CompositeByteBufGatheringTest : IDisposable
 
         Assert.Equal(12 + 512, buffer.ReadableBytes);
         int segments = 0;
+
         foreach (ReadOnlyMemory<byte> segment in buffer.ReadableSequence)
             ++segments;
+
         Assert.Equal(2, segments);
 
         buffer.Release();
@@ -650,6 +655,7 @@ public class CompositeByteBufGatheringTest : IDisposable
         buf.WriterIndex = 3;
         buf.ReaderIndex = 1;
         using var channel = new TestGatheringByteChannel();
+
         try
         {
             Assert.Equal(2, buf.ReadBytes(channel.Socket, 2));
@@ -668,6 +674,7 @@ public class CompositeByteBufGatheringTest : IDisposable
         CompositeByteBuf buf = new ShortWriteComposite(_unpooled);
         buf1.WriteBytes(new byte[] { 1, 2, 3, 4 });
         buf2.WriteBytes(new byte[] { 1, 2, 3, 4 });
+
         if (slice)
         {
             buf1.ReaderIndex = 1;
@@ -685,7 +692,9 @@ public class CompositeByteBufGatheringTest : IDisposable
             buf.WriterIndex = 7;
             buf.ReaderIndex = 1;
         }
+
         using var channel = new TestGatheringByteChannel();
+
         try
         {
             while (buf.IsReadable())
@@ -695,11 +704,14 @@ public class CompositeByteBufGatheringTest : IDisposable
                 Assert.Equal(1, written);
                 Assert.Equal(before + written, buf.ReaderIndex);
             }
+
             byte[] data = new byte[6];
+
             if (slice)
                 buf.GetBytes(0, data);
             else
                 buf.GetBytes(1, data);
+
             Assert.Equal(data, channel.WrittenBytes(6));
         }
         finally
@@ -715,6 +727,7 @@ public class CompositeByteBufGatheringTest : IDisposable
         buf.WriterIndex = 3;
         buf.ReaderIndex = 1;
         using var channel = new TestGatheringByteChannel();
+
         try
         {
             Assert.Equal(2, buf.ReadBytes(channel.Socket, 2));

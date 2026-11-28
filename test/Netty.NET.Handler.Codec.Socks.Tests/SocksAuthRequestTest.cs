@@ -33,6 +33,7 @@ public class SocksAuthRequestTest
         {
             Assert.IsType<ArgumentNullException>(e, exactMatch: false);
         }
+
         try
         {
             new SocksAuthRequest("", null);
@@ -54,6 +55,7 @@ public class SocksAuthRequestTest
         {
             Assert.IsType<ArgumentException>(e, exactMatch: false);
         }
+
         try
         {
             new SocksAuthRequest("username", "παράδειγμα.δοκιμή");
@@ -84,6 +86,7 @@ public class SocksAuthRequestTest
         {
             Assert.IsType<ArgumentException>(e, exactMatch: false);
         }
+
         try
         {
             new SocksAuthRequest("password",

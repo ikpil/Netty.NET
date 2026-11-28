@@ -77,6 +77,7 @@ internal sealed class PseudoRandomFunction
     internal static byte[] Hash(byte[] secret, byte[] label, byte[] seed, int length, string algo)
     {
         ObjectUtil.CheckPositiveOrZero(length, "length");
+
         try
         {
             using IncrementalHash hmac = IncrementalHash.CreateHMAC(HashName(algo), secret);
@@ -96,11 +97,13 @@ internal sealed class PseudoRandomFunction
             byte[] expansion = EmptyArrays.EMPTY_BYTES;
             byte[] data = Concat(label, seed);
             byte[] A = data;
+
             for (int i = 0; i < iterations; i++)
             {
                 A = DoFinal(hmac, A);
                 expansion = Concat(expansion, DoFinal(hmac, Concat(A, data)));
             }
+
             return CopyOf(expansion, length);
         }
         catch (CryptographicException e)
@@ -121,6 +124,7 @@ internal sealed class PseudoRandomFunction
     private static byte[] DoFinal(IncrementalHash hmac, byte[] input)
     {
         hmac.AppendData(input);
+
         return hmac.GetHashAndReset();
     }
 

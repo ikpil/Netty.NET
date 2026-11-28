@@ -48,6 +48,7 @@ public sealed class Http2Server
     {
         // Configure the server.
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             ServerBootstrap b = new ServerBootstrap();
@@ -70,6 +71,7 @@ public sealed class Http2Server
     public static async Task Main(string[] args)
     {
         int port;
+
         if (args.Length > 0)
         {
             port = int.Parse(args[0], NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture);
@@ -78,6 +80,7 @@ public sealed class Http2Server
         {
             port = 9000;
         }
+
         await new Http2Server(port).RunAsync();
     }
 }

@@ -22,6 +22,7 @@ public class DatagramMulticastConfigContractTest
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var socket = (Socket)typeof(AbstractNioChannel).GetMethod("JavaChannel", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(channel, null)!;
         var level = family == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP;
+
         try
         {
             await channel.RegisterAsync(group.Next());
@@ -29,6 +30,7 @@ public class DatagramMulticastConfigContractTest
             Assert.True(channel.Config.TryGetOption(ChannelOption.IP_MULTICAST_TTL, out int configured));
             Assert.Equal((int)socket.GetSocketOption(level, SocketOptionName.MulticastTimeToLive),
                 configured);
+
             foreach (int ttl in new[] { 0, 17, 255 })
             {
                 Assert.True(channel.Config.SetOption(ChannelOption.IP_MULTICAST_TTL, ttl));
@@ -37,8 +39,10 @@ public class DatagramMulticastConfigContractTest
                 Assert.Equal(ttl, (int)socket.GetSocketOption(level, SocketOptionName.MulticastTimeToLive));
                 Assert.Equal(unicastTtl, socket.Ttl);
             }
+
             foreach (int ttl in new[] { -1, 256, int.MaxValue })
                 Assert.Throws<ArgumentOutOfRangeException>(() => channel.Config.SetOption(ChannelOption.IP_MULTICAST_TTL, ttl));
+
             Assert.True(channel.Config.TryGetOption(ChannelOption.IP_MULTICAST_TTL, out configured));
             Assert.Equal(255, configured);
         }

@@ -56,6 +56,7 @@ public sealed class NativeMemoryView : IDisposable
                 lock (_sync)
                 {
                     ThrowIfDisposed();
+
                     return CreateMemory(_memory.Length);
                 }
             }
@@ -66,6 +67,7 @@ public sealed class NativeMemoryView : IDisposable
             lock (_sync)
             {
                 ThrowIfDisposed();
+
                 return _memory.Span;
             }
         }
@@ -75,6 +77,7 @@ public sealed class NativeMemoryView : IDisposable
             lock (_sync)
             {
                 ThrowIfDisposed();
+
                 return _memory.Slice(elementIndex).Pin();
             }
         }

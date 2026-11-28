@@ -80,6 +80,7 @@ public static class HeadersUtils
     public static string ToString<K, V>(Type headersClass, IIterator<IEntry<K, V>> headersIt, int size)
     {
         string simpleName = GetSimpleName(headersClass);
+
         if (size == 0)
         {
             return simpleName + "[]";
@@ -90,11 +91,13 @@ public static class HeadersUtils
             StringBuilder sb = new StringBuilder(simpleName.Length + 2 + size * 20)
                     .Append(simpleName)
                     .Append('[');
+
             while (headersIt.HasNext())
             {
                 IEntry<K, V> header = headersIt.Next();
                 sb.Append(header.GetKey()).Append(": ").Append(header.GetValue()).Append(", ");
             }
+
             sb.Length = sb.Length - 2;
             return sb.Append(']').ToString();
         }
@@ -158,6 +161,7 @@ public static class HeadersUtils
                     return i;
                 }
             }
+
             return -1;
         }
 
@@ -169,6 +173,7 @@ public static class HeadersUtils
         public void CopyTo(string[] array, int arrayIndex)
         {
             ArgumentNullException.ThrowIfNull(array);
+
             for (int i = 0; i < Count; i++)
             {
                 array[arrayIndex + i] = this[i];
@@ -236,11 +241,13 @@ public static class HeadersUtils
             {
                 return it.HasNext();
             }
+
             if (!advanced)
             {
                 hasNext = iter.MoveNext();
                 advanced = true;
             }
+
             return hasNext;
         }
 
@@ -254,6 +261,7 @@ public static class HeadersUtils
             {
                 throw new InvalidOperationException();
             }
+
             advanced = false;
             return new StringEntry(iter.Current);
         }
@@ -265,6 +273,7 @@ public static class HeadersUtils
                 it.Remove();
                 return;
             }
+
             throw new NotSupportedException("remove");
         }
 
@@ -279,6 +288,7 @@ public static class HeadersUtils
             {
                 return false;
             }
+
             _current = Next();
             return true;
         }
@@ -312,6 +322,7 @@ public static class HeadersUtils
             {
                 name = entry.GetKey().ToString();
             }
+
             return name;
         }
 
@@ -321,6 +332,7 @@ public static class HeadersUtils
             {
                 value = entry.GetValue().ToString();
             }
+
             return value;
         }
 
@@ -359,6 +371,7 @@ public static class HeadersUtils
                 hasNext = iter.MoveNext();
                 advanced = true;
             }
+
             return hasNext;
         }
 
@@ -368,6 +381,7 @@ public static class HeadersUtils
             {
                 throw new InvalidOperationException();
             }
+
             advanced = false;
             T next = iter.Current;
             return next != null ? next.ToString() : null;
@@ -389,6 +403,7 @@ public static class HeadersUtils
             {
                 return false;
             }
+
             _current = Next();
             return true;
         }
@@ -445,6 +460,7 @@ public static class HeadersUtils
         public void CopyTo(string[] array, int arrayIndex)
         {
             ArgumentNullException.ThrowIfNull(array);
+
             foreach (string name in this)
             {
                 array[arrayIndex++] = name;

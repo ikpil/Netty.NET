@@ -64,6 +64,7 @@ public class MultiSearchProcessorTest
     public void TestSearchForMultiple(int kind)
     {
         var (haystack, owner) = Buffer(Bytes("one two three one"), kind);
+
         try
         {
             int length = haystack.ReadableBytes;
@@ -94,6 +95,7 @@ public class MultiSearchProcessorTest
     public void TestSearchForMultipleOverlapping(int kind)
     {
         var (haystack, owner) = Buffer(Bytes("abcd"), kind);
+
         try
         {
             int length = haystack.ReadableBytes;
@@ -118,6 +120,7 @@ public class MultiSearchProcessorTest
     public void FindLongerNeedleInCaseOfSuffixMatch(int kind)
     {
         var (haystack, owner) = Buffer(Bytes("xabcx"), kind);
+
         try
         {
             IMultiSearchProcessor processor1 = Factory("abc", "bc").NewSearchProcessor();
@@ -136,6 +139,7 @@ public class MultiSearchProcessorTest
     private static int ExpectedId(byte[][] patterns, ReadOnlySpan<byte> session)
     {
         int found = -1, length = 0;
+
         for (int id = 0; id < patterns.Length; id++)
         {
             byte[] pattern = patterns[id];
@@ -145,6 +149,7 @@ public class MultiSearchProcessorTest
                 length = pattern.Length;
             }
         }
+
         return found;
     }
 
@@ -155,6 +160,7 @@ public class MultiSearchProcessorTest
         byte[][] patterns = new[] { "he", "she", "his", "hers", "rs", "she" }.Select(Bytes).ToArray();
         byte[] data = Bytes("ushershishershe");
         var expected = new List<(int End, int Id)>();
+
         for (int i = 0; i < data.Length; i++)
         {
             int id = ExpectedId(patterns, data.AsSpan(0, i + 1));
@@ -169,9 +175,11 @@ public class MultiSearchProcessorTest
             IMultiSearchProcessor processor = AbstractMultiSearchProcessorFactory.NewAhoCorasicSearchProcessorFactory(patterns).NewSearchProcessor();
             var actual = new List<(int End, int Id)>();
             int consumed = 0;
+
             foreach (byte[] chunk in new[] { data[..split], Array.Empty<byte>(), data[split..] })
             {
                 var (buffer, owner) = Buffer(chunk, kind);
+
                 try
                 {
                     buffer.MarkReaderIndex().MarkWriterIndex();
@@ -192,8 +200,10 @@ public class MultiSearchProcessorTest
                 {
                     owner.Release();
                 }
+
                 consumed += chunk.Length;
             }
+
             Assert.Equal(expected, actual);
         }
     }
@@ -262,11 +272,13 @@ public class MultiSearchProcessorTest
     public void EmptyPatternListMatchesNothingAndIndividualNullOrEmptyPatternsAreRejected()
     {
         IMultiSearchProcessor processor = AbstractMultiSearchProcessorFactory.NewAhoCorasicSearchProcessorFactory().NewSearchProcessor();
+
         for (int i = 0; i < 256; i++)
         {
             Assert.True(processor.Process((byte)i));
             Assert.Equal(-1, processor.GetFoundNeedleId());
         }
+
         processor.Reset();
         Assert.Equal(-1, processor.GetFoundNeedleId());
         Assert.Throws<ArgumentNullException>(() => AbstractMultiSearchProcessorFactory.NewAhoCorasicSearchProcessorFactory((byte[][])null));
@@ -280,11 +292,13 @@ public class MultiSearchProcessorTest
         byte[][] patterns = Enumerable.Range(0, 256).Select(i => new[] { (byte)i }).Concat(new[]
         { new byte[] { 255, 128 }, new byte[] { 0, 255, 128 }, new byte[] { 255 } }).ToArray();
         IMultiSearchProcessor processor = AbstractMultiSearchProcessorFactory.NewAhoCorasicSearchProcessorFactory(patterns).NewSearchProcessor();
+
         for (int i = 0; i < 256; i++)
         {
             Assert.False(processor.Process((byte)i));
             Assert.Equal(i == 255 ? 258 : i, processor.GetFoundNeedleId());
         }
+
         processor.Reset();
         Assert.False(processor.Process(0));
         Assert.False(processor.Process(255));
@@ -298,8 +312,10 @@ public class MultiSearchProcessorTest
         byte[] prefix = Enumerable.Repeat((byte)255, 1025).ToArray();
         byte[][] patterns = { prefix.Concat(new byte[] { 0 }).ToArray(), prefix.Concat(new byte[] { 128 }).ToArray(), new byte[] { 255, 128 } };
         IMultiSearchProcessor processor = AbstractMultiSearchProcessorFactory.NewAhoCorasicSearchProcessorFactory(patterns).NewSearchProcessor();
+
         foreach (byte value in prefix)
             Assert.True(processor.Process(value));
+
         Assert.False(processor.Process(128));
         Assert.Equal(1, processor.GetFoundNeedleId());
         Assert.True(processor.Process(255));
@@ -329,6 +345,7 @@ public class MultiSearchProcessorTest
                 patterns[^1] = patterns[0].ToArray();
                 patterns[^2] = patterns[0][^1..];
             }
+
             byte[] data = new byte[384];
 
             for (int j = 0; j < data.Length; j++)
@@ -349,6 +366,7 @@ public class MultiSearchProcessorTest
                     resetStart = i;
                     Assert.Equal(-1, processor.GetFoundNeedleId());
                 }
+
                 int expected = ExpectedId(patterns, data.AsSpan(resetStart, i - resetStart + 1));
                 Assert.Equal(expected < 0, processor.Process(data[i]));
                 Assert.Equal(expected, processor.GetFoundNeedleId());

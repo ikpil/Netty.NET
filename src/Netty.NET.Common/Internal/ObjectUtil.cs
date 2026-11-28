@@ -440,12 +440,14 @@ public static class ObjectUtil
     public static string CheckNonEmptyAfterTrim(string value, string name)
     {
         CheckNotNull(value, name);
+
         int start = 0, end = value.Length;
 
         while (start < end && value[start] <= ' ')
         {
             start++;
         }
+
         while (start < end && value[end - 1] <= ' ')
         {
             end--;

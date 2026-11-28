@@ -31,6 +31,7 @@ public class ByteBufIndexStateSourceTest
             if (provider >= 3)
                 _pool = new PooledByteBufAllocator(nativeAllocator: Native, maxOrder: 1,
                     smallCacheSize: 0, normalCacheSize: 0);
+
             Root = provider switch
             {
                 0 => new UnpooledHeapByteBuf(length),
@@ -51,6 +52,7 @@ public class ByteBufIndexStateSourceTest
             {
                 Root.Release();
             }
+
             Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
@@ -78,6 +80,7 @@ public class ByteBufIndexStateSourceTest
     {
         const int capacity = 4096;
         using var s = new Storage(provider, capacity);
+
         switch (scenario)
         {
             case IndexCase.ReaderNegative:
@@ -159,6 +162,7 @@ public class ByteBufIndexStateSourceTest
                 Assert.Equal(capacity / 2, s.Root.WriterIndex);
                 break;
         }
+
         Assert.Equal(1, s.Root.RefCnt);
     }
 
@@ -184,6 +188,7 @@ public class ByteBufIndexStateSourceTest
             4 => s.Root.RetainedDuplicate(), 5 => s.Root.RetainedSlice(2, 8), _ => s.Root
         };
         int count = s.Root.RefCnt, viewCount = view.RefCnt;
+
         try
         {
             Assert.Same(view, view.SetIndex(2, 6));
@@ -219,6 +224,7 @@ public class ByteBufIndexStateSourceTest
             Assert.Equal(count, s.Root.RefCnt);
             Assert.Equal(viewCount, view.RefCnt);
             Assert.Equal(bytes, ByteBufUtil.GetBytes(s.Root, 0, 16));
+
             if (shape != 0)
             {
                 Assert.Equal(3, s.Root.ReaderIndex);
@@ -232,6 +238,7 @@ public class ByteBufIndexStateSourceTest
                 view.Release();
             }
         }
+
         Assert.Equal(1, s.Root.RefCnt);
     }
 }

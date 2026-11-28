@@ -45,6 +45,7 @@ internal sealed class Http3ControlStreamFrameTypeValidator : IHttp3FrameTypeVali
                     throw new Http3Exception(Http3ErrorCode.H3_MISSING_SETTINGS,
                             "Missing settings frame.");
                 }
+
                 throw new Http3Exception(Http3ErrorCode.H3_FRAME_UNEXPECTED,
                         "Unexpected frame type '" + type.ToString(CultureInfo.InvariantCulture) + "' received");
             default:

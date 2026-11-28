@@ -81,8 +81,10 @@ public class HttpRequestEncoder : HttpObjectEncoder<IHttpRequest>
                     }
                 }
             }
+
             buf.WriteByte(SP);
             ByteBufUtil.WriteUtf8(buf, uriCharSequence);
+
             if (needSlash)
             {
                 // write "/ " after uri

@@ -36,6 +36,7 @@ public class DerivedByteBufTextDispatchTest
             {
                 throw Failure;
             }
+
             return $"parent:{index}:{length}";
         }
     }
@@ -113,10 +114,12 @@ public class DerivedByteBufTextDispatchTest
             {
                 _owners[i].Release();
             }
+
             if (Root.RefCnt > 0)
             {
                 Root.Release();
             }
+
             Assert.Equal(0, Native.ReservedBytes);
         }
     }
@@ -140,8 +143,10 @@ public class DerivedByteBufTextDispatchTest
         using var c = new Context(direct, form);
         Encoding codec = encoding == 0 ? Encoding.UTF8 : encoding == 1 ? Encoding.ASCII : Encoding.Latin1;
         c.Observation.Fail = fail;
+
         if (empty && operation != 0)
             c.View.SetIndex(9, 9).MarkReaderIndex().MarkWriterIndex();
+
         int reader = c.View.ReaderIndex, writer = c.View.WriterIndex, claims = c.Root.RefCnt;
         int index = operation is 0 or 3 ? empty ? c.View.Capacity : 2 : reader;
         int length = empty ? 0 : operation == 1 ? writer - reader : 5;
@@ -170,6 +175,7 @@ public class DerivedByteBufTextDispatchTest
                 new string(Array.ConvertAll(ByteBufUtil.GetBytes(c.Root, c.Offset + index, length), b => (char)b));
             Assert.Equal(expected, actual);
         }
+
         if (forward)
         {
             var call = Assert.Single(c.Observation.Calls);
@@ -178,6 +184,7 @@ public class DerivedByteBufTextDispatchTest
         }
         else
             Assert.Empty(c.Observation.Calls);
+
         Assert.Equal(reader + (operation is 2 or 4 && !(forward && fail) ? length : 0), c.View.ReaderIndex);
         Assert.Equal(writer, c.View.WriterIndex);
         Assert.Equal((3, 40, claims), (c.Root.ReaderIndex, c.Root.WriterIndex, c.Root.RefCnt));
@@ -234,6 +241,7 @@ public class DerivedByteBufTextDispatchTest
         root.WriteZero(64);
         ByteBuf owner = PooledDerivedByteBuf.NewDuplicate(root, root, 0, 64);
         ByteBuf view = sliced ? owner.Slice(4, 16) : owner.Duplicate();
+
         try
         {
             Assert.True(owner.Release());
@@ -248,6 +256,7 @@ public class DerivedByteBufTextDispatchTest
             {
                 owner.Release();
             }
+
             root.Release();
             Assert.Equal(0, native.ReservedBytes);
         }

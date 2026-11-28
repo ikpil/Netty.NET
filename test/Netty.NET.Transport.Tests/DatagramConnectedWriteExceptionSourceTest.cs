@@ -71,6 +71,7 @@ public class DatagramConnectedWriteExceptionSourceTest : AbstractClientSocketTes
         IChannel clientChannel = await clientBootstrap.ConnectAsync(serverAddress);
 
         CountDownLatch clientFirstSendLatch = new CountDownLatch(1);
+
         try
         {
             ByteBuf firstMessage = Unpooled.WrappedBuffer(Encoding.UTF8.GetBytes("First message"));
@@ -102,6 +103,7 @@ public class DatagramConnectedWriteExceptionSourceTest : AbstractClientSocketTes
                                 Interlocked.CompareExchange(ref writeException.Value, future.Exception?.InnerException,
                                         null);
                             }
+
                             writesCompleteLatch.CountDown();
                         });
                 await Task.Delay(50);

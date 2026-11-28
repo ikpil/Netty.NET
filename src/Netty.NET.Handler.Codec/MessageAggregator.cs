@@ -218,6 +218,7 @@ public abstract class MessageAggregator<I, S, C, O> : MessageToMessageDecoder<I>
         {
             throw new InvalidOperationException("not added to a pipeline yet");
         }
+
         return ctx;
     }
 
@@ -227,6 +228,7 @@ public abstract class MessageAggregator<I, S, C, O> : MessageToMessageDecoder<I>
         {
             aggregating = true;
             handlingOversizedMessage = false;
+
             if (currentMessage != null)
             {
                 currentMessage.Release();
@@ -277,6 +279,7 @@ public abstract class MessageAggregator<I, S, C, O> : MessageToMessageDecoder<I>
                             TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
                     return;
                 }
+
                 if (handlingOversizedMessage)
                 {
                     return;
@@ -292,6 +295,7 @@ public abstract class MessageAggregator<I, S, C, O> : MessageToMessageDecoder<I>
             if (m is IDecoderResultProvider && !((IDecoderResultProvider) m).DecoderResult().IsSuccess())
             {
                 O aggregated;
+
                 if (m is IByteBufHolder)
                 {
                     aggregated = BeginAggregation(m, ((IByteBufHolder) m).Content.Retain());
@@ -300,6 +304,7 @@ public abstract class MessageAggregator<I, S, C, O> : MessageToMessageDecoder<I>
                 {
                     aggregated = BeginAggregation(m, Unpooled.EmptyBuffer);
                 }
+
                 FinishAggregation0(aggregated);
                 @out.Add(aggregated);
                 return;
@@ -307,10 +312,12 @@ public abstract class MessageAggregator<I, S, C, O> : MessageToMessageDecoder<I>
 
             // A streamed message - initialize the cumulative buffer, and wait for incoming chunks.
             CompositeByteBuf content = ctx.Alloc().CompositeBuffer(maxCumulationBufferComponents);
+
             if (m is IByteBufHolder)
             {
                 AppendPartialContent(content, ((IByteBufHolder) m).Content);
             }
+
             currentMessage = BeginAggregation(m, content);
         }
         else if (IsContentMessage(msg))
@@ -342,6 +349,7 @@ public abstract class MessageAggregator<I, S, C, O> : MessageToMessageDecoder<I>
             Aggregate(currentMessage, m);
 
             bool last;
+
             if (m is IDecoderResultProvider)
             {
                 DecoderResult decoderResult = ((IDecoderResultProvider) m).DecoderResult();
@@ -352,6 +360,7 @@ public abstract class MessageAggregator<I, S, C, O> : MessageToMessageDecoder<I>
                         ((IDecoderResultProvider) currentMessage).SetDecoderResult(
                                 DecoderResult.Failure(decoderResult.Cause()));
                     }
+
                     last = true;
                 }
                 else
@@ -460,6 +469,7 @@ public abstract class MessageAggregator<I, S, C, O> : MessageToMessageDecoder<I>
         handlingOversizedMessage = true;
         currentMessage = null;
         handleIncompleteAggregateDuringClose = false;
+
         try
         {
             HandleOversizedMessage(ctx, oversized);
@@ -494,6 +504,7 @@ public abstract class MessageAggregator<I, S, C, O> : MessageToMessageDecoder<I>
         {
             ctx.Read();
         }
+
         ctx.FireChannelReadComplete();
     }
 
@@ -504,6 +515,7 @@ public abstract class MessageAggregator<I, S, C, O> : MessageToMessageDecoder<I>
             ctx.FireExceptionCaught(
                     new PrematureChannelClosureException("Channel closed while still aggregating message"));
         }
+
         try
         {
             // release current message if it is not null as it may be a left-over
@@ -541,6 +553,7 @@ public abstract class MessageAggregator<I, S, C, O> : MessageToMessageDecoder<I>
             currentMessage.Release();
             currentMessage = null;
         }
+
         handlingOversizedMessage = false;
         aggregating = false;
     }

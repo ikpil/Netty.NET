@@ -34,6 +34,7 @@ public abstract class SimpleNameResolver<T> : INameResolver<T>
     protected SimpleNameResolver(IEventExecutor executor)
     {
         ArgumentNullException.ThrowIfNull(executor);
+
         Executor = executor;
     }
 
@@ -48,6 +49,7 @@ public abstract class SimpleNameResolver<T> : INameResolver<T>
     {
         if (cancellationToken.IsCancellationRequested)
             return Task.FromCanceled<T>(cancellationToken);
+
         try
         {
             return DoResolveAsync(inetHost, cancellationToken);
@@ -66,6 +68,7 @@ public abstract class SimpleNameResolver<T> : INameResolver<T>
     {
         if (cancellationToken.IsCancellationRequested)
             return Task.FromCanceled<IReadOnlyList<T>>(cancellationToken);
+
         try
         {
             return DoResolveAllAsync(inetHost, cancellationToken);

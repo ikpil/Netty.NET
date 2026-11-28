@@ -17,12 +17,14 @@ public class AttributeMapInterruptContractTest
         IAttribute<object> old = operation == 0 ? null : map.Attr(key);
         var payload = new object();
         old?.Set(payload);
+
         if (operation == 1)
         {
             // Pause after detaching the owner, before removal, to force Attr's
             // replacement path. Publication and removal use the public operations.
             old.GetType().GetField("attributeMap", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(old, null);
         }
+
         object dictionary = Field(map, "attributes");
         var locks = (object[])Field(Field(dictionary, "_tables"), "_locks");
         IAttribute<object> current = null;
@@ -42,6 +44,7 @@ public class AttributeMapInterruptContractTest
                 {
                     current = map.Attr(key);
                 }
+
                 try
                 {
                     Thread.Sleep(0);
@@ -58,6 +61,7 @@ public class AttributeMapInterruptContractTest
         }) { IsBackground = true };
         int acquired = 0;
         bool started = false;
+
         try
         {
             // Hold the actual native bucket monitors; reflection schedules the
@@ -89,9 +93,11 @@ public class AttributeMapInterruptContractTest
                 Assert.True(worker.Join(TimeSpan.FromSeconds(5)));
             }
         }
+
         Assert.True(waited);
         Assert.Null(failure);
         Assert.True(pendingInterrupt);
+
         if (operation == 2)
         {
             Assert.Same(payload, removed);
@@ -104,6 +110,7 @@ public class AttributeMapInterruptContractTest
             Assert.Same(current, map.Attr(key));
             Assert.Null(current.Get());
             Assert.True(map.HasAttr(key));
+
             if (operation == 1)
             {
                 Assert.NotSame(old, current);

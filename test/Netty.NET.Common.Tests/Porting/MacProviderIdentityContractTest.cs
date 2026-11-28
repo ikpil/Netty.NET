@@ -118,6 +118,7 @@ public class MacProviderIdentityContractTest
             {
                 throw new NetworkInformationException(1);
             }
+
             return physical;
         }
 
@@ -128,6 +129,7 @@ public class MacProviderIdentityContractTest
             {
                 throw new InvalidOperationException("provider equality must not run");
             }
+
             return obj is ProviderInterface;
         }
 
@@ -138,6 +140,7 @@ public class MacProviderIdentityContractTest
             {
                 throw new InvalidOperationException("provider hashing must not run");
             }
+
             return ChangingHash ? HashCalls : 0;
         }
 

@@ -56,6 +56,7 @@ public static class ThreadDeathWatcher
         {
             poolName = prefix + poolName;
         }
+
         // because the ThreadDeathWatcher is a singleton, tasks submitted to it can come from arbitrary threads and
         // this can trigger the creation of a thread from arbitrary thread groups; for this reason, the thread factory
         // must not be sticky about its thread group
@@ -83,6 +84,7 @@ public static class ThreadDeathWatcher
         {
             throw new ArgumentException("thread must be alive.", nameof(thread));
         }
+
         Schedule(thread, task, true);
     }
 
@@ -97,6 +99,7 @@ public static class ThreadDeathWatcher
     {
         ArgumentNullException.ThrowIfNull(thread);
         ArgumentNullException.ThrowIfNull(task);
+
         Schedule(thread, task, false);
     }
 
@@ -107,7 +110,9 @@ public static class ThreadDeathWatcher
         {
             return;
         }
+
         Thread worker = threadFactory.NewThread(watcher.Run);
+
         // Set to null to ensure we not create classloader leaks by holds a strong reference to the inherited
         // classloader.
         // See:
@@ -124,6 +129,7 @@ public static class ThreadDeathWatcher
             using var suppressed = ExecutionContext.SuppressFlow();
             worker.Start();
         }
+
         Volatile.Write(ref watcherThread, worker);
     }
 
@@ -159,6 +165,7 @@ public static class ThreadDeathWatcher
                 // Try once again just in case notifyWatchees() triggered watch() or unwatch().
                 FetchWatchees();
                 NotifyWatchees();
+
                 try
                 {
                     Thread.Sleep(1000);
@@ -167,6 +174,7 @@ public static class ThreadDeathWatcher
                 {
                     // Ignore the interrupt; do not terminate until all tasks are run.
                 }
+
                 if (watchees.Count == 0 && pendingEntries.IsEmpty)
                 {
                     // Mark the current worker thread as stopped.
@@ -220,7 +228,9 @@ public static class ThreadDeathWatcher
                     index++;
                     continue;
                 }
+
                 watchees.RemoveAt(index);
+
                 try
                 {
                     entry.task();

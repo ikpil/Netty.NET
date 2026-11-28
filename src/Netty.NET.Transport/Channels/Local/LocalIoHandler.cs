@@ -65,6 +65,7 @@ public sealed class LocalIoHandler : IIoHandler
         {
             return localIoHandle;
         }
+
         throw new ArgumentException("IoHandle of type " + StringUtil.SimpleClassName(handle) + " not supported");
     }
 
@@ -74,6 +75,7 @@ public sealed class LocalIoHandler : IIoHandler
         {
             _executionThread = Thread.CurrentThread;
         }
+
         if (context.CanBlock())
         {
             // Just block until there is a task ready to process or wakeup(...) is called.
@@ -84,6 +86,7 @@ public sealed class LocalIoHandler : IIoHandler
         {
             context.ReportActiveIoTime(0);
         }
+
         return 0;
     }
 
@@ -106,6 +109,7 @@ public sealed class LocalIoHandler : IIoHandler
         {
             handle.CloseNow();
         }
+
         _registeredChannels.Clear();
     }
 
@@ -123,6 +127,7 @@ public sealed class LocalIoHandler : IIoHandler
             localHandle.Registered();
             return registration;
         }
+
         throw new InvalidOperationException();
     }
 
@@ -140,6 +145,7 @@ public sealed class LocalIoHandler : IIoHandler
                 long millis = nanos >= long.MaxValue - 999_999 ? long.MaxValue : (nanos + 999_999) / 1_000_000;
                 Monitor.Wait(_parkLock, millis > int.MaxValue ? Timeout.Infinite : (int)millis);
             }
+
             _permit = false;
         }
     }
@@ -189,6 +195,7 @@ public sealed class LocalIoHandler : IIoHandler
             {
                 return false;
             }
+
             if (_executor.IsExecutorThread(Thread.CurrentThread))
             {
                 Cancel0();
@@ -197,6 +204,7 @@ public sealed class LocalIoHandler : IIoHandler
             {
                 _executor.Execute(Cancel0);
             }
+
             return true;
         }
 

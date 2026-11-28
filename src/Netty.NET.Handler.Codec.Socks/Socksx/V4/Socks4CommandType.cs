@@ -91,6 +91,7 @@ public class Socks4CommandType : IComparable<Socks4CommandType>
         {
             this.text = text = name + '(' + (byteValue & 0xFF).ToString(CultureInfo.InvariantCulture) + ')';
         }
+
         return text;
     }
 }

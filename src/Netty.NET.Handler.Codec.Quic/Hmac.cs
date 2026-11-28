@@ -69,10 +69,12 @@ internal sealed class Hmac
         mac.Initialize();
         byte[] signBytes = new byte[mac.HashSize / 8];
         mac.TryComputeHash(input.Span, signBytes, out _);
+
         if (signBytes.Length != outLength)
         {
             Array.Resize(ref signBytes, outLength);
         }
+
         return signBytes;
     }
 

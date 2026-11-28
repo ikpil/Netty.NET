@@ -59,6 +59,7 @@ public class DefaultSocks5InitialResponse : AbstractSocks5Message, ISocks5Initia
         {
             buf.Append("(authMethod: ");
         }
+
         buf.Append(AuthMethod());
         buf.Append(')');
 

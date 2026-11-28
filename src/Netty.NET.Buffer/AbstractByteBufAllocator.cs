@@ -34,6 +34,7 @@ public abstract class AbstractByteBufAllocator : IByteBufAllocator
     protected static ByteBuf ToLeakAwareBuffer(ByteBuf buffer)
     {
         IResourceLeakTracker<ByteBuf> leak = null;
+
         try
         {
             leak = ByteBuf.LeakDetector.Track(buffer);
@@ -41,6 +42,7 @@ public abstract class AbstractByteBufAllocator : IByteBufAllocator
             {
                 return buffer;
             }
+
             return ByteBuf.LeakDetector.IsRecordEnabled()
                 ? new AdvancedLeakAwareByteBuf(buffer, leak) : new SimpleLeakAwareByteBuf(buffer, leak);
         }
@@ -54,6 +56,7 @@ public abstract class AbstractByteBufAllocator : IByteBufAllocator
     protected static CompositeByteBuf ToLeakAwareBuffer(CompositeByteBuf buffer)
     {
         IResourceLeakTracker<ByteBuf> leak = null;
+
         try
         {
             leak = ByteBuf.LeakDetector.Track(buffer);
@@ -61,6 +64,7 @@ public abstract class AbstractByteBufAllocator : IByteBufAllocator
             {
                 return buffer;
             }
+
             return ByteBuf.LeakDetector.IsRecordEnabled()
                 ? new AdvancedLeakAwareCompositeByteBuf(buffer, leak) : new SimpleLeakAwareCompositeByteBuf(buffer, leak);
         }
@@ -82,6 +86,7 @@ public abstract class AbstractByteBufAllocator : IByteBufAllocator
         catch
         {
         }
+
         ReferenceCountUtil.SafeRelease(buffer);
     }
 

@@ -102,8 +102,10 @@ public abstract class HttpContentEncoder : MessageToMessageCodec<IHttpRequest, I
             throw new InvalidOperationException("maxPipelineDepth exceeded: " +
                     maxPipelineDepth.ToString(CultureInfo.InvariantCulture));
         }
+
         string acceptEncoding;
         IList<string> acceptEncodingHeaders = msg.Headers().GetAll(ACCEPT_ENCODING);
+
         switch (acceptEncodingHeaders.Count)
         {
         case 0:
@@ -135,6 +137,7 @@ public abstract class HttpContentEncoder : MessageToMessageCodec<IHttpRequest, I
     protected override void Encode(IChannelHandlerContext ctx, IHttpObject msg, IList<object> @out)
     {
         bool isFull = msg is IHttpResponse && msg is ILastHttpContent;
+
         switch (state)
         {
             case State.AWAIT_HEADERS:
@@ -146,6 +149,7 @@ public abstract class HttpContentEncoder : MessageToMessageCodec<IHttpRequest, I
                 int code = res.Status().Code();
                 HttpStatusClass codeClass = res.Status().CodeClass();
                 string acceptEncoding;
+
                 if (codeClass == HttpStatusClass.INFORMATIONAL)
                 {
                     // We need to not poll the encoding when response with 1xx codes as another response will follow
@@ -179,11 +183,13 @@ public abstract class HttpContentEncoder : MessageToMessageCodec<IHttpRequest, I
                 if (IsPassthru(res.ProtocolVersion(), code, acceptEncoding))
                 {
                     @out.Add(ReferenceCountUtil.Retain(res));
+
                     if (!isFull)
                     {
                         // Pass through all following contents.
                         state = State.PASS_THROUGH;
                     }
+
                     break;
                 }
 
@@ -204,15 +210,18 @@ public abstract class HttpContentEncoder : MessageToMessageCodec<IHttpRequest, I
                 if (result == null)
                 {
                     @out.Add(ReferenceCountUtil.Retain(res));
+
                     if (!isFull)
                     {
                         // Pass through all following contents.
                         state = State.PASS_THROUGH;
                     }
+
                     break;
                 }
 
                 EmbeddedChannel contentEncoder = result.ContentEncoder();
+
                 try
                 {
                     // Encode the content and remove or replace the existing headers
@@ -260,14 +269,17 @@ public abstract class HttpContentEncoder : MessageToMessageCodec<IHttpRequest, I
                         {
                             encoder = null;
                         }
+
                         contentEncoder.FinishAndReleaseAll();
                     }
                 }
+
                 goto case State.AWAIT_CONTENT;
             }
             case State.AWAIT_CONTENT:
             {
                 EnsureContent(msg);
+
                 if (EncodeContent((IHttpContent) msg, @out))
                 {
                     state = State.AWAIT_HEADERS;
@@ -277,17 +289,20 @@ public abstract class HttpContentEncoder : MessageToMessageCodec<IHttpRequest, I
                     // MessageToMessageCodec needs at least one output message
                     @out.Add(new DefaultHttpContent(Unpooled.EmptyBuffer));
                 }
+
                 break;
             }
             case State.PASS_THROUGH:
             {
                 EnsureContent(msg);
                 @out.Add(ReferenceCountUtil.Retain(msg));
+
                 // Passed through all following contents of the current response.
                 if (msg is ILastHttpContent)
                 {
                     state = State.AWAIT_HEADERS;
                 }
+
                 break;
             }
         }
@@ -302,6 +317,7 @@ public abstract class HttpContentEncoder : MessageToMessageCodec<IHttpRequest, I
         {
             // adjust the content-length header
             int messageSize = 0;
+
             for (int i = existingMessages; i < @out.Count; i++)
             {
                 object item = @out[i];
@@ -310,6 +326,7 @@ public abstract class HttpContentEncoder : MessageToMessageCodec<IHttpRequest, I
                     messageSize += ((IHttpContent) item).Content.ReadableBytes;
                 }
             }
+
             HttpUtil.SetContentLength(newRes, messageSize);
         }
         else
@@ -368,8 +385,10 @@ public abstract class HttpContentEncoder : MessageToMessageCodec<IHttpRequest, I
             {
                 @out.Add(new ComposedLastHttpContent(headers, DecoderResult.SUCCESS));
             }
+
             return true;
         }
+
         return false;
     }
 
@@ -438,6 +457,7 @@ public abstract class HttpContentEncoder : MessageToMessageCodec<IHttpRequest, I
         {
             FetchEncoderOutput(@out);
         }
+
         encoder = null;
     }
 
@@ -450,11 +470,13 @@ public abstract class HttpContentEncoder : MessageToMessageCodec<IHttpRequest, I
             {
                 break;
             }
+
             if (!buf.IsReadable())
             {
                 buf.Release();
                 continue;
             }
+
             @out.Add(new DefaultHttpContent(buf));
         }
     }

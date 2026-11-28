@@ -52,6 +52,7 @@ public class PooledChunkEventTest
         Assert.Equal(direct, record.Flag("direct"));
         Assert.Equal(pooled, record.Flag("pooled"));
         Assert.True(direct ? record.Number("address") != 0 : record.Number("address") == 0);
+
         if (id == 4)
             Assert.False(record.Flag("threadLocal"));
     }
@@ -66,9 +67,11 @@ public class PooledChunkEventTest
         ByteBuf[] buffers = Enumerable.Range(0, 4).Select(_ => Allocate(allocator, direct, 32768)).ToArray();
         Assert.Equal(new[] { 4, 1, 1, 1, 1 }, listener.Events.Select(e => e.Id));
         Check(listener.Events[0], 4, 131072, direct, true);
+
         // release all buffers
         foreach (ByteBuf buffer in buffers)
             buffer.Release();
+
         Assert.Equal(new[] { 4, 1, 1, 1, 1, 2, 2, 2, 2, 5 }, listener.Events.Select(e => e.Id));
         Check(listener.Events[^1], 5, 131072, direct, true);
         allocator.Dispose();
@@ -89,13 +92,17 @@ public class PooledChunkEventTest
         initial.Release();
         int buffersPerChunk = (int)(131072 / pinned);
         var buffers = Enumerable.Range(0, buffersPerChunk - 2).Select(_ => Allocate(allocator, direct, size)).ToArray();
+
         // we still have 2 available segments in the chunk, so we should not allocate a new one
         for (int i = 0; i < 128; i++)
             Allocate(allocator, direct, size).Release();
+
         Assert.Single(listener.Events, e => e.Id == 4);
+
         // release all buffers
         foreach (ByteBuf buffer in buffers)
             buffer.Release();
+
         allocator.Dispose();
         Assert.Single(listener.Events, e => e.Id == 5);
         Assert.Equal(0, native.ReservedBytes);
@@ -110,8 +117,10 @@ public class PooledChunkEventTest
         using var listener = Listen();
         ByteBuf[] buffers = Enumerable.Range(0, 5).Select(_ => Allocate(allocator, direct, 32768)).ToArray();
         Assert.Equal(2, listener.Events.Count(e => e.Id == 4));
+
         foreach (ByteBuf buffer in buffers)
             buffer.Release();
+
         Assert.Equal(2, listener.Events.Count(e => e.Id == 5));
         allocator.Dispose();
         Assert.Equal(0, native.ReservedBytes);
@@ -124,8 +133,10 @@ public class PooledChunkEventTest
         var native = new NativeMemoryAllocator();
         using var allocator = NewAllocator(native);
         using var listener = Listen((EventKeywords)24);
+
         for (int i = 0; i < 128; i++)
             Allocate(allocator, direct, 128).Release();
+
         Check(Assert.Single(listener.Events), 4, 16384, direct, true);
         allocator.Dispose();
         Check(listener.Events[1], 5, 16384, direct, true);
@@ -146,10 +157,12 @@ public class PooledChunkEventTest
         ByteBuf second = Allocate(allocator, direct, 32768);
         PoolChunk newChunk = ((PooledByteBuf)AllocatorLeakDetectionTest.UnwrapLeak(second)).Allocation.Chunk;
         second.Release();
+
         if (direct)
             Assert.NotSame(oldChunk, newChunk);
         else
             Assert.Same(oldChunk, newChunk);
+
         Assert.Equal(new[] { 4, 5, 4, 5 }, listener.Events.Select(e => e.Id));
         allocator.Dispose();
         Assert.Equal(4, listener.Events.Length);
@@ -167,8 +180,10 @@ public class PooledChunkEventTest
         int capacity = alignment == 0 ? 20000 : 20480;
         Check(listener.Events[0], 4, capacity, direct, false);
         Assert.Equal(direct ? (long)ManagedMemoryTest.Address(buffer.AsReadOnlyMemory(0, buffer.Capacity)) : 0, listener.Events[0].Number("address"));
+
         if (alignment != 0)
             Assert.True(listener.Events[0].Number("address") % alignment == 0);
+
         buffer.Release();
         Assert.Equal(new[] { 4, 1, 2, 5 }, listener.Events.Select(e => e.Id));
         Check(listener.Events[3], 5, capacity, direct, false);
@@ -193,6 +208,7 @@ public class PooledChunkEventTest
         listener.Callback = _ => held |= Monitor.IsEntered(allocatorLock) || Monitor.IsEntered(cacheLock) || Monitor.IsEntered(allocation.Arena.SyncRoot);
         buffer.Release();
         Assert.Equal(new[] { 4, 1, 2 }, listener.Events.Select(e => e.Id));
+
         if (operation == 0)
             Assert.True(allocator.TrimCurrentThreadCache());
         else if (operation == 1)
@@ -202,6 +218,7 @@ public class PooledChunkEventTest
         // The scheduled trimming callback targets this cache method directly.
         else
             allocation.Cache.Trim();
+
         Assert.False(held);
         Assert.Equal(new[] { 4, 1, 2, 5 }, listener.Events.Select(e => e.Id));
         allocator.Dispose();
@@ -303,6 +320,7 @@ public class PooledChunkEventTest
         {
             if (e.Id != 4 || nested)
                 return;
+
             nested = true;
             Allocate(allocator, true, 64).Release();
         };
@@ -337,6 +355,7 @@ public class PooledChunkEventTest
         });
         Listener listener = null;
         Monitor.Enter(arena.SyncRoot);
+
         try
         {
             worker.Start();
@@ -352,7 +371,9 @@ public class PooledChunkEventTest
         {
             Monitor.Exit(arena.SyncRoot);
         }
+
         worker.Join();
+
         using (listener)
         {
             Assert.Null(failure);
@@ -370,8 +391,10 @@ public class PooledChunkEventTest
         using var allocator = NewAllocator(native);
         using var listener = Listen((EventKeywords)24);
         listener.Callback = _ => throw new InvalidOperationException("observer failure");
+
         for (int i = 0; i < 2; i++)
             Allocate(allocator, true, 20000).Release();
+
         Assert.Equal(new[] { 4, 5, 4, 5 }, listener.Events.Where(e => e.Id > 0).Select(e => e.Id));
         allocator.Dispose();
         Assert.Equal(0, native.ReservedBytes);

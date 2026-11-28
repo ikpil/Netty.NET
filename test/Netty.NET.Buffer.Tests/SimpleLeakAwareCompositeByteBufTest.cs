@@ -60,6 +60,7 @@ public class SimpleLeakAwareCompositeByteBufTest : WrappedCompositeByteBufTest
             {
                 break;
             }
+
             Assert.True(tracker.Get());
         }
     }
@@ -111,6 +112,7 @@ public class SimpleLeakAwareCompositeByteBufTest : WrappedCompositeByteBufTest
         {
             AssertWrapped(buffer.RetainedSlice(0, 1));
         }
+
         Assert.True(buffer.Release());
     }
 
@@ -122,6 +124,7 @@ public class SimpleLeakAwareCompositeByteBufTest : WrappedCompositeByteBufTest
         {
             AssertWrapped(buffer.ReadRetainedSlice(1));
         }
+
         Assert.True(buffer.Release());
     }
 

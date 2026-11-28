@@ -60,6 +60,7 @@ public class MpscIntQueueContractTest
     {
         IMpscIntQueue queue = IMpscIntQueue.Create(requested, empty);
         Assert.Equal(empty, queue.Poll());
+
         for (int cycle = 0; cycle < 100; cycle++)
         {
             for (int i = 1; i <= capacity; i++)
@@ -67,10 +68,13 @@ public class MpscIntQueueContractTest
                 Assert.True(queue.Offer(i));
                 Assert.Equal(i, queue.Size());
             }
+
             Assert.False(queue.Offer(42));
             Assert.False(queue.IsEmpty());
+
             for (int i = 1; i <= capacity; i++)
                 Assert.Equal(i, queue.Poll());
+
             Assert.True(queue.IsEmpty());
             Assert.Equal(0, queue.Size());
         }
@@ -149,8 +153,10 @@ public class MpscIntQueueContractTest
             supplierEntered.Set();
             if (!releaseSupplier.Wait(TimeSpan.FromSeconds(5)))
                 throw new TimeoutException();
+
             return ++next;
         }));
+
         try
         {
             Assert.True(supplierEntered.Wait(TimeSpan.FromSeconds(5)));
@@ -164,6 +170,7 @@ public class MpscIntQueueContractTest
         {
             releaseSupplier.Set();
         }
+
         Assert.True(producer.Wait(TimeSpan.FromSeconds(5)));
         Assert.Equal(2, producer.Result);
         Assert.Equal(1, queue.Poll());
@@ -181,40 +188,49 @@ public class MpscIntQueueContractTest
         IMpscIntQueue queue = IMpscIntQueue.Create(64, -1);
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(10));
         var workers = new Task[producers + 1];
+
         for (int producer = 0; producer < producers; producer++)
         {
             int id = producer;
             workers[producer] = Task.Run(() =>
             {
                 int next = 0;
+
                 while (next < count)
                 {
                     deadline.Token.ThrowIfCancellationRequested();
+
                     if (bulk)
                         queue.Fill(Math.Min(7, count - next), () => id * count + next++);
                     else if (queue.Offer(id * count + next))
                         next++;
+
                     Thread.Yield();
                 }
             });
         }
+
         workers[producers] = Task.Run(() =>
         {
             int[] next = new int[producers];
+
             for (int consumed = 0; consumed < producers * count;)
             {
                 deadline.Token.ThrowIfCancellationRequested();
+
                 int value = queue.Poll();
                 if (value == -1)
                 {
                     Thread.Yield();
                     continue;
                 }
+
                 int id = value / count;
                 Assert.InRange(id, 0, producers - 1);
                 Assert.Equal(id * count + next[id]++, value);
                 consumed++;
             }
+
             Assert.All(next, n => Assert.Equal(count, n));
         });
         Assert.True(Task.WaitAll(workers, TimeSpan.FromSeconds(15)));
@@ -245,6 +261,7 @@ public class MpscIntQueueContractTest
             {
                 pollEntered.Set();
                 result = queue.Poll();
+
                 try
                 {
                     Thread.Sleep(0);
@@ -263,6 +280,7 @@ public class MpscIntQueueContractTest
                 pollFinished.Set();
             }
         }) { IsBackground = true };
+
         try
         {
             Assert.True(supplierEntered.Wait(TimeSpan.FromSeconds(5)));
@@ -275,9 +293,11 @@ public class MpscIntQueueContractTest
         {
             releaseSupplier.Set();
             Assert.True(producer.Wait(TimeSpan.FromSeconds(5)));
+
             if ((consumer.ThreadState & ThreadState.Unstarted) == 0)
                 Assert.True(consumer.Join(TimeSpan.FromSeconds(5)));
         }
+
         Assert.Null(failure);
         Assert.Equal(7, result);
         Assert.True(interruptPreserved);

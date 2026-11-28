@@ -32,6 +32,7 @@ public class ByteBufScalarRoundTripSourceTest
             if (provider >= 3)
                 _pool = new PooledByteBufAllocator(nativeAllocator: Native, maxOrder: 1,
                     smallCacheSize: 0, normalCacheSize: 0);
+
             Root = provider switch
             {
                 0 => new UnpooledHeapByteBuf(length),
@@ -52,6 +53,7 @@ public class ByteBufScalarRoundTripSourceTest
             {
                 Root.Release();
             }
+
             Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
@@ -75,7 +77,9 @@ public class ByteBufScalarRoundTripSourceTest
                     {
                         continue;
                     }
+
             yield return [provider, kind, false, sequential];
+
             if (kind is not (ScalarKind.SignedByte or ScalarKind.UnsignedByte))
                 yield return [provider, kind, true, sequential];
         }
@@ -97,12 +101,14 @@ public class ByteBufScalarRoundTripSourceTest
         {
             return BitConverter.DoubleToInt64Bits(random.NextDouble());
         }
+
         Span<byte> bytes = stackalloc byte[8];
         random.NextBytes(bytes[..(kind == 8 ? 8 : 4)]);
         if (kind == 8)
         {
             return BinaryPrimitives.ReadInt64BigEndian(bytes);
         }
+
         int value = BinaryPrimitives.ReadInt32BigEndian(bytes);
         return kind switch
         {
@@ -124,6 +130,7 @@ public class ByteBufScalarRoundTripSourceTest
     private static void Model(Span<byte> destination, long bits, int kind, bool little)
     {
         int value = unchecked((int)bits);
+
         if (destination.Length == 1)
         {
             destination[0] = unchecked((byte)bits);
@@ -142,6 +149,7 @@ public class ByteBufScalarRoundTripSourceTest
         else if (destination.Length == 3)
         {
             Span<byte> word = stackalloc byte[4];
+
             if (little)
             {
                 BinaryPrimitives.WriteInt32LittleEndian(word, value);
@@ -150,6 +158,7 @@ public class ByteBufScalarRoundTripSourceTest
             {
                 BinaryPrimitives.WriteInt32BigEndian(word, value);
             }
+
             (little ? word[..3] : word[1..]).CopyTo(destination);
         }
         else if (destination.Length == 4)
@@ -176,6 +185,7 @@ public class ByteBufScalarRoundTripSourceTest
     private static void Store(ByteBuf b, int index, long bits, int kind, bool little, bool sequential)
     {
         int value = unchecked((int)bits);
+
         if (sequential)
         {
             switch (kind)
@@ -192,6 +202,7 @@ public class ByteBufScalarRoundTripSourceTest
                     {
                         b.WriteShort(value);
                     }
+
                     break;
                 case 4 or 5:
                     if (little)
@@ -202,6 +213,7 @@ public class ByteBufScalarRoundTripSourceTest
                     {
                         b.WriteMedium(value);
                     }
+
                     break;
                 case 6 or 7:
                     if (little)
@@ -212,6 +224,7 @@ public class ByteBufScalarRoundTripSourceTest
                     {
                         b.WriteInt(value);
                     }
+
                     break;
                 default:
                     if (little)
@@ -222,10 +235,13 @@ public class ByteBufScalarRoundTripSourceTest
                     {
                         b.WriteLong(bits);
                     }
+
                     break;
             }
+
             return;
         }
+
         switch (kind)
         {
             case 0 or 1:
@@ -240,6 +256,7 @@ public class ByteBufScalarRoundTripSourceTest
                 {
                     b.SetShort(index, value);
                 }
+
                 break;
             case 4 or 5:
                 if (little)
@@ -250,6 +267,7 @@ public class ByteBufScalarRoundTripSourceTest
                 {
                     b.SetMedium(index, value);
                 }
+
                 break;
             case 6 or 7:
                 if (little)
@@ -260,6 +278,7 @@ public class ByteBufScalarRoundTripSourceTest
                 {
                     b.SetInt(index, value);
                 }
+
                 break;
             case 8:
                 if (little)
@@ -270,6 +289,7 @@ public class ByteBufScalarRoundTripSourceTest
                 {
                     b.SetLong(index, bits);
                 }
+
                 break;
             case 9:
                 if (little)
@@ -280,6 +300,7 @@ public class ByteBufScalarRoundTripSourceTest
                 {
                     b.SetFloat(index, BitConverter.Int32BitsToSingle(value));
                 }
+
                 break;
             default:
                 if (little)
@@ -290,6 +311,7 @@ public class ByteBufScalarRoundTripSourceTest
                 {
                     b.SetDouble(index, BitConverter.Int64BitsToDouble(bits));
                 }
+
                 break;
         }
     }
@@ -310,6 +332,7 @@ public class ByteBufScalarRoundTripSourceTest
             _ => little ? b.ReadLongLE() : b.ReadLong()
         };
         }
+
         return kind switch
         {
             0 => unchecked((sbyte)b.GetByte(index)), 1 => b.GetByte(index),
@@ -332,56 +355,74 @@ public class ByteBufScalarRoundTripSourceTest
         ByteBuf buffer = s.Root;
         // Initialize otherwise-unused float gaps/medium tails for the independent whole-byte oracle.
         buffer.SetZero(0, capacity);
+
         if (sequential)
             buffer.WriterIndex = 0;
+
         int width = Width(kind), step = kind == 9 ? 8 : width, end = capacity / step * step;
         byte[] expectedWire = new byte[capacity];
         var random = new Random(seed);
+
         for (int i = 0; i < end; i += step)
         {
             long bits = NextBits(random, kind, sequential);
+
             if (sequential)
             {
                 Assert.Equal(i, buffer.WriterIndex);
                 Assert.True(buffer.IsWritable());
             }
+
             Store(buffer, i, bits, kind, little, sequential);
             Model(expectedWire.AsSpan(i, width), bits, kind, little);
         }
+
         Assert.Equal(expectedWire, ByteBufUtil.GetBytes(buffer, 0, capacity));
         Assert.Equal(0, buffer.ReaderIndex);
         Assert.Equal(sequential ? end : 0, buffer.WriterIndex);
+
         if (sequential)
         {
             Assert.Equal(capacity - end, buffer.WritableBytes);
+
             if (width != 3)
                 Assert.False(buffer.IsWritable());
         }
+
         // Each runtime independently reseeds its own PRNG; full signed integer domains use random bytes.
         random = new Random(seed);
+
         for (int i = 0; i < end; i += step)
         {
             long expected = LogicalValue(NextBits(random, kind, sequential), kind);
+
             if (sequential)
             {
                 Assert.Equal(i, buffer.ReaderIndex);
                 Assert.True(buffer.IsReadable());
             }
+
             long actual = Load(buffer, i, kind, little, sequential);
+
             if (kind == 9)
                 Assert.InRange(Math.Abs(BitConverter.Int32BitsToSingle((int)expected) - BitConverter.Int32BitsToSingle((int)actual)), 0, 0.01);
+
             if (kind == 10)
                 Assert.InRange(Math.Abs(BitConverter.Int64BitsToDouble(expected) - BitConverter.Int64BitsToDouble(actual)), 0, 0.01);
+
             Assert.Equal(expected, actual);
         }
+
         Assert.Equal(sequential ? end : 0, buffer.ReaderIndex);
         Assert.Equal(sequential ? end : 0, buffer.WriterIndex);
+
         if (sequential)
         {
             Assert.False(buffer.IsReadable());
             Assert.Equal(0, buffer.ReadableBytes);
             Assert.Equal(capacity - end, buffer.WritableBytes);
         }
+
         Assert.Equal(1, buffer.RefCnt);
     }
 
@@ -402,14 +443,18 @@ public class ByteBufScalarRoundTripSourceTest
         using var s = new Storage(provider, 18);
         ushort[] values = [0, 1, 127, 128, 255, 256, 32767, 32768, 65535];
         byte[] expected = [0, 0, 1, 0, 127, 0, 128, 0, 255, 0, 0, 1, 255, 127, 0, 128, 255, 255];
+
         foreach (ushort value in values)
             s.Root.WriteShortLE(value);
+
         Assert.Equal(expected, ByteBufUtil.GetBytes(s.Root, 0, 18));
+
         for (int i = 0; i < values.Length; ++i)
         {
             Assert.Equal(i * 2, s.Root.ReaderIndex);
             Assert.Equal(values[i], s.Root.ReadUnsignedShortLE());
         }
+
         Assert.Equal(18, s.Root.ReaderIndex);
         Assert.Equal(18, s.Root.WriterIndex);
         Assert.Equal(1, s.Root.RefCnt);

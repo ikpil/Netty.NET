@@ -40,6 +40,7 @@ public sealed class MqttHeartBeatBrokerHandler : ChannelInboundHandlerAdapter
         MqttMessage mqttMessage = (MqttMessage) msg;
         Console.WriteLine("Received MQTT message: " + mqttMessage);
         MqttMessageType messageType = mqttMessage.FixedHeader().MessageType();
+
         switch (messageType)
         {
         case var _ when messageType == MqttMessageType.CONNECT:
@@ -70,6 +71,7 @@ public sealed class MqttHeartBeatBrokerHandler : ChannelInboundHandlerAdapter
     public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
     {
         Console.WriteLine("Channel heartBeat lost");
+
         if (evt is IdleStateEvent && IdleState.READER_IDLE == ((IdleStateEvent) evt).State())
         {
             _ = ctx.CloseAsync();

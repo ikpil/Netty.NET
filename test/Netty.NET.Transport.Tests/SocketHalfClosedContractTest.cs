@@ -122,8 +122,10 @@ public class SocketHalfClosedContractTest
         var firstError = await Record.ExceptionAsync(() => first);
         var secondError = await Record.ExceptionAsync(() => second);
         var unflushedError = await Record.ExceptionAsync(() => unflushed);
+
         foreach (var buffer in buffers)
             Assert.Equal(0, buffer.RefCnt);
+
         await channel.EventLoop.SubmitAsync(() =>
         {
         });
@@ -172,6 +174,7 @@ public class SocketHalfClosedContractTest
         private void Fail()
         {
             Started.TrySetResult();
+
             if (Failure.Task.IsCompleted)
             {
                 Failure.Task.GetAwaiter().GetResult();
@@ -269,7 +272,9 @@ public class SocketHalfClosedContractTest
             {
                 _sinceComplete = 0;
             }
+
             Interlocked.Increment(ref ReadCompletes);
+
             if (_bytesRead == 1)
             {
                 // Bounce this through the event loop to make sure it happens after we're done

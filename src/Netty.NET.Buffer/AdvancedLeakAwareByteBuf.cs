@@ -45,6 +45,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
         {
             logger.Debug("-D{}: {}", AcquireAndReleaseOnlyProperty, AcquireAndReleaseOnly);
         }
+
         ResourceLeakDetector.AddExclusions(typeof(AdvancedLeakAwareByteBuf), nameof(Touch), nameof(RecordLeakNonRefCountingOperation));
     }
 
@@ -78,12 +79,14 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override ByteBuf Retain(int increment = 1)
     {
         _leak.Record();
+
         return base.Retain(increment);
     }
 
     public override bool Release(int decrement = 1)
     {
         _leak.Record();
+
         return base.Release(decrement);
     }
 
@@ -98,6 +101,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
         {
             _leak.Record(hint);
         }
+
         return this;
     }
 
@@ -131,30 +135,35 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override int EnsureWritable(int minimumWritableBytes, bool force)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.EnsureWritable(minimumWritableBytes, force);
     }
 
     public override Memory<byte> AsMemory(int index, int length)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.AsMemory(index, length);
     }
 
     public override Span<byte> AsSpan(int index, int length)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.AsSpan(index, length);
     }
 
     public override byte GetByte(int index)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.GetByte(index);
     }
 
     public override bool GetBoolean(int index)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.GetBoolean(index);
     }
 
@@ -175,6 +184,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override short GetShort(int index)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.GetShort(index);
     }
 
@@ -188,6 +198,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override short GetShortLE(int index)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.GetShortLE(index);
     }
 
@@ -201,6 +212,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override int GetInt(int index)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.GetInt(index);
     }
 
@@ -214,6 +226,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override int GetIntLE(int index)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.GetIntLE(index);
     }
 
@@ -227,6 +240,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override long GetLong(int index)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.GetLong(index);
     }
 
@@ -240,6 +254,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override long GetLongLE(int index)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.GetLongLE(index);
     }
 
@@ -253,24 +268,28 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override int GetUnsignedMedium(int index)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.GetUnsignedMedium(index);
     }
 
     public override int GetUnsignedMediumLE(int index)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.GetUnsignedMediumLE(index);
     }
 
     public override int GetMedium(int index)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.GetMedium(index);
     }
 
     public override int GetMediumLE(int index)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.GetMediumLE(index);
     }
 
@@ -291,30 +310,35 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override ushort GetUnsignedShort(int index)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.GetUnsignedShort(index);
     }
 
     public override ushort GetUnsignedShortLE(int index)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.GetUnsignedShortLE(index);
     }
 
     public override uint GetUnsignedInt(int index)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.GetUnsignedInt(index);
     }
 
     public override uint GetUnsignedIntLE(int index)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.GetUnsignedIntLE(index);
     }
 
     public override char GetChar(int index)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.GetChar(index);
     }
 
@@ -328,24 +352,28 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override float GetFloat(int index)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.GetFloat(index);
     }
 
     public override float GetFloatLE(int index)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.GetFloatLE(index);
     }
 
     public override double GetDouble(int index)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.GetDouble(index);
     }
 
     public override double GetDoubleLE(int index)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.GetDoubleLE(index);
     }
 
@@ -380,6 +408,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override byte ReadByte()
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadByte();
     }
 
@@ -393,6 +422,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override bool ReadBoolean()
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadBoolean();
     }
 
@@ -406,6 +436,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override short ReadShort()
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadShort();
     }
 
@@ -419,6 +450,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override short ReadShortLE()
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadShortLE();
     }
 
@@ -432,6 +464,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override int ReadMedium()
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadMedium();
     }
 
@@ -445,6 +478,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override int ReadMediumLE()
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadMediumLE();
     }
 
@@ -458,6 +492,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override int ReadInt()
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadInt();
     }
 
@@ -471,6 +506,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override int ReadIntLE()
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadIntLE();
     }
 
@@ -484,6 +520,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override long ReadLong()
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadLong();
     }
 
@@ -497,6 +534,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override long ReadLongLE()
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadLongLE();
     }
 
@@ -510,6 +548,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override float ReadFloat()
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadFloat();
     }
 
@@ -523,6 +562,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override float ReadFloatLE()
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadFloatLE();
     }
 
@@ -536,6 +576,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override double ReadDouble()
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadDouble();
     }
 
@@ -549,6 +590,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override double ReadDoubleLE()
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadDoubleLE();
     }
 
@@ -562,42 +604,49 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override ushort ReadUnsignedShort()
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadUnsignedShort();
     }
 
     public override ushort ReadUnsignedShortLE()
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadUnsignedShortLE();
     }
 
     public override uint ReadUnsignedInt()
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadUnsignedInt();
     }
 
     public override uint ReadUnsignedIntLE()
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadUnsignedIntLE();
     }
 
     public override int ReadUnsignedMedium()
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadUnsignedMedium();
     }
 
     public override int ReadUnsignedMediumLE()
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadUnsignedMediumLE();
     }
 
     public override char ReadChar()
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadChar();
     }
 
@@ -694,72 +743,84 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override ByteBuf Copy()
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.Copy();
     }
 
     public override ByteBuf Copy(int index, int length)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.Copy(index, length);
     }
 
     public override ByteBuf ReadBytes(int length)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadBytes(length);
     }
 
     public override ByteBuf Slice()
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return base.Slice();
     }
 
     public override ByteBuf Slice(int index, int length)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return base.Slice(index, length);
     }
 
     public override ByteBuf RetainedSlice()
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return base.RetainedSlice();
     }
 
     public override ByteBuf RetainedSlice(int index, int length)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return base.RetainedSlice(index, length);
     }
 
     public override ByteBuf Duplicate()
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return base.Duplicate();
     }
 
     public override ByteBuf RetainedDuplicate()
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return base.RetainedDuplicate();
     }
 
     public override ByteBuf ReadSlice(int length)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return base.ReadSlice(length);
     }
 
     public override ByteBuf ReadRetainedSlice(int length)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return base.ReadRetainedSlice(length);
     }
 
     public override int GetBytes(int index, Socket destination, int length)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.GetBytes(index, destination, length);
     }
 
@@ -767,12 +828,14 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
         CancellationToken cancellationToken = default)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.GetBytesAsync(index, destination, length, cancellationToken);
     }
 
     public override int SetBytes(int index, Socket source, int length)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.SetBytes(index, source, length);
     }
 
@@ -780,12 +843,14 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
         CancellationToken cancellationToken = default)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.SetBytesAsync(index, source, length, cancellationToken);
     }
 
     public override int ReadBytes(Socket destination, int length)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadBytes(destination, length);
     }
 
@@ -793,12 +858,14 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
         CancellationToken cancellationToken = default)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadBytesAsync(destination, length, cancellationToken);
     }
 
     public override int WriteBytes(Socket source, int length)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.WriteBytes(source, length);
     }
 
@@ -806,30 +873,35 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
         CancellationToken cancellationToken = default)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.WriteBytesAsync(source, length, cancellationToken);
     }
 
     public override int GetBytes(int index, SafeFileHandle destination, long position, int length)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.GetBytes(index, destination, position, length);
     }
 
     public override int SetBytes(int index, SafeFileHandle source, long position, int length)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.SetBytes(index, source, position, length);
     }
 
     public override int ReadBytes(SafeFileHandle destination, long position, int length)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadBytes(destination, position, length);
     }
 
     public override int WriteBytes(SafeFileHandle source, long position, int length)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.WriteBytes(source, position, length);
     }
 
@@ -837,6 +909,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
         CancellationToken cancellationToken = default)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.GetBytesAsync(index, destination, position, length, cancellationToken);
     }
 
@@ -844,6 +917,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
         CancellationToken cancellationToken = default)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.SetBytesAsync(index, source, position, length, cancellationToken);
     }
 
@@ -851,6 +925,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
         CancellationToken cancellationToken = default)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadBytesAsync(destination, position, length, cancellationToken);
     }
 
@@ -858,30 +933,35 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
         CancellationToken cancellationToken = default)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.WriteBytesAsync(source, position, length, cancellationToken);
     }
 
     public override ByteBuf AsReadOnly()
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return base.AsReadOnly();
     }
 
     public override ReadOnlyMemory<byte> AsReadOnlyMemory(int index, int length)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.AsReadOnlyMemory(index, length);
     }
 
     public override ReadOnlySpan<byte> AsReadOnlySpan(int index, int length)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.AsReadOnlySpan(index, length);
     }
 
     public override ReadOnlySequence<byte> AsReadOnlySequence(int index, int length)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.AsReadOnlySequence(index, length);
     }
 
@@ -895,6 +975,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override int SetBytes(int index, Stream source, int length)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.SetBytes(index, source, length);
     }
 
@@ -908,6 +989,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
     public override int WriteBytes(Stream source, int length)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.WriteBytes(source, length);
     }
 
@@ -915,6 +997,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
         CancellationToken cancellationToken = default)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.GetBytesAsync(index, destination, length, cancellationToken);
     }
 
@@ -922,6 +1005,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
         CancellationToken cancellationToken = default)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.SetBytesAsync(index, source, length, cancellationToken);
     }
 
@@ -929,6 +1013,7 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
         CancellationToken cancellationToken = default)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadBytesAsync(destination, length, cancellationToken);
     }
 
@@ -936,96 +1021,112 @@ internal sealed class AdvancedLeakAwareByteBuf : SimpleLeakAwareByteBuf
         CancellationToken cancellationToken = default)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.WriteBytesAsync(source, length, cancellationToken);
     }
 
     public override string ToString(Encoding charset)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ToString(charset);
     }
 
     public override string ToString(int index, int length, Encoding charset)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ToString(index, length, charset);
     }
 
     public override ICharSequence GetCharSequence(int index, int length, Encoding charset)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.GetCharSequence(index, length, charset);
     }
 
     public override ICharSequence ReadCharSequence(int length, Encoding charset)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadCharSequence(length, charset);
     }
 
     public override string ReadString(int length, Encoding charset)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ReadString(length, charset);
     }
 
     public override int SetCharSequence(int index, ReadOnlySpan<char> sequence, Encoding charset)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.SetCharSequence(index, sequence, charset);
     }
 
     public override int WriteCharSequence(ReadOnlySpan<char> sequence, Encoding charset)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.WriteCharSequence(sequence, charset);
     }
 
     public override int IndexOf(int fromIndex, int toIndex, byte value)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.IndexOf(fromIndex, toIndex, value);
     }
 
     public override int BytesBefore(byte value)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.BytesBefore(value);
     }
 
     public override int BytesBefore(int length, byte value)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.BytesBefore(length, value);
     }
 
     public override int BytesBefore(int index, int length, byte value)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.BytesBefore(index, length, value);
     }
 
     public override int ForEachByte(Func<byte, bool> processor)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ForEachByte(processor);
     }
 
     public override int ForEachByte(int index, int length, Func<byte, bool> processor)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ForEachByte(index, length, processor);
     }
 
     public override int ForEachByteDesc(Func<byte, bool> processor)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ForEachByteDesc(processor);
     }
 
     public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
     {
         RecordLeakNonRefCountingOperation(_leak);
+
         return Buffer.ForEachByteDesc(index, length, processor);
     }
 

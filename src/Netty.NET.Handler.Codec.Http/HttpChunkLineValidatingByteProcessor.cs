@@ -94,6 +94,7 @@ internal sealed class HttpChunkLineValidatingByteProcessor
             {
                 bits.Set(chars[i], value);
             }
+
             return this;
         }
 
@@ -108,6 +109,7 @@ internal sealed class HttpChunkLineValidatingByteProcessor
             {
                 bits.Set(i, value);
             }
+
             return this;
         }
 
@@ -172,6 +174,7 @@ internal sealed class HttpChunkLineValidatingByteProcessor
                     return STATES_BY_ORDINAL[match.then];
                 }
             }
+
             if (this == Size)
             {
                 throw new FormatException("Invalid chunk size");
@@ -204,6 +207,7 @@ internal sealed class HttpChunkLineValidatingByteProcessor
         {
             throw new InvalidChunkExtensionException("Invalid chunk extension");
         }
+
         // Exhaustiveness check
         Debug.Assert(state == State.Size ||
                 state == State.ChunkExtName ||

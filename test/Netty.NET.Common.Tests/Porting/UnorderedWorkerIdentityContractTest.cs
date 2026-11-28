@@ -21,6 +21,7 @@ public class UnorderedWorkerIdentityContractTest
         Thread created = null;
         var original = new Factory(task => created = new Thread(task.Invoke) { IsBackground = true });
         var executor = new UnorderedThreadPoolEventExecutor(1, original);
+
         try
         {
             Assert.Equal(0, executor.WorkerCount);
@@ -48,6 +49,7 @@ public class UnorderedWorkerIdentityContractTest
         var factory = new Factory(task => worker = new Thread(() =>
         {
             prefixAffinity = executor.InEventLoop();
+
             try
             {
                 task.Invoke();
@@ -61,6 +63,7 @@ public class UnorderedWorkerIdentityContractTest
         executor = forwardFactory
             ? new UnorderedThreadPoolEventExecutor(1, new Factory(task => factory.NewThread(task)))
             : new UnorderedThreadPoolEventExecutor(1, factory);
+
         try
         {
             var invocation = executor.ScheduleAsync(() =>
@@ -80,6 +83,7 @@ public class UnorderedWorkerIdentityContractTest
         {
             _ = executor.StopAsync();
             Assert.True(executor.AwaitTermination(TimeSpan.FromSeconds(5)));
+
             if (worker != null)
             {
                 Assert.True(worker.Join(TimeSpan.FromSeconds(5)));
@@ -105,8 +109,10 @@ public class UnorderedWorkerIdentityContractTest
             oldWorker = Thread.CurrentThread;
             entered.Set();
             release.Wait();
+
             return executor.InEventLoop();
         });
+
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));

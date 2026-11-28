@@ -34,6 +34,7 @@ internal sealed class ThreadLocalDirectBufferCache : IDisposable
     internal ThreadLocalDirectBufferCache(int limit, NativeMemoryAllocator nativeAllocator = null)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(limit);
+
         _limit = limit;
         NativeAllocator = nativeAllocator ?? NativeMemoryAllocator.Shared;
     }
@@ -42,13 +43,17 @@ internal sealed class ThreadLocalDirectBufferCache : IDisposable
     {
         if (!_thread.TryGetTarget(out Thread thread) || !ReferenceEquals(thread, Thread.CurrentThread))
             throw new InvalidOperationException("A direct-buffer cache belongs to its physical thread.");
+
         NativeMemoryOwner owner;
+
         lock (_sync)
         {
             ObjectDisposedException.ThrowIf(_closed, this);
+
             owner = _idle;
             _idle = null;
         }
+
         return ThreadLocalDirectByteBuf.Create(this, owner);
     }
 
@@ -63,18 +68,21 @@ internal sealed class ThreadLocalDirectBufferCache : IDisposable
                 return;
             }
         }
+
         owner.Dispose();
     }
 
     public void Dispose()
     {
         NativeMemoryOwner owner;
+
         lock (_sync)
         {
             _closed = true;
             owner = _idle;
             _idle = null;
         }
+
         owner?.Dispose();
     }
 }

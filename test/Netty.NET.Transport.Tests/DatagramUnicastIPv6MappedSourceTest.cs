@@ -49,6 +49,7 @@ public class DatagramUnicastIPv6MappedSourceTest : DatagramUnicastIPv6SourceTest
         {
             return new IPEndPoint(NetUtil.LOCALHOST4, serverAddress.Port);
         }
+
         return serverAddress;
     }
 

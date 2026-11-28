@@ -112,6 +112,7 @@ public class MultiThreadIoEventLoopGroupSourceTest
         public void SetSimulateWorkload(bool active)
         {
             _simulateWorkload.Set(active);
+
             if (active)
             {
                 Execute(() =>
@@ -167,6 +168,7 @@ public class MultiThreadIoEventLoopGroupSourceTest
     public async Task TestScalingWithIoRegistrationLifecycle()
     {
         TestMultiThreadIoEventLoopGroup group = new TestMultiThreadIoEventLoopGroup(0, 2, TimeSpan.FromMilliseconds(200));
+
         try
         {
             StartAllExecutors(group);
@@ -203,6 +205,7 @@ public class MultiThreadIoEventLoopGroupSourceTest
     public async Task TestShouldNotSuspendExecutorWithActiveRegistration()
     {
         TestMultiThreadIoEventLoopGroup group = new TestMultiThreadIoEventLoopGroup(0, 2, TimeSpan.FromMilliseconds(200));
+
         try
         {
             StartAllExecutors(group);
@@ -241,16 +244,19 @@ public class MultiThreadIoEventLoopGroupSourceTest
     internal static void StartAllExecutors(MultiThreadIoEventLoopGroup group)
     {
         using CountdownEvent latch = new CountdownEvent(group.ExecutorCount());
+
         foreach (IEventExecutor executor in group.Iterator())
         {
             executor.Execute(() => latch.Signal());
         }
+
         Assert.True(latch.Wait(TimeSpan.FromSeconds(2)), "Executors did not start in time");
     }
 
     internal static int CountActiveExecutors(MultiThreadIoEventLoopGroup group)
     {
         int activeCount = 0;
+
         foreach (IEventExecutor executor in group.Iterator())
         {
             if (!executor.IsSuspended())
@@ -258,6 +264,7 @@ public class MultiThreadIoEventLoopGroupSourceTest
                 activeCount++;
             }
         }
+
         return activeCount;
     }
 
@@ -270,6 +277,7 @@ public class MultiThreadIoEventLoopGroupSourceTest
                 return executor;
             }
         }
+
         return null;
     }
 
@@ -277,14 +285,17 @@ public class MultiThreadIoEventLoopGroupSourceTest
                                           long timeoutMillis)
     {
         var watch = Stopwatch.StartNew();
+
         while (watch.ElapsedMilliseconds < timeoutMillis)
         {
             if (group.ExecutorCount() - CountActiveExecutors(group) >= expectedSuspendedCount)
             {
                 return;
             }
+
             Thread.Sleep(50);
         }
+
         Assert.Fail("Timed out waiting for " + expectedSuspendedCount + " executor(s) to suspend.");
     }
 
@@ -307,7 +318,9 @@ public class MultiThreadIoEventLoopGroupSourceTest
             {
                 return;
             }
+
             Thread.Sleep(20);
+
             if (!cancellation.IsCancellationRequested)
                 ThreadPool.QueueUserWorkItem(_ =>
                 {

@@ -81,6 +81,7 @@ public class BrotliDecoderTest : IDisposable
     private static void FillArrayWithCompressibleData(byte[] array)
     {
         Random rng = new Random(RANDOM.Next());
+
         for (int i = 0; i < array.Length; i++)
         {
             array[i] = i % 4 != 0 ? (byte) 0 : (byte) rng.Next();
@@ -93,6 +94,7 @@ public class BrotliDecoderTest : IDisposable
         BrotliStream brotliOs = new BrotliStream(os, new BrotliCompressionOptions { Quality = 11 });
         brotliOs.Write(data);
         brotliOs.Close();
+
         return os.ToArray();
     }
 
@@ -179,6 +181,7 @@ public class BrotliDecoderTest : IDisposable
         Random rng = new Random(RANDOM.Next());
         int written = 0, length = rng.Next(100);
         ByteBuf compressedBuf;
+
         while (written + length < compressedLength)
         {
             compressedBuf = data.RetainedSlice(written, length);
@@ -186,6 +189,7 @@ public class BrotliDecoderTest : IDisposable
             written += length;
             length = rng.Next(100);
         }
+
         compressedBuf = data.Slice(written, compressedLength - written);
         Assert.True(channel.WriteInbound(compressedBuf.Retain()));
 
@@ -200,10 +204,12 @@ public class BrotliDecoderTest : IDisposable
     {
         CompositeByteBuf decompressed = Unpooled.CompositeBuffer();
         ByteBuf msg;
+
         while ((msg = channel.ReadInbound<ByteBuf>()) != null)
         {
             decompressed.AddComponent(msg, true);
         }
+
         return decompressed;
     }
 }

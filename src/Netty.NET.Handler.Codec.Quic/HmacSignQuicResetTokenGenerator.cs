@@ -37,6 +37,7 @@ internal sealed class HmacSignQuicResetTokenGenerator : IQuicResetTokenGenerator
     public ReadOnlyMemory<byte> NewResetToken(ReadOnlyMemory<byte> cid)
     {
         ObjectUtil.CheckPositive(cid.Length, "cid");
+
         return Hmac.SignToken(cid, Quic.RESET_TOKEN_LEN);
     }
 }

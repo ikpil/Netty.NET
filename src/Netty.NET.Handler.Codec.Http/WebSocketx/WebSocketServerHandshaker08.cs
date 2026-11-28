@@ -152,6 +152,7 @@ public class WebSocketServerHandshaker08 : WebSocketServerHandshaker
             throw new WebSocketServerHandshakeException(
                     "not a WebSocket request: an |Upgrade| header must containing the value 'websocket'", req);
         }
+
         string key = reqHeaders.Get(HttpHeaderNames.SEC_WEBSOCKET_KEY);
         if (key == null)
         {
@@ -195,6 +196,7 @@ public class WebSocketServerHandshaker08 : WebSocketServerHandshaker
                 res.Headers().Set(HttpHeaderNames.SEC_WEBSOCKET_PROTOCOL, selectedSubprotocol);
             }
         }
+
         return res;
     }
 

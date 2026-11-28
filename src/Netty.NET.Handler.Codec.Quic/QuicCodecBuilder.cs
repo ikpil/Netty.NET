@@ -464,6 +464,7 @@ public abstract class QuicCodecBuilder<B> where B : QuicCodecBuilder<B>
             throw new ArgumentException("QuicSslContext.isServer() " + (sslContext.IsServer() ? "true" : "false")
                     + " isn't supported by this builder");
         }
+
         return SslEngineProvider(q => sslContext.NewEngine(q.Alloc()));
     }
 
@@ -501,6 +502,7 @@ public abstract class QuicCodecBuilder<B> where B : QuicCodecBuilder<B>
     public B ActiveConnectionIdLimit(long limit)
     {
         ObjectUtil.CheckPositive(limit, "limit");
+
         activeConnectionIdLimit = limit;
         return Self();
     }
@@ -589,6 +591,7 @@ public abstract class QuicCodecBuilder<B> where B : QuicCodecBuilder<B>
         {
             throw new ArgumentException(name + " : " + amount + " (expected: >= 0)");
         }
+
         return amount.Ticks / TimeSpan.TicksPerMillisecond;
     }
 }

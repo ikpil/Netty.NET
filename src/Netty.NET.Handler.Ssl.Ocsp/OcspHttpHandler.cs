@@ -67,6 +67,7 @@ internal sealed class OcspHttpHandler : ChannelDuplexHandler
     public override void ChannelRead(IChannelHandlerContext ctx, object msg)
     {
         IFullHttpResponse response = (IFullHttpResponse) msg;
+
         try
         {
             // If DEBUG is enabled then log the response
@@ -133,6 +134,7 @@ internal sealed class OcspHttpHandler : ChannelDuplexHandler
         {
             responseFuture.TrySetException(new ClosedChannelException());
         }
+
         base.ChannelInactive(ctx);
     }
 }

@@ -130,6 +130,7 @@ public sealed class FixedRedisMessagePool : IRedisMessagePool
         keyToSimpleStrings = new Dictionary<RedisReplyKey, SimpleStringRedisMessage>(replyKeys.Length);
         stringToSimpleStrings = new Dictionary<string, SimpleStringRedisMessage>(replyKeys.Length);
         byteBufToSimpleStrings = new Dictionary<ByteBuf, SimpleStringRedisMessage>(replyKeys.Length);
+
         foreach (RedisReplyKey value in replyKeys)
         {
             ByteBuf key = Unpooled.UnreleasableBuffer(Unpooled.WrappedBuffer(
@@ -144,6 +145,7 @@ public sealed class FixedRedisMessagePool : IRedisMessagePool
         keyToErrors = new Dictionary<RedisErrorKey, ErrorRedisMessage>(RedisErrorKey.Values().Length);
         stringToErrors = new Dictionary<string, ErrorRedisMessage>(RedisErrorKey.Values().Length);
         byteBufToErrors = new Dictionary<ByteBuf, ErrorRedisMessage>(RedisErrorKey.Values().Length);
+
         foreach (RedisErrorKey value in RedisErrorKey.Values())
         {
             ByteBuf key = Unpooled.UnreleasableBuffer(Unpooled.WrappedBuffer(
@@ -158,6 +160,7 @@ public sealed class FixedRedisMessagePool : IRedisMessagePool
         byteBufToIntegers = new Dictionary<ByteBuf, IntegerRedisMessage>(SIZE_CACHED_INTEGER_NUMBER);
         longToIntegers = new Dictionary<long, IntegerRedisMessage>(SIZE_CACHED_INTEGER_NUMBER);
         longToByteBufs = new Dictionary<long, byte[]>(SIZE_CACHED_INTEGER_NUMBER);
+
         for (long value = MIN_CACHED_INTEGER_NUMBER; value < MAX_CACHED_INTEGER_NUMBER; value++)
         {
             byte[] keyBytes = RedisCodecUtil.LongToAsciiBytes(value);

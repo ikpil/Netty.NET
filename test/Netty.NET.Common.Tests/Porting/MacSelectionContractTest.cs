@@ -35,6 +35,7 @@ public class MacSelectionContractTest
     {
         var failure = new InvalidOperationException("provider defect");
         var iface = Interface("00:12:34:56:78:90", "192.0.2.1");
+
         if (hardware)
         {
             iface.Setup(x => x.GetPhysicalAddress()).Throws(failure);
@@ -43,6 +44,7 @@ public class MacSelectionContractTest
         {
             iface.Setup(x => x.GetIPProperties()).Throws(failure);
         }
+
         Assert.Same(failure, Assert.Throws<InvalidOperationException>(() => Select(iface)));
     }
 
@@ -189,12 +191,14 @@ public class MacSelectionContractTest
     {
         var collection = new Mock<UnicastIPAddressInformationCollection>();
         collection.SetupGet(x => x.Count).Returns(addresses.Length);
+
         if (addresses.Length != 0)
         {
             var info = new Mock<UnicastIPAddressInformation>();
             info.SetupGet(x => x.Address).Returns(IPAddress.Parse(addresses[0]));
             collection.Setup(x => x[0]).Returns(info.Object);
         }
+
         var properties = new Mock<IPInterfaceProperties>();
         properties.SetupGet(x => x.UnicastAddresses).Returns(collection.Object);
         var iface = new Mock<NetworkInterface>();

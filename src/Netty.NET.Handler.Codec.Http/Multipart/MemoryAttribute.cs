@@ -76,19 +76,23 @@ public class MemoryAttribute : AbstractMemoryHttpData, IAttribute
     public virtual void SetValue(string value)
     {
         ObjectUtil.CheckNotNull(value, "value");
+
         byte [] bytes = GetCharset().GetBytes(value);
         CheckSize(bytes.Length);
         ByteBuf buffer = Unpooled.WrappedBuffer(bytes);
+
         if (definedSize > 0)
         {
             definedSize = buffer.ReadableBytes;
         }
+
         SetContent(buffer);
     }
 
     public override void AddContent(ByteBuf buffer, bool last)
     {
         int localsize = buffer.ReadableBytes;
+
         try
         {
             CheckSize(size + localsize);
@@ -98,10 +102,12 @@ public class MemoryAttribute : AbstractMemoryHttpData, IAttribute
             buffer.Release();
             throw;
         }
+
         if (definedSize > 0 && definedSize < size + localsize)
         {
             definedSize = size + localsize;
         }
+
         base.AddContent(buffer, last);
     }
 
@@ -116,6 +122,7 @@ public class MemoryAttribute : AbstractMemoryHttpData, IAttribute
         {
             return false;
         }
+
         IAttribute attribute = (IAttribute) o;
         return string.Equals(GetName(), attribute.GetName(), StringComparison.OrdinalIgnoreCase);
     }
@@ -127,6 +134,7 @@ public class MemoryAttribute : AbstractMemoryHttpData, IAttribute
             throw new InvalidCastException("Cannot compare " + GetHttpDataType() +
                     " with " + other.GetHttpDataType());
         }
+
         return CompareTo((IAttribute) other);
     }
 
@@ -159,6 +167,7 @@ public class MemoryAttribute : AbstractMemoryHttpData, IAttribute
         {
             content = content.RetainedDuplicate();
             bool success = false;
+
             try
             {
                 IAttribute duplicate = Replace(content);
@@ -183,6 +192,7 @@ public class MemoryAttribute : AbstractMemoryHttpData, IAttribute
     {
         MemoryAttribute attr = new MemoryAttribute(GetName());
         attr.SetCharset(GetCharset());
+
         if (content != null)
         {
             try
@@ -194,6 +204,7 @@ public class MemoryAttribute : AbstractMemoryHttpData, IAttribute
                 throw new ChannelException(e);
             }
         }
+
         attr.SetCompleted(IsCompleted());
         return attr;
     }

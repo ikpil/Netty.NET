@@ -49,6 +49,7 @@ public class SocketLingerCloseContractTest
         // doClose0 completes the Tasks on the close executor; the owner then fails queued writes and runs the
         // deferred deregistration (AbstractUnsafe.close/deregister).
         fixture.PumpUntil(() => promise.IsCompleted && repeat.IsCompleted && write.IsCompleted && fixture.Events.Contains("removed"));
+
         if (fail)
         {
             Assert.Same(cause, Assert.Throws<IOException>(() => promise.GetAwaiter().GetResult()));
@@ -57,6 +58,7 @@ public class SocketLingerCloseContractTest
         {
             Assert.True(promise.IsCompletedSuccessfully);
         }
+
         Assert.True(repeat.IsCompletedSuccessfully);
         Assert.True(fixture.Channel.CloseFuture.IsCompletedSuccessfully);
         Assert.ThrowsAny<ClosedChannelException>(() => write.GetAwaiter().GetResult());
@@ -78,12 +80,14 @@ public class SocketLingerCloseContractTest
         Assert.False(termination.IsCompleted);
         Assert.False(fixture.Channel.CloseFuture.IsCompleted);
         Assert.Empty(fixture.Events);
+
         if (immediate)
         {
             Assert.Throws<Netty.NET.Common.Concurrent.RejectedExecutionException>(() => fixture.Loop.Execute(() =>
             {
             }));
         }
+
         fixture.Channel.AllowClose.Set();
         fixture.PumpUntil(() => termination.IsCompleted);
         Assert.True(termination.IsCompletedSuccessfully);
@@ -98,17 +102,21 @@ public class SocketLingerCloseContractTest
     public void ExplicitDeregistrationDefersRemovalUntilNativeCloseCompletes(bool beforeClose)
     {
         using var fixture = new Fixture();
+
         // AbstractUnsafe.deregister runs later on the owner (#4435), so pump until its Task completes.
         if (beforeClose)
         {
             Deregister(fixture);
         }
+
         Task promise = fixture.Channel.CloseAsync(TestContext.Current.CancellationToken);
         fixture.WaitForClose();
+
         if (!beforeClose)
         {
             Deregister(fixture);
         }
+
         Assert.Equal(new[] { "unregistered" }, fixture.Events);
         fixture.Channel.AllowClose.Set();
         fixture.PumpUntil(() => promise.IsCompleted);
@@ -189,33 +197,40 @@ public class SocketLingerCloseContractTest
         {
             await channel.RegisterAsync(loop, cancellation);
             Thread owner = await loop.SubmitAsync(() => Thread.CurrentThread, cancellation);
+
             if (deregister)
             {
                 await channel.DeregisterAsync(cancellation);
             }
+
             Task promise = closeFirst ? channel.CloseAsync(cancellation) : channel.CloseFuture;
             Task termination = shutdownMode == 0 ? Task.CompletedTask : !closeFirst ? Shutdown() : null;
             Assert.True(channel.CloseEntered.Wait(TimeSpan.FromSeconds(3), cancellation));
             Assert.False(promise.IsCompleted);
             Assert.NotSame(owner, channel.CloseThread);
+
             if (closeFirst)
             {
                 Assert.Same(owner, await loop.SubmitAsync(() => Thread.CurrentThread, cancellation));
+
                 if (deregister)
                 {
                     // TrySuspend accepts a request; CanSuspend decides whether the worker may actually exit.
                     Assert.True(await loop.SubmitAsync(loop.TrySuspend, cancellation));
                     Assert.False(owner.Join(TimeSpan.FromMilliseconds(100)));
                 }
+
                 if (shutdownMode != 0)
                 {
                     termination = Shutdown();
                 }
             }
+
             if (shutdownMode != 0)
             {
                 Assert.False(termination.IsCompleted);
             }
+
             channel.AllowClose.Set();
             await promise.WaitAsync(TimeSpan.FromSeconds(5), cancellation);
             await termination.WaitAsync(TimeSpan.FromSeconds(5), cancellation);
@@ -285,6 +300,7 @@ public class SocketLingerCloseContractTest
         internal void PumpUntil(Func<bool> condition)
         {
             var deadline = DateTime.UtcNow.AddSeconds(5);
+
             while (!condition())
             {
                 Assert.True(DateTime.UtcNow < deadline, "Native close completion did not reach its owner.");
@@ -324,6 +340,7 @@ public class SocketLingerCloseContractTest
             Interlocked.Increment(ref CloseCalls);
             CloseThread = Thread.CurrentThread;
             CloseEntered.Set();
+
             try
             {
                 if (!AllowClose.Wait(TimeSpan.FromSeconds(5)))

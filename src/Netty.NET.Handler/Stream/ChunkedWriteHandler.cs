@@ -125,6 +125,7 @@ public class ChunkedWriteHandler : ChannelDuplexHandler
         {
             return;
         }
+
         if (ctx.Executor.InEventLoop())
         {
             ResumeTransfer0(ctx);
@@ -184,6 +185,7 @@ public class ChunkedWriteHandler : ChannelDuplexHandler
             // channel is writable again try to continue flushing
             DoFlush(ctx);
         }
+
         ctx.FireChannelWritabilityChanged();
     }
 
@@ -193,6 +195,7 @@ public class ChunkedWriteHandler : ChannelDuplexHandler
         {
             return;
         }
+
         for (;;)
         {
             queue.TryDequeue(out PendingWrite currentWrite);
@@ -201,11 +204,13 @@ public class ChunkedWriteHandler : ChannelDuplexHandler
             {
                 break;
             }
+
             object message = currentWrite.msg;
             if (message is IChunkedInput<object> @in)
             {
                 bool endOfInput;
                 long inputLength;
+
                 try
                 {
                     endOfInput = @in.IsEndOfInput();
@@ -226,6 +231,7 @@ public class ChunkedWriteHandler : ChannelDuplexHandler
                     {
                         cause = new ClosedChannelException();
                     }
+
                     currentWrite.Fail(cause);
                 }
                 else
@@ -239,6 +245,7 @@ public class ChunkedWriteHandler : ChannelDuplexHandler
                 {
                     cause = new ClosedChannelException();
                 }
+
                 currentWrite.Fail(cause);
             }
         }
@@ -260,7 +267,9 @@ public class ChunkedWriteHandler : ChannelDuplexHandler
             flushPending = true;
             return;
         }
+
         inFlush = true;
+
         try
         {
             do
@@ -296,6 +305,7 @@ public class ChunkedWriteHandler : ChannelDuplexHandler
 
         bool requiresFlush = true;
         IByteBufAllocator allocator = ctx.Alloc();
+
         while (channel.IsWritable)
         {
             queue.TryPeek(out PendingWrite currentWrite);
@@ -318,6 +328,7 @@ public class ChunkedWriteHandler : ChannelDuplexHandler
                 // See https://github.com/netty/netty/issues/8700.
                 // A promise that was cancelled by the user is different: nobody closed or released the message.
                 queue.Dequeue();
+
                 if (currentWrite.promise.Task.IsCanceled)
                 {
                     if (currentWrite.msg is IChunkedInput<object> cancelledInput)
@@ -329,6 +340,7 @@ public class ChunkedWriteHandler : ChannelDuplexHandler
                         ReferenceCountUtil.Release(currentWrite.msg);
                     }
                 }
+
                 continue;
             }
 
@@ -339,6 +351,7 @@ public class ChunkedWriteHandler : ChannelDuplexHandler
                 bool endOfInput;
                 bool suspend;
                 object message = null;
+
                 try
                 {
                     message = chunks.ReadChunk(allocator);
@@ -382,8 +395,10 @@ public class ChunkedWriteHandler : ChannelDuplexHandler
                     // may cause an action that also touches the queue.
                     queue.Dequeue();
                 }
+
                 // Flush each chunk to conserve memory
                 Task f = ctx.WriteAndFlushAsync(message);
+
                 if (endOfInput)
                 {
                     if (f.IsCompleted)
@@ -404,6 +419,7 @@ public class ChunkedWriteHandler : ChannelDuplexHandler
                 else
                 {
                     bool resume = !channel.IsWritable;
+
                     if (f.IsCompleted)
                     {
                         HandleFuture(f, chunks, currentWrite, resume);
@@ -414,6 +430,7 @@ public class ChunkedWriteHandler : ChannelDuplexHandler
                                 HandleFuture(future, chunks, currentWrite, resume));
                     }
                 }
+
                 requiresFlush = false;
             }
             else
@@ -475,6 +492,7 @@ public class ChunkedWriteHandler : ChannelDuplexHandler
         else
         {
             currentWrite.Progress(input.Progress(), input.Length());
+
             if (resume && ctx.Channel.IsWritable)
             {
                 ResumeTransfer();
@@ -544,6 +562,7 @@ public class ChunkedWriteHandler : ChannelDuplexHandler
             this.channel = channel;
             this.cancellationToken = cancellationToken;
             progressObserver = channel.Config.WriteProgress;
+
             if (cancellationToken.CanBeCanceled)
             {
                 CancellationTokenRegistration registration = cancellationToken.UnsafeRegister(
@@ -567,6 +586,7 @@ public class ChunkedWriteHandler : ChannelDuplexHandler
                 // No need to notify the progress or fulfill the promise because it's done already.
                 return;
             }
+
             Progress(total, total);
             promise.TrySetResult();
         }
@@ -591,6 +611,7 @@ public class ChunkedWriteHandler : ChannelDuplexHandler
                 {
                     return;
                 }
+
                 try
                 {
                     progressObserver.Report(

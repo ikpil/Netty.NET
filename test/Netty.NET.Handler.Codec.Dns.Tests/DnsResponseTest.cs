@@ -79,6 +79,7 @@ public class DnsResponseTest
     public void ReadResponseTest()
     {
         EmbeddedChannel embedder = new EmbeddedChannel(new DatagramDnsResponseDecoder());
+
         foreach (sbyte[] p in packets)
         {
             ByteBuf packet = ((IChannel) embedder).Alloc().Buffer(512).WriteBytes(Bytes(p));
@@ -98,6 +99,7 @@ public class DnsResponseTest
 
             envelope.Release();
         }
+
         Assert.False(embedder.Finish());
     }
 
@@ -106,6 +108,7 @@ public class DnsResponseTest
     {
         EmbeddedChannel embedder = new EmbeddedChannel(new DatagramDnsResponseDecoder());
         ByteBuf packet = ((IChannel) embedder).Alloc().Buffer(512).WriteBytes(Bytes(malformedLoopPacket));
+
         try
         {
             Assert.Throws<CorruptedFrameException>(() =>
@@ -124,6 +127,7 @@ public class DnsResponseTest
     {
         EmbeddedChannel embedder = new EmbeddedChannel(new DatagramDnsResponseDecoder());
         ByteBuf packet = ((IChannel) embedder).Alloc().Buffer(512);
+
         try
         {
             Assert.Throws<CorruptedFrameException>(() =>
@@ -145,6 +149,7 @@ public class DnsResponseTest
         {
             EmbeddedChannel embedder = new EmbeddedChannel(new DatagramDnsResponseDecoder());
             ByteBuf packet = NewHeader(embedder, 0x8000, section, DnsCodecUtil.MAX_RECORDS_PER_SECTION + 1);
+
             try
             {
                 Assert.Throws<TooLongFrameException>(
@@ -172,10 +177,12 @@ public class DnsResponseTest
     {
         ByteBuf buf = ((IChannel) channel).Alloc().Buffer(12);
         buf.WriteShort(1).WriteShort(flags);
+
         for (int i = 0; i < 4; i++)
         {
             buf.WriteShort(i == section ? count : 0);
         }
+
         return buf;
     }
 }

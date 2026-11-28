@@ -111,6 +111,7 @@ public class AdaptiveCumulatorTest
         {
             CompositeByteBuf composite = new ReleasingThrowingCompositeByteBuf(
                     alloc, int.MaxValue, throwingCumulatorError, contiguous);
+
             try
             {
                 NotSupportedException actualError = Assert.Throws<NotSupportedException>(() =>
@@ -155,6 +156,7 @@ public class AdaptiveCumulatorTest
                     buffer.Release();
                     throw error;
                 }
+
                 return base.AddFlattenedComponents(buffer, increaseWriterIndex);
             }
         }
@@ -254,6 +256,7 @@ public class AdaptiveCumulatorTest
         public void ShouldCompose(int composeMinSize, string tailData, string inData)
         {
             SetUp(composeMinSize, tailData, inData);
+
             try
             {
                 int initialComponents = composite.NumComponents;
@@ -352,10 +355,12 @@ public class AdaptiveCumulatorTest
         private string Repeat(string s, int count)
         {
             StringBuilder sb = new StringBuilder();
+
             for (int i = 0; i < count; i++)
             {
                 sb.Append(s);
             }
+
             return sb.ToString();
         }
 
@@ -465,6 +470,7 @@ public class AdaptiveCumulatorTest
         public void MergeWithCompositeTail_tailExpandable_write(string compositeHeadData, int compositeReaderIndex)
         {
             SetUp(compositeHeadData, compositeReaderIndex);
+
             try
             {
                 int fitCapacity = tail.Capacity + INCOMING_DATA_READABLE.Length;
@@ -487,6 +493,7 @@ public class AdaptiveCumulatorTest
                 string compositeHeadData, int compositeReaderIndex)
         {
             SetUp(compositeHeadData, compositeReaderIndex);
+
             try
             {
                 int tailFastCapacity = alloc.CalculateNewCapacity(EXPECTED_TAIL_DATA.Length, int.MaxValue);
@@ -506,6 +513,7 @@ public class AdaptiveCumulatorTest
                 string compositeHeadData, int compositeReaderIndex)
         {
             SetUp(compositeHeadData, compositeReaderIndex);
+
             try
             {
                 int tailFastCapacity = tail.WriterIndex + tail.MaxFastWritableBytes;
@@ -533,6 +541,7 @@ public class AdaptiveCumulatorTest
                 string compositeHeadData, int compositeReaderIndex)
         {
             SetUp(compositeHeadData, compositeReaderIndex);
+
             try
             {
                 string tailSuffixFullCapacity = Repeat("a", tail.MaxWritableBytes);
@@ -552,6 +561,7 @@ public class AdaptiveCumulatorTest
                 string compositeHeadData, int compositeReaderIndex)
         {
             SetUp(compositeHeadData, compositeReaderIndex);
+
             try
             {
                 tail.Retain();
@@ -571,6 +581,7 @@ public class AdaptiveCumulatorTest
                 string compositeHeadData, int compositeReaderIndex)
         {
             SetUp(compositeHeadData, compositeReaderIndex);
+
             try
             {
                 composite.AddFlattenedComponents(tail.AsReadOnly(), true);
@@ -645,10 +656,12 @@ public class AdaptiveCumulatorTest
             finally
             {
                 compositeRo.Release();
+
                 if (newTail.RefCnt > 0)
                 {
                     newTail.Release();
                 }
+
                 TearDown();
             }
         }

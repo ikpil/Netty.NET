@@ -45,6 +45,7 @@ public class SocketChannelNotYetConnectedSourceTest : AbstractClientSocketTest
     {
         ISocketChannel ch = (ISocketChannel) await cb.Handler(new ChannelInboundHandlerAdapter())
                 .BindAsync(NewSocketAddress());
+
         try
         {
             Exception cause = await Assert.ThrowsAnyAsync<Exception>(() => ch.ShutdownInputAsync());
@@ -105,6 +106,7 @@ public class SocketChannelNotYetConnectedSourceTest : AbstractClientSocketTest
         IChannel server = await fixture.Server.ChildHandler(new SendFortyTwo()).BindAsync(new IPEndPoint(IPAddress.Loopback, 0));
         var read = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         IChannel client = null;
+
         try
         {
             client = await fixture.Client.Option(ChannelOption.AUTO_READ, autoRead).Handler(new ReadFortyTwo(read)).ConnectAsync(server.LocalAddress);
@@ -116,6 +118,7 @@ public class SocketChannelNotYetConnectedSourceTest : AbstractClientSocketTest
             {
                 await client.CloseAsync();
             }
+
             await server.CloseAsync();
         }
     }
@@ -147,6 +150,7 @@ public class SocketChannelNotYetConnectedSourceTest : AbstractClientSocketTest
         protected override void Decode(IChannelHandlerContext ctx, ByteBuf @in, IList<object> @out)
         {
             Assert.True(@in.ReadableBytes <= sizeof(int));
+
             if (@in.ReadableBytes == sizeof(int))
             {
                 Assert.Equal(42, @in.ReadInt());

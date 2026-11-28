@@ -136,6 +136,7 @@ public sealed class WebSocketDecoderConfig
         internal Builder(WebSocketDecoderConfig decoderConfig)
         {
             ObjectUtil.CheckNotNull(decoderConfig, "decoderConfig");
+
             maxFramePayloadLength = decoderConfig.MaxFramePayloadLength();
             expectMaskedFrames = decoderConfig.ExpectMaskedFrames();
             allowMaskMismatch = decoderConfig.AllowMaskMismatch();

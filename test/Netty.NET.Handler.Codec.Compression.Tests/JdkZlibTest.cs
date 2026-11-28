@@ -142,10 +142,12 @@ public class JdkZlibTest : ZlibTest
                 // Let's feed the input byte by byte to simulate fragmentation.
                 ByteBuf buf = Unpooled.CopiedBuffer(bytes);
                 bool written = false;
+
                 while (buf.IsReadable())
                 {
                     written |= chDecoderGZip.WriteInbound(buf.ReadRetainedSlice(1));
                 }
+
                 buf.Release();
 
                 Assert.True(written);
@@ -182,6 +184,7 @@ public class JdkZlibTest : ZlibTest
         // netty must decode it identically; before the FEXTRA fix the extra bytes were never
         // skipped, corrupting the deflate stream and throwing DecompressionException.
         EmbeddedChannel ch = new EmbeddedChannel(CreateDecoder(ZlibWrapper.GZIP));
+
         try
         {
             Assert.True(ch.WriteInbound(Unpooled.CopiedBuffer(gzipWithExtra)));
@@ -218,16 +221,19 @@ public class JdkZlibTest : ZlibTest
         Array.Copy(secondGz, 0, both, firstGz.Length, secondGz.Length);
 
         EmbeddedChannel ch = new EmbeddedChannel(new JdkZlibDecoder(true, 0));
+
         try
         {
             Assert.True(ch.WriteInbound(Unpooled.CopiedBuffer(both)));
             MemoryStream decoded = new MemoryStream();
             ByteBuf msg;
+
             while ((msg = ch.ReadInbound<ByteBuf>()) != null)
             {
                 msg.ReadBytes(decoded, msg.ReadableBytes);
                 msg.Release();
             }
+
             Assert.Equal(Encoding.UTF8.GetBytes(firstText + secondText),
                     decoded.ToArray());
             decoded.Dispose();
@@ -279,9 +285,11 @@ public class JdkZlibTest : ZlibTest
 
         EmbeddedChannel ch = new EmbeddedChannel(CreateDecoder(wrapper));
         MemoryStream decoded = new MemoryStream();
+
         try
         {
             ByteBuf @in = Unpooled.WrappedBuffer(compressed);
+
             try
             {
                 while (@in.IsReadable())
@@ -293,14 +301,17 @@ public class JdkZlibTest : ZlibTest
             {
                 @in.Release();
             }
+
             ch.Finish();
 
             ByteBuf msg;
+
             while ((msg = ch.ReadInbound<ByteBuf>()) != null)
             {
                 msg.ReadBytes(decoded, msg.ReadableBytes);
                 msg.Release();
             }
+
             Assert.Equal(data, decoded.ToArray());
         }
         finally
@@ -318,6 +329,7 @@ public class JdkZlibTest : ZlibTest
         {
             return Gzip(data);
         }
+
         MemoryStream bytesOut = new MemoryStream();
         ZLibCompressionOptions bestCompression = new ZLibCompressionOptions { CompressionLevel = 9 };
         Stream deflaterOut = wrapper == ZlibWrapper.NONE
@@ -325,6 +337,7 @@ public class JdkZlibTest : ZlibTest
                 : new ZLibStream(bytesOut, bestCompression);
         deflaterOut.Write(data);
         deflaterOut.Dispose();
+
         return bytesOut.ToArray();
     }
 
@@ -334,16 +347,20 @@ public class JdkZlibTest : ZlibTest
         {
             return JdkGunzip(compressed);
         }
+
         MemoryStream @out = new MemoryStream();
+
         try
         {
             Stream @in = wrapper == ZlibWrapper.NONE
                     ? new DeflateStream(new MemoryStream(compressed), CompressionMode.Decompress)
                     : new ZLibStream(new MemoryStream(compressed), CompressionMode.Decompress);
+
             try
             {
                 byte[] buf = new byte[8192];
                 int n;
+
                 while ((n = @in.Read(buf)) != 0)
                 {
                     @out.Write(buf, 0, n);
@@ -353,6 +370,7 @@ public class JdkZlibTest : ZlibTest
             {
                 @in.Dispose();
             }
+
             return @out.ToArray();
         }
         finally
@@ -367,6 +385,7 @@ public class JdkZlibTest : ZlibTest
         GZipStream gzipOut = new GZipStream(bytesOut, CompressionMode.Compress);
         gzipOut.Write(data);
         gzipOut.Dispose();
+
         return bytesOut.ToArray();
     }
 
@@ -379,6 +398,7 @@ public class JdkZlibTest : ZlibTest
         // XLEN (2 bytes, little-endian per RFC 1952) followed by the extra subfield, right after
         // the fixed 10-byte gzip header.
         MemoryStream withExtra = new MemoryStream();
+
         try
         {
             byte[] header = standard.AsSpan(0, 10).ToArray();
@@ -388,6 +408,7 @@ public class JdkZlibTest : ZlibTest
             withExtra.WriteByte((byte) ((extra.Length >>> 8) & 0xff));  // XLEN high byte
             withExtra.Write(extra);
             withExtra.Write(standard, 10, standard.Length - 10);
+
             return withExtra.ToArray();
         }
         finally
@@ -399,14 +420,17 @@ public class JdkZlibTest : ZlibTest
     private static byte[] JdkGunzip(byte[] gz)
     {
         MemoryStream @out = new MemoryStream();
+
         try
         {
             GZipStream @in =
                     new GZipStream(new MemoryStream(gz), CompressionMode.Decompress);
+
             try
             {
                 byte[] buf = new byte[256];
                 int n;
+
                 while ((n = @in.Read(buf)) != 0)
                 {
                     @out.Write(buf, 0, n);
@@ -416,6 +440,7 @@ public class JdkZlibTest : ZlibTest
             {
                 @in.Dispose();
             }
+
             return @out.ToArray();
         }
         finally
@@ -470,6 +495,7 @@ public class JdkZlibTest : ZlibTest
         Assert.True(channel.WriteOutbound(bigBuffer));
         Assert.True(channel.Finish());
         channel.CheckException();
+
         Assert.True(channel.ReleaseOutbound());
     }
 
@@ -549,6 +575,7 @@ public class JdkZlibTest : ZlibTest
         Assert.True(encoder.Finish());
 
         ByteBuf compressed = Unpooled.Buffer();
+
         for (;;)
         {
             ByteBuf part = encoder.ReadOutbound<ByteBuf>();
@@ -556,6 +583,7 @@ public class JdkZlibTest : ZlibTest
             {
                 break;
             }
+
             compressed.WriteBytes(part);
             part.Release();
         }
@@ -586,10 +614,12 @@ public class JdkZlibTest : ZlibTest
         {
             decoder.WriteInbound(Unpooled.WrappedBuffer(new byte[]{ b }));
         }
+
         Assert.True(decoder.Finish());
 
         ByteBuf result = Unpooled.Buffer();
         ByteBuf chunk;
+
         while ((chunk = decoder.ReadInbound<ByteBuf>()) != null)
         {
             result.WriteBytes(chunk);
@@ -632,6 +662,7 @@ public class JdkZlibTest : ZlibTest
         GZipStream gzipOut = new GZipStream(baos, CompressionMode.Compress);
         gzipOut.Write(input);
         gzipOut.Dispose();
+
         return baos.ToArray();
     }
 
@@ -640,6 +671,7 @@ public class JdkZlibTest : ZlibTest
     {
         MemoryStream bytes = new MemoryStream();
         stream.CopyTo(bytes);
+
         return bytes.ToArray();
     }
 

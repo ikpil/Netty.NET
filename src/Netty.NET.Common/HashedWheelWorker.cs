@@ -39,6 +39,7 @@ internal sealed class HashedWheelWorker
     {
         // Initialize the startTime.
         Volatile.Write(ref _timer._startTime, SystemTimer.NanoTime());
+
         if (Volatile.Read(ref _timer._startTime) == 0)
         {
             // We use 0 as an indicator for the uninitialized value here, so make sure it's not 0 when initialized.

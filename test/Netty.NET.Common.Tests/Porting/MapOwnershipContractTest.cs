@@ -49,6 +49,7 @@ public class MapOwnershipContractTest : IDisposable
             Assert.Equal(3, map.Size()); // Binding, cache presence, nonzero reader depth.
 
             FastThreadLocal.Destroy();
+
             if (mode == 2)
             {
                 Assert.Same(map, InternalThreadLocalMap.GetIfSet());
@@ -57,6 +58,7 @@ public class MapOwnershipContractTest : IDisposable
             {
                 Assert.Null(InternalThreadLocalMap.GetIfSet());
             }
+
             InternalThreadLocalMap.Remove();
             Assert.Null(InternalThreadLocalMap.GetIfSet());
             Assert.True(local.IsSet(map));
@@ -105,10 +107,12 @@ public class MapOwnershipContractTest : IDisposable
             : new Thread(Execute) { IsBackground = true };
         worker.Start();
         Assert.True(worker.Join(TimeSpan.FromSeconds(5)));
+
         if (failure != null)
         {
             System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
         }
+
         Assert.Equal("parent context", marker.Value);
         Assert.Same(parentMap, InternalThreadLocalMap.GetIfSet());
         Assert.Same(parentCache, parentMap.HandlerSharableCache());

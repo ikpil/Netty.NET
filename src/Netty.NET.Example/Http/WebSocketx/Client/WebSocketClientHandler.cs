@@ -86,6 +86,7 @@ public class WebSocketClientHandler : SimpleChannelInboundHandler<object>
     protected override void ChannelRead0(IChannelHandlerContext ctx, object msg)
     {
         IChannel ch = ctx.Channel;
+
         if (!handshaker.IsHandshakeComplete())
         {
             try
@@ -99,6 +100,7 @@ public class WebSocketClientHandler : SimpleChannelInboundHandler<object>
                 Console.WriteLine("WebSocket Client failed to connect");
                 handshakeFuture.SetException(e);
             }
+
             return;
         }
 
@@ -130,10 +132,12 @@ public class WebSocketClientHandler : SimpleChannelInboundHandler<object>
     public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
     {
         Console.Error.WriteLine(cause);
+
         if (!handshakeFuture.Task.IsCompleted)
         {
             handshakeFuture.SetException(cause);
         }
+
         _ = ctx.CloseAsync();
     }
 }

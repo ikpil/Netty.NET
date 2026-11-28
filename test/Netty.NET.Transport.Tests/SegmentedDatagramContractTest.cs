@@ -22,6 +22,7 @@ public class SegmentedDatagramContractTest
         var local = new IPEndPoint(IPAddress.Loopback, 0);
         receiver.Bind(local);
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+
         try
         {
             var bootstrap = NewSender(group, AddressFamily.InterNetwork);
@@ -35,24 +36,28 @@ public class SegmentedDatagramContractTest
             content.SkipBytes(1);
             var packet = new SegmentedDatagramPacket(content, 3, (IPEndPoint)receiver.LocalEndPoint);
             var duplicate = packet.RetainedDuplicate();
+
             try
             {
                 Assert.Equal(packet.SegmentSize, duplicate.SegmentSize);
                 Assert.Equal(packet.Recipient, duplicate.Recipient);
                 await sender.WriteAndFlushAsync(packet, token);
                 byte[] data = new byte[8];
+
                 foreach (byte[] expected in new byte[][] { [1, 2, 3], [4, 5, 6], [7] })
                 {
                     var result = await receiver.ReceiveFromAsync(data.AsMemory(), SocketFlags.None, local, token)
                         .AsTask().WaitAsync(TimeSpan.FromSeconds(3), token);
                     Assert.Equal(expected, data[..result.ReceivedBytes]);
                 }
+
                 Assert.Equal(1, duplicate.Content.ReaderIndex);
             }
             finally
             {
                 duplicate.Release();
             }
+
             Assert.Equal(0, content.RefCnt);
         }
         finally
@@ -70,6 +75,7 @@ public class SegmentedDatagramContractTest
         {
             Assert.SkipUnless(Socket.OSSupportsIPv6, "IPv6 unavailable.");
         }
+
         var family = ipv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork;
         var token = TestContext.Current.CancellationToken;
         using var receiver = new Socket(family, SocketType.Dgram, ProtocolType.Udp);
@@ -77,6 +83,7 @@ public class SegmentedDatagramContractTest
         receiver.Bind(local);
 
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+
         try
         {
             var sender = await NewSender(group, family).BindAsync(local, token);
@@ -87,6 +94,7 @@ public class SegmentedDatagramContractTest
             await sender.WriteAndFlushAsync(new DatagramPacket(Unpooled.Buffer().WriteByte(33), target), token);
 
             byte[] actual = new byte[1025];
+
             foreach (byte[] expected in new byte[][] { payload[..512], payload[512..1024], payload[1024..], [33] })
             {
                 var received = await receiver.ReceiveFromAsync(actual.AsMemory(), SocketFlags.None, local, token)

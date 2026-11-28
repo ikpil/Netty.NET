@@ -72,6 +72,7 @@ internal sealed class Http3HeadersSink
         {
             throw validationException;
         }
+
         if (validate)
         {
             if (trailer)
@@ -81,6 +82,7 @@ internal sealed class Http3HeadersSink
                     // Trailers must not have pseudo headers.
                     throw new Http3HeadersValidationException("Pseudo-header(s) included in trailers.");
                 }
+
                 return;
             }
 
@@ -180,9 +182,11 @@ internal sealed class Http3HeadersSink
         {
             return;
         }
+
         ICharSequence authority = headers.Authority();
         IList<ICharSequence> hosts = headers.GetAll(HttpHeaderNames.HOST);
         ICharSequence expected = authority != null ? authority : hosts[0];
+
         for (int i = 0; i < hosts.Count; i++)
         {
             if (!AsciiString.ContentEqualsIgnoreCase(expected, hosts[i]))
@@ -254,6 +258,7 @@ internal sealed class Http3HeadersSink
                 throw new Http3HeadersValidationException(
                         "Pseudo-header field '" + name + "' exists already.");
             }
+
             receivedPseudoHeaders |= pseudoHeader.GetFlag();
 
             HeaderType currentHeaderType = pseudoHeader.IsRequestOnly() ?
@@ -274,6 +279,7 @@ internal sealed class Http3HeadersSink
         {
             return false;
         }
+
         for (int i = 0; i < s.Length; i++)
         {
             if (s[i] != cs.CharAt(i))
@@ -281,6 +287,7 @@ internal sealed class Http3HeadersSink
                 return false;
             }
         }
+
         return true;
     }
 

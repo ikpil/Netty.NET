@@ -365,10 +365,12 @@ public class RedisDecoderTest : IDisposable
     {
         ByteBuf buf = Unpooled.Buffer();
         buf.WriteByte('$');
+
         for (int i = 0; i <= RedisConstants.POSITIVE_LONG_MAX_LENGTH; i++)
         {
             buf.WriteByte('0');
         }
+
         Assert.False(channel.WriteInbound(buf));
 
         Assert.Throws<DecoderException>(() => channel.WriteInbound(ByteBufOf("1")));
@@ -380,10 +382,12 @@ public class RedisDecoderTest : IDisposable
         EmbeddedChannel channel = new EmbeddedChannel(new RedisDecoder());
         ByteBuf buf = Unpooled.Buffer();
         buf.WriteByte('$');
+
         for (int i = 0; i < RedisConstants.POSITIVE_LONG_MAX_LENGTH; i++)
         {
             buf.WriteByte('0');
         }
+
         buf.WriteByte('\r');
 
         // 19 digits + \r = 20 bytes.
@@ -402,10 +406,12 @@ public class RedisDecoderTest : IDisposable
         EmbeddedChannel channel = new EmbeddedChannel(new RedisDecoder());
         ByteBuf buf = Unpooled.Buffer();
         buf.WriteByte('$');
+
         for (int i = 0; i < RedisConstants.POSITIVE_LONG_MAX_LENGTH; i++)
         {
             buf.WriteByte('1');
         }
+
         Assert.False(channel.WriteInbound(buf));
 
         // We expect that sending 1000 more bytes will exceed the maximum valid length capacity,

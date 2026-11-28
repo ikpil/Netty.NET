@@ -91,6 +91,7 @@ public sealed class X509Bundle
     {
         ObjectUtil.CheckNotNull(root, "root");
         ObjectUtil.CheckNotNull(keyPair, "keyPair");
+
         if (certPath.Length > 1 && CertificateEquals(certPath[certPath.Length - 1], root))
         {
             this.certPath = certPath[..^1];
@@ -99,6 +100,7 @@ public sealed class X509Bundle
         {
             this.certPath = (X509Certificate2[]) certPath.Clone();
         }
+
         this.root = root;
         this.keyPair = keyPair;
     }
@@ -113,12 +115,14 @@ public sealed class X509Bundle
     {
         ObjectUtil.CheckNotNull(root, "root");
         ObjectUtil.CheckNotNull(keyPair, "keyPair");
+
         X509Bundle bundle = new X509Bundle(new X509Certificate2[] { root }, root, keyPair);
         if (!bundle.IsCertificateAuthority() || !bundle.IsSelfSigned())
         {
             throw new ArgumentException("Given certificate is not a root CA certificate: " +
                                         root.SubjectName.Name + ", issued by " + root.IssuerName.Name);
         }
+
         return bundle;
     }
 
@@ -228,12 +232,14 @@ public sealed class X509Bundle
     {
         Func<byte[], string> encoder = GetMimeEncoder();
         StringBuilder sb = new StringBuilder();
+
         foreach (X509Certificate2 cert in certs)
         {
             sb.Append("-----BEGIN CERTIFICATE-----\r\n");
             sb.Append(encoder(cert.RawData));
             sb.Append("\r\n-----END CERTIFICATE-----\r\n");
         }
+
         return sb.ToString();
     }
 
@@ -249,6 +255,7 @@ public sealed class X509Bundle
         object privateKey = Algorithms.GetPrivate(keyPair);
         sb.Append(encoder(Algorithms.GetEncoded(privateKey)));
         sb.Append("\r\n-----END PRIVATE KEY-----\r\n");
+
         return sb.ToString();
     }
 
@@ -260,14 +267,17 @@ public sealed class X509Bundle
         {
             string base64 = Convert.ToBase64String(bytes);
             StringBuilder sb = new StringBuilder(base64.Length + base64.Length / 64 * 2);
+
             for (int i = 0; i < base64.Length; i += 64)
             {
                 if (i > 0)
                 {
                     sb.Append("\r\n");
                 }
+
                 sb.Append(base64, i, Math.Min(64, base64.Length - i));
             }
+
             return sb.ToString();
         };
     }
@@ -361,11 +371,13 @@ public sealed class X509Bundle
         if (privateKey != null)
         {
             keyStore.Add(Algorithms.CopyWithPrivateKey(certPath[0], privateKey));
+
             for (int i = 1; i < certPath.Length; i++)
             {
                 keyStore.Add(certPath[i]);
             }
         }
+
         return keyStore.Export(X509ContentType.Pkcs12, new string(keyEntryPassword));
     }
 
@@ -428,14 +440,17 @@ public sealed class X509Bundle
     private static FileInfo CreateTempFile(byte[] content, string filePrefix, string fileSuffix)
     {
         string tempFile = Path.Combine(Path.GetTempPath(), filePrefix + Guid.NewGuid().ToString("N") + fileSuffix);
+
         using (FileStream @out = new FileStream(tempFile, FileMode.CreateNew, FileAccess.Write))
         {
             @out.Write(content);
         }
+
         lock (DELETE_ON_EXIT)
         {
             DELETE_ON_EXIT.Add(tempFile);
         }
+
         return new FileInfo(tempFile);
     }
 
@@ -468,6 +483,7 @@ public sealed class X509Bundle
         X509Certificate2Collection keyStore =
             X509CertificateLoader.LoadPkcs12Collection(ToKeyStore(EmptyArrays.EMPTY_CHARS), string.Empty);
         X509Certificate2 target = null;
+
         foreach (X509Certificate2 cert in keyStore)
         {
             if (cert.HasPrivateKey)
@@ -475,15 +491,19 @@ public sealed class X509Bundle
                 target = cert;
             }
         }
+
         if (target == null)
         {
             throw new CryptographicException("The bundle has no private key entry.");
         }
+
         X509Certificate2Collection intermediates = new X509Certificate2Collection();
+
         for (int i = 1; i < certPath.Length; i++)
         {
             intermediates.Add(certPath[i]);
         }
+
         SslStreamCertificateContext context = SslStreamCertificateContext.Create(target, intermediates, offline: true);
         // CLR: a self-signed bundle puts the same certificate into the key store twice (root and key entry), and both
         // loaded entries carry the private key in one key container; when the entry that is not the target is finalized,
@@ -517,16 +537,20 @@ public sealed class X509Bundle
     public X509Bundle MergeIntermediates(X509Bundle other)
     {
         List<X509Certificate2> certs = new List<X509Certificate2>();
+
         foreach (X509Certificate2 cert in certPath)
         {
             AddIfAbsent(certs, cert);
         }
+
         X509Certificate2[] otherPath = other.certPath;
+
         for (int i = 1; i < otherPath.Length; i++)
         {
             X509Certificate2 intermediate = otherPath[i];
             AddIfAbsent(certs, intermediate);
         }
+
         return FromCertificatePath(certs.ToArray(), root, keyPair);
     }
 
@@ -539,6 +563,7 @@ public sealed class X509Bundle
                 return;
             }
         }
+
         certs.Add(cert);
     }
 
@@ -554,6 +579,7 @@ public sealed class X509Bundle
         {
             return a == b;
         }
+
         return a.AsSpan().SequenceEqual(b);
     }
 }

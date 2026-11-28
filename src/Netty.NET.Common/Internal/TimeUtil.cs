@@ -26,6 +26,7 @@ internal static class TimeUtil
         {
             return long.MinValue;
         }
+
         return value * multiplier;
     }
 }

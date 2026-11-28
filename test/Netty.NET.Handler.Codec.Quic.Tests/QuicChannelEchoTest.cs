@@ -48,6 +48,7 @@ public class QuicChannelEchoTest : AbstractQuicTest
     public static IEnumerable<object[]> Data()
     {
         List<object[]> config = new List<object[]>();
+
         for (int a = 0; a < 2; a++)
         {
             for (int b = 0; b < 2; b++)
@@ -58,6 +59,7 @@ public class QuicChannelEchoTest : AbstractQuicTest
                 }
             }
         }
+
         return config;
     }
 
@@ -119,6 +121,7 @@ public class QuicChannelEchoTest : AbstractQuicTest
         IPEndPoint address = (IPEndPoint) server.LocalAddress;
         IChannel channel = await QuicTestUtils.NewClient(ImmediateExecutor.INSTANCE);
         IQuicChannel quicChannel = null;
+
         try
         {
             quicChannel = await QuicTestUtils.NewQuicChannelBootstrap(channel)
@@ -142,11 +145,13 @@ public class QuicChannelEchoTest : AbstractQuicTest
                     {
                         await f.WaitAsync(cancellationToken);
                     }
+
                     break;
                 }
 
                 await Task.Delay(50, cancellationToken);
             }
+
             await WaitForData(sh, ch, cancellationToken);
 
             // Close underlying streams.
@@ -214,6 +219,7 @@ public class QuicChannelEchoTest : AbstractQuicTest
                     }, TaskScheduler.Default);
 
             ctx.Channel.Config.SetAutoRead(autoRead);
+
             if (!autoRead)
             {
                 ctx.Read();
@@ -284,6 +290,7 @@ public class QuicChannelEchoTest : AbstractQuicTest
         IPEndPoint address = (IPEndPoint) server.LocalAddress;
         IChannel channel = await QuicTestUtils.NewClient(ImmediateExecutor.INSTANCE);
         IQuicChannel quicChannel = null;
+
         try
         {
             QuicChannelValidationHandler clientHandler = new ClientValidationHandler(autoRead);
@@ -315,6 +322,7 @@ public class QuicChannelEchoTest : AbstractQuicTest
                 {
                     await f.WaitAsync(cancellationToken);
                 }
+
                 await WaitForData(ch, sh, cancellationToken);
                 await WaitForData(sh, ch, cancellationToken);
                 await Task.Delay(100, cancellationToken);
@@ -358,6 +366,7 @@ public class QuicChannelEchoTest : AbstractQuicTest
             base.ChannelActive(ctx);
             SetAllocator(ctx.Channel, allocator);
             ctx.Channel.Config.SetAutoRead(autoRead);
+
             if (!autoRead)
             {
                 ctx.Read();
@@ -405,6 +414,7 @@ public class QuicChannelEchoTest : AbstractQuicTest
         if (composite)
         {
             CompositeByteBuf compositeByteBuf = allocator.CompositeBuffer();
+
             for (int i = 0; i < data.Length;)
             {
                 int length = Math.Min(random.Next(1024 * 64), data.Length - i);
@@ -412,11 +422,13 @@ public class QuicChannelEchoTest : AbstractQuicTest
                 compositeByteBuf.AddComponent(buf, true);
                 i += length;
             }
+
             return new List<Task> { channel.WriteAndFlushAsync(compositeByteBuf) };
         }
         else
         {
             List<Task> futures = new List<Task>();
+
             for (int i = 0; i < data.Length;)
             {
                 int length = Math.Min(random.Next(1024 * 64), data.Length - i);
@@ -424,6 +436,7 @@ public class QuicChannelEchoTest : AbstractQuicTest
                 futures.Add(channel.WriteAndFlushAsync(buf));
                 i += length;
             }
+
             return futures;
         }
     }
@@ -458,14 +471,17 @@ public class QuicChannelEchoTest : AbstractQuicTest
         {
             ExceptionDispatchInfo.Capture(h1.exception).Throw();
         }
+
         if (h2.exception != null && !(h2.exception is IOException))
         {
             ExceptionDispatchInfo.Capture(h2.exception).Throw();
         }
+
         if (h1.exception != null)
         {
             ExceptionDispatchInfo.Capture(h1.exception).Throw();
         }
+
         if (h2.exception != null)
         {
             ExceptionDispatchInfo.Capture(h2.exception).Throw();
@@ -503,6 +519,7 @@ public class QuicChannelEchoTest : AbstractQuicTest
             channel = ctx.Channel;
             IQuicStreamChannel channel0 = (IQuicStreamChannel) ctx.Channel;
             Assert.Equal(QuicStreamType.BIDIRECTIONAL, channel0.Type());
+
             if (channel0.IsLocalCreated())
             {
                 // Server starts with 1, client with 0
@@ -513,6 +530,7 @@ public class QuicChannelEchoTest : AbstractQuicTest
                 // Server starts with 1, client with 0
                 Assert.Equal(server ? 0 : 1, channel0.StreamId());
             }
+
             if (!autoRead)
             {
                 ctx.Read();
@@ -525,6 +543,7 @@ public class QuicChannelEchoTest : AbstractQuicTest
             @in.ReadBytes(actual);
 
             int lastIdx = counter;
+
             for (int i = 0; i < actual.Length; i++)
             {
                 Assert.Equal(data[i + lastIdx], actual[i]);

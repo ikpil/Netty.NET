@@ -60,6 +60,7 @@ public abstract class AbstractIntegrationTest
     public virtual void CloseChannels()
     {
         _ = encoder.CloseAsync();
+
         for (;;)
         {
             object msg = encoder.ReadOutbound();
@@ -67,10 +68,12 @@ public abstract class AbstractIntegrationTest
             {
                 break;
             }
+
             ReferenceCountUtil.Release(msg);
         }
 
         _ = decoder.CloseAsync();
+
         for (;;)
         {
             object msg = decoder.ReadInbound();
@@ -78,6 +81,7 @@ public abstract class AbstractIntegrationTest
             {
                 break;
             }
+
             ReferenceCountUtil.Release(msg);
         }
     }
@@ -129,10 +133,12 @@ public abstract class AbstractIntegrationTest
     {
         byte[] data = new byte[10240];
         new Random(rand.Next()).NextBytes(data);
+
         for (int i = 0; i < 1024; i++)
         {
             data[i] = 2;
         }
+
         TestIdentity(data, true);
         TestIdentity(data, false);
     }
@@ -142,10 +148,12 @@ public abstract class AbstractIntegrationTest
     {
         Random rng = new Random(rand.Next());
         byte[] data = new byte[10240];
+
         for (int i = 0; i < data.Length; i++)
         {
             data[i] = i % 4 != 0 ? (byte) 0 : (byte) rng.Next();
         }
+
         TestIdentity(data, true);
         TestIdentity(data, false);
     }
@@ -171,10 +179,12 @@ public abstract class AbstractIntegrationTest
     public void TestSequential()
     {
         byte[] data = new byte[1024];
+
         for (int i = 0; i < data.Length; i++)
         {
             data[i] = (byte) i;
         }
+
         TestIdentity(data, true);
         TestIdentity(data, false);
     }
@@ -193,6 +203,7 @@ public abstract class AbstractIntegrationTest
             Assert.True(encoder.Finish());
 
             ByteBuf msg;
+
             while ((msg = encoder.ReadOutbound<ByteBuf>()) != null)
             {
                 compressed.AddComponent(msg, true);
@@ -200,10 +211,12 @@ public abstract class AbstractIntegrationTest
 
             decoder.WriteInbound(compressed.Retain());
             Assert.False(compressed.IsReadable());
+
             while ((msg = decoder.ReadInbound<ByteBuf>()) != null)
             {
                 decompressed.AddComponent(msg, true);
             }
+
             @in.ReaderIndex = 0;
             Assert.Equal(@in, decompressed);
         }
@@ -237,16 +250,19 @@ public abstract class AbstractIntegrationTest
         EmbeddedChannel compressChannel = CreateEncoder();
         ByteBuf compressed = compressChannel.Alloc().Buffer();
         byte[] chunk = new byte[chunkSize];
+
         for (int i = 0; i <= numberOfChunks; i++)
         {
             if (i < numberOfChunks)
             {
                 ByteBuf @in = compressChannel.Alloc().Buffer(chunkSize);
+
                 for (int j = 0; j < chunkSize; j++)
                 {
                     byte byteValue = (byte) (i + (j & 0xA0));
                     chunk[j] = byteValue;
                 }
+
                 @in.WriteBytes(chunk);
                 digest.AppendData(chunk);
                 compressChannel.WriteOutbound(@in);
@@ -257,6 +273,7 @@ public abstract class AbstractIntegrationTest
                 _ = compressChannel.CloseAsync();
 #pragma warning restore xUnit1051
             }
+
             while (true)
             {
                 ByteBuf buf = compressChannel.ReadOutbound<ByteBuf>();
@@ -264,10 +281,12 @@ public abstract class AbstractIntegrationTest
                 {
                     break;
                 }
+
                 compressed.WriteBytes(buf);
                 buf.Release();
             }
         }
+
         byte[] expectedData = digest.GetHashAndReset();
 
         using PooledByteBufAllocator allocator = new PooledByteBufAllocator(false);
@@ -300,12 +319,14 @@ public abstract class AbstractIntegrationTest
         {
             ByteBuf buf = (ByteBuf) msg;
             total += buf.ReadableBytes;
+
             try
             {
                 foreach (ReadOnlyMemory<byte> segment in buf.AsReadOnlySequence(buf.ReaderIndex, buf.ReadableBytes))
                 {
                     digest.AppendData(segment.Span);
                 }
+
                 PooledByteBufAllocator allocator = (PooledByteBufAllocator) ctx.Alloc();
                 Assert.True(allocator.Metric.UsedHeapMemory < memoryLimit);
                 Assert.True(allocator.Metric.UsedDirectMemory < memoryLimit);

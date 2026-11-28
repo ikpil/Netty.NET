@@ -36,6 +36,7 @@ public class MqttMessageIdVariableHeader
         throw new ArgumentException("messageId: " + messageId.ToString(CultureInfo.InvariantCulture) +
                 " (expected: 1 ~ 65535)");
       }
+
       return new MqttMessageIdVariableHeader(messageId);
     }
 

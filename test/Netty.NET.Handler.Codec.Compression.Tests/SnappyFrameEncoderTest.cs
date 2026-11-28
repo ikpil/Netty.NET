@@ -116,6 +116,7 @@ public class SnappyFrameEncoderTest
         });
 
         CompositeByteBuf actual = Unpooled.CompositeBuffer();
+
         for (;;)
         {
             ByteBuf m = channel.ReadOutbound<ByteBuf>();
@@ -123,8 +124,10 @@ public class SnappyFrameEncoderTest
             {
                 break;
             }
+
             actual.AddComponent(m, true);
         }
+
         Assert.Equal(expected, actual);
 
         expected.Release();

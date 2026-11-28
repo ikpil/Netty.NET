@@ -73,6 +73,7 @@ public sealed class QuicServerZeroRTTExample
                     ch.Pipeline.AddLast(new LineBasedFrameDecoder(1024))
                             .AddLast(new ByeHandler());
                 })).Build();
+
         try
         {
             Bootstrap bs = new Bootstrap();
@@ -117,6 +118,7 @@ public sealed class QuicServerZeroRTTExample
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             ByteBuf byteBuf = (ByteBuf) msg;
+
             try
             {
                 if (byteBuf.ToString(Encoding.ASCII).Trim().Equals("Bye"))

@@ -121,6 +121,7 @@ internal sealed class TestSpdyFrameDecoderDelegate : ISpdyFrameDecoderDelegate
             {
                 return;
             }
+
             buf.Release();
         }
     }

@@ -73,7 +73,9 @@ public sealed class InsecureQuicTokenHandler : IQuicTokenHandler
         {
             return -1;
         }
+
         ByteBuf addressBuffer = Unpooled.WrappedBuffer(addr);
+
         try
         {
             if (!addressBuffer.Equals(token.Slice(SERVER_NAME_BYTES.Length, addr.Length)))
@@ -85,6 +87,7 @@ public sealed class InsecureQuicTokenHandler : IQuicTokenHandler
         {
             addressBuffer.Release();
         }
+
         return minLength;
     }
 

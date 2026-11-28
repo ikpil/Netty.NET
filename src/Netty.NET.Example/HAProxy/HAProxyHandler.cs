@@ -38,6 +38,7 @@ public class HAProxyHandler : ChannelOutboundHandlerAdapter
     public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken)
     {
         Task future = ctx.WriteAsync(msg, cancellationToken);
+
         if (msg is HAProxyMessage)
         {
             _ = future.ContinueWith(future1 =>
@@ -54,6 +55,7 @@ public class HAProxyHandler : ChannelOutboundHandlerAdapter
             }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously,
                 new EventExecutorTaskScheduler(() => ctx.Executor));
         }
+
         return future;
     }
 }

@@ -198,7 +198,9 @@ public class TrafficCounter
             {
                 return;
             }
+
             counter.ResetAccounting(MilliSecondFromNano());
+
             if (counter.trafficShapingHandler != null)
             {
                 counter.trafficShapingHandler.DoAccounting(counter);
@@ -217,6 +219,7 @@ public class TrafficCounter
             {
                 return;
             }
+
             lastTime.Set(MilliSecondFromNano());
             long localCheckInterval = checkInterval.Get();
             // if executor is null, it means it is piloted by a GlobalChannelTrafficCounter, so no executor
@@ -243,12 +246,15 @@ public class TrafficCounter
             {
                 return;
             }
+
             monitorActive = false;
             ResetAccounting(MilliSecondFromNano());
+
             if (trafficShapingHandler != null)
             {
                 trafficShapingHandler.DoAccounting(this);
             }
+
             if (scheduledFuture != null)
             {
                 scheduledFuture.Cancel();
@@ -271,10 +277,12 @@ public class TrafficCounter
                 // nothing to do
                 return;
             }
+
             if (logger.IsDebugEnabled() && interval > CheckInterval() << 1)
             {
                 logger.Debug("Acct schedule not ok: " + interval + " > 2*" + CheckInterval() + " from " + name);
             }
+
             Volatile.Write(ref lastReadBytes, currentReadBytes.Set(0));
             Volatile.Write(ref lastWrittenBytes, currentWrittenBytes.Set(0));
             lastReadThroughput = Volatile.Read(ref lastReadBytes) * 1000 / interval;
@@ -572,12 +580,14 @@ public class TrafficCounter
         {
             return 0;
         }
+
         long lastTimeCheck = lastTime.Get();
         long sum = currentReadBytes.Get();
         long localReadingTime = readingTime;
         long lastRB = Volatile.Read(ref lastReadBytes);
         long interval = now - lastTimeCheck;
         long pastDelay = Math.Max(Volatile.Read(ref lastReadingTime) - lastTimeCheck, 0);
+
         if (interval > AbstractTrafficShapingHandler.MINIMAL_WAIT)
         {
             // Enough interval time to compute shaping
@@ -588,16 +598,20 @@ public class TrafficCounter
                 {
                     logger.Debug("Time: " + time + ':' + sum + ':' + interval + ':' + pastDelay);
                 }
+
                 if (time > maxTime && now + time - localReadingTime > maxTime)
                 {
                     time = maxTime;
                 }
+
                 readingTime = Math.Max(localReadingTime, now + time);
                 return time;
             }
+
             readingTime = Math.Max(localReadingTime, now);
             return 0;
         }
+
         // take the last read interval check to get enough interval time
         long lastsum = sum + lastRB;
         long lastinterval = interval + checkInterval.Get();
@@ -608,13 +622,16 @@ public class TrafficCounter
             {
                 logger.Debug("Time: " + time2 + ':' + lastsum + ':' + lastinterval + ':' + pastDelay);
             }
+
             if (time2 > maxTime && now + time2 - localReadingTime > maxTime)
             {
                 time2 = maxTime;
             }
+
             readingTime = Math.Max(localReadingTime, now + time2);
             return time2;
         }
+
         readingTime = Math.Max(localReadingTime, now);
         return 0;
     }
@@ -660,6 +677,7 @@ public class TrafficCounter
         {
             return 0;
         }
+
         long lastTimeCheck = lastTime.Get();
         long sum = currentWrittenBytes.Get();
         long lastWB = Volatile.Read(ref lastWrittenBytes);
@@ -676,16 +694,20 @@ public class TrafficCounter
                 {
                     logger.Debug("Time: " + time + ':' + sum + ':' + interval + ':' + pastDelay);
                 }
+
                 if (time > maxTime && now + time - localWritingTime > maxTime)
                 {
                     time = maxTime;
                 }
+
                 writingTime = Math.Max(localWritingTime, now + time);
                 return time;
             }
+
             writingTime = Math.Max(localWritingTime, now);
             return 0;
         }
+
         // take the last write interval check to get enough interval time
         long lastsum = sum + lastWB;
         long lastinterval = interval + checkInterval.Get();
@@ -696,13 +718,16 @@ public class TrafficCounter
             {
                 logger.Debug("Time: " + time2 + ':' + lastsum + ':' + lastinterval + ':' + pastDelay);
             }
+
             if (time2 > maxTime && now + time2 - localWritingTime > maxTime)
             {
                 time2 = maxTime;
             }
+
             writingTime = Math.Max(localWritingTime, now + time2);
             return time2;
         }
+
         writingTime = Math.Max(localWritingTime, now);
         return 0;
     }

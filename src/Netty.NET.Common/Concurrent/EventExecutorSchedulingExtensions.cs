@@ -12,6 +12,7 @@ public static class EventExecutorSchedulingExtensions
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(action);
+
         return ScheduleCore<object>(executor, _ =>
         {
             action();
@@ -23,6 +24,7 @@ public static class EventExecutorSchedulingExtensions
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(function);
+
         return ScheduleCore(executor, _ => function(), delay, 0, cancellationToken);
     }
 
@@ -30,6 +32,7 @@ public static class EventExecutorSchedulingExtensions
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(action);
+
         return ScheduleCore<object>(executor, token =>
         {
             action(token);
@@ -56,6 +59,7 @@ public static class EventExecutorSchedulingExtensions
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(function);
+
         return ScheduleCore(executor, _ => function() ?? throw new InvalidOperationException("The scheduled delegate returned a null Task."),
             delay, 0, cancellationToken).Unwrap();
     }
@@ -64,6 +68,7 @@ public static class EventExecutorSchedulingExtensions
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(function);
+
         return ScheduleCore(executor, _ => function() ?? throw new InvalidOperationException("The scheduled delegate returned a null Task."),
             delay, 0, cancellationToken).Unwrap();
     }
@@ -72,6 +77,7 @@ public static class EventExecutorSchedulingExtensions
         TimeSpan delay, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(function);
+
         return ScheduleCore(executor, token => function(token) ?? throw new InvalidOperationException("The scheduled delegate returned a null Task."),
             delay, 0, cancellationToken).Unwrap();
     }
@@ -80,6 +86,7 @@ public static class EventExecutorSchedulingExtensions
         TimeSpan delay, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(function);
+
         return ScheduleCore(executor, token => function(token) ?? throw new InvalidOperationException("The scheduled delegate returned a null Task."),
             delay, 0, cancellationToken).Unwrap();
     }
@@ -90,6 +97,7 @@ public static class EventExecutorSchedulingExtensions
         TimeSpan period, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(action);
+
         return SchedulePeriodic(executor, _ => action(), initialDelay, period, false, cancellationToken);
     }
 
@@ -104,6 +112,7 @@ public static class EventExecutorSchedulingExtensions
         TimeSpan delay, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(action);
+
         return SchedulePeriodic(executor, _ => action(), initialDelay, delay, true, cancellationToken);
     }
 
@@ -125,6 +134,7 @@ public static class EventExecutorSchedulingExtensions
         {
             throw new ArgumentOutOfRangeException(nameof(interval));
         }
+
         long period = AbstractScheduledEventExecutor.ToNanos(interval);
         return ScheduleCore<object>(executor, ct =>
         {
@@ -139,6 +149,7 @@ public static class EventExecutorSchedulingExtensions
     {
         ArgumentNullException.ThrowIfNull(group);
         ArgumentNullException.ThrowIfNull(function);
+
         if (delay < TimeSpan.Zero)
         {
             delay = TimeSpan.Zero;
@@ -156,6 +167,7 @@ public static class EventExecutorSchedulingExtensions
             return ordered.ScheduleNative(function, delay, period, token);
         if (executor is UnorderedThreadPoolEventExecutor unordered)
             return unordered.ScheduleNative(function, delay, period, token);
+
         return Task.FromException<T>(new NotSupportedException("This executor does not support deadline scheduling."));
     }
 }

@@ -20,6 +20,7 @@ public class LocalTransportContractTest
         var group = new DefaultEventLoopGroup(threads);
         IChannel server = null, client = null;
         var received = new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
+
         try
         {
             server = await new ServerBootstrap().Group(group).Channel<LocalServerChannel>()
@@ -38,8 +39,10 @@ public class LocalTransportContractTest
         {
             if (client != null)
                 await client.CloseAsync();
+
             if (server != null)
                 await server.CloseAsync();
+
             await group.StopAsync().WaitAsync(TimeSpan.FromSeconds(10));
         }
     }

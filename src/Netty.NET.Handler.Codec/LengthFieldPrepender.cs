@@ -159,6 +159,7 @@ public class LengthFieldPrepender : MessageToMessageEncoder<ByteBuf>
                     "lengthFieldLength must be either 1, 2, 3, 4, or 8: " +
                     lengthFieldLength.ToString(CultureInfo.InvariantCulture));
         }
+
         this.byteOrder = ObjectUtil.CheckNotNull(byteOrder, "byteOrder");
         this.lengthFieldLength = lengthFieldLength;
         this.lengthIncludesLengthFieldLength = lengthIncludesLengthFieldLength;
@@ -175,6 +176,7 @@ public class LengthFieldPrepender : MessageToMessageEncoder<ByteBuf>
     protected override void Encode(IChannelHandlerContext ctx, ByteBuf msg, IList<object> @out)
     {
         int length = msg.ReadableBytes + lengthAdjustment;
+
         if (lengthIncludesLengthFieldLength)
         {
             length += lengthFieldLength;
@@ -183,6 +185,7 @@ public class LengthFieldPrepender : MessageToMessageEncoder<ByteBuf>
         CheckPositiveOrZero(length, "length");
 
         bool littleEndian = byteOrder == ByteOrder.LITTLE_ENDIAN;
+
         switch (lengthFieldLength)
         {
         case 1:
@@ -191,6 +194,7 @@ public class LengthFieldPrepender : MessageToMessageEncoder<ByteBuf>
                 throw new ArgumentException(
                         "length does not fit into a byte: " + length.ToString(CultureInfo.InvariantCulture));
             }
+
             @out.Add(ctx.Alloc().Buffer(1).WriteByte((byte) length));
             break;
         case 2:
@@ -199,6 +203,7 @@ public class LengthFieldPrepender : MessageToMessageEncoder<ByteBuf>
                 throw new ArgumentException(
                         "length does not fit into a short integer: " + length.ToString(CultureInfo.InvariantCulture));
             }
+
             @out.Add(littleEndian ? ctx.Alloc().Buffer(2).WriteShortLE(unchecked((short) length))
                     : ctx.Alloc().Buffer(2).WriteShort(unchecked((short) length)));
             break;
@@ -208,6 +213,7 @@ public class LengthFieldPrepender : MessageToMessageEncoder<ByteBuf>
                 throw new ArgumentException(
                         "length does not fit into a medium integer: " + length.ToString(CultureInfo.InvariantCulture));
             }
+
             @out.Add(littleEndian ? ctx.Alloc().Buffer(3).WriteMediumLE(length)
                     : ctx.Alloc().Buffer(3).WriteMedium(length));
             break;
@@ -223,6 +229,7 @@ public class LengthFieldPrepender : MessageToMessageEncoder<ByteBuf>
             throw new UnreachableException(
                     "Unexpected length field length: " + lengthFieldLength.ToString(CultureInfo.InvariantCulture));
         }
+
         @out.Add(msg.Retain());
     }
 }

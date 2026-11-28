@@ -28,10 +28,12 @@ public class LengthFieldBasedFrameDecoderTest
     {
         ByteBuf buf = Unpooled.Buffer();
         buf.WriteInt(32);
+
         for (int i = 0; i < 32; i++)
         {
             buf.WriteByte(i);
         }
+
         buf.WriteInt(1);
         buf.WriteByte('a');
         EmbeddedChannel channel = new EmbeddedChannel(new LengthFieldBasedFrameDecoder(16, 0, 4));
@@ -53,10 +55,12 @@ public class LengthFieldBasedFrameDecoderTest
     {
         ByteBuf buf = Unpooled.Buffer();
         buf.WriteInt(32);
+
         for (int i = 0; i < 32; i++)
         {
             buf.WriteByte(i);
         }
+
         buf.WriteInt(1);
         buf.WriteByte('a');
         EmbeddedChannel channel = new EmbeddedChannel(new LengthFieldBasedFrameDecoder(16, 0, 4));

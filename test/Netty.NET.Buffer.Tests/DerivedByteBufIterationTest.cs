@@ -85,9 +85,11 @@ public class DerivedByteBufIterationTest
             }
 
             Root.SetIndex(2, 14).MarkReaderIndex().MarkWriterIndex();
+
             if (kind is >= 5 and <= 9)
                 Owner = kind is 6 or 8 ? PooledDerivedByteBuf.NewDuplicate(Root, Root, 2, 14)
                     : PooledDerivedByteBuf.NewSlice(Root, Root, 3, 10);
+
             View = kind switch
             {
                 0 => Root.Duplicate(),
@@ -111,10 +113,12 @@ public class DerivedByteBufIterationTest
             {
                 Assert.True(Owner.Release());
             }
+
             if (Root.RefCnt > 0)
             {
                 Assert.True(Root.Release());
             }
+
             Assert.Equal(0, Native.ReservedBytes);
         }
     }
@@ -188,6 +192,7 @@ public class DerivedByteBufIterationTest
         {
             if (++calls == 2)
                 throw failure;
+
             return true;
         })));
         Assert.Equal(2, calls);
@@ -202,11 +207,13 @@ public class DerivedByteBufIterationTest
             Assert.Equal(3, Scan(s.View, descending, 2, 3, value =>
             {
                 visited.Add(value);
+
                 if (visited.Count == 1)
                 {
                     s.Root.Capacity = 32;
                     s.Root.SetByte(s.Offset + 3, 99);
                 }
+
                 return value != 99;
             }));
             Assert.Equal(descending ? new byte[] { (byte)(s.Offset + 4), 99 }
@@ -214,6 +221,7 @@ public class DerivedByteBufIterationTest
             Assert.Equal(1, s.Observation.Calls);
             Assert.Equal(32, s.Native.ReservedBytes);
         }
+
         Assert.Equal(reader, s.View.ReaderIndex);
         Assert.Equal(writer, s.View.WriterIndex);
         Assert.Equal(2, s.Root.ReaderIndex);
@@ -221,6 +229,7 @@ public class DerivedByteBufIterationTest
         s.View.SetIndex(0, s.View.Capacity).ResetReaderIndex().ResetWriterIndex();
         Assert.Equal(reader, s.View.ReaderIndex);
         Assert.Equal(writer, s.View.WriterIndex);
+
         if (s.Owner != null)
         {
             Assert.Equal(2, s.Root.RefCnt);

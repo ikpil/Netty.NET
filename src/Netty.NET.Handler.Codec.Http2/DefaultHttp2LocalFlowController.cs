@@ -222,6 +222,7 @@ public class DefaultHttp2LocalFlowController : IHttp2LocalFlowController
 
             return ConsumeAllBytes(State(stream), numBytes);
         }
+
         return false;
     }
 
@@ -490,6 +491,7 @@ public class DefaultHttp2LocalFlowController : IHttp2LocalFlowController
                 throw StreamError(stream.Id(), INTERNAL_ERROR,
                         "Attempting to return too many bytes for stream %d", stream.Id());
             }
+
             processedWindow -= delta;
         }
 
@@ -497,6 +499,7 @@ public class DefaultHttp2LocalFlowController : IHttp2LocalFlowController
         {
             // Return the bytes processed and update the window.
             ReturnProcessedBytes(numBytes);
+
             return WriteWindowUpdateIfNeeded();
         }
 
@@ -520,6 +523,7 @@ public class DefaultHttp2LocalFlowController : IHttp2LocalFlowController
                 WriteWindowUpdate();
                 return true;
             }
+
             return false;
         }
 
@@ -531,6 +535,7 @@ public class DefaultHttp2LocalFlowController : IHttp2LocalFlowController
         {
             // Expand the window for this stream back to the size of the initial window.
             int deltaWindowSize = initialStreamWindowSize - processedWindow;
+
             try
             {
                 IncrementFlowControlWindows(deltaWindowSize);
@@ -708,8 +713,10 @@ public class DefaultHttp2LocalFlowController : IHttp2LocalFlowController
                 {
                     compositeException = new CompositeStreamException(e.Error(), 4);
                 }
+
                 compositeException.Add(e);
             }
+
             return true;
         }
 

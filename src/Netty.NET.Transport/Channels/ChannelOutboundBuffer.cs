@@ -99,6 +99,7 @@ public sealed class ChannelOutboundBuffer
     public ChannelOutboundBuffer(IChannel channel)
     {
         ArgumentNullException.ThrowIfNull(channel);
+
         this.channel = channel;
     }
 
@@ -119,13 +120,17 @@ public sealed class ChannelOutboundBuffer
     public Task AddMessage(object msg, int size, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(msg);
+
         if (cancellationToken.IsCancellationRequested)
         {
             ReferenceCountUtil.SafeRelease(msg);
+
             return Task.FromCanceled(cancellationToken);
         }
+
         var promise = new WritePromise(channel, cancellationToken, channel.Config.WriteProgress);
         Entry entry = Entry.NewInstance(msg, size, Total(msg), promise);
+
         if (tailEntry == null)
         {
             flushedEntry = null;
@@ -135,7 +140,9 @@ public sealed class ChannelOutboundBuffer
             Entry tail = tailEntry;
             tail.next = entry;
         }
+
         tailEntry = entry;
+
         if (unflushedEntry == null)
         {
             unflushedEntry = entry;
@@ -181,11 +188,14 @@ public sealed class ChannelOutboundBuffer
                 // there is no flushedEntry yet, so start with the entry
                 flushedEntry = entry;
             }
+
             long cancelledBytes = 0;
             List<object> cancelledMsgs = null;
+
             do
             {
                 flushed++;
+
                 if (!entry.promise.SetUncancellable())
                 {
                     // Was cancelled so make sure we free up memory. The message is released only once this buffer is
@@ -194,9 +204,11 @@ public sealed class ChannelOutboundBuffer
                     {
                         cancelledMsgs = new List<object>(2);
                     }
+
                     cancelledMsgs.Add(entry.msg);
                     cancelledBytes += entry.Cancel();
                 }
+
                 entry = entry.next;
             } while (entry != null);
 
@@ -209,6 +221,7 @@ public sealed class ChannelOutboundBuffer
                 {
                     ReferenceCountUtil.SafeRelease(cancelledMsgs[i]);
                 }
+
                 // Notify about the freed bytes only now. This may fire channelWritabilityChanged(...) synchronously,
                 // and a handler may write, flush or close the channel from there, so this buffer must be consistent
                 // first.
@@ -279,6 +292,7 @@ public sealed class ChannelOutboundBuffer
         {
             return holder.Content.ReadableBytes;
         }
+
         return -1;
     }
 
@@ -312,6 +326,7 @@ public sealed class ChannelOutboundBuffer
             {
                 return 0;
             }
+
             return entry.progress;
         }
     }
@@ -335,6 +350,7 @@ public sealed class ChannelOutboundBuffer
         {
             return;
         }
+
         // this is going to save from type pollution due to https://bugs.openjdk.org/browse/JDK-8180450
         p.TryProgress(progress, e.total);
     }
@@ -352,6 +368,7 @@ public sealed class ChannelOutboundBuffer
             ClearNioBuffers();
             return false;
         }
+
         object msg = e.msg;
 
         WritePromise promise = e.promise;
@@ -380,6 +397,7 @@ public sealed class ChannelOutboundBuffer
             {
                 ReferenceCountUtil.SafeRelease(msg);
             }
+
             SafeSuccess(promise);
             DecrementPendingOutboundBytes(size, false, true);
         }
@@ -408,6 +426,7 @@ public sealed class ChannelOutboundBuffer
             ClearNioBuffers();
             return false;
         }
+
         object msg = e.msg;
 
         WritePromise promise = e.promise;
@@ -436,6 +455,7 @@ public sealed class ChannelOutboundBuffer
         {
             // processed everything
             flushedEntry = null;
+
             if (e == tailEntry)
             {
                 tailEntry = null;
@@ -465,6 +485,7 @@ public sealed class ChannelOutboundBuffer
                 {
                     throw new InvalidOperationException("Written bytes extend beyond flushed byte buffers.");
                 }
+
                 break;
             }
 
@@ -478,6 +499,7 @@ public sealed class ChannelOutboundBuffer
                     Progress(readableBytes);
                     writtenBytes -= readableBytes;
                 }
+
                 Remove();
             }
             else // readableBytes > writtenBytes
@@ -487,9 +509,11 @@ public sealed class ChannelOutboundBuffer
                     buf.ReaderIndex = readerIndex + (int)writtenBytes;
                     Progress(writtenBytes);
                 }
+
                 break;
             }
         }
+
         ClearNioBuffers();
     }
 
@@ -543,6 +567,7 @@ public sealed class ChannelOutboundBuffer
         InternalThreadLocalMap threadLocalMap = InternalThreadLocalMap.Get();
         ReadOnlyMemory<byte>[] nioBuffers = NIO_BUFFERS.Get(threadLocalMap);
         Entry entry = flushedEntry;
+
         while (IsFlushedEntry(entry) && entry.msg is ByteBuf)
         {
             if (!entry.cancelled)
@@ -568,6 +593,7 @@ public sealed class ChannelOutboundBuffer
                         // - https://linux.die.net//man/2/writev
                         break;
                     }
+
                     nioBufferSize += readableBytes;
                     int count = entry.count;
                     if (count == -1)
@@ -575,12 +601,14 @@ public sealed class ChannelOutboundBuffer
                         //noinspection ConstantValueVariableUse
                         entry.count = count = NioBufferCountOf(buf, readerIndex, readableBytes);
                     }
+
                     int neededSpace = Math.Min(maxCount, nioBufferCount + count);
                     if (neededSpace > nioBuffers.Length)
                     {
                         nioBuffers = ExpandNioBufferArray(nioBuffers, neededSpace, nioBufferCount);
                         NIO_BUFFERS.Set(threadLocalMap, nioBuffers);
                     }
+
                     if (count == 1)
                     {
                         ReadOnlyMemory<byte> nioBuf = entry.buf;
@@ -598,6 +626,7 @@ public sealed class ChannelOutboundBuffer
                             // tail, which is the buffer's readable bytes.
                             nioBuf = nioBuf.Slice(nioBuf.Length - readableBytes);
                         }
+
                         nioBuffers[nioBufferCount++] = nioBuf;
                     }
                     else
@@ -606,14 +635,17 @@ public sealed class ChannelOutboundBuffer
                         // branch is not very likely to get hit very frequently.
                         nioBufferCount = NioBuffers(entry, buf, nioBuffers, nioBufferCount, maxCount);
                     }
+
                     if (nioBufferCount >= maxCount)
                     {
                         break;
                     }
                 }
             }
+
             entry = entry.next;
         }
+
         this.nioBufferCount = nioBufferCount;
         this.nioBufferSize = nioBufferSize;
 
@@ -629,13 +661,16 @@ public sealed class ChannelOutboundBuffer
             // of Object allocation
             entry.bufs = nioBufs = NioBuffers(buf.ReadableSequence);
         }
+
         // CLR: ByteBuffers written by an earlier gathering write have no remaining bytes; ReadOnlyMemory has no
         // position, so the bytes written since the segments were cached are skipped from the front instead.
         long written = -buf.ReadableBytes;
+
         for (int i = 0; i < nioBufs.Length; i++)
         {
             written += nioBufs[i].Length;
         }
+
         for (int i = 0; i < nioBufs.Length && nioBufferCount < maxCount; ++i)
         {
             ReadOnlyMemory<byte> nioBuf = nioBufs[i];
@@ -644,13 +679,16 @@ public sealed class ChannelOutboundBuffer
                 written -= nioBuf.Length;
                 continue;
             }
+
             if (written > 0)
             {
                 nioBuf = nioBuf.Slice((int)written);
                 written = 0;
             }
+
             nioBuffers[nioBufferCount++] = nioBuf;
         }
+
         return nioBufferCount;
     }
 
@@ -662,16 +700,20 @@ public sealed class ChannelOutboundBuffer
         {
             return 1;
         }
+
         ReadOnlySequence<byte> sequence = buf.AsReadOnlySequence(index, length);
         if (sequence.IsSingleSegment)
         {
             return 1;
         }
+
         int count = 0;
+
         foreach (ReadOnlyMemory<byte> _ in sequence)
         {
             count++;
         }
+
         return count;
     }
 
@@ -679,16 +721,19 @@ public sealed class ChannelOutboundBuffer
     private static ReadOnlyMemory<byte>[] NioBuffers(ReadOnlySequence<byte> sequence)
     {
         var segments = new List<ReadOnlyMemory<byte>>();
+
         foreach (ReadOnlyMemory<byte> segment in sequence)
         {
             segments.Add(segment);
         }
+
         return segments.ToArray();
     }
 
     private static ReadOnlyMemory<byte>[] ExpandNioBufferArray(ReadOnlyMemory<byte>[] array, int neededSpace, int size)
     {
         int newCapacity = array.Length;
+
         do
         {
             // double capacity until it is big enough
@@ -757,6 +802,7 @@ public sealed class ChannelOutboundBuffer
     private void SetUserDefinedWritability(int index)
     {
         int mask = ~WritabilityMask(index);
+
         for (;;)
         {
             int oldValue = Volatile.Read(ref unwritable);
@@ -767,6 +813,7 @@ public sealed class ChannelOutboundBuffer
                 {
                     FireChannelWritabilityChanged(true);
                 }
+
                 break;
             }
         }
@@ -775,6 +822,7 @@ public sealed class ChannelOutboundBuffer
     private void ClearUserDefinedWritability(int index)
     {
         int mask = WritabilityMask(index);
+
         for (;;)
         {
             int oldValue = Volatile.Read(ref unwritable);
@@ -785,6 +833,7 @@ public sealed class ChannelOutboundBuffer
                 {
                     FireChannelWritabilityChanged(true);
                 }
+
                 break;
             }
         }
@@ -796,6 +845,7 @@ public sealed class ChannelOutboundBuffer
         {
             throw new ArgumentException("index: " + index.ToString(CultureInfo.InvariantCulture) + " (expected: 1~31)");
         }
+
         return 1 << index;
     }
 
@@ -811,6 +861,7 @@ public sealed class ChannelOutboundBuffer
                 {
                     FireChannelWritabilityChanged(invokeLater);
                 }
+
                 break;
             }
         }
@@ -828,6 +879,7 @@ public sealed class ChannelOutboundBuffer
                 {
                     FireChannelWritabilityChanged(invokeLater);
                 }
+
                 break;
             }
         }
@@ -836,6 +888,7 @@ public sealed class ChannelOutboundBuffer
     private void FireChannelWritabilityChanged(bool invokeLater)
     {
         IChannelPipeline pipeline = channel.Pipeline;
+
         if (invokeLater)
         {
             // CLR: the source channel drops its buffer reference on close, so later tracker updates cannot notify.
@@ -843,11 +896,13 @@ public sealed class ChannelOutboundBuffer
             {
                 return;
             }
+
             Action task = fireChannelWritabilityChangedTask;
             if (task == null)
             {
                 fireChannelWritabilityChangedTask = task = () => pipeline.FireChannelWritabilityChanged();
             }
+
             try
             {
                 channel.EventLoop.Execute(task);
@@ -894,6 +949,7 @@ public sealed class ChannelOutboundBuffer
         try
         {
             inFail = true;
+
             for (;;)
             {
                 if (!Remove0(cause, notify))
@@ -938,6 +994,7 @@ public sealed class ChannelOutboundBuffer
             // CLR: this object outlives close (see _closed), so it must not keep the recycled entries.
             unflushedEntry = null;
             tailEntry = null;
+
             while (e != null)
             {
                 // Just decrease; do not trigger any events via decrementPendingOutboundBytes()
@@ -949,6 +1006,7 @@ public sealed class ChannelOutboundBuffer
                     ReferenceCountUtil.SafeRelease(e.msg);
                     SafeFail(e.promise, cause);
                 }
+
                 e = e.UnguardedRecycleAndGetNext();
             }
         }
@@ -956,6 +1014,7 @@ public sealed class ChannelOutboundBuffer
         {
             inFail = false;
         }
+
         ClearNioBuffers();
     }
 
@@ -1074,6 +1133,7 @@ public sealed class ChannelOutboundBuffer
                     return;
                 }
             }
+
             entry = entry.next;
         } while (IsFlushedEntry(entry));
     }
@@ -1141,6 +1201,7 @@ public sealed class ChannelOutboundBuffer
                 buf = default;
                 return pSize;
             }
+
             return 0;
         }
 
@@ -1226,12 +1287,14 @@ public sealed class ChannelOutboundBuffer
         internal bool TrySuccess()
         {
             _registration.Dispose();
+
             return TrySetResult();
         }
 
         internal bool TryFailure(Exception cause)
         {
             _registration.Dispose();
+
             return TrySetException(cause);
         }
 
@@ -1250,6 +1313,7 @@ public sealed class ChannelOutboundBuffer
             {
                 return;
             }
+
             // Native IProgress replaces a producer-owned ChannelProgressivePromise. Report before
             // completing the queue Task; observer failure must not fail or interrupt the socket write.
             try

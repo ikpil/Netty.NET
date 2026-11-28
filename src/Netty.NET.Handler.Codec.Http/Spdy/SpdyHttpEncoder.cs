@@ -149,6 +149,7 @@ public class SpdyHttpEncoder : MessageToMessageEncoder<IHttpObject>
         : base(typeof(IHttpObject))
     {
         ObjectUtil.CheckNotNull(version, "version");
+
         this.headersToLowerCase = headersToLowerCase;
         this.validateHeaders = validateHeaders;
     }
@@ -169,6 +170,7 @@ public class SpdyHttpEncoder : MessageToMessageEncoder<IHttpObject>
             last = spdySynStreamFrame.IsLast() || spdySynStreamFrame.IsUnidirectional();
             valid = true;
         }
+
         if (msg is IHttpResponse)
         {
 
@@ -179,6 +181,7 @@ public class SpdyHttpEncoder : MessageToMessageEncoder<IHttpObject>
             last = spdyHeadersFrame.IsLast();
             valid = true;
         }
+
         if (msg is IHttpContent && !last)
         {
 
@@ -186,6 +189,7 @@ public class SpdyHttpEncoder : MessageToMessageEncoder<IHttpObject>
 
             chunk.Content.Retain();
             ISpdyDataFrame spdyDataFrame = new DefaultSpdyDataFrame(currentStreamId, chunk.Content);
+
             if (chunk is ILastHttpContent)
             {
                 ILastHttpContent trailer = (ILastHttpContent) chunk;
@@ -201,6 +205,7 @@ public class SpdyHttpEncoder : MessageToMessageEncoder<IHttpObject>
                     ISpdyHeadersFrame spdyHeadersFrame = new DefaultSpdyHeadersFrame(currentStreamId, validateHeaders);
                     spdyHeadersFrame.SetLast(true);
                     IIterator<IEntry<ICharSequence, ICharSequence>> itr = trailers.IteratorCharSequence();
+
                     while (itr.HasNext())
                     {
                         IEntry<ICharSequence, ICharSequence> entry = itr.Next();
@@ -267,10 +272,12 @@ public class SpdyHttpEncoder : MessageToMessageEncoder<IHttpObject>
         {
             scheme = Of("https");
         }
+
         frameHeaders.Set(ISpdyHeaders.HttpNames.SCHEME, scheme);
 
         // Transfer the remaining HTTP headers
         IIterator<IEntry<ICharSequence, ICharSequence>> itr = httpHeaders.IteratorCharSequence();
+
         while (itr.HasNext())
         {
             IEntry<ICharSequence, ICharSequence> entry = itr.Next();
@@ -278,7 +285,9 @@ public class SpdyHttpEncoder : MessageToMessageEncoder<IHttpObject>
                     headersToLowerCase ? AsciiString.Of(entry.GetKey()).ToLowerCase() : entry.GetKey();
             frameHeaders.Add(headerName, entry.GetValue());
         }
+
         currentStreamId = spdySynStreamFrame.StreamId();
+
         if (associatedToStreamId == 0)
         {
             spdySynStreamFrame.SetLast(IsLast(httpRequest));
@@ -306,6 +315,7 @@ public class SpdyHttpEncoder : MessageToMessageEncoder<IHttpObject>
         httpHeaders.Remove(HttpHeaderNames.TRANSFER_ENCODING);
 
         ISpdyHeadersFrame spdyHeadersFrame;
+
         if (SpdyCodecUtil.IsServerId(streamId))
         {
             spdyHeadersFrame = new DefaultSpdyHeadersFrame(streamId, validateHeaders);
@@ -314,6 +324,7 @@ public class SpdyHttpEncoder : MessageToMessageEncoder<IHttpObject>
         {
             spdyHeadersFrame = new DefaultSpdySynReplyFrame(streamId, validateHeaders);
         }
+
         ISpdyHeaders frameHeaders = spdyHeadersFrame.Headers();
         // Unfold the first line of the response into name/value pairs
         frameHeaders.Set(ISpdyHeaders.HttpNames.STATUS, httpResponse.Status().CodeAsText());
@@ -321,6 +332,7 @@ public class SpdyHttpEncoder : MessageToMessageEncoder<IHttpObject>
 
         // Transfer the remaining HTTP headers
         IIterator<IEntry<ICharSequence, ICharSequence>> itr = httpHeaders.IteratorCharSequence();
+
         while (itr.HasNext())
         {
             IEntry<ICharSequence, ICharSequence> entry = itr.Next();

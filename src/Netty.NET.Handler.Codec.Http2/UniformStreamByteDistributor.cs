@@ -89,6 +89,7 @@ public sealed class UniformStreamByteDistributor : IStreamByteDistributor
     public void MinAllocationChunk(int minAllocationChunk)
     {
         CheckPositive(minAllocationChunk, "minAllocationChunk");
+
         this.minAllocationChunk = minAllocationChunk;
     }
 
@@ -115,6 +116,7 @@ public sealed class UniformStreamByteDistributor : IStreamByteDistributor
         int chunkSize = Math.Max(minAllocationChunk, maxBytes / size);
 
         State state = PollFirst();
+
         do
         {
             state.enqueued = false;
@@ -122,6 +124,7 @@ public sealed class UniformStreamByteDistributor : IStreamByteDistributor
             {
                 continue;
             }
+
             if (maxBytes == 0 && state.streamableBytes > 0)
             {
                 // Stop at the first state that can't send. Add this state back to the head of the queue. Note
@@ -151,6 +154,7 @@ public sealed class UniformStreamByteDistributor : IStreamByteDistributor
         {
             return null;
         }
+
         queue.RemoveFirst();
         return first.Value;
     }
@@ -190,6 +194,7 @@ public sealed class UniformStreamByteDistributor : IStreamByteDistributor
                 streamableBytes = newStreamableBytes;
                 distributor.totalStreamableBytes += delta;
             }
+
             // In addition to only enqueuing state when they have frames we enforce the following restrictions:
             // 1. If the window has gone negative. We never want to queue a state. However we also don't want to
             //    Immediately remove the item if it is already queued because removal from deque is O(n). So
@@ -198,6 +203,7 @@ public sealed class UniformStreamByteDistributor : IStreamByteDistributor
             //    we gave the state a chance to write zero length frames. We wait until updateStreamableBytes is
             //    called again before this state is allowed to write.
             windowNegative = windowSize < 0;
+
             if (hasFrame && (windowSize > 0 || windowSize == 0 && !writing))
             {
                 AddToQueue();
@@ -211,6 +217,7 @@ public sealed class UniformStreamByteDistributor : IStreamByteDistributor
         internal void Write(int numBytes, IStreamByteDistributor.IWriter writer)
         {
             writing = true;
+
             try
             {
                 // Write the allocated bytes.

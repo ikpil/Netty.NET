@@ -26,6 +26,7 @@ public class NioSocketChannelAddressContractTest
     {
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         IChannel server = null, client = null;
+
         try
         {
             server = await NewServer(group, IPAddress.Loopback, null);
@@ -46,6 +47,7 @@ public class NioSocketChannelAddressContractTest
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var accepted = new TaskCompletionSource<IChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
         IChannel server = null, client = null;
+
         try
         {
             server = await NewServer(group, IPAddress.Loopback, accepted);
@@ -70,6 +72,7 @@ public class NioSocketChannelAddressContractTest
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var channel = new NioSocketChannel();
         IPEndPoint endpoint = UnusedLoopbackEndPoint();
+
         try
         {
             await Assert.ThrowsAnyAsync<Exception>(() => new Bootstrap().Group(group).ChannelFactory(() => channel)
@@ -93,6 +96,7 @@ public class NioSocketChannelAddressContractTest
         IPAddress wildcard = ipv6 ? IPAddress.IPv6Any : IPAddress.Any;
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         IChannel server = null, client = null;
+
         try
         {
             server = await NewServer(group, loopback, null);
@@ -113,6 +117,7 @@ public class NioSocketChannelAddressContractTest
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var accepted = new TaskCompletionSource<IChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
         IChannel server = null, client = null;
+
         try
         {
             server = await NewServer(group, IPAddress.Loopback, accepted);
@@ -136,6 +141,7 @@ public class NioSocketChannelAddressContractTest
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var accepted = new TaskCompletionSource<IChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
         IChannel server = null, client = null;
+
         try
         {
             server = await NewServer(group, IPAddress.Loopback, accepted);
@@ -156,6 +162,7 @@ public class NioSocketChannelAddressContractTest
     {
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         IChannel channel = null;
+
         try
         {
             channel = await NewClient(group).BindAsync(new IPEndPoint(IPAddress.Loopback, 0)).WaitAsync(Timeout);
@@ -178,6 +185,7 @@ public class NioSocketChannelAddressContractTest
         var channel = new NioSocketChannel();
         IPEndPoint endpoint = UnusedLoopbackEndPoint();
         IPEndPoint local = UnusedLoopbackEndPoint();
+
         try
         {
             await Assert.ThrowsAnyAsync<Exception>(() => new Bootstrap().Group(group).ChannelFactory(() => channel)
@@ -215,8 +223,10 @@ public class NioSocketChannelAddressContractTest
     {
         if (client != null)
             await client.CloseAsync();
+
         if (server != null)
             await server.CloseAsync();
+
         await group.StopAsync().WaitAsync(Timeout);
     }
 }

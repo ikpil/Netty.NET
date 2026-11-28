@@ -73,11 +73,13 @@ internal sealed class CodecOutputList : IList<object>
         internal CodecOutputLists(int numElements)
         {
             elements = new CodecOutputList[MathUtil.SafeFindNextPositivePowerOfTwo(numElements)];
+
             for (int i = 0; i < elements.Length; ++i)
             {
                 // Size of 16 should be good enough for the majority of all users as an initial capacity.
                 elements[i] = new CodecOutputList(this, 16);
             }
+
             count = elements.Length;
             currentIdx = elements.Length;
             mask = elements.Length - 1;
@@ -91,6 +93,7 @@ internal sealed class CodecOutputList : IList<object>
                 // low.
                 return new CodecOutputList(NOOP_RECYCLER, 4);
             }
+
             --count;
 
             int idx = (currentIdx - 1) & mask;
@@ -131,6 +134,7 @@ internal sealed class CodecOutputList : IList<object>
         get
         {
             CheckIndex(index);
+
             return array[index];
         }
         set
@@ -147,6 +151,7 @@ internal sealed class CodecOutputList : IList<object>
     public void Add(object element)
     {
         CheckNotNull(element, "element");
+
         try
         {
             Insert0(size, element);
@@ -158,6 +163,7 @@ internal sealed class CodecOutputList : IList<object>
             ExpandArray();
             Insert0(size, element);
         }
+
         ++ size;
     }
 
@@ -189,6 +195,7 @@ internal sealed class CodecOutputList : IList<object>
         {
             Array.Copy(array, index + 1, array, index, len);
         }
+
         array[-- size] = null;
     }
 
@@ -211,6 +218,7 @@ internal sealed class CodecOutputList : IList<object>
                 return i;
             }
         }
+
         return -1;
     }
 
@@ -231,6 +239,7 @@ internal sealed class CodecOutputList : IList<object>
         {
             return false;
         }
+
         RemoveAt(index);
         return true;
     }
@@ -262,10 +271,12 @@ internal sealed class CodecOutputList : IList<object>
     internal void Recycle()
     {
         int len = Math.Max(maxSeenSize, size);
+
         for (int i = 0; i < len; i ++)
         {
             array[i] = null;
         }
+
         size = 0;
         maxSeenSize = 0;
         insertSinceRecycled = false;

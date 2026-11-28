@@ -57,9 +57,11 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         {
             parent.Retain(); // Retain up front to ensure the parent is accessible before doing more work.
         }
+
         _root = root;
         _offset = offset;
         _fixedCapacity = fixedCapacity;
+
         if (retained)
         {
             _parent = parent;
@@ -68,9 +70,11 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         {
             _referenceCountDelegate = parent;
         }
+
         try
         {
             SetIndex(reader, writer); // It is assumed the bounds checking is done by the caller.
+
             // CLR keeps its index invariants checked, and each new owned wrapper starts at count one.
             if (!fixedCapacity)
             {
@@ -81,10 +85,12 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         catch
         {
             _parent = _root = null;
+
             if (retained)
             {
                 parent.Release();
             }
+
             throw;
         }
     }
@@ -93,6 +99,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
     {
         if (index < 0 || length < 0 || index > root.Capacity - length)
             throw new ArgumentOutOfRangeException(nameof(index));
+
         return new(root, parent, index, length, 0, length, true, true);
     }
 
@@ -131,6 +138,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         }
         ArgumentNullException.ThrowIfNull(charset);
         CheckIndex(index, length);
+
         return Root.GetCharSequence(_offset + index, length, charset);
     }
     public override int Capacity
@@ -143,6 +151,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
             {
                 throw new NotSupportedException("A slice has fixed capacity.");
             }
+
             Root.Capacity = value;
         }
     }
@@ -170,6 +179,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
     {
         EnsureCanWrite();
         CheckIndex(index, source.Length);
+
         Root.SetBytesFromIoCore(_offset + index, source);
     }
 
@@ -181,6 +191,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
     internal override byte ReadByteCore(int index)
     {
         CheckIndex(index, 1);
+
         return Root.ReadByteCore(_offset + index);
     }
 
@@ -188,12 +199,14 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
     {
         EnsureCanWrite();
         CheckIndex(index, 1);
+
         Root.WriteByteCore(_offset + index, value);
     }
 
     internal override ulong ReadWord(int index, int width, bool littleEndian)
     {
         CheckIndex(index, width);
+
         return Root.ReadWord(_offset + index, width, littleEndian);
     }
 
@@ -201,6 +214,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
     {
         EnsureCanWrite();
         CheckIndex(index, width);
+
         Root.SetWord(_offset + index, value, width, littleEndian);
         return this;
     }
@@ -229,24 +243,28 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
     internal override ReadOnlySequence<byte> BorrowCopySequence(int index, int length)
     {
         CheckIndex(index, length);
+
         return Root.BorrowCopySequence(_offset + index, length);
     }
 
     internal override BufferMemoryLease AcquireReadLease()
     {
         EnsureAccessible();
+
         return Root.AcquireReadLease();
     }
 
     internal override BufferMemoryLease PinMemoryForWrite()
     {
         EnsureCanWrite();
+
         return Root.PinMemoryForWrite();
     }
 
     public override ByteBuf Copy(int index, int length)
     {
         CheckIndex(index, length);
+
         return Root.Copy(_offset + index, length);
     }
 
@@ -271,6 +289,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         {
             EnsureAccessible();
         }
+
         int result = Root.ForEachByte(_offset + index, length, processor);
         return _fixedCapacity ? result < _offset ? -1 : result - _offset : result;
     }
@@ -285,6 +304,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         {
             EnsureAccessible();
         }
+
         int result = Root.ForEachByteDesc(_offset + index, length, processor);
         return _fixedCapacity ? result < _offset ? -1 : result - _offset : result;
     }
@@ -295,6 +315,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
     {
         ArgumentNullException.ThrowIfNull(destination);
         CheckIndex(index, length);
+
         Root.GetBytes(_offset + index, destination, length);
         return this;
     }
@@ -304,6 +325,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
     {
         ArgumentNullException.ThrowIfNull(destination);
         CheckIndex(index, length);
+
         await Root.GetBytesAsync(_offset + index, destination, length, cancellationToken).ConfigureAwait(false);
     }
 
@@ -312,6 +334,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         EnsureCanWrite();
         ArgumentNullException.ThrowIfNull(source);
         CheckIndex(index, length);
+
         return Root.SetBytes(_offset + index, source, length);
     }
 
@@ -321,6 +344,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         EnsureCanWrite();
         ArgumentNullException.ThrowIfNull(source);
         CheckIndex(index, length);
+
         return await Root.SetBytesAsync(_offset + index, source, length, cancellationToken).ConfigureAwait(false);
     }
 
@@ -330,6 +354,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
     {
         ArgumentNullException.ThrowIfNull(destination);
         CheckIndex(index, length);
+
         return Root.GetBytes(_offset + index, destination, length);
     }
 
@@ -339,6 +364,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         ArgumentNullException.ThrowIfNull(destination);
         CheckIndex(index, length);
         cancellationToken.ThrowIfCancellationRequested();
+
         return await Root.GetBytesAsync(_offset + index, destination, length, cancellationToken).ConfigureAwait(false);
     }
 
@@ -347,6 +373,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         EnsureCanWrite();
         ArgumentNullException.ThrowIfNull(source);
         CheckIndex(index, length);
+
         return Root.SetBytes(_offset + index, source, length);
     }
 
@@ -357,6 +384,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         ArgumentNullException.ThrowIfNull(source);
         CheckIndex(index, length);
         cancellationToken.ThrowIfCancellationRequested();
+
         return await Root.SetBytesAsync(_offset + index, source, length, cancellationToken).ConfigureAwait(false);
     }
 
@@ -364,6 +392,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
     {
         CheckIndex(index, length);
         CheckFileTransfer(destination, position, length);
+
         return Root.GetBytes(_offset + index, destination, position, length);
     }
 
@@ -373,6 +402,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         CheckIndex(index, length);
         CheckFileTransfer(destination, position, length);
         cancellationToken.ThrowIfCancellationRequested();
+
         return await Root.GetBytesAsync(_offset + index, destination, position, length, cancellationToken).ConfigureAwait(false);
     }
 
@@ -381,6 +411,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         EnsureCanWrite();
         CheckIndex(index, length);
         CheckFileTransfer(source, position, length);
+
         return Root.SetBytes(_offset + index, source, position, length);
     }
 
@@ -391,6 +422,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         CheckIndex(index, length);
         CheckFileTransfer(source, position, length);
         cancellationToken.ThrowIfCancellationRequested();
+
         return await Root.SetBytesAsync(_offset + index, source, position, length, cancellationToken).ConfigureAwait(false);
     }
 
@@ -399,6 +431,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
     public override ByteBuf GetBytes(int index, Span<byte> destination)
     {
         CheckIndex(index, destination.Length);
+
         Root.GetBytes(_offset + index, destination);
         return this;
     }
@@ -407,6 +440,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
     {
         EnsureCanWrite();
         CheckIndex(index, source.Length);
+
         Root.SetBytes(_offset + index, source);
         return this;
     }
@@ -415,6 +449,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
     {
         ArgumentNullException.ThrowIfNull(destination);
         CheckIndex(index, length);
+
         Root.GetBytes(_offset + index, destination, destinationIndex, length);
         return this;
     }
@@ -424,6 +459,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         EnsureCanWrite();
         ArgumentNullException.ThrowIfNull(source);
         CheckIndex(index, length);
+
         Root.SetBytes(_offset + index, source, sourceIndex, length);
         return this;
     }
@@ -437,6 +473,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         {
             return base.GetByte(index);
         }
+
         return Root.GetByte(_offset + index);
     }
 
@@ -448,6 +485,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         {
             return base.SetByte(index, value);
         }
+
         Root.SetByte(_offset + index, value);
         return this;
     }
@@ -459,6 +497,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         {
             return base.GetShort(index);
         }
+
         return Root.GetShort(_offset + index);
     }
 
@@ -470,6 +509,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         {
             return base.SetShort(index, value);
         }
+
         Root.SetShort(_offset + index, value);
         return this;
     }
@@ -481,6 +521,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         {
             return base.GetShortLE(index);
         }
+
         return Root.GetShortLE(_offset + index);
     }
 
@@ -492,6 +533,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         {
             return base.SetShortLE(index, value);
         }
+
         Root.SetShortLE(_offset + index, value);
         return this;
     }
@@ -503,6 +545,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         {
             return base.GetUnsignedMedium(index);
         }
+
         return Root.GetUnsignedMedium(_offset + index);
     }
 
@@ -514,6 +557,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         {
             return base.SetMedium(index, value);
         }
+
         Root.SetMedium(_offset + index, value);
         return this;
     }
@@ -525,6 +569,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         {
             return base.GetUnsignedMediumLE(index);
         }
+
         return Root.GetUnsignedMediumLE(_offset + index);
     }
 
@@ -536,6 +581,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         {
             return base.SetMediumLE(index, value);
         }
+
         Root.SetMediumLE(_offset + index, value);
         return this;
     }
@@ -547,6 +593,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         {
             return base.GetInt(index);
         }
+
         return Root.GetInt(_offset + index);
     }
 
@@ -558,6 +605,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         {
             return base.SetInt(index, value);
         }
+
         Root.SetInt(_offset + index, value);
         return this;
     }
@@ -569,6 +617,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         {
             return base.GetIntLE(index);
         }
+
         return Root.GetIntLE(_offset + index);
     }
 
@@ -580,6 +629,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         {
             return base.SetIntLE(index, value);
         }
+
         Root.SetIntLE(_offset + index, value);
         return this;
     }
@@ -591,6 +641,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         {
             return base.GetLong(index);
         }
+
         return Root.GetLong(_offset + index);
     }
 
@@ -602,6 +653,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         {
             return base.SetLong(index, value);
         }
+
         Root.SetLong(_offset + index, value);
         return this;
     }
@@ -613,6 +665,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         {
             return base.GetLongLE(index);
         }
+
         return Root.GetLongLE(_offset + index);
     }
 
@@ -624,6 +677,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         {
             return base.SetLongLE(index, value);
         }
+
         Root.SetLongLE(_offset + index, value);
         return this;
     }
@@ -636,6 +690,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         {
             return base.WriteLongLE(value);
         }
+
         EnsureWritable(8);
         Root.SetLongLE(WriterIndex, value);
         WriterIndex += 8;
@@ -652,6 +707,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         {
             _referenceCountDelegate.Retain(increment);
         }
+
         return this;
     }
 
@@ -666,12 +722,14 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         {
             _referenceCountDelegate.Touch(hint);
         }
+
         return this;
     }
 
     public override ByteBuf Slice(int index, int length)
     {
         CheckIndex(index, length);
+
         // All reference count methods should be inherited from this object (this is the "parent").
         return new PooledDerivedByteBuf(Root, _referenceCountDelegate ?? this, _offset + index,
             length, 0, length, true, false);
@@ -690,11 +748,13 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         {
             CheckIndex(index, length);
         }
+
         long translated = (long)_offset + index;
         if (translated < 0 || translated > int.MaxValue)
         {
             throw new ArgumentOutOfRangeException(nameof(index));
         }
+
         return NewSlice(Root, this, (int)translated, length);
     }
 
@@ -705,6 +765,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
         {
             return Slice(0, Capacity).SetIndex(ReaderIndex, WriterIndex);
         }
+
         // All reference count methods should be inherited from this object (this is the "parent").
         ByteBuf marks = !IsIndependent && !_fixedCapacity ? this : Root;
         return new PooledDerivedByteBuf(Root, _referenceCountDelegate ?? this, 0, Root.MaxCapacity,
@@ -714,6 +775,7 @@ internal sealed class PooledDerivedByteBuf : AbstractReferenceCountedByteBuf
     public override ByteBuf RetainedDuplicate()
     {
         EnsureAccessible();
+
         return IsIndependent && _fixedCapacity
             ? RetainedSlice(0, Capacity).SetIndex(ReaderIndex, WriterIndex)
             : NewDuplicate(Root, this, _offset + ReaderIndex, _offset + WriterIndex);

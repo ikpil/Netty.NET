@@ -114,6 +114,7 @@ public sealed class QuicEndpointChannel : AbstractChannel
                 return codec;
             }
         }
+
         return null;
     }
 
@@ -123,12 +124,14 @@ public sealed class QuicEndpointChannel : AbstractChannel
         {
             throw new PlatformNotSupportedException("System.Net.Quic is not supported on this platform");
         }
+
         MsQuicCodec codec = Codec();
         if (codec == null)
         {
             throw new InvalidOperationException("No QUIC codec (QuicServerCodecBuilder or QuicClientCodecBuilder " +
                                                 "Build()) in the pipeline of " + this);
         }
+
         localAddress = await codec.BindAsync(this, address, cancellationToken).ConfigureAwait(false);
         SetActive(true);
     }

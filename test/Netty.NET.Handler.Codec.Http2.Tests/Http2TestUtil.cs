@@ -134,6 +134,7 @@ public static class Http2TestUtil
     {
         HpackEncoder hpackEncoder = new HpackEncoder(false, 16, 0);
         ByteBuf buf = Unpooled.Buffer();
+
         try
         {
             hpackEncoder.SetMaxHeaderTableSize(maxHeaderTableSize);
@@ -144,6 +145,7 @@ public static class Http2TestUtil
         {
             buf.Release();
         }
+
         return hpackEncoder;
     }
 
@@ -201,6 +203,7 @@ public static class Http2TestUtil
             int numBytes = data.ReadableBytes;
             int processed = listener.OnDataRead(ctx, streamId, data, padding, endOfStream);
             CountDown(messageLatch);
+
             if (dataLatch != null)
             {
                 for (int i = 0; i < numBytes; ++i)
@@ -208,6 +211,7 @@ public static class Http2TestUtil
                     CountDown(dataLatch);
                 }
             }
+
             return processed;
         }
 
@@ -216,6 +220,7 @@ public static class Http2TestUtil
         {
             listener.OnHeadersRead(ctx, streamId, headers, padding, endStream);
             CountDown(messageLatch);
+
             if (trailersLatch != null && endStream)
             {
                 CountDown(trailersLatch);
@@ -227,6 +232,7 @@ public static class Http2TestUtil
         {
             listener.OnHeadersRead(ctx, streamId, headers, streamDependency, weight, exclusive, padding, endStream);
             CountDown(messageLatch);
+
             if (trailersLatch != null && endStream)
             {
                 CountDown(trailersLatch);
@@ -386,6 +392,7 @@ public static class Http2TestUtil
                 {
                     break;
                 }
+
                 buf.Release();
             }
         });
@@ -405,6 +412,7 @@ public static class Http2TestUtil
                 TaskCompletionSource promise) =>
             {
                 buffers.Enqueue(debugData);
+
                 return SetSuccess(promise);
             });
         frameWriter.Setup(w => w.WriteHeadersAsync(It.IsAny<IChannelHandlerContext>(), It.IsAny<int>(),
@@ -424,6 +432,7 @@ public static class Http2TestUtil
                 TaskCompletionSource promise) =>
             {
                 buffers.Enqueue(data);
+
                 return SetSuccess(promise);
             });
 
@@ -448,6 +457,7 @@ public static class Http2TestUtil
                 TaskCompletionSource promise) =>
             {
                 buffers.Enqueue(payload);
+
                 return SetSuccess(promise);
             });
         return frameWriter.Object;

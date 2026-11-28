@@ -63,6 +63,7 @@ public class IndexedPriorityQueueContractTest
         Assert.Same(nodes[2], descending.Poll());
         Assert.Same(nodes[0], descending.Poll());
         Assert.Same(nodes[1], descending.Poll());
+
         foreach (Node node in nodes)
         {
             Assert.Equal(-1, node.PriorityQueueIndex(ascending));
@@ -118,6 +119,7 @@ public class IndexedPriorityQueueContractTest
         for (int step = 0; step < 1024; ++step)
         {
             Node node = alive[random.Next(alive.Count)];
+
             if (step % 3 == 0)
             {
                 Assert.True(queue.Remove(node));
@@ -132,13 +134,16 @@ public class IndexedPriorityQueueContractTest
                 node.Priority = -10000 - step;
                 queue.PriorityChanged(node);
             }
+
             Node expected = alive.MinBy(item => item.Priority);
             Assert.Same(expected, queue.Peek());
             Node[] snapshot = queue.ToArray();
             Assert.Equal(alive.Count, snapshot.Length);
+
             for (int index = 0; index < snapshot.Length; ++index)
                 Assert.Equal(index, snapshot[index].PriorityQueueIndex(queue));
         }
+
         alive.Sort((a, b) => a.Priority.CompareTo(b.Priority));
 
         foreach (Node expected in alive)

@@ -59,9 +59,11 @@ public abstract class AbstractComboTestsuiteTest<SB, CB> where SB : class where 
     {
         List<TestsuitePermutation.IBootstrapComboFactory<SB, CB>> combos = NewFactories();
         string methodName = TestUtils.TestMethodName(testInfo);
+
         foreach (IByteBufAllocator allocator in NewAllocators())
         {
             int i = 0;
+
             foreach (TestsuitePermutation.IBootstrapComboFactory<SB, CB> e in combos)
             {
                 sb = e.NewServerInstance();

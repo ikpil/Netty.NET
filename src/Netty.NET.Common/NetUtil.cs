@@ -238,6 +238,7 @@ public static class NetUtil
     {
         ArgumentException.ThrowIfNullOrEmpty(sysctlKey);
         ArgumentNullException.ThrowIfNull(startProcess);
+
         var processInfo = new ProcessStartInfo
         {
             FileName = "sysctl",
@@ -249,6 +250,7 @@ public static class NetUtil
 
         // Own only a successfully started child; startup failures retain their original exception.
         using Process process = startProcess(processInfo);
+
         try
         {
             // Suppress warnings about resource leaks since the buffered reader is closed below
@@ -294,6 +296,7 @@ public static class NetUtil
     public static byte[] CreateByteArrayFromIpAddressString(string ipAddressString)
     {
         ArgumentNullException.ThrowIfNull(ipAddressString);
+
         return CreateByteArrayFromIpAddressString(ipAddressString.AsSpan());
     }
 
@@ -334,6 +337,7 @@ public static class NetUtil
     public static IPAddress CreateInetAddressFromIpAddressString(string ipAddressString)
     {
         ArgumentNullException.ThrowIfNull(ipAddressString);
+
         return CreateInetAddressFromIpAddressString(ipAddressString.AsSpan());
     }
 
@@ -369,6 +373,7 @@ public static class NetUtil
                 {
                     return null;
                 }
+
                 ipAddressString = ipAddressString[0..percentPos];
                 byte[] bytes = GetIPv6ByName(ipAddressString, true);
                 if (bytes == null)
@@ -447,8 +452,10 @@ public static class NetUtil
         ArgumentNullException.ThrowIfNull(ipAddress);
         if (ipAddress.AddressFamily != AddressFamily.InterNetwork)
             throw new ArgumentException("An IPv4 address is required.", nameof(ipAddress));
+
         Span<byte> octets = stackalloc byte[4];
         ipAddress.TryWriteBytes(octets, out _);
+
         return BinaryPrimitives.ReadInt32BigEndian(octets);
     }
 
@@ -459,6 +466,7 @@ public static class NetUtil
     {
         Span<byte> bytes = stackalloc byte[4];
         BinaryPrimitives.WriteInt32BigEndian(bytes, i);
+
         return BytesToIpAddress(bytes);
     }
 
@@ -471,6 +479,7 @@ public static class NetUtil
     public static string BytesToIpAddress(byte[] bytes)
     {
         ArgumentNullException.ThrowIfNull(bytes);
+
         return BytesToIpAddress(bytes.AsSpan());
     }
 
@@ -485,6 +494,7 @@ public static class NetUtil
         ArgumentNullException.ThrowIfNull(bytes);
         if (length != 4 && length != 16)
             throw new ArgumentException("length: " + length.ToString(CultureInfo.InvariantCulture) + " (expected: 4 or 16)", nameof(length));
+
         return BytesToIpAddress(bytes.AsSpan(offset, length));
     }
 
@@ -517,6 +527,7 @@ public static class NetUtil
     public static bool IsValidIpV6Address(string ip)
     {
         ArgumentNullException.ThrowIfNull(ip);
+
         return IsValidIpV6Address(ip.AsSpan());
     }
 
@@ -551,6 +562,7 @@ public static class NetUtil
 
         int colons;
         int compressBegin;
+
         if (c == ':')
         {
             // an IPv6 address can start with "::" or with a number
@@ -570,6 +582,7 @@ public static class NetUtil
         }
 
         int wordLen = 0;
+
         for (int i = start; i < end; i++)
         {
             c = ip[i];
@@ -750,6 +763,7 @@ public static class NetUtil
     public static bool IsValidIpV4Address(string ip)
     {
         ArgumentNullException.ThrowIfNull(ip);
+
         return IsValidIpV4Address(ip.AsSpan());
     }
 
@@ -792,6 +806,7 @@ public static class NetUtil
     public static IPAddress GetByName(string ip)
     {
         ArgumentNullException.ThrowIfNull(ip);
+
         return GetByName(ip.AsSpan(), true);
     }
 
@@ -812,6 +827,7 @@ public static class NetUtil
     public static IPAddress GetByName(string ip, bool ipv4Mapped)
     {
         ArgumentNullException.ThrowIfNull(ip);
+
         return GetByName(ip.AsSpan(), ipv4Mapped);
     }
 
@@ -860,9 +876,11 @@ public static class NetUtil
         int ipv6Separators = 0;
         int ipv4Separators = 0;
         int tmp;
+
         for (; i < ipLength; ++i)
         {
             char c = ip[i];
+
             switch (c)
             {
                 case ':':
@@ -967,6 +985,7 @@ public static class NetUtil
         }
 
         bool isCompressed = compressBegin > 0;
+
         // Finish up last set of data that was accumulated in the loop (or before the loop)
         if (ipv4Separators > 0)
         {
@@ -1083,6 +1102,7 @@ public static class NetUtil
     public static string ToSocketAddressString(string host, int port)
     {
         ArgumentNullException.ThrowIfNull(host);
+
         string portStr = port.ToString(CultureInfo.InvariantCulture);
         return NewSocketAddressStringBuilder(
             host, portStr, !IsValidIpV6Address(host)).Append(':').Append(portStr).ToString();
@@ -1161,12 +1181,14 @@ public static class NetUtil
 
         Span<byte> bytes = stackalloc byte[IPV6_BYTE_COUNT];
         ip.TryWriteBytes(bytes, out _);
+
         return ToAddressString(bytes, ipv4Mapped);
     }
 
     private static string ToAddressString(ReadOnlySpan<byte> bytes, bool ipv4Mapped)
     {
         Span<int> words = stackalloc int[IPV6_WORD_COUNT];
+
         for (int i = 0; i < words.Length; ++i)
         {
             int idx = i << 1;
@@ -1178,6 +1200,7 @@ public static class NetUtil
         int currentLength;
         int shortestStart = -1;
         int shortestLength = 0;
+
         for (int i = 0; i < words.Length; ++i)
         {
             if (words[i] == 0)
@@ -1221,10 +1244,12 @@ public static class NetUtil
         // Translate to string taking into account longest consecutive 0s
         int shortestEnd = shortestStart + shortestLength;
         StringBuilder b = new StringBuilder(IPV6_MAX_CHAR_COUNT);
+
         if (shortestEnd < 0)
         {
             // Optimization when there is no compressing needed
             b.Append(words[0].ToString("x"));
+
             for (int i = 1; i < words.Length; ++i)
             {
                 b.Append(':');
@@ -1237,6 +1262,7 @@ public static class NetUtil
             // General case that can handle compressing (and not compressing)
             // Loop unroll the first index (so we don't constantly check i==0 cases in loop)
             bool isIpv4Mapped;
+
             if (InRangeEndExclusive(0, shortestStart, shortestEnd))
             {
                 b.Append("::");
@@ -1300,6 +1326,7 @@ public static class NetUtil
     public static string GetHostname(EndPoint addr)
     {
         ArgumentNullException.ThrowIfNull(addr);
+
         return addr switch
         {
             DnsEndPoint dnsAddress => dnsAddress.Host,
@@ -1315,11 +1342,13 @@ public static class NetUtil
         {
             return address.ToString();
         }
+
         // The non-virtual formatter reads the native value without a derived display callback.
         // Match .NET 10's buffer bound, including embedded IPv4 text and an unsigned scope ID.
         Span<char> text = stackalloc char[65];
         bool formatted = address.TryFormat(text, out int length);
         Debug.Assert(formatted);
+
         return new string(text[..length]);
     }
 
@@ -1352,6 +1381,7 @@ internal static class SoMaxConnAction
         // - Mac OS X: 128
         // - Linux kernel > 5.4 : 4096
         int somaxconn;
+
         if (OperatingSystem.IsWindows())
         {
             somaxconn = 200;
@@ -1377,7 +1407,9 @@ internal static class SoMaxConnAction
         ArgumentNullException.ThrowIfNull(openFile);
         ArgumentNullException.ThrowIfNull(trySysctl);
         ArgumentNullException.ThrowIfNull(sysctlGetInt);
+
         string file = "/proc/sys/net/core/somaxconn";
+
         try
         {
             // file.exists() may throw a SecurityException if a SecurityManager is used, so execute it in the
@@ -1388,6 +1420,7 @@ internal static class SoMaxConnAction
                 using var reader = new StreamReader(new BoundedStream(openFile(file)));
                 var line = reader.ReadLine();
                 somaxconn = int.Parse(line, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture);
+
                 if (logger.IsDebugEnabled())
                 {
                     logger.Debug("{}: {}", file, somaxconn);
@@ -1397,6 +1430,7 @@ internal static class SoMaxConnAction
             {
                 // Try to get from sysctl
                 int? tmp = null;
+
                 if (trySysctl())
                 {
                     tmp = sysctlGetInt("kern.ipc.somaxconn");

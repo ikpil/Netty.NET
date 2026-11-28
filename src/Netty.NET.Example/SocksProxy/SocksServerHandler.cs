@@ -41,6 +41,7 @@ public sealed class SocksServerHandler : SimpleChannelInboundHandler<ISocksMessa
     protected override void ChannelRead0(IChannelHandlerContext ctx, ISocksMessage socksRequest)
     {
         SocksVersion version = socksRequest.Version();
+
         switch (version)
         {
             case var _ when version == SocksVersion.SOCKS4a:
@@ -55,6 +56,7 @@ public sealed class SocksServerHandler : SimpleChannelInboundHandler<ISocksMessa
                 {
                     _ = ctx.CloseAsync();
                 }
+
                 break;
             case var _ when version == SocksVersion.SOCKS5:
                 if (socksRequest is ISocks5InitialRequest)
@@ -93,6 +95,7 @@ public sealed class SocksServerHandler : SimpleChannelInboundHandler<ISocksMessa
                 {
                     _ = ctx.CloseAsync();
                 }
+
                 break;
             case var _ when version == SocksVersion.UNKNOWN:
                 _ = ctx.CloseAsync();

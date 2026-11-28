@@ -50,6 +50,7 @@ public sealed class TelnetClient
         SslContext sslCtx = ServerUtil.BuildSslContext();
 
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             Bootstrap b = new Bootstrap();
@@ -62,6 +63,7 @@ public sealed class TelnetClient
 
             // Read commands from the stdin.
             Task lastWriteFuture = null;
+
             for (;;)
             {
                 string line = Console.In.ReadLine();

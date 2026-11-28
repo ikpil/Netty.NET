@@ -133,6 +133,7 @@ public class QpackDecoderTest
     {
         Setup(128);
         ByteBuf @in = EncodeBlockingFrame(1);
+
         try
         {
             Assert.ThrowsAny<QpackException>(
@@ -160,6 +161,7 @@ public class QpackDecoderTest
         for (long streamId = 0; streamId < maxBlockedStreams; streamId++)
         {
             ByteBuf @in = EncodeBlockingFrame(1);
+
             try
             {
                 Assert.False(decoder.Decode(attributes, streamId, @in, @in.ReadableBytes, sink, () =>
@@ -174,6 +176,7 @@ public class QpackDecoderTest
         }
 
         ByteBuf overflow = EncodeBlockingFrame(1);
+
         try
         {
             Assert.ThrowsAny<QpackException>(
@@ -199,6 +202,7 @@ public class QpackDecoderTest
         for (long streamId = 0; streamId < maxBlockedStreams; streamId++)
         {
             ByteBuf @in = EncodeBlockingFrame(1);
+
             try
             {
                 Assert.False(decoder.Decode(attributes, streamId, @in, @in.ReadableBytes, sink, () =>
@@ -217,6 +221,7 @@ public class QpackDecoderTest
         for (long streamId = 100; streamId < 100 + maxBlockedStreams; streamId++)
         {
             ByteBuf @in = EncodeBlockingFrame(2);
+
             try
             {
                 Assert.False(decoder.Decode(attributes, streamId, @in, @in.ReadableBytes, sink, () =>
@@ -241,9 +246,11 @@ public class QpackDecoderTest
         Action<ICharSequence, ICharSequence> sink = (n, v) =>
         {
         };
+
         for (long streamId = 0; streamId < maxBlockedStreams; streamId++)
         {
             ByteBuf @in = EncodeBlockingFrame(1);
+
             try
             {
                 Assert.False(decoder.Decode(attributes, streamId, @in, @in.ReadableBytes, sink,
@@ -259,6 +266,7 @@ public class QpackDecoderTest
         {
             decoder.StreamAbandoned(decoderStream, streamId);
             ByteBuf cancel = decoderStream.ReadOutbound<ByteBuf>();
+
             try
             {
                 Assert.Equal((short) (0b0100_0000 | streamId), (short) cancel.ReadByte());
@@ -270,9 +278,11 @@ public class QpackDecoderTest
         }
 
         int resumed = 0;
+
         for (long streamId = 100; streamId < 100 + maxBlockedStreams; streamId++)
         {
             ByteBuf @in = EncodeBlockingFrame(1);
+
             try
             {
                 Assert.False(decoder.Decode(attributes, streamId, @in, @in.ReadableBytes, sink,
@@ -334,6 +344,7 @@ public class QpackDecoderTest
     {
         ByteBuf buf = Unpooled.Buffer();
         QpackUtil.EncodePrefixedInteger(buf, (byte) (postBase ? 0b0 : 0b1000_0000), 8, deltaBase);
+
         try
         {
             return decoder.DecodeBase(buf, requiredInsertCount);
@@ -348,6 +359,7 @@ public class QpackDecoderTest
     {
         ByteBuf buf = Unpooled.Buffer();
         QpackUtil.EncodePrefixedInteger(buf, (byte) 0b0, 8, count == 0 ? 0 : count % (2L * maxEntries) + 1);
+
         try
         {
             return decoder.DecodeRequiredInsertCount(attributes, buf);
@@ -365,6 +377,7 @@ public class QpackDecoderTest
             inserted++;
             decoder.InsertLiteral(decoderStream, Cs(FOO + i), Cs(BAR + i));
         }
+
         Assert.Equal(count > 0, decoderStream.FinishAndReleaseAll());
     }
 

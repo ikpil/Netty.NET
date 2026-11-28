@@ -64,6 +64,7 @@ public sealed class ProtocolDetectionResult<T>
         {
             throw new ArgumentNullException("protocol");
         }
+
         return new ProtocolDetectionResult<T>(ProtocolDetectionState.DETECTED, protocol);
     }
 

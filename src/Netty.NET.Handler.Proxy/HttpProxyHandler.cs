@@ -123,6 +123,7 @@ public sealed class HttpProxyHandler : ProxyHandler
 
         ByteBuf authz = Unpooled.CopiedBuffer(username + ':' + password, Encoding.UTF8);
         ByteBuf authzBase64;
+
         try
         {
             authzBase64 = Base64.Encode(authz, false);
@@ -131,6 +132,7 @@ public sealed class HttpProxyHandler : ProxyHandler
         {
             authz.Release();
         }
+
         try
         {
             authorization = new AsciiString("Basic " + authzBase64.ToString(Encoding.ASCII));
@@ -231,6 +233,7 @@ public sealed class HttpProxyHandler : ProxyHandler
             {
                 throw new HttpProxyConnectException(ExceptionMessage("too many responses"), /*headers=*/ null);
             }
+
             IHttpResponse res = (IHttpResponse) response;
             status = res.Status();
             inboundHeaders = res.Headers();

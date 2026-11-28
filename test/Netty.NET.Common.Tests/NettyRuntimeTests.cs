@@ -28,6 +28,7 @@ public class NettyRuntimeTests
     public void TestIllegalSet()
     {
         var holder = new AvailableProcessorsHolder();
+
         foreach (int i in new[] { -1, 0 })
         {
             ArgumentException e = Assert.Throws<ArgumentException>(() => holder.SetAvailableProcessors(i));
@@ -82,6 +83,7 @@ public class NettyRuntimeTests
         try
         {
             AwaitBarrier(barrier);
+
             try
             {
                 holder.AvailableProcessors();
@@ -90,6 +92,7 @@ public class NettyRuntimeTests
             {
                 reference.Set(e);
             }
+
             AwaitBarrier(barrier);
         }
         catch (Exception e)
@@ -125,6 +128,7 @@ public class NettyRuntimeTests
             try
             {
                 AwaitBarrier(barrier);
+
                 try
                 {
                     holder.SetAvailableProcessors(2048);
@@ -133,6 +137,7 @@ public class NettyRuntimeTests
                 {
                     setException.Set(e);
                 }
+
                 AwaitBarrier(barrier);
             }
             catch (Exception e)
@@ -149,6 +154,7 @@ public class NettyRuntimeTests
         Assert.True(set.Join(TimeSpan.FromSeconds(5)));
         Assert.Null(getFailure);
         Assert.Null(setFailure);
+
         if (setException.Get() == null)
         {
             Assert.Equal(2048, holder.AvailableProcessors());
@@ -163,6 +169,7 @@ public class NettyRuntimeTests
     public void TestGetWithSystemProperty()
     {
         string previous = SystemPropertyUtil.Get("io.netty.availableProcessors");
+
         try
         {
             Environment.SetEnvironmentVariable("io.netty.availableProcessors", "2048");
@@ -180,6 +187,7 @@ public class NettyRuntimeTests
     public void TestGet()
     {
         string previous = SystemPropertyUtil.Get("io.netty.availableProcessors");
+
         try
         {
             Environment.SetEnvironmentVariable("io.netty.availableProcessors", null);

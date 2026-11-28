@@ -53,12 +53,14 @@ public class ByteBufIterationKernelTest
         public override int ForEachByte(int index, int length, Func<byte, bool> processor)
         {
             calls.BeforeIndexed();
+
             return base.ForEachByte(index, length, processor);
         }
 
         public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
         {
             calls.BeforeIndexed();
+
             return base.ForEachByteDesc(index, length, processor);
         }
     }
@@ -73,12 +75,14 @@ public class ByteBufIterationKernelTest
         public override int ForEachByte(int index, int length, Func<byte, bool> processor)
         {
             calls.BeforeIndexed();
+
             return base.ForEachByte(index, length, processor);
         }
 
         public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
         {
             calls.BeforeIndexed();
+
             return base.ForEachByteDesc(index, length, processor);
         }
     }
@@ -87,6 +91,7 @@ public class ByteBufIterationKernelTest
     {
         ByteBuf result = direct ? new Direct(calls, native) : new Heap(calls);
         result.SetBytes(0, new byte[] { 128, 129, 130, 131, 132, 133, 134, 135 });
+
         return result.SetIndex(1, 7).MarkReaderIndex().MarkWriterIndex();
     }
 
@@ -124,6 +129,7 @@ public class ByteBufIterationKernelTest
         int start = indexed ? 2 : 1, end = indexed ? 6 : 7;
         int first = descending ? end - 1 : start, next = first + (descending ? -1 : 1);
         var failure = new Failure();
+
         try
         {
             Func<byte, bool> processor = value =>
@@ -133,21 +139,25 @@ public class ByteBufIterationKernelTest
                 {
                     throw failure;
                 }
+
                 if (visited.Count == 1)
                 {
                     if (scenario == 4)
                     {
                         owner.Capacity = 16;
                     }
+
                     if (scenario is 3 or 4)
                     {
                         owner.SetByte(next, 99);
                     }
+
                     if (scenario == 5)
                     {
                         owner.SetIndex(0, 8);
                     }
                 }
+
                 return scenario switch { 0 => value != 132, 3 or 4 => value != 99, _ => true };
             };
 
@@ -164,24 +174,31 @@ public class ByteBufIterationKernelTest
             {
                 Assert.Equal(scenario == 0 ? 4 : scenario is 3 or 4 ? next : -1, Invoke());
             }
+
             var indices = Enumerable.Range(start, end - start);
+
             if (descending)
             {
                 indices = indices.Reverse();
             }
+
             byte[] expected = indices.Select(i => (byte)(128 + i)).ToArray();
+
             if (scenario == 0)
             {
                 expected = expected[..(Array.IndexOf(expected, (byte)132) + 1)];
             }
+
             if (scenario == 2)
             {
                 expected = expected[..2];
             }
+
             if (scenario is 3 or 4)
             {
                 expected = [expected[0], 99];
             }
+
             Assert.Equal(expected, visited);
             Assert.Equal(indexed ? 1 : 0, calls.Indexed);
             Assert.Equal(0, calls.Gets);
@@ -190,10 +207,12 @@ public class ByteBufIterationKernelTest
             Assert.Equal(scenario == 4 ? 16 : 8, owner.Capacity);
             Assert.Equal(1, owner.RefCnt);
             byte[] bytes = [128, 129, 130, 131, 132, 133, 134, 135];
+
             if (scenario is 3 or 4)
             {
                 bytes[next] = 99;
             }
+
             Assert.Equal(bytes, ByteBufUtil.GetBytes(owner, 0, 8));
             owner.ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(1, owner.ReaderIndex);
@@ -203,6 +222,7 @@ public class ByteBufIterationKernelTest
         {
             Assert.True(owner.Release());
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -236,6 +256,7 @@ public class ByteBufIterationKernelTest
         view.SetIndex(offset == 0 ? 1 : kind == 2 ? 0 : 1, offset == 0 ? 7 : kind == 2 ? 3 : 4)
             .MarkReaderIndex().MarkWriterIndex();
         int reader = view.ReaderIndex, writer = view.WriterIndex;
+
         try
         {
             var visited = new List<byte>();
@@ -261,8 +282,10 @@ public class ByteBufIterationKernelTest
             {
                 Assert.True(retained.Release());
             }
+
             Assert.True(root.Release());
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -274,6 +297,7 @@ public class ByteBufIterationKernelTest
         var native = new NativeMemoryAllocator();
         var calls = new Calls();
         ByteBuf root = Create(direct, calls, native);
+
         try
         {
             root.SetIndex(8, 8);
@@ -302,6 +326,7 @@ public class ByteBufIterationKernelTest
                 root.Release();
             }
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -330,6 +355,7 @@ public class ByteBufIterationKernelTest
             Assert.True(root.Release());
             return !stop;
         };
+
         try
         {
             int Invoke()
@@ -341,6 +367,7 @@ public class ByteBufIterationKernelTest
                 Assert.Equal(descending ? indexed ? 5 : 6 : indexed ? 2 : 1, Invoke());
             else
                 Assert.Throws<IllegalReferenceCountException>(() => Invoke());
+
             Assert.Equal(1, visits);
             Assert.Equal(indexed ? 1 : 0, calls.Indexed);
             Assert.Equal(0, calls.Gets);
@@ -353,6 +380,7 @@ public class ByteBufIterationKernelTest
                 root.Release();
             }
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 }

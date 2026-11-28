@@ -35,6 +35,7 @@ public class ByteBufViewFactorySourceTest
             if (provider >= 3)
                 _pool = new PooledByteBufAllocator(nativeAllocator: Native, maxOrder: 1,
                     smallCacheSize: 0, normalCacheSize: 0);
+
             Root = provider switch
             {
                 0 => new UnpooledHeapByteBuf(length),
@@ -55,6 +56,7 @@ public class ByteBufViewFactorySourceTest
             {
                 Root.Release();
             }
+
             Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
@@ -97,6 +99,7 @@ public class ByteBufViewFactorySourceTest
         ByteBuf slice = initialRetained ? s.Root.RetainedSlice(s.Root.ReaderIndex + 1, 2)
             : s.Root.Slice(s.Root.ReaderIndex + 1, 2);
         ByteBuf unexpected = null;
+
         try
         {
             Assert.Equal(2, slice.Capacity);
@@ -128,11 +131,13 @@ public class ByteBufViewFactorySourceTest
             {
                 unexpected.Release();
             }
+
             if (initialRetained)
             {
                 slice.Release();
             }
         }
+
         Assert.Equal(1, s.Root.RefCnt);
     }
 
@@ -203,10 +208,12 @@ public class ByteBufViewFactorySourceTest
     {
         using var s = new Storage(provider, Capacity);
         (int Index, int Length)[] ranges = [(0, Capacity), (0, Capacity - 1), (1, Capacity - 1), (1, Capacity - 2)];
+
         for (int pass = 0; pass < 2; ++pass)
         foreach (var range in ranges)
         {
             ByteBuf slice = retained ? s.Root.RetainedSlice(range.Index, range.Length) : s.Root.Slice(range.Index, range.Length);
+
             try
             {
                 if (pass == 0)
@@ -222,6 +229,7 @@ public class ByteBufViewFactorySourceTest
                 }
             }
         }
+
         Assert.Equal(0, s.Root.ReaderIndex);
         Assert.Equal(0, s.Root.WriterIndex);
         Assert.Equal(1, s.Root.RefCnt);
@@ -232,6 +240,7 @@ public class ByteBufViewFactorySourceTest
     public void DuplicatesOfBorrowedAndRetainedSlicesKeepSliceCapacity(int provider, bool retained)
     {
         using var s = new Storage(provider, Capacity);
+
         foreach (bool retainedDuplicate in new[] { false, true })
         foreach (bool indexed in new[] { false, true })
         {
@@ -239,10 +248,12 @@ public class ByteBufViewFactorySourceTest
                 ? indexed ? s.Root.RetainedSlice(0, Capacity - 2) : s.Root.RetainedSlice()
                 : indexed ? s.Root.Slice(0, Capacity - 2) : s.Root.Slice();
             ByteBuf duplicate = null;
+
             try
             {
                 duplicate = retainedDuplicate ? slice.RetainedDuplicate() : slice.Duplicate();
                 Assert.Equal(slice.Capacity, duplicate.Capacity);
+
                 // Preserve the original release order, including an independent pooled duplicate.
                 if (retained)
                     {
@@ -256,12 +267,14 @@ public class ByteBufViewFactorySourceTest
                     {
                         slice.Release();
                     }
+
                 if (retainedDuplicate)
                     {
                         duplicate?.Release();
                     }
             }
         }
+
         Assert.Equal(1, s.Root.RefCnt);
     }
 
@@ -281,6 +294,7 @@ public class ByteBufViewFactorySourceTest
         {
             s.Root.SetIndex(reader, Capacity - 2);
             ByteBuf duplicate = s.Root.RetainedDuplicate(), slice = s.Root.RetainedSlice();
+
             try
             {
                 foreach (ByteBuf derived in new[] { duplicate, slice })
@@ -296,6 +310,7 @@ public class ByteBufViewFactorySourceTest
                 duplicate.Release();
                 slice.Release();
             }
+
             Assert.Equal(1, s.Root.RefCnt);
         }
     }
@@ -305,6 +320,7 @@ public class ByteBufViewFactorySourceTest
         for (int phase = 0; phase < 2; ++phase)
         {
             ByteBuf retained = buffer.RetainedSlice();
+
             try
             {
                 Assert.Equal(buffer.ReadableBytes, retained.ReadableBytes);
@@ -322,6 +338,7 @@ public class ByteBufViewFactorySourceTest
             {
                 retained.Release();
             }
+
             if (phase == 0)
             {
                 Assert.Equal(unchecked((byte)originalStart), buffer.ReadByte());

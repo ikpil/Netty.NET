@@ -51,6 +51,7 @@ internal class Http3FrameTypeOutboundValidationHandler<T> : ChannelOutboundHandl
         {
             WriteFrameDiscarded(msg, promise);
         }
+
         return promise.Task;
     }
 

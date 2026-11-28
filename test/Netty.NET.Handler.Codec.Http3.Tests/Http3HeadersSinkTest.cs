@@ -256,14 +256,17 @@ public class Http3HeadersSinkTest
         sink.Accept(IHttp3Headers.PseudoHeaderName.METHOD.Value(), Cs("GET"));
         sink.Accept(IHttp3Headers.PseudoHeaderName.PATH.Value(), Cs("/"));
         sink.Accept(IHttp3Headers.PseudoHeaderName.SCHEME.Value(), Cs("https"));
+
         if (authority != null)
         {
             sink.Accept(IHttp3Headers.PseudoHeaderName.AUTHORITY.Value(), Cs(authority));
         }
+
         foreach (string host in hosts)
         {
             sink.Accept(new AsciiString(HttpHeaderNames.HOST), Cs(host));
         }
+
         return sink;
     }
 

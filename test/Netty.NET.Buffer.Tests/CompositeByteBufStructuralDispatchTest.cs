@@ -58,6 +58,7 @@ public class CompositeByteBufStructuralDispatchTest
                 {
                     buffer.Release();
                 }
+
             foreach (ByteBuf buffer in _buffers)
             {
                 if (buffer is Trap trap)
@@ -66,12 +67,15 @@ public class CompositeByteBufStructuralDispatchTest
                         {
                             rejected.Release();
                         }
+
                 if (buffer.RefCnt > 0)
                 {
                     buffer.Release();
                 }
+
                 Assert.Equal(0, buffer.RefCnt);
             }
+
             (Allocator as IDisposable)?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
         }
@@ -99,6 +103,7 @@ public class CompositeByteBufStructuralDispatchTest
                 RejectedInputs.Add(buffer);
                 Reject("add");
             }
+
             return base.AddComponent(buffer, increaseWriterIndex);
         }
 
@@ -108,6 +113,7 @@ public class CompositeByteBufStructuralDispatchTest
             {
                 Reject("array-batch");
             }
+
             return base.AddComponents(index, buffers, increaseWriterIndex);
         }
 
@@ -117,6 +123,7 @@ public class CompositeByteBufStructuralDispatchTest
             {
                 Reject("array-forward");
             }
+
             return base.AddComponents(buffers, increaseWriterIndex);
         }
 
@@ -126,6 +133,7 @@ public class CompositeByteBufStructuralDispatchTest
             {
                 Reject("enumerable-batch");
             }
+
             return base.AddComponents(index, buffers, increaseWriterIndex);
         }
 
@@ -135,6 +143,7 @@ public class CompositeByteBufStructuralDispatchTest
             {
                 Reject("consolidate");
             }
+
             return base.Consolidate();
         }
 
@@ -144,6 +153,7 @@ public class CompositeByteBufStructuralDispatchTest
             {
                 Reject("range-consolidate");
             }
+
             return base.Consolidate(index, count);
         }
 
@@ -153,6 +163,7 @@ public class CompositeByteBufStructuralDispatchTest
             {
                 Reject("remove");
             }
+
             return base.RemoveComponents(index, count);
         }
     }
@@ -252,6 +263,7 @@ public class CompositeByteBufStructuralDispatchTest
         ByteBuf first = s.Data(1, 2), second = s.Data(3, 4);
         buffer.AddComponent(first, true);
         buffer.RejectAllConsolidation = buffer.RejectRangeConsolidation = true;
+
         if (operation == 0)
             buffer.AddComponent(second, true);
         else if (operation == 1)
@@ -264,6 +276,7 @@ public class CompositeByteBufStructuralDispatchTest
             buffer.AddFlattenedComponents(source, true);
             Assert.Equal(0, source.RefCnt);
         }
+
         Assert.Equal(new byte[] { 1, 2, 3, 4 }, ByteBufUtil.GetBytes(buffer));
         Assert.Equal(0, buffer.ReaderIndex);
         Assert.Equal(4, buffer.WriterIndex);
@@ -297,27 +310,32 @@ public class CompositeByteBufStructuralDispatchTest
         ByteBuf first = s.Data(1, 2), second = s.Data(3, 4), third = s.Data(5, 6);
         buffer.AddComponents([first, second, third], operation != 0);
         buffer.RejectRemoval = true;
+
         if (operation == 0)
             buffer.RemoveComponent(0);
         else
         {
             buffer.SetIndex(3, 6).MarkReaderIndex().MarkWriterIndex();
+
             if (operation == 1)
                 buffer.DiscardReadComponents();
             else
                 buffer.DiscardReadBytes();
         }
+
         byte[] expected = operation == 2 ? [4, 5, 6] : [3, 4, 5, 6];
         Assert.Equal(expected, ByteBufUtil.GetBytes(buffer, 0, buffer.Capacity));
         int reader = operation == 1 ? 1 : 0, writer = operation == 0 ? 0 : expected.Length;
         Assert.Equal(reader, buffer.ReaderIndex);
         Assert.Equal(writer, buffer.WriterIndex);
+
         if (operation != 0)
         {
             buffer.SetIndex(0, buffer.Capacity).ResetWriterIndex().ResetReaderIndex();
             Assert.Equal(reader, buffer.ReaderIndex);
             Assert.Equal(writer, buffer.WriterIndex);
         }
+
         Assert.Equal(2, buffer.NumComponents);
         Assert.Equal(0, first.RefCnt);
         Assert.Equal(1, second.RefCnt);
@@ -348,12 +366,14 @@ public class CompositeByteBufStructuralDispatchTest
         Trap buffer = s.Composite(direct, 4);
         ByteBuf[] sources = [s.Data(1, 2), s.Data(3, 4)];
         buffer.RejectIndexedBatch = true;
+
         if (enumerable)
             buffer.AddComponents((IEnumerable<ByteBuf>)sources, increase);
         else if (increase)
             buffer.AddComponents(sources, true);
         else
             buffer.AddComponents(sources);
+
         Assert.Equal(new byte[] { 1, 2, 3, 4 }, ByteBufUtil.GetBytes(buffer, 0, 4));
         Assert.Equal(0, buffer.ReaderIndex);
         Assert.Equal(increase ? 4 : 0, buffer.WriterIndex);

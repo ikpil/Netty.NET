@@ -71,6 +71,7 @@ public class XmlEntityReference
         {
             return false;
         }
+
         return text != null ? text.Equals(that.text) : that.text == null;
     }
 

@@ -25,19 +25,23 @@ public class AsciiStringDelimiterContractTest
     {
         byte[] backing = new byte[260];
         char[] characters = new char[256];
+
         for (int i = 0; i < 256; i++)
         {
             backing[i + 2] = (byte)i;
             characters[i] = (char)i;
         }
+
         var bytes = new AsciiString(backing, 2, 256, false);
         var text = new StringCharSequence("!!" + new string(characters) + "!!", 2, 256);
         int[] starts = { int.MinValue, -1, 0, 1, 127, 255, 256, 257, int.MaxValue - 1, int.MaxValue };
+
         for (int target = 0; target < 256; target++)
         {
             foreach (int start in starts)
             {
                 int expected = -1;
+
                 for (int i = Math.Max(0, start); i < 256; i++)
                 {
                     if (characters[i] == target)
@@ -46,6 +50,7 @@ public class AsciiStringDelimiterContractTest
                         break;
                     }
                 }
+
                 Assert.Equal(expected, bytes.IndexOf((char)target, start));
                 Assert.Equal(expected, AsciiString.IndexOf(bytes, (char)target, start));
                 Assert.Equal(expected, text.IndexOf((char)target, start));
@@ -103,8 +108,10 @@ public class AsciiStringDelimiterContractTest
     {
         var value = new AsciiString(Encoding.Latin1.GetBytes("!!" + text + "!!"), 2, text.Length, false);
         var fields = new List<string>();
+
         foreach (Range range in value.AsSpan().Split((byte)','))
             fields.Add(Encoding.Latin1.GetString(value.AsSpan()[range]));
+
         Assert.Equal(expected, fields.ToArray());
     }
 
@@ -119,6 +126,7 @@ public class AsciiStringDelimiterContractTest
             var value = new AsciiString(backing, 2, logical.Length, false);
             var expected = new List<(int Start, int Length)>();
             int start = 0;
+
             for (int i = 0; i < logical.Length; i++)
             {
                 if (logical[i] == separator)
@@ -127,10 +135,13 @@ public class AsciiStringDelimiterContractTest
                     start = i + 1;
                 }
             }
+
             expected.Add((start, logical.Length - start));
             var actual = new List<(int Start, int Length)>();
+
             foreach (Range range in value.AsSpan().Split((byte)separator))
                 actual.Add(range.GetOffsetAndLength(value.Count));
+
             Assert.Equal(expected.ToArray(), actual.ToArray());
         }
     }
@@ -142,11 +153,13 @@ public class AsciiStringDelimiterContractTest
         var value = new AsciiString(backing, 2, 5, false);
         ReadOnlyMemory<byte> memory = value.AsMemory();
         var fields = new List<ReadOnlyMemory<byte>>();
+
         foreach (Range range in memory.Span.Split((byte)','))
         {
             var (start, length) = range.GetOffsetAndLength(memory.Length);
             fields.Add(memory.Slice(start, length));
         }
+
         Assert.Equal(2, fields.Count);
         Assert.True(MemoryMarshal.TryGetArray(fields[1], out ArraySegment<byte> segment));
         Assert.Same(backing, segment.Array);
@@ -177,8 +190,10 @@ public class AsciiStringDelimiterContractTest
         }
 
         Assert.Equal(new[] { "é😀", "\0Ā" }, fields.ToArray());
+
         for (int i = 0; i < logical.Length; i++)
             Assert.Equal(logical.IndexOf(logical[i], i), value.IndexOf(logical[i], i));
+
         Assert.Equal(-1, value.IndexOf('!', 0));
         Assert.Equal(-1, value.IndexOf('é', int.MaxValue));
         Assert.Equal(0, value.IndexOf('é', int.MinValue));
@@ -195,6 +210,7 @@ public class AsciiStringDelimiterContractTest
             new StringCharSequence("!!name:value!!", 2, 10),
             new AppendableCharSequence(10).Append("name:value")
         };
+
         foreach (ICharSequence value in values)
         {
             Assert.Equal(4, AsciiString.IndexOf(value, ':', 0));

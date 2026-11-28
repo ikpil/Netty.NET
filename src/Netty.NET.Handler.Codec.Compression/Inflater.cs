@@ -171,9 +171,11 @@ internal sealed class Inflater
                 throw new NotSupportedException(
                         "a raw inflater takes a preset dictionary only before its first input byte");
             }
+
             Prime(dictionary);
             return;
         }
+
         if (!needDict)
         {
             throw new ArgumentException("no preset dictionary is needed");
@@ -182,6 +184,7 @@ internal sealed class Inflater
         {
             throw new ArgumentException("the Adler-32 of the preset dictionary does not match the stream's DICTID");
         }
+
         stream.Dispose();
         feed.StartRawData();
         stream = new DeflateStream(feed, CompressionMode.Decompress, true);
@@ -199,6 +202,7 @@ internal sealed class Inflater
         {
             return;
         }
+
         // BFINAL 0 and BTYPE 00 in the first byte (its other bits are ignored), then LEN and NLEN, least significant
         // byte first.
         byte[] block = new byte[5 + length];
@@ -209,6 +213,7 @@ internal sealed class Inflater
         Array.Copy(dictionary, dictionary.Length - length, block, 5, length);
         feed.SetPrime(block);
         byte[] skipped = new byte[Math.Min(length, 8192)];
+
         while (length > 0)
         {
             int read = stream.Read(skipped, 0, Math.Min(length, skipped.Length));
@@ -216,6 +221,7 @@ internal sealed class Inflater
             {
                 throw new InvalidOperationException("the preset dictionary was not inflated");
             }
+
             length -= read;
         }
     }
@@ -241,13 +247,16 @@ internal sealed class Inflater
         {
             return 0;
         }
+
         int n = 0;
+
         if (hasLookahead)
         {
             b[off] = lookaheadBuffer[0];
             hasLookahead = false;
             n = 1;
         }
+
         while (n < len)
         {
             int read = Read(b, off + n, len - n);
@@ -255,12 +264,15 @@ internal sealed class Inflater
             {
                 break;
             }
+
             n += read;
         }
+
         if (n == len && !finished && !needDict && Read(lookaheadBuffer, 0, 1) == 1)
         {
             hasLookahead = true;
         }
+
         bytesWritten += n;
         return n;
     }
@@ -274,13 +286,16 @@ internal sealed class Inflater
             ReadDictId();
             return 0;
         }
+
         if (trailerLeft > 0 || badTrailer)
         {
             ReadTrailer();
             return 0;
         }
+
         int emptyReads = feed.emptyReads;
         int read;
+
         try
         {
             read = stream.Read(b, off, len);
@@ -290,6 +305,7 @@ internal sealed class Inflater
             // The strict validation of DeflateStream reports the empty Feed read as truncated data.
             read = 0;
         }
+
         if (read == 0)
         {
             if (feed.emptyReads == emptyReads)
@@ -315,6 +331,7 @@ internal sealed class Inflater
         {
             adler.Append(new ReadOnlySpan<byte>(b, off, read));
         }
+
         return read;
     }
 
@@ -326,6 +343,7 @@ internal sealed class Inflater
             dictId = dictId << 8 | value;
             dictIdLeft--;
         }
+
         if (dictIdLeft == 0)
         {
             needDict = true;
@@ -340,11 +358,13 @@ internal sealed class Inflater
         {
             throw new InvalidDataException(INCORRECT_DATA_CHECK);
         }
+
         while (trailerLeft > 0 && feed.TakeByte(out byte value))
         {
             trailer = trailer << 8 | value;
             trailerLeft--;
         }
+
         if (trailerLeft == 0)
         {
             if (trailer != adler.GetCurrentHashAsUInt32())
@@ -352,6 +372,7 @@ internal sealed class Inflater
                 badTrailer = true;
                 throw new InvalidDataException(INCORRECT_DATA_CHECK);
             }
+
             finished = true;
         }
     }
@@ -438,6 +459,7 @@ internal sealed class Inflater
                 value = 0;
                 return false;
             }
+
             value = input[position++];
             inputTaken = true;
             exhausted = position == limit;
@@ -460,36 +482,44 @@ internal sealed class Inflater
                 {
                     prime = null;
                 }
+
                 return p;
             }
+
             int n = dictionaryHeader ? 0 : Math.Min(buffer.Length, limit - position);
             if (oneByte && n > 1)
             {
                 n = 1;
             }
+
             if (headerLeft > 0 && n > headerLeft)
             {
                 n = headerLeft;
             }
+
             if (n == 0)
             {
                 exhausted = true;
                 emptyReads++;
                 return 0;
             }
+
             input.AsSpan(position, n).CopyTo(buffer);
+
             if (headerLeft > 0)
             {
                 for (int i = 0; i < n; i++)
                 {
                     header = header << 8 | input[position + i];
                 }
+
                 headerLeft -= n;
                 // RFC 1950, section 2.2: CMF (CM 8 = deflate, CINFO <= 7), FLG with FCHECK (CMF * 256 + FLG is a
                 // multiple of 31) and FDICT (bit 5).
                 dictionaryHeader = headerLeft == 0 && (header & 0x0F00) == 0x0800 && (header & 0xF000) <= 0x7000 &&
                                    header % 31 == 0 && (header & 0x20) != 0;
             }
+
             position += n;
             exhausted = false;
             inputTaken = true;

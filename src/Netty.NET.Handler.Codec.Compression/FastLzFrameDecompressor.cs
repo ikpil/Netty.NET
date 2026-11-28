@@ -127,6 +127,7 @@ public sealed class FastLzFrameDecompressor : InputBufferingDecompressor
                 {
                     break;
                 }
+
                 currentChecksum = hasChecksum ? buf.ReadInt() : 0;
                 chunkLength = buf.ReadUnsignedShort();
                 originalLength = isCompressed ? buf.ReadUnsignedShort() : chunkLength;
@@ -170,6 +171,7 @@ public sealed class FastLzFrameDecompressor : InputBufferingDecompressor
         {
             throw new DecompressionException("Unexpected end of input");
         }
+
         currentState = State.COMPLETE;
     }
 
@@ -200,6 +202,7 @@ public sealed class FastLzFrameDecompressor : InputBufferingDecompressor
                             "stream corrupted: originalLength({0}) and actual length({1}) mismatch",
                             originalLength, decompressedBytes));
                 }
+
                 output.WriterIndex = output.WriterIndex + decompressedBytes;
             }
             else

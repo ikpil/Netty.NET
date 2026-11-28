@@ -56,6 +56,7 @@ public sealed class HAProxyMessageEncoder : MessageToByteEncoder<HAProxyMessage>
     protected override void Encode(IChannelHandlerContext ctx, HAProxyMessage msg, ByteBuf @out)
     {
         HAProxyProtocolVersion protocolVersion = msg.ProtocolVersion();
+
         switch (protocolVersion)
         {
             case var _ when protocolVersion == HAProxyProtocolVersion.V1:
@@ -96,6 +97,7 @@ public sealed class HAProxyMessageEncoder : MessageToByteEncoder<HAProxyMessage>
         @out.WriteByte(msg.ProxiedProtocol().ByteValue());
 
         AddressFamily addressFamily = msg.ProxiedProtocol().AddressFamily_();
+
         switch (addressFamily)
         {
             case var _ when addressFamily == AddressFamily.AF_IPv4:

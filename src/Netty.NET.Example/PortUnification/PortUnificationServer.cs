@@ -57,6 +57,7 @@ public sealed class PortUnificationServer
             .Build();
 
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             ServerBootstrap b = new ServerBootstrap();

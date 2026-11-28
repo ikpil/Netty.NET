@@ -122,6 +122,7 @@ public static class HttpUtil
     public static bool IsEncodingSafeStartLineToken(ICharSequence token)
     {
         int lenBytes = token.Length();
+
         for (int i = 0; i < lenBytes; i++)
         {
             char ch = token.CharAt(i);
@@ -137,6 +138,7 @@ public static class HttpUtil
                 }
             }
         }
+
         return true;
     }
 
@@ -320,6 +322,7 @@ public static class HttpUtil
     {
         // WebSocket messages have constant content-lengths.
         HttpHeaders h = message.Headers();
+
         if (message is IHttpRequest)
         {
             IHttpRequest req = (IHttpRequest) message;
@@ -457,14 +460,18 @@ public static class HttpUtil
             {
                 return;
             }
+
             // CLR: the ArrayList<CharSequence> copy of the String values and its Iterator.remove() loop are a List of
             // StringCharSequence values filtered in place.
             List<object> values = new List<object>(encodings.Count);
+
             foreach (string encoding in encodings)
             {
                 values.Add(new StringCharSequence(encoding));
             }
+
             values.RemoveAll(value => HttpHeaderValues.CHUNKED.ContentEqualsIgnoreCase((ICharSequence) value));
+
             if (values.Count == 0)
             {
                 m.Headers().Remove(HttpHeaderNames.TRANSFER_ENCODING);
@@ -549,14 +556,17 @@ public static class HttpUtil
                 // Leading whitespace after '=' is not grammar-legal and is deliberately kept, so
                 // such values keep failing the charset lookup below.
                 int end = charsetRaw.Length();
+
                 while (end > 0 && IsOws(charsetRaw.CharAt(end - 1)))
                 {
                     end--;
                 }
+
                 if (end < charsetRaw.Length())
                 {
                     charsetRaw = charsetRaw.SubSequence(0, end);
                 }
+
                 if (charsetRaw.Length() > 2)
                 { // at least contains 2 quotes(")
                     if (charsetRaw.CharAt(0) == '"' && charsetRaw.CharAt(charsetRaw.Length() - 1) == '"')
@@ -564,6 +574,7 @@ public static class HttpUtil
                         charsetRaw = charsetRaw.SubSequence(1, charsetRaw.Length() - 1);
                     }
                 }
+
                 try
                 {
                     return CharsetUtil.ForName(charsetRaw.ToString());
@@ -574,6 +585,7 @@ public static class HttpUtil
                 }
             }
         }
+
         return defaultCharset;
     }
 
@@ -691,10 +703,12 @@ public static class HttpUtil
             // Remove the trailing optional whitespace (OWS) that RFC 9110 allows before the semicolon
             // starting the next parameter, see https://www.rfc-editor.org/rfc/rfc9110#section-8.3.1
             int end = indexOfSemicolon;
+
             while (end > 0 && IsOws(contentTypeValue.CharAt(end - 1)))
             {
                 end--;
             }
+
             return contentTypeValue.SubSequence(0, end);
         }
         else
@@ -727,6 +741,7 @@ public static class HttpUtil
 
             return '[' + hostString + ']';
         }
+
         return hostString;
     }
 
@@ -775,12 +790,15 @@ public static class HttpUtil
             {
                 // Find and enforce that all Content-Length values are the same
                 string firstValue = null;
+
                 foreach (T field in contentLengthFields)
                 {
                     string[] tokens = field.ToString().Split(COMMA_STRING);
+
                     foreach (string token in tokens)
                     {
                         string trimmed = TrimJava(token);
+
                         if (firstValue == null)
                         {
                             firstValue = trimmed;
@@ -792,6 +810,7 @@ public static class HttpUtil
                         }
                     }
                 }
+
                 // Replace the duplicated field-values with a single valid Content-Length field
                 firstField = firstValue;
             }
@@ -802,6 +821,7 @@ public static class HttpUtil
                         "Multiple Content-Length values found: " + ToJavaString(contentLengthFields));
             }
         }
+
         // Ensure we not allow sign as part of the content-length:
         // See https://github.com/squid-cache/squid/security/advisories/GHSA-qf3v-rc95-96j5
         if (firstField.Length == 0 || !char.IsDigit(firstField[0]))
@@ -810,6 +830,7 @@ public static class HttpUtil
             throw new ArgumentException(
                     "Content-Length value is not a number: " + firstField);
         }
+
         try
         {
             long value = ParseLong(firstField);
@@ -828,14 +849,17 @@ public static class HttpUtil
     {
         int start = 0;
         int end = value.Length;
+
         while (start < end && value[start] <= ' ')
         {
             start++;
         }
+
         while (end > start && value[end - 1] <= ' ')
         {
             end--;
         }
+
         return value.Substring(start, end - start);
     }
 
@@ -843,14 +867,17 @@ public static class HttpUtil
     private static string ToJavaString<T>(IList<T> list)
     {
         StringBuilder sb = new StringBuilder("[");
+
         for (int i = 0; i < list.Count; i++)
         {
             if (i > 0)
             {
                 sb.Append(", ");
             }
+
             sb.Append(list[i]);
         }
+
         return sb.Append(']').ToString();
     }
 
@@ -873,6 +900,7 @@ public static class HttpUtil
         {
             return ValidateAsciiStringToken((AsciiString) token);
         }
+
         return ValidateCharSequenceToken(token);
     }
 
@@ -885,6 +913,7 @@ public static class HttpUtil
     private static int ValidateAsciiStringToken(AsciiString token)
     {
         byte[] array = token.Array();
+
         for (int i = token.ArrayOffset(), len = token.ArrayOffset() + token.Length(); i < len; i++)
         {
             if (!IsValidTokenChar(array[i]))
@@ -892,6 +921,7 @@ public static class HttpUtil
                 return i - token.ArrayOffset();
             }
         }
+
         return -1;
     }
 
@@ -913,6 +943,7 @@ public static class HttpUtil
                 return i;
             }
         }
+
         return -1;
     }
 
@@ -1010,6 +1041,7 @@ public static class HttpUtil
         {
             return 0 != (TOKEN_CHARS_LOW & 1L << value);
         }
+
         return 0 != (TOKEN_CHARS_HIGH & 1L << value - 64);
     }
 }

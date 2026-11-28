@@ -240,6 +240,7 @@ public class QpackEncoderDynamicTableTest
         {
             insertCount++;
         }
+
         return idx;
     }
 

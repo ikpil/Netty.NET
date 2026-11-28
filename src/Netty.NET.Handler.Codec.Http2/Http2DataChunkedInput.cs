@@ -76,6 +76,7 @@ public sealed class Http2DataChunkedInput : IChunkedInput<IHttp2DataFrame>
             // Only end of input after last HTTP chunk has been sent
             return endStreamSent;
         }
+
         return false;
     }
 

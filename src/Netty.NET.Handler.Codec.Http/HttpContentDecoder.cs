@@ -69,6 +69,7 @@ public abstract class HttpContentDecoder : MessageToMessageDecoder<IHttpObject>
     protected override void Decode(IChannelHandlerContext ctx, IHttpObject msg, IList<object> @out)
     {
         needRead = true;
+
         if (msg is IHttpResponse && ((IHttpResponse) msg).Status().Code() == 100)
         {
 
@@ -76,6 +77,7 @@ public abstract class HttpContentDecoder : MessageToMessageDecoder<IHttpObject>
             {
                 continueResponse = true;
             }
+
             // 100-continue response must be passed through.
             needRead = false;
             ctx.FireChannelRead(ReferenceCountUtil.Retain(msg));
@@ -88,6 +90,7 @@ public abstract class HttpContentDecoder : MessageToMessageDecoder<IHttpObject>
             {
                 continueResponse = false;
             }
+
             // 100-continue response must be passed through.
             needRead = false;
             ctx.FireChannelRead(ReferenceCountUtil.Retain(msg));
@@ -126,6 +129,7 @@ public abstract class HttpContentDecoder : MessageToMessageDecoder<IHttpObject>
                     contentEncoding = IDENTITY;
                 }
             }
+
             decoder = NewContentDecoder(contentEncoding);
 
             if (decoder == null)
@@ -134,11 +138,14 @@ public abstract class HttpContentDecoder : MessageToMessageDecoder<IHttpObject>
                 {
                     ((IHttpContent) message).Retain();
                 }
+
                 needRead = false;
                 ctx.FireChannelRead(message);
                 return;
             }
+
             decoder.Pipeline.AddLast(forwarder);
+
             // Remove content-length header:
             // the correct value can be set only after all chunks are processed/decoded.
             // If buffering is not an issue, add HttpObjectAggregator down the chain, it will set the header.
@@ -171,6 +178,7 @@ public abstract class HttpContentDecoder : MessageToMessageDecoder<IHttpObject>
                 // Note: "copy" object must not be an instance of LastHttpContent class,
                 // as this would (erroneously) indicate the end of the HttpMessage to other handlers.
                 IHttpMessage copy;
+
                 if (message is IHttpRequest)
                 {
                     IHttpRequest r = (IHttpRequest) message; // HttpRequest or FullHttpRequest
@@ -186,6 +194,7 @@ public abstract class HttpContentDecoder : MessageToMessageDecoder<IHttpObject>
                     throw new CodecException("Object of class " + message.GetType().FullName +
                                              " is not an HttpRequest or HttpResponse");
                 }
+
                 copy.Headers().Set(message.Headers());
                 copy.SetDecoderResult(message.DecoderResult());
                 needRead = false;
@@ -201,6 +210,7 @@ public abstract class HttpContentDecoder : MessageToMessageDecoder<IHttpObject>
         if (msg is IHttpContent)
         {
             IHttpContent c = (IHttpContent) msg;
+
             if (decoder == null)
             {
                 needRead = false;
@@ -221,6 +231,7 @@ public abstract class HttpContentDecoder : MessageToMessageDecoder<IHttpObject>
                     // the last product on closure,
                     HttpHeaders headers = last.TrailingHeaders();
                     needRead = false;
+
                     if (headers.IsEmpty())
                     {
                         ctx.FireChannelRead(ILastHttpContent.EMPTY_LAST_CONTENT);
@@ -345,6 +356,7 @@ public abstract class HttpContentDecoder : MessageToMessageDecoder<IHttpObject>
                 buf.Release();
                 return;
             }
+
             contentDecoder.needRead = false;
             targetCtx.FireChannelRead(new DefaultHttpContent(buf));
         }

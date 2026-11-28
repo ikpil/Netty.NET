@@ -113,6 +113,7 @@ public abstract class ResourceRecordEncoder : IRecordEncoder
     internal static string[] SplitLabels(string domainName)
     {
         List<string> labels = new List<string>(domainName.Split('.'));
+
         while (labels.Count > 0 && labels[labels.Count - 1].Length == 0)
         {
             labels.RemoveAt(labels.Count - 1);

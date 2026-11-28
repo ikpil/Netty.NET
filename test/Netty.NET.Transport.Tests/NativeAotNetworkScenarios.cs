@@ -73,6 +73,7 @@ internal static class NativeAotNetworkScenarios
     {
         var group = new MultiThreadIoEventLoopGroup(2, NioIoHandler.NewFactory());
         IChannel server = null, client = null;
+
         try
         {
             // Larger than one read so that the echo crosses several reads, writes and flushes.
@@ -100,6 +101,7 @@ internal static class NativeAotNetworkScenarios
     {
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         IChannel receiver = null, sender = null;
+
         try
         {
             var payload = Payload(1024);
@@ -148,11 +150,13 @@ internal static class NativeAotNetworkScenarios
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             var buffer = (ByteBuf)msg;
+
             try
             {
                 var chunk = new byte[buffer.ReadableBytes];
                 buffer.ReadBytes(chunk);
                 _bytes.Write(chunk);
+
                 if (_bytes.Length >= expected)
                 {
                     received.TrySetResult(_bytes.ToArray());
@@ -181,6 +185,7 @@ internal static class NativeAotNetworkScenarios
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             var packet = (DatagramPacket)msg;
+
             try
             {
                 var bytes = new byte[packet.Content.ReadableBytes];

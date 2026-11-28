@@ -89,10 +89,12 @@ public class IpSubnetFilterTest
     public void TestIp4SubnetFilterRule()
     {
         IpSubnetFilterRule rule = new IpSubnetFilterRule("192.168.56.1", 24, IpFilterRuleType.ACCEPT);
+
         for (int i = 0; i <= 255; i++)
         {
             Assert.True(rule.Matches(NewSockAddress(string.Format(CultureInfo.InvariantCulture, "192.168.56.{0}", i))));
         }
+
         Assert.False(rule.Matches(NewSockAddress("192.168.57.1")));
 
         rule = new IpSubnetFilterRule("91.114.240.1", 23, IpFilterRuleType.ACCEPT);
@@ -137,10 +139,12 @@ public class IpSubnetFilterTest
         EmbeddedChannel chDeny = NewEmbeddedInetChannel("192.168.57.1", denyHandler);
         ByteBuf @out = chDeny.ReadOutbound<ByteBuf>();
         Assert.Equal(7, @out.ReadableBytes);
+
         for (byte i = 1; i <= 7; i++)
         {
             Assert.Equal(i, @out.ReadByte());
         }
+
         Assert.False(chDeny.IsActive);
         Assert.False(chDeny.IsOpen);
 
@@ -214,12 +218,14 @@ public class IpSubnetFilterTest
         Assert.False(ch1.Finish());
 
         EmbeddedChannel ch4 = NewEmbeddedInetChannel("91.92.93.1", handler);
+
         for (long deadline = Environment.TickCount64 + 10000;
              !ch4.IsActive && Environment.TickCount64 < deadline;)
         {
             await Task.Delay(1, TestContext.Current.CancellationToken);
             ch4 = NewEmbeddedInetChannel("91.92.93.1", handler);
         }
+
         Assert.True(ch4.IsActive);
     }
 

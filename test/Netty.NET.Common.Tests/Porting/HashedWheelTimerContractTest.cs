@@ -73,6 +73,7 @@ public class HashedWheelTimerContractTest
         using var stopped = new HashedWheelTimer(BackgroundFactory());
         Assert.Empty(stopped.Stop());
         Assert.Throws<ArgumentNullException>(() => stopped.NewTimeout(null, TimeSpan.Zero));
+
         for (int i = 0; i < 3; i++)
         {
             Assert.Throws<InvalidOperationException>(() => stopped.NewTimeout(TimerTask.Create(_ =>
@@ -133,6 +134,7 @@ public class HashedWheelTimerContractTest
             IsBackground = true
         };
         submitter.Start();
+
         try
         {
             Assert.True(timer.Started.Wait(TimeSpan.FromSeconds(5)));
@@ -143,6 +145,7 @@ public class HashedWheelTimerContractTest
             timer.Continue.Set();
             Assert.True(submitter.Join(TimeSpan.FromSeconds(5)));
         }
+
         Assert.IsType<InvalidOperationException>(failure);
         Assert.Equal("cannot be started once stopped", failure.Message);
         Assert.Equal(0, timer.PendingTimeouts());
@@ -228,6 +231,7 @@ public class HashedWheelTimerContractTest
             {
                 stopFailure = caught;
             }
+
             ready.Set();
         }), TimeSpan.Zero);
         Assert.True(ready.Wait(TimeSpan.FromSeconds(5)));
@@ -266,6 +270,7 @@ public class HashedWheelTimerContractTest
             {
                 if (Interlocked.Increment(ref submissions) == 1)
                     throw new RejectedExecutionException("executor rejected");
+
                 command();
             });
         ITimeout rejected = timer.NewTimeout(TimerTask.Create(_ => Interlocked.Increment(ref rejectedRuns)), TimeSpan.Zero);
@@ -319,6 +324,7 @@ public class HashedWheelTimerContractTest
         {
             entered.Set();
             var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(5);
+
             while (Volatile.Read(ref release) == 0 && DateTime.UtcNow < deadline)
                 Thread.SpinWait(100);
         }), TimeSpan.Zero);
@@ -331,6 +337,7 @@ public class HashedWheelTimerContractTest
             {
                 stopping.Set();
                 timer.Stop();
+
                 try
                 {
                     Thread.Sleep(0);
@@ -349,6 +356,7 @@ public class HashedWheelTimerContractTest
             IsBackground = true
         };
         stopper.Start();
+
         try
         {
             Assert.True(stopping.Wait(TimeSpan.FromSeconds(5)));
@@ -360,6 +368,7 @@ public class HashedWheelTimerContractTest
             Volatile.Write(ref release, 1);
             Assert.True(stopper.Join(TimeSpan.FromSeconds(5)));
         }
+
         Assert.Null(failure);
         Assert.True(restored);
     }

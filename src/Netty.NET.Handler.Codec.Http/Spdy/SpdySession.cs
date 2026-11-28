@@ -80,10 +80,12 @@ internal sealed class SpdySession
     internal IDictionary<int, StreamState> ActiveStreams()
     {
         SortedDictionary<int, StreamState> streams = new SortedDictionary<int, StreamState>(streamComparator);
+
         foreach (KeyValuePair<int, StreamState> e in activeStreams)
         {
             streams[e.Key] = e.Value;
         }
+
         return streams;
     }
 
@@ -101,6 +103,7 @@ internal sealed class SpdySession
                 state = old;
                 return newState;
             });
+
             if (state == null)
             {
                 if (remote)
@@ -118,6 +121,7 @@ internal sealed class SpdySession
     private StreamState RemoveActiveStream(int streamId, bool remote)
     {
         activeStreams.TryRemove(streamId, out StreamState state);
+
         if (state != null)
         {
             if (remote)
@@ -129,6 +133,7 @@ internal sealed class SpdySession
                 Interlocked.Decrement(ref activeLocalStreams);
             }
         }
+
         return state;
     }
 
@@ -153,6 +158,7 @@ internal sealed class SpdySession
         if (state != null)
         {
             state.CloseRemoteSide();
+
             if (state.IsLocalSideClosed())
             {
                 RemoveActiveStream(streamId, remote);
@@ -172,6 +178,7 @@ internal sealed class SpdySession
         if (state != null)
         {
             state.CloseLocalSide();
+
             if (state.IsRemoteSideClosed())
             {
                 RemoveActiveStream(streamId, remote);
@@ -232,10 +239,12 @@ internal sealed class SpdySession
         {
             return -1;
         }
+
         if (deltaWindowSize > 0)
         {
             state.SetReceiveWindowSizeLowerBound(0);
         }
+
         return state.UpdateReceiveWindowSize(deltaWindowSize);
     }
 
@@ -263,6 +272,7 @@ internal sealed class SpdySession
         foreach (StreamState state in activeStreams.Values)
         {
             state.UpdateReceiveWindowSize(deltaWindowSize);
+
             if (deltaWindowSize < 0)
             {
                 state.SetReceiveWindowSizeLowerBound(deltaWindowSize);
@@ -292,6 +302,7 @@ internal sealed class SpdySession
                     }
                 }
             }
+
             return null;
         }
 
@@ -420,6 +431,7 @@ internal sealed class SpdySession
                 {
                     break;
                 }
+
                 pendingWrite.Fail(cause);
             }
         }

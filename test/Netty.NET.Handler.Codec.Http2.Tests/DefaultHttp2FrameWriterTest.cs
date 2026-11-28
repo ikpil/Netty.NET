@@ -85,6 +85,7 @@ public class DefaultHttp2FrameWriterTest : IDisposable
                     {
                         outbound.WriteBytes((ByteBuf) msg);
                     }
+
                     ReferenceCountUtil.Release(msg);
                     return future;
                 });
@@ -443,6 +444,7 @@ public class DefaultHttp2FrameWriterTest : IDisposable
     private static void AssertAllTrackedBuffersReleased(TrackingFailingAllocator allocator)
     {
         Assert.False(allocator.allocated.Count == 0, "expected at least one buffer to be allocated");
+
         foreach (ByteBuf buf in allocator.allocated)
         {
             Assert.Equal(0, buf.RefCnt, "expected tracked buffer to be fully released");
@@ -510,12 +512,14 @@ public class DefaultHttp2FrameWriterTest : IDisposable
         outputStream.WriteByte(padding);
         outputStream.Write(HeaderPayload(streamId, headers));
         outputStream.Write(new byte[padding]);
+
         return outputStream.ToArray();
     }
 
     private byte[] HeaderPayload(int streamId, IHttp2Headers headers)
     {
         ByteBuf byteBuf = Unpooled.Buffer();
+
         try
         {
             http2HeadersEncoder.EncodeHeaders(streamId, headers, byteBuf);
@@ -538,17 +542,20 @@ public class DefaultHttp2FrameWriterTest : IDisposable
         outputStream.Write(payload, 0, firstPayloadSize);
         outputStream.Write(new byte[padding]);
         outputStream.Write(payload, firstPayloadSize, payload.Length - firstPayloadSize);
+
         return outputStream.ToArray();
     }
 
     private static IHttp2Headers DummyHeaders(IHttp2Headers headers, int times)
     {
         string largeValue = Repeat("dummy-value", 100);
+
         for (int i = 0; i < times; i++)
         {
             headers.Add(new StringCharSequence("dummy-" + i.ToString(CultureInfo.InvariantCulture)),
                     new StringCharSequence(largeValue));
         }
+
         return headers;
     }
 

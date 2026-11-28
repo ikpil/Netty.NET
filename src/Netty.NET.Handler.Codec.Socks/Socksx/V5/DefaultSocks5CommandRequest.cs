@@ -115,6 +115,7 @@ public sealed class DefaultSocks5CommandRequest : AbstractSocks5Message, ISocks5
         {
             buf.Append("(type: ");
         }
+
         buf.Append(Type());
         buf.Append(", dstAddrType: ");
         buf.Append(DstAddrType());

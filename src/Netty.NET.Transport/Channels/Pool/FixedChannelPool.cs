@@ -165,6 +165,7 @@ public class FixedChannelPool : SimpleChannelPool
             throw new ArgumentOutOfRangeException(nameof(acquireTimeout));
         if (action != null && action != AcquireTimeoutAction.New && action != AcquireTimeoutAction.Fail)
             throw new ArgumentOutOfRangeException(nameof(action));
+
         _executor = bootstrap.NextEventLoop();
         _maxConnections = maxConnections;
         _maxPendingAcquires = maxPendingAcquires;
@@ -180,6 +181,7 @@ public class FixedChannelPool : SimpleChannelPool
     public override Task<IChannel> AcquireAsync(CancellationToken cancellationToken = default)
     {
         var request = new AcquireRequest(cancellationToken);
+
         try
         {
             if (_executor.InEventLoop())
@@ -191,12 +193,14 @@ public class FixedChannelPool : SimpleChannelPool
         {
             request.Fail(error);
         }
+
         return request.Producer.Task;
     }
 
     private void Acquire0(AcquireRequest request)
     {
         Debug.Assert(_executor.InEventLoop());
+
         try
         {
             if (_closed)
@@ -204,6 +208,7 @@ public class FixedChannelPool : SimpleChannelPool
                 request.Fail(ClosedException());
                 return;
             }
+
             if (_acquiredChannelCount < _maxConnections)
             {
                 StartAcquire(request);
@@ -215,6 +220,7 @@ public class FixedChannelPool : SimpleChannelPool
             else
             {
                 request.Node = _pending.AddLast(request);
+
                 if (_timeoutAction != null)
                 {
                     request.ExpireNanoTime = unchecked(_executor.Ticker().NanoTime() + _acquireTimeoutNanos);
@@ -230,6 +236,7 @@ public class FixedChannelPool : SimpleChannelPool
                 _pending.Remove(request.Node);
                 request.Node = null;
             }
+
             request.Fail(error);
         }
     }
@@ -237,15 +244,18 @@ public class FixedChannelPool : SimpleChannelPool
     private void StartAcquire(AcquireRequest request)
     {
         Debug.Assert(_executor.InEventLoop());
+
         if (!request.Acquired)
         {
             Interlocked.Increment(ref _acquiredChannelCount);
             request.Acquired = true;
         }
+
         // We need to create a new promise as we need to ensure the AcquireListener runs in the correct
         // EventLoop
         // CLR: base AcquireAsync owns a separate native producer. Consumer cancellation never abandons it.
         Task<IChannel> acquisition;
+
         try
         {
             acquisition = base.AcquireAsync();
@@ -254,6 +264,7 @@ public class FixedChannelPool : SimpleChannelPool
         {
             acquisition = Task.FromException<IChannel>(error);
         }
+
         _ = ObserveAcquireAsync(request, acquisition);
     }
 
@@ -261,6 +272,7 @@ public class FixedChannelPool : SimpleChannelPool
     {
         IChannel channel = null;
         Exception failure = null;
+
         try
         {
             channel = await acquisition.ConfigureAwait(false);
@@ -269,6 +281,7 @@ public class FixedChannelPool : SimpleChannelPool
         {
             failure = error;
         }
+
         try
         {
             // Always queue native completion. This supplies the source promise listener's bounded
@@ -279,6 +292,7 @@ public class FixedChannelPool : SimpleChannelPool
         {
             if (channel != null)
                 await global::Netty.NET.Transport.Bootstrapping.Bootstrap.CleanupAsync(channel).ConfigureAwait(false);
+
             request.Fail(error);
         }
     }
@@ -286,20 +300,24 @@ public class FixedChannelPool : SimpleChannelPool
     private void FinishAcquire(AcquireRequest request, IChannel channel, Exception failure)
     {
         Debug.Assert(_executor.InEventLoop());
+
         if (_closed)
         {
             // Since the pool is closed, we have no choice but to close the channel
             if (channel != null)
                 _ = global::Netty.NET.Transport.Bootstrapping.Bootstrap.CleanupAsync(channel);
+
             request.Fail(ClosedException());
             return;
         }
+
         if (failure != null)
         {
             if (request.Acquired)
                 DecrementAndRunTaskQueue();
             else
                 RunTaskQueue();
+
             request.Fail(failure);
         }
         else
@@ -309,6 +327,7 @@ public class FixedChannelPool : SimpleChannelPool
                 // Promise was completed in the meantime (like cancelled), just release the channel again.
                 _ = ReleaseCancelledAcquireAsync(channel);
             }
+
             request.Finish();
         }
     }
@@ -328,7 +347,9 @@ public class FixedChannelPool : SimpleChannelPool
     public override async Task ReleaseAsync(IChannel channel)
     {
         ArgumentNullException.ThrowIfNull(channel);
+
         Exception failure = null;
+
         try
         {
             await base.ReleaseAsync(channel).ConfigureAwait(false);
@@ -337,6 +358,7 @@ public class FixedChannelPool : SimpleChannelPool
         {
             failure = error;
         }
+
         try
         {
             await OnExecutorAsync(() =>
@@ -347,11 +369,13 @@ public class FixedChannelPool : SimpleChannelPool
                     _ = global::Netty.NET.Transport.Bootstrapping.Bootstrap.CleanupAsync(channel);
                     throw ClosedException();
                 }
+
                 // Check if the exception was not because of we passed the Channel to the wrong pool.
                 // Other failures (for example an IllegalArgumentException thrown by the ChannelPoolHandler)
                 // must still give back the slot.
                 if (failure is not ChannelNotAcquiredFromPoolException)
                     DecrementAndRunTaskQueue();
+
                 if (failure != null)
                     System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
             }).ConfigureAwait(false);
@@ -367,6 +391,7 @@ public class FixedChannelPool : SimpleChannelPool
     {
         if (!_executor.InEventLoop())
             return _executor.SubmitAsync(action);
+
         try
         {
             action();
@@ -401,6 +426,7 @@ public class FixedChannelPool : SimpleChannelPool
             request.CancelTimeout();
             StartAcquire(request);
         }
+
         // We should never have a negative value.
         Debug.Assert(_acquiredChannelCount >= 0);
     }
@@ -409,6 +435,7 @@ public class FixedChannelPool : SimpleChannelPool
     {
         Debug.Assert(_executor.InEventLoop());
         long nanoTime = _executor.Ticker().NanoTime();
+
         for (; ; )
         {
             var request = _pending.First?.Value;
@@ -418,9 +445,11 @@ public class FixedChannelPool : SimpleChannelPool
             // See https://github.com/netty/netty/issues/3705
             if (request == null || unchecked(nanoTime - request.ExpireNanoTime) < 0)
                 break;
+
             _pending.RemoveFirst();
             request.Node = null;
             request.CancelTimeout();
+
             if (_timeoutAction == AcquireTimeoutAction.Fail)
             {
                 // Fail the promise as we timed out.
@@ -452,6 +481,7 @@ public class FixedChannelPool : SimpleChannelPool
                 {
                     if (request.Node == null)
                         return;
+
                     _pending.Remove(request.Node);
                     request.Node = null;
                     FinishAcquire(request, null, error);
@@ -481,7 +511,9 @@ public class FixedChannelPool : SimpleChannelPool
         Debug.Assert(_executor.InEventLoop());
         if (_closed)
             return _closeTask ?? Task.CompletedTask;
+
         _closed = true;
+
         while (_pending.First != null)
         {
             var request = _pending.First.Value;
@@ -491,6 +523,7 @@ public class FixedChannelPool : SimpleChannelPool
             // keeps IllegalStateException("FixedChannelPool was closed") as InvalidOperationException.
             request.Fail(new ClosedChannelException());
         }
+
         Interlocked.Exchange(ref _acquiredChannelCount, 0);
         // Ensure we dispatch this on another Thread as close0 will be called from the EventExecutor and we need
         // to ensure we will not block in a EventExecutor.
@@ -538,6 +571,7 @@ public class FixedChannelPool : SimpleChannelPool
             var cancellation = Interlocked.Exchange(ref TimeoutCancellation, null);
             if (cancellation == null)
                 return;
+
             cancellation.Cancel();
             cancellation.Dispose();
         }

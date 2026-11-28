@@ -143,9 +143,11 @@ internal sealed class Deflater
         {
             return;
         }
+
         if (!hasDictionary)
         {
             hasDictionary = true;
+
             if (!nowrap)
             {
                 // The ZLibStream received no byte and writes nothing when it is disposed.
@@ -155,6 +157,7 @@ internal sealed class Deflater
                 adler = new Adler32();
             }
         }
+
         dictionaryAdler?.Append(dictionary);
         int length = Math.Min(dictionary.Length, WINDOW_SIZE);
         stream.Write(dictionary, dictionary.Length - length, length);
@@ -187,6 +190,7 @@ internal sealed class Deflater
         if (!started)
         {
             started = true;
+
             if (dictionaryAdler != null)
             {
                 // The zlib header with FDICT and DICTID, which the raw stream does not write.
@@ -194,7 +198,9 @@ internal sealed class Deflater
                 WriteInt(dictionaryAdler.GetCurrentHashAsUInt32());
             }
         }
+
         int n = 0;
+
         for (;;)
         {
             n += sink.Take(b, off + n, len - n);
@@ -202,6 +208,7 @@ internal sealed class Deflater
             {
                 break;
             }
+
             if (inputLength > 0)
             {
                 int chunk = Math.Min(inputLength, MAX_WRITE);
@@ -226,6 +233,7 @@ internal sealed class Deflater
                 break;
             }
         }
+
         finished = closed && sink.Available == 0;
         return n;
     }
@@ -235,6 +243,7 @@ internal sealed class Deflater
         stream.Dispose();
         stream = null;
         closed = true;
+
         if (adler != null)
         {
             // The raw stream received the dictionary and wrote the final block; the ADLER32 trailer follows.
@@ -246,7 +255,9 @@ internal sealed class Deflater
             {
                 WriteHeader(0);
             }
+
             sink.Write(new byte[] { 0x03, 0x00 });
+
             if (!nowrap)
             {
                 sink.Write(new byte[] { 0, 0, 0, 1 });
@@ -278,6 +289,7 @@ internal sealed class Deflater
             stream.Dispose();
             stream = null;
         }
+
         closed = true;
     }
 
@@ -307,6 +319,7 @@ internal sealed class Deflater
                     readIndex = writeIndex = 0;
                 }
             }
+
             return n;
         }
 
@@ -328,6 +341,7 @@ internal sealed class Deflater
                 readIndex = 0;
                 writeIndex = available;
             }
+
             source.CopyTo(buffer.AsSpan(writeIndex));
             writeIndex += source.Length;
         }

@@ -43,9 +43,11 @@ public static class ReflectionUtil
         ArgumentNullException.ThrowIfNull(obj);
         ArgumentNullException.ThrowIfNull(parametrizedSuperclass);
         ArgumentNullException.ThrowIfNull(typeParamName);
+
         Type thisClass = obj.GetType();
         Type superclassDefinition = parametrizedSuperclass.IsGenericType ?
             parametrizedSuperclass.GetGenericTypeDefinition() : parametrizedSuperclass;
+
         for (Type currentClass = thisClass; currentClass != null; currentClass = currentClass.BaseType)
         {
             Type genericSuperType = currentClass.BaseType;
@@ -53,6 +55,7 @@ public static class ReflectionUtil
             {
                 continue;
             }
+
             Type definition = genericSuperType.IsGenericType ? genericSuperType.GetGenericTypeDefinition() : genericSuperType;
             if (definition != superclassDefinition)
             {
@@ -62,10 +65,12 @@ public static class ReflectionUtil
             {
                 continue;
             }
+
             Type[] parameters = definition.GetGenericArguments();
             int index = Array.FindIndex(parameters, parameter => parameter.Name == typeParamName);
             if (index < 0)
                 throw new InvalidOperationException("unknown type parameter '" + typeParamName + "': " + parametrizedSuperclass);
+
             Type actualType = genericSuperType.GetGenericArguments()[index];
             if (actualType.IsGenericParameter)
             {
@@ -76,8 +81,10 @@ public static class ReflectionUtil
             {
                 return Fail(thisClass, typeParamName);
             }
+
             return actualType;
         }
+
         return Fail(thisClass, typeParamName);
     }
 }

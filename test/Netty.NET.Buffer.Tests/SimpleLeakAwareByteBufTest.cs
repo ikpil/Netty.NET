@@ -68,6 +68,7 @@ public class SimpleLeakAwareByteBufTest : BigEndianHeapByteBufTest
             {
                 break;
             }
+
             Assert.True(tracker.Get());
         }
     }
@@ -119,6 +120,7 @@ public class SimpleLeakAwareByteBufTest : BigEndianHeapByteBufTest
         {
             AssertWrapped(buffer.RetainedSlice(0, 1));
         }
+
         Assert.True(buffer.Release());
     }
 
@@ -130,6 +132,7 @@ public class SimpleLeakAwareByteBufTest : BigEndianHeapByteBufTest
         {
             AssertWrapped(buffer.ReadRetainedSlice(1));
         }
+
         Assert.True(buffer.Release());
     }
 
@@ -202,8 +205,10 @@ public class SimpleLeakAwareByteBufTest : BigEndianHeapByteBufTest
     private static string StackTraceOf(Exception exception)
     {
         StringBuilder text = new StringBuilder(exception.ToString());
+
         foreach (Exception suppressed in ThrowableUtil.GetSuppressed(exception))
             text.Append(Environment.NewLine).Append("Suppressed: ").Append(StackTraceOf(suppressed));
+
         return text.ToString();
     }
 

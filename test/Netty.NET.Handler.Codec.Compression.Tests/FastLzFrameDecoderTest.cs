@@ -50,6 +50,7 @@ public class FastLzFrameDecoderTest
     private static void AssertDecompressionException(byte[] input)
     {
         EmbeddedChannel channel = new EmbeddedChannel(new FastLzFrameDecoder());
+
         try
         {
             Assert.Throws<DecompressionException>(() => channel.WriteInbound(Unpooled.WrappedBuffer(input)));

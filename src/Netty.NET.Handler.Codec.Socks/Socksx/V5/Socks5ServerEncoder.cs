@@ -113,6 +113,7 @@ public class Socks5ServerEncoder : MessageToByteEncoder<ISocks5Message>
         {
             CheckFieldLength(addrValue.Length);
         }
+
         addressEncoder.EncodeAddress(bndAddrType, addrValue, @out);
 
         ByteBufUtil.WriteShortBE(@out, msg.BndPort());

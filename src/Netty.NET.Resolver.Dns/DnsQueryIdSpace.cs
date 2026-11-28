@@ -66,6 +66,7 @@ internal sealed class DnsQueryIdSpace
     internal int NextId()
     {
         int freeIdx = -1;
+
         for (int bucketIdx = 0; bucketIdx < idBuckets.Length; bucketIdx++)
         {
             DnsQueryIdRange bucket = idBuckets[bucketIdx];
@@ -85,6 +86,7 @@ internal sealed class DnsQueryIdSpace
                 freeIdx = bucketIdx;
             }
         }
+
         if (freeIdx == -1)
         {
             // No ids left and no slot left to create a new bucket.
@@ -111,6 +113,7 @@ internal sealed class DnsQueryIdSpace
         {
             throw new ArgumentException("id too large: " + id.ToString(CultureInfo.InvariantCulture));
         }
+
         DnsQueryIdRange bucket = idBuckets[bucketIdx];
         Debug.Assert(bucket != null);
         bucket.PushId(id);
@@ -144,11 +147,13 @@ internal sealed class DnsQueryIdSpace
     internal int UsableIds()
     {
         int usableIds = 0;
+
         foreach (DnsQueryIdRange bucket in idBuckets)
         {
             // If there is nothing stored in the index yet we can assume the whole bucket is usable
             usableIds += bucket == null ? BUCKET_SIZE : bucket.UsableIds();
         }
+
         return usableIds;
     }
 
@@ -179,6 +184,7 @@ internal sealed class DnsQueryIdSpace
         {
             this.ids = new short[bucketSize];
             this.startId = startId;
+
             for (int v = startId; v < bucketSize + startId; v++)
             {
                 PushId(v);
@@ -197,6 +203,7 @@ internal sealed class DnsQueryIdSpace
             {
                 return -1;
             }
+
             short id = ids[count - 1];
             count--;
 
@@ -214,6 +221,7 @@ internal sealed class DnsQueryIdSpace
             {
                 throw new InvalidOperationException("overflow");
             }
+
             Debug.Assert(id <= startId + ids.Length && id >= startId);
             // pick a slot for our index, and whatever was in that slot before will get moved to the tail.
             int insertionPosition = RandomNumberGenerator.GetInt32(count + 1);

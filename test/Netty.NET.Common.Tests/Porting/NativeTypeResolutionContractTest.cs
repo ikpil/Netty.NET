@@ -27,12 +27,14 @@ public class NativeTypeResolutionContractTest : IDisposable
     {
         var map = InternalThreadLocalMap.Get();
         var types = ResolveCollectibleTypes();
+
         for (int attempt = 0; attempt < 12 && (types.Payload.IsAlive || types.Derived.IsAlive); attempt++)
         {
             GC.Collect();
             GC.WaitForPendingFinalizers();
             GC.Collect();
         }
+
         GC.KeepAlive(map);
         Assert.False(types.Payload.IsAlive, "Type checks must not leave a collectible payload in a worker cache.");
         Assert.False(types.Derived.IsAlive, "Resolving metadata must not leave the collectible handler in a worker cache.");

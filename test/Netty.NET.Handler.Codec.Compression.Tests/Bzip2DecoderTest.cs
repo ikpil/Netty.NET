@@ -253,6 +253,7 @@ public class Bzip2DecoderTest : AbstractDecoderTest
                 ch.FinishAndReleaseAll();
             });
         }, TestContext.Current.CancellationToken);
+
         try
         {
             await execution.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
@@ -283,6 +284,7 @@ public class Bzip2DecoderTest : AbstractDecoderTest
         channel.WriteInbound(Unpooled.WrappedBuffer(compressed));
         ByteBuf decoded = channel.ReadInbound<ByteBuf>();
         Assert.NotNull(decoded, "expected decoded output for well-formed AAAA block");
+
         try
         {
             byte[] result = new byte[decoded.ReadableBytes];

@@ -40,6 +40,7 @@ public class LocalTransportThreadModel2SourceTest
         var address = new LocalAddress(typeof(LocalTransportThreadModel2SourceTest).FullName!);
         var serverHandler = new LocalHandler("SERVER");
         var clientHandler = new LocalHandler("CLIENT");
+
         try
         {
             var clientBootstrap = new Bootstrap().Group(clients).Channel<LocalChannel>()
@@ -47,15 +48,19 @@ public class LocalTransportThreadModel2SourceTest
             await new ServerBootstrap().Group(servers).Channel<LocalServerChannel>()
                 .ChildHandler(serverHandler).BindAsync(address, token);
             const int count = 100;
+
             for (int i = 1; i <= count; i++)
             {
                 var channel = await clientBootstrap.ConnectAsync(cancellationToken: token);
                 // SPIN until we get what we are looking for.
                 int target = i * MessagesPerConnection;
+
                 while (serverHandler.Count != target || clientHandler.Count != target)
                     await Task.Delay(50, token);
+
                 await CloseAsync(channel, clientHandler, token);
             }
+
             Assert.Equal(count * 2 * MessagesPerConnection, serverHandler.Count + clientHandler.Count);
         }
         finally
@@ -74,6 +79,7 @@ public class LocalTransportThreadModel2SourceTest
             {
                 await write.WaitAsync(token);
             }
+
             await channel.CloseAsync(token);
         }, token);
         // Wait until the connection is closed or the connection attempt fails.
@@ -89,10 +95,12 @@ public class LocalTransportThreadModel2SourceTest
         var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         var local = new LocalAddress(Guid.NewGuid().ToString());
         var remote = new LocalAddress(Guid.NewGuid().ToString());
+
         try
         {
             var channel = new LocalChannel();
             await group.RegisterAsync(channel, token);
+
             if (alreadyBound)
             {
                 await new ServerBootstrap().Group(group).Channel<LocalServerChannel>()
@@ -132,6 +140,7 @@ public class LocalTransportThreadModel2SourceTest
         {
             for (int i = 0; i < MessagesPerConnection; i++)
                 _lastWrite = ctx.Channel.WriteAsync($"{name} {i}");
+
             ctx.Channel.Flush();
         }
 

@@ -32,6 +32,7 @@ public class UnpooledCopyingTest
     public void EmptyInputsReturnTheSentinelWithoutConsumingSourceOwnership()
     {
         ByteBuf source = Unpooled.Buffer(8);
+
         try
         {
             Assert.Same(Unpooled.EmptyBuffer, Unpooled.CopiedBuffer());
@@ -59,6 +60,7 @@ public class UnpooledCopyingTest
     {
         byte[] source = { 1, 2, 3 };
         ByteBuf copy = span ? Unpooled.CopiedBuffer(source.AsSpan()) : Unpooled.CopiedBuffer(source);
+
         try
         {
             Assert.IsType<UnpooledHeapByteBuf>(copy);
@@ -83,6 +85,7 @@ public class UnpooledCopyingTest
     {
         byte[] source = { 9, 1, 2, 8 };
         ByteBuf copy = Unpooled.CopiedBuffer(source, 1, 2);
+
         try
         {
             Assert.Equal(2, copy.MaxCapacity);
@@ -96,6 +99,7 @@ public class UnpooledCopyingTest
         {
             copy.Release();
         }
+
         Assert.Same(Unpooled.EmptyBuffer, Unpooled.CopiedBuffer(source, source.Length, 0));
     }
 
@@ -116,6 +120,7 @@ public class UnpooledCopyingTest
         byte[] a = { 1 }, b = { 2 }, c = { 3 };
         ByteBuf copy = Unpooled.CopiedBuffer(a, Array.Empty<byte>(), b, c);
         ByteBuf single = Unpooled.CopiedBuffer(new byte[][] { new byte[] { 1, 2, 3 } });
+
         try
         {
             Assert.IsType<UnpooledHeapByteBuf>(copy);
@@ -145,6 +150,7 @@ public class UnpooledCopyingTest
         ByteBuf source = direct ? new UnpooledDirectByteBuf(5, allocator: allocator) : Unpooled.Buffer(5);
         source.WriteBytes(new byte[] { 9, 1, 2, 3, 8 }).SetIndex(1, 4).MarkReaderIndex().MarkWriterIndex();
         ByteBuf copy = arrayOverload ? Unpooled.CopiedBuffer(new[] { source }) : Unpooled.CopiedBuffer(source);
+
         try
         {
             Assert.IsType<UnpooledHeapByteBuf>(copy);
@@ -172,6 +178,7 @@ public class UnpooledCopyingTest
         {
             copy.Release();
         }
+
         Assert.Equal(1, source.RefCnt);
         source.Release();
         Assert.Equal(0, allocator.ReservedBytes);
@@ -193,6 +200,7 @@ public class UnpooledCopyingTest
         a.Release();
         b.Release();
         Assert.Equal(0, allocator.ReservedBytes);
+
         try
         {
             Assert.IsType<UnpooledHeapByteBuf>(copy);
@@ -214,6 +222,7 @@ public class UnpooledCopyingTest
         ByteBuf empty = Unpooled.Buffer(4);
         ByteBuf single = Unpooled.CopiedBuffer(new[] { source });
         ByteBuf multiple = Unpooled.CopiedBuffer(source, empty);
+
         try
         {
             Assert.Equal(int.MaxValue, single.MaxCapacity);
@@ -238,6 +247,7 @@ public class UnpooledCopyingTest
         var nested = new CompositeByteBuf();
         nested.AddComponents(new[] { Unpooled.WrappedBuffer(new byte[] { 3 }), Unpooled.EmptyBuffer, Unpooled.WrappedBuffer(new byte[] { 4 }) }, true);
         ByteBuf copy = Unpooled.CopiedBuffer(retained.AsReadOnly(), nested.Duplicate());
+
         try
         {
             Assert.Equal(new byte[] { 1, 2, 3, 4 }, Bytes(copy));
@@ -266,6 +276,7 @@ public class UnpooledCopyingTest
         source.SetIndex(1, 3);
         ByteBuf copy = Unpooled.CopiedBuffer(source.AsReadOnly().Slice());
         source.Release();
+
         try
         {
             Assert.Equal(new byte[] { 1, 2 }, Bytes(copy));
@@ -282,6 +293,7 @@ public class UnpooledCopyingTest
     {
         ByteBuf a = Unpooled.Buffer(2).WriteShortLE(0x1234), b = Unpooled.Buffer(2).WriteShort(0x5678);
         ByteBuf copy = Unpooled.CopiedBuffer(a, b);
+
         try
         {
             Assert.Equal(new byte[] { 0x34, 0x12, 0x56, 0x78 }, Bytes(copy));
@@ -301,6 +313,7 @@ public class UnpooledCopyingTest
     {
         ByteBuf source = Unpooled.WrappedBuffer(new byte[] { 1, 2 });
         ByteBuf copy = Unpooled.CopiedBuffer(source, source, source);
+
         try
         {
             Assert.Equal(new byte[] { 1, 2, 1, 2, 1, 2 }, Bytes(copy));
@@ -323,6 +336,7 @@ public class UnpooledCopyingTest
         Assert.Throws<ArgumentNullException>(() => Unpooled.CopiedBuffer((ByteBuf[])null));
         Assert.Throws<ArgumentNullException>(() => Unpooled.CopiedBuffer(new byte[] { 1 }, null, new byte[] { 2 }));
         ByteBuf source = Unpooled.WrappedBuffer(new byte[] { 1 });
+
         try
         {
             Assert.Throws<ArgumentNullException>(() => Unpooled.CopiedBuffer(source, null, source));
@@ -342,6 +356,7 @@ public class UnpooledCopyingTest
     {
         var source = new FailingReadHeapByteBuf();
         ByteBuf other = Unpooled.WrappedBuffer(new byte[] { 3 });
+
         try
         {
             Assert.Same(source.Failure, Assert.Throws<InvalidOperationException>(() => multiple
@@ -351,6 +366,7 @@ public class UnpooledCopyingTest
             Assert.Equal(3, source.WriterIndex);
             source.Fail = false;
             ByteBuf copy = multiple ? Unpooled.CopiedBuffer(other, source) : Unpooled.CopiedBuffer(source);
+
             try
             {
                 Assert.Equal(multiple ? new byte[] { 3, 1, 2 } : new byte[] { 1, 2 }, Bytes(copy));
@@ -373,6 +389,7 @@ public class UnpooledCopyingTest
         ByteBuf dead = Unpooled.Buffer(1);
         dead.Release();
         ByteBuf readable = Unpooled.WrappedBuffer(new byte[] { 1 });
+
         try
         {
             Assert.Same(Unpooled.EmptyBuffer, Unpooled.CopiedBuffer(dead));
@@ -392,11 +409,13 @@ public class UnpooledCopyingTest
     public void OverflowPreflightRejectsRepeatedBackingBeforeAllocationOrOwnershipChanges(bool buffers)
     {
         byte[] backing = new byte[1 << 20];
+
         if (buffers)
         {
             ByteBuf source = Unpooled.WrappedBuffer(backing);
             var inputs = new ByteBuf[2048];
             Array.Fill(inputs, source);
+
             try
             {
                 Assert.Throws<ArgumentException>(() => Unpooled.CopiedBuffer(inputs));

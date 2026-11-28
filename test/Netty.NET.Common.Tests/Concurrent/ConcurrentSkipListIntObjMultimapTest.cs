@@ -159,12 +159,15 @@ public class ConcurrentSkipListIntObjMultimapTest
         Iterator itr = _map.Iterator();
         itr.Next();
         IntEntry entry = itr.Next();
+
         if (withPriorRemoval)
         {
             _map.Remove(entry.GetKey(), entry.GetValue());
         }
+
         itr.Remove();
         Assert.Equal(1, _map.Size());
+
         if (entry.Equals(new IntEntry(1, "a")))
         {
             Assert.Equal(new IntEntry(1, "b"), _map.PollFirstEntry());
@@ -231,12 +234,14 @@ public class ConcurrentSkipListIntObjMultimapTest
     {
         _ = repetition;
         int[] xs = new int[50];
+
         for (int i = 0; i < xs.Length; i++)
         {
             int key = Random.Shared.Next(50);
             _map.Put(key, "a");
             xs[i] = key;
         }
+
         Array.Sort(xs);
         Assert.Equal(xs[0], _map.FirstKey());
         Assert.Equal(new IntEntry(xs[0], "a"), _map.FirstEntry());
@@ -250,17 +255,21 @@ public class ConcurrentSkipListIntObjMultimapTest
     {
         _ = repetition;
         IntEntry[] xs = new IntEntry[50];
+
         for (int i = 0; i < xs.Length; i++)
         {
             int key = Random.Shared.Next(50);
             xs[i] = new IntEntry(key, key.ToString(CultureInfo.InvariantCulture));
             _map.Put(key, xs[i].GetValue());
         }
+
         Array.Sort(xs);
+
         for (int i = 0; i < 10; i++)
         {
             IntEntry target = xs[Random.Shared.Next(xs.Length)];
             IntEntry expected = null;
+
             foreach (IntEntry x in xs)
             {
                 if (x.CompareTo(target) < 0)
@@ -272,6 +281,7 @@ public class ConcurrentSkipListIntObjMultimapTest
                     break;
                 }
             }
+
             Assert.Equal(expected, _map.LowerEntry(target.GetKey()));
             Assert.Equal(expected == null ? _noKey : expected.GetKey(), _map.LowerKey(target.GetKey()));
         }
@@ -285,12 +295,14 @@ public class ConcurrentSkipListIntObjMultimapTest
         _map.Put(1, "a");
         _map.Put(3, "b");
         _map.Put(4, "c");
+
         if (multiMapped)
         {
             _map.Put(1, "a");
             _map.Put(3, "b");
             _map.Put(4, "c");
         }
+
         Assert.Equal(1, _map.LowerKey(3));
         Assert.Equal(new IntEntry(1, "a"), _map.LowerEntry(3));
         Assert.Equal(3, _map.LowerKey(4));
@@ -305,17 +317,21 @@ public class ConcurrentSkipListIntObjMultimapTest
     {
         _ = repetition;
         IntEntry[] xs = new IntEntry[50];
+
         for (int i = 0; i < xs.Length; i++)
         {
             int key = Random.Shared.Next(50);
             xs[i] = new IntEntry(key, key.ToString(CultureInfo.InvariantCulture));
             _map.Put(key, xs[i].GetValue());
         }
+
         Array.Sort(xs);
+
         for (int i = 0; i < 10; i++)
         {
             IntEntry target = xs[Random.Shared.Next(xs.Length)];
             IntEntry expected = null;
+
             foreach (IntEntry x in xs)
             {
                 if (x.CompareTo(target) <= 0)
@@ -327,6 +343,7 @@ public class ConcurrentSkipListIntObjMultimapTest
                     break;
                 }
             }
+
             Assert.Equal(expected, _map.FloorEntry(target.GetKey()));
             Assert.Equal(expected == null ? _noKey : expected.GetKey(), _map.FloorKey(target.GetKey()));
         }
@@ -340,12 +357,14 @@ public class ConcurrentSkipListIntObjMultimapTest
         _map.Put(1, "a");
         _map.Put(3, "b");
         _map.Put(4, "c");
+
         if (multiMapped)
         {
             _map.Put(1, "a");
             _map.Put(3, "b");
             _map.Put(4, "c");
         }
+
         Assert.Equal(1, _map.FloorKey(2));
         Assert.Equal(new IntEntry(1, "a"), _map.FloorEntry(2));
         Assert.Equal(3, _map.FloorKey(3));
@@ -358,17 +377,21 @@ public class ConcurrentSkipListIntObjMultimapTest
     {
         _ = repetition;
         IntEntry[] xs = new IntEntry[50];
+
         for (int i = 0; i < xs.Length; i++)
         {
             int key = Random.Shared.Next(50);
             xs[i] = new IntEntry(key, key.ToString(CultureInfo.InvariantCulture));
             _map.Put(key, xs[i].GetValue());
         }
+
         Array.Sort(xs);
+
         for (int i = 0; i < 10; i++)
         {
             IntEntry target = xs[Random.Shared.Next(xs.Length)];
             IntEntry expected = null;
+
             foreach (IntEntry x in xs)
             {
                 if (x.CompareTo(target) >= 0)
@@ -377,6 +400,7 @@ public class ConcurrentSkipListIntObjMultimapTest
                     break;
                 }
             }
+
             Assert.Equal(expected, _map.CeilingEntry(target.GetKey()));
             Assert.Equal(expected == null ? _noKey : expected.GetKey(), _map.CeilingKey(target.GetKey()));
         }
@@ -390,12 +414,14 @@ public class ConcurrentSkipListIntObjMultimapTest
         _map.Put(1, "a");
         _map.Put(2, "b");
         _map.Put(4, "c");
+
         if (multiMapped)
         {
             _map.Put(1, "a");
             _map.Put(2, "b");
             _map.Put(4, "c");
         }
+
         Assert.Equal(2, _map.CeilingKey(2));
         Assert.Equal(new IntEntry(2, "b"), _map.CeilingEntry(2));
         Assert.Equal(4, _map.CeilingKey(3));
@@ -408,17 +434,21 @@ public class ConcurrentSkipListIntObjMultimapTest
     {
         _ = repetition;
         IntEntry[] xs = new IntEntry[50];
+
         for (int i = 0; i < xs.Length; i++)
         {
             int key = Random.Shared.Next(50);
             xs[i] = new IntEntry(key, key.ToString(CultureInfo.InvariantCulture));
             _map.Put(key, xs[i].GetValue());
         }
+
         Array.Sort(xs);
+
         for (int i = 0; i < 10; i++)
         {
             IntEntry target = xs[Random.Shared.Next(xs.Length)];
             IntEntry expected = null;
+
             foreach (IntEntry x in xs)
             {
                 if (x.CompareTo(target) > 0)
@@ -427,6 +457,7 @@ public class ConcurrentSkipListIntObjMultimapTest
                     break;
                 }
             }
+
             Assert.Equal(expected, _map.HigherEntry(target.GetKey()));
             Assert.Equal(expected == null ? _noKey : expected.GetKey(), _map.HigherKey(target.GetKey()));
         }
@@ -440,12 +471,14 @@ public class ConcurrentSkipListIntObjMultimapTest
         _map.Put(1, "a");
         _map.Put(2, "b");
         _map.Put(4, "c");
+
         if (multiMapped)
         {
             _map.Put(1, "a");
             _map.Put(2, "b");
             _map.Put(4, "c");
         }
+
         Assert.Equal(4, _map.HigherKey(2));
         Assert.Equal(new IntEntry(4, "c"), _map.HigherEntry(2));
         Assert.Equal(4, _map.HigherKey(3));

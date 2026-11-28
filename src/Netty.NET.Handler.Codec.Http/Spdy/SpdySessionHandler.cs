@@ -124,6 +124,7 @@ public class SpdySessionHandler : ChannelDuplexHandler
     public virtual void SetSessionReceiveWindowSize(int sessionReceiveWindowSize)
     {
         CheckPositiveOrZero(sessionReceiveWindowSize, "sessionReceiveWindowSize");
+
         // This will not send a window update frame immediately.
         // If this value increases the allowed receive window size,
         // a WINDOW_UPDATE frame will be sent when only half of the
@@ -153,6 +154,7 @@ public class SpdySessionHandler : ChannelDuplexHandler
         {
             return;
         }
+
         sentInitialSettingsFrame = true;
         // Advertise the accept limit to the remote peer. This is advisory only -- the limit is
         // enforced locally by acceptStream(...) regardless of whether the peer honors it.
@@ -217,6 +219,7 @@ public class SpdySessionHandler : ChannelDuplexHandler
             if (!spdySession.IsActiveStream(streamId))
             {
                 spdyDataFrame.Release();
+
                 if (streamId <= lastGoodStreamId)
                 {
                     IssueStreamError(ctx, streamId, SpdyStreamStatus.PROTOCOL_ERROR);
@@ -225,6 +228,7 @@ public class SpdySessionHandler : ChannelDuplexHandler
                 {
                     IssueStreamError(ctx, streamId, SpdyStreamStatus.INVALID_STREAM);
                 }
+
                 return;
             }
 
@@ -423,6 +427,7 @@ public class SpdySessionHandler : ChannelDuplexHandler
             {
                 spdySettingsFrame.RemoveValue(ISpdySettingsFrame.SETTINGS_INITIAL_WINDOW_SIZE);
             }
+
             spdySettingsFrame.SetPersistValue(ISpdySettingsFrame.SETTINGS_INITIAL_WINDOW_SIZE, false);
 
             int newInitialWindowSize =
@@ -458,6 +463,7 @@ public class SpdySessionHandler : ChannelDuplexHandler
             {
                 return;
             }
+
             Interlocked.Decrement(ref pings);
 
         }
@@ -527,6 +533,7 @@ public class SpdySessionHandler : ChannelDuplexHandler
                 {
                     IssueStreamError(ctx, streamId, SpdyStreamStatus.FLOW_CONTROL_ERROR);
                 }
+
                 return;
             }
 
@@ -542,6 +549,7 @@ public class SpdySessionHandler : ChannelDuplexHandler
         {
             RemoveStream(ctx, streamId, Task.CompletedTask);
         }
+
         ctx.FireChannelInactive();
     }
 
@@ -752,6 +760,7 @@ public class SpdySessionHandler : ChannelDuplexHandler
             {
                 spdySettingsFrame.RemoveValue(ISpdySettingsFrame.SETTINGS_INITIAL_WINDOW_SIZE);
             }
+
             spdySettingsFrame.SetPersistValue(ISpdySettingsFrame.SETTINGS_INITIAL_WINDOW_SIZE, false);
 
             int newInitialWindowSize =
@@ -772,6 +781,7 @@ public class SpdySessionHandler : ChannelDuplexHandler
                             "invalid PING ID: " + spdyPingFrame.Id().ToString(CultureInfo.InvariantCulture)));
                 return;
             }
+
             Interlocked.Increment(ref pings);
 
         }
@@ -850,6 +860,7 @@ public class SpdySessionHandler : ChannelDuplexHandler
 
         ISpdyRstStreamFrame spdyRstStreamFrame = new DefaultSpdyRstStreamFrame(streamId, status);
         WriteAndFlush(ctx, spdyRstStreamFrame, promise);
+
         if (fireChannelRead)
         {
             ctx.FireChannelRead(spdyRstStreamFrame);
@@ -898,13 +909,16 @@ public class SpdySessionHandler : ChannelDuplexHandler
         {
             return false;
         }
+
         spdySession.AcceptStream(
                 streamId, priority, remoteSideClosed, localSideClosed,
                 initialSendWindowSize, initialReceiveWindowSize, remote);
+
         if (remote)
         {
             lastGoodStreamId = streamId;
         }
+
         return true;
     }
 
@@ -918,6 +932,7 @@ public class SpdySessionHandler : ChannelDuplexHandler
         {
             spdySession.CloseLocalSide(streamId, IsRemoteInitiatedId(streamId));
         }
+
         if (closeSessionFutureListener != null && spdySession.NoActiveStreams())
         {
             AddListener(ctx, future, closeSessionFutureListener);
@@ -1013,6 +1028,7 @@ public class SpdySessionHandler : ChannelDuplexHandler
         }
 
         Task f = SendGoAwayFrame(ctx, SpdySessionStatus.OK);
+
         if (spdySession.NoActiveStreams())
         {
             AddListener(ctx, f, new ClosingChannelFutureListener(ctx, future));

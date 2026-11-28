@@ -62,6 +62,7 @@ public sealed class SocksCmdRequest : SocksRequest
             {
                 throw new ArgumentException(host + " IDN: " + asciiHost + " exceeds 255 char limit");
             }
+
             host = asciiHost;
         }
         else if (addressType == SocksAddressType.IPv6)
@@ -74,10 +75,12 @@ public sealed class SocksCmdRequest : SocksRequest
         else if (addressType == SocksAddressType.UNKNOWN)
         {
         }
+
         if (port <= 0 || port >= 65536)
         {
             throw new ArgumentException(port.ToString(CultureInfo.InvariantCulture) + " is not in bounds 0 < x < 65536");
         }
+
         this.cmdType = cmdType;
         this.addressType = addressType;
         this.host = host;
@@ -133,6 +136,7 @@ public sealed class SocksCmdRequest : SocksRequest
         byteBuf.WriteByte(cmdType.ByteValue());
         byteBuf.WriteByte(0x00);
         byteBuf.WriteByte(addressType.ByteValue());
+
         if (addressType == SocksAddressType.IPv4)
         {
             byteBuf.WriteBytes(NetUtil.CreateByteArrayFromIpAddressString(host));

@@ -76,6 +76,7 @@ public sealed class SpdyServer
 
         // Configure the server.
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             ServerBootstrap b = new ServerBootstrap();

@@ -69,6 +69,7 @@ public class ByteBufScalarUtilTest
             int low24 = value & 0xffffff;
             Assert.Equal(low24 >= 0x800000 ? low24 - 0x1000000 : low24, ByteBufUtil.SwapMedium(ByteBufUtil.SwapMedium(value)));
         }
+
         foreach (long value in new[] { long.MinValue, long.MaxValue, -1L, 0L, 1L })
         {
             byte[] bytes = BitConverter.GetBytes(value);
@@ -82,6 +83,7 @@ public class ByteBufScalarUtilTest
     public void OriginalWriteShortSetShortAndWriteMediumScenariosWithTruncation(int kind)
     {
         ByteBuf b = Storage(kind, 12);
+
         try
         {
             foreach (int value in Values)
@@ -115,6 +117,7 @@ public class ByteBufScalarUtilTest
     public void OriginalUnsignedShortAndIntReadScenariosUseExplicitLeOperations(int kind)
     {
         ByteBuf b = Storage(kind, 8);
+
         try
         {
             int shortValue = 0x1234; // unsigned short
@@ -154,6 +157,7 @@ public class ByteBufScalarUtilTest
     public void FailurePathsPreserveBytesIndicesAndReferenceCount(int kind)
     {
         ByteBuf b = Storage(kind, 4).Slice(0, 4).Clear().WriteInt(0x01020304);
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.WriteShortBE(b, 7));
@@ -177,6 +181,7 @@ public class ByteBufScalarUtilTest
         {
             b.Release();
         }
+
         Assert.Throws<IllegalReferenceCountException>(() => ByteBufUtil.SetShortBE(b, 0, 1));
         Assert.Throws<IllegalReferenceCountException>(() => ByteBufUtil.ReadIntBE(b));
     }
@@ -188,20 +193,24 @@ public class ByteBufScalarUtilTest
         ByteBuf b = Storage(kind, 4);
         ByteBuf retained = b.RetainedSlice(0, 4);
         ByteBuf[] views = { b, retained, b.Duplicate(), b.AsReadOnly(), Unpooled.UnreleasableBuffer(b) };
+
         foreach (ByteBuf view in views)
         {
             Assert.True(ByteBufUtil.IsAccessible(view));
             Assert.Same(view, ByteBufUtil.EnsureAccessible(view));
         }
+
         Assert.Equal(2, b.RefCnt);
         b.Release();
         Assert.True(ByteBufUtil.IsAccessible(b));
         retained.Release();
+
         foreach (ByteBuf view in views)
         {
             Assert.False(ByteBufUtil.IsAccessible(view));
             Assert.Throws<IllegalReferenceCountException>(() => ByteBufUtil.EnsureAccessible(view));
         }
+
         Assert.True(ByteBufUtil.IsAccessible(Unpooled.EmptyBuffer));
         Assert.Same(Unpooled.EmptyBuffer, ByteBufUtil.EnsureAccessible(Unpooled.EmptyBuffer));
     }
@@ -211,6 +220,7 @@ public class ByteBufScalarUtilTest
     {
         var a = new UnpooledByteBufAllocator();
         ByteBuf b = a.HeapBuffer(2, 8);
+
         try
         {
             Assert.Equal(0, b.EnsureWritable(2, false));
@@ -224,7 +234,9 @@ public class ByteBufScalarUtilTest
         {
             b.Release();
         }
+
         b = a.HeapBuffer(2, 8);
+
         try
         {
             Assert.Equal(3, b.EnsureWritable(9, true));
@@ -236,6 +248,7 @@ public class ByteBufScalarUtilTest
         {
             b.Release();
         }
+
         foreach (int code in new[] { int.MinValue, -1, 4, int.MaxValue })
             Assert.False(ByteBufUtil.EnsureWritableSuccess(code));
     }
@@ -244,6 +257,7 @@ public class ByteBufScalarUtilTest
     public void HttpDelimiterConsumerWritesWireOrderAcrossCompositeBoundaries()
     {
         ByteBuf b = Storage(2, 8);
+
         try
         {
             ByteBufUtil.WriteShortBE(b, 0x0d0a);

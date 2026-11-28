@@ -13,15 +13,19 @@ public class SignalContractTest
     {
         string name = "signal-race-" + Guid.NewGuid();
         var lookups = new Task<Signal>[32];
+
         for (int i = 0; i < lookups.Length; i++)
             lookups[i] = Task.Run(() => Signal.ValueOf(name));
+
         Signal[] values = await Task.WhenAll(lookups);
+
         foreach (Signal value in values)
         {
             Assert.Same(values[0], value);
             Assert.Equal(name, value.Name);
             Assert.Equal(values[0].Id, value.Id);
         }
+
         Assert.Same(values[0], Signal.ValueOf(name));
     }
 
@@ -48,6 +52,7 @@ public class SignalContractTest
     public void ReplayCatchBoundaryPreservesIdentityAndEmptyDiagnosticsOnRepeatedThrows()
     {
         Signal replay = Signal.ValueOf("replay-" + Guid.NewGuid());
+
         for (int attempt = 0; attempt < 4; attempt++)
         {
             try
@@ -85,6 +90,7 @@ public class SignalContractTest
         string prefix = "ordered-signal-" + Guid.NewGuid();
         var ordered = new SortedSet<Signal>();
         var keys = new Dictionary<Signal, int>();
+
         for (int i = 0; i < 32; i++)
         {
             Signal value = Signal.ValueOf(prefix + i);
@@ -96,18 +102,23 @@ public class SignalContractTest
             Assert.True(ordered.Add(value));
             Assert.False(ordered.Add(Signal.ValueOf(prefix + i)));
         }
+
         Signal previous = null;
+
         foreach (Signal value in ordered)
         {
             Assert.Equal(keys[value], keys[Signal.ValueOf(value.Name)]);
+
             if (previous != null)
             {
                 Assert.False(previous.Equals(value));
                 Assert.True(previous.CompareTo(value) < 0);
                 Assert.True(value.CompareTo(previous) > 0);
             }
+
             previous = value;
         }
+
         Assert.Equal(32, ordered.Count);
     }
 

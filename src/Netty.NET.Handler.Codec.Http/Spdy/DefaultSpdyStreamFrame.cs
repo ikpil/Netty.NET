@@ -49,6 +49,7 @@ public abstract class DefaultSpdyStreamFrame : ISpdyStreamFrame
     public virtual ISpdyStreamFrame SetStreamId(int streamId)
     {
         CheckPositive(streamId, "streamId");
+
         this.streamId = streamId;
         return this;
     }

@@ -297,6 +297,7 @@ public sealed class MqttMessageBuilders
             {
                 topicFilters = new List<string>(5);
             }
+
             topicFilters.Add(topic);
             return this;
         }
@@ -370,6 +371,7 @@ public sealed class MqttMessageBuilders
             {
                 propsBuilder = new ConnAckPropertiesBuilder();
             }
+
             consumer.Apply(propsBuilder);
             return this;
         }
@@ -380,6 +382,7 @@ public sealed class MqttMessageBuilders
             {
                 properties = propsBuilder.Build();
             }
+
             MqttFixedHeader mqttFixedHeader =
                     new MqttFixedHeader(MqttMessageType.CONNACK, false, MqttQoS.AT_MOST_ONCE, false, 0);
             MqttConnAckVariableHeader mqttConnAckVariableHeader =
@@ -411,73 +414,90 @@ public sealed class MqttMessageBuilders
         public MqttProperties Build()
         {
             MqttProperties props = new MqttProperties();
+
             if (clientId != null)
             {
                 props.Add(new MqttProperties.StringProperty(MqttProperties.ASSIGNED_CLIENT_IDENTIFIER,
                         clientId));
             }
+
             if (sessionExpiryInterval != null)
             {
                 props.Add(new MqttProperties.IntegerProperty(
                         MqttProperties.SESSION_EXPIRY_INTERVAL, (int) sessionExpiryInterval.Value));
             }
+
             if (receiveMaximum > 0)
             {
                 props.Add(new MqttProperties.IntegerProperty(MqttProperties.RECEIVE_MAXIMUM, receiveMaximum));
             }
+
             if (maximumQos != null)
             {
                 props.Add(new MqttProperties.IntegerProperty(MqttProperties.MAXIMUM_QOS,
                         maximumQos.Value));
             }
+
             props.Add(new MqttProperties.IntegerProperty(MqttProperties.RETAIN_AVAILABLE, retain ? 1 : 0));
+
             if (maximumPacketSize != null)
             {
                 props.Add(new MqttProperties.IntegerProperty(MqttProperties.MAXIMUM_PACKET_SIZE,
                         (int) maximumPacketSize.Value));
             }
+
             props.Add(new MqttProperties.IntegerProperty(MqttProperties.TOPIC_ALIAS_MAXIMUM,
                     topicAliasMaximum));
+
             if (reasonString != null)
             {
                 props.Add(new MqttProperties.StringProperty(MqttProperties.REASON_STRING, reasonString));
             }
+
             props.Add(userProperties);
+
             if (wildcardSubscriptionAvailable != null)
             {
                 props.Add(new MqttProperties.IntegerProperty(MqttProperties.WILDCARD_SUBSCRIPTION_AVAILABLE,
                         wildcardSubscriptionAvailable.Value ? 1 : 0));
             }
+
             if (subscriptionIdentifiersAvailable != null)
             {
                 props.Add(new MqttProperties.IntegerProperty(MqttProperties.SUBSCRIPTION_IDENTIFIER_AVAILABLE,
                         subscriptionIdentifiersAvailable.Value ? 1 : 0));
             }
+
             if (sharedSubscriptionAvailable != null)
             {
                 props.Add(new MqttProperties.IntegerProperty(MqttProperties.SHARED_SUBSCRIPTION_AVAILABLE,
                         sharedSubscriptionAvailable.Value ? 1 : 0));
             }
+
             if (serverKeepAlive != null)
             {
                 props.Add(new MqttProperties.IntegerProperty(MqttProperties.SERVER_KEEP_ALIVE,
                         serverKeepAlive.Value));
             }
+
             if (responseInformation != null)
             {
                 props.Add(new MqttProperties.StringProperty(MqttProperties.RESPONSE_INFORMATION,
                         responseInformation));
             }
+
             if (serverReference != null)
             {
                 props.Add(new MqttProperties.StringProperty(MqttProperties.SERVER_REFERENCE,
                         serverReference));
             }
+
             if (authenticationMethod != null)
             {
                 props.Add(new MqttProperties.StringProperty(MqttProperties.AUTHENTICATION_METHOD,
                         authenticationMethod));
             }
+
             if (authenticationData != null)
             {
                 props.Add(new MqttProperties.BinaryProperty(MqttProperties.AUTHENTICATION_DATA,
@@ -505,6 +525,7 @@ public sealed class MqttMessageBuilders
             {
                 throw new ArgumentException("maximum QoS property could be 0 or 1");
             }
+
             this.maximumQos = value;
             return this;
         }
@@ -678,6 +699,7 @@ public sealed class MqttMessageBuilders
             //transform to primitive types
             int[] grantedQoses = new int[this.grantedQoses.Count];
             int i = 0;
+
             foreach (MqttQoS grantedQos in this.grantedQoses)
             {
                 grantedQoses[i++] = grantedQos.Value();

@@ -19,6 +19,7 @@ public class DynamicProgressContractTest
         internal void RunAll()
         {
             _running = Thread.CurrentThread;
+
             try
             {
                 while (_queue.TryDequeue(out var work))
@@ -42,6 +43,7 @@ public class DynamicProgressContractTest
             ArgumentNullException.ThrowIfNull(task);
             if (Rejection != null)
                 throw Rejection;
+
             _queue.Enqueue(task);
         }
         public override Task TerminationFuture => Task.CompletedTask;
@@ -78,14 +80,17 @@ public class DynamicProgressContractTest
     private static async Task Drain(QueuedExecutor executor, Task completion)
     {
         var elapsed = Stopwatch.StartNew();
+
         while (!completion.IsCompleted && elapsed.Elapsed < TimeSpan.FromSeconds(5))
         {
             executor.RunAll();
+
             if (!completion.IsCompleted)
             {
                 await Task.Delay(1);
             }
         }
+
         await completion.WaitAsync(TimeSpan.FromSeconds(5));
     }
 
@@ -140,6 +145,7 @@ public class DynamicProgressContractTest
         using var first = reporter.Register(value =>
         {
             events.Add("first:" + value.Completed);
+
             if (value.Completed == 1)
             {
                 added = reporter.Register(next => events.Add("added:" + next.Completed));
@@ -198,6 +204,7 @@ public class DynamicProgressContractTest
             }
         });
         second = reporter.Register(_ => ++calls, _ => ++calls);
+
         if (terminal)
         {
             source.SetResult();
@@ -208,7 +215,9 @@ public class DynamicProgressContractTest
             reporter.Report(new TransferProgress(2));
             source.SetResult();
         }
+
         await reporter.NotificationsCompleted.WaitAsync(TimeSpan.FromSeconds(5));
+
         if (terminal)
         {
             await second.NotificationsCompleted;
@@ -217,6 +226,7 @@ public class DynamicProgressContractTest
         {
             await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await second.NotificationsCompleted);
         }
+
         Assert.Equal(1, calls);
         second.Dispose();
     }
@@ -235,8 +245,10 @@ public class DynamicProgressContractTest
         {
         });
         reporter.Report(new TransferProgress(1));
+
         foreach (var task in new[] { reporter.NotificationsCompleted, first.NotificationsCompleted, second.NotificationsCompleted })
             Assert.Same(error, await Assert.ThrowsAsync<RejectedExecutionException>(async () => await task));
+
         Assert.False(source.Task.IsCompleted);
         source.SetResult();
     }
@@ -271,6 +283,7 @@ public class DynamicProgressContractTest
         var registration = reporter.Register(_ => GC.KeepAlive(target));
         reporter.Report(new TransferProgress(1));
         registration.Dispose();
+
         return new WeakReference(target);
     }
 
@@ -302,6 +315,7 @@ public class DynamicProgressContractTest
         var active = pool.SubmitAsync(() =>
         {
             started.Set();
+
             try
             {
                 release.Wait();
@@ -310,6 +324,7 @@ public class DynamicProgressContractTest
             {
             }
         });
+
         try
         {
             Assert.True(started.Wait(TimeSpan.FromSeconds(5)));
@@ -319,6 +334,7 @@ public class DynamicProgressContractTest
             int callbacks = 0;
             using var first = reporter.Register(_ => ++callbacks, _ => ++callbacks);
             using var second = reporter.Register(null, _ => ++callbacks);
+
             if (terminal)
             {
                 source.SetResult();
@@ -328,12 +344,16 @@ public class DynamicProgressContractTest
             {
                 reporter.Report(new TransferProgress(1));
             }
+
             Assert.Equal(1, pool.PendingTaskCount);
             _ = pool.StopAsync();
+
             foreach (var task in new[] { reporter.NotificationsCompleted, first.NotificationsCompleted, second.NotificationsCompleted })
                 await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await task.WaitAsync(TimeSpan.FromSeconds(5)));
+
             Assert.Equal(0, callbacks);
             Assert.Equal(terminal, source.Task.IsCompleted);
+
             if (!terminal)
             {
                 source.SetResult();

@@ -35,6 +35,7 @@ public abstract class ByteBufAllocatorTest : IDisposable
         {
             _allocators.Add(disposable);
         }
+
         return allocator;
     }
 
@@ -66,6 +67,7 @@ public abstract class ByteBufAllocatorTest : IDisposable
     {
         IByteBufAllocator allocator = NewAllocator(preferDirect);
         ByteBuf buffer = allocator.Buffer(1);
+
         try
         {
             AssertBuffer(buffer, IsDirectExpected(preferDirect), 1, DefaultMaxCapacity());
@@ -88,6 +90,7 @@ public abstract class ByteBufAllocatorTest : IDisposable
     {
         IByteBufAllocator allocator = NewAllocator(preferDirect);
         ByteBuf buffer = allocator.Buffer(1, maxCapacity);
+
         try
         {
             AssertBuffer(buffer, IsDirectExpected(preferDirect), 1, maxCapacity);
@@ -112,6 +115,7 @@ public abstract class ByteBufAllocatorTest : IDisposable
     {
         IByteBufAllocator allocator = NewAllocator(preferDirect);
         ByteBuf buffer = allocator.HeapBuffer(1);
+
         try
         {
             AssertBuffer(buffer, false, 1, DefaultMaxCapacity());
@@ -133,6 +137,7 @@ public abstract class ByteBufAllocatorTest : IDisposable
     {
         IByteBufAllocator allocator = NewAllocator(preferDirect);
         ByteBuf buffer = allocator.HeapBuffer(1, maxCapacity);
+
         try
         {
             AssertBuffer(buffer, false, 1, maxCapacity);
@@ -155,6 +160,7 @@ public abstract class ByteBufAllocatorTest : IDisposable
     {
         IByteBufAllocator allocator = NewAllocator(preferDirect);
         ByteBuf buffer = allocator.DirectBuffer(1);
+
         try
         {
             AssertBuffer(buffer, true, 1, DefaultMaxCapacity());
@@ -176,6 +182,7 @@ public abstract class ByteBufAllocatorTest : IDisposable
     {
         IByteBufAllocator allocator = NewAllocator(preferDirect);
         ByteBuf buffer = allocator.DirectBuffer(1, maxCapacity);
+
         try
         {
             AssertBuffer(buffer, true, 1, maxCapacity);
@@ -198,6 +205,7 @@ public abstract class ByteBufAllocatorTest : IDisposable
     {
         IByteBufAllocator allocator = NewAllocator(preferDirect);
         CompositeByteBuf buffer = allocator.CompositeBuffer();
+
         try
         {
             AssertCompositeByteBuf(buffer, DefaultMaxComponents());
@@ -227,6 +235,7 @@ public abstract class ByteBufAllocatorTest : IDisposable
     {
         IByteBufAllocator allocator = NewAllocator(preferDirect);
         CompositeByteBuf buffer = allocator.CompositeHeapBuffer();
+
         try
         {
             AssertCompositeByteBuf(buffer, DefaultMaxComponents());
@@ -249,6 +258,7 @@ public abstract class ByteBufAllocatorTest : IDisposable
     {
         IByteBufAllocator allocator = NewAllocator(preferDirect);
         CompositeByteBuf buffer = allocator.CompositeHeapBuffer(maxNumComponents);
+
         try
         {
             AssertCompositeByteBuf(buffer, maxNumComponents);
@@ -271,6 +281,7 @@ public abstract class ByteBufAllocatorTest : IDisposable
     {
         IByteBufAllocator allocator = NewAllocator(preferDirect);
         CompositeByteBuf buffer = allocator.CompositeDirectBuffer();
+
         try
         {
             AssertCompositeByteBuf(buffer, DefaultMaxComponents());
@@ -293,6 +304,7 @@ public abstract class ByteBufAllocatorTest : IDisposable
     {
         IByteBufAllocator allocator = NewAllocator(preferDirect);
         CompositeByteBuf buffer = allocator.CompositeDirectBuffer(maxNumComponents);
+
         try
         {
             AssertCompositeByteBuf(buffer, maxNumComponents);
@@ -332,10 +344,12 @@ public class ByteBufAllocatorClrContractTest
     {
         IByteBufAllocator a = new UnpooledByteBufAllocator(preferDirect);
         Func<int, int, ByteBuf>[] factories = { (n, m) => a.Buffer(n, m), (n, m) => a.HeapBuffer(n, m), (n, m) => a.DirectBuffer(n, m), (n, m) => a.IoBuffer(n, m) };
+
         for (int kind = 0; kind < factories.Length; kind++)
         foreach (int max in new[] { 8, int.MaxValue })
         {
             ByteBuf b = factories[kind](1, max);
+
             try
             {
                 Assert.Equal(kind == 0 ? preferDirect : kind >= 2, b.IsDirect);
@@ -353,6 +367,7 @@ public class ByteBufAllocatorClrContractTest
                 b.Release();
             }
         }
+
         foreach (var (b, initial) in new[] { (a.Buffer(), 256), (a.HeapBuffer(), 256), (a.DirectBuffer(), 256), (a.IoBuffer(), 256), (a.Buffer(17), 17), (a.HeapBuffer(17), 17), (a.DirectBuffer(17), 17), (a.IoBuffer(17), 17) })
         {
             try
@@ -366,6 +381,7 @@ public class ByteBufAllocatorClrContractTest
                 b.Release();
             }
         }
+
         Assert.False(a.IsDirectBufferPooled);
     }
 
@@ -376,10 +392,12 @@ public class ByteBufAllocatorClrContractTest
     public void CompositeFactoriesAllocateComponentsAfterGrowth(bool preferDirect)
     {
         IByteBufAllocator a = new UnpooledByteBufAllocator(preferDirect);
+
         for (int kind = 0; kind < 3; kind++)
         foreach (int max in new[] { 8, 16 })
         {
             CompositeByteBuf b = kind switch { 0 => a.CompositeBuffer(max), 1 => a.CompositeHeapBuffer(max), _ => a.CompositeDirectBuffer(max) };
+
             try
             {
                 Assert.Same(a, b.Alloc());
@@ -393,6 +411,7 @@ public class ByteBufAllocatorClrContractTest
                 Assert.Same(a, b.Component(0).Alloc());
                     b.WriteLong(0x0102030405060708);
                 ByteBuf copy = b.Copy();
+
                 try
                     {
                         Assert.Same(a, copy.Alloc());
@@ -451,6 +470,7 @@ public class ByteBufAllocatorClrContractTest
         Assert.False(empty.Release());
         Assert.Equal(1, empty.RefCnt);
         ByteBuf growable = a.HeapBuffer(0, 1);
+
         try
         {
             Assert.NotSame(empty, growable);
@@ -462,6 +482,7 @@ public class ByteBufAllocatorClrContractTest
         {
             growable.Release();
         }
+
         Assert.Same(Unpooled.EmptyBuffer, UnpooledByteBufAllocator.Default.DirectBuffer(0, 0));
         Assert.Same(IByteBufAllocator.Default, ByteBufUtil.DefaultAllocator);
     }
@@ -472,15 +493,18 @@ public class ByteBufAllocatorClrContractTest
     {
         var a = new RecordingAllocator();
         ByteBuf root = direct ? a.DirectBuffer(4, 64) : a.HeapBuffer(4, 64);
+
         try
         {
             root.WriteBytes(new byte[] { 1, 2, 3, 4 });
             ByteBuf[] views = { root, root.Duplicate(), root.Slice(1, 2), root.AsReadOnly(), Unpooled.UnreleasableBuffer(root), root.Slice(1, 2).Duplicate().AsReadOnly() };
+
             foreach (ByteBuf view in views)
             {
                 Assert.Same(a, view.Alloc());
                 int calls = direct ? a.DirectCalls : a.HeapCalls;
                 ByteBuf copy = view.Copy();
+
                 try
                 {
                     Assert.Same(a, copy.Alloc());
@@ -492,8 +516,10 @@ public class ByteBufAllocatorClrContractTest
                 {
                     copy.Release();
                 }
+
                 Assert.Equal(calls + 1, direct ? a.DirectCalls : a.HeapCalls);
             }
+
             root.EnsureWritable(1);
             Assert.Equal(5, root.Capacity);
             Assert.Equal((5, 64), a.LastCalculation);
@@ -518,6 +544,7 @@ public class ByteBufAllocatorClrContractTest
     {
         var a = new RecordingAllocator();
         CompositeByteBuf b = direct ? a.CompositeDirectBuffer(2) : a.CompositeHeapBuffer(2);
+
         try
         {
             b.AddComponent(Unpooled.WrappedBuffer(new byte[] { 1, 2 }), true);
@@ -531,6 +558,7 @@ public class ByteBufAllocatorClrContractTest
             b.Capacity = 8;
             Assert.Same(a, b.Component(1).Alloc());
             ByteBuf copy = b.Slice(1, 4).Copy();
+
             try
             {
                 Assert.Same(a, copy.Alloc());
@@ -555,11 +583,13 @@ public class ByteBufAllocatorClrContractTest
         var native = new NativeMemoryAllocator(16);
         var a = new UnpooledByteBufAllocator(true, native);
         ByteBuf b = useLegacyConstructor ? new UnpooledDirectByteBuf(4, 8, native) : a.DirectBuffer(4, 8);
+
         try
         {
             b.WriteInt(0x01020304);
             IByteBufAllocator policy = b.Alloc();
             ByteBuf copy = b.Duplicate().Copy();
+
             try
             {
                 Assert.Same(policy, copy.Alloc());
@@ -569,9 +599,11 @@ public class ByteBufAllocatorClrContractTest
             {
                 copy.Release();
             }
+
             b.Capacity = 8;
             Assert.Equal(8, native.ReservedBytes);
             ByteBuf full = policy.DirectBuffer(8, 8);
+
             try
             {
                 Assert.Throws<OutOfDirectMemoryError>(() => b.Copy());
@@ -588,8 +620,10 @@ public class ByteBufAllocatorClrContractTest
         {
             b.Release();
         }
+
         Assert.Equal(0, native.ReservedBytes);
         CompositeByteBuf composite = useLegacyConstructor ? new CompositeByteBuf(16, true, native) : a.CompositeDirectBuffer();
+
         try
         {
             composite.Capacity = 8;
@@ -600,6 +634,7 @@ public class ByteBufAllocatorClrContractTest
         {
             composite.Release();
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -610,6 +645,7 @@ public class ByteBufAllocatorClrContractTest
         var a = new UnpooledByteBufAllocator(true, native);
         ByteBuf b = a.DirectBuffer(4, 8).WriteInt(0x01020304);
         using var lease = b.AcquireReadLease();
+
         try
         {
             Assert.Throws<OutOfDirectMemoryError>(() => b.Capacity = 8);
@@ -627,8 +663,10 @@ public class ByteBufAllocatorClrContractTest
             {
                 b.Release();
             }
+
             lease.Dispose();
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -642,6 +680,7 @@ public class ByteBufAllocatorClrContractTest
             for (int n = 0; n < 16; n++)
             {
                 ByteBuf b = (i & 1) == 0 ? a.DirectBuffer(8, 16) : a.HeapBuffer(8, 16);
+
                 try
                 {
                     b.WriteLong(i);

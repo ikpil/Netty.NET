@@ -49,6 +49,7 @@ public sealed class EchoServer
         // Configure the server.
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
         EchoServerHandler serverHandler = new EchoServerHandler();
+
         try
         {
             ServerBootstrap b = new ServerBootstrap();
@@ -59,10 +60,12 @@ public sealed class EchoServer
              .ChildHandler(new ActionChannelInitializer<ISocketChannel>(ch =>
              {
                  IChannelPipeline p = ch.Pipeline;
+
                  if (sslCtx != null)
                  {
                      p.AddLast(sslCtx.NewHandler(ch.Alloc()));
                  }
+
                  //p.addLast(new LoggingHandler(LogLevel.INFO));
                  p.AddLast(serverHandler);
              }));

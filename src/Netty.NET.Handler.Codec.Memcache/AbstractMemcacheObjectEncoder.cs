@@ -106,6 +106,7 @@ public abstract class AbstractMemcacheObjectEncoder<M> : MessageToMessageEncoder
         {
             return (int) ((IFileRegion) msg).Count();
         }
+
         throw new InvalidOperationException("unexpected message type: " + StringUtil.SimpleClassName(msg));
     }
 
@@ -129,6 +130,7 @@ public abstract class AbstractMemcacheObjectEncoder<M> : MessageToMessageEncoder
         {
             return ((IFileRegion) msg).Retain();
         }
+
         throw new InvalidOperationException("unexpected message type: " + StringUtil.SimpleClassName(msg));
     }
 

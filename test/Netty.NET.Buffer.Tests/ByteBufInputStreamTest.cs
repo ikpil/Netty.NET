@@ -49,12 +49,14 @@ public class ByteBufInputStreamTest : IDisposable
         {
             return Unpooled.DirectBuffer(bytes.Length).WriteBytes(bytes);
         }
+
         if (kind is 4 or 5)
         {
             _pooled ??= new PooledByteBufAllocator(nativeAllocator: _native, maxOrder: 1,
                 smallCacheSize: 32, normalCacheSize: 32);
             return (kind == 4 ? _pooled.HeapBuffer(bytes.Length) : _pooled.DirectBuffer(bytes.Length)).WriteBytes(bytes);
         }
+
         int split = bytes.Length / 2;
         ByteBuf first = Unpooled.WrappedBuffer(bytes[..split]), second = Unpooled.WrappedBuffer(bytes[split..]);
         return kind == 2 ? Unpooled.CompositeBuffer().AddComponents(new[] { first, second }, true)
@@ -106,8 +108,10 @@ public class ByteBufInputStreamTest : IDisposable
         ByteBuf encoded = Unpooled.Buffer(0);
         encoded.WriteBoolean(true).WriteBoolean(false).WriteByte(42).WriteByte(224);
         encoded.WriteBytes(Encoding.Latin1.GetBytes("Hello, World!"));
+
         foreach (char value in "Hello, World!")
             encoded.WriteChar(value);
+
         encoded.WriteDouble(42).WriteFloat(42).WriteInt(42).WriteLong(42).WriteShort(42).WriteShort(49152);
         encoded.WriteShort(13).WriteBytes(Encoding.ASCII.GetBytes("Hello, World!"));
         encoded.WriteBytes(Encoding.Latin1.GetBytes("The first line\r\r\n"));
@@ -122,8 +126,10 @@ public class ByteBufInputStreamTest : IDisposable
         byte[] bytes = new byte[13];
         stream.ReadFully(bytes);
         Assert.Equal("Hello, World!", Encoding.Latin1.GetString(bytes));
+
         foreach (char value in "Hello, World!")
             Assert.Equal(value, stream.ReadChar());
+
         Assert.Equal(42, stream.ReadDouble());
         Assert.Equal(42, stream.ReadSingle());
         Assert.Equal(42, stream.ReadInt32());
@@ -151,6 +157,7 @@ public class ByteBufInputStreamTest : IDisposable
     {
         // case1
         ByteBuf first = Owner(kind, new byte[] { 1, 2, 3, 4, 5, 6 });
+
         using (var input = new ByteBufInputStream(first, 3, true))
         {
             Assert.Equal(1, input.ReadByte());
@@ -164,10 +171,12 @@ public class ByteBufInputStreamTest : IDisposable
 
             Assert.Equal(3, first.ReaderIndex);
         }
+
         Assert.Equal(0, first.RefCnt);
 
         // case2
         ByteBuf second = Owner(kind, new byte[] { 1, 2, 3, 4, 5, 6 });
+
         using (var input = new ByteBufInputStream(second, 4, true))
         {
             for (int i = 1; i <= 4; i++)
@@ -179,18 +188,22 @@ public class ByteBufInputStreamTest : IDisposable
             Assert.Equal(-1, input.ReadByte());
             Assert.Equal(4, second.ReaderIndex);
         }
+
         Assert.Equal(0, second.RefCnt);
 
         // case1
         ByteBuf noLine = Owner(kind, new byte[] { 1, 2, 3, 4, 5, 6 });
+
         using (var input = new ByteBufInputStream(noLine, 0, true))
         {
             Assert.Null(input.ReadLine());
             Assert.Equal(0, noLine.ReaderIndex);
         }
+
         Assert.Equal(0, noLine.RefCnt);
 
         ByteBuf line = Owner(kind, Encoding.ASCII.GetBytes("AB\nCEF"));
+
         using (var input = new ByteBufInputStream(line, 4, true))
         {
             Assert.Equal("AB", input.ReadLine());
@@ -198,15 +211,18 @@ public class ByteBufInputStreamTest : IDisposable
             Assert.Null(input.ReadLine());
             Assert.Equal(4, line.ReaderIndex);
         }
+
         Assert.Equal(0, line.RefCnt);
 
         // case1
         ByteBuf noByte = Owner(kind, new byte[] { 1, 2, 3, 4, 5, 6 });
+
         using (var input = new ByteBufInputStream(noByte, 0, true))
         {
             Assert.Throws<EndOfStreamException>(() => input.ReadBoolean());
             Assert.Equal(0, noByte.ReaderIndex);
         }
+
         Assert.Equal(0, noByte.RefCnt);
     }
 
@@ -216,6 +232,7 @@ public class ByteBufInputStreamTest : IDisposable
     {
         ByteBuf buffer = Owner(2, new byte[] { (byte)'A', (byte)'B', 13, 10, (byte)'C', (byte)'E' });
         using var stream = new ByteBufInputStream(buffer, length, true);
+
         if (length == 0)
         {
             Assert.Null(stream.ReadLine());
@@ -223,12 +240,15 @@ public class ByteBufInputStreamTest : IDisposable
         else
         {
             Assert.Equal(length == 1 ? "A" : "AB", stream.ReadLine());
+
             if (length == 6)
             {
                 Assert.Equal("CE", stream.ReadLine());
             }
+
             Assert.Null(stream.ReadLine());
         }
+
         Assert.Equal(length, buffer.ReaderIndex);
     }
 
@@ -239,16 +259,20 @@ public class ByteBufInputStreamTest : IDisposable
         using var stream = new ByteBufInputStream(buffer, true);
         int charCount = 7; //total chars in the string below without new line characters
         stream.Mark();
+
         foreach (string expected in new[] { "", "a", "", "b", "c", "d", "e" })
             Assert.Equal(expected, stream.ReadLine());
+
         Assert.Null(stream.ReadLine());
         stream.Reset();
         int count = 0;
+
         while (stream.ReadLine() != null)
         {
             ++count;
             Assert.True(count <= charCount);
         }
+
         Assert.Equal(charCount, count);
     }
 
@@ -356,8 +380,10 @@ public class ByteBufInputStreamTest : IDisposable
         // Attribute serialization cannot preserve isolated surrogates; compare UTF-16 units explicitly.
         string actual = stream.ReadUtf();
         Assert.Equal(expectedCodeUnits.Length / 4, actual.Length);
+
         for (int i = 0; i < actual.Length; ++i)
             Assert.Equal(Convert.ToUInt16(expectedCodeUnits.Substring(i * 4, 4), 16), actual[i]);
+
         Assert.Equal(0, stream.Available);
     }
 

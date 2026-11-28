@@ -53,12 +53,14 @@ internal static class AsciiStringUtil
 
         byte[] newByteArray = GC.AllocateUninitializedArray<byte>(length);
         ToLowerCase(byteArray, offset, newByteArray);
+
         return new AsciiString(newByteArray, false);
     }
 
     private static bool ContainsUpperCase(byte[] byteArray, int offset, int length)
     {
         int longCount = length >>> 3;
+
         for (int i = 0; i < longCount; ++i)
         {
             long word = MemoryMarshal.Read<long>(byteArray.AsSpan(offset, sizeof(long)));
@@ -76,6 +78,7 @@ internal static class AsciiStringUtil
     private static bool UnrolledContainsUpperCase(byte[] byteArray, int offset, int byteCount)
     {
         Debug.Assert(byteCount >= 0 && byteCount < 8);
+
         if ((byteCount & sizeof(int)) != 0)
         {
             int word = MemoryMarshal.Read<int>(byteArray.AsSpan(offset, sizeof(int)));
@@ -115,6 +118,7 @@ internal static class AsciiStringUtil
         int length = dst.Length;
         int longCount = length >>> 3;
         int offset = 0;
+
         for (int i = 0; i < longCount; ++i)
         {
             long word = MemoryMarshal.Read<long>(src.AsSpan(srcOffset + offset, sizeof(long)));
@@ -130,6 +134,7 @@ internal static class AsciiStringUtil
     {
         Debug.Assert(byteCount >= 0 && byteCount < 8);
         int offset = 0;
+
         if ((byteCount & sizeof(int)) != 0)
         {
             int word = MemoryMarshal.Read<int>(src.AsSpan(srcPos + offset, sizeof(int)));
@@ -171,12 +176,14 @@ internal static class AsciiStringUtil
 
         byte[] newByteArray = GC.AllocateUninitializedArray<byte>(length);
         ToUpperCase(byteArray, offset, newByteArray);
+
         return new AsciiString(newByteArray, false);
     }
 
     private static bool ContainsLowerCase(byte[] byteArray, int offset, int length)
     {
         int longCount = length >>> 3;
+
         for (int i = 0; i < longCount; ++i)
         {
             long word = MemoryMarshal.Read<long>(byteArray.AsSpan(offset, sizeof(long)));
@@ -194,6 +201,7 @@ internal static class AsciiStringUtil
     private static bool UnrolledContainsLowerCase(byte[] byteArray, int offset, int byteCount)
     {
         Debug.Assert(byteCount >= 0 && byteCount < 8);
+
         if ((byteCount & sizeof(int)) != 0)
         {
             int word = MemoryMarshal.Read<int>(byteArray.AsSpan(offset, sizeof(int)));
@@ -233,6 +241,7 @@ internal static class AsciiStringUtil
         int length = dst.Length;
         int longCount = length >>> 3;
         int offset = 0;
+
         for (int i = 0; i < longCount; ++i)
         {
             long word = MemoryMarshal.Read<long>(src.AsSpan(srcOffset + offset, sizeof(long)));
@@ -248,6 +257,7 @@ internal static class AsciiStringUtil
     {
         Debug.Assert(byteCount >= 0 && byteCount < 8);
         int offset = 0;
+
         if ((byteCount & sizeof(int)) != 0)
         {
             int word = MemoryMarshal.Read<int>(src.AsSpan(srcOffset + offset, sizeof(int)));

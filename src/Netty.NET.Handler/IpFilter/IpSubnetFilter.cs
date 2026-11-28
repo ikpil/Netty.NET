@@ -102,6 +102,7 @@ public class IpSubnetFilter : AbstractRemoteAddressFilter<IPEndPoint>
     public IpSubnetFilter(bool acceptIfNotFound, IList<IpSubnetFilterRule> rules)
     {
         ObjectUtil.CheckNotNull(rules, "rules");
+
         this.acceptIfNotFound = acceptIfNotFound;
 
         int numAcceptIPv4 = 0;
@@ -257,6 +258,7 @@ public class IpSubnetFilter : AbstractRemoteAddressFilter<IPEndPoint>
             {
                 return cmp;
             }
+
             return a.Contains(b) ? (b.Contains(a) ? 0 : -1) : 1;
         });
         using IEnumerator<IpSubnetFilterRule> iterator = rules.OrderBy(rule => rule, comparator).GetEnumerator();
@@ -291,6 +293,7 @@ public class IpSubnetFilter : AbstractRemoteAddressFilter<IPEndPoint>
                                     + childRule + " (" + childRule.RuleType() + "). "
                                     + "Use RuleBasedIpFilter for mixed ACCEPT/REJECT carve-outs.");
                 }
+
                 continue;
             }
 

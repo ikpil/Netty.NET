@@ -149,6 +149,7 @@ public class Http2MaxRstFrameLimitEncoderTest : IDisposable
             {
                 break;
             }
+
             promise.SetResult();
         }
     }
@@ -161,6 +162,7 @@ public class Http2MaxRstFrameLimitEncoderTest : IDisposable
         Assert.True(encoder.WriteRstStreamAsync(ctx, 1, error.Code(), NewPromise()).IsCompletedSuccessfully);
         VerifyFlushAndClose(0, false);
         Assert.True(encoder.WriteRstStreamAsync(ctx, 1, error.Code(), NewPromise()).IsCompletedSuccessfully);
+
         if (error == CANCEL || error == NO_ERROR)
         {
             // CANCEL and NO_ERROR are ignored as these will not be caused by a stream error.
@@ -192,7 +194,9 @@ public class Http2MaxRstFrameLimitEncoderTest : IDisposable
         {
             ctxMock.Verify(c => c.Flush(), Times.AtLeast(invocations));
         }
+
         ctxMock.Verify(c => c.CloseAsync(It.IsAny<CancellationToken>()), Times.Exactly(invocations));
+
         if (failed)
         {
             writer.Verify(w => w.WriteGoAwayAsync(ctx, int.MaxValue, ENHANCE_YOUR_CALM.Code(),

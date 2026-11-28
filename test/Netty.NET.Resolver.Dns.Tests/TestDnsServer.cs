@@ -174,6 +174,7 @@ internal class TestDnsServer : DnsServer
         rm.SetDnsTtl(100);
         rm.SetDnsType(RecordType.NS);
         rm.Put(DnsAttribute.DOMAIN_NAME, domainName);
+
         return rm.GetEntry();
     }
 
@@ -185,6 +186,7 @@ internal class TestDnsServer : DnsServer
         rm.SetDnsTtl(100);
         rm.SetDnsType(type);
         rm.Put(DnsAttribute.IP_ADDRESS, address);
+
         return rm.GetEntry();
     }
 
@@ -279,6 +281,7 @@ internal class TestDnsServer : DnsServer
             public override void Decode(IIoSession session, IoBuffer @in, IProtocolDecoderOutput @out)
             {
                 DnsMessage message = decoder.Decode(@in);
+
                 if (factory.dropRecordType != null)
                 {
                     foreach (QuestionRecord record in message.GetQuestionRecords())
@@ -289,6 +292,7 @@ internal class TestDnsServer : DnsServer
                         }
                     }
                 }
+
                 @out.Write(message);
             }
         }
@@ -304,6 +308,7 @@ internal class TestDnsServer : DnsServer
                 {
                     throw new InvalidOperationException(resourceRecord.Get(DnsAttribute.IP_ADDRESS));
                 }
+
                 // encode the ::1
                 ioBuffer.Put(bytes);
             }
@@ -317,13 +322,16 @@ internal class TestDnsServer : DnsServer
         internal MapRecordStoreA(ISet<string> domains, int length)
         {
             domainMap = new Dictionary<string, List<string>>(domains.Count);
+
             foreach (string domain in domains)
             {
                 List<string> addresses = new List<string>(length);
+
                 for (int i = 0; i < length; i++)
                 {
                     addresses.Add(TestRecordStore.NextIp());
                 }
+
                 domainMap[domain] = addresses;
             }
         }
@@ -349,14 +357,17 @@ internal class TestDnsServer : DnsServer
             if (addresses != null && questionRecord.GetRecordType() == RecordType.A)
             {
                 ISet<IResourceRecord> records = new LinkedHashSet<IResourceRecord>();
+
                 foreach (string address in addresses)
                 {
                     IDictionary<string, object> attributes = new Dictionary<string, object>();
                     attributes[DnsAttribute.IP_ADDRESS.ToLower(CultureInfo.CurrentCulture)] = address;
                     records.Add(new TestResourceRecord(name, questionRecord.GetRecordType(), attributes));
                 }
+
                 return records;
             }
+
             return null;
         }
     }
@@ -417,6 +428,7 @@ internal class TestDnsServer : DnsServer
             if (domains.Contains(name))
             {
                 IDictionary<string, object> attr = new Dictionary<string, object>();
+
                 switch (questionRecord.GetRecordType())
                 {
                     case var type when type == RecordType.A:
@@ -424,28 +436,34 @@ internal class TestDnsServer : DnsServer
                         {
                             attr[DnsAttribute.IP_ADDRESS.ToLowerInvariant()] = NextIp();
                         } while (Random.Shared.Next(2) != 0);
+
                         break;
                     case var type when type == RecordType.AAAA:
                         do
                         {
                             attr[DnsAttribute.IP_ADDRESS.ToLowerInvariant()] = NextIp6();
                         } while (Random.Shared.Next(2) != 0);
+
                         break;
                     case var type when type == RecordType.MX:
                         int priority = 0;
+
                         do
                         {
                             attr[DnsAttribute.DOMAIN_NAME.ToLowerInvariant()] = NextDomain();
                             attr[DnsAttribute.MX_PREFERENCE.ToLowerInvariant()] =
                                 (++priority).ToString(CultureInfo.InvariantCulture);
                         } while (Random.Shared.Next(2) != 0);
+
                         break;
                     default:
                         return null;
                 }
+
                 return ImmutableHashSet.Create<IResourceRecord>(
                         new TestResourceRecord(name, questionRecord.GetRecordType(), attr));
             }
+
             return null;
         }
     }

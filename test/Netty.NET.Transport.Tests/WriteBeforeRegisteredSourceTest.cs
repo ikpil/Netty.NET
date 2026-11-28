@@ -49,6 +49,7 @@ public class WriteBeforeRegisteredSourceTest : AbstractClientSocketTest
         Bootstrap connectBootstrap = new Bootstrap().Group(cb.Config.Group)
                 .ChannelFactory(() => channel = channelFactory())
                 .Option(ChannelOption.ALLOCATOR, (IByteBufAllocator) cb.Config.Options[ChannelOption.ALLOCATOR]);
+
         try
         {
             _ = connectBootstrap.Handler(h).ConnectAsync(NewSocketAddress());
@@ -62,6 +63,7 @@ public class WriteBeforeRegisteredSourceTest : AbstractClientSocketTest
                 _ = ch.CloseAsync();
             }
         }
+
         return Task.CompletedTask;
     }
 

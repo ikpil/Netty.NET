@@ -47,12 +47,14 @@ public static class ResourceLeakDetector
     static ResourceLeakDetector()
     {
         bool disabled = false;
+
         if (SystemPropertyUtil.Get("io.netty.noResourceLeakDetection") != null)
         {
             disabled = SystemPropertyUtil.GetBoolean("io.netty.noResourceLeakDetection", false);
             logger.Debug("-Dio.netty.noResourceLeakDetection: {}", disabled);
             logger.Warn("-Dio.netty.noResourceLeakDetection is deprecated. Use '-D{}={}' instead.", PROP_LEVEL, "disabled");
         }
+
         ResourceLeakDetectorLevel defaultLevel = disabled ? ResourceLeakDetectorLevel.DISABLED : DEFAULT_LEVEL;
         // First read old property name
         string levelString = SystemPropertyUtil.Get(PROP_LEVEL_OLD, defaultLevel.ToString());
@@ -62,6 +64,7 @@ public static class ResourceLeakDetector
         SAMPLING_INTERVAL = SystemPropertyUtil.GetInt(PROP_SAMPLING_INTERVAL, DEFAULT_SAMPLING_INTERVAL);
         TRACK_CLOSE = SystemPropertyUtil.GetBoolean(PROP_TRACK_CLOSE, true);
         level = (int)ParseLevel(levelString);
+
         if (logger.IsDebugEnabled())
         {
             logger.Debug("-D{}: {}", PROP_LEVEL, GetLevel().ToString().ToLowerInvariant());
@@ -78,13 +81,16 @@ public static class ResourceLeakDetector
     public static ResourceLeakDetectorLevel ParseLevel(string levelStr)
     {
         ArgumentNullException.ThrowIfNull(levelStr);
+
         string text = levelStr.Trim();
+
         foreach (ResourceLeakDetectorLevel candidate in Enum.GetValues<ResourceLeakDetectorLevel>())
             if (string.Equals(text, candidate.ToString(), StringComparison.OrdinalIgnoreCase) ||
                 text == ((int)candidate).ToString(CultureInfo.InvariantCulture))
             {
                 return candidate;
             }
+
         return DEFAULT_LEVEL;
     }
 
@@ -114,6 +120,7 @@ public static class ResourceLeakDetector
         {
             throw new ArgumentOutOfRangeException(nameof(value));
         }
+
         Volatile.Write(ref level, (int)value);
     }
 
@@ -131,7 +138,9 @@ public static class ResourceLeakDetector
     {
         ArgumentNullException.ThrowIfNull(clz);
         ArgumentNullException.ThrowIfNull(methodNames);
+
         var nameSet = new HashSet<string>(methodNames);
+
         // Use loop rather than lookup. This avoids knowing the parameters, and doesn't have to handle
         // NoSuchMethodException.
         foreach (MethodInfo method in clz.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public |
@@ -140,16 +149,20 @@ public static class ResourceLeakDetector
             {
                 break;
             }
+
         if (nameSet.Count != 0)
         {
             throw new ArgumentException("Can't find '[" + string.Join(", ", nameSet) + "]' in " + clz.FullName);
         }
+
         string[] oldMethods, newMethods;
+
         do
         {
             oldMethods = excludedMethods.Get();
             newMethods = new string[oldMethods.Length + 2 * methodNames.Length];
             Array.Copy(oldMethods, newMethods, oldMethods.Length);
+
             for (int i = 0; i < methodNames.Length; i++)
             {
                 newMethods[oldMethods.Length + i * 2] = ExclusionTypeName(clz);
@@ -226,6 +239,7 @@ public class ResourceLeakDetector<T> where T : class
     public ResourceLeakDetector(string resourceType, int samplingInterval, long maxActive)
     {
         ArgumentNullException.ThrowIfNull(resourceType);
+
         this.resourceType = resourceType;
         this.samplingInterval = samplingInterval;
     }
@@ -233,6 +247,7 @@ public class ResourceLeakDetector<T> where T : class
     private static string TypeName(Type type)
     {
         ArgumentNullException.ThrowIfNull(type);
+
         return StringUtil.SimpleClassName(type);
     }
 
@@ -303,7 +318,9 @@ public class ResourceLeakDetector<T> where T : class
                 return null;
             }
         }
+
         ReportLeak();
+
         return new DefaultResourceLeak<T>(obj, refQueue, allLeaks, GetInitialHint(resourceType));
     }
 
@@ -329,6 +346,7 @@ public class ResourceLeakDetector<T> where T : class
 
             return;
         }
+
         // Detect and report previous leaks.
         while (refQueue.TryDequeue(out var leak))
         {
@@ -336,11 +354,13 @@ public class ResourceLeakDetector<T> where T : class
             {
                 continue;
             }
+
             string records = leak.GetReportAndClearRecords();
             if (!reportedLeaks.TryAdd(records, 0))
             {
                 continue;
             }
+
             if (records.Length == 0)
             {
                 ReportUntracedLeak(resourceType);
@@ -349,6 +369,7 @@ public class ResourceLeakDetector<T> where T : class
             {
                 ReportTracedLeak(resourceType, records);
             }
+
             Volatile.Read(ref leakListener)?.OnLeak(resourceType, records);
         }
     }

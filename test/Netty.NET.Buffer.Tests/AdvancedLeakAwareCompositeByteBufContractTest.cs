@@ -41,14 +41,17 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
     public void DataViewsStructuresFailuresAndReferenceOperationsPreserveOriginalRecording(int kind, int depth, int op)
     {
         CompositeByteBuf expected = Owner(kind), origin = Owner(kind), referent = origin;
+
         if (depth != 0)
         {
             referent = new WrappedCompositeByteBuf(origin);
         }
+
         var tracker = new Tracker(referent);
         CompositeByteBuf b = new AdvancedLeakAwareCompositeByteBuf(referent, tracker);
         ByteBuf expectedView = null, view = null;
         string expectedResult = "", result = "";
+
         try
         {
             Exception expectedFailure = Record.Exception(() => expectedResult = Run(expected, op, out expectedView));
@@ -59,6 +62,7 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
             Assert.Equal(expected.NumComponents, b.NumComponents);
             Assert.Equal(op is 133 or 134 or 135 or 136 or 137 or 138 or 142 ? 0 : 1, tracker.Records);
             Assert.Equal(0, tracker.Closes);
+
             if (view != null && op is >= 84 and <= 92)
             {
                 Assert.IsType<AdvancedLeakAwareByteBuf>(view);
@@ -71,6 +75,7 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
             expected.Release(expected.RefCnt);
             b.Release(origin.RefCnt);
         }
+
         Assert.Equal(1, tracker.Closes);
     }
 
@@ -78,8 +83,10 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
     {
         if (op < 123)
             return Execute(cb, op, out view);
+
         view = null;
         string result = "ok";
+
         switch (op)
         {
             case 123:
@@ -140,8 +147,10 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
             case 132:
                 {
                     var s=new StringBuilder();
+
                     foreach(ByteBuf part in cb)
                         s.Append(part.Capacity).Append(":").Append(ByteBufUtil.HexDump(part)).Append(";");
+
                     result=s.ToString();
                     break;
                 }
@@ -183,8 +192,10 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
             case 139:
                 {
                     var s=new StringBuilder();
+
                     foreach(ByteBuf part in cb.Decompose(3,22))
                         s.Append(ByteBufUtil.HexDump(part)).Append(";");
+
                     result=s.ToString();
                     break;
                 }
@@ -200,6 +211,7 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
             case 141:
                 {
                     ByteBuf incoming=Unpooled.WrappedBuffer(new byte[]{90});
+
                     try
                     {
                         cb.AddComponent(100,incoming);
@@ -208,6 +220,7 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
                     {
                         result="error,"+incoming.RefCnt;
                     }
+
                     break;
                 }
             case 142:
@@ -269,6 +282,7 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
                     break;
                 }
         }
+
         return result;
     }
 
@@ -321,6 +335,7 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
         var inner = new AdvancedLeakAwareCompositeByteBuf(origin, innerTracker);
         var outerTracker = new Tracker(inner);
         var outer = new AdvancedLeakAwareCompositeByteBuf(inner, outerTracker);
+
         try
         {
             Assert.Equal(origin.GetInt(3), outer.GetInt(3));
@@ -334,6 +349,7 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
         {
             outer.Release();
         }
+
         Assert.Equal(3, innerTracker.Records);
         Assert.Equal(3, outerTracker.Records);
         Assert.Equal(1, innerTracker.Closes);
@@ -346,6 +362,7 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
         CompositeByteBuf origin = Owner(0);
         var tracker = new Tracker(origin);
         var b = new AdvancedLeakAwareCompositeByteBuf(origin, tracker);
+
         try
         {
             _ = b.Capacity;
@@ -379,6 +396,7 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
         {
             b.Release();
         }
+
         Assert.Equal(4, tracker.Records);
         Assert.Equal(1, tracker.Closes);
     }
@@ -401,6 +419,7 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
         CompositeByteBuf origin = Owner(0);
         var tracker = new Tracker(origin);
         var b = new AdvancedLeakAwareCompositeByteBuf(origin, tracker);
+
         try
         {
             using var generic = ((IEnumerable<ByteBuf>)b).GetEnumerator();
@@ -434,6 +453,7 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
         var b = new AdvancedLeakAwareCompositeByteBuf(origin, tracker);
         var pin = internalLease ? default : b.AsMemory(0, 8).Pin();
         var lease = internalLease ? b.AcquireReadLease() : default;
+
         try
         {
             Assert.True(b.Release());
@@ -446,6 +466,7 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
             lease.Dispose();
             pin.Dispose();
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -457,6 +478,7 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
         CompositeByteBuf origin = Owner(0);
         var tracker = new Tracker(origin);
         ByteBuf b = new AdvancedLeakAwareCompositeByteBuf(origin, tracker);
+
         try
         {
             switch (operation)
@@ -489,6 +511,7 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
                     Assert.Equal(1.25f, b.ReadFloatLE());
                     break;
             }
+
             Assert.Equal(1, tracker.Records);
         }
         finally
@@ -505,6 +528,7 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
         var tracker = new Tracker(origin);
         ByteBuf b = new AdvancedLeakAwareCompositeByteBuf((CompositeByteBuf)origin, tracker);
         using var stream = new MemoryStream();
+
         try
         {
             Assert.Same(b, b.GetBytes(3, stream, 8));
@@ -536,6 +560,7 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
         var tracker = new Tracker(origin);
         ByteBuf b = new AdvancedLeakAwareCompositeByteBuf((CompositeByteBuf)origin, tracker);
         using var stream = new MemoryStream(new byte[64]);
+
         try
         {
             CancellationToken token = cancel ? new CancellationToken(true) : TestContext.Current.CancellationToken;
@@ -552,10 +577,12 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
             Assert.Equal(1, tracker.Records);
             await Run(b.ReadBytesAsync(stream, 8, token));
             Assert.Equal(2, tracker.Records);
+
             if (cancel)
                 Assert.Equal(2, b.ReaderIndex);
             else
                 Assert.Equal(10, b.ReaderIndex);
+
             if (cancel)
                 await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await b.SetBytesAsync(3, stream, 8, token));
             else
@@ -563,7 +590,9 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
                 stream.Position = 0;
                 Assert.Equal(8, await b.SetBytesAsync(3, stream, 8, token));
             }
+
             Assert.Equal(3, tracker.Records);
+
             if (cancel)
                 await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await b.WriteBytesAsync(stream, 8, token));
             else
@@ -571,6 +600,7 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
                 stream.Position = 0;
                 Assert.Equal(8, await b.WriteBytesAsync(stream, 8, token));
             }
+
             Assert.Equal(4, tracker.Records);
             Assert.Equal(cancel ? 32 : 40, b.WriterIndex);
         }
@@ -588,11 +618,13 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
         ByteBuf origin = Owner(1);
         var tracker = new Tracker(origin);
         ByteBuf b = new AdvancedLeakAwareCompositeByteBuf((CompositeByteBuf)origin, tracker);
+
         try
         {
             using var file = File.OpenHandle(path, FileMode.Open, FileAccess.ReadWrite, FileShare.Read,
                 asyncIo ? FileOptions.Asynchronous : FileOptions.None);
             var token = TestContext.Current.CancellationToken;
+
             if (asyncIo)
             {
                 Assert.Equal(8, await b.GetBytesAsync(3, file, 0, 8, token));
@@ -615,6 +647,7 @@ public class AdvancedLeakAwareCompositeByteBufContractTest
                 Assert.Equal(8, b.WriteBytes(file, 8, 8));
                 Assert.Equal(4, tracker.Records);
             }
+
             Assert.Equal(10, origin.ReaderIndex);
             Assert.Equal(40, origin.WriterIndex);
         }

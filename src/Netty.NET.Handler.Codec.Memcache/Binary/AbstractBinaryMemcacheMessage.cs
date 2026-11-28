@@ -87,6 +87,7 @@ public abstract class AbstractBinaryMemcacheMessage
         {
             this.key.Release();
         }
+
         this.key = key;
         short oldKeyLength = keyLength;
         keyLength = key == null ? (short) 0 : (short) key.ReadableBytes;
@@ -100,6 +101,7 @@ public abstract class AbstractBinaryMemcacheMessage
         {
             this.extras.Release();
         }
+
         this.extras = extras;
         // CLR: the old and new extras lengths are sign-extended as Java promotes its signed byte (JLS 5.6, 5.1.2:
         // https://docs.oracle.com/javase/specs/jls/se17/html/jls-5.html#jls-5.6); (sbyte) keeps the Java total for the
@@ -230,6 +232,7 @@ public abstract class AbstractBinaryMemcacheMessage
         {
             key.Release();
         }
+
         if (extras != null)
         {
             extras.Release();
@@ -248,10 +251,12 @@ public abstract class AbstractBinaryMemcacheMessage
         {
             key.Touch(hint);
         }
+
         if (extras != null)
         {
             extras.Touch(hint);
         }
+
         return this;
     }
 

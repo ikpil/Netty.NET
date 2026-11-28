@@ -30,6 +30,7 @@ public class ReadOnlyNativeProviderTest
         var allocator = new UnpooledByteBufAllocator(true, native);
         ByteBuf source = new ReadOnlyMemoryByteBuf(allocator, owner.Memory.Slice(3, 8));
         ByteBuf copy = source.Copy(1, 3);
+
         try
         {
             Assert.Equal(8, copy.MaxCapacity);
@@ -51,8 +52,10 @@ public class ReadOnlyNativeProviderTest
     {
         var sourceNative = new NativeMemoryAllocator();
         using var owner = sourceNative.Allocate(48);
+
         for (int i = 0; i < 48; i++)
             owner.Memory.Span[i] = (byte)i;
+
         var targetNative = new NativeMemoryAllocator();
         IByteBufAllocator allocator = allocatorKind switch
         {
@@ -70,6 +73,7 @@ public class ReadOnlyNativeProviderTest
         };
         view.MarkReaderIndex().MarkWriterIndex();
         int reader = view.ReaderIndex, writer = view.WriterIndex;
+
         try
         {
             foreach (int length in new[] { 0, 1, 7, 24 })
@@ -77,6 +81,7 @@ public class ReadOnlyNativeProviderTest
                 int index = Math.Min(1, view.Capacity - length);
                 byte[] expected = ByteBufUtil.GetBytes(view, index, length);
                 ByteBuf copy = view.Copy(index, length);
+
                 try
                 {
                     Assert.Equal(32, copy.MaxCapacity);
@@ -90,6 +95,7 @@ public class ReadOnlyNativeProviderTest
                     copy.Capacity = 32;
                     Assert.Throws<ArgumentOutOfRangeException>(() => copy.Capacity = 33);
                     Assert.Equal(expected, ByteBufUtil.GetBytes(copy, 0, length));
+
                     if (length != 0)
                     {
                         copy.SetByte(0, 200);
@@ -100,10 +106,12 @@ public class ReadOnlyNativeProviderTest
                 {
                     copy.Release();
                 }
+
                 Assert.Equal(reader, view.ReaderIndex);
                 Assert.Equal(writer, view.WriterIndex);
                 Assert.Equal(1, source.RefCnt);
             }
+
             view.ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(reader, view.ReaderIndex);
             Assert.Equal(writer, view.WriterIndex);
@@ -113,6 +121,7 @@ public class ReadOnlyNativeProviderTest
             source.Release();
             (allocator as IDisposable)?.Dispose();
         }
+
         Assert.Equal(0, targetNative.ReservedBytes);
         Assert.Equal(48, sourceNative.ReservedBytes);
     }
@@ -125,29 +134,35 @@ public class ReadOnlyNativeProviderTest
     {
         var native = new NativeMemoryAllocator();
         using var owner = native.Allocate(48);
+
         for (int i = 0; i < 48; i++)
             owner.Memory.Span[i] = unchecked((byte)(i * 17 + 128));
+
         ByteBuf source = Unpooled.WrappedBuffer((ReadOnlyMemory<byte>)owner.Memory.Slice(offset, 32)).SetIndex(2, 24);
         ByteBuf heap = Unpooled.Buffer(40, 40), direct = new UnpooledDirectByteBuf(40, 40, native);
         ByteBuf composite = Unpooled.CompositeBuffer().AddComponent(Unpooled.Buffer(5, 5).WriteZero(5))
             .AddComponent(new UnpooledDirectByteBuf(35, 35, native).WriteZero(35));
+
         try
         {
             for (int i = 0; i <= 24; i++)
             {
                 byte[] expected = owner.Memory.Slice(offset + i, 8).ToArray();
                 ulong be = 0, le = 0;
+
                 for (int j = 0; j < 8; j++)
                 {
                     be = (be << 8) | expected[j];
                     le |= (ulong)expected[j] << (8 * j);
                 }
+
                 Assert.Equal(unchecked((long)be), source.GetLong(i));
                 Assert.Equal(unchecked((long)le), source.GetLongLE(i));
                 Assert.Equal(unchecked((short)((expected[0] << 8) | expected[1])), source.GetShort(i));
                 Assert.Equal(expected[0] << 16 | expected[1] << 8 | expected[2], source.GetUnsignedMedium(i));
                 Assert.Equal(unchecked((int)(be >> 32)), source.GetInt(i));
             }
+
             foreach (ByteBuf target in new[] { heap, direct, composite })
             {
                 source.GetBytes(1, target, 3, 24);
@@ -156,6 +171,7 @@ public class ReadOnlyNativeProviderTest
                 Assert.Equal(2, source.ReaderIndex);
                 Assert.Equal(24, source.WriterIndex);
             }
+
             byte[] array = new byte[30];
             source.GetBytes(2, array.AsSpan(3, 24));
             Assert.Equal(owner.Memory.Slice(offset + 2, 24).ToArray(), array[3..27]);
@@ -187,6 +203,7 @@ public class ReadOnlyNativeProviderTest
         source.Release();
         owner.Dispose();
         Assert.Equal(0, external.ReservedBytes);
+
         try
         {
             Assert.Equal(8, copy.MaxCapacity);
@@ -197,6 +214,7 @@ public class ReadOnlyNativeProviderTest
         {
             copy.Release();
         }
+
         Assert.Equal(0, target.ReservedBytes);
     }
 
@@ -212,6 +230,7 @@ public class ReadOnlyNativeProviderTest
         ByteBuf target = Unpooled.WrappedBuffer((ReadOnlyMemory<byte>)targetOwner.Memory);
         ByteBuf dead = new UnpooledDirectByteBuf(12, 12, native);
         dead.Release();
+
         try
         {
             Assert.Throws<NotSupportedException>(() => source.GetBytes(0, target, 0, 4));
@@ -237,6 +256,7 @@ public class ReadOnlyNativeProviderTest
         owner.Memory.Span.Fill(71);
         var allocator = new ReadOnlyTargetAllocator(native);
         ByteBuf source = new ReadOnlyMemoryByteBuf(allocator, owner.Memory);
+
         try
         {
             Assert.Throws<NotSupportedException>(() => source.Copy(1, 4));
@@ -276,6 +296,7 @@ public class ReadOnlyNativeProviderTest
         var allocator = new ReadOnlyTargetAllocator(native);
         ByteBuf source = new ReadOnlyMemoryByteBuf(allocator, owner.Memory);
         ByteBuf copy = source.Copy(8, 0);
+
         try
         {
             Assert.Same(allocator.Last, copy);
@@ -290,6 +311,7 @@ public class ReadOnlyNativeProviderTest
             source.Release();
             copy.Release();
         }
+
         Assert.Equal(8, native.ReservedBytes);
     }
 }

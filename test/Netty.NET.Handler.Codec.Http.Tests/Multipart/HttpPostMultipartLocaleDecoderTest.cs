@@ -46,6 +46,7 @@ public class HttpPostMultipartLocaleDecoderTest
         // compare against the lowercase ASCII constants and threw
         // "TransferEncoding Unknown: bınary".
         CultureInfo original = CultureInfo.CurrentCulture;
+
         try
         {
             CultureInfo.CurrentCulture = new CultureInfo("tr-TR");

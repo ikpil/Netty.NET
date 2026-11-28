@@ -78,6 +78,7 @@ public sealed class ServerCookieDecoder : CookieDecoder
     {
         List<ICookie> cookies = new List<ICookie>();
         Decode(cookies, header);
+
         return new ReadOnlyCollection<ICookie>(cookies);
     }
 
@@ -108,6 +109,7 @@ public sealed class ServerCookieDecoder : CookieDecoder
         int i = 0;
 
         bool rfc2965Style = false;
+
         if (string.Compare(header, 0, RFC2965_VERSION, 0, RFC2965_VERSION.Length,
                 StringComparison.OrdinalIgnoreCase) == 0)
         {
@@ -126,6 +128,7 @@ public sealed class ServerCookieDecoder : CookieDecoder
                 {
                     goto loop;
                 }
+
                 char c = header[i];
                 if (c == '\t' || c == '\n' || c == 0x0b || c == '\f'
                         || c == '\r' || c == ' ' || c == ',' || c == ';')
@@ -133,6 +136,7 @@ public sealed class ServerCookieDecoder : CookieDecoder
                     i++;
                     continue;
                 }
+
                 break;
             }
 
@@ -158,6 +162,7 @@ public sealed class ServerCookieDecoder : CookieDecoder
                     // NAME=VALUE
                     nameEnd = i;
                     i++;
+
                     if (i == headerLen)
                     {
                         // NAME= (empty value, i.e. nothing after '=')

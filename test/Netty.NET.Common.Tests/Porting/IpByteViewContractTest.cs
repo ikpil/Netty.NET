@@ -118,6 +118,7 @@ public class IpByteViewContractTest
         var culture = (CultureInfo)CultureInfo.InvariantCulture.Clone();
         culture.NumberFormat.NativeDigits = new[] { "٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩" };
         culture.NumberFormat.NegativeSign = "~";
+
         try
         {
             CultureInfo.CurrentCulture = culture;
@@ -150,6 +151,7 @@ public class IpByteViewContractTest
     {
         uint bits = 0x80000001;
         Span<byte> packet = stackalloc byte[4];
+
         for (int i = 0; i < 10000; i++)
         {
             bits = unchecked(bits * 1664525 + 1013904223);

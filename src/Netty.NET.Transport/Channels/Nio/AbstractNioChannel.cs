@@ -78,6 +78,7 @@ public abstract class AbstractNioChannel : AbstractChannel
         _ch = ch ?? throw new ArgumentNullException(nameof(ch));
         ReadInterestOp = ObjectUtil.CheckNotNull(readOps, "readOps").Value();
         ReadOps = readOps;
+
         try
         {
             ch.Blocking = false;
@@ -96,6 +97,7 @@ public abstract class AbstractNioChannel : AbstractChannel
 
             throw new ChannelException("Failed to enter non-blocking mode.", e);
         }
+
         _unsafe = NewUnsafe();
     }
 
@@ -218,6 +220,7 @@ public abstract class AbstractNioChannel : AbstractChannel
             {
                 return;
             }
+
             _channel.RemoveAndSubmit(_channel.ReadOps);
         }
 
@@ -293,6 +296,7 @@ public abstract class AbstractNioChannel : AbstractChannel
     protected internal override Task ConnectTransportAsync(EndPoint remoteAddress, EndPoint localAddress, CancellationToken cancellationToken)
     {
         var promise = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
         // Don't mark the connect promise as uncancellable as in fact we can cancel it as it is using
         // non-blocking io.
         if (cancellationToken.IsCancellationRequested)
@@ -300,6 +304,7 @@ public abstract class AbstractNioChannel : AbstractChannel
             promise.TrySetCanceled(cancellationToken);
             return promise.Task;
         }
+
         try
         {
             EnsureOpen();
@@ -320,6 +325,7 @@ public abstract class AbstractNioChannel : AbstractChannel
             }
 
             bool wasActive = IsActive;
+
             if (DoConnect(remoteAddress, localAddress))
             {
                 FulfillConnectPromise(promise, wasActive, cancellationToken);
@@ -371,6 +377,7 @@ public abstract class AbstractNioChannel : AbstractChannel
             promise.TrySetException(AnnotateConnectException(t, remoteAddress));
             CloseIfClosed();
         }
+
         return promise.Task;
     }
 
@@ -398,6 +405,7 @@ public abstract class AbstractNioChannel : AbstractChannel
         if (!wasActive && active)
         {
             Pipeline.FireChannelActive();
+
             // CLR: BeginRead holds a read() issued before activation until the channel is active.
             if (promiseSet)
             {
@@ -451,6 +459,7 @@ public abstract class AbstractNioChannel : AbstractChannel
             {
                 _connectTimeoutFuture.Cancel();
             }
+
             _connectPromise = null;
         }
     }

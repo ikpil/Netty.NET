@@ -64,6 +64,7 @@ internal sealed class Http2ControlFrameLimitEncoder : DecoratingHttp2ConnectionE
         {
             return promise.Task;
         }
+
         return base.WriteSettingsAckAsync(ctx, newPromise);
     }
 
@@ -77,8 +78,10 @@ internal sealed class Http2ControlFrameLimitEncoder : DecoratingHttp2ConnectionE
             {
                 return promise.Task;
             }
+
             return base.WritePingAsync(ctx, ack, data, newPromise);
         }
+
         return base.WritePingAsync(ctx, ack, data, promise);
     }
 
@@ -90,6 +93,7 @@ internal sealed class Http2ControlFrameLimitEncoder : DecoratingHttp2ConnectionE
         {
             return promise.Task;
         }
+
         return base.WriteRstStreamAsync(ctx, streamId, errorCode, newPromise);
     }
 
@@ -102,6 +106,7 @@ internal sealed class Http2ControlFrameLimitEncoder : DecoratingHttp2ConnectionE
                 // Let's try to flush once as we may be able to flush some of the control frames.
                 ctx.Flush();
             }
+
             if (outstandingControlFrames == maxOutstandingControlFrames)
             {
                 limitReached = true;
@@ -114,6 +119,7 @@ internal sealed class Http2ControlFrameLimitEncoder : DecoratingHttp2ConnectionE
                 lifecycleManager.OnError(ctx, true, exception);
                 _ = ctx.CloseAsync();
             }
+
             outstandingControlFrames++;
 
             // We did not reach the limit yet, add the listener to decrement the number of outstanding control frames
@@ -121,6 +127,7 @@ internal sealed class Http2ControlFrameLimitEncoder : DecoratingHttp2ConnectionE
             Http2CodecUtil.AddListener(ctx, promise.Task, outstandingControlFramesListener);
             return promise;
         }
+
         return promise;
     }
 }

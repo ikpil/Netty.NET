@@ -35,8 +35,10 @@ public class DefaultAttributeMap : IAttributeMap
     public IAttribute<T> Attr<T>(AttributeKey<T> key) where T : class
     {
         ArgumentNullException.ThrowIfNull(key);
+
         DefaultAttribute<T> replacement = null;
         bool interrupted = false;
+
         try
         {
             for (;;)
@@ -51,6 +53,7 @@ public class DefaultAttributeMap : IAttributeMap
                     {
                         return attribute;
                     }
+
                     replacement ??= new DefaultAttribute<T>(this, key);
                     if (attributes.TryUpdate(key, replacement, attribute))
                     {
@@ -77,6 +80,7 @@ public class DefaultAttributeMap : IAttributeMap
     public bool HasAttr<T>(AttributeKey<T> key) where T : class
     {
         ArgumentNullException.ThrowIfNull(key);
+
         return attributes.ContainsKey(key);
     }
 
@@ -85,6 +89,7 @@ public class DefaultAttributeMap : IAttributeMap
         // Conditional removal must match the old slot as well as the key: a
         // concurrent Attr may already have published its replacement.
         bool interrupted = false;
+
         try
         {
             for (;;)

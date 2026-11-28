@@ -42,9 +42,11 @@ public sealed class ChannelGroupException : AggregateException, IReadOnlyCollect
     private static KeyValuePair<IChannel, Exception>[] CopyCauses(IEnumerable<KeyValuePair<IChannel, Exception>> causes)
     {
         ArgumentNullException.ThrowIfNull(causes);
+
         var copy = causes.ToArray();
         if (copy.Length == 0 || copy.Any(pair => pair.Key == null || pair.Value == null))
             throw new ArgumentException("At least one channel and its failure are required.", nameof(causes));
+
         return copy;
     }
 

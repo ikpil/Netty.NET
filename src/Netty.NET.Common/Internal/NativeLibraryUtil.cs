@@ -41,12 +41,15 @@ public static class NativeLibraryUtil
     public static IntPtr LoadLibrary(string libName, bool absolute)
     {
         ArgumentNullException.ThrowIfNull(libName);
+
         if (absolute)
         {
             if (!Path.IsPathFullyQualified(libName))
                 throw new ArgumentException("An absolute native library path is required.", nameof(libName));
+
             return NativeLibrary.Load(libName);
         }
+
         return NativeLibrary.Load(libName, typeof(NativeLibraryUtil).Assembly, null);
     }
     // Utility

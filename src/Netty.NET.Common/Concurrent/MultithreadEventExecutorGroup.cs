@@ -84,6 +84,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
         for (int i = 0; i < nThreads; i++)
         {
             bool success = false;
+
             try
             {
                 children[i] = NewChild(executor, args);
@@ -106,6 +107,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
                     for (int j = 0; j < i; j++)
                     {
                         IEventExecutor e = children[j];
+
                         try
                         {
                             while (!e.IsTerminated())
@@ -136,6 +138,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
             termination.ConfigureAwait(false).GetAwaiter().UnsafeOnCompleted(() =>
             {
                 _ = termination.Exception;
+
                 if (Interlocked.Increment(ref terminatedChildren) == children.Length)
                     _terminationSource.SetResult();
             });
@@ -221,6 +224,7 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
     public override Task StopAsync()
     {
         List<Exception> failures = null;
+
         foreach (IEventExecutor child in children)
         {
             try
@@ -232,12 +236,14 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
                 (failures ??= new List<Exception>()).Add(error);
             }
         }
+
         // Request failures are distinct from the existing all-child completion
         // signal. Do not strand later children or invent a second termination Task.
         if (failures != null)
         {
             throw new AggregateException("Executor stop requests failed.", failures);
         }
+
         return TerminationFuture;
     }
 
@@ -292,9 +298,11 @@ public abstract class MultithreadEventExecutorGroup : AbstractEventExecutorGroup
     public override bool AwaitTermination(TimeSpan timeout)
     {
         long deadline = unchecked(SystemTimer.NanoTime() + AbstractScheduledEventExecutor.ToNanos(timeout));
+
         foreach (IEventExecutor l in children)
         {
             bool breakLoop = false;
+
             for (;;)
             {
                 long timeLeft = unchecked(deadline - SystemTimer.NanoTime());

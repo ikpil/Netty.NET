@@ -32,6 +32,7 @@ public class ByteBufAllocatorMetricTest
     {
         var a = new UnpooledByteBufAllocator();
         ByteBuf b = Allocate(a, direct, 4, 128);
+
         try
         {
             b.WriteInt(0x01020304);
@@ -57,6 +58,7 @@ public class ByteBufAllocatorMetricTest
         {
             b.Release();
         }
+
         AssertUsage(a, direct, 0);
         Assert.Throws<IllegalReferenceCountException>(() => b.Release());
         AssertUsage(a, direct, 0);
@@ -68,13 +70,16 @@ public class ByteBufAllocatorMetricTest
     {
         var a = new UnpooledByteBufAllocator();
         ByteBuf b = Allocate(a, direct, 8, 64).WriteLong(42);
+
         try
         {
             ByteBuf[] views = { b.Duplicate(), b.Slice(1, 4), b.AsReadOnly(), Unpooled.UnreleasableBuffer(b) };
             AssertUsage(a, direct, 8);
+
             foreach (ByteBuf view in views)
             {
                 ByteBuf copy = view.Copy();
+
                 try
                 {
                     AssertUsage(a, direct, 8 + view.ReadableBytes);
@@ -83,8 +88,10 @@ public class ByteBufAllocatorMetricTest
                 {
                     copy.Release();
                 }
+
                 AssertUsage(a, direct, 8);
             }
+
             ByteBuf retained = b.RetainedSlice(1, 4);
             Assert.False(b.Release());
             AssertUsage(a, direct, 8);
@@ -106,12 +113,14 @@ public class ByteBufAllocatorMetricTest
     {
         var a = new UnpooledByteBufAllocator();
         ByteBuf b = direct ? new UnpooledDirectByteBuf(a, 4, 64) : new UnpooledHeapByteBuf(a, 4, 64);
+
         try
         {
             b.WriteInt(42);
             b.Capacity = 8;
             AssertUsage(a, direct, 0);
             ByteBuf copy = b.Copy();
+
             try
             {
                 AssertUsage(a, direct, 4);
@@ -120,12 +129,14 @@ public class ByteBufAllocatorMetricTest
             {
                 copy.Release();
             }
+
             AssertUsage(a, direct, 0);
         }
         finally
         {
             b.Release();
         }
+
         AssertUsage(a, direct, 0);
     }
 
@@ -135,6 +146,7 @@ public class ByteBufAllocatorMetricTest
     {
         var a = new UnpooledByteBufAllocator();
         CompositeByteBuf b = direct ? a.CompositeDirectBuffer(2) : a.CompositeHeapBuffer(2);
+
         try
         {
             for (int i = 0; i < 3; i++)
@@ -147,6 +159,7 @@ public class ByteBufAllocatorMetricTest
             b.Capacity = 9;
             AssertUsage(a, direct, 9);
             ByteBuf copy = b.Copy();
+
             try
             {
                 AssertUsage(a, direct, 15);
@@ -155,6 +168,7 @@ public class ByteBufAllocatorMetricTest
             {
                 copy.Release();
             }
+
             b.Capacity = 4;
             // A sliced component still owns the original six-byte consolidated allocation.
             AssertUsage(a, direct, 6);
@@ -163,6 +177,7 @@ public class ByteBufAllocatorMetricTest
         {
             b.Release();
         }
+
         AssertUsage(a, direct, 0);
     }
 
@@ -175,6 +190,7 @@ public class ByteBufAllocatorMetricTest
         ByteBuf first = a.DirectBuffer(4, 8).WriteInt(1);
         ByteBuf second = other.DirectBuffer(8, 8).WriteLong(2);
         CompositeByteBuf composite = a.CompositeDirectBuffer();
+
         try
         {
             composite.AddComponent(first, true);
@@ -190,6 +206,7 @@ public class ByteBufAllocatorMetricTest
         {
             composite.Release();
         }
+
         AssertUsage(a, true, 0);
         AssertUsage(other, true, 0);
         Assert.Equal(0, native.ReservedBytes);
@@ -205,6 +222,7 @@ public class ByteBufAllocatorMetricTest
         AssertUsage(a, true, 0);
         Assert.Equal(0, native.ReservedBytes);
         ByteBuf b = a.DirectBuffer(0, 4);
+
         try
         {
             AssertUsage(a, true, 0);
@@ -216,6 +234,7 @@ public class ByteBufAllocatorMetricTest
         {
             b.Release();
         }
+
         AssertUsage(a, true, 0);
         Assert.Equal(0, native.ReservedBytes);
     }
@@ -226,6 +245,7 @@ public class ByteBufAllocatorMetricTest
         var native = new NativeMemoryAllocator(8);
         var a = new UnpooledByteBufAllocator(true, native);
         ByteBuf b = a.DirectBuffer(4, 8).WriteInt(0x01020304);
+
         try
         {
             Assert.Throws<OutOfDirectMemoryError>(() => a.DirectBuffer(8, 8));
@@ -233,6 +253,7 @@ public class ByteBufAllocatorMetricTest
             AssertUsage(a, true, 4);
             Assert.Equal(4, native.ReservedBytes);
             ByteBuf full = a.DirectBuffer(4, 4);
+
             try
             {
                 Assert.Throws<OutOfDirectMemoryError>(() => b.Copy());
@@ -242,6 +263,7 @@ public class ByteBufAllocatorMetricTest
             {
                 full.Release();
             }
+
             Assert.Equal(0x01020304, b.GetInt(0));
             Assert.Equal(4, b.WriterIndex);
             AssertUsage(a, true, 4);
@@ -250,6 +272,7 @@ public class ByteBufAllocatorMetricTest
         {
             b.Release();
         }
+
         AssertUsage(a, true, 0);
         Assert.Equal(0, native.ReservedBytes);
     }
@@ -259,6 +282,7 @@ public class ByteBufAllocatorMetricTest
     {
         var a = new UnpooledByteBufAllocator();
         ByteBuf source = Unpooled.WrappedBuffer(new byte[] { 1 });
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.ReadBytes(a, source, 2));
@@ -288,12 +312,14 @@ public class ByteBufAllocatorMetricTest
         var a = new UnpooledByteBufAllocator(true, native);
         ByteBuf b = a.DirectBuffer(4, 8).WriteInt(0x01020304);
         var oldPin = b.AsMemory(0, 4).Pin();
+
         try
         {
             b.Capacity = 8;
             AssertUsage(a, true, 8);
             Assert.Equal(8, native.ReservedBytes);
             var newPin = b.AsMemory(0, 8).Pin();
+
             try
             {
                 b.Release();
@@ -304,6 +330,7 @@ public class ByteBufAllocatorMetricTest
             {
                 newPin.Dispose();
             }
+
             Assert.Equal(0, native.ReservedBytes);
         }
         finally
@@ -312,8 +339,10 @@ public class ByteBufAllocatorMetricTest
             {
                 b.Release();
             }
+
             oldPin.Dispose();
         }
+
         AssertUsage(a, true, 0);
         Assert.Equal(0, native.ReservedBytes);
     }
@@ -329,6 +358,7 @@ public class ByteBufAllocatorMetricTest
             b.Capacity = 64;
             return b;
         }, TestContext.Current.CancellationToken)));
+
         try
         {
             Assert.Equal(4096, a.Metric.UsedHeapMemory);
@@ -338,6 +368,7 @@ public class ByteBufAllocatorMetricTest
         {
             await Task.WhenAll(buffers.Select(b => Task.Run(() => b.Release(), TestContext.Current.CancellationToken)));
         }
+
         AssertUsage(a, true, 0);
         Assert.Equal(0, native.ReservedBytes);
         ByteBuf shared = a.DirectBuffer(16, 16).Retain(63);
@@ -354,6 +385,7 @@ public class ByteBufAllocatorMetricTest
         Assert.Same(a.Metric, ((IByteBufAllocatorMetricProvider)a).Metric);
         ByteBuf b = a.Buffer(3, 3);
         ByteBuf io = a.IoBuffer(5, 5);
+
         try
         {
             Assert.Equal(preferDirect ? 0 : 3, a.Metric.UsedHeapMemory);
@@ -366,6 +398,7 @@ public class ByteBufAllocatorMetricTest
             b.Release();
             io.Release();
         }
+
         AssertUsage(a, true, 0);
     }
 

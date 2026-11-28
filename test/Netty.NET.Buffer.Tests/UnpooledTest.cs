@@ -198,6 +198,7 @@ public class UnpooledTest
                 }
             }
         }
+
         foreach (ByteBuf buffer in expected)
         {
             buffer.Release();
@@ -282,6 +283,7 @@ public class UnpooledTest
                 Unpooled.EmptyBuffer,
                 Unpooled.WrappedBuffer(new byte[16]),
                 Unpooled.EmptyBuffer);
+
         try
         {
             Assert.Equal(16, buf.Capacity);
@@ -296,6 +298,7 @@ public class UnpooledTest
     public void TestWrappedBuffer()
     {
         var native = new NativeMemoryAllocator();
+
         using (var direct = native.Allocate(16, true))
         {
             ByteBuf buffer = Unpooled.WrappedBuffer(direct.Memory);
@@ -304,6 +307,7 @@ public class UnpooledTest
             // CLR: the wrapper borrows the caller-owned native storage and leaves it to its owner.
             Assert.Equal(16, native.ReservedBytes);
         }
+
         Assert.Equal(0, native.ReservedBytes);
 
         AssertEqualsAndRelease(
@@ -340,6 +344,7 @@ public class UnpooledTest
         Memory<byte> expectedBuffer = nioBuffer.Memory.Slice(4, 8);
 
         ByteBuf buffer = Unpooled.WrappedBuffer(expectedBuffer);
+
         try
         {
             Assert.True(buffer.IsDirect);
@@ -350,6 +355,7 @@ public class UnpooledTest
         {
             buffer.Release();
         }
+
         Assert.Equal(16, native.ReservedBytes);
         nioBuffer.Dispose();
         Assert.Equal(0, native.ReservedBytes);
@@ -417,6 +423,7 @@ public class UnpooledTest
     private static void TestCopiedBufferCharSequence(string sequence, Encoding charset)
     {
         ByteBuf copied = Unpooled.CopiedBuffer(sequence, charset);
+
         try
         {
             Assert.Equal(sequence, copied.ToString(charset));
@@ -431,12 +438,14 @@ public class UnpooledTest
     public void TestCopiedBuffer()
     {
         var native = new NativeMemoryAllocator();
+
         using (var direct = native.Allocate(16, true))
         {
             ByteBuf copied = Unpooled.CopiedBuffer((ReadOnlyMemory<byte>)direct.Memory);
             Assert.Equal(16, copied.Capacity);
             copied.Release();
         }
+
         Assert.Equal(0, native.ReservedBytes);
 
         AssertEqualsAndRelease(Unpooled.WrappedBuffer(new byte[] { 1, 2, 3 }),
@@ -785,15 +794,19 @@ public class UnpooledTest
         // CLR: ReadOnlyMemory over native storage replaces ByteBuffer.allocateDirect(12).asReadOnlyBuffer().
         var native = new NativeMemoryAllocator();
         using var buffer = native.Allocate(12);
+
         for (int i = 0; i < 12; i++)
         {
             buffer.Memory.Span[i] = (byte)i;
         }
+
         ByteBuf wrapped = Unpooled.WrappedBuffer((ReadOnlyMemory<byte>)buffer.Memory);
+
         for (int i = 0; i < 12; i++)
         {
             Assert.Equal((byte)i, wrapped.ReadByte());
         }
+
         wrapped.Release();
         buffer.Dispose();
         Assert.Equal(0, native.ReservedBytes);
@@ -804,6 +817,7 @@ public class UnpooledTest
     {
         // CLR: ArgumentOutOfRangeException (an ArgumentException) replaces IllegalArgumentException.
         ByteBuf buf = Unpooled.Buffer(8);
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => buf.SkipBytes(-1));
@@ -840,6 +854,7 @@ public class UnpooledTest
         // Ensure destination buffer is bigger then what is wrapped in the ByteBuf.
         Memory<byte> nioBuffer = new byte[bytes.Length + 1];
         ByteBuf wrappedBuffer = Unpooled.WrappedBuffer(bytes);
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => wrappedBuffer.GetBytes(wrappedBuffer.ReaderIndex, nioBuffer.Span));
@@ -857,6 +872,7 @@ public class UnpooledTest
         // Ensure destination buffer is bigger then what is wrapped in the ByteBuf.
         Memory<byte> nioBuffer = new byte[bytes.Length + 1];
         ByteBuf wrappedBuffer = Unpooled.WrappedBuffer(bytes, 0, bytes.Length);
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => wrappedBuffer.GetBytes(wrappedBuffer.ReaderIndex, nioBuffer.Span));

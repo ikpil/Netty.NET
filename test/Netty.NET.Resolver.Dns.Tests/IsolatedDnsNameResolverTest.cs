@@ -98,12 +98,14 @@ public class IsolatedDnsNameResolverTest : IClassFixture<IsolatedDnsNameResolver
         TestDnsServer customDnsServer = new TestDnsServer(new NameRecordStore(hostname, expectedIp));
         customDnsServer.Start();
         DnsNameResolver.resolveLocalhostWithoutDns = false;
+
         try
         {
             DnsNameResolver resolver = NewResolver(strategy, false, null, customDnsServer, group.Next())
                     .ResolvedAddressTypes(ResolvedAddressTypes.Ipv4Only)
                     .HostsFileEntriesResolver(new NullHostsFileEntriesResolver())
                     .Build();
+
             try
             {
                 IPAddress address = await resolver.ResolveAsync(hostname);
@@ -135,12 +137,14 @@ public class IsolatedDnsNameResolverTest : IClassFixture<IsolatedDnsNameResolver
         TestDnsServer customDnsServer = new TestDnsServer(new NameRecordStore("localhost", expectedIp));
         customDnsServer.Start();
         DnsNameResolver.resolveLocalhostWithoutDns = false;
+
         try
         {
             DnsNameResolver resolver = NewResolver(strategy, false, null, customDnsServer, group.Next())
                     .ResolvedAddressTypes(ResolvedAddressTypes.Ipv4Only)
                     .HostsFileEntriesResolver(new NullHostsFileEntriesResolver())
                     .Build();
+
             try
             {
                 IPAddress address = await resolver.ResolveAsync("localhost");
@@ -186,6 +190,7 @@ public class IsolatedDnsNameResolverTest : IClassFixture<IsolatedDnsNameResolver
                     return ImmutableHashSet.Create(NewARecord(hostname, expectedIp));
                 }
             }
+
             return ImmutableHashSet<IResourceRecord>.Empty;
         }
     }

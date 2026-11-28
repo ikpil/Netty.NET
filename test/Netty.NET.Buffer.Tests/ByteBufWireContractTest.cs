@@ -37,6 +37,7 @@ public class ByteBufWireContractTest
         // Preserve AbstractByteBufTest's 100 byte-buffer consistency iterations.
         var random = new Random(0x64CC10);
         ByteBuf buffer = Unpooled.Buffer(13, 13);
+
         try
         {
             for (int iteration = 0; iteration < 100; ++iteration)
@@ -55,8 +56,10 @@ public class ByteBufWireContractTest
                 Set(buffer, 3, width, littleEndian, value);
                 byte[] expected = new byte[13];
                 Array.Fill(expected, (byte)0xA5);
+
                 for (int i = 0; i < width; ++i)
                     expected[3 + i] = unchecked((byte)(bits >> ((littleEndian ? i : width - i - 1) * 8)));
+
                 Assert.Equal(expected, buffer.AsMemory(0, 13).ToArray());
                 long numeric = width switch
                 {
@@ -95,6 +98,7 @@ public class ByteBufWireContractTest
                 {
                     b.SetShort(index, unchecked((int)value));
                 }
+
                 break;
             case 3:
                 if (le)
@@ -105,6 +109,7 @@ public class ByteBufWireContractTest
                 {
                     b.SetMedium(index, unchecked((int)value));
                 }
+
                 break;
             case 4:
                 if (le)
@@ -115,6 +120,7 @@ public class ByteBufWireContractTest
                 {
                     b.SetInt(index, unchecked((int)value));
                 }
+
                 break;
             case 8:
                 if (le)
@@ -125,6 +131,7 @@ public class ByteBufWireContractTest
                 {
                     b.SetLong(index, value);
                 }
+
                 break;
         }
     }
@@ -147,6 +154,7 @@ public class ByteBufWireContractTest
     public void SequentialAccessGrowsAndPreservesUnsignedAndFloatingBits(bool le)
     {
         ByteBuf buffer = Unpooled.Buffer(0, 64);
+
         try
         {
             if (le)
@@ -157,8 +165,10 @@ public class ByteBufWireContractTest
             {
                 buffer.WriteShort(0xFEDC).WriteMedium(0xFEDCBA).WriteInt(unchecked((int)0xFEDCBA98)).WriteLong(long.MinValue);
             }
+
             int floatBits = unchecked((int)0xFFC01234);
             long doubleBits = unchecked((long)0xFFF8000012345678UL);
+
             if (le)
             {
                 buffer.WriteFloatLE(BitConverter.Int32BitsToSingle(floatBits)).WriteDoubleLE(BitConverter.Int64BitsToDouble(doubleBits));
@@ -167,6 +177,7 @@ public class ByteBufWireContractTest
             {
                 buffer.WriteFloat(BitConverter.Int32BitsToSingle(floatBits)).WriteDouble(BitConverter.Int64BitsToDouble(doubleBits));
             }
+
             Assert.Equal((ushort)0xFEDC, le ? buffer.ReadUnsignedShortLE() : buffer.ReadUnsignedShort());
             Assert.Equal(0xFEDCBA, le ? buffer.ReadUnsignedMediumLE() : buffer.ReadUnsignedMedium());
             Assert.Equal(0xFEDCBA98u, le ? buffer.ReadUnsignedIntLE() : buffer.ReadUnsignedInt());
@@ -186,6 +197,7 @@ public class ByteBufWireContractTest
     public void PrimitiveFailuresDoNotAdvanceIndices()
     {
         ByteBuf buffer = Unpooled.Buffer(3, 3);
+
         try
         {
             buffer.WriteByte(0xFF);
@@ -209,6 +221,7 @@ public class ByteBufWireContractTest
     {
         ByteBuf buffer = Unpooled.CopiedBuffer(new byte[] { 0, 1, 2, 3, 4, 5 });
         ByteBuf destination = Unpooled.Buffer(8, 8);
+
         try
         {
             buffer.GetBytes(0, buffer, 1, 5);
@@ -240,6 +253,7 @@ public class ByteBufWireContractTest
     public void ReadsCannotAccessUnwrittenCapacityAndWritesCan()
     {
         ByteBuf buffer = Unpooled.Buffer(8);
+
         try
         {
             buffer.SetLong(0, long.MaxValue);

@@ -80,6 +80,7 @@ public interface IQpackDecoderStateSyncStrategy
                 lastCountAcknowledged = insertCount;
                 return true;
             }
+
             return false;
         }
     }

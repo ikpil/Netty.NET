@@ -312,6 +312,7 @@ public abstract class WebSocketClientHandshaker
     public virtual Task HandshakeAsync(IChannel channel)
     {
         ObjectUtil.CheckNotNull(channel, "channel");
+
         return HandshakeAsync(channel, new TaskCompletionSource());
     }
 
@@ -350,6 +351,7 @@ public abstract class WebSocketClientHandshaker
             if (generateOriginHeader && !customHeaders.Contains(HttpHeaderNames.ORIGIN))
             {
                 string originName;
+
                 if (version == WebSocketVersion.V07 || version == WebSocketVersion.V08)
                 {
                     originName = HttpHeaderNames.SEC_WEBSOCKET_ORIGIN.ToString();
@@ -377,12 +379,14 @@ public abstract class WebSocketClientHandshaker
                 {
                     ctx = pipeline.Context(typeof(HttpClientCodec));
                 }
+
                 if (ctx == null)
                 {
                     promise.SetException(new InvalidOperationException("ChannelPipeline does not contain " +
                             "an HttpRequestEncoder or HttpClientCodec"));
                     return;
                 }
+
                 pipeline.AddAfter(ctx.Name, "ws-encoder", NewWebSocketEncoder());
 
                 promise.SetResult();
@@ -478,6 +482,7 @@ public abstract class WebSocketClientHandshaker
                 throw new InvalidOperationException("ChannelPipeline does not contain " +
                         "an HttpRequestEncoder or HttpClientCodec");
             }
+
             HttpClientCodec codec =  (HttpClientCodec) ctx.Handler;
             // Remove the encoder part of the codec as the user may start writing frames after this method returns.
             codec.RemoveOutboundHandler();
@@ -496,6 +501,7 @@ public abstract class WebSocketClientHandshaker
                 // Remove the encoder part of the codec as the user may start writing frames after this method returns.
                 p.Remove<HttpRequestEncoder>();
             }
+
             IChannelHandlerContext context = ctx;
             p.AddAfter(context.Name, "ws-decoder", NewWebsocketDecoder());
 
@@ -564,6 +570,7 @@ public abstract class WebSocketClientHandshaker
             }
 
             string aggregatorCtx = ctx.Name;
+
             // Content-Length and Transfer-Encoding must not be sent in any response with a status code of 1xx or 204.
             if (version == WebSocketVersion.V00)
             {
@@ -574,6 +581,7 @@ public abstract class WebSocketClientHandshaker
             }
 
             p.AddAfter(aggregatorCtx, "handshaker", new HandshakeResponseHandler(this, channel, promise));
+
             try
             {
                 ctx.FireChannelRead(ReferenceCountUtil.Retain(response));
@@ -583,6 +591,7 @@ public abstract class WebSocketClientHandshaker
                 promise.SetException(cause);
             }
         }
+
         return promise.Task;
     }
 
@@ -637,6 +646,7 @@ public abstract class WebSocketClientHandshaker
                 {
                     promise.TrySetException(new ClosedChannelException());
                 }
+
                 ctx.FireChannelInactive();
             }
             finally
@@ -664,6 +674,7 @@ public abstract class WebSocketClientHandshaker
                 Debug.Assert(fullHttpResponse != null);
                 IFullHttpResponse handshakeResponse = fullHttpResponse;
                 fullHttpResponse = null;
+
                 try
                 {
                     ctx.Pipeline.Remove(this);
@@ -673,6 +684,7 @@ public abstract class WebSocketClientHandshaker
                 {
                     handshakeResponse.Release();
                 }
+
                 return;
             }
 
@@ -682,6 +694,7 @@ public abstract class WebSocketClientHandshaker
                 fullHttpResponse = new DefaultFullHttpResponse(httpResponse.ProtocolVersion(),
                     httpResponse.Status(), Unpooled.EmptyBuffer, httpResponse.Headers(),
                     EmptyHttpHeaders.INSTANCE);
+
                 if (httpResponse.DecoderResult().IsFailure())
                 {
                     fullHttpResponse.SetDecoderResult(httpResponse.DecoderResult());
@@ -753,6 +766,7 @@ public abstract class WebSocketClientHandshaker
     public virtual Task CloseAsync(IChannel channel, CloseWebSocketFrame frame)
     {
         ObjectUtil.CheckNotNull(channel, "channel");
+
         return CloseAsync(channel, frame, new TaskCompletionSource());
     }
 
@@ -772,6 +786,7 @@ public abstract class WebSocketClientHandshaker
     public virtual Task CloseAsync(IChannel channel, CloseWebSocketFrame frame, TaskCompletionSource promise)
     {
         ObjectUtil.CheckNotNull(channel, "channel");
+
         return Close0(channel, channel, frame, promise);
     }
 
@@ -786,6 +801,7 @@ public abstract class WebSocketClientHandshaker
     public virtual Task CloseAsync(IChannelHandlerContext ctx, CloseWebSocketFrame frame)
     {
         ObjectUtil.CheckNotNull(ctx, "ctx");
+
         return CloseAsync(ctx, frame, new TaskCompletionSource());
     }
 
@@ -803,6 +819,7 @@ public abstract class WebSocketClientHandshaker
                                    TaskCompletionSource promise)
     {
         ObjectUtil.CheckNotNull(ctx, "ctx");
+
         return Close0(ctx, ctx.Channel, frame, promise);
     }
 
@@ -874,6 +891,7 @@ public abstract class WebSocketClientHandshaker
         {
             return components.host;
         }
+
         string host = components.host;
         string scheme = components.scheme;
         if (port == HttpScheme.HTTP.Port())
@@ -901,6 +919,7 @@ public abstract class WebSocketClientHandshaker
         string schemePrefix;
         int port = components.port;
         int defaultPort;
+
         if (ContentEquals(WebSocketScheme.WSS.Name(), scheme)
             || ContentEquals(HttpScheme.HTTPS.Name(), scheme)
             || (scheme == null && port == WebSocketScheme.WSS.Port()))
@@ -924,6 +943,7 @@ public abstract class WebSocketClientHandshaker
             // See https://tools.ietf.org/html/rfc6454#section-6.2
             return schemePrefix + NetUtil.ToSocketAddressString(host, port);
         }
+
         return schemePrefix + host;
     }
 
@@ -941,11 +961,14 @@ public abstract class WebSocketClientHandshaker
         {
             return parts;
         }
+
         int length = parts.Length;
+
         while (length > 0 && parts[length - 1].Length == 0)
         {
             length--;
         }
+
         return length == parts.Length ? parts : parts.AsSpan(0, length).ToArray();
     }
 
@@ -971,12 +994,16 @@ public abstract class WebSocketClientHandshaker
             {
                 s = s.Substring(0, fragment);
             }
+
             int i = 0;
+
             while (i < s.Length && (char.IsAsciiLetterOrDigit(s[i]) || s[i] == '+' || s[i] == '-' || s[i] == '.'))
             {
                 i++;
             }
+
             int start = 0;
+
             if (i > 0 && i < s.Length && s[i] == ':' && char.IsAsciiLetter(s[0]))
             {
                 scheme = s.Substring(0, i);
@@ -987,18 +1014,22 @@ public abstract class WebSocketClientHandshaker
                     return;
                 }
             }
+
             if (string.CompareOrdinal(s, start, "//", 0, 2) == 0)
             {
                 int authorityStart = start + 2;
                 int authorityEnd = authorityStart;
+
                 while (authorityEnd < s.Length && s[authorityEnd] != '/' && s[authorityEnd] != '?')
                 {
                     authorityEnd++;
                 }
+
                 string authority = s.Substring(authorityStart, authorityEnd - authorityStart);
                 ParseServerAuthority(authority, out host, out port);
                 start = authorityEnd;
             }
+
             int query = s.IndexOf('?', start);
             if (query == -1)
             {
@@ -1019,6 +1050,7 @@ public abstract class WebSocketClientHandshaker
             string hostPort = at == -1 ? authority : authority.Substring(at + 1);
             string h;
             string p = null;
+
             if (hostPort.StartsWith('['))
             {
                 int close = hostPort.IndexOf(']');
@@ -1026,13 +1058,16 @@ public abstract class WebSocketClientHandshaker
                 {
                     return;
                 }
+
                 h = hostPort.Substring(0, close + 1);
+
                 if (close + 1 < hostPort.Length)
                 {
                     if (hostPort[close + 1] != ':')
                     {
                         return;
                     }
+
                     p = hostPort.Substring(close + 2);
                 }
             }
@@ -1042,7 +1077,9 @@ public abstract class WebSocketClientHandshaker
                 h = colon == -1 ? hostPort : hostPort.Substring(0, colon);
                 p = colon == -1 ? null : hostPort.Substring(colon + 1);
             }
+
             int parsedPort = -1;
+
             if (!string.IsNullOrEmpty(p))
             {
                 if (!int.TryParse(p, NumberStyles.None, CultureInfo.InvariantCulture, out parsedPort))
@@ -1051,10 +1088,12 @@ public abstract class WebSocketClientHandshaker
                     return;
                 }
             }
+
             if (h.Length == 0)
             {
                 return;
             }
+
             host = h;
             port = parsedPort;
         }

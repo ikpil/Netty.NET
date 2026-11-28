@@ -28,14 +28,18 @@ public class AsciiStringCaseConversionContractTest
         // A fixed generator exercises mixed high bytes and ASCII boundaries at
         // every alignment without using the production SWAR or case helpers.
         var random = new Random(4219 + length);
+
         for (int offset = 0; offset < 16; offset++)
         {
             byte[] storage = new byte[offset + length + 8];
             random.NextBytes(storage);
+
             if (length > 0)
                 storage[offset] = (byte)'A';
+
             if (length > 1)
                 storage[offset + length - 1] = (byte)'z';
+
             Verify(storage, offset, length);
         }
     }
@@ -47,6 +51,7 @@ public class AsciiStringCaseConversionContractTest
         {
             byte[] storage = new byte[40];
             Array.Fill(storage, (byte)value);
+
             // 8-byte words, 4/2/1-byte tails, and an unaligned source slice.
             for (int length = 8; length <= 23; length++)
                 Verify(storage, 3, length);
@@ -71,6 +76,7 @@ public class AsciiStringCaseConversionContractTest
         byte[] lower = new byte[length];
         byte[] upper = new byte[length];
         bool hasUpper = false, hasLower = false;
+
         for (int i = 0; i < length; i++)
         {
             byte value = storage[offset + i];
@@ -81,6 +87,7 @@ public class AsciiStringCaseConversionContractTest
             hasUpper |= uppercase;
             hasLower |= lowercase;
         }
+
         var source = new AsciiString(storage, offset, length, false);
         AsciiString actualLower = source.ToLowerCase();
         AsciiString actualUpper = source.ToUpperCase();

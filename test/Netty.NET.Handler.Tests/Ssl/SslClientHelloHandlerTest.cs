@@ -131,12 +131,14 @@ public class SslClientHelloHandlerTest
         EmbeddedChannel ch = new EmbeddedChannel(handler);
 
         byte[] records = new byte[5 * 200_000];
+
         for (int i = 0; i < records.Length; i += 5)
         {
             records[i] = SslUtils.SSL_CONTENT_TYPE_HANDSHAKE;
             records[i + 1] = 3;
             records[i + 2] = 3;
         }
+
         try
         {
             Assert.Throws<DecoderException>(() => ch.WriteInbound(Unpooled.WrappedBuffer(records)));
@@ -164,6 +166,7 @@ public class SslClientHelloHandlerTest
             {
                 nullRetryOccurred = true;
             }
+
             return Task.FromResult(new object());
         }
 

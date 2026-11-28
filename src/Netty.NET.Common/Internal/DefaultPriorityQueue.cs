@@ -43,6 +43,7 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
         {
             throw new ArgumentOutOfRangeException(nameof(initialSize));
         }
+
         _queue = initialSize != 0
             ? new T[initialSize]
             : Array.Empty<T>();
@@ -80,6 +81,7 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
             item = default;
             return false;
         }
+
         item = Poll();
         return true;
     }
@@ -135,6 +137,7 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
         if (node.PriorityQueueIndex(this) != -1)
             throw new ArgumentException("e.priorityQueueIndex(): " + node.PriorityQueueIndex(this).ToString(CultureInfo.InvariantCulture) +
                     " (expected: " + (-1).ToString(CultureInfo.InvariantCulture) + ") + e: " + e);
+
         // Check that the array capacity is enough to hold values by doubling capacity.
         if (_size >= _queue.Length)
         {
@@ -156,6 +159,7 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
         SetIndex(result, -1);
         T last = _queue[--_size];
         _queue[_size] = default;
+
         if (_size != 0)
         {
             // Make sure we don't add the last element back.
@@ -179,6 +183,7 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
         }
 
         SetIndex(node, -1);
+
         if (--_size == 0 || _size == i)
         {
             // If there are no node left, or this is the last node in the array just remove and return.
@@ -242,6 +247,7 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
         {
             throw new OutOfMemoryException();
         }
+
         long newCapacity = (long)oldCapacity + (oldCapacity < 64 ? oldCapacity + 2 : (oldCapacity >> 1));
         // Keep capacity owned by the array, so failed allocation cannot leave
         // a second capacity field inconsistent with the actual storage.
@@ -251,6 +257,7 @@ public sealed class DefaultPriorityQueue<T> : IPriorityQueue<T> where T : class
     private void BubbleDown(int k, T node)
     {
         int half = _size >>> 1;
+
         while (k < half)
         {
             // Compare node to the children of index k.

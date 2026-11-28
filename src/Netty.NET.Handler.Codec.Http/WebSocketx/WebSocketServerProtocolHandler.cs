@@ -248,6 +248,7 @@ public class WebSocketServerProtocolHandler : WebSocketProtocolHandler
             cp.AddBefore(ctx.Name, typeof(WebSocketServerProtocolHandshakeHandler).FullName,
                     new WebSocketServerProtocolHandshakeHandler(serverConfig));
         }
+
         if (serverConfig.DecoderConfig().WithUTF8Validator() && cp.Get<Utf8FrameValidator>() == null)
         {
             // Add the UFT8 checking before this one.
@@ -278,8 +279,10 @@ public class WebSocketServerProtocolHandler : WebSocketProtocolHandler
                 _ = ctx.WriteAndFlushAsync(Unpooled.EmptyBuffer).ContinueWith(future => ctx.Channel.CloseAsync(),
                         CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
             }
+
             return;
         }
+
         base.Decode(ctx, frame, @out);
     }
 

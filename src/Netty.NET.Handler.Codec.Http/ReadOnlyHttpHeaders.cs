@@ -60,10 +60,12 @@ public sealed class ReadOnlyHttpHeaders : HttpHeaders
         {
             throw NewInvalidArraySizeException();
         }
+
         if (validateHeaders)
         {
             ValidateHeaders(nameValuePairs);
         }
+
         this.nameValuePairs = nameValuePairs;
     }
 
@@ -83,6 +85,7 @@ public sealed class ReadOnlyHttpHeaders : HttpHeaders
     private ICharSequence Get0(ICharSequence name)
     {
         int nameHash = AsciiString.HashCode(name);
+
         for (int i = 0; i < nameValuePairs.Length; i += 2)
         {
             ICharSequence roName = nameValuePairs[i];
@@ -92,6 +95,7 @@ public sealed class ReadOnlyHttpHeaders : HttpHeaders
                 return nameValuePairs[i + 1];
             }
         }
+
         return null;
     }
 
@@ -143,9 +147,11 @@ public sealed class ReadOnlyHttpHeaders : HttpHeaders
         {
             return Array.Empty<string>();
         }
+
         ICharSequence csName = new StringCharSequence(name);
         int nameHash = AsciiString.HashCode(csName);
         IList<string> values = new List<string>(4);
+
         for (int i = 0; i < nameValuePairs.Length; i += 2)
         {
             ICharSequence roName = nameValuePairs[i];
@@ -154,6 +160,7 @@ public sealed class ReadOnlyHttpHeaders : HttpHeaders
                 values.Add(nameValuePairs[i + 1].ToString());
             }
         }
+
         return values;
     }
 
@@ -163,12 +170,15 @@ public sealed class ReadOnlyHttpHeaders : HttpHeaders
         {
             return Array.Empty<IEntry<string, string>>();
         }
+
         IList<IEntry<string, string>> entries = new List<IEntry<string, string>>(Size());
+
         for (int i = 0; i < nameValuePairs.Length; i += 2)
         {
             entries.Add(new ImmutableEntry(nameValuePairs[i].ToString(),
                     nameValuePairs[i + 1].ToString())); // [java/index-out-of-bounds]
         }
+
         return entries;
     }
 
@@ -206,6 +216,7 @@ public sealed class ReadOnlyHttpHeaders : HttpHeaders
                 }
             }
         }
+
         return false;
     }
 
@@ -245,11 +256,14 @@ public sealed class ReadOnlyHttpHeaders : HttpHeaders
         {
             return ImmutableHashSet<string>.Empty;
         }
+
         ISet<string> names = new LinkedHashSet<string>(Size());
+
         for (int i = 0; i < nameValuePairs.Length; i += 2)
         {
             names.Add(nameValuePairs[i].ToString());
         }
+
         return names;
     }
 
@@ -373,6 +387,7 @@ public sealed class ReadOnlyHttpHeaders : HttpHeaders
             {
                 throw new InvalidOperationException();
             }
+
             key = nameValuePairs[nextNameIndex];
             value = nameValuePairs[nextNameIndex + 1];
             nextNameIndex += 2;
@@ -415,6 +430,7 @@ public sealed class ReadOnlyHttpHeaders : HttpHeaders
             {
                 return false;
             }
+
             Next();
             return true;
         }
@@ -454,6 +470,7 @@ public sealed class ReadOnlyHttpHeaders : HttpHeaders
             {
                 throw new InvalidOperationException();
             }
+
             key = nameValuePairs[nextNameIndex].ToString();
             value = nameValuePairs[nextNameIndex + 1].ToString();
             nextNameIndex += 2;
@@ -496,6 +513,7 @@ public sealed class ReadOnlyHttpHeaders : HttpHeaders
             {
                 return false;
             }
+
             Next();
             return true;
         }
@@ -537,6 +555,7 @@ public sealed class ReadOnlyHttpHeaders : HttpHeaders
             {
                 throw new InvalidOperationException();
             }
+
             string value = nameValuePairs[nextNameIndex + 1].ToString();
             nextNameIndex = FindNextValue();
             return value;
@@ -557,6 +576,7 @@ public sealed class ReadOnlyHttpHeaders : HttpHeaders
                     return i;
                 }
             }
+
             return -1;
         }
 
@@ -570,6 +590,7 @@ public sealed class ReadOnlyHttpHeaders : HttpHeaders
             {
                 return false;
             }
+
             current = Next();
             return true;
         }
@@ -611,6 +632,7 @@ public sealed class ReadOnlyHttpHeaders : HttpHeaders
             {
                 throw new InvalidOperationException();
             }
+
             ICharSequence value = nameValuePairs[nextNameIndex + 1];
             nextNameIndex = FindNextValue();
             return value;
@@ -631,6 +653,7 @@ public sealed class ReadOnlyHttpHeaders : HttpHeaders
                     return i;
                 }
             }
+
             return -1;
         }
 
@@ -644,6 +667,7 @@ public sealed class ReadOnlyHttpHeaders : HttpHeaders
             {
                 return false;
             }
+
             current = Next();
             return true;
         }

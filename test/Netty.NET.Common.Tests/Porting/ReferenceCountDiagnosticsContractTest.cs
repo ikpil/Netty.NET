@@ -15,6 +15,7 @@ public class ReferenceCountDiagnosticsContractTest
         var previous = CultureInfo.CurrentCulture;
         var custom = (CultureInfo)CultureInfo.GetCultureInfo(culture).Clone();
         custom.NumberFormat.NegativeSign = "NEG";
+
         try
         {
             CultureInfo.CurrentCulture = custom;
@@ -36,6 +37,7 @@ public class ReferenceCountDiagnosticsContractTest
         var previous = CultureInfo.CurrentCulture;
         var custom = (CultureInfo)CultureInfo.GetCultureInfo(culture).Clone();
         custom.NumberFormat.NegativeSign = "NEG";
+
         try
         {
             CultureInfo.CurrentCulture = custom;

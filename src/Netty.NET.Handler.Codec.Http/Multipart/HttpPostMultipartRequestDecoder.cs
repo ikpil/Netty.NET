@@ -243,6 +243,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
         if (dataBoundary != null)
         {
             multipartDataBoundary = dataBoundary[0];
+
             if (dataBoundary.Length > 1 && dataBoundary[1] != null)
             {
                 try
@@ -259,6 +260,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
         {
             multipartDataBoundary = null;
         }
+
         currentStatus = MultiPartStatus.HEADERDELIMITER;
 
         try
@@ -298,6 +300,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
     public virtual bool IsMultipart()
     {
         CheckDestroyed();
+
         return true;
     }
 
@@ -337,6 +340,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
         {
             throw new NotEnoughDataDecoderException();
         }
+
         return bodyListHttpData;
     }
 
@@ -359,6 +363,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
         {
             throw new NotEnoughDataDecoderException();
         }
+
         return bodyMapHttpData.TryGetValue(name, out List<IInterfaceHttpData> list) ? list : null;
     }
 
@@ -382,11 +387,13 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
         {
             throw new NotEnoughDataDecoderException();
         }
+
         bodyMapHttpData.TryGetValue(name, out List<IInterfaceHttpData> list);
         if (list != null)
         {
             return list[0];
         }
+
         return null;
     }
 
@@ -409,6 +416,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
         }
 
         ByteBuf buf = content.Content;
+
         if (undecodedChunk == null)
         {
             undecodedChunk =
@@ -422,11 +430,13 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
         {
             undecodedChunk.WriteBytes(buf);
         }
+
         ParseBody();
         if (maxBufferedBytes > 0 && undecodedChunk != null && undecodedChunk.ReadableBytes > maxBufferedBytes)
         {
             throw new HttpPostRequestDecoder.TooLongFormFieldException();
         }
+
         if (undecodedChunk != null && undecodedChunk.WriterIndex > discardThreshold)
         {
             if (undecodedChunk.RefCnt == 1)
@@ -444,6 +454,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                 undecodedChunk = buffer;
             }
         }
+
         return this;
     }
 
@@ -474,6 +485,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                 throw new EndOfDataDecoderException();
             }
         }
+
         return bodyListHttpData.Count != 0 && bodyListHttpDataRank < bodyListHttpData.Count;
     }
 
@@ -497,6 +509,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
         {
             return bodyListHttpData[bodyListHttpDataRank++];
         }
+
         return null;
     }
 
@@ -527,8 +540,10 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
             {
                 currentStatus = MultiPartStatus.EPILOGUE;
             }
+
             return;
         }
+
         ParseBodyMultipart();
     }
 
@@ -545,11 +560,13 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
         {
             throw new HttpPostRequestDecoder.TooManyFormFieldsException();
         }
+
         if (!bodyMapHttpData.TryGetValue(data.GetName(), out List<IInterfaceHttpData> datas))
         {
             datas = new List<IInterfaceHttpData>(1);
             bodyMapHttpData[data.GetName()] = datas;
         }
+
         datas.Add(data);
         bodyListHttpData.Add(data);
     }
@@ -568,7 +585,9 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
             // nothing to decode
             return;
         }
+
         IInterfaceHttpData data = DecodeMultipart(currentStatus);
+
         while (data != null)
         {
             AddHttpData(data);
@@ -576,6 +595,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
             {
                 break;
             }
+
             data = DecodeMultipart(currentStatus);
         }
     }
@@ -640,12 +660,15 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                     throw new ErrorDataDecoderException(e);
                 }
             }
+
             IAttribute nameAttribute = Get(currentFieldAttributes, HttpHeaderValues.NAME.ToString());
+
             if (currentAttribute == null)
             {
                 IAttribute lengthAttribute = Get(currentFieldAttributes,
                         HttpHeaderNames.CONTENT_LENGTH.ToString());
                 long size;
+
                 try
                 {
                     size = lengthAttribute != null? HttpUtil.ParseLong(lengthAttribute
@@ -659,6 +682,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                 {
                     size = 0;
                 }
+
                 try
                 {
                     if (size > 0)
@@ -676,17 +700,20 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                 {
                     throw new ErrorDataDecoderException(e);
                 }
+
                 if (localCharset != null)
                 {
                     currentAttribute.SetCharset(localCharset);
                 }
             }
+
             // load data
             if (!LoadDataMultipartOptimized(undecodedChunk, multipartDataBoundary, currentAttribute))
             {
                 // Delimiter is not found. Need more chunks.
                 return null;
             }
+
             IAttribute finalAttribute = currentAttribute;
             currentAttribute = null;
             currentFieldAttributes = null;
@@ -741,9 +768,12 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
             {
                 throw new NotEnoughDataDecoderException(e1);
             }
+
             return;
         }
+
         SeekAheadOptimize sao = new SeekAheadOptimize(undecodedChunk);
+
         while (sao.pos < sao.limit)
         {
             char c = (char) (sao.bytes[sao.pos++] & 0xFF);
@@ -753,6 +783,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                 return;
             }
         }
+
         throw new NotEnoughDataDecoderException("Access out of bounds");
     }
 
@@ -786,6 +817,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
     {
         // --AaB03x or --AaB03x--
         int readerIndex = undecodedChunk.ReaderIndex;
+
         try
         {
             SkipControlCharacters(undecodedChunk);
@@ -795,8 +827,10 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
             undecodedChunk.ReaderIndex = readerIndex;
             return null;
         }
+
         SkipOneLine();
         string newline;
+
         try
         {
             newline = ReadDelimiterOptimized(undecodedChunk, delimiter, charset);
@@ -806,11 +840,13 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
             undecodedChunk.ReaderIndex = readerIndex;
             return null;
         }
+
         if (newline.Equals(delimiter))
         {
             currentStatus = dispositionStatus;
             return DecodeMultipart(dispositionStatus);
         }
+
         if (newline.Equals(delimiter + "--"))
         {
             // CLOSEDELIMITER or MIXED CLOSEDELIMITER found
@@ -822,8 +858,10 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                 currentFieldAttributes = null;
                 return DecodeMultipart(MultiPartStatus.HEADERDELIMITER);
             }
+
             return null;
         }
+
         undecodedChunk.ReaderIndex = readerIndex;
         throw new ErrorDataDecoderException("No Multipart delimiter found");
     }
@@ -837,14 +875,17 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
     private IInterfaceHttpData FindMultipartDisposition()
     {
         int readerIndex = undecodedChunk.ReaderIndex;
+
         if (currentStatus == MultiPartStatus.DISPOSITION)
         {
             currentFieldAttributes = new SortedDictionary<string, IAttribute>(CaseIgnoringComparator.INSTANCE);
         }
+
         // read many lines until empty line with newline found! Store all data
         while (!SkipOneLine())
         {
             string newline;
+
             try
             {
                 SkipControlCharacters(undecodedChunk);
@@ -855,10 +896,12 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                 undecodedChunk.ReaderIndex = readerIndex;
                 return null;
             }
+
             string[] contents = SplitMultipartHeader(newline);
             if (HttpHeaderNames.CONTENT_DISPOSITION.ContentEqualsIgnoreCase(new StringCharSequence(contents[0])))
             {
                 bool checkSecondArg;
+
                 if (currentStatus == MultiPartStatus.DISPOSITION)
                 {
                     checkSecondArg = HttpHeaderValues.FORM_DATA.ContentEqualsIgnoreCase(new StringCharSequence(contents[1]));
@@ -868,6 +911,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                     checkSecondArg = HttpHeaderValues.ATTACHMENT.ContentEqualsIgnoreCase(new StringCharSequence(contents[1]))
                             || HttpHeaderValues.FILE.ContentEqualsIgnoreCase(new StringCharSequence(contents[1]));
                 }
+
                 if (checkSecondArg)
                 {
                     // read next values and store them in the map as Attribute
@@ -875,6 +919,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                     {
                         string[] values = contents[i].Split('=', 2);
                         IAttribute attribute;
+
                         try
                         {
                             attribute = GetContentDispositionAttribute(values);
@@ -883,6 +928,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                         {
                             throw new ErrorDataDecoderException(e);
                         }
+
                         currentFieldAttributes[attribute.GetName()] = attribute;
                     }
                 }
@@ -890,6 +936,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
             else if (HttpHeaderNames.CONTENT_TRANSFER_ENCODING.ContentEqualsIgnoreCase(new StringCharSequence(contents[0])))
             {
                 IAttribute attribute;
+
                 try
                 {
                     attribute = factory.CreateAttribute(request, HttpHeaderNames.CONTENT_TRANSFER_ENCODING.ToString(),
@@ -905,6 +952,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
             else if (HttpHeaderNames.CONTENT_LENGTH.ContentEqualsIgnoreCase(new StringCharSequence(contents[0])))
             {
                 IAttribute attribute;
+
                 try
                 {
                     attribute = factory.CreateAttribute(request, HttpHeaderNames.CONTENT_LENGTH.ToString(),
@@ -944,6 +992,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                         {
                             string values = StringUtil.SubstringAfter(contents[i], '=');
                             IAttribute attribute;
+
                             try
                             {
                                 attribute = factory.CreateAttribute(request, charsetHeader, CleanString(values));
@@ -952,6 +1001,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                             {
                                 throw new ErrorDataDecoderException(e);
                             }
+
                             currentFieldAttributes[HttpHeaderValues.CHARSET.ToString()] = attribute;
                         }
                         else if (contents[i].Contains('='))
@@ -959,6 +1009,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                             string name = StringUtil.SubstringBefore(contents[i], '=');
                             string values = StringUtil.SubstringAfter(contents[i], '=');
                             IAttribute attribute;
+
                             try
                             {
                                 attribute = factory.CreateAttribute(request, CleanString(name), values);
@@ -967,11 +1018,13 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                             {
                                 throw new ErrorDataDecoderException(e);
                             }
+
                             currentFieldAttributes[name] = attribute;
                         }
                         else
                         {
                             IAttribute attribute;
+
                             try
                             {
                                 attribute = factory.CreateAttribute(request,
@@ -981,14 +1034,17 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                             {
                                 throw new ErrorDataDecoderException(e);
                             }
+
                             currentFieldAttributes[attribute.GetName()] = attribute;
                         }
                     }
                 }
             }
         }
+
         // Is it a FileUpload
         IAttribute filenameAttribute = Get(currentFieldAttributes, HttpHeaderValues.FILENAME.ToString());
+
         if (currentStatus == MultiPartStatus.DISPOSITION)
         {
             if (filenameAttribute != null)
@@ -1060,6 +1116,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
             // otherwise we need to clean the value
             value = CleanString(value);
         }
+
         return factory.CreateAttribute(request, name, value);
     }
 
@@ -1079,9 +1136,11 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
         Encoding localCharset = charset;
         // Default
         TransferEncodingMechanism mechanism = TransferEncodingMechanism.BIT7;
+
         if (encoding != null)
         {
             string code;
+
             try
             {
                 // RFC 2045 Content-Transfer-Encoding values are case-insensitive ASCII tokens.
@@ -1094,6 +1153,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
             {
                 throw new ErrorDataDecoderException(e);
             }
+
             if (code.Equals(HttpPostBodyUtil.TransferEncodingMechanism.BIT7.Value()))
             {
                 localCharset = Encoding.ASCII;
@@ -1113,6 +1173,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                 throw new ErrorDataDecoderException("TransferEncoding Unknown: " + code);
             }
         }
+
         IAttribute charsetAttribute = Get(currentFieldAttributes, HttpHeaderValues.CHARSET.ToString());
         if (charsetAttribute != null)
         {
@@ -1125,6 +1186,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                 throw new ErrorDataDecoderException(e);
             }
         }
+
         if (currentFileUpload == null)
         {
             IAttribute filenameAttribute = Get(currentFieldAttributes, HttpHeaderValues.FILENAME.ToString());
@@ -1132,6 +1194,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
             IAttribute contentTypeAttribute = Get(currentFieldAttributes, HttpHeaderNames.CONTENT_TYPE.ToString());
             IAttribute lengthAttribute = Get(currentFieldAttributes, HttpHeaderNames.CONTENT_LENGTH.ToString());
             long size;
+
             try
             {
                 size = lengthAttribute != null ? HttpUtil.ParseLong(lengthAttribute.GetValue()) : 0L;
@@ -1144,9 +1207,11 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
             {
                 size = 0;
             }
+
             try
             {
                 string contentType;
+
                 if (contentTypeAttribute != null)
                 {
                     contentType = contentTypeAttribute.GetValue();
@@ -1155,6 +1220,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                 {
                     contentType = HttpPostBodyUtil.DEFAULT_BINARY_CONTENT_TYPE;
                 }
+
                 currentFileUpload = factory.CreateFileUpload(request,
                         CleanString(nameAttribute.GetValue()), CleanString(filenameAttribute.GetValue()),
                         CleanMimeContentType(contentType), mechanism.Value(), localCharset,
@@ -1165,12 +1231,14 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                 throw new ErrorDataDecoderException(e);
             }
         }
+
         // load data as much as possible
         if (!LoadDataMultipartOptimized(undecodedChunk, delimiter, currentFileUpload))
         {
             // Delimiter is not found. Need more chunks.
             return null;
         }
+
         if (currentFileUpload.IsCompleted())
         {
             // ready to load the next one
@@ -1184,10 +1252,12 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                 currentStatus = MultiPartStatus.MIXEDDELIMITER;
                 CleanMixedAttributes();
             }
+
             IFileUpload fileUpload = currentFileUpload;
             currentFileUpload = null;
             return fileUpload;
         }
+
         // do not change the buffer position
         // since some can be already saved into FileUpload
         // So do not change the currentStatus
@@ -1202,6 +1272,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
     {
         // Release all data items, including those not yet pulled, only file based items
         CleanFiles();
+
         // Clean Memory based data
         foreach (IInterfaceHttpData httpData in bodyListHttpData)
         {
@@ -1266,6 +1337,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
     {
         int readerIndex = undecodedChunk.ReaderIndex;
         ByteBuf line = null;
+
         try
         {
             if (undecodedChunk.IsReadable())
@@ -1275,6 +1347,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                 {
                     throw new NotEnoughDataDecoderException();
                 }
+
                 try
                 {
                     line = undecodedChunk.Alloc().HeapBuffer(posLfOrCrLf);
@@ -1286,6 +1359,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                         // force read next byte since LF is the following one
                         undecodedChunk.ReadByte();
                     }
+
                     return line.ToString(charset);
                 }
                 finally
@@ -1299,6 +1373,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
             undecodedChunk.ReaderIndex = readerIndex;
             throw new NotEnoughDataDecoderException(e);
         }
+
         undecodedChunk.ReaderIndex = readerIndex;
         throw new NotEnoughDataDecoderException();
     }
@@ -1323,6 +1398,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
         int readerIndex = undecodedChunk.ReaderIndex;
         byte[] bdelimiter = charset.GetBytes(delimiter);
         int delimiterLength = bdelimiter.Length;
+
         try
         {
             int delimiterPos = FindDelimiter(undecodedChunk, readerIndex, bdelimiter, false);
@@ -1332,8 +1408,10 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                 undecodedChunk.ReaderIndex = readerIndex;
                 throw new NotEnoughDataDecoderException();
             }
+
             StringBuilder sb = new StringBuilder(delimiter);
             undecodedChunk.ReaderIndex = readerIndex + delimiterPos + delimiterLength;
+
             // Now check if either opening delimiter or closing delimiter
             if (undecodedChunk.IsReadable())
             {
@@ -1366,6 +1444,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                     if (nextByte == '-')
                     {
                         sb.Append('-');
+
                         // now try to find if CRLF or LF there
                         if (undecodedChunk.IsReadable())
                         {
@@ -1398,6 +1477,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                                 return sb.ToString();
                             }
                         }
+
                         // FIXME what do we do here?
                         // either considering it is fine, either waiting for
                         // more data to come?
@@ -1414,6 +1494,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
             undecodedChunk.ReaderIndex = readerIndex;
             throw new NotEnoughDataDecoderException(e);
         }
+
         undecodedChunk.ReaderIndex = readerIndex;
         throw new NotEnoughDataDecoderException();
     }
@@ -1433,6 +1514,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
         {
             return;
         }
+
         int readerIndex = buffer.ReaderIndex;
         int readableBytes = buffer.ReadableBytes;
         if (readableBytes == lengthToSkip)
@@ -1441,6 +1523,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
             buffer.WriterIndex = readerIndex;
             return;
         }
+
         buffer.SetBytes(readerIndex, buffer, readerIndex + lengthToSkip, readableBytes - lengthToSkip);
         buffer.ReaderIndex = readerIndex;
         buffer.WriterIndex = readerIndex + readableBytes - lengthToSkip;
@@ -1458,6 +1541,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
         {
             return false;
         }
+
         int startReaderIndex = undecodedChunk.ReaderIndex;
         byte[] bdelimiter = httpData.GetCharset().GetBytes(delimiter);
         int posDelimiter = FindDelimiter(undecodedChunk, startReaderIndex, bdelimiter, true);
@@ -1474,6 +1558,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                 // Not enough bytes, but at most delimiter.length bytes available so can still try to find CRLF there
                 lastPosition = 0;
             }
+
             posDelimiter = FindLastLineBreak(undecodedChunk, startReaderIndex + lastPosition);
             // No LineBreak, however CR can be at the end of the buffer, LF not yet there (issue #11668)
             // Check if last CR (if any) shall not be in the content (definedLength vs actual length + buffer - 1)
@@ -1485,10 +1570,12 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                 lastPosition = 0;
                 posDelimiter = readableBytes - 1;
             }
+
             if (posDelimiter < 0)
             {
                 // not found so this chunk can be fully added
                 ByteBuf content = undecodedChunk.Copy();
+
                 try
                 {
                     httpData.AddContent(content, false);
@@ -1497,10 +1584,12 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                 {
                     throw new ErrorDataDecoderException(e);
                 }
+
                 undecodedChunk.ReaderIndex = startReaderIndex;
                 undecodedChunk.WriterIndex = startReaderIndex;
                 return false;
             }
+
             // posDelimiter is not from startReaderIndex but from startReaderIndex + lastPosition
             posDelimiter += lastPosition;
             if (posDelimiter == 0)
@@ -1508,8 +1597,10 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                 // Nothing to add
                 return false;
             }
+
             // Not fully but still some bytes to provide: httpData is not yet finished since delimiter not found
             ByteBuf content2 = undecodedChunk.Copy(startReaderIndex, posDelimiter);
+
             try
             {
                 httpData.AddContent(content2, false);
@@ -1518,11 +1609,14 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
             {
                 throw new ErrorDataDecoderException(e);
             }
+
             RewriteCurrentBuffer(undecodedChunk, posDelimiter);
             return false;
         }
+
         // Delimiter found at posDelimiter, including LF or CRLF, so httpData has its last chunk
         ByteBuf content3 = undecodedChunk.Copy(startReaderIndex, posDelimiter);
+
         try
         {
             httpData.AddContent(content3, true);
@@ -1531,6 +1625,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
         {
             throw new ErrorDataDecoderException(e);
         }
+
         RewriteCurrentBuffer(undecodedChunk, posDelimiter);
         return true;
     }
@@ -1544,9 +1639,11 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
     {
         int size = field.Length;
         StringBuilder sb = new StringBuilder(size);
+
         for (int i = 0; i < size; i++)
         {
             char nextChar = field[i];
+
             switch (nextChar)
             {
             case (char) HttpConstants.COLON:
@@ -1569,9 +1666,11 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                 {
                     sb.Append(nextChar);
                 }
+
                 break;
             }
         }
+
         return HttpUtil.TrimJava(sb.ToString());
     }
 
@@ -1589,6 +1688,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
             // when a "syntactically invalid Content-Type header field is encountered".
             return HttpPostBodyUtil.DEFAULT_BINARY_CONTENT_TYPE;
         }
+
         return contentType;
     }
 
@@ -1603,6 +1703,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
         {
             return false;
         }
+
         byte nextByte = undecodedChunk.ReadByte();
         if (nextByte == HttpConstants.CR)
         {
@@ -1611,18 +1712,22 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                 undecodedChunk.ReaderIndex = undecodedChunk.ReaderIndex - 1;
                 return false;
             }
+
             nextByte = undecodedChunk.ReadByte();
             if (nextByte == HttpConstants.LF)
             {
                 return true;
             }
+
             undecodedChunk.ReaderIndex = undecodedChunk.ReaderIndex - 2;
             return false;
         }
+
         if (nextByte == HttpConstants.LF)
         {
             return true;
         }
+
         undecodedChunk.ReaderIndex = undecodedChunk.ReaderIndex - 1;
         return false;
     }
@@ -1642,6 +1747,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
         int valueStart;
         int valueEnd;
         nameStart = FindNonWhitespace(sb, 0);
+
         for (nameEnd = nameStart; nameEnd < sb.Length; nameEnd++)
         {
             char ch = sb[nameEnd];
@@ -1650,6 +1756,7 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                 break;
             }
         }
+
         for (colonEnd = nameEnd; colonEnd < sb.Length; colonEnd++)
         {
             if (sb[colonEnd] == ':')
@@ -1658,11 +1765,13 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                 break;
             }
         }
+
         valueStart = FindNonWhitespace(sb, colonEnd);
         valueEnd = FindEndOfString(sb);
         headers.Add(sb.Substring(nameStart, nameEnd - nameStart));
         string svalue = (valueStart >= valueEnd) ? StringUtil.EMPTY_STRING : sb.Substring(valueStart, valueEnd - valueStart);
         string[] values;
+
         if (svalue.IndexOf(';') >= 0)
         {
             values = SplitMultipartHeaderValues(svalue);
@@ -1671,15 +1780,19 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
         {
             values = SplitDiscardingTrailingEmpty(svalue, ',');
         }
+
         foreach (string value in values)
         {
             headers.Add(HttpUtil.TrimJava(value));
         }
+
         string[] array = new string[headers.Count];
+
         for (int i = 0; i < headers.Count; i++)
         {
             array[i] = headers[i];
         }
+
         return array;
     }
 
@@ -1693,9 +1806,11 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
         bool inQuote = false;
         bool escapeNext = false;
         int start = 0;
+
         for (int i = 0; i < svalue.Length; i++)
         {
             char c = svalue[i];
+
             if (inQuote)
             {
                 if (escapeNext)
@@ -1727,7 +1842,9 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
                 }
             }
         }
+
         values.Add(svalue.Substring(start));
+
         return values.ToArray();
     }
 
@@ -1758,15 +1875,19 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
         {
             return parts;
         }
+
         int length = parts.Length;
+
         while (length > 0 && parts[length - 1].Length == 0)
         {
             length--;
         }
+
         if (length == parts.Length)
         {
             return parts;
         }
+
         string[] result = new string[length];
         Array.Copy(parts, result, length);
         return result;

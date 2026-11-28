@@ -97,6 +97,7 @@ public abstract class AbstractByteBufAllocatorTest<T> : ByteBufAllocatorTest whe
         {
             buffer = buffer.Unwrap();
         }
+
         Assert.IsAssignableFrom(clazz, buffer);
     }
 
@@ -115,6 +116,7 @@ public abstract class AbstractByteBufAllocatorTest<T> : ByteBufAllocatorTest whe
         // (https://learn.microsoft.com/en-us/dotnet/api/system.memory-1.pin?view=net-10.0).
         T allocator = NewAllocator(true);
         ByteBuf buf = allocator.DirectBuffer();
+
         try
         {
             Assert.NotEqual(0, ManagedMemoryTest.Address(buf.AsMemory(0, buf.Capacity)));
@@ -199,10 +201,12 @@ public abstract class AbstractByteBufAllocatorTest<T> : ByteBufAllocatorTest whe
         // absence or -1 results have no CLR counterpart
         // (https://learn.microsoft.com/en-us/dotnet/api/system.gc.getallocatedbytesforcurrentthread?view=net-10.0).
         long allocBefore = GC.GetAllocatedBytesForCurrentThread();
+
         for (int i = 0; i < 100; ++i)
         {
             allocator.HeapBuffer(bufSize, bufSize).Release();
         }
+
         long allocAfter = GC.GetAllocatedBytesForCurrentThread();
         Assert.True(allocAfter - allocBefore < 8 * 1024 * 1024,
                 string.Format(CultureInfo.InvariantCulture,
@@ -223,6 +227,7 @@ public abstract class AbstractByteBufAllocatorTest<T> : ByteBufAllocatorTest whe
         // CLR: the public DirectBuffer factory replaces the protected newDirectBuffer access; it validates the same
         // arguments and then calls NewDirectBuffer (src/Netty.NET.Buffer/AbstractByteBufAllocator.cs).
         ByteBuf buf = NewAllocator(preferDirect).DirectBuffer(maxSize, maxSize);
+
         try
         {
             // CLR: ArgumentOutOfRangeException replaces IllegalArgumentException.
@@ -243,21 +248,25 @@ public abstract class AbstractByteBufAllocatorTest<T> : ByteBufAllocatorTest whe
         T allocator = NewAllocator(true);
         int size = 8;
         ByteBuf directBuffer = allocator.DirectBuffer(size, size);
+
         try
         {
             for (int i = 0; i < size; ++i)
             {
                 directBuffer.SetByte(i, i);
             }
+
             int srcStartIndex = size / 2;
             // The source is this buffer's own internal NIO buffer.
             // CLR: AsReadOnlyMemory replaces internalNioBuffer(index, length) (jvm-nio-platform; src/Netty.NET.Buffer/ByteBuf.cs).
             ReadOnlyMemory<byte> srcByteBuf = directBuffer.AsReadOnlyMemory(srcStartIndex, size - srcStartIndex);
             directBuffer.SetBytes(0, srcByteBuf.Span);
+
             for (int i = 0; i < srcStartIndex; i++)
             {
                 Assert.Equal((byte) (srcStartIndex + i), directBuffer.GetByte(i));
             }
+
             for (int i = srcStartIndex; i < size; i++)
             {
                 Assert.Equal((byte) i, directBuffer.GetByte(i));

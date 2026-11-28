@@ -115,6 +115,7 @@ public class ProtobufVarint32LengthFieldPrepender : MessageToByteEncoder<ByteBuf
         {
             return 4;
         }
+
         return 5;
     }
 }

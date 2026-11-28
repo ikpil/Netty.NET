@@ -54,6 +54,7 @@ public sealed class NativeMemoryOwner : IMemoryOwner<byte>
             owner = manager.Owner;
             return true;
         }
+
         owner = null;
         return false;
     }
@@ -68,6 +69,7 @@ public sealed class NativeMemoryOwner : IMemoryOwner<byte>
                 return true;
             }
         }
+
         address = 0;
         return false;
     }
@@ -77,6 +79,7 @@ public sealed class NativeMemoryOwner : IMemoryOwner<byte>
         lock (Sync)
         {
             ThrowIfDisposed();
+
             var lease = new StorageLease(this);
             _leases++;
             return lease;
@@ -94,6 +97,7 @@ public sealed class NativeMemoryOwner : IMemoryOwner<byte>
         {
             return Memory;
         }
+
         lock (Sync)
         {
             nuint mask = (nuint)alignment - 1;
@@ -102,6 +106,7 @@ public sealed class NativeMemoryOwner : IMemoryOwner<byte>
             {
                 return Memory.Slice(0, 0);
             }
+
             int start = (int)padding;
             int count = (Length - start) & ~(alignment - 1);
             return Memory.Slice(start, count);
@@ -111,9 +116,11 @@ public sealed class NativeMemoryOwner : IMemoryOwner<byte>
     private nint GetAddress()
     {
         ThrowIfDisposed();
+
         // Called under Sync. Only aligned slices and address diagnostics need a stable address.
         if (!_stablePin.IsAllocated)
             _stablePin = GCHandle.Alloc(_storage, GCHandleType.Pinned);
+
         return _stablePin.AddrOfPinnedObject();
     }
 
@@ -124,6 +131,7 @@ public sealed class NativeMemoryOwner : IMemoryOwner<byte>
             _disposed = true;
             ReleaseStorageIfUnused();
         }
+
         GC.SuppressFinalize(this);
     }
 
@@ -140,6 +148,7 @@ public sealed class NativeMemoryOwner : IMemoryOwner<byte>
     internal Span<byte> GetSpan()
     {
         ThrowIfDisposed();
+
         return _storage.AsSpan(0, Length);
     }
 
@@ -170,15 +179,18 @@ public sealed class NativeMemoryOwner : IMemoryOwner<byte>
         {
             return;
         }
+
         if (_stablePin.IsAllocated)
         {
             _stablePin.Free();
         }
+
         _storage = null;
         if (!_hasReservation)
         {
             return;
         }
+
         _hasReservation = false;
         Allocator.Release(Math.Max(1, Length));
     }
@@ -194,11 +206,13 @@ public sealed class NativeMemoryOwner : IMemoryOwner<byte>
             {
                 return;
             }
+
             lock (current.Sync)
             {
                 current._leases--;
                 current.ReleaseStorageIfUnused();
             }
+
             GC.SuppressFinalize(this);
         }
 
@@ -219,6 +233,7 @@ public sealed class NativeMemoryOwner : IMemoryOwner<byte>
                 lock (owner.Sync)
                 {
                     owner.ThrowIfDisposed();
+
                     return CreateMemory(owner.Length);
                 }
             }
@@ -239,6 +254,7 @@ public sealed class NativeMemoryOwner : IMemoryOwner<byte>
                 owner.ThrowIfDisposed();
                 ArgumentOutOfRangeException.ThrowIfNegative(elementIndex);
                 ArgumentOutOfRangeException.ThrowIfGreaterThan(elementIndex, owner.Length);
+
                 return owner._storage.AsMemory(elementIndex, owner.Length - elementIndex).Pin();
             }
         }

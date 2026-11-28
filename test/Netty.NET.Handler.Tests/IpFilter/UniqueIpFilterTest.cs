@@ -45,6 +45,7 @@ public class UniqueIpFilterTest
     {
         Barrier barrier = new Barrier(2);
         ConcurrentExclusiveSchedulerPair executorService = new ConcurrentExclusiveSchedulerPair(TaskScheduler.Default, 2);
+
         try
         {
             for (int round = 0; round < 10000; round++)
@@ -74,6 +75,7 @@ public class UniqueIpFilterTest
         return Task.Factory.StartNew<EmbeddedChannel>(() =>
         {
             barrier.SignalAndWait();
+
             return new InetEmbeddedChannel(handler);
         }, CancellationToken.None, TaskCreationOptions.None, executorService.ConcurrentScheduler);
     }

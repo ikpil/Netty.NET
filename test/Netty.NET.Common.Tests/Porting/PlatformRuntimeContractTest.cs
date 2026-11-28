@@ -82,6 +82,7 @@ public class PlatformRuntimeContractTest
             Assert.Same(allocator, allocatorType.GetProperty("Shared").GetValue(null));
             Assert.Equal(8L, allocatorType.GetProperty("MaximumBytes").GetValue(allocator));
             MethodInfo allocate = allocatorType.GetMethod("Allocate");
+
             using (var owner = (IMemoryOwner<byte>)allocate.Invoke(allocator, new object[] { 8, true }))
             {
                 Assert.Equal(8L, allocatorType.GetProperty("ReservedBytes").GetValue(allocator));
@@ -92,6 +93,7 @@ public class PlatformRuntimeContractTest
                 Assert.Equal(typeof(OutOfDirectMemoryError).FullName, failure.InnerException.GetType().FullName);
                 owner.Memory.Span[0] = 0xa5;
             }
+
             Assert.Equal(0L, allocatorType.GetProperty("ReservedBytes").GetValue(allocator));
         });
     }
@@ -102,6 +104,7 @@ public class PlatformRuntimeContractTest
     {
         var saved = new Dictionary<string, string>();
         var context = new AssemblyLoadContext("Netty platform probe", isCollectible: true);
+
         try
         {
             foreach (var setting in settings)
@@ -117,6 +120,7 @@ public class PlatformRuntimeContractTest
         {
             foreach (var setting in saved)
                 Environment.SetEnvironmentVariable(setting.Key, setting.Value);
+
             context.Unload();
         }
     }
@@ -132,8 +136,10 @@ public class PlatformRuntimeContractTest
         object allocator = Activator.CreateInstance(allocatorType, new object[] { 16L });
         MethodInfo allocate = allocatorType.GetMethod("Allocate");
         byte[] bytes = new byte[30];
+
         for (int index = 0; index < bytes.Length; index++)
             bytes[index] = unchecked((byte)(index * 73 + 8 * 17 + 128));
+
         using (var owner = (IMemoryOwner<byte>)allocate.Invoke(allocator, new object[] { 8, false }))
         {
             bytes.AsSpan(11, 8).CopyTo(owner.Memory.Span);
@@ -146,6 +152,7 @@ public class PlatformRuntimeContractTest
             Assert.Equal(BitConverter.IsLittleEndian ? 277172517 : 205010825,
                 (int)hash.Invoke(null, new object[] { snapshot, 0, snapshot.Length }));
         }
+
         Assert.Equal(0L, allocatorType.GetProperty("ReservedBytes").GetValue(allocator));
     }
 }

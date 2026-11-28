@@ -50,16 +50,19 @@ public class DefaultSocks5InitialRequest : AbstractSocks5Message, ISocks5Initial
         ObjectUtil.CheckNotNull(authMethods, "authMethods");
 
         List<Socks5AuthMethod> list = new List<Socks5AuthMethod>(authMethods.Length);
+
         foreach (Socks5AuthMethod m in authMethods)
         {
             if (m == null)
             {
                 break;
             }
+
             list.Add(m);
         }
 
         CheckNonEmpty(list, "list");
+
         this.authMethods = new ReadOnlyCollection<Socks5AuthMethod>(list);
     }
 
@@ -68,16 +71,19 @@ public class DefaultSocks5InitialRequest : AbstractSocks5Message, ISocks5Initial
         ObjectUtil.CheckNotNull(authMethods, "authSchemes");
 
         List<Socks5AuthMethod> list = new List<Socks5AuthMethod>();
+
         foreach (Socks5AuthMethod m in authMethods)
         {
             if (m == null)
             {
                 break;
             }
+
             list.Add(m);
         }
 
         CheckNonEmpty(list, "list");
+
         this.authMethods = new ReadOnlyCollection<Socks5AuthMethod>(list);
     }
 
@@ -101,6 +107,7 @@ public class DefaultSocks5InitialRequest : AbstractSocks5Message, ISocks5Initial
         {
             buf.Append("(authMethods: ");
         }
+
         buf.Append('[').AppendJoin(", ", AuthMethods()).Append(']');
         buf.Append(')');
 

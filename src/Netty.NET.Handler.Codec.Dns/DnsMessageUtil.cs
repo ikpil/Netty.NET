@@ -49,6 +49,7 @@ internal static class DnsMessageUtil
     internal static StringBuilder AppendRecordClass(StringBuilder buf, int dnsClass)
     {
         string name;
+
         switch (dnsClass &= 0xFFFF)
         {
         case IDnsRecord.CLASS_IN:
@@ -101,11 +102,13 @@ internal static class DnsMessageUtil
         {
             buf.Append(", RD");
         }
+
         if (msg.Z() != 0)
         {
             buf.Append(", Z: ")
                .Append(msg.Z().ToString(CultureInfo.InvariantCulture));
         }
+
         buf.Append(')');
     }
 
@@ -124,32 +127,38 @@ internal static class DnsMessageUtil
            .Append(',');
 
         bool hasComma = true;
+
         if (msg.IsRecursionDesired())
         {
             hasComma = false;
             buf.Append(" RD");
         }
+
         if (msg.IsAuthoritativeAnswer())
         {
             hasComma = false;
             buf.Append(" AA");
         }
+
         if (msg.IsTruncated())
         {
             hasComma = false;
             buf.Append(" TC");
         }
+
         if (msg.IsRecursionAvailable())
         {
             hasComma = false;
             buf.Append(" RA");
         }
+
         if (msg.Z() != 0)
         {
             if (!hasComma)
             {
                 buf.Append(',');
             }
+
             buf.Append(" Z: ")
                .Append(msg.Z().ToString(CultureInfo.InvariantCulture));
         }
@@ -212,6 +221,7 @@ internal static class DnsMessageUtil
     private static void AppendRecords(StringBuilder buf, IDnsMessage message, DnsSection section)
     {
         int count = message.Count(section);
+
         for (int i = 0; i < count; i ++)
         {
             buf.Append(StringUtil.NEWLINE)
@@ -224,6 +234,7 @@ internal static class DnsMessageUtil
     {
         IDnsQuery query = NewQuery(buf, supplier);
         bool success = false;
+
         try
         {
             int questionCount = DnsCodecUtil.CheckRecordCount(DnsSection.QUESTION, buf.ReadUnsignedShort());
@@ -280,6 +291,7 @@ internal static class DnsMessageUtil
             {
                 break;
             }
+
             query.AddRecord(section, r);
         }
     }
@@ -287,6 +299,7 @@ internal static class DnsMessageUtil
     internal static void EncodeDnsResponse(IDnsRecordEncoder encoder, IDnsResponse response, ByteBuf buf)
     {
         bool success = false;
+
         try
         {
             EncodeHeader(response, buf);
@@ -316,22 +329,27 @@ internal static class DnsMessageUtil
         buf.WriteShort(response.Id());
         int flags = 32768;
         flags |= (response.OpCode().ByteValue() & 0xFF) << 11;
+
         if (response.IsAuthoritativeAnswer())
         {
             flags |= 1 << 10;
         }
+
         if (response.IsTruncated())
         {
             flags |= 1 << 9;
         }
+
         if (response.IsRecursionDesired())
         {
             flags |= 1 << 8;
         }
+
         if (response.IsRecursionAvailable())
         {
             flags |= 1 << 7;
         }
+
         flags |= response.Z() << 4;
         flags |= response.Code().IntValue();
         buf.WriteShort(flags);
@@ -344,6 +362,7 @@ internal static class DnsMessageUtil
     private static void EncodeQuestions(IDnsRecordEncoder encoder, IDnsResponse response, ByteBuf buf)
     {
         int count = response.Count(DnsSection.QUESTION);
+
         for (int i = 0; i < count; ++i)
         {
             encoder.EncodeQuestion(response.RecordAt<IDnsQuestion>(DnsSection.QUESTION, i), buf);
@@ -354,6 +373,7 @@ internal static class DnsMessageUtil
                                       IDnsResponse response, DnsSection section, ByteBuf buf)
     {
         int count = response.Count(section);
+
         for (int i = 0; i < count; ++i)
         {
             encoder.EncodeRecord(response.RecordAt<IDnsRecord>(section, i), buf);

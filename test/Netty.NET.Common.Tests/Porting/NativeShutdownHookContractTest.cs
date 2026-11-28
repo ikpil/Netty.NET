@@ -36,6 +36,7 @@ public class NativeShutdownHookContractTest
         Action equivalent = new Action(first.Invoke);
         Assert.False(ReferenceEquals(original, equivalent));
         Assert.Equal(original, equivalent);
+
         try
         {
             executor.AddShutdownHook(original);
@@ -63,6 +64,7 @@ public class NativeShutdownHookContractTest
         Action second = () => trace.Add("second");
         Action third = () => trace.Add("third");
         Action withdrawn = () => trace.Add("withdrawn");
+
         try
         {
             executor.AddShutdownHook(() =>
@@ -95,6 +97,7 @@ public class NativeShutdownHookContractTest
             throw new InvalidOperationException("expected hook failure");
         };
         Action skipped = () => trace.Add("skipped multicast tail");
+
         try
         {
             executor.AddShutdownHook(first + skipped);
@@ -132,6 +135,7 @@ public class NativeShutdownHookContractTest
                     RunTask(task);
                     UpdateLastExecutionTime();
                 }
+
                 if (ConfirmShutdown())
                 {
                     return;
@@ -146,6 +150,7 @@ public class NativeShutdownHookContractTest
         var executor = new NativeHookLoop();
         int runs = 0;
         Action hook = () => runs++;
+
         try
         {
             executor.AddShutdownHook(hook);
@@ -173,6 +178,7 @@ public class NativeShutdownHookContractTest
     public async Task NullHooksFailBeforeDispatchAndTerminatedExecutorsRejectEdits()
     {
         var executor = new NativeHookLoop();
+
         try
         {
             Assert.Equal("task", Assert.Throws<ArgumentNullException>(() => executor.AddShutdownHook(null)).ParamName);
@@ -201,10 +207,12 @@ public class NativeShutdownHookContractTest
         var weak = new WeakReference(payload);
         Action hook = () => GC.KeepAlive(payload);
         executor.AddShutdownHook(hook);
+
         if (remove)
         {
             executor.RemoveShutdownHook(hook);
         }
+
         return weak;
     }
 
@@ -217,6 +225,7 @@ public class NativeShutdownHookContractTest
             GC.WaitForPendingFinalizers();
             GC.Collect();
         }
+
         Assert.False(weak.IsAlive);
     }
 
@@ -226,6 +235,7 @@ public class NativeShutdownHookContractTest
     public async Task RemovedOrCompletedHooksReleaseCapturedPayloads(bool remove)
     {
         var executor = new DefaultEventExecutor();
+
         try
         {
             WeakReference weak = RegisterPayload(executor, remove);
@@ -233,10 +243,12 @@ public class NativeShutdownHookContractTest
             {
             }, TestContext.Current.CancellationToken)
                 .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
             if (!remove)
             {
                 await Stop(executor);
             }
+
             AssertCollected(weak);
             GC.KeepAlive(executor);
         }

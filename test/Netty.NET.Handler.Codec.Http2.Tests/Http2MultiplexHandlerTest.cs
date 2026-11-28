@@ -128,6 +128,7 @@ public class Http2MultiplexHandlerTest : Http2MultiplexTest<Http2FrameCodec>
     {
         EmbeddedChannel parent = new EmbeddedChannel(Http2FrameCodecBuilder.ForClient().Build(),
                 new Http2MultiplexHandler(new ChannelInboundHandlerAdapter()));
+
         try
         {
             AtomicInteger inactive = new AtomicInteger();

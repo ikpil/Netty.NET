@@ -145,6 +145,7 @@ public class FastThreadLocalTest : IDisposable
         int n = 100;
         var workers = Enumerable.Range(0, n).Select(_ => new Worker()).OrderBy(_ => Random.Shared.Next()).ToList();
         var threads = workers.Select((worker, i) => new Thread(worker.Run) { IsBackground = true, Name = "worker-" + i }).ToList();
+
         try
         {
             foreach (Thread thread in threads)
@@ -157,6 +158,7 @@ public class FastThreadLocalTest : IDisposable
                 {
                     worker.Semaphore.Release();
                 }
+
             await Task.WhenAll(workers.Select(worker => worker.Completion.Task)).WaitAsync(TimeSpan.FromSeconds(15));
         }
         finally
@@ -165,6 +167,7 @@ public class FastThreadLocalTest : IDisposable
             {
                 Assert.True(thread.Join(TimeSpan.FromSeconds(15)));
             }
+
             foreach (Worker worker in workers)
             {
                 worker.Semaphore.Dispose();
@@ -225,23 +228,28 @@ public class FastThreadLocalTest : IDisposable
                 threadLocal2.Set(Thread.CurrentThread.Name);
             }
         };
+
         if (wrap)
         {
             Action original = runnable;
             runnable = () => FastThreadLocalThread.RunWithFastThreadLocal(original);
         }
+
         Thread thread = RunThread(runnable, fastThreadLocal);
         string threadName = thread.Name;
         // Null this out so it can be collected
         thread = null;
+
         // Loop until onRemoval(...) was called. This will fail the test if this not works due a timeout.
         while (threadLocal.OnRemovalCalled == null || threadLocal2.OnRemovalCalled == null)
         {
             TestContext.Current.CancellationToken.ThrowIfCancellationRequested();
+
             GC.Collect();
             GC.WaitForPendingFinalizers();
             Thread.Sleep(50);
         }
+
         Assert.Equal(threadName, threadLocal.OnRemovalCalled);
         Assert.Equal(threadName, threadLocal2.OnRemovalCalled);
     }
@@ -266,6 +274,7 @@ public class FastThreadLocalTest : IDisposable
         int ARRAY_LIST_CAPACITY_MAX_SIZE = Array.MaxLength;
         var field = typeof(InternalThreadLocalMap).GetField("nextIndex", BindingFlags.Static | BindingFlags.NonPublic);
         int previous = (int)field.GetValue(null);
+
         try
         {
             // CLR test adaptation: jump to the boundary rather than allocating over two billion objects.
@@ -298,6 +307,7 @@ public class FastThreadLocalTest : IDisposable
         RunThread(() =>
         {
             int expand_threshold = 1 << 30;
+
             try
             {
                 InternalThreadLocalMap.Get().SetIndexedVariable(expand_threshold, null);
@@ -382,10 +392,12 @@ public class FastThreadLocalTest : IDisposable
         thread.Name = "test-local-" + Guid.NewGuid();
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(10)), "Thread did not terminate");
+
         if (failure != null)
         {
             System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
         }
+
         return thread;
     }
 }

@@ -49,6 +49,7 @@ public class DerivedByteBufScalarTest
         public override ByteBuf SetByte(int index, int value)
         {
             o.Record("SetByte", index, unchecked((ulong)value));
+
             return base.SetByte(index, value ^ (o.Alter ? 0x35 : 0));
         }
 
@@ -61,6 +62,7 @@ public class DerivedByteBufScalarTest
         public override ByteBuf SetShort(int index, int value)
         {
             o.Record("SetShort", index, unchecked((ulong)value));
+
             return base.SetShort(index, value ^ (o.Alter ? 0x35 : 0));
         }
 
@@ -73,6 +75,7 @@ public class DerivedByteBufScalarTest
         public override ByteBuf SetShortLE(int index, int value)
         {
             o.Record("SetShortLE", index, unchecked((ulong)value));
+
             return base.SetShortLE(index, value ^ (o.Alter ? 0x35 : 0));
         }
 
@@ -85,6 +88,7 @@ public class DerivedByteBufScalarTest
         public override ByteBuf SetMedium(int index, int value)
         {
             o.Record("SetMedium", index, unchecked((ulong)value));
+
             return base.SetMedium(index, value ^ (o.Alter ? 0x35 : 0));
         }
 
@@ -97,6 +101,7 @@ public class DerivedByteBufScalarTest
         public override ByteBuf SetMediumLE(int index, int value)
         {
             o.Record("SetMediumLE", index, unchecked((ulong)value));
+
             return base.SetMediumLE(index, value ^ (o.Alter ? 0x35 : 0));
         }
 
@@ -109,6 +114,7 @@ public class DerivedByteBufScalarTest
         public override ByteBuf SetInt(int index, int value)
         {
             o.Record("SetInt", index, unchecked((ulong)value));
+
             return base.SetInt(index, value ^ (o.Alter ? 0x35 : 0));
         }
 
@@ -121,6 +127,7 @@ public class DerivedByteBufScalarTest
         public override ByteBuf SetIntLE(int index, int value)
         {
             o.Record("SetIntLE", index, unchecked((ulong)value));
+
             return base.SetIntLE(index, value ^ (o.Alter ? 0x35 : 0));
         }
 
@@ -133,6 +140,7 @@ public class DerivedByteBufScalarTest
         public override ByteBuf SetLong(int index, long value)
         {
             o.Record("SetLong", index, unchecked((ulong)value));
+
             return base.SetLong(index, value ^ (o.Alter ? 0x35 : 0));
         }
 
@@ -145,6 +153,7 @@ public class DerivedByteBufScalarTest
         public override ByteBuf SetLongLE(int index, long value)
         {
             o.Record("SetLongLE", index, unchecked((ulong)value));
+
             return base.SetLongLE(index, value ^ (o.Alter ? 0x35 : 0));
         }
     }
@@ -159,6 +168,7 @@ public class DerivedByteBufScalarTest
         public override ByteBuf SetByte(int index, int value)
         {
             o.Record("SetByte", index, unchecked((ulong)value));
+
             return base.SetByte(index, value ^ (o.Alter ? 0x35 : 0));
         }
 
@@ -171,6 +181,7 @@ public class DerivedByteBufScalarTest
         public override ByteBuf SetShort(int index, int value)
         {
             o.Record("SetShort", index, unchecked((ulong)value));
+
             return base.SetShort(index, value ^ (o.Alter ? 0x35 : 0));
         }
 
@@ -183,6 +194,7 @@ public class DerivedByteBufScalarTest
         public override ByteBuf SetShortLE(int index, int value)
         {
             o.Record("SetShortLE", index, unchecked((ulong)value));
+
             return base.SetShortLE(index, value ^ (o.Alter ? 0x35 : 0));
         }
 
@@ -195,6 +207,7 @@ public class DerivedByteBufScalarTest
         public override ByteBuf SetMedium(int index, int value)
         {
             o.Record("SetMedium", index, unchecked((ulong)value));
+
             return base.SetMedium(index, value ^ (o.Alter ? 0x35 : 0));
         }
 
@@ -207,6 +220,7 @@ public class DerivedByteBufScalarTest
         public override ByteBuf SetMediumLE(int index, int value)
         {
             o.Record("SetMediumLE", index, unchecked((ulong)value));
+
             return base.SetMediumLE(index, value ^ (o.Alter ? 0x35 : 0));
         }
 
@@ -219,6 +233,7 @@ public class DerivedByteBufScalarTest
         public override ByteBuf SetInt(int index, int value)
         {
             o.Record("SetInt", index, unchecked((ulong)value));
+
             return base.SetInt(index, value ^ (o.Alter ? 0x35 : 0));
         }
 
@@ -231,6 +246,7 @@ public class DerivedByteBufScalarTest
         public override ByteBuf SetIntLE(int index, int value)
         {
             o.Record("SetIntLE", index, unchecked((ulong)value));
+
             return base.SetIntLE(index, value ^ (o.Alter ? 0x35 : 0));
         }
 
@@ -243,6 +259,7 @@ public class DerivedByteBufScalarTest
         public override ByteBuf SetLong(int index, long value)
         {
             o.Record("SetLong", index, unchecked((ulong)value));
+
             return base.SetLong(index, value ^ (o.Alter ? 0x35 : 0));
         }
 
@@ -255,6 +272,7 @@ public class DerivedByteBufScalarTest
         public override ByteBuf SetLongLE(int index, long value)
         {
             o.Record("SetLongLE", index, unchecked((ulong)value));
+
             return base.SetLongLE(index, value ^ (o.Alter ? 0x35 : 0));
         }
     }
@@ -274,9 +292,11 @@ public class DerivedByteBufScalarTest
             }
 
             Root.SetIndex(4, 60).MarkReaderIndex().MarkWriterIndex();
+
             if (kind is >= 5 and <= 9)
                 Owner = kind is 6 or 8 ? PooledDerivedByteBuf.NewDuplicate(Root, Root, 4, 60)
                     : PooledDerivedByteBuf.NewSlice(Root, Root, 5, 40);
+
             View = kind switch
             {
                 0 => Root.Duplicate(), 1 => Root.Slice(5, 40), 2 => Root.AsReadOnly(),
@@ -295,10 +315,12 @@ public class DerivedByteBufScalarTest
             {
                 Assert.True(Owner.Release());
             }
+
             if (Root.RefCnt > 0)
             {
                 Assert.True(Root.Release());
             }
+
             Assert.Equal(0, Native.ReservedBytes);
         }
     }
@@ -316,8 +338,10 @@ public class DerivedByteBufScalarTest
     {
         ulong bits = 0;
         int width = Widths[type];
+
         for (int i = 0; i < width; i++)
             bits |= (ulong)bytes[index + i] << (8 * (Little(type) ? i : width - 1 - i));
+
         return bits;
     }
 
@@ -339,6 +363,7 @@ public class DerivedByteBufScalarTest
         {
             return unchecked((ulong)((int)(bits << 8) >> 8));
         }
+
         return bits;
     }
 
@@ -438,6 +463,7 @@ public class DerivedByteBufScalarTest
         int refs = s.Root.RefCnt, width = Widths[type];
         s.Observation.Alter = true;
         bool forwards = kind is 0 or 2 or 6 or 8;
+
         if (write && s.View.IsReadOnly)
         {
             Assert.Throws<NotSupportedException>(() => Write(s.View, type, 3, false));
@@ -446,7 +472,9 @@ public class DerivedByteBufScalarTest
             Assert.Equal(expected, Snapshot(s));
             return;
         }
+
         ulong bits = Decode(expected, s.Offset + 3, type);
+
         if (write)
         {
             Assert.Same(s.View, Write(s.View, type, 3, false));
@@ -454,6 +482,7 @@ public class DerivedByteBufScalarTest
         }
         else
             Assert.Equal(Result(bits ^ (forwards ? 0x35UL : 0), type), Read(s.View, type, 3, false));
+
         if (forwards)
         {
             Visit v = Assert.Single(s.Observation.Visits);
@@ -462,6 +491,7 @@ public class DerivedByteBufScalarTest
         }
         else
             Assert.Empty(s.Observation.Visits);
+
         Assert.Equal(expected, Snapshot(s));
         Assert.Equal(1, s.View.ReaderIndex);
         Assert.Equal(10, s.View.WriterIndex);
@@ -474,6 +504,7 @@ public class DerivedByteBufScalarTest
         s.View.SetIndex(1, write ? 2 : 10);
         s.Observation.Visits.Clear();
         s.Observation.Fail = !relativeForwards;
+
         if (write)
         {
             Assert.Same(s.View, Write(s.View, type, 0, true));
@@ -481,6 +512,7 @@ public class DerivedByteBufScalarTest
         }
         else
             Assert.Equal(Result(Decode(expected, s.Offset + 1, type), type), Read(s.View, type, 0, true));
+
         if (relativeForwards)
         {
             Visit v = Assert.Single(s.Observation.Visits);
@@ -489,20 +521,25 @@ public class DerivedByteBufScalarTest
         }
         else
             Assert.Empty(s.Observation.Visits);
+
         Assert.Equal(expected, Snapshot(s));
         Assert.Equal(write ? 1 : 1 + width, s.View.ReaderIndex);
         Assert.Equal(write ? 2 + width : 10, s.View.WriterIndex);
+
         if (forwards)
         {
             s.Observation.Visits.Clear();
             s.Observation.Fail = true;
+
             if (write)
                 Assert.Throws<IOException>(() => Write(s.View, type, 3, false));
             else
                 Assert.Throws<IOException>(() => Read(s.View, type, 3, false));
+
             Assert.Single(s.Observation.Visits);
             Assert.Equal(expected, Snapshot(s));
         }
+
         if (relativeForwards)
         {
             s.View.SetIndex(1, 2);
@@ -514,24 +551,30 @@ public class DerivedByteBufScalarTest
             Assert.Equal(2, s.View.WriterIndex);
             Assert.Equal(expected, Snapshot(s));
         }
+
         s.Observation.Fail = false;
         s.Observation.Visits.Clear();
         int invalid = s.View.Capacity - width + 1;
+
         if (write)
             Assert.Throws<ArgumentOutOfRangeException>(() => Write(s.View, type, invalid, false));
         else
             Assert.Throws<ArgumentOutOfRangeException>(() => Read(s.View, type, invalid, false));
+
         Assert.Empty(s.Observation.Visits);
         Assert.Equal(4, s.Root.ReaderIndex);
         Assert.Equal(60, s.Root.WriterIndex);
+
         if (s.Owner != null)
         {
             Assert.True(s.Owner.Release());
             Assert.Equal(1, s.Root.RefCnt);
+
             if (write)
                 Assert.Throws<IllegalReferenceCountException>(() => Write(s.View, type, 3, false));
             else
                 Assert.Throws<IllegalReferenceCountException>(() => Read(s.View, type, 3, false));
+
             Assert.Empty(s.Observation.Visits);
         }
     }
@@ -674,12 +717,14 @@ public class DerivedByteBufScalarTest
     {
         var policy = new RelativePolicy();
         var other = new UnpooledHeapByteBuf(1, 1);
+
         try
         {
             policy.Returned = other;
             ulong bits = type == 9 ? 0x89UL : type == 16 ? 0x89abUL : type is 10 or 11 ? 0x89abcdUL : Widths[type] == 4 ? 0x89abcdefUL : 0x89abcdef01234567UL;
             Assert.Equal(Result(bits, type), Read(policy, type, 0, true));
             Assert.Equal(1, policy.Calls);
+
             if (type is 9 or 16 or >= 17)
             {
                 Assert.Same(type is 18 or 20 ? other : policy, Write(policy, type, 0, true));
@@ -687,6 +732,7 @@ public class DerivedByteBufScalarTest
                 Assert.Equal(written, policy.Bits);
                 Assert.Equal(2, policy.Calls);
             }
+
             Assert.Equal(1, policy.ReaderIndex);
             Assert.Equal(10, policy.WriterIndex);
         }

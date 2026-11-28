@@ -276,6 +276,7 @@ public sealed class WebSocketServerProtocolConfig
             {
                 decoderConfigBuilder = decoderConfig.ToBuilder();
             }
+
             return decoderConfigBuilder;
         }
 

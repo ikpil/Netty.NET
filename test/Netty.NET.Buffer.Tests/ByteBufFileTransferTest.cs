@@ -38,6 +38,7 @@ public class ByteBufFileTransferTest
         {
             return Unpooled.DirectBuffer(8, 128).SetZero(0, 8);
         }
+
         return Unpooled.CompositeBuffer().AddComponent(Unpooled.WrappedBuffer(new byte[3]))
             .AddComponent(Unpooled.EmptyBuffer).AddComponent(Unpooled.DirectBuffer(5, 5).WriteZero(5));
     }
@@ -86,6 +87,7 @@ public class ByteBufFileTransferTest
         long channelPosition = file.Stream.Position;
         ByteBuf source = Owner(kind).WriteBytes(new byte[] { 97, 98, 99, 100 });
         ByteBuf target = Owner(kind);
+
         try
         {
             Assert.Equal(4, await Read(source, async, file.Handle, 10, 4, Token));
@@ -119,6 +121,7 @@ public class ByteBufFileTransferTest
         long channelPosition = file.Stream.Position;
         ByteBuf source = Owner(kind).WriteBytes(new byte[] { 97, 98, 99, 100 }).SetIndex(1, 4);
         ByteBuf target = Owner(kind).SetIndex(1, 2);
+
         try
         {
             Assert.Equal(4, await Get(source, async, 0, file.Handle, 10, 4, Token));
@@ -147,6 +150,7 @@ public class ByteBufFileTransferTest
         RandomAccess.Write(file.Handle, new byte[] { 1, 2, 3 }, 0);
         ByteBuf b = Owner(kind);
         b.WriterIndex = 2;
+
         try
         {
             Assert.Equal(2, await Write(b, async, file.Handle, 1, 30, Token));
@@ -172,6 +176,7 @@ public class ByteBufFileTransferTest
         using var file = new TemporaryFile();
         RandomAccess.Write(file.Handle, new byte[] { 9 }, 0);
         ByteBuf b = Owner(0);
+
         try
         {
             Assert.Equal(0, await Get(b, async, 8, file.Handle, long.MaxValue, 0, Token));
@@ -204,6 +209,7 @@ public class ByteBufFileTransferTest
         file.Stream.Dispose();
         using var invalid = new SafeFileHandle(IntPtr.Zero, false);
         ByteBuf b = Owner(1).WriteByte(9);
+
         try
         {
             await Assert.ThrowsAsync<ObjectDisposedException>(() => Get(b, async, 0, closed, 0, 0, Token).AsTask());
@@ -231,6 +237,7 @@ public class ByteBufFileTransferTest
             Unpooled.DirectBuffer(2, 2).WriteBytes(new byte[] { 3, 4 }))
             : Owner(1).WriteBytes(new byte[] { 1, 2, 3, 4 }).AsReadOnly();
         using var file = new TemporaryFile();
+
         try
         {
             await Assert.ThrowsAsync<NotSupportedException>(() => Set(b, async, 0, file.Handle, 0, 0, Token).AsTask());
@@ -272,6 +279,7 @@ public class ByteBufFileTransferTest
         ByteBuf b = Owner(kind).WriteByte(9);
         using var cts = new CancellationTokenSource();
         cts.Cancel();
+
         try
         {
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => b.GetBytesAsync(0, file.Handle, 0, 1, cts.Token).AsTask());
@@ -301,6 +309,7 @@ public class ByteBufFileTransferTest
         RandomAccess.Write(file.Handle, new byte[] { 1, 2, 3, 4 }, 0);
         ByteBuf b = Owner(1);
         ByteBuf slice = b.Slice(2, 6).Clear();
+
         try
         {
             Assert.Equal(4, await Write(slice, async, file.Handle, 0, 4, Token));
@@ -325,6 +334,7 @@ public class ByteBufFileTransferTest
         RandomAccess.Write(file.Handle, new byte[] { 1, 2, 3, 4 }, 0);
         ByteBuf b = Unpooled.CompositeBuffer().AddComponent(Unpooled.WrappedBuffer(new byte[2]))
             .AddComponent(Unpooled.WrappedBuffer(new byte[2]).AsReadOnly());
+
         try
         {
             await Assert.ThrowsAsync<NotSupportedException>(() => Write(b, async, file.Handle, 0, 4, Token).AsTask());
@@ -344,6 +354,7 @@ public class ByteBufFileTransferTest
         using var file = new TemporaryFile();
         file.Stream.Position = 7;
         ByteBuf b = Owner(1).WriteBytes(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
+
         try
         {
             Task[] writes = Enumerable.Range(0, 128).Select(async i =>
@@ -374,6 +385,7 @@ public class ByteBufFileTransferTest
         using var writeOnly = File.OpenHandle(file.Stream.Name, FileMode.Open, FileAccess.Write,
             FileShare.ReadWrite | FileShare.Delete, FileOptions.Asynchronous);
         ByteBuf b = Owner(1).WriteBytes(new byte[] { 1, 2 });
+
         try
         {
             Exception outputFailure = await Record.ExceptionAsync(() => Read(b, async, readOnly, 0, 2, Token).AsTask());

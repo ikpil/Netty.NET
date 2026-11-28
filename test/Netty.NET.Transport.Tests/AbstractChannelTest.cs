@@ -37,6 +37,7 @@ public class AbstractChannelTest
         var channel = new TestChannel();
         var handler = new LifecycleHandler();
         channel.Pipeline.AddLast(handler);
+
         try
         {
             await channel.RegisterAsync(loop); // Cause any exceptions to be thrown
@@ -58,6 +59,7 @@ public class AbstractChannelTest
         var channel = new TestChannel();
         var handler = new LifecycleHandler();
         channel.Pipeline.AddLast(handler);
+
         try
         {
             await channel.RegisterAsync(loop);
@@ -88,6 +90,7 @@ public class AbstractChannelTest
         var ioException = new IOException();
         var channel = new FailingChannel(ioException);
         var loop = new DefaultEventLoop();
+
         try
         {
             await channel.RegisterAsync(loop);
@@ -110,6 +113,7 @@ public class AbstractChannelTest
         var ioException = new IOException();
         var channel = new FailingChannel(ioException);
         var loop = new DefaultEventLoop();
+
         try
         {
             await channel.RegisterAsync(loop);
@@ -138,6 +142,7 @@ public class AbstractChannelTest
         var loop = ImmediateLoop();
         //Open, but never connected
         var channel = new TestChannel(false);
+
         try
         {
             await channel.RegisterAsync(loop);
@@ -164,6 +169,7 @@ public class AbstractChannelTest
     {
         var loop = ImmediateLoop();
         var channel = new TestChannel(false);
+
         try
         {
             await channel.RegisterAsync(loop);

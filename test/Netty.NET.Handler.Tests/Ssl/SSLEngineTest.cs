@@ -146,6 +146,7 @@ public abstract class SSLEngineTest : IAsyncLifetime
         internal void MessageReceived(IChannelHandlerContext ctx, ByteBuf msg)
         {
             messages.Add(msg);
+
             if (onNextMessages.TryDequeue(out IOnNextMessage onNextMessage))
             {
                 onNextMessage.MessageReceived(ctx, msg);
@@ -286,6 +287,7 @@ public abstract class SSLEngineTest : IAsyncLifetime
     {
         TheoryData<SSLEngineTestParam> @params = new TheoryData<SSLEngineTestParam>();
         bool tlsv13Supported = SslProvider.IsTlsv13Supported(SslProvider.JDK);
+
         foreach (BufferType type in Enum.GetValues<BufferType>())
         {
             // CLR: the delegate=true parameters are not generated (see the class comment).
@@ -296,6 +298,7 @@ public abstract class SSLEngineTest : IAsyncLifetime
                 @params.Add(new SSLEngineTestParam(type, ProtocolCipherCombo.Tlsv13(), false));
             }
         }
+
         return @params;
     }
 
@@ -409,21 +412,25 @@ public abstract class SSLEngineTest : IAsyncLifetime
         Task clientCloseFuture = null;
         Task serverConnectedCloseFuture = null;
         Task serverCloseFuture = null;
+
         if (clientChannel != null)
         {
             clientCloseFuture = clientChannel.CloseAsync();
             clientChannel = null;
         }
+
         if (serverConnectedChannel != null)
         {
             serverConnectedCloseFuture = serverConnectedChannel.CloseAsync();
             serverConnectedChannel = null;
         }
+
         if (serverChannel != null)
         {
             serverCloseFuture = serverChannel.CloseAsync();
             serverChannel = null;
         }
+
         // We must wait for the Channel cleanup to finish. In the case if the ReferenceCountedOpenSslEngineTest
         // the ReferenceCountedOpenSslEngine depends upon the SslContext and so we must wait the cleanup the
         // SslContext to avoid JVM core dumps!
@@ -433,45 +440,55 @@ public abstract class SSLEngineTest : IAsyncLifetime
         {
             await clientCloseFuture;
         }
+
         if (serverConnectedCloseFuture != null)
         {
             await serverConnectedCloseFuture;
         }
+
         if (serverCloseFuture != null)
         {
             await serverCloseFuture;
         }
+
         if (serverSslCtx != null)
         {
             CleanupServerSslContext(serverSslCtx);
             serverSslCtx = null;
         }
+
         if (clientSslCtx != null)
         {
             CleanupClientSslContext(clientSslCtx);
             clientSslCtx = null;
         }
+
         Task serverGroupShutdownFuture = null;
         Task serverChildGroupShutdownFuture = null;
         Task clientGroupShutdownFuture = null;
+
         if (sb != null)
         {
             serverGroupShutdownFuture = sb.Config.Group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
             serverChildGroupShutdownFuture = sb.Config.ChildGroup.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
         }
+
         if (cb != null)
         {
             clientGroupShutdownFuture = cb.Config.Group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
         }
+
         if (serverGroupShutdownFuture != null)
         {
             await serverGroupShutdownFuture;
             await serverChildGroupShutdownFuture;
         }
+
         if (clientGroupShutdownFuture != null)
         {
             await clientGroupShutdownFuture;
         }
+
         serverException = null;
         clientException = null;
     }
@@ -611,6 +628,7 @@ public abstract class SSLEngineTest : IAsyncLifetime
         {
             MemoryStream keyStore = new MemoryStream();
             resourceAsStream.CopyTo(keyStore);
+
             return keyStore.ToArray();
         }
     }
@@ -660,14 +678,17 @@ public abstract class SSLEngineTest : IAsyncLifetime
     protected static bool CausedBySSLException(Exception cause)
     {
         Exception next = cause;
+
         do
         {
             if (next is AuthenticationException)
             {
                 return true;
             }
+
             next = next.InnerException;
         } while (next != null);
+
         return false;
     }
 
@@ -761,10 +782,12 @@ public abstract class SSLEngineTest : IAsyncLifetime
 
             IChannelPipeline p = ch.Pipeline;
             SslHandler handler = test.serverSslCtx.NewHandler(ch.Alloc());
+
             if (serverInitEngine)
             {
                 test.MySetupMutualAuthServerInitSslHandler(handler);
             }
+
             p.AddLast(handler);
             p.AddLast(new MessageDelegatorChannelHandler(test.serverReceiver, test.serverLatch));
             p.AddLast(new MutualAuthKeyManagerServerHandler(test, failureExpected));
@@ -791,6 +814,7 @@ public abstract class SSLEngineTest : IAsyncLifetime
                 {
                     test.serverException = new InvalidOperationException("handshake complete. expected failure");
                 }
+
                 CountDown(test.serverLatch);
             }
             else if (evt is SslHandshakeCompletionEvent)
@@ -798,6 +822,7 @@ public abstract class SSLEngineTest : IAsyncLifetime
                 test.serverException = ((SslHandshakeCompletionEvent) evt).Cause();
                 CountDown(test.serverLatch);
             }
+
             ctx.FireUserEventTriggered(evt);
         }
 
@@ -869,6 +894,7 @@ public abstract class SSLEngineTest : IAsyncLifetime
                 test.clientException = ((SslHandshakeCompletionEvent) evt).Cause();
                 CountDown(test.clientLatch);
             }
+
             ctx.FireUserEventTriggered(evt);
         }
 
@@ -1047,6 +1073,7 @@ public abstract class SSLEngineTest : IAsyncLifetime
                     ctx.FireUserEventTriggered(evt);
                     return;
                 }
+
                 CountDown(test.serverLatch);
             }
             else if (evt is SslHandshakeCompletionEvent)
@@ -1054,6 +1081,7 @@ public abstract class SSLEngineTest : IAsyncLifetime
                 test.serverException = ((SslHandshakeCompletionEvent) evt).Cause();
                 CountDown(test.serverLatch);
             }
+
             ctx.FireUserEventTriggered(evt);
         }
 
@@ -1145,6 +1173,7 @@ public abstract class SSLEngineTest : IAsyncLifetime
                 {
                     test.clientException = new InvalidOperationException("handshake complete. expected failure");
                 }
+
                 CountDown(test.clientLatch);
             }
             else if (evt is SslHandshakeCompletionEvent)
@@ -1152,6 +1181,7 @@ public abstract class SSLEngineTest : IAsyncLifetime
                 test.clientException = ((SslHandshakeCompletionEvent) evt).Cause();
                 CountDown(test.clientLatch);
             }
+
             ctx.FireUserEventTriggered(evt);
         }
 
@@ -1176,6 +1206,7 @@ public abstract class SSLEngineTest : IAsyncLifetime
         _ = future.ContinueWith(static (f, state) =>
         {
             TaskCompletionSource p = (TaskCompletionSource) state;
+
             if (f.IsCanceled)
             {
                 p.TrySetCanceled();
@@ -1208,6 +1239,7 @@ public abstract class SSLEngineTest : IAsyncLifetime
         {
             return new TaskCanceledException(future);
         }
+
         return future.Exception?.InnerException;
     }
 
@@ -1483,6 +1515,7 @@ public abstract class SSLEngineTest : IAsyncLifetime
     {
         ByteBuf clientMessage = Unpooled.CopiedBuffer(Encoding.UTF8.GetBytes("I am a client"));
         ByteBuf serverMessage = Unpooled.CopiedBuffer(Encoding.UTF8.GetBytes("I am a server"));
+
         try
         {
             await WriteAndVerifyReceived(clientMessage.Retain(), clientChannel, serverLatch, serverReceiver);
@@ -1519,6 +1552,7 @@ public abstract class SSLEngineTest : IAsyncLifetime
                                                      CountdownEvent receiverLatch, MessageReceiver receiver)
     {
         ByteBuf buf = null;
+
         try
         {
             Assert.True(await Await(sendChannel.WriteAndFlushAsync(message.Duplicate()), TimeSpan.FromSeconds(10)));
@@ -1527,10 +1561,12 @@ public abstract class SSLEngineTest : IAsyncLifetime
 
             buf = Unpooled.Buffer();
             ByteBuf buffer = receiver.messages.Take();
+
             for (;;)
             {
                 buf.WriteBytes(buffer);
                 buffer.Release();
+
                 if (buf.ReadableBytes < message.ReadableBytes)
                 {
                     if (!receiver.messages.TryTake(out buffer, TimeSpan.FromSeconds(1)))
@@ -1543,6 +1579,7 @@ public abstract class SSLEngineTest : IAsyncLifetime
                     break;
                 }
             }
+
             Assert.Equal(message, buf);
         }
         finally
@@ -1550,6 +1587,7 @@ public abstract class SSLEngineTest : IAsyncLifetime
             if (buf != null)
             {
                 buf.Release();
+
                 // CLR: the source releases every queued buffer and then clears the queue; BlockingCollection has no
                 // Clear(), so each buffer is taken and released.
                 while (receiver.messages.TryTake(out ByteBuf data))
@@ -1597,6 +1635,7 @@ public abstract class SSLEngineTest : IAsyncLifetime
                 .ApplicationProtocolConfig(serverApn)
                 .SessionCacheSize(0)
                 .SessionTimeout(0);
+
         if (serverApn.Protocol_() == ApplicationProtocolConfig.Protocol.NPN ||
                 serverApn.Protocol_() == ApplicationProtocolConfig.Protocol.NPN_AND_ALPN)
         {
@@ -1669,6 +1708,7 @@ public abstract class SSLEngineTest : IAsyncLifetime
         {
             return new IPEndPoint(IPAddress.IPv6Loopback, endPoint.Port);
         }
+
         return address;
     }
 
@@ -1814,6 +1854,7 @@ public abstract class SSLEngineTest : IAsyncLifetime
             Assert.Skip("CipherSuitesPolicy is not supported on Windows (docs/handler-ssl-design.md); the contexts of " +
                         "this test configure cipher suites.");
         }
+
         X509Bundle ssc = GetCachedCertificate();
         serverSslCtx = WrapContext(param, SslContextBuilder.ForServer(ssc.ToTempCertChainPem(), ssc.ToTempPrivateKeyPem())
                                         .SslProvider(SslServerProvider())
@@ -1895,6 +1936,7 @@ public abstract class SSLEngineTest : IAsyncLifetime
                 // renegotiation which was expected, and respond with a fatal alert.
                 _ = ctx.WriteAndFlushAsync(ctx.Alloc().Buffer(1).WriteByte(100));
             }
+
             ctx.FireUserEventTriggered(evt);
         }
 
@@ -1964,6 +2006,7 @@ public abstract class SSLEngineTest : IAsyncLifetime
                 _ = ctx.CloseAsync();
                 return;
             }
+
             ctx.FireUserEventTriggered(evt);
         }
 
@@ -1987,6 +2030,7 @@ public abstract class SSLEngineTest : IAsyncLifetime
         cipherList.AddRange(SslUtils.DEFAULT_CIPHER_SUITES);
         cipherList.Add("InvalidCipher");
         SslHandler server = null;
+
         try
         {
             // CLR: newEngine(alloc) is NewHandler(alloc) (the SslHandler owns the SslStream options); the context

@@ -37,6 +37,7 @@ public class SWARUtilTest
             long value = GetLong(asciiTable, idx);
             bool actual = SWARUtil.ContainsUpperCase(value);
             bool expected = false;
+
             for (int i = 0; i < sizeof(long); i++)
             {
                 expected |= (asciiTable[idx + i] >= 65 && asciiTable[idx + i] <= 90);
@@ -60,6 +61,7 @@ public class SWARUtilTest
             int value = GetInt(asciiTable, idx);
             bool containsUpperCase = SWARUtil.ContainsUpperCase(value);
             bool expectedContainsUpperCase = false;
+
             for (int i = 0; i < sizeof(int); i++)
             {
                 expectedContainsUpperCase |= (asciiTable[idx + i] >= 65 && asciiTable[idx + i] <= 90);
@@ -83,6 +85,7 @@ public class SWARUtilTest
             long value = GetLong(asciiTable, idx);
             bool actual = SWARUtil.ContainsLowerCase(value);
             bool expected = false;
+
             for (int i = 0; i < sizeof(long); i++)
             {
                 expected |= (asciiTable[idx + i] >= 97 && asciiTable[idx + i] <= 122);
@@ -106,6 +109,7 @@ public class SWARUtilTest
             int value = GetInt(asciiTable, idx);
             bool actual = SWARUtil.ContainsLowerCase(value);
             bool expected = false;
+
             for (int i = 0; i < sizeof(int); i++)
             {
                 expected |= (asciiTable[idx + i] >= 97 && asciiTable[idx + i] <= 122);
@@ -129,6 +133,7 @@ public class SWARUtilTest
             long value = GetLong(asciiTable, idx);
             long actual = SWARUtil.ToUpperCase(value);
             long expected = 0L;
+
             for (int i = 0; i < sizeof(long); i++)
             {
                 byte b = AsciiStringUtil.ToUpperCase(asciiTable[idx + i]);
@@ -153,6 +158,7 @@ public class SWARUtilTest
             int value = GetInt(asciiTable, idx);
             int actual = SWARUtil.ToUpperCase(value);
             int expected = 0;
+
             for (int i = 0; i < sizeof(int); i++)
             {
                 byte b = AsciiStringUtil.ToUpperCase(asciiTable[idx + i]);
@@ -177,6 +183,7 @@ public class SWARUtilTest
             long value = GetLong(asciiTable, idx);
             long actual = SWARUtil.ToLowerCase(value);
             long expected = 0L;
+
             for (int i = 0; i < sizeof(long); i++)
             {
                 byte b = AsciiStringUtil.ToLowerCase(asciiTable[idx + i]);
@@ -201,6 +208,7 @@ public class SWARUtilTest
             int value = GetInt(asciiTable, idx);
             int actual = SWARUtil.ToLowerCase(value);
             int expected = 0;
+
             for (int i = 0; i < sizeof(int); i++)
             {
                 byte b = AsciiStringUtil.ToLowerCase(asciiTable[idx + i]);
@@ -226,6 +234,7 @@ public class SWARUtilTest
     private static byte[] GetExtendedAsciiTable()
     {
         byte[] table = new byte[256];
+
         for (int i = 0; i < 256; i++)
         {
             table[i] = (byte)i;

@@ -137,6 +137,7 @@ internal sealed class OcspClient
                     if (future.IsCompletedSuccessfully)
                     {
                         object responseObject;
+
                         try
                         {
                             responseObject = future.Result.GetResponseObject();
@@ -151,6 +152,7 @@ internal sealed class OcspClient
                             responsePromise.SetException(Cause(future));
                             return;
                         }
+
                         if (responseObject is BasicOcspResp basicOcspResp)
                         {
                             ValidateResponse(x509Certificate, responsePromise,
@@ -288,6 +290,7 @@ internal sealed class OcspClient
             {
                 ValidateNonce(basicResponse, derNonce);
             }
+
             ValidateSignature(basicResponse, issuer);
             responsePromise.TrySetResult(basicResponse);
         }
@@ -335,6 +338,7 @@ internal sealed class OcspClient
         if (certs != null && certs.Length > 0)
         {
             X509Certificate2[] certificates = new X509Certificate2[certs.Length];
+
             try
             {
                 for (int i = 0; i < certs.Length; i++)
@@ -356,6 +360,7 @@ internal sealed class OcspClient
                 // Original certificate issuer has delegated OCSP signing.
                 // Responder cert must be authorized to sign OCSP responses.
                 List<string> extendedKeyUsage;
+
                 try
                 {
                     extendedKeyUsage = GetExtendedKeyUsage(responderCertificate);
@@ -365,6 +370,7 @@ internal sealed class OcspClient
                     throw new CryptographicException(
                             "Responder has invalid or malformed ExtendedKeyUsage extension", e);
                 }
+
                 if (extendedKeyUsage == null ||
                     !extendedKeyUsage.Contains(OID_OCSP_SIGNING))
                 {
@@ -415,12 +421,15 @@ internal sealed class OcspClient
         {
             return null;
         }
+
         X509EnhancedKeyUsageExtension eku = new X509EnhancedKeyUsageExtension(extension, extension.Critical);
         List<string> oids = new List<string>();
+
         foreach (Oid oid in eku.EnhancedKeyUsages)
         {
             oids.Add(oid.Value);
         }
+
         return oids;
     }
 
@@ -485,6 +494,7 @@ internal sealed class OcspClient
         // Build and validate the certificate path
         builder.Build(responderCertificate);
         int anchor = -1;
+
         for (int i = 0; i < builder.ChainElements.Count; i++)
         {
             if (IsIssuingCa(builder.ChainElements[i].Certificate, issuerCertificate))
@@ -493,11 +503,13 @@ internal sealed class OcspClient
                 break;
             }
         }
+
         if (anchor <= 0)
         {
             throw new CryptographicException("OCSP responder certificate is not trusted by issuer: "
                     + ChainStatusText(builder.ChainStatus));
         }
+
         for (int i = 0; i < anchor; i++)
         {
             X509ChainStatus[] status = builder.ChainElements[i].ChainElementStatus;
@@ -521,10 +533,12 @@ internal sealed class OcspClient
     private static string ChainStatusText(X509ChainStatus[] chainStatus)
     {
         List<string> statuses = new List<string>();
+
         foreach (X509ChainStatus status in chainStatus)
         {
             statuses.Add(status.Status + " (" + status.StatusInformation.Trim() + ")");
         }
+
         return string.Join(", ", statuses);
     }
 
@@ -545,6 +559,7 @@ internal sealed class OcspClient
     private static string ParseOcspUrlFromCertificate(X509Certificate2 cert)
     {
         string ocspUrl = null;
+
         try
         {
             X509Extension extension = cert.Extensions["1.3.6.1.5.5.7.1.1"];
@@ -566,6 +581,7 @@ internal sealed class OcspClient
             // Though this should never happen
             throw new ArgumentException("Error while parsing X509Certificate into JcaX509CertificateHolder", e);
         }
+
         if (ocspUrl != null)
         {
             return ocspUrl;
@@ -593,6 +609,7 @@ internal sealed class OcspClient
         {
             return future.Exception.InnerExceptions.Count == 1 ? future.Exception.InnerException : future.Exception;
         }
+
         return future.IsCanceled ? new TaskCanceledException(future) : null;
     }
 

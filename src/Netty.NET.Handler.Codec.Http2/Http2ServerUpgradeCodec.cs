@@ -140,6 +140,7 @@ public class Http2ServerUpgradeCodec : HttpServerUpgradeHandler.IUpgradeCodec
                 throw new ArgumentException("There must be 1 and only 1 "
                         + HTTP_UPGRADE_SETTINGS_HEADER + " header.");
             }
+
             // CLR: the String header value is passed as a CharSequence, so it is wrapped in StringCharSequence
             // (docs/codec-http-porting.md, Shared CLR adaptations).
             settings = DecodeSettingsHeader(ctx, new StringCharSequence(upgradeHeaders[0]));
@@ -165,11 +166,13 @@ public class Http2ServerUpgradeCodec : HttpServerUpgradeHandler.IUpgradeCodec
             if (handlers != null)
             {
                 string name = ctx.Pipeline.Context(connectionHandler).Name;
+
                 for (int i = handlers.Length - 1; i >= 0; i--)
                 {
                     ctx.Pipeline.AddAfter(name, null, handlers[i]);
                 }
             }
+
             connectionHandler.OnHttpServerUpgrade(settings);
         }
         catch (Http2Exception e)
@@ -189,6 +192,7 @@ public class Http2ServerUpgradeCodec : HttpServerUpgradeHandler.IUpgradeCodec
         // ByteBufUtil.EncodeString takes that content as a ReadOnlySpan<char> (src/Netty.NET.Buffer/
         // ByteBufUtil.cs), and CharsetUtil.UTF_8 is Encoding.UTF8.
         ByteBuf header = ByteBufUtil.EncodeString(ctx.Alloc(), settingsHeader.ToString(), Encoding.UTF8);
+
         try
         {
             // Decode the SETTINGS payload.

@@ -29,6 +29,7 @@ public class DnsRecordTypeTest
     private static List<DnsRecordType> AllTypes()
     {
         List<DnsRecordType> result = new List<DnsRecordType>();
+
         foreach (FieldInfo field in typeof(DnsRecordType).GetFields())
         {
             if (field.IsStatic && field.FieldType == typeof(DnsRecordType))
@@ -36,6 +37,7 @@ public class DnsRecordTypeTest
                 result.Add((DnsRecordType) field.GetValue(null));
             }
         }
+
         Assert.False(result.Count == 0);
         return result;
     }

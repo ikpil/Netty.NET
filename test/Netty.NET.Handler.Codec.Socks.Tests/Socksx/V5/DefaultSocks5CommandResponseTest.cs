@@ -37,6 +37,7 @@ public class DefaultSocks5CommandResponseTest
         {
             Assert.IsType<ArgumentNullException>(e, exactMatch: false);
         }
+
         try
         {
             new DefaultSocks5CommandResponse(Socks5CommandStatus.FAILURE, null);

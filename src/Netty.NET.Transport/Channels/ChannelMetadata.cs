@@ -48,6 +48,7 @@ public sealed class ChannelMetadata
     public ChannelMetadata(bool hasDisconnect, int defaultMaxMessagesPerRead)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(defaultMaxMessagesPerRead);
+
         _hasDisconnect = hasDisconnect;
         _defaultMaxMessagesPerRead = defaultMaxMessagesPerRead;
     }

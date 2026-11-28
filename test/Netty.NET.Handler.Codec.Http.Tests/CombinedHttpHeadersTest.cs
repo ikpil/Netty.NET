@@ -172,10 +172,12 @@ public class CombinedHttpHeadersTest
     public void AddCharSequencesCsvMultipleTimes()
     {
         CombinedHttpHeaders headers = NewCombinedHttpHeaders();
+
         for (int i = 0; i < 5; ++i)
         {
             headers.Add(HEADER_NAME, "value");
         }
+
         Assert.True(ContentEquals(new StringCharSequence("value,value,value,value,value"),
                 new StringCharSequence(headers.Get(HEADER_NAME))));
     }

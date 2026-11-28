@@ -90,6 +90,7 @@ public abstract class SslClientHelloHandler<T> : ByteToMessageDecoder, IChannelO
                 while (readableBytes >= SslUtils.SSL_RECORD_HEADER_LENGTH)
                 {
                     int contentType = @in.GetByte(readerIndex);
+
                     switch (contentType)
                     {
                         case SslUtils.SSL_CONTENT_TYPE_CHANGE_CIPHER_SPEC:
@@ -108,11 +109,13 @@ public abstract class SslClientHelloHandler<T> : ByteToMessageDecoder, IChannelO
                                 SslUtils.HandleHandshakeFailure(ctx, e, true);
                                 throw e;
                             }
+
                             if (len == SslUtils.NOT_ENOUGH_DATA)
                             {
                                 // Not enough data
                                 return;
                             }
+
                             // No ClientHello
                             Select(ctx, null);
                             return;
@@ -206,6 +209,7 @@ public abstract class SslClientHelloHandler<T> : ByteToMessageDecoder, IChannelO
                                 readerIndex += packetLength;
                                 readableBytes -= packetLength;
                                 aggregatedBytes += packetLength;
+
                                 if (handshakeLength == -1)
                                 {
                                     if (handshakeBuffer.ReadableBytes < 4)
@@ -245,8 +249,10 @@ public abstract class SslClientHelloHandler<T> : ByteToMessageDecoder, IChannelO
                                     Select(ctx, clientHello);
                                     return;
                                 }
+
                                 break;
                             }
+
                             // fall-through
                             goto default;
                         default:
@@ -273,6 +279,7 @@ public abstract class SslClientHelloHandler<T> : ByteToMessageDecoder, IChannelO
                 {
                     logger.Debug("Unexpected client hello packet: " + ByteBufUtil.HexDump(@in), e);
                 }
+
                 Select(ctx, null);
             }
         }
@@ -296,6 +303,7 @@ public abstract class SslClientHelloHandler<T> : ByteToMessageDecoder, IChannelO
     private void Select(IChannelHandlerContext ctx, ByteBuf clientHello)
     {
         Task<T> future;
+
         try
         {
             future = Lookup(ctx, clientHello);
@@ -321,9 +329,11 @@ public abstract class SslClientHelloHandler<T> : ByteToMessageDecoder, IChannelO
                 _ = future.ContinueWith(future1 =>
                 {
                     ReleaseIfNotNull(finalClientHello);
+
                     try
                     {
                         suppressRead = false;
+
                         try
                         {
                             OnLookupComplete(ctx, future1);

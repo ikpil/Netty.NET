@@ -38,6 +38,7 @@ public class SocketRstSourceTest : AbstractSocketTest
     protected virtual void AssertRstOnCloseException(SocketException cause, IChannel clientChannel)
     {
         Assert.Equal(SocketError.ConnectionReset, cause.SocketErrorCode);
+
         if (CultureInfo.CurrentCulture.Name == "en-US" || CultureInfo.CurrentCulture.Name == "en-GB")
         {
             Assert.True(cause.Message.Contains("reset") || cause.Message.Contains("closed"),

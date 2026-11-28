@@ -84,6 +84,7 @@ public abstract class SimpleChannelInboundHandler<T> : ChannelInboundHandlerAdap
         // CLR: Class<? extends I> is checked at run time.
         if (!typeof(T).IsAssignableFrom(inboundMessageType))
             throw new ArgumentException($"{inboundMessageType} is not assignable to {typeof(T)}", nameof(inboundMessageType));
+
         matcher = inboundMessageType;
         _autoRelease = autoRelease;
     }
@@ -100,6 +101,7 @@ public abstract class SimpleChannelInboundHandler<T> : ChannelInboundHandlerAdap
     public override void ChannelRead(IChannelHandlerContext ctx, object msg)
     {
         bool release = true;
+
         try
         {
             if (AcceptInboundMessage(msg))

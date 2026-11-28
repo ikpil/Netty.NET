@@ -48,6 +48,7 @@ public static class Recycler
         RATIO = Math.Max(0, SystemPropertyUtil.GetInt("io.netty.recycler.ratio", 8));
         BLOCKING_POOL = SystemPropertyUtil.GetBoolean("io.netty.recycler.blocking", false);
         BATCH_FAST_TL_ONLY = SystemPropertyUtil.GetBoolean("io.netty.recycler.batchFastThreadLocalOnly", true);
+
         if (logger.IsDebugEnabled())
         {
             object capacityText = DEFAULT_MAX_CAPACITY_PER_THREAD == 0 ? "disabled" : DEFAULT_MAX_CAPACITY_PER_THREAD;
@@ -77,6 +78,7 @@ public static class Recycler
     public static Recycler<T> Create<T>(Func<IRecyclerHandle<T>, T> factory) where T : class
     {
         ArgumentNullException.ThrowIfNull(factory);
+
         return new FactoryRecycler<T>(factory);
     }
 
@@ -238,6 +240,7 @@ public abstract class Recycler<T> where T : class
     private Recycler(int maxCapacityPerThread, int ratio, int chunkSize, bool useThreadLocalStorage, Thread owner, bool unguarded)
     {
         int interval = Math.Max(0, ratio);
+
         if (maxCapacityPerThread <= 0)
         {
             maxCapacityPerThread = 0;
@@ -248,6 +251,7 @@ public abstract class Recycler<T> where T : class
             maxCapacityPerThread = Math.Max(4, maxCapacityPerThread);
             chunkSize = Math.Max(2, Math.Min(chunkSize, maxCapacityPerThread >> 1));
         }
+
         if (maxCapacityPerThread > 0 && useThreadLocalStorage)
             threadLocalPool = new PoolThreadLocal(maxCapacityPerThread, interval, chunkSize, unguarded);
         else
@@ -259,6 +263,7 @@ public abstract class Recycler<T> where T : class
             else
             {
                 ArgumentNullException.ThrowIfNull(owner);
+
                 localPool = CreatePool(owner, maxCapacityPerThread, interval, chunkSize, unguarded);
             }
         }
@@ -284,6 +289,7 @@ public abstract class Recycler<T> where T : class
         {
             return NewObject(NOOP_HANDLE);
         }
+
         return threadLocalPool.Get().GetWith(this);
     }
 
@@ -303,6 +309,7 @@ public abstract class Recycler<T> where T : class
         {
             return false;
         }
+
         handle.Recycle(value);
         return true;
     }
@@ -317,6 +324,7 @@ public abstract class Recycler<T> where T : class
         {
             return 0;
         }
+
         return threadLocalPool.GetIfExists()?.Size() ?? 0;
     }
 
@@ -373,6 +381,7 @@ public abstract class Recycler<T> where T : class
             }
             if (Interlocked.Exchange(ref state, STATE_AVAILABLE) == STATE_AVAILABLE)
                 throw new InvalidOperationException("Object has been recycled already.");
+
             pool.Release(this);
         }
 
@@ -384,6 +393,7 @@ public abstract class Recycler<T> where T : class
             }
             if (Volatile.Read(ref state) == STATE_AVAILABLE)
                 throw new InvalidOperationException("Object has been recycled already.");
+
             Volatile.Write(ref state, STATE_AVAILABLE);
             pool.Release(this);
         }
@@ -423,6 +433,7 @@ public abstract class Recycler<T> where T : class
             {
                 return recycler.NewObject(NOOP_HANDLE);
             }
+
             handle = new DefaultHandle(this);
             T value = recycler.NewObject(handle);
             handle.Set(value);
@@ -494,6 +505,7 @@ public abstract class Recycler<T> where T : class
                 // it's ok to be racy; at worst we reuse something that won't return back to the pool
                 return Volatile.Read(ref pooledHandles)?.Poll();
             }
+
             int top = size - 1;
             H value = batch[top];
             batchSize = top;
@@ -541,6 +553,7 @@ public abstract class Recycler<T> where T : class
             {
                 return false;
             }
+
             ratioCounter = 0;
             return true;
         }
@@ -589,6 +602,7 @@ public abstract class Recycler<T> where T : class
         public bool Offer(H value)
         {
             int before;
+
             do
             {
                 before = Volatile.Read(ref count);
@@ -597,6 +611,7 @@ public abstract class Recycler<T> where T : class
                     return false;
                 }
             } while (Interlocked.CompareExchange(ref count, before + 1, before) != before);
+
             try
             {
                 ConcurrentQueueOperations.EnqueueUninterruptibly(queue, value);
@@ -606,6 +621,7 @@ public abstract class Recycler<T> where T : class
                 Interlocked.Decrement(ref count);
                 throw;
             }
+
             return true;
         }
 
@@ -620,6 +636,7 @@ public abstract class Recycler<T> where T : class
             {
                 return false;
             }
+
             Interlocked.Decrement(ref count);
             return true;
         }
@@ -669,6 +686,7 @@ public abstract class Recycler<T> where T : class
             {
                 return false;
             }
+
             deque.Enqueue(value);
             return true;
         }

@@ -131,6 +131,7 @@ public class Http3PushStreamTest : IDisposable
     {
         EmbeddedQuicStreamChannel serverStream = NewServerStream();
         ReadStreamHeader(serverStream).Release();
+
         try
         {
             Assert.ThrowsAny<Http3Exception>(() => serverStream.WriteOutbound(new DefaultHttp3PushPromiseFrame(1)));
@@ -150,6 +151,7 @@ public class Http3PushStreamTest : IDisposable
                 (EmbeddedQuicStreamChannel) await serverChannel.CreateStreamAsync(QuicStreamType.UNIDIRECTIONAL,
                         new NoopPushStreamServerInitializer(maxPushId + 1), TestContext.Current.CancellationToken);
         EmbeddedQuicStreamChannel clientStream = NewClientStreamUninitialized();
+
         try
         {
             ByteBuf streamHeader = ReadStreamHeader(serverStream);
@@ -190,6 +192,7 @@ public class Http3PushStreamTest : IDisposable
     {
         EmbeddedQuicStreamChannel serverStream = NewServerStream();
         EmbeddedQuicStreamChannel clientStream = NewClientStream(serverStream);
+
         try
         {
             foreach (IHttp3RequestStreamFrame frame in frames)

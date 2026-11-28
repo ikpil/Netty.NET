@@ -115,6 +115,7 @@ public class DefaultHttp2FrameReader : IHttp2FrameReader, IHttp2FrameSizePolicy,
             // See https://datatracker.ietf.org/doc/html/rfc9113#section-4.2 for details.
             throw ConnectionError(FRAME_SIZE_ERROR, "Invalid MAX_FRAME_SIZE specified in sent settings: %d", max);
         }
+
         maxFrameSize = max;
     }
 
@@ -144,6 +145,7 @@ public class DefaultHttp2FrameReader : IHttp2FrameReader, IHttp2FrameSizePolicy,
             input.SkipBytes(input.ReadableBytes);
             return;
         }
+
         try
         {
             do
@@ -162,6 +164,7 @@ public class DefaultHttp2FrameReader : IHttp2FrameReader, IHttp2FrameSizePolicy,
                 {
                     return;
                 }
+
                 // Slice to work only on the frame being read
                 ByteBuf framePayload = input.ReadSlice(payloadLength);
                 // We have consumed the data for this frame, next time we read,
@@ -192,12 +195,14 @@ public class DefaultHttp2FrameReader : IHttp2FrameReader, IHttp2FrameSizePolicy,
             // Wait until the entire framing section has been read.
             return false;
         }
+
         payloadLength = @in.ReadUnsignedMedium();
         if (payloadLength > maxFrameSize)
         {
             throw ConnectionError(FRAME_SIZE_ERROR, "Frame length: %d exceeds maximum: %d", payloadLength,
                                   maxFrameSize);
         }
+
         frameType = @in.ReadByte();
         flags = new Http2Flags(@in.ReadByte());
         streamId = ReadUnsignedInt(@in);
@@ -251,6 +256,7 @@ public class DefaultHttp2FrameReader : IHttp2FrameReader, IHttp2FrameSizePolicy,
         // When this method is called, we ensure that the payload buffer passed in
         // matches what we expect to be reading for payloadLength
         Debug.Assert(@in.ReadableBytes == payloadLength);
+
         // Read the payload and fire the frame event to the listener.
         switch (frameType)
         {
@@ -480,6 +486,7 @@ public class DefaultHttp2FrameReader : IHttp2FrameReader, IHttp2FrameSizePolicy,
                 throw ConnectionError(
                         PROTOCOL_ERROR, "HEADERS frame for stream %d cannot depend on itself.", streamId);
             }
+
             short weight = (short) (payload.ReadByte() + 1);
             int lenToRead = LengthWithoutTrailingPadding(payload.ReadableBytes, padding);
 
@@ -538,6 +545,7 @@ public class DefaultHttp2FrameReader : IHttp2FrameReader, IHttp2FrameSizePolicy,
         {
             HeadersBlockBuilder hdrBlockBuilder = HeadersBlockBuilder();
             hdrBlockBuilder.AddFragment(fragment, len, ctx.Alloc(), endOfHeaders);
+
             if (endOfHeaders)
             {
                 listener.OnHeadersRead(ctx, headersStreamId, hdrBlockBuilder.Headers(), streamDependency,
@@ -573,6 +581,7 @@ public class DefaultHttp2FrameReader : IHttp2FrameReader, IHttp2FrameSizePolicy,
         {
             HeadersBlockBuilder hdrBlockBuilder = HeadersBlockBuilder();
             hdrBlockBuilder.AddFragment(fragment, len, ctx.Alloc(), endOfHeaders);
+
             if (endOfHeaders)
             {
                 listener.OnHeadersRead(ctx, headersStreamId, hdrBlockBuilder.Headers(), padding,
@@ -599,6 +608,7 @@ public class DefaultHttp2FrameReader : IHttp2FrameReader, IHttp2FrameSizePolicy,
         {
             throw StreamError(streamId, PROTOCOL_ERROR, "A stream cannot depend on itself.");
         }
+
         short weight = (short) (payload.ReadByte() + 1);
         listener.OnPriorityRead(ctx, streamId, streamDependency, weight, exclusive);
     }
@@ -621,10 +631,12 @@ public class DefaultHttp2FrameReader : IHttp2FrameReader, IHttp2FrameSizePolicy,
         {
             int numSettings = payloadLength / SETTING_ENTRY_LENGTH;
             Http2Settings settings = new Http2Settings();
+
             for (int index = 0; index < numSettings; ++index)
             {
                 char id = (char) payload.ReadUnsignedShort();
                 long value = payload.ReadUnsignedInt();
+
                 try
                 {
                     settings.Put(id, value);
@@ -636,9 +648,11 @@ public class DefaultHttp2FrameReader : IHttp2FrameReader, IHttp2FrameSizePolicy,
                         throw ConnectionError(FLOW_CONTROL_ERROR, e,
                                 "Failed setting initial window size: %s", e.Message);
                     }
+
                     throw ConnectionError(PROTOCOL_ERROR, e, "Protocol error: %s", e.Message);
                 }
             }
+
             listener.OnSettingsRead(ctx, settings);
         }
     }
@@ -686,6 +700,7 @@ public class DefaultHttp2FrameReader : IHttp2FrameReader, IHttp2FrameSizePolicy,
                 IHttp2FrameListener listener)
         {
             HeadersBlockBuilder().AddFragment(fragment, len, ctx.Alloc(), endOfHeaders);
+
             if (endOfHeaders)
             {
                 listener.OnPushPromiseRead(ctx, pushPromiseStreamId, promisedStreamId,
@@ -734,6 +749,7 @@ public class DefaultHttp2FrameReader : IHttp2FrameReader, IHttp2FrameSizePolicy,
                         "Received WINDOW_UPDATE with delta 0 for stream: %d", streamId);
             }
         }
+
         listener.OnWindowUpdateRead(ctx, streamId, windowSizeIncrement);
     }
 
@@ -761,6 +777,7 @@ public class DefaultHttp2FrameReader : IHttp2FrameReader, IHttp2FrameSizePolicy,
         {
             return 0;
         }
+
         return payload.ReadByte() + 1;
     }
 
@@ -774,11 +791,13 @@ public class DefaultHttp2FrameReader : IHttp2FrameReader, IHttp2FrameSizePolicy,
         {
             return readableBytes;
         }
+
         int n = readableBytes - (padding - 1);
         if (n < 0)
         {
             throw ConnectionError(PROTOCOL_ERROR, "Frame payload too small for padding.");
         }
+
         return n;
     }
 
@@ -899,6 +918,7 @@ public class DefaultHttp2FrameReader : IHttp2FrameReader, IHttp2FrameSizePolicy,
                 {
                     HeaderSizeExceeded();
                 }
+
                 if (endOfHeaders)
                 {
                     // Optimization - don't bother copying, just use the buffer as-is. Need
@@ -909,13 +929,16 @@ public class DefaultHttp2FrameReader : IHttp2FrameReader, IHttp2FrameSizePolicy,
                 {
                     headerBlock = alloc.Buffer(len).WriteBytes(fragment, len);
                 }
+
                 return;
             }
+
             if (reader.headersDecoder.Configuration().MaxHeaderListSizeGoAway() - len <
                     headerBlock.ReadableBytes)
             {
                 HeaderSizeExceeded();
             }
+
             if (headerBlock.IsWritable(len))
             {
                 // The buffer can hold the requested bytes, just write it directly.

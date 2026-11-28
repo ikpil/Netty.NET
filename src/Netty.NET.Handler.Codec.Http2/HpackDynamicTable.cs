@@ -63,6 +63,7 @@ internal sealed class HpackDynamicTable
     public int Length()
     {
         int length;
+
         if (head < tail)
         {
             length = hpackHeaderFields.Length - tail + head;
@@ -71,6 +72,7 @@ internal sealed class HpackDynamicTable
         {
             length = head - tail;
         }
+
         return length;
     }
 
@@ -101,6 +103,7 @@ internal sealed class HpackDynamicTable
             throw new ArgumentOutOfRangeException(null, "Index " + index.ToString(CultureInfo.InvariantCulture) +
                 " out of bounds for length " + Length().ToString(CultureInfo.InvariantCulture));
         }
+
         int i = head - index;
         if (i < 0)
         {
@@ -126,12 +129,15 @@ internal sealed class HpackDynamicTable
             Clear();
             return;
         }
+
         while (capacity - size < headerSize)
         {
             Remove();
         }
+
         hpackHeaderFields[head++] = header;
         size += headerSize;
+
         if (head == hpackHeaderFields.Length)
         {
             head = 0;
@@ -148,12 +154,15 @@ internal sealed class HpackDynamicTable
         {
             return null;
         }
+
         size -= removed.Size();
         hpackHeaderFields[tail++] = null;
+
         if (tail == hpackHeaderFields.Length)
         {
             tail = 0;
         }
+
         return removed;
     }
 
@@ -165,11 +174,13 @@ internal sealed class HpackDynamicTable
         while (tail != head)
         {
             hpackHeaderFields[tail++] = null;
+
             if (tail == hpackHeaderFields.Length)
             {
                 tail = 0;
             }
         }
+
         head = 0;
         tail = 0;
         size = 0;
@@ -190,6 +201,7 @@ internal sealed class HpackDynamicTable
         {
             return;
         }
+
         this.capacity = capacity;
 
         if (capacity == 0)
@@ -206,6 +218,7 @@ internal sealed class HpackDynamicTable
         }
 
         int maxEntries = (int) (capacity / HpackHeaderField.HEADER_ENTRY_OVERHEAD);
+
         if (capacity % HpackHeaderField.HEADER_ENTRY_OVERHEAD != 0)
         {
             maxEntries++;
@@ -221,13 +234,16 @@ internal sealed class HpackDynamicTable
 
         // initially length will be 0 so there will be no copy
         int len = Length();
+
         if (hpackHeaderFields != null)
         {
             int cursor = tail;
+
             for (int i = 0; i < len; i++)
             {
                 HpackHeaderField entry = hpackHeaderFields[cursor++];
                 tmp[i] = entry;
+
                 if (cursor == hpackHeaderFields.Length)
                 {
                     cursor = 0;

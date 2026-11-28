@@ -47,6 +47,7 @@ public abstract class AbstractSocketReuseFdSourceTest : AbstractSocketTest
     protected override List<TestsuitePermutation.IBootstrapComboFactory<ServerBootstrap, Bootstrap>> NewFactories()
     {
         DomainSocketSourceTest.RequireDomainSockets();
+
         return DomainSocketTestPermutation.INSTANCE.DomainSocket();
     }
 
@@ -106,6 +107,7 @@ public abstract class AbstractSocketReuseFdSourceTest : AbstractSocketTest
         };
 
         IChannel sc = await sb.BindAsync();
+
         for (int i = 0; i < numChannels; i++)
         {
             _ = cb.ConnectAsync(sc.LocalAddress).ContinueWith(listener, CancellationToken.None,
@@ -166,6 +168,7 @@ public abstract class AbstractSocketReuseFdSourceTest : AbstractSocketTest
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
             channel = ctx.Channel;
+
             if (client)
             {
                 // CLR: Encoding.ASCII is CharsetUtil.US_ASCII.
@@ -218,6 +221,7 @@ public abstract class AbstractSocketReuseFdSourceTest : AbstractSocketTest
                 donePromise.TrySetException(new InvalidOperationException("exceptionCaught: " + ctx.Channel, cause));
                 _ = ctx.CloseAsync();
             }
+
             Interlocked.CompareExchange(ref globalException.Value, cause, null);
         }
 

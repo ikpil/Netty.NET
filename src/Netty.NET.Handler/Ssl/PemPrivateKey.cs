@@ -86,15 +86,18 @@ public sealed class PemPrivateKey : AbstractReferenceCounted, IPemEncoded
     internal static IPemEncoded ToPEM(IByteBufAllocator allocator, bool useDirect, byte[] bytes)
     {
         ByteBuf encoded = Unpooled.WrappedBuffer(bytes);
+
         try
         {
             ByteBuf base64 = SslUtils.ToBase64(allocator, encoded);
+
             try
             {
                 int size = BEGIN_PRIVATE_KEY.Length + base64.ReadableBytes + END_PRIVATE_KEY.Length;
 
                 bool success = false;
                 ByteBuf pem = useDirect ? allocator.DirectBuffer(size) : allocator.Buffer(size);
+
                 try
                 {
                     pem.WriteBytes(BEGIN_PRIVATE_KEY);

@@ -192,12 +192,14 @@ public class PooledByteBufAllocatorTest : AbstractByteBufAllocatorTest<PooledByt
         long active = 0;
         long alloc = 0;
         long dealloc = 0;
+
         foreach (IPoolArenaMetric arena in arenaMetrics)
         {
             active += arena.NumActiveAllocations;
             alloc += arena.NumAllocations;
             dealloc += arena.NumDeallocations;
         }
+
         Assert.Equal(expectedActive, active);
         Assert.Equal(expectedAlloc, alloc);
         Assert.Equal(expectedDealloc, dealloc);
@@ -234,6 +236,7 @@ public class PooledByteBufAllocatorTest : AbstractByteBufAllocatorTest<PooledByt
     {
         using PooledByteBufAllocator allocator = new PooledByteBufAllocator(true, 1, 1, 8192, 9, 0, 0, 0);
         ByteBuf buffer = allocator.HeapBuffer(500);
+
         try
         {
             IPoolArenaMetric metric = allocator.Metric.HeapArenas[0];
@@ -345,6 +348,7 @@ public class PooledByteBufAllocatorTest : AbstractByteBufAllocatorTest<PooledByt
         int size = pageSize * 5;
 
         ByteBuf[] bufs = new ByteBuf[10];
+
         for (int i = 0; i < 10; i++)
         {
             bufs[i] = allocator.Buffer(size);
@@ -412,6 +416,7 @@ public class PooledByteBufAllocatorTest : AbstractByteBufAllocatorTest<PooledByt
         {
             // CLR: the public HeapBuffer factory replaces the protected newHeapBuffer access.
             ByteBuf buf = allocator.HeapBuffer(1024, 1024);
+
             for (int i = 0; i < buf.Capacity; i++)
             {
                 buf.WriteByte(0);
@@ -431,6 +436,7 @@ public class PooledByteBufAllocatorTest : AbstractByteBufAllocatorTest<PooledByt
         for (int i = 0; i < numArenas; i++)
         {
             FastThreadLocalThread thread;
+
             if (useRunnable)
             {
                 thread = new FastThreadLocalThread(task);
@@ -441,6 +447,7 @@ public class PooledByteBufAllocatorTest : AbstractByteBufAllocatorTest<PooledByt
                 thread = new RunOverridingFastThreadLocalThread(task);
                 Assert.False(FastThreadLocalThread.WillCleanupFastThreadLocals(thread.Thread));
             }
+
             thread.Thread.Start();
             thread.Thread.Join();
         }
@@ -596,6 +603,7 @@ public class PooledByteBufAllocatorTest : AbstractByteBufAllocatorTest<PooledByt
             catch (Exception e)
             {
                 task.SetException(e);
+
                 if (cacheLatch.CurrentCount > 0)
                 {
                     cacheLatch.Signal();
@@ -640,6 +648,7 @@ public class PooledByteBufAllocatorTest : AbstractByteBufAllocatorTest<PooledByt
         using PooledByteBufAllocator pool = new PooledByteBufAllocator(true, 0, 1, 8192, 9, 0, 0, 0);
         IByteBufAllocator allocator = pool;
         List<AllocationThread> threads = new List<AllocationThread>();
+
         try
         {
             for (int i = 0; i < 64; i++)
@@ -650,6 +659,7 @@ public class PooledByteBufAllocatorTest : AbstractByteBufAllocatorTest<PooledByt
             }
 
             long start = Stopwatch.GetTimestamp();
+
             while (!IsExpired(start, runningTime))
             {
                 CheckForErrors(threads);
@@ -723,6 +733,7 @@ public class PooledByteBufAllocatorTest : AbstractByteBufAllocatorTest<PooledByt
             try
             {
                 int idx = 0;
+
                 while (Volatile.Read(ref finish) == null)
                 {
                     for (int i = 0; i < 10; i++)
@@ -730,6 +741,7 @@ public class PooledByteBufAllocatorTest : AbstractByteBufAllocatorTest<PooledByt
                         int len = ALLOCATION_SIZES[Math.Abs(idx++ % ALLOCATION_SIZES.Length)];
                         ByteBuf buf = allocator.DirectBuffer(len, int.MaxValue);
                         Assert.Equal(len, buf.WritableBytes);
+
                         while (buf.IsWritable())
                         {
                             buf.WriteByte(i);
@@ -737,6 +749,7 @@ public class PooledByteBufAllocatorTest : AbstractByteBufAllocatorTest<PooledByt
 
                         buffers.Enqueue(buf);
                     }
+
                     ReleaseBuffersAndCheckContent();
                 }
             }
@@ -753,13 +766,16 @@ public class PooledByteBufAllocatorTest : AbstractByteBufAllocatorTest<PooledByt
         private void ReleaseBuffersAndCheckContent()
         {
             int i = 0;
+
             while (!buffers.IsEmpty)
             {
                 buffers.TryDequeue(out ByteBuf buf);
+
                 while (buf.IsReadable())
                 {
                     Assert.Equal(i, buf.ReadByte());
                 }
+
                 buf.Release();
                 i++;
             }
@@ -786,6 +802,7 @@ public class PooledByteBufAllocatorTest : AbstractByteBufAllocatorTest<PooledByt
             {
                 ReleaseBuffersAndCheckContent();
             }
+
             CheckForError();
         }
 
@@ -848,13 +865,16 @@ public class PooledByteBufAllocatorTest : AbstractByteBufAllocatorTest<PooledByt
         {
             byteBufs[i] = allocator.HeapBuffer(elemSize, elemSize);
         }
+
         PoolChunk chunk = UnwrapIfNeeded(byteBufs[0]).Allocation.Chunk;
 
         int beforeFreeBytes = chunk.FreeBytes;
+
         for (int i = 0; i < length; i++)
         {
             byteBufs[i].Release();
         }
+
         int afterFreeBytes = chunk.FreeBytes;
 
         Assert.True(beforeFreeBytes < afterFreeBytes);
@@ -897,31 +917,39 @@ public class PooledByteBufAllocatorTest : AbstractByteBufAllocatorTest<PooledByt
         int[] capacities = new int[30];
         // CLR: an unseeded System.Random replaces the unseeded SplittableRandom.
         Random rng = new Random();
+
         for (int i = 0; i < capacities.Length; i++)
         {
             capacities[i] = initialCapacity / 4 + rng.Next(8 * initialCapacity);
         }
+
         ByteBuf[] bufs = new ByteBuf[capacities.Length];
+
         for (int i = 0; i < 20; i++)
         {
             bufs[i] = allocator.DirectBuffer(capacities[i], 2 * capacities[i]);
         }
+
         for (int i = 0; i < 10; i++)
         {
             bufs[i].Release();
         }
+
         for (int i = 20; i < 30; i++)
         {
             bufs[i] = allocator.DirectBuffer(capacities[i], 2 * capacities[i]);
         }
+
         for (int i = 0; i < 10; i++)
         {
             bufs[i] = allocator.DirectBuffer(capacities[i], 2 * capacities[i]);
         }
+
         for (int i = 0; i < 30; i++)
         {
             bufs[i].Release();
         }
+
         TrimCaches(allocator);
         Assert.Equal(0, allocator.PinnedDirectMemory);
     }
@@ -964,31 +992,39 @@ public class PooledByteBufAllocatorTest : AbstractByteBufAllocatorTest<PooledByt
         int[] capacities = new int[30];
         // CLR: an unseeded System.Random replaces the unseeded SplittableRandom.
         Random rng = new Random();
+
         for (int i = 0; i < capacities.Length; i++)
         {
             capacities[i] = initialCapacity / 4 + rng.Next(8 * initialCapacity);
         }
+
         ByteBuf[] bufs = new ByteBuf[capacities.Length];
+
         for (int i = 0; i < 20; i++)
         {
             bufs[i] = allocator.HeapBuffer(capacities[i], 2 * capacities[i]);
         }
+
         for (int i = 0; i < 10; i++)
         {
             bufs[i].Release();
         }
+
         for (int i = 20; i < 30; i++)
         {
             bufs[i] = allocator.HeapBuffer(capacities[i], 2 * capacities[i]);
         }
+
         for (int i = 0; i < 10; i++)
         {
             bufs[i] = allocator.HeapBuffer(capacities[i], 2 * capacities[i]);
         }
+
         for (int i = 0; i < 30; i++)
         {
             bufs[i].Release();
         }
+
         TrimCaches(allocator);
         Assert.Equal(0, allocator.PinnedDirectMemory);
     }
@@ -1009,6 +1045,7 @@ public class PooledByteBufAllocatorTest : AbstractByteBufAllocatorTest<PooledByt
     {
         int smallCacheSize;
         int normalCacheSize;
+
         if (useThreadLocalCaching)
         {
             smallCacheSize = PooledByteBufAllocator.DefaultSmallCacheSize();
@@ -1019,6 +1056,7 @@ public class PooledByteBufAllocatorTest : AbstractByteBufAllocatorTest<PooledByt
             smallCacheSize = 0;
             normalCacheSize = 0;
         }
+
         int directMemoryCacheAlignment = 0;
         using PooledByteBufAllocator alloc = new PooledByteBufAllocator(
                 PooledByteBufAllocator.DefaultPreferDirect(),
@@ -1073,6 +1111,7 @@ public class PooledByteBufAllocatorTest : AbstractByteBufAllocatorTest<PooledByt
             {
                 buffer.Release();
             }
+
             capSum = 0;
             // After releasing all buffers, pinned memory must be zero
             Assert.Equal(0, alloc.PinnedDirectMemory);
@@ -1085,6 +1124,7 @@ public class PooledByteBufAllocatorTest : AbstractByteBufAllocatorTest<PooledByt
     private static long UsedMemory(IReadOnlyList<IPoolArenaMetric> arenas)
     {
         long totalUsed = 0;
+
         foreach (IPoolArenaMetric arenaMetrics in arenas)
         {
             foreach (IPoolChunkListMetric arenaMetric in arenaMetrics.ChunkLists)
@@ -1097,6 +1137,7 @@ public class PooledByteBufAllocatorTest : AbstractByteBufAllocatorTest<PooledByt
                 }
             }
         }
+
         return totalUsed;
     }
 
@@ -1105,6 +1146,7 @@ public class PooledByteBufAllocatorTest : AbstractByteBufAllocatorTest<PooledByt
     {
         IByteBufAllocator allocator = NewAllocator(true);
         List<ByteBuf> buffers = new List<ByteBuf>();
+
         try
         {
             for (int i = 0; i < 31; i++)
@@ -1198,10 +1240,12 @@ public class PooledByteBufAllocatorClrContractTest
         Assert.Equal(poolHeap ? PooledByteBufAllocator.DefaultNumHeapArena() : 0, a.Metric.NumHeapArenas);
         Assert.Equal(poolDirect ? PooledByteBufAllocator.DefaultNumDirectArena() : 0, a.Metric.NumDirectArenas);
         var factories = new Func<ByteBuf>[] { () => a.Buffer(), () => a.HeapBuffer(), () => a.DirectBuffer(), () => a.IoBuffer() };
+
         for (int i = 0; i < factories.Length; ++i)
         {
             ByteBuf b = factories[i]();
             bool direct = i == 0 ? preferDirect : i >= 2;
+
             try
             {
                 Assert.Equal(direct, b.IsDirect);
@@ -1221,6 +1265,7 @@ public class PooledByteBufAllocatorClrContractTest
                 b.Release();
             }
         }
+
         Assert.Equal(poolHeap ? 131072 : -1, a.Metric.UsedHeapMemory);
         Assert.Equal(poolDirect ? 131072 : -1, a.Metric.UsedDirectMemory);
         Assert.Equal(poolHeap ? 0 : -1, a.PinnedHeapMemory);
@@ -1234,11 +1279,13 @@ public class PooledByteBufAllocatorClrContractTest
     public void OriginalArenaMetricsWithoutCacheCountEveryReservationAndReturn(int alignment)
     {
         using var a = NewAllocator(alignment: alignment);
+
         for (int i = 0; i < 100; ++i)
         {
             Assert.True(a.HeapBuffer().Release());
             Assert.True(a.DirectBuffer().Release());
         }
+
         foreach (var arena in a.Metric.HeapArenas.Concat(a.Metric.DirectArenas))
         {
             Assert.Equal(100, arena.NumAllocations);
@@ -1254,6 +1301,7 @@ public class PooledByteBufAllocatorClrContractTest
             Assert.Equal(a.Metric.ChunkSize, arena.NumActiveBytes);
             Assert.Equal(1, arena.NumThreadCaches);
         }
+
         Assert.Equal(0, a.Metric.SmallCacheSize);
         Assert.Equal(0, a.Metric.NormalCacheSize);
         Assert.Equal(1, a.Metric.NumThreadLocalCaches);
@@ -1271,6 +1319,7 @@ public class PooledByteBufAllocatorClrContractTest
         Assert.Empty(arena.SmallSubpages);
         ByteBuf b = a.Buffer(500);
         var snapshot = arena.SmallSubpages;
+
         try
         {
             IPoolSubpageMetric subpage = Assert.Single(snapshot);
@@ -1287,6 +1336,7 @@ public class PooledByteBufAllocatorClrContractTest
         {
             b.Release();
         }
+
         Assert.Equal(snapshot[0].MaxNumElements, snapshot[0].NumAvailable);
         a.Dispose();
         Assert.Empty(arena.SmallSubpages);
@@ -1316,6 +1366,7 @@ public class PooledByteBufAllocatorClrContractTest
         Assert.Equal(0, arena.NumActiveBytes);
         Assert.Equal(0, Pinned(a, direct));
         ByteBuf b = a.Buffer(initial, initial * 4);
+
         try
         {
             Assert.Equal(a.Metric.ChunkSize, arena.NumActiveBytes);
@@ -1332,6 +1383,7 @@ public class PooledByteBufAllocatorClrContractTest
         {
             b.Release();
         }
+
         // This is the case as allocations will start in qInit and chunks in qInit will never be released until
         // these are moved to q000.
         // See https://www.bsdcan.org/2006/papers/jemalloc.pdf
@@ -1365,6 +1417,7 @@ public class PooledByteBufAllocatorClrContractTest
         Assert.Equal(0, arena.NumActiveBytes);
         Assert.Equal(0, Pinned(a, direct));
         var retry = a.Buffer(a.Metric.ChunkSize);
+
         try
         {
             Assert.Equal(2, arena.NumChunkAllocations);
@@ -1386,6 +1439,7 @@ public class PooledByteBufAllocatorClrContractTest
         int requested = a.Metric.ChunkSize + 1;
         ByteBuf b = a.DirectBuffer(requested, requested);
         int reserved = alignment == 0 ? requested : arena.NormalizeSize(requested);
+
         try
         {
             Assert.Equal(requested, b.Capacity);
@@ -1402,6 +1456,7 @@ public class PooledByteBufAllocatorClrContractTest
         {
             b.Release();
         }
+
         Assert.Equal(1, arena.NumHugeDeallocations);
         Assert.Equal(0, arena.NumActiveBytes);
         Assert.Equal(0, native.ReservedBytes);
@@ -1427,6 +1482,7 @@ public class PooledByteBufAllocatorClrContractTest
         b.Release();
         Assert.Equal(0, native.ReservedBytes);
         ByteBuf retry = a.DirectBuffer(48);
+
         try
         {
             Assert.Equal(2, arena.NumAllocations);
@@ -1450,6 +1506,7 @@ public class PooledByteBufAllocatorClrContractTest
         ByteBuf b = a.Buffer(size).WriteInt(42);
         long pinned = Pinned(a, direct);
         Memory<byte> memory = b.AsMemory(0, 4);
+
         using (var lease = b.AcquireReadLease())
         {
             a.Dispose();
@@ -1463,6 +1520,7 @@ public class PooledByteBufAllocatorClrContractTest
             Assert.Equal(1, arena.NumActiveAllocations);
             Assert.Equal(new byte[] { 0, 0, 0, 42 }, memory.Span.ToArray());
         }
+
         Assert.Equal(0, arena.NumActiveBytes);
         Assert.Equal(0, Pinned(a, direct));
         Assert.Equal(0, arena.NumActiveAllocations);
@@ -1478,6 +1536,7 @@ public class PooledByteBufAllocatorClrContractTest
         using var a = NewAllocator(true, native: native);
         ByteBuf b = a.DirectBuffer(131072).WriteInt(42);
         ReadOnlySpan<byte> captured = b.AsReadOnlySpan(0, 4);
+
         using (var pin = b.AsMemory(0, 4).Pin())
         {
             b.Release();
@@ -1486,6 +1545,7 @@ public class PooledByteBufAllocatorClrContractTest
             Assert.Equal(0, native.ReservedBytes);
             Assert.Equal(42, captured[3]);
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -1497,6 +1557,7 @@ public class PooledByteBufAllocatorClrContractTest
         var arena = Arena(a, direct);
         ByteBuf root = a.Buffer(48).WriteLong(42);
         ByteBuf view = root.RetainedSlice(0, 8), copy = view.Copy();
+
         try
         {
             Assert.Same(a, copy.Alloc());
@@ -1511,12 +1572,15 @@ public class PooledByteBufAllocatorClrContractTest
         finally
         {
             copy.Release();
+
             if (root.RefCnt != 0)
             {
                 root.Release(root.RefCnt);
             }
         }
+
         CompositeByteBuf composite = a.CompositeBuffer(1);
+
         try
         {
             composite.Capacity = 100;
@@ -1529,6 +1593,7 @@ public class PooledByteBufAllocatorClrContractTest
         {
             composite.Release();
         }
+
         Assert.Equal(0, arena.NumActiveAllocations);
         Assert.Equal(0, Pinned(a, direct));
     }
@@ -1541,6 +1606,7 @@ public class PooledByteBufAllocatorClrContractTest
         using var a = new PooledByteBufAllocator(direct, false, false, nativeAllocator: native);
         ByteBuf b = a.Buffer(8, 32).WriteInt(42);
         a.Dispose();
+
         try
         {
             Assert.Throws<ObjectDisposedException>(() => a.Buffer(1));
@@ -1557,6 +1623,7 @@ public class PooledByteBufAllocatorClrContractTest
         {
             b.Release();
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -1616,6 +1683,7 @@ public class PooledByteBufAllocatorClrContractTest
             for (int i = 0; i < 128; ++i)
             {
                 ByteBuf b = a.Buffer(new[] { 48, 32768, 131073 }[i % 3]);
+
                 try
                 {
                     b.WriteInt(worker);

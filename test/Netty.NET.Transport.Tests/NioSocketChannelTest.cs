@@ -41,6 +41,7 @@ public class NioSocketChannelTest
     {
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         IChannel server = null;
+
         try
         {
             var sb = new ServerBootstrap().Group(group).Channel<NioServerSocketChannel>();
@@ -56,6 +57,7 @@ public class NioSocketChannelTest
         {
             if (server != null)
                 await server.CloseAsync();
+
             await group.StopAsync().WaitAsync(TimeSpan.FromSeconds(10));
         }
     }
@@ -88,6 +90,7 @@ public class NioSocketChannelTest
         var futures = new ConcurrentQueue<Task>();
         var closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         IChannel server = null;
+
         try
         {
             var sb = new ServerBootstrap().Group(group).Channel<NioServerSocketChannel>()
@@ -98,13 +101,16 @@ public class NioSocketChannelTest
             await s.ConnectAsync(IPAddress.Loopback, ((IPEndPoint)server.LocalAddress).Port);
             var buf = new byte[8192];
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+
             for (; ; )
             {
                 if (await s.GetStream().ReadAsync(buf, timeout.Token) == 0)
                     break;
+
                 // Wait a little bit so that the write attempts are split into multiple flush attempts.
                 await Task.Delay(10, timeout.Token);
             }
+
             await closed.Task.WaitAsync(TimeSpan.FromSeconds(10));
             Assert.Equal(3, futures.Count);
             Assert.True(futures.TryDequeue(out var f1));
@@ -122,6 +128,7 @@ public class NioSocketChannelTest
         {
             if (server != null)
                 await server.CloseAsync();
+
             await group.StopAsync().WaitAsync(TimeSpan.FromSeconds(10));
         }
     }
@@ -151,6 +158,7 @@ public class NioSocketChannelTest
         byte[] bytes = new byte[1024];
         Random.Shared.NextBytes(bytes);
         IChannel sc = null, cc = null;
+
         try
         {
             sc = await new ServerBootstrap().Group(group).Channel<NioServerSocketChannel>()
@@ -168,8 +176,10 @@ public class NioSocketChannelTest
         {
             if (cc != null)
                 await cc.CloseAsync();
+
             if (sc != null)
                 await sc.CloseAsync();
+
             await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
         }
     }
@@ -186,6 +196,7 @@ public class NioSocketChannelTest
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
             var loop = group.Next();
+
             if (sameEventLoop)
                 _ = Deregister(ctx, loop);
             else
@@ -217,6 +228,7 @@ public class NioSocketChannelTest
         var socket = new TcpListener(IPAddress.Loopback, 0);
         socket.Start();
         TcpClient accepted = null;
+
         try
         {
             var channel = (NioSocketChannel)await new Bootstrap().Group(group).Channel<NioSocketChannel>()
@@ -236,6 +248,7 @@ public class NioSocketChannelTest
             {
                 // ignore
             }
+
             try
             {
                 socket.Stop();
@@ -244,6 +257,7 @@ public class NioSocketChannelTest
             {
                 // ignore
             }
+
             await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
         }
     }
@@ -264,6 +278,7 @@ public class NioSocketChannelTest
                 {
                     return;
                 }
+
                 closing = true;
                 _ = CloseAsync(ctx);
             });

@@ -152,6 +152,7 @@ public class FastLzFrameDecoder : ByteToMessageDecoder
                 {
                     break;
                 }
+
                 currentChecksum = hasChecksum ? @in.ReadInt() : 0;
                 chunkLength = @in.ReadUnsignedShort();
                 originalLength = isCompressed ? @in.ReadUnsignedShort() : chunkLength;
@@ -187,6 +188,7 @@ public class FastLzFrameDecoder : ByteToMessageDecoder
                                     "stream corrupted: originalLength({0}) and actual length({1}) mismatch",
                                     originalLength, decompressedBytes));
                         }
+
                         output.WriterIndex = output.WriterIndex + decompressedBytes;
                     }
                     else
@@ -216,6 +218,7 @@ public class FastLzFrameDecoder : ByteToMessageDecoder
                     {
                         output.Release();
                     }
+
                     output = null;
                     @in.SkipBytes(chunkLength);
 
@@ -228,6 +231,7 @@ public class FastLzFrameDecoder : ByteToMessageDecoder
                         output.Release();
                     }
                 }
+
                 break;
             }
             case State.CORRUPTED:

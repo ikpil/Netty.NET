@@ -104,6 +104,7 @@ public class ByteBufLeakListenerTest : IDisposable
             1 => allocator.DirectBuffer(8, 8),
             _ => allocator.CompositeBuffer().AddComponent(Unpooled.WrappedBuffer(new byte[8]), true)
         };
+
         try
         {
             root.SetIndex(0, 0).WriteLong(42).Touch("normally-released");
@@ -113,6 +114,7 @@ public class ByteBufLeakListenerTest : IDisposable
             Assert.True(view.Release());
             // Tracking again drains eligible reports; a normally closed tracker cannot notify.
             ByteBuf next = allocator.DirectBuffer(1, 1);
+
             try
             {
                 Assert.Equal(0, listener.Calls);
@@ -126,8 +128,10 @@ public class ByteBufLeakListenerTest : IDisposable
         {
             if (root.RefCnt > 0)
                 root.Release(root.RefCnt);
+
             (allocator as IDisposable)?.Dispose();
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -143,6 +147,7 @@ public class ByteBufLeakListenerTest : IDisposable
     private static void Drain()
     {
         ByteBuf b = new UnpooledHeapByteBuf(UnpooledByteBufAllocator.Default, 1, 1);
+
         try
         {
             Assert.True(ByteBuf.LeakDetector.TrackForcibly(b).Close(b));
@@ -165,6 +170,7 @@ public class ByteBufLeakListenerTest : IDisposable
             {
                 return;
             }
+
             Thread.Sleep(10);
         } while (timer.Elapsed < TimeSpan.FromSeconds(5));
 
@@ -180,6 +186,7 @@ public class ByteBufLeakListenerTest : IDisposable
             // Only count this case's unique leak when unrelated collected buffers are drained.
             if (hint != null && !records.Contains(hint))
                 return;
+
             Calls++;
             ThreadId = Environment.CurrentManagedThreadId;
             ResourceType = resourceType;

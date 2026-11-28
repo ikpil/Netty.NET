@@ -108,6 +108,7 @@ public sealed class Bzip2Decompressor : InputBufferingDecompressor
     internal override void ProcessInput(ByteBuf buf)
     {
         reader.SetByteBuf(buf);
+
         switch (currentState)
         {
             case State.INIT:
@@ -115,17 +116,20 @@ public sealed class Bzip2Decompressor : InputBufferingDecompressor
                 {
                     break;
                 }
+
                 int magicNumber = buf.ReadUnsignedMedium();
                 if (magicNumber != MAGIC_NUMBER)
                 {
                     throw new DecompressionException("Unexpected stream identifier contents. Mismatched bzip2 " +
                             "protocol version?");
                 }
+
                 int blockSize = buf.ReadByte() - '0';
                 if (blockSize < MIN_BLOCK_SIZE || blockSize > MAX_BLOCK_SIZE)
                 {
                     throw new DecompressionException("block size is invalid");
                 }
+
                 this.blockSize = blockSize * BASE_BLOCK_SIZE;
 
                 streamCRC = 0;
@@ -137,6 +141,7 @@ public sealed class Bzip2Decompressor : InputBufferingDecompressor
                 {
                     break;
                 }
+
                 // Get the block magic bytes.
                 int magic1 = reader.ReadBits(24);
                 int magic2 = reader.ReadBits(24);
@@ -148,13 +153,16 @@ public sealed class Bzip2Decompressor : InputBufferingDecompressor
                     {
                         throw new DecompressionException("stream CRC error");
                     }
+
                     currentState = State.EOF;
                     break;
                 }
+
                 if (magic1 != BLOCK_HEADER_MAGIC_1 || magic2 != BLOCK_HEADER_MAGIC_2)
                 {
                     throw new DecompressionException("bad block header");
                 }
+
                 blockCRC = reader.ReadInt();
                 currentState = State.INIT_BLOCK_PARAMS;
                 // fall through
@@ -164,6 +172,7 @@ public sealed class Bzip2Decompressor : InputBufferingDecompressor
                 {
                     break;
                 }
+
                 bool blockRandomised = reader.ReadBoolean();
                 int bwtStartPointer = reader.ReadBits(24);
 
@@ -177,6 +186,7 @@ public sealed class Bzip2Decompressor : InputBufferingDecompressor
                 {
                     break;
                 }
+
                 this.blockDecompressor.huffmanInUse16 = reader.ReadBits(16);
                 currentState = State.RECEIVE_HUFFMAN_USED_BITMAPS;
                 // fall through
@@ -193,6 +203,7 @@ public sealed class Bzip2Decompressor : InputBufferingDecompressor
                 }
 
                 int huffmanSymbolCount = 0;
+
                 if (bitNumber > 0)
                 {
                     for (int i = 0; i < 16; i++)
@@ -209,6 +220,7 @@ public sealed class Bzip2Decompressor : InputBufferingDecompressor
                         }
                     }
                 }
+
                 blockDecompressor.huffmanEndOfBlockSymbol = huffmanSymbolCount + 1;
 
                 int totalTables = reader.ReadBits(3);
@@ -216,11 +228,13 @@ public sealed class Bzip2Decompressor : InputBufferingDecompressor
                 {
                     throw new DecompressionException("incorrect huffman groups number");
                 }
+
                 int alphaSize = huffmanSymbolCount + 2;
                 if (alphaSize > HUFFMAN_MAX_ALPHABET_SIZE)
                 {
                     throw new DecompressionException("incorrect alphabet size");
                 }
+
                 this.huffmanStageDecoder = new Bzip2HuffmanStageDecoder(reader, totalTables, alphaSize);
                 currentState = State.RECEIVE_SELECTORS_NUMBER;
                 // fall through
@@ -230,11 +244,13 @@ public sealed class Bzip2Decompressor : InputBufferingDecompressor
                 {
                     break;
                 }
+
                 int totalSelectors = reader.ReadBits(15);
                 if (totalSelectors < 1 || totalSelectors > MAX_SELECTORS)
                 {
                     throw new DecompressionException("incorrect selectors number");
                 }
+
                 this.huffmanStageDecoder.selectors = new byte[totalSelectors];
 
                 currentState = State.RECEIVE_SELECTORS;
@@ -247,6 +263,7 @@ public sealed class Bzip2Decompressor : InputBufferingDecompressor
                 Bzip2MoveToFrontTable tableMtf = huffmanStageDecoder.tableMTF;
 
                 int currSelector;
+
                 // Get zero-terminated bit runs (0..62) of MTF'ed Huffman table. length = 1..6
                 for (currSelector = huffmanStageDecoder.currentSelector;
                      currSelector < totalSelectors; currSelector++)
@@ -257,7 +274,9 @@ public sealed class Bzip2Decompressor : InputBufferingDecompressor
                         huffmanStageDecoder.currentSelector = currSelector;
                         return;
                     }
+
                     int index = 0;
+
                     while (reader.ReadBoolean())
                     {
                         index++;
@@ -267,6 +286,7 @@ public sealed class Bzip2Decompressor : InputBufferingDecompressor
                                     index.ToString(CultureInfo.InvariantCulture));
                         }
                     }
+
                     selectors[currSelector] = tableMtf.IndexToFront(index);
                 }
 
@@ -285,6 +305,7 @@ public sealed class Bzip2Decompressor : InputBufferingDecompressor
                 int currAlpha = 0;
                 bool modifyLength = huffmanStageDecoder.modifyLength;
                 bool saveStateAndReturn = false;
+
                 for (currGroup = huffmanStageDecoder.currentGroup; currGroup < totalTables; currGroup++)
                 {
                     // start_huffman_length
@@ -293,10 +314,12 @@ public sealed class Bzip2Decompressor : InputBufferingDecompressor
                         saveStateAndReturn = true;
                         break;
                     }
+
                     if (currLength < 0)
                     {
                         currLength = reader.ReadBits(5);
                     }
+
                     for (currAlpha = huffmanStageDecoder.currentAlpha; currAlpha < alphaSize; currAlpha++)
                     {
                         // delta_bit_length: 1..40
@@ -305,6 +328,7 @@ public sealed class Bzip2Decompressor : InputBufferingDecompressor
                             saveStateAndReturn = true;
                             goto saveStateCheck;
                         }
+
                         while (modifyLength || reader.ReadBoolean())  // 0=>next symbol; 1=>alter length
                         {
                             if (!reader.IsReadable())
@@ -313,17 +337,21 @@ public sealed class Bzip2Decompressor : InputBufferingDecompressor
                                 saveStateAndReturn = true;
                                 goto saveStateCheck;
                             }
+
                             // 1=>decrement length;  0=>increment length
                             currLength += reader.ReadBoolean() ? -1 : 1;
                             modifyLength = false;
+
                             if (!reader.IsReadable())
                             {
                                 saveStateAndReturn = true;
                                 goto saveStateCheck;
                             }
                         }
+
                         codeLength[currGroup][currAlpha] = (byte) currLength;
                     }
+
                     currLength = -1;
                     currAlpha = huffmanStageDecoder.currentAlpha = 0;
                     modifyLength = false;
@@ -351,6 +379,7 @@ public sealed class Bzip2Decompressor : InputBufferingDecompressor
                 {
                     return;
                 }
+
                 currentState = State.DECODED_HUFFMAN_DATA;
                 break;
         }
@@ -362,10 +391,13 @@ public sealed class Bzip2Decompressor : InputBufferingDecompressor
         {
             throw new InvalidOperationException("Not in state NEED_OUTPUT");
         }
+
         ByteBuf uncompressed = allocator.Buffer(outputBufferSize);
+
         try
         {
             int uncByte;
+
             while ((uncByte = blockDecompressor.Read()) >= 0)
             {
                 uncompressed.WriteByte(uncByte);
@@ -374,6 +406,7 @@ public sealed class Bzip2Decompressor : InputBufferingDecompressor
                     break;
                 }
             }
+
             if (uncByte < 0)
             {
                 // all data read
@@ -381,6 +414,7 @@ public sealed class Bzip2Decompressor : InputBufferingDecompressor
                 int currentBlockCRC = blockDecompressor.CheckCRC();
                 streamCRC = (streamCRC << 1 | streamCRC >>> 31) ^ currentBlockCRC;
             }
+
             return uncompressed;
         }
         catch (Exception)

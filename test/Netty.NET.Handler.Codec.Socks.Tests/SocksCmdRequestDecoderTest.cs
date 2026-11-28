@@ -39,6 +39,7 @@ public class SocksCmdRequestDecoderTest
         SocksCmdRequestDecoder decoder = new SocksCmdRequestDecoder();
         EmbeddedChannel embedder = new EmbeddedChannel(decoder);
         SocksCommonTestUtils.WriteMessageIntoEmbedder(embedder, msg);
+
         if (msg.AddressType() == SocksAddressType.UNKNOWN)
         {
             Assert.IsType<UnknownSocksRequest>(embedder.ReadInbound(), exactMatch: false);
@@ -51,6 +52,7 @@ public class SocksCmdRequestDecoderTest
             Assert.Equal(msg.Host(), host);
             Assert.Equal(msg.Port(), port);
         }
+
         Assert.Null(embedder.ReadInbound());
     }
 
@@ -59,6 +61,7 @@ public class SocksCmdRequestDecoderTest
     {
         string[] hosts = { "127.0.0.1", };
         int[] ports = { 1, 32769, 65535 };
+
         foreach (SocksCmdType cmdType in SocksCmdType.Values())
         {
             foreach (string host in hosts)
@@ -76,6 +79,7 @@ public class SocksCmdRequestDecoderTest
     {
         string[] hosts = { SocksCommonUtils.Ipv6toStr(IPAddress.Parse("::1").GetAddressBytes()) };
         int[] ports = { 1, 32769, 65535 };
+
         foreach (SocksCmdType cmdType in SocksCmdType.Values())
         {
             foreach (string host in hosts)
@@ -104,6 +108,7 @@ public class SocksCmdRequestDecoderTest
                           "실례.테스트",
                           "உதாரணம்.பரிட்சை" };
         int[] ports = { 1, 32769, 65535 };
+
         foreach (SocksCmdType cmdType in SocksCmdType.Values())
         {
             foreach (string host in hosts)
@@ -121,6 +126,7 @@ public class SocksCmdRequestDecoderTest
     {
         string host = "google.com";
         int port = 80;
+
         foreach (SocksCmdType cmdType in SocksCmdType.Values())
         {
             TestSocksCmdRequestDecoderWithDifferentParams(cmdType, SocksAddressType.UNKNOWN, host, port);

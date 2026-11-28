@@ -41,6 +41,7 @@ public class ByteVisitorContractTest
             (ByteProcessor.FIND_LINEAR_WHITESPACE, new byte[] { 32, 9 }, false),
             (ByteProcessor.FIND_NON_LINEAR_WHITESPACE, new byte[] { 32, 9 }, true)
         };
+
         foreach (var predicate in predicates)
             for (int value = 0; value <= byte.MaxValue; value++)
             {
@@ -117,6 +118,7 @@ public class ByteVisitorContractTest
             {
                 throw failure;
             }
+
             return true; };
         var observed = Assert.Throws<InvalidOperationException>(() =>
         {
@@ -276,10 +278,12 @@ public class ByteVisitorContractTest
         Assert.Equal(-1, text.ForEachByte(value =>
         {
             visited.Add(value);
+
             if (visited.Count == 1)
             {
                 bytes[2] = 128;
             }
+
             return true;
         }));
         Assert.Equal(new byte[] { 10, 128, 255 }, visited);

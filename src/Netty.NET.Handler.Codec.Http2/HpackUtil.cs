@@ -65,6 +65,7 @@ internal sealed class HpackUtil
             {
                 return 0;
             }
+
             AsciiString s1Ascii = (AsciiString) s1;
             AsciiString s2Ascii = (AsciiString) s2;
             return PlatformDependent.EqualsConstantTime(s1Ascii.Array(), s1Ascii.ArrayOffset(),

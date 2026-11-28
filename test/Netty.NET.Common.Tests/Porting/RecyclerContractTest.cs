@@ -99,12 +99,14 @@ public class RecyclerContractTest
         var pool = new Pool(32, unguarded);
         var tasks = new Task[8];
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+
         for (int worker = 0; worker < tasks.Length; worker++)
             tasks[worker] = Task.Run(() =>
             {
                 for (int i = 0; i < 5000; i++)
                 {
                     deadline.Token.ThrowIfCancellationRequested();
+
                     Item item = pool.Get();
                     Assert.Equal(0, Interlocked.CompareExchange(ref item.Active, 1, 0));
                     Thread.Yield();
@@ -112,6 +114,7 @@ public class RecyclerContractTest
                     item.Handle.Recycle(item);
                 }
             });
+
         Assert.True(Task.WaitAll(tasks, TimeSpan.FromSeconds(15)));
         Assert.InRange(pool.ThreadLocalSize(), 1, 32);
     }

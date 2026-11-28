@@ -53,6 +53,7 @@ public abstract class Http3PushStreamServerInitializer : ChannelInitializer<IQui
             throw new ArgumentException("Using server push stream initializer for client stream: " +
                     ch.StreamId().ToString(CultureInfo.InvariantCulture));
         }
+
         Http3CodecUtils.VerifyIsUnidirectional(ch);
 
         // We need to write stream type into the stream before doing anything else.

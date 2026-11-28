@@ -74,6 +74,7 @@ public class DefaultHttp2HeadersTest
         IHttp2Headers headers = NewHeaders();
 
         IHttp2Headers nonPseudoHeaders = new DefaultHttp2Headers();
+
         foreach (IEntry<ICharSequence, ICharSequence> entry in headers)
         {
             if (entry.GetKey().Length() == 0 || entry.GetKey().CharAt(0) != ':' &&
@@ -445,6 +446,7 @@ public class DefaultHttp2HeadersTest
     internal static void VerifyPseudoHeadersFirst(IHttp2Headers headers)
     {
         ICharSequence lastNonPseudoName = null;
+
         foreach (IEntry<ICharSequence, ICharSequence> entry in headers)
         {
             if (entry.GetKey().Length() == 0 || entry.GetKey().CharAt(0) != ':')

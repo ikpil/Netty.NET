@@ -89,6 +89,7 @@ public sealed class Http3ServerPushStreamManager
     public Http3ServerPushStreamManager(IQuicChannel channel, int initialPushStreamsCountHint)
     {
         ArgumentNullException.ThrowIfNull(channel, "channel");
+
         this.channel = channel;
         pushStreams = new Dictionary<long, object>(initialPushStreamsCountHint);
         controlStreamListener = new ControlStreamListenerHandler(this);
@@ -119,6 +120,7 @@ public sealed class Http3ServerPushStreamManager
         {
             return NextPushId();
         }
+
         throw new InvalidOperationException("MAX allowed push ID: " + maxPushId.ToString(CultureInfo.InvariantCulture) +
                 ", next push ID: " + Volatile.Read(ref nextId).ToString(CultureInfo.InvariantCulture));
     }
@@ -194,16 +196,19 @@ public sealed class Http3ServerPushStreamManager
     private long NextPushId()
     {
         long pushId = Interlocked.Increment(ref nextId) - 1;
+
         lock (pushStreams)
         {
             pushStreams[pushId] = PUSH_ID_GENERATED;
         }
+
         return pushId;
     }
 
     private void ValidatePushId(long pushId)
     {
         bool replaced;
+
         lock (pushStreams)
         {
             replaced = pushStreams.TryGetValue(pushId, out object existing) && existing == PUSH_ID_GENERATED;
@@ -212,6 +217,7 @@ public sealed class Http3ServerPushStreamManager
                 pushStreams[pushId] = AWAITING_STREAM_ESTABLISHMENT;
             }
         }
+
         if (!replaced)
         {
             throw new ArgumentException("Unknown push ID: " + pushId.ToString(CultureInfo.InvariantCulture));
@@ -221,6 +227,7 @@ public sealed class Http3ServerPushStreamManager
     private Http3PushStreamServerInitializer PushStreamInitializer(long pushId, IChannelHandler handler)
     {
         Http3PushStreamServerInitializer initializer;
+
         if (handler is Http3PushStreamServerInitializer)
         {
             initializer = (Http3PushStreamServerInitializer) handler;
@@ -229,6 +236,7 @@ public sealed class Http3ServerPushStreamManager
         {
             initializer = null;
         }
+
         return new PushStreamInitializerImpl(this, pushId, initializer, handler);
     }
 
@@ -287,6 +295,7 @@ public sealed class Http3ServerPushStreamManager
                     if (manager.pushStreams.TryGetValue(pushId, out object existing))
                     {
                         long id = pushId;
+
                         if (existing == AWAITING_STREAM_ESTABLISHMENT)
                         {
                             manager.pushStreams[id] = CANCELLED_STREAM;
@@ -298,6 +307,7 @@ public sealed class Http3ServerPushStreamManager
                                 throw new InvalidOperationException("Unexpected push stream state " + existing +
                                         " for pushId: " + id.ToString(CultureInfo.InvariantCulture));
                             }
+
                             Debug.Assert(existing is IQuicStreamChannel);
                             _ = ((IQuicStreamChannel) existing).CloseAsync();
                             // remove the push stream from the map.
@@ -306,6 +316,7 @@ public sealed class Http3ServerPushStreamManager
                     }
                 }
             }
+
             ReferenceCountUtil.Release(msg);
         }
     }
@@ -331,6 +342,7 @@ public sealed class Http3ServerPushStreamManager
         protected internal override void InitPushStream(IQuicStreamChannel ch)
         {
             ch.Pipeline.AddLast(new PushStreamStateHandler(manager, pushId, ch));
+
             if (initializer != null)
             {
                 initializer.InitPushStream(ch);
@@ -377,22 +389,26 @@ public sealed class Http3ServerPushStreamManager
         {
             Debug.Assert(!stateUpdated);
             stateUpdated = true;
+
             // CLR: pushStreams.compute(pushId, (id, existing) -> ...) under the lock (see the type comment).
             lock (manager.pushStreams)
             {
                 manager.pushStreams.TryGetValue(pushId, out object existing);
                 long id = pushId;
+
                 if (existing == AWAITING_STREAM_ESTABLISHMENT)
                 {
                     manager.pushStreams[id] = ch;
                     return;
                 }
+
                 if (existing == CANCELLED_STREAM)
                 {
                     _ = ch.CloseAsync();
                     manager.pushStreams.Remove(id);
                     return; // remove push stream.
                 }
+
                 throw new InvalidOperationException("Unexpected push stream state " +
                         (existing == null ? "null" : existing.ToString()) + " for pushId: " +
                         id.ToString(CultureInfo.InvariantCulture));
@@ -408,6 +424,7 @@ public sealed class Http3ServerPushStreamManager
                     manager.pushStreams.Remove(pushId);
                 }
             }
+
             ctx.FireUserEventTriggered(evt);
         }
     }

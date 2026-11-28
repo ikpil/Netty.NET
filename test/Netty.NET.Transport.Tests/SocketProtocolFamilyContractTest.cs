@@ -64,15 +64,18 @@ public class SocketProtocolFamilyContractTest
         {
             Assert.Equal(AddressFamily.InterNetwork, inet.NativeSocket.AddressFamily);
         }
+
         using (var deprecated = new StreamProbe(InternetProtocolFamily.IPv4))
         {
             Assert.Equal(AddressFamily.InterNetwork, deprecated.NativeSocket.AddressFamily);
         }
+
         using (var osDefault = new StreamProbe((SocketProtocolFamily?)null))
         {
             Assert.Equal(Socket.OSSupportsIPv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork,
                 osDefault.NativeSocket.AddressFamily);
         }
+
         if (Socket.OSSupportsIPv6)
         {
             using var inet6 = new StreamProbe(SocketProtocolFamily.Inet6);
@@ -80,6 +83,7 @@ public class SocketProtocolFamilyContractTest
             // OpenJDK clears IPV6_V6ONLY when IPv4 is available.
             Assert.Equal(Socket.OSSupportsIPv4, inet6.NativeSocket.DualMode);
         }
+
         Assert.Throws<NotSupportedException>(() => new NioSocketChannel(SocketProtocolFamily.Unix));
     }
 
@@ -90,16 +94,19 @@ public class SocketProtocolFamilyContractTest
         {
             Assert.Equal(AddressFamily.InterNetwork, inet.NativeSocket.AddressFamily);
         }
+
         using (var deprecated = new ServerProbe(InternetProtocolFamily.IPv4))
         {
             Assert.Equal(AddressFamily.InterNetwork, deprecated.NativeSocket.AddressFamily);
         }
+
         if (Socket.OSSupportsIPv6)
         {
             using var inet6 = new ServerProbe(SocketProtocolFamily.Inet6);
             Assert.Equal(AddressFamily.InterNetworkV6, inet6.NativeSocket.AddressFamily);
             Assert.Equal(Socket.OSSupportsIPv4, inet6.NativeSocket.DualMode);
         }
+
         Assert.Throws<NotSupportedException>(() => new NioServerSocketChannel(SocketProtocolFamily.Unix));
     }
 
@@ -117,10 +124,12 @@ public class SocketProtocolFamilyContractTest
         {
             Assert.Skip("A dual-stack host is required.");
         }
+
         var cancellation = TestContext.Current.CancellationToken;
         var received = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var channel = new NioDatagramChannel(SocketProtocolFamily.Inet6);
+
         try
         {
             channel.Pipeline.AddLast(new Receiver(received));

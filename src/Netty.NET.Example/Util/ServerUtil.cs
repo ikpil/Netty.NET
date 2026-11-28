@@ -32,6 +32,7 @@ public static class ServerUtil
         {
             return null;
         }
+
         X509Bundle ssc = new CertificateBuilder()
                 .Subject("cn=localhost")
                 .SetIsCertificateAuthority(true)

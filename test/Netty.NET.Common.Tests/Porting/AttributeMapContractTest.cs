@@ -81,6 +81,7 @@ public class AttributeMapContractTest
         var old = map.Attr(key);
         var initial = new object();
         old.Set(initial);
+
         if (returnOld)
         {
             Assert.Same(initial, old.GetAndRemove());
@@ -89,6 +90,7 @@ public class AttributeMapContractTest
         {
             old.Remove();
         }
+
         Assert.Null(old.Get());
         Assert.False(map.HasAttr(key));
         var current = map.Attr(key);
@@ -124,9 +126,11 @@ public class AttributeMapContractTest
         });
         object winner = map.Attr(key).Get();
         int winners = 0;
+
         for (int index = 0; index < slots.Length; index++)
         {
             Assert.Same(slots[0], slots[index]);
+
             if (previous[index] == null)
             {
                 winners++;
@@ -137,6 +141,7 @@ public class AttributeMapContractTest
                 Assert.Same(winner, previous[index]);
             }
         }
+
         Assert.Equal(1, winners);
     }
 
@@ -162,6 +167,7 @@ public class AttributeMapContractTest
         {
             Assert.True(expected.Add(value));
         }
+
         foreach (object value in previous)
         {
             Assert.True(expected.Remove(value));
@@ -177,11 +183,13 @@ public class AttributeMapContractTest
         var map = new DefaultAttributeMap();
         var textKeys = new AttributeKey<string>[32];
         var objectKeys = new AttributeKey<object>[32];
+
         for (int index = 0; index < textKeys.Length; index++)
         {
             textKeys[index] = AttributeKey.ValueOf<string>(Guid.NewGuid().ToString());
             objectKeys[index] = AttributeKey.ValueOf<object>(Guid.NewGuid().ToString());
         }
+
         var texts = new IAttribute<string>[8, 32];
         var objects = new IAttribute<object>[8, 32];
         RunContenders(worker =>
@@ -193,10 +201,12 @@ public class AttributeMapContractTest
                 objects[worker, index] = map.Attr(objectKeys[index]);
             }
         });
+
         for (int index = 0; index < 32; index++)
         {
             Assert.True(map.HasAttr(textKeys[index]));
             Assert.True(map.HasAttr(objectKeys[index]));
+
             for (int worker = 0; worker < 8; worker++)
             {
                 Assert.Same(texts[0, index], texts[worker, index]);
@@ -223,6 +233,7 @@ public class AttributeMapContractTest
             object wrapper = old.GetType().GetField("_attributeMap", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(old);
             wrapper.GetType().GetMethod("GetAndSet").Invoke(wrapper, new object[] { null });
         }
+
         var current = map.Attr(key);
         Assert.NotSame(old, current);
         var payload = new object();
@@ -239,6 +250,7 @@ public class AttributeMapContractTest
         using var start = new ManualResetEventSlim();
         var threads = new Thread[8];
         var errors = new Exception[8];
+
         for (int index = 0; index < threads.Length; index++)
         {
             int worker = index;
@@ -251,6 +263,7 @@ public class AttributeMapContractTest
                     {
                         throw new TimeoutException();
                     }
+
                     action(worker);
                 }
                 catch (Exception error)
@@ -260,6 +273,7 @@ public class AttributeMapContractTest
             }) { IsBackground = true };
             threads[index].Start();
         }
+
         try
         {
             Assert.True(ready.Wait(TimeSpan.FromSeconds(5)));
@@ -273,6 +287,7 @@ public class AttributeMapContractTest
                 Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
             }
         }
+
         Assert.All(errors, error => Assert.Null(error));
     }
 }

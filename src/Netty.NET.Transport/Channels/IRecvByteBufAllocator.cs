@@ -121,6 +121,7 @@ public interface IRecvByteBufAllocator
         public DelegatingHandle(IHandle handle)
         {
             ArgumentNullException.ThrowIfNull(handle);
+
             _delegate = handle;
         }
 

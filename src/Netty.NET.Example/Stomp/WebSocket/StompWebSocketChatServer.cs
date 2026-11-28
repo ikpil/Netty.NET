@@ -42,6 +42,7 @@ public class StompWebSocketChatServer
     public async Task StartAsync(int port)
     {
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             ServerBootstrap bootstrap = new ServerBootstrap()
@@ -62,6 +63,7 @@ public class StompWebSocketChatServer
                 }
             }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
             await Task.WhenAny(bindFuture);
+
             if (bindFuture.IsCompletedSuccessfully)
             {
                 await bindFuture.Result.CloseFuture;

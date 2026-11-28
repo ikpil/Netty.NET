@@ -172,6 +172,7 @@ public class HAProxyMessageDecoder : ByteToMessageDecoder
                 v2MaxHeaderSize = calcMax;
             }
         }
+
         this.failFast = failFast;
     }
 
@@ -229,6 +230,7 @@ public class HAProxyMessageDecoder : ByteToMessageDecoder
     private static int FindEndOfLine(ByteBuf buffer)
     {
         int n = buffer.WriterIndex;
+
         for (int i = buffer.ReaderIndex; i < n; i++)
         {
             byte b = buffer.GetByte(i);
@@ -237,6 +239,7 @@ public class HAProxyMessageDecoder : ByteToMessageDecoder
                 return i;  // \r\n
             }
         }
+
         return -1;  // Not found.
     }
 
@@ -250,6 +253,7 @@ public class HAProxyMessageDecoder : ByteToMessageDecoder
     public override void ChannelRead(IChannelHandlerContext ctx, object msg)
     {
         base.ChannelRead(ctx, msg);
+
         if (finished)
         {
             ctx.Pipeline.Remove(this);
@@ -281,6 +285,7 @@ public class HAProxyMessageDecoder : ByteToMessageDecoder
         if (decoded != null)
         {
             finished = true;
+
             try
             {
                 if (version == 1)
@@ -313,6 +318,7 @@ public class HAProxyMessageDecoder : ByteToMessageDecoder
         {
             headerExtractor = new StructHeaderExtractor(this, v2MaxHeaderSize);
         }
+
         return headerExtractor.Extract(ctx, buffer);
     }
 
@@ -330,6 +336,7 @@ public class HAProxyMessageDecoder : ByteToMessageDecoder
         {
             headerExtractor = new LineHeaderExtractor(this, V1_MAX_LENGTH);
         }
+
         return headerExtractor.Extract(ctx, buffer);
     }
 
@@ -350,6 +357,7 @@ public class HAProxyMessageDecoder : ByteToMessageDecoder
         finished = true;
         _ = ctx.CloseAsync(); // drop connection immediately per spec
         HAProxyProtocolException ppex;
+
         if (errMsg != null && e != null)
         {
             ppex = new HAProxyProtocolException(errMsg, e);
@@ -366,6 +374,7 @@ public class HAProxyMessageDecoder : ByteToMessageDecoder
         {
             ppex = new HAProxyProtocolException();
         }
+
         throw ppex;
     }
 
@@ -389,6 +398,7 @@ public class HAProxyMessageDecoder : ByteToMessageDecoder
         {
             return DETECTION_RESULT_V1;
         }
+
         return ProtocolDetectionResult<HAProxyProtocolVersion>.Invalid();
     }
 
@@ -402,6 +412,7 @@ public class HAProxyMessageDecoder : ByteToMessageDecoder
                 return false;
             }
         }
+
         return true;
     }
 
@@ -436,6 +447,7 @@ public class HAProxyMessageDecoder : ByteToMessageDecoder
         public ByteBuf Extract(IChannelHandlerContext ctx, ByteBuf buffer)
         {
             int eoh = FindEndOfHeader(buffer);
+
             if (!decoder.discarding)
             {
                 if (eoh >= 0)
@@ -447,6 +459,7 @@ public class HAProxyMessageDecoder : ByteToMessageDecoder
                         decoder.FailOverLimit(ctx, length);
                         return null;
                     }
+
                     ByteBuf frame = buffer.ReadSlice(length);
                     buffer.SkipBytes(DelimiterLength(buffer, eoh));
                     return frame;
@@ -459,11 +472,13 @@ public class HAProxyMessageDecoder : ByteToMessageDecoder
                         decoder.discardedBytes = length;
                         buffer.SkipBytes(length);
                         decoder.discarding = true;
+
                         if (decoder.failFast)
                         {
                             decoder.FailOverLimit(ctx, "over " + decoder.discardedBytes.ToString(CultureInfo.InvariantCulture));
                         }
                     }
+
                     return null;
                 }
             }
@@ -475,6 +490,7 @@ public class HAProxyMessageDecoder : ByteToMessageDecoder
                     buffer.ReaderIndex = eoh + DelimiterLength(buffer, eoh);
                     decoder.discardedBytes = 0;
                     decoder.discarding = false;
+
                     if (!decoder.failFast)
                     {
                         decoder.FailOverLimit(ctx, "over " + length.ToString(CultureInfo.InvariantCulture));
@@ -485,6 +501,7 @@ public class HAProxyMessageDecoder : ByteToMessageDecoder
                     decoder.discardedBytes += buffer.ReadableBytes;
                     buffer.SkipBytes(buffer.ReadableBytes);
                 }
+
                 return null;
             }
         }

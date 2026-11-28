@@ -54,6 +54,7 @@ public class ResourceLeakDetectorTest : IDisposable
         // With 50 threads issue #6087 is reproducible on every run.
         var threads = new Thread[50];
         using var barrier = new Barrier(threads.Length);
+
         for (int i = 0; i < threads.Length; i++)
         {
             threads[i] = new Thread(() =>
@@ -68,12 +69,14 @@ public class ResourceLeakDetectorTest : IDisposable
                             Interlocked.CompareExchange(ref error, new InvalidOperationException("ResourceLeak.close() returned 'false' but expected 'true'"), null);
                             return true;
                         }
+
                     return false;
                 }
 
                 try
                 {
                     Assert.True(barrier.SignalAndWait(TimeSpan.FromSeconds(10)));
+
                     // Run 10000 times or until the test is marked as finished.
                     for (int b = 0; b < 1000 && Volatile.Read(ref finished) == 0; b++)
                     {
@@ -83,6 +86,7 @@ public class ResourceLeakDetectorTest : IDisposable
                             Resource resource = new DefaultResource();
                             resources.Enqueue(new LeakAwareResource(resource, DefaultResource.detector.Track(resource)));
                         }
+
                         if (CloseResources(true))
                         {
                             Volatile.Write(ref finished, 1);
@@ -112,10 +116,13 @@ public class ResourceLeakDetectorTest : IDisposable
             }) { IsBackground = true };
             threads[i].Start();
         }
+
         // Just wait until all threads are done.
         var elapsed = Stopwatch.StartNew();
+
         foreach (Thread thread in threads)
             Assert.True(thread.Join(TimeSpan.FromMilliseconds(ConcurrentUsageTimeoutMilliseconds) - elapsed.Elapsed));
+
         // Check if we had any leak reports in the ResourceLeakDetector itself
         DefaultResource.detector.AssertNoErrors();
         AssertNoErrors(error);
@@ -127,6 +134,7 @@ public class ResourceLeakDetectorTest : IDisposable
         DefaultResource.detectorWithSetupHint.Initialise();
         LeakResource();
         var deadline = Stopwatch.StartNew();
+
         do
         {
             // Trigger GC.
@@ -142,6 +150,7 @@ public class ResourceLeakDetectorTest : IDisposable
                 sink = RuntimeHelpers.GetHashCode(new byte[10000]);
             }
         } while (DefaultResource.detectorWithSetupHint.GetLeaksFound() < 1 && deadline.Elapsed < TimeSpan.FromSeconds(10));
+
         Assert.Equal(1, DefaultResource.detectorWithSetupHint.GetLeaksFound());
         DefaultResource.detectorWithSetupHint.AssertNoErrors();
     }
@@ -156,6 +165,7 @@ public class ResourceLeakDetectorTest : IDisposable
         Assert.Equal("expected failure", failure.Message);
         DefaultResource.detectorWithSetupHint.initialHint = DefaultResource.detectorWithSetupHint.canaryString;
         var deadline = Stopwatch.StartNew();
+
         do
         {
             // Trigger GC.
@@ -171,6 +181,7 @@ public class ResourceLeakDetectorTest : IDisposable
                 sink = RuntimeHelpers.GetHashCode(new byte[10000]);
             }
         } while (DefaultResource.detectorWithSetupHint.GetLeaksFound() < 1 && deadline.Elapsed < TimeSpan.FromSeconds(10));
+
         Assert.Equal(1, DefaultResource.detectorWithSetupHint.GetLeaksFound());
         DefaultResource.detectorWithSetupHint.AssertNoErrors();
     }
@@ -275,6 +286,7 @@ public class ResourceLeakDetectorTest : IDisposable
             {
                 ReportError(new InvalidOperationException("Leak records did not contain canary string"));
             }
+
             Interlocked.Increment(ref leaksFound);
         }
 
@@ -284,6 +296,7 @@ public class ResourceLeakDetectorTest : IDisposable
             {
                 ReportError(new InvalidOperationException("Got untraced leak w/o canary string"));
             }
+
             Interlocked.Increment(ref leaksFound);
         }
 

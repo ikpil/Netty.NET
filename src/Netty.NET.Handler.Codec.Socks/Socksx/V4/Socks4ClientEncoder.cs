@@ -46,6 +46,7 @@ public sealed class Socks4ClientEncoder : MessageToByteEncoder<ISocks4CommandReq
         @out.WriteByte(msg.Version().ByteValue());
         @out.WriteByte(msg.Type().ByteValue());
         ByteBufUtil.WriteShortBE(@out, msg.DstPort());
+
         if (NetUtil.IsValidIpV4Address(msg.DstAddr()))
         {
             @out.WriteBytes(NetUtil.CreateByteArrayFromIpAddressString(msg.DstAddr()));
@@ -73,6 +74,7 @@ public sealed class Socks4ClientEncoder : MessageToByteEncoder<ISocks4CommandReq
                 throw new EncoderException("Illegal character in " + fieldName + " field.");
             }
         }
+
         return strValue;
     }
 }

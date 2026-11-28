@@ -48,6 +48,7 @@ internal sealed class HttpProxyServer : ProxyServer
     protected override void Configure(ISocketChannel ch)
     {
         IChannelPipeline p = ch.Pipeline;
+
         switch (testMode)
         {
         case TestMode.INTERMEDIARY:
@@ -79,6 +80,7 @@ internal sealed class HttpProxyServer : ProxyServer
         ctx.Pipeline.Get<HttpServerCodec>().RemoveInboundHandler();
 
         bool authzSuccess = false;
+
         if (username != null)
         {
             string authz = req.Headers().Get(HttpHeaderNames.PROXY_AUTHORIZATION);
@@ -118,6 +120,7 @@ internal sealed class HttpProxyServer : ProxyServer
         {
             IFullHttpRequest req = (IFullHttpRequest) msg;
             IFullHttpResponse res;
+
             if (!server.Authenticate(ctx, req))
             {
                 res = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.UNAUTHORIZED);

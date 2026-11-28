@@ -49,6 +49,7 @@ public interface ISocks5AddressDecoder
             {
                 return NetUtil.IntToIpAddress(ByteBufUtil.ReadIntBE(@in));
             }
+
             if (addrType == Socks5AddressType.DOMAIN)
             {
                 // CLR: readUnsignedByte() is ReadByte() (unsigned System.Byte, docs/common-clr-design.md);
@@ -58,6 +59,7 @@ public interface ISocks5AddressDecoder
                 @in.SkipBytes(length);
                 return domain;
             }
+
             if (addrType == Socks5AddressType.IPv6)
             {
                 // CLR: the Buffer port has no hasArray()/array()/arrayOffset(); Memory borrowing replaces them and no
@@ -66,6 +68,7 @@ public interface ISocks5AddressDecoder
                 // source takes for every ReplayingDecoder input, whose ReplayingDecoderByteBuf.hasArray() is false.
                 byte[] tmp = new byte[IPv6_LEN];
                 @in.ReadBytes(tmp);
+
                 return NetUtil.BytesToIpAddress(tmp);
             }
             else

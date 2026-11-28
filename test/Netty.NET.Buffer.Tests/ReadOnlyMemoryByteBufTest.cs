@@ -38,6 +38,7 @@ public class ReadOnlyMemoryByteBufTest
         storage.Memory.Span[9] = 2;
         // Test for https://github.com/netty/netty/issues/1708
         ByteBuf b = Unpooled.WrappedBuffer((ReadOnlyMemory<byte>)storage.Memory.Slice(2, 8));
+
         try
         {
             Assert.True(b.IsReadOnly);
@@ -63,6 +64,7 @@ public class ReadOnlyMemoryByteBufTest
         {
             b.Release();
         }
+
         Assert.Equal(0xee, storage.Memory.Span[0]);
     }
 
@@ -78,6 +80,7 @@ public class ReadOnlyMemoryByteBufTest
         }
 
         ByteBuf b = Unpooled.WrappedBuffer((ReadOnlyMemory<byte>)storage.Memory);
+
         try
         {
             Assert.Equal(1, b.ReadByte());
@@ -111,6 +114,7 @@ public class ReadOnlyMemoryByteBufTest
         using var storage = new ExternalStorage(kind, 8);
         storage.Memory.Span.Fill(7);
         ByteBuf b = Unpooled.WrappedBuffer((ReadOnlyMemory<byte>)storage.Memory);
+
         try
         {
             b.Clear();
@@ -146,18 +150,23 @@ public class ReadOnlyMemoryByteBufTest
     public void CopiesKeepCreatorAndStoragePolicyButAreWritableAndIndependent(int kind)
     {
         using var storage = new ExternalStorage(kind, 16);
+
         for (int i = 0; i < 16; i++)
             storage.Memory.Span[i] = (byte)i;
+
         var native = new NativeMemoryAllocator(128);
         var a = new UnpooledByteBufAllocator(true, native);
         ByteBuf b = new ReadOnlyMemoryByteBuf(a, storage.Memory);
+
         try
         {
             b.SetIndex(1, 10).MarkReaderIndex().MarkWriterIndex();
             ByteBuf[] views = { b, b.Duplicate(), b.Slice(1, 9), b.Slice(0, 12).Duplicate().AsReadOnly() };
+
             foreach (ByteBuf view in views)
             {
                 ByteBuf copy = view.Copy();
+
                 try
                 {
                     Assert.Same(a, copy.Alloc());
@@ -174,7 +183,9 @@ public class ReadOnlyMemoryByteBufTest
                     copy.Release();
                 }
             }
+
             ByteBuf offsetCopy = b.Copy(1, 9);
+
             try
             {
                 Assert.Equal(Enumerable.Range(1, 9).Select(i => (byte)i), ByteBufUtil.GetBytes(offsetCopy));
@@ -183,6 +194,7 @@ public class ReadOnlyMemoryByteBufTest
             {
                 offsetCopy.Release();
             }
+
             Assert.Equal(1, b.ReaderIndex);
             Assert.Equal(10, b.WriterIndex);
             Assert.Equal(1, b.RefCnt);
@@ -202,6 +214,7 @@ public class ReadOnlyMemoryByteBufTest
     {
         using var storage = new ExternalStorage(kind, 8);
         Func<ByteBuf, ByteBuf>[] create = { b => b.AsReadOnly(), b => b.Duplicate(), b => b.Slice(), b => b.Duplicate().Duplicate(), b => b.Duplicate().Slice(), b => b.Slice().Duplicate(), b => b.Slice().Slice() };
+
         foreach (var factory in create)
         {
             ByteBuf b = Unpooled.WrappedBuffer((ReadOnlyMemory<byte>)storage.Memory);
@@ -214,6 +227,7 @@ public class ReadOnlyMemoryByteBufTest
             Assert.Throws<IllegalReferenceCountException>(() => b.GetByte(0));
             Assert.Throws<IllegalReferenceCountException>(() => derived.GetByte(0));
         }
+
         ByteBuf root = Unpooled.WrappedBuffer((ReadOnlyMemory<byte>)storage.Memory);
         ByteBuf retained = root.RetainedSlice(1, 4);
         Assert.False(root.Release());
@@ -227,12 +241,15 @@ public class ReadOnlyMemoryByteBufTest
     public void CompositeOwnsWrapperReferencesAndConsolidationCreatesWritableStorage(int kind)
     {
         using var storage = new ExternalStorage(kind, 8);
+
         for (int i = 0; i < 8; i++)
             storage.Memory.Span[i] = (byte)(i + 1);
+
         ByteBuf first = Unpooled.WrappedBuffer((ReadOnlyMemory<byte>)storage.Memory[..3]);
         ByteBuf second = Unpooled.WrappedBuffer((ReadOnlyMemory<byte>)storage.Memory[3..]);
         var a = new UnpooledByteBufAllocator();
         CompositeByteBuf b = a.CompositeHeapBuffer();
+
         try
         {
             b.AddComponent(first, true).AddComponent(second, true);
@@ -250,6 +267,7 @@ public class ReadOnlyMemoryByteBufTest
         {
             b.Release();
         }
+
         Assert.Equal(0, a.Metric.UsedHeapMemory);
         Assert.Equal(1, storage.Memory.Span[0]);
     }
@@ -259,15 +277,19 @@ public class ReadOnlyMemoryByteBufTest
     public async Task OriginalConcurrentCopiesUseIndependentRangesWithoutSharedCursor(int kind)
     {
         using var storage = new ExternalStorage(kind, 32);
+
         for (int i = 0; i < 32; i++)
             storage.Memory.Span[i] = (byte)i;
+
         var a = new UnpooledByteBufAllocator();
         ByteBuf b = new ReadOnlyMemoryByteBuf(a, storage.Memory);
+
         try
         {
             await Task.WhenAll(Enumerable.Range(0, 32).Select(i => Task.Run(() =>
             {
                 ByteBuf copy = b.Copy(i, 32 - i);
+
                 try
                 {
                     Assert.Equal(Enumerable.Range(i, 32 - i).Select(v => (byte)v), ByteBufUtil.GetBytes(copy));
@@ -301,6 +323,7 @@ public class ReadOnlyMemoryByteBufTest
         }
 
         ByteBuf b = Unpooled.WrappedBuffer((ReadOnlyMemory<byte>)storage.Memory);
+
         try
         {
             using var output = new MemoryStream();
@@ -344,6 +367,7 @@ public class ReadOnlyMemoryByteBufTest
         ByteBuf b = Unpooled.WrappedBuffer((ReadOnlyMemory<byte>)owner.Memory);
         ReadOnlyMemory<byte> memory = b.AsReadOnlyMemory(0, 8);
         var pin = memory.Pin();
+
         try
         {
             b.Release();
@@ -359,9 +383,11 @@ public class ReadOnlyMemoryByteBufTest
             {
                 b.Release();
             }
+
             owner.Dispose();
             pin.Dispose();
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -374,6 +400,7 @@ public class ReadOnlyMemoryByteBufTest
         var destination = new NativeMemoryAllocator(4);
         var a = new UnpooledByteBufAllocator(true, destination);
         ByteBuf b = new ReadOnlyMemoryByteBuf(a, owner.Memory);
+
         try
         {
             Assert.Throws<OutOfDirectMemoryError>(() => b.Copy());
@@ -394,6 +421,7 @@ public class ReadOnlyMemoryByteBufTest
     {
         var a = new ReadOnlyResultAllocator();
         ByteBuf b = new ReadOnlyMemoryByteBuf(a, new byte[] { 1, 2 });
+
         try
         {
             Assert.Throws<NotSupportedException>(() => b.Copy());

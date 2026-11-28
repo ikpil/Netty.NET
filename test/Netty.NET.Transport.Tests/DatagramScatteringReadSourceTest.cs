@@ -74,6 +74,7 @@ public class DatagramScatteringReadSourceTest
         IByteBufAllocator allocator = adaptiveAllocator ?? (IByteBufAllocator)PooledByteBufAllocator.Default;
         var loop = new MultiThreadIoEventLoopGroup(2, NioIoHandler.NewFactory());
         var token = TestContext.Current.CancellationToken;
+
         try
         {
             var sender = await NewBootstrap(loop, allocator, new Discard()).BindAsync(new IPEndPoint(IPAddress.Loopback, 0), token);
@@ -82,14 +83,17 @@ public class DatagramScatteringReadSourceTest
                 .Option(ChannelOption.RECVBUF_ALLOCATOR, receiveAllocator)
                 .Option(ChannelOption.AUTO_READ, false)
                 .BindAsync(new IPEndPoint(IPAddress.Loopback, 0), token);
+
             if (connected)
             {
                 await receiver.ConnectAsync(sender.LocalAddress, cancellationToken: token);
             }
 
             var writes = new Task[numPackets];
+
             for (int i = 0; i < writes.Length; i++)
                 writes[i] = sender.WriteAsync(new DatagramPacket(allocator.DirectBuffer().WriteLong(i), (IPEndPoint)receiver.LocalAddress), token);
+
             sender.Flush();
             await Task.WhenAll(writes).WaitAsync(TimeSpan.FromSeconds(10), token);
 
@@ -127,6 +131,7 @@ public class DatagramScatteringReadSourceTest
         IByteBufAllocator allocator = adaptiveAllocator ?? (IByteBufAllocator)PooledByteBufAllocator.Default;
         var loop = new MultiThreadIoEventLoopGroup(2, NioIoHandler.NewFactory());
         var token = TestContext.Current.CancellationToken;
+
         try
         {
             var sender = await NewBootstrap(loop, allocator, new Discard()).BindAsync(new IPEndPoint(IPAddress.Loopback, 0), token);
@@ -136,6 +141,7 @@ public class DatagramScatteringReadSourceTest
             var receiver = await NewBootstrap(loop, allocator, capture)
                 .Option(ChannelOption.RECVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator(1400, 1400, 64 * 1024))
                 .BindAsync(new IPEndPoint(IPAddress.Loopback, 0), token);
+
             if (connected)
             {
                 await receiver.ConnectAsync(sender.LocalAddress, cancellationToken: token);
@@ -175,6 +181,7 @@ public class DatagramScatteringReadSourceTest
         protected override void ChannelRead0(IChannelHandlerContext ctx, DatagramPacket packet)
         {
             Assert.Equal(sender, packet.Sender);
+
             if (bytes == null)
             {
                 // Each packet contains a long which represent the write iteration.
@@ -188,6 +195,7 @@ public class DatagramScatteringReadSourceTest
                 packet.Content.ReadBytes(received);
                 Assert.Equal(bytes, received);
             }
+
             _received++;
             _batch++;
         }
@@ -200,6 +208,7 @@ public class DatagramScatteringReadSourceTest
                 _batch = 0;
                 ctx.Read();
             }
+
             if (_received == expected)
             {
                 Completed.TrySetResult();

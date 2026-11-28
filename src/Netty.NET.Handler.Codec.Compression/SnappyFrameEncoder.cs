@@ -100,6 +100,7 @@ public class SnappyFrameEncoder : MessageToByteEncoder<ByteBuf>
             for (;;)
             {
                 int lengthIdx = @out.WriterIndex + 1;
+
                 if (dataLength < MIN_COMPRESSIBLE_LENGTH)
                 {
                     ByteBuf slice = @in.ReadSlice(dataLength);
@@ -108,6 +109,7 @@ public class SnappyFrameEncoder : MessageToByteEncoder<ByteBuf>
                 }
 
                 @out.WriteInt(0);
+
                 if (dataLength > sliceSize)
                 {
                     ByteBuf slice = @in.ReadSlice(sliceSize);
@@ -148,6 +150,7 @@ public class SnappyFrameEncoder : MessageToByteEncoder<ByteBuf>
             throw new CompressionException("compressed data too large: " +
                     chunkLength.ToString(CultureInfo.InvariantCulture));
         }
+
         @out.SetMediumLE(lengthIdx, chunkLength);
     }
 

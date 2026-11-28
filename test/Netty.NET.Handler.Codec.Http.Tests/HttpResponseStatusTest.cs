@@ -113,6 +113,7 @@ public class HttpResponseStatusTest
         {
             HttpStatusClass httpStatusClass = HttpStatusClass.ValueOf(code);
             Assert.NotSame(HttpStatusClass.UNKNOWN, httpStatusClass);
+
             if (HttpStatusClass.INFORMATIONAL.Contains(code))
             {
                 Assert.Equal(HttpStatusClass.INFORMATIONAL, httpStatusClass);
@@ -138,6 +139,7 @@ public class HttpResponseStatusTest
                 Assert.Fail("At least one of the if-branches above must be true");
             }
         }
+
         // status scope: [Integer.MIN_VALUE, 100).
         for (int code = int.MinValue; code < 100; code ++)
         {
@@ -147,6 +149,7 @@ public class HttpResponseStatusTest
                 Assert.Equal(HttpStatusClass.UNKNOWN, httpStatusClass);
             }
         }
+
         // status scope: [600, Integer.MAX_VALUE].
         for (int code = 600; code > 0; code ++)
         {

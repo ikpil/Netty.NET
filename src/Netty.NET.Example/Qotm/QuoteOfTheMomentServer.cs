@@ -42,6 +42,7 @@ public sealed class QuoteOfTheMomentServer
     public static async Task Main(string[] args)
     {
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             Bootstrap b = new Bootstrap();

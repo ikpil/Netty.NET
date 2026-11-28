@@ -58,6 +58,7 @@ public class SourceNumberTextContractTest
     {
         var previous = CultureInfo.CurrentCulture;
         CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture);
+
         try
         {
             Assert.Equal("d : -0.5 (expected: > 0)", Message(() => ObjectUtil.CheckPositive(-0.5, "d")));

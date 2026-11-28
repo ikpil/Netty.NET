@@ -32,10 +32,12 @@ public class MpscIntQueueTest
         IMpscIntQueue queue = IMpscIntQueue.Create(size, -1);
         int filled = queue.Fill(size, () => 42);
         Assert.Equal(size, filled);
+
         for (int i = 0; i < size; i++)
         {
             Assert.Equal(42, queue.Poll());
         }
+
         Assert.Equal(-1, queue.Poll());
         Assert.True(queue.IsEmpty());
     }

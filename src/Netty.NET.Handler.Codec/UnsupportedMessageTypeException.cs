@@ -58,6 +58,7 @@ public class UnsupportedMessageTypeException : CodecException
         if (expectedTypes != null && expectedTypes.Length > 0)
         {
             buf.Append(" (expected: ").Append(expectedTypes[0].FullName);
+
             for (int i = 1; i < expectedTypes.Length; i ++)
             {
                 Type t = expectedTypes[i];
@@ -65,8 +66,10 @@ public class UnsupportedMessageTypeException : CodecException
                 {
                     break;
                 }
+
                 buf.Append(", ").Append(t.FullName);
             }
+
             buf.Append(')');
         }
 

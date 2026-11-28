@@ -54,6 +54,7 @@ internal abstract class MsQuicCodec : ChannelDuplexHandler
             throw new NotSupportedException("flushStrategy(FlushStrategy) is not supported by System.Net.Quic " +
                                             "(msquic sends the datagrams itself)");
         }
+
         Config = config;
     }
 
@@ -72,6 +73,7 @@ internal abstract class MsQuicCodec : ChannelDuplexHandler
                     "The QUIC codec runs on a " + nameof(QuicEndpointChannel) + " (System.Net.Quic owns the UDP socket), " +
                     "not on " + ctx.Channel.GetType().Name);
         }
+
         context = ctx;
     }
 
@@ -81,6 +83,7 @@ internal abstract class MsQuicCodec : ChannelDuplexHandler
         {
             EndpointClosed(endpoint);
         }
+
         context = null;
     }
 
@@ -109,6 +112,7 @@ internal abstract class MsQuicCodec : ChannelDuplexHandler
         {
             return ConnectQuicChannel(addr.Channel, remoteAddress, localAddress);
         }
+
         return ctx.ConnectAsync(remoteAddress, localAddress, cancellationToken);
     }
 
@@ -140,6 +144,7 @@ internal abstract class MsQuicCodec : ChannelDuplexHandler
         {
             ch.ForceClose();
         }
+
         channels.Clear();
     }
 }

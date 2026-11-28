@@ -29,6 +29,7 @@ public class DefaultEventLoopTest : AbstractSingleThreadEventLoopTest
     {
         IEventLoopGroup group = NewEventLoopGroup();
         SingleThreadEventLoop loop = (SingleThreadEventLoop) group.Next();
+
         try
         {
             IChannel ch = NewChannel();

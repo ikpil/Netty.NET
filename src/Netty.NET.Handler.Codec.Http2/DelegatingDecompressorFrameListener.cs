@@ -133,6 +133,7 @@ public class DelegatingDecompressorFrameListener : Http2FrameListenerDecorator
             // The decompressor may be null if no compatible encoding type was found in this stream's headers
             return listener.OnDataRead(ctx, streamId, data, padding, endOfStream);
         }
+
         return decompressor.Decompress(ctx, stream, data, padding, endOfStream);
     }
 
@@ -171,6 +172,7 @@ public class DelegatingDecompressorFrameListener : Http2FrameListenerDecorator
                     .Handlers(ZlibCodecFactory.NewZlibDecoder(ZlibWrapper.GZIP, maxAllocation))
                     .Build();
         }
+
         if (DEFLATE.ContentEqualsIgnoreCase(contentEncoding) || X_DEFLATE.ContentEqualsIgnoreCase(contentEncoding))
         {
             ZlibWrapper wrapper = strict ? ZlibWrapper.ZLIB : ZlibWrapper.ZLIB_OR_NONE;
@@ -182,6 +184,7 @@ public class DelegatingDecompressorFrameListener : Http2FrameListenerDecorator
                     .Handlers(ZlibCodecFactory.NewZlibDecoder(wrapper, maxAllocation))
                     .Build();
         }
+
         if (Brotli.IsAvailable() && BR.ContentEqualsIgnoreCase(contentEncoding))
         {
             return new EmbeddedChannel.Builder()
@@ -200,6 +203,7 @@ public class DelegatingDecompressorFrameListener : Http2FrameListenerDecorator
                     .Handlers(new SnappyFrameDecoder())
                     .Build();
         }
+
         // 'identity' or unsupported
         return null;
     }
@@ -244,6 +248,7 @@ public class DelegatingDecompressorFrameListener : Http2FrameListenerDecorator
             {
                 contentEncoding = IDENTITY;
             }
+
             EmbeddedChannel channel = NewContentDecompressor(ctx, contentEncoding);
             if (channel != null)
             {
@@ -344,6 +349,7 @@ public class DelegatingDecompressorFrameListener : Http2FrameListenerDecorator
                 // Convert the decompressed bytes to compressed (on the wire) bytes.
                 numBytes = decompressor.ConsumeBytes(stream.Id(), numBytes);
             }
+
             try
             {
                 return flowController.ConsumeBytes(stream, numBytes);
@@ -457,6 +463,7 @@ public class DelegatingDecompressorFrameListener : Http2FrameListenerDecorator
         {
             int compressedBytes = data.ReadableBytes + padding;
             IncrementCompressedBytes(compressedBytes);
+
             try
             {
                 this.stream = stream;
@@ -474,8 +481,10 @@ public class DelegatingDecompressorFrameListener : Http2FrameListenerDecorator
                     // This mimics what EmbeddedChannel will throw.
                     throw new ClosedChannelException();
                 }
+
                 // call retain here as it will call release after its written to the channel
                 decompressor.WriteInbound(data.Retain());
+
                 if (endOfStream)
                 {
                     decompressor.Finish();
@@ -491,6 +500,7 @@ public class DelegatingDecompressorFrameListener : Http2FrameListenerDecorator
                         return compressedBytes;
                     }
                 }
+
                 // We consume bytes each time we call the listener to ensure if multiple frames are decompressed
                 // that the bytes are accounted for immediately. Otherwise the user may see an inconsistent state of
                 // flow control.
@@ -503,6 +513,7 @@ public class DelegatingDecompressorFrameListener : Http2FrameListenerDecorator
                 {
                     throw;
                 }
+
                 throw StreamError(stream.Id(), INTERNAL_ERROR, t,
                         "Decompressor error detected while delegating data read on streamId %d", stream.Id());
             }
@@ -543,6 +554,7 @@ public class DelegatingDecompressorFrameListener : Http2FrameListenerDecorator
                         "Attempting to return too many bytes for stream %d. decompressed: %d " +
                                 "decompressedBytes: %d", streamId, decompressed, decompressedBytes);
             }
+
             double consumedRatio = decompressedBytes / (double) decompressed;
             int consumedCompressed = Math.Min(compressed, (int) Math.Ceiling(compressed * consumedRatio));
             if (compressed - consumedCompressed < 0)
@@ -552,6 +564,7 @@ public class DelegatingDecompressorFrameListener : Http2FrameListenerDecorator
                                 "decompressedBytes: %d decompressed: %d compressed: %d consumedCompressed: %d",
                         streamId, decompressedBytes, decompressed, compressed, consumedCompressed);
             }
+
             decompressed -= decompressedBytes;
             compressed -= consumedCompressed;
 

@@ -107,10 +107,12 @@ public class HttpToHttp2ConnectionHandler : Http2ConnectionHandler
         bool release = true;
         SimpleChannelPromiseAggregator promiseAggregator =
                 new SimpleChannelPromiseAggregator(promise, ctx.Channel, ctx.Executor);
+
         try
         {
             IHttp2ConnectionEncoder encoder = Encoder();
             bool endStream = false;
+
             if (msg is IHttpMessage)
             {
                 IHttpMessage httpMsg = (IHttpMessage) msg;
@@ -137,6 +139,7 @@ public class HttpToHttp2ConnectionHandler : Http2ConnectionHandler
                 bool isLastContent = false;
                 HttpHeaders trailers = EmptyHttpHeaders.INSTANCE;
                 IHttp2Headers http2Trailers = EmptyHttp2Headers.INSTANCE;
+
                 if (msg is ILastHttpContent)
                 {
                     isLastContent = true;
@@ -171,8 +174,10 @@ public class HttpToHttp2ConnectionHandler : Http2ConnectionHandler
             {
                 ReferenceCountUtil.Release(msg);
             }
+
             promiseAggregator.DoneAllocatingPromises();
         }
+
         return promise.Task;
     }
 

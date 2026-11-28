@@ -44,6 +44,7 @@ public class DnsResolveContextTest
     {
         EmbeddedChannel channel = new EmbeddedChannel();
         IDnsCnameCache cache = new DefaultDnsCnameCache();
+
         if (chainLength == 1)
         {
             cache.Cache(HOSTNAME, HOSTNAME, long.MaxValue, channel.EventLoop);
@@ -51,14 +52,17 @@ public class DnsResolveContextTest
         else
         {
             string lastName = HOSTNAME;
+
             for (int i = 1; i < chainLength; i++)
             {
                 string nextName = i + "." + lastName;
                 cache.Cache(lastName, nextName, long.MaxValue, channel.EventLoop);
                 lastName = nextName;
             }
+
             cache.Cache(lastName, HOSTNAME, long.MaxValue, channel.EventLoop);
         }
+
         return cache;
     }
 }

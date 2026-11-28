@@ -60,14 +60,17 @@ internal static class LinuxSocketOptions
     internal static void SetOptionValue(Socket socket, int level, int name, object value)
     {
         int raw;
+
         if (value is long threshold)
         {
             ArgumentOutOfRangeException.ThrowIfNegative(threshold);
             ArgumentOutOfRangeException.ThrowIfGreaterThan(threshold, (long)uint.MaxValue);
+
             raw = unchecked((int)threshold);
         }
         else
             raw = value is bool enabled ? enabled ? 1 : 0 : (int)value;
+
         SetInt(socket, level, name, raw);
     }
 
@@ -81,6 +84,7 @@ internal static class LinuxSocketOptions
             throw new SocketException();
         if (length != bytes.Length)
             throw new SocketException((int)SocketError.Fault);
+
         bytes.CopyTo(address.Buffer.Span);
         return (IPEndPoint)template.Create(address);
     }

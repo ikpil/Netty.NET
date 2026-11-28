@@ -52,6 +52,7 @@ public class ByteBufUtf8RangeTest
     {
         string text = "Some UTF-8 like äÄ∏ŒŒ";
         var (buffer, owner) = Destination(kind);
+
         try
         {
             byte[] expected = Encoding.UTF8.GetBytes(text[5..18]);
@@ -62,6 +63,7 @@ public class ByteBufUtf8RangeTest
             Assert.Equal(expected.Length, ByteBufUtil.ReserveAndWriteUtf8(buffer, text, 5, 18, 16));
             Assert.Equal(expected, ByteBufUtil.GetBytes(buffer, 4, expected.Length));
             string pair = "\uD800\uDC00"; // surrogate pair: one code point, two chars
+
             foreach (var range in new[] { (0, 1), (1, 2), (0, 2), (1, 1), (2, 2) })
             {
                 buffer.WriterIndex = 4;
@@ -74,6 +76,7 @@ public class ByteBufUtf8RangeTest
                 Assert.Equal(expected.Length, ByteBufUtil.ReserveAndWriteUtf8(buffer, pair, range.Item1, range.Item2, expected.Length));
                 Assert.Equal(expected, ByteBufUtil.GetBytes(buffer, 4, expected.Length));
             }
+
             Assert.Equal(1, buffer.ReaderIndex);
             Assert.Equal(1, owner.RefCnt);
             buffer.ResetReaderIndex().ResetWriterIndex();
@@ -96,6 +99,7 @@ public class ByteBufUtf8RangeTest
         byte[] padded = new byte[] { 17, 18 }.Concat(data).Concat(new byte[] { 19, 20 }).ToArray();
         AsciiString text = new AsciiString(padded, false).SubSequence(1, 259, false).SubSequence(1, 257, false);
         var (buffer, owner) = Destination(kind);
+
         try
         {
             for (int start = 0; start <= data.Length; start++)
@@ -110,6 +114,7 @@ public class ByteBufUtf8RangeTest
                 Assert.Equal(expected.Length, ByteBufUtil.ReserveAndWriteUtf8(buffer, text, start, end, expected.Length));
                 Assert.Equal(expected, ByteBufUtil.GetBytes(buffer, 4, expected.Length));
             }
+
             buffer.ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(1, buffer.ReaderIndex);
             Assert.Equal(4, buffer.WriterIndex);
@@ -131,10 +136,12 @@ public class ByteBufUtf8RangeTest
         string text = "Some UTF-8 like äÄ∏ŒŒ";
         AsciiString raw = new(text);
         ByteBuf buffer = Unpooled.Buffer(1, 64).WriteByte(99);
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.Utf8Bytes(text, start, end));
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.Utf8Bytes(raw, start, end));
+
             foreach (ByteBuf destination in new[] { buffer, null })
             {
                 Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.WriteUtf8(destination, text, start, end));
@@ -142,6 +149,7 @@ public class ByteBufUtf8RangeTest
                 Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.ReserveAndWriteUtf8(destination, text, start, end, -1));
                 Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.ReserveAndWriteUtf8(destination, raw, start, end, -1));
             }
+
             Assert.Equal(1, buffer.Capacity);
             Assert.Equal(1, buffer.WriterIndex);
             Assert.Equal(99, buffer.GetByte(0));
@@ -162,6 +170,7 @@ public class ByteBufUtf8RangeTest
             2 => Unpooled.CompositeBuffer().AddComponent(Unpooled.WrappedBuffer(new byte[2]), true),
             _ => Unpooled.Buffer(2, 8)
         };
+
         try
         {
             buffer.SetIndex(0, 0);
@@ -183,7 +192,9 @@ public class ByteBufUtf8RangeTest
         {
             buffer.Release();
         }
+
         buffer = kind == 1 ? Unpooled.DirectBuffer(2, 2) : Unpooled.Buffer(2, 2);
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.WriteUtf8(buffer, "xABz", 1, 3));
@@ -211,6 +222,7 @@ public class ByteBufUtf8RangeTest
             2 => Unpooled.CompositeBuffer().AddComponent(Unpooled.WrappedBuffer(new byte[1]), true),
             _ => Unpooled.Buffer(1, 64)
         }).Clear().WriteByte(99);
+
         try
         {
             AsciiString raw = new(new byte[] { 9, 0, 128, 255, 8 }, false);
@@ -234,6 +246,7 @@ public class ByteBufUtf8RangeTest
         ByteBuf owner = direct ? Unpooled.DirectBuffer(4, 16) : Unpooled.Buffer(4, 16);
         ByteBuf buffer = owner.AsReadOnly();
         AsciiString raw = new("AB");
+
         try
         {
             foreach (int end in new[] { 0, 1 })
@@ -243,6 +256,7 @@ public class ByteBufUtf8RangeTest
                 Assert.Throws<NotSupportedException>(() => ByteBufUtil.ReserveAndWriteUtf8(buffer, raw, 0, end, end));
                 Assert.Throws<NotSupportedException>(() => ByteBufUtil.ReserveAndWriteUtf8(buffer, "AB", 0, end, end));
             }
+
             Assert.Equal(0, owner.WriterIndex);
             Assert.Equal(1, owner.RefCnt);
         }
@@ -250,6 +264,7 @@ public class ByteBufUtf8RangeTest
         {
             owner.Release();
         }
+
         Assert.Throws<IllegalReferenceCountException>(() => ByteBufUtil.WriteUtf8(owner, "AB", 0, 0));
         Assert.Throws<IllegalReferenceCountException>(() => ByteBufUtil.ReserveAndWriteUtf8(owner, raw, 0, 0, 0));
         Assert.Throws<IllegalReferenceCountException>(() => ByteBufUtil.ReserveAndWriteUtf8(owner, new AsciiString(""), 0));
@@ -276,6 +291,7 @@ public class ByteBufUtf8RangeTest
     {
         byte[] bytes = { 1, 2, 3, 4, 5, 6, 7, 8 };
         ByteBuf buffer = Unpooled.Buffer(8, 64).WriteBytes(bytes).SetIndex(1, grow ? 7 : 2);
+
         try
         {
             Assert.True(MemoryMarshal.TryGetArray((ReadOnlyMemory<byte>)buffer.AsMemory(0, 8), out var storage));
@@ -298,6 +314,7 @@ public class ByteBufUtf8RangeTest
     {
         var allocator = new NativeMemoryAllocator();
         ByteBuf buffer = new UnpooledDirectByteBuf(6, 64, allocator);
+
         try
         {
             Span<char> chars = MemoryMarshal.Cast<byte, char>(buffer.AsSpan(0, 6));
@@ -316,6 +333,7 @@ public class ByteBufUtf8RangeTest
         {
             buffer.Release();
         }
+
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -326,6 +344,7 @@ public class ByteBufUtf8RangeTest
         ByteBuf first = Unpooled.WrappedBuffer(new byte[2]);
         ByteBuf second = new FailingHeapBuffer();
         ByteBuf buffer = Unpooled.CompositeBuffer().AddComponent(first, true).AddComponent(second, true).Clear();
+
         try
         {
             Assert.Throws<InvalidOperationException>(() => ascii
@@ -340,6 +359,7 @@ public class ByteBufUtf8RangeTest
         {
             buffer.Release();
         }
+
         Assert.Equal(0, first.RefCnt);
         Assert.Equal(0, second.RefCnt);
     }

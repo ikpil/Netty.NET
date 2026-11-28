@@ -133,6 +133,7 @@ public class Utf8FrameValidator : ChannelInboundHandlerAdapter
         {
             utf8Validator = new Utf8Validator();
         }
+
         utf8Validator.Check(buffer);
     }
 
@@ -140,6 +141,7 @@ public class Utf8FrameValidator : ChannelInboundHandlerAdapter
                                    CorruptedWebSocketFrameException ex)
     {
         frame.Release();
+
         if (closeOnProtocolViolation && ctx.Channel.IsOpen)
         {
             WebSocketCloseStatus closeStatus = ex.CloseStatus();

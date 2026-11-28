@@ -40,12 +40,14 @@ public class GlobalEventExecutorTest
     {
         // Wait until the global executor is stopped (just in case there is a task running due to previous test cases)
         var wait = Stopwatch.StartNew();
+
         for (;;)
         {
             if (e._thread == null || !e._thread.IsAlive)
             {
                 break;
             }
+
             Assert.True(wait.Elapsed < TimeSpan.FromSeconds(5), "Global executor did not become inactive.");
             Thread.Sleep(50);
         }

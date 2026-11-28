@@ -39,27 +39,33 @@ public class ChannelGroupSetContractTest
         group.Add(b);
         group.Add(c);
         var other = new[] { b, d, d };
+
         if (operation == "union")
         {
             group.UnionWith(other);
             Assert.True(group.SetEquals(new[] { a, b, c, d }));
         }
+
         if (operation == "except")
         {
             group.ExceptWith(other);
             Assert.True(group.SetEquals(new[] { a, c }));
         }
+
         if (operation == "intersect")
         {
             group.IntersectWith(other);
             Assert.True(group.SetEquals(new[] { b }));
         }
+
         if (operation == "symmetric")
         {
             group.SymmetricExceptWith(other);
             Assert.True(group.SetEquals(new[] { a, c, d }));
         }
+
         Assert.False(group.IsReadOnly);
+
         foreach (var channel in new[] { a, b, c, d })
             Mock.Get(channel).Verify(c => c.CloseAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -74,14 +80,19 @@ public class ChannelGroupSetContractTest
         ISet<IChannel> group = new DefaultChannelGroup();
         group.Add(NewChannel());
         group.Add(NewChannel());
+
         if (operation == "union")
             group.UnionWith(group);
+
         if (operation == "except")
             group.ExceptWith(group);
+
         if (operation == "intersect")
             group.IntersectWith(group);
+
         if (operation == "symmetric")
             group.SymmetricExceptWith(group);
+
         Assert.Equal(count, group.Count);
     }
 
@@ -203,10 +214,12 @@ public class ChannelGroupSetContractTest
         var group = new DefaultChannelGroup(stayClosed: true);
         await group.CloseAsync();
         var channel = NewChannel();
+
         if (operation == "union")
             group.UnionWith(new[] { channel, channel });
         else
             group.SymmetricExceptWith(new[] { channel, channel });
+
         Assert.Contains(channel, group);
         // Union performs two original Add calls; symmetric difference deduplicates its set operand.
         Mock.Get(channel).Verify(c => c.CloseAsync(It.IsAny<CancellationToken>()), operation == "union" ? Times.Exactly(2) : Times.Once());
@@ -221,8 +234,10 @@ public class ChannelGroupSetContractTest
         ((ICollection<IChannel>)group).Add(channel);
         Assert.Contains(channel, group);
         close.SetResult();
+
         while (group.Contains(channel))
             await Task.Delay(1, TestContext.Current.CancellationToken);
+
         Assert.Empty(group);
     }
 
@@ -230,6 +245,7 @@ public class ChannelGroupSetContractTest
     public void NameOrderingIsOrdinalAndSameNameOrderingRetainsIdentity()
     {
         var saved = CultureInfo.CurrentCulture;
+
         try
         {
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("tr-TR");
@@ -264,6 +280,7 @@ public class ChannelGroupSetContractTest
                 group.ExceptWith(channels);
             }
         }, cancellation);
+
         while (!mutation.IsCompleted)
         {
             var snapshot = group.ToArray();
@@ -272,6 +289,7 @@ public class ChannelGroupSetContractTest
             Assert.True(snapshot.TakeWhile(c => c is IServerChannel).Count() == snapshot.Count(c => c is IServerChannel));
             await Task.Yield();
         }
+
         await mutation;
     }
 }

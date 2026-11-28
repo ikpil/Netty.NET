@@ -31,6 +31,7 @@ public class LocalCoalescingContractTest
         IChannel server = null;
         var accepted = new TaskCompletionSource<IChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
         var received = new TaskCompletionSource<int[]>(TaskCreationOptions.RunContinuationsAsynchronously);
+
         try
         {
             server = await new ServerBootstrap().Group(readers).Channel<LocalServerChannel>()
@@ -66,6 +67,7 @@ public class LocalCoalescingContractTest
             resume.Set();
 #pragma warning disable xUnit1051 // Close both owners even after a failing baseline or test cancellation.
             await sender.CloseAsync();
+
             if (server != null)
                 await server.CloseAsync();
 #pragma warning restore xUnit1051
@@ -86,6 +88,7 @@ public class LocalCoalescingContractTest
         var second = Unpooled.CompositeBuffer().AddComponent(Unpooled.WrappedBuffer(new byte[] { 5 }), true)
             .AddComponent(Unpooled.WrappedBuffer(new byte[] { 6 }), true);
         var last = Unpooled.WrappedBuffer(new byte[] { 7 });
+
         try
         {
             server = await new ServerBootstrap().Group(group).Channel<LocalServerChannel>()
@@ -117,15 +120,19 @@ public class LocalCoalescingContractTest
 #pragma warning disable xUnit1051 // Cleanup must complete even after test cancellation.
             if (client != null)
                 await client.CloseAsync();
+
             if (server != null)
                 await server.CloseAsync();
 #pragma warning restore xUnit1051
             await group.StopAsync().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
             // Also release leaked references when running this regression against the broken baseline.
             while (first.RefCnt > 0)
                 first.Release();
+
             while (second.RefCnt > 0)
                 second.Release();
+
             while (last.RefCnt > 0)
                 last.Release();
         }
@@ -151,6 +158,7 @@ public class LocalCoalescingContractTest
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             _values.Add(msg is LocalChannelOwnershipContractTest.ReleaseHookMessage ? 1 : (int)msg);
+
             if (_values.Count == 2)
                 received.TrySetResult(_values.ToArray());
         }

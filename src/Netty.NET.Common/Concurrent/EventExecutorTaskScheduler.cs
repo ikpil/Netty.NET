@@ -60,6 +60,7 @@ public sealed class EventExecutorTaskScheduler : TaskScheduler
     public EventExecutorTaskScheduler(Func<IEventExecutor> executor)
     {
         ArgumentNullException.ThrowIfNull(executor);
+
         _executor = executor;
     }
 

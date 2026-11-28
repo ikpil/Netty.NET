@@ -113,6 +113,7 @@ public static class HostsFileParser
         IReadOnlyDictionary<string, IReadOnlyList<IPAddress>> fromMapWithListValue)
     {
         var result = new Dictionary<string, IPAddress>(fromMapWithListValue.Count);
+
         foreach (var entry in fromMapWithListValue)
         {
             IReadOnlyList<IPAddress> value = entry.Value;
@@ -121,6 +122,7 @@ public static class HostsFileParser
                 result.Add(entry.Key, value[0]);
             }
         }
+
         return result;
     }
 }

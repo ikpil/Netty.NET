@@ -202,6 +202,7 @@ public static class MessageFormatter
         StringBuilder sbuf = new StringBuilder(messagePattern.Length + 50);
         int i = 0;
         int L = 0;
+
         do
         {
             bool notEscaped = j == 0 || messagePattern[j - 1] != ESCAPE_CHAR;
@@ -218,6 +219,7 @@ public static class MessageFormatter
             }
 
             i = j + 2;
+
             if (notEscaped)
             {
                 DeeplyAppendParameter(sbuf, argArray[L], null);
@@ -237,6 +239,7 @@ public static class MessageFormatter
 
         // append the characters following the last {} pair.
         sbuf.Append(messagePattern, i, messagePattern.Length - i);
+
         return new FormattingTuple(sbuf.ToString(), L <= lastArrIdx ? throwable : null);
     }
 
@@ -261,6 +264,7 @@ public static class MessageFormatter
             // check for primitive array types because they
             // unfortunately cannot be cast to Object[]
             sbuf.Append('[');
+
             if (o is bool[] boolArray)
             {
                 BooleanArrayAppend(sbuf, boolArray);
@@ -343,6 +347,7 @@ public static class MessageFormatter
         if (seenSet.Add(a))
         {
             DeeplyAppendParameter(sbuf, a[0], seenSet);
+
             for (int i = 1; i < a.Length; i++)
             {
                 sbuf.Append(", ");
@@ -366,6 +371,7 @@ public static class MessageFormatter
         }
 
         sbuf.Append(a[0] ? "true" : "false");
+
         for (int i = 1; i < a.Length; i++)
         {
             sbuf.Append(", ");
@@ -381,6 +387,7 @@ public static class MessageFormatter
         }
 
         sbuf.Append(unchecked(((sbyte)a[0]).ToString(CultureInfo.InvariantCulture)));
+
         for (int i = 1; i < a.Length; i++)
         {
             sbuf.Append(", ");
@@ -396,6 +403,7 @@ public static class MessageFormatter
         }
 
         sbuf.Append(a[0]);
+
         for (int i = 1; i < a.Length; i++)
         {
             sbuf.Append(", ");
@@ -411,6 +419,7 @@ public static class MessageFormatter
         }
 
         sbuf.Append(a[0].ToString(CultureInfo.InvariantCulture));
+
         for (int i = 1; i < a.Length; i++)
         {
             sbuf.Append(", ");
@@ -426,6 +435,7 @@ public static class MessageFormatter
         }
 
         sbuf.Append(a[0].ToString(CultureInfo.InvariantCulture));
+
         for (int i = 1; i < a.Length; i++)
         {
             sbuf.Append(", ");
@@ -441,6 +451,7 @@ public static class MessageFormatter
         }
 
         sbuf.Append(a[0].ToString(CultureInfo.InvariantCulture));
+
         for (int i = 1; i < a.Length; i++)
         {
             sbuf.Append(", ");
@@ -456,6 +467,7 @@ public static class MessageFormatter
         }
 
         SafeObjectAppend(sbuf, a[0]);
+
         for (int i = 1; i < a.Length; i++)
         {
             sbuf.Append(", ");
@@ -471,6 +483,7 @@ public static class MessageFormatter
         }
 
         SafeObjectAppend(sbuf, a[0]);
+
         for (int i = 1; i < a.Length; i++)
         {
             sbuf.Append(", ");

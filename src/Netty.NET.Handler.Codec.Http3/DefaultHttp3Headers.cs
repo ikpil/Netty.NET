@@ -54,9 +54,11 @@ public sealed class DefaultHttp3Headers
             {
                 throw new Http3HeadersValidationException("empty headers are not allowed [" + ToJavaString(name) + "]");
             }
+
             if (name is AsciiString)
             {
                 int index;
+
                 try
                 {
                     index = ((AsciiString) name).ForEachByte(HTTP3_NAME_VALIDATOR_PROCESSOR);
@@ -248,11 +250,13 @@ public sealed class DefaultHttp3Headers
             {
                 after = headers.head;
                 before = headers.head.Before();
+
                 if (headers.firstNonPseudo == headers.head)
                 {
                     headers.firstNonPseudo = this;
                 }
             }
+
             PointNeighborsToThis();
         }
 
@@ -262,6 +266,7 @@ public sealed class DefaultHttp3Headers
             {
                 headers.firstNonPseudo = headers.firstNonPseudo.After();
             }
+
             base.Remove();
         }
     }

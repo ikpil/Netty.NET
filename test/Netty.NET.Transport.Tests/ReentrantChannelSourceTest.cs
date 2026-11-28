@@ -142,6 +142,7 @@ public class ReentrantChannelSourceTest
         var address = new LocalAddress(typeof(ReentrantChannelSourceTest).Name);
         var received = Channel.CreateUnbounded<string>();
         var token = TestContext.Current.CancellationToken;
+
         try
         {
             var server = await new ServerBootstrap().Group(group).Channel<LocalServerChannel>()
@@ -189,12 +190,14 @@ public class ReentrantChannelSourceTest
         var token = TestContext.Current.CancellationToken;
         using var cancelWrite = CancellationTokenSource.CreateLinkedTokenSource(token);
         using var resumeExecutor = new ManualResetEventSlim();
+
         try
         {
             client.Pipeline.AddLast(group, "external-writer", new PassWrite());
             await executor.SubmitAsync(() =>
             {
             }, token);
+
             if (reject)
             {
                 await group.StopAsync();
@@ -212,6 +215,7 @@ public class ReentrantChannelSourceTest
 
             var buffer = CreateTestBuffer(2000);
             var write = client.WriteAndFlushAsync(buffer, cancelWrite.Token);
+
             if (reject)
             {
                 await Assert.ThrowsAsync<RejectedExecutionException>(() => write.WaitAsync(token));
@@ -224,6 +228,7 @@ public class ReentrantChannelSourceTest
                 resumeExecutor.Set();
                 await Assert.ThrowsAnyAsync<OperationCanceledException>(() => write.WaitAsync(token));
             }
+
             Assert.Equal(0, client.OutboundBuffer.TotalPendingWriteBytes);
             Assert.Equal(0, buffer.RefCnt);
             Assert.True(client.IsWritable);
@@ -271,6 +276,7 @@ public class ReentrantChannelSourceTest
             {
                 return;
             }
+
             foreach (string expected in otherExpected)
                 if (expected == actual)
                 {
@@ -294,6 +300,7 @@ public class ReentrantChannelSourceTest
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken token)
         {
             _log.Append("WRITE\n");
+
             return ctx.WriteAsync(msg, token);
         }
 
@@ -307,6 +314,7 @@ public class ReentrantChannelSourceTest
         {
             if (!writability)
                 _log.Append("CLOSE\n");
+
             return ctx.CloseAsync(token);
         }
 
@@ -322,6 +330,7 @@ public class ReentrantChannelSourceTest
             {
                 _log.Append(ctx.Channel.IsWritable ? "WRITABILITY: writable=true\n" : "WRITABILITY: writable=false\n");
             }
+
             ctx.FireChannelWritabilityChanged();
         }
     }
@@ -334,6 +343,7 @@ public class ReentrantChannelSourceTest
             {
                 ctx.Channel.Flush();
             }
+
             ctx.FireChannelWritabilityChanged();
         }
     }
@@ -356,6 +366,7 @@ public class ReentrantChannelSourceTest
             {
                 ctx.Channel.Flush();
             }
+
             return ctx.WriteAsync(msg, token);
         }
 
@@ -365,6 +376,7 @@ public class ReentrantChannelSourceTest
             {
                 _ = ctx.Channel.WriteAsync(CreateTestBuffer(2000));
             }
+
             ctx.Flush();
         }
     }
@@ -411,6 +423,7 @@ public class ReentrantChannelSourceTest
         {
             var buffer = (ByteBuf)msg;
             string text;
+
             try
             {
                 text = buffer.ToString(Encoding.UTF8);
@@ -448,6 +461,7 @@ public class ReentrantChannelSourceTest
                 _demand = false;
                 ctx.FireChannelRead(item);
             }
+
             ctx.FireChannelReadComplete();
         }
 

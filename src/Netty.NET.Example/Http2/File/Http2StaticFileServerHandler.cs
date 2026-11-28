@@ -171,6 +171,7 @@ public class Http2StaticFileServerHandler : ChannelDuplexHandler
                 {
                     SendRedirect(ctx, uri + '/');
                 }
+
                 return;
             }
 
@@ -199,6 +200,7 @@ public class Http2StaticFileServerHandler : ChannelDuplexHandler
             }
 
             FileStream raf;
+
             try
             {
                 raf = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -208,6 +210,7 @@ public class Http2StaticFileServerHandler : ChannelDuplexHandler
                 SendError(ctx, NOT_FOUND);
                 return;
             }
+
             long fileLength = raf.Length;
 
             IHttp2Headers headers = new DefaultHttp2Headers();
@@ -226,6 +229,7 @@ public class Http2StaticFileServerHandler : ChannelDuplexHandler
             IProgress<ChannelWriteProgress> previousProgress = config.WriteProgress;
             SendFileProgressListener listener = new SendFileProgressListener(ctx.Channel);
             config.WriteProgress = listener;
+
             try
             {
                 sendFileFuture = ctx.WriteAndFlushAsync(new Http2DataChunkedInput(
@@ -299,6 +303,7 @@ public class Http2StaticFileServerHandler : ChannelDuplexHandler
     public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)
     {
         Console.Error.WriteLine(cause);
+
         if (ctx.Channel.IsActive)
         {
             SendError(ctx, INTERNAL_SERVER_ERROR);

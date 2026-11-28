@@ -111,6 +111,7 @@ internal class PemValue : AbstractReferenceCounted, IPemEncoded
         {
             SslUtils.Zeroout(content);
         }
+
         content.Release();
     }
 

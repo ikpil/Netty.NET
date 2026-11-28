@@ -29,6 +29,7 @@ public class SocketInheritedWriteContractTest
     public void OverriddenFileProducersAreCalledByTheInheritedLoop()
     {
         string path = Path.GetTempFileName();
+
         try
         {
             File.WriteAllBytes(path, new byte[] { 7, 8, 9 });

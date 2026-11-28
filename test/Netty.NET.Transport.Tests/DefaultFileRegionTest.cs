@@ -43,6 +43,7 @@ public class DefaultFileRegionTest
     public void TestCreateFromFile()
     {
         FileInfo file = NewFile();
+
         try
         {
             TestFileRegion(new DefaultFileRegion(file, 0, data.Length));
@@ -57,6 +58,7 @@ public class DefaultFileRegionTest
     public void TestCreateFromFileChannel()
     {
         FileInfo file = NewFile();
+
         try
         {
             using var randomAccessFile = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -108,6 +110,7 @@ public class DefaultFileRegionTest
             Assert.Equal(data.Length - 1024, region.TransferTo(channel, 0));
             Assert.Equal(data.Length, region.Count());
             Assert.Equal(data.Length - 1024, region.Transferred());
+
             try
             {
                 Assert.Throws<IOException>(() => region.TransferTo(channel, data.Length - 1024));

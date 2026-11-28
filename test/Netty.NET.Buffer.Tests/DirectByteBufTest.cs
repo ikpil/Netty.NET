@@ -36,11 +36,13 @@ public class DirectByteBufTest : HeapByteBufTest
         var allocator = new NativeMemoryAllocator(1024);
         ByteBuf direct = new UnpooledDirectByteBuf(0, 64, allocator);
         ByteBuf heap = Unpooled.Buffer(0, 64);
+
         try
         {
             foreach (ByteBuf buffer in new[] { direct, heap })
                 buffer.WriteByte(0xFF).WriteShortLE(0xFEDC).WriteMedium(0xABCDEF)
                     .WriteIntLE(unchecked((int)0xFEDCBA98)).WriteLong(long.MinValue).WriteDoubleLE(-0.0);
+
             Assert.True(direct.IsDirect);
             Assert.Equal(heap.ReadableMemory.ToArray(), direct.ReadableMemory.ToArray());
             ByteBuf slice = direct.Slice(1, 5);
@@ -57,6 +59,7 @@ public class DirectByteBufTest : HeapByteBufTest
             direct.Release();
             heap.Release();
         }
+
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -65,6 +68,7 @@ public class DirectByteBufTest : HeapByteBufTest
     {
         var allocator = new NativeMemoryAllocator(64);
         ByteBuf buffer = new UnpooledDirectByteBuf(8, 16, allocator);
+
         try
         {
             buffer.WriteBytes(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
@@ -84,6 +88,7 @@ public class DirectByteBufTest : HeapByteBufTest
         {
             buffer.Release();
         }
+
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -92,6 +97,7 @@ public class DirectByteBufTest : HeapByteBufTest
     {
         var allocator = new NativeMemoryAllocator(8);
         ByteBuf buffer = new UnpooledDirectByteBuf(8, 16, allocator);
+
         try
         {
             buffer.WriteBytes(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
@@ -108,6 +114,7 @@ public class DirectByteBufTest : HeapByteBufTest
         {
             buffer.Release();
         }
+
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -135,6 +142,7 @@ public class DirectByteBufTest : HeapByteBufTest
         Memory<byte> borrowed = buffer.AsMemory(2, 4);
         ReadOnlySpan<byte> captured = borrowed.Span;
         var pin = borrowed.Pin();
+
         try
         {
             Assert.True(buffer.Release());
@@ -148,6 +156,7 @@ public class DirectByteBufTest : HeapByteBufTest
         {
             pin.Dispose();
         }
+
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -160,6 +169,7 @@ public class DirectByteBufTest : HeapByteBufTest
         Memory<byte> old = buffer.AsMemory(0, 4);
         ReadOnlySpan<byte> captured = old.Span;
         var pin = old.Pin();
+
         try
         {
             buffer.Capacity = 12;
@@ -172,6 +182,7 @@ public class DirectByteBufTest : HeapByteBufTest
         {
             pin.Dispose();
         }
+
         Assert.Equal(12, allocator.ReservedBytes);
         Assert.True(buffer.Release());
         Assert.Equal(0, allocator.ReservedBytes);
@@ -184,6 +195,7 @@ public class DirectByteBufTest : HeapByteBufTest
     {
         var allocator = new NativeMemoryAllocator(32);
         ByteBuf buffer = new UnpooledDirectByteBuf(4, 8, allocator);
+
         try
         {
             buffer.WriteBytes(new byte[] { 1, 2, 3, 4 });
@@ -198,6 +210,7 @@ public class DirectByteBufTest : HeapByteBufTest
         {
             buffer.Release();
         }
+
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -206,6 +219,7 @@ public class DirectByteBufTest : HeapByteBufTest
     {
         var allocator = new NativeMemoryAllocator(32);
         ByteBuf buffer = new UnpooledDirectByteBuf(4, 8, allocator);
+
         try
         {
             buffer.WriteBytes(new byte[] { 1, 2, 3, 4 });
@@ -218,6 +232,7 @@ public class DirectByteBufTest : HeapByteBufTest
         {
             buffer.Release();
         }
+
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -228,6 +243,7 @@ public class DirectByteBufTest : HeapByteBufTest
         ByteBuf buffer = new UnpooledDirectByteBuf(8, 16, allocator);
         buffer.WriteBytes(new byte[] { 1, 2, 3, 4 }).SkipBytes(1);
         ByteBuf copy = buffer.Copy();
+
         try
         {
             Assert.True(copy.IsDirect);
@@ -242,6 +258,7 @@ public class DirectByteBufTest : HeapByteBufTest
         {
             copy.Release();
         }
+
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -250,6 +267,7 @@ public class DirectByteBufTest : HeapByteBufTest
     {
         var allocator = new NativeMemoryAllocator(16);
         ByteBuf buffer = new UnpooledDirectByteBuf(0, 8, allocator);
+
         try
         {
             Assert.Equal(1, allocator.ReservedBytes);
@@ -262,6 +280,7 @@ public class DirectByteBufTest : HeapByteBufTest
         {
             buffer.Release();
         }
+
         Assert.Equal(0, allocator.ReservedBytes);
     }
 

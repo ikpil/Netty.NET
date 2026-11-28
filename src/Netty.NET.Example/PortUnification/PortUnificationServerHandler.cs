@@ -95,6 +95,7 @@ public class PortUnificationServerHandler : ByteToMessageDecoder
         {
             return SslHandler.IsEncrypted(buf, false);
         }
+
         return false;
     }
 
@@ -104,6 +105,7 @@ public class PortUnificationServerHandler : ByteToMessageDecoder
         {
             return magic1 == 31 && magic2 == 139;
         }
+
         return false;
     }
 

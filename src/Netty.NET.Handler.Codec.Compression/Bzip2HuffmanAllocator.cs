@@ -54,6 +54,7 @@ internal sealed class Bzip2HuffmanAllocator
             k = i;
             i -= limit - i + 1;
         }
+
         i = Math.Max(nodesToMove - 1, i);
 
         while (k > i + 1)
@@ -68,6 +69,7 @@ internal sealed class Bzip2HuffmanAllocator
                 i = temp;
             }
         }
+
         return k;
     }
 
@@ -83,6 +85,7 @@ internal sealed class Bzip2HuffmanAllocator
         for (int headNode = 0, tailNode = 1, topNode = 2; tailNode < length - 1; tailNode++)
         {
             int temp;
+
             if (topNode >= length || array[headNode] < array[topNode])
             {
                 temp = array[headNode];
@@ -102,6 +105,7 @@ internal sealed class Bzip2HuffmanAllocator
             {
                 temp += array[topNode++];
             }
+
             array[tailNode] = temp;
         }
     }
@@ -115,10 +119,12 @@ internal sealed class Bzip2HuffmanAllocator
     private static int FindNodesToRelocate(int[] array, int maximumLength)
     {
         int currentNode = array.Length - 2;
+
         for (int currentDepth = 1; currentDepth < maximumLength - 1 && currentNode > 1; currentDepth++)
         {
             currentNode =  First(array, currentNode - 1, 0);
         }
+
         return currentNode;
     }
 
@@ -165,6 +171,7 @@ internal sealed class Bzip2HuffmanAllocator
             firstNode = firstNode <= nodesToMove ? firstNode : First(array, lastNode - 1, nodesToMove);
 
             int offset = 0;
+
             if (currentDepth >= insertDepth)
             {
                 offset = Math.Min(nodesLeftToMove, 1 << (currentDepth - insertDepth));
@@ -172,6 +179,7 @@ internal sealed class Bzip2HuffmanAllocator
             else if (currentDepth == insertDepth - 1)
             {
                 offset = 1;
+
                 if (array[firstNode] == lastNode)
                 {
                     firstNode++;

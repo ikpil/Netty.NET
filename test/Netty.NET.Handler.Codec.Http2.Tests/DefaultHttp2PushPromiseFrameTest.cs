@@ -193,6 +193,7 @@ public class DefaultHttp2PushPromiseFrameTest : IAsyncLifetime
             {
                 IHttp2PriorityFrame priorityFrame = (IHttp2PriorityFrame) msg;
                 test.contentMap.TryGetValue(priorityFrame.Stream().Id(), out string content);
+
                 if (content == null)
                 {
                     _ = ctx.WriteAndFlushAsync(new DefaultHttp2GoAwayFrame(Http2Error.REFUSED_STREAM));

@@ -41,6 +41,7 @@ internal sealed class Socks4ProxyServer : ProxyServer
     protected override void Configure(ISocketChannel ch)
     {
         IChannelPipeline p = ch.Pipeline;
+
         switch (testMode)
         {
         case TestMode.INTERMEDIARY:
@@ -69,6 +70,7 @@ internal sealed class Socks4ProxyServer : ProxyServer
         }
 
         bool authzSuccess;
+
         if (username != null)
         {
             authzSuccess = username.Equals(req.UserId());
@@ -77,6 +79,7 @@ internal sealed class Socks4ProxyServer : ProxyServer
         {
             authzSuccess = true;
         }
+
         return authzSuccess;
     }
 
@@ -135,6 +138,7 @@ internal sealed class Socks4ProxyServer : ProxyServer
 
             ISocks4CommandResponse res;
             bool sendGreeting = false;
+
             if (!authzSuccess)
             {
                 res = new DefaultSocks4CommandResponse(Socks4CommandStatus.IDENTD_AUTH_FAILURE);

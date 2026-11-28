@@ -37,6 +37,7 @@ public class RedisArrayAggregatorTest
         int maxNestedDepth = 100;
         EmbeddedChannel channel = new EmbeddedChannel(new RedisDecoder(),
                 new RedisArrayAggregator(RedisConstants.REDIS_MAX_ARRAY_LENGTH, maxNestedDepth));
+
         for (int i = 0; i < maxNestedDepth; i++)
         {
             Assert.False(channel.WriteInbound(Unpooled.WrappedBuffer(arrayHeader)));

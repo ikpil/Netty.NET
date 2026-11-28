@@ -70,6 +70,7 @@ public sealed class DefaultHttp2PriorityFrame : AbstractHttp2StreamFrame, IHttp2
         {
             return false;
         }
+
         DefaultHttp2PriorityFrame other = (DefaultHttp2PriorityFrame) o;
         bool same = base.Equals(other);
         return same && streamDependency == other.streamDependency

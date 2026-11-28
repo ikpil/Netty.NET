@@ -170,6 +170,7 @@ public abstract class DnsServerAddresses
         ObjectUtil.CheckNotNull(addresses, "addresses");
 
         List<EndPoint> list;
+
         if (addresses is IReadOnlyCollection<EndPoint> collection)
         {
             list = new List<EndPoint>(collection.Count);
@@ -189,10 +190,12 @@ public abstract class DnsServerAddresses
             {
                 throw new ArgumentException("cannot use an unresolved DNS server address: " + a);
             }
+
             list.Add(a);
         }
 
         ObjectUtil.CheckNonEmpty(list, "list");
+
         return list;
     }
 
@@ -201,6 +204,7 @@ public abstract class DnsServerAddresses
         ObjectUtil.CheckNotNull(addresses, "addresses");
 
         List<EndPoint> list = new List<EndPoint>(addresses.Length);
+
         foreach (EndPoint a in addresses)
         {
             if (a == null)
@@ -211,6 +215,7 @@ public abstract class DnsServerAddresses
             {
                 throw new ArgumentException("cannot use an unresolved DNS server address: " + a);
             }
+
             list.Add(a);
         }
 
@@ -243,7 +248,9 @@ public abstract class DnsServerAddresses
         {
             throw new ArgumentException("hostname can't be null");
         }
+
         IPAddress addr;
+
         try
         {
             addr = new DefaultNameResolver(ImmediateEventExecutor.INSTANCE).ResolveAsync(hostname).GetAwaiter().GetResult();
@@ -252,6 +259,7 @@ public abstract class DnsServerAddresses
         {
             return new DnsEndPoint(hostname, port);
         }
+
         return new IPEndPoint(addr, port);
     }
 }

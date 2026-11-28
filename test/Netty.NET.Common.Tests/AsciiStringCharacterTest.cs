@@ -50,6 +50,7 @@ public class AsciiStringCharacterTest
     public void TestGetBytesStringBuilder()
     {
         StringBuilder b = new StringBuilder();
+
         for (int i = 0; i < 1 << 16; ++i)
         {
             b.Append("eéaà");
@@ -57,6 +58,7 @@ public class AsciiStringCharacterTest
 
         string bString = b.ToString();
         Encoding[] charsets = Encodings;
+
         for (int i = 0; i < charsets.Length; ++i)
         {
             Encoding charset = charsets[i];
@@ -70,6 +72,7 @@ public class AsciiStringCharacterTest
     public void TestGetBytesString()
     {
         StringBuilder b = new StringBuilder();
+
         for (int i = 0; i < 1 << 16; ++i)
         {
             b.Append("eéaà");
@@ -77,6 +80,7 @@ public class AsciiStringCharacterTest
 
         string bString = b.ToString();
         Encoding[] charsets = Encodings;
+
         for (int i = 0; i < charsets.Length; ++i)
         {
             Encoding charset = charsets[i];
@@ -90,6 +94,7 @@ public class AsciiStringCharacterTest
     public void TestGetBytesAsciiString()
     {
         StringBuilder b = new StringBuilder();
+
         for (int i = 0; i < 1 << 16; ++i)
         {
             b.Append("eéaà");
@@ -121,6 +126,7 @@ public class AsciiStringCharacterTest
         AsciiString sub2 = ascii.SubSequence(start, end, true);
         Assert.Equal(sub1.GetHashCode(), sub2.GetHashCode());
         Assert.Equal(sub1, sub2);
+
         for (int i = start; i < end; ++i)
         {
             Assert.Equal(init[i], sub1.ByteAt(i - start));
@@ -132,6 +138,7 @@ public class AsciiStringCharacterTest
     {
         string[] falseLhs = { null, "a", "aa", "aaa" };
         string[] falseRhs = { null, "b", "ba", "baa" };
+
         for (int i = 0; i < falseLhs.Length; ++i)
         {
             for (int j = 0; j < falseRhs.Length; ++j)
@@ -188,6 +195,7 @@ public class AsciiStringCharacterTest
     public void TestCaseSensitivity()
     {
         int i = 0;
+
         for (; i < 32; i++)
         {
             DoCaseSensitivity(i);
@@ -207,6 +215,7 @@ public class AsciiStringCharacterTest
         int upperToLower = (int)'a' - upperA;
         byte[] lowerCaseBytes = new byte[len];
         StringBuilder upperCaseBuilder = new StringBuilder(len);
+
         for (int i = 0; i < len; ++i)
         {
             char upper = (char)(r.Next((upperZ - upperA) + 1) + upperA);
@@ -252,6 +261,7 @@ public class AsciiStringCharacterTest
         string s1 = "TRANSFER-ENCODING";
         char[] array = new char[128];
         int offset = 100;
+
         for (int i = 0; i < s1.Length; ++i)
         {
             array[offset + i] = s1[i];
@@ -672,10 +682,12 @@ public class AsciiStringCharacterTest
         AsciiString cached = AsciiString.Cached(nonLatin1);
         // Manually compute the expected sanitized string from the byte array
         StringBuilder expected = new StringBuilder();
+
         foreach (byte b in cached.ToByteArray())
         {
             expected.Append((char) (b & 0xFF));
         }
+
         Assert.Equal(expected.ToString(), cached.ToString());
     }
 

@@ -11,6 +11,7 @@ internal static class UninterruptibleMonitor
     internal static Lease Enter(object monitor)
     {
         bool interrupted = false;
+
         for (;;)
         {
             try
@@ -23,10 +24,12 @@ internal static class UninterruptibleMonitor
                 interrupted = true;
             }
         }
+
         if (interrupted)
         {
             Thread.CurrentThread.Interrupt();
         }
+
         return new Lease(monitor);
     }
 

@@ -162,6 +162,7 @@ public class WebSocketServerHandshaker00 : WebSocketServerHandshaker
         IFullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, new HttpResponseStatus(101,
                 isHixie76 ? "WebSocket Protocol Handshake" : "Web Socket Protocol Handshake"),
                 req.Content.Alloc().Buffer(0));
+
         if (headers != null)
         {
             res.Headers().Add(headers);
@@ -225,6 +226,7 @@ public class WebSocketServerHandshaker00 : WebSocketServerHandshaker
                 res.Headers().Set(HttpHeaderNames.WEBSOCKET_PROTOCOL, SelectSubprotocol(protocol));
             }
         }
+
         return res;
     }
 

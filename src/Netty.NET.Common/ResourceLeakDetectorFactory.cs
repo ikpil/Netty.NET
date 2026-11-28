@@ -89,6 +89,7 @@ public abstract class ResourceLeakDetectorFactory
     public virtual ResourceLeakDetector<T> NewResourceLeakDetector<T>(Type resource, int samplingInterval) where T : class
     {
         ObjectUtil.CheckPositive(samplingInterval, "samplingInterval");
+
         return NewResourceLeakDetector<T>(resource, samplingInterval, long.MaxValue);
     }
 }

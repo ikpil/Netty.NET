@@ -121,15 +121,18 @@ internal sealed class MsQuicSslEngine : QuicSslEngine
             validatedChain = null;
             return;
         }
+
         X509Certificate2 leaf = certificate as X509Certificate2 ??
                 X509CertificateLoader.LoadCertificate(certificate.GetRawCertData());
         int count = chain == null ? 0 : chain.ChainElements.Count;
         X509Certificate2[] certificates = new X509Certificate2[count == 0 ? 1 : count];
         certificates[0] = leaf;
+
         for (int i = 1; i < count; i++)
         {
             certificates[i] = chain.ChainElements[i].Certificate;
         }
+
         validatedChain = certificates;
     }
 
@@ -150,7 +153,9 @@ internal sealed class MsQuicSslEngine : QuicSslEngine
                 remote as X509Certificate2 ?? X509CertificateLoader.LoadCertificate(remote.GetRawCertData())
             };
         }
+
         peerCertificates = chain;
+
         lock (this)
         {
             cipherSuite = connection.NegotiatedCipherSuite;

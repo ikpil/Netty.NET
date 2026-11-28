@@ -98,6 +98,7 @@ internal sealed class QpackDecoder
         blockedStreams = new Dictionary<int, List<BlockedStream>>(Math.Min(16, maxBlockedStreams));
         this.dynamicTable = dynamicTable;
         maxEntries = QpackUtil.MaxEntries(maxTableCapacity);
+
         try
         {
             fullRange = ToIntOrThrow(2 * maxEntries);
@@ -132,11 +133,13 @@ internal sealed class QpackDecoder
         if (ShouldWaitForDynamicTableUpdates(requiredInsertCount))
         {
             blockedStreamsCount++;
+
             if (!blockedStreams.TryGetValue(requiredInsertCount, out List<BlockedStream> streams))
             {
                 streams = new List<BlockedStream>(2);
                 blockedStreams.Add(requiredInsertCount, streams);
             }
+
             streams.Add(new BlockedStream(streamId, whenDecoded));
             @in.ReaderIndex = initialReaderIdx;
             return false;
@@ -173,6 +176,7 @@ internal sealed class QpackDecoder
                 throw UNKNOWN_TYPE;
             }
         }
+
         if (requiredInsertCount > 0)
         {
             Debug.Assert(!qpackAttributes.DynamicTableDisabled());
@@ -184,6 +188,7 @@ internal sealed class QpackDecoder
             CloseOnFailure(qpackAttributes.DecoderStream(),
                     qpackAttributes.DecoderStream().WriteAndFlushAsync(sectionAck));
         }
+
         return true;
     }
 
@@ -201,6 +206,7 @@ internal sealed class QpackDecoder
         {
             throw DYNAMIC_TABLE_CAPACITY_EXCEEDS_MAX;
         }
+
         dynamicTable.SetCapacity(capacity);
     }
 
@@ -220,6 +226,7 @@ internal sealed class QpackDecoder
                                           ICharSequence value)
     {
         QpackHeaderField entryForName;
+
         if (staticTableRef)
         {
             entryForName = QpackStaticTable.GetField(nameIdx);
@@ -228,6 +235,7 @@ internal sealed class QpackDecoder
         {
             entryForName = dynamicTable.GetEntryRelativeEncoderInstructions(nameIdx);
         }
+
         dynamicTable.Add(new QpackHeaderField(entryForName.name, value));
         SendInsertCountIncrementIfRequired(qpackDecoderStream);
     }
@@ -276,6 +284,7 @@ internal sealed class QpackDecoder
         {
             return;
         }
+
         ReleaseBlockedStream(streamId);
         SendStreamCancellation(qpackDecoderStream, streamId);
     }
@@ -298,23 +307,28 @@ internal sealed class QpackDecoder
         {
             return false;
         }
+
         foreach (KeyValuePair<int, List<BlockedStream>> entry in blockedStreams)
         {
             List<BlockedStream> list = entry.Value;
+
             for (int i = 0; i < list.Count; i++)
             {
                 if (list[i].streamId == streamId)
                 {
                     list.RemoveAt(i);
                     blockedStreamsCount--;
+
                     if (list.Count == 0)
                     {
                         blockedStreams.Remove(entry.Key);
                     }
+
                     return true;
                 }
             }
         }
+
         return false;
     }
 
@@ -378,6 +392,7 @@ internal sealed class QpackDecoder
         //
         // T == 1 implies static table
         QpackHeaderField field;
+
         if (FirstByteEquals(@in, 0b1100_0000))
         {
             int idx = DecodePrefixedIntegerAsInt(@in, 6);
@@ -386,6 +401,7 @@ internal sealed class QpackDecoder
             {
                 throw HEADER_ILLEGAL_INDEX_VALUE;
             }
+
             field = QpackStaticTable.GetField(idx);
         }
         else
@@ -394,6 +410,7 @@ internal sealed class QpackDecoder
             Debug.Assert(idx >= 0);
             field = dynamicTable.GetEntryRelativeEncodedField(@base - idx - 1);
         }
+
         sink(field.name, field.value);
     }
 
@@ -413,6 +430,7 @@ internal sealed class QpackDecoder
     private void DecodeLiteralWithNameRef(ByteBuf @in, Action<ICharSequence, ICharSequence> sink, int @base)
     {
         ICharSequence name;
+
         // https://www.rfc-editor.org/rfc/rfc9204.html#name-literal-field-line-with-nam
         //    0   1   2   3   4   5   6   7
         // +---+---+---+---+---+---+---+---+
@@ -432,6 +450,7 @@ internal sealed class QpackDecoder
             {
                 throw NAME_ILLEGAL_INDEX_VALUE;
             }
+
             name = QpackStaticTable.GetField(idx).name;
         }
         else
@@ -440,6 +459,7 @@ internal sealed class QpackDecoder
             Debug.Assert(idx >= 0);
             name = dynamicTable.GetEntryRelativeEncodedField(@base - idx - 1).name;
         }
+
         ICharSequence value = DecodeHuffmanEncodedLiteral(@in, 7);
         sink(name, value);
     }
@@ -494,8 +514,10 @@ internal sealed class QpackDecoder
         {
             throw INVALID_LENGTH_ENCODED_LITERAL;
         }
+
         byte[] buf = new byte[length];
         @in.ReadBytes(buf);
+
         return new AsciiString(buf, false);
     }
 
@@ -547,13 +569,16 @@ internal sealed class QpackDecoder
             {
                 throw INVALID_REQUIRED_INSERT_COUNT;
             }
+
             requiredInsertCount -= fullRange;
         }
+
         // requiredInsertCount can not be negative as encodedInsertCount read from the buffer can not be negative.
         if (requiredInsertCount == 0)
         {
             throw INVALID_REQUIRED_INSERT_COUNT;
         }
+
         return ToIntOrThrow(requiredInsertCount);
     }
 
@@ -584,8 +609,10 @@ internal sealed class QpackDecoder
             {
                 throw MAX_BLOCKED_STREAMS_EXCEEDED;
             }
+
             return true;
         }
+
         return false;
     }
 
@@ -596,6 +623,7 @@ internal sealed class QpackDecoder
         {
             blockedStreamsCount -= streams.Count;
             bool failed = false;
+
             foreach (BlockedStream stream in streams)
             {
                 try
@@ -608,11 +636,13 @@ internal sealed class QpackDecoder
                     logger.Error("Failed to resume a blocked stream {}.", stream.whenDecoded, e);
                 }
             }
+
             if (failed)
             {
                 throw BLOCKED_STREAM_RESUMPTION_FAILED;
             }
         }
+
         if (stateSyncStrategy.EntryAdded(insertCount))
         {
             // https://www.rfc-editor.org/rfc/rfc9204.html#name-insert-count-increment

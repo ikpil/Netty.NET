@@ -124,6 +124,7 @@ public class HttpServerUpgradeHandlerTest
             Assert.False(writeUpgradeMessage);
 
             inReadCall = true;
+
             try
             {
                 base.ChannelRead(ctx, msg);
@@ -236,6 +237,7 @@ public class HttpServerUpgradeHandlerTest
 
         Assert.True(channel.WriteInbound(upgrade));
         Assert.NotNull(channel.Pipeline.Get<HttpServerCodec>());
+
         if (removeAfterFirst)
         {
             Assert.Null(channel.Pipeline.Get<HttpServerUpgradeHandler>()); // Should be removed.
@@ -244,6 +246,7 @@ public class HttpServerUpgradeHandlerTest
         {
             Assert.NotNull(channel.Pipeline.Get<HttpServerUpgradeHandler>()); // Should not be removed.
         }
+
         Assert.Null(channel.Pipeline.Get("marker"));
 
         IHttpRequest req = channel.ReadInbound<IHttpRequest>();
@@ -281,6 +284,7 @@ public class HttpServerUpgradeHandlerTest
 
         Assert.True(channel.WriteInbound(upgrade));
         channel.CheckException();
+
         Assert.True(channel.FinishAndReleaseAll());
     }
 

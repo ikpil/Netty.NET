@@ -96,9 +96,11 @@ public class SslContextTrustManagerTest
         {
             X509Certificate2 eecCert = eecCerts[i];
             Assert.NotNull(eecCert, "Cannot use cert " + eecResources[i]);
+
             try
             {
                 CheckServerTrusted(tm, new X509Certificate2[] { eecCert }, "RSA");
+
                 if (!expectations[i])
                 {
                     Assert.Fail(string.Format(CultureInfo.InvariantCulture,

@@ -30,6 +30,7 @@ public class SucceededChannelFutureSourceTest
     {
         var channel = new TaskTestChannel(_ => Task.CompletedTask);
         var loop = new ManualIoEventLoop(Thread.CurrentThread, NioIoHandler.NewFactory());
+
         try
         {
             loop.RegisterAsync(channel, TestContext.Current.CancellationToken).GetAwaiter().GetResult();

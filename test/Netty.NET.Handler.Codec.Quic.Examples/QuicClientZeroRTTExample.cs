@@ -70,6 +70,7 @@ public sealed class QuicClientZeroRTTExample
                     }
                 }, TaskScheduler.Default);
             }
+
             base.UserEventTriggered(ctx, evt);
         }
     }
@@ -77,6 +78,7 @@ public sealed class QuicClientZeroRTTExample
     internal static async Task NewChannelAndSendData(QuicSslContext context, IChannelHandler earlyDataSendHandler)
     {
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+
         try
         {
             IChannelHandler codec = new QuicClientCodecBuilder()

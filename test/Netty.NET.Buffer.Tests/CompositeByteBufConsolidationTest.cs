@@ -85,10 +85,12 @@ public class CompositeByteBufConsolidationTest
         ReadOnlyMemory<byte> memory = buf.AsMemory(0, 6);
         Assert.Equal(expected, memory.ToArray());
         Assert.Equal(!direct, MemoryMarshal.TryGetArray(memory, out ArraySegment<byte> array));
+
         if (!direct)
         {
             Assert.NotNull(array.Array);
             Assert.Equal(6, array.Count);
+
             if (!pooled)
             {
                 Assert.Equal(0, array.Offset);
@@ -103,6 +105,7 @@ public class CompositeByteBufConsolidationTest
         using var storage = new Storage(pooled, direct);
         CompositeByteBuf buf = storage.Allocator.CompositeBuffer(2);
         var sources = new List<ByteBuf>();
+
         try
         {
             AddSource(storage, buf, sources, 1);
@@ -122,6 +125,7 @@ public class CompositeByteBufConsolidationTest
         {
             buf.Release();
         }
+
         Assert.All(sources, source => Assert.Equal(0, source.RefCnt));
     }
 
@@ -132,6 +136,7 @@ public class CompositeByteBufConsolidationTest
         using var storage = new Storage(pooled, direct);
         CompositeByteBuf buf = storage.Allocator.CompositeBuffer(int.MaxValue);
         var sources = new List<ByteBuf>();
+
         try
         {
             AddSource(storage, buf, sources, 1);
@@ -150,6 +155,7 @@ public class CompositeByteBufConsolidationTest
         {
             buf.Release();
         }
+
         Assert.All(sources, source => Assert.Equal(0, source.RefCnt));
     }
 
@@ -160,6 +166,7 @@ public class CompositeByteBufConsolidationTest
         using var storage = new Storage(pooled, direct);
         CompositeByteBuf buf = storage.Allocator.CompositeBuffer(int.MaxValue);
         var sources = new List<ByteBuf>();
+
         try
         {
             AddSource(storage, buf, sources, 1);
@@ -192,6 +199,7 @@ public class CompositeByteBufConsolidationTest
         {
             buf.Release();
         }
+
         Assert.All(sources, source => Assert.Equal(0, source.RefCnt));
     }
 
@@ -203,6 +211,7 @@ public class CompositeByteBufConsolidationTest
         CompositeByteBuf composite = storage.Allocator.CompositeBuffer(3);
         var sources = new List<ByteBuf>();
         ByteBuf copy = null;
+
         try
         {
             foreach (byte[] data in new[] { new byte[] { 1, 2, 3 }, new byte[] { 4 }, new byte[] { 5, 6 } })
@@ -212,6 +221,7 @@ public class CompositeByteBufConsolidationTest
                 composite.AddComponent(source);
                 Assert.Equal(sources.Count, composite.NumComponents);
             }
+
             // NOTE: hard-coding 6 here, since it seems like addComponent doesn't bump the writer index.
             // I'm unsure as to whether or not this is correct behavior
             // CLR: Java's merged nioBuffer is replaced by an explicit owned copy before borrowing Memory.
@@ -230,6 +240,7 @@ public class CompositeByteBufConsolidationTest
             copy?.Release();
             composite.Release();
         }
+
         Assert.All(sources, source => Assert.Equal(0, source.RefCnt));
     }
 
@@ -240,12 +251,14 @@ public class CompositeByteBufConsolidationTest
         using var storage = new Storage(pooled, direct);
         CompositeByteBuf composite = storage.Allocator.CompositeBuffer();
         ByteBuf copy = null;
+
         try
         {
             // CLR: the original truncated eight-byte factory contributes 1/2/3/2 real bytes.
             // Empty separators are omitted here so the native variation also has an all-native component set.
             foreach (int size in new[] { 1, 2, 3, 2 })
                 composite.AddComponent(storage.Allocator.Buffer(size, size).WriteZero(size), true);
+
             composite.WriterIndex = 0;
             composite.WriteZero(4);
             copy = indexed ? composite.Copy(0, 4) : composite.Copy();
@@ -263,6 +276,7 @@ public class CompositeByteBufConsolidationTest
         finally
         {
             copy?.Release();
+
             if (composite.RefCnt > 0)
             {
                 composite.Release();
@@ -277,6 +291,7 @@ public class CompositeByteBufConsolidationTest
         using var storage = new Storage(pooled, direct);
         CompositeByteBuf composite = storage.Allocator.CompositeBuffer();
         ByteBuf copy = null, duplicate = null;
+
         try
         {
             Assert.Equal(0, composite.NumComponents);
@@ -295,6 +310,7 @@ public class CompositeByteBufConsolidationTest
         finally
         {
             copy?.Release();
+
             if (composite.RefCnt > 0)
             {
                 composite.Release();
@@ -308,6 +324,7 @@ public class CompositeByteBufConsolidationTest
         using var storage = new Storage(false, false);
         CompositeByteBuf buf = storage.Allocator.CompositeBuffer();
         ByteBuf copy = null;
+
         try
         {
             Assert.Equal(0, buf.NumComponents);
@@ -326,6 +343,7 @@ public class CompositeByteBufConsolidationTest
     {
         using var storage = new Storage(false, false);
         CompositeByteBuf buf = storage.Allocator.CompositeBuffer();
+
         try
         {
             Assert.Equal(0, buf.NumComponents);

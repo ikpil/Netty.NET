@@ -55,6 +55,7 @@ public sealed class MqttMessageType
         // and ensure valueOf to work fine
         MqttMessageType[] values = Values();
         VALUES = new MqttMessageType[values.Length + 1];
+
         foreach (MqttMessageType mqttMessageType in values)
         {
             int value = mqttMessageType.value;
@@ -62,6 +63,7 @@ public sealed class MqttMessageType
             {
                 throw new UnreachableException("value already in use: " + value.ToString(CultureInfo.InvariantCulture));
             }
+
             VALUES[value] = mqttMessageType;
         }
     }
@@ -86,6 +88,7 @@ public sealed class MqttMessageType
         {
             throw new ArgumentException("unknown message type: " + type.ToString(CultureInfo.InvariantCulture));
         }
+
         return VALUES[type];
     }
 

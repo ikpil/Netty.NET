@@ -54,6 +54,7 @@ internal readonly struct BufferMemoryLease : IDisposable
             return threadLocal.AcquireLease();
         if (NativeMemoryOwner.TryGetOwner(memory, out var owner))
             return new BufferMemoryLease(owner.AcquireStorageLease());
+
         return new BufferMemoryLease(memory.Pin());
     }
 
@@ -67,6 +68,7 @@ internal readonly struct BufferMemoryLease : IDisposable
             storage = adaptive.GetStorage(start, length);
             return lease;
         }
+
         if (MemoryMarshal.TryGetMemoryManager<byte, ThreadLocalDirectAllocation>(
                 memory, out var threadLocal, out start, out length))
         {
@@ -74,6 +76,7 @@ internal readonly struct BufferMemoryLease : IDisposable
             storage = threadLocal.GetStorage(start, length);
             return lease;
         }
+
         storage = memory;
         return default;
     }
@@ -85,6 +88,7 @@ internal readonly struct BufferMemoryLease : IDisposable
             {
                 _children[i].Dispose();
             }
+
         _handle.Dispose();
         _reservation?.Dispose();
     }

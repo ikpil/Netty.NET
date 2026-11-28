@@ -37,6 +37,7 @@ public class UnpooledMemoryWrappingTest
 
         Memory<byte>[] ranges = { default, storage.Memory.Slice(2, 3), storage.Memory.Slice(16, 0), storage.Memory.Slice(8, 4), default };
         ByteBuf result = Wrap(ranges, readOnly);
+
         try
         {
             var composite = Assert.IsType<CompositeByteBuf>(result);
@@ -53,6 +54,7 @@ public class UnpooledMemoryWrappingTest
             storage.Memory.Span[2] = 99;
             Assert.Equal(99, result.GetByte(0));
             Assert.Equal(readOnly, composite.Component(0).IsReadOnly);
+
             if (readOnly)
             {
                 Assert.Throws<NotSupportedException>(() => result.SetByte(0, 42));
@@ -62,6 +64,7 @@ public class UnpooledMemoryWrappingTest
                 result.SetByte(0, 42);
                 Assert.Equal(42, storage.Memory.Span[2]);
             }
+
             Assert.Equal(3, ranges[1].Length);
             Assert.Equal(4, ranges[3].Length);
             Assert.Equal(1, storage.Memory.Span[1]);
@@ -71,6 +74,7 @@ public class UnpooledMemoryWrappingTest
         {
             result.Release();
         }
+
         Assert.Equal(readOnly ? 99 : 42, storage.Memory.Span[2]);
     }
 
@@ -90,6 +94,7 @@ public class UnpooledMemoryWrappingTest
         }
 
         ByteBuf result = Wrap(ranges, readOnly, 2);
+
         try
         {
             var composite = Assert.IsType<CompositeByteBuf>(result);
@@ -108,6 +113,7 @@ public class UnpooledMemoryWrappingTest
         {
             result.Release();
         }
+
         Assert.Equal(99, storage.Memory.Span[0]);
     }
 
@@ -119,6 +125,7 @@ public class UnpooledMemoryWrappingTest
         Memory<byte> range = storage.Memory.Slice(2, 4);
         ByteBuf single = Wrap(new[] { range }, readOnly, -1);
         ByteBuf multiple = Wrap(new[] { Memory<byte>.Empty, range }, readOnly, 1);
+
         try
         {
             Assert.IsNotType<CompositeByteBuf>(single);
@@ -137,6 +144,7 @@ public class UnpooledMemoryWrappingTest
             single.Release();
             multiple.Release();
         }
+
         storage.Memory.Span[0] = 42;
     }
 
@@ -159,6 +167,7 @@ public class UnpooledMemoryWrappingTest
         Memory<byte> a = new byte[] { 1 }, b = new byte[] { 2 }, c = new byte[] { 3 };
         ByteBuf one = Unpooled.WrappedBuffer(new Memory<byte>[] { new byte[] { 1, 2, 3 } });
         ByteBuf many = Unpooled.WrappedBuffer(a, b, c);
+
         try
         {
             Assert.True(ByteBufUtil.Equals(one, many));
@@ -229,6 +238,7 @@ public class UnpooledMemoryWrappingTest
         Assert.Equal(0, second.DisposeCalls);
         second.FailAccess = false;
         ByteBuf recovered = Wrap(new[] { a, b }, readOnly, 1);
+
         try
         {
             Assert.Equal(new byte[] { 1, 1, 1, 1, 2, 2, 2, 2 }, ByteBufUtil.GetBytes(recovered));
@@ -237,6 +247,7 @@ public class UnpooledMemoryWrappingTest
         {
             recovered.Release();
         }
+
         Assert.Equal(0, first.DisposeCalls);
         Assert.Equal(0, second.DisposeCalls);
     }
@@ -260,6 +271,7 @@ public class UnpooledMemoryWrappingTest
         Memory<byte> first = new byte[] { 1, 2 };
         ReadOnlyMemory<byte> second = new byte[] { 3, 4 };
         ByteBuf result = Unpooled.WrappedBuffer(Unpooled.WrappedBuffer(first), Unpooled.WrappedBuffer(second));
+
         try
         {
             result.SetByte(0, 99);
@@ -279,6 +291,7 @@ public class UnpooledMemoryWrappingTest
         {
             return maximum.HasValue ? Unpooled.WrappedBuffer(maximum.Value, buffers) : Unpooled.WrappedBuffer(buffers);
         }
+
         ReadOnlyMemory<byte>[] ranges = Array.ConvertAll(buffers, static memory => (ReadOnlyMemory<byte>)memory);
         return maximum.HasValue ? Unpooled.WrappedBuffer(maximum.Value, ranges) : Unpooled.WrappedBuffer(ranges);
     }
@@ -330,6 +343,7 @@ public class UnpooledMemoryWrappingTest
             {
                 throw new InvalidOperationException("Source access failed.");
             }
+
             return _array ?? throw new ObjectDisposedException(nameof(ArrayMemoryManager));
         }
 

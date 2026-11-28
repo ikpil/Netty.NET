@@ -49,6 +49,7 @@ public class FixedLengthFrameDecoder : ByteToMessageDecoder
     public FixedLengthFrameDecoder(int frameLength)
     {
         CheckPositive(frameLength, "frameLength");
+
         this.frameLength = frameLength;
     }
 

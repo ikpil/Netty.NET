@@ -60,6 +60,7 @@ public sealed class TcpDnsServer
         _ = Task.Run(async () =>
         {
             await Task.Delay(1000);
+
             try
             {
                 await ClientQueryAsync();
@@ -99,6 +100,7 @@ public sealed class TcpDnsServer
                         DnsRecordType.A, ttl, Unpooled.WrappedBuffer(address));
                 response.AddRecord(DnsSection.ANSWER, queryAnswer);
             }
+
             return response;
         }
     }
@@ -107,6 +109,7 @@ public sealed class TcpDnsServer
     private static async Task ClientQueryAsync()
     {
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             Bootstrap b = new Bootstrap();
@@ -160,6 +163,7 @@ public sealed class TcpDnsServer
             IDnsQuestion question = msg.RecordAt<IDnsQuestion>(DnsSection.QUESTION, 0);
             Console.WriteLine("name: {0}", question.Name());
         }
+
         for (int i = 0, count = msg.Count(DnsSection.ANSWER); i < count; i++)
         {
             IDnsRecord record = msg.RecordAt<IDnsRecord>(DnsSection.ANSWER, i);

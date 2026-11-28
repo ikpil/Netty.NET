@@ -58,6 +58,7 @@ public class DnsAddressResolverGroupTest
         DnsNameResolverBuilder builder = new DnsNameResolverBuilder()
                 .EventLoop(loop).DatagramChannelType(typeof(NioDatagramChannel));
         DnsAddressResolverGroup resolverGroup = new DnsAddressResolverGroup(builder);
+
         try
         {
             TaskCompletionSource<object> promise =
@@ -109,6 +110,7 @@ public class DnsAddressResolverGroupTest
         IEventLoopGroup defaultEventLoopGroup = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         IEventLoop eventLoop1 = defaultEventLoopGroup.Next();
         IEventLoop eventLoop2 = defaultEventLoopGroup.Next();
+
         try
         {
             TaskCompletionSource<IPEndPoint> promise1 =
@@ -150,6 +152,7 @@ public class DnsAddressResolverGroupTest
             {
                 return ImmutableHashSet.Create(NewARecord(hostname, expectedIp));
             }
+
             return null;
         }
     }

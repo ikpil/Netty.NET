@@ -35,6 +35,7 @@ public class SocketGatheringWriteBudgetContractTest
 
         Assert.Equal(new[] { attempted }, fixture.Channel.Attempts.Single());
         Assert.Equal(expected, fixture.Channel.GetMaxBytesPerGatheringWrite());
+
         if (attempted == written)
         {
             Assert.True(future.IsCompletedSuccessfully);
@@ -152,6 +153,7 @@ public class SocketGatheringWriteBudgetContractTest
         internal void PumpUntil(Func<bool> condition)
         {
             var deadline = DateTime.UtcNow.AddSeconds(5);
+
             while (!condition())
             {
                 Assert.True(DateTime.UtcNow < deadline, "The native write completion did not reach its owner.");

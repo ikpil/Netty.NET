@@ -77,14 +77,17 @@ public class PrimitiveAccessReplacementTest
     {
         using var owner = new Owner(kind);
         ByteBuf b = owner.Buffer.SetIndex(2, 48).MarkReaderIndex().MarkWriterIndex();
+
         foreach (int index in new[] { 0, 1, 2, 3, 7, 15, 31, 32, 55, 64 - width }.Distinct())
         foreach (long value in Values())
         {
             b.SetBytes(0, Enumerable.Repeat((byte)0xa5, 64).ToArray());
             byte[] expected = Enumerable.Repeat((byte)0xa5, 64).ToArray();
             ulong bits = unchecked((ulong)value);
+
             for (int i = 0; i < width; i++)
                     expected[index + (little ? i : width - 1 - i)] = unchecked((byte)(bits >> (8 * i)));
+
             Assert.Same(b, Set(b, index, value, width, little));
             Assert.Equal(expected, ByteBufUtil.GetBytes(b, 0, 64));
             long expectedValue = width switch
@@ -97,17 +100,21 @@ public class PrimitiveAccessReplacementTest
             };
             Assert.Equal(expectedValue, Get(b, index, width, little));
             Assert.Equal(expectedValue, Get(b.AsReadOnly(), index, width, little));
+
             if (width == 3)
             {
                 int signed = (int)expectedValue;
                 if ((signed & 0x800000) != 0)
                         signed -= 0x1000000;
+
                 Assert.Equal(signed, little ? b.GetMediumLE(index) : b.GetMedium(index));
             }
+
             Assert.Equal(2, b.ReaderIndex);
                 Assert.Equal(48, b.WriterIndex);
                 Assert.Equal(1, b.RefCnt);
         }
+
         b.ResetReaderIndex().ResetWriterIndex();
         Assert.Equal(2, b.ReaderIndex);
         Assert.Equal(48, b.WriterIndex);
@@ -119,11 +126,13 @@ public class PrimitiveAccessReplacementTest
         using var owner = new Owner(kind);
         ByteBuf b = owner.Buffer;
         b.SetBytes(0, Enumerable.Repeat((byte)0xa5, 64).ToArray());
+
         foreach (int index in new[] { -1, 65 - width, int.MaxValue })
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => Set(b, index, -1, width, little));
             Assert.Throws<ArgumentOutOfRangeException>(() => Get(b, index, width, little));
         }
+
         Assert.Throws<NotSupportedException>(() => Set(b.AsReadOnly(), 0, -1, width, little));
         Assert.Equal(Enumerable.Repeat((byte)0xa5, 64).ToArray(), ByteBufUtil.GetBytes(b, 0, 64));
         b.Release();
@@ -169,6 +178,7 @@ public class PrimitiveAccessReplacementTest
         {
             if (Buffer.RefCnt != 0)
                 Buffer.Release(Buffer.RefCnt);
+
             _allocator?.Dispose();
             Assert.Equal(0, _native.ReservedBytes);
         }

@@ -209,6 +209,7 @@ public sealed class PerMessageDeflateServerExtensionHandshaker : IWebSocketServe
                     "compressionLevel: " + compressionLevel.ToString(CultureInfo.InvariantCulture) +
                     " (expected: 0-9)");
         }
+
         this.compressionLevel = compressionLevel;
         this.allowServerWindowSize = allowServerWindowSize;
         this.preferredClientWindowSize = preferredClientWindowSize;
@@ -235,6 +236,7 @@ public sealed class PerMessageDeflateServerExtensionHandshaker : IWebSocketServe
 
         IEnumerator<KeyValuePair<string, string>> parametersIterator =
                 extensionData.Parameters().GetEnumerator();
+
         while (deflateEnabled && parametersIterator.MoveNext())
         {
             KeyValuePair<string, string> parameter = parametersIterator.Current;
@@ -327,6 +329,7 @@ public sealed class PerMessageDeflateServerExtensionHandshaker : IWebSocketServe
         {
             return value;
         }
+
         throw new FormatException("For input string: \"" + s + "\"");
     }
 
@@ -376,22 +379,27 @@ public sealed class PerMessageDeflateServerExtensionHandshaker : IWebSocketServe
         public WebSocketExtensionData NewReponseData()
         {
             Dictionary<string, string> parameters = new Dictionary<string, string>(4);
+
             if (serverNoContext)
             {
                 parameters[SERVER_NO_CONTEXT] = null;
             }
+
             if (clientNoContext)
             {
                 parameters[CLIENT_NO_CONTEXT] = null;
             }
+
             if (serverWindowSize != MAX_WINDOW_SIZE)
             {
                 parameters[SERVER_MAX_WINDOW] = serverWindowSize.ToString(CultureInfo.InvariantCulture);
             }
+
             if (clientWindowSize != MAX_WINDOW_SIZE)
             {
                 parameters[CLIENT_MAX_WINDOW] = clientWindowSize.ToString(CultureInfo.InvariantCulture);
             }
+
             return new WebSocketExtensionData(PERMESSAGE_DEFLATE_EXTENSION, parameters);
         }
     }

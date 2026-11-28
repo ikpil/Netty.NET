@@ -272,12 +272,14 @@ public class HpackEncoderTest : IDisposable
     public void TestManyHeaderCombinations()
     {
         Random r = new Random(0);
+
         for (int i = 0; i < 50000; i++)
         {
             if (r.Next(10) == 0)
             {
                 SetMaxTableSize(NextBoolean(r) ? 0 : r.Next(4096));
             }
+
             VerifyRoundTrip(new DefaultHttp2Headers()
               .Add(Of("k" + r.Next(20).ToString(CultureInfo.InvariantCulture)), Of("x" + r.Next(500).ToString(CultureInfo.InvariantCulture)))
               .Add(Of(":method"), Of(NextBoolean(r) ? "GET" : "POST"))
@@ -304,7 +306,9 @@ public class HpackEncoderTest : IDisposable
                 // This is not a legal header value character. Skip it.
                 continue;
             }
+
             actualHeaderValueBuilder.Append((char) i); // Use the index as the code point value of the character.
+
             if (i <= 255)
             {
                 expectedHeaderValueBuilder.Append((char) i);
@@ -314,6 +318,7 @@ public class HpackEncoderTest : IDisposable
                 expectedHeaderValueBuilder.Append('?'); // Expect this character to be sanitized.
             }
         }
+
         string actualHeaderValue = actualHeaderValueBuilder.ToString();
         string expectedHeaderValue = expectedHeaderValueBuilder.ToString();
         HpackEncoder encoderWithHuffmanEncoding =
@@ -375,10 +380,12 @@ public class HpackEncoderTest : IDisposable
     private byte[] ToByteArray(int[] encoding)
     {
         byte[] expectedEncoding = new byte[encoding.Length];
+
         for (int i = 0; i < encoding.Length; i++)
         {
             expectedEncoding[i] = (byte) encoding[i];
         }
+
         return expectedEncoding;
     }
 

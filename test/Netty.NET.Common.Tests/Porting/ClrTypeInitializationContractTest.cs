@@ -104,6 +104,7 @@ public class ClrTypeInitializationContractTest
     private static void WithTypes(Action<Assembly, AssemblyLoadContext> assertion)
     {
         var context = new AssemblyLoadContext("native initialization contract", isCollectible: true);
+
         try
         {
             assertion(context.LoadFromAssemblyPath(typeof(ClrTypeInitializationContractTest).Assembly.Location), context);

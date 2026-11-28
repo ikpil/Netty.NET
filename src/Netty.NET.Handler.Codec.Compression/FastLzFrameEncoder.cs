@@ -99,6 +99,7 @@ public class FastLzFrameEncoder : MessageToByteEncoder<ByteBuf>
             throw new ArgumentException(string.Format(CultureInfo.InvariantCulture,
                     "level: {0} (expected: {1} or {2} or {3})", level, LEVEL_AUTO, LEVEL_1, LEVEL_2));
         }
+
         this.level = level;
         this.checksum = checksum == null ? null : ByteBufChecksum.WrapChecksum(checksum);
     }
@@ -113,6 +114,7 @@ public class FastLzFrameEncoder : MessageToByteEncoder<ByteBuf>
             {
                 return;
             }
+
             int idx = @in.ReaderIndex;
             int length = Math.Min(@in.ReadableBytes, MAX_CHUNK_LENGTH);
 
@@ -122,6 +124,7 @@ public class FastLzFrameEncoder : MessageToByteEncoder<ByteBuf>
 
             byte blockType;
             int chunkLength;
+
             if (length < MIN_LENGTH_TO_COMPRESSION)
             {
                 blockType = BLOCK_TYPE_NON_COMPRESSED;
@@ -135,6 +138,7 @@ public class FastLzFrameEncoder : MessageToByteEncoder<ByteBuf>
                     checksum.Update(@in, idx, length);
                     @out.SetInt(outputIdx + CHECKSUM_OFFSET, (int) checksum.GetValue());
                 }
+
                 @out.SetBytes(outputPtr, @in, idx, length);
                 chunkLength = length;
             }
@@ -168,6 +172,7 @@ public class FastLzFrameEncoder : MessageToByteEncoder<ByteBuf>
                     chunkLength = length;
                 }
             }
+
             @out.SetShort(outputOffset, length);
 
             @out.SetByte(outputIdx + OPTIONS_OFFSET,

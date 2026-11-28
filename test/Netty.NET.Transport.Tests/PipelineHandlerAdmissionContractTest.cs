@@ -19,6 +19,7 @@ public class PipelineHandlerAdmissionContractTest
         var removing = new RemoveThenThrow(failure);
         var following = new CaptureFailure();
         var channel = new Netty.NET.Transport.Channels.Embedded.EmbeddedChannel(removing, following);
+
         try
         {
             Assert.False(channel.WriteInbound("message"));
@@ -40,6 +41,7 @@ public class PipelineHandlerAdmissionContractTest
         var added = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var received = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var handler = new AdmissionHandler(added, received);
+
         try
         {
             await channel.RegisterAsync(group.Next());

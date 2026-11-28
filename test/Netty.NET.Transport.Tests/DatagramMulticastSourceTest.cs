@@ -86,12 +86,14 @@ public class DatagramMulticastSourceTest : AbstractDatagramTest
 
         int attempts = 5;
         Task<IChannel> clientFuture;
+
         do
         {
             if (sc != null)
             {
                 await sc.CloseAsync();
             }
+
             sc = (IDatagramChannel) await sb.BindAsync(routableAddress ?? NewSocketAddress(iface));
             // CLR: OioDatagramChannel is deprecated-not-ported, so no channel takes the source's OIO early return:
             // skip the test for OIO, as it fails because of
@@ -111,6 +113,7 @@ public class DatagramMulticastSourceTest : AbstractDatagramTest
             // state" (https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.configureawaitoptions).
             await ((Task) clientFuture).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
         } while (!clientFuture.IsCompletedSuccessfully && --attempts > 0);
+
         IDatagramChannel cc = (IDatagramChannel) await clientFuture;
         AssertNetworkInterface(iface, ((IDatagramChannelConfig) cc.Config).GetNetworkInterface());
         AssertInterfaceAddress(iface, ((IDatagramChannelConfig) cc.Config).GetInterface());
@@ -133,11 +136,13 @@ public class DatagramMulticastSourceTest : AbstractDatagramTest
 
         // we should not receive a message anymore as we left the group before
         await sc.WriteAndFlushAsync(new DatagramPacket(Unpooled.CopyInt(1), groupAddress));
+
         if (MixedFamily)
         {
             // CLR: on the mixed-family route a late duplicate is given 200 ms to arrive before the duplicate check.
             await Task.Delay(200);
         }
+
         await mhandler.Await();
 
         ((IDatagramChannelConfig) cc.Config).SetLoopbackModeDisabled(false);
@@ -177,6 +182,7 @@ public class DatagramMulticastSourceTest : AbstractDatagramTest
                 return;
             }
         }
+
         Assert.Fail();
     }
 
@@ -207,6 +213,7 @@ public class DatagramMulticastSourceTest : AbstractDatagramTest
         public async Task<bool> Await()
         {
             bool success;
+
             try
             {
                 await latch.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
@@ -216,11 +223,13 @@ public class DatagramMulticastSourceTest : AbstractDatagramTest
             {
                 success = false;
             }
+
             if (fail)
             {
                 // fail if we receive an message after we are done
                 Assert.Fail();
             }
+
             return success;
         }
     }
@@ -255,6 +264,7 @@ public class DatagramMulticastSourceTest : AbstractDatagramTest
                 return new IPEndPoint(address, 0);
             }
         }
+
         throw new UnreachableException();
     }
 
@@ -274,6 +284,7 @@ public class DatagramMulticastSourceTest : AbstractDatagramTest
                 {
                     continue;
                 }
+
                 foreach (UnicastIPAddressInformation addressInformation in iface.GetIPProperties().UnicastAddresses)
                 {
                     IPAddress address = addressInformation.Address;
@@ -286,13 +297,16 @@ public class DatagramMulticastSourceTest : AbstractDatagramTest
                         // in use" (https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socketoptionname).
                         IPEndPoint anyAddress = NewAnySocketAddress();
                         Socket socket = new Socket(anyAddress.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+
                         if (MixedFamily)
                         {
                             socket.DualMode = true;
                         }
+
                         socket.Bind(anyAddress);
                         socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                         SetNetworkInterface(socket, iface);
+
                         try
                         {
                             socket.SendTo(new byte[] { 1, 2, 3, 4 }, 4, SocketFlags.None,
@@ -312,6 +326,7 @@ public class DatagramMulticastSourceTest : AbstractDatagramTest
                 }
             }
         }
+
         return null;
     }
 
@@ -350,6 +365,7 @@ public class DatagramMulticastSourceTest : AbstractDatagramTest
         {
             address.ScopeId = iface.GetIPProperties().GetIPv6Properties().Index;
         }
+
         return new IPEndPoint(address, port);
     }
 
@@ -373,7 +389,9 @@ public class DatagramMulticastSourceTest : AbstractDatagramTest
         {
             return null;
         }
+
         IChannel server = await sb.BindAsync(bindAddress);
+
         try
         {
             SocketException failure = await Assert.ThrowsAsync<SocketException>(() => server.WriteAndFlushAsync(
@@ -385,6 +403,7 @@ public class DatagramMulticastSourceTest : AbstractDatagramTest
         {
             await server.CloseAsync();
         }
+
         return new IPEndPoint(IPAddress.IPv6Any, 0);
     }
 
@@ -453,6 +472,7 @@ public class DatagramMulticastSourceTest : AbstractDatagramTest
     {
         if (!OperatingSystem.IsLinux() || !Socket.OSSupportsIPv6)
             Assert.Skip("Requires a Linux dual-mode socket.");
+
         return RunMulticastAsync(adaptive, AddressFamily.InterNetworkV6, mixed: true);
     }
 
@@ -461,6 +481,7 @@ public class DatagramMulticastSourceTest : AbstractDatagramTest
         using var socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp) { DualMode = true };
         socket.Bind(new IPEndPoint(source, 0));
         SetIPv4MulticastInterface(socket, iface);
+
         try
         {
             socket.SendTo(new byte[4], new IPEndPoint(multicast, 12345));
@@ -469,6 +490,7 @@ public class DatagramMulticastSourceTest : AbstractDatagramTest
         {
             return error.SocketErrorCode;
         }
+
         return null;
     }
 

@@ -17,6 +17,7 @@ public class SocketNativeFileRegionContractTest
         string path = Path.GetTempFileName();
         var bytes = new byte[300_000];
         Random.Shared.NextBytes(bytes);
+
         try
         {
             File.WriteAllBytes(path, bytes);
@@ -30,8 +31,10 @@ public class SocketNativeFileRegionContractTest
             {
                 Assert.Equal(3, file.Position);
             }
+
             var received = new byte[bytes.Length - 7];
             int offset = 0;
+
             while (offset < received.Length)
             {
                 fixture.Loop.RunNow();
@@ -39,6 +42,7 @@ public class SocketNativeFileRegionContractTest
                 fixture.Receive(chunk).CopyTo(received, offset);
                 offset += chunk;
             }
+
             fixture.PumpUntil(() => write.IsCompleted);
             Assert.True(write.IsCompletedSuccessfully);
             Assert.Equal(bytes.AsSpan(7).ToArray(), received);
@@ -55,6 +59,7 @@ public class SocketNativeFileRegionContractTest
     {
         string path = Path.GetTempFileName();
         string moved = path + ".moved";
+
         try
         {
             File.WriteAllBytes(path, new byte[] { 1, 2, 3 });
@@ -90,6 +95,7 @@ public class SocketNativeFileRegionContractTest
     public void ACountBeyondTheFileFailsAsIOException()
     {
         string path = Path.GetTempFileName();
+
         try
         {
             File.WriteAllBytes(path, new byte[] { 1, 2 });

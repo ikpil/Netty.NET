@@ -85,6 +85,7 @@ public sealed class DefaultChannelId : IChannelId
         if (processId < 0)
         {
             processId = DefaultProcessId();
+
             if (logger.IsDebugEnabled())
             {
                 logger.Debug("-Dio.netty.processId: {} (auto-detected)", processId);
@@ -105,6 +106,7 @@ public sealed class DefaultChannelId : IChannelId
             {
                 logger.Warn("-Dio.netty.machineId: {} (malformed)", customMachineId, e);
             }
+
             if (machineId != null)
             {
                 logger.Debug("-Dio.netty.machineId: {} (user-set)", customMachineId);
@@ -114,6 +116,7 @@ public sealed class DefaultChannelId : IChannelId
         if (machineId == null)
         {
             machineId = MacAddressUtil.DefaultMachineId();
+
             if (logger.IsDebugEnabled())
             {
                 logger.Debug("-Dio.netty.machineId: {} (auto-detected)", MacAddressUtil.FormatAddress(machineId));
@@ -166,10 +169,12 @@ public sealed class DefaultChannelId : IChannelId
     {
         // CLR: Arrays.hashCode(byte[]) and Long.hashCode(long) are spelled out to keep the Java values.
         int h = 1;
+
         foreach (byte b in machineId)
         {
             h = unchecked(31 * h + (sbyte)b);
         }
+
         h = unchecked(31 * h + processId);
         h = unchecked(31 * h + sequence);
         h = unchecked(31 * h + (int)(timestamp ^ (long)((ulong)timestamp >> 32)));
@@ -186,6 +191,7 @@ public sealed class DefaultChannelId : IChannelId
             AppendHexInt(buf, random);
             this.shortValue = shortValue = buf.ToString();
         }
+
         return shortValue;
     }
 
@@ -196,6 +202,7 @@ public sealed class DefaultChannelId : IChannelId
         {
             this.longValue = longValue = NewLongValue();
         }
+
         return longValue;
     }
 
@@ -213,6 +220,7 @@ public sealed class DefaultChannelId : IChannelId
         AppendHexLong(buf, timestamp);
         buf.Append('-');
         AppendHexInt(buf, random);
+
         return buf.ToString();
     }
 
@@ -246,11 +254,13 @@ public sealed class DefaultChannelId : IChannelId
     {
         ulong v = (ulong)value;
         ulong r = 0;
+
         for (int i = 0; i < 64; i++)
         {
             r = (r << 1) | (v & 1);
             v >>= 1;
         }
+
         return (long)r;
     }
 
@@ -258,6 +268,7 @@ public sealed class DefaultChannelId : IChannelId
     {
         Span<byte> bytes = stackalloc byte[4];
         Random.Shared.NextBytes(bytes);
+
         return BitConverter.ToInt32(bytes);
     }
 
@@ -273,6 +284,7 @@ public sealed class DefaultChannelId : IChannelId
             // short circuit
             return 0;
         }
+
         if (o is DefaultChannelId other)
         {
             int cmp = CompareBytes(machineId, other.machineId);
@@ -280,21 +292,25 @@ public sealed class DefaultChannelId : IChannelId
             {
                 return cmp;
             }
+
             cmp = ((uint)processId).CompareTo((uint)other.processId);
             if (cmp != 0)
             {
                 return cmp;
             }
+
             cmp = ((uint)sequence).CompareTo((uint)other.sequence);
             if (cmp != 0)
             {
                 return cmp;
             }
+
             cmp = ((ulong)timestamp).CompareTo((ulong)other.timestamp);
             if (cmp != 0)
             {
                 return cmp;
             }
+
             return ((uint)random).CompareTo((uint)other.random);
         }
 
@@ -307,6 +323,7 @@ public sealed class DefaultChannelId : IChannelId
         int len1 = a.Length;
         int len2 = b.Length;
         int len = Math.Min(len1, len2);
+
         for (int k = 0; k < len; k++)
         {
             int cmp = (a[k] & 0xFF) - (b[k] & 0xFF);
@@ -315,6 +332,7 @@ public sealed class DefaultChannelId : IChannelId
                 return cmp;
             }
         }
+
         return len1 - len2;
     }
 
@@ -328,6 +346,7 @@ public sealed class DefaultChannelId : IChannelId
         {
             return false;
         }
+
         DefaultChannelId other = (DefaultChannelId)obj;
         return hashCode == other.hashCode
                 && random == other.random
@@ -354,6 +373,7 @@ public sealed class DefaultChannelId : IChannelId
         {
             if (reader.TokenType != JsonTokenType.String || !TryParse(reader.GetString(), out DefaultChannelId id))
                 throw new JsonException("Expected a DefaultChannelId long text.");
+
             return id;
         }
 
@@ -369,7 +389,9 @@ public sealed class DefaultChannelId : IChannelId
             if (parts == null || parts.Length != 5 || parts[0].Length == 0 || parts[0].Length % 2 != 0 ||
                 parts[1].Length != 8 || parts[2].Length != 8 || parts[3].Length != 16 || parts[4].Length != 8)
                 return false;
+
             byte[] machineId;
+
             try
             {
                 machineId = Convert.FromHexString(parts[0]);
@@ -378,11 +400,13 @@ public sealed class DefaultChannelId : IChannelId
             {
                 return false;
             }
+
             if (!uint.TryParse(parts[1], NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out uint processId) ||
                 !uint.TryParse(parts[2], NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out uint sequence) ||
                 !ulong.TryParse(parts[3], NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out ulong timestamp) ||
                 !uint.TryParse(parts[4], NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out uint random))
                 return false;
+
             id = new DefaultChannelId(machineId, (int)processId, (int)sequence, (long)timestamp, (int)random);
             return string.Equals(id.AsLongText(), text, StringComparison.Ordinal);
         }

@@ -59,6 +59,7 @@ internal static class Http3FrameValidationUtils
         {
             return Cast<T>(msg);
         }
+
         return null;
     }
 
@@ -77,6 +78,7 @@ internal static class Http3FrameValidationUtils
         {
             return Cast<T>(msg);
         }
+
         return null;
     }
 

@@ -45,7 +45,9 @@ internal sealed class PoolThreadCache : IDisposable
         int normalCacheSize, int maxCachedBufferCapacity, int freeSweepAllocationThreshold)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(maxCachedBufferCapacity);
+
         _freeSweepAllocationThreshold = freeSweepAllocationThreshold;
+
         if (directArena != null)
         {
             _smallDirect = CreateSubPageCaches(smallCacheSize, directArena.SizeClass.NSubpages);
@@ -57,6 +59,7 @@ internal sealed class PoolThreadCache : IDisposable
             _smallDirect = null;
             _normalDirect = null;
         }
+
         if (heapArena != null)
         {
             // Create the caches for the heap allocations
@@ -69,6 +72,7 @@ internal sealed class PoolThreadCache : IDisposable
             _smallHeap = null;
             _normalHeap = null;
         }
+
         // Only check if there are caches in use.
         if ((_smallDirect != null || _normalDirect != null || _smallHeap != null || _normalHeap != null)
             && freeSweepAllocationThreshold < 1)
@@ -81,10 +85,13 @@ internal sealed class PoolThreadCache : IDisposable
         {
             return null;
         }
+
         var caches = new RegionCache[count];
+
         for (int i = 0; i < count; ++i)
             // TODO: maybe use cacheSize / cache.length
             caches[i] = new RegionCache(size);
+
         return caches;
     }
 
@@ -94,12 +101,15 @@ internal sealed class PoolThreadCache : IDisposable
         {
             return null;
         }
+
         int max = Math.Min(arena.SizeClass.ChunkSize, maxCapacity);
         // Create as many normal caches as we support based on how many sizeIdx we have and what the upper
         // bound is that we want to cache in general.
         var caches = new List<RegionCache>();
+
         for (int i = arena.SizeClass.NSubpages; i < arena.SizeClass.NSizes && arena.SizeClass.SizeIdx2Size(i) <= max; ++i)
             caches.Add(new RegionCache(size));
+
         return caches.ToArray();
     }
 
@@ -108,6 +118,7 @@ internal sealed class PoolThreadCache : IDisposable
     private RegionCache Cache(PoolArena arena, int sizeIdx)
     {
         RegionCache[] caches;
+
         if (sizeIdx < arena.SizeClass.NSubpages)
             caches = arena.IsDirect ? _smallDirect : _smallHeap;
         else
@@ -116,6 +127,7 @@ internal sealed class PoolThreadCache : IDisposable
             sizeIdx -= arena.SizeClass.NSubpages;
             caches = arena.IsDirect ? _normalDirect : _normalHeap;
         }
+
         return caches != null && (uint)sizeIdx < (uint)caches.Length ? caches[sizeIdx] : null;
     }
 
@@ -128,6 +140,7 @@ internal sealed class PoolThreadCache : IDisposable
     internal PoolArena.Allocation TryAllocate(PoolArena arena, int sizeIdx)
     {
         using var events = BufferAllocatorEventSource.Log.BeginOperation();
+
         lock (_sync)
         {
             RegionCache cache = Cache(arena, sizeIdx);
@@ -136,12 +149,15 @@ internal sealed class PoolThreadCache : IDisposable
             {
                 return null;
             }
+
             PoolArena.Allocation allocation = cache.Allocate(this);
+
             if (++_allocations >= _freeSweepAllocationThreshold)
             {
                 _allocations = 0;
                 TrimCore();
             }
+
             return allocation;
         }
     }
@@ -158,6 +174,7 @@ internal sealed class PoolThreadCache : IDisposable
             {
                 return false;
             }
+
             return Cache(allocation.Arena, allocation.Arena.SizeClass.Size2SizeIdx(allocation.ReservedLength))
                 ?.Add(new Entry(allocation.Arena, allocation.Storage, allocation.Handle, allocation.ReservedLength)) == true;
         }
@@ -166,6 +183,7 @@ internal sealed class PoolThreadCache : IDisposable
     internal void Trim()
     {
         using var events = BufferAllocatorEventSource.Log.BeginOperation();
+
         lock (_sync)
         {
             if (!_freed)
@@ -202,6 +220,7 @@ internal sealed class PoolThreadCache : IDisposable
     public void Dispose()
     {
         using var events = BufferAllocatorEventSource.Log.BeginOperation();
+
         lock (_sync)
         {
             // As free() may be called either by the finalizer or by FastThreadLocal.onRemoval(...) we need to ensure
@@ -211,6 +230,7 @@ internal sealed class PoolThreadCache : IDisposable
             {
                 return;
             }
+
             _freed = true;
             Free(_smallDirect);
             Free(_normalDirect);
@@ -261,6 +281,7 @@ internal sealed class PoolThreadCache : IDisposable
             {
                 return false;
             }
+
             try
             {
                 _queue.Enqueue(entry);
@@ -285,16 +306,19 @@ internal sealed class PoolThreadCache : IDisposable
             {
                 return null;
             }
+
             // Init the buffer before removing the entry: a failed CLR wrapper allocation
             // leaves the cached handle reachable for the next request or shutdown.
             PoolArena.Allocation allocation = entry.Arena.BindCached(entry.Storage, entry.Handle, entry.Length, threadCache);
             _queue.Dequeue();
+
             // allocations is not thread-safe which is fine as this is only called from the same thread all time.
             // CLR: the enclosing Monitor also serializes trimming and explicit close.
             unchecked
             {
                 ++_allocations;
             }
+
             return allocation;
         }
 
@@ -308,6 +332,7 @@ internal sealed class PoolThreadCache : IDisposable
                 if (!_queue.TryDequeue(out Entry entry))
                     // all cleared
                     return;
+
                 // Capture entry state before we recycle the entry object.
                 // CLR: Queue clears removed value entries, allowing storage to be collected.
                 entry.Arena.ReturnCached(entry.Storage, entry.Handle);
@@ -321,6 +346,7 @@ internal sealed class PoolThreadCache : IDisposable
         {
             int free = unchecked(_size - _allocations);
             _allocations = 0;
+
             // We not even allocated all the number that are
             if (free > 0)
             {

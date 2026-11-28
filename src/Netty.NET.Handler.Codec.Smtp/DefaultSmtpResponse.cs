@@ -59,7 +59,9 @@ public sealed class DefaultSmtpResponse : ISmtpResponse
         {
             throw new ArgumentException("code must be 100 <= code <= 599");
         }
+
         this.code = code;
+
         if (details == null)
         {
             this.details = ReadOnlyCollection<ICharSequence>.Empty;

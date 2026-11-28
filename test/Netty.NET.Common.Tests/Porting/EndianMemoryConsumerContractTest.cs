@@ -27,9 +27,11 @@ public class EndianMemoryConsumerContractTest
     private static void Check(Memory<byte> memory, int width, bool little)
     {
         long[] values = { 0, 1, -1, long.MinValue, unchecked((long)0x8070605040302010UL), 0x123456789abcdef0L };
+
         foreach (long value in values)
         {
             long narrowed = width == 2 ? unchecked((short)value) : width == 4 ? unchecked((int)value) : value;
+
             for (int offset = 0; offset < 8; offset++)
             {
                 memory.Span.Fill(0x5a);
@@ -38,11 +40,13 @@ public class EndianMemoryConsumerContractTest
                 Assert.Equal(narrowed, Read(region.Span, width, little));
                 byte[] expected = new byte[24];
                 Array.Fill(expected, (byte)0x5a);
+
                 for (int i = 0; i < width; i++)
                 {
                     int shift = 8 * (little ? i : width - i - 1);
                     expected[offset + i] = unchecked((byte)((ulong)value >> shift));
                 }
+
                 Assert.Equal(expected, memory.ToArray());
 
                 // The backing allocation is large enough; the logical view is not.
@@ -78,6 +82,7 @@ public class EndianMemoryConsumerContractTest
                 {
                     BinaryPrimitives.WriteInt16BigEndian(memory, unchecked((short)value));
                 }
+
                 break;
             case 4:
                 if (little)
@@ -88,6 +93,7 @@ public class EndianMemoryConsumerContractTest
                 {
                     BinaryPrimitives.WriteInt32BigEndian(memory, unchecked((int)value));
                 }
+
                 break;
             case 8:
                 if (little)
@@ -98,6 +104,7 @@ public class EndianMemoryConsumerContractTest
                 {
                     BinaryPrimitives.WriteInt64BigEndian(memory, value);
                 }
+
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(width));

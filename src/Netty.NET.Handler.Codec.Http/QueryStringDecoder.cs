@@ -189,10 +189,12 @@ public class QueryStringDecoder
     private QueryStringDecoder(Builder builder, Uri uri)
     {
         RawPathAndQuery(uri, out string rawPath, out string rawQuery);
+
         if (rawPath == null)
         {
             rawPath = EMPTY_STRING;
         }
+
         // Also take care of cut of things like "http://localhost"
         this.uri = rawQuery == null? rawPath : rawPath + '?' + rawQuery;
         this.charset = CheckNotNull(builder.charset, "charset");
@@ -211,12 +213,15 @@ public class QueryStringDecoder
         {
             s = s.Substring(0, fragment);
         }
+
         int start = 0;
         int i = 0;
+
         while (i < s.Length && (char.IsAsciiLetterOrDigit(s[i]) || s[i] == '+' || s[i] == '-' || s[i] == '.'))
         {
             i++;
         }
+
         if (i > 0 && i < s.Length && s[i] == ':' && char.IsAsciiLetter(s[0]))
         {
             // scheme ":" hier-part
@@ -228,10 +233,12 @@ public class QueryStringDecoder
                 rawQuery = null;
                 return;
             }
+
             if (start + 1 < s.Length && s[start + 1] == '/')
             {
                 // "//" authority
                 start += 2;
+
                 while (start < s.Length && s[start] != '/' && s[start] != '?')
                 {
                     start++;
@@ -242,11 +249,13 @@ public class QueryStringDecoder
         {
             // A network-path reference: "//" authority path.
             start = 2;
+
             while (start < s.Length && s[start] != '/' && s[start] != '?')
             {
                 start++;
             }
         }
+
         int query = s.IndexOf('?', start);
         if (query == -1)
         {
@@ -282,6 +291,7 @@ public class QueryStringDecoder
         {
             path = DecodeComponent(uri, 0, PathEndIdx(), charset, false);
         }
+
         return path;
     }
 
@@ -294,6 +304,7 @@ public class QueryStringDecoder
         {
             @params = DecodeParams(uri, PathEndIdx(), charset, maxParams);
         }
+
         return @params;
     }
 
@@ -320,6 +331,7 @@ public class QueryStringDecoder
         {
             pathEndIdx = FindPathEndIndex(uri);
         }
+
         return pathEndIdx;
     }
 
@@ -330,14 +342,17 @@ public class QueryStringDecoder
         {
             return ImmutableDictionary<string, IList<string>>.Empty;
         }
+
         if (s[from] == '?')
         {
             from++;
         }
+
         IDictionary<string, IList<string>> @params = new LinkedHashMap<string, IList<string>>();
         int nameStart = from;
         int valueStart = -1;
         int i;
+
         for (i = from; i < len; i++)
         {
             switch (s[i])
@@ -351,12 +366,14 @@ public class QueryStringDecoder
                 {
                     valueStart = i + 1;
                 }
+
                 break;
             case ';':
                 if (semicolonIsNormalChar)
                 {
                     continue;
                 }
+
                 // fall-through
                 goto case '&';
             case '&':
@@ -368,6 +385,7 @@ public class QueryStringDecoder
                         return @params;
                     }
                 }
+
                 nameStart = i + 1;
                 break;
             case '#':
@@ -389,13 +407,16 @@ public class QueryStringDecoder
         {
             return false;
         }
+
         if (valueStart <= nameStart)
         {
             valueStart = valueEnd + 1;
         }
+
         string name = DecodeComponent(s, nameStart, valueStart - 1, charset, htmlQueryDecoding);
         string value = DecodeComponent(s, valueStart, valueEnd, charset, htmlQueryDecoding);
         @params.TryGetValue(name, out IList<string> values);
+
         if (values == null)
         {
             @params[name] = ImmutableList.Create(value);
@@ -411,6 +432,7 @@ public class QueryStringDecoder
             newValues.Add(value);
             @params[name] = newValues;
         }
+
         return true;
     }
 
@@ -458,6 +480,7 @@ public class QueryStringDecoder
         {
             return EMPTY_STRING;
         }
+
         return DecodeComponent(s, 0, s.Length, charset, true);
     }
 
@@ -468,7 +491,9 @@ public class QueryStringDecoder
         {
             return EMPTY_STRING;
         }
+
         int firstEscaped = -1;
+
         for (int i = from; i < toExcluded; i++)
         {
             char c = s[i];
@@ -478,6 +503,7 @@ public class QueryStringDecoder
                 break;
             }
         }
+
         if (firstEscaped == -1)
         {
             return s.Substring(from, toExcluded - from);
@@ -501,6 +527,7 @@ public class QueryStringDecoder
             }
 
             bufIdx = 0;
+
             do
             {
                 if (i + 3 > toExcluded)
@@ -508,19 +535,23 @@ public class QueryStringDecoder
                     throw new ArgumentException("unterminated escape sequence at index " +
                             i.ToString(CultureInfo.InvariantCulture) + " of: " + s);
                 }
+
                 buf[bufIdx++] = DecodeHexByte(s, i + 1);
                 i += 3;
             } while (i < toExcluded && s[i] == '%');
+
             i--;
 
             strBuf.Append(charset.GetString(buf, 0, bufIdx));
         }
+
         return strBuf.ToString();
     }
 
     private static int FindPathEndIndex(string uri)
     {
         int len = uri.Length;
+
         for (int i = 0; i < len; i++)
         {
             char c = uri[i];
@@ -529,6 +560,7 @@ public class QueryStringDecoder
                 return i;
             }
         }
+
         return len;
     }
 

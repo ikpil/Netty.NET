@@ -23,6 +23,7 @@ public class ExecutorSubmissionContractTest
         public override void Execute(Action task)
         {
             ArgumentNullException.ThrowIfNull(task);
+
             tasks.Add(task);
         }
 
@@ -35,6 +36,7 @@ public class ExecutorSubmissionContractTest
         internal void Run(Action task)
         {
             running = true;
+
             try
             {
                 task();
@@ -232,6 +234,7 @@ public class ExecutorSubmissionContractTest
         int calls = 0;
         Task<int>[] operations = { executor.SubmitAsync(() => ++calls, owner.Token),
             executor.SubmitAsync(() => ++calls, owner.Token) };
+
         try
         {
             await Assert.ThrowsAsync<TimeoutException>(() => Task.WhenAll(operations).WaitAsync(TimeSpan.FromMilliseconds(10)));
@@ -241,6 +244,7 @@ public class ExecutorSubmissionContractTest
         {
             owner.Cancel();
         }
+
         Assert.All(operations, task => Assert.True(task.IsCanceled));
 
         while (executor.tasks.TryTake(out var task))
@@ -257,6 +261,7 @@ public class ExecutorSubmissionContractTest
         var executor = new ManualExecutor();
         using var owner = new CancellationTokenSource();
         Task<int> first = executor.SubmitAsync(int () => throw new InvalidOperationException("Canceled invocation ran"), owner.Token);
+
         try
         {
             Assert.Throws<ArgumentNullException>(() => executor.SubmitAsync((Func<int>)null, owner.Token));
@@ -265,6 +270,7 @@ public class ExecutorSubmissionContractTest
         {
             owner.Cancel();
         }
+
         Assert.True(first.IsCanceled);
         executor.Run(executor.Take());
     }
@@ -283,12 +289,14 @@ public class ExecutorSubmissionContractTest
         {
             var remaining = operations.ToList();
             var failures = new List<Exception>();
+
             try
             {
                 while (remaining.Count != 0)
                 {
                     Task<int> candidate = await Task.WhenAny(remaining).ConfigureAwait(false);
                     remaining.Remove(candidate);
+
                     try
                     {
                         return await candidate.ConfigureAwait(false);
@@ -298,6 +306,7 @@ public class ExecutorSubmissionContractTest
                         failures.Add(failure);
                     }
                 }
+
                 throw new AggregateException(failures);
             }
             finally
@@ -338,6 +347,7 @@ public class ExecutorSubmissionContractTest
         using var owner = new CancellationTokenSource();
         int calls = 0;
         Task<int> operation = executor.SubmitAsync(() => ++calls, owner.Token);
+
         try
         {
             await Assert.ThrowsAsync<TimeoutException>(() => Task.WhenAny(operation).WaitAsync(TimeSpan.FromMilliseconds(10)));
@@ -347,6 +357,7 @@ public class ExecutorSubmissionContractTest
         {
             owner.Cancel();
         }
+
         executor.Run(executor.Take());
         Assert.True(operation.IsCanceled);
         Assert.Equal(0, calls);

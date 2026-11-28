@@ -213,15 +213,18 @@ public sealed class HttpClientCodec : CombinedChannelDuplexHandler<HttpResponseD
                     // https://github.com/netty/netty/issues/1159
                     return;
                 }
+
                 @out.Add(buffer.ReadBytes(readable));
             }
             else
             {
                 int oldSize = @out.Count;
                 base.Decode(ctx, buffer, @out);
+
                 if (codec.failOnMissingResponse)
                 {
                     int size = @out.Count;
+
                     for (int i = oldSize; i < size; i++)
                     {
                         Decrement(@out[i]);
@@ -265,6 +268,7 @@ public sealed class HttpClientCodec : CombinedChannelDuplexHandler<HttpResponseD
             if (method != null)
             {
                 char firstChar = method.Name()[0];
+
                 switch (firstChar)
                 {
                     case 'H':
@@ -289,6 +293,7 @@ public sealed class HttpClientCodec : CombinedChannelDuplexHandler<HttpResponseD
                             ////
                             //// return !msg.isChunked();
                         }
+
                         break;
                     case 'C':
                         // Successful CONNECT request results in a response with empty body.
@@ -303,14 +308,17 @@ public sealed class HttpClientCodec : CombinedChannelDuplexHandler<HttpResponseD
                                     codec.done = true;
                                     codec.queue.Clear();
                                 }
+
                                 return true;
                             }
                         }
+
                         break;
                     default:
                         break;
                 }
             }
+
             return base.IsContentAlwaysEmpty(msg);
         }
 

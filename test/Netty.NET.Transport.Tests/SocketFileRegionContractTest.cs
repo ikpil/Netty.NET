@@ -39,6 +39,7 @@ public class SocketFileRegionContractTest
             {
                 throw new IOException("incorrect resume offset");
             }
+
             target.Write(new byte[] { 3, 4 });
             self.TransferredBytes = 4;
             return 2;
@@ -77,9 +78,11 @@ public class SocketFileRegionContractTest
             {
                 retried.TrySetResult();
             }
+
             return 0;
         });
         Task write = socket.Channel.WriteAndFlushAsync(region, TestContext.Current.CancellationToken);
+
         try
         {
             await retried.Task.WaitAsync(TestContext.Current.CancellationToken);
@@ -93,6 +96,7 @@ public class SocketFileRegionContractTest
         {
             await socket.Channel.CloseAsync();
         }
+
         await Assert.ThrowsAnyAsync<ClosedChannelException>(() => write);
         await region.Deallocated.Task.WaitAsync(TestContext.Current.CancellationToken);
         Assert.True(region.Positions.Count >= 2);
@@ -118,6 +122,7 @@ public class SocketFileRegionContractTest
         string path = Path.GetTempFileName();
         var data = new byte[2 * 1024 * 1024];
         Random.Shared.NextBytes(data);
+
         try
         {
             await File.WriteAllBytesAsync(path, data, TestContext.Current.CancellationToken);
@@ -184,6 +189,7 @@ public class SocketFileRegionContractTest
         public long TransferTo(Stream target, long position)
         {
             Positions.Enqueue(position);
+
             return transfer(this, target, position);
         }
 
@@ -224,14 +230,18 @@ public class SocketFileRegionContractTest
         internal static async Task<Connected> Open(bool nonblocking = false, bool limitedReceiveBuffer = false)
         {
             var connected = new Connected();
+
             if (limitedReceiveBuffer)
             {
                 connected._listener.Server.ReceiveBufferSize = 1024;
             }
+
             connected._listener.Start();
+
             try
             {
                 var bootstrap = connected._fixture.Client;
+
                 if (nonblocking)
                 {
                     connected.OwnedSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp) { Blocking = false, SendBufferSize = 1024 };
@@ -239,6 +249,7 @@ public class SocketFileRegionContractTest
                     bootstrap = new Bootstrap().Group(bootstrap.Config.Group).ChannelFactory(() => channel)
                         .Option(ChannelOption.ALLOCATOR, (IByteBufAllocator)bootstrap.Config.Options[ChannelOption.ALLOCATOR]);
                 }
+
                 connected.Channel = (NioSocketChannel)await bootstrap.Handler(new ChannelInboundHandlerAdapter())
                     .ConnectAsync(connected._listener.LocalEndpoint, cancellationToken: TestContext.Current.CancellationToken);
                 connected.Peer = await connected._listener.AcceptTcpClientAsync(TestContext.Current.CancellationToken);
@@ -257,6 +268,7 @@ public class SocketFileRegionContractTest
                 await Channel.CloseAsync();
             else
                 OwnedSocket?.Dispose();
+
             Peer?.Dispose();
             _listener.Stop();
             await _fixture.DisposeAsync();

@@ -61,6 +61,7 @@ public class OptionalSslHandlerTest
     {
         DecodingOptionalSslHandler handler = new DecodingOptionalSslHandler(sslContext.Object);
         ByteBuf payload = Unpooled.CopiedBuffer(Encoding.Default.GetBytes("plaintext"));
+
         try
         {
             handler.InvokeDecode(context.Object, payload, null);
@@ -78,6 +79,7 @@ public class OptionalSslHandlerTest
         IChannelHandler nonSslHandler = new Mock<IChannelHandler>().Object;
         DecodingOptionalSslHandler handler = new NonSslReplacingHandler(sslContext.Object, nonSslHandler);
         ByteBuf payload = Unpooled.CopiedBuffer(Encoding.Default.GetBytes("plaintext"));
+
         try
         {
             handler.InvokeDecode(context.Object, payload, null);
@@ -95,6 +97,7 @@ public class OptionalSslHandlerTest
         SslHandler sslHandler = new Mock<SslHandler>(new SslServerAuthenticationOptions()).Object;
         DecodingOptionalSslHandler handler = new SslReplacingHandler(sslContext.Object, sslHandler);
         ByteBuf payload = Unpooled.WrappedBuffer(new byte[] { 22, 3, 1, 0, 5 });
+
         try
         {
             handler.InvokeDecode(context.Object, payload, null);
@@ -111,6 +114,7 @@ public class OptionalSslHandlerTest
     {
         DecodingOptionalSslHandler handler = new DecodingOptionalSslHandler(sslContext.Object);
         ByteBuf payload = Unpooled.WrappedBuffer(new byte[] { 22, 3 });
+
         try
         {
             handler.InvokeDecode(context.Object, payload, null);

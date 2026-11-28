@@ -227,6 +227,7 @@ public class DnsResponseCode : IComparable<DnsResponseCode>
         {
             this.text = text = name + '(' + IntValue().ToString(CultureInfo.InvariantCulture) + ')';
         }
+
         return text;
     }
 }

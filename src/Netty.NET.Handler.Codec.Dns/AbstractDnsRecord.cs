@@ -71,6 +71,7 @@ public abstract class AbstractDnsRecord : IDnsRecord
     protected AbstractDnsRecord(string name, DnsRecordType type, int dnsClass, long timeToLive)
     {
         CheckPositiveOrZero(timeToLive, "timeToLive");
+
         // Convert to ASCII which will also check that the length is not too big.
         // See:
         //   - https://github.com/netty/netty/issues/4937
@@ -91,6 +92,7 @@ public abstract class AbstractDnsRecord : IDnsRecord
             // See https://github.com/netty/netty/issues/10034
             return name;
         }
+
         // CLR: IDN.toASCII is the shared Netty.NET.Common.Internal.IDN.ToASCII, which keeps the OpenJDK label loop
         // and its ArgumentException failures (src/Netty.NET.Common/Internal/IDN.cs).
         return IDN.ToASCII(name);
@@ -102,6 +104,7 @@ public abstract class AbstractDnsRecord : IDnsRecord
         {
             return name + '.';
         }
+
         return name;
     }
 

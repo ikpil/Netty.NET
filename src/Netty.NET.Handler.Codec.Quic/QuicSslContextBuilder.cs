@@ -154,6 +154,7 @@ public sealed class QuicSslContextBuilder
     private QuicSslContextBuilder(bool forServer)
     {
         this.forServer = forServer;
+
         if (!forServer)
         {
              this.endpointIdentificationAlgorithm = MsQuicSslContext.defaultEndpointVerificationAlgorithm;
@@ -185,6 +186,7 @@ public sealed class QuicSslContextBuilder
         {
             throw new NotSupportedException("Only supported for server");
         }
+
         this.mapping = ObjectUtil.CheckNotNull(mapping, "mapping");
         return this;
     }
@@ -202,6 +204,7 @@ public sealed class QuicSslContextBuilder
         {
             options[option] = value;
         }
+
         return this;
     }
 
@@ -318,6 +321,7 @@ public sealed class QuicSslContextBuilder
     {
         X509Certificate2[] keyCertChain;
         AsymmetricAlgorithm key;
+
         try
         {
             keyCertChain = MsQuicSslContext.ToX509Certificates0(keyCertChainFile);
@@ -326,6 +330,7 @@ public sealed class QuicSslContextBuilder
         {
             throw new ArgumentException("File does not contain valid certificates: " + keyCertChainFile, e);
         }
+
         try
         {
             key = MsQuicSslContext.ToPrivateKey0(keyFile, keyPassword);
@@ -334,6 +339,7 @@ public sealed class QuicSslContextBuilder
         {
             throw new ArgumentException("File does not contain valid private key: " + keyFile, e);
         }
+
         return KeyManager(key, keyPassword, keyCertChain);
     }
 
@@ -355,6 +361,7 @@ public sealed class QuicSslContextBuilder
         {
             return KeyManager((SslStreamCertificateContext) null, keyPassword);
         }
+
         try
         {
             SslStreamCertificateContext keyManagerFactory =
@@ -444,6 +451,7 @@ public sealed class QuicSslContextBuilder
         {
             throw new NotSupportedException("Only supported for server");
         }
+
         this.clientAuth = clientAuth;
         return this;
     }
@@ -479,6 +487,7 @@ public sealed class QuicSslContextBuilder
         {
             throw new NotSupportedException("keylog(true) is not supported by System.Net.Quic (msquic)");
         }
+
         if (forServer)
         {
             return new MsQuicSslContext(true, sessionTimeout, sessionCacheSize, clientAuth, trustManagerFactory,
@@ -501,11 +510,14 @@ public sealed class QuicSslContextBuilder
         {
             return null;
         }
+
         List<KeyValuePair<SslContextOption, object>> list = new List<KeyValuePair<SslContextOption, object>>();
+
         foreach (KeyValuePair<SslContextOption, object> element in iterable)
         {
             list.Add(element);
         }
+
         return list.ToArray();
     }
 }

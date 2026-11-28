@@ -46,6 +46,7 @@ public sealed class Http1RequestHandler : Http2RequestHandler
         {
             _ = ctx.WriteAsync(new DefaultFullHttpResponse(HTTP_1_1, CONTINUE, Unpooled.EmptyBuffer));
         }
+
         base.ChannelRead0(ctx, request);
     }
 
@@ -61,6 +62,7 @@ public sealed class Http1RequestHandler : Http2RequestHandler
                 {
                     response.Headers().Set(CONNECTION, HttpHeaderValues.KEEP_ALIVE);
                 }
+
                 _ = ctx.WriteAndFlushAsync(response);
             }
             else

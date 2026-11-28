@@ -39,10 +39,12 @@ public class WebSocketServerInitializer : ChannelInitializer<ISocketChannel>
     protected override void InitChannel(ISocketChannel ch)
     {
         IChannelPipeline pipeline = ch.Pipeline;
+
         if (sslCtx != null)
         {
             pipeline.AddLast(sslCtx.NewHandler(ch.Alloc()));
         }
+
         pipeline.AddLast(new HttpServerCodec());
         pipeline.AddLast(new HttpObjectAggregator(MAX_CONTENT_LENGTH));
         pipeline.AddLast(new WebSocketServerHandler());

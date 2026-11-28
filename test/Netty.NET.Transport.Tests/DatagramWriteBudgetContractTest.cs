@@ -35,6 +35,7 @@ public class DatagramWriteBudgetContractTest
         fixture.Channel.Flush();
         Assert.Equal(Math.Min(budget, 5), fixture.Channel.Attempts.Count);
         int completed = Math.Min(budget, 5);
+
         while (completed < writes.Length)
         {
             Assert.Equal(1, fixture.Loop.RunNow(-1));
@@ -43,6 +44,7 @@ public class DatagramWriteBudgetContractTest
             Assert.All(writes.Take(completed), write => Assert.True(write.IsCompletedSuccessfully));
             Assert.All(writes.Skip(completed), write => Assert.False(write.IsCompleted));
         }
+
         Assert.Equal(new[] { 1, 2, 3, 4, 5 }, fixture.Channel.Attempts);
     }
 
@@ -72,6 +74,7 @@ public class DatagramWriteBudgetContractTest
         channel.Config.SetAutoRead(false);
         channel.Config.SetOption(ChannelOption.MAX_MESSAGES_PER_WRITE, budget);
         var marker = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+
         try
         {
             await group.RegisterAsync(channel, TestContext.Current.CancellationToken);
@@ -105,6 +108,7 @@ public class DatagramWriteBudgetContractTest
             {
                 fixture.Channel.Config.SetOption(ChannelOption.MAX_MESSAGES_PER_WRITE, next);
             }
+
             return Task.CompletedTask;
         };
         Task[] writes = Enqueue(fixture.Channel, 6);
@@ -166,11 +170,13 @@ public class DatagramWriteBudgetContractTest
             if (id == 1)
             {
                 later = fixture.Channel.WriteAsync(Unpooled.Buffer(1).WriteByte(4));
+
                 if (flush)
                 {
                     fixture.Channel.Flush();
                 }
             }
+
             return Task.CompletedTask;
         };
         Task[] first = Enqueue(fixture.Channel, 3);
@@ -178,6 +184,7 @@ public class DatagramWriteBudgetContractTest
         Assert.Single(fixture.Channel.Attempts);
         fixture.PumpUntil(() => first.All(write => write.IsCompleted) && (!flush || later.IsCompleted));
         Assert.Equal(flush ? new[] { 1, 2, 3, 4 } : new[] { 1, 2, 3 }, fixture.Channel.Attempts);
+
         if (!flush)
         {
             Assert.False(later.IsCompleted);
@@ -219,6 +226,7 @@ public class DatagramWriteBudgetContractTest
     public void MessageQuantumDoesNotChangeTheEmbeddedTransportWritePolicy()
     {
         var channel = new EmbeddedChannel();
+
         try
         {
             channel.Config.SetOption(ChannelOption.MAX_MESSAGES_PER_WRITE, 1);
@@ -249,16 +257,19 @@ public class DatagramWriteBudgetContractTest
         receiver.Bind(new IPEndPoint(loopback, 0));
         var target = (IPEndPoint)receiver.LocalEndPoint;
         using var cancel = new CancellationTokenSource();
+
         try
         {
             loop.RegisterAsync(sender).GetAwaiter().GetResult();
             sender.BindAsync(new IPEndPoint(loopback, 0)).GetAwaiter().GetResult();
+
             if (connected)
             {
                 var connect = sender.ConnectAsync(target);
                 PumpUntil(loop, () => connect.IsCompleted);
                 connect.GetAwaiter().GetResult();
             }
+
             var bareEmpty = sender.WriteAsync(Unpooled.Buffer(0));
             var addressedEmpty = sender.WriteAsync(new DatagramPacket(Unpooled.Buffer(0), target));
             var payload = Unpooled.Buffer(1).WriteByte(99);
@@ -292,9 +303,11 @@ public class DatagramWriteBudgetContractTest
     private static void PumpUntil(ManualIoEventLoop loop, Func<bool> condition)
     {
         var clock = Stopwatch.StartNew();
+
         while (!condition())
         {
             TestContext.Current.CancellationToken.ThrowIfCancellationRequested();
+
             Assert.True(clock.Elapsed < TimeSpan.FromSeconds(5), "Native write completion did not reach its owner.");
             loop.RunNow();
             Thread.Sleep(1);
@@ -309,10 +322,12 @@ public class DatagramWriteBudgetContractTest
         {
             Channel = channel;
             Channel.Config.SetAutoRead(false);
+
             if (budget.HasValue)
             {
                 Channel.Config.SetOption(ChannelOption.MAX_MESSAGES_PER_WRITE, budget.Value);
             }
+
             Loop.RegisterAsync(Channel).GetAwaiter().GetResult();
             Channel.BindAsync(new IPEndPoint(IPAddress.Loopback, 0)).GetAwaiter().GetResult();
             // AbstractUnsafe.bind invokes channelActive later; settle it before counting write turns.

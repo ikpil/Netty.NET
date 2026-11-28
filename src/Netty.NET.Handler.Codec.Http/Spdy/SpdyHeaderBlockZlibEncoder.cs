@@ -50,6 +50,7 @@ internal class SpdyHeaderBlockZlibEncoder : SpdyHeaderBlockRawEncoder
                     "compressionLevel: " + compressionLevel.ToString(CultureInfo.InvariantCulture)
                     + " (expected: 0-9)");
         }
+
         compressor = new Deflater(compressionLevel);
         compressor.SetDictionary(SPDY_DICT);
     }
@@ -76,6 +77,7 @@ internal class SpdyHeaderBlockZlibEncoder : SpdyHeaderBlockRawEncoder
     {
         ByteBuf compressed = alloc.HeapBuffer(len);
         bool release = true;
+
         try
         {
             while (CompressInto(compressed))
@@ -83,6 +85,7 @@ internal class SpdyHeaderBlockZlibEncoder : SpdyHeaderBlockRawEncoder
                 // Although unlikely, it's possible that the compressed size is larger than the decompressed size
                 compressed.EnsureWritable(compressed.Capacity << 1);
             }
+
             release = false;
             return compressed;
         }
@@ -117,6 +120,7 @@ internal class SpdyHeaderBlockZlibEncoder : SpdyHeaderBlockRawEncoder
         }
 
         ByteBuf decompressed = base.Encode(alloc, frame);
+
         try
         {
             if (!decompressed.IsReadable())
@@ -139,6 +143,7 @@ internal class SpdyHeaderBlockZlibEncoder : SpdyHeaderBlockRawEncoder
         {
             return;
         }
+
         finished = true;
         compressor.End();
         base.End();
@@ -154,6 +159,7 @@ internal class SpdyHeaderBlockZlibEncoder : SpdyHeaderBlockRawEncoder
         {
             return true;
         }
+
         array = default;
         return false;
     }
@@ -168,6 +174,7 @@ internal class SpdyHeaderBlockZlibEncoder : SpdyHeaderBlockRawEncoder
         {
             return array;
         }
+
         throw new NotSupportedException("the buffer range is not backed by one managed array");
     }
 }

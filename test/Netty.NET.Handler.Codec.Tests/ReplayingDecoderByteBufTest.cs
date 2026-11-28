@@ -36,6 +36,7 @@ public class ReplayingDecoderByteBufTest
 
         bool error;
         int i = 0;
+
         try
         {
             for (;;)
@@ -66,6 +67,7 @@ public class ReplayingDecoderByteBufTest
 
         bool error;
         int i = 0;
+
         try
         {
             for (;;)
@@ -92,14 +94,17 @@ public class ReplayingDecoderByteBufTest
     public void TestGetBoolean()
     {
         ByteBuf buf = Unpooled.Buffer(10);
+
         while (buf.IsWritable())
         {
             buf.WriteBoolean(true);
         }
+
         ReplayingDecoderByteBuf buffer = new ReplayingDecoderByteBuf(buf);
 
         bool error;
         int i = 0;
+
         try
         {
             for (;;)
@@ -125,19 +130,23 @@ public class ReplayingDecoderByteBufTest
     {
         ByteBuf buf = Unpooled.Buffer(10);
         int i = 0;
+
         while (buf.IsWritable())
         {
             buf.WriteByte(i++);
         }
+
         ReplayingDecoderByteBuf buffer = new ReplayingDecoderByteBuf(buf);
         ByteBuf slice = buffer.RetainedSlice(0, 4);
         Assert.Equal(2, slice.RefCnt);
 
         i = 0;
+
         while (slice.IsReadable())
         {
             Assert.Equal(i++, slice.ReadByte());
         }
+
         slice.Release();
         buf.Release();
         Assert.Equal(0, slice.RefCnt);

@@ -53,6 +53,7 @@ internal static class DnsAddressDecoder
         {
             return null;
         }
+
         ByteBuf content = ((IByteBufHolder) record).Content;
         int contentLen = content.ReadableBytes;
         if (contentLen != INADDRSZ4 && contentLen != INADDRSZ6)

@@ -39,6 +39,7 @@ public sealed class SupportedCipherSuiteFilter : ICipherSuiteFilter
         ObjectUtil.CheckNotNull(supportedCiphers, "supportedCiphers");
 
         List<string> newCiphers;
+
         if (ciphers == null)
         {
             newCiphers = new List<string>(defaultCiphers.Count);
@@ -48,17 +49,20 @@ public sealed class SupportedCipherSuiteFilter : ICipherSuiteFilter
         {
             newCiphers = new List<string>(supportedCiphers.Count);
         }
+
         foreach (string c in ciphers)
         {
             if (c == null)
             {
                 break;
             }
+
             if (supportedCiphers.Contains(c))
             {
                 newCiphers.Add(c);
             }
         }
+
         return newCiphers.ToArray();
     }
 

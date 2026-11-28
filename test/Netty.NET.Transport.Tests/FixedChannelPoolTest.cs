@@ -57,6 +57,7 @@ public class FixedChannelPoolTest
         await using var t = new BootstrapTuple(1);
         using var handler = new BlockingChannelPoolHandler();
         FixedChannelPool pool = null;
+
         try
         {
             await t.StartServerAsync();
@@ -82,8 +83,10 @@ public class FixedChannelPoolTest
         finally
         {
             handler.ContinueAcquire();
+
             if (pool != null)
                 await pool.CloseAsync();
+
             if (handler.Channel != null)
                 await handler.Channel.CloseAsync();
         }
@@ -95,6 +98,7 @@ public class FixedChannelPoolTest
         await using var t = new BootstrapTuple(1);
         FixedChannelPool pool = null;
         IChannel channel = null;
+
         try
         {
             await t.StartServerAsync();
@@ -125,6 +129,7 @@ public class FixedChannelPoolTest
         {
             if (pool != null)
                 await pool.CloseAsync();
+
             if (channel != null)
                 await channel.CloseAsync();
         }
@@ -136,6 +141,7 @@ public class FixedChannelPoolTest
         await using var t = new BootstrapTuple(1);
         using var handler = new BlockingChannelPoolHandler();
         FixedChannelPool pool = null;
+
         try
         {
             await t.StartServerAsync();
@@ -156,8 +162,10 @@ public class FixedChannelPoolTest
         finally
         {
             handler.ContinueAcquire();
+
             if (pool != null)
                 await pool.CloseAsync();
+
             if (handler.Channel != null)
                 await handler.Channel.CloseAsync();
         }
@@ -403,25 +411,31 @@ public class FixedChannelPoolTest
         // create
         int totalChannels = 5;
         var channels = new List<IChannel>();
+
         for (int i = 0; i < totalChannels; i++)
             channels.Add(await pool.AcquireAsync());
+
         for (int i = 0; i < totalChannels; i++)
             await pool.ReleaseAsync(channels[i]);
+
         // test logic
         for (int i = 0; i < totalChannels; i++)
         {
             var channel = await pool.AcquireAsync();
+
             if (lastInFirstOutOrdering)
                 Assert.Same(channel, channels[totalChannels - 1 - i]);
             else
                 Assert.Same(channel, channels[i]);
         }
+
         // close all
         for (int i = 0; i < totalChannels; i++)
         {
             await channels[i].CloseAsync();
             await pool.ReleaseAsync(channels[i]);
         }
+
         await t.Server.CloseAsync();
     }
 
@@ -451,6 +465,7 @@ public class FixedChannelPoolTest
         {
             if (Server != null)
                 await Server.CloseAsync();
+
             await Group.StopAsync().WaitAsync(TimeSpan.FromSeconds(5));
         }
     }
@@ -469,6 +484,7 @@ public class FixedChannelPoolTest
         {
             if (Interlocked.CompareExchange(ref _channel, channel, null) != null)
                 return;
+
             _channelAcquired.TrySetResult();
             if (!_continueAcquire.Wait(TimeSpan.FromSeconds(5)))
                 throw new TimeoutException("Timed out waiting to continue acquire");

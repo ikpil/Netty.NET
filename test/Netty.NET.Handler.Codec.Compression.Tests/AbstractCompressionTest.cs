@@ -43,6 +43,7 @@ public abstract class AbstractCompressionTest
     private static void FillArrayWithCompressibleData(byte[] array)
     {
         Random rng = new Random();
+
         for (int i = 0; i < array.Length; i++)
         {
             array[i] = i % 4 != 0 ? (byte) 0 : (byte) rng.Next();

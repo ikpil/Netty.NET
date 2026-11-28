@@ -70,6 +70,7 @@ public class Http2ClientInitializer : ChannelInitializer<ISocketChannel>
                 .Build();
         responseHandler = new HttpResponseHandler();
         settingsHandler = new Http2SettingsHandler(new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously));
+
         if (sslCtx != null)
         {
             ConfigureSsl(ch);
@@ -127,6 +128,7 @@ public class Http2ClientInitializer : ChannelInitializer<ISocketChannel>
                 initializer.ConfigureEndOfPipeline(p);
                 return;
             }
+
             _ = ctx.CloseAsync();
             throw new InvalidOperationException("unknown protocol: " + protocol);
         }
@@ -173,6 +175,7 @@ public class Http2ClientInitializer : ChannelInitializer<ISocketChannel>
             {
                 hostString = ((System.Net.IPEndPoint) remote).Address.ToString();
             }
+
             int port = remote is System.Net.DnsEndPoint dnsEndPoint ? dnsEndPoint.Port
                     : ((System.Net.IPEndPoint) remote).Port;
             upgradeRequest.Headers().Set(HttpHeaderNames.HOST, hostString + ':' + port);

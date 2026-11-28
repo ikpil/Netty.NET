@@ -38,6 +38,7 @@ internal sealed class HashedWheelBucket
     {
         Debug.Assert(timeout._bucket == null);
         timeout._bucket = this;
+
         if (_head == null)
         {
             _head = _tail = timeout;
@@ -61,6 +62,7 @@ internal sealed class HashedWheelBucket
         while (timeout != null)
         {
             HashedWheelTimeout next = timeout._next;
+
             if (timeout._remainingRounds <= 0)
             {
                 if (timeout._deadline <= deadline)
@@ -86,6 +88,7 @@ internal sealed class HashedWheelBucket
     public HashedWheelTimeout Remove(HashedWheelTimeout timeout)
     {
         HashedWheelTimeout next = timeout._next;
+
         // remove timeout that was either processed or cancelled by updating the linked-list
         if (timeout._prev != null)
         {

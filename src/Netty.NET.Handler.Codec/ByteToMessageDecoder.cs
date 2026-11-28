@@ -85,12 +85,14 @@ public abstract class ByteToMessageDecoder : ChannelInboundHandlerAdapter
                 @in.Release();
                 return cumulation;
             }
+
             if (!cumulation.IsReadable() && @in.IsContiguous)
             {
                 // If cumulation is empty and input buffer is contiguous, use it directly
                 cumulation.Release();
                 return @in;
             }
+
             try
             {
                 int required = @in.ReadableBytes;
@@ -104,6 +106,7 @@ public abstract class ByteToMessageDecoder : ChannelInboundHandlerAdapter
                     //   assumed to be shared (e.g. refCnt() > 1) and the reallocation may not be safe.
                     return ExpandCumulation(alloc, cumulation, @in);
                 }
+
                 cumulation.WriteBytes(@in, @in.ReaderIndex, required);
                 @in.ReaderIndex = @in.WriterIndex;
                 return cumulation;
@@ -134,12 +137,15 @@ public abstract class ByteToMessageDecoder : ChannelInboundHandlerAdapter
                 @in.Release();
                 return cumulation;
             }
+
             if (!cumulation.IsReadable())
             {
                 cumulation.Release();
                 return @in;
             }
+
             CompositeByteBuf composite = null;
+
             try
             {
                 if (cumulation is CompositeByteBuf && cumulation.RefCnt == 1)
@@ -156,6 +162,7 @@ public abstract class ByteToMessageDecoder : ChannelInboundHandlerAdapter
                 {
                     composite = alloc.CompositeBuffer(int.MaxValue).AddFlattenedComponents(cumulation, true);
                 }
+
                 composite.AddFlattenedComponents(@in, true);
                 @in = null;
                 return composite;
@@ -166,6 +173,7 @@ public abstract class ByteToMessageDecoder : ChannelInboundHandlerAdapter
                 {
                     // We must release if the ownership was not transferred as otherwise it may produce a leak
                     @in.Release();
+
                     // Also release any new buffer allocated if we're not returning it
                     if (composite != null && composite != cumulation)
                     {
@@ -249,6 +257,7 @@ public abstract class ByteToMessageDecoder : ChannelInboundHandlerAdapter
     public void SetDiscardAfterReads(int discardAfterReads)
     {
         CheckPositive(discardAfterReads, "discardAfterReads");
+
         this.discardAfterReads = discardAfterReads;
     }
 
@@ -287,6 +296,7 @@ public abstract class ByteToMessageDecoder : ChannelInboundHandlerAdapter
             decodeState = STATE_HANDLER_REMOVED_PENDING;
             return;
         }
+
         ByteBuf buf = cumulation;
         if (buf != null)
         {
@@ -304,6 +314,7 @@ public abstract class ByteToMessageDecoder : ChannelInboundHandlerAdapter
                 buf.Release();
             }
         }
+
         HandlerRemoved0(ctx);
     }
 
@@ -326,6 +337,7 @@ public abstract class ByteToMessageDecoder : ChannelInboundHandlerAdapter
                 {
                     selfFiredChannelRead = true;
                     CodecOutputList @out = CodecOutputList.NewInstance();
+
                     try
                     {
                         first = cumulation == null;
@@ -350,6 +362,7 @@ public abstract class ByteToMessageDecoder : ChannelInboundHandlerAdapter
                             if (cumulation != null && !cumulation.IsReadable())
                             {
                                 numReads = 0;
+
                                 try
                                 {
                                     cumulation.Release();
@@ -363,6 +376,7 @@ public abstract class ByteToMessageDecoder : ChannelInboundHandlerAdapter
                                                     "or passed it down the pipeline without a retain() call, " +
                                                     "which is not allowed.", e);
                                 }
+
                                 cumulation = null;
                             }
                             else if (++numReads >= discardAfterReads)
@@ -396,6 +410,7 @@ public abstract class ByteToMessageDecoder : ChannelInboundHandlerAdapter
             {
                 inputMessages = new Queue<object>(2);
             }
+
             inputMessages.Enqueue(input);
         }
     }
@@ -433,10 +448,12 @@ public abstract class ByteToMessageDecoder : ChannelInboundHandlerAdapter
     {
         numReads = 0;
         DiscardSomeReadBytes();
+
         if (selfFiredChannelRead && !firedChannelRead && !ctx.Channel.Config.IsAutoRead())
         {
             ctx.Read();
         }
+
         firedChannelRead = false;
         selfFiredChannelRead = false;
         ctx.FireChannelReadComplete();
@@ -471,12 +488,14 @@ public abstract class ByteToMessageDecoder : ChannelInboundHandlerAdapter
             // when the input has been shutdown.
             ChannelInputClosed(ctx, false);
         }
+
         base.UserEventTriggered(ctx, evt);
     }
 
     private void ChannelInputClosed(IChannelHandlerContext ctx, bool callChannelInactive)
     {
         CodecOutputList @out = CodecOutputList.NewInstance();
+
         try
         {
             ChannelInputClosed(ctx, @out);
@@ -500,13 +519,16 @@ public abstract class ByteToMessageDecoder : ChannelInboundHandlerAdapter
                     cumulation.Release();
                     cumulation = null;
                 }
+
                 int size = @out.Count;
                 FireChannelRead(ctx, @out, size);
+
                 if (size > 0)
                 {
                     // Something was read, call fireChannelReadComplete()
                     ctx.FireChannelReadComplete();
                 }
+
                 if (callChannelInactive)
                 {
                     ctx.FireChannelInactive();
@@ -529,6 +551,7 @@ public abstract class ByteToMessageDecoder : ChannelInboundHandlerAdapter
         if (cumulation != null)
         {
             CallDecode(ctx, cumulation, @out);
+
             // If callDecode(...) removed the handle from the pipeline we should not call decodeLast(...) as this would
             // be unexpected.
             if (!ctx.IsRemoved)
@@ -651,6 +674,7 @@ public abstract class ByteToMessageDecoder : ChannelInboundHandlerAdapter
     internal void DecodeRemovalReentryProtection(IChannelHandlerContext ctx, ByteBuf @in, IList<object> @out)
     {
         decodeState = STATE_CALLING_CHILD_DECODE;
+
         try
         {
             Decode(ctx, @in, @out);
@@ -661,6 +685,7 @@ public abstract class ByteToMessageDecoder : ChannelInboundHandlerAdapter
             {
                 bool removePending = decodeState == STATE_HANDLER_REMOVED_PENDING;
                 decodeState = STATE_INIT;
+
                 if (removePending)
                 {
                     FireChannelRead(ctx, @out, @out.Count);
@@ -695,6 +720,7 @@ public abstract class ByteToMessageDecoder : ChannelInboundHandlerAdapter
         int totalBytes = oldBytes + newBytes;
         ByteBuf newCumulation = alloc.Buffer(alloc.CalculateNewCapacity(totalBytes, int.MaxValue));
         ByteBuf toRelease = newCumulation;
+
         try
         {
             // This avoids redundant checks and stack depth compared to calling writeBytes(...)

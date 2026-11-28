@@ -57,15 +57,18 @@ public class ServerSocketSuspendTest : AbstractServerSocketTest
             // CLR: Stopwatch timestamps replace System.nanoTime(); elapsed TimeSpan ticks are 100 ns each, so the
             // comparisons below stay in TIMEOUT's nanoseconds.
             long startTime = Stopwatch.GetTimestamp();
+
             for (int i = 0; i < NUM_CHANNELS; i ++)
             {
                 Socket s = new Socket(SocketType.Stream, ProtocolType.Tcp);
+
                 // CLR: SocketUtils.connect(s, address, 10000) connects with a 10000 ms timeout; the CLR connect
                 // observes a CancellationToken that a CancellationTokenSource cancels after 10000 ms instead.
                 using (CancellationTokenSource timeout = new CancellationTokenSource(10000))
                 {
                     await s.ConnectAsync(sc.LocalAddress, timeout.Token);
                 }
+
                 sockets.Add(s);
             }
 
@@ -89,16 +92,20 @@ public class ServerSocketSuspendTest : AbstractServerSocketTest
         try
         {
             long startTime = Stopwatch.GetTimestamp();
+
             for (int i = 0; i < NUM_CHANNELS; i ++)
             {
                 Socket s = new Socket(SocketType.Stream, ProtocolType.Tcp);
+
                 // CLR: Socket.connect(address, 10000) is the same bounded connect as above.
                 using (CancellationTokenSource timeout = new CancellationTokenSource(10000))
                 {
                     await s.ConnectAsync(sc.LocalAddress, timeout.Token);
                 }
+
                 sockets.Add(s);
             }
+
             long endTime = Stopwatch.GetTimestamp();
 
             Assert.True(Stopwatch.GetElapsedTime(startTime, endTime).Ticks * 100 < TIMEOUT);

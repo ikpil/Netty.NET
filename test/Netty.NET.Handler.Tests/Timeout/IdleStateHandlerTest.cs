@@ -78,6 +78,7 @@ public class IdleStateHandlerTest
 
         EmbeddedChannel channel = new EmbeddedChannel(idleStateHandler, handler);
         channel.FreezeTime();
+
         try
         {
             // For each expected event advance the ticker and run() the task. Each
@@ -177,6 +178,7 @@ public class IdleStateHandlerTest
 
         EmbeddedChannel channel = new EmbeddedChannel(idleStateHandler, handler);
         channel.FreezeTime();
+
         try
         {
             long delayInNanos = TimeSpan.FromSeconds(1).Ticks * 100;
@@ -249,6 +251,7 @@ public class IdleStateHandlerTest
 
         ObservableChannel channel = new ObservableChannel(idleStateHandler, handler);
         channel.FreezeTime();
+
         try
         {
             // We're writing 3 messages that will be consumed at different rates!
@@ -416,6 +419,7 @@ public class IdleStateHandlerTest
                     return msg;
                 }
             }
+
             return null;
         }
 
@@ -438,6 +442,7 @@ public class IdleStateHandlerTest
                     return msg;
                 }
             }
+
             return null;
         }
     }

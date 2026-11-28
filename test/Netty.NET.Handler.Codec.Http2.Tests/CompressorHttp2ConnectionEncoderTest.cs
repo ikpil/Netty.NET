@@ -181,6 +181,7 @@ public class CompressorHttp2ConnectionEncoderTest
                                      TaskCompletionSource promise, bool hasPriority)
     {
         IHttp2Headers headers = new DefaultHttp2Headers().Set(CONTENT_ENCODING, GZIP);
+
         if (hasPriority)
         {
             _ = encoder.WriteHeadersAsync(ctx, streamId, headers, 0, (short) 16, false, 0, false, promise);
@@ -270,6 +271,7 @@ public class CompressorHttp2ConnectionEncoderTest
             {
                 throw targetContentEncodingFailure;
             }
+
             return contentEncoding;
         }
     }

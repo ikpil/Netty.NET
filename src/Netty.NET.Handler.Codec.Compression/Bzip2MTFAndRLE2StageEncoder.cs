@@ -99,6 +99,7 @@ internal sealed class Bzip2MTFAndRLE2StageEncoder
         Bzip2MoveToFrontTable symbolMTF = new Bzip2MoveToFrontTable();
 
         int totalUniqueValues = 0;
+
         for (int i = 0; i < huffmanSymbolMap.Length; i++)
         {
             if (bwtValuesPresent[i])
@@ -106,12 +107,14 @@ internal sealed class Bzip2MTFAndRLE2StageEncoder
                 huffmanSymbolMap[i] = (byte) totalUniqueValues++;
             }
         }
+
         int endOfBlockSymbol = totalUniqueValues + 1;
 
         int mtfIndex = 0;
         int repeatCount = 0;
         int totalRunAs = 0;
         int totalRunBs = 0;
+
         for (int i = 0; i < bwtLength; i++)
         {
             // Move To Front
@@ -126,6 +129,7 @@ internal sealed class Bzip2MTFAndRLE2StageEncoder
                 if (repeatCount > 0)
                 {
                     repeatCount--;
+
                     while (true)
                     {
                         if ((repeatCount & 1) == 0)
@@ -143,10 +147,13 @@ internal sealed class Bzip2MTFAndRLE2StageEncoder
                         {
                             break;
                         }
+
                         repeatCount = (repeatCount - 2) >>> 1;
                     }
+
                     repeatCount = 0;
                 }
+
                 mtfBlock[mtfIndex++] = (char) (mtfPosition + 1);
                 mtfSymbolFrequencies[mtfPosition + 1]++;
             }
@@ -155,6 +162,7 @@ internal sealed class Bzip2MTFAndRLE2StageEncoder
         if (repeatCount > 0)
         {
             repeatCount--;
+
             while (true)
             {
                 if ((repeatCount & 1) == 0)
@@ -172,6 +180,7 @@ internal sealed class Bzip2MTFAndRLE2StageEncoder
                 {
                     break;
                 }
+
                 repeatCount = (repeatCount - 2) >>> 1;
             }
         }

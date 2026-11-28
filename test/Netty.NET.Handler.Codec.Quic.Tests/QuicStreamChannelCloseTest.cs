@@ -73,6 +73,7 @@ public class QuicStreamChannelCloseTest : AbstractQuicTest
     {
         IChannel server = null;
         IChannel channel = null;
+
         try
         {
             TaskCompletionSource<IChannel> streamPromise =
@@ -149,6 +150,7 @@ public class QuicStreamChannelCloseTest : AbstractQuicTest
     {
         IChannel server = null;
         IChannel channel = null;
+
         try
         {
             TaskCompletionSource<IChannel> streamPromise =
@@ -223,6 +225,7 @@ public class QuicStreamChannelCloseTest : AbstractQuicTest
     {
         IChannel server = null;
         IChannel channel = null;
+
         try
         {
             TaskCompletionSource<IChannel> streamPromise =
@@ -241,6 +244,7 @@ public class QuicStreamChannelCloseTest : AbstractQuicTest
             // ChannelOutputShutdownException should only be used when its a BIDIRECTIONAL channel and half-closure
             // is used.
             Exception cause = await Cause(streamPromise.Task.WaitAsync(cancellationToken));
+
             if (halfClose && type != QuicStreamType.UNIDIRECTIONAL)
             {
                 Assert.IsAssignableFrom<ChannelOutputShutdownException>(cause);
@@ -249,6 +253,7 @@ public class QuicStreamChannelCloseTest : AbstractQuicTest
             {
                 Assert.IsAssignableFrom<ClosedChannelException>(cause);
             }
+
             await quicChannel.CloseAsync(cancellationToken);
 
             // Wait till the client was closed
@@ -301,6 +306,7 @@ public class QuicStreamChannelCloseTest : AbstractQuicTest
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
             Task future;
+
             if (halfClose)
             {
                 future = ((IQuicStreamChannel) ctx.Channel).ShutdownOutputAsync();
@@ -309,6 +315,7 @@ public class QuicStreamChannelCloseTest : AbstractQuicTest
             {
                 future = ctx.Channel.CloseAsync();
             }
+
             _ = future.ContinueWith(f =>
             {
                 _ = ctx.Channel.WriteAndFlushAsync("Unsupported message").ContinueWith(wf =>

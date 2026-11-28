@@ -45,6 +45,7 @@ public class OptionalSslHandler : ByteToMessageDecoder
         {
             return;
         }
+
         if (SslHandler.IsEncrypted(@in, false))
         {
             HandleSsl(context);
@@ -60,6 +61,7 @@ public class OptionalSslHandler : ByteToMessageDecoder
     private void HandleSsl(IChannelHandlerContext context)
     {
         SslHandler sslHandler = null;
+
         try
         {
             sslHandler = NewSslHandler(context, sslContext);

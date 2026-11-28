@@ -82,6 +82,7 @@ public sealed class Http3
         {
             throw new InvalidOperationException("Connection handler not found.");
         }
+
         return connectionHandler.localControlStreamHandler.MaxPushIdReceived();
     }
 
@@ -188,6 +189,7 @@ public sealed class Http3
         {
             return (Http3RequestStreamInitializer) handler;
         }
+
         return new HandlerRequestStreamInitializer(handler);
     }
 

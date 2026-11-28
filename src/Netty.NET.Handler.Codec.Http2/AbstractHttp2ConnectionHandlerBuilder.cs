@@ -185,6 +185,7 @@ public abstract class AbstractHttp2ConnectionHandlerBuilder<T, B>
             throw new ArgumentException("gracefulShutdownTimeoutMillis: " + ToJavaString(gracefulShutdownTimeoutMillis) +
                                                " (expected: -1 for indefinite or >= 0)");
         }
+
         this.gracefulShutdownTimeoutMillis = gracefulShutdownTimeoutMillis;
         return Self();
     }
@@ -665,6 +666,7 @@ public abstract class AbstractHttp2ConnectionHandlerBuilder<T, B>
         if (encoder != null)
         {
             Debug.Assert(decoder != null);
+
             return BuildFromCodec(decoder, encoder);
         }
 
@@ -704,7 +706,9 @@ public abstract class AbstractHttp2ConnectionHandlerBuilder<T, B>
         {
             encoder = new Http2ControlFrameLimitEncoder(encoder, maxQueuedControlFrames);
         }
+
         int maxEncodedRstFrames;
+
         if (maxEncodedRstFramesPerWindow == null)
         {
             // Only enable by default on the server.
@@ -721,11 +725,13 @@ public abstract class AbstractHttp2ConnectionHandlerBuilder<T, B>
         {
             maxEncodedRstFrames = maxEncodedRstFramesPerWindow.Value;
         }
+
         if (maxEncodedRstFrames > 0 && maxEncodedRstFramesSecondsPerWindow > 0)
         {
             encoder = new Http2MaxRstFrameLimitEncoder(
                     encoder, maxEncodedRstFrames, maxEncodedRstFramesSecondsPerWindow);
         }
+
         if (encoderEnforceMaxConcurrentStreams)
         {
             if (connection.IsServer())
@@ -736,6 +742,7 @@ public abstract class AbstractHttp2ConnectionHandlerBuilder<T, B>
                         "encoderEnforceMaxConcurrentStreams: " + ToJavaString(encoderEnforceMaxConcurrentStreams) +
                         " not supported for server");
             }
+
             encoder = new StreamBufferingEncoder(encoder);
         }
 
@@ -756,7 +763,9 @@ public abstract class AbstractHttp2ConnectionHandlerBuilder<T, B>
         {
             decoder = new Http2EmptyDataFrameConnectionDecoder(decoder, maxConsecutiveEmptyDataFrames);
         }
+
         int maxDecodedRstFrames;
+
         if (maxDecodedRstFramesPerWindow == null)
         {
             // Only enable by default on the server.
@@ -773,11 +782,14 @@ public abstract class AbstractHttp2ConnectionHandlerBuilder<T, B>
         {
             maxDecodedRstFrames = maxDecodedRstFramesPerWindow.Value;
         }
+
         if (maxDecodedRstFrames > 0 && maxDecodedRstFramesSecondsPerWindow > 0)
         {
             decoder = new Http2MaxRstFrameDecoder(decoder, maxDecodedRstFrames, maxDecodedRstFramesSecondsPerWindow);
         }
+
         T handler;
+
         try
         {
             // Call the abstract build method
@@ -792,10 +804,12 @@ public abstract class AbstractHttp2ConnectionHandlerBuilder<T, B>
 
         // Setup post build options
         handler.GracefulShutdownTimeoutMillis(gracefulShutdownTimeoutMillis);
+
         if (handler.Decoder().FrameListener() == null)
         {
             handler.Decoder().FrameListener(frameListener);
         }
+
         return handler;
     }
 

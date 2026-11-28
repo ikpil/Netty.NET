@@ -66,6 +66,7 @@ internal static class Http3RequestStreamValidationUtils
             _ = ctx.CloseAsync();
             return false;
         }
+
         if (frame is IHttp3PushPromiseFrame)
         {
             // Only supported on the server.
@@ -73,6 +74,7 @@ internal static class Http3RequestStreamValidationUtils
             FrameTypeUnexpected(promise, frame);
             return false;
         }
+
         return true;
     }
 
@@ -84,12 +86,14 @@ internal static class Http3RequestStreamValidationUtils
             HeaderUnexpected(ctx, headersFrame, "connection header included");
             return INVALID_FRAME_READ;
         }
+
         ICharSequence value = headersFrame.Headers().Get(HttpHeaderNames.TE);
         if (value != null && !HttpHeaderValues.TRAILERS.Equals(value))
         {
             HeaderUnexpected(ctx, headersFrame, "te header field included with invalid value: " + value);
             return INVALID_FRAME_READ;
         }
+
         if (decodeState.ReceivedFinalHeaders())
         {
             long length = NormalizeAndGetContentLength(
@@ -98,8 +102,10 @@ internal static class Http3RequestStreamValidationUtils
             {
                 headersFrame.Headers().SetLong(HttpHeaderNames.CONTENT_LENGTH, length);
             }
+
             return length;
         }
+
         return CONTENT_LENGTH_NOT_MODIFIED;
     }
 
@@ -142,6 +148,7 @@ internal static class Http3RequestStreamValidationUtils
         if (!qpackAttributes.DynamicTableDisabled() && !decodeState.Terminated())
         {
             long streamId = ((IQuicStreamChannel) ctx.Channel).StreamId();
+
             if (qpackAttributes.DecoderStreamAvailable())
             {
                 qpackDecoder.StreamAbandoned(qpackAttributes.DecoderStream(), streamId);
@@ -185,6 +192,7 @@ internal static class Http3RequestStreamValidationUtils
                     H3_MESSAGE_ERROR, "Expected content-length " + expectedLength.ToString(CultureInfo.InvariantCulture) +
                     " != " + seenLength.ToString(CultureInfo.InvariantCulture) + ".");
         }
+
         return seenLength;
     }
 }

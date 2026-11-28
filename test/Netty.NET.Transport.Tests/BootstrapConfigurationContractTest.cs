@@ -21,6 +21,7 @@ public class BootstrapConfigurationContractTest
     {
         var exception = new InvalidOperationException("newChannel crash");
         var group = new DefaultEventLoopGroup(1);
+
         try
         {
             var bootstrap = new Bootstrap().Group(group).Handler(new ChannelInboundHandlerAdapter()).ChannelFactory(() => throw exception);
@@ -53,6 +54,7 @@ public class BootstrapConfigurationContractTest
         var remote = new LocalAddress("config-remote");
         var bootstrap = new Bootstrap().Group(group).ChannelFactory(factory).Handler(handler).LocalAddress(local).RemoteAddress(remote)
             .Option(ChannelOption.AUTO_READ, true).Option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 100).Attr(key, "old");
+
         try
         {
             var config = bootstrap.Config;
@@ -104,6 +106,7 @@ public class BootstrapConfigurationContractTest
         var childHandler = new ChannelInboundHandlerAdapter();
         var bootstrap = new ServerBootstrap().Group(parent, child).Channel<LocalServerChannel>().Handler(handler).ChildHandler(childHandler)
             .Option(ChannelOption.AUTO_READ, true).ChildOption(ChannelOption.AUTO_READ, false).Attr(key, "parent").ChildAttr(key, "child");
+
         try
         {
             var config = bootstrap.Config;
@@ -175,6 +178,7 @@ public class BootstrapConfigurationContractTest
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var token = TestContext.Current.CancellationToken;
         var channels = new List<IChannel>();
+
         try
         {
             ServerBootstrap NewServer()
@@ -192,12 +196,14 @@ public class BootstrapConfigurationContractTest
 
             channels.Add(await NewClient().BindAsync("127.0.0.1", 0, token));
             channels.Add(await NewClient().BindAsync(IPAddress.Loopback, 0, token));
+
             foreach (IChannel channel in channels)
             {
                 var local = Assert.IsType<IPEndPoint>(channel.LocalAddress);
                 Assert.Equal(IPAddress.Loopback, local.Address);
                 Assert.NotEqual(0, local.Port);
             }
+
             // The JDK refuses to bind an unresolved address (UnresolvedAddressException, an IllegalArgumentException).
             Task<IChannel> unresolved = NewServer().BindAsync("netty.invalid", 0, token);
             Assert.IsAssignableFrom<ArgumentException>(await Record.ExceptionAsync(() => unresolved));

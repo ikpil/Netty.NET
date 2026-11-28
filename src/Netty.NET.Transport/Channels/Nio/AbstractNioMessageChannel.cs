@@ -53,6 +53,7 @@ public abstract class AbstractNioMessageChannel : AbstractNioChannel
         {
             return;
         }
+
         base.DoBeginRead();
     }
 
@@ -81,6 +82,7 @@ public abstract class AbstractNioMessageChannel : AbstractNioChannel
 
             bool closed = false;
             Exception exception = null;
+
             try
             {
                 try
@@ -92,6 +94,7 @@ public abstract class AbstractNioMessageChannel : AbstractNioChannel
                         {
                             break;
                         }
+
                         if (localRead < 0)
                         {
                             closed = true;
@@ -107,11 +110,13 @@ public abstract class AbstractNioMessageChannel : AbstractNioChannel
                 }
 
                 int size = _readBuf.Count;
+
                 for (int i = 0; i < size; i++)
                 {
                     _channel.ReadPending = false;
                     pipeline.FireChannelRead(_readBuf[i]);
                 }
+
                 _readBuf.Clear();
                 allocHandle.ReadComplete();
                 pipeline.FireChannelReadComplete();
@@ -126,6 +131,7 @@ public abstract class AbstractNioMessageChannel : AbstractNioChannel
                 if (closed)
                 {
                     _channel.InputShutdown = true;
+
                     if (_channel.IsOpen)
                     {
                         _ = _channel.Close();
@@ -151,6 +157,7 @@ public abstract class AbstractNioMessageChannel : AbstractNioChannel
     protected override void DoWrite(ChannelOutboundBuffer @in)
     {
         int maxMessagesPerWrite = MaxMessagesPerWrite();
+
         while (maxMessagesPerWrite > 0)
         {
             object msg = @in.Current;
@@ -158,9 +165,11 @@ public abstract class AbstractNioMessageChannel : AbstractNioChannel
             {
                 break;
             }
+
             try
             {
                 bool done = false;
+
                 for (int i = Config.GetWriteSpinCount() - 1; i >= 0; i--)
                 {
                     if (DoWriteMessage(msg, @in))
@@ -193,6 +202,7 @@ public abstract class AbstractNioMessageChannel : AbstractNioChannel
                 }
             }
         }
+
         if (@in.IsEmpty)
         {
             // Wrote all messages.
@@ -213,6 +223,7 @@ public abstract class AbstractNioMessageChannel : AbstractNioChannel
         {
             return defaultChannelConfig.GetMaxMessagesPerWrite();
         }
+
         return config.TryGetOption(ChannelOption.MAX_MESSAGES_PER_WRITE, out int value) ? value : int.MaxValue;
     }
 
@@ -238,6 +249,7 @@ public abstract class AbstractNioMessageChannel : AbstractNioChannel
             // accepting incoming connections. (e.g. too many open files)
             return this is not IServerChannel;
         }
+
         return true;
     }
 

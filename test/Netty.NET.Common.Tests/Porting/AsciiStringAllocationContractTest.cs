@@ -21,6 +21,7 @@ public class AsciiStringAllocationContractTest
         var characters = new char[length + 4];
         Array.Fill(characters, '\u2007');
         var expected = new byte[length];
+
         for (int i = 0; i < length; i++)
         {
             byte value = (byte)((i * 73 + 41) & 255);

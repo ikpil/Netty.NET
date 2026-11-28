@@ -101,6 +101,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
         Assert.False(headersFrame.IsEndStream());
 
         IHttp2DataFrame dataFrame = ch.ReadOutbound<IHttp2DataFrame>();
+
         try
         {
             Assert.Equal("hello world", dataFrame.Content.ToString(Encoding.UTF8));
@@ -151,6 +152,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
         Assert.False(headersFrame.IsEndStream());
 
         IHttp2DataFrame dataFrame = ch.ReadOutbound<IHttp2DataFrame>();
+
         try
         {
             Assert.Equal("hello world", dataFrame.Content.ToString(Encoding.UTF8));
@@ -193,6 +195,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
         Assert.True(ch.WriteOutbound(content));
 
         IHttp2DataFrame dataFrame = ch.ReadOutbound<IHttp2DataFrame>();
+
         try
         {
             Assert.Equal("hello world", dataFrame.Content.ToString(Encoding.UTF8));
@@ -215,6 +218,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
         Assert.True(ch.WriteOutbound(end));
 
         IHttp2DataFrame emptyFrame = ch.ReadOutbound<IHttp2DataFrame>();
+
         try
         {
             Assert.Equal(0, emptyFrame.Content.ReadableBytes);
@@ -239,6 +243,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
         Assert.True(ch.WriteOutbound(end));
 
         IHttp2DataFrame dataFrame = ch.ReadOutbound<IHttp2DataFrame>();
+
         try
         {
             Assert.Equal("hello world", dataFrame.Content.ToString(Encoding.UTF8));
@@ -283,6 +288,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
         Assert.True(ch.WriteOutbound(trailers));
 
         IHttp2DataFrame dataFrame = ch.ReadOutbound<IHttp2DataFrame>();
+
         try
         {
             Assert.Equal("hello world", dataFrame.Content.ToString(Encoding.UTF8));
@@ -315,6 +321,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
         Assert.True(ch.WriteInbound(new DefaultHttp2HeadersFrame(headers, true)));
 
         IFullHttpRequest request = ch.ReadInbound<IFullHttpRequest>();
+
         try
         {
             // The request-target/URI stays the authority, matching regular CONNECT: this fix does not
@@ -350,6 +357,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
         Assert.True(ch.WriteInbound(new DefaultHttp2HeadersFrame(headers, true)));
 
         IFullHttpRequest request = ch.ReadInbound<IFullHttpRequest>();
+
         try
         {
             Assert.Equal("ws.example:443", request.Uri());
@@ -420,6 +428,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
         Assert.True(ch.WriteInbound(new DefaultHttp2HeadersFrame(headers, true)));
 
         IFullHttpRequest request = ch.ReadInbound<IFullHttpRequest>();
+
         try
         {
             Assert.Equal("/", request.Uri());
@@ -447,6 +456,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
         Assert.True(ch.WriteInbound(new DefaultHttp2HeadersFrame(headers, true)));
 
         ILastHttpContent trailers = ch.ReadInbound<ILastHttpContent>();
+
         try
         {
             Assert.Equal(0, trailers.Content.ReadableBytes);
@@ -470,6 +480,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
         Assert.True(ch.WriteInbound(new DefaultHttp2DataFrame(hello)));
 
         IHttpContent content = ch.ReadInbound<IHttpContent>();
+
         try
         {
             Assert.Equal("hello world", content.Content.ToString(Encoding.UTF8));
@@ -492,6 +503,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
         Assert.True(ch.WriteInbound(new DefaultHttp2DataFrame(hello, true)));
 
         ILastHttpContent content = ch.ReadInbound<ILastHttpContent>();
+
         try
         {
             Assert.Equal("hello world", content.Content.ToString(Encoding.UTF8));
@@ -518,6 +530,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
         Assert.Equal<object>(reset, ch.ReadInbound());
 
         IHttp2GoAwayFrame frame = ch.ReadInbound<IHttp2GoAwayFrame>();
+
         try
         {
             Assert.Equal(goaway, frame);
@@ -595,6 +608,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
             if (msg is IHttp2StreamFrame)
             {
                 frames.Enqueue((IHttp2StreamFrame) msg);
+
                 return ctx.WriteAsync(Unpooled.EmptyBuffer, cancellationToken);
             }
             else
@@ -621,6 +635,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
         Assert.False(headersFrame.IsEndStream());
 
         IHttp2DataFrame dataFrame = ch.ReadOutbound<IHttp2DataFrame>();
+
         try
         {
             Assert.Equal("hello world", dataFrame.Content.ToString(Encoding.UTF8));
@@ -683,6 +698,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
         Assert.False(headersFrame.IsEndStream());
 
         IHttp2DataFrame dataFrame = ch.ReadOutbound<IHttp2DataFrame>();
+
         try
         {
             Assert.Equal("hello world", dataFrame.Content.ToString(Encoding.UTF8));
@@ -729,6 +745,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
         Assert.True(ch.WriteOutbound(content));
 
         IHttp2DataFrame dataFrame = ch.ReadOutbound<IHttp2DataFrame>();
+
         try
         {
             Assert.Equal("hello world", dataFrame.Content.ToString(Encoding.UTF8));
@@ -751,6 +768,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
         Assert.True(ch.WriteOutbound(end));
 
         IHttp2DataFrame emptyFrame = ch.ReadOutbound<IHttp2DataFrame>();
+
         try
         {
             Assert.Equal(0, emptyFrame.Content.ReadableBytes);
@@ -775,6 +793,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
         Assert.True(ch.WriteOutbound(end));
 
         IHttp2DataFrame dataFrame = ch.ReadOutbound<IHttp2DataFrame>();
+
         try
         {
             Assert.Equal("hello world", dataFrame.Content.ToString(Encoding.UTF8));
@@ -819,6 +838,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
         Assert.True(ch.WriteOutbound(trailers));
 
         IHttp2DataFrame dataFrame = ch.ReadOutbound<IHttp2DataFrame>();
+
         try
         {
             Assert.Equal("hello world", dataFrame.Content.ToString(Encoding.UTF8));
@@ -848,6 +868,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
         Assert.True(ch.WriteInbound(new DefaultHttp2HeadersFrame(headers, false)));
 
         IFullHttpResponse response = ch.ReadInbound<IFullHttpResponse>();
+
         try
         {
             Assert.Equal(HttpResponseStatus.CONTINUE, response.Status());
@@ -883,6 +904,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
         Assert.True(ch.WriteInbound(new DefaultHttp2HeadersFrame(headers, false)));
 
         IFullHttpResponse response = ch.ReadInbound<IFullHttpResponse>();
+
         try
         {
             Assert.Equal(HttpResponseStatus.EARLY_HINTS, response.Status());
@@ -981,6 +1003,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
         headers.Status(HttpResponseStatus.OK.CodeAsText());
 
         IHttp2HeadersFrame frame = new DefaultHttp2HeadersFrame(headers, true);
+
         if (withStreamId)
         {
             frame.Stream(new OpenStream());
@@ -989,6 +1012,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
         Assert.True(ch.WriteInbound(frame));
 
         IFullHttpResponse response = ch.ReadInbound<IFullHttpResponse>();
+
         try
         {
             Assert.Equal(HttpResponseStatus.OK, response.Status());
@@ -996,6 +1020,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
             Assert.Equal(0, response.Content.ReadableBytes);
             Assert.True(response.TrailingHeaders().IsEmpty());
             Assert.False(HttpUtil.IsTransferEncodingChunked(response));
+
             if (withStreamId)
             {
                 Assert.Equal(1,
@@ -1033,6 +1058,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
         Assert.True(ch.WriteInbound(new DefaultHttp2HeadersFrame(headers, true)));
 
         ILastHttpContent trailers = ch.ReadInbound<ILastHttpContent>();
+
         try
         {
             Assert.Equal(0, trailers.Content.ReadableBytes);
@@ -1056,6 +1082,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
         Assert.True(ch.WriteInbound(new DefaultHttp2DataFrame(hello)));
 
         IHttpContent content = ch.ReadInbound<IHttpContent>();
+
         try
         {
             Assert.Equal("hello world", content.Content.ToString(Encoding.UTF8));
@@ -1078,6 +1105,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
         Assert.True(ch.WriteInbound(new DefaultHttp2DataFrame(hello, true)));
 
         ILastHttpContent content = ch.ReadInbound<ILastHttpContent>();
+
         try
         {
             Assert.Equal("hello world", content.Content.ToString(Encoding.UTF8));
@@ -1104,6 +1132,7 @@ public class Http2StreamFrameToHttpObjectCodecTest
         Assert.Equal<object>(reset, ch.ReadInbound());
 
         IHttp2GoAwayFrame frame = ch.ReadInbound<IHttp2GoAwayFrame>();
+
         try
         {
             Assert.Equal(goaway, frame);

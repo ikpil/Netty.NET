@@ -47,14 +47,17 @@ public sealed class MqttSubscribePayload
     public override string ToString()
     {
         StringBuilder builder = new StringBuilder(StringUtil.SimpleClassName(this)).Append('[');
+
         for (int i = 0; i < topicSubscriptions.Count; i++)
         {
             builder.Append(topicSubscriptions[i]?.ToString() ?? "null").Append(", ");
         }
+
         if (topicSubscriptions.Count != 0)
         {
             builder.Length = builder.Length - 2;
         }
+
         return builder.Append(']').ToString();
     }
 }

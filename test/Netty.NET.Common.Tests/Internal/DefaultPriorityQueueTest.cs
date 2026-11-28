@@ -155,6 +155,7 @@ public class DefaultPriorityQueueTest
         TestElement[] values = new TestElement[numElements];
         DefaultPriorityQueue<TestElement> queue =
                 new DefaultPriorityQueue<TestElement>(TestElementComparator.INSTANCE, values.Length);
+
         for (int i = 0; i < values.Length; ++i)
         {
             do
@@ -174,14 +175,17 @@ public class DefaultPriorityQueueTest
             {
                 StringBuilder sb = new StringBuilder(values.Length * 2);
                 sb.Append("error on removal of index: ").Append(i).Append(" [");
+
                 foreach (TestElement value in values)
                 {
                     sb.Append(value).Append(" ");
                 }
+
                 sb.Append("]");
                 throw new InvalidOperationException(sb.ToString(), cause);
             }
         }
+
         AssertEmptyQueue(queue);
     }
 
@@ -285,6 +289,7 @@ public class DefaultPriorityQueueTest
         expectedOrderList.Sort(TestElementComparator.INSTANCE);
         Assert.Equal(expectedOrderList.Count, queue.Size());
         Assert.Equal(expectedOrderList.Count == 0, queue.IsEmpty());
+
         foreach (TestElement expected in expectedOrderList.ToArray())
         {
             Assert.Equal(expected, queue.Poll());
@@ -299,6 +304,7 @@ public class DefaultPriorityQueueTest
         Assert.True(queue.Offer(a));
         Assert.True(queue.Contains(a));
         Assert.True(queue.ContainsTyped(a));
+
         try
         { // An element can not be inserted more than 1 time.
             queue.Offer(a);

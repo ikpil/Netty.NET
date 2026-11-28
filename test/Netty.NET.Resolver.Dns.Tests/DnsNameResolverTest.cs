@@ -318,6 +318,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         string windowsHostName;
         bool windowsHostsFileLocalhostEntryExists;
         bool windowsHostsFileHostNameEntryExists;
+
         try
         {
             if (PlatformDependent.IsWindows())
@@ -351,6 +352,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             windowsHostsFileLocalhostEntryExists = false;
             windowsHostsFileHostNameEntryExists = false;
         }
+
         WINDOWS_HOST_NAME = windowsHostName;
         WINDOWS_HOSTS_FILE_LOCALHOST_ENTRY_EXISTS = windowsHostsFileLocalhostEntryExists;
         WINDOWS_HOSTS_FILE_HOST_NAME_ENTRY_EXISTS = windowsHostsFileHostNameEntryExists;
@@ -474,6 +476,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
     public async Task TestResolveAorAAAA(DnsNameResolverChannelStrategy strategy)
     {
         DnsNameResolver resolver = NewResolver(strategy, ResolvedAddressTypes.Ipv4Preferred).Build();
+
         try
         {
             await TestResolve0(resolver, EXCLUSIONS_RESOLVE_A, AAAA);
@@ -489,6 +492,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
     public async Task TestResolveAAAAorA(DnsNameResolverChannelStrategy strategy)
     {
         DnsNameResolver resolver = NewResolver(strategy, ResolvedAddressTypes.Ipv6Preferred).Build();
+
         try
         {
             await TestResolve0(resolver, EXCLUSIONS_RESOLVE_A, A);
@@ -515,31 +519,38 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         string overriddenIP = "12.34.12.34";
         TestDnsServer dnsServer2 = new TestDnsServer(new NameServerCacheRecordStore(overriddenIP));
         dnsServer2.Start();
+
         try
         {
             ISet<string> overriddenHostnames = new HashSet<string>();
+
             foreach (string name in DOMAINS)
             {
                 if (EXCLUSIONS_RESOLVE_A.Contains(name))
                 {
                     continue;
                 }
+
                 if (Random.Shared.Next(2) != 0)
                 {
                     overriddenHostnames.Add(name);
                 }
             }
+
             DnsNameResolver resolver = NewResolver(channelStrategy, false,
                     new OverriddenHostnamesProvider(overriddenHostnames, dnsServer2)).Build();
+
             try
             {
                 IDictionary<string, IPAddress> resultA = await TestResolve0(resolver, EXCLUSIONS_RESOLVE_A, AAAA);
+
                 foreach (KeyValuePair<string, IPAddress> resolvedEntry in resultA)
                 {
                     if (IPAddress.IsLoopback(resolvedEntry.Value))
                     {
                         continue;
                     }
+
                     if (overriddenHostnames.Contains(resolvedEntry.Key))
                     {
                         Assert.Equal(overriddenIP, GetHostAddress(resolvedEntry.Value),
@@ -615,6 +626,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                 // Cache for eternity
                 .Ttl(int.MaxValue, int.MaxValue)
                 .Build();
+
         try
         {
             IDictionary<string, IPAddress> resultA = await TestResolve0(resolver, EXCLUSIONS_RESOLVE_A, null);
@@ -627,6 +639,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
 
             // Ensure the result from the cache is identical from the uncached one.
             Assert.Equal(resultB.Count, resultA.Count);
+
             foreach (KeyValuePair<string, IPAddress> e in resultA)
             {
                 IPAddress expected = e.Value;
@@ -647,6 +660,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
     public async Task TestResolveAAAA(DnsNameResolverChannelStrategy strategy)
     {
         DnsNameResolver resolver = NewResolver(strategy, ResolvedAddressTypes.Ipv6Only).Build();
+
         try
         {
             await TestResolve0(resolver, EXCLUSIONS_RESOLVE_AAAA, null);
@@ -662,6 +676,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
     public async Task TestNonCachedResolve(DnsNameResolverChannelStrategy strategy)
     {
         DnsNameResolver resolver = NewNonCachedResolver(strategy, ResolvedAddressTypes.Ipv4Only).Build();
+
         try
         {
             await TestResolve0(resolver, EXCLUSIONS_RESOLVE_A, null);
@@ -692,6 +707,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                                                                  string inetHost)
     {
         DnsNameResolver resolver = NewNonCachedResolver(strategy, ResolvedAddressTypes.Ipv4Only).Build();
+
         try
         {
             IPAddress addr = await resolver.ResolveAsync(inetHost);
@@ -723,6 +739,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                                                                     string inetHost)
     {
         DnsNameResolver resolver = NewNonCachedResolver(strategy, ResolvedAddressTypes.Ipv4Only).Build();
+
         try
         {
             IReadOnlyList<IPAddress> addrs = await resolver.ResolveAllAsync(inetHost);
@@ -770,11 +787,13 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             logger.Info("{}: {}", unresolved, GetHostAddress(resolved));
 
             bool typeMatches = false;
+
             foreach (SocketProtocolFamily f in resolver.ResolvedInternetProtocolFamiliesUnsafe())
             {
                 AddressFamily resolvedType = resolved.AddressFamily;
                 AddressFamily? addressType = DnsNameResolver.AddressType(f);
                 Assert.NotNull(addressType);
+
                 if (addressType == resolvedType)
                 {
                     typeMatches = true;
@@ -799,12 +818,14 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
     public async Task TestQueryMx(DnsNameResolverChannelStrategy strategy)
     {
         DnsNameResolver resolver = NewResolver(strategy).Build();
+
         try
         {
             Assert.True(resolver.IsRecursionDesired());
 
             IDictionary<string, Task<IAddressedEnvelope<IDnsResponse, IPEndPoint>>> futures =
                     new LinkedHashMap<string, Task<IAddressedEnvelope<IDnsResponse, IPEndPoint>>>();
+
             foreach (string name in DOMAINS)
             {
                 if (EXCLUSIONS_QUERY_MX.Contains(name))
@@ -825,6 +846,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
 
                 int answerCount = response.Count(DnsSection.ANSWER);
                 List<IDnsRecord> mxList = new List<IDnsRecord>(answerCount);
+
                 for (int i = 0; i < answerCount; i++)
                 {
                     IDnsRecord r = response.RecordAt<IDnsRecord>(DnsSection.ANSWER, i);
@@ -836,6 +858,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
 
                 Assert.True(mxList.Count > 0);
                 StringBuilder buf = new StringBuilder();
+
                 foreach (IDnsRecord r in mxList)
                 {
                     ByteBuf recordContent = ((IByteBufHolder)r).Content;
@@ -878,6 +901,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
     public void TestNegativeTtl(DnsNameResolverChannelStrategy strategy)
     {
         DnsNameResolver resolver = NewResolver(strategy).NegativeTtl(10).Build();
+
         try
         {
             ResolveNonExistentDomain(resolver);
@@ -960,9 +984,11 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         // complete asynchronously on the EventLoop, so the observer may only have seen some of its events yet.
         // Only verify that no unexpected event was recorded.
         TestDnsQueryLifecycleObserver observer;
+
         while (lifecycleObserverFactory.observers.TryDequeue(out observer))
         {
             object o;
+
             while (observer.events.TryDequeue(out o))
             {
                 if (o is QueryCancelledEvent)
@@ -976,6 +1002,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                 }
             }
         }
+
         return (UnknownHostException)e;
     }
 
@@ -984,6 +1011,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
     public async Task TestResolveIp(DnsNameResolverChannelStrategy strategy)
     {
         DnsNameResolver resolver = NewResolver(strategy).Build();
+
         try
         {
             IPAddress address = await resolver.ResolveAsync("10.0.0.1");
@@ -1073,6 +1101,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
 
         TheoryData<DnsNameResolverChannelStrategy, ResolvedAddressTypes, IPAddress, string> output =
                 new TheoryData<DnsNameResolverChannelStrategy, ResolvedAddressTypes, IPAddress, string>();
+
         foreach (DnsNameResolverChannelStrategy strategy in strategies)
         {
             foreach (string name in names)
@@ -1097,6 +1126,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         DnsNameResolver resolver = NewResolver(strategy, addressTypes)
                 .HostsFileEntriesResolver(new NoHostsFileEntriesResolver())
                 .Build();
+
         try
         {
             IPAddress address = await resolver.ResolveAsync(name);
@@ -1138,6 +1168,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                                            IPAddress expectedAddr, string name)
     {
         DnsNameResolver resolver = NewResolver(strategy, addressTypes).Build();
+
         try
         {
             IPAddress address = await resolver.ResolveAsync(name);
@@ -1243,12 +1274,14 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                 new CnameChainRecordStore(firstName, secondName, lastName, ipv4Addr, ipv6Addr));
         dnsServer2.Start();
         DnsNameResolver resolver = null;
+
         try
         {
             DnsNameResolverBuilder builder = NewResolver(strategy)
                     .RecursionDesired(true)
                     .MaxQueriesPerResolve(16)
                     .NameServerProvider(new SingletonDnsServerAddressStreamProvider(dnsServer2.LocalAddress()));
+
             if (ipv4Preferred)
             {
                 builder.ResolvedAddressTypes(ResolvedAddressTypes.Ipv4Preferred);
@@ -1257,8 +1290,10 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             {
                 builder.ResolvedAddressTypes(ResolvedAddressTypes.Ipv6Preferred);
             }
+
             resolver = builder.Build();
             IPAddress resolvedAddress = await resolver.ResolveAsync(firstName);
+
             if (ipv4Preferred)
             {
                 Assert.Equal(ipv4Addr, GetHostAddress(resolvedAddress));
@@ -1271,6 +1306,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         finally
         {
             dnsServer2.Stop();
+
             if (resolver != null)
             {
                 resolver.Dispose();
@@ -1315,6 +1351,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             else if (question.GetDomainName().Equals(lastName))
             {
                 rm.SetDnsType(question.GetRecordType());
+
                 switch (question.GetRecordType())
                 {
                     case var type when type == RecordType.A:
@@ -1331,6 +1368,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             {
                 return null;
             }
+
             return ImmutableHashSet.Create(rm.GetEntry());
         }
     }
@@ -1368,6 +1406,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         dnsServer2.Start();
         dnsServer3.Start();
         DnsNameResolver resolver = null;
+
         try
         {
             IAuthoritativeDnsServerCache nsCache = new DefaultAuthoritativeDnsServerCache();
@@ -1388,6 +1427,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                     ipv4Preferred ? ResolvedAddressTypes.Ipv4Only : ResolvedAddressTypes.Ipv6Only,
                     provider, strategy, hitServer2, dnsServer2, dnsServer3);
             IPAddress resolvedAddress = await resolver.ResolveAsync(firstName);
+
             if (ipv4Preferred)
             {
                 Assert.Equal(ipv4Addr, GetHostAddress(resolvedAddress));
@@ -1401,6 +1441,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         {
             dnsServer2.Stop();
             dnsServer3.Stop();
+
             if (resolver != null)
             {
                 resolver.Dispose();
@@ -1424,6 +1465,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         public ISet<IResourceRecord> GetRecords(QuestionRecord question)
         {
             hitServer2.Set(true);
+
             if (question.GetDomainName().Equals(firstName))
             {
                 ResourceRecordModifier rm = new ResourceRecordModifier();
@@ -1432,6 +1474,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                 rm.SetDnsTtl(100);
                 rm.SetDnsType(RecordType.CNAME);
                 rm.Put(DnsAttribute.DOMAIN_NAME, lastName);
+
                 return ImmutableHashSet.Create(rm.GetEntry());
             }
             else
@@ -1463,6 +1506,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                 rm.SetDnsName(question.GetDomainName());
                 rm.SetDnsTtl(100);
                 rm.SetDnsType(question.GetRecordType());
+
                 switch (question.GetRecordType())
                 {
                     case var type when type == RecordType.A:
@@ -1536,6 +1580,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                                               ResolvedAddressTypes addressTypes, IPAddress expectedAddr, string name)
     {
         DnsNameResolver resolver = NewResolver(strategy, addressTypes).Build();
+
         try
         {
             IReadOnlyList<IPAddress> addresses = await resolver.ResolveAllAsync(name);
@@ -1559,12 +1604,14 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
     public async Task TestResolveAllMx(DnsNameResolverChannelStrategy strategy)
     {
         DnsNameResolver resolver = NewResolver(strategy).Build();
+
         try
         {
             Assert.True(resolver.IsRecursionDesired());
 
             IDictionary<string, Task<IReadOnlyList<IDnsRecord>>> futures =
                     new LinkedHashMap<string, Task<IReadOnlyList<IDnsRecord>>>();
+
             foreach (string name in DOMAINS)
             {
                 if (EXCLUSIONS_QUERY_MX.Contains(name))
@@ -1583,6 +1630,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                 IReadOnlyList<IDnsRecord> mxList = await f;
                 Assert.True(mxList.Count > 0);
                 StringBuilder buf = new StringBuilder();
+
                 foreach (IDnsRecord r in mxList)
                 {
                     ByteBuf recordContent = ((IByteBufHolder)r).Content;
@@ -1645,6 +1693,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             {
                 return new IPAddress(new byte[] { 1, 2, 3, 4 });
             }
+
             return null;
         }
     }
@@ -1670,6 +1719,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
     private static async Task TestResolveUnicode(DnsNameResolverChannelStrategy strategy, bool decode)
     {
         DnsNameResolver resolver = NewResolver(strategy, decode).Build();
+
         try
         {
             foreach (KeyValuePair<string, string> entries in DOMAINS_PUNYCODE)
@@ -1712,9 +1762,11 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         TestDnsServer dnsServer1 = new TestDnsServer(ImmutableHashSet.Create("notnetty.com"));
         TestDnsServer dnsServer2 = new TestDnsServer(ImmutableHashSet.Create(knownHostName));
         DnsNameResolver resolver = null;
+
         try
         {
             IPEndPoint dnsServer1Address;
+
             if (startDnsServer1)
             {
                 dnsServer1.Start();
@@ -1725,6 +1777,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                 // Some address where a DNS server will not be running.
                 dnsServer1Address = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 22);
             }
+
             dnsServer2.Start();
 
             TestRecursiveCacheDnsQueryLifecycleObserverFactory lifecycleObserverFactory =
@@ -1768,6 +1821,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             {
                 resolver.Dispose();
             }
+
             dnsServer1.Stop();
             dnsServer2.Stop();
         }
@@ -1781,6 +1835,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         TestDnsServer dnsServer1 = new TestDnsServer(ImmutableHashSet.Create("notnetty.com"));
         TestDnsServer dnsServer2 = new TestDnsServer(ImmutableHashSet.Create(knownHostName));
         DnsNameResolver resolver = null;
+
         try
         {
             dnsServer1.Start();
@@ -1826,6 +1881,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             {
                 resolver.Dispose();
             }
+
             dnsServer1.Stop();
             dnsServer2.Stop();
         }
@@ -1874,6 +1930,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         List<ISet<IResourceRecord>> records = new List<ISet<IResourceRecord>>();
         string ipv6Address = "0:0:0:0:0:0:1:1";
         string ipv4Address = "1.1.1.1";
+
         if (types == ResolvedAddressTypes.Ipv4Preferred)
         {
             records.Add(ImmutableHashSet.Create(TestDnsServer.NewAddressRecord(name, RecordType.AAAA, ipv6Address)));
@@ -1884,10 +1941,12 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             records.Add(ImmutableHashSet.Create(TestDnsServer.NewAddressRecord(name, RecordType.A, ipv4Address)));
             records.Add(ImmutableHashSet.Create(TestDnsServer.NewAddressRecord(name, RecordType.AAAA, ipv6Address)));
         }
+
         IEnumerator<ISet<IResourceRecord>> recordsIterator = records.GetEnumerator();
         IRecordStore arbitrarilyOrderedStore = new ArbitrarilyOrderedRecordStore(recordsIterator);
         TestDnsServer nonCompliantDnsServer = new TestDnsServer(arbitrarilyOrderedStore);
         nonCompliantDnsServer.Start();
+
         try
         {
             DnsNameResolver resolver = NewResolver(strategy, types)
@@ -1896,6 +1955,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                             nonCompliantDnsServer.LocalAddress()))
                     .Build();
             IPAddress resolved = await resolver.ResolveAsync("netty.com");
+
             if (types == ResolvedAddressTypes.Ipv4Preferred)
             {
                 Assert.Equal(ipv4Address, GetHostAddress(resolved));
@@ -1904,6 +1964,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             {
                 Assert.Equal(ipv6Address, GetHostAddress(resolved));
             }
+
             IPAddress ipv4InetAddress = IPAddress.Parse(ipv4Address);
             IPAddress ipv6InetAddress = IPAddress.Parse(ipv6Address);
 
@@ -1934,6 +1995,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             {
                 throw new InvalidOperationException("no more records");
             }
+
             return recordsIterator.Current;
         }
     }
@@ -2062,6 +2124,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             {
                 return new IPEndPoint(server, dnsServerAuthority.LocalAddress().Port);
             }
+
             return base.NewRedirectServerAddress(server);
         }
     }
@@ -2077,21 +2140,26 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         {
             return address.ToString();
         }
+
         byte[] src = address.GetAddressBytes();
         StringBuilder sb = new StringBuilder(39);
+
         for (int i = 0; i < 16 / 2; i++)
         {
             sb.Append((((src[i << 1] << 8) & 0xff00) | (src[(i << 1) + 1] & 0xff))
                     .ToString("x", CultureInfo.InvariantCulture));
+
             if (i < 16 / 2 - 1)
             {
                 sb.Append(':');
             }
         }
+
         if (address.ScopeId != 0)
         {
             sb.Append('%').Append(address.ScopeId.ToString(CultureInfo.InvariantCulture));
         }
+
         return sb.ToString();
     }
 
@@ -2208,6 +2276,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                 // We should not cache anything because of bailiwick check
                 Assert.Null(cached);
             }
+
             if (cache != NoopDnsCache.INSTANCE)
             {
                 IReadOnlyList<IDnsCacheEntry> ns1Cached = cache.Get(ns1Name + '.', null);
@@ -2217,6 +2286,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                 Assert.Null(nsEntry.Cause());
 
                 IReadOnlyList<IDnsCacheEntry> ns2Cached = cache.Get(ns2Name + '.', null);
+
                 if (invalidNsFirst)
                 {
                     Assert.Single(ns2Cached);
@@ -2265,6 +2335,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                 return ImmutableHashSet.Create(NewARecord(
                         expectedHostName, expected.ToString()));
             }
+
             return ImmutableHashSet<IResourceRecord>.Empty;
         }
     }
@@ -2298,6 +2369,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                 {
                     message.GetAdditionalRecords().Clear();
                     message.GetAnswerRecords().Clear();
+
                     if (invalidNsFirst)
                     {
                         message.GetAuthorityRecords().Add(TestDnsServer.NewNsRecord(domain, ns2Name));
@@ -2308,9 +2380,11 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                         message.GetAuthorityRecords().Add(TestDnsServer.NewNsRecord(domain, ns1Name));
                         message.GetAuthorityRecords().Add(TestDnsServer.NewNsRecord(domain, ns2Name));
                     }
+
                     return message;
                 }
             }
+
             // CLR: remembers the name of every answered address (see TestFollowNsRedirects).
             foreach (IResourceRecord answer in message.GetAnswerRecords())
             {
@@ -2320,6 +2394,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                     nsHostNames[IPAddress.Parse(ipAddress)] = answer.GetDomainName();
                 }
             }
+
             return message;
         }
     }
@@ -2373,6 +2448,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             {
                 return new IPEndPoint(NetUtil.LOCALHOST, ((IPEndPoint)socket.LocalEndPoint).Port);
             }
+
             return base.NewRedirectServerAddress(server);
         }
     }
@@ -2527,6 +2603,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                     return message;
                 }
             }
+
             return message;
         }
 
@@ -2608,6 +2685,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             {
                 nameservers.Reverse();
             }
+
             IDnsServerAddressStream stream = new SequentialDnsServerAddressStream(nameservers, 0);
             redirectedRef.Set(stream);
             return stream;
@@ -2754,6 +2832,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                     return message;
                 }
             }
+
             return message;
         }
 
@@ -2833,6 +2912,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         {
             IReadOnlyList<IPAddress> addresses = await resolver.ResolveAllAsync(unresolved);
             Assert.True(addresses.Count > 0);
+
             foreach (IPAddress address in addresses)
             {
                 Assert.StartsWith(ipAddrPrefix, address.ToString());
@@ -2860,17 +2940,20 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         {
             ISet<IResourceRecord> records = new HashSet<IResourceRecord>(searchDomains.Count);
             string qName = questionRecord.GetDomainName();
+
             foreach (string searchDomain in searchDomains)
             {
                 if (qName.EndsWith(searchDomain, StringComparison.Ordinal))
                 {
                     continue;
                 }
+
                 IResourceRecord rr = NewARecord(qName + '.' + searchDomain,
                         ipAddrPrefix + Random.Shared.Next(1, 10).ToString(CultureInfo.InvariantCulture));
                 logger.Info("Adding A record: " + rr);
                 records.Add(rr);
             }
+
             return records;
         }
     }
@@ -2937,6 +3020,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                     message.GetAuthorityRecords().Add(TestDnsServer.NewNsRecord(domain, ns2Name));
                 }
             }
+
             return message;
         }
     }
@@ -3040,6 +3124,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         TestDnsServer dnsServer2 = new TestDnsServer(new TimeoutOneQueryStore(recordType));
         dnsServer2.Start(dropType);
         DnsNameResolver resolver = null;
+
         try
         {
             DnsNameResolverBuilder builder = NewResolver(strategy)
@@ -3053,6 +3138,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             IReadOnlyList<IPAddress> resolvedAddresses =
                     await resolver.ResolveAllAsync("somehost.netty.io");
             Assert.Single(resolvedAddresses);
+
             if (recordType == RecordType.A)
             {
                 Assert.Contains(new IPAddress(new byte[] { 10, 0, 0, 2 }), resolvedAddresses);
@@ -3066,6 +3152,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         finally
         {
             dnsServer2.Stop();
+
             if (resolver != null)
             {
                 resolver.Dispose();
@@ -3086,6 +3173,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         {
             ISet<IResourceRecord> records = new LinkedHashSet<IResourceRecord>(2);
             IDictionary<string, object> map1 = new Dictionary<string, object>();
+
             if (question.GetRecordType() == RecordType.A)
             {
                 map1[DnsAttribute.IP_ADDRESS.ToLower(CultureInfo.CurrentCulture)] = "10.0.0.2";
@@ -3094,6 +3182,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             {
                 map1[DnsAttribute.IP_ADDRESS.ToLower(CultureInfo.CurrentCulture)] = "::1";
             }
+
             records.Add(new TestDnsServer.TestResourceRecord(
                     question.GetDomainName(), recordType, map1));
             return records;
@@ -3130,6 +3219,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         TestDnsServer dnsServer2 = new TestDnsServer(new FollowCNAMEEvenIfARecordIsPresentStore());
         dnsServer2.Start();
         DnsNameResolver resolver = null;
+
         try
         {
             DnsNameResolverBuilder builder = NewResolver(strategy)
@@ -3148,6 +3238,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         finally
         {
             dnsServer2.Stop();
+
             if (resolver != null)
             {
                 resolver.Dispose();
@@ -3199,6 +3290,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         TestDnsServer dnsServer2 = new TestDnsServer(new CNAMEFollowInResponseStore(queryCount));
         dnsServer2.Start();
         DnsNameResolver resolver = null;
+
         try
         {
             DnsNameResolverBuilder builder = NewResolver(strategy)
@@ -3217,6 +3309,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         finally
         {
             dnsServer2.Stop();
+
             if (resolver != null)
             {
                 resolver.Dispose();
@@ -3236,6 +3329,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         public ISet<IResourceRecord> GetRecords(QuestionRecord question)
         {
             queryCount.IncrementAndGet();
+
             if (question.GetDomainName().Equals("somehost.netty.io"))
             {
                 ISet<IResourceRecord> records = new LinkedHashSet<IResourceRecord>(2);
@@ -3260,6 +3354,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                        "cname3.netty.io", RecordType.A, map1));
                 return records;
             }
+
             return null;
         }
     }
@@ -3274,6 +3369,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         TestDnsServer dnsServer2 = new TestDnsServer(new FollowCNAMELoopStore());
         dnsServer2.Start();
         DnsNameResolver resolver = null;
+
         try
         {
             DnsNameResolverBuilder builder = NewResolver(strategy)
@@ -3290,6 +3386,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         finally
         {
             dnsServer2.Stop();
+
             if (resolver != null)
             {
                 resolver.Dispose();
@@ -3329,6 +3426,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
     public async Task TestCNAMELoopInCache(DnsNameResolverChannelStrategy strategy)
     {
         DnsNameResolver resolver = null;
+
         try
         {
             DnsNameResolverBuilder builder = NewResolver(strategy)
@@ -3383,6 +3481,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                 .ResolvedAddressTypes(types)
                 .Ndots(1)
                 .SearchDomains(new List<string> { "." }).Build();
+
         try
         {
             await resolver.ResolveAsync("invalid.com");
@@ -3501,6 +3600,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                 .SearchDomains(new List<string> { "netty.io" })
                 .NameServerProvider(new SingletonDnsServerAddressStreamProvider(server.LocalAddress()))
                 .ResolveCache(cache).Build();
+
         try
         {
             await resolver.ResolveAsync("test");
@@ -3545,6 +3645,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         TestDnsServer dnsServer2 = new TestDnsServer(new CNameCachedStore(cnameQueries, aQueries));
         dnsServer2.Start();
         DnsNameResolver resolver = null;
+
         try
         {
             DnsNameResolverBuilder builder = NewResolver(strategy)
@@ -3596,6 +3697,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         finally
         {
             dnsServer2.Stop();
+
             if (resolver != null)
             {
                 resolver.Dispose();
@@ -3625,6 +3727,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                         ImmutableDictionary<string, object>.Empty.Add(
                                 DnsAttribute.IP_ADDRESS.ToLower(CultureInfo.CurrentCulture), "10.0.0.99")));
             }
+
             if ("x.netty.io".Equals(question.GetDomainName()))
             {
                 cnameQueries.IncrementAndGet();
@@ -3634,6 +3737,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                         ImmutableDictionary<string, object>.Empty.Add(
                                 DnsAttribute.DOMAIN_NAME.ToLower(CultureInfo.CurrentCulture), "cname.netty.io")));
             }
+
             if ("y.netty.io".Equals(question.GetDomainName()))
             {
                 cnameQueries.IncrementAndGet();
@@ -3643,6 +3747,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                         ImmutableDictionary<string, object>.Empty.Add(
                                 DnsAttribute.DOMAIN_NAME.ToLower(CultureInfo.CurrentCulture), "x.netty.io")));
             }
+
             return ImmutableHashSet<IResourceRecord>.Empty;
         }
     }
@@ -3659,6 +3764,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         public string Get(string hostname)
         {
             Assert.True(hostname.EndsWith('.'), hostname);
+
             return cache.GetValueOrDefault(hostname);
         }
 
@@ -3691,6 +3797,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         TestDnsServer dnsServer = new TestDnsServer(new CnameCacheBailiwickStore());
         dnsServer.Start();
         DnsNameResolver resolver = null;
+
         try
         {
             DnsNameResolverBuilder builder = NewResolver(strategy)
@@ -3711,6 +3818,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         finally
         {
             dnsServer.Stop();
+
             if (resolver != null)
             {
                 resolver.Dispose();
@@ -3742,6 +3850,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                                 DnsAttribute.IP_ADDRESS.ToLower(CultureInfo.CurrentCulture), "10.0.0.99")));
                 return records;
             }
+
             return ImmutableHashSet<IResourceRecord>.Empty;
         }
     }
@@ -3848,9 +3957,11 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         TestRecursiveCacheDnsQueryLifecycleObserverFactory lifecycleObserverFactory =
                 (TestRecursiveCacheDnsQueryLifecycleObserverFactory)resolver.DnsQueryLifecycleObserverFactory();
         TestDnsQueryLifecycleObserver observer;
+
         while (lifecycleObserverFactory.observers.TryDequeue(out observer))
         {
             observer.events.TryDequeue(out object o);
+
             if (o is QueryCancelledEvent)
             {
                 Assert.Equal(cancelledType, observer.question.Type());
@@ -3864,6 +3975,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             {
                 Assert.Fail("unexpected event type: " + (o == null ? "null" : o.ToString()));
             }
+
             Assert.True(observer.events.IsEmpty);
         }
     }
@@ -4025,6 +4137,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             {
                 cacheHits[hostname] = cached.Duplicate();
             }
+
             return cached;
         }
 
@@ -4101,6 +4214,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             foreach (string domain in domains)
             {
                 string name = domain;
+
                 for (int i = 0 ;; i++)
                 {
                     int idx = name.IndexOf('.');
@@ -4108,6 +4222,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                     {
                         break;
                     }
+
                     name = name.Substring(idx + 1); // skip the '.' as well.
                     string dnsName = "dns" + idx + '.' + domain;
                     message.GetAuthorityRecords().Add(NewNsRecord(name, dnsName));
@@ -4117,6 +4232,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                     message.GetAuthorityRecords().Add(NewNsRecord(name, "unresolved." + dnsName));
                 }
             }
+
             return message;
         }
     }
@@ -4134,6 +4250,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         DnsNameResolver resolver = NewResolver(strategy, ResolvedAddressTypes.Ipv4Only)
                 .NameServerProvider(new SingletonDnsServerAddressStreamProvider(server.LocalAddress()))
                 .Build();
+
         try
         {
             IAddressedEnvelope<IDnsResponse, IPEndPoint> envelope = await resolver.QueryAsync(
@@ -4153,6 +4270,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             {
                 txts.AddRange(DecodeTxt(response.RecordAt<IDnsRecord>(DnsSection.ANSWER, i)));
             }
+
             Assert.Contains(txt1, txts);
             Assert.Contains(txt2, txts);
             envelope.Release();
@@ -4193,6 +4311,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                 records.Add(new TestDnsServer.TestResourceRecord(question.GetDomainName(), RecordType.TXT, map2));
                 return records;
             }
+
             return ImmutableHashSet<IResourceRecord>.Empty;
         }
     }
@@ -4206,16 +4325,19 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         {
             return ImmutableList<string>.Empty;
         }
+
         List<string> list = new List<string>();
         ByteBuf data = ((IDnsRawRecord)record).Content;
         int idx = data.ReaderIndex;
         int wIdx = data.WriterIndex;
+
         while (idx < wIdx)
         {
             int len = data.GetByte(idx++);
             list.Add(data.ToString(idx, len, Encoding.UTF8));
             idx += len;
         }
+
         return list;
     }
 
@@ -4233,6 +4355,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         TestDnsServer dnsServer2 = new TestDnsServer(new NotIncludeDuplicatesRecordStore(name, ipv4Addr));
         dnsServer2.Start();
         DnsNameResolver resolver = null;
+
         try
         {
             DnsNameResolverBuilder builder = NewResolver(strategy)
@@ -4249,6 +4372,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         finally
         {
             dnsServer2.Stop();
+
             if (resolver != null)
             {
                 resolver.Dispose();
@@ -4294,6 +4418,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                                 [DnsAttribute.IP_ADDRESS.ToLower(CultureInfo.CurrentCulture)] = ipv4Addr
                         }));
             }
+
             return records;
         }
     }
@@ -4307,6 +4432,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         TestDnsServer dnsServer2 = new TestDnsServer(new IncludeDuplicatesRecordStore(ipv4Addr));
         dnsServer2.Start();
         DnsNameResolver resolver = null;
+
         try
         {
             DnsNameResolverBuilder builder = NewResolver(strategy)
@@ -4318,6 +4444,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             resolver = builder.Build();
             IReadOnlyList<IDnsRecord> resolvedAddresses = await resolver.ResolveAllAsync(new DefaultDnsQuestion(name, A));
             Assert.Equal(2, resolvedAddresses.Count);
+
             foreach (IDnsRecord record in resolvedAddresses)
             {
                 ReferenceCountUtil.Release(record);
@@ -4326,6 +4453,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         finally
         {
             dnsServer2.Stop();
+
             if (resolver != null)
             {
                 resolver.Dispose();
@@ -4372,6 +4500,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         TestDnsServer dnsServer2 = new TestDnsServer(ImmutableHashSet.Create(host));
         dnsServer2.Start(RecordType.AAAA);
         DnsNameResolver resolver = null;
+
         try
         {
             DnsNameResolverBuilder builder = NewResolver(strategy)
@@ -4389,6 +4518,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         finally
         {
             dnsServer2.Stop();
+
             if (resolver != null)
             {
                 resolver.Dispose();
@@ -4405,6 +4535,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         TestDnsServer dnsServer2 = new TestDnsServer(ImmutableHashSet.Create(host));
         dnsServer2.Start(RecordType.AAAA);
         DnsNameResolver resolver = null;
+
         try
         {
             DnsNameResolverBuilder builder = NewResolver(strategy)
@@ -4422,6 +4553,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         finally
         {
             dnsServer2.Stop();
+
             if (resolver != null)
             {
                 resolver.Dispose();
@@ -4439,6 +4571,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         TestDnsServer dnsServer2 = new TestDnsServer(new DropAAAAResolveAllFastRecordStore(host));
         dnsServer2.Start(RecordType.AAAA);
         DnsNameResolver resolver = null;
+
         try
         {
             DnsNameResolverBuilder builder = NewResolver(strategy)
@@ -4452,6 +4585,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             resolver = builder.Build();
             IReadOnlyList<IPAddress> addresses = await resolver.ResolveAllAsync(host);
             Assert.Equal(2, addresses.Count);
+
             foreach (IPAddress address in addresses)
             {
                 Assert.Equal(AddressFamily.InterNetwork, address.AddressFamily);
@@ -4460,6 +4594,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         finally
         {
             dnsServer2.Stop();
+
             if (resolver != null)
             {
                 resolver.Dispose();
@@ -4495,6 +4630,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                         }));
                 return records;
             }
+
             return null;
         }
     }
@@ -4554,12 +4690,14 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         TestDnsServer dnsServer2 = new TruncatedTestDnsServer(new TxtRecordStore(host, txt), messageRef,
                                                               truncatedBecauseOfMtu);
         DnsNameResolver resolver = null;
+
         try
         {
             DnsNameResolverBuilder builder = NewResolver(strategy);
             IDatagramChannel datagramChannel = new NioDatagramChannel();
             Func<IDatagramChannel> channelFactory = () => datagramChannel;
             builder.DatagramChannelFactory(channelFactory);
+
             if (tcpFallback)
             {
                 // If we are configured to use TCP as a fallback also bind a TCP socket
@@ -4571,15 +4709,18 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             {
                 dnsServer2.Start();
             }
+
             builder.QueryTimeoutMillis(10000)
                     .ResolvedAddressTypes(ResolvedAddressTypes.Ipv4Preferred)
                     .MaxQueriesPerResolve(16)
                     .NameServerProvider(new SingletonDnsServerAddressStreamProvider(dnsServer2.LocalAddress()));
             resolver = builder.Build();
+
             if (truncatedBecauseOfMtu)
             {
                 datagramChannel.Pipeline.AddFirst(new TruncatingPacketHandler());
             }
+
             Task<IAddressedEnvelope<IDnsResponse, IPEndPoint>> envelopeFuture = resolver.QueryAsync(
                     new DefaultDnsQuestion(host, DnsRecordType.TXT));
 
@@ -4618,11 +4759,13 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             {
                 Assert.True(envelope.Content.IsTruncated());
             }
+
             Assert.True(envelope.Release());
         }
         finally
         {
             dnsServer2.Stop();
+
             if (resolver != null)
             {
                 resolver.Dispose();
@@ -4654,6 +4797,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                                         [DnsAttribute.CHARACTER_STRING.ToLower(CultureInfo.CurrentCulture)] = txt
                                 }));
             }
+
             return null;
         }
     }
@@ -4681,8 +4825,10 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                 // Create a copy of the message but set the truncated flag.
                 DnsMessageModifier modifier = ModifierFrom(message);
                 modifier.SetTruncated(true);
+
                 return modifier.GetDnsMessage();
             }
+
             return message;
         }
     }
@@ -4698,6 +4844,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                 DatagramPacket packet = (DatagramPacket)msg;
                 packet.Content.WriterIndex = packet.Content.WriterIndex - 1;
             }
+
             ctx.FireChannelRead(msg);
         }
     }
@@ -4733,6 +4880,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         {
             stream.WriteByte(ioBuffer.Get());
         }
+
         stream.Flush();
     }
 
@@ -4763,6 +4911,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             serverSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
             serverSocket.Bind(new IPEndPoint(NetUtil.LOCALHOST4, 0));
             serverSocket.Listen();
+
             try
             {
                 dns.Start(null, (IPEndPoint)serverSocket.LocalEndPoint);
@@ -4770,10 +4919,12 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                 {
                     return serverSocket;
                 }
+
                 // The underlying UDP acceptor sometimes fails to bind without throwing (observed on Windows),
                 // leaving localAddress() null. Treat this the same as a failed bind and retry.
                 dns.Stop();
                 serverSocket.Close();
+
                 if (i == 10)
                 {
                     Assert.Skip(
@@ -4783,6 +4934,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             catch (IOException e)
             {
                 serverSocket.Close();
+
                 if (i == 10)
                 {
                     // We tried 10 times without success
@@ -4807,6 +4959,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         TestDnsServer dnsServer2 = new TcpFallbackTestDnsServer(new TxtRecordStore(host, txt), messageRef);
         DnsNameResolver resolver = null;
         Socket serverSocket = null;
+
         try
         {
             DnsNameResolverBuilder builder = NewResolver(strategy);
@@ -4868,10 +5021,12 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         finally
         {
             dnsServer2.Stop();
+
             if (resolver != null)
             {
                 resolver.Dispose();
             }
+
             if (serverSocket != null)
             {
                 serverSocket.Close();
@@ -4982,6 +5137,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         TestDnsServer dnsServer3 = new TestDnsServer(new DifferentNameServersRecordStore3(secondName, lastName));
         dnsServer3.Start();
         DnsNameResolver resolver = null;
+
         try
         {
             resolver = NewResolver(strategy)
@@ -4998,6 +5154,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         {
             dnsServer2.Stop();
             dnsServer3.Stop();
+
             if (resolver != null)
             {
                 resolver.Dispose();
@@ -5043,6 +5200,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             {
                 return null;
             }
+
             return ImmutableHashSet.Create(rm.GetEntry());
         }
     }
@@ -5069,8 +5227,10 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                 rm.SetDnsTtl(100);
                 rm.SetDnsType(RecordType.CNAME);
                 rm.Put(DnsAttribute.DOMAIN_NAME, lastName);
+
                 return ImmutableHashSet.Create(rm.GetEntry());
             }
+
             return null;
         }
     }
@@ -5095,6 +5255,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             {
                 return DnsServerAddresses.Singleton(dnsServer3.LocalAddress()).Stream();
             }
+
             return DnsServerAddresses.Singleton(dnsServer2.LocalAddress()).Stream();
         }
     }
@@ -5121,6 +5282,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         TestDnsServer dnsServer3 = new TestDnsServer(new CountingRecordStore(server3Counter, ipv4Addr));
         dnsServer3.Start();
         DnsNameResolver resolver = null;
+
         try
         {
             resolver = NewResolver(strategy)
@@ -5148,6 +5310,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         {
             dnsServer2.Stop();
             dnsServer3.Stop();
+
             if (resolver != null)
             {
                 resolver.Dispose();
@@ -5177,6 +5340,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
 
             rm.SetDnsType(question.GetRecordType());
             rm.Put(DnsAttribute.IP_ADDRESS, ipv4Addr);
+
             return ImmutableHashSet.Create(rm.GetEntry());
         }
     }
@@ -5206,6 +5370,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         TestDnsServer dnsServer2 = new TestDnsServer(new SrvWithCnameRecordStore(alias));
         dnsServer2.Start();
         DnsNameResolver resolver = null;
+
         try
         {
             DnsNameResolverBuilder builder = NewResolver(strategy)
@@ -5226,6 +5391,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         finally
         {
             dnsServer2.Stop();
+
             if (resolver != null)
             {
                 resolver.Dispose();
@@ -5270,6 +5436,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                 records.Add(rm.GetEntry());
                 return records;
             }
+
             if (name == "foo.service.netty.io")
             {
                 ResourceRecordModifier rm = new ResourceRecordModifier();
@@ -5278,8 +5445,10 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                 rm.SetDnsTtl(10);
                 rm.SetDnsType(RecordType.A);
                 rm.Put(DnsAttribute.IP_ADDRESS, "10.0.0.1");
+
                 return ImmutableHashSet.Create(rm.GetEntry());
             }
+
             if (alias.Get())
             {
                 ResourceRecordModifier rm = new ResourceRecordModifier();
@@ -5291,8 +5460,10 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                 rm.Put(DnsAttribute.SERVICE_PORT, "8080");
                 rm.Put(DnsAttribute.SERVICE_PRIORITY, "10");
                 rm.Put(DnsAttribute.SERVICE_WEIGHT, "1");
+
                 return ImmutableHashSet.Create(rm.GetEntry());
             }
+
             return null;
         }
     }
@@ -5311,6 +5482,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
     public async Task TestCNAMEOnlyTriedOnAddressLookups(DnsNameResolverChannelStrategy strategy)
     {
         TRY_FINAL_CNAME_ON_ADDRESS_LOOKUPS = true;
+
         try
         {
             await TestFollowUpCNAME(strategy, true);
@@ -5330,6 +5502,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         TestDnsServer dnsServer2 = new TestDnsServer(new FollowUpCnameRecordStore(cnameQueries));
 
         DnsNameResolver resolver = null;
+
         try
         {
             dnsServer2.Start();
@@ -5368,6 +5541,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         finally
         {
             dnsServer2.Stop();
+
             if (resolver != null)
             {
                 resolver.Dispose();
@@ -5408,6 +5582,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
     {
         IReadOnlyList<IDnsRecord> records = await recordsFuture;
         Assert.NotEmpty(records);
+
         foreach (IDnsRecord record in records)
         {
             ReferenceCountUtil.Release(record);
@@ -5440,9 +5615,11 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         string addressString = address + '%' + scopeId;
         byte[] bytes = NetUtil.CreateByteArrayFromIpAddressString(address);
         IPAddress inet6Address = new IPAddress(bytes, scopeId);
+
         try
         {
             IPAddress addr;
+
             if (resolveAll)
             {
                 IReadOnlyList<IPAddress> addressList = GetNow(resolver.ResolveAllAsync(addressString));
@@ -5453,6 +5630,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             {
                 addr = GetNow(resolver.ResolveAsync(addressString));
             }
+
             Assert.Equal(inet6Address, addr);
         }
         finally
@@ -5488,9 +5666,11 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         string addressString = "fe80:0:0:0:1c31:d1d1:4824:72a9";
         byte[] bytes = NetUtil.CreateByteArrayFromIpAddressString(addressString);
         IPAddress inet6Address = new IPAddress(bytes);
+
         try
         {
             IPAddress addr;
+
             if (resolveAll)
             {
                 IReadOnlyList<IPAddress> addressList = GetNow(resolver.ResolveAllAsync(addressString));
@@ -5501,6 +5681,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             {
                 addr = GetNow(resolver.ResolveAsync(addressString));
             }
+
             Assert.Equal(inet6Address, addr);
         }
         finally
@@ -5529,9 +5710,11 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         string addressString = "10.0.0.1";
         byte[] bytes = NetUtil.CreateByteArrayFromIpAddressString(addressString);
         IPAddress inetAddress = new IPAddress(bytes);
+
         try
         {
             IPAddress addr;
+
             if (resolveAll)
             {
                 IReadOnlyList<IPAddress> addressList = GetNow(resolver.ResolveAllAsync(addressString));
@@ -5542,6 +5725,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             {
                 addr = GetNow(resolver.ResolveAsync(addressString));
             }
+
             Assert.Equal(inetAddress, addr);
         }
         finally
@@ -5568,6 +5752,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
 
         byte[] bytes = NetUtil.CreateByteArrayFromIpAddressString(addressString);
         IPAddress inetAddress = new IPAddress(bytes);
+
         try
         {
             IPAddress addr = await resolver.ResolveAsync("netty.io");
@@ -5604,6 +5789,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         public ISet<IResourceRecord> GetRecords(QuestionRecord question)
         {
             names.Enqueue(question.GetDomainName());
+
             if (++called == 2)
             {
                 ResourceRecordModifier rm = new ResourceRecordModifier();
@@ -5613,8 +5799,10 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
 
                 rm.SetDnsType(question.GetRecordType());
                 rm.Put(DnsAttribute.IP_ADDRESS, addressString);
+
                 return ImmutableHashSet.Create(rm.GetEntry());
             }
+
             return null;
         }
     }
@@ -5650,6 +5838,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
 
         byte[] bytes = NetUtil.CreateByteArrayFromIpAddressString(addressString);
         IPAddress inetAddress = new IPAddress(bytes);
+
         try
         {
             IPAddress addr = await resolver.ResolveAsync("netty.io");
@@ -5660,11 +5849,13 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             resolver.Dispose();
             dnsServer2.Stop();
             Assert.Equal("netty.io", Poll(names));
+
             if (!absoluteSuccess)
             {
                 Assert.Equal("netty.io.search1.netty.io", Poll(names));
                 Assert.Equal("netty.io.search2.netty.io", Poll(names));
             }
+
             Assert.True(names.IsEmpty);
         }
 
@@ -5694,6 +5885,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         {
             names.Enqueue(question.GetDomainName());
             ++called;
+
             if ((absoluteSuccess && called == 1) || called == 3)
             {
                 ResourceRecordModifier rm = new ResourceRecordModifier();
@@ -5703,8 +5895,10 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
 
                 rm.SetDnsType(question.GetRecordType());
                 rm.Put(DnsAttribute.IP_ADDRESS, addressString);
+
                 return ImmutableHashSet.Create(rm.GetEntry());
             }
+
             return null;
         }
     }
@@ -5728,6 +5922,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
 
         byte[] bytes = NetUtil.CreateByteArrayFromIpAddressString(addressString);
         IPAddress inetAddress = new IPAddress(bytes);
+
         try
         {
             Task<IPAddress> f = resolver.ResolveAsync("netty.io");
@@ -5768,6 +5963,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         public ISet<IResourceRecord> GetRecords(QuestionRecord question)
         {
             called.IncrementAndGet();
+
             try
             {
                 latch.Wait();
@@ -5778,6 +5974,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
 
                 rm.SetDnsType(question.GetRecordType());
                 rm.Put(DnsAttribute.IP_ADDRESS, addressString);
+
                 return ImmutableHashSet.Create(rm.GetEntry());
             }
             catch (ThreadInterruptedException e)
@@ -5808,13 +6005,16 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         Socket datagramSocket = new Socket(SocketType.Dgram, ProtocolType.Udp);
         datagramSocket.Bind(new IPEndPoint(
                 datagramSocket.AddressFamily == AddressFamily.InterNetworkV6 ? IPAddress.IPv6Any : IPAddress.Any, 0));
+
         try
         {
             Assert.True(datagramSocket.IsBound);
+
             try
             {
                 DnsNameResolver resolver = NewResolver(strategy)
                         .LocalAddress(datagramSocket.LocalEndPoint).Build();
+
                 try
                 {
                     Exception cause = await Assert.ThrowsAnyAsync<UnknownHostException>(
@@ -5860,6 +6060,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         AtomicBoolean returnSuccess = new AtomicBoolean(false);
         DnsNameResolver resolver = NewResolver(strategy, true,
                 new ResponseFeedbackStreamProvider(successCalled, failureCalled, returnSuccess)).Build();
+
         try
         {
             // setup call to be successful and verify
@@ -5874,6 +6075,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
 
             // setup call to fail and verify
             returnSuccess.Set(false);
+
             try
             {
                 Exception e = await Assert.ThrowsAnyAsync<Exception>(() =>
@@ -5953,6 +6155,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             {
                 return dnsServer.LocalAddress();
             }
+
             return new IPEndPoint(new IPAddress(new byte[] { 169, 254, 12, 34 }), 53);
         }
 
@@ -6004,6 +6207,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                 provider, new ThreadLocalNameServerAddressStream(provider),
                 new string[] { "k8se-apps.svc.cluster.local, svc.cluster.local, cluster.local" }, 1,
                 true, false, 0, strategy);
+
         try
         {
             IPAddress address = await resolver.ResolveAsync(hostname);
@@ -6078,6 +6282,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
                     return message;
                 }
             }
+
             return message;
         }
     }

@@ -103,9 +103,11 @@ public abstract class ApplicationProtocolNegotiationHandler : ChannelInboundHand
     {
         // Let's buffer all data until this handler will be removed from the pipeline.
         bufferedMessages.Add(msg);
+
         if (!sslHandlerChecked)
         {
             sslHandlerChecked = true;
+
             if (ctx.Pipeline.Get<SslHandler>() == null)
             {
                 // Just remove ourself if there is no SslHandler in the pipeline and so we would otherwise
@@ -126,6 +128,7 @@ public abstract class ApplicationProtocolNegotiationHandler : ChannelInboundHand
             {
                 ctx.FireChannelRead(bufferedMessages[i]);
             }
+
             ctx.FireChannelReadComplete();
             bufferedMessages.Clear();
         }
@@ -136,6 +139,7 @@ public abstract class ApplicationProtocolNegotiationHandler : ChannelInboundHand
         if (evt is SslHandshakeCompletionEvent)
         {
             SslHandshakeCompletionEvent handshakeEvent = (SslHandshakeCompletionEvent) evt;
+
             try
             {
                 if (handshakeEvent.IsSuccess())
@@ -146,6 +150,7 @@ public abstract class ApplicationProtocolNegotiationHandler : ChannelInboundHand
                         throw new InvalidOperationException("cannot find an SslHandler in the pipeline (required for "
                                 + "application-level protocol negotiation)");
                     }
+
                     string protocol = sslHandler.ApplicationProtocol();
                     ConfigurePipeline(ctx, protocol != null ? protocol : fallbackProtocol);
                 }
@@ -189,6 +194,7 @@ public abstract class ApplicationProtocolNegotiationHandler : ChannelInboundHand
     private void RemoveSelfIfPresent(IChannelHandlerContext ctx)
     {
         IChannelPipeline pipeline = ctx.Pipeline;
+
         if (!ctx.IsRemoved)
         {
             pipeline.Remove(this);
@@ -229,6 +235,7 @@ public abstract class ApplicationProtocolNegotiationHandler : ChannelInboundHand
                 RemoveSelfIfPresent(ctx);
             }
         }
+
         logger.Warn("{} Failed to select the application-level protocol:", ctx.Channel, cause);
         ctx.FireExceptionCaught(cause);
         _ = ctx.CloseAsync();

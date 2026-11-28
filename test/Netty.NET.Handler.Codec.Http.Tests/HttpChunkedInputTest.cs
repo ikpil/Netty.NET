@@ -53,6 +53,7 @@ public class HttpChunkedInputTest
         {
             TMP = PlatformDependent.CreateTempFile("netty-chunk-", ".tmp", null);
             DeleteOnExit(TMP);
+
             using (FileStream @out = new FileStream(TMP.FullName, FileMode.Create, FileAccess.Write))
             {
                 @out.Write(BYTES);
@@ -202,6 +203,7 @@ public class HttpChunkedInputTest
         int i = 0;
         int read = 0;
         IHttpContent lastHttpContent = null;
+
         for (;;)
         {
             IHttpContent httpContent = ch.ReadOutbound<IHttpContent>();
@@ -209,21 +211,25 @@ public class HttpChunkedInputTest
             {
                 break;
             }
+
             if (lastHttpContent != null)
             {
                 Assert.True(lastHttpContent is DefaultHttpContent, "Chunk must be DefaultHttpContent");
             }
 
             ByteBuf buffer = httpContent.Content;
+
             while (buffer.IsReadable())
             {
                 Assert.Equal(BYTES[i++], buffer.ReadByte());
                 read++;
+
                 if (i == BYTES.Length)
                 {
                     i = 0;
                 }
             }
+
             buffer.Release();
 
             // Save last chunk

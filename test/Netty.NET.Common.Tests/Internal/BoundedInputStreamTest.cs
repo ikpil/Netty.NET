@@ -42,6 +42,7 @@ public class BoundedInputStreamTest
         Assert.Throws<IOException>(() =>
         {
             int max = bytes.Length;
+
             do
             {
                 int result = reader.Read(new byte[max], 0, max);
@@ -55,6 +56,7 @@ public class BoundedInputStreamTest
     public void TestBoundEnforced256()
     {
         byte[] bytes = new byte[256];
+
         for (int i = 0; i < bytes.Length; i++)
         {
             bytes[i] = (byte)i;
@@ -62,6 +64,7 @@ public class BoundedInputStreamTest
 
 
         using BoundedInputStream reader = new BoundedInputStream(new MemoryStream(bytes), bytes.Length - 1);
+
         foreach (byte expectedByte in bytes)
         {
             Assert.Equal(expectedByte, (byte)reader.ReadByte());

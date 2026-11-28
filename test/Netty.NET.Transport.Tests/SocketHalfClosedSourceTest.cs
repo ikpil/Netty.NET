@@ -64,6 +64,7 @@ public class SocketHalfClosedSourceTest : AbstractSocketTest
                     return;
                 }
             }
+
             await AllDataReadEventTriggeredAfterHalfClosure(serverBootstrap, bootstrap);
         });
     }
@@ -80,6 +81,7 @@ public class SocketHalfClosedSourceTest : AbstractSocketTest
         IChannel serverChannel = null;
         IChannel clientChannel = null;
         StrongBox<IChannel> serverChildChannel = new StrongBox<IChannel>();
+
         try
         {
             cb.Option(ChannelOption.ALLOW_HALF_CLOSURE, true)
@@ -123,6 +125,7 @@ public class SocketHalfClosedSourceTest : AbstractSocketTest
             {
                 await clientChannel.CloseAsync();
             }
+
             if (serverChannel != null)
             {
                 await serverChannel.CloseAsync();
@@ -186,7 +189,9 @@ public class SocketHalfClosedSourceTest : AbstractSocketTest
             {
                 bytesSinceReadComplete = 0;
             }
+
             Interlocked.Increment(ref clientReadCompletes.Value);
+
             if (bytesRead == totalServerBytesWritten)
             {
                 // Bounce this through the event loop to make sure it happens after we're done
@@ -222,6 +227,7 @@ public class SocketHalfClosedSourceTest : AbstractSocketTest
         IChannel clientChannel = null;
 
         CountDownLatch waitHalfClosureDone = new CountDownLatch(1);
+
         try
         {
             sb.ChildOption(ChannelOption.SO_LINGER, 1)
@@ -295,6 +301,7 @@ public class SocketHalfClosedSourceTest : AbstractSocketTest
     private static async Task TestHalfClosureOnlyOneEventWhenAutoRead0(ServerBootstrap sb, Bootstrap cb)
     {
         IChannel serverChannel = null;
+
         try
         {
             cb.Option(ChannelOption.ALLOW_HALF_CLOSURE, true)
@@ -398,6 +405,7 @@ public class SocketHalfClosedSourceTest : AbstractSocketTest
         StrongBox<int> clientZeroDataReadCompletes = new StrongBox<int>();
         IChannel serverChannel = null;
         IChannel clientChannel = null;
+
         try
         {
             cb.Option(ChannelOption.ALLOW_HALF_CLOSURE, true)
@@ -440,6 +448,7 @@ public class SocketHalfClosedSourceTest : AbstractSocketTest
             {
                 await clientChannel.CloseAsync();
             }
+
             if (serverChannel != null)
             {
                 await serverChannel.CloseAsync();
@@ -505,11 +514,14 @@ public class SocketHalfClosedSourceTest : AbstractSocketTest
             {
                 bytesSinceReadComplete = 0;
             }
+
             Interlocked.Increment(ref clientReadCompletes.Value);
+
             if (bytesRead == totalServerBytesWritten)
             {
                 clientReadAllDataLatch.CountDown();
             }
+
             if (!autoRead)
             {
                 ctx.Read();
@@ -554,6 +566,7 @@ public class SocketHalfClosedSourceTest : AbstractSocketTest
         StrongBox<Exception> causeRef = new StrongBox<Exception>();
         IChannel serverChannel = null;
         IChannel clientChannel = null;
+
         try
         {
             cb.Option(ChannelOption.ALLOW_HALF_CLOSURE, allowHalfClosed)
@@ -590,6 +603,7 @@ public class SocketHalfClosedSourceTest : AbstractSocketTest
             {
                 await clientChannel.CloseAsync();
             }
+
             if (serverChannel != null)
             {
                 await serverChannel.CloseAsync();
@@ -776,6 +790,7 @@ public class SocketHalfClosedSourceTest : AbstractSocketTest
         StrongBox<int> clientReadCompletes = new StrongBox<int>();
         IChannel serverChannel = null;
         IChannel clientChannel = null;
+
         try
         {
             cb.Option(ChannelOption.ALLOW_HALF_CLOSURE, allowHalfClosed)
@@ -810,6 +825,7 @@ public class SocketHalfClosedSourceTest : AbstractSocketTest
             {
                 await clientChannel.CloseAsync();
             }
+
             if (serverChannel != null)
             {
                 await serverChannel.CloseAsync();
@@ -871,10 +887,12 @@ public class SocketHalfClosedSourceTest : AbstractSocketTest
         public override void ChannelReadComplete(IChannelHandlerContext ctx)
         {
             Interlocked.Increment(ref clientReadCompletes.Value);
+
             if (bytesRead == totalServerBytesWritten)
             {
                 clientReadAllDataLatch.CountDown();
             }
+
             if (!autoRead)
             {
                 ctx.Read();
@@ -909,6 +927,7 @@ public class SocketHalfClosedSourceTest : AbstractSocketTest
 
         IChannel serverChannel = null;
         IChannel clientChannel = null;
+
         try
         {
             ShutdownInputWriter shutdownInputWriter = new ShutdownInputWriter(expectedBytes);
@@ -936,6 +955,7 @@ public class SocketHalfClosedSourceTest : AbstractSocketTest
             {
                 await serverChannel.CloseAsync();
             }
+
             if (clientChannel != null)
             {
                 await clientChannel.CloseAsync();
@@ -961,6 +981,7 @@ public class SocketHalfClosedSourceTest : AbstractSocketTest
         protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf msg)
         {
             receivedMsgs.WriteBytes(msg);
+
             if (receivedMsgs.ReadableBytes == expectedBytesCount)
             {
                 actualBytes = ByteBufUtil.GetBytes(receivedMsgs);
@@ -1018,6 +1039,7 @@ public class SocketHalfClosedSourceTest : AbstractSocketTest
 
         IChannel serverChannel = null;
         IChannel clientChannel = null;
+
         try
         {
             ShutdownOutputWriter shutdownOutputWriter = new ShutdownOutputWriter(expectedBytes);
@@ -1047,6 +1069,7 @@ public class SocketHalfClosedSourceTest : AbstractSocketTest
             {
                 await serverChannel.CloseAsync();
             }
+
             if (clientChannel != null)
             {
                 await clientChannel.CloseAsync();
@@ -1069,6 +1092,7 @@ public class SocketHalfClosedSourceTest : AbstractSocketTest
             {
                 _ = ctx.WriteAndFlushAsync(Unpooled.WrappedBuffer(expectedBytes));
             }
+
             ctx.FireUserEventTriggered(evt);
         }
     }
@@ -1096,6 +1120,7 @@ public class SocketHalfClosedSourceTest : AbstractSocketTest
         protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf msg)
         {
             receivedMsgs.WriteBytes(msg);
+
             if (receivedMsgs.ReadableBytes == expectedBytesCount)
             {
                 this.actualbytes = ByteBufUtil.GetBytes(receivedMsgs);
@@ -1214,6 +1239,7 @@ public class SocketHalfClosedSourceTest : AbstractSocketTest
         internal void CountDown()
         {
             int current;
+
             do
             {
                 current = Volatile.Read(ref count);
@@ -1223,6 +1249,7 @@ public class SocketHalfClosedSourceTest : AbstractSocketTest
                 }
             }
             while (Interlocked.CompareExchange(ref count, current - 1, current) != current);
+
             if (current == 1)
             {
                 zero.TrySetResult();

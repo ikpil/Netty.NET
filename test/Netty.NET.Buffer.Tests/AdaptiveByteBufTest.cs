@@ -58,6 +58,7 @@ public class AdaptiveByteBufTest
         using var allocator = new AdaptiveBufferTestAllocator(lowMemory);
         ByteBuf guard = Buffer(allocator, direct, 7, 1000);
         var buffer = Buffer(allocator, direct, 7, 1000);
+
         try
         {
             AdaptiveChunkAllocation original = buffer.Allocation;
@@ -97,6 +98,7 @@ public class AdaptiveByteBufTest
             buffer.Release();
             guard.Release();
         }
+
         allocator.Dispose();
         Assert.Equal(0, allocator.UsedHeapMemory + allocator.UsedDirectMemory);
         Assert.Equal(0, allocator.Native.ReservedBytes);
@@ -107,10 +109,12 @@ public class AdaptiveByteBufTest
     public void FastWritableHintClampsPublicMaximumAndEnsureWritableUsesReservation(bool direct, bool lowMemory)
     {
         using var allocator = new AdaptiveBufferTestAllocator(lowMemory);
+
         foreach (int requested in new[] { 0, 7, 512, 16897, 32769, 1048577 })
         {
             int maximum = requested + 3;
             var buffer = Buffer(allocator, direct, requested, maximum);
+
             try
             {
                 int fast = allocator.ComputeBufferCapacity(direct, requested, maximum);
@@ -122,6 +126,7 @@ public class AdaptiveByteBufTest
                 Assert.Equal(maximum, buffer.Capacity);
                 Assert.Equal(3, buffer.WritableBytes);
                 Assert.Equal(requested, buffer.WriterIndex);
+
                 if (fast >= maximum)
                 {
                     Assert.Same(before, buffer.Allocation);
@@ -130,6 +135,7 @@ public class AdaptiveByteBufTest
                 {
                     Assert.NotSame(before, buffer.Allocation);
                 }
+
                 Assert.Equal(1, buffer.EnsureWritable(4, false));
                 Assert.Throws<ArgumentOutOfRangeException>(() => buffer.EnsureWritable(4));
             }
@@ -147,6 +153,7 @@ public class AdaptiveByteBufTest
         using var allocator = new AdaptiveBufferTestAllocator();
         AdaptiveByteBuf root = Buffer(allocator, false, 8, 1000);
         ByteBuf buffer = wrapped ? new SimpleLeakAwareByteBuf(root, ByteBuf.LeakDetector.TrackForcibly(root)) : root;
+
         try
         {
             // Unwrap if this is wrapped by a leak aware buffer.
@@ -211,6 +218,7 @@ public class AdaptiveByteBufTest
             buffer.SetBytes(0, Pattern(7));
             buffer.SetIndex(2, 6);
             ByteBuf copy = buffer.Copy(1, 5);
+
             try
             {
                 // The raw chunk delegate's maximum: the 32-byte class chunk, a fresh buddy
@@ -245,6 +253,7 @@ public class AdaptiveByteBufTest
         ByteBuf guard = Buffer(allocator, direct, 64, 1000);
         guard.SetZero(0, 64);
         var b = Buffer(allocator, direct, 64, 1000);
+
         try
         {
             Assert.Equal(64, b.Allocation.Offset);
@@ -260,8 +269,10 @@ public class AdaptiveByteBufTest
             expected.AsSpan(0, 20).CopyTo(expected.AsSpan(3));
             Assert.Equal(expected, b.AsReadOnlySequence(0, 32).ToArray());
             Assert.Equal(!direct, MemoryMarshal.TryGetArray((ReadOnlyMemory<byte>)b.AsMemory(0, 32), out var array));
+
             if (!direct)
                 Assert.Equal(64, array.Offset);
+
             b.Clear();
             string text = "A\uD55C\U0001F600";
             int written = ByteBufUtil.WriteUtf8(b, text);
@@ -283,6 +294,7 @@ public class AdaptiveByteBufTest
         using var allocator = new AdaptiveBufferTestAllocator(lowMemory);
         var b = Buffer(allocator, direct, 7, 100);
         b.SetBytes(0, Pattern(7));
+
         try
         {
             Assert.Equal(32, b.Allocation.Length);
@@ -317,6 +329,7 @@ public class AdaptiveByteBufTest
         b.SetBytes(0, Pattern(64));
         b.SetIndex(3, 61);
         string path = Path.GetTempFileName();
+
         try
         {
             using var stream = new MemoryStream();
@@ -356,6 +369,7 @@ public class AdaptiveByteBufTest
         var lease = b.AcquireReadLease();
         Span<byte> oldBytes = old.Span;
         var held = new List<ByteBuf>();
+
         try
         {
             b.WriteBytes(old.Span);
@@ -363,6 +377,7 @@ public class AdaptiveByteBufTest
             Assert.NotSame(original, b.Allocation);
             Assert.Equal(0, oldBytes[0]);
             Assert.Throws<ObjectDisposedException>(() => old.Span.Clear());
+
             // Exhaust the other FIFO slots before asking for reuse of the returned slot.
             for (int i = 1; i < AdaptivePoolingAllocator.MIN_CHUNK_SIZE / 32; i++)
             {
@@ -370,6 +385,7 @@ public class AdaptiveByteBufTest
                 held.Add(first);
                 Assert.NotEqual(original.Offset, first.Allocation.Offset);
             }
+
             lease.Dispose();
             var next = Buffer(allocator, direct, 32, 1000);
             Assert.Equal(original.Offset, next.Allocation.Offset);
@@ -397,6 +413,7 @@ public class AdaptiveByteBufTest
         b.SetIndex(2, 5).MarkReaderIndex().MarkWriterIndex();
         b.SetIndex(3, 6);
         AdaptiveChunkAllocation original = b.Allocation;
+
         try
         {
             Assert.Throws<OutOfDirectMemoryError>(() => b.Capacity = 33);
@@ -413,6 +430,7 @@ public class AdaptiveByteBufTest
         {
             b.Release();
         }
+
         allocator.Dispose();
         Assert.Equal(0, native.ReservedBytes);
     }
@@ -465,6 +483,7 @@ public class AdaptiveByteBufTest
         b.SetBytes(0, Pattern(7));
         b.SetIndex(2, 5);
         int previousLength = 7;
+
         try
         {
             foreach (int capacity in new[] { 33, 641, 1153, 4097, 16897, 32769, 1048577 })
@@ -481,6 +500,7 @@ public class AdaptiveByteBufTest
         {
             b.Release();
         }
+
         allocator.Dispose();
         Assert.Equal(0, allocator.UsedHeapMemory + allocator.UsedDirectMemory);
         Assert.Equal(0, allocator.Native.ReservedBytes);
@@ -493,6 +513,7 @@ public class AdaptiveByteBufTest
         using var allocator = new AdaptiveBufferTestAllocator(lowMemory, threadLocal: true);
         ByteBuf guard = Buffer(allocator, direct, 513, 2000);
         var b = Buffer(allocator, direct, 513, 2000);
+
         try
         {
             // 640-byte segments leave a 512-byte tail, shifting local offsets.
@@ -532,6 +553,7 @@ public class AdaptiveByteBufTest
         b.SetBytes(0, Pattern(7));
         b.SetIndex(2, 5).MarkReaderIndex().MarkWriterIndex();
         AdaptiveChunkAllocation old = b.Allocation;
+
         try
         {
             Assert.Throws<InvalidOperationException>(() => b.Capacity = 1048577);
@@ -552,6 +574,7 @@ public class AdaptiveByteBufTest
         {
             b.Release();
         }
+
         Assert.True(manager.Disposed);
         allocator.Dispose();
         Assert.Equal(0, allocator.UsedHeapMemory);

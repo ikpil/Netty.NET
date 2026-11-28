@@ -54,6 +54,7 @@ public sealed class SocksSubnegotiationVersion
                 return code;
             }
         }
+
         return UNKNOWN;
     }
 

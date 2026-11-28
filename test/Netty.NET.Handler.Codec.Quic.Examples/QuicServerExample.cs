@@ -81,6 +81,7 @@ public sealed class QuicServerExample
                     ch.Pipeline.AddLast(new LineBasedFrameDecoder(1024))
                             .AddLast(new HelloWorldHandler());
                 })).Build();
+
         try
         {
             Bootstrap bs = new Bootstrap();
@@ -113,6 +114,7 @@ public sealed class QuicServerExample
                 {
                     LOGGER.Info("Connection closed: {}", f.Result);
                 }
+
                 //only test for first connection
                 ctx.Channel.Parent.CloseAsync();
             }, TaskScheduler.Default);
@@ -127,6 +129,7 @@ public sealed class QuicServerExample
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             ByteBuf byteBuf = (ByteBuf) msg;
+
             try
             {
                 if (byteBuf.ToString(Encoding.ASCII).Trim().Equals("GET /"))

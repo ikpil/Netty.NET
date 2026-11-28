@@ -153,6 +153,7 @@ public class DefaultHttp2HeadersDecoder : IHttp2HeadersDecoder, IHttp2HeadersDec
             throw ConnectionError(INTERNAL_ERROR, "Header List Size GO_AWAY %d must be non-negative and >= %d",
                     goAwayMax, max);
         }
+
         hpackDecoder.SetMaxHeaderListSize(max);
         maxHeaderListSizeGoAway = goAwayMax;
     }

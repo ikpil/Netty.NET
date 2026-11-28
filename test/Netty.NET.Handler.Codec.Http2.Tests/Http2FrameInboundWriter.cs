@@ -270,6 +270,7 @@ internal sealed class Http2FrameInboundWriter
         public Task WriteAndFlushAsync(object msg, CancellationToken cancellationToken = default)
         {
             TaskCompletionSource promise = NewPromise();
+
             try
             {
                 channel.WriteInbound(msg);
@@ -280,6 +281,7 @@ internal sealed class Http2FrameInboundWriter
             {
                 promise.SetException(cause);
             }
+
             return promise.Task;
         }
     }

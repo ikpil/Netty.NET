@@ -92,8 +92,10 @@ public class WrappedByteBufDispatchTest
             ByteBuf Data(int length)
             {
                 ByteBuf b = allocator.Buffer(length, length);
+
                 for (int i = 0; i < length; ++i)
                     b.WriteByte(i + 1);
+
                 return b;
             }
 
@@ -127,14 +129,18 @@ public class WrappedByteBufDispatchTest
         {
             if (LifetimeOwner.RefCnt > 0)
                 LifetimeOwner.Release();
+
             foreach (ByteBuf b in _components)
             if (b.RefCnt > 0)
                 b.Release();
+
             if (Peer.RefCnt > 0)
                 Peer.Release();
+
             foreach (ByteBuf b in Batch)
             if (b.RefCnt > 0)
                 b.Release();
+
             Stream.Dispose();
             Socket.Dispose();
             File.Dispose();
@@ -1670,6 +1676,7 @@ public class WrappedByteBufDispatchTest
         var root = new KernelProbe(allocator, direct, [data]);
         var tracker = new Tracker();
         ByteBuf b = Wrap(root, form, tracker, out ByteBuf owner);
+
         try
         {
             void Request()
@@ -1716,6 +1723,7 @@ public class WrappedByteBufDispatchTest
             owner.Release();
             Assert.Equal(0, native.ReservedBytes);
         }
+
         Assert.Equal(form is 1 or 3 or 4 or 7 or 8 ? 1 : 0, tracker.Closes);
     }
 
@@ -1830,8 +1838,10 @@ public class WrappedByteBufDispatchTest
         using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         using var file = new SafeFileHandle(nint.Zero, false);
         using var cancellation = new CancellationTokenSource();
+
         if (mode == 2)
             cancellation.Cancel();
+
         try
         {
             CancellationToken token = cancellation.Token;
@@ -1855,13 +1865,16 @@ public class WrappedByteBufDispatchTest
             Task<int> task = pending.AsTask();
             Assert.False(task.IsCompleted);
             Assert.Equal((3, 10), (b.ReaderIndex, b.WriterIndex));
+
             if (mode == 0)
             {
                 // The wrapped operation owns index publication. The wrapper must not advance twice.
                 if (operation is 1 or 5)
                     root.WriterIndex += 2;
+
                 if (operation == 3)
                     root.ReaderIndex += 2;
+
                 root.Result.Complete(2);
                 Assert.Equal(2, await task);
             }
@@ -1875,6 +1888,7 @@ public class WrappedByteBufDispatchTest
                 root.Result.Fail(new OperationCanceledException(token));
                 Assert.Equal(token, (await Assert.ThrowsAnyAsync<OperationCanceledException>(() => task)).CancellationToken);
             }
+
             Assert.Equal((mode == 0 && operation == 3 ? 5 : 3, mode == 0 && operation is 1 or 5 ? 12 : 10), (b.ReaderIndex, b.WriterIndex));
             Assert.Equal(1, root.Result.Consumptions);
             Assert.Equal(1, root.Result.Continuations);
@@ -1886,6 +1900,7 @@ public class WrappedByteBufDispatchTest
             owner.Release();
             Assert.Equal(0, native.ReservedBytes);
         }
+
         Assert.Equal(form is 1 or 3 or 4 or 7 or 8 ? 1 : 0, tracker.Closes);
     }
 
@@ -1913,6 +1928,7 @@ public class WrappedByteBufDispatchTest
         ByteBuf b = form == 0 ? new Wrapper(inner) : form == 1 ? new SimpleLeakAwareByteBuf(inner, outerTracker) : new UnreleasableByteBuf(inner);
         ByteBuf owner = form == 2 ? inner : b;
         using var stream = new MemoryStream(new byte[] { 41, 42, 43, 44 });
+
         try
         {
             switch (operation)
@@ -1953,6 +1969,7 @@ public class WrappedByteBufDispatchTest
                     b.GetFloatLE(3);
                     break;
             }
+
             Assert.Equal(1, innerTracker.Records);
             Assert.Equal(0, outerTracker.Records);
             Assert.Equal(0, innerTracker.Closes);
@@ -1963,6 +1980,7 @@ public class WrappedByteBufDispatchTest
             owner.Release();
             Assert.Equal(0, native.ReservedBytes);
         }
+
         Assert.Equal(1, innerTracker.Closes);
         Assert.Equal(form == 1 ? 1 : 0, outerTracker.Closes);
     }

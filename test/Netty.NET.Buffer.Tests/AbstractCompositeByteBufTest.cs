@@ -40,6 +40,7 @@ public abstract class AbstractCompositeByteBufTest : AbstractByteBufTest
     {
         ByteBuf buffer = NewBuffer(8);
         ByteBuf copy = null;
+
         try
         {
             buffer.WriteZero(4);
@@ -59,6 +60,7 @@ public abstract class AbstractCompositeByteBufTest : AbstractByteBufTest
     {
         Assert.Equal(int.MaxValue, maxCapacity);
         var buffers = new List<ByteBuf>();
+
         for (int i = 0; i < length + 45; i += 45)
         {
             buffers.Add(Unpooled.EmptyBuffer);
@@ -83,6 +85,7 @@ public abstract class AbstractCompositeByteBufTest : AbstractByteBufTest
         }
 
         ByteBuf buffer;
+
         // Ensure that we are really testing a CompositeByteBuf
         switch (buffers.Count)
         {
@@ -188,6 +191,7 @@ public abstract class AbstractCompositeByteBufTest : AbstractByteBufTest
         {
             compositeToAdd = new WrappedCompositeByteBuf(compositeToAdd);
         }
+
         newComposite.AddFlattenedComponents(compositeToAdd, true);
 
         // verify that added range matches
@@ -491,6 +495,7 @@ public abstract class AbstractCompositeByteBufTest : AbstractByteBufTest
     {
         CompositeByteBuf cbuf = NewCompositeBuffer();
         List<ByteBuf> buffers = new List<ByteBuf>(4);
+
         for (int i = 0; i < 4; i++)
         {
             ByteBuf buf = Unpooled.Buffer().WriteInt(i);
@@ -501,6 +506,7 @@ public abstract class AbstractCompositeByteBufTest : AbstractByteBufTest
         // Skip the first 2 bytes which means even if we call discard*ReadBytes() later we can no drop the first
         // component as it is still used.
         cbuf.SkipBytes(2);
+
         if (discardSome)
         {
             cbuf.DiscardSomeReadBytes();
@@ -509,6 +515,7 @@ public abstract class AbstractCompositeByteBufTest : AbstractByteBufTest
         {
             cbuf.DiscardReadBytes();
         }
+
         Assert.Equal(4, cbuf.NumComponents);
 
         // Now skip 3 bytes which means we should be able to drop the first component on the next discard*ReadBytes()
@@ -523,12 +530,14 @@ public abstract class AbstractCompositeByteBufTest : AbstractByteBufTest
         {
             cbuf.DiscardReadBytes();
         }
+
         Assert.Equal(3, cbuf.NumComponents);
         // Now skip again 3 bytes which should bring our readerIndex == start of the 3 component.
         cbuf.SkipBytes(3);
 
         // Read one int (4 bytes) which should bring our readerIndex == start of the 4 component.
         Assert.Equal(2, cbuf.ReadInt());
+
         if (discardSome)
         {
             cbuf.DiscardSomeReadBytes();
@@ -541,6 +550,7 @@ public abstract class AbstractCompositeByteBufTest : AbstractByteBufTest
         // Now all except the last component should have been dropped / released.
         Assert.Equal(1, cbuf.NumComponents);
         Assert.Equal(3, cbuf.ReadInt());
+
         if (discardSome)
         {
             cbuf.DiscardSomeReadBytes();
@@ -549,6 +559,7 @@ public abstract class AbstractCompositeByteBufTest : AbstractByteBufTest
         {
             cbuf.DiscardReadBytes();
         }
+
         Assert.Equal(0, cbuf.NumComponents);
 
         // These should have been released already.
@@ -556,6 +567,7 @@ public abstract class AbstractCompositeByteBufTest : AbstractByteBufTest
         {
             Assert.Equal(0, buffer.RefCnt);
         }
+
         Assert.True(cbuf.Release());
     }
 

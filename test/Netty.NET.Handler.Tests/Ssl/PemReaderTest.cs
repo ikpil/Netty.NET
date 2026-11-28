@@ -61,6 +61,7 @@ public class PemReaderTest
         MemoryStream @in = new MemoryStream(certs);
         ByteBuf[] bufs = PemReader.ReadCertificates(@in);
         Assert.Equal(2, bufs.Length);
+
         foreach (ByteBuf buf in bufs)
         {
             buf.Release();

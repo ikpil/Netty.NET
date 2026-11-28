@@ -35,6 +35,7 @@ public class SocksCmdResponseDecoderTest
         SocksCmdResponseDecoder decoder = new SocksCmdResponseDecoder();
         EmbeddedChannel embedder = new EmbeddedChannel(decoder);
         SocksCommonTestUtils.WriteMessageIntoEmbedder(embedder, msg);
+
         if (addressType == SocksAddressType.UNKNOWN)
         {
             Assert.IsType<UnknownSocksResponse>(embedder.ReadInbound(), exactMatch: false);
@@ -43,12 +44,15 @@ public class SocksCmdResponseDecoderTest
         {
             msg = embedder.ReadInbound<SocksResponse>();
             Assert.Equal(((SocksCmdResponse) msg).CmdStatus(), cmdStatus);
+
             if (host != null)
             {
                 Assert.Equal(((SocksCmdResponse) msg).Host(), host);
             }
+
             Assert.Equal(((SocksCmdResponse) msg).Port(), port);
         }
+
         Assert.Null(embedder.ReadInbound());
     }
 

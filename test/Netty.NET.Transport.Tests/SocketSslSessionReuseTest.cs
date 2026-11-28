@@ -224,11 +224,13 @@ public class SocketSslSessionReuseTest : AbstractSocketTest
     {
         ISet<string> idSet = new HashSet<string>();
         byte[] id;
+
         while (sessionIds.MoveNext())
         {
             id = sessionIds.Current;
             idSet.Add(ByteBufUtil.HexDump(Unpooled.WrappedBuffer(id)));
         }
+
         return idSet;
     }
 
@@ -320,6 +322,7 @@ public class SocketSslSessionReuseTest : AbstractSocketTest
                     cumulation.WriteBytes(buf, buf.ReaderIndex, buf.ReadableBytes);
                     Record();
                 }
+
                 ctx.FireChannelRead(msg);
             }
 
@@ -334,6 +337,7 @@ public class SocketSslSessionReuseTest : AbstractSocketTest
                 {
                     return;
                 }
+
                 if (cumulation.GetByte(0) == HANDSHAKE && cumulation.GetByte(5) == SERVER_HELLO)
                 {
                     int length = cumulation.GetByte(SESSION_ID_LENGTH_OFFSET);
@@ -341,6 +345,7 @@ public class SocketSslSessionReuseTest : AbstractSocketTest
                     {
                         return;
                     }
+
                     if (length > 0)
                     {
                         byte[] id = new byte[length];
@@ -348,6 +353,7 @@ public class SocketSslSessionReuseTest : AbstractSocketTest
                         sessionContext.ids.Enqueue(id);
                     }
                 }
+
                 Release();
             }
 

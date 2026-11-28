@@ -96,6 +96,7 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
         return OnLoopAsync(() =>
         {
             EnsureOpen();
+
             if (!_inputShutdown)
             {
                 DoShutdownInput();
@@ -164,6 +165,7 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
                 if (byteBuf.IsReadable())
                 {
                     _channel.ReadPending = false;
+
                     try
                     {
                         pipeline.FireChannelRead(byteBuf);
@@ -178,6 +180,7 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
                     byteBuf.Release();
                 }
             }
+
             allocHandle.ReadComplete();
             pipeline.FireChannelReadComplete();
             pipeline.FireExceptionCaught(cause);
@@ -202,6 +205,7 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
                 _channel.ClearReadPending();
                 return;
             }
+
             IChannelPipeline pipeline = _channel.Pipeline;
             IByteBufAllocator allocator = config.GetAllocator();
             IRecvByteBufAllocator.IHandle allocHandle = _channel.RecvBufAllocHandle();
@@ -209,12 +213,14 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
 
             ByteBuf byteBuf = null;
             bool close = false;
+
             try
             {
                 do
                 {
                     byteBuf = allocHandle.Allocate(allocator);
                     allocHandle.LastBytesRead(_channel.DoReadBytes(byteBuf));
+
                     if (allocHandle.LastBytesRead() <= 0)
                     {
                         // nothing was read. release the buffer.
@@ -226,6 +232,7 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
                             // There is nothing left to read as we received an EOF.
                             _channel.ReadPending = false;
                         }
+
                         break;
                     }
 
@@ -270,6 +277,7 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
     protected override void DoBeginRead()
     {
         base.DoBeginRead();
+
         if (ReadPending && _inputShutdown && !_inputClosedSeenErrorOnRead && IsAllowHalfClosure(Config))
         {
             EventLoop.Execute(() =>
@@ -304,6 +312,7 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
             // Directly return here so incompleteWrite(...) is not called.
             return 0;
         }
+
         return DoWriteInternal(@in, @in.Current);
     }
 
@@ -321,10 +330,12 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
             if (localFlushedAmount > 0)
             {
                 @in.Progress(localFlushedAmount);
+
                 if (!buf.IsReadable())
                 {
                     @in.Remove();
                 }
+
                 return 1;
             }
         }
@@ -341,10 +352,12 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
             if (localFlushedAmount > 0)
             {
                 @in.Progress(localFlushedAmount);
+
                 if (region.Transferred() >= region.Count() && !HasPendingFileRegionBytes())
                 {
                     @in.Remove();
                 }
+
                 return 1;
             }
         }
@@ -354,12 +367,14 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
             // CLR: InvalidOperationException replaces java.lang.Error.
             throw new InvalidOperationException("Unexpected message type: " + StringUtil.ClassName(msg));
         }
+
         return WRITE_STATUS_SNDBUF_FULL;
     }
 
     protected override void DoWrite(ChannelOutboundBuffer @in)
     {
         int writeSpinCount = Config.GetWriteSpinCount();
+
         do
         {
             object msg = @in.Current;
@@ -370,6 +385,7 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
                 // Directly return here so incompleteWrite(...) is not called.
                 return;
             }
+
             writeSpinCount -= DoWriteInternal(@in, msg);
         } while (writeSpinCount > 0);
 
@@ -429,11 +445,13 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
         {
             return _fileRegionTarget.FlushPending();
         }
+
         long position = region.Transferred();
         if (region is DefaultFileRegion defaultFileRegion && region.GetType() == typeof(DefaultFileRegion))
         {
             return defaultFileRegion.TransferTo(JavaChannel(), position);
         }
+
         FileRegionStream target = _fileRegionTarget ??= new FileRegionStream(this);
         long written = region.TransferTo(target, position);
         return written > 0 ? target.FlushPending() : written;
@@ -459,8 +477,10 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
         {
             return -1;
         }
+
         int read = JavaChannel().Receive(byteBuf.AsSpan(byteBuf.WriterIndex, attempted), SocketFlags.None,
             out SocketError error);
+
         switch (error)
         {
             case SocketError.Success:
@@ -473,10 +493,12 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
             default:
                 throw new SocketException((int)error);
         }
+
         if (read == 0)
         {
             return -1;
         }
+
         byteBuf.WriterIndex += read;
         return read;
     }
@@ -518,6 +540,7 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
         {
             return;
         }
+
         RemoveAndSubmit(NioIoOps.WRITE);
     }
 
@@ -582,15 +605,18 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
         segments.Clear();
         bool arrays = true;
         long total = 0;
+
         for (int i = offset; i < offset + length; i++)
         {
             if (!MemoryMarshal.TryGetArray(buffers[i], out ArraySegment<byte> segment))
             {
                 arrays = false;
             }
+
             segments.Add(segment);
             total += buffers[i].Length;
         }
+
         try
         {
             if (arrays)
@@ -598,15 +624,19 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
                 int written = JavaChannel().Send(segments, SocketFlags.None, out SocketError error);
                 return SocketWriteResult(written, error);
             }
+
             byte[] staging = ArrayPool<byte>.Shared.Rent((int)total);
+
             try
             {
                 int position = 0;
+
                 for (int i = offset; i < offset + length; i++)
                 {
                     buffers[i].Span.CopyTo(staging.AsSpan(position));
                     position += buffers[i].Length;
                 }
+
                 int written = JavaChannel().Send(staging, 0, position, SocketFlags.None, out SocketError error);
                 return SocketWriteResult(written, error);
             }
@@ -653,6 +683,7 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
     protected override Task DoBindAsync(EndPoint address, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+
         DoBind0(address);
         return Task.CompletedTask;
     }
@@ -664,12 +695,14 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
         {
             throw new SocketException((int)SocketError.IsConnected);
         }
+
         if (localAddress != null)
         {
             DoBind0(localAddress);
         }
 
         bool success = false;
+
         try
         {
             bool connected = Connect(JavaChannel(), remoteAddress);
@@ -681,6 +714,7 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
             {
                 SetActive(true);
             }
+
             success = true;
             return connected;
         }
@@ -723,12 +757,14 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
         {
             throw new NotSupportedException("finishConnect is not supported for " + GetType().FullName);
         }
+
         SetActive(true);
     }
 
     protected override void DoClose()
     {
         base.DoClose();
+
         // Dispose aborts pending CLR socket operations. Shut down the TCP directions first so accepted
         // data and FIN retain the orderly close semantics of FileDescriptor-based Java socket close.
         try
@@ -773,6 +809,7 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
     public async Task ShutdownAsync()
     {
         Exception outputFailure = null;
+
         try
         {
             await ShutdownOutputAsync().ConfigureAwait(false);
@@ -781,6 +818,7 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
         {
             outputFailure = error;
         }
+
         try
         {
             await ShutdownInputAsync().ConfigureAwait(false);
@@ -788,6 +826,7 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
         catch (Exception) when (outputFailure != null)
         {
         }
+
         if (outputFailure != null)
         {
             ExceptionDispatchInfo.Capture(outputFailure).Throw();
@@ -816,6 +855,7 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
         public override void Write(byte[] buffer, int offset, int count)
         {
             ArgumentNullException.ThrowIfNull(buffer);
+
             Write(buffer.AsSpan(offset, count));
         }
 
@@ -827,6 +867,7 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
                 _accepted += written;
                 buffer = buffer[written..];
             }
+
             if (!buffer.IsEmpty)
             {
                 _pending.Enqueue(buffer.ToArray());
@@ -846,9 +887,11 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
                 {
                     break;
                 }
+
                 _pending.Dequeue();
                 _pendingOffset = 0;
             }
+
             long accepted = _accepted;
             _accepted = 0;
             return accepted;

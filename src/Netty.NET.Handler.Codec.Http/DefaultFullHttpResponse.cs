@@ -182,10 +182,12 @@ public class DefaultFullHttpResponse : DefaultHttpResponse, IFullHttpResponse
             {
                 hash = 31;
             }
+
             hash = 31 * hash + TrailingHeaders().GetHashCode();
             hash = 31 * hash + base.GetHashCode();
             this.hash = hash;
         }
+
         return hash;
     }
 

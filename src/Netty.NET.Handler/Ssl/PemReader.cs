@@ -75,6 +75,7 @@ internal static class PemReader
     internal static ByteBuf[] ReadCertificates(System.IO.Stream @in)
     {
         string content;
+
         try
         {
             content = ReadContent(@in);
@@ -88,6 +89,7 @@ internal static class PemReader
         Regex pattern = CERT_HEADER;
         Match m;
         int start = 0;
+
         try
         {
             for (;;)
@@ -111,6 +113,7 @@ internal static class PemReader
                 }
 
                 ByteBuf base64 = Unpooled.CopiedBuffer(m.Value, Encoding.ASCII);
+
                 try
                 {
                     start = m.Index + m.Length;
@@ -121,6 +124,7 @@ internal static class PemReader
                         // Certificate is incomplete.
                         break;
                     }
+
                     ByteBuf der = Base64.Decode(base64);
                     certs.Add(der);
                 }
@@ -139,6 +143,7 @@ internal static class PemReader
             {
                 cert.Release();
             }
+
             throw;
         }
 
@@ -168,6 +173,7 @@ internal static class PemReader
     internal static ByteBuf ReadPrivateKey(System.IO.Stream @in)
     {
         string content;
+
         try
         {
             content = ReadContent(@in);
@@ -176,12 +182,14 @@ internal static class PemReader
         {
             throw new CryptographicException("failed to read key input stream", e);
         }
+
         int start = 0;
         Match m = KEY_HEADER.Match(content, start);
         if (!m.Success)
         {
             throw KeyNotFoundException();
         }
+
         start = m.Index + m.Length;
         m = BODY.Match(content, start);
         if (!m.Success)
@@ -190,6 +198,7 @@ internal static class PemReader
         }
 
         ByteBuf base64 = Unpooled.CopiedBuffer(m.Value, Encoding.ASCII);
+
         try
         {
             start = m.Index + m.Length;
@@ -199,6 +208,7 @@ internal static class PemReader
                 // Key is incomplete.
                 throw KeyNotFoundException();
             }
+
             return Base64.Decode(base64);
         }
         finally
@@ -219,6 +229,7 @@ internal static class PemReader
     {
         MemoryStream @out = new MemoryStream();
         byte[] buf = new byte[8192];
+
         for (;;)
         {
             int ret = @in.Read(buf, 0, buf.Length);
@@ -226,8 +237,10 @@ internal static class PemReader
             {
                 break;
             }
+
             @out.Write(buf, 0, ret);
         }
+
         return Encoding.ASCII.GetString(@out.GetBuffer(), 0, (int) @out.Length);
     }
 }

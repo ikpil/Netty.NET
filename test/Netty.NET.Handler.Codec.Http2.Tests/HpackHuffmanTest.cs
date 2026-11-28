@@ -52,6 +52,7 @@ public class HpackHuffmanTest
     public void TestHuffman()
     {
         string s = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
         for (int i = 0; i < s.Length; i++)
         {
             RoundTrip(s.Substring(0, i));
@@ -67,10 +68,12 @@ public class HpackHuffmanTest
     public void TestDecodeEOS()
     {
         byte[] buf = new byte[4];
+
         for (int i = 0; i < 4; i++)
         {
             buf[i] = (byte) 0xFF;
         }
+
         Assert.ThrowsAny<Http2Exception>(() =>
         {
             Decode(buf);
@@ -164,6 +167,7 @@ public class HpackHuffmanTest
     {
         int inputLen = 500;
         StringBuilder sb = new StringBuilder();
+
         for (int i = 0; i < inputLen; i++)
         {
             // Starts with 0x4E01 because certain suboptimal sanitization could cause some problem with this input.
@@ -171,10 +175,12 @@ public class HpackHuffmanTest
             // (0x4E01 & OxFF) is greater than zero which indicates insufficient sanitization.
             sb.Append((char) (0x4E01 + i));
         }
+
         HpackHuffmanEncoder encoder = new HpackHuffmanEncoder();
         string toBeEncoded = sb.ToString();
         ByteBuf buffer = Unpooled.Buffer();
         byte[] bytes;
+
         try
         {
             encoder.Encode(buffer, new StringCharSequence(toBeEncoded));
@@ -185,6 +191,7 @@ public class HpackHuffmanTest
         {
             buffer.Release(); // Release as soon as possible.
         }
+
         byte[] actualBytes = Decode(bytes);
         string actualDecoded = Encoding.Default.GetString(actualBytes);
         char[] charArray = new char[inputLen];
@@ -200,10 +207,12 @@ public class HpackHuffmanTest
     private static byte[] MakeBuf(params int[] bytes)
     {
         byte[] buf = new byte[bytes.Length];
+
         for (int i = 0; i < buf.Length; i++)
         {
             buf[i] = (byte) bytes[i];
         }
+
         return buf;
     }
 
@@ -225,6 +234,7 @@ public class HpackHuffmanTest
     private static void RoundTrip(HpackHuffmanEncoder encoder, byte[] buf)
     {
         ByteBuf buffer = Unpooled.Buffer();
+
         try
         {
             encoder.Encode(buffer, new AsciiString(buf, false));
@@ -244,10 +254,12 @@ public class HpackHuffmanTest
     private static byte[] Decode(byte[] bytes)
     {
         ByteBuf buffer = Unpooled.WrappedBuffer(bytes);
+
         try
         {
             AsciiString decoded = new HpackHuffmanDecoder().Decode(buffer, buffer.ReadableBytes);
             Assert.False(buffer.IsReadable());
+
             return decoded.ToByteArray();
         }
         finally

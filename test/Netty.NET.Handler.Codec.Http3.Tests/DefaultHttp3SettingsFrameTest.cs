@@ -116,6 +116,7 @@ public class DefaultHttp3SettingsFrameTest
 
         IEnumerator<KeyValuePair<long, long>> it = frame.GetEnumerator();
         int count = 0;
+
         while (it.MoveNext())
         {
             KeyValuePair<long, long> entry = it.Current;
@@ -123,6 +124,7 @@ public class DefaultHttp3SettingsFrameTest
             Assert.NotNull((object) entry.Value);
             count++;
         }
+
         Assert.True(count >= 2);
     }
 

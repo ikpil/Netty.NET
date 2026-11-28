@@ -41,6 +41,7 @@ public class AbstractDiskHttpDataTest
     public void TestGetChunk()
     {
         TestHttpData test = new TestHttpData("test", Encoding.UTF8, 0);
+
         try
         {
             FileInfo tmpFile = PlatformDependent.CreateTempFile(Guid.NewGuid().ToString(), ".tmp", null);
@@ -48,6 +49,7 @@ public class AbstractDiskHttpDataTest
             FileStream fos = new FileStream(tmpFile.FullName, FileMode.Create, FileAccess.Write);
             byte[] bytes = new byte[4096];
             Random.Shared.NextBytes(bytes);
+
             try
             {
                 fos.Write(bytes, 0, bytes.Length);
@@ -57,6 +59,7 @@ public class AbstractDiskHttpDataTest
             {
                 fos.Dispose();
             }
+
             test.SetContent(tmpFile);
             ByteBuf buf1 = test.GetChunk(1024);
             Assert.Equal(buf1.ReaderIndex, 0);

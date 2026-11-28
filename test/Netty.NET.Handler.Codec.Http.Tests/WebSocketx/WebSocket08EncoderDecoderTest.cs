@@ -45,6 +45,7 @@ public class WebSocket08EncoderDecoderTest
     {
         binTestData = Unpooled.Buffer(MAX_TESTDATA_LENGTH);
         byte j = 0;
+
         for (int i = 0; i < MAX_TESTDATA_LENGTH; i++)
         {
             binTestData.SetByte(i, j);
@@ -53,15 +54,18 @@ public class WebSocket08EncoderDecoderTest
 
         StringBuilder s = new StringBuilder();
         char c = 'A';
+
         for (int i = 0; i < MAX_TESTDATA_LENGTH; i++)
         {
             s.Append(c);
             c++;
+
             if (c == 'Z')
             {
                 c = 'A';
             }
         }
+
         strTestData = s.ToString();
     }
 
@@ -219,10 +223,12 @@ public class WebSocket08EncoderDecoderTest
         BinaryWebSocketFrame binFrame = (BinaryWebSocketFrame) decoded;
         int readable = binFrame.Content.ReadableBytes;
         Assert.Equal(testDataLength, readable);
+
         for (int i = 0; i < testDataLength; i++)
         {
             Assert.Equal(binTestData.GetByte(i), binFrame.Content.GetByte(i));
         }
+
         binFrame.Release();
     }
 
@@ -237,6 +243,7 @@ public class WebSocket08EncoderDecoderTest
             {
                 return;
             }
+
             inChannel.WriteInbound(encoded);
         }
     }

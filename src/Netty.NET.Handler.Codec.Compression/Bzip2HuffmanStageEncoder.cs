@@ -101,11 +101,13 @@ internal sealed class Bzip2HuffmanStageEncoder
 
         huffmanCodeLengths = new int[totalTables][];
         huffmanMergedCodeSymbols = new int[totalTables][];
+
         for (int i = 0; i < totalTables; i++)
         {
             huffmanCodeLengths[i] = new int[mtfAlphabetSize];
             huffmanMergedCodeSymbols[i] = new int[mtfAlphabetSize];
         }
+
         selectors = new byte[(mtfLength + HUFFMAN_GROUP_RUN_LENGTH - 1) / HUFFMAN_GROUP_RUN_LENGTH];
     }
 
@@ -132,6 +134,7 @@ internal sealed class Bzip2HuffmanStageEncoder
         {
             return 3;
         }
+
         return 2;
     }
 
@@ -161,7 +164,9 @@ internal sealed class Bzip2HuffmanStageEncoder
         {
             mergedFrequenciesAndIndices[i] = (symbolFrequencies[i] << 9) | i;
         }
+
         Array.Sort(mergedFrequenciesAndIndices);
+
         for (int i = 0; i < alphabetSize; i++)
         {
             sortedFrequencies[i] = mergedFrequenciesAndIndices[i] >>> 9;
@@ -213,6 +218,7 @@ internal sealed class Bzip2HuffmanStageEncoder
             }
 
             int[] tableCodeLengths = huffmanCodeLengths[i];
+
             for (int j = 0; j < mtfAlphabetSize; j++)
             {
                 if (j < lowCostStart || j > lowCostEnd)
@@ -243,6 +249,7 @@ internal sealed class Bzip2HuffmanStageEncoder
 
         int totalTables = huffmanCodeLengths.Length;
         int[][] tableFrequencies = new int[totalTables][];
+
         for (int i = 0; i < totalTables; i++)
         {
             tableFrequencies[i] = new int[mtfAlphabetSize];
@@ -258,9 +265,11 @@ internal sealed class Bzip2HuffmanStageEncoder
 
             // Calculate the cost of this group when encoded by each table
             int[] cost = new int[totalTables];
+
             for (int i = groupStart; i <= groupEnd; i++)
             {
                 int value = mtfBlock[i];
+
                 for (int j = 0; j < totalTables; j++)
                 {
                     cost[j] += huffmanCodeLengths[j][value];
@@ -270,6 +279,7 @@ internal sealed class Bzip2HuffmanStageEncoder
             // Find the table with the least cost for this group
             byte bestTable = 0;
             int bestCost = cost[0];
+
             for (byte i = 1 ; i < totalTables; i++)
             {
                 int tableCost = cost[i];
@@ -282,6 +292,7 @@ internal sealed class Bzip2HuffmanStageEncoder
 
             // Accumulate symbol frequencies for the table chosen for this block
             int[] bestGroupFrequencies = tableFrequencies[bestTable];
+
             for (int i = groupStart; i <= groupEnd; i++)
             {
                 bestGroupFrequencies[mtfBlock[i]]++;
@@ -292,6 +303,7 @@ internal sealed class Bzip2HuffmanStageEncoder
             {
                 selectors[selectorIndex++] = bestTable;
             }
+
             groupStart = groupEnd + 1;
         }
 
@@ -319,6 +331,7 @@ internal sealed class Bzip2HuffmanStageEncoder
 
             int minimumLength = 32;
             int maximumLength = 0;
+
             for (int j = 0; j < mtfAlphabetSize; j++)
             {
                 int length = tableLengths[j];
@@ -326,6 +339,7 @@ internal sealed class Bzip2HuffmanStageEncoder
                 {
                     maximumLength = length;
                 }
+
                 if (length < minimumLength)
                 {
                     minimumLength = length;
@@ -333,6 +347,7 @@ internal sealed class Bzip2HuffmanStageEncoder
             }
 
             int code = 0;
+
             for (int j = minimumLength; j <= maximumLength; j++)
             {
                 for (int k = 0; k < mtfAlphabetSize; k++)
@@ -343,6 +358,7 @@ internal sealed class Bzip2HuffmanStageEncoder
                         code++;
                     }
                 }
+
                 code <<= 1;
             }
         }
@@ -365,6 +381,7 @@ internal sealed class Bzip2HuffmanStageEncoder
 
         // Write the selectors
         Bzip2MoveToFrontTable selectorMTF = new Bzip2MoveToFrontTable();
+
         foreach (byte selector in selectors)
         {
             writer.WriteUnary(@out, selectorMTF.ValueToFront(selector));
@@ -382,10 +399,12 @@ internal sealed class Bzip2HuffmanStageEncoder
                 int codeLength = tableLengths[j];
                 int value = currentLength < codeLength ? 2 : 3;
                 int delta = Math.Abs(codeLength - currentLength);
+
                 while (delta-- > 0)
                 {
                     writer.WriteBits(@out, 2, value);
                 }
+
                 writer.WriteBoolean(@out, false);
                 currentLength = codeLength;
             }
@@ -403,6 +422,7 @@ internal sealed class Bzip2HuffmanStageEncoder
         int mtfLength = this.mtfLength;
 
         int selectorIndex = 0;
+
         for (int mtfIndex = 0; mtfIndex < mtfLength;)
         {
             int groupEnd = Math.Min(mtfIndex + HUFFMAN_GROUP_RUN_LENGTH, mtfLength) - 1;
@@ -423,10 +443,12 @@ internal sealed class Bzip2HuffmanStageEncoder
     {
         // Create optimised selector list and Huffman tables
         GenerateHuffmanOptimisationSeeds();
+
         for (int i = 3; i >= 0; i--)
         {
             OptimiseSelectorsAndHuffmanTables(i == 0);
         }
+
         AssignHuffmanCodeSymbols();
 
         // Write out the tables and the block data encoded with them

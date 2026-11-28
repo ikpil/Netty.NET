@@ -34,6 +34,7 @@ public sealed class ImmediateExecutor : IExecutor
     public void Execute(Action command)
     {
         ArgumentNullException.ThrowIfNull(command);
+
         command();
     }
 }

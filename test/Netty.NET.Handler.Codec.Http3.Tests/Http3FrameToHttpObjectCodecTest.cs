@@ -125,6 +125,7 @@ public class Http3FrameToHttpObjectCodecTest
         Assert.Equal("200", headersFrame.Headers().Status().ToString());
 
         IHttp3DataFrame dataFrame = ch.ReadOutbound<IHttp3DataFrame>();
+
         try
         {
             Assert.Equal("hello world", dataFrame.Content.ToString(Encoding.UTF8));
@@ -171,6 +172,7 @@ public class Http3FrameToHttpObjectCodecTest
         Assert.Equal("200", headersFrame.Headers().Status().ToString());
 
         IHttp3DataFrame dataFrame = ch.ReadOutbound<IHttp3DataFrame>();
+
         try
         {
             Assert.Equal("hello world", dataFrame.Content.ToString(Encoding.UTF8));
@@ -211,6 +213,7 @@ public class Http3FrameToHttpObjectCodecTest
         Assert.True(ch.WriteOutbound(content));
 
         IHttp3DataFrame dataFrame = ch.ReadOutbound<IHttp3DataFrame>();
+
         try
         {
             Assert.Equal("hello world", dataFrame.Content.ToString(Encoding.UTF8));
@@ -233,6 +236,7 @@ public class Http3FrameToHttpObjectCodecTest
 
         Assert.True(ch.IsOutputShutdown);
         IHttp3DataFrame dataFrame = ch.ReadOutbound<IHttp3DataFrame>();
+
         try
         {
             Assert.Equal(0, dataFrame.Content.ReadableBytes);
@@ -255,6 +259,7 @@ public class Http3FrameToHttpObjectCodecTest
         Assert.True(ch.WriteOutbound(end));
 
         IHttp3DataFrame dataFrame = ch.ReadOutbound<IHttp3DataFrame>();
+
         try
         {
             Assert.Equal("hello world", dataFrame.Content.ToString(Encoding.UTF8));
@@ -280,6 +285,7 @@ public class Http3FrameToHttpObjectCodecTest
         Assert.True(ch.WriteOutbound(trailers));
 
         IHttp3DataFrame dataFrame = ch.ReadOutbound<IHttp3DataFrame>();
+
         try
         {
             Assert.Equal("hello world", dataFrame.Content.ToString(Encoding.UTF8));
@@ -417,6 +423,7 @@ public class Http3FrameToHttpObjectCodecTest
         Assert.True(ch.WriteInboundWithFin(new DefaultHttp3HeadersFrame(headers)));
 
         ILastHttpContent trailers = ch.ReadInbound<ILastHttpContent>();
+
         try
         {
             Assert.Equal(0, trailers.Content.ReadableBytes);
@@ -440,6 +447,7 @@ public class Http3FrameToHttpObjectCodecTest
         Assert.True(ch.WriteInbound(new DefaultHttp3DataFrame(hello)));
 
         IHttpContent content = ch.ReadInbound<IHttpContent>();
+
         try
         {
             Assert.Equal("hello world", content.Content.ToString(Encoding.UTF8));
@@ -462,6 +470,7 @@ public class Http3FrameToHttpObjectCodecTest
         Assert.True(ch.WriteInboundWithFin(new DefaultHttp3DataFrame(hello)));
 
         IHttpContent content = ch.ReadInbound<IHttpContent>();
+
         try
         {
             Assert.Equal("hello world", content.Content.ToString(Encoding.UTF8));
@@ -472,6 +481,7 @@ public class Http3FrameToHttpObjectCodecTest
         }
 
         ILastHttpContent last = ch.ReadInbound<ILastHttpContent>();
+
         try
         {
             Assert.False(last.Content.IsReadable());
@@ -520,6 +530,7 @@ public class Http3FrameToHttpObjectCodecTest
         Assert.Equal("/hello/world", headers.Path().ToString());
 
         IHttp3DataFrame dataFrame = ch.ReadOutbound<IHttp3DataFrame>();
+
         try
         {
             Assert.Equal("hello world", dataFrame.Content.ToString(Encoding.UTF8));
@@ -578,6 +589,7 @@ public class Http3FrameToHttpObjectCodecTest
         Assert.Equal("/hello/world", headers.Path().ToString());
 
         IHttp3DataFrame dataFrame = ch.ReadOutbound<IHttp3DataFrame>();
+
         try
         {
             Assert.Equal("hello world", dataFrame.Content.ToString(Encoding.UTF8));
@@ -622,6 +634,7 @@ public class Http3FrameToHttpObjectCodecTest
         Assert.True(ch.WriteOutbound(content));
 
         IHttp3DataFrame dataFrame = ch.ReadOutbound<IHttp3DataFrame>();
+
         try
         {
             Assert.Equal("hello world", dataFrame.Content.ToString(Encoding.UTF8));
@@ -630,6 +643,7 @@ public class Http3FrameToHttpObjectCodecTest
         {
             dataFrame.Release();
         }
+
         Assert.False(ch.IsOutputShutdown);
         Assert.Null(ch.ReadOutbound());
         Assert.False(ch.Finish());
@@ -643,6 +657,7 @@ public class Http3FrameToHttpObjectCodecTest
 
         Assert.True(ch.IsOutputShutdown);
         IHttp3DataFrame dataFrame = ch.ReadOutbound<IHttp3DataFrame>();
+
         try
         {
             Assert.Equal(0, dataFrame.Content.ReadableBytes);
@@ -665,6 +680,7 @@ public class Http3FrameToHttpObjectCodecTest
         Assert.True(ch.WriteOutbound(end));
 
         IHttp3DataFrame dataFrame = ch.ReadOutbound<IHttp3DataFrame>();
+
         try
         {
             Assert.Equal("hello world", dataFrame.Content.ToString(Encoding.UTF8));
@@ -707,6 +723,7 @@ public class Http3FrameToHttpObjectCodecTest
         Assert.True(ch.WriteOutbound(trailers));
 
         IHttp3DataFrame dataFrame = ch.ReadOutbound<IHttp3DataFrame>();
+
         try
         {
             Assert.Equal("hello world", dataFrame.Content.ToString(Encoding.UTF8));
@@ -763,6 +780,7 @@ public class Http3FrameToHttpObjectCodecTest
         Assert.True(ch.IsOutputShutdown);
 
         IHttp3DataFrame dataFrame = ch.ReadOutbound<IHttp3DataFrame>();
+
         try
         {
             Assert.Equal(0, dataFrame.Content.ReadableBytes);
@@ -890,11 +908,14 @@ public class Http3FrameToHttpObjectCodecTest
     {
         ByteBuf content = nonEmptyContent ? Unpooled.WrappedBuffer(new byte[1]) : Unpooled.EmptyBuffer;
         HttpHeaders trailers = new DefaultHttpHeaders();
+
         if (hasTrailers)
         {
             trailers.Add("foo", "bar");
         }
+
         IHttpObject msg;
+
         if (headers)
         {
             if (last)
@@ -910,6 +931,7 @@ public class Http3FrameToHttpObjectCodecTest
                     content.Release();
                     return;
                 }
+
                 msg = new DefaultHttpRequest(
                         HttpVersion.HTTP_1_1, HttpMethod.POST, "/foo", new DefaultHttpHeaders());
             }
@@ -928,6 +950,7 @@ public class Http3FrameToHttpObjectCodecTest
                     content.Release();
                     return;
                 }
+
                 msg = new DefaultHttpContent(content);
             }
         }
@@ -949,12 +972,14 @@ public class Http3FrameToHttpObjectCodecTest
             Assert.Equal("POST", headersFrame.Headers().Method().ToString());
             Assert.Equal("/foo", headersFrame.Headers().Path().ToString());
         }
+
         if (nonEmptyContent)
         {
             IHttp3DataFrame dataFrame = ch.ReadOutbound<IHttp3DataFrame>();
             Assert.Equal(1, dataFrame.Content.ReadableBytes);
             dataFrame.Release();
         }
+
         if (hasTrailers)
         {
             IHttp3HeadersFrame trailersFrame = ch.ReadOutbound<IHttp3HeadersFrame>();
@@ -973,10 +998,12 @@ public class Http3FrameToHttpObjectCodecTest
         }
 
         Assert.False(ch.IsOutputShutdown);
+
         foreach (TaskCompletionSource framePromise in framePromises)
         {
             framePromise.TrySetResult();
         }
+
         if (last)
         {
             Assert.True(ch.IsOutputShutdown);
@@ -985,10 +1012,12 @@ public class Http3FrameToHttpObjectCodecTest
         {
             Assert.False(ch.IsOutputShutdown);
         }
+
         if (!voidPromise)
         {
             Assert.True(fullPromise.IsCompleted);
         }
+
         Assert.False(ch.Finish());
     }
 
@@ -1022,6 +1051,7 @@ public class Http3FrameToHttpObjectCodecTest
         Assert.True(ch.WriteInbound(new DefaultHttp3HeadersFrame(headers)));
 
         IFullHttpResponse response = ch.ReadInbound<IFullHttpResponse>();
+
         try
         {
             Assert.Equal(HttpResponseStatus.CONTINUE, response.Status());
@@ -1086,6 +1116,7 @@ public class Http3FrameToHttpObjectCodecTest
         Assert.True(ch.WriteInboundWithFin(new DefaultHttp3HeadersFrame(headers)));
 
         ILastHttpContent trailers = ch.ReadInbound<ILastHttpContent>();
+
         try
         {
             Assert.Equal(0, trailers.Content.ReadableBytes);
@@ -1109,6 +1140,7 @@ public class Http3FrameToHttpObjectCodecTest
         Assert.True(ch.WriteInbound(new DefaultHttp3DataFrame(hello)));
 
         IHttpContent content = ch.ReadInbound<IHttpContent>();
+
         try
         {
             Assert.Equal("hello world", content.Content.ToString(Encoding.UTF8));
@@ -1131,6 +1163,7 @@ public class Http3FrameToHttpObjectCodecTest
         Assert.True(ch.WriteInboundWithFin(new DefaultHttp3DataFrame(hello)));
 
         IHttpContent content = ch.ReadInbound<IHttpContent>();
+
         try
         {
             Assert.Equal("hello world", content.Content.ToString(Encoding.UTF8));
@@ -1141,6 +1174,7 @@ public class Http3FrameToHttpObjectCodecTest
         }
 
         ILastHttpContent last = ch.ReadInbound<ILastHttpContent>();
+
         try
         {
             Assert.False(last.Content.IsReadable());
@@ -1178,6 +1212,7 @@ public class Http3FrameToHttpObjectCodecTest
     {
         CancellationToken cancellationToken = TestContext.Current.CancellationToken;
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+
         try
         {
             // CLR: the QuicEndpointChannel takes the place of NioDatagramChannel (see the class comment).

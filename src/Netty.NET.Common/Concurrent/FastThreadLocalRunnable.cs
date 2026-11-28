@@ -44,6 +44,7 @@ internal sealed class FastThreadLocalRunnable
     internal static Action Wrap(Action runnable)
     {
         ArgumentNullException.ThrowIfNull(runnable);
+
         return runnable.Target is FastThreadLocalRunnable && runnable.GetInvocationList().Length == 1
             ? runnable : new FastThreadLocalRunnable(runnable).Run;
     }

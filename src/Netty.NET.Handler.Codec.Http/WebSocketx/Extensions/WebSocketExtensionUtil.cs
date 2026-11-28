@@ -63,14 +63,17 @@ public sealed class WebSocketExtensionUtil
         if (rawExtensions.Length > 0)
         {
             IList<WebSocketExtensionData> extensions = new List<WebSocketExtensionData>(rawExtensions.Length);
+
             foreach (string rawExtension in rawExtensions)
             {
                 string[] extensionParameters = Split(rawExtension, PARAMETER_SEPARATOR[0]);
                 string name = HttpUtil.TrimJava(extensionParameters[0]);
                 IDictionary<string, string> parameters;
+
                 if (extensionParameters.Length > 1)
                 {
                     parameters = new LinkedHashMap<string, string>(extensionParameters.Length - 1);
+
                     for (int i = 1; i < extensionParameters.Length; i++)
                     {
                         string parameter = HttpUtil.TrimJava(extensionParameters[i]);
@@ -85,8 +88,10 @@ public sealed class WebSocketExtensionUtil
                 {
                     parameters = ImmutableDictionary<string, string>.Empty;
                 }
+
                 extensions.Add(new WebSocketExtensionData(name, parameters));
             }
+
             return extensions;
         }
         else
@@ -107,6 +112,7 @@ public sealed class WebSocketExtensionUtil
         {
             WebSocketExtensionData matchingExtra = null;
             int i;
+
             for (i = 0; i < extraExtensions.Count; i ++)
             {
                 WebSocketExtensionData extra = extraExtensions[i];
@@ -116,6 +122,7 @@ public sealed class WebSocketExtensionUtil
                     break;
                 }
             }
+
             if (matchingExtra == null)
             {
                 extraExtensions.Add(userDefined);
@@ -125,10 +132,12 @@ public sealed class WebSocketExtensionUtil
                 // merge with higher precedence to user defined parameters
                 IDictionary<string, string> mergedParameters =
                         new LinkedHashMap<string, string>(matchingExtra.Parameters());
+
                 foreach (KeyValuePair<string, string> parameter in userDefined.Parameters())
                 {
                     mergedParameters[parameter.Key] = parameter.Value;
                 }
+
                 extraExtensions[i] = new WebSocketExtensionData(matchingExtra.Name(), mergedParameters);
             }
         }
@@ -138,16 +147,19 @@ public sealed class WebSocketExtensionUtil
         foreach (WebSocketExtensionData data in extraExtensions)
         {
             sb.Append(data.Name());
+
             foreach (KeyValuePair<string, string> parameter in data.Parameters())
             {
                 sb.Append(PARAMETER_SEPARATOR);
                 sb.Append(parameter.Key);
+
                 if (parameter.Value != null)
                 {
                     sb.Append(PARAMETER_EQUAL);
                     sb.Append(parameter.Value);
                 }
             }
+
             sb.Append(EXTENSION_SEPARATOR);
         }
 
@@ -172,11 +184,14 @@ public sealed class WebSocketExtensionUtil
         {
             return parts;
         }
+
         int length = parts.Length;
+
         while (length > 0 && parts[length - 1].Length == 0)
         {
             length--;
         }
+
         return length == parts.Length ? parts : parts.AsSpan(0, length).ToArray();
     }
 

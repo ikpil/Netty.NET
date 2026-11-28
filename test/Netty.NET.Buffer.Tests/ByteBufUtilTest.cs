@@ -276,6 +276,7 @@ public class ByteBufUtilTest
     {
         using var owner = new Provider(bufferType);
         CompositeByteBuf buffer = owner.Composite();
+
         try
         {
             byte[] bytes = NettyUtf8.GetBytes("1234");
@@ -305,10 +306,12 @@ public class ByteBufUtilTest
                         (byte) 0xE2, (byte) 0x82, (byte) 0xAC,
                         (byte) 0xF0, (byte) 0x90, (byte) 0x8D, (byte) 0x88] // multiple characters
         ];
+
         foreach (byte[] bytes in validUtf8Bytes)
         {
             AssertIsText(owner, bytes, true, NettyUtf8);
         }
+
         byte[][] invalidUtf8Bytes = [
                 [(byte) 0x80],
                 [(byte) 0xF0, (byte) 0x82, (byte) 0x82, (byte) 0xAC], // Overlong encodings
@@ -322,6 +325,7 @@ public class ByteBufUtilTest
                 [(byte) 0xE0, (byte) 0x80, (byte) 0x80],              // out of lower bound
                 [(byte) 0xED, (byte) 0xAF, (byte) 0x80]               // out of upper bound
         ];
+
         foreach (byte[] bytes in invalidUtf8Bytes)
         {
             AssertIsText(owner, bytes, false, NettyUtf8);
@@ -358,6 +362,7 @@ public class ByteBufUtilTest
     {
         using var owner = new Provider(bufferType);
         ByteBuf buffer = owner.Buffer(4);
+
         try
         {
             buffer.WriteBytes(new byte[4]);
@@ -366,10 +371,12 @@ public class ByteBufUtilTest
                     [0, 4],
                     [1, 3],
             ];
+
             foreach (int[] pair in validIndexLengthPairs)
             {
                 Assert.True(ByteBufUtil.IsText(buffer, pair[0], pair[1], Encoding.ASCII));
             }
+
             int[][] invalidIndexLengthPairs = [
                     [4, 1],
                     [-1, 2],
@@ -378,6 +385,7 @@ public class ByteBufUtilTest
                     [5, 0],
                     [1, 5],
             ];
+
             foreach (int[] pair in invalidIndexLengthPairs)
             {
                 Assert.Throws<ArgumentOutOfRangeException>(() =>
@@ -433,6 +441,7 @@ public class ByteBufUtilTest
     {
         using var owner = new Provider(bufferType);
         ByteBuf buf = owner.Buffer(4);
+
         try
         {
             CheckGetBytes(buf);
@@ -450,6 +459,7 @@ public class ByteBufUtilTest
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         timeout.CancelAfter(TimeSpan.FromSeconds(30));
         int counter = 60000, completed = 0;
+
         try
         {
             Task[] workers = Enumerable.Range(0, 10).Select(_ => Task.Run(() =>
@@ -457,6 +467,7 @@ public class ByteBufUtilTest
                 while (Interlocked.Decrement(ref counter) > 0)
                 {
                     timeout.Token.ThrowIfCancellationRequested();
+
                     Assert.True(ByteBufUtil.IsText(b, Encoding.Latin1));
                     Interlocked.Increment(ref completed);
                 }
@@ -477,6 +488,7 @@ public class ByteBufUtilTest
         using var owner = new Provider(BufferType.HeapUnpooled);
 
         ByteBuf buf = owner.Buffer(5);
+
         try
         {
             buf.SetByte(0, 0x05);
@@ -502,6 +514,7 @@ public class ByteBufUtilTest
         using var owner = new Provider(BufferType.HeapUnpooled);
 
         ByteBuf buf = owner.Buffer(5);
+
         try
         {
             buf.SetByte(4, 0x05);
@@ -615,6 +628,7 @@ public class ByteBufUtilTest
         int length = b1.Length - iB1;
         Array.Copy(b1, iB1, b2, iB2, length);
         ByteBuf first = Unpooled.WrappedBuffer(b1), second = Unpooled.WrappedBuffer(b2);
+
         try
         {
             Assert.True(ByteBufUtil.Equals(first, iB1, second, iB2, length));
@@ -643,6 +657,7 @@ public class ByteBufUtilTest
         int diffIndex = Random.Shared.Next(iB1, iB1 + length);
         b1[diffIndex] = unchecked((byte)(b1[diffIndex] + 1));
         ByteBuf first = Unpooled.WrappedBuffer(b1), second = Unpooled.WrappedBuffer(b2);
+
         try
         {
             Assert.False(ByteBufUtil.Equals(first, iB1, second, iB2, length));
@@ -667,6 +682,7 @@ public class ByteBufUtilTest
         int length = b1.Length - iB1;
         Array.Copy(b1, iB1, b2, iB2, length - 1);
         ByteBuf first = Unpooled.WrappedBuffer(b1), second = Unpooled.WrappedBuffer(b2);
+
         try
         {
             Assert.False(ByteBufUtil.Equals(first, iB1, second, iB2,
@@ -692,6 +708,7 @@ public class ByteBufUtilTest
         int length = b1.Length - iB1;
         Array.Copy(b1, iB1, b2, iB2, length - 1);
         ByteBuf first = Unpooled.WrappedBuffer(b1), second = Unpooled.WrappedBuffer(b2);
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() =>
@@ -750,6 +767,7 @@ public class ByteBufUtilTest
     private static void CheckUtf8Bytes(Provider owner, string charSequence)
     {
         ByteBuf buf = owner.Buffer(ByteBufUtil.Utf8MaxBytes(charSequence));
+
         try
         {
             int writtenBytes = ByteBufUtil.WriteUtf8(buf, charSequence);
@@ -765,6 +783,7 @@ public class ByteBufUtilTest
     private static void AssertIsText(Provider owner, byte[] bytes, bool expected, Encoding charset)
     {
         ByteBuf buffer = owner.Buffer(bytes.Length);
+
         try
         {
             buffer.WriteBytes(bytes);
@@ -809,6 +828,7 @@ public class ByteBufUtilTest
         foreach (int[] range in new[] { new[] { -1, 5 }, new[] { 5, 30 }, new[] { 10, 5 } })
         {
             ByteBuf buf = owner.Buffer(16);
+
             try
             {
                 Assert.Throws<ArgumentOutOfRangeException>(() => method(buf, "Some UTF-8 like äÄ∏ŒŒ", range[0], range[1]));
@@ -865,11 +885,13 @@ public class ByteBufUtilTest
         // CLR seeded RNG values differ from Java; keep all 10,000 trials, the small alphabet,
         // original lengths/prefixes and the independent scalar oracle for every generated input.
         Random random = new Random(needleReaderIndex);
+
         for (int i = 0; i < 10000; i++)
         {
             byte[] needleBytes = new byte[2 + random.Next(5)];
             byte[] haystackBytes = new byte[random.Next(16)];
             byte[] prefix = new byte[needleReaderIndex];
+
             foreach (byte[] bytes in new[] { needleBytes, haystackBytes, prefix })
             {
                 for (int j = 0; j < bytes.Length; j++)
@@ -877,6 +899,7 @@ public class ByteBufUtilTest
                     bytes[j] = (byte)random.Next(3);
                 }
             }
+
             ByteBuf needle = Unpooled.Buffer().WriteBytes(prefix).WriteBytes(needleBytes);
             needle.ReaderIndex = prefix.Length;
             ByteBuf haystack = Unpooled.WrappedBuffer(haystackBytes);
@@ -1278,6 +1301,7 @@ public class ByteBufUtilTest
         byte[] b = new byte[len];
         Random.Shared.NextBytes(b);
         string hexDump = ByteBufUtil.HexDump(b);
+
         for (int i = 0; i <= len; i++)
         {
             // going over sub-strings of various lengths including empty byte[].
@@ -1292,15 +1316,18 @@ public class ByteBufUtilTest
         for (int i = 0; i <= haystack.Length - needle.Length; i++)
         {
             int j = 0;
+
             while (j < needle.Length && haystack[i + j] == needle[j])
             {
                 j++;
             }
+
             if (j == needle.Length)
             {
                 return i;
             }
         }
+
         return -1;
     }
 

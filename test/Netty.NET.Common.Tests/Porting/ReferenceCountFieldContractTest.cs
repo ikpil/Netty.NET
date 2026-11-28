@@ -96,6 +96,7 @@ public class ReferenceCountFieldContractTest
             () => ReferenceCountUpdater.Retain(ref fields.First, int.MaxValue));
         Assert.Equal($"refCnt: {count}, increment: {int.MaxValue}", overflow.Message);
         Assert.Equal(count, ReferenceCountUpdater.GetCount(ref fields.First));
+
         if (count < int.MaxValue)
         {
             var excessive = Assert.Throws<IllegalReferenceCountException>(
@@ -103,6 +104,7 @@ public class ReferenceCountFieldContractTest
             Assert.Equal($"refCnt: {count}, decrement: {int.MaxValue}", excessive.Message);
             Assert.Equal(count, ReferenceCountUpdater.GetCount(ref fields.First));
         }
+
         Assert.True(ReferenceCountUpdater.Release(ref fields.First, count));
         Assert.Equal(0, ReferenceCountUpdater.GetCount(ref fields.First));
         Assert.Throws<IllegalReferenceCountException>(() => ReferenceCountUpdater.Retain(ref fields.First));
@@ -120,10 +122,12 @@ public class ReferenceCountFieldContractTest
         borrowed.Span[0] = 0xa5;
         Assert.Equal(0xa5, owner.Memory.Span[3]);
         Assert.Equal(16, allocator.ReservedBytes);
+
         if (ReferenceCountUpdater.Release(ref fields.First))
         {
             owner.Dispose();
         }
+
         Assert.Equal(0, allocator.ReservedBytes);
         Assert.Throws<ObjectDisposedException>(() => _ = borrowed.Span.Length);
         Assert.Throws<IllegalReferenceCountException>(() => ReferenceCountUpdater.Retain(ref fields.First));
@@ -152,6 +156,7 @@ public class ReferenceCountFieldContractTest
             Task<bool> retaining = Task.Run(() =>
             {
                 start.Wait();
+
                 try
                 {
                     counted.Retain();
@@ -165,6 +170,7 @@ public class ReferenceCountFieldContractTest
             Task<bool> releasing = Task.Run(() =>
             {
                 start.Wait();
+
                 return counted.Release();
             });
             start.Set();
@@ -173,10 +179,12 @@ public class ReferenceCountFieldContractTest
             bool released = await releasing;
             Assert.Equal(!retained, released);
             Assert.Equal(retained ? 1 : 0, counted.RefCnt);
+
             if (retained)
             {
                 Assert.True(counted.Release());
             }
+
             Assert.Equal(0, counted.RefCnt);
             Assert.Equal(1, counted.Deallocations);
         }
@@ -209,6 +217,7 @@ public class ReferenceCountFieldContractTest
             Task<bool>[] attempts = Enumerable.Range(0, 2).Select(_ => Task.Run(() =>
             {
                 start.Wait();
+
                 try
                 {
                     ReferenceCountUpdater.Retain(ref fields.First);

@@ -82,6 +82,7 @@ internal abstract class DeflateDecoder : WebSocketExtensionDecoder
         ByteBuf decompressedContent = DecompressContent(ctx, msg);
 
         WebSocketFrame outMsg;
+
         if (msg is TextWebSocketFrame)
         {
             outMsg = new TextWebSocketFrame(msg.IsFinalFragment(), NewRsv(msg), decompressedContent);
@@ -122,6 +123,7 @@ internal abstract class DeflateDecoder : WebSocketExtensionDecoder
             {
                 throw new CodecException("unexpected initial frame type: " + msg.GetType().FullName);
             }
+
             decoder = new EmbeddedChannel.Builder()
                     .Handlers(ZlibCodecFactory.NewZlibDecoder(ZlibWrapper.NONE, maxAllocation))
                     .Build();
@@ -131,12 +133,14 @@ internal abstract class DeflateDecoder : WebSocketExtensionDecoder
         bool emptyDeflateBlock = EMPTY_DEFLATE_BLOCK.Equals(msg.Content);
 
         decoder.WriteInbound(msg.Content.Retain());
+
         if (AppendFrameTail(msg))
         {
             decoder.WriteInbound(FRAME_TAIL.Duplicate());
         }
 
         CompositeByteBuf compositeDecompressedContent = ctx.Alloc().CompositeBuffer();
+
         for (;;)
         {
             ByteBuf partUncompressedContent = decoder.ReadInbound<ByteBuf>();
@@ -144,13 +148,16 @@ internal abstract class DeflateDecoder : WebSocketExtensionDecoder
             {
                 break;
             }
+
             if (!partUncompressedContent.IsReadable())
             {
                 partUncompressedContent.Release();
                 continue;
             }
+
             compositeDecompressedContent.AddComponent(partUncompressedContent, true);
         }
+
         // Correctly handle empty frames
         // See https://github.com/netty/netty/issues/4348
         if (!emptyDeflateBlock && readable && compositeDecompressedContent.NumComponents <= 0)

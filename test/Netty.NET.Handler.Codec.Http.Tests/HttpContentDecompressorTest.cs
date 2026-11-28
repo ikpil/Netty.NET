@@ -177,11 +177,14 @@ public class HttpContentDecompressorTest
         List<string> encodings = new List<string>();
         encodings.Add("gzip");
         encodings.Add("deflate");
+
         if (Brotli.IsAvailable())
         {
             encodings.Add("br");
         }
+
         encodings.Add("snappy");
+
         return encodings.Select(e => new object[] { e });
     }
 
@@ -208,12 +211,14 @@ public class HttpContentDecompressorTest
             buffer.WriteZero(chunkSize);
             compressionChannel.WriteOutbound(new DefaultHttpContent(buffer));
         }
+
         compressionChannel.WriteOutbound(ILastHttpContent.EMPTY_LAST_CONTENT);
         compressionChannel.Finish();
         compressionChannel.ReleaseInbound();
 
         ByteBuf compressed = compressionChannel.Alloc().Buffer();
         IHttpMessage message = null;
+
         while (true)
         {
             IHttpObject obj = compressionChannel.ReadOutbound<IHttpObject>();
@@ -221,10 +226,12 @@ public class HttpContentDecompressorTest
             {
                 break;
             }
+
             if (obj is IHttpMessage)
             {
                 message = (IHttpMessage) obj;
             }
+
             if (obj is IHttpContent)
             {
                 IHttpContent content = (IHttpContent) obj;
@@ -254,10 +261,12 @@ public class HttpContentDecompressorTest
         // definitely exceeds BrotliDecoder's 64KB default output cap and any
         // small maxAllocation we might set below.
         byte[] payload = new byte[128 * 1024];
+
         for (int i = 0; i < payload.Length; i++)
         {
             payload[i] = (byte) (i % 251);
         }
+
         MemoryStream compressedOut = new MemoryStream();
         BrotliStream brotliOs = new BrotliStream(compressedOut, CompressionMode.Compress);
         brotliOs.Write(payload);
@@ -268,6 +277,7 @@ public class HttpContentDecompressorTest
         // BrotliDecoder.inputBufferSize = 64, effectively breaking the decoder
         // for realistic payloads; after the fix it configures outputBufferSize.
         EmbeddedChannel channel = new EmbeddedChannel(new HttpContentDecompressor(64));
+
         try
         {
             IHttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
@@ -281,6 +291,7 @@ public class HttpContentDecompressorTest
             byte[] decompressed = new byte[0];
             int contentChunks = 0;
             object msg;
+
             while ((msg = channel.ReadInbound()) != null)
             {
                 try

@@ -145,10 +145,12 @@ internal sealed class EmbeddedQuicStreamChannel : EmbeddedChannel, IQuicStreamCh
         {
             inputShutdown = i;
         }
+
         if (outputShutdown == null)
         {
             outputShutdown = i;
         }
+
         return Task.CompletedTask;
     }
 
@@ -158,6 +160,7 @@ internal sealed class EmbeddedQuicStreamChannel : EmbeddedChannel, IQuicStreamCh
         {
             inputShutdown = i;
         }
+
         return Task.CompletedTask;
     }
 
@@ -167,6 +170,7 @@ internal sealed class EmbeddedQuicStreamChannel : EmbeddedChannel, IQuicStreamCh
         {
             outputShutdown = i;
         }
+
         return Task.CompletedTask;
     }
 
@@ -197,12 +201,14 @@ internal sealed class EmbeddedQuicStreamChannel : EmbeddedChannel, IQuicStreamCh
     {
         bool fin = msg is IQuicStreamFrame && ((IQuicStreamFrame) msg).HasFin();
         Task promise = base.WriteTransportAsync(msg, cancellationToken);
+
         if (fin)
         {
             // Mimic the API.
             _ = promise.ContinueWith(f => outputShutdown = 0, CancellationToken.None,
                     TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
+
         return promise;
     }
 

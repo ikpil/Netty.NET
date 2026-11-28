@@ -42,6 +42,7 @@ internal sealed class SequentialDnsServerAddressStream : IDnsServerAddressStream
     {
         int i = this.i;
         EndPoint next = addresses[i];
+
         if (++ i < addresses.Count)
         {
             this.i = i;
@@ -50,6 +51,7 @@ internal sealed class SequentialDnsServerAddressStream : IDnsServerAddressStream
         {
             this.i = 0;
         }
+
         return next;
     }
 
@@ -78,6 +80,7 @@ internal sealed class SequentialDnsServerAddressStream : IDnsServerAddressStream
         StringBuilder buf = new StringBuilder(type.Length + 2 + addresses.Count * 16);
         buf.Append(type).Append("(index: ").Append(index.ToString(CultureInfo.InvariantCulture));
         buf.Append(", addrs: (");
+
         foreach (EndPoint a in addresses)
         {
             buf.Append(a).Append(", ");

@@ -251,6 +251,7 @@ public class PcapWriteHandlerTest
         string payloadString = new string('X', 65507 + 1);
         DatagramPacket datagram =
                 new DatagramPacket(Unpooled.WrappedBuffer(Encoding.Default.GetBytes(payloadString)), serverAddr);
+
         try
         {
             // We fake a client
@@ -362,6 +363,7 @@ public class PcapWriteHandlerTest
         IPEndPoint clientAddr = new IPEndPoint(IPAddress.Parse("2.2.2.2"), 3456);
         DatagramPacket outbound = new DatagramPacket(payload.RetainedDuplicate(), serverAddr);
         DatagramPacket inbound = new DatagramPacket(payload.RetainedDuplicate(), clientAddr, serverAddr);
+
         try
         {
             // We fake a client
@@ -404,6 +406,7 @@ public class PcapWriteHandlerTest
         IPEndPoint clientAddr = new IPEndPoint(IPAddress.Parse("2.2.2.2"), 3456);
         DatagramPacket outbound = new DatagramPacket(payload.RetainedDuplicate(), serverAddr);
         DatagramPacket inbound = new DatagramPacket(payload.RetainedDuplicate(), clientAddr, serverAddr);
+
         try
         {
             // We fake a client
@@ -439,6 +442,7 @@ public class PcapWriteHandlerTest
     public void UdpExceptionCaught()
     {
         ByteBuf pcapBuffer = Unpooled.Buffer();
+
         try
         {
             Exception exception = new Exception();
@@ -492,6 +496,7 @@ public class PcapWriteHandlerTest
     {
         ByteBuf byteBuf = Unpooled.Buffer();
         ByteBuf payload = Unpooled.WrappedBuffer(Encoding.Default.GetBytes("Meow"));
+
         try
         {
             IEventLoopGroup group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
@@ -686,6 +691,7 @@ public class PcapWriteHandlerTest
         ByteBuf pcapBuffer = Unpooled.Buffer();
         string payloadString = new string('X', 65495 + 1);
         ByteBuf payload = Unpooled.WrappedBuffer(Encoding.Default.GetBytes(payloadString));
+
         try
         {
             IPEndPoint serverAddr = new IPEndPoint(IPAddress.Parse("1.1.1.1"), 1234);
@@ -894,6 +900,7 @@ public class PcapWriteHandlerTest
 
             // Let's send 4 GiB inbound, ...
             long msgCount = (fourGB / chunkSize) + 2;
+
             for (int i = 0; i < msgCount; i++)
             {
                 //Only store the last data/ack
@@ -901,6 +908,7 @@ public class PcapWriteHandlerTest
                 {
                     outputStream.Record();
                 }
+
                 embeddedChannel.WriteInbound(payload.RetainedDuplicate());
             }
 
@@ -920,6 +928,7 @@ public class PcapWriteHandlerTest
                 {
                     outputStream.Record();
                 }
+
                 embeddedChannel.WriteOutbound(payload.RetainedDuplicate());
             }
 
@@ -943,6 +952,7 @@ public class PcapWriteHandlerTest
     public void WriterStateTest()
     {
         ByteBuf payload = Unpooled.WrappedBuffer(Encoding.Default.GetBytes("Meow"));
+
         try
         {
             IPEndPoint serverAddr = new IPEndPoint(IPAddress.Parse("1.1.1.1"), 1234);
@@ -1247,6 +1257,7 @@ public class PcapWriteHandlerTest
         ipv4Packet.ReadInt();
         // Destination IPv4 Address
         Assert.Equal(NetUtil.Ipv4AddressToInt(destinationAddress.Address), ipv4Packet.ReadInt());
+
         return ipv4Packet.ReadSlice(20 + expectedPayloadLength);
     }
 
@@ -1306,10 +1317,12 @@ public class PcapWriteHandlerTest
         // Release all ByteBuf
         Assert.True(dstMac.Release());
         Assert.True(srcMac.Release());
+
         if (expectedPayloadLength > 0)
         {
             Assert.True(payload.Release());
         }
+
         Assert.True(ethernetPacket.Release());
         Assert.True(ipv4Packet.Release());
         Assert.True(udpPacket.Release());
@@ -1379,6 +1392,7 @@ public class PcapWriteHandlerTest
             ByteBuf buf = (ByteBuf) msg;
             read += buf.ReadableBytes;
             _ = ctx.WriteAndFlushAsync(buf);
+
             if (read == payload.ReadableBytes)
             {
                 serverLatch.TrySetResult();
@@ -1428,6 +1442,7 @@ public class PcapWriteHandlerTest
             ByteBuf buf = (ByteBuf) msg;
             read += buf.ReadableBytes;
             buf.Release();
+
             if (read == payload.ReadableBytes)
             {
                 clientLatch.TrySetResult();
@@ -1476,6 +1491,7 @@ public class PcapWriteHandlerTest
         public override void WriteByte(byte b)
         {
             bytesWritten++;
+
             if (@out != null)
             {
                 @out.WriteByte(b);
@@ -1485,6 +1501,7 @@ public class PcapWriteHandlerTest
         public override void Write(byte[] b, int off, int len)
         {
             bytesWritten += len;
+
             if (@out != null)
             {
                 @out.Write(b, off, len);
@@ -1628,6 +1645,7 @@ public class PcapWriteHandlerTest
                 // ick! config() is called by the super constructor, so we need to do this.
                 config = base.NewConfig();
             }
+
             return config;
         }
 

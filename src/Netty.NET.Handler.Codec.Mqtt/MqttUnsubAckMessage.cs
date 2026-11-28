@@ -51,6 +51,7 @@ public sealed class MqttUnsubAckMessage : MqttMessage
         {
             return (MqttMessageIdAndPropertiesVariableHeader) variableHeader;
         }
+
         return new MqttMessageIdAndPropertiesVariableHeader(variableHeader.MessageId(), MqttProperties.NO_PROPERTIES);
     }
 

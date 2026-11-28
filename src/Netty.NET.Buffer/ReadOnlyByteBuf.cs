@@ -69,12 +69,14 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
     internal override byte ReadByteCore(int index)
     {
         CheckIndex(index, 1);
+
         return _parent.ReadByteCore(index);
     }
 
     internal override ulong ReadWord(int index, int width, bool littleEndian)
     {
         CheckIndex(index, width);
+
         return _parent.ReadWord(index, width, littleEndian);
     }
 
@@ -96,6 +98,7 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
     internal override ReadOnlySequence<byte> BorrowCopySequence(int index, int length)
     {
         CheckIndex(index, length);
+
         return _parent.BorrowCopySequence(index, length);
     }
 
@@ -139,6 +142,7 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
     {
         ArgumentNullException.ThrowIfNull(destination);
         CheckIndex(index, length);
+
         _parent.GetBytes(index, destination, length);
         return this;
     }
@@ -148,6 +152,7 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
     {
         ArgumentNullException.ThrowIfNull(destination);
         CheckIndex(index, length);
+
         await _parent.GetBytesAsync(index, destination, length, cancellationToken).ConfigureAwait(false);
     }
 
@@ -157,6 +162,7 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
     {
         ArgumentNullException.ThrowIfNull(destination);
         CheckIndex(index, length);
+
         return _parent.GetBytes(index, destination, length);
     }
 
@@ -166,6 +172,7 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
         ArgumentNullException.ThrowIfNull(destination);
         CheckIndex(index, length);
         cancellationToken.ThrowIfCancellationRequested();
+
         return await _parent.GetBytesAsync(index, destination, length, cancellationToken).ConfigureAwait(false);
     }
 
@@ -173,6 +180,7 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
     {
         CheckIndex(index, length);
         CheckFileTransfer(destination, position, length);
+
         return _parent.GetBytes(index, destination, position, length);
     }
 
@@ -182,6 +190,7 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
         CheckIndex(index, length);
         CheckFileTransfer(destination, position, length);
         cancellationToken.ThrowIfCancellationRequested();
+
         return await _parent.GetBytesAsync(index, destination, position, length, cancellationToken).ConfigureAwait(false);
     }
 
@@ -190,6 +199,7 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
     public override ByteBuf GetBytes(int index, Span<byte> destination)
     {
         CheckIndex(index, destination.Length);
+
         _parent.GetBytes(index, destination);
         return this;
     }
@@ -198,6 +208,7 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
     {
         ArgumentNullException.ThrowIfNull(destination);
         CheckIndex(index, length);
+
         _parent.GetBytes(index, destination, destinationIndex, length);
         return this;
     }
@@ -207,54 +218,63 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
     public override byte GetByte(int index)
     {
         CheckIndex(index, 1);
+
         return _parent.GetByte(index);
     }
 
     public override short GetShort(int index)
     {
         CheckIndex(index, 2);
+
         return _parent.GetShort(index);
     }
 
     public override short GetShortLE(int index)
     {
         CheckIndex(index, 2);
+
         return _parent.GetShortLE(index);
     }
 
     public override int GetUnsignedMedium(int index)
     {
         CheckIndex(index, 3);
+
         return _parent.GetUnsignedMedium(index);
     }
 
     public override int GetUnsignedMediumLE(int index)
     {
         CheckIndex(index, 3);
+
         return _parent.GetUnsignedMediumLE(index);
     }
 
     public override int GetInt(int index)
     {
         CheckIndex(index, 4);
+
         return _parent.GetInt(index);
     }
 
     public override int GetIntLE(int index)
     {
         CheckIndex(index, 4);
+
         return _parent.GetIntLE(index);
     }
 
     public override long GetLong(int index)
     {
         CheckIndex(index, 8);
+
         return _parent.GetLong(index);
     }
 
     public override long GetLongLE(int index)
     {
         CheckIndex(index, 8);
+
         return _parent.GetLongLE(index);
     }
     public override int RefCnt => _parent.RefCnt;
@@ -294,24 +314,28 @@ internal sealed class ReadOnlyByteBuf : ByteBuf
     public override int ForEachByte(int index, int length, Func<byte, bool> processor)
     {
         EnsureAccessible();
+
         return _parent.ForEachByte(index, length, processor);
     }
 
     public override int ForEachByteDesc(int index, int length, Func<byte, bool> processor)
     {
         EnsureAccessible();
+
         return _parent.ForEachByteDesc(index, length, processor);
     }
 
     public override ByteBuf Slice(int index, int length)
     {
         CheckIndex(index, length);
+
         return new ReadOnlyByteBuf(_parent.Slice(index, length));
     }
 
     public override ByteBuf Duplicate()
     {
         EnsureAccessible();
+
         return new ReadOnlyByteBuf(this);
     }
 }

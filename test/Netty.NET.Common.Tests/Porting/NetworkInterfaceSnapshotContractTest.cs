@@ -117,6 +117,7 @@ public class NetworkInterfaceSnapshotContractTest
         Assert.True(list.IsReadOnly);
         Assert.Throws<NotSupportedException>(() => list.Add(new NamedInterface("extra")));
         Assert.Throws<NotSupportedException>(() => list.Clear());
+
         if (list.Count != 0)
             Assert.Throws<NotSupportedException>(() => list[0] = new NamedInterface("replacement"));
     }

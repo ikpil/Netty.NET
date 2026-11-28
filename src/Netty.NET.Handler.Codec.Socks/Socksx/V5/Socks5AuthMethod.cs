@@ -122,6 +122,7 @@ public class Socks5AuthMethod : IComparable<Socks5AuthMethod>
         {
             this.text = text = name + '(' + (byteValue & 0xFF).ToString(CultureInfo.InvariantCulture) + ')';
         }
+
         return text;
     }
 }

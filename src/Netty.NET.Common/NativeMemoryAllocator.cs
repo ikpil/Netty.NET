@@ -44,6 +44,7 @@ public sealed class NativeMemoryAllocator
     public NativeMemoryAllocator(long maximumBytes = long.MaxValue)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(maximumBytes);
+
         MaximumBytes = maximumBytes;
     }
 
@@ -54,8 +55,10 @@ public sealed class NativeMemoryAllocator
     public NativeMemoryOwner Allocate(int length, bool clear = false)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(length);
+
         long bytes = Math.Max(1, length);
         Reserve(bytes);
+
         try
         {
             var owner = new NativeMemoryOwner(this, length, clear);
@@ -88,7 +91,9 @@ public sealed class NativeMemoryAllocator
             {
                 Reserve(delta);
             }
+
             NativeMemoryOwner replacement;
+
             try
             {
                 replacement = new NativeMemoryOwner(this, length, clear: false);
@@ -100,14 +105,18 @@ public sealed class NativeMemoryAllocator
                 {
                     Release(delta);
                 }
+
                 throw;
             }
+
             owner.TransferReservation();
             replacement.TakeReservation();
+
             if (delta < 0)
             {
                 Release(-delta);
             }
+
             return replacement;
         }
     }

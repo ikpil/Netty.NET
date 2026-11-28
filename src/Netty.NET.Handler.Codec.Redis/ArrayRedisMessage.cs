@@ -88,6 +88,7 @@ public class ArrayRedisMessage : AbstractReferenceCounted, IRedisMessage
         {
             ReferenceCountUtil.Touch(msg);
         }
+
         return this;
     }
 

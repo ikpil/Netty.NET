@@ -335,18 +335,22 @@ public class HttpConversionUtilTest
             string authority, string[] hosts, bool hostAddedFirst)
     {
         IHttp3Headers headers = new DefaultHttp3Headers();
+
         if (!hostAddedFirst && authority != null)
         {
             headers.Authority(Cs(authority));
         }
+
         foreach (string host in hosts)
         {
             headers.Add(HOST, Cs(host));
         }
+
         if (hostAddedFirst && authority != null)
         {
             headers.Authority(Cs(authority));
         }
+
         return headers;
     }
 

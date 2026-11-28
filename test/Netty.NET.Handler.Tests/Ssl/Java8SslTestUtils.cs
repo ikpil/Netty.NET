@@ -50,9 +50,11 @@ public static class Java8SslTestUtils
     {
 
         X509Certificate2[] certCollection = new X509Certificate2[resourceNames.Length];
+
         for (int i = 0; i < resourceNames.Length; i++)
         {
             string resourceName = resourceNames[i];
+
             using (System.IO.Stream @is = GetResourceAsStream(resourceName))
             {
                 Assert.NotNull(@is, "Cannot find " + resourceName);
@@ -61,6 +63,7 @@ public static class Java8SslTestUtils
                 certCollection[i] = X509CertificateLoader.LoadCertificate(bytes.ToArray());
             }
         }
+
         return certCollection;
     }
 

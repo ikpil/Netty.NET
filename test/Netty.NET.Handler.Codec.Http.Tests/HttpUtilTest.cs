@@ -382,11 +382,13 @@ public class HttpUtilTest
     {
         IList<string> cases = new List<string>();
         string c = "continue";
+
         for (int i = 0; i < Math.Pow(2, c.Length); i++)
         {
             StringBuilder sb = new StringBuilder(c.Length);
             int j = i;
             int k = 0;
+
             while (j > 0)
             {
                 if ((j & 1) == 1)
@@ -397,14 +399,18 @@ public class HttpUtilTest
                 {
                     sb.Append(c[k++]);
                 }
+
                 j >>= 1;
             }
+
             for (; k < c.Length; k++)
             {
                 sb.Append(c[k]);
             }
+
             cases.Add(sb.ToString());
         }
+
         return cases;
     }
 
@@ -416,6 +422,7 @@ public class HttpUtilTest
         {
             Run100ContinueTest(HttpVersion.HTTP_1_1, "100-" + continueCase, true);
         }
+
         Run100ContinueTest(HttpVersion.HTTP_1_1, null, false);
         Run100ContinueTest(HttpVersion.HTTP_1_1, "chocolate=yummy", false);
         Run100ContinueTest(HttpVersion.HTTP_1_0, "100-continue", false);
@@ -427,10 +434,12 @@ public class HttpUtilTest
     private static void Run100ContinueTest(HttpVersion version, string expectations, bool expect)
     {
         IHttpMessage message = new DefaultFullHttpRequest(version, HttpMethod.GET, "/");
+
         if (expectations != null)
         {
             message.Headers().Set(HttpHeaderNames.EXPECT, expectations);
         }
+
         Run100ContinueTest(message, expect);
     }
 
@@ -448,6 +457,7 @@ public class HttpUtilTest
         {
             RunUnsupportedExpectationTest(HttpVersion.HTTP_1_1, "100-" + continueCase, false);
         }
+
         RunUnsupportedExpectationTest(HttpVersion.HTTP_1_1, null, false);
         RunUnsupportedExpectationTest(HttpVersion.HTTP_1_1, "chocolate=yummy", true);
         RunUnsupportedExpectationTest(HttpVersion.HTTP_1_0, "100-continue", false);
@@ -460,10 +470,12 @@ public class HttpUtilTest
                                                       string expectations, bool expect)
     {
         IHttpMessage message = new DefaultFullHttpRequest(version, HttpMethod.GET, "/");
+
         if (expectations != null)
         {
             message.Headers().Set("Expect", expectations);
         }
+
         RunUnsupportedExpectationTest(message, expect);
     }
 
@@ -576,14 +588,17 @@ public class HttpUtilTest
     public static IEnumerable<object[]> ValidTokenChars()
     {
         List<char> list = new List<char>();
+
         for (char c = '0'; c <= '9'; c++)
         {
             list.Add(c);
         }
+
         for (char c = 'a'; c <= 'z'; c++)
         {
             list.Add(c);
         }
+
         for (char c = 'A'; c <= 'Z'; c++)
         {
             list.Add(c);

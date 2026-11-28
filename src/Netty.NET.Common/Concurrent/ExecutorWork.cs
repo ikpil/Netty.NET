@@ -24,6 +24,7 @@ internal sealed class ExecutorWork
     internal static Action Wrap(INativeSubmission work)
     {
         ArgumentNullException.ThrowIfNull(work);
+
         return new ExecutorWork(work)._entry;
     }
 
@@ -36,6 +37,7 @@ internal sealed class ExecutorWork
         {
             return entry._work;
         }
+
         return null;
     }
 

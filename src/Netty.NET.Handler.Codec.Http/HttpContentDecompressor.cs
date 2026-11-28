@@ -80,6 +80,7 @@ public class HttpContentDecompressor : HttpContentDecoder
                     .Handlers(ZlibCodecFactory.NewZlibDecoder(ZlibWrapper.GZIP, maxAllocation))
                     .Build();
         }
+
         if (DEFLATE.ContentEqualsIgnoreCase(encoding) ||
             X_DEFLATE.ContentEqualsIgnoreCase(encoding))
         {
@@ -92,6 +93,7 @@ public class HttpContentDecompressor : HttpContentDecoder
                     .Handlers(ZlibCodecFactory.NewZlibDecoder(wrapper, maxAllocation))
                     .Build();
         }
+
         if (Brotli.IsAvailable() && BR.ContentEqualsIgnoreCase(encoding))
         {
             return new EmbeddedChannel.Builder()

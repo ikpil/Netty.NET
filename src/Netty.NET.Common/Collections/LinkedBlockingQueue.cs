@@ -29,6 +29,7 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
             throw new ArgumentException("capacity must be positive", nameof(boundedCapacity));
         }
         ArgumentNullException.ThrowIfNull(comparer);
+
         capacity = boundedCapacity;
         this.comparer = comparer;
     }
@@ -58,12 +59,14 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
         {
             throw new ArgumentNullException(nameof(item));
         }
+
         using (UninterruptibleMonitor.Enter(gate))
         {
             if (queue.Count >= capacity)
             {
                 return false;
             }
+
             queue.AddLast(item);
             Volatile.Write(ref count, queue.Count);
             Monitor.PulseAll(gate);
@@ -100,6 +103,7 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
             item = default;
             return false;
         }
+
         item = head.Value;
         queue.RemoveFirst();
         Volatile.Write(ref count, queue.Count);
@@ -116,6 +120,7 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
                 item = default;
                 return false;
             }
+
             item = head.Value;
             return true;
         }
@@ -127,6 +132,7 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
         {
             return false;
         }
+
         using (UninterruptibleMonitor.Enter(gate))
         {
             var node = queue.First;
@@ -140,6 +146,7 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
             {
                 return false;
             }
+
             queue.Remove(node);
             Volatile.Write(ref count, queue.Count);
             return true;
@@ -151,6 +158,7 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
         // JDK take/lockInterruptibly observes a pending interrupt even if the
         // queue is populated. CLR only exposes it at an interruptible wait.
         Thread.Sleep(0);
+
         lock (gate)
         {
             while (queue.Count == 0)
@@ -167,6 +175,7 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
     {
         Thread.Sleep(0);
         long started = Stopwatch.GetTimestamp();
+
         lock (gate)
         {
             while (queue.Count == 0)
@@ -177,10 +186,12 @@ public class LinkedBlockingQueue<T> : IQueue<T>, IBlockingQueue<T>
                     item = default;
                     return false;
                 }
+
                 long remaining = timeout.Ticks - elapsed;
                 int millis = (int)Math.Min(int.MaxValue, 1 + (remaining - 1) / TimeSpan.TicksPerMillisecond);
                 Monitor.Wait(gate, millis);
             }
+
             return Poll(out item);
         }
     }

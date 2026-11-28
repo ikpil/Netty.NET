@@ -276,6 +276,7 @@ public class HashedWheelTimer : ITimer, IDisposable
         CheckNotNull(threadFactory, "threadFactory");
         CheckPositive(tickDuration, "tickDuration");
         CheckPositive(ticksPerWheel, "ticksPerWheel");
+
         _taskExecutor = CheckNotNull(taskExecutor, "taskExecutor");
 
         // Normalize ticksPerWheel to power of two and initialize the wheel.
@@ -312,6 +313,7 @@ public class HashedWheelTimer : ITimer, IDisposable
 
         int instances = Interlocked.Increment(ref INSTANCE_COUNTER);
         _instanceCounted = 1;
+
         if (instances > INSTANCE_COUNT_LIMIT &&
             Interlocked.CompareExchange(ref WARNED_TOO_MANY_INSTANCES, 1, 0) == 0)
         {
@@ -351,6 +353,7 @@ public class HashedWheelTimer : ITimer, IDisposable
         ticksPerWheel = MathUtil.FindNextPositivePowerOfTwo(ticksPerWheel);
 
         HashedWheelBucket[] wheel = new HashedWheelBucket[ticksPerWheel];
+
         for (int i = 0; i < wheel.Length; i++)
         {
             wheel[i] = new HashedWheelBucket();
@@ -369,6 +372,7 @@ public class HashedWheelTimer : ITimer, IDisposable
     public virtual void Start()
     {
         int state = Volatile.Read(ref _workerState);
+
         switch (state)
         {
             case WORKER_STATE_INIT:
@@ -416,6 +420,7 @@ public class HashedWheelTimer : ITimer, IDisposable
             if (Interlocked.Exchange(ref _workerState, WORKER_STATE_SHUTDOWN) != WORKER_STATE_SHUTDOWN)
             {
                 DecrementInstanceCount();
+
                 if (_leak != null)
                 {
                     bool closed = _leak.Close(this);
@@ -429,6 +434,7 @@ public class HashedWheelTimer : ITimer, IDisposable
         try
         {
             bool interrupted = false;
+
             while (_workerThread.IsAlive)
             {
                 // Java interrupt on a terminated thread is harmless. CLR can
@@ -440,6 +446,7 @@ public class HashedWheelTimer : ITimer, IDisposable
                 catch (ThreadStateException)
                 {
                 }
+
                 try
                 {
                     _workerThread.Join(100);
@@ -458,6 +465,7 @@ public class HashedWheelTimer : ITimer, IDisposable
         finally
         {
             DecrementInstanceCount();
+
             if (_leak != null)
             {
                 bool closed = _leak.Close(this);
@@ -467,6 +475,7 @@ public class HashedWheelTimer : ITimer, IDisposable
 
         var unprocessed = _worker.UnprocessedTimeouts();
         var cancelled = new HashSet<ITimeout>(unprocessed.Count);
+
         foreach (ITimeout timeout in unprocessed)
         {
             if (timeout.Cancel())
@@ -526,6 +535,7 @@ public class HashedWheelTimer : ITimer, IDisposable
             Interlocked.Decrement(ref _pendingTimeouts);
             throw new InvalidOperationException("cannot be started once stopped");
         }
+
         return timeout;
     }
 

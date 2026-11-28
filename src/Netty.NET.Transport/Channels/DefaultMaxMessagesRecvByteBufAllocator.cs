@@ -50,6 +50,7 @@ public abstract class DefaultMaxMessagesRecvByteBufAllocator : IMaxMessagesRecvB
     public IMaxMessagesRecvByteBufAllocator MaxMessagesPerRead(int maxMessagesPerRead)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxMessagesPerRead);
+
         _maxMessagesPerRead = maxMessagesPerRead;
         return this;
     }
@@ -106,6 +107,7 @@ public abstract class DefaultMaxMessagesRecvByteBufAllocator : IMaxMessagesRecvB
         protected MaxMessageHandle(DefaultMaxMessagesRecvByteBufAllocator owner)
         {
             ArgumentNullException.ThrowIfNull(owner);
+
             _owner = owner;
             _respectMaybeMoreData = owner.RespectMaybeMoreData();
             _defaultMaybeMoreSupplier = () => _attemptedBytesRead == _lastBytesRead;
@@ -136,6 +138,7 @@ public abstract class DefaultMaxMessagesRecvByteBufAllocator : IMaxMessagesRecvB
         public virtual void LastBytesRead(int bytes)
         {
             _lastBytesRead = bytes;
+
             if (bytes > 0)
                 _totalBytesRead = unchecked(_totalBytesRead + bytes);
         }

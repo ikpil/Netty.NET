@@ -60,6 +60,7 @@ public sealed class WriteBufferWaterMark
             if (high < low)
                 throw new ArgumentOutOfRangeException(nameof(high), "High water mark cannot be less than low water mark.");
         }
+
         _low = low;
         _high = high;
     }

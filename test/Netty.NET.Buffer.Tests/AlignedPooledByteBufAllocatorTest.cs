@@ -97,6 +97,7 @@ public class AlignedPooledByteBufAllocatorTest : PooledByteBufAllocatorTest
                 .GetField("_smallSubpagePools", BindingFlags.Instance | BindingFlags.NonPublic)!
                 .GetValue(unwrapped.Allocation.Arena)!;
         PoolSubpage head = null;
+
         foreach (PoolSubpage subpage in smallSubpagePools)
         {
             if (subpage.Next != subpage)
@@ -106,6 +107,7 @@ public class AlignedPooledByteBufAllocatorTest : PooledByteBufAllocatorTest
                 break;
             }
         }
+
         Assert.NotNull(head);
         Thread t1 = new Thread(() =>
         {
@@ -118,10 +120,12 @@ public class AlignedPooledByteBufAllocatorTest : PooledByteBufAllocatorTest
         // no hasQueuedThread query, so a WaitSleepJoin thread state stands for "queued on the head lock"
         // (https://learn.microsoft.com/en-us/dotnet/api/system.threading.threadstate?view=net-10.0).
         Monitor.Enter(head.SyncRoot);
+
         try
         {
             t1.Start();
             long start = Stopwatch.GetTimestamp();
+
             while ((t1.ThreadState & System.Threading.ThreadState.WaitSleepJoin) == 0)
             {
                 if (Stopwatch.GetElapsedTime(start) > TimeSpan.FromSeconds(3))
@@ -129,6 +133,7 @@ public class AlignedPooledByteBufAllocatorTest : PooledByteBufAllocatorTest
                     break;
                 }
             }
+
             Assert.True((t1.ThreadState & System.Threading.ThreadState.WaitSleepJoin) != 0,
                     "The t1 thread should still be waiting for the head lock.");
         }
@@ -136,6 +141,7 @@ public class AlignedPooledByteBufAllocatorTest : PooledByteBufAllocatorTest
         {
             Monitor.Exit(head.SyncRoot);
         }
+
         t1.Join();
     }
 
@@ -146,6 +152,7 @@ public class AlignedPooledByteBufAllocatorTest : PooledByteBufAllocatorTest
         {
             buffer = buffer.Unwrap();
         }
+
         return (PooledByteBuf) buffer;
     }
 }

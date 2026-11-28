@@ -37,6 +37,7 @@ public class UnsafeByteBufUtilTest
         {
             if (provider is 1 or 2)
                 Pool = new PooledByteBufAllocator(true, pageSize: 4096, maxOrder: maxOrder, nativeAllocator: Native);
+
             Target = provider switch
             {
                 0 => new UnpooledDirectByteBuf(length, length, Native),
@@ -51,6 +52,7 @@ public class UnsafeByteBufUtilTest
         {
             if (Target.RefCnt > 0)
                 Assert.True(Target.Release());
+
             Pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
         }
@@ -66,6 +68,7 @@ public class UnsafeByteBufUtilTest
         // Inspect storage behind optional leak facades; keep ownership/release on the original facade.
         while (buffer is not PooledByteBuf)
             buffer = Assert.IsAssignableFrom<ByteBuf>(buffer.Unwrap());
+
         return ((PooledByteBuf)buffer).Allocation;
     }
 
@@ -90,6 +93,7 @@ public class UnsafeByteBufUtilTest
         // create memory pool with one page
         using var s = new Storage(2, 10);
         ByteBuf b1 = s.Pool.HeapBuffer(16, 16), b2 = s.Pool.HeapBuffer(16, 16);
+
         try
         {
             var first = AllocationOf(b1);
@@ -171,6 +175,7 @@ public class UnsafeByteBufUtilTest
             [8, 4, 0, 0, 5], // src length oversize
             [4, 4, 0, 1, 4] // src length oversize
         ];
+
         for (int provider = 0; provider < 3; ++provider)
         foreach (int[] range in ranges)
             yield return [provider, range[0], range[1], range[2], range[3], range[4]];
@@ -258,10 +263,12 @@ public class UnsafeByteBufUtilTest
         byte[] data = Enumerable.Range(0, length + 16).Select(i => unchecked((byte)(i * 7 + 1))).ToArray();
         s.Target.SetBytes(0, data).SetIndex(3, length + 11).MarkReaderIndex().MarkWriterIndex();
         using var output = new Output(fail);
+
         if (fail)
             Assert.Throws<IOException>(() => s.Target.GetBytes(5, output, length));
         else
             Assert.Same(s.Target, s.Target.GetBytes(5, output, length));
+
         Assert.Equal(data.Skip(5).Take(fail ? 17 : length), output.ToArray());
         Assert.Equal(1, output.Calls);
         Assert.True(output.CanWrite);
@@ -295,11 +302,13 @@ public class UnsafeByteBufUtilTest
         var native = new NativeMemoryAllocator(16 << 20);
         IByteBufAllocator allocator = Factory(adaptive, native);
         ByteBuf b = null, copy = null;
+
         try
         {
             b = allocator.DirectBuffer(length, length + 64);
             Assert.True(b.IsDirect);
             Assert.Same(allocator, b.Alloc());
+
             if (adaptive)
             {
                 Assert.True(MemoryMarshal.TryGetMemoryManager<byte, AdaptiveChunkAllocation>(b.AsMemory(0, length), out _));
@@ -308,6 +317,7 @@ public class UnsafeByteBufUtilTest
             {
                 Assert.True(NativeMemoryOwner.TryGetOwner(b.AsMemory(0, length), out _));
             }
+
             Assert.True(native.ReservedBytes >= length);
             byte[] prefix = Enumerable.Range(0, Math.Min(32, length)).Select(i => (byte)(i + 1)).ToArray();
             b.WriteBytes(prefix).MarkReaderIndex().MarkWriterIndex();
@@ -317,6 +327,7 @@ public class UnsafeByteBufUtilTest
             Assert.Equal(prefix, ByteBufUtil.GetBytes(copy));
             b.Capacity = length + 64;
             Assert.Equal(prefix, ByteBufUtil.GetBytes(b, 0, prefix.Length));
+
             if (adaptive)
             {
                 Assert.True(MemoryMarshal.TryGetMemoryManager<byte, AdaptiveChunkAllocation>(b.AsMemory(0, b.Capacity), out _));
@@ -325,6 +336,7 @@ public class UnsafeByteBufUtilTest
             {
                 Assert.True(NativeMemoryOwner.TryGetOwner(b.AsMemory(0, b.Capacity), out _));
             }
+
             Assert.True(native.ReservedBytes >= b.Capacity);
             b.SetIndex(0, b.Capacity).ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(0, b.ReaderIndex);
@@ -335,12 +347,15 @@ public class UnsafeByteBufUtilTest
         finally
         {
             copy?.Release();
+
             if (b?.RefCnt > 0)
             {
                 b.Release();
             }
+
             ((IDisposable)allocator).Dispose();
         }
+
         Assert.Equal(0, native.ReservedBytes);
         Assert.Equal(adaptive ? 0 : -1, ((IByteBufAllocatorMetricProvider)allocator).Metric.UsedDirectMemory);
     }
@@ -351,6 +366,7 @@ public class UnsafeByteBufUtilTest
     {
         var native = new NativeMemoryAllocator(0);
         IByteBufAllocator allocator = Factory(adaptive, native);
+
         try
         {
             Assert.Throws<OutOfDirectMemoryError>(() => allocator.DirectBuffer(128, 192));
@@ -359,6 +375,7 @@ public class UnsafeByteBufUtilTest
         {
             ((IDisposable)allocator).Dispose();
         }
+
         Assert.Equal(0, native.ReservedBytes);
         Assert.Equal(adaptive ? 0 : -1, ((IByteBufAllocatorMetricProvider)allocator).Metric.UsedDirectMemory);
     }

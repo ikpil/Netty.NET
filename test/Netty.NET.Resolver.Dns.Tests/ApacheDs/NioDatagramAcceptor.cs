@@ -158,6 +158,7 @@ public sealed class NioDatagramAcceptor : IDatagramAcceptor
         Socket ch;
         Thread thread;
         List<NioSession> managedSessions;
+
         lock (@lock)
         {
             ch = handle;
@@ -175,6 +176,7 @@ public sealed class NioDatagramAcceptor : IDatagramAcceptor
         }
 
         ch.Dispose();
+
         if (thread != null && thread != Thread.CurrentThread && !thread.Join(TimeSpan.FromSeconds(30)))
         {
             LOG.Warn("The receive thread of {} did not stop.", thread.Name);
@@ -211,6 +213,7 @@ public sealed class NioDatagramAcceptor : IDatagramAcceptor
         }
 
         Socket ch = new Socket(ipLocalAddress.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+
         try
         {
             ch.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress,
@@ -236,11 +239,13 @@ public sealed class NioDatagramAcceptor : IDatagramAcceptor
     private void Run(Socket ch)
     {
         byte[] datagram = new byte[65536];
+
         for (;;)
         {
             EndPoint remoteAddress = new IPEndPoint(
                 ch.AddressFamily == AddressFamily.InterNetworkV6 ? IPAddress.IPv6Any : IPAddress.Any, 0);
             int length;
+
             try
             {
                 length = ch.ReceiveFrom(datagram, ref remoteAddress);
@@ -300,6 +305,7 @@ public sealed class NioDatagramAcceptor : IDatagramAcceptor
     private NioSession NewSessionWithoutLock(Socket ch, EndPoint remoteAddress)
     {
         NioSession session;
+
         lock (@lock)
         {
             if (handle != ch)
@@ -461,6 +467,7 @@ public sealed class NioDatagramAcceptor : IDatagramAcceptor
             lock (entries)
             {
                 IIoFilter[] filters = new IIoFilter[entries.Count];
+
                 for (int i = 0; i < filters.Length; i++)
                 {
                     filters[i] = entries[i].Value;
@@ -516,6 +523,7 @@ public sealed class NioDatagramAcceptor : IDatagramAcceptor
             IIoFilter[] filters = Filters();
             bool[] sent = new bool[1];
             CallPreviousFilterWrite(filters, filters.Length - 1, message, sent);
+
             if (sent[0])
             {
                 try

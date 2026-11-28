@@ -36,6 +36,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
             {
                 return 0;
             }
+
             long delta = unchecked(o1.DeadlineNanos() - o2.DeadlineNanos());
             return delta == 0 ? o1.GetId().CompareTo(o2.GetId()) : delta < 0 ? -1 : 1;
         });
@@ -238,6 +239,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         }
 
         long nanoTime = GetCurrentTimeNanos();
+
         for (;;)
         {
             IScheduledWork scheduledTask = PollScheduledWork(nanoTime);
@@ -358,6 +360,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         {
             task.SetId(++nextTaskId);
         }
+
         ScheduledTaskQueue().TryEnqueue(task);
     }
 
@@ -365,17 +368,21 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         CancellationToken token, bool captureContext = true)
     {
         ValidateScheduled0(delay);
+
         if (period != 0)
         {
             ValidateScheduled0(TimeSpan.FromTicks(Math.Abs(period) / 100));
         }
+
         if (token.IsCancellationRequested)
         {
             return Task.FromCanceled<T>(token);
         }
+
         var task = new NativeScheduledWork<T>(function, token,
             DeadlineNanos(GetCurrentTimeNanos(), ToNanos(delay)), period, nativeClock,
             nativeCanExecute, nativeEnqueue, nativeRemove, captureContext, nativeCanRun);
+
         try
         {
             if (!task.Completion.IsCompleted)
@@ -387,6 +394,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         {
             task.Reject(error);
         }
+
         task.Publish();
         return task.ResultTask;
     }
@@ -397,6 +405,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         {
             return;
         }
+
         if (IsShutdown())
         {
             task.CancelWithoutRemove();
@@ -413,6 +422,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
         {
             return;
         }
+
         try
         {
             RemoveScheduled(task);
@@ -442,6 +452,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
             else
             {
                 LazyExecute(task.QueueCallback);
+
                 // Second hook after scheduling to facilitate race-avoidance
                 if (AfterScheduledTaskSubmitted(deadlineNanos))
                 {
@@ -455,6 +466,7 @@ public abstract class AbstractScheduledEventExecutor : AbstractEventExecutor
     public void RemoveScheduled(IScheduledWork task)
     {
         Debug.Assert(task.IsCanceled);
+
         if (InEventLoop())
         {
             ScheduledTaskQueue().TryRemove(task);

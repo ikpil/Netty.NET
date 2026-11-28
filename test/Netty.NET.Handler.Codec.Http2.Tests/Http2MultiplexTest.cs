@@ -146,6 +146,7 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
         {
             ((LastInboundHandler) childChannelInitializer.handler).FinishAndReleaseAll();
         }
+
         parentChannel.FinishAndReleaseAll();
         codec = null;
     }
@@ -308,15 +309,18 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
         LastInboundHandler inboundHandler = new EndStreamCloseHandler(mode);
 
         IHttp2StreamChannel channel = NewInboundStream(3, mode == RstFrameTestMode.HEADERS_END_STREAM, inboundHandler);
+
         if (mode != RstFrameTestMode.HEADERS_END_STREAM)
         {
             frameInboundWriter.WriteInboundData(
                     channel.Stream().Id(), Bb("something"), 0, mode == RstFrameTestMode.DATA_END_STREAM);
+
             if (mode != RstFrameTestMode.DATA_END_STREAM)
             {
                 frameInboundWriter.WriteInboundHeaders(channel.Stream().Id(), new DefaultHttp2Headers(), 0, true);
             }
         }
+
         await channel.CloseFuture;
 
         // We should never produce a RST frame in this case as we received the endOfStream before we write a frame
@@ -345,9 +349,11 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
             try
             {
                 bool endStream;
+
                 if (msg is IHttp2HeadersFrame)
                 {
                     endStream = ((IHttp2HeadersFrame) msg).IsEndStream();
+
                     switch (mode)
                     {
                         case RstFrameTestMode.HEADERS_END_STREAM:
@@ -363,6 +369,7 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
                             {
                                 Assert.False(endStream);
                             }
+
                             break;
                         case RstFrameTestMode.DATA_END_STREAM:
                             Assert.False(endStream);
@@ -371,11 +378,13 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
                             Assert.Fail(null);
                             break;
                     }
+
                     headersReceived = true;
                 }
                 else if (msg is IHttp2DataFrame)
                 {
                     endStream = ((IHttp2DataFrame) msg).IsEndStream();
+
                     switch (mode)
                     {
                         case RstFrameTestMode.HEADERS_END_STREAM:
@@ -396,6 +405,7 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
                 {
                     throw new UnsupportedMessageTypeException(msg);
                 }
+
                 if (endStream)
                 {
                     Http2CodecUtil.AddListener(ctx,
@@ -683,11 +693,13 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
         childChannel.Config.SetAutoRead(false);
 
         const int maxWrites = 10000; // enough writes to generated SOOE.
+
         for (int i = 0; i < maxWrites; ++i)
         {
             frameInboundWriter.WriteInboundData(childChannel.Stream().Id(),
                     Bb(i.ToString(CultureInfo.InvariantCulture)), 0, false);
         }
+
         frameInboundWriter.WriteInboundData(childChannel.Stream().Id(),
                 Bb(maxWrites.ToString(CultureInfo.InvariantCulture)), 0, true);
         shouldRead.Set(true);
@@ -699,6 +711,7 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
             Assert.NotNull(dataFrame1);
             Release(dataFrame1);
         }
+
         // CLR: the loop body's dataFrame0 is dataFrame1 in the port: "within a nested declaration space it is not
         // possible to declare a local variable or constant with the same name as a local variable or constant in an
         // enclosing declaration space" (https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0136).
@@ -793,6 +806,7 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             ctx.FireChannelRead(msg);
+
             // Close channel after 2 reads so there is still something in the inboundBuffer when the close happens.
             if (++count == 2)
             {
@@ -850,6 +864,7 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             ctx.FireChannelRead(msg);
+
             if (!readComplete)
             {
                 ctx.Read();
@@ -859,6 +874,7 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
         public override void ChannelReadComplete(IChannelHandlerContext ctx)
         {
             ctx.FireChannelReadComplete();
+
             if (readComplete)
             {
                 ctx.Read();
@@ -889,6 +905,7 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
         Assert.True(childChannel.IsActive);
         childChannel.Read();
         inboundHandler.CheckException();
+
         VerifyFramesMultiplexedToCorrectChannel(childChannel, inboundHandler, 2);
         Assert.False(childChannel.IsActive);
     }
@@ -917,6 +934,7 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
         Assert.True(childChannel.IsActive);
         childChannel.Read();
         inboundHandler.CheckException();
+
         VerifyFramesMultiplexedToCorrectChannel(childChannel, inboundHandler, 2);
         Assert.False(childChannel.IsActive);
     }
@@ -1013,6 +1031,7 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
                 promise.SetException(new Exception("boom"));
                 return promise.Task;
             }
+
             promise.SetResult();
             return promise.Task;
         }
@@ -1567,6 +1586,7 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
             {
                 channelReadCompleteCount.IncrementAndGet();
             }
+
             if (shouldDisableAutoRead.Get())
             {
                 obj.Channel.Config.SetAutoRead(false);
@@ -1603,6 +1623,7 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
         frameInboundWriter.WriteInboundWindowUpdate(childChannel.Stream().Id(), 4);
 
         IHttp2WindowUpdateFrame updateFrame = inboundHandler.ReadInbound<IHttp2WindowUpdateFrame>();
+
         if (IgnoreWindowUpdateFrames())
         {
             Assert.Null(updateFrame);
@@ -1789,6 +1810,7 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
         public override void ChannelReadComplete(IChannelHandlerContext ctx)
         {
             base.ChannelReadComplete(ctx);
+
             if (triggerOnReadComplete)
             {
                 ctx.Read();
@@ -1799,6 +1821,7 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             ctx.FireChannelRead(msg);
+
             if (!triggerOnReadComplete)
             {
                 ctx.Read();
@@ -1874,6 +1897,7 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
         // Trigger a read of the second frame.
         childChannel.Read();
         VerifyFramesMultiplexedToCorrectChannel(childChannel, inboundHandler, 1);
+
         if (autoWriteWindowUpdateFrames)
         {
             // We expect a flush here because the StreamChannel will flush the smaller increment but the
@@ -1890,6 +1914,7 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
 
         // Call read one more time which should trigger the writing of the flow control update.
         childChannel.Read();
+
         if (autoWriteWindowUpdateFrames)
         {
             Mock.Get(frameWriter).Verify(w => w.WriteWindowUpdateAsync(EqCodecCtx(), 0, 32 * 1024,
@@ -2000,6 +2025,7 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
             frameInboundWriter.WriteInboundData(childChannel.Stream().Id(), Bb(16 * 1024), 0, false);
             VerifyFramesMultiplexedToCorrectChannel(childChannel, inboundHandler, 1);
         }
+
         Mock.Get(frameWriter).Verify(w => w.WriteWindowUpdateAsync(EqCodecCtx(), It.IsAny<int>(), It.IsAny<int>(),
                 AnyChannelPromise()), Times.Never());
         _ = flushSniffer.CheckFlush();
@@ -2076,6 +2102,7 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
             {
                 frameInboundWriter.WriteInboundData(streamId, Bb(4), 0, false);
             }
+
             ctx.FireChannelReadComplete();
         }
     }
@@ -2138,6 +2165,7 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
                 frameInboundWriter.WriteInboundData(streamId, Bb(3), 0, false);
                 frameInboundWriter.WriteInboundData(streamId, Bb(4), 0, true);
             }
+
             ctx.FireChannelReadComplete();
         }
     }
@@ -2147,6 +2175,7 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
     {
         IHttp2DataFrame frame = inboundHandler.ReadInbound<IHttp2DataFrame>();
         Assert.NotNull(frame, "expected a DATA frame with " + expectedBytes + " bytes");
+
         try
         {
             Assert.Equal(expectedBytes, frame.Content.ReadableBytes);
@@ -2200,6 +2229,7 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
             Assert.Equal(streamChannel.Stream(), frame.Stream());
             Release(frame);
         }
+
         Assert.Null(inboundHandler.ReadInbound<object>());
     }
 

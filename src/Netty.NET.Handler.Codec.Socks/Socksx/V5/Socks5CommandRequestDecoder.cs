@@ -91,6 +91,7 @@ public class Socks5CommandRequestDecoder : ReplayingDecoder<Socks5CommandRequest
                 {
                     @out.Add(@in.ReadRetainedSlice(readableBytes));
                 }
+
                 break;
             }
             case State.FAILURE:

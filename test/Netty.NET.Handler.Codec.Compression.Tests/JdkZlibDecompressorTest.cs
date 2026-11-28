@@ -102,14 +102,17 @@ public abstract class JdkZlibDecompressorTest : AbstractDecompressorTest
         byte[] compressed = Gzip(Encoding.UTF8.GetBytes("complete gzip"));
         IDecompressor decompressor = JdkZlibDecompressor.Builder_().Wrapper(ZlibWrapper.GZIP)
                 .Build(IByteBufAllocator.Default);
+
         try
         {
             Assert.Equal(IDecompressor.Status.NEED_INPUT, decompressor.Status_());
             decompressor.AddInput(Unpooled.WrappedBuffer(compressed));
+
             while (decompressor.Status_() == IDecompressor.Status.NEED_OUTPUT)
             {
                 decompressor.TakeOutput().Release();
             }
+
             Assert.Equal(IDecompressor.Status.COMPLETE, decompressor.Status_());
         }
         finally
@@ -154,6 +157,7 @@ public abstract class JdkZlibDecompressorTest : AbstractDecompressorTest
         Assert.SkipUnless(wrapper == ZlibWrapper.ZLIB, "wrapper == ZlibWrapper.ZLIB");
         IDecompressor decompressor = JdkZlibDecompressor.Builder_().Wrapper(ZlibWrapper.ZLIB)
                 .Build(IByteBufAllocator.Default);
+
         try
         {
             Assert.Equal(IDecompressor.Status.NEED_INPUT, decompressor.Status_());
@@ -181,6 +185,7 @@ public abstract class JdkZlibDecompressorTest : AbstractDecompressorTest
         Array.Fill(expected, (byte) 'a');
         byte[] compressed = Deflate(expected);
         CompositeByteBuf output = IByteBufAllocator.Default.CompositeBuffer();
+
         try
         {
             using (IDecompressor decompressor = JdkZlibDecompressor.Builder_().MaxAllocation(1)
@@ -188,6 +193,7 @@ public abstract class JdkZlibDecompressorTest : AbstractDecompressorTest
             {
                 decompressor.Status_();
                 decompressor.AddInput(Unpooled.DirectBuffer(compressed.Length).WriteBytes(compressed));
+
                 for (;;)
                 {
                     switch (decompressor.Status_())
@@ -237,6 +243,7 @@ public abstract class JdkZlibDecompressorTest : AbstractDecompressorTest
         compressed[1] = 0;
         IDecompressor decompressor = JdkZlibDecompressor.Builder_().Wrapper(ZlibWrapper.GZIP)
                 .Build(IByteBufAllocator.Default);
+
         try
         {
             Assert.Equal(IDecompressor.Status.NEED_INPUT, decompressor.Status_());
@@ -284,12 +291,14 @@ public abstract class JdkZlibDecompressorTest : AbstractDecompressorTest
     private static byte[] Decompress(IDecompressor decompressor, byte[] compressed)
     {
         CompositeByteBuf output = IByteBufAllocator.Default.CompositeBuffer();
+
         try
         {
             using (IDecompressor ignored = decompressor)
             {
                 decompressor.Status_();
                 decompressor.AddInput(Unpooled.WrappedBuffer(compressed));
+
                 for (;;)
                 {
                     switch (decompressor.Status_())
@@ -343,21 +352,26 @@ public abstract class JdkZlibDecompressorTest : AbstractDecompressorTest
         {
             return JdkGunzip(compressed);
         }
+
         Stream inflater = wrapper == ZlibWrapper.NONE
                 ? new DeflateStream(new MemoryStream(compressed), CompressionMode.Decompress)
                 : new ZLibStream(new MemoryStream(compressed), CompressionMode.Decompress);
+
         try
         {
             Stream input = inflater;
             MemoryStream output = new MemoryStream();
             byte[] buffer = new byte[256];
             int read;
+
             while ((read = input.Read(buffer)) != 0)
             {
                 output.Write(buffer, 0, read);
             }
+
             input.Dispose();
             output.Dispose();
+
             return output.ToArray();
         }
         finally
@@ -373,6 +387,7 @@ public abstract class JdkZlibDecompressorTest : AbstractDecompressorTest
         Stream stream = new DeflateStream(output, deflater);
         stream.Write(data);
         stream.Dispose();
+
         return output.ToArray();
     }
 
@@ -382,6 +397,7 @@ public abstract class JdkZlibDecompressorTest : AbstractDecompressorTest
         GZipStream gzip = new GZipStream(output, CompressionMode.Compress);
         gzip.Write(data);
         gzip.Dispose();
+
         return output.ToArray();
     }
 
@@ -391,6 +407,7 @@ public abstract class JdkZlibDecompressorTest : AbstractDecompressorTest
         ZLibStream deflater = new ZLibStream(output, CompressionMode.Compress);
         deflater.Write(data);
         deflater.Dispose();
+
         return output.ToArray();
     }
 
@@ -400,10 +417,12 @@ public abstract class JdkZlibDecompressorTest : AbstractDecompressorTest
         {
             Assert.Equal(IDecompressor.Status.NEED_INPUT, decompressor.Status_());
             decompressor.AddInput(Unpooled.WrappedBuffer(compressed));
+
             while (decompressor.Status_() == IDecompressor.Status.NEED_OUTPUT)
             {
                 decompressor.TakeOutput().Release();
             }
+
             Assert.Equal(IDecompressor.Status.NEED_INPUT, decompressor.Status_());
             Assert.Throws<DecompressionException>(decompressor.EndOfInput);
         }
@@ -424,6 +443,7 @@ public abstract class JdkZlibDecompressorTest : AbstractDecompressorTest
         output.WriteByte((byte) ((extra.Length >>> 8) & 0xff));
         output.Write(extra);
         output.Write(standard, 10, standard.Length - 10);
+
         return output.ToArray();
     }
 
@@ -433,11 +453,14 @@ public abstract class JdkZlibDecompressorTest : AbstractDecompressorTest
         GZipStream input = new GZipStream(new MemoryStream(gzip), CompressionMode.Decompress);
         byte[] buffer = new byte[256];
         int read;
+
         while ((read = input.Read(buffer)) != 0)
         {
             output.Write(buffer, 0, read);
         }
+
         input.Dispose();
+
         return output.ToArray();
     }
 }

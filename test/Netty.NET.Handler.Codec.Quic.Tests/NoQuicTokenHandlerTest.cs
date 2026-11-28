@@ -36,6 +36,7 @@ public class NoQuicTokenHandlerTest
     {
         ByteBuf @out = Unpooled.Buffer();
         ByteBuf dcid = Unpooled.WrappedBuffer(QuicConnectionAddress.Random().Id());
+
         try
         {
             bool written = NoQuicTokenHandler.INSTANCE.WriteToken(@out, dcid, new IPEndPoint(
@@ -54,6 +55,7 @@ public class NoQuicTokenHandlerTest
     public void TestValidateToken()
     {
         ByteBuf token = Unpooled.WrappedBuffer(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8 });
+
         try
         {
             int offset = NoQuicTokenHandler.INSTANCE.ValidateToken(token, new IPEndPoint(

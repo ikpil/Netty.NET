@@ -43,6 +43,7 @@ public class ChannelPromiseTaskContractTest
         cancellation.Cancel();
         Assert.False(future.IsCompleted);
         var e = new IOException("Native write failed.");
+
         if (fail)
         {
             fixture.Write.SetException(e);
@@ -51,8 +52,10 @@ public class ChannelPromiseTaskContractTest
         {
             fixture.Write.SetResult();
         }
+
         fixture.PumpUntil(() => future.IsCompleted);
         Assert.False(future.IsCanceled);
+
         if (fail)
         {
             Assert.Same(e, Assert.Throws<IOException>(() => future.GetAwaiter().GetResult()));
@@ -61,6 +64,7 @@ public class ChannelPromiseTaskContractTest
         {
             Assert.True(future.IsCompletedSuccessfully);
         }
+
         Assert.Equal(0, buf.RefCnt);
         Assert.True(fixture.Channel.IsOpen);
     }
@@ -131,6 +135,7 @@ public class ChannelPromiseTaskContractTest
         internal void PumpUntil(Func<bool> condition)
         {
             var deadline = DateTime.UtcNow.AddSeconds(5);
+
             while (!condition())
             {
                 Assert.True(DateTime.UtcNow < deadline, "The queued Task did not complete on its owner.");

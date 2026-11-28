@@ -52,14 +52,17 @@ public class IoEventLoopGroupSourceTest
     private static void AssertChooserNotAdvancedBy(Action<IIoEventLoopGroup> action)
     {
         IIoEventLoopGroup group = new MultiThreadIoEventLoopGroup(THREADS, LocalIoHandler.NewFactory());
+
         try
         {
             // Record the round-robin order of the group first, so we know what next() must return afterwards.
             IIoEventLoop[] roundRobin = new IIoEventLoop[THREADS];
+
             for (int i = 0; i < THREADS; i++)
             {
                 roundRobin[i] = group.Next();
             }
+
             for (int i = 0; i < THREADS; i++)
             {
                 action(group);

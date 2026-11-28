@@ -77,6 +77,7 @@ public class CloseNotifyTest
             // Ensure we support TLSv1.3
             Assert.SkipUnless(SslProvider.IsTlsv13Supported(provider), "TLSv1.3 is not supported");
         }
+
         ConcurrentQueue<object> clientEventQueue = new ConcurrentQueue<object>();
         ConcurrentQueue<object> serverEventQueue = new ConcurrentQueue<object>();
 
@@ -175,6 +176,7 @@ public class CloseNotifyTest
         SslHandler handler = sslContext.NewHandler(ALLOC);
         // handler incremented the reference count and will destroy it when removed
         ReferenceCountUtil.Release(sslContext);
+
         return new EmbeddedChannel(
                 handler,
                 new EventQueueHandler(eventQueue)
@@ -210,6 +212,7 @@ public class CloseNotifyTest
     private static void ForwardData(EmbeddedChannel from, EmbeddedChannel to)
     {
         ByteBuf @in;
+
         while ((@in = from.ReadOutbound<ByteBuf>()) != null)
         {
             to.WriteInbound(@in);
@@ -220,15 +223,18 @@ public class CloseNotifyTest
     {
         ByteBuf cumulation = Unpooled.EmptyBuffer;
         ByteBuf @in, closeNotify = null;
+
         while ((@in = from.ReadOutbound<ByteBuf>()) != null)
         {
             if (closeNotify != null)
             {
                 closeNotify.Release();
             }
+
             closeNotify = @in.Duplicate();
             cumulation = MERGE_CUMULATOR.Cumulate(ALLOC, cumulation, @in.Retain());
         }
+
         AssertCloseNotify(closeNotify);
         to.WriteInbound(cumulation);
     }
@@ -241,6 +247,7 @@ public class CloseNotifyTest
     {
         SslHandler sslHandler = channel.Pipeline.Get<SslHandler>();
         AuthSslProtocols session = sslHandler.Engine().SslProtocol;
+
         switch (session)
         {
             case AuthSslProtocols.Tls13:
@@ -256,6 +263,7 @@ public class CloseNotifyTest
     private static void DiscardEmptyOutboundBuffers(EmbeddedChannel channel)
     {
         Queue<object> outbound = channel.OutboundMessages();
+
         while (outbound.TryPeek(out object peeked) && peeked is ByteBuf)
         {
             ByteBuf buf = (ByteBuf) peeked;
@@ -274,6 +282,7 @@ public class CloseNotifyTest
     internal static void AssertCloseNotify(ByteBuf closeNotify)
     {
         Assert.NotNull(closeNotify);
+
         try
         {
             Assert.True(closeNotify.ReadableBytes >= 7);

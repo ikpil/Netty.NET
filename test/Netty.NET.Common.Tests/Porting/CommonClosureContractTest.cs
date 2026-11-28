@@ -18,6 +18,7 @@ public class CommonClosureContractTest
         // fails with IOException, which is logged; the file still counts as present. Only the classifiers
         // allowed by isAllowedClassifier (fedora, suse, arch) are recorded.
         string path = Path.GetTempFileName();
+
         try
         {
             var text = new StringBuilder("ID=fedora\n");
@@ -38,6 +39,7 @@ public class CommonClosureContractTest
     public void OsReleaseWithinTheLimitIsReadCompletely()
     {
         string path = Path.GetTempFileName();
+
         try
         {
             File.WriteAllText(path, "ID=\"fedora\"\nID_LIKE=\"suse arch\"\n", new UTF8Encoding(false));

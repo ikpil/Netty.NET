@@ -125,6 +125,7 @@ public class HttpChunkedInput : IChunkedInput<IHttpContent>
             {
                 return null;
             }
+
             return new DefaultHttpContent(buf);
         }
     }

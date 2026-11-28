@@ -42,6 +42,7 @@ public class CompositeByteBufBoundaryTest : IDisposable
         // See https://github.com/netty/netty/issues/11612
         ByteBuf buffer = _allocator.HeapBuffer(8).WriteZero(8);
         CompositeByteBuf compositeByteBuf = _allocator.CompositeHeapBuffer(int.MaxValue);
+
         try
         {
             compositeByteBuf.AddComponents(new ByteBuf[] { buffer, null }, true);
@@ -77,6 +78,7 @@ public class CompositeByteBufBoundaryTest : IDisposable
         finally
         {
             compositeByteBuf.Release();
+
             // CLR preflight leaves a rejected array input caller-owned; single insertion can consume it.
             if (buffer.RefCnt > 0)
                 buffer.Release();
@@ -106,6 +108,7 @@ public class CompositeByteBufBoundaryTest : IDisposable
         finally
         {
             compositeByteBuf.Release();
+
             // CLR preflight leaves a rejected array input caller-owned; single insertion can consume it.
             if (buffer.RefCnt > 0)
                 buffer.Release();
@@ -135,6 +138,7 @@ public class CompositeByteBufBoundaryTest : IDisposable
         finally
         {
             compositeByteBuf.Release();
+
             // CLR preflight leaves a rejected array input caller-owned; single insertion can consume it.
             if (buffer.RefCnt > 0)
                 buffer.Release();
@@ -148,10 +152,12 @@ public class CompositeByteBufBoundaryTest : IDisposable
         int capacity = 1024 * 1024; // 1MB
         ByteBuf buffer = _allocator.HeapBuffer(capacity).WriteZero(capacity);
         List<ByteBuf> buffers = new List<ByteBuf>();
+
         for (long i = 0; i <= int.MaxValue; i += capacity)
         {
             buffers.Add(buffer.Duplicate());
         }
+
         // Add one more
         buffers.Add(buffer.Duplicate());
 
@@ -176,10 +182,12 @@ public class CompositeByteBufBoundaryTest : IDisposable
         int capacity = 1024 * 1024; // 1MB
         ByteBuf buffer = _allocator.HeapBuffer(capacity).WriteZero(capacity);
         List<ByteBuf> buffers = new List<ByteBuf>();
+
         for (long i = 0; i <= int.MaxValue; i += capacity)
         {
             buffers.Add(buffer.Duplicate());
         }
+
         // Add one more
         buffers.Add(buffer.Duplicate());
 

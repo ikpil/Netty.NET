@@ -43,6 +43,7 @@ public class PooledAllocatorBindingQueryTest
         using var allocator = new PooledByteBufAllocator(false, topology is 0 or 2 ? 1 : 0, topology is 0 or 3 ? 1 : 0,
             pageSize: 4096, maxOrder: 1, nativeAllocator: native, smallCacheSize: cached ? 2 : 0, normalCacheSize: cached ? 2 : 0);
         ByteBuf owner = null;
+
         try
         {
             for (int i = 0; i < 3; ++i)
@@ -61,6 +62,7 @@ public class PooledAllocatorBindingQueryTest
             var worker = new Thread(() =>
             {
                 ByteBuf allocation = null;
+
                 try
                 {
                     Assert.False(allocator.HasCurrentThreadBinding);
@@ -81,6 +83,7 @@ public class PooledAllocatorBindingQueryTest
             }) { IsBackground = true };
             worker.Start();
             Assert.True(worker.Join(TimeSpan.FromSeconds(10)));
+
             if (workerFailure != null)
             {
                 ExceptionDispatchInfo.Capture(workerFailure).Throw();
@@ -96,11 +99,13 @@ public class PooledAllocatorBindingQueryTest
             Assert.Equal(pinnedDirect, allocator.PinnedDirectMemory);
             Assert.Equal(expected, allocator.ReleaseCurrentThreadBinding());
             Assert.False(allocator.HasCurrentThreadBinding);
+
             if (trigger == 0)
             {
                 owner.SetByte(0, 0x5A);
                 Assert.Equal(0x5A, owner.GetByte(0));
             }
+
             owner.Release();
             owner = null;
             allocator.Dispose();

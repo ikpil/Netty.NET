@@ -51,6 +51,7 @@ public class SpdyFrameLogger : ChannelDuplexHandler
         {
             Log((ISpdyFrame) msg, Direction.INBOUND);
         }
+
         ctx.FireChannelRead(msg);
     }
 
@@ -60,6 +61,7 @@ public class SpdyFrameLogger : ChannelDuplexHandler
         {
             Log((ISpdyFrame) msg, Direction.OUTBOUND);
         }
+
         return ctx.WriteAsync(msg, cancellationToken);
     }
 

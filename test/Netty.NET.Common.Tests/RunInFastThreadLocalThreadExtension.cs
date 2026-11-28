@@ -49,6 +49,7 @@ public static class RunInFastThreadLocalThreadExtension
     public static void Run(Action invocation)
     {
         ArgumentNullException.ThrowIfNull(invocation);
+
         ExceptionDispatchInfo failure = null;
         var thread = new Worker(() =>
         {

@@ -142,6 +142,7 @@ public class ClientCookieDecoderTest
         sources.Add("b=\"1\",");
 
         ICollection<ICookie> cookies = new List<ICookie>();
+
         foreach (string source in sources)
         {
             cookies.Add(ClientCookieDecoder.STRICT.Decode(source));

@@ -23,6 +23,7 @@ public class PipelineOptionalRemovalContractTest
             var thread = new Thread(() =>
             {
                 Rendezvous(ref ready);
+
                 try
                 {
                     first = ((DefaultChannelPipeline)channel.Pipeline).RemoveIfExists(name);
@@ -34,6 +35,7 @@ public class PipelineOptionalRemovalContractTest
             });
             thread.Start();
             Rendezvous(ref ready);
+
             try
             {
                 second = ((DefaultChannelPipeline)channel.Pipeline).RemoveIfExists(name);
@@ -42,7 +44,9 @@ public class PipelineOptionalRemovalContractTest
             {
                 secondError = error;
             }
+
             thread.Join();
+
             try
             {
                 Assert.Null(firstError);
@@ -62,6 +66,7 @@ public class PipelineOptionalRemovalContractTest
     private static void Rendezvous(ref int ready)
     {
         Interlocked.Increment(ref ready);
+
         while (Volatile.Read(ref ready) < 2)
             Thread.Yield();
     }

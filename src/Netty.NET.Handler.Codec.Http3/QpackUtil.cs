@@ -45,6 +45,7 @@ internal sealed class QpackUtil
     internal static void EncodePrefixedInteger(ByteBuf @out, byte mask, int prefixLength, long toEncode)
     {
         CheckInRange(toEncode, 0, MAX_UNSIGNED_INT, "toEncode");
+
         int nbits = (1 << prefixLength) - 1;
         if (toEncode < nbits)
         {
@@ -54,6 +55,7 @@ internal sealed class QpackUtil
         {
             @out.WriteByte(unchecked((byte) (mask | nbits)));
             long remainder = toEncode - nbits;
+
             // A remainder of exactly 128 does not fit in the final (non-continuation) byte, which can only
             // represent 0-127; it must still go through the continuation-byte branch below.
             while (remainder >= 128)
@@ -62,6 +64,7 @@ internal sealed class QpackUtil
                 @out.WriteByte(next);
                 remainder = remainder / 128;
             }
+
             @out.WriteByte(unchecked((byte) remainder));
         }
     }
@@ -92,6 +95,7 @@ internal sealed class QpackUtil
         {
             throw PREFIXED_INTEGER_TOO_LONG;
         }
+
         return (int) aLong;
     }
 
@@ -123,6 +127,7 @@ internal sealed class QpackUtil
         long i = first;
         int factor = 0;
         byte next;
+
         do
         {
             if (factor == 56)
@@ -132,15 +137,18 @@ internal sealed class QpackUtil
                 // than continuing to scan an unbounded run of continuation bytes.
                 throw PREFIXED_INTEGER_ENCODING_TOO_LONG;
             }
+
             if (idx == writerIndex)
             {
                 @in.ReaderIndex = readerIndex;
                 return -1;
             }
+
             next = @in.GetByte(idx++);
             i += (next & 0x7fL) << factor;
             factor += 7;
         } while ((next & 0x80) == 0x80);
+
         @in.ReaderIndex = idx;
         return i;
     }
@@ -178,6 +186,7 @@ internal sealed class QpackUtil
             {
                 return 0;
             }
+
             AsciiString s1Ascii = (AsciiString) s1;
             AsciiString s2Ascii = (AsciiString) s2;
             return PlatformDependent.EqualsConstantTime(s1Ascii.Array(), s1Ascii.ArrayOffset(),
@@ -219,6 +228,7 @@ internal sealed class QpackUtil
         {
             q--;
         }
+
         return q;
     }
 

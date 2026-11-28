@@ -46,11 +46,13 @@ internal sealed class Http3RequestStreamEncodeStateValidator : ChannelOutboundHa
     public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken)
     {
         TaskCompletionSource promise = Http3CodecUtils.NewPromise();
+
         if (!(msg is IHttp3RequestStreamFrame))
         {
             Http3CodecUtils.Write(ctx, msg, promise);
             return promise.Task;
         }
+
         IHttp3RequestStreamFrame frame = (IHttp3RequestStreamFrame) msg;
         State? nextState = EvaluateFrame(state, frame);
         if (nextState == null)
@@ -58,6 +60,7 @@ internal sealed class Http3RequestStreamEncodeStateValidator : ChannelOutboundHa
             FrameTypeUnexpected(ctx, msg);
             return promise.Task;
         }
+
         state = nextState.Value;
         Http3CodecUtils.Write(ctx, msg, promise);
         return promise.Task;
@@ -97,6 +100,7 @@ internal sealed class Http3RequestStreamEncodeStateValidator : ChannelOutboundHa
             // always allow push promise frames.
             return state;
         }
+
         switch (state)
         {
             case State.None:
@@ -105,6 +109,7 @@ internal sealed class Http3RequestStreamEncodeStateValidator : ChannelOutboundHa
                 {
                     return null;
                 }
+
                 return IsInformationalResponse((IHttp3HeadersFrame) frame) ? State.Headers : State.FinalHeaders;
             case State.FinalHeaders:
                 if (frame is IHttp3HeadersFrame)
@@ -114,9 +119,11 @@ internal sealed class Http3RequestStreamEncodeStateValidator : ChannelOutboundHa
                         // Information response after final response headers
                         return null;
                     }
+
                     // trailers
                     return State.Trailers;
                 }
+
                 return state;
             case State.Trailers:
                 return null;

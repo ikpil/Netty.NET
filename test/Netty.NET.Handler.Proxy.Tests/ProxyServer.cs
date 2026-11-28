@@ -113,6 +113,7 @@ internal abstract class ProxyServer
         protected override void InitChannel(ISocketChannel ch)
         {
             IChannelPipeline p = ch.Pipeline;
+
             if (useSsl)
             {
                 p.AddLast(ProxyHandlerTest.serverSslCtx.NewHandler(ch.Alloc()));
@@ -151,6 +152,7 @@ internal abstract class ProxyServer
     public void CheckExceptions()
     {
         Exception t;
+
         for (;;)
         {
             t = recordedExceptions.TryDequeue(out Exception polled) ? polled : null;
@@ -244,12 +246,14 @@ internal abstract class ProxyServer
             if (backend != null)
             {
                 bool wrote = false;
+
                 for (;;)
                 {
                     if (!received.TryDequeue(out object msg))
                     {
                         break;
                     }
+
                     _ = backend.WriteAsync(msg);
                     wrote = true;
                 }
@@ -271,6 +275,7 @@ internal abstract class ProxyServer
             b.Channel<NioSocketChannel>();
             b.Group(loop);
             b.Handler(handler);
+
             return b.ConnectAsync(IntermediaryDestination());
         }
 
@@ -364,6 +369,7 @@ internal abstract class ProxyServer
                 {
                     throw new InvalidOperationException("unexpected message: " + str);
                 }
+
                 return;
             }
 

@@ -58,6 +58,7 @@ internal sealed class PreferredAddressTypeComparator : IComparer<IPAddress>
         {
             return 0;
         }
+
         return preferredAddressType == o1.AddressFamily ? -1 : 1;
     }
 }

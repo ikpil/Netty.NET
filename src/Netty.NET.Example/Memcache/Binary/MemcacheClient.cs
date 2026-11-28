@@ -52,6 +52,7 @@ public sealed class MemcacheClient
     {
         // Configure SSL.
         SslContext sslCtx;
+
         if (SSL)
         {
             sslCtx = SslContextBuilder.ForClient()
@@ -63,6 +64,7 @@ public sealed class MemcacheClient
         }
 
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             Bootstrap b = new Bootstrap();
@@ -71,10 +73,12 @@ public sealed class MemcacheClient
                     .Handler(new ActionChannelInitializer<ISocketChannel>(ch =>
                     {
                         IChannelPipeline p = ch.Pipeline;
+
                         if (sslCtx != null)
                         {
                             p.AddLast(sslCtx.NewHandler(ch.Alloc(), HOST, PORT));
                         }
+
                         p.AddLast(new BinaryMemcacheClientCodec());
                         p.AddLast(new BinaryMemcacheObjectAggregator(int.MaxValue));
                         p.AddLast(new MemcacheClientHandler());
@@ -89,6 +93,7 @@ public sealed class MemcacheClient
             Console.WriteLine("set <key> <value>");
             Task lastWriteFuture = null;
             TextReader @in = Console.In;
+
             for (;;)
             {
                 string line = @in.ReadLine();
@@ -96,11 +101,13 @@ public sealed class MemcacheClient
                 {
                     break;
                 }
+
                 if ("quit".Equals(line.ToLower()))
                 {
                     await ch.CloseAsync();
                     break;
                 }
+
                 // Sends the received line to the server.
                 lastWriteFuture = ch.WriteAndFlushAsync(line);
             }

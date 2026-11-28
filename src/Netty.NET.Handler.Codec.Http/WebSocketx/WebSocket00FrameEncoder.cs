@@ -72,6 +72,7 @@ public class WebSocket00FrameEncoder : MessageToMessageEncoder<WebSocketFrame>, 
 
             ByteBuf buf = ctx.Alloc().Buffer(5);
             bool release = true;
+
             try
             {
                 // Encode type.
@@ -82,6 +83,7 @@ public class WebSocket00FrameEncoder : MessageToMessageEncoder<WebSocketFrame>, 
                 int b2 = dataLen >>> 14 & 0x7F;
                 int b3 = dataLen >>> 7 & 0x7F;
                 int b4 = dataLen & 0x7F;
+
                 if (b1 == 0)
                 {
                     if (b2 == 0)
@@ -90,6 +92,7 @@ public class WebSocket00FrameEncoder : MessageToMessageEncoder<WebSocketFrame>, 
                         {
                             buf.WriteByte(b3 | 0x80);
                         }
+
                         buf.WriteByte(b4);
                     }
                     else

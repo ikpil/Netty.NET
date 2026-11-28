@@ -69,6 +69,7 @@ public class Http2InboundFrameLogger : IHttp2FrameReader
                 int padding, bool endOfStream)
         {
             logger.LogData(INBOUND, ctx, streamId, data, padding, endOfStream);
+
             return listener.OnDataRead(ctx, streamId, data, padding, endOfStream);
         }
 

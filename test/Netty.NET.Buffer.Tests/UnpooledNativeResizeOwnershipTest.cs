@@ -75,12 +75,15 @@ public class UnpooledNativeResizeOwnershipTest
             3 => new AdvancedLeakAwareByteBuf(root, tracker),
             _ => root.Duplicate()
         };
+
         if (facade == 4)
             b.SetIndex(1, 6).MarkReaderIndex().MarkWriterIndex().SetIndex(4, 12);
+
         ReadOnlyMemory<byte> old = root.AsReadOnlyMemory(0, 16);
         ReadOnlySpan<byte> captured = old.Span;
         MemoryHandle pin = pinned ? old.Pin() : default;
         NativeMemoryOwner pressure = native.Allocate(borrowed ? 31 : 15);
+
         try
         {
             Assert.Equal(31, native.ReservedBytes);
@@ -95,8 +98,10 @@ public class UnpooledNativeResizeOwnershipTest
             b.ResetWriterIndex().ResetReaderIndex();
             Assert.Equal((1, 6), (b.ReaderIndex, b.WriterIndex));
             root.SetIndex(3, 14);
+
             if (facade == 4)
                 b.SetIndex(4, 12);
+
             pressure.Dispose();
             b.Capacity = capacity;
             Assert.Equal(capacity, root.Capacity);
@@ -107,6 +112,7 @@ public class UnpooledNativeResizeOwnershipTest
             Assert.Equal(facade == 4 ? (4, 12) : (Math.Min(3, capacity), capacity), (b.ReaderIndex, b.WriterIndex));
             Assert.Equal(borrowed ? 0 : capacity, allocator.Metric.UsedDirectMemory);
             Assert.Equal(capacity, native.ReservedBytes);
+
             if (borrowed)
             {
                 Assert.Equal(bytes, old.ToArray());
@@ -117,13 +123,16 @@ public class UnpooledNativeResizeOwnershipTest
             }
             else
                 Assert.Throws<ObjectDisposedException>(() => old.Span.ToArray());
+
             if (pinned)
                 Assert.Equal(bytes, captured.ToArray());
+
             if (capacity < 6)
             {
                 // Shrink preserves marks; a writer mark outside the new capacity
                 // remains invalid, while the old reader mark can still be restored.
                 Assert.Throws<ArgumentOutOfRangeException>(() => b.ResetWriterIndex());
+
                 if (facade == 4)
                 {
                     // CLR validates the entire index pair. Repair the stale
@@ -131,23 +140,29 @@ public class UnpooledNativeResizeOwnershipTest
                     Assert.Throws<ArgumentOutOfRangeException>(() => b.ResetReaderIndex());
                     b.SetIndex(0, capacity);
                 }
+
                 b.ResetReaderIndex();
                 Assert.Equal(1, b.ReaderIndex);
+
                 if (facade == 4)
                 {
                     Assert.Throws<ArgumentOutOfRangeException>(() => root.ResetWriterIndex());
                     root.ResetReaderIndex();
                 }
+
                 Assert.Equal((1, capacity), (root.ReaderIndex, root.WriterIndex));
             }
             else
             {
                 b.ResetWriterIndex().ResetReaderIndex();
                 Assert.Equal((1, 6), (b.ReaderIndex, b.WriterIndex));
+
                 if (facade == 4)
                     root.ResetWriterIndex().ResetReaderIndex();
+
                 Assert.Equal((1, 6), (root.ReaderIndex, root.WriterIndex));
             }
+
             Assert.True(b.Release());
             Assert.Equal(facade is 2 or 3 ? 1 : 0, tracker.Closes);
             Assert.Equal(0, allocator.Metric.UsedDirectMemory);
@@ -159,8 +174,10 @@ public class UnpooledNativeResizeOwnershipTest
         finally
         {
             pressure.Dispose();
+
             if (root.RefCnt > 0)
                 b.Release();
+
             external.Dispose();
             pin.Dispose();
             Assert.Equal(0, native.ReservedBytes);

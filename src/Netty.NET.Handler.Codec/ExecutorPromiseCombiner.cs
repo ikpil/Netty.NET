@@ -68,9 +68,11 @@ internal static class ExecutorPromiseCombiner
             promise.TrySetResult();
             return;
         }
+
         IEventExecutor executor = ctx.Executor;
         TaskScheduler scheduler = new EventExecutorTaskScheduler(() => executor);
         Combiner combiner = new Combiner(snapshot, promise);
+
         foreach (Task future in snapshot)
         {
             _ = future.ContinueWith(static (_, state) => ((Combiner) state).OperationComplete(), combiner,

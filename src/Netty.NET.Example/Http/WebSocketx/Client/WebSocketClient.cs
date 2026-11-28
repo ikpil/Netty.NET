@@ -71,6 +71,7 @@ public sealed class WebSocketClient
         string scheme = string.IsNullOrEmpty(uri.Scheme)? "ws" : uri.Scheme;
         string host = string.IsNullOrEmpty(uri.Host)? "127.0.0.1" : uri.Host;
         int port;
+
         if (uri.IsDefaultPort)
         {
             if ("ws".Equals(scheme, StringComparison.OrdinalIgnoreCase))
@@ -99,6 +100,7 @@ public sealed class WebSocketClient
 
         bool ssl = "wss".Equals(scheme, StringComparison.OrdinalIgnoreCase);
         SslContext sslCtx;
+
         if (ssl)
         {
             sslCtx = SslContextBuilder.ForClient()
@@ -110,6 +112,7 @@ public sealed class WebSocketClient
         }
 
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             // Connect with V13 (RFC 6455 aka HyBi-17). You can change it to V08 or V00.
@@ -126,10 +129,12 @@ public sealed class WebSocketClient
              .Handler(new ActionChannelInitializer<ISocketChannel>(ch =>
              {
                  IChannelPipeline p = ch.Pipeline;
+
                  if (sslCtx != null)
                  {
                      p.AddLast(sslCtx.NewHandler(ch.Alloc(), host, port));
                  }
+
                  p.AddLast(
                          new HttpClientCodec(),
                          new HttpObjectAggregator(MAX_CONTENT_LENGTH),
@@ -141,6 +146,7 @@ public sealed class WebSocketClient
             await handler.HandshakeFuture();
 
             TextReader console = Console.In;
+
             while (true)
             {
                 string msg = console.ReadLine();

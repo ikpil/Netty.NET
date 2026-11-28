@@ -40,20 +40,24 @@ public class SocketStringEchoTest : AbstractSocketTest
     static SocketStringEchoTest()
     {
         StringBuilder sb = new StringBuilder();
+
         for (int i = 0; i < data.Length; i ++)
         {
             sb.Length = 0;
             int eLen = random.Next(512);
             int j = 1;
+
             while (sb.Length < eLen)
             {
                 // CLR: String.format("%03X/%x.", i, j++) is the X3/x hexadecimal format with the default locale.
                 sb.Append(string.Format(CultureInfo.CurrentCulture, "{0:X3}/{1:x}.", i, j++));
             }
+
             if (sb.Length > eLen)
             {
                 sb.Length = eLen;
             }
+
             data[i] = sb.ToString();
         }
     }
@@ -122,6 +126,7 @@ public class SocketStringEchoTest : AbstractSocketTest
 
         IChannel sc = await sb.BindAsync();
         IChannel cc = await cb.ConnectAsync(sc.LocalAddress);
+
         foreach (string element in data)
         {
             string delimiter = NextBoolean() ? "\r\n" : "\n";
@@ -169,6 +174,7 @@ public class SocketStringEchoTest : AbstractSocketTest
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
             channel = ctx.Channel;
+
             if (!autoRead)
             {
                 ctx.Read();

@@ -105,6 +105,7 @@ public class ChunkedNioFile : IChunkedInput<ByteBuf>
         {
             throw new ClosedChannelException();
         }
+
         this.@in = @in;
         this.chunkSize = chunkSize;
         this.offset = startOffset = offset;
@@ -120,6 +121,7 @@ public class ChunkedNioFile : IChunkedInput<ByteBuf>
         {
             throw new ClosedChannelException();
         }
+
         return @in.Length;
     }
 
@@ -168,9 +170,11 @@ public class ChunkedNioFile : IChunkedInput<ByteBuf>
         int chunkSize = (int) Math.Min(this.chunkSize, endOffset - offset);
         ByteBuf buffer = allocator.Buffer(chunkSize);
         bool release = true;
+
         try
         {
             int readBytes = 0;
+
             for (;;)
             {
                 int localReadBytes = buffer.WriteBytes(@in.SafeFileHandle, offset + readBytes, chunkSize - readBytes);
@@ -189,12 +193,14 @@ public class ChunkedNioFile : IChunkedInput<ByteBuf>
                             @in.Length.ToString(CultureInfo.InvariantCulture) + " smaller than requested end " +
                             "offset " + endOffset.ToString(CultureInfo.InvariantCulture));
                 }
+
                 readBytes += localReadBytes;
                 if (readBytes == chunkSize)
                 {
                     break;
                 }
             }
+
             this.offset += readBytes;
             release = false;
             return buffer;

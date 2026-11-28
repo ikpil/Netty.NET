@@ -95,14 +95,17 @@ public class ByteBufAllocatedReadDispatchTest
             1 => new PooledByteBufAllocator(preferDirect, maxOrder: 1, nativeAllocator: native),
             _ => new AdaptiveByteBufAllocator(preferDirect, lowMemory: false, nativeAllocator: native)
         };
+
         try
         {
             ByteBuf empty = allocator.IoBuffer(0, 0);
             Assert.NotSame(Unpooled.EmptyBuffer, empty);
+
             for (int kind = 0; kind <= 4; kind++)
             {
                 var tracker = new Tracker();
                 ByteBuf facade = Wrap(empty, tracker, kind);
+
                 foreach (ByteBuf source in new[] { empty, facade })
                 {
                     Assert.Same(empty, source.ReadBytes(0));
@@ -114,8 +117,10 @@ public class ByteBufAllocatedReadDispatchTest
                     Assert.Equal(1, source.RefCnt);
                     Assert.False(source.Release());
                 }
+
                 Assert.Equal(0, tracker.Closes);
             }
+
             // A derived read-only view uses AbstractByteBuf's ordinary allocated-read contract.
             Assert.Same(Unpooled.EmptyBuffer, empty.AsReadOnly().ReadBytes(0));
             Assert.Same(empty, empty.ReadSlice(0));
@@ -151,6 +156,7 @@ public class ByteBufAllocatedReadDispatchTest
         var native = new NativeMemoryAllocator();
         var allocator = new UnpooledByteBufAllocator(preferDirect, native);
         ByteBuf owner;
+
         if (composite)
         {
             owner = new Composite(allocator).AddComponent(
@@ -160,10 +166,12 @@ public class ByteBufAllocatedReadDispatchTest
         {
             owner = new Heap(allocator).WriteBytes(new byte[] { 17, 34, 51, 68 });
         }
+
         owner.ReaderIndex = 1;
         var tracker = new Tracker();
         ByteBuf facade = Wrap(owner, tracker, kind);
         ByteBuf result = null;
+
         try
         {
             if (length is < 0 or > 3)
@@ -174,16 +182,19 @@ public class ByteBufAllocatedReadDispatchTest
             {
                 result = facade.ReadBytes(length);
             }
+
             Assert.Equal(1, composite ? ((Composite)owner).Calls : ((Heap)owner).Calls);
             Assert.Equal(1 + (length == 2 ? 2 : 0), owner.ReaderIndex);
             Assert.Equal(owner.ReaderIndex, facade.ReaderIndex);
             Assert.Equal(4, owner.WriterIndex);
             Assert.Equal(1, owner.RefCnt);
             Assert.Equal(kind is 2 or 7 ? 1 : 0, tracker.Records);
+
             if (length == 0)
             {
                 Assert.Same(Unpooled.EmptyBuffer, result);
             }
+
             if (length == 2)
             {
                 Assert.Same(allocator, result.Alloc());
@@ -194,15 +205,18 @@ public class ByteBufAllocatedReadDispatchTest
                 result.SetByte(0, 99);
                 Assert.Equal(34, owner.GetByte(1));
             }
+
             Assert.True(kind is 3 or 4 ? owner.Release() : facade.Release());
             Assert.Equal(0, owner.RefCnt);
             Assert.Equal(kind is 1 or 2 or 6 or 7 ? 1 : 0, tracker.Closes);
+
             if (length == 2)
             {
                 Assert.Equal(new byte[] { 99, 51 }, result.ReadableSequence.ToArray());
                 Assert.True(result.Release());
                 result = null;
             }
+
             Assert.Equal(0, allocator.Metric.UsedHeapMemory);
             Assert.Equal(0, allocator.Metric.UsedDirectMemory);
             Assert.Equal(0, native.ReservedBytes);
@@ -213,6 +227,7 @@ public class ByteBufAllocatedReadDispatchTest
             {
                 result.Release();
             }
+
             if (owner.RefCnt > 0)
             {
                 owner.Release();

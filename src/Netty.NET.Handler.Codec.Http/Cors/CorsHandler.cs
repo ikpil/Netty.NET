@@ -81,6 +81,7 @@ public class CorsHandler : ChannelDuplexHandler
     public CorsHandler(IList<CorsConfig> configList, bool isShortCircuit)
     {
         CheckNonEmpty(configList, "configList");
+
         this.configList = configList;
         this.isShortCircuit = isShortCircuit;
         this.varyOnOrigin = IsCorsSupportEnabled();
@@ -95,6 +96,7 @@ public class CorsHandler : ChannelDuplexHandler
                 return true;
             }
         }
+
         return false;
     }
 
@@ -105,6 +107,7 @@ public class CorsHandler : ChannelDuplexHandler
             request = (IHttpRequest) msg;
             string origin = request.Headers().Get(HttpHeaderNames.ORIGIN);
             config = GetForOrigin(origin);
+
             if (IsPreflightRequest(request))
             {
                 HandlePreflight(ctx, request);
@@ -113,6 +116,7 @@ public class CorsHandler : ChannelDuplexHandler
                 consumeContent = true;
                 return;
             }
+
             if (isShortCircuit && !(origin == null || config != null))
             {
                 Forbidden(ctx, request);
@@ -152,10 +156,12 @@ public class CorsHandler : ChannelDuplexHandler
             SetPreflightHeaders(response);
             SetAllowPrivateNetwork(response);
         }
+
         if (!response.Headers().Contains(HttpHeaderNames.CONTENT_LENGTH))
         {
             response.Headers().Set(HttpHeaderNames.CONTENT_LENGTH, HttpHeaderValues.ZERO);
         }
+
         ReferenceCountUtil.Release(request);
         Respond(ctx, request, response);
     }
@@ -192,6 +198,7 @@ public class CorsHandler : ChannelDuplexHandler
                 return corsConfig;
             }
         }
+
         return null;
     }
 
@@ -206,6 +213,7 @@ public class CorsHandler : ChannelDuplexHandler
                 SetVaryHeader(response);
                 return true;
             }
+
             if (config.IsAnyOriginSupported())
             {
                 if (config.IsCredentialsAllowed())
@@ -217,16 +225,20 @@ public class CorsHandler : ChannelDuplexHandler
                 {
                     SetAnyOrigin(response);
                 }
+
                 return true;
             }
+
             if (config.Origins().Contains(origin))
             {
                 SetOrigin(response, origin);
                 SetVaryHeader(response);
                 return true;
             }
+
             logger.Debug("Request origin [{}]] was not among the configured origins [{}]", origin, config.Origins());
         }
+
         return false;
     }
 
@@ -323,11 +335,13 @@ public class CorsHandler : ChannelDuplexHandler
                 SetAllowCredentials(response);
                 SetExposeHeaders(response);
             }
+
             if (varyOnOrigin)
             {
                 SetVaryHeader(response);
             }
         }
+
         return ctx.WriteAsync(msg, cancellationToken);
     }
 
@@ -351,6 +365,7 @@ public class CorsHandler : ChannelDuplexHandler
         HttpUtil.SetKeepAlive(response, keepAlive);
 
         Task future = ctx.WriteAndFlushAsync(response);
+
         if (!keepAlive)
         {
             IChannel channel = ctx.Channel;

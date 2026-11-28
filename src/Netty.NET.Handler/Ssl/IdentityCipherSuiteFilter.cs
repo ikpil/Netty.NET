@@ -58,14 +58,17 @@ public sealed class IdentityCipherSuiteFilter : ICipherSuiteFilter
         else
         {
             List<string> newCiphers = new List<string>(supportedCiphers.Count);
+
             foreach (string c in ciphers)
             {
                 if (c == null)
                 {
                     break;
                 }
+
                 newCiphers.Add(c);
             }
+
             return newCiphers.ToArray();
         }
     }

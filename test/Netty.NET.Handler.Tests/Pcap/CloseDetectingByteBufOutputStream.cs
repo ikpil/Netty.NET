@@ -52,6 +52,7 @@ internal sealed class CloseDetectingByteBufOutputStream : System.IO.Stream
             @delegate.Dispose();
             isCloseCalled = true;
         }
+
         base.Dispose(disposing);
     }
 

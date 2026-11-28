@@ -40,6 +40,7 @@ public sealed class StompVersion
     static StompVersion()
     {
         List<string> subProtocols = new List<string>(Values().Length);
+
         foreach (StompVersion stompVersion in Values())
         {
             subProtocols.Add(stompVersion.subProtocol);

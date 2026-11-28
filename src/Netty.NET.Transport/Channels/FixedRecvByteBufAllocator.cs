@@ -32,6 +32,7 @@ public class FixedRecvByteBufAllocator : DefaultMaxMessagesRecvByteBufAllocator
     public FixedRecvByteBufAllocator(int bufferSize)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(bufferSize);
+
         _bufferSize = bufferSize;
     }
 

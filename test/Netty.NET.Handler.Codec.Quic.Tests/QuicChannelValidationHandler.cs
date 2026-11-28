@@ -60,6 +60,7 @@ internal class QuicChannelValidationHandler : ChannelInboundHandlerAdapter
         {
             ExceptionDispatchInfo.Capture(cause).Throw();
         }
+
         if (wasActive)
         {
             // Validate that the addresses could be retrieved

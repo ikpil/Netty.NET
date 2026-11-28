@@ -156,6 +156,7 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
                 page = 8192;
                 alignment = 0;
             }
+
             // Java validates alignment shape when constructing the allocator, after
             // its page fallback. Preserve that timing instead of silently correcting it.
             PageSize = page;
@@ -167,6 +168,7 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
                 logger.Debug("Invalid pooled maxOrder; using 9");
                 order = 9;
             }
+
             MaxOrder = order;
 
             // Determine reasonable default for nHeapArena and nDirectArena.
@@ -205,9 +207,11 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
             // the number of threshold of allocations when cached entries will be freed up if not frequently used
             TrimInterval = SystemPropertyUtil.GetInt("io.netty.allocator.cacheTrimInterval", 8192);
             long milliseconds;
+
             if (SystemPropertyUtil.Contains("io.netty.allocation.cacheTrimIntervalMillis"))
             {
                 logger.Warn("-Dio.netty.allocation.cacheTrimIntervalMillis is deprecated, use -Dio.netty.allocator.cacheTrimIntervalMillis");
+
                 if (SystemPropertyUtil.Contains("io.netty.allocator.cacheTrimIntervalMillis"))
                 {
                     // Both system properties are specified. Use the non-deprecated one.
@@ -218,6 +222,7 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
             }
             else
                 milliseconds = SystemPropertyUtil.GetLong("io.netty.allocator.cacheTrimIntervalMillis", 0);
+
             // CLR TimeSpan has a narrower range than Java's long millisecond delays.
             TrimPeriod = milliseconds <= 0 ? TimeSpan.Zero : TimeSpan.FromTicks(
                 Math.Min(milliseconds, long.MaxValue / TimeSpan.TicksPerMillisecond) * TimeSpan.TicksPerMillisecond);
@@ -382,6 +387,7 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
         {
             throw new ArgumentOutOfRangeException(nameof(pageSize));
         }
+
         if (directMemoryCacheAlignment > 0)
         {
             // Ensure page size is a whole multiple of the alignment, or bump it to the next whole multiple.
@@ -390,13 +396,16 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
             {
                 throw new ArgumentOutOfRangeException(nameof(pageSize));
             }
+
             pageSize = (int)aligned;
         }
+
         if (pageSize < 4096 || !BitOperations.IsPow2(pageSize))
             throw new ArgumentOutOfRangeException(nameof(pageSize));
         if (maxOrder < 0 || maxOrder > 14)
             throw new ArgumentOutOfRangeException(null,
                 "maxOrder: " + maxOrder.ToString(System.Globalization.CultureInfo.InvariantCulture) + " (expected: 0-14)");
+
         // Ensure the resulting chunkSize does not overflow.
         long chunkSize = (long)pageSize << maxOrder;
         if (chunkSize > 1 << 30)
@@ -405,17 +414,21 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
         }
         ArgumentOutOfRangeException.ThrowIfNegative(nHeapArena);
         ArgumentOutOfRangeException.ThrowIfNegative(nDirectArena);
+
         // The source passes cache sizes to PoolThreadCache unchecked: nonpositive sizes disable that cache, and the
         // DEFAULT_* capacity/trim values are only validated once an eligible thread actually creates caches.
         // CLR: explicit overrides of those process-wide values are validated here.
         if (maxCachedBufferCapacity is int capacity)
             ArgumentOutOfRangeException.ThrowIfNegative(capacity, nameof(maxCachedBufferCapacity));
+
         if (cacheTrimInterval is int interval)
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(interval, nameof(cacheTrimInterval));
+
         if (cacheTrimPeriod < TimeSpan.Zero)
         {
             throw new ArgumentOutOfRangeException(nameof(cacheTrimPeriod));
         }
+
         SmallCacheSize = smallCacheSize;
         NormalCacheSize = normalCacheSize;
         _maxCachedBufferCapacity = maxCachedBufferCapacity ?? Configuration.Value.MaxCachedCapacity;
@@ -427,6 +440,7 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
         _nativeAllocator = nativeAllocator ?? NativeMemoryAllocator.Shared;
         _heapArenas = new PoolArena[nHeapArena];
         _directArenas = new PoolArena[nDirectArena];
+
         if (nHeapArena > 0)
         {
             var sizeClasses = new SizeClasses(pageSize, shifts, ChunkSize, 0);
@@ -436,12 +450,15 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
                 _heapArenas[i] = new PoolHeapArena(this, sizeClasses);
             }
         }
+
         if (nDirectArena > 0)
         {
             var sizeClasses = new SizeClasses(pageSize, shifts, ChunkSize, directMemoryCacheAlignment);
+
             for (int i = 0; i < nDirectArena; ++i)
                 _directArenas[i] = new PoolDirectArena(this, sizeClasses, _nativeAllocator);
         }
+
         HeapArenas = Array.AsReadOnly<IPoolArenaMetric>(_heapArenas);
         DirectArenas = Array.AsReadOnly<IPoolArenaMetric>(_directArenas);
         Metric = new PooledByteBufAllocatorMetric(this);
@@ -459,6 +476,7 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
         PoolArena heapArena = cache?.HeapArena;
 
         ByteBuf buf;
+
         if (heapArena != null)
         {
             buf = AllocateFromArena(heapArena, initialCapacity, maxCapacity, cache.Cache);
@@ -470,6 +488,7 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
 
         // CLR: detector callbacks run after allocation; the buffer owns its reservation.
         BufferAllocatorEventSource.Log.Allocated(buf);
+
         return ToLeakAwareBuffer(buf);
     }
 
@@ -480,6 +499,7 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
         PoolArena directArena = cache?.DirectArena;
 
         ByteBuf buf;
+
         if (directArena != null)
         {
             buf = AllocateFromArena(directArena, initialCapacity, maxCapacity, cache.Cache);
@@ -490,6 +510,7 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
         }
 
         BufferAllocatorEventSource.Log.Allocated(buf);
+
         return ToLeakAwareBuffer(buf);
     }
 
@@ -503,6 +524,7 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
         {
             // CLR: Dispose raced with this allocation; report the allocator rather than its arena.
             ObjectDisposedException.ThrowIf(true, this);
+
             throw;
         }
     }
@@ -532,7 +554,9 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
         {
             return -1;
         }
+
         long total = 0;
+
         foreach (PoolArena arena in arenas)
         {
             total = unchecked(total + (pinned ? arena.NumPinnedBytes : arena.NumActiveBytes));
@@ -541,6 +565,7 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
                 return long.MaxValue;
             }
         }
+
         return total;
     }
 
@@ -552,12 +577,14 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
     public void Dispose()
     {
         using var events = BufferAllocatorEventSource.Log.BeginOperation();
+
         lock (_sync)
         {
             if (_disposed)
             {
                 return;
             }
+
             _disposed = true;
 
             foreach (ThreadBinding binding in _threadBindings.Values)
@@ -571,6 +598,7 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
             {
                 arena.Dispose();
             }
+
             foreach (PoolArena arena in _directArenas)
             {
                 arena.Dispose();
@@ -629,12 +657,15 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
         {
             return null;
         }
+
         Thread thread = Thread.CurrentThread;
         if (_threadBindings.TryGetValue(thread.ManagedThreadId, out ThreadBinding binding) && binding.IsOwner(thread))
             return binding;
+
         lock (_sync)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
+
             return NewThreadBinding(thread);
         }
     }
@@ -648,6 +679,7 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
         {
             return binding;
         }
+
         ReleaseTerminatedThreadBindingsCore();
         IEventExecutor executor = ThreadExecutorMap.CurrentExecutor();
         bool useCache = _useCacheForAllThreads ||
@@ -660,6 +692,7 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
         _threadBindings[id] = binding;
         binding.HeapArena?.AddThreadBinding();
         binding.DirectArena?.AddThreadBinding();
+
         try
         {
             // The Thread is used by an EventExecutor, let's use the cache as the chances are good that we
@@ -668,6 +701,7 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
             // the original eligibility rules; mapped executors permit periodic trim.
             if (_cacheTrimPeriod > TimeSpan.Zero && executor != null)
                 binding.StartTrimming(executor, _cacheTrimPeriod);
+
             if (_threadCleanup != null && FastThreadLocalThread.CurrentThreadWillCleanupFastThreadLocals())
                 _threadCleanup.Set(new WeakReference<ThreadBinding>(binding));
         }
@@ -678,6 +712,7 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
             binding.Detach();
             throw;
         }
+
         return binding;
     }
 
@@ -693,6 +728,7 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
             {
                 return;
             }
+
             lock (owner._sync)
             {
                 int id = Environment.CurrentManagedThreadId;
@@ -700,6 +736,7 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
                 {
                     return;
                 }
+
                 owner._threadBindings.TryRemove(id, out _);
                 binding.Detach();
             }
@@ -712,6 +749,7 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
         {
             return null;
         }
+
         PoolArena minArena = arenas[0];
         //optimized
         //If it is the first execution, directly return minarena and reduce the number of for loop comparisons below
@@ -719,11 +757,13 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
         {
             return minArena;
         }
+
         for (int i = 1; i < arenas.Length; ++i)
             if (arenas[i].NumThreadCaches < minArena.NumThreadCaches)
             {
                 minArena = arenas[i];
             }
+
         return minArena;
     }
 
@@ -736,11 +776,13 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
     public bool TrimCurrentThreadCache()
     {
         using var events = BufferAllocatorEventSource.Log.BeginOperation();
+
         lock (_sync)
         {
             Thread thread = Thread.CurrentThread;
             if (!_threadBindings.TryGetValue(thread.ManagedThreadId, out ThreadBinding binding) || !binding.IsOwner(thread))
                 return false;
+
             binding.Cache.Trim();
             return true;
         }
@@ -774,11 +816,13 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
     public bool ReleaseCurrentThreadBinding()
     {
         using var events = BufferAllocatorEventSource.Log.BeginOperation();
+
         lock (_sync)
         {
             Thread thread = Thread.CurrentThread;
             if (!_threadBindings.TryGetValue(thread.ManagedThreadId, out ThreadBinding binding) || !binding.IsOwner(thread))
                 return false;
+
             _threadBindings.TryRemove(thread.ManagedThreadId, out _);
             binding.Detach();
             return true;
@@ -792,6 +836,7 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
     public int ReleaseTerminatedThreadBindings()
     {
         using var events = BufferAllocatorEventSource.Log.BeginOperation();
+
         lock (_sync)
         {
             return ReleaseTerminatedThreadBindingsCore();
@@ -802,20 +847,24 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
     {
         Debug.Assert(Monitor.IsEntered(_sync));
         List<int> removed = null;
+
         foreach (var pair in _threadBindings)
             if (!pair.Value.IsAlive)
             {
                 (removed ??= new List<int>()).Add(pair.Key);
             }
+
         if (removed == null)
         {
             return 0;
         }
+
         foreach (int id in removed)
         {
             _threadBindings.TryRemove(id, out ThreadBinding binding);
             binding.Detach();
         }
+
         return removed.Count;
     }
 
@@ -824,6 +873,7 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
         get
         {
             using var events = BufferAllocatorEventSource.Log.BeginOperation();
+
             lock (_sync)
             {
                 ReleaseTerminatedThreadBindingsCore();
@@ -883,6 +933,7 @@ public class PooledByteBufAllocator : AbstractByteBufAllocator, IByteBufAllocato
             {
                 task.GetAwaiter().GetResult();
             }
+
             // Immediate rejection is propagated to the factory; later scheduler
             // faults are observed without retaining the binding in a continuation.
             _ = task.ContinueWith(static failed =>

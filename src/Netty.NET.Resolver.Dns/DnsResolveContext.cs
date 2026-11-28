@@ -138,6 +138,7 @@ internal static class DnsResolveContext
         {
             return name;
         }
+
         return name + '.';
     }
 
@@ -162,6 +163,7 @@ internal static class DnsResolveContext
         }
 
         CheckCnameLoop(name, first, second);
+
         return CnameResolveFromCacheLoop(cnameCache, name, first, second);
     }
 
@@ -173,17 +175,21 @@ internal static class DnsResolveContext
         bool advance = false;
 
         string name = mapping;
+
         // Resolve from cnameCache() until there is no more cname entry cached.
         while ((mapping = cnameCache.Get(HostnameWithDot(name))) != null)
         {
             CheckCnameLoop(hostname, first, mapping);
             name = mapping;
+
             if (advance)
             {
                 first = cnameCache.Get(first);
             }
+
             advance = !advance;
         }
+
         return name;
     }
 
@@ -207,6 +213,7 @@ internal static class DnsResolveContext
         {
             return authoritativeDnsServerCache;
         }
+
         return new RedirectAuthoritativeDnsServerCache(authoritativeDnsServerCache);
     }
 
@@ -245,6 +252,7 @@ internal static class DnsResolveContext
     internal static Exception Cause(DnsResponseCode code)
     {
         Debug.Assert(code != null);
+
         if (DnsResponseCode.SERVFAIL.IntValue() == code.IntValue())
         {
             return SERVFAIL_QUERY_FAILED_EXCEPTION;
@@ -280,11 +288,13 @@ internal static class DnsResolveContext
                 {
                     IDnsServerAddressStream stream = duplicate.Duplicate();
                     addresses = new List<EndPoint>(Count);
+
                     for (int i = 0; i < stream.Size(); i++)
                     {
                         addresses.Add(stream.Next());
                     }
                 }
+
                 return addresses[index];
             }
         }
@@ -294,6 +304,7 @@ internal static class DnsResolveContext
         public IEnumerator<EndPoint> GetEnumerator()
         {
             IDnsServerAddressStream stream = duplicate.Duplicate();
+
             for (int i = 0; i < stream.Size(); i++)
             {
                 yield return stream.Next();
@@ -319,10 +330,12 @@ internal static class DnsResolveContext
         }
 
         AuthoritativeNameServerList serverNames = new AuthoritativeNameServerList(questionName);
+
         for (int i = 0; i < authorityCount; i++)
         {
             serverNames.Add(res.RecordAt<IDnsRecord>(DnsSection.AUTHORITY, i));
         }
+
         return serverNames.IsEmpty() ? null : serverNames;
     }
 
@@ -331,6 +344,7 @@ internal static class DnsResolveContext
     {
         int answerCount = response.Count(DnsSection.ANSWER);
         Dictionary<string, string> cnames = null;
+
         for (int i = 0; i < answerCount; i ++)
         {
             IDnsRecord r = response.RecordAt<IDnsRecord>(DnsSection.ANSWER, i);
@@ -373,6 +387,7 @@ internal static class DnsResolveContext
                 {
                     cache.Cache(nameWithDot, mappingWithDot, r.TimeToLive(), loop);
                 }
+
                 cnames[name] = mapping;
             }
         }
@@ -383,6 +398,7 @@ internal static class DnsResolveContext
     internal static string DecodeDomainName(ByteBuf @in)
     {
         @in.MarkReaderIndex();
+
         try
         {
             return DefaultDnsRecordDecoder.DecodeName(@in);
@@ -432,6 +448,7 @@ internal static class DnsResolveContext
             string recordName = r.Name().ToLowerInvariant();
 
             int dots = 0;
+
             for (int a = recordName.Length - 1, b = questionName.Length - 1; a >= 0; a--, b--)
             {
                 char c = recordName[a];
@@ -439,6 +456,7 @@ internal static class DnsResolveContext
                 {
                     return;
                 }
+
                 if (c == '.')
                 {
                     dots++;
@@ -469,10 +487,12 @@ internal static class DnsResolveContext
             else if (head.dots == dots)
             {
                 AuthoritativeNameServer serverName = head;
+
                 while (serverName.next != null)
                 {
                     serverName = serverName.next;
                 }
+
                 serverName.next = new AuthoritativeNameServer(dots, r.TimeToLive(), recordName, domainName);
                 nameServerCount++;
             }
@@ -504,6 +524,7 @@ internal static class DnsResolveContext
                         {
                             serverName = serverName.next;
                         }
+
                         AuthoritativeNameServer server = new AuthoritativeNameServer(serverName);
                         server.next = serverName.next;
                         serverName.next = server;
@@ -511,6 +532,7 @@ internal static class DnsResolveContext
 
                         nameServerCount++;
                     }
+
                     // We should replace the TTL if needed with the one of the ADDITIONAL record so we use
                     // the smallest for caching.
                     serverName.Update(parent.NewRedirectServerAddress(resolved), r.TimeToLive());
@@ -519,6 +541,7 @@ internal static class DnsResolveContext
                     Cache(serverName, authoritativeCache, parent.Executor);
                     return;
                 }
+
                 serverName = serverName.next;
             }
         }
@@ -566,6 +589,7 @@ internal static class DnsResolveContext
                         }
                     }
                 }
+
                 serverName = serverName.next;
             }
         }
@@ -597,6 +621,7 @@ internal static class DnsResolveContext
             {
                 return;
             }
+
             cache.Cache(server.domainName, server.address, server.ttl, loop);
         }
 
@@ -616,14 +641,17 @@ internal static class DnsResolveContext
             List<EndPoint> addressList = new List<EndPoint>(nameServerCount);
 
             AuthoritativeNameServer server = head;
+
             while (server != null)
             {
                 if (server.address != null)
                 {
                     addressList.Add(server.address);
                 }
+
                 server = server.next;
             }
+
             return addressList;
         }
     }
@@ -900,6 +928,7 @@ internal abstract class DnsResolveContext<T> where T : class
                 return true;
             }
         }
+
         return false;
     }
 
@@ -930,6 +959,7 @@ internal abstract class DnsResolveContext<T> where T : class
             IDnsServerAddressStream nameServerAddressStream = GetNameServers(name);
 
             int end = expectedTypes.Length - 1;
+
             for (int i = 0; i < end; ++i)
             {
                 if (!Query(name, expectedTypes[i], nameServerAddressStream.Duplicate(), false, promise))
@@ -937,6 +967,7 @@ internal abstract class DnsResolveContext<T> where T : class
                     return;
                 }
             }
+
             Query(name, expectedTypes[end], nameServerAddressStream, false, promise);
         }
         finally
@@ -985,6 +1016,7 @@ internal abstract class DnsResolveContext<T> where T : class
                 // We are not interested in handling '.TLD.' as we should never serve the root servers from cache.
                 return null;
             }
+
             idx = idx2;
 
             IDnsServerAddressStream entries = AuthoritativeDnsServerCache().Get(hostname);
@@ -1022,11 +1054,13 @@ internal abstract class DnsResolveContext<T> where T : class
                                       queryLifecycleObserver, promise, cause);
             return;
         }
+
         TaskCompletionSource<IAddressedEnvelope<IDnsResponse, IPEndPoint>> queryPromise =
                 DnsNameResolver.NewPromise<IAddressedEnvelope<IDnsResponse, IPEndPoint>>();
 
         long queryStartTimeNanos;
         bool isFeedbackAddressStream;
+
         if (nameServerAddrStream is IDnsServerResponseFeedbackAddressStream)
         {
             queryStartTimeNanos = SystemTimer.NanoTime();
@@ -1060,10 +1094,12 @@ internal abstract class DnsResolveContext<T> where T : class
                 {
                     result.Release();
                 }
+
                 return;
             }
 
             Exception queryCause = DnsNameResolver.Cause(future);
+
             try
             {
                 if (queryCause == null)
@@ -1075,6 +1111,7 @@ internal abstract class DnsResolveContext<T> where T : class
                         feedbackNameServerAddrStream.FeedbackSuccess(nameServerAddr,
                                 SystemTimer.NanoTime() - queryStartTimeNanos);
                     }
+
                     OnResponse(nameServerAddrStream, nameServerAddrStreamIndex, question, future.Result,
                                queryLifecycleObserver, promise);
                 }
@@ -1088,6 +1125,7 @@ internal abstract class DnsResolveContext<T> where T : class
                         feedbackNameServerAddrStream.FeedbackFailure(nameServerAddr, queryCause,
                                 SystemTimer.NanoTime() - queryStartTimeNanos);
                     }
+
                     queryLifecycleObserver.QueryFailed(queryCause);
                     Query(nameServerAddrStream, nameServerAddrStreamIndex + 1, question,
                           NewDnsQueryLifecycleObserver(question), true, promise, queryCause);
@@ -1175,6 +1213,7 @@ internal abstract class DnsResolveContext<T> where T : class
                     // Was a redirect so return here as everything else is handled in handleRedirect(...)
                     return;
                 }
+
                 DnsRecordType type = question.Type();
 
                 if (type == DnsRecordType.CNAME)
@@ -1263,6 +1302,7 @@ internal abstract class DnsResolveContext<T> where T : class
                 int additionalCount = res.Count(DnsSection.ADDITIONAL);
 
                 IAuthoritativeDnsServerCache authoritativeDnsServerCache = AuthoritativeDnsServerCache();
+
                 for (int i = 0; i < additionalCount; i++)
                 {
                     IDnsRecord r = res.RecordAt<IDnsRecord>(DnsSection.ADDITIONAL, i);
@@ -1296,6 +1336,7 @@ internal abstract class DnsResolveContext<T> where T : class
                 }
             }
         }
+
         return false;
     }
 
@@ -1312,11 +1353,13 @@ internal abstract class DnsResolveContext<T> where T : class
         bool found = false;
         bool completeEarly = this.completeEarly;
         bool cnameNeedsFollow = cnames.Count != 0;
+
         for (int i = 0; i < answerCount; i ++)
         {
             IDnsRecord r = response.RecordAt<IDnsRecord>(DnsSection.ANSWER, i);
             DnsRecordType type = r.Type();
             bool matches = false;
+
             foreach (DnsRecordType expectedType in expectedTypes)
             {
                 if (type == expectedType)
@@ -1340,6 +1383,7 @@ internal abstract class DnsResolveContext<T> where T : class
                 Dictionary<string, string> cnamesCopy = new Dictionary<string, string>(cnames);
                 // Even if the record's name is not exactly same, it might be an alias defined in the CNAME records.
                 string resolved = questionName;
+
                 do
                 {
                     resolved = cnamesCopy.Remove(resolved, out string next) ? next : null;
@@ -1363,6 +1407,7 @@ internal abstract class DnsResolveContext<T> where T : class
                         }
 
                         string fqdn;
+
                         if (searchDomain[searchDomain.Length - 1] == '.')
                         {
                             fqdn = questionName + searchDomain;
@@ -1371,12 +1416,14 @@ internal abstract class DnsResolveContext<T> where T : class
                         {
                             fqdn = questionName + searchDomain + '.';
                         }
+
                         if (recordName.Equals(fqdn))
                         {
                             resolved = recordName;
                             break;
                         }
                     }
+
                     if (resolved == null)
                     {
                         if (logger.IsDebugEnabled())
@@ -1386,6 +1433,7 @@ internal abstract class DnsResolveContext<T> where T : class
                                     channel, r.ToString(), response.Id(), envelope.Sender,
                                     questionName, cnames, parent.SearchDomains());
                         }
+
                         continue;
                     }
                 }
@@ -1401,10 +1449,12 @@ internal abstract class DnsResolveContext<T> where T : class
                             channel, r.ToString(), response.Id(),
                             envelope.Sender, hostname, additionals);
                 }
+
                 continue;
             }
 
             bool shouldRelease = false;
+
             // Check if we did determine we wanted to complete early before. If this is the case we want to not
             // include the result
             if (!completeEarly)
@@ -1458,6 +1508,7 @@ internal abstract class DnsResolveContext<T> where T : class
             {
                 this.completeEarly = true;
             }
+
             queryLifecycleObserver.QuerySucceed();
         }
         else if (cnames.Count == 0)
@@ -1481,6 +1532,7 @@ internal abstract class DnsResolveContext<T> where T : class
         // Resolve the host name in the question into the real host name.
         string resolved = question.Name().ToLowerInvariant();
         bool found = false;
+
         while (cnames.Count != 0)
         { // Do not attempt to call Map.remove() when the Map is empty
                                     // because it can be Collections.emptyMap()
@@ -1542,6 +1594,7 @@ internal abstract class DnsResolveContext<T> where T : class
                     Query(nameServerAddrStream, nameServerAddrStreamIndex + 1, question, queryLifecycleObserver,
                           true, promise, cause);
                 }
+
                 return;
             }
 
@@ -1609,6 +1662,7 @@ internal abstract class DnsResolveContext<T> where T : class
                 List<T> result = FilterResults(finalResult);
                 // Lets replace the previous stored result.
                 finalResult = new List<T>(0);
+
                 if (!DnsNameResolver.TrySuccess<IReadOnlyList<T>>(promise, result))
                 {
                     foreach (T item in result)
@@ -1623,6 +1677,7 @@ internal abstract class DnsResolveContext<T> where T : class
                 // and never add to it again.
                 Debug.Assert(finalResult.Count == 0);
             }
+
             return;
         }
 
@@ -1632,6 +1687,7 @@ internal abstract class DnsResolveContext<T> where T : class
         StringBuilder buf = new StringBuilder(64);
 
         buf.Append("Failed to resolve '").Append(hostname).Append("' ").Append(DnsNameResolver.ArraysToString(expectedTypes));
+
         if (tries > 1)
         {
             if (tries < maxAllowedQueries)
@@ -1647,7 +1703,9 @@ internal abstract class DnsResolveContext<T> where T : class
                 .Append(' ');
             }
         }
+
         UnknownHostException unknownHostException;
+
         if (cause == null)
         {
             unknownHostException = new UnknownHostException(buf.ToString());
@@ -1660,6 +1718,7 @@ internal abstract class DnsResolveContext<T> where T : class
             // CLR: initCause(cause) is the (string, Exception) constructor.
             unknownHostException = new UnknownHostException(buf.ToString(), cause);
         }
+
         promise.TrySetException(unknownHostException);
     }
 
@@ -1675,8 +1734,10 @@ internal abstract class DnsResolveContext<T> where T : class
             {
                 return nameServerAddrs.Duplicate();
             }
+
             return parent.NewNameServerAddressStream(name);
         }
+
         return stream;
     }
 
@@ -1685,6 +1746,7 @@ internal abstract class DnsResolveContext<T> where T : class
     {
         IDnsQuestion cnameQuestion;
         IDnsServerAddressStream stream;
+
         try
         {
             cname = CnameResolveFromCache(CnameCache(), cname);
@@ -1696,6 +1758,7 @@ internal abstract class DnsResolveContext<T> where T : class
             queryLifecycleObserver.QueryFailed(cause);
             throw;
         }
+
         Query(stream, 0, cnameQuestion, queryLifecycleObserver.QueryCNAMEd(cnameQuestion),
               true, promise, null);
     }
@@ -1704,6 +1767,7 @@ internal abstract class DnsResolveContext<T> where T : class
                           bool flush, TaskCompletionSource<IReadOnlyList<T>> promise)
     {
         IDnsQuestion question;
+
         try
         {
             question = new DefaultDnsQuestion(hostname, type, dnsClass);
@@ -1716,6 +1780,7 @@ internal abstract class DnsResolveContext<T> where T : class
                     type + ']', cause));
             return false;
         }
+
         Query(dnsServerAddressStream, 0, question, NewDnsQueryLifecycleObserver(question), flush, promise, null);
         return true;
     }
@@ -1750,12 +1815,14 @@ internal abstract class DnsResolveContext<T> where T : class
             {
                 return NextResolved0();
             }
+
             EndPoint address = originalStream.Next();
             if (address.Equals(replaced))
             {
                 resolved = 0;
                 return NextResolved0();
             }
+
             return address;
         }
 

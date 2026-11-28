@@ -62,6 +62,7 @@ internal sealed class SipHash
         {
             throw new ArgumentException("seed must be of length " + SEED_LENGTH);
         }
+
         this.compressionRounds = ObjectUtil.CheckPositive(compressionRounds, "compressionRounds");
         this.finalizationRounds = ObjectUtil.CheckPositive(finalizationRounds, "finalizationRounds");
 
@@ -86,15 +87,18 @@ internal sealed class SipHash
         int remaining = span.Length;
         int position = 0;
         int len = remaining - (remaining % sizeof(long));
+
         for (int offset = position; offset < len; offset +=  sizeof(long))
         {
             // We use little-endian as in the paper.
             long m = BinaryPrimitives.ReadInt64LittleEndian(span.Slice(offset, sizeof(long)));
             v3 ^= m;
+
             for (int i = 0; i < compressionRounds; i++)
             {
                 Sipround();
             }
+
             v0 ^= m;
         }
 
@@ -102,6 +106,7 @@ internal sealed class SipHash
         int left = remaining & (sizeof(long) - 1);
         long b = (long) remaining << 56;
         Debug.Assert(left < sizeof(long));
+
         switch (left)
         {
             case 7:
@@ -132,6 +137,7 @@ internal sealed class SipHash
         }
 
         v3 ^= b;
+
         for (int i = 0; i < compressionRounds; i++)
         {
             Sipround();
@@ -139,6 +145,7 @@ internal sealed class SipHash
 
         v0 ^= b;
         v2 ^= 0xFF;
+
         for (int i = 0; i < finalizationRounds; i++)
         {
             Sipround();

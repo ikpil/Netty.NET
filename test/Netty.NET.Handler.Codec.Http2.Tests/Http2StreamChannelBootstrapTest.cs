@@ -55,6 +55,7 @@ public class Http2StreamChannelBootstrapTest
         IEventLoopGroup group = null;
         IChannel serverChannel = null;
         IChannel clientChannel = null;
+
         try
         {
             CountdownEvent serverChannelLatch = new CountdownEvent(1);
@@ -114,6 +115,7 @@ public class Http2StreamChannelBootstrapTest
             await SafeClose(clientChannel);
             await SafeClose(serverConnectedChannel);
             await SafeClose(serverChannel);
+
             if (group != null)
             {
                 _ = group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(3));

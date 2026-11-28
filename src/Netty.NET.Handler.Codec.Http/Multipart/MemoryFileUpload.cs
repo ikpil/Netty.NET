@@ -81,6 +81,7 @@ public class MemoryFileUpload : AbstractMemoryHttpData, IFileUpload
             throw new InvalidCastException("Cannot compare " + GetHttpDataType() +
                     " with " + o.GetHttpDataType());
         }
+
         return CompareTo((IFileUpload) o);
     }
 
@@ -141,6 +142,7 @@ public class MemoryFileUpload : AbstractMemoryHttpData, IFileUpload
         {
             content = content.RetainedDuplicate();
             bool success = false;
+
             try
             {
                 IFileUpload duplicate = Replace(content);
@@ -165,6 +167,7 @@ public class MemoryFileUpload : AbstractMemoryHttpData, IFileUpload
     {
         MemoryFileUpload upload = new MemoryFileUpload(
                 GetName(), GetFilename(), GetContentType(), GetContentTransferEncoding(), GetCharset(), size);
+
         if (content != null)
         {
             try
@@ -176,6 +179,7 @@ public class MemoryFileUpload : AbstractMemoryHttpData, IFileUpload
                 throw new ChannelException(e);
             }
         }
+
         upload.SetCompleted(IsCompleted());
         return upload;
     }

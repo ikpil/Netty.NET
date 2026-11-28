@@ -58,6 +58,7 @@ internal static class HttpHeadersEncoder
         else
         {
             int length = value.Length();
+
             for (int i = 0; i < length; i++)
             {
                 buf.SetByte(offset + i, AsciiString.C2b(value.CharAt(i)));

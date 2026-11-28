@@ -377,6 +377,7 @@ public class LoggingHandlerTest : IDisposable
                 // The presence of a newline implies a hex-dump was logged
                 return actual.Contains(StringUtil.NEWLINE) == shouldContainNewline;
             }
+
             return false;
         }
     }

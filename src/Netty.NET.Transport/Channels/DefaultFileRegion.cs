@@ -50,6 +50,7 @@ public class DefaultFileRegion : AbstractReferenceCounted, IFileRegion
         ArgumentNullException.ThrowIfNull(fileChannel);
         ArgumentOutOfRangeException.ThrowIfNegative(position);
         ArgumentOutOfRangeException.ThrowIfNegative(count);
+
         _file = fileChannel;
         _position = position;
         _count = count;
@@ -68,6 +69,7 @@ public class DefaultFileRegion : AbstractReferenceCounted, IFileRegion
         ArgumentNullException.ThrowIfNull(file);
         ArgumentOutOfRangeException.ThrowIfNegative(position);
         ArgumentOutOfRangeException.ThrowIfNegative(count);
+
         _path = file;
         _position = position;
         _count = count;
@@ -113,19 +115,23 @@ public class DefaultFileRegion : AbstractReferenceCounted, IFileRegion
     {
         if (position < 0 || position > _count)
             throw new ArgumentOutOfRangeException(nameof(position));
+
         long count = _count - position;
         if (count == 0)
             return 0;
         if (RefCnt == 0)
             throw new IllegalReferenceCountException(0);
+
         // Call open to make sure fc is initialized. This is a no-oop if we called it before.
         Open();
         ArgumentNullException.ThrowIfNull(target);
         if (position > long.MaxValue - _position)
             throw new IOException("File region offset exceeds Int64 range.");
+
         long offset = _position + position;
         long written = 0;
         byte[] buffer = ArrayPool<byte>.Shared.Rent(64 * 1024);
+
         try
         {
             // RandomAccess preserves the supplied FileStream's position, like positional FileChannel.transferTo.
@@ -135,9 +141,11 @@ public class DefaultFileRegion : AbstractReferenceCounted, IFileRegion
                 int length = (int)Math.Min(count - written, buffer.Length);
                 if (written > long.MaxValue - offset)
                     throw new IOException("File region offset exceeds Int64 range.");
+
                 int read = RandomAccess.Read(_file.SafeFileHandle, buffer.AsSpan(0, length), offset + written);
                 if (read == 0)
                     break;
+
                 target.Write(buffer.AsSpan(0, read));
                 written += read;
                 _transferred = unchecked(_transferred + read);
@@ -147,6 +155,7 @@ public class DefaultFileRegion : AbstractReferenceCounted, IFileRegion
         {
             ArrayPool<byte>.Shared.Return(buffer);
         }
+
         if (written == 0)
         {
             // If the amount of written data is 0 we need to check if the requested count is bigger then the
@@ -155,6 +164,7 @@ public class DefaultFileRegion : AbstractReferenceCounted, IFileRegion
             // See https://github.com/netty/netty/issues/8868
             Validate(this, position);
         }
+
         return written;
     }
 
@@ -163,7 +173,9 @@ public class DefaultFileRegion : AbstractReferenceCounted, IFileRegion
         FileStream file = _file;
         if (file == null)
             return;
+
         _file = null;
+
         try
         {
             file.Dispose();
@@ -204,29 +216,35 @@ public class DefaultFileRegion : AbstractReferenceCounted, IFileRegion
     {
         if (position < 0 || position > _count)
             throw new ArgumentOutOfRangeException(nameof(position));
+
         long count = _count - position;
         if (count == 0)
             return 0;
         if (RefCnt == 0)
             throw new IllegalReferenceCountException(0);
+
         // Call open to make sure fc is initialized. This is a no-oop if we called it before.
         Open();
         ArgumentNullException.ThrowIfNull(target);
         if (position > long.MaxValue - _position)
             throw new IOException("File region offset exceeds Int64 range.");
+
         int length = (int)Math.Min(count, SocketTransferChunkSize);
         byte[] buffer = ArrayPool<byte>.Shared.Rent(length);
         long written = 0;
+
         try
         {
             int read = RandomAccess.Read(_file.SafeFileHandle, buffer.AsSpan(0, length), _position + position);
             if (read > 0)
             {
                 int sent = target.Send(buffer, 0, read, SocketFlags.None, out SocketError error);
+
                 if (error == SocketError.WouldBlock)
                     sent = 0;
                 else if (error != SocketError.Success)
                     throw new SocketException((int)error);
+
                 written = sent;
             }
         }
@@ -234,6 +252,7 @@ public class DefaultFileRegion : AbstractReferenceCounted, IFileRegion
         {
             ArrayPool<byte>.Shared.Return(buffer);
         }
+
         if (written > 0)
         {
             _transferred = unchecked(_transferred + written);
@@ -246,6 +265,7 @@ public class DefaultFileRegion : AbstractReferenceCounted, IFileRegion
             // See https://github.com/netty/netty/issues/8868
             Validate(this, position);
         }
+
         return written;
     }
     private const int SocketTransferChunkSize = 64 * 1024;

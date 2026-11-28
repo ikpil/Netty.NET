@@ -47,6 +47,7 @@ public class SocketShutdownOutputByPeerSourceTest : AbstractServerSocketTest
         TestHandler h = new TestHandler();
         Socket s = NewSocket();
         IChannel sc = null;
+
         try
         {
             sc = await sb.ChildHandler(h).ChildOption(ChannelOption.ALLOW_HALF_CLOSURE, true).BindAsync();
@@ -81,6 +82,7 @@ public class SocketShutdownOutputByPeerSourceTest : AbstractServerSocketTest
             {
                 _ = sc.CloseAsync();
             }
+
             Close(s);
         }
     }
@@ -98,6 +100,7 @@ public class SocketShutdownOutputByPeerSourceTest : AbstractServerSocketTest
         TestHandler h = new TestHandler();
         Socket s = NewSocket();
         IChannel sc = null;
+
         try
         {
             sc = await sb.ChildHandler(h).BindAsync();
@@ -132,6 +135,7 @@ public class SocketShutdownOutputByPeerSourceTest : AbstractServerSocketTest
             {
                 _ = sc.CloseAsync();
             }
+
             Close(s);
         }
     }
@@ -147,7 +151,9 @@ public class SocketShutdownOutputByPeerSourceTest : AbstractServerSocketTest
         {
             return base.NewFactories();
         }
+
         DomainSocketSourceTest.RequireDomainSockets();
+
         return DomainSocketTestPermutation.INSTANCE.ServerDomainSocket();
     }
 
@@ -187,6 +193,7 @@ public class SocketShutdownOutputByPeerSourceTest : AbstractServerSocketTest
             await s.ConnectAsync(address);
             return;
         }
+
         // CLR: SocketUtils.connect(s, address, 10000) connects with a 10000 ms timeout; the CLR connect observes a
         // CancellationToken that a CancellationTokenSource cancels after 10000 ms instead.
         using CancellationTokenSource timeout = new CancellationTokenSource(10000);
@@ -209,6 +216,7 @@ public class SocketShutdownOutputByPeerSourceTest : AbstractServerSocketTest
             s.Send(BitConverter.GetBytes(data));
             return;
         }
+
         // CLR: OutputStream.write(int) writes the low-order eight bits of data as one byte.
         s.Send(new byte[] { (byte) data });
     }
@@ -220,6 +228,7 @@ public class SocketShutdownOutputByPeerSourceTest : AbstractServerSocketTest
             // CLR: LinuxSocket.newSocketDomain() is an AF_UNIX stream socket.
             return DomainSocketSourceTest.NewSocket();
         }
+
         // CLR: new java.net.Socket() is unconnected and takes its address family from the connect address. "If the
         // operating system supports IPv6, this constructor creates a dual-mode socket; otherwise, it creates an IPv4
         // socket" (Socket(SocketType, ProtocolType), https://learn.microsoft.com/en-us/dotnet/api/

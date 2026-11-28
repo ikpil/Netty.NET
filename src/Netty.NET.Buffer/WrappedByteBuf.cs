@@ -167,6 +167,7 @@ public class WrappedByteBuf : ByteBuf
     internal override ReadOnlySequence<byte> BorrowCopySequence(int index, int length)
     {
         CheckIndex(index, length);
+
         return Buffer.BorrowCopySequence(index, length);
     }
 

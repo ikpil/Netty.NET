@@ -45,6 +45,7 @@ public sealed class HttpStaticFileServer
         SslContext sslCtx = ServerUtil.BuildSslContext();
 
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             ServerBootstrap b = new ServerBootstrap();

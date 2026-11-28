@@ -61,6 +61,7 @@ public class DefaultDnsRecordEncoderTest
         };
         expectedBuf.WriteShort(hostname.Length);
         expectedBuf.WriteBytes(hostname);
+
         try
         {
             encoder.EncodeRecord(ptrRecord, @out);
@@ -111,6 +112,7 @@ public class DefaultDnsRecordEncoderTest
         DefaultDnsRecordEncoder encoder = new DefaultDnsRecordEncoder();
         ByteBuf @out = Unpooled.Buffer();
         ByteBuf expectedBuf = Unpooled.WrappedBuffer(expected);
+
         try
         {
             encoder.EncodeName(name, @out);
@@ -141,6 +143,7 @@ public class DefaultDnsRecordEncoderTest
     private static void TestOptEcsRecordIp(IPAddress address)
     {
         int addressBits = address.GetAddressBytes().Length * 8;
+
         for (int i = 0; i <= addressBits; ++i)
         {
             TestIp(address, i);
@@ -172,6 +175,7 @@ public class DefaultDnsRecordEncoderTest
 
         DefaultDnsRecordEncoder encoder = new DefaultDnsRecordEncoder();
         ByteBuf @out = Unpooled.Buffer();
+
         try
         {
             IDnsOptEcsRecord record = new DefaultDnsOptEcsRecord(

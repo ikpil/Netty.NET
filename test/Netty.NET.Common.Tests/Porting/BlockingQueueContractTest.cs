@@ -56,11 +56,13 @@ public class BlockingQueueContractTest
             }
         }) { IsBackground = true };
         waiter.Start();
+
         if (SpinWait.SpinUntil(() => !waiter.IsAlive || (waiter.ThreadState & System.Threading.ThreadState.WaitSleepJoin) != 0,
             TimeSpan.FromSeconds(5)) && waiter.IsAlive)
         {
             waiter.Interrupt();
         }
+
         Assert.True(waiter.Join(TimeSpan.FromSeconds(5)));
         Assert.IsType<ThreadInterruptedException>(failure);
     }
@@ -73,11 +75,13 @@ public class BlockingQueueContractTest
         var consumer = Task.Run(() =>
         {
             var next = new int[producers];
+
             for (int i = 0; i < producers * items; i++)
             {
                 var item = queue.Take();
                 Assert.Equal(next[item.producer]++, item.sequence);
             }
+
             Assert.All(next, count => Assert.Equal(items, count));
         });
         Parallel.For(0, producers, producer =>
@@ -105,6 +109,7 @@ public class BlockingQueueContractTest
             try
             {
                 Assert.True(queue.TryPeek(out head));
+
                 try
                 {
                     Thread.Sleep(0);
@@ -119,6 +124,7 @@ public class BlockingQueueContractTest
                 failure = error;
             }
         }) { IsBackground = true };
+
         lock (gate)
         {
             waiter.Start();
@@ -126,6 +132,7 @@ public class BlockingQueueContractTest
                 TimeSpan.FromSeconds(5)));
             waiter.Interrupt();
         }
+
         Assert.True(waiter.Join(TimeSpan.FromSeconds(5)));
         Assert.Null(failure);
         Assert.Equal("head", head);

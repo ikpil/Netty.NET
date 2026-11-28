@@ -37,6 +37,7 @@ public class LineEncoderTest
         EmbeddedChannel channel = new EmbeddedChannel(new LineEncoder(lineSeparator, Encoding.UTF8));
         Assert.True(channel.WriteOutbound(msg));
         ByteBuf buf = channel.ReadOutbound<ByteBuf>();
+
         try
         {
             byte[] data = new byte[buf.ReadableBytes];

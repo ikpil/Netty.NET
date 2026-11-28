@@ -32,6 +32,7 @@ public class DomainSocketOptionSourceTest
         using var socket = NewSocket();
         var server = new NioServerDomainSocketChannel(socket);
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+
         try
         {
             int before = socket.ReceiveBufferSize;
@@ -55,6 +56,7 @@ public class DomainSocketOptionSourceTest
         RequireDomainSockets();
         var server = new NioServerDomainSocketChannel();
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+
         try
         {
             server.Config.GetOptions();

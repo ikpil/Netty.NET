@@ -41,6 +41,7 @@ public class ByteBufSizePredicateTest
         ByteBuf owner = Owner(backing, native, out IDisposable allocator);
         ByteBuf view = null;
         bool retained = viewKind >= 4;
+
         try
         {
             owner.SetIndex(3, 13).MarkReaderIndex().MarkWriterIndex();
@@ -64,6 +65,7 @@ public class ByteBufSizePredicateTest
             view.ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(reader, view.ReaderIndex);
             Assert.Equal(writer, view.WriterIndex);
+
             if (viewKind != 0 && !(backing == 5 && viewKind == 3))
             {
                 owner.SetIndex(0, 16);
@@ -76,9 +78,11 @@ public class ByteBufSizePredicateTest
             {
                 view.Release();
             }
+
             owner.Release();
             allocator?.Dispose();
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -89,6 +93,7 @@ public class ByteBufSizePredicateTest
             Assert.Equal(count <= readable, b.IsReadable(count));
             Assert.Equal(!readOnly && count <= writable, b.IsWritable(count));
         }
+
         Assert.Equal(readable > 0, b.IsReadable());
         Assert.Equal(!readOnly && writable > 0, b.IsWritable());
     }
@@ -105,12 +110,14 @@ public class ByteBufSizePredicateTest
         {
             return a.DirectBuffer(16, 64);
         }
+
         if (kind is 2 or 3)
         {
             var pooled = new PooledByteBufAllocator(false, maxOrder: 1, nativeAllocator: native);
             disposable = pooled;
             return kind == 2 ? pooled.HeapBuffer(16, 64) : pooled.DirectBuffer(16, 64);
         }
+
         ByteBuf x = a.HeapBuffer(8, 8).SetIndex(0, 8), y = a.HeapBuffer(8, 8).SetIndex(0, 8);
         return kind == 4 ? new CompositeByteBuf(a, false, 4).AddComponents([x, y], true)
             : Unpooled.WrappedUnmodifiableBuffer(x, y);
@@ -131,11 +138,13 @@ public class ByteBufSizePredicateTest
             4 => Unpooled.UnreleasableBuffer(empty),
             _ => new PlainWrapper(new AdvancedLeakAwareByteBuf(empty, tracker))
         };
+
         foreach (int count in Counts)
         {
             Assert.False(b.IsReadable(count));
             Assert.False(b.IsWritable(count));
         }
+
         Assert.Equal(0, b.ReaderIndex);
         Assert.Equal(0, b.WriterIndex);
         Assert.Equal(1, b.RefCnt);
@@ -149,6 +158,7 @@ public class ByteBufSizePredicateTest
     {
         ByteBuf owner = new UnpooledHeapByteBuf(0, 64);
         ByteBuf b = readOnly ? owner.AsReadOnly() : owner;
+
         try
         {
             Check(b, 0, 0, readOnly);
@@ -157,6 +167,7 @@ public class ByteBufSizePredicateTest
         {
             owner.Release();
         }
+
         ByteBuf sentinelReadOnly = Unpooled.EmptyBuffer.AsReadOnly();
         Check(sentinelReadOnly, 0, 0, true);
     }
@@ -193,6 +204,7 @@ public class ByteBufSizePredicateTest
         var tracker = new Tracker();
         CompositeByteBuf b = advanced ? new AdvancedLeakAwareCompositeByteBuf(root, tracker)
             : new SimpleLeakAwareCompositeByteBuf(root, tracker);
+
         try
         {
             Assert.True(b.IsReadable(123));
@@ -227,6 +239,7 @@ public class ByteBufSizePredicateTest
         ByteBuf owner = new UnpooledHeapByteBuf(16, 64).SetIndex(3, 13);
         ByteBuf slice = owner.Slice(2, 8), duplicate = owner.Duplicate();
         Assert.True(owner.Release());
+
         foreach (int count in Counts)
         {
             Assert.Equal(count <= 10, owner.IsReadable(count));

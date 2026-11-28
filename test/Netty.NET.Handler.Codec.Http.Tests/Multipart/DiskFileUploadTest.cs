@@ -118,6 +118,7 @@ public class DiskFileUploadTest
     public void TestAddContents()
     {
         DiskFileUpload f1 = new DiskFileUpload("file1", "file1", "application/json", null, null, 0);
+
         try
         {
             byte[] jsonBytes = new byte[4096];
@@ -136,6 +137,7 @@ public class DiskFileUploadTest
                 int offset = 0;
                 int read = 0;
                 int len = buf.Length;
+
                 while ((read = fis.Read(buf, offset, len)) > 0)
                 {
                     len -= read;
@@ -145,6 +147,7 @@ public class DiskFileUploadTest
                         break;
                     }
                 }
+
                 Assert.Equal(jsonBytes, buf);
             }
         }
@@ -158,6 +161,7 @@ public class DiskFileUploadTest
     public void TestSetContentFromByteBuf()
     {
         DiskFileUpload f1 = new DiskFileUpload("file2", "file2", "application/json", null, null, 0);
+
         try
         {
             string json = "{\"hello\":\"world\"}";
@@ -180,10 +184,12 @@ public class DiskFileUploadTest
     {
         string json = "{\"hello\":\"world\",\"foo\":\"bar\"}";
         DiskFileUpload f1 = new DiskFileUpload("file3", "file3", "application/json", null, null, 0);
+
         try
         {
             byte[] bytes = Encoding.UTF8.GetBytes(json);
             ByteBuf buf = Unpooled.WrappedBuffer(bytes);
+
             try
             {
                 using (System.IO.Stream @is = new ByteBufInputStream(buf))
@@ -222,6 +228,7 @@ public class DiskFileUploadTest
     private static void TestAddContentFromByteBuf0(bool composite)
     {
         DiskFileUpload f1 = new DiskFileUpload("file3", "file3", "application/json", null, null, 0);
+
         try
         {
             byte[] bytes = new byte[4096];
@@ -239,6 +246,7 @@ public class DiskFileUploadTest
             {
                 buffer = Unpooled.WrappedBuffer(bytes);
             }
+
             f1.AddContent(buffer, true);
             ByteBuf buf = f1.GetByteBuf();
             Assert.Equal(0, buf.ReaderIndex);
@@ -260,6 +268,7 @@ public class DiskFileUploadTest
             int offset = 0;
             int read;
             int len = buf.Length;
+
             while ((read = fis.Read(buf, offset, len)) > 0)
             {
                 len -= read;
@@ -269,6 +278,7 @@ public class DiskFileUploadTest
                     break;
                 }
             }
+
             return buf;
         }
     }
@@ -280,6 +290,7 @@ public class DiskFileUploadTest
         byte[] bytes = Encoding.UTF8.GetBytes(json);
         FileInfo tmpFile = null;
         DiskFileUpload f1 = new DiskFileUpload("file4", "file4", "application/json", null, null, 0);
+
         try
         {
             Assert.Null(f1.GetFile());
@@ -301,6 +312,7 @@ public class DiskFileUploadTest
         const long maxSize = 4;
         DiskFileUpload f1 = new DiskFileUpload("file5", "file5", "application/json", null, null, 0);
         f1.SetMaxSize(maxSize);
+
         try
         {
             f1.SetContent(Unpooled.WrappedBuffer(new byte[(int) maxSize]));
@@ -313,6 +325,7 @@ public class DiskFileUploadTest
             FileInfo tmpFile = PlatformDependent.CreateTempFile(Guid.NewGuid().ToString(), ".tmp", null);
             DeleteOnExit(tmpFile);
             FileStream fos = new FileStream(tmpFile.FullName, FileMode.Create, FileAccess.Write);
+
             try
             {
                 fos.Write(bytes, 0, bytes.Length);
@@ -322,6 +335,7 @@ public class DiskFileUploadTest
             {
                 fos.Dispose();
             }
+
             IOException e = Assert.Throws<IOException>(() => f1.SetContent(tmpFile));
             Assert.NotNull(f1.GetFile());
             Assert.Equal(originalFile, f1.GetFile());

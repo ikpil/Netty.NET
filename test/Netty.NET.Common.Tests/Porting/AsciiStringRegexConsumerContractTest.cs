@@ -67,6 +67,7 @@ public class AsciiStringRegexConsumerContractTest
     public void CallerSelectsInvariantCaseAndAsciiCharacterClasses()
     {
         CultureInfo previous = CultureInfo.CurrentCulture;
+
         try
         {
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("tr-TR");

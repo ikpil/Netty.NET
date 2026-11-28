@@ -71,6 +71,7 @@ public class DefaultSpdyGoAwayFrame : ISpdyGoAwayFrame
     public virtual ISpdyGoAwayFrame SetLastGoodStreamId(int lastGoodStreamId)
     {
         CheckPositiveOrZero(lastGoodStreamId, "lastGoodStreamId");
+
         this.lastGoodStreamId = lastGoodStreamId;
         return this;
     }

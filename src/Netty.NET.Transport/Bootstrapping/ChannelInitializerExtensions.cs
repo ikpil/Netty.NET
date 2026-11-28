@@ -35,16 +35,21 @@ internal static class ChannelInitializerExtensions
     internal static IDisposable Register(ChannelInitializerExtension extension, bool invoke)
     {
         ArgumentNullException.ThrowIfNull(extension);
+
         var entry = new Entry(extension, extension.Priority, invoke);
+
         lock (Gate)
         {
             if (_entries.Any(e => ReferenceEquals(e.Extension, extension)))
                 throw new ArgumentException("Extension already registered.", nameof(extension));
+
             var copy = _entries.Append(entry).ToArray();
             Array.Sort(copy, (a, b) => ComparePriority(a.Priority, b.Priority));
             Volatile.Write(ref _entries, copy);
         }
+
         Logger.Info("Channel initializer extension " + (invoke ? "registered: " : "detected: ") + extension.GetType().FullName);
+
         return new Registration(entry);
     }
 
@@ -73,6 +78,7 @@ internal static class ChannelInitializerExtensions
         {
             return -1;
         }
+
         int compare = left.CompareTo(right);
         return compare != 0 ? compare : BitConverter.DoubleToInt64Bits(left).CompareTo(BitConverter.DoubleToInt64Bits(right));
     }
@@ -87,6 +93,7 @@ internal static class ChannelInitializerExtensions
             {
                 return;
             }
+
             lock (Gate)
                 Volatile.Write(ref _entries, _entries.Where(e => !ReferenceEquals(e, removed)).ToArray());
         }

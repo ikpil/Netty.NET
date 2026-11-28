@@ -68,6 +68,7 @@ public class PromiseContractTest
     public async Task CommittedNativeSubmissionCanStillSucceedOrFailAfterCancellationRequest()
     {
         var executor = new DefaultEventExecutor();
+
         try
         {
             foreach (bool fail in new[] { false, true })
@@ -88,8 +89,10 @@ public class PromiseContractTest
                     {
                         throw error;
                     }
+
                     return value;
                 }, cancellation.Token);
+
                 try
                 {
                     Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
@@ -100,6 +103,7 @@ public class PromiseContractTest
                 {
                     release.Set();
                 }
+
                 if (fail)
                 {
                     Assert.Same(error, await Assert.ThrowsAsync<InvalidOperationException>(async () =>
@@ -109,6 +113,7 @@ public class PromiseContractTest
                 {
                     Assert.Same(value, await operation.WaitAsync(TimeSpan.FromSeconds(5)));
                 }
+
                 Assert.False(operation.IsCanceled);
             }
         }
@@ -128,6 +133,7 @@ public class PromiseContractTest
         Assert.True(first.TrySetCanceled(cancellation.Token));
         Assert.False(first.TrySetCanceled(cancellation.Token));
         Assert.True(second.TrySetCanceled(cancellation.Token));
+
         foreach (var task in new[] { first.Task, second.Task })
         {
             var awaited = await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await task);
@@ -136,6 +142,7 @@ public class PromiseContractTest
             Assert.Equal(cancellation.Token, blocking.CancellationToken);
             Assert.True(task.IsCanceled);
         }
+
         Assert.False(first.TrySetResult(null));
         Assert.False(first.TrySetException(new Exception("late failure")));
     }
@@ -265,6 +272,7 @@ public class PromiseContractTest
             Assert.Equal(1, wins);
             Assert.Equal(1, notifications);
             Assert.True(source.Task.IsCompleted);
+
             if (source.Task.IsCompletedSuccessfully)
             {
                 Assert.Same(value, await source.Task);
@@ -383,6 +391,7 @@ public class PromiseContractTest
             try
             {
                 Task<object> result;
+
                 if (completedProducer)
                 {
                     var producer = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -393,6 +402,7 @@ public class PromiseContractTest
                 {
                     result = Task.FromResult<object>(null);
                 }
+
                 Thread.CurrentThread.Interrupt();
                 Assert.Null(result.GetAwaiter().GetResult());
                 Assert.Throws<ThreadInterruptedException>(() => Thread.Sleep(0));
@@ -432,6 +442,7 @@ public class PromiseContractTest
         var executor = new DefaultEventExecutor();
         using var entered = new ManualResetEventSlim();
         var source = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+
         try
         {
             bool invokedOnLoop = false;
@@ -459,6 +470,7 @@ public class PromiseContractTest
     public async Task EarlyAndLateCompletionRegistrationsUseTheAssignedExecutor()
     {
         var executor = new DefaultEventExecutor();
+
         try
         {
             var source = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);

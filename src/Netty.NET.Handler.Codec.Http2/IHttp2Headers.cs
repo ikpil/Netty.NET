@@ -155,6 +155,7 @@ public interface IHttp2Headers : IHeaders<ICharSequence, ICharSequence, IHttp2He
             {
                 return GetPseudoHeader((AsciiString) header);
             }
+
             return GetPseudoHeaderName(header);
         }
 
@@ -178,6 +179,7 @@ public interface IHttp2Headers : IHeaders<ICharSequence, ICharSequence, IHttp2He
                     {
                         return SCHEME;
                     }
+
                     return ContentEquals(":status", header)? STATUS : null;
                 case 9:
                     // :protocol
@@ -187,6 +189,7 @@ public interface IHttp2Headers : IHeaders<ICharSequence, ICharSequence, IHttp2He
                     return ContentEquals(":authority", header)? AUTHORITY : null;
                 }
             }
+
             return null;
         }
 
@@ -227,6 +230,7 @@ public interface IHttp2Headers : IHeaders<ICharSequence, ICharSequence, IHttp2He
                     {
                         return SCHEME;
                     }
+
                     return STATUS.Value().Equals(header)? STATUS : null;
                 case 9:
                     // :protocol
@@ -236,6 +240,7 @@ public interface IHttp2Headers : IHeaders<ICharSequence, ICharSequence, IHttp2He
                     return AUTHORITY.Value().Equals(header)? AUTHORITY : null;
                 }
             }
+
             return null;
         }
 
@@ -261,6 +266,7 @@ public interface IHttp2Headers : IHeaders<ICharSequence, ICharSequence, IHttp2He
             {
                 return false;
             }
+
             for (int i = 0; i < s.Length; i++)
             {
                 if (s[i] != cs.CharAt(i))
@@ -268,6 +274,7 @@ public interface IHttp2Headers : IHeaders<ICharSequence, ICharSequence, IHttp2He
                     return false;
                 }
             }
+
             return true;
         }
     }

@@ -52,6 +52,7 @@ public class SlicedByteBufFactoryTest
             if (provider >= 3)
                 _pool = new PooledByteBufAllocator(nativeAllocator: _native, maxOrder: 1,
                     smallCacheSize: 0, normalCacheSize: 0);
+
             Root = provider switch
             {
                 0 => new UnpooledHeapByteBuf(16, 64),
@@ -64,10 +65,12 @@ public class SlicedByteBufFactoryTest
             };
             Root.SetBytes(0, new byte[16]).SetIndex(2, 14).MarkReaderIndex().MarkWriterIndex();
             View = retained ? Root.RetainedSlice(offset, 8) : Root.Slice(offset, 8);
+
             if (retained)
             {
                 Assert.False(Root.Release());
             }
+
             Assert.Equal(1, View.RefCnt);
             Assert.Equal(Root.RefCnt, View.RefCnt);
         }
@@ -78,6 +81,7 @@ public class SlicedByteBufFactoryTest
             {
                 View.Release(View.RefCnt);
             }
+
             Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, _native.ReservedBytes);
@@ -319,11 +323,13 @@ public class SlicedByteBufFactoryTest
         byte[] expected = { 4, 5, 6 };
         ByteBuf slice = retainedSlice ? buf.RetainedSlice(buf.ReaderIndex + 3, 3)
                                       : buf.Slice(buf.ReaderIndex + 3, 3);
+
         try
         {
             Assert.Equal(expected, ByteBufUtil.GetBytes(slice));
             Assert.Equal(0, slice.CompareTo(slice.Duplicate()));
             ByteBuf b = slice.RetainedDuplicate();
+
             try
             {
                 Assert.Equal(0, slice.CompareTo(b));
@@ -332,6 +338,7 @@ public class SlicedByteBufFactoryTest
             {
                 b.Release();
             }
+
             Assert.Equal(0, slice.CompareTo(slice.Slice(0, slice.Capacity)));
             // CLR: mutations are shared while the parent indices stay independent.
             slice.SetByte(1, 42);

@@ -55,18 +55,22 @@ public sealed class DateFormatter
     static DateFormatter()
     {
         DELIMITERS.Set(0x09, true);
+
         for (char c = (char) 0x20; c <= 0x2F; c++)
         {
             DELIMITERS.Set(c, true);
         }
+
         for (char c = (char) 0x3B; c <= 0x40; c++)
         {
             DELIMITERS.Set(c, true);
         }
+
         for (char c = (char) 0x5B; c <= 0x60; c++)
         {
             DELIMITERS.Set(c, true);
         }
+
         for (char c = (char) 0x7B; c <= 0x7E; c++)
         {
             DELIMITERS.Set(c, true);
@@ -123,6 +127,7 @@ public sealed class DateFormatter
             throw new ArgumentException("Can't parse more than 64 chars, " +
                     "looks like a user error or a malformed header");
         }
+
         return Formatter().Parse0(ObjectUtil.CheckNotNull(txt, "txt"), start, end);
     }
 
@@ -245,6 +250,7 @@ public sealed class DateFormatter
                     // no digits between separators
                     return false;
                 }
+
                 switch (currentPartNumber)
                 {
                     case 0:
@@ -259,6 +265,7 @@ public sealed class DateFormatter
                         // invalid, too many :
                         return false;
                 }
+
                 currentPartValue = 0;
                 currentPartNumber++;
                 numDigits = 0;
@@ -456,6 +463,7 @@ public sealed class DateFormatter
         {
             yearFound = TryParseYear(txt, tokenStart, tokenEnd);
         }
+
         return timeFound && dayOfMonthFound && monthFound && yearFound;
     }
 
@@ -483,6 +491,7 @@ public sealed class DateFormatter
                     {
                         return true;
                     }
+
                     tokenStart = -1;
                 }
             }
@@ -521,6 +530,7 @@ public sealed class DateFormatter
             // invalid value
             return false;
         }
+
         return true;
     }
 
@@ -538,6 +548,7 @@ public sealed class DateFormatter
     private string Format0(DateTimeOffset date)
     {
         Append0(date, sb);
+
         return sb.ToString();
     }
 
@@ -555,6 +566,7 @@ public sealed class DateFormatter
         sb.Append(cal.Year.ToString(CultureInfo.InvariantCulture)).Append(' ');
         AppendZeroLeftPadded(cal.Hour, sb).Append(':');
         AppendZeroLeftPadded(cal.Minute, sb).Append(':');
+
         return AppendZeroLeftPadded(cal.Second, sb).Append(" GMT");
     }
 
@@ -564,6 +576,7 @@ public sealed class DateFormatter
         {
             sb.Append('0');
         }
+
         return sb.Append(value.ToString(CultureInfo.InvariantCulture));
     }
 }

@@ -28,7 +28,9 @@ public class DatagramLinuxConfigSourceTest
         {
             Assert.Skip("IP_FREEBIND requires Linux.");
         }
+
         var channel = new NioDatagramChannel();
+
         try
         {
             Assert.True(channel.Config.SetOption(ChannelOption.IP_FREEBIND, true));

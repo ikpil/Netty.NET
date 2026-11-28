@@ -89,8 +89,10 @@ public class QueueSurfaceContractTest
         Assert.Same(Array.Empty<int>(), queue.ToArray());
         Assert.Empty(queue);
         Assert.Equal("EmptyPriorityQueue", queue.ToString());
+
         foreach (string method in new[] { "Size", "Offer", "Poll", "Peek", "Element" })
             Assert.Null(queue.GetType().GetMethod(method));
+
         Assert.Null(queue.GetType().GetMethod("Remove", Type.EmptyTypes));
     }
 

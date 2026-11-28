@@ -266,6 +266,7 @@ public class HttpContentDecoderTest
         Assert.False(channel.WriteInbound(Unpooled.WrappedBuffer(Encoding.ASCII.GetBytes(headers))));
 
         int offset = 0;
+
         while (offset < SAMPLE_BZ_BYTES.Length)
         {
             int len = Math.Min(1500, SAMPLE_BZ_BYTES.Length - offset);
@@ -820,6 +821,7 @@ public class HttpContentDecoderTest
         int outputSize = 0;
         ByteBuf o;
         List<ByteBuf> inbound = new List<ByteBuf>();
+
         while ((o = channel.ReadInbound<ByteBuf>()) != null)
         {
             inbound.Add(o);
@@ -828,6 +830,7 @@ public class HttpContentDecoderTest
 
         byte[] output = new byte[outputSize];
         int readCount = 0;
+
         foreach (ByteBuf b in inbound)
         {
             int readableBytes = b.ReadableBytes;
@@ -835,6 +838,7 @@ public class HttpContentDecoderTest
             b.Release();
             readCount += readableBytes;
         }
+
         Assert.True(channel.InboundMessages().Count == 0 && channel.OutboundMessages().Count == 0);
         return output;
     }
@@ -843,6 +847,7 @@ public class HttpContentDecoderTest
     {
         byte[] receivedContent = new byte[contentLength];
         int readCount = 0;
+
         foreach (object o in req)
         {
             if (o is IHttpContent)
@@ -852,12 +857,14 @@ public class HttpContentDecoderTest
                 b.ReadBytes(receivedContent.AsSpan(readCount, readableBytes));
                 readCount += readableBytes;
             }
+
             if (o is IHttpMessage)
             {
                 Assert.Equal(hasTransferEncoding,
                         ((IHttpMessage) o).Headers().Contains(HttpHeaderNames.TRANSFER_ENCODING));
             }
         }
+
         return receivedContent;
     }
 
@@ -872,6 +879,7 @@ public class HttpContentDecoderTest
                 contentLength += b.ReadableBytes;
             }
         }
+
         return contentLength;
     }
 
@@ -885,6 +893,7 @@ public class HttpContentDecoderTest
         int outputSize = 0;
         ByteBuf o;
         List<ByteBuf> outbound = new List<ByteBuf>();
+
         while ((o = channel.ReadOutbound<ByteBuf>()) != null)
         {
             outbound.Add(o);
@@ -893,6 +902,7 @@ public class HttpContentDecoderTest
 
         byte[] output = new byte[outputSize];
         int readCount = 0;
+
         foreach (ByteBuf b in outbound)
         {
             int readableBytes = b.ReadableBytes;
@@ -900,6 +910,7 @@ public class HttpContentDecoderTest
             b.Release();
             readCount += readableBytes;
         }
+
         Assert.True(channel.InboundMessages().Count == 0 && channel.OutboundMessages().Count == 0);
         return output;
     }
@@ -907,6 +918,7 @@ public class HttpContentDecoderTest
     private static void AssertHasInboundMessages(EmbeddedChannel channel, bool hasMessages)
     {
         object o;
+
         if (hasMessages)
         {
             while (true)
@@ -930,6 +942,7 @@ public class HttpContentDecoderTest
     private static void AssertHasOutboundMessages(EmbeddedChannel channel, bool hasMessages)
     {
         object o;
+
         if (hasMessages)
         {
             while (true)

@@ -137,6 +137,7 @@ public class NioServerDomainSocketChannel : AbstractNioMessageChannel, IServerCh
         {
             // ignore
         }
+
         return null;
     }
 
@@ -153,6 +154,7 @@ public class NioServerDomainSocketChannel : AbstractNioMessageChannel, IServerCh
     protected override Task DoBindAsync(EndPoint address, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+
         JavaChannel().Bind(address);
         Config.TryGetOption(ChannelOption.SO_BACKLOG, out int backlog);
         JavaChannel().Listen(backlog);
@@ -201,6 +203,7 @@ public class NioServerDomainSocketChannel : AbstractNioMessageChannel, IServerCh
         ArgumentNullException.ThrowIfNull(socket);
         if (socket.AddressFamily != AddressFamily.Unix || socket.SocketType != SocketType.Stream)
             throw new ArgumentException("A Unix domain stream socket is required.", nameof(socket));
+
         return socket;
     }
 }

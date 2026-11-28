@@ -70,6 +70,7 @@ public class CompositeByteBufReferenceTest
         ByteBuf c3 = storage.Allocator.Buffer().WriteByte(3).Retain(2);
 
         CompositeByteBuf buf = storage.Allocator.CompositeBuffer();
+
         try
         {
             Assert.Equal(1, buf.RefCnt);
@@ -111,6 +112,7 @@ public class CompositeByteBufReferenceTest
         ByteBuf c3 = storage.Allocator.Buffer().WriteByte(3).Retain(2);
 
         CompositeByteBuf bufA = storage.Allocator.CompositeBuffer(), bufB = null;
+
         try
         {
             bufA.AddComponents(c1, c2, c3).WriterIndex = 3;
@@ -163,6 +165,7 @@ public class CompositeByteBufReferenceTest
         ByteBuf c3 = storage.Allocator.Buffer().WriteByte(3).Retain(2);
 
         CompositeByteBuf buf = storage.Allocator.CompositeBuffer();
+
         try
         {
             Assert.Equal(1, buf.RefCnt);
@@ -204,6 +207,7 @@ public class CompositeByteBufReferenceTest
         ByteBuf source = storage.Allocator.Buffer(4, 6).SetIndex(1, 3);
         CompositeByteBuf composite = storage.Allocator.CompositeBuffer().AddComponent(source);
         ByteBuf view = null;
+
         try
         {
             view = composite.Component(0);
@@ -227,6 +231,7 @@ public class CompositeByteBufReferenceTest
         {
             composite.Release();
         }
+
         Assert.Equal(0, source.RefCnt);
         Assert.Equal(0, view.RefCnt);
     }
@@ -238,6 +243,7 @@ public class CompositeByteBufReferenceTest
         using var storage = new Storage(pooled, direct);
         CompositeByteBuf cbuf = storage.Allocator.CompositeBuffer();
         ByteBuf buf = storage.Allocator.Buffer();
+
         try
         {
             Assert.Equal(1, buf.RefCnt);
@@ -266,6 +272,7 @@ public class CompositeByteBufReferenceTest
         ByteBuf buf = storage.Allocator.Buffer();
         ByteBuf buf2 = storage.Allocator.Buffer().WriteInt(1);
         ByteBuf buf3 = storage.Allocator.Buffer();
+
         try
         {
             Assert.Equal(1, buf.RefCnt);
@@ -301,6 +308,7 @@ public class CompositeByteBufReferenceTest
         CompositeByteBuf cbuf = storage.Allocator.CompositeBuffer();
         ByteBuf buf1 = storage.Allocator.Buffer().WriteByte((byte)1);
         ByteBuf buf3 = null;
+
         try
         {
             cbuf.AddComponent(buf1, true);
@@ -340,6 +348,7 @@ public class CompositeByteBufReferenceTest
         CompositeByteBuf cbuf = storage.Allocator.CompositeBuffer();
         ByteBuf buf1 = storage.Allocator.Buffer().WriteByte((byte)1);
         ByteBuf buf2 = null;
+
         try
         {
             cbuf.AddComponent(buf1, true);

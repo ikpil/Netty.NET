@@ -36,6 +36,7 @@ public class ByteBufAsyncStreamTransferTest
         {
             return Unpooled.DirectBuffer(8, 128).SetZero(0, 8);
         }
+
         return Unpooled.CompositeBuffer(2).AddComponent(Unpooled.WrappedBuffer(new byte[3]))
             .AddComponent(Unpooled.DirectBuffer(5, 5).WriteZero(5));
     }
@@ -57,6 +58,7 @@ public class ByteBufAsyncStreamTransferTest
         ByteBuf b = Owner(kind);
         b.SetIndex(1, 2);
         using var input = new DelayedStream();
+
         try
         {
             Task<int> pending = b.WriteBytesAsync(input, 10, TestContext.Current.CancellationToken).AsTask();
@@ -89,6 +91,7 @@ public class ByteBufAsyncStreamTransferTest
         ByteBuf b = Owner(kind).WriteBytes(new byte[] { 9, 1, 2, 3, 4 });
         b.ReaderIndex = 1;
         using var output = new DelayedStream();
+
         try
         {
             Task pending = b.ReadBytesAsync(output, 4, TestContext.Current.CancellationToken).AsTask();
@@ -117,6 +120,7 @@ public class ByteBufAsyncStreamTransferTest
         b.SetIndex(1, 2);
         using var input = new DelayedStream();
         using var output = new DelayedStream();
+
         try
         {
             Task<int> read = b.SetBytesAsync(2, input, 6, TestContext.Current.CancellationToken).AsTask();
@@ -147,6 +151,7 @@ public class ByteBufAsyncStreamTransferTest
         using var stream = new DelayedStream();
         using var cts = new CancellationTokenSource();
         cts.Cancel();
+
         try
         {
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => b.WriteBytesAsync(stream, 30, cts.Token).AsTask());
@@ -172,6 +177,7 @@ public class ByteBufAsyncStreamTransferTest
         b.WriterIndex = 2;
         using var stream = new DelayedStream();
         using var cts = new CancellationTokenSource();
+
         try
         {
             Task<int> pending = b.WriteBytesAsync(stream, 30, cts.Token).AsTask();
@@ -203,14 +209,17 @@ public class ByteBufAsyncStreamTransferTest
         using var stream = new DelayedStream { Fail = !cancel, CancelAfterCopy = cancel };
         using var cts = new CancellationTokenSource();
         stream.Cancellation = cts;
+
         try
         {
             Task pending = b.ReadBytesAsync(stream, 4, cts.Token).AsTask();
             stream.Complete();
+
             if (cancel)
                 await Assert.ThrowsAnyAsync<OperationCanceledException>(() => pending.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
             else
                 await Assert.ThrowsAsync<IOException>(() => pending.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
+
             Assert.Equal(new byte[] { 1 }, stream.Accepted);
             Assert.Equal(1, b.ReaderIndex);
             Assert.Equal(5, b.WriterIndex);
@@ -232,14 +241,17 @@ public class ByteBufAsyncStreamTransferTest
         using var stream = new DelayedStream { Fail = !cancel, CancelAfterCopy = cancel };
         using var cts = new CancellationTokenSource();
         stream.Cancellation = cts;
+
         try
         {
             Task<int> pending = b.WriteBytesAsync(stream, 4, cts.Token).AsTask();
             stream.Complete();
+
             if (cancel)
                 await Assert.ThrowsAnyAsync<OperationCanceledException>(() => pending.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
             else
                 await Assert.ThrowsAsync<IOException>(() => pending.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
+
             Assert.Equal(new byte[8], Bytes(b, 0, 8));
             Assert.Equal(1, b.WriterIndex);
         }
@@ -256,6 +268,7 @@ public class ByteBufAsyncStreamTransferTest
         ByteBuf b = Owner(1).WriteBytes(new byte[] { 1, 2, 3, 4 });
         using var stream = new DelayedStream { IgnoreCancellation = true };
         using var cts = new CancellationTokenSource();
+
         try
         {
             Task pending = input ? b.WriteBytesAsync(stream, 4, cts.Token).AsTask()
@@ -265,6 +278,7 @@ public class ByteBufAsyncStreamTransferTest
             await Finish(pending);
             Assert.Equal(input ? 8 : 4, b.WriterIndex);
             Assert.Equal(input ? 0 : 4, b.ReaderIndex);
+
             if (input)
             {
                 Assert.Equal(new byte[] { 1, 2, 3, 4 }, Bytes(b, 4, 4));
@@ -286,6 +300,7 @@ public class ByteBufAsyncStreamTransferTest
     {
         ByteBuf b = Owner(kind);
         using var stream = new DelayedStream { Count = 0 };
+
         try
         {
             Task<int> pending = b.WriteBytesAsync(stream, 30, TestContext.Current.CancellationToken).AsTask();
@@ -308,6 +323,7 @@ public class ByteBufAsyncStreamTransferTest
     {
         ByteBuf b = Owner(1);
         using var stream = new DelayedStream { Count = count };
+
         try
         {
             Task<int> pending = b.WriteBytesAsync(stream, 8, TestContext.Current.CancellationToken).AsTask();
@@ -327,6 +343,7 @@ public class ByteBufAsyncStreamTransferTest
     {
         ByteBuf b = Owner(0);
         using var stream = new DelayedStream();
+
         try
         {
             await b.GetBytesAsync(8, stream, 0, TestContext.Current.CancellationToken);
@@ -360,6 +377,7 @@ public class ByteBufAsyncStreamTransferTest
             Unpooled.DirectBuffer(2, 2).WriteBytes(new byte[] { 3, 4 }))
             : Owner(1).WriteBytes(new byte[] { 1, 2, 3, 4 }).AsReadOnly();
         using var stream = new DelayedStream();
+
         try
         {
             await Assert.ThrowsAsync<NotSupportedException>(() => b.SetBytesAsync(0, stream, 0, TestContext.Current.CancellationToken).AsTask());
@@ -396,6 +414,7 @@ public class ByteBufAsyncStreamTransferTest
     {
         ByteBuf b = Owner(kind).WriteBytes(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
         using var output = new ByteBufOutputStream(b);
+
         try
         {
             await b.ReadBytesAsync(output, 8, TestContext.Current.CancellationToken);
@@ -422,6 +441,7 @@ public class ByteBufAsyncStreamTransferTest
         ByteBuf wrapper = Unpooled.UnreleasableBuffer(b);
         using var first = new DelayedStream();
         using var second = new DelayedStream();
+
         try
         {
             Task<int> pending = slice.WriteBytesAsync(first, 4, TestContext.Current.CancellationToken).AsTask();
@@ -449,6 +469,7 @@ public class ByteBufAsyncStreamTransferTest
         ByteBuf b = Unpooled.CompositeBuffer().AddComponent(Unpooled.WrappedBuffer(new byte[2]))
             .AddComponent(Unpooled.WrappedBuffer(new byte[2]).AsReadOnly());
         using var stream = new DelayedStream();
+
         try
         {
             Task<int> pending = b.WriteBytesAsync(stream, 4, TestContext.Current.CancellationToken).AsTask();
@@ -482,6 +503,7 @@ public class ByteBufAsyncStreamTransferTest
                 }
             }
         };
+
         try
         {
             Task pending = b.ReadBytesAsync(stream, 8, TestContext.Current.CancellationToken).AsTask();
@@ -504,10 +526,12 @@ public class ByteBufAsyncStreamTransferTest
     {
         ByteBuf b = Owner(1);
         using var stream = new DelayedStream { Callback = () => b.Capacity = shrink ? 4 : 64 };
+
         try
         {
             Task<int> pending = b.SetBytesAsync(2, stream, 6, TestContext.Current.CancellationToken).AsTask();
             stream.Complete();
+
             if (shrink)
             {
                 await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => pending.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken));
@@ -519,6 +543,7 @@ public class ByteBufAsyncStreamTransferTest
                 Assert.Equal(4, await pending);
                 Assert.Equal(new byte[] { 1, 2, 3, 4 }, Bytes(b, 2, 4));
             }
+
             Assert.Equal(0, b.WriterIndex);
         }
         finally
@@ -552,6 +577,7 @@ public class ByteBufAsyncStreamTransferTest
         using var stream = new DelayedStream();
         using var cts = new CancellationTokenSource();
         cts.Cancel();
+
         try
         {
             await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => b.WriteBytesAsync(stream, 129, cts.Token).AsTask());
@@ -593,8 +619,10 @@ public class ByteBufAsyncStreamTransferTest
             Token = cancellationToken;
             await _completion.Task.WaitAsync(IgnoreCancellation ? CancellationToken.None : cancellationToken).ConfigureAwait(false);
             Callback?.Invoke();
+
             for (int i = 0; i < Math.Min(destination.Length, Math.Max(0, Count)); i++)
                 destination.Span[i] = (byte)(i + 1);
+
             FailAfterCopy(cancellationToken);
             return Count;
         }
@@ -616,6 +644,7 @@ public class ByteBufAsyncStreamTransferTest
             {
                 throw new IOException("Failure after staging or accepting bytes.");
             }
+
             if (CancelAfterCopy)
             {
                 Cancellation.Cancel();

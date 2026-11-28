@@ -81,11 +81,13 @@ public class HttpObjectAggregatorTest
         Assert.Equal(2, buffer.NumComponents);
         IReadOnlyList<ByteBuf> buffers = buffer.Decompose(0, buffer.Capacity);
         Assert.Equal(2, buffers.Count);
+
         foreach (ByteBuf buf in buffers)
         {
             // This should be false as we decompose the buffer before to not have deep hierarchy
             Assert.False(buf is CompositeByteBuf);
         }
+
         aggregatedMessage.Release();
     }
 
@@ -282,6 +284,7 @@ public class HttpObjectAggregatorTest
         {
             return false;
         }
+
         return true;
     }
 
@@ -437,6 +440,7 @@ public class HttpObjectAggregatorTest
     {
         HttpObjectAggregator aggregator;
         const int maxContentLength = 4;
+
         if (close)
         {
             aggregator = new HttpObjectAggregator(maxContentLength, true);
@@ -445,6 +449,7 @@ public class HttpObjectAggregatorTest
         {
             aggregator = new HttpObjectAggregator(maxContentLength);
         }
+
         EmbeddedChannel embedder = new EmbeddedChannel(new HttpRequestDecoder(), aggregator);
 
         Assert.False(embedder.WriteInbound(Unpooled.CopiedBuffer(
@@ -675,6 +680,7 @@ public class HttpObjectAggregatorTest
 
             // Getting an aggregated response out
             object msg1 = channel.ReadInbound();
+
             try
             {
                 Assert.IsAssignableFrom<IFullHttpRequest>(msg1);
@@ -755,6 +761,7 @@ public class HttpObjectAggregatorTest
 
             // Getting an aggregated response out
             object msg1 = channel.ReadInbound();
+
             try
             {
                 Assert.IsAssignableFrom<IFullHttpResponse>(msg1);

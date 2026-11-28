@@ -86,12 +86,14 @@ public abstract class MessageToMessageEncoder<I> : ChannelOutboundHandlerAdapter
     {
         CodecOutputList @out = null;
         Task future = null;
+
         try
         {
             if (AcceptOutboundMessage(msg))
             {
                 @out = CodecOutputList.NewInstance();
                 I cast = (I) msg;
+
                 try
                 {
                     Encode(ctx, cast, @out);
@@ -102,6 +104,7 @@ public abstract class MessageToMessageEncoder<I> : ChannelOutboundHandlerAdapter
                     // CLR: PlatformDependent.throwException(th) rethrows the original exception.
                     throw;
                 }
+
                 ReferenceCountUtil.Release(cast);
                 if (@out.Count == 0)
                 {
@@ -148,6 +151,7 @@ public abstract class MessageToMessageEncoder<I> : ChannelOutboundHandlerAdapter
                 }
             }
         }
+
         return future;
     }
 
@@ -158,10 +162,12 @@ public abstract class MessageToMessageEncoder<I> : ChannelOutboundHandlerAdapter
     private static Task WritePromiseCombiner(IChannelHandlerContext ctx, CodecOutputList @out)
     {
         Task[] futures = new Task[@out.Count];
+
         for (int i = 0; i < @out.Count; i++)
         {
             futures[i] = ctx.WriteAsync(@out.GetUnsafe(i));
         }
+
         return ExecutorPromiseCombiner.Combine(ctx, futures);
     }
 

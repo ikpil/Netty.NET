@@ -54,6 +54,7 @@ public class PooledDerivedByteBufTest
         var native = new NativeMemoryAllocator();
         using var a = new PooledByteBufAllocator(nativeAllocator: native, maxOrder: 1);
         ByteBuf root = Root(a, direct), first = null, second = null;
+
         try
         {
             first = firstSlice ? root.RetainedSlice(2, 12) : root.RetainedDuplicate();
@@ -70,6 +71,7 @@ public class PooledDerivedByteBufTest
             second.SetByte(0, 99);
             Assert.Equal(99, root.GetByte(offset));
             Assert.False(root.Release());
+
             if (childFirst)
             {
                 Assert.True(second.Release());
@@ -85,6 +87,7 @@ public class PooledDerivedByteBufTest
                 Assert.Equal(99, second.GetByte(0));
                 Assert.True(second.Release());
             }
+
             Assert.Equal(0, root.RefCnt);
             Assert.Equal(0, first.RefCnt);
             Assert.Equal(0, second.RefCnt);
@@ -95,12 +98,16 @@ public class PooledDerivedByteBufTest
         {
             if (second?.RefCnt > 0)
                 second.Release(second.RefCnt);
+
             if (first?.RefCnt > 0)
                 first.Release(first.RefCnt);
+
             if (root.RefCnt > 0)
                 root.Release(root.RefCnt);
+
             a.Dispose();
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -111,6 +118,7 @@ public class PooledDerivedByteBufTest
         using var a = new PooledByteBufAllocator(maxOrder: 1);
         ByteBuf root = Root(a, direct), owner = sliced ? root.RetainedSlice(2, 8) : root.RetainedDuplicate();
         ByteBuf borrowed = owner.Slice(1, 4), alias = borrowed.Duplicate();
+
         try
         {
             Assert.Equal(1, borrowed.RefCnt);
@@ -140,6 +148,7 @@ public class PooledDerivedByteBufTest
             {
                 owner.Release(owner.RefCnt);
             }
+
             root.Release();
         }
     }
@@ -151,6 +160,7 @@ public class PooledDerivedByteBufTest
         using var a = new PooledByteBufAllocator(maxOrder: 1);
         ByteBuf root = Root(a, direct), first = root.RetainedSlice(2, 8), borrowed = first.Slice(1, 4);
         ByteBuf child = duplicate ? borrowed.RetainedDuplicate() : borrowed.RetainedSlice(1, 2);
+
         try
         {
             Assert.Equal(2, root.RefCnt);
@@ -172,10 +182,12 @@ public class PooledDerivedByteBufTest
             {
                 child.Release();
             }
+
             if (first.RefCnt > 0)
             {
                 first.Release(first.RefCnt);
             }
+
             if (root.RefCnt > 0)
             {
                 root.Release(root.RefCnt);
@@ -189,6 +201,7 @@ public class PooledDerivedByteBufTest
     {
         using var a = new PooledByteBufAllocator(maxOrder: 1);
         ByteBuf root = Root(a, direct), slice = root.RetainedSlice(2, 8), duplicate = root.RetainedDuplicate();
+
         try
         {
             slice.Retain(2);
@@ -210,10 +223,12 @@ public class PooledDerivedByteBufTest
             {
                 slice.Release(slice.RefCnt);
             }
+
             if (duplicate.RefCnt > 0)
             {
                 duplicate.Release(duplicate.RefCnt);
             }
+
             if (root.RefCnt > 0)
             {
                 root.Release(root.RefCnt);
@@ -228,6 +243,7 @@ public class PooledDerivedByteBufTest
         using var a = new PooledByteBufAllocator(maxOrder: 1);
         ByteBuf root = Root(a, direct).SetIndex(3, 13);
         ByteBuf slice = root.RetainedSlice(2, 8).SetIndex(1, 7), duplicate = root.RetainedDuplicate();
+
         try
         {
             ByteBuf slicedDuplicate = slice.Duplicate(), rootDuplicate = duplicate.Duplicate();
@@ -249,6 +265,7 @@ public class PooledDerivedByteBufTest
             Assert.Equal(8, slice.Capacity);
             Assert.Throws<NotSupportedException>(() => slice.Capacity = 8);
             ByteBuf copy = slice.Copy(1, 3);
+
             try
             {
                 Assert.Equal(64, copy.MaxCapacity);
@@ -273,6 +290,7 @@ public class PooledDerivedByteBufTest
     {
         using var a = new PooledByteBufAllocator(maxOrder: 1);
         ByteBuf root = Root(a, direct), owner = root.RetainedSlice(2, 8);
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => root.RetainedSlice(15, 2));
@@ -294,6 +312,7 @@ public class PooledDerivedByteBufTest
             {
                 owner.Release(owner.RefCnt);
             }
+
             root.Release();
         }
     }
@@ -305,6 +324,7 @@ public class PooledDerivedByteBufTest
         using var a = new PooledByteBufAllocator(maxOrder: 1);
         ByteBuf root = Root(a, direct), owner = root.RetainedSlice(2, 8);
         ByteBuf borrowed = owner.Slice(1, 2), child = borrowed.RetainedSlice(-1, 8);
+
         try
         {
             Assert.Equal(8, child.Capacity);
@@ -327,6 +347,7 @@ public class PooledDerivedByteBufTest
         ByteBuf root = Root(a, true), child = root.RetainedSlice(3, 8);
         ReadOnlySpan<byte> captured = child.AsReadOnlySpan(0, 8);
         var pin = child.AsMemory(0, 8).Pin();
+
         try
         {
             Assert.False(root.Release());
@@ -340,15 +361,18 @@ public class PooledDerivedByteBufTest
         finally
         {
             pin.Dispose();
+
             if (child.RefCnt > 0)
             {
                 child.Release();
             }
+
             if (root.RefCnt > 0)
             {
                 root.Release(root.RefCnt);
             }
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -384,6 +408,7 @@ public class PooledDerivedByteBufTest
         var firstTracker = AllocatorLeakDetectionTest.Tracker(first);
         var childTracker = AllocatorLeakDetectionTest.Tracker(child);
         ByteBuf firstReferent = first.Unwrap(), childReferent = child.Unwrap();
+
         try
         {
             Assert.NotSame(spy, firstTracker);
@@ -403,8 +428,10 @@ public class PooledDerivedByteBufTest
         {
             if (child.RefCnt > 0)
                 child.Release();
+
             if (first.RefCnt > 0)
                 first.Release(first.RefCnt);
+
             if (root.RefCnt > 0)
                 wrapper.Release(root.RefCnt);
         }
@@ -418,6 +445,7 @@ public class PooledDerivedByteBufTest
         var spy = new Tracker(root);
         var failure = new Exception("wrapper factory failure");
         var wrapper = new FailingWrapper(root, spy, failure);
+
         try
         {
             Assert.Same(failure, Assert.Throws<Exception>(() => wrapper.RetainedDuplicate()));
@@ -430,6 +458,7 @@ public class PooledDerivedByteBufTest
         {
             wrapper.Release();
         }
+
         Assert.Equal(1, spy.Closes);
     }
 
@@ -444,6 +473,7 @@ public class PooledDerivedByteBufTest
         using var a = new PooledByteBufAllocator(maxOrder: 1);
         ByteBuf root = Root(a, direct, 8);
         ByteBuf first = root.RetainedSlice(1, 6), second = null;
+
         try
         {
             Assert.Equal(new byte[] { 1, 2, 3, 4, 5, 6 }, ByteBufUtil.GetBytes(first));
@@ -462,10 +492,12 @@ public class PooledDerivedByteBufTest
             ByteBuf third = doSlice1 ? second.Slice(1, 2) : second.Duplicate();
             Assert.Equal(doSlice1 ? new byte[] { 3, 4 } : new byte[] { 2, 3, 4, 5 }, ByteBufUtil.GetBytes(third));
             ByteBuf fourth = doSlice2 ? third.Slice(third.ReaderIndex + 1, 1) : third.Duplicate();
+
             if (doSlice2)
                 Assert.Equal(new byte[] { doSlice1 ? (byte)4 : (byte)3 }, ByteBufUtil.GetBytes(fourth));
             else
                 Assert.Equal(0, third.CompareTo(fourth));
+
             // Cleanup the expected buffers used for testing.
             // CLR expectations are managed byte arrays, so there are no expected ByteBuf references to release.
             // Slice 4, 3, and 2 should effectively "share" a reference count.
@@ -485,8 +517,10 @@ public class PooledDerivedByteBufTest
         {
             if (second?.RefCnt > 0)
                 second.Release(second.RefCnt);
+
             if (first.RefCnt > 0)
                 first.Release(first.RefCnt);
+
             if (root.RefCnt > 0)
                 root.Release(root.RefCnt);
         }
@@ -498,6 +532,7 @@ public class PooledDerivedByteBufTest
     {
         using var a = new PooledByteBufAllocator(maxOrder: 1);
         ByteBuf root = Root(a, direct), empty = root.RetainedSlice(16, 0);
+
         try
         {
             Assert.NotSame(Unpooled.EmptyBuffer, empty);
@@ -516,6 +551,7 @@ public class PooledDerivedByteBufTest
             {
                 empty.Release();
             }
+
             if (root.RefCnt > 0)
             {
                 root.Release(root.RefCnt);

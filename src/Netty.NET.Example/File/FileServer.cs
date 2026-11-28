@@ -56,6 +56,7 @@ public sealed class FileServer
 
         // Configure the server.
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+
         try
         {
             ServerBootstrap b = new ServerBootstrap();
@@ -66,10 +67,12 @@ public sealed class FileServer
              .ChildHandler(new ActionChannelInitializer<ISocketChannel>(ch =>
              {
                  IChannelPipeline p = ch.Pipeline;
+
                  if (sslCtx != null)
                  {
                      p.AddLast(sslCtx.NewHandler(ch.Alloc()));
                  }
+
                  p.AddLast(
                          new StringEncoder(Encoding.UTF8),
                          new LineBasedFrameDecoder(8192),

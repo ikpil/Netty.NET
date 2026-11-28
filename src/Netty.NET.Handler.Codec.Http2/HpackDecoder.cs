@@ -151,6 +151,7 @@ internal sealed class HpackDecoder
     private void DecodeDynamicTableSizeUpdates(ByteBuf @in)
     {
         byte b;
+
         while (@in.IsReadable() && ((b = @in.GetByte(@in.ReaderIndex)) & 0x20) == 0x20 && ((b & 0xC0) == 0x00))
         {
             @in.ReadByte();
@@ -175,6 +176,7 @@ internal sealed class HpackDecoder
         bool huffmanEncoded = false;
         AsciiString name = null;
         IndexType indexType = IndexType.NONE;
+
         while (@in.IsReadable())
         {
             switch (state)
@@ -186,10 +188,12 @@ internal sealed class HpackDecoder
                         // HpackEncoder MUST signal maximum dynamic table size change
                         throw MAX_DYNAMIC_TABLE_SIZE_CHANGE_REQUIRED;
                     }
+
                     if (b < 0)
                     {
                         // Indexed Header Field
                         index = b & 0x7F;
+
                         switch (index)
                         {
                             case 0:
@@ -210,6 +214,7 @@ internal sealed class HpackDecoder
                         // Literal Header Field with Incremental Indexing
                         indexType = IndexType.INCREMENTAL;
                         index = b & 0x3F;
+
                         switch (index)
                         {
                             case 0:
@@ -238,6 +243,7 @@ internal sealed class HpackDecoder
                         // Literal Header Field without Indexing / never Indexed
                         indexType = (b & 0x10) == 0x10 ? IndexType.NEVER : IndexType.NONE;
                         index = b & 0x0F;
+
                         switch (index)
                         {
                             case 0:
@@ -254,6 +260,7 @@ internal sealed class HpackDecoder
                                 break;
                         }
                     }
+
                     break;
 
                 case READ_INDEXED_HEADER:
@@ -286,6 +293,7 @@ internal sealed class HpackDecoder
                         nameLength = index;
                         state = READ_LITERAL_HEADER_NAME;
                     }
+
                     break;
 
                 case READ_LITERAL_HEADER_NAME_LENGTH:
@@ -311,6 +319,7 @@ internal sealed class HpackDecoder
                     b = (sbyte) @in.ReadByte();
                     huffmanEncoded = (b & 0x80) == 0x80;
                     index = b & 0x7F;
+
                     switch (index)
                     {
                         case 0x7f:
@@ -369,6 +378,7 @@ internal sealed class HpackDecoder
             throw ConnectionError(PROTOCOL_ERROR, "Header Table Size must be >= %d and <= %d but was %d",
                     MIN_HEADER_TABLE_SIZE, MAX_HEADER_TABLE_SIZE, maxHeaderTableSize);
         }
+
         maxDynamicTableSize = maxHeaderTableSize;
         if (maxDynamicTableSize < encoderMaxDynamicTableSize)
         {
@@ -386,6 +396,7 @@ internal sealed class HpackDecoder
             throw ConnectionError(PROTOCOL_ERROR, "Header List Size must be >= %d and <= %d but was %d",
                     MIN_HEADER_LIST_SIZE, MAX_HEADER_LIST_SIZE, maxHeaderListSize);
         }
+
         this.maxHeaderListSize = maxHeaderListSize;
     }
 
@@ -433,6 +444,7 @@ internal sealed class HpackDecoder
         {
             throw INVALID_MAX_DYNAMIC_TABLE_SIZE;
         }
+
         encoderMaxDynamicTableSize = dynamicTableSize;
         maxDynamicTableSizeChangeRequired = false;
         hpackDynamicTable.SetCapacity(dynamicTableSize);
@@ -448,6 +460,7 @@ internal sealed class HpackDecoder
                 throw StreamError(streamId, PROTOCOL_ERROR,
                         "Pseudo-header field '%s' found after regular header.", name);
             }
+
             IHttp2Headers.PseudoHeaderName pseudoHeader = GetPseudoHeader(name);
             HeaderType currentHeaderType = pseudoHeader.IsRequestOnly() ?
                     HeaderType.REQUEST_PSEUDO_HEADER : HeaderType.RESPONSE_PSEUDO_HEADER;
@@ -455,8 +468,10 @@ internal sealed class HpackDecoder
             {
                 throw StreamError(streamId, PROTOCOL_ERROR, "Mix of request and response pseudo-headers.");
             }
+
             return currentHeaderType;
         }
+
         if (HttpHeaderValidationUtil.IsConnectionHeader(name, true))
         {
             throw StreamError(streamId, PROTOCOL_ERROR, "Illegal connection-specific header '%s' encountered.", name);
@@ -477,11 +492,13 @@ internal sealed class HpackDecoder
             HpackHeaderField hpackHeaderField = HpackStaticTable.GetEntry(index);
             return (AsciiString) hpackHeaderField.name;
         }
+
         if (index - HpackStaticTable.length <= hpackDynamicTable.Length())
         {
             HpackHeaderField hpackHeaderField = hpackDynamicTable.GetEntry(index - HpackStaticTable.length);
             return (AsciiString) hpackHeaderField.name;
         }
+
         throw READ_NAME_ILLEGAL_INDEX_VALUE;
     }
 
@@ -495,6 +512,7 @@ internal sealed class HpackDecoder
         {
             return hpackDynamicTable.GetEntry(index - HpackStaticTable.length);
         }
+
         throw INDEX_HEADER_ILLEGAL_INDEX_VALUE;
     }
 
@@ -523,8 +541,10 @@ internal sealed class HpackDecoder
         {
             return huffmanDecoder.Decode(@in, length);
         }
+
         byte[] buf = new byte[length];
         @in.ReadBytes(buf);
+
         return new AsciiString(buf, false);
     }
 
@@ -552,6 +572,7 @@ internal sealed class HpackDecoder
             @in.ReaderIndex = readerIndex;
             throw DECODE_ULE_128_TO_INT_DECOMPRESSION_EXCEPTION;
         }
+
         return (int) v;
     }
 
@@ -565,6 +586,7 @@ internal sealed class HpackDecoder
         Debug.Assert(result <= 0x7f && result >= 0);
         bool resultStartedAtZero = result == 0;
         int writerIndex = @in.WriterIndex;
+
         for (int readerIndex = @in.ReaderIndex, shift = 0; readerIndex < writerIndex; ++readerIndex, shift += 7)
         {
             byte b = @in.GetByte(readerIndex);
@@ -585,6 +607,7 @@ internal sealed class HpackDecoder
                 @in.ReaderIndex = readerIndex + 1;
                 return result + ((b & 0x7FL) << shift);
             }
+
             result += (b & 0x7FL) << shift;
         }
 
@@ -646,6 +669,7 @@ internal sealed class HpackDecoder
             try
             {
                 headers.Add(name, value);
+
                 if (validateHeaders)
                 {
                     previousType = ValidateHeader(streamId, name, value, previousType);

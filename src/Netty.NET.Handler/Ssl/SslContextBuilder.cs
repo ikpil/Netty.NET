@@ -231,10 +231,12 @@ public sealed class SslContextBuilder
     private SslContextBuilder(bool forServer)
     {
         this.forServer = forServer;
+
         if (!forServer)
         {
             endpointIdentificationAlgorithm = SslContext.defaultEndpointVerificationAlgorithm;
         }
+
         serverNames = forServer ? null : new List<string>(2); // Only for clients.
     }
 
@@ -251,6 +253,7 @@ public sealed class SslContextBuilder
         {
             options[option] = value;
         }
+
         return this;
     }
 
@@ -422,6 +425,7 @@ public sealed class SslContextBuilder
     {
         X509Certificate2[] keyCertChain;
         AsymmetricAlgorithm key;
+
         try
         {
             keyCertChain = SslContext.ToX509Certificates(keyCertChainFile);
@@ -430,6 +434,7 @@ public sealed class SslContextBuilder
         {
             throw new ArgumentException("File does not contain valid certificates: " + keyCertChainFile, e);
         }
+
         try
         {
             key = SslContext.ToPrivateKey(keyFile, keyPassword);
@@ -438,6 +443,7 @@ public sealed class SslContextBuilder
         {
             throw new ArgumentException("File does not contain valid private key: " + keyFile, e);
         }
+
         return KeyManager(key, keyPassword, keyCertChain);
     }
 
@@ -459,6 +465,7 @@ public sealed class SslContextBuilder
     {
         X509Certificate2[] keyCertChain;
         AsymmetricAlgorithm key;
+
         try
         {
             keyCertChain = SslContext.ToX509Certificates(keyCertChainInputStream);
@@ -467,6 +474,7 @@ public sealed class SslContextBuilder
         {
             throw new ArgumentException("Input stream not contain valid certificates.", e);
         }
+
         try
         {
             key = SslContext.ToPrivateKey(keyInputStream, keyPassword);
@@ -475,6 +483,7 @@ public sealed class SslContextBuilder
         {
             throw new ArgumentException("Input stream does not contain valid private key.", e);
         }
+
         return KeyManager(key, keyPassword, keyCertChain);
     }
 
@@ -495,6 +504,7 @@ public sealed class SslContextBuilder
             ObjectUtil.CheckNonEmpty(keyCertChain, "keyCertChain");
             ObjectUtil.CheckNotNull(key, "key required for servers");
         }
+
         if (keyCertChain == null || keyCertChain.Length == 0)
         {
             this.keyCertChain = null;
@@ -505,8 +515,10 @@ public sealed class SslContextBuilder
             {
                 ObjectUtil.CheckNotNullWithIAE(cert, "cert");
             }
+
             this.keyCertChain = (X509Certificate2[]) keyCertChain.Clone();
         }
+
         this.key = key;
         this.keyPassword = keyPassword;
         keyManagerFactory = null;
@@ -547,6 +559,7 @@ public sealed class SslContextBuilder
         {
             ObjectUtil.CheckNotNull(keyManagerFactory, "keyManagerFactory required for servers");
         }
+
         keyCertChain = null;
         key = null;
         keyPassword = null;
@@ -578,6 +591,7 @@ public sealed class SslContextBuilder
         {
             throw new ArgumentException("keyManager of a client is a LocalCertificateSelectionCallback");
         }
+
         keyManagerFactory = null;
         serverKeyManager = keyManager;
         clientKeyManager = null;
@@ -596,6 +610,7 @@ public sealed class SslContextBuilder
         {
             throw new ArgumentException("keyManager required for servers is a ServerCertificateSelectionCallback");
         }
+
         keyManagerFactory = null;
         serverKeyManager = null;
         clientKeyManager = keyManager;
@@ -774,6 +789,7 @@ public sealed class SslContextBuilder
                     "because this is a server context builder.");
         }
         ObjectUtil.CheckNotNull(serverName, "serverName");
+
         serverNames.Add(serverName);
         return this;
     }
@@ -810,11 +826,14 @@ public sealed class SslContextBuilder
         {
             return null;
         }
+
         List<T> list = new List<T>();
+
         foreach (T element in iterable)
         {
             list.Add(element);
         }
+
         return list.ToArray();
     }
 }

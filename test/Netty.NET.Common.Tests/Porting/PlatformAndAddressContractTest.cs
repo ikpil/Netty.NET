@@ -12,6 +12,7 @@ public class PlatformAndAddressContractTest
     {
         Assert.Equal(OperatingSystem.IsAndroid(), PlatformDependent.IsAndroid());
         var allocator = new NativeMemoryAllocator(8);
+
         using (var owner = allocator.Allocate(8, true))
         {
             Assert.Equal(0L, MemoryMarshal.Read<long>(owner.Memory.Span));
@@ -19,16 +20,20 @@ public class PlatformAndAddressContractTest
             Assert.Equal(0xa5, owner.Memory.Span[0]);
             Assert.Equal(8L, allocator.ReservedBytes);
         }
+
         Assert.Equal(0L, allocator.ReservedBytes);
         Assert.Equal(OperatingSystem.IsWindows(), PlatformDependent.IsWindows());
         Assert.Equal(OperatingSystem.IsMacOS(), PlatformDependent.IsOsx());
+
         if (OperatingSystem.IsWindows())
         {
             Assert.True(PlatformDependent.IsWindows());
             Assert.Equal("windows", PlatformDependent.NormalizedOs());
         }
+
         if (RuntimeInformation.ProcessArchitecture == Architecture.X64)
             Assert.Equal("x86_64", PlatformDependent.NormalizedArch());
+
         Assert.True(PlatformDependent.Tmpdir().Exists);
     }
 

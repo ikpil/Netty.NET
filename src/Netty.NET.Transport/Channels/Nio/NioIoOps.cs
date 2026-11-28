@@ -118,6 +118,7 @@ public sealed class NioIoOps : IIoOps
         {
             return this;
         }
+
         return ValueOf(_value | ops.Value());
     }
 
@@ -133,6 +134,7 @@ public sealed class NioIoOps : IIoOps
         {
             return this;
         }
+
         return ValueOf(_value & ~ops.Value());
     }
 
@@ -156,6 +158,7 @@ public sealed class NioIoOps : IIoOps
         {
             return false;
         }
+
         NioIoOps nioOps = (NioIoOps)o;
         return _value == nioOps._value;
     }
@@ -208,6 +211,7 @@ public sealed class NioIoOps : IIoOps
                 return @event;
             }
         }
+
         return new DefaultNioIoEvent(new NioIoOps(value));
     }
 
@@ -235,6 +239,7 @@ public sealed class NioIoOps : IIoOps
             {
                 return false;
             }
+
             INioIoEvent @event = (INioIoEvent)o;
             return @event.Ops().Equals(Ops());
         }

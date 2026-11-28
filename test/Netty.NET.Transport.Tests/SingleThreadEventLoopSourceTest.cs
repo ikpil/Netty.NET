@@ -46,8 +46,10 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
             {
                 _ = loop.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
             }
+
         foreach (var loop in new SingleThreadEventLoop[] { _a, _b, _c })
             await loop.TerminationFuture.WaitAsync(TimeSpan.FromSeconds(10));
+
         Assert.Equal(1, _a.CleanedUp);
     }
 
@@ -134,10 +136,12 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
         {
             bool empty = timestamps.IsEmpty;
             timestamps.Enqueue(Stopwatch.GetTimestamp());
+
             if (!laggy || empty)
             {
                 SleepIgnoringInterrupt(laggy ? 401 : 50);
             }
+
             CountDown(latch);
         }, TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(100), cancel.Token);
         // CLR: the test thread waits for the latch as the source does. A Task.Run wait added a thread-pool hop between
@@ -148,12 +152,14 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
         await Task.Delay(300);
         Assert.Equal(expectedTimeStamps, timestamps.Count);
         var values = timestamps.ToArray();
+
         if (laggy)
         {
             // Check if the task was run with lag.
             for (int i = 1; i < values.Length; i++)
             {
                 var diff = Stopwatch.GetElapsedTime(values[i - 1], values[i]);
+
                 if (i == 1)
                 {
                     Assert.True(diff >= TimeSpan.FromMilliseconds(400), diff.ToString());
@@ -230,6 +236,7 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
         Assert.Equal(expectedTimeStamps, timestamps.Count);
         // Check if the task was run without a lag.
         var values = timestamps.ToArray();
+
         for (int i = 1; i < values.Length; i++)
             Assert.True(Stopwatch.GetElapsedTime(values[i - 1], values[i]) >= TimeSpan.FromMilliseconds(150));
     }
@@ -243,6 +250,7 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
         Action task = () =>
         {
             Interlocked.Increment(ref ranTasks);
+
             while (!latch.IsSet)
             {
                 try
@@ -255,16 +263,19 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
                 }
             }
         };
+
         try
         {
             for (int i = 0; i < numTasks; i++)
             {
                 _a.Execute(task);
             }
+
             // At this point, the first task should be running and stuck at latch.await().
             while (Volatile.Read(ref ranTasks) == 0)
             {
                 TestContext.Current.CancellationToken.ThrowIfCancellationRequested();
+
                 Thread.Yield();
             }
 
@@ -301,12 +312,14 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
     public async Task TestGracefulShutdownQuietPeriod()
     {
         var shutdown = _a.ShutdownGracefullyAsync(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(int.MaxValue));
+
         // Keep Scheduling tasks for another 2 seconds.
         for (int i = 0; i < 20; i++)
         {
             Thread.Sleep(100);
             _a.Execute(Noop);
         }
+
         long start = Stopwatch.GetTimestamp();
         Assert.True(_a.IsShuttingDown());
         Assert.False(_a.IsShutdown());
@@ -318,6 +331,7 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
     public void TestGracefulShutdownTimeout()
     {
         _ = _a.ShutdownGracefullyAsync(TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(2));
+
         // Keep Scheduling tasks for another 3 seconds.
         // Submitted tasks must be rejected after 2 second timeout.
         for (int i = 0; i < 10; i++)
@@ -325,11 +339,13 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
             Thread.Sleep(100);
             _a.Execute(Noop);
         }
+
         Assert.Throws<RejectedExecutionException>(() =>
         {
             for (int i = 0; i < 20; i++)
             {
                 TestContext.Current.CancellationToken.ThrowIfCancellationRequested();
+
                 Thread.Sleep(100);
                 _a.Execute(Noop);
             }
@@ -392,6 +408,7 @@ public class SingleThreadEventLoopSourceTest : IAsyncLifetime
                     task();
                     UpdateLastExecutionTime();
                 }
+
                 if (ConfirmShutdown())
                 {
                     break;

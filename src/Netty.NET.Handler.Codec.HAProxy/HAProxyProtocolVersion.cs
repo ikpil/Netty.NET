@@ -66,6 +66,7 @@ public sealed class HAProxyProtocolVersion
     public static HAProxyProtocolVersion ValueOf(byte verCmdByte)
     {
         int version = unchecked((sbyte) verCmdByte & (sbyte) VERSION_MASK);
+
         switch ((byte) version)
         {
             case VERSION_TWO_BYTE:

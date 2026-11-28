@@ -106,6 +106,7 @@ public class MqttCodecTest : IDisposable
         {
             ReferenceCountUtil.Release(o);
         }
+
         @out.Clear();
     }
 
@@ -362,6 +363,7 @@ public class MqttCodecTest : IDisposable
         byteBuf.WriteShort(claimedTopicNameLength);
         // ... + only 8 of the 32 topic-name bytes the prefix claims (so the decoder will ask for REPLAY).
         byteBuf.WriteZero(currentPacketRemainingLength - 2);
+
         // Trailing PINGREQ packets - the cumulation bytes that the buggy size check used to look at.
         // Each PINGREQ is just a 2-byte fixed header: 0xC0 (type 12, flags 0) and remaining-length 0.
         for (int i = 0; i < followingPingReqPackets; i++)
@@ -374,6 +376,7 @@ public class MqttCodecTest : IDisposable
         {
             Assert.True(channel.WriteInbound(byteBuf));
             MqttMessage decodedMessage = channel.ReadInbound<MqttMessage>();
+
             try
             {
                 Assert.True(decodedMessage.DecoderResult().IsFailure());
@@ -415,6 +418,7 @@ public class MqttCodecTest : IDisposable
         {
             Assert.True(channel.WriteInbound(byteBuf));
             MqttMessage decodedMessage = channel.ReadInbound<MqttMessage>();
+
             try
             {
                 Assert.True(decodedMessage.DecoderResult().IsFailure());
@@ -468,6 +472,7 @@ public class MqttCodecTest : IDisposable
         {
             Assert.True(channel.WriteInbound(byteBuf));
             MqttMessage decodedMessage = channel.ReadInbound<MqttMessage>();
+
             try
             {
                 Assert.True(decodedMessage.DecoderResult().IsFailure());
@@ -627,6 +632,7 @@ public class MqttCodecTest : IDisposable
         {
             Assert.True(channel.WriteInbound(byteBuf));
             MqttMessage first = channel.ReadInbound<MqttMessage>();
+
             try
             {
                 Assert.True(first.DecoderResult().IsFailure(),
@@ -637,6 +643,7 @@ public class MqttCodecTest : IDisposable
             {
                 ReferenceCountUtil.Release(first);
             }
+
             // No second message: the trailing bytes belong to the malformed frame.
             Assert.Null(channel.ReadInbound());
         }
@@ -892,6 +899,7 @@ public class MqttCodecTest : IDisposable
     {
         const string expectedPayload = "{\"complete\":1}";
         EmbeddedChannel channel = new EmbeddedChannel(new MqttDecoder());
+
         try
         {
             // The MQTT version is read from a channel attribute set while decoding CONNECT. Without a
@@ -904,6 +912,7 @@ public class MqttCodecTest : IDisposable
             // User Properties, with a single-byte PAYLOAD_FORMAT_INDICATOR as the very last property.
             ByteBuf properties = ALLOCATOR.Buffer();
             int i = 0;
+
             while (properties.ReadableBytes < 130)
             {
                 properties.WriteByte(USER_PROPERTY);
@@ -911,6 +920,7 @@ public class MqttCodecTest : IDisposable
                 WriteMqttUtf8String(properties, "value-with-some-padding-" + i);
                 i++;
             }
+
             properties.WriteByte(PAYLOAD_FORMAT_INDICATOR); // 0x01
             properties.WriteByte(0x01);                      // its single-byte value
             Assert.True(properties.ReadableBytes >= 128); // 2-byte VBI trigger condition
@@ -918,6 +928,7 @@ public class MqttCodecTest : IDisposable
             Assert.True(channel.WriteInbound(NewPublish("topic", properties, expectedPayload)));
 
             MqttPublishMessage decoded = channel.ReadInbound<MqttPublishMessage>();
+
             try
             {
                 Assert.False(decoded.DecoderResult().IsFailure(), decoded.DecoderResult().Cause()?.ToString() ?? "null");
@@ -944,6 +955,7 @@ public class MqttCodecTest : IDisposable
     {
         const string expectedPayload = "{\"complete\":1}";
         EmbeddedChannel channel = new EmbeddedChannel(new MqttDecoder());
+
         try
         {
             Assert.True(channel.WriteInbound(NewMqtt5Connect()));
@@ -960,6 +972,7 @@ public class MqttCodecTest : IDisposable
             Assert.True(channel.WriteInbound(NewPublish("topic", properties, expectedPayload)));
 
             MqttPublishMessage decoded = channel.ReadInbound<MqttPublishMessage>();
+
             try
             {
                 Assert.False(decoded.DecoderResult().IsFailure(), decoded.DecoderResult().Cause()?.ToString() ?? "null");
@@ -981,6 +994,7 @@ public class MqttCodecTest : IDisposable
     public void TestPublishMqtt5PropertyLengthOverreadIsRejected()
     {
         EmbeddedChannel channel = new EmbeddedChannel(new MqttDecoder());
+
         try
         {
             Assert.True(channel.WriteInbound(NewMqtt5Connect()));
@@ -1002,6 +1016,7 @@ public class MqttCodecTest : IDisposable
             Assert.True(channel.WriteInbound(malformed));
 
             MqttMessage decoded = channel.ReadInbound<MqttMessage>();
+
             try
             {
                 Assert.True(decoded.DecoderResult().IsFailure());
@@ -1022,6 +1037,7 @@ public class MqttCodecTest : IDisposable
     public void TestPublishMqtt5PropertyLengthCoveringFullStringIsAccepted()
     {
         EmbeddedChannel channel = new EmbeddedChannel(new MqttDecoder());
+
         try
         {
             Assert.True(channel.WriteInbound(NewMqtt5Connect()));
@@ -1039,6 +1055,7 @@ public class MqttCodecTest : IDisposable
             Assert.True(channel.WriteInbound(wellFormed));
 
             MqttPublishMessage decoded = channel.ReadInbound<MqttPublishMessage>();
+
             try
             {
                 Assert.False(decoded.DecoderResult().IsFailure());
@@ -1114,6 +1131,7 @@ public class MqttCodecTest : IDisposable
             {
                 digit |= 0x80;
             }
+
             buffer.WriteByte(digit);
         } while (value > 0);
     }
@@ -1576,6 +1594,7 @@ public class MqttCodecTest : IDisposable
                 properties);
         ByteBuf payload = ALLOCATOR.Buffer();
         payload.WriteBytes(Encoding.UTF8.GetBytes("whatever"));
+
         return new MqttPublishMessage(mqttFixedHeader, mqttPublishVariableHeader, payload);
     }
 
@@ -1773,9 +1792,11 @@ public class MqttCodecTest : IDisposable
     private static MqttMessage DecodeUtf8TestPacket(MqttDecoder decoder, ByteBuf @in)
     {
         EmbeddedChannel channel = new EmbeddedChannel(decoder);
+
         try
         {
             channel.WriteInbound(@in);
+
             return channel.ReadInbound<MqttMessage>();
         }
         finally
@@ -1847,6 +1868,7 @@ public class MqttCodecTest : IDisposable
         ByteBuf packet = BuildConnectWithClientIdBytes(cid);
         MqttMessage msg = DecodeUtf8TestPacket(new MqttDecoder(), packet);
         Assert.NotNull(msg);
+
         try
         {
             Assert.True(msg.DecoderResult().IsSuccess(),
@@ -1866,6 +1888,7 @@ public class MqttCodecTest : IDisposable
         ByteBuf packet = BuildConnectWithClientIdBytes(new byte[0]);
         MqttMessage msg = DecodeUtf8TestPacket(new MqttDecoder(), packet);
         Assert.NotNull(msg);
+
         try
         {
             Assert.True(msg.DecoderResult().IsSuccess());
@@ -1883,6 +1906,7 @@ public class MqttCodecTest : IDisposable
         MqttDecoder lenient = new MqttDecoder(8 * 1024 * 1024, 23, false);
         MqttMessage msg = DecodeUtf8TestPacket(lenient, packet);
         Assert.NotNull(msg);
+
         try
         {
             Assert.True(msg.DecoderResult().IsSuccess(),
@@ -1908,6 +1932,7 @@ public class MqttCodecTest : IDisposable
         MqttDecoder lenient = new MqttDecoder(8 * 1024 * 1024, 23, false);
         MqttMessage msg = DecodeUtf8TestPacket(lenient, packet);
         Assert.NotNull(msg);
+
         try
         {
             Assert.True(msg.DecoderResult().IsSuccess());
@@ -1979,6 +2004,7 @@ public class MqttCodecTest : IDisposable
         ByteBuf payload = ALLOCATOR.Buffer();
         payload.WriteBytes(Encoding.UTF8.GetBytes("data"));
         MqttPublishMessage message = new MqttPublishMessage(fixedHeader, variableHeader, payload);
+
         try
         {
             Assert.Throws<MqttIdentifierRejectedException>(() => MqttEncoder.DoEncode(ctx.Object, message));

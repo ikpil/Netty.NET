@@ -41,6 +41,7 @@ public class AttributeKey
     public static AttributeKey<T> ValueOf<T>(string name) where T : class
     {
         ObjectUtil.CheckNonEmpty(name, nameof(name));
+
         IAttributeKey key = Keys.GetOrAdd(name,
             n => new AttributeKey<T>(Interlocked.Increment(ref _nextId), n));
         return key as AttributeKey<T> ?? throw new ArgumentException(
@@ -55,11 +56,13 @@ public class AttributeKey
     public static AttributeKey<T> NewInstance<T>(string name) where T : class
     {
         ObjectUtil.CheckNonEmpty(name, nameof(name));
+
         var key = new AttributeKey<T>(Interlocked.Increment(ref _nextId), name);
         if (!Keys.TryAdd(name, key))
         {
             throw new ArgumentException("'" + name + "' is already in use", nameof(name));
         }
+
         return key;
     }
 }
@@ -103,6 +106,7 @@ public class AttributeKey<T> : AbstractConstant<AttributeKey<T>>, IAttributeKey 
     {
         ObjectUtil.CheckNotNull(firstNameComponent, nameof(firstNameComponent));
         ObjectUtil.CheckNotNull(secondNameComponent, nameof(secondNameComponent));
+
         // Reject unnamed CLR types rather than publish an ambiguous "#name" key.
         string firstName = firstNameComponent.FullName ?? throw new ArgumentException(
             "A type with a full name is required.", nameof(firstNameComponent));

@@ -79,6 +79,7 @@ public sealed class DefaultHttp2ResetFrame : AbstractHttp2StreamFrame, IHttp2Res
         {
             return false;
         }
+
         DefaultHttp2ResetFrame other = (DefaultHttp2ResetFrame) o;
         return base.Equals(o) && errorCode == other.errorCode;
     }

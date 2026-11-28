@@ -29,6 +29,7 @@ public class TimerQueuePublicationContractTest
         Exception failure = null;
         bool pendingInterrupt = false, cancelResult = false;
         Thread publisher = null;
+
         try
         {
             // Keep the worker in an ordinary task so neither handoff queue can drain during publication.
@@ -38,8 +39,10 @@ public class TimerQueuePublicationContractTest
                 proceed.Wait(TimeSpan.FromSeconds(15));
             }), TimeSpan.Zero);
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5)));
+
             for (int index = 0; index < (cancellation ? 33 : 32); index++)
                 timeouts[index] = timer.NewTimeout(task, TimeSpan.FromDays(1));
+
             if (cancellation)
                 for (int index = 0; index < 32; index++)
                 {
@@ -62,6 +65,7 @@ public class TimerQueuePublicationContractTest
                     {
                         timeouts[32] = timer.NewTimeout(task, TimeSpan.FromDays(1));
                     }
+
                     try
                     {
                         Thread.Sleep(0);
@@ -78,6 +82,7 @@ public class TimerQueuePublicationContractTest
             }) { IsBackground = true };
             bool waited = false;
             Monitor.Enter(gate);
+
             try
             {
                 publisher.Start();
@@ -91,11 +96,13 @@ public class TimerQueuePublicationContractTest
             {
                 Monitor.Exit(gate);
             }
+
             Assert.True(publisher.Join(TimeSpan.FromSeconds(5)));
             Assert.True(waited);
             Assert.Null(failure);
             Assert.True(pendingInterrupt);
             Assert.Equal(33, timer.PendingTimeouts());
+
             if (cancellation)
             {
                 Assert.True(cancelResult);
@@ -115,17 +122,20 @@ public class TimerQueuePublicationContractTest
             Assert.Equal(33, cancelled);
             Assert.Equal(0, runs);
             Assert.Equal(0, timer.PendingTimeouts());
+
             foreach (ITimeout timeout in timeouts)
             {
                 Assert.True(timeout.IsCancelled());
                 Assert.False(timeout.IsExpired());
                 Assert.False(timeout.Cancel());
             }
+
             Assert.Empty(timer.Stop());
         }
         finally
         {
             proceed.Set();
+
             if (publisher != null && (publisher.ThreadState & ThreadState.Unstarted) == 0)
                 Assert.True(publisher.Join(TimeSpan.FromSeconds(5)));
         }

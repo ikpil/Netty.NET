@@ -72,6 +72,7 @@ public class WebSocketServerHandshaker00Test : WebSocketServerHandshakerTest
 
         WebSocketServerHandshaker00 handshaker00 = new WebSocketServerHandshaker00(
             "ws://example.com/chat", "chat", int.MaxValue);
+
         try
         {
             WebSocketHandshakeException e = Assert.ThrowsAny<WebSocketHandshakeException>(() =>
@@ -129,6 +130,7 @@ public class WebSocketServerHandshaker00Test : WebSocketServerHandshakerTest
         {
             Assert.Null(res.Headers().Get(HttpHeaderNames.SEC_WEBSOCKET_PROTOCOL));
         }
+
         ILastHttpContent content = ch2.ReadInbound<ILastHttpContent>();
 
         Assert.Equal("8jKS'y:G*Co,Wxa-", content.Content.ToString(Encoding.ASCII));

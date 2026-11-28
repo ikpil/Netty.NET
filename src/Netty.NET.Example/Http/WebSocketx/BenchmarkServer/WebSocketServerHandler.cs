@@ -122,17 +122,20 @@ public class WebSocketServerHandler : SimpleChannelInboundHandler<object>
             _ = handshaker.CloseAsync(ctx, (CloseWebSocketFrame) frame.Retain());
             return;
         }
+
         if (frame is PingWebSocketFrame)
         {
             _ = ctx.WriteAsync(new PongWebSocketFrame(frame.Content.Retain()));
             return;
         }
+
         if (frame is TextWebSocketFrame)
         {
             // Echo the frame
             _ = ctx.WriteAsync(frame.Retain());
             return;
         }
+
         if (frame is BinaryWebSocketFrame)
         {
             // Echo the frame
@@ -149,10 +152,12 @@ public class WebSocketServerHandler : SimpleChannelInboundHandler<object>
             ByteBufUtil.WriteUtf8(res.Content, responseStatus.ToString());
             HttpUtil.SetContentLength(res, res.Content.ReadableBytes);
         }
+
         // Send the response and close the connection if necessary.
         bool keepAlive = HttpUtil.IsKeepAlive(req) && responseStatus.Code() == 200;
         HttpUtil.SetKeepAlive(res, keepAlive);
         Task future = ctx.WriteAsync(res); // Flushed in channelReadComplete()
+
         if (!keepAlive)
         {
             IChannel channel = ctx.Channel;
@@ -170,6 +175,7 @@ public class WebSocketServerHandler : SimpleChannelInboundHandler<object>
     private static string GetWebSocketLocation(IFullHttpRequest req)
     {
         string location =  (req.Headers().Get(HttpHeaderNames.HOST) ?? "null") + WEBSOCKET_PATH;
+
         if (WebSocketServer.SSL)
         {
             return "wss://" + location;

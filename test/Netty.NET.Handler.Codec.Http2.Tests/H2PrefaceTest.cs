@@ -92,6 +92,7 @@ public class H2PrefaceTest
         IChannel channel = await clientBootstrap.RegisterAsync(TestContext.Current.CancellationToken);
         Task cf = channel.ConnectAsync(clientBootstrap.Config.RemoteAddress, null, TestContext.Current.CancellationToken);
         TaskScheduler listenerScheduler = new EventExecutorTaskScheduler(() => channel.EventLoop);
+
         try
         {
             Http2StreamChannelBootstrap streamChannelBootstrap = new Http2StreamChannelBootstrap(channel);
@@ -255,6 +256,7 @@ public class H2PrefaceTest
             {
                 listener.responseHeaders.TrySetResult((IHttp2HeadersFrame) msg);
             }
+
             ctx.FireChannelRead(msg);
         }
 

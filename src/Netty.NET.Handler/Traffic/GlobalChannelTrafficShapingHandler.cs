@@ -152,6 +152,7 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
         // Default
         SetMaxDeviation(DEFAULT_DEVIATION, DEFAULT_SLOWDOWN, DEFAULT_ACCELERATION);
         ObjectUtil.CheckNotNullWithIAE(executor, "executor");
+
         TrafficCounter tc = new GlobalChannelTrafficCounter(this, executor, "GlobalChannelTC",
                 Volatile.Read(ref checkInterval));
         SetTrafficCounter(tc);
@@ -313,6 +314,7 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
         {
             throw new ArgumentException("accelerationFactor must be <= 0");
         }
+
         this.maxDeviation = maxDeviation;
         this.accelerationFactor = 1 + accelerationFactor;
         this.slowDownFactor = 1 + slowDownFactor;
@@ -325,6 +327,7 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
         long maxReadBytes = 0;
         long minWrittenBytes = long.MaxValue;
         long minReadBytes = long.MaxValue;
+
         foreach (PerChannel perChannel in channelQueues.Values)
         {
             long value = perChannel.channelTrafficCounter.CumulativeWrittenBytes();
@@ -332,20 +335,24 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
             {
                 maxWrittenBytes = value;
             }
+
             if (minWrittenBytes > value)
             {
                 minWrittenBytes = value;
             }
+
             value = perChannel.channelTrafficCounter.CumulativeReadBytes();
             if (maxReadBytes < value)
             {
                 maxReadBytes = value;
             }
+
             if (minReadBytes > value)
             {
                 minReadBytes = value;
             }
         }
+
         bool multiple = channelQueues.Count > 1;
         readDeviationActive = multiple && minReadBytes < maxReadBytes / 2;
         writeDeviationActive = multiple && minWrittenBytes < maxWrittenBytes / 2;
@@ -366,6 +373,7 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
             // no change
             return wait;
         }
+
         float ratio = maxLocal / maxGlobal;
         // if in the boundaries, same value
         if (ratio > maxDeviation)
@@ -377,6 +385,7 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
             else
             {
                 ratio = slowDownFactor;
+
                 if (wait < MINIMAL_WAIT)
                 {
                     wait = MINIMAL_WAIT;
@@ -387,6 +396,7 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
         {
             ratio = accelerationFactor;
         }
+
         return (long)(wait * ratio);
     }
 
@@ -430,6 +440,7 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
         Volatile.Write(ref writeChannelLimit, newWriteLimit);
         Volatile.Write(ref readChannelLimit, newReadLimit);
         long now = Traffic.TrafficCounter.MilliSecondFromNano();
+
         foreach (PerChannel perChannel in channelQueues.Values)
         {
             perChannel.channelTrafficCounter.ResetAccounting(now);
@@ -451,6 +462,7 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
     {
         Volatile.Write(ref writeChannelLimit, writeLimit);
         long now = Traffic.TrafficCounter.MilliSecondFromNano();
+
         foreach (PerChannel perChannel in channelQueues.Values)
         {
             perChannel.channelTrafficCounter.ResetAccounting(now);
@@ -472,6 +484,7 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
     {
         Volatile.Write(ref readChannelLimit, readLimit);
         long now = Traffic.TrafficCounter.MilliSecondFromNano();
+
         foreach (PerChannel perChannel in channelQueues.Values)
         {
             perChannel.channelTrafficCounter.ResetAccounting(now);
@@ -492,6 +505,7 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
         IChannel channel = ctx.Channel;
         int key = channel.GetHashCode();
         channelQueues.TryGetValue(key, out PerChannel perChannel);
+
         if (perChannel == null)
         {
             perChannel = new PerChannel();
@@ -504,6 +518,7 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
             perChannel.lastWriteTimestamp = perChannel.lastReadTimestamp;
             channelQueues[key] = perChannel;
         }
+
         return perChannel;
     }
 
@@ -520,6 +535,7 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
         IChannel channel = ctx.Channel;
         int key = channel.GetHashCode();
         channelQueues.TryRemove(key, out PerChannel perChannel);
+
         if (perChannel != null)
         {
             // write operations need synchronization
@@ -541,15 +557,19 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
                 {
                     queuesSize.AddAndGet(-perChannel.queueSize);
                     ClosedChannelException cause = new ClosedChannelException();
+
                     foreach (ToSend toSend in perChannel.messagesQueue)
                     {
                         ReleaseAndFailQueuedWrite(toSend.toSend, toSend.promise, cause);
                     }
+
                     perChannel.queueSize = 0;
                 }
+
                 perChannel.messagesQueue.Clear();
             }
         }
+
         ReleaseWriteSuspended(ctx);
         ReleaseReadSuspended(ctx);
         base.HandlerRemoved(ctx);
@@ -559,6 +579,7 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
     {
         long size = CalculateSize(msg);
         long now = Traffic.TrafficCounter.MilliSecondFromNano();
+
         if (size > 0)
         {
             // compute the number of ms to wait before reopening the channel
@@ -566,31 +587,38 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
             int key = ctx.Channel.GetHashCode();
             channelQueues.TryGetValue(key, out PerChannel perChannel);
             long wait = 0;
+
             if (perChannel != null)
             {
                 wait = perChannel.channelTrafficCounter.ReadTimeToWait(size, Volatile.Read(ref readChannelLimit),
                         Volatile.Read(ref maxTime), now);
+
                 if (readDeviationActive)
                 {
                     // now try to balance between the channels
                     long maxLocalRead;
                     maxLocalRead = perChannel.channelTrafficCounter.CumulativeReadBytes();
                     long maxGlobalRead = cumulativeReadBytes.Get();
+
                     if (maxLocalRead <= 0)
                     {
                         maxLocalRead = 0;
                     }
+
                     if (maxGlobalRead < maxLocalRead)
                     {
                         maxGlobalRead = maxLocalRead;
                     }
+
                     wait = ComputeBalancedWait(maxLocalRead, maxGlobalRead, wait);
                 }
             }
+
             if (wait < waitGlobal)
             {
                 wait = waitGlobal;
             }
+
             wait = CheckWaitReadTime(ctx, wait, now);
             if (wait >= MINIMAL_WAIT)
             { // At least 10ms seems a minimal
@@ -598,11 +626,13 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
                 // Only AutoRead AND HandlerActive True means Context Active
                 IChannel channel = ctx.Channel;
                 IChannelConfig config = channel.Config;
+
                 if (logger.IsDebugEnabled())
                 {
                     logger.Debug("Read Suspend: " + wait + ':' + Text(config.IsAutoRead()) + ':'
                             + Text(IsHandlerActive(ctx)));
                 }
+
                 if (config.IsAutoRead() && IsHandlerActive(ctx))
                 {
                     config.SetAutoRead(false);
@@ -616,7 +646,9 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
                         reopenTask = new ReopenReadTimerTask(ctx).Run;
                         attr.Set(reopenTask);
                     }
+
                     _ = ctx.Executor.ScheduleAsync(reopenTask, TimeSpan.FromMilliseconds(wait));
+
                     if (logger.IsDebugEnabled())
                     {
                         logger.Debug("Suspend final status => " + Text(config.IsAutoRead()) + ':'
@@ -625,6 +657,7 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
                 }
             }
         }
+
         InformReadOperation(ctx, now);
         ctx.FireChannelRead(msg);
     }
@@ -633,6 +666,7 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
     {
         int key = ctx.Channel.GetHashCode();
         channelQueues.TryGetValue(key, out PerChannel perChannel);
+
         if (perChannel != null)
         {
             long maxTime = Volatile.Read(ref this.maxTime);
@@ -641,6 +675,7 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
                 wait = maxTime;
             }
         }
+
         return wait;
     }
 
@@ -648,6 +683,7 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
     {
         int key = ctx.Channel.GetHashCode();
         channelQueues.TryGetValue(key, out PerChannel perChannel);
+
         if (perChannel != null)
         {
             perChannel.lastReadTimestamp = now;
@@ -743,6 +779,7 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
                     return true;
                 }
             }
+
             return false;
         }
 
@@ -760,6 +797,7 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
             {
                 throw new NotSupportedException();
             }
+
             return false;
         }
     }
@@ -800,6 +838,7 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
     {
         long size = CalculateSize(msg);
         long now = Traffic.TrafficCounter.MilliSecondFromNano();
+
         if (size > 0)
         {
             // compute the number of ms to wait before continue with the channel
@@ -807,31 +846,38 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
             int key = ctx.Channel.GetHashCode();
             channelQueues.TryGetValue(key, out PerChannel perChannel);
             long wait = 0;
+
             if (perChannel != null)
             {
                 wait = perChannel.channelTrafficCounter.WriteTimeToWait(size, Volatile.Read(ref writeChannelLimit),
                         Volatile.Read(ref maxTime), now);
+
                 if (writeDeviationActive)
                 {
                     // now try to balance between the channels
                     long maxLocalWrite;
                     maxLocalWrite = perChannel.channelTrafficCounter.CumulativeWrittenBytes();
                     long maxGlobalWrite = cumulativeWrittenBytes.Get();
+
                     if (maxLocalWrite <= 0)
                     {
                         maxLocalWrite = 0;
                     }
+
                     if (maxGlobalWrite < maxLocalWrite)
                     {
                         maxGlobalWrite = maxLocalWrite;
                     }
+
                     wait = ComputeBalancedWait(maxLocalWrite, maxGlobalWrite, wait);
                 }
             }
+
             if (wait < waitGlobal)
             {
                 wait = waitGlobal;
             }
+
             if (wait >= MINIMAL_WAIT)
             {
                 if (logger.IsDebugEnabled())
@@ -839,9 +885,11 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
                     logger.Debug("Write suspend: " + wait + ':' + Text(ctx.Channel.Config.IsAutoRead()) + ':'
                             + Text(IsHandlerActive(ctx)));
                 }
+
                 return SubmitWrite(ctx, msg, size, wait, now, cancellationToken);
             }
         }
+
         // to maintain order of write
         return SubmitWrite(ctx, msg, size, 0, now, cancellationToken);
     }
@@ -853,15 +901,18 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
         IChannel channel = ctx.Channel;
         int key = channel.GetHashCode();
         channelQueues.TryGetValue(key, out PerChannel perChannel);
+
         if (perChannel == null)
         {
             // in case write occurs before handlerAdded is raised for this handler
             // imply a synchronized only if needed
             perChannel = GetOrSetPerChannel(ctx);
         }
+
         ToSend newToSend;
         long delay = writedelay;
         bool globalSizeExceeded = false;
+
         // write operations need synchronization
         lock (perChannel)
         {
@@ -873,25 +924,30 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
                 perChannel.lastWriteTimestamp = now;
                 return future;
             }
+
             long maxTime = Volatile.Read(ref this.maxTime);
             if (delay > maxTime && now + delay - perChannel.lastWriteTimestamp > maxTime)
             {
                 delay = maxTime;
             }
+
             newToSend = new ToSend(delay + now, msg, size, NewPromise(cancellationToken), cancellationToken);
             perChannel.messagesQueue.AddLast(newToSend);
             perChannel.queueSize += size;
             queuesSize.AddAndGet(size);
             CheckWriteSuspend(ctx, delay, perChannel.queueSize);
+
             if (queuesSize.Get() > Volatile.Read(ref maxGlobalWriteSize))
             {
                 globalSizeExceeded = true;
             }
         }
+
         if (globalSizeExceeded)
         {
             SetUserDefinedWritability(ctx, false);
         }
+
         long futureNow = newToSend.relativeTimeAction;
         PerChannel forSchedule = perChannel;
         _ = ctx.Executor.ScheduleAsync(() => SendAllValid(ctx, forSchedule, futureNow), TimeSpan.FromMilliseconds(delay));
@@ -904,6 +960,7 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
         lock (perChannel)
         {
             ToSend newToSend = PollFirst(perChannel.messagesQueue);
+
             for (; newToSend != null; newToSend = PollFirst(perChannel.messagesQueue))
             {
                 if (newToSend.relativeTimeAction <= now)
@@ -922,11 +979,13 @@ public class GlobalChannelTrafficShapingHandler : AbstractTrafficShapingHandler
                     break;
                 }
             }
+
             if (perChannel.messagesQueue.Count == 0)
             {
                 ReleaseWriteSuspended(ctx);
             }
         }
+
         ctx.Flush();
     }
 

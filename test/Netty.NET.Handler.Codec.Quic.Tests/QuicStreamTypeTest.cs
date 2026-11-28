@@ -115,6 +115,7 @@ public class QuicStreamTypeTest : AbstractQuicTest
 
         QuicChannelValidationHandler serverHandler = new ServerStreamCreationHandler(serverWritePromise);
         QuicChannelValidationHandler clientHandler = new QuicChannelValidationHandler();
+
         try
         {
             server = await QuicTestUtils.NewServer(executor, serverHandler, new ChannelInboundHandlerAdapter());

@@ -61,6 +61,7 @@ internal sealed class Http2StreamChannelId : IChannelId
                 return res;
             }
         }
+
         return parentId.CompareTo(o);
     }
 
@@ -75,6 +76,7 @@ internal sealed class Http2StreamChannelId : IChannelId
         {
             return false;
         }
+
         Http2StreamChannelId otherId = (Http2StreamChannelId) obj;
         return id == otherId.id && parentId.Equals(otherId.parentId);
     }

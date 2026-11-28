@@ -151,6 +151,7 @@ public class ChunkedFile : IChunkedInput<ByteBuf>
 
         ByteBuf buf = allocator.HeapBuffer(chunkSize);
         bool release = true;
+
         try
         {
             // CLR: file.readFully(buf.array(), buf.arrayOffset(), chunkSize) reads into the heap buffer's writable

@@ -33,6 +33,7 @@ public sealed class DefaultEventExecutorChooserFactory : IEventExecutorChooserFa
     public IEventExecutorChooser NewChooser(IEventExecutor[] executors)
     {
         ArgumentNullException.ThrowIfNull(executors);
+
         if (IsPowerOfTwo(executors.Length))
         {
             return new PowerOfTwoEventExecutorChooser(executors);

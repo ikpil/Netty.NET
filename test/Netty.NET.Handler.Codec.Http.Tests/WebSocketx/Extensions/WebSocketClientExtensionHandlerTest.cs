@@ -253,6 +253,7 @@ public class WebSocketClientExtensionHandlerTest
                 req2.Headers().Get(HttpHeaderNames.SEC_WEBSOCKET_EXTENSIONS));
 
         IHttpResponse res = NewUpgradeResponse("main, fallback");
+
         try
         {
             ch.WriteInbound(res);
@@ -261,6 +262,7 @@ public class WebSocketClientExtensionHandlerTest
         {
             return;
         }
+
         Assert.Fail("Expected to encounter a CodecException");
 
         // test

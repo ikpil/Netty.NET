@@ -56,6 +56,7 @@ internal sealed class Http2EmptyDataFrameConnectionDecoder : DecoratingHttp2Conn
         {
             return ((Http2EmptyDataFrameListener) frameListener).listener;
         }
+
         return frameListener;
     }
 

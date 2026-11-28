@@ -230,6 +230,7 @@ public class DefaultHttp2RemoteFlowController : IHttp2RemoteFlowController
         // The context can be null assuming the frame will be queued and send later when the context is set.
         Debug.Assert(ctx == null || ctx.Executor.InEventLoop());
         CheckNotNull(frame, "frame");
+
         try
         {
             monitor.EnqueueFrame(State(stream), frame);
@@ -378,6 +379,7 @@ public class DefaultHttp2RemoteFlowController : IHttp2RemoteFlowController
             // In case an exception is thrown we want to remember it and pass it to cancel(Throwable).
             Exception cause = null;
             IHttp2RemoteFlowController.IFlowControlled frame;
+
             try
             {
                 Debug.Assert(!writing);
@@ -385,6 +387,7 @@ public class DefaultHttp2RemoteFlowController : IHttp2RemoteFlowController
 
                 // Write the remainder of frames that we are allowed to
                 bool writeOccurred = false;
+
                 while (!cancelled && (frame = Peek()) != null)
                 {
                     int maxBytes = Math.Min(allocated, WritableWindow());
@@ -394,11 +397,14 @@ public class DefaultHttp2RemoteFlowController : IHttp2RemoteFlowController
                         // Don't write needless empty frames.
                         break;
                     }
+
                     writeOccurred = true;
                     int initialFrameSize = frame.Size();
+
                     try
                     {
                         frame.Write(controller.ctx, Math.Max(0, maxBytes));
+
                         if (frame.Size() == 0)
                         {
                             // This frame has been fully written, remove this frame and notify it.
@@ -445,6 +451,7 @@ public class DefaultHttp2RemoteFlowController : IHttp2RemoteFlowController
                     Cancel(INTERNAL_ERROR, cause);
                 }
             }
+
             return writtenBytes;
         }
 
@@ -458,6 +465,7 @@ public class DefaultHttp2RemoteFlowController : IHttp2RemoteFlowController
                 throw StreamError(stream.Id(), FLOW_CONTROL_ERROR,
                         "Window size overflow for stream: %d", stream.Id());
             }
+
             window += delta;
 
             controller.streamByteDistributor.UpdateStreamableBytes(this);
@@ -490,11 +498,13 @@ public class DefaultHttp2RemoteFlowController : IHttp2RemoteFlowController
             }
 
             int lastSize = last.Size();
+
             if (last.Merge(controller.ctx, frame))
             {
                 IncrementPendingBytes(last.Size() - lastSize, true);
                 return;
             }
+
             EnqueueFrameWithoutMerge(frame);
         }
 
@@ -527,6 +537,7 @@ public class DefaultHttp2RemoteFlowController : IHttp2RemoteFlowController
             {
                 return null;
             }
+
             pendingWriteQueue.RemoveFirst();
             return first.Value;
         }
@@ -551,6 +562,7 @@ public class DefaultHttp2RemoteFlowController : IHttp2RemoteFlowController
                 // Only create exception once and reuse to reduce overhead of filling in the stacktrace.
                 Http2Exception exception = StreamError(stream.Id(), error, cause,
                         "Stream closed before write could take place");
+
                 do
                 {
                     WriteError(frame, exception);
@@ -571,6 +583,7 @@ public class DefaultHttp2RemoteFlowController : IHttp2RemoteFlowController
         {
             pendingBytes += numBytes;
             controller.monitor.IncrementPendingBytes(numBytes);
+
             if (updateStreamableBytes)
             {
                 controller.streamByteDistributor.UpdateStreamableBytes(this);
@@ -716,10 +729,13 @@ public class DefaultHttp2RemoteFlowController : IHttp2RemoteFlowController
             {
                 return;
             }
+
             inWritePendingBytes = true;
+
             try
             {
                 int bytesToWrite = controller.WritableBytes();
+
                 // Make sure we always write at least once, regardless if we have bytesToWrite or not.
                 // This ensures that zero-length frames will always be written.
                 for (;;)
@@ -784,6 +800,7 @@ public class DefaultHttp2RemoteFlowController : IHttp2RemoteFlowController
                         "Window size overflow for stream: %d after SETTINGS_INITIAL_WINDOW_SIZE change",
                         stream.Id());
             }
+
             return true;
         }
     }
@@ -813,12 +830,14 @@ public class DefaultHttp2RemoteFlowController : IHttp2RemoteFlowController
             {
                 NotifyWritabilityChanged(state);
             }
+
             return true;
         }
 
         internal override void WindowSize(FlowState state, int initialWindowSize)
         {
             base.WindowSize(state, initialWindowSize);
+
             try
             {
                 CheckStateWritability(state);
@@ -838,6 +857,7 @@ public class DefaultHttp2RemoteFlowController : IHttp2RemoteFlowController
         internal override void InitialWindowSize(int newWindowSize)
         {
             base.InitialWindowSize(newWindowSize);
+
             if (IsWritableConnection())
             {
                 // If the write operation does not occur we still need to check all streams because they
@@ -890,6 +910,7 @@ public class DefaultHttp2RemoteFlowController : IHttp2RemoteFlowController
         private void NotifyWritabilityChanged(FlowState state)
         {
             state.MarkedWritability(!state.MarkedWritability());
+
             try
             {
                 listener.WritabilityChanged(state.stream);

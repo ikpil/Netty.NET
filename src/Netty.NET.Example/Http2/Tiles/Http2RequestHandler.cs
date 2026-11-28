@@ -60,6 +60,7 @@ public class Http2RequestHandler : SimpleChannelInboundHandler<IFullHttpRequest>
             SendBadRequest(ctx, streamId);
             return;
         }
+
         string x = FirstValue(queryString, IMAGE_COORDINATE_X);
         string y = FirstValue(queryString, IMAGE_COORDINATE_Y);
         if (x == null || y == null)

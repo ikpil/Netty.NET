@@ -46,6 +46,7 @@ public sealed class DefaultHttp3MaxPushIdFrame : IHttp3MaxPushIdFrame
         {
             return false;
         }
+
         DefaultHttp3MaxPushIdFrame that = (DefaultHttp3MaxPushIdFrame) o;
         return id == that.id;
     }

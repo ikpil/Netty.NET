@@ -31,6 +31,7 @@ public class TransportFoundationContractTest
     public void WaterMarkFormattingDoesNotDependOnCallerCulture()
     {
         var previous = CultureInfo.CurrentCulture;
+
         try
         {
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("ar-SA");
@@ -83,6 +84,7 @@ public class TransportFoundationContractTest
         buffer.ReaderIndex = 3;
         var holder = new DefaultByteBufHolder(buffer);
         var file = new DefaultFileRegion(new FileInfo("unused-region-file"), 0, long.MaxValue);
+
         try
         {
             Assert.Equal(7, estimator.NewHandle().Size(buffer));
@@ -109,6 +111,7 @@ public class TransportFoundationContractTest
     {
         string path = Path.GetTempFileName();
         byte[] content = Enumerable.Range(0, 10).Select(i => (byte)i).ToArray();
+
         try
         {
             File.WriteAllBytes(path, content);
@@ -116,6 +119,7 @@ public class TransportFoundationContractTest
             source.Position = 7;
             var region = new DefaultFileRegion(source, start, count);
             using var target = new MemoryStream();
+
             try
             {
                 Assert.Equal(count - relative, region.TransferTo(target, relative));
@@ -129,6 +133,7 @@ public class TransportFoundationContractTest
             {
                 region.Release();
             }
+
             Assert.False(region.IsOpen());
             Assert.Throws<ObjectDisposedException>(() => source.ReadByte());
         }
@@ -180,10 +185,12 @@ public class TransportFoundationContractTest
         Assert.Throws<ArgumentOutOfRangeException>(() => new DefaultFileRegion(new FileInfo("unused"), -1, 1));
         Assert.Throws<ArgumentOutOfRangeException>(() => new DefaultFileRegion(new FileInfo("unused"), 0, -1));
         string path = Path.GetTempFileName();
+
         try
         {
             var region = new DefaultFileRegion(new FileInfo(path), long.MaxValue, long.MaxValue);
             using var target = new MemoryStream();
+
             try
             {
                 Assert.Throws<IOException>(() => region.TransferTo(target, 1));
@@ -205,11 +212,13 @@ public class TransportFoundationContractTest
     public void FailedTargetWriteDoesNotCountUnacceptedBytes()
     {
         string path = Path.GetTempFileName();
+
         try
         {
             File.WriteAllBytes(path, new byte[100]);
             var region = new DefaultFileRegion(new FileInfo(path), 0, 100);
             using var target = new ThrowingStream();
+
             try
             {
                 Assert.Throws<IOException>(() => region.TransferTo(target, 0));

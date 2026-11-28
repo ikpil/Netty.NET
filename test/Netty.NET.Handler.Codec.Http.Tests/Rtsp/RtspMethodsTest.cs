@@ -55,6 +55,7 @@ public class RtspMethodsTest
         // RtspMethods.valueOf must pin Locale.US so RTSP method names that contain 'i' such as
         // "describe" or "redirect" continue to resolve to the cached uppercase entries.
         CultureInfo original = CultureInfo.CurrentCulture;
+
         try
         {
             CultureInfo.CurrentCulture = new CultureInfo("tr-TR");

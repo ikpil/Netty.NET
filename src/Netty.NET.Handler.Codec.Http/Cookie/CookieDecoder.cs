@@ -76,6 +76,7 @@ public abstract class CookieDecoder
                 logger.Debug("Skipping cookie because name '{}' contains invalid char '{}'",
                         name, name[invalidOctetPos]);
             }
+
             return null;
         }
 
@@ -88,6 +89,7 @@ public abstract class CookieDecoder
                 logger.Debug("Skipping cookie because value '{}' contains invalid char '{}'",
                         unwrappedValue, unwrappedValue.CharAt(invalidOctetPos));
             }
+
             return null;
         }
 

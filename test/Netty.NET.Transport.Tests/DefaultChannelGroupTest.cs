@@ -34,6 +34,7 @@ public class DefaultChannelGroupTest
         var group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
         // CLR aggregation uses Task.WhenAll; the original GlobalEventExecutor is not a Task owner.
         var allChannels = new DefaultChannelGroup();
+
         try
         {
             var bootstrap = new ServerBootstrap().Group(group).Channel<NioServerSocketChannel>()

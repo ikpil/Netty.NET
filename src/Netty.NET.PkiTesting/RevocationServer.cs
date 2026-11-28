@@ -78,6 +78,7 @@ public sealed class RevocationServer
         {
             return instance;
         }
+
         lock (INSTANCE_LOCK)
         {
             RevocationServer server = instance;
@@ -87,6 +88,7 @@ public sealed class RevocationServer
                 server.Start();
                 instance = server;
             }
+
             return server;
         }
     }
@@ -118,10 +120,12 @@ public sealed class RevocationServer
                     exchange.Response.Close();
                     return;
                 }
+
                 byte[] crl = GenerateCrl(info);
                 exchange.Response.ContentType = "application/pkix-crl";
                 exchange.Response.StatusCode = 200;
                 exchange.Response.ContentLength64 = crl.Length;
+
                 using (Stream @out = exchange.Response.OutputStream)
                 {
                     @out.Write(crl);
@@ -132,6 +136,7 @@ public sealed class RevocationServer
             {
                 exchange.Response.StatusCode = 405;
             }
+
             exchange.Response.Close();
         };
     }
@@ -147,6 +152,7 @@ public sealed class RevocationServer
             HttpListener listener = new HttpListener();
             listener.Prefixes.Add("http://127.0.0.1:" + port + "/");
             listener.Prefixes.Add("http://localhost:" + port + "/");
+
             try
             {
                 listener.Start();
@@ -182,6 +188,7 @@ public sealed class RevocationServer
         while (true)
         {
             HttpListenerContext exchange;
+
             try
             {
                 exchange = await crlServer.GetContextAsync().ConfigureAwait(false);
@@ -190,6 +197,7 @@ public sealed class RevocationServer
             {
                 return;
             }
+
             try
             {
                 handler(exchange);
@@ -213,12 +221,14 @@ public sealed class RevocationServer
     public void Register(X509Bundle issuer)
     {
         string key = Key(issuer.GetCertificate());
+
         lock (issuers)
         {
             if (issuers.ContainsKey(key))
             {
                 return;
             }
+
             string path = "/crl/" + Interlocked.Increment(ref issuerCounter) + ".crl";
             Uri uri = new Uri(crlBaseAddress + path);
             CrlInfo info = new CrlInfo(issuer, uri);
@@ -261,6 +271,7 @@ public sealed class RevocationServer
         {
             return info.uri;
         }
+
         return null;
     }
 
@@ -272,6 +283,7 @@ public sealed class RevocationServer
         ConcurrentDictionary<BigInteger, DateTimeOffset> certs = info.revokedCerts;
         DateTimeOffset now = DateTimeOffset.UtcNow;
         CertificateList list = new CertificateList(issuer, now, now.AddSeconds(10), certs);
+
         try
         {
             Signed signed = new Signed(issuer);

@@ -81,6 +81,7 @@ public class DatagramPacketEncoderTest : IDisposable
         Assert.True(channel.WriteOutbound(
                 new DefaultAddressedEnvelope<string, IPEndPoint>("netty", recipient, sender)));
         DatagramPacket packet = channel.ReadOutbound<DatagramPacket>();
+
         try
         {
             Assert.Equal("netty", packet.Content.ToString(Encoding.UTF8));
@@ -102,6 +103,7 @@ public class DatagramPacketEncoderTest : IDisposable
                 new DefaultAddressedEnvelope<long, IPEndPoint>(1L, recipient, sender);
         Assert.True(channel.WriteOutbound(envelope));
         DefaultAddressedEnvelope<long, IPEndPoint> output = channel.ReadOutbound<DefaultAddressedEnvelope<long, IPEndPoint>>();
+
         try
         {
             Assert.Same(envelope, output);

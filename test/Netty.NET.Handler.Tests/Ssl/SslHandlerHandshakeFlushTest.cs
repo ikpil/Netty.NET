@@ -52,6 +52,7 @@ public class SslHandlerHandshakeFlushTest
                 .Build();
         EmbeddedChannel server = new EmbeddedChannel();
         EmbeddedChannel client = new EmbeddedChannel();
+
         try
         {
             HandshakeEventRecorder recorder = new HandshakeEventRecorder(server);
@@ -87,6 +88,7 @@ public class SslHandlerHandshakeFlushTest
             {
                 return;
             }
+
             to.WriteInbound(record);
         }
     }
@@ -110,6 +112,7 @@ public class SslHandlerHandshakeFlushTest
             {
                 Fired = true;
                 int bytes = 0;
+
                 foreach (object message in channel.OutboundMessages())
                 {
                     if (message is ByteBuf buf)
@@ -117,8 +120,10 @@ public class SslHandlerHandshakeFlushTest
                         bytes += buf.ReadableBytes;
                     }
                 }
+
                 FlushedBytesAtEvent = bytes;
             }
+
             ctx.FireUserEventTriggered(evt);
         }
     }

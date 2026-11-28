@@ -116,6 +116,7 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
     public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken)
     {
         Task future = null;
+
         try
         {
             if (AcceptOutboundMessage(msg))
@@ -148,12 +149,14 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
                 future = written;
             }
         }
+
         return future;
     }
 
     private static Task WriteOutList(IChannelHandlerContext ctx, List<object> @out, CancellationToken cancellationToken)
     {
         int size = @out.Count;
+
         try
         {
             if (size == 1)
@@ -166,6 +169,7 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
                 // See https://github.com/netty/netty/issues/2525
                 return WritePromiseCombiner(ctx, @out);
             }
+
             return null;
         }
         finally
@@ -177,10 +181,12 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
     private static Task WritePromiseCombiner(IChannelHandlerContext ctx, List<object> @out)
     {
         Task[] combiner = new Task[@out.Count];
+
         for (int i = 0; i < @out.Count; i++)
         {
             combiner[i] = ctx.WriteAsync(@out[i]);
         }
+
         return ExecutorPromiseCombiner.Combine(ctx, combiner);
     }
 
@@ -192,6 +198,7 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
             @out.Add(Unpooled.EmptyBuffer);
             return;
         }
+
         // The reason why we perform instanceof checks in this order,
         // by duplicating some code and without relying on ReferenceCountUtil::release as a generic release
         // mechanism, is https://bugs.openjdk.org/browse/JDK-8180450.
@@ -202,9 +209,11 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
             EncodeFullHttpMessage(ctx, msg, @out);
             return;
         }
+
         if (msg is IHttpMessage)
         {
             H m;
+
             try
             {
                 m = (H) msg;
@@ -214,6 +223,7 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
                 ReferenceCountUtil.Release(msg);
                 throw;
             }
+
             if (m is ILastHttpContent)
             {
                 EncodeHttpMessageLastContent(ctx, m, @out);
@@ -236,12 +246,14 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
     private void EncodeJustHttpMessage(IChannelHandlerContext ctx, H m, IList<object> @out)
     {
         Debug.Assert(!(m is IHttpContent));
+
         try
         {
             if (state != ST_INIT)
             {
                 ThrowUnexpectedMessageTypeEx(m, state);
             }
+
             ByteBuf buf = EncodeInitHttpMessage(ctx, m);
 
             Debug.Assert(CheckContentState(state));
@@ -264,6 +276,7 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
                 {
                     break;
                 }
+
                 // fall-through!
                 goto case ST_CONTENT_ALWAYS_EMPTY;
             case ST_CONTENT_ALWAYS_EMPTY:
@@ -285,12 +298,14 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
         Debug.Assert(m is IHttpContent);
         Debug.Assert(!(m is ILastHttpContent));
         IHttpContent httpContent = (IHttpContent) m;
+
         try
         {
             if (state != ST_INIT)
             {
                 ThrowUnexpectedMessageTypeEx(m, state);
             }
+
             ByteBuf buf = EncodeInitHttpMessage(ctx, m);
 
             Debug.Assert(CheckContentState(state));
@@ -307,12 +322,14 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
     {
         Debug.Assert(m is ILastHttpContent);
         ILastHttpContent httpContent = (ILastHttpContent) m;
+
         try
         {
             if (state != ST_INIT)
             {
                 ThrowUnexpectedMessageTypeEx(m, state);
             }
+
             ByteBuf buf = EncodeInitHttpMessage(ctx, m);
 
             Debug.Assert(CheckContentState(state));
@@ -330,6 +347,7 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
     private void EncodeNotHttpMessageContentTypes(IChannelHandlerContext ctx, object msg, IList<object> @out)
     {
         Debug.Assert(!(msg is IHttpMessage));
+
         if (state == ST_INIT)
         {
             try
@@ -338,6 +356,7 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
                 {
                     return;
                 }
+
                 ThrowUnexpectedMessageTypeEx(msg, ST_INIT);
             }
             finally
@@ -345,31 +364,37 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
                 ReferenceCountUtil.Release(msg);
             }
         }
+
         if (msg == ILastHttpContent.EMPTY_LAST_CONTENT)
         {
             state = EncodeEmptyLastHttpContent(state, @out);
             return;
         }
+
         if (msg is ILastHttpContent)
         {
             EncodeLastHttpContent(ctx, (ILastHttpContent) msg, @out);
             return;
         }
+
         if (msg is IHttpContent)
         {
             EncodeHttpContent(ctx, (IHttpContent) msg, @out);
             return;
         }
+
         if (msg is ByteBuf)
         {
             EncodeByteBufContent(ctx, (ByteBuf) msg, @out);
             return;
         }
+
         if (msg is IFileRegion)
         {
             EncodeFileRegionContent(ctx, (IFileRegion) msg, @out);
             return;
         }
+
         try
         {
             ThrowUnexpectedMessageTypeEx(msg, state);
@@ -384,6 +409,7 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
     {
         Debug.Assert(o is IFullHttpMessage);
         IFullHttpMessage msg = (IFullHttpMessage) o;
+
         try
         {
             if (this.state != ST_INIT)
@@ -409,6 +435,7 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
                                                   (accountForContentSize? content.ReadableBytes : 0);
             ByteBuf buf = ctx.Alloc().Buffer(headersAndContentSize);
             bool handedOff = false;
+
             try
             {
                 EncodeInitialLine(buf, m);
@@ -455,8 +482,10 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
                 @out.Add(buf);
                 @out.Add(content.Retain());
             }
+
             return true;
         }
+
         return false;
     }
 
@@ -471,6 +500,7 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
         try
         {
             Debug.Assert(state != ST_INIT);
+
             switch (state)
             {
                 case ST_CONTENT_NON_CHUNK:
@@ -517,6 +547,7 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
             @out.Add(msg.Retain());
             return true;
         }
+
         return false;
     }
 
@@ -529,6 +560,7 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
             {
                 return;
             }
+
             EncodeByteBufAndTrailers(state, ctx, @out, content, null);
         }
         finally
@@ -553,6 +585,7 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
             default:
                 throw new UnreachableException("Unexpected http object encoder state: " + state);
         }
+
         return ST_INIT;
     }
 
@@ -560,6 +593,7 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
     {
         Debug.Assert(state != ST_INIT);
         Debug.Assert(!(msg is IHttpMessage));
+
         try
         {
             EncodeByteBufAndTrailers(state, ctx, @out, msg.Content, msg.TrailingHeaders());
@@ -576,6 +610,7 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
         Debug.Assert(state != ST_INIT);
         Debug.Assert(!(msg is IHttpMessage));
         Debug.Assert(!(msg is ILastHttpContent));
+
         try
         {
             this.EncodeByteBufAndTrailers(state, ctx, @out, msg.Content, null);
@@ -597,6 +632,7 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
                     @out.Add(content.Retain());
                     break;
                 }
+
                 // fall-through!
                 goto case ST_CONTENT_ALWAYS_EMPTY;
             case ST_CONTENT_ALWAYS_EMPTY:
@@ -620,6 +656,7 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
             @out.Add(content.Retain());
             @out.Add(CRLF_BUF.Duplicate());
         }
+
         if (trailingHeaders != null)
         {
             EncodeTrailingHeaders(ctx, trailingHeaders, @out);
@@ -656,6 +693,7 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
 
         ByteBuf buf = ctx.Alloc().Buffer((int) headersEncodedSizeAccumulator);
         bool success = false;
+
         try
         {
             // Encode the message.
@@ -689,6 +727,7 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
     protected virtual void EncodeHeaders(HttpHeaders headers, ByteBuf buf)
     {
         IIterator<IEntry<ICharSequence, ICharSequence>> iter = headers.IteratorCharSequence();
+
         while (iter.HasNext())
         {
             IEntry<ICharSequence, ICharSequence> header = iter.Next();

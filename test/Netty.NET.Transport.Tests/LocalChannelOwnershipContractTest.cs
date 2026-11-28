@@ -23,6 +23,7 @@ public class LocalChannelOwnershipContractTest
     {
         var group = new DefaultEventLoopGroup(1);
         IChannel server = null, client = null;
+
         try
         {
             server = await new ServerBootstrap().Group(group).Channel<LocalServerChannel>()
@@ -50,8 +51,10 @@ public class LocalChannelOwnershipContractTest
         {
             if (client != null)
                 await client.CloseAsync();
+
             if (server != null)
                 await server.CloseAsync();
+
             await group.StopAsync();
         }
     }
@@ -63,6 +66,7 @@ public class LocalChannelOwnershipContractTest
         var accepted = new TaskCompletionSource<LocalChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
         IChannel server = null;
         var unbound = new LocalAddress(Guid.NewGuid().ToString());
+
         try
         {
             var refused = await Assert.ThrowsAsync<SocketException>(() => new Bootstrap().Group(group).Channel<LocalChannel>()
@@ -86,6 +90,7 @@ public class LocalChannelOwnershipContractTest
         {
             if (server != null)
                 await server.CloseAsync();
+
             await group.StopAsync();
         }
     }
@@ -97,6 +102,7 @@ public class LocalChannelOwnershipContractTest
         var group = new DefaultEventLoopGroup(1);
         var reader = new ReadAgainOnRead(messages);
         IChannel server = null, client = null;
+
         try
         {
             server = await new ServerBootstrap().Group(group).Channel<LocalServerChannel>()
@@ -106,8 +112,10 @@ public class LocalChannelOwnershipContractTest
             client = await new Bootstrap().Group(group).Channel<LocalChannel>()
                 .Handler(new ChannelInboundHandlerAdapter()).ConnectAsync(server.LocalAddress);
             await reader.Active.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
             for (int i = 0; i < messages; i++)
                 _ = client.WriteAsync(i);
+
             client.Flush();
             await reader.Done.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             // Each channelRead() calls read() again, so doBeginRead() nests readInbound() until
@@ -121,8 +129,10 @@ public class LocalChannelOwnershipContractTest
         {
             if (client != null)
                 await client.CloseAsync();
+
             if (server != null)
                 await server.CloseAsync();
+
             await group.StopAsync();
         }
     }
@@ -140,6 +150,7 @@ public class LocalChannelOwnershipContractTest
         int initializationCount = 0;
         IChannel server = null, client = null;
         executor.Execute(() => Assert.True(release.Wait(TimeSpan.FromSeconds(5))));
+
         try
         {
             server = await new ServerBootstrap().Group(group).Channel<LocalServerChannel>()
@@ -162,10 +173,12 @@ public class LocalChannelOwnershipContractTest
             await peer.CloseFuture.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             // AbstractUnsafe.close completes closeFuture before its deferred deregistration (#4435) runs on the loop.
             var deadline = Stopwatch.StartNew();
+
             while (peer.IsRegistered && deadline.Elapsed < TimeSpan.FromSeconds(5))
                 await peer.EventLoop.SubmitAsync(() =>
                 {
                 });
+
             Assert.False(peer.IsRegistered);
             // Source ChannelInitializerTest requires registration, read and removal to survive an offloaded
             // initializer. Force HandlerAdded to run only after close so it must receive queued Registered.
@@ -179,10 +192,13 @@ public class LocalChannelOwnershipContractTest
         finally
         {
             release.Set();
+
             if (client != null)
                 await client.CloseAsync();
+
             if (server != null)
                 await server.CloseAsync();
+
             // CLR: fireChannelRegistered hops to the offloaded initializer's executor first (as in the source), which
             // may still forward one queued event to the channel loop; drain that executor while the group still runs.
             await executor.StopAsync();
@@ -197,6 +213,7 @@ public class LocalChannelOwnershipContractTest
         using var cancellation = new CancellationTokenSource();
         var queued = new TaskCompletionSource<LocalChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
         IChannel server = null, client = null;
+
         try
         {
             server = await new ServerBootstrap().Group(group).ChannelFactory(() => new ObservedQueuedServer(queued))
@@ -226,8 +243,10 @@ public class LocalChannelOwnershipContractTest
         {
             if (client != null)
                 await client.CloseAsync();
+
             if (server != null)
                 await server.CloseAsync();
+
             await group.StopAsync();
         }
     }
@@ -241,6 +260,7 @@ public class LocalChannelOwnershipContractTest
         var accepted = new TaskCompletionSource<IChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
         var received = new TaskCompletionSource<string[]>(TaskCreationOptions.RunContinuationsAsynchronously);
         var events = new List<string>();
+
         try
         {
             server = await new ServerBootstrap().Group(group).Channel<LocalServerChannel>()
@@ -259,14 +279,17 @@ public class LocalChannelOwnershipContractTest
             var message = new ReleaseHookMessage(() => reply = peer.WriteAndFlushAsync(2));
             await client.WriteAndFlushAsync(message);
             Assert.Equal(new[] { "server", "client" }, await received.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
+
             if (reply != null)
                 await reply;
         }
         finally
         {
             await sender.CloseAsync();
+
             if (server != null)
                 await server.CloseAsync();
+
             await group.StopAsync();
         }
     }
@@ -291,6 +314,7 @@ public class LocalChannelOwnershipContractTest
             ownCloseStarted.TrySetResult();
             Assert.True(allowPublish.Wait(TimeSpan.FromSeconds(5)));
         });
+
         try
         {
             server = await new ServerBootstrap().Group(readers).Channel<LocalServerChannel>()
@@ -323,9 +347,12 @@ public class LocalChannelOwnershipContractTest
             allowOwnClose.Set();
             allowPublish.Set();
             await sender.CloseAsync();
+
             if (server != null)
                 await server.CloseAsync();
+
             await Task.WhenAll(writers.StopAsync(), readers.StopAsync());
+
             while (message.RefCnt > 0)
                 message.Release();
         }
@@ -371,8 +398,10 @@ public class LocalChannelOwnershipContractTest
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             Depths.Add(InternalThreadLocalMap.Get().LocalChannelReaderStackDepth());
+
             if (Depths.Count == expected)
                 Done.TrySetResult();
+
             ctx.Read();
         }
     }
@@ -421,6 +450,7 @@ public class LocalChannelOwnershipContractTest
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             events.Add(name);
+
             if (events.Count == 2)
                 received.TrySetResult(events.ToArray());
         }
@@ -439,9 +469,11 @@ public class LocalChannelOwnershipContractTest
         public override IReferenceCounted Retain(int increment)
         {
             base.Retain(increment);
+
             // The first retain is doWrite publishing the message to the peer (peer.inboundBuffer.add(retain(msg))).
             if (Interlocked.Increment(ref _retains) == 1)
                 retained();
+
             return this;
         }
 

@@ -65,6 +65,7 @@ public sealed class SocksAddressType
                 return code;
             }
         }
+
         return UNKNOWN;
     }
 

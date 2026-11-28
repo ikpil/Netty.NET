@@ -69,6 +69,7 @@ public class DefaultMockTickerTest
         var threads = new List<Thread>();
         var futures = new List<Task>();
         var ticker = (DefaultMockTicker)Ticker.NewMockTicker();
+
         try
         {
             for (int i = 0; i < 4; i++)
@@ -96,6 +97,7 @@ public class DefaultMockTickerTest
             {
                 ticker.AwaitSleepingThread(thread);
             }
+
             // Time did not advance at all, and thus future will not complete.
             foreach (Task future in futures)
             {
@@ -110,6 +112,7 @@ public class DefaultMockTickerTest
             {
                 ticker.AwaitSleepingThread(thread);
             }
+
             // Still needs one more nanosecond for our futures.
             foreach (Task future in futures)
             {
@@ -128,6 +131,7 @@ public class DefaultMockTickerTest
                 {
                     thread.Interrupt();
                 }
+
                 Assert.True(thread.Join(TimeSpan.FromSeconds(5)), "Ticker waiter did not stop");
             }
         }

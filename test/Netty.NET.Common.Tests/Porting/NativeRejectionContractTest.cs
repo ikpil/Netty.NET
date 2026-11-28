@@ -15,6 +15,7 @@ public class NativeRejectionContractTest
         protected internal override void Wakeup(bool inEventLoop)
         {
             base.Wakeup(inEventLoop);
+
             if (!inEventLoop && OnWake != null)
             {
                 WakeCalls++;
@@ -32,6 +33,7 @@ public class NativeRejectionContractTest
                     SafeExecute(task);
                     UpdateLastExecutionTime();
                 }
+
                 if (ConfirmShutdown())
                 {
                     return;
@@ -69,6 +71,7 @@ public class NativeRejectionContractTest
         var executor = new Loop(RejectedExecutionHandlers.Backoff(3, TimeSpan.FromTicks(ticks)));
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
+
         try
         {
             executor.Execute(() =>
@@ -109,6 +112,7 @@ public class NativeRejectionContractTest
         using var release = new ManualResetEventSlim();
         using var slotEntered = new ManualResetEventSlim();
         using var slotRelease = new ManualResetEventSlim();
+
         try
         {
             executor.Execute(() =>
@@ -162,6 +166,7 @@ public class NativeRejectionContractTest
     public async Task OnLoopBackoffRejectsWithoutWaitingOrWakingTheWorker()
     {
         var executor = new Loop(RejectedExecutionHandlers.Backoff(int.MaxValue, TimeSpan.MaxValue));
+
         try
         {
             executor.OnWake = static () =>
@@ -202,6 +207,7 @@ public class NativeRejectionContractTest
         });
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
+
         try
         {
             executor.Execute(() =>
@@ -219,6 +225,7 @@ public class NativeRejectionContractTest
             }
 
             Thread caller = Thread.CurrentThread;
+
             if (nativeResult)
             {
                 Task result = executor.SubmitAsync(static () =>
@@ -257,6 +264,7 @@ public class NativeRejectionContractTest
             Assert.True(owner.OfferTask(work));
             termination = owner.StopAsync();
         });
+
         try
         {
             executor.Execute(() =>
@@ -303,6 +311,7 @@ public class NativeRejectionContractTest
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
         var completion = new TaskCompletionSource<Exception>(TaskCreationOptions.RunContinuationsAsynchronously);
+
         try
         {
             executor.Execute(() =>
@@ -328,6 +337,7 @@ public class NativeRejectionContractTest
                 {
                     Thread.CurrentThread.Interrupt();
                     Exception rejection = null;
+
                     try
                     {
                         executor.Execute(static () =>
@@ -338,9 +348,11 @@ public class NativeRejectionContractTest
                     {
                         rejection = error;
                     }
+
                     // xUnit may acquire a resource lock while reading an exception
                     // message. Consume the expected pending interrupt before assertions.
                     bool interrupted = false;
+
                     try
                     {
                         Thread.Sleep(0);
@@ -349,6 +361,7 @@ public class NativeRejectionContractTest
                     {
                         interrupted = true;
                     }
+
                     Assert.IsType<RejectedExecutionException>(rejection);
                     Assert.Equal(1, executor.WakeCalls);
                     Assert.True(interrupted);
@@ -380,6 +393,7 @@ public class NativeRejectionContractTest
             starts++;
             new Thread(() => work()) { IsBackground = true }.Start();
         });
+
         try
         {
             Assert.Equal("task", Assert.Throws<ArgumentNullException>(() => executor.OfferTask((Action)null)).ParamName);

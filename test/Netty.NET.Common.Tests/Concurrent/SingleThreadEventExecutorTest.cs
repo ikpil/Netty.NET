@@ -99,6 +99,7 @@ public class SingleThreadEventExecutorTest
         protected override void Run()
         {
             started?.Invoke();
+
             while (!ConfirmShutdown())
             {
                 Action task = TakeTask();
@@ -165,6 +166,7 @@ public class SingleThreadEventExecutorTest
     private static void Suspend(SingleThreadEventExecutor executor, int sleep = 50)
     {
         var time = Stopwatch.StartNew();
+
         while (!executor.TrySuspend())
         {
             Assert.True(time.Elapsed < TimeSpan.FromSeconds(2), "executor did not suspend");
@@ -177,6 +179,7 @@ public class SingleThreadEventExecutorTest
     {
         var factory = new TestThreadFactory();
         var executor = new SuspendingSingleThreadEventExecutor(factory);
+
         try
         {
             var task1 = new LatchTask();
@@ -219,6 +222,7 @@ public class SingleThreadEventExecutorTest
     {
         var factory = new TestThreadFactory();
         var executor = new SuspendingSingleThreadEventExecutor(factory);
+
         try
         {
             // suspend when executor is not started yet
@@ -272,6 +276,7 @@ public class SingleThreadEventExecutorTest
             }
         }) { IsBackground = true };
         suspender.Start();
+
         try
         {
             for (int i = 1; i <= 10000; i++)
@@ -299,6 +304,7 @@ public class SingleThreadEventExecutorTest
     {
         var factory = new TestThreadFactory();
         var executor = new SuspendingSingleThreadEventExecutor(factory);
+
         try
         {
             // Schedule a task which is so far in the future that we are sure it will not run at all.
@@ -352,6 +358,7 @@ public class SingleThreadEventExecutorTest
         {
             var factory = new TestThreadFactory();
             var executor = new SuspendingSingleThreadEventExecutor(factory);
+
             try
             {
                 using var cancellation = new CancellationTokenSource();
@@ -387,6 +394,7 @@ public class SingleThreadEventExecutorTest
         var factory = new TestThreadFactory();
         var executor = new SuspendingSingleThreadEventExecutor(factory);
         using var latch = new CountdownEvent(1);
+
         try
         {
             // Schedule a task which is so far in the future that we are sure it will not run at all.
@@ -430,6 +438,7 @@ public class SingleThreadEventExecutorTest
             {
                 latch.Signal();
             }
+
             Shutdown(executor);
         }
     }
@@ -467,6 +476,7 @@ public class SingleThreadEventExecutorTest
         Thread threadRef = null;
         var executor = new LoopExecutor(new DefaultThreadFactory("test"), false);
         executor.started = () => threadRef = Thread.CurrentThread;
+
         try
         {
             var properties = executor.ThreadProperties();
@@ -514,6 +524,7 @@ public class SingleThreadEventExecutorTest
     {
         var executor = new LoopExecutor(new DefaultThreadFactory("compose"));
         int calls = 0;
+
         try
         {
             Task operation = executor.SubmitAsync(async () =>
@@ -533,6 +544,7 @@ public class SingleThreadEventExecutorTest
                     })
                 };
                 Task composition = any ? Task.WhenAny(children) : Task.WhenAll(children);
+
                 if (timeout)
                 {
                     await composition.WaitAsync(TimeSpan.FromSeconds(3)).ConfigureAwait(false);
@@ -541,6 +553,7 @@ public class SingleThreadEventExecutorTest
                 {
                     await composition.ConfigureAwait(false);
                 }
+
                 await executor.SubmitAsync(() =>
                 {
                     Assert.True(executor.InEventLoop());
@@ -577,6 +590,7 @@ public class SingleThreadEventExecutorTest
                         Monitor.Wait(this);
                     }
                 }
+
                 RunAllTasks();
             }
         }
@@ -596,6 +610,7 @@ public class SingleThreadEventExecutorTest
     public void TestLazyExecution()
     {
         var executor = new LazyExecutor();
+
         try
         {
             // Ensure event loop is started
@@ -672,6 +687,7 @@ public class SingleThreadEventExecutorTest
                     submittedTasks.Enqueue(submission);
                 }
             }
+
             return result;
         }
     }
@@ -681,6 +697,7 @@ public class SingleThreadEventExecutorTest
         // A queue that doesn't support remove, so tasks once added cannot be rejected anymore
         var taskQueue = new NoRemoveQueue();
         var executor = new AfterShutdownExecutor(taskQueue);
+
         try
         {
             // Start the loop
@@ -720,6 +737,7 @@ public class SingleThreadEventExecutorTest
     public void TestTakeTask()
     {
         var executor = new LoopExecutor(new DefaultThreadFactory("take"));
+
         try
         {
             //add task
@@ -747,6 +765,7 @@ public class SingleThreadEventExecutorTest
     {
         //for https://github.com/netty/netty/issues/1614
         var executor = new LoopExecutor(new DefaultThreadFactory("busy-take"));
+
         try
         {
             //add scheduled task

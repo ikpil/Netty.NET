@@ -94,10 +94,12 @@ public class CompressorHttp2ConnectionEncoder : DecoratingHttp2ConnectionEncoder
         compressionOptions.Add(StandardCompressionOptions.Gzip());
         compressionOptions.Add(StandardCompressionOptions.Deflate());
         compressionOptions.Add(StandardCompressionOptions.Snappy());
+
         if (Brotli.IsAvailable())
         {
             compressionOptions.Add(StandardCompressionOptions.Brotli());
         }
+
         return compressionOptions.ToArray();
     }
 
@@ -128,6 +130,7 @@ public class CompressorHttp2ConnectionEncoder : DecoratingHttp2ConnectionEncoder
         : base(@delegate)
     {
         ObjectUtil.CheckNotNull(compressionOptionsArgs, "CompressionOptions");
+
         ObjectUtil.DeepCheckNotNull("CompressionOptions", compressionOptionsArgs);
 
         foreach (ICompressionOptions compressionOptions in compressionOptionsArgs)
@@ -211,15 +214,18 @@ public class CompressorHttp2ConnectionEncoder : DecoratingHttp2ConnectionEncoder
                     {
                         buf = NextReadableBuf(channel);
                     }
+
                     return base.WriteDataAsync(ctx, streamId, buf == null ? Unpooled.EmptyBuffer : buf, padding,
                             true, promise);
                 }
+
                 // END_STREAM is not set and the assumption is data is still forthcoming.
                 promise.SetResult();
                 return promise.Task;
             }
 
             List<Task> combiner = new List<Task>();
+
             for (;;)
             {
                 ByteBuf nextBuf = NextReadableBuf(channel);
@@ -241,6 +247,7 @@ public class CompressorHttp2ConnectionEncoder : DecoratingHttp2ConnectionEncoder
                 padding = 0; // Padding is only communicated once on the first iteration
                 buf = nextBuf;
             }
+
             ExecutorPromiseCombiner.Combine(ctx, combiner, promise);
         }
         catch (Exception cause)
@@ -254,6 +261,7 @@ public class CompressorHttp2ConnectionEncoder : DecoratingHttp2ConnectionEncoder
                 Cleanup(stream, channel);
             }
         }
+
         return promise.Task;
     }
 
@@ -261,6 +269,7 @@ public class CompressorHttp2ConnectionEncoder : DecoratingHttp2ConnectionEncoder
             int padding, bool endStream, TaskCompletionSource promise)
     {
         EmbeddedChannel compressor = null;
+
         try
         {
             // Determine if compression is required and sanitize the headers.
@@ -288,6 +297,7 @@ public class CompressorHttp2ConnectionEncoder : DecoratingHttp2ConnectionEncoder
                 compressor.FinishAndReleaseAll();
             }
         }
+
         return promise.Task;
     }
 
@@ -296,6 +306,7 @@ public class CompressorHttp2ConnectionEncoder : DecoratingHttp2ConnectionEncoder
             bool endOfStream, TaskCompletionSource promise)
     {
         EmbeddedChannel compressor = null;
+
         try
         {
             // Determine if compression is required and sanitize the headers.
@@ -324,6 +335,7 @@ public class CompressorHttp2ConnectionEncoder : DecoratingHttp2ConnectionEncoder
                 compressor.FinishAndReleaseAll();
             }
         }
+
         return promise.Task;
     }
 
@@ -347,6 +359,7 @@ public class CompressorHttp2ConnectionEncoder : DecoratingHttp2ConnectionEncoder
         {
             return NewCompressionChannel(ctx, ZlibWrapper.ZLIB);
         }
+
         IChannel channel = ctx.Channel;
         if (Brotli.IsAvailable() && brotliOptions != null && BR.ContentEqualsIgnoreCase(contentEncoding))
         {
@@ -371,6 +384,7 @@ public class CompressorHttp2ConnectionEncoder : DecoratingHttp2ConnectionEncoder
                     .Handlers(new SnappyFrameEncoder())
                     .Build();
         }
+
         // 'identity' or unsupported
         return null;
     }
@@ -396,6 +410,7 @@ public class CompressorHttp2ConnectionEncoder : DecoratingHttp2ConnectionEncoder
     private EmbeddedChannel NewCompressionChannel(IChannelHandlerContext ctx, ZlibWrapper wrapper)
     {
         IChannel channel = ctx.Channel;
+
         if (supportsCompressionOptions)
         {
             if (wrapper == ZlibWrapper.GZIP && gzipCompressionOptions != null)
@@ -462,7 +477,9 @@ public class CompressorHttp2ConnectionEncoder : DecoratingHttp2ConnectionEncoder
         {
             encoding = IDENTITY;
         }
+
         EmbeddedChannel compressor = NewContentCompressor(ctx, encoding);
+
         try
         {
             if (compressor != null)
@@ -513,6 +530,7 @@ public class CompressorHttp2ConnectionEncoder : DecoratingHttp2ConnectionEncoder
                 return true;
             }
         }
+
         return false;
     }
 
@@ -543,11 +561,13 @@ public class CompressorHttp2ConnectionEncoder : DecoratingHttp2ConnectionEncoder
             {
                 return null;
             }
+
             if (!buf.IsReadable())
             {
                 buf.Release();
                 continue;
             }
+
             return buf;
         }
     }

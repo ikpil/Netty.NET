@@ -145,9 +145,11 @@ public class SocketGatheringWriteSourceTest : AbstractSocketTest
 
         // CLR: a System.Random seeded from random replaces new SplittableRandom(random.nextLong()).
         Random rng = new Random(random.Next());
+
         for (int i = 0; i < data.Length;)
         {
             int length = Math.Min(rng.Next(1024 * 8), data.Length - i);
+
             if (composite && i % 2 == 0)
             {
                 int firstBufLength = length / 2;
@@ -162,6 +164,7 @@ public class SocketGatheringWriteSourceTest : AbstractSocketTest
             {
                 _ = cc.WriteAsync(RandomBufferType(cc.Alloc(), data, i, length));
             }
+
             i += length;
         }
 
@@ -169,6 +172,7 @@ public class SocketGatheringWriteSourceTest : AbstractSocketTest
         // CLR: Channel.voidPromise() has no counterpart because every outbound operation returns its own Task
         // (IChannel.cs), so assertNotEquals(cc.voidPromise(), cf) checks that writeAndFlush returned that Task.
         Assert.NotNull(cf);
+
         try
         {
             Assert.True(await AwaitAsync(cf, 60000));
@@ -203,6 +207,7 @@ public class SocketGatheringWriteSourceTest : AbstractSocketTest
         {
             throw ch.exception;
         }
+
         ByteBuf expected = Unpooled.WrappedBuffer(data);
         Assert.Equal(expected, sh.received);
         expected.Release();
@@ -265,6 +270,7 @@ public class SocketGatheringWriteSourceTest : AbstractSocketTest
         cc1.EventLoop.Execute(() =>
         {
             Random rng = new Random(random.Next());
+
             for (int i = 0; i < data.Length;)
             {
                 int length = Math.Min(rng.Next(1024 * 8), data.Length - i);
@@ -272,6 +278,7 @@ public class SocketGatheringWriteSourceTest : AbstractSocketTest
                 _ = cc2.WriteAsync(RandomBufferType(cc2.Alloc(), data, i, length));
                 i += length;
             }
+
             _ = Cascade(cc1.WriteAndFlushAsync(Unpooled.EmptyBuffer), p1);
             _ = Cascade(cc2.WriteAndFlushAsync(Unpooled.EmptyBuffer), p2);
         });
@@ -305,11 +312,13 @@ public class SocketGatheringWriteSourceTest : AbstractSocketTest
             {
                 throw ch.exception;
             }
+
             ByteBuf expected = Unpooled.WrappedBuffer(data);
             Assert.Equal(expected, sh.received);
             expected.Release();
             sh.received.Release();
         }
+
         await sc.CloseAsync();
     }
 
@@ -359,6 +368,7 @@ public class SocketGatheringWriteSourceTest : AbstractSocketTest
         protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf @in)
         {
             received.WriteBytes(@in);
+
             if (received.ReadableBytes >= expectedBytes)
             {
                 // CLR: SetResult throws when already completed, as Promise.setSuccess(null) does.
@@ -397,10 +407,12 @@ public class SocketGatheringWriteSourceTest : AbstractSocketTest
         public sealed override void ChannelActive(IChannelHandlerContext ctx)
         {
             channel = ctx.Channel;
+
             if (!autoRead)
             {
                 ctx.Read();
             }
+
             base.ChannelActive(ctx);
         }
 
@@ -414,6 +426,7 @@ public class SocketGatheringWriteSourceTest : AbstractSocketTest
             {
                 ctx.Read();
             }
+
             base.ChannelReadComplete(ctx);
         }
 
@@ -423,6 +436,7 @@ public class SocketGatheringWriteSourceTest : AbstractSocketTest
             {
                 HandleException(ctx, cause);
             }
+
             base.ExceptionCaught(ctx, cause);
         }
 

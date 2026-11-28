@@ -216,6 +216,7 @@ public abstract class DatagramUnicastSourceTest : AbstractDatagramTest
         client.Bind(bindaddr);
         EndPoint sendAddress = address is IPEndPoint ?
                 ConvertAnyAddress((IPEndPoint) address) : address;
+
         for (int i = 0; i < 100; i++)
         {
             try
@@ -233,6 +234,7 @@ public abstract class DatagramUnicastSourceTest : AbstractDatagramTest
             {
                 Assert.Skip("JDK sockets do not support binding to these addresses.");
             }
+
             await semaphore.WaitAsync();
         }
     }
@@ -251,6 +253,7 @@ public abstract class DatagramUnicastSourceTest : AbstractDatagramTest
         {
             return;
         }
+
         IChannel sc = await sb.Handler(new ActionChannelInitializer<IChannel>(ch =>
         {
             ch.Pipeline.AddLast(new DropHandler());
@@ -258,6 +261,7 @@ public abstract class DatagramUnicastSourceTest : AbstractDatagramTest
 
         IChannel cc = await cb.Option(ChannelOption.DATAGRAM_CHANNEL_ACTIVE_ON_REGISTRATION, true).
                 Handler(new ChannelInboundHandlerAdapter()).RegisterAsync();
+
         try
         {
             IPEndPoint goodHost = ConvertAnyAddress((IPEndPoint) sc.LocalAddress);
@@ -310,6 +314,7 @@ public abstract class DatagramUnicastSourceTest : AbstractDatagramTest
             cb.Handler(new NothingSentHandler());
 
             EndPoint sender;
+
             if (bindClient)
             {
                 cc = await cb.BindAsync(NewSocketAddress());
@@ -331,13 +336,16 @@ public abstract class DatagramUnicastSourceTest : AbstractDatagramTest
                     ConvertAnyAddress((IPEndPoint) sc.LocalAddress) : localAddr;
 
             bool received = false;
+
             for (int attempt = 1; attempt <= SEND_ATTEMPTS && !received; attempt++)
             {
                 List<Task> futures = new List<Task>(count);
+
                 for (int i = 0; i < count; i++)
                 {
                     futures.Add(Write(cc, buf, addr, wrapType));
                 }
+
                 // release as we used buf.retain() before
                 cc.Flush();
 
@@ -345,9 +353,11 @@ public abstract class DatagramUnicastSourceTest : AbstractDatagramTest
                 {
                     await future;
                 }
+
                 // UDP datagrams can be lost even on loopback, so retry a few times before giving up.
                 received = await latch.Await(TimeSpan.FromSeconds(10));
             }
+
             if (!received)
             {
                 Exception error = Volatile.Read(ref errorRef.Value);
@@ -355,6 +365,7 @@ public abstract class DatagramUnicastSourceTest : AbstractDatagramTest
                 {
                     throw error;
                 }
+
                 Assert.Fail();
             }
         }
@@ -389,6 +400,7 @@ public abstract class DatagramUnicastSourceTest : AbstractDatagramTest
     {
         IChannel sc = null;
         IChannel cc = null;
+
         try
         {
             CountDownLatch latch = new CountDownLatch(count);
@@ -405,13 +417,16 @@ public abstract class DatagramUnicastSourceTest : AbstractDatagramTest
 
             List<Task> futures = new List<Task>();
             bool received = false;
+
             for (int attempt = 1; attempt <= SEND_ATTEMPTS && !received; attempt++)
             {
                 futures.Clear();
+
                 for (int i = 0; i < count; i++)
                 {
                     futures.Add(Write(cc, buf, wrapType));
                 }
+
                 cc.Flush();
 
                 foreach (Task future in futures)
@@ -424,6 +439,7 @@ public abstract class DatagramUnicastSourceTest : AbstractDatagramTest
                 received = await latch.Await(TimeSpan.FromSeconds(10)) &&
                         await clientLatch.Await(TimeSpan.FromSeconds(10));
             }
+
             if (!received)
             {
                 if (latch.GetCount() != 0)
@@ -433,8 +449,10 @@ public abstract class DatagramUnicastSourceTest : AbstractDatagramTest
                     {
                         throw cause;
                     }
+
                     Assert.Fail();
                 }
+
                 // CLR: the braces scope this second cause local; C# rejects reusing the if block's local name in the
                 // enclosing block (CS0136).
                 {
@@ -446,6 +464,7 @@ public abstract class DatagramUnicastSourceTest : AbstractDatagramTest
                 }
                 Assert.Fail();
             }
+
             // CLR: supplemental check that neither handler reported an assertion failure for a delivered datagram.
             if (Volatile.Read(ref errorRef.Value) is { } serverError)
             {
@@ -455,6 +474,7 @@ public abstract class DatagramUnicastSourceTest : AbstractDatagramTest
             {
                 throw clientError;
             }
+
             Assert.True(IsConnected(cc));
 
             Assert.NotNull(cc.LocalAddress);
@@ -478,8 +498,10 @@ public abstract class DatagramUnicastSourceTest : AbstractDatagramTest
                             return;
                         }
                     }
+
                     throw;
                 }
+
                 Assert.False(IsConnected(cc));
                 Assert.NotNull(cc.LocalAddress);
                 Assert.Equal(localPort, ((IPEndPoint) cc.LocalAddress).Port);
@@ -543,12 +565,14 @@ public abstract class DatagramUnicastSourceTest : AbstractDatagramTest
         buf.WriteBytes(BAD_PREFIX);
         buf.WriteBytes(EXPECTED);
         buf.ReaderIndex = BAD_PREFIX.Length;
+
         try
         {
             foreach (WrapType type in Enum.GetValues<WrapType>())
             {
                 await TestWriteOffsetBytebuf0(sb, cb, buf.Retain(), EXPECTED, type);
             }
+
             Assert.Equal(1, buf.RefCnt);
         }
         finally
@@ -568,6 +592,7 @@ public abstract class DatagramUnicastSourceTest : AbstractDatagramTest
 
         IChannel sc = null;
         IChannel cc = null;
+
         try
         {
             sc = await sb.BindAsync(NewSocketAddress());
@@ -577,6 +602,7 @@ public abstract class DatagramUnicastSourceTest : AbstractDatagramTest
                 // Correctly ha
                 serverAddress = ConvertAnyAddress((IPEndPoint) serverAddress);
             }
+
             cb.Handler(new NoOpHolderHandler());
 
             cc = await cb.ConnectAsync(serverAddress);
@@ -595,6 +621,7 @@ public abstract class DatagramUnicastSourceTest : AbstractDatagramTest
             {
                 await cc.CloseAsync();
             }
+
             if (sc != null)
             {
                 await sc.CloseAsync();
@@ -643,8 +670,10 @@ public abstract class DatagramUnicastSourceTest : AbstractDatagramTest
             {
                 return new IPEndPoint(NetUtil.LOCALHOST6, serverAddress.Port);
             }
+
             return new IPEndPoint(NetUtil.LOCALHOST4, serverAddress.Port);
         }
+
         return serverAddress;
     }
 
@@ -673,7 +702,9 @@ public abstract class DatagramUnicastSourceTest : AbstractDatagramTest
         public CountDownLatch(int count)
         {
             ArgumentOutOfRangeException.ThrowIfNegative(count);
+
             this.count = count;
+
             if (count == 0)
             {
                 zero.TrySetResult();
@@ -683,6 +714,7 @@ public abstract class DatagramUnicastSourceTest : AbstractDatagramTest
         public void CountDown()
         {
             int current;
+
             do
             {
                 current = Volatile.Read(ref count);
@@ -692,6 +724,7 @@ public abstract class DatagramUnicastSourceTest : AbstractDatagramTest
                 }
             }
             while (Interlocked.CompareExchange(ref count, current - 1, current) != current);
+
             if (current == 1)
             {
                 zero.TrySetResult();

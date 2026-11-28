@@ -45,6 +45,7 @@ public static class RejectedExecutionHandlers
     public static Action<Action, SingleThreadEventExecutor> Backoff(int retries, TimeSpan backoffAmount)
     {
         ObjectUtil.CheckPositive(retries, "retries");
+
         return (task, executor) =>
         {
             if (!executor.InEventLoop())
@@ -61,6 +62,7 @@ public static class RejectedExecutionHandlers
                     }
                 }
             }
+
             // Either we tried to add the task from within the EventLoop or we was not able to add it even with
             // backoff.
             throw new RejectedExecutionException();
@@ -76,13 +78,16 @@ public static class RejectedExecutionHandlers
         {
             return;
         }
+
         long started = Stopwatch.GetTimestamp();
         TimeSpan remaining = delay;
+
         while (remaining > TimeSpan.Zero)
         {
             // Round up without overflowing TimeSpan.MaxValue, and chunk waits
             // to CLR Sleep's millisecond limit. No nanosecond floating conversion.
             int milliseconds = (int)Math.Min(int.MaxValue, 1 + (remaining.Ticks - 1) / TimeSpan.TicksPerMillisecond);
+
             try
             {
                 Thread.Sleep(milliseconds);
@@ -92,6 +97,7 @@ public static class RejectedExecutionHandlers
                 Thread.CurrentThread.Interrupt();
                 return;
             }
+
             remaining = delay - Stopwatch.GetElapsedTime(started);
         }
     }

@@ -50,12 +50,14 @@ internal sealed class ThreadLocalDirectAllocation : MemoryManager<byte>
     public override Span<byte> GetSpan()
     {
         ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
+
         return _memory.Span;
     }
 
     protected override bool TryGetArray(out ArraySegment<byte> segment)
     {
         ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
+
         return MemoryMarshal.TryGetArray((ReadOnlyMemory<byte>)_memory, out segment);
     }
 
@@ -69,12 +71,14 @@ internal sealed class ThreadLocalDirectAllocation : MemoryManager<byte>
         // Allocate first so failure cannot strand a reference count increment.
         var claim = new Claim();
         ObjectDisposedException.ThrowIf(Volatile.Read(ref _disposed) != 0, this);
+
         ReferenceCountUpdater.Retain(ref _references);
         claim.Activate(this);
         if (Volatile.Read(ref _disposed) == 0)
         {
             return claim;
         }
+
         claim.Dispose();
         throw new ObjectDisposedException(nameof(ThreadLocalDirectAllocation));
     }
@@ -118,11 +122,13 @@ internal sealed class ThreadLocalDirectAllocation : MemoryManager<byte>
         {
             return;
         }
+
         NativeMemoryOwner owner = _owner;
         ThreadLocalDirectBufferCache cache = _cache;
         _owner = null;
         _cache = null;
         _memory = default;
+
         if (cache == null)
         {
             owner.Dispose();

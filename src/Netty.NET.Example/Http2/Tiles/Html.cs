@@ -64,6 +64,7 @@ public static class Html
         // The string to be built contains 13192 fixed characters plus the variable latency and random cache-bust.
         int numberOfCharacters = 13192 + StringLength(latency) + StringLength(r);
         StringBuilder sb = new StringBuilder(numberOfCharacters).Append("<div id=\"netty\">");
+
         for (int y = 0; y < IMAGES_Y_AXIS; y++)
         {
             for (int x = 0; x < IMAGES_X_AXIS; x++)
@@ -75,9 +76,12 @@ public static class Html
                 .Append("&latency=").Append(latency)
                 .Append("'>");
             }
+
             sb.Append("<br/>\r\n");
         }
+
         sb.Append("</div>");
+
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
 

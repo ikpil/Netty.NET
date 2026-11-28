@@ -183,6 +183,7 @@ public class QpackDecoderHandlerTest : IDisposable
         // Refer now to dynamic table
         EncodeHeaders(headers => headers.Add(fooBar.name, fooBar.value));
         ByteBuf buf = EncodeSectionAck(decoderStream.StreamId());
+
         try
         {
             while (buf.IsReadable())
@@ -194,6 +195,7 @@ public class QpackDecoderHandlerTest : IDisposable
         {
             buf.Release();
         }
+
         FinishStreams();
     }
 
@@ -204,6 +206,7 @@ public class QpackDecoderHandlerTest : IDisposable
         EncodeHeaders(headers => headers.Add(fooBar.name, fooBar.value));
         VerifyRequiredInsertCount(1);
         ByteBuf buf = EncodeInsertCountIncrement(1);
+
         try
         {
             while (buf.IsReadable())
@@ -215,6 +218,7 @@ public class QpackDecoderHandlerTest : IDisposable
         {
             buf.Release();
         }
+
         VerifyKnownReceivedCount(1);
         FinishStreams();
     }
@@ -226,6 +230,7 @@ public class QpackDecoderHandlerTest : IDisposable
         EncodeHeaders(headers => headers.Add(fooBar.name, fooBar.value));
         VerifyRequiredInsertCount(1);
         ByteBuf buf = EncodeStreamCancellation(decoderStream.StreamId());
+
         try
         {
             while (buf.IsReadable())
@@ -237,6 +242,7 @@ public class QpackDecoderHandlerTest : IDisposable
         {
             buf.Release();
         }
+
         FinishStreams();
     }
 
@@ -301,12 +307,14 @@ public class QpackDecoderHandlerTest : IDisposable
         {
             EncodeHeaders(streamId, headers => headers.Add(fooBar.name, fooBar.value));
         }
+
         Assert.Equal(QpackEncoder.MAX_OUTSTANDING_SECTIONS, encoder.OutstandingSectionCount());
 
         // The limit is reached: further field sections must fall back to literal encoding instead of growing
         // the tracker map any further.
         long overflowStreamId = QpackEncoder.MAX_OUTSTANDING_SECTIONS + 1;
         ByteBuf @out = decoderStream.Alloc().Buffer();
+
         try
         {
             EncodeHeaders(overflowStreamId, headers => headers.Add(fooBar.name, fooBar.value), @out);
@@ -326,6 +334,7 @@ public class QpackDecoderHandlerTest : IDisposable
 
         long resumedStreamId = overflowStreamId + 1;
         @out = decoderStream.Alloc().Buffer();
+
         try
         {
             EncodeHeaders(resumedStreamId, headers => headers.Add(fooBar.name, fooBar.value), @out);
@@ -343,6 +352,7 @@ public class QpackDecoderHandlerTest : IDisposable
         {
             SendStreamCancellation(streamId);
         }
+
         SendStreamCancellation(resumedStreamId);
         Assert.Equal(0, encoder.OutstandingSectionCount());
 
@@ -361,6 +371,7 @@ public class QpackDecoderHandlerTest : IDisposable
         {
             EncodeHeaders(streamId, headers => headers.Add(fooBar.name, fooBar.value));
         }
+
         Assert.Equal(QpackEncoder.MAX_OUTSTANDING_SECTIONS, encoder.OutstandingSectionCount());
 
         // Cancelling a stream with a still-pending field section also frees up tracking capacity.
@@ -369,6 +380,7 @@ public class QpackDecoderHandlerTest : IDisposable
 
         long resumedStreamId = QpackEncoder.MAX_OUTSTANDING_SECTIONS + 1;
         ByteBuf @out = decoderStream.Alloc().Buffer();
+
         try
         {
             EncodeHeaders(resumedStreamId, headers => headers.Add(fooBar.name, fooBar.value), @out);
@@ -378,12 +390,14 @@ public class QpackDecoderHandlerTest : IDisposable
         {
             @out.Release();
         }
+
         Assert.Equal(QpackEncoder.MAX_OUTSTANDING_SECTIONS, encoder.OutstandingSectionCount());
 
         for (long streamId = 2; streamId <= QpackEncoder.MAX_OUTSTANDING_SECTIONS; streamId++)
         {
             SendStreamCancellation(streamId);
         }
+
         SendStreamCancellation(resumedStreamId);
         Assert.Equal(0, encoder.OutstandingSectionCount());
 
@@ -467,6 +481,7 @@ public class QpackDecoderHandlerTest : IDisposable
     private void EncodeHeaders(long streamId, Action<IHttp3Headers> headersUpdater)
     {
         ByteBuf @out = decoderStream.Alloc().Buffer();
+
         try
         {
             EncodeHeaders(streamId, headersUpdater, @out);

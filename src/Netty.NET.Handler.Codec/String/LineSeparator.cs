@@ -68,6 +68,7 @@ public sealed class LineSeparator
         {
             return false;
         }
+
         LineSeparator that = (LineSeparator) o;
         return value != null ? value.Equals(that.value) : that.value == null;
     }

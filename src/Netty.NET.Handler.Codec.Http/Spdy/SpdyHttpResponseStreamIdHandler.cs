@@ -59,6 +59,7 @@ public class SpdyHttpResponseStreamIdHandler : MessageToMessageCodec<object, IHt
         {
             msg.Headers().SetInt(SpdyHttpHeaders.Names.STREAM_ID, id.Value);
         }
+
         @out.Add(ReferenceCountUtil.Retain(msg));
     }
 
@@ -81,6 +82,7 @@ public class SpdyHttpResponseStreamIdHandler : MessageToMessageCodec<object, IHt
         {
             ids.Remove(((ISpdyRstStreamFrame) msg).StreamId());
         }
+
         @out.Add(ReferenceCountUtil.Retain(msg));
     }
 
@@ -91,6 +93,7 @@ public class SpdyHttpResponseStreamIdHandler : MessageToMessageCodec<object, IHt
         {
             return null;
         }
+
         int id = ids.First.Value;
         ids.RemoveFirst();
         return id;

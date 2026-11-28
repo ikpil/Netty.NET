@@ -42,6 +42,7 @@ internal static class ApplicationProtocolUtil
         }
 
         List<string> result = new List<string>(initialListSize);
+
         foreach (string p in protocols)
         {
             result.Add(ObjectUtil.CheckNonEmpty(p, "p"));
@@ -63,6 +64,7 @@ internal static class ApplicationProtocolUtil
         }
 
         List<string> result = new List<string>(initialListSize);
+
         foreach (string p in protocols)
         {
             result.Add(ObjectUtil.CheckNonEmpty(p, "p"));

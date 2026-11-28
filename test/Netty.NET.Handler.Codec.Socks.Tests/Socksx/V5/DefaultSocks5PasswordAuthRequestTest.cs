@@ -34,6 +34,7 @@ public class DefaultSocks5PasswordAuthRequestTest
         {
             Assert.IsType<ArgumentNullException>(e, exactMatch: false);
         }
+
         try
         {
             new DefaultSocks5PasswordAuthRequest("", null);
@@ -55,6 +56,7 @@ public class DefaultSocks5PasswordAuthRequestTest
         {
             Assert.IsType<ArgumentException>(e, exactMatch: false);
         }
+
         try
         {
             new DefaultSocks5PasswordAuthRequest("username", "παράδειγμα.δοκιμή");
@@ -85,6 +87,7 @@ public class DefaultSocks5PasswordAuthRequestTest
         {
             Assert.IsType<ArgumentException>(e, exactMatch: false);
         }
+
         try
         {
             new DefaultSocks5PasswordAuthRequest("password",

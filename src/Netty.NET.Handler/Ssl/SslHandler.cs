@@ -430,6 +430,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         {
             return certificates;
         }
+
         X509Certificate remote = engine.RemoteCertificate;
         return remote == null ? null : new[] { X509CertificateLoader.LoadCertificate(remote.GetRawCertData()) };
     }
@@ -470,6 +471,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         if (ReferenceEquals(sender, engine) && certificate != null)
         {
             List<X509Certificate2> certificates = new List<X509Certificate2>();
+
             if (chain != null)
             {
                 foreach (X509ChainElement element in chain.ChainElements)
@@ -477,20 +479,25 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                     certificates.Add(X509CertificateLoader.LoadCertificate(element.Certificate.RawData));
                 }
             }
+
             if (certificates.Count == 0)
             {
                 certificates.Add(X509CertificateLoader.LoadCertificate(certificate.GetRawCertData()));
             }
+
             Volatile.Write(ref peerCertificates, certificates.ToArray());
         }
+
         if (configured != null)
         {
             return configured(sender, certificate, chain, errors);
         }
+
         if (!remoteCertificateRequired)
         {
             errors &= ~SslPolicyErrors.RemoteCertificateNotAvailable;
         }
+
         return errors == SslPolicyErrors.None;
     }
 
@@ -533,6 +540,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
     {
         IChannelHandlerContext ctx = this.ctx;
         TaskCompletionSource promise = NewUserPromise();
+
         if (ctx.Executor.InEventLoop())
         {
             CloseOutbound0(promise);
@@ -541,6 +549,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         {
             ctx.Executor.Execute(() => CloseOutbound0(promise));
         }
+
         return promise.Task;
     }
 
@@ -548,6 +557,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
     {
         SetState(STATE_OUTBOUND_CLOSED);
         EngineCloseOutbound();
+
         try
         {
             Flush(ctx, promise);
@@ -583,6 +593,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                 pendingUnencryptedWrites.ReleaseAndFailAll(
                   new ChannelException("Pending write on removal of SslHandler"));
             }
+
             pendingUnencryptedWrites = null;
 
             AuthenticationException cause = null;
@@ -598,12 +609,14 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                     ctx.FireUserEventTriggered(new SslHandshakeCompletionEvent(cause));
                 }
             }
+
             if (!sslClosePromise.Task.IsCompleted)
             {
                 if (cause == null)
                 {
                     cause = new AuthenticationException("SslHandler removed before SSLEngine was closed");
                 }
+
                 NotifyClosePromise(cause);
             }
         }
@@ -668,16 +681,19 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         {
             UnsupportedMessageTypeException exception = new UnsupportedMessageTypeException(msg, typeof(ByteBuf));
             ReferenceCountUtil.SafeRelease(msg);
+
             return Task.FromException(exception);
         }
         else if (pendingUnencryptedWrites == null)
         {
             ReferenceCountUtil.SafeRelease(msg);
+
             return Task.FromException(NewPendingWritesNullException());
         }
         else
         {
             TaskCompletionSource promise = NewUserPromise();
+
             if (cancellationToken.CanBeCanceled)
             {
                 CancellationTokenRegistration registration = cancellationToken.UnsafeRegister(
@@ -686,6 +702,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                         registration, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously,
                         TaskScheduler.Default);
             }
+
             pendingUnencryptedWrites.Add((ByteBuf) msg, promise);
             return promise.Task;
         }
@@ -733,10 +750,12 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
             // See https://github.com/netty/netty/issues/3364
             pendingUnencryptedWrites.Add(Unpooled.EmptyBuffer, NewPromise());
         }
+
         if (!handshakePromise.Task.IsCompleted)
         {
             SetState(STATE_FLUSHED_BEFORE_HANDSHAKE);
         }
+
         try
         {
             Wrap(ctx, false);
@@ -754,9 +773,11 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
     {
         ByteBuf @out = null;
         IByteBufAllocator alloc = ctx.Alloc();
+
         try
         {
             int wrapDataSize = this.wrapDataSize;
+
             // Only continue to loop if the handler was not removed in the meantime.
             // See https://github.com/netty/netty/issues/5860
             while (!ctx.IsRemoved && !pendingUnencryptedWrites.IsEmpty)
@@ -783,6 +804,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                         // remaining buffer and get it on the next outer loop.
                         int readableBytes = buf.ReadableBytes;
                         int numPackets = readableBytes / MAX_PLAINTEXT_LENGTH;
+
                         if (readableBytes % MAX_PLAINTEXT_LENGTH != 0)
                         {
                             numPackets += 1;
@@ -792,6 +814,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                         {
                             @out = AllocateOutNetBuf(ctx, readableBytes, numPackets);
                         }
+
                         result = WrapMultiple(alloc, engine, buf, @out);
                     }
                     else
@@ -800,6 +823,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                         {
                             @out = AllocateOutNetBuf(ctx, buf.ReadableBytes, 1);
                         }
+
                         result = Wrap(alloc, engine, buf, @out);
                     }
                 }
@@ -834,6 +858,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                 {
                     ByteBuf b = @out;
                     @out = null;
+
                     if (promise != null)
                     {
                         Cascade(ctx.WriteAsync(b), promise);
@@ -866,6 +891,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                                 exception = new SslClosedEngineException("SSLEngine closed already");
                             }
                         }
+
                         pendingUnencryptedWrites.ReleaseAndFailAll(exception);
                     }
 
@@ -882,6 +908,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                                 // resume once the task completes.
                                 goto outer_break;
                             }
+
                             break;
                         case HandshakeStatus.FINISHED:
                         case HandshakeStatus.NOT_HANDSHAKING: // work around for android bug that skips the FINISHED state.
@@ -896,6 +923,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                             {
                                 pendingUnencryptedWrites.Add(Unpooled.EmptyBuffer);
                             }
+
                             break;
                         case HandshakeStatus.NEED_UNWRAP:
                             // The underlying engine is starving so we need to feed it with more data.
@@ -916,6 +944,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
             {
                 @out.Release();
             }
+
             if (inUnwrap)
             {
                 SetState(STATE_NEEDS_FLUSH);
@@ -933,6 +962,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
     {
         ByteBuf @out = null;
         IByteBufAllocator alloc = ctx.Alloc();
+
         try
         {
             // Only continue to loop if the handler was not removed in the meantime.
@@ -946,6 +976,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                     // If this is not enough we will increase the buffer in wrap(...).
                     @out = AllocateOutNetBuf(ctx, 2048, 1);
                 }
+
                 EngineResult result = Wrap(alloc, engine, Unpooled.EmptyBuffer, @out);
                 if (result.BytesProduced() > 0)
                 {
@@ -957,14 +988,17 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                             SetHandshakeFailureTransportFailure(ctx, cause);
                         }
                     });
+
                     if (inUnwrap)
                     {
                         SetState(STATE_NEEDS_FLUSH);
                     }
+
                     @out = null;
                 }
 
                 HandshakeStatus status = result.GetHandshakeStatus();
+
                 switch (status)
                 {
                     case HandshakeStatus.FINISHED:
@@ -988,10 +1022,12 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                         {
                             FlushIfNeeded(ctx);
                         }
+
                         if (SetHandshakeSuccess() && inUnwrap && !pendingUnencryptedWrites.IsEmpty)
                         {
                             Wrap(ctx, true);
                         }
+
                         return false;
                     case HandshakeStatus.NEED_TASK:
                         if (!RunDelegatedTasks(inUnwrap))
@@ -1000,6 +1036,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                             // resume once the task completes.
                             goto outer_break;
                         }
+
                         break;
                     case HandshakeStatus.NEED_UNWRAP:
                         if (inUnwrap || UnwrapNonAppData(ctx) <= 0)
@@ -1009,6 +1046,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                             // return) to feed more data to the engine.
                             return false;
                         }
+
                         break;
                     case HandshakeStatus.NEED_WRAP:
                         break;
@@ -1017,12 +1055,14 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                         {
                             Wrap(ctx, true);
                         }
+
                         // Workaround for TLS False Start problem reported at:
                         // https://github.com/netty/netty/issues/1108#issuecomment-14266970
                         if (!inUnwrap)
                         {
                             UnwrapNonAppData(ctx);
                         }
+
                         return true;
                     default:
                         throw new InvalidOperationException("Unknown handshake status: " + result.GetHandshakeStatus());
@@ -1044,6 +1084,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                 @out.Release();
             }
         }
+
         return false;
     }
 
@@ -1069,6 +1110,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                     // upstream will re-enqueue the buffer for later.
                     break;
                 }
+
                 // This shouldn't happen, as the out buf was properly sized for at least packetLength
                 // prior to calling wrap.
                 @out.EnsureWritable(nextOutSize);
@@ -1250,6 +1292,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
             throw new ArgumentException(
                     "buffer must have at least " + SslUtils.SSL_RECORD_HEADER_LENGTH + " readable bytes");
         }
+
         return SslUtils.GetEncryptedPacketLength(buffer, buffer.ReaderIndex, probeSSLv2) != SslUtils.NOT_ENCRYPTED;
     }
 
@@ -1272,6 +1315,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
             {
                 return;
             }
+
             packetLength = SslUtils.GetEncryptedPacketLength(@in, @in.ReaderIndex, true);
             if (packetLength == SslUtils.NOT_ENCRYPTED)
             {
@@ -1286,11 +1330,14 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
 
                 throw e;
             }
+
             if (packetLength == SslUtils.NOT_ENOUGH_DATA)
             {
                 return;
             }
+
             Debug.Assert(packetLength > 0);
+
             if (packetLength > readableBytes)
             {
                 // wait until the whole packet can be read
@@ -1302,6 +1349,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         // Reset the state of this class so we can get the length of the next packet. We assume the entire packet will
         // be consumed by the SSLEngine.
         this.packetLength = 0;
+
         try
         {
             int bytesConsumed = Unwrap(ctx, @in, packetLength);
@@ -1349,6 +1397,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
             // ensure we always flush and close the channel.
             SetHandshakeFailure(ctx, cause, true, false, true);
         }
+
         // CLR: ExceptionDispatchInfo.Throw rethrows the original exception unchanged as PlatformDependent.throwException
         // does (https://learn.microsoft.com/dotnet/api/system.runtime.exceptionservices.exceptiondispatchinfo.throw), as
         // Transport ChannelHandlerMask does.
@@ -1363,6 +1412,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         {
             return;
         }
+
         DecodeJdkCompatible(ctx, @in);
     }
 
@@ -1421,6 +1471,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         bool notifyClosure = false;
         bool executedRead = false;
         ByteBuf decodeOut = Allocate(ctx, length);
+
         try
         {
             // Only continue to loop if the handler was not removed in the meantime.
@@ -1458,6 +1509,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                 if (decodeOut.IsReadable())
                 {
                     SetState(STATE_FIRE_CHANNEL_READ);
+
                     if (IsStateSet(STATE_UNWRAP_REENTRY))
                     {
                         executedRead = true;
@@ -1467,6 +1519,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                     {
                         ctx.FireChannelRead(decodeOut);
                     }
+
                     decodeOut = null;
                 }
 
@@ -1480,6 +1533,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                     {
                         decodeOut.Release();
                     }
+
                     // CLR: SSLSession.getApplicationBufferSize() is the largest plaintext of a record; EngineUnwrap
                     // appends with WriteBytes and never reports BUFFER_OVERFLOW, so this branch only keeps the
                     // structure.
@@ -1572,6 +1626,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                 }
             }
         }
+
         return originalLength - length;
     }
 
@@ -1584,6 +1639,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         {
             SetState(STATE_UNWRAP_REENTRY);
         }
+
         try
         {
             return SetHandshakeSuccess();
@@ -1650,9 +1706,11 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
     private void ExecuteDelegatedTask(SslTasksRunner task)
     {
         SetState(STATE_PROCESS_TASK);
+
         try
         {
             Volatile.Write(ref waitingTaskRunner, task);
+
             if (EngineGetHandshakeStatus() != HandshakeStatus.NEED_TASK &&
                     Interlocked.CompareExchange(ref waitingTaskRunner, null, task) == task)
             {
@@ -1690,6 +1748,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         private void TaskError(Exception e)
         {
             IChannelHandlerContext ctx = handler.ctx;
+
             if (inUnwrap)
             {
                 // As the error happened while the task was scheduled as part of unwrap(...) we also need to ensure
@@ -1716,6 +1775,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         private void SafeExceptionCaught(Exception cause)
         {
             IChannelHandlerContext ctx = handler.ctx;
+
             try
             {
                 handler.ExceptionCaught(ctx, WrapIfNeeded(cause));
@@ -1733,6 +1793,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                 // If we are not in unwrap(...) we can just rethrow without wrapping at all.
                 return cause;
             }
+
             // As the exception would have been triggered by an inbound operation we will need to wrap it in a
             // DecoderException to mimic what a decoder would do when decode(...) throws.
             return cause is DecoderException ? cause : new DecoderException(cause);
@@ -1741,6 +1802,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         private void TryDecodeAgain()
         {
             IChannelHandlerContext ctx = handler.ctx;
+
             try
             {
                 handler.ChannelRead(ctx, Unpooled.EmptyBuffer);
@@ -1769,9 +1831,11 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
             handler.ClearState(STATE_PROCESS_TASK);
             // CLR: a resume that OnEngineProgress scheduled without a waiting runner may be scheduled again from here.
             Interlocked.Exchange(ref handler.resumeScheduled, 0);
+
             try
             {
                 HandshakeStatus status = handler.EngineGetHandshakeStatus();
+
                 switch (status)
                 {
                     // There is another task that needs to be executed and offloaded to the delegatingTaskExecutor as
@@ -1786,6 +1850,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                     // Not handshaking anymore, lets notify about the completion if not done yet and resume processing.
                     case HandshakeStatus.NOT_HANDSHAKING:
                         handler.SetHandshakeSuccess(); // NOT_HANDSHAKING -> workaround for android skipping FINISHED state.
+
                         try
                         {
                             // Lets call wrap to ensure we produce the alert if there is any pending and also to
@@ -1797,6 +1862,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                             TaskError(e);
                             return;
                         }
+
                         if (inUnwrap)
                         {
                             // If we were in the unwrap call when the task was processed we should also try to unwrap
@@ -1822,6 +1888,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                             handler.HandleUnwrapThrowable(ctx, e);
                             return;
                         }
+
                         TryDecodeAgain();
                         break;
 
@@ -1873,6 +1940,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                 // The executor is already shutting down, just return.
                 return;
             }
+
             // Jump back on the EventExecutor. We do this even if we are already on the EventLoop to guard against
             // reentrancy issues. Failing to do so could lead to the situation of tryDecode(...) be called and so
             // channelRead(...) while still in the decode loop. In this case channelRead(...) might release the input
@@ -1942,12 +2010,14 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         // wrapNonAppData may drain pendingUnencryptedWrites in wrap which transitions to handshake from FINISHED to
         // NOT_HANDSHAKING which invokes setHandshakeSuccess, and then wrapNonAppData also directly invokes this method.
         bool notified = false;
+
         if (!handshakePromise.Task.IsCompleted && EngineHandshakeSucceeded())
         {
             // CLR: the application protocol and the application-data read of a completed handshake are set up first.
             EngineEnsureReading();
             notified = handshakePromise.TrySetResult(ctx.Channel);
         }
+
         if (notified)
         {
             if (logger.IsDebugEnabled())
@@ -1958,16 +2028,20 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                         engine.SslProtocol,
                         engine.NegotiatedCipherSuite);
             }
+
             ctx.FireUserEventTriggered(SslHandshakeCompletionEvent.SUCCESS);
         }
+
         if (IsStateSet(STATE_READ_DURING_HANDSHAKE))
         {
             ClearState(STATE_READ_DURING_HANDSHAKE);
+
             if (!ctx.Channel.Config.IsAutoRead())
             {
                 ctx.Read();
             }
         }
+
         return notified;
     }
 
@@ -1997,6 +2071,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                 // debug log of SSLEngine.closeInbound()'s SSLException (no close_notify received) has no counterpart.
                 EngineCloseInbound();
             }
+
             if (handshakePromise.TrySetException(cause) || alwaysFlushAndClose)
             {
                 SslUtils.HandleHandshakeFailure(ctx, cause, notify);
@@ -2018,6 +2093,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         {
             AuthenticationException transportFailure = new AuthenticationException("failure when writing TLS control frames", cause);
             ReleaseAndFailAll(ctx, transportFailure);
+
             if (handshakePromise.TrySetException(transportFailure))
             {
                 ctx.FireUserEventTriggered(new SslHandshakeCompletionEvent(transportFailure));
@@ -2081,6 +2157,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
 
         TaskCompletionSource promise = NewUserPromise();
         TaskCompletionSource closeNotifyPromise = NewPromise();
+
         try
         {
             Flush(ctx, closeNotifyPromise);
@@ -2106,6 +2183,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                 AddListener(sslClosePromise.Task, f => promise.TrySetResult());
             }
         }
+
         return promise.Task;
     }
 
@@ -2119,6 +2197,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         {
             promise.TrySetException(NewPendingWritesNullException());
         }
+
         Flush(ctx);
     }
 
@@ -2175,6 +2254,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         if (!IsStateSet(STATE_HANDSHAKE_STARTED))
         {
             SetState(STATE_HANDSHAKE_STARTED);
+
             if (EngineGetUseClientMode())
             {
                 // Begin the initial handshake.
@@ -2182,6 +2262,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                 // not be invoked. We have to initialize here instead.
                 Handshake(flushAtEnd);
             }
+
             ApplyHandshakeTimeout();
         }
         else if (IsStateSet(STATE_NEEDS_FLUSH))
@@ -2278,6 +2359,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
 
         // Begin handshake.
         IChannelHandlerContext ctx = this.ctx;
+
         try
         {
             EngineBeginHandshake();
@@ -2315,8 +2397,10 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
             {
                 return;
             }
+
             AuthenticationException exception =
                     new SslHandshakeTimeoutException("handshake timed out after " + handshakeTimeoutMillis + "ms");
+
             try
             {
                 if (localHandshakePromise.TrySetException(exception))
@@ -2349,6 +2433,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         {
             StartHandshakeProcessing(true);
         }
+
         ctx.FireChannelActive();
     }
 
@@ -2363,6 +2448,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         }
 
         CancellationTokenSource timeoutFuture;
+
         if (!flushFuture.IsCompleted)
         {
             long closeNotifyTimeout = Volatile.Read(ref closeNotifyFlushTimeoutMillis);
@@ -2398,6 +2484,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
             {
                 timeoutFuture.Cancel();
             }
+
             long closeNotifyReadTimeout = Volatile.Read(ref closeNotifyReadTimeoutMillis);
             if (closeNotifyReadTimeout <= 0)
             {
@@ -2437,6 +2524,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                     {
                         closeNotifyReadTimeoutFuture.Cancel();
                     }
+
                     AddCloseListener(ctx.CloseAsync(), promise);
                 });
             }
@@ -2461,6 +2549,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
     private ByteBuf Allocate(IChannelHandlerContext ctx, int capacity)
     {
         IByteBufAllocator alloc = ctx.Alloc();
+
         if (wantsDirectBuffer)
         {
             return alloc.DirectBuffer(capacity);
@@ -2572,6 +2661,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         {
             return future.Exception.InnerException;
         }
+
         return future.IsCanceled ? new TaskCanceledException(future) : null;
     }
 
@@ -2584,6 +2674,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
     private static Regex CompileJavaPattern(string pattern)
     {
         StringBuilder regex = new StringBuilder(@"\A(?:");
+
         foreach (char c in pattern)
         {
             if (c == '.')
@@ -2599,6 +2690,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                 regex.Append(c);
             }
         }
+
         return new Regex(regex.Append(@")\z").ToString(), RegexOptions.CultureInvariant);
     }
 
@@ -2728,18 +2820,21 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         {
             SynchronizationContext.SetSynchronizationContext(null);
         }
+
         try
         {
             if (TaskScheduler.Current == TaskScheduler.Default)
             {
                 return call(state);
             }
+
             Task<TResult> inline = new Task<TResult>(static s =>
             {
                 (Func<TState, TResult> c, TState st) = ((Func<TState, TResult>, TState)) s;
                 return c(st);
             }, (call, state));
             inline.RunSynchronously(TaskScheduler.Default);
+
             return inline.GetAwaiter().GetResult();
         }
         finally
@@ -2748,6 +2843,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
             {
                 SynchronizationContext.SetSynchronizationContext(context);
             }
+
             engineThread = previousThread;
         }
     }
@@ -2775,8 +2871,10 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                     "SslStream cannot start a renegotiation in client mode (only NegotiateClientCertificateAsync of a " +
                     "server is available)");
         }
+
         bool renegotiation = handshakeOperation != null;
         handshakeFinishedReported = false;
+
         try
         {
             if (renegotiation)
@@ -2815,6 +2913,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
             engineClosed = true;
             throw;
         }
+
         _ = handshakeOperation.ContinueWith(static (t, s) =>
         {
             _ = t.Exception;
@@ -2829,6 +2928,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         {
             return engine.NegotiateClientCertificateAsync();
         }
+
         throw new PlatformNotSupportedException(
                 "SslStream.NegotiateClientCertificateAsync is not supported on this platform");
     }
@@ -2854,6 +2954,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         {
             return mediation.IsReadPending() ? HandshakeStatus.NEED_UNWRAP : HandshakeStatus.NEED_TASK;
         }
+
         return HandshakeStatus.NOT_HANDSHAKING;
     }
 
@@ -2865,6 +2966,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
             handshakeFinishedReported = true;
             return HandshakeStatus.FINISHED;
         }
+
         return EngineGetHandshakeStatus();
     }
 
@@ -2875,11 +2977,13 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         {
             return;
         }
+
         engineOutboundDone = true;
         if (!initialHandshakeDone || engineClosed)
         {
             return;
         }
+
         try
         {
             shutdownOperation = RunEngine(this, static h => h.engine.ShutdownAsync());
@@ -2915,10 +3019,12 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         {
             return new EngineResult(Status.CLOSED, EngineGetHandshakeStatus(), 0, 0);
         }
+
         if (handshakeOperation == null)
         {
             EngineBeginHandshake();
         }
+
         EngineEnsureReading();
         int produced = EngineHarvestReads(@out);
         // A record shorter than the 5-byte record header (an SSLv2-style length from getEncryptedPacketLength) is not a
@@ -2932,6 +3038,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         {
             return new EngineResult(Status.BUFFER_UNDERFLOW, EngineGetHandshakeStatus(), 0, produced);
         }
+
         if (len > 0)
         {
             RunEngine((this, @in, len), static s =>
@@ -2940,10 +3047,12 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                 return true;
             });
         }
+
         EngineThrowIfFailed();
         EngineEnsureReading();
         produced += EngineHarvestReads(@out);
         EngineThrowIfFailed();
+
         return new EngineResult(engineInboundDone ? Status.CLOSED : Status.OK, EngineResultHandshakeStatus(), len,
                 produced);
     }
@@ -2956,6 +3065,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         {
             EngineBeginHandshake();
         }
+
         EngineEnsureReading();
         EngineThrowIfFailed();
         int produced = mediation.DrainOutput(@out);
@@ -2963,7 +3073,9 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         {
             return new EngineResult(Status.CLOSED, EngineResultHandshakeStatus(), 0, produced);
         }
+
         int consumed = 0;
+
         // During a renegotiation of this server SslStream holds its write side (WriteAsync throws
         // NotSupportedException, measured), so application data waits as during an SSLEngine handshake.
         if (EngineHandshakeSucceeded() && !EngineWritePending() && @in.IsReadable())
@@ -2973,6 +3085,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
             EngineThrowIfFailed();
             produced += mediation.DrainOutput(@out);
         }
+
         return new EngineResult(Status.OK, EngineResultHandshakeStatus(), consumed, produced);
     }
 
@@ -2982,6 +3095,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         bool borrowed = sequence.IsSingleSegment;
         ReadOnlyMemory<byte> data = borrowed ? sequence.First : sequence.ToArray();
         ValueTask operation;
+
         try
         {
             operation = RunEngine((this, data), static s => s.Item1.engine.WriteAsync(s.Item2));
@@ -2991,6 +3105,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
             engineFailure = ToSSLException(e);
             return;
         }
+
         if (operation.IsCompleted)
         {
             try
@@ -3001,15 +3116,19 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
             {
                 engineFailure = ToSSLException(e);
             }
+
             return;
         }
+
         // SslStream waits for a renegotiation before it encrypts: the memory of in must stay valid until then.
         writeOperation = operation;
         writeOutstanding = true;
+
         if (borrowed)
         {
             writeRetained = @in.Retain();
         }
+
         operation.ConfigureAwait(false).GetAwaiter().UnsafeOnCompleted(onEngineProgress);
     }
 
@@ -3018,6 +3137,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         if (writeOutstanding && writeOperation.IsCompleted)
         {
             writeOutstanding = false;
+
             try
             {
                 writeOperation.GetAwaiter().GetResult();
@@ -3029,6 +3149,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
             finally
             {
                 writeOperation = default;
+
                 if (writeRetained != null)
                 {
                     writeRetained.Release();
@@ -3036,6 +3157,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                 }
             }
         }
+
         return writeOutstanding;
     }
 
@@ -3046,22 +3168,26 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         {
             return;
         }
+
         if (!initialHandshakeDone)
         {
             initialHandshakeDone = true;
             SslApplicationProtocol protocol = engine.NegotiatedApplicationProtocol;
             negotiatedApplicationProtocol = protocol.Protocol.IsEmpty ? null : Encoding.UTF8.GetString(protocol.Protocol.Span);
         }
+
         EngineStartRead();
     }
 
     private void EngineStartRead()
     {
         readBuffer ??= new byte[MAX_PLAINTEXT_LENGTH];
+
         if (!EngineGetUseClientMode())
         {
             readCancellation ??= new CancellationTokenSource();
         }
+
         try
         {
             readOperation = RunEngine(this, static h => h.engine.ReadAsync(h.readBuffer,
@@ -3072,7 +3198,9 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
             engineFailure ??= ToSSLException(e);
             return;
         }
+
         readOutstanding = true;
+
         if (!readOperation.IsCompleted)
         {
             readOperation.ConfigureAwait(false).GetAwaiter().UnsafeOnCompleted(onEngineProgress);
@@ -3083,10 +3211,12 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
     private int EngineHarvestReads(ByteBuf @out)
     {
         int produced = 0;
+
         while (readOutstanding && readOperation.IsCompleted)
         {
             readOutstanding = false;
             int n;
+
             try
             {
                 n = readOperation.GetAwaiter().GetResult();
@@ -3100,16 +3230,19 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
             {
                 readOperation = default;
             }
+
             if (n == 0)
             {
                 engineInboundDone = true;
                 EngineAcknowledgeCloseNotify();
                 return produced;
             }
+
             @out.WriteBytes(readBuffer.AsSpan(0, n));
             produced += n;
             EngineStartRead();
         }
+
         return produced;
     }
 
@@ -3128,6 +3261,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         {
             return;
         }
+
         EngineCloseOutbound();
     }
 
@@ -3138,6 +3272,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         {
             return;
         }
+
         CancellationTokenSource cancellation = readCancellation;
         readCancellation = null;
         RunEngine(cancellation, static c =>
@@ -3145,9 +3280,11 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
             c.Cancel();
             return true;
         });
+
         if (readOperation.IsCompleted)
         {
             readOutstanding = false;
+
             try
             {
                 readOperation.GetAwaiter().GetResult();
@@ -3165,6 +3302,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                 readOperation = default;
             }
         }
+
         cancellation.Dispose();
     }
 
@@ -3178,6 +3316,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         {
             return engineFailure;
         }
+
         if (handshakeOperation != null && (handshakeOperation.IsFaulted || handshakeOperation.IsCanceled))
         {
             // Any exception of the handshake (an AuthenticationException, or what a validation or selection callback
@@ -3186,6 +3325,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                     new AuthenticationException("SslStream authentication was cancelled");
             return engineFailure;
         }
+
         return null;
     }
 
@@ -3214,8 +3354,10 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         {
             return;
         }
+
         engineDisposed = true;
         engineClosed = true;
+
         try
         {
             RunEngine(this, static h =>
@@ -3228,6 +3370,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         {
             logger.Debug("SslStream.Dispose() raised an exception.", e);
         }
+
         EngineObserveCompleted();
         readCancellation?.Dispose();
         readCancellation = null;
@@ -3239,6 +3382,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         if (readOutstanding && readOperation.IsCompleted)
         {
             readOutstanding = false;
+
             try
             {
                 readOperation.GetAwaiter().GetResult();
@@ -3247,8 +3391,10 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
             {
                 // The disposed SslStream ends its read with an exception.
             }
+
             readOperation = default;
         }
+
         EngineWritePending();
     }
 
@@ -3261,11 +3407,13 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         {
             return;
         }
+
         if (engineDisposed)
         {
             EngineObserveCompleted();
             return;
         }
+
         SslTasksRunner runner = Interlocked.Exchange(ref waitingTaskRunner, null);
         if (runner == null)
         {
@@ -3273,8 +3421,10 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
             {
                 return;
             }
+
             runner = sslTaskRunnerForUnwrap;
         }
+
         runner.Run();
     }
 
@@ -3331,6 +3481,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
             bool complete = false;
             int n = 0;
             CancellationTokenRegistration registration = default;
+
             lock (gate)
             {
                 if (readPending)
@@ -3345,6 +3496,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                     readRegistration = default;
                     complete = true;
                 }
+
                 if (length > 0)
                 {
                     if (inputOffset + inputCount + length > input.Length)
@@ -3355,10 +3507,12 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                         input = grown;
                         inputOffset = 0;
                     }
+
                     buffer.GetBytes(index, input.AsSpan(inputOffset + inputCount, length));
                     inputCount += length;
                 }
             }
+
             if (complete)
             {
                 registration.Unregister();
@@ -3375,12 +3529,15 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                 {
                     return 0;
                 }
+
                 @out.WriteBytes(output.AsSpan(0, n));
                 outputCount = 0;
+
                 if (output.Length > RETAINED_OUTPUT_CAPACITY)
                 {
                     output = Array.Empty<byte>();
                 }
+
                 return n;
             }
         }
@@ -3388,12 +3545,14 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
         {
             short version;
+
             lock (gate)
             {
                 if (disposed)
                 {
                     return ValueTask.FromException<int>(new ObjectDisposedException(nameof(MediationStream)));
                 }
+
                 if (inputCount > 0)
                 {
                     int n = Math.Min(buffer.Length, inputCount);
@@ -3404,19 +3563,24 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                     {
                         inputOffset = 0;
                     }
+
                     return new ValueTask<int>(n);
                 }
+
                 readSource.Reset();
                 version = readSource.Version;
                 pendingReadBuffer = buffer;
                 readPending = true;
+
                 if (cancellationToken.CanBeCanceled)
                 {
                     readRegistration = cancellationToken.UnsafeRegister(
                             static (s, token) => ((MediationStream) s).CancelPendingRead(token), this);
                 }
             }
+
             handler.OnEngineProgress();
+
             return new ValueTask<int>(this, version);
         }
 
@@ -3428,10 +3592,12 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                 {
                     return;
                 }
+
                 readPending = false;
                 pendingReadBuffer = default;
                 readRegistration = default;
             }
+
             readSource.SetException(new OperationCanceledException(token));
         }
 
@@ -3457,9 +3623,11 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                     System.Buffer.BlockCopy(output, 0, grown, 0, outputCount);
                     output = grown;
                 }
+
                 buffer.CopyTo(output.AsSpan(outputCount));
                 outputCount += buffer.Length;
             }
+
             handler.OnEngineProgress();
         }
 
@@ -3517,11 +3685,13 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         {
             bool complete = false;
             CancellationTokenRegistration registration = default;
+
             lock (gate)
             {
                 if (!disposed)
                 {
                     disposed = true;
+
                     if (readPending)
                     {
                         readPending = false;
@@ -3532,11 +3702,13 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                     }
                 }
             }
+
             if (complete)
             {
                 registration.Unregister();
                 readSource.SetException(new ObjectDisposedException(nameof(MediationStream)));
             }
+
             base.Dispose(disposing);
         }
 

@@ -100,22 +100,26 @@ public class InboundHttp2ToHttpAdapterTest : IAsyncLifetime
     {
         CleanupCapturedRequests();
         CleanupCapturedResponses();
+
         if (clientChannel != null)
         {
             await clientChannel.CloseAsync();
             clientChannel = null;
         }
+
         if (serverChannel != null)
         {
             await serverChannel.CloseAsync();
             serverChannel = null;
         }
+
         IChannel serverConnectedChannel = this.serverConnectedChannel;
         if (serverConnectedChannel != null)
         {
             await serverConnectedChannel.CloseAsync();
             this.serverConnectedChannel = null;
         }
+
         Task serverGroup = sb.Config.Group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
         Task serverChildGroup = sb.Config.ChildGroup.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
         Task clientGroup = cb.Config.Group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
@@ -130,6 +134,7 @@ public class InboundHttp2ToHttpAdapterTest : IAsyncLifetime
         await BoostrapEnv(1, 1, 1);
         IFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET,
                 "/some/path/resource2");
+
         try
         {
             HttpHeaders httpHeaders = request.Headers();
@@ -163,6 +168,7 @@ public class InboundHttp2ToHttpAdapterTest : IAsyncLifetime
         await BoostrapEnv(1, 1, 1);
         IFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET,
                 "/some/path/resource2");
+
         try
         {
             HttpHeaders httpHeaders = request.Headers();
@@ -200,6 +206,7 @@ public class InboundHttp2ToHttpAdapterTest : IAsyncLifetime
         await BoostrapEnv(1, 1, 1);
         IFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET,
                 "/some/path/resource2");
+
         try
         {
             HttpHeaders httpHeaders = request.Headers();
@@ -261,6 +268,7 @@ public class InboundHttp2ToHttpAdapterTest : IAsyncLifetime
         ByteBuf content = Unpooled.CopiedBuffer(Encoding.UTF8.GetBytes(text));
         IFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET,
                 "/some/path/resource2", content);
+
         try
         {
             HttpHeaders httpHeaders = request.Headers();
@@ -306,6 +314,7 @@ public class InboundHttp2ToHttpAdapterTest : IAsyncLifetime
         ByteBuf normalContent = Unpooled.CopiedBuffer(Encoding.UTF8.GetBytes(normalText));
         IFullHttpRequest expectedRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET,
                 "/normal/path", normalContent.Copy());
+
         try
         {
             HttpHeaders httpHeaders = expectedRequest.Headers();
@@ -364,6 +373,7 @@ public class InboundHttp2ToHttpAdapterTest : IAsyncLifetime
         ByteBuf content = Unpooled.CopiedBuffer(Encoding.UTF8.GetBytes(text));
         IFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET,
                 "/some/path/resource2", content);
+
         try
         {
             HttpHeaders httpHeaders = request.Headers();
@@ -402,6 +412,7 @@ public class InboundHttp2ToHttpAdapterTest : IAsyncLifetime
         ByteBuf content = Unpooled.CopiedBuffer(Encoding.UTF8.GetBytes(text));
         IFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET,
                 "/some/path/resource2", content);
+
         try
         {
             HttpHeaders httpHeaders = request.Headers();
@@ -437,6 +448,7 @@ public class InboundHttp2ToHttpAdapterTest : IAsyncLifetime
         ByteBuf content = Unpooled.CopiedBuffer(Encoding.UTF8.GetBytes(text));
         IFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET,
                 "/some/path/resource2", content);
+
         try
         {
             HttpHeaders httpHeaders = request.Headers();
@@ -484,6 +496,7 @@ public class InboundHttp2ToHttpAdapterTest : IAsyncLifetime
                 "/some/path/resource", content);
         IFullHttpMessage request2 = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.PUT,
                 "/some/path/resource2", content2);
+
         try
         {
             HttpHeaders httpHeaders = request.Headers();
@@ -537,6 +550,7 @@ public class InboundHttp2ToHttpAdapterTest : IAsyncLifetime
         IFullHttpMessage response2 = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CREATED,
                 content2);
         IFullHttpMessage request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "/push/test");
+
         try
         {
             HttpHeaders httpHeaders = response.Headers();
@@ -887,6 +901,7 @@ public class InboundHttp2ToHttpAdapterTest : IAsyncLifetime
             {
                 capturedRequest.Release();
             }
+
             capturedRequests = null;
         }
     }
@@ -899,6 +914,7 @@ public class InboundHttp2ToHttpAdapterTest : IAsyncLifetime
             {
                 capturedResponse.Release();
             }
+
             capturedResponses = null;
         }
     }

@@ -50,6 +50,7 @@ public sealed class QuoteOfTheMomentClient
     {
 
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             Bootstrap b = new Bootstrap();

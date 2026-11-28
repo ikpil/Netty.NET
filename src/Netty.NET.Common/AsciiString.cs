@@ -177,10 +177,12 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     public AsciiString(ReadOnlySpan<char> value)
     {
         _value = new byte[value.Length];
+
         for (int i = 0; i < value.Length; i++)
         {
             _value[i] = C2b(value[i]);
         }
+
         _offset = 0;
         _length = value.Length;
     }
@@ -200,6 +202,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     public AsciiString(ReadOnlySpan<char> value, Encoding encoding)
     {
         ArgumentNullException.ThrowIfNull(encoding);
+
         _value = new byte[encoding.GetByteCount(value)];
         encoding.GetBytes(value, _value.AsSpan());
         _offset = 0;
@@ -250,6 +253,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         }
 
         _value = GC.AllocateUninitializedArray<byte>(length);
+
         for (int i = 0, j = start; i < length; i++, j++)
         {
             _value[i] = C2b(value[j]);
@@ -297,6 +301,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         }
 
         _value = GC.AllocateUninitializedArray<byte>(length);
+
         for (int i = 0, j = start; i < length; i++, j++)
         {
             _value[i] = C2b(value.CharAt(j));
@@ -362,7 +367,9 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     private int ForEachByte0(int index, int length, Func<byte, bool> visitor)
     {
         ArgumentNullException.ThrowIfNull(visitor);
+
         int len = _offset + index + length;
+
         for (int i = _offset + index; i < len; ++i)
         {
             if (!visitor(_value[i]))
@@ -406,7 +413,9 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     private int ForEachByteDesc0(int index, int length, Func<byte, bool> visitor)
     {
         ArgumentNullException.ThrowIfNull(visitor);
+
         int end = _offset + index;
+
         for (int i = _offset + index + length - 1; i >= end; --i)
         {
             if (!visitor(_value[i]))
@@ -567,6 +576,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         int length1 = Length();
         int length2 = @string.Length();
         int minLength = Math.Min(length1, length2);
+
         for (int i = 0, j = ArrayOffset(); i < minLength; i++, j++)
         {
             result = B2c(_value[j]) - @string.CharAt(i);
@@ -623,6 +633,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
             byte[] newValue = GC.AllocateUninitializedArray<byte>(thisLen + thatLen);
             Arrays.Arraycopy(_value, ArrayOffset(), newValue, 0, thisLen);
             Arrays.Arraycopy(that._value, that.ArrayOffset(), newValue, thisLen, thatLen);
+
             return new AsciiString(newValue, false);
         }
 
@@ -634,6 +645,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         {
             byte[] newValue = GC.AllocateUninitializedArray<byte>(thisLen + thatLen);
             Arrays.Arraycopy(_value, ArrayOffset(), newValue, 0, thisLen);
+
             for (int i = thisLen, j = 0; i < newValue.Length; i++, j++)
             {
                 newValue[i] = C2b(str.CharAt(j));
@@ -682,6 +694,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
             if (_offset == 0 && other._offset == 0 && _length == value.Length)
             {
                 byte[] otherValue = other._value;
+
                 for (int i = 0; i < value.Length; ++i)
                 {
                     if (!EqualsIgnoreCase(value[i], otherValue[i]))
@@ -698,6 +711,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
 
         {
             byte[] value = _value;
+
             for (int i = _offset, j = 0; j < str.Length(); ++i, ++j)
             {
                 if (!EqualsIgnoreCase(B2c(value[i]), str.CharAt(j)))
@@ -722,6 +736,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     {
         byte[] value = _value;
         byte[] otherValue = other._value;
+
         for (int i = _offset, j = other._offset, end = _offset + _length; i < end; ++i, ++j)
         {
             if (!EqualsIgnoreCase(value[i], otherValue[j]))
@@ -763,6 +778,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         }
 
         char[] buffer = new char[length];
+
         for (int i = 0, j = start + ArrayOffset(); i < length; i++, j++)
         {
             buffer[i] = B2c(_value[j]);
@@ -790,6 +806,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         }
 
         int dstEnd = dstIdx + length;
+
         for (int i = dstIdx, j = srcIdx + ArrayOffset(); i < dstEnd; i++, j++)
         {
             dst[i] = B2c(_value[j]);
@@ -890,11 +907,14 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     {
         // CLR: a null subString fails with ArgumentNullException instead of Java's implicit NPE.
         ArgumentNullException.ThrowIfNull(subString);
+
         int subCount = subString.Length();
+
         if (start < 0)
         {
             start = 0;
         }
+
         if (subCount <= 0)
         {
             return start < _length ? start : _length;
@@ -909,23 +929,28 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         {
             return INDEX_NOT_FOUND;
         }
+
         byte firstCharAsByte = C2b0(firstChar);
         int len = _offset + _length - subCount;
+
         for (int i = start + _offset; i <= len; ++i)
         {
             if (_value[i] == firstCharAsByte)
             {
                 int o1 = i, o2 = 0;
+
                 while (++o2 < subCount && B2c(_value[++o1]) == subString.CharAt(o2))
                 {
                     // Intentionally empty
                 }
+
                 if (o2 == subCount)
                 {
                     return i - _offset;
                 }
             }
         }
+
         return INDEX_NOT_FOUND;
     }
 
@@ -980,6 +1005,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     {
         // CLR: a null subString fails with ArgumentNullException instead of Java's implicit NPE.
         ArgumentNullException.ThrowIfNull(subString);
+
         int subCount = subString.Length();
         start = Math.Min(start, _length - subCount);
         if (start < 0)
@@ -996,22 +1022,27 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         {
             return INDEX_NOT_FOUND;
         }
+
         byte firstCharAsByte = C2b0(firstChar);
+
         for (int i = _offset + start; i >= _offset; --i)
         {
             if (_value[i] == firstCharAsByte)
             {
                 int o1 = i, o2 = 0;
+
                 while (++o2 < subCount && B2c(_value[++o1]) == subString.CharAt(o2))
                 {
                     // Intentionally empty
                 }
+
                 if (o2 == subCount)
                 {
                     return i - _offset;
                 }
             }
         }
+
         return INDEX_NOT_FOUND;
     }
 
@@ -1053,6 +1084,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         }
 
         int thatEnd = start + length;
+
         for (int i = start, j = thisStart + ArrayOffset(); i < thatEnd; i++, j++)
         {
             if (B2c(_value[j]) != str.CharAt(i))
@@ -1082,6 +1114,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
 
         thisStart += _offset;
         int thisEnd = thisStart + count;
+
         while (thisStart < thisEnd)
         {
             if (!EqualsIgnoreCase(B2c(_value[thisStart++]), seq[start++]))
@@ -1127,11 +1160,13 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
 
         thisStart += ArrayOffset();
         int thisEnd = thisStart + length;
+
         if (str is AsciiString asciiString)
         {
             byte[] value = _value;
             byte[] otherValue = asciiString._value;
             start += asciiString._offset;
+
             while (thisStart < thisEnd)
             {
                 if (!EqualsIgnoreCase(value[thisStart++], otherValue[start++]))
@@ -1171,6 +1206,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         byte oldCharAsByte = C2b0(oldChar);
         byte newCharAsByte = C2b(newChar);
         int len = _offset + _length;
+
         for (int i = _offset; i < len; ++i)
         {
             if (_value[i] == oldCharAsByte)
@@ -1179,6 +1215,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
                 Arrays.Arraycopy(_value, _offset, buffer, 0, i - _offset);
                 buffer[i - _offset] = newCharAsByte;
                 ++i;
+
                 for (; i < len; ++i)
                 {
                     byte oldValue = _value[i];
@@ -1258,6 +1295,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
 
         int length = c.Length();
         int start = 0, end = length;
+
         if (c is StringCharSequence || c is AppendableCharSequence)
         {
             ReadOnlySpan<char> chars = c is StringCharSequence text
@@ -1279,6 +1317,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
             {
                 start++;
             }
+
             while (end > start && c.CharAt(end - 1) <= ' ')
             {
                 end--;
@@ -1355,6 +1394,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
 
         int start = 0;
         int length = Length();
+
         for (int i = start; i < length; i++)
         {
             if (CharAt(i) == delim)
@@ -1367,6 +1407,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
                 {
                     res.Add(new AsciiString(_value, start + ArrayOffset(), i - start, false));
                 }
+
                 start = i + 1;
             }
         }
@@ -1695,6 +1736,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         T numberBase = T.CreateChecked(radix);
         T multiplyLimit = limit / numberBase;
         T accumulated = T.Zero;
+
         for (int i = start; i < bytes.Length; i++)
         {
             byte b = bytes[i];
@@ -1780,6 +1822,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         {
             return result;
         }
+
         throw new FormatException("Input is not a valid floating-point number.");
     }
 
@@ -1795,6 +1838,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         {
             start++;
         }
+
         while (end > start && bytes[end - 1] <= 0x20)
         {
             end--;
@@ -1813,12 +1857,14 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         {
             return false;
         }
+
         if (unsigned.SequenceEqual("NaN"u8))
         {
             // Use the native canonical NaN; NaN payload/sign is not a text contract.
             result = T.NaN;
             return true;
         }
+
         if (unsigned.SequenceEqual("Infinity"u8))
         {
             result = negative ? T.NegativeInfinity : T.PositiveInfinity;
@@ -1844,6 +1890,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         {
             return false;
         }
+
         const NumberStyles styles = NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint |
                                     NumberStyles.AllowExponent;
         if (T.TryParse(bytes, styles, CultureInfo.InvariantCulture, out T parsed))
@@ -1851,6 +1898,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
             result = parsed;
             return true;
         }
+
         return false;
     }
 
@@ -1875,17 +1923,21 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
                 digits++;
             }
         }
+
         if (digits == 0)
         {
             return false;
         }
+
         if (i < bytes.Length && bytes[i] is (byte)'e' or (byte)'E')
         {
             i++;
+
             if (i < bytes.Length && bytes[i] is (byte)'+' or (byte)'-')
             {
                 i++;
             }
+
             int exponentStart = i;
 
             while (i < bytes.Length && bytes[i] is >= (byte)'0' and <= (byte)'9')
@@ -1898,6 +1950,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
                 return false;
             }
         }
+
         return i == bytes.Length;
     }
 
@@ -1919,6 +1972,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         bool point = false;
         bool sticky = false;
         int i = 2;
+
         for (; i < bytes.Length && bytes[i] is not ((byte)'p' or (byte)'P'); i++)
         {
             byte b = bytes[i];
@@ -1928,9 +1982,11 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
                 {
                     return false;
                 }
+
                 point = true;
                 continue;
             }
+
             int digit = b switch
             {
                 >= (byte)'0' and <= (byte)'9' => b - '0',
@@ -1942,43 +1998,55 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
             {
                 return false;
             }
+
             digits++;
+
             if (point)
             {
                 fractionalDigits++;
             }
+
             if (significantBits == 0 && digit == 0)
             {
                 continue;
             }
+
             int width = significantBits == 0 ? BitOperations.Log2((uint)digit) + 1 : 4;
             significantBits += width;
             // Only precision+1 leading bits and a sticky tail are needed. Storage
             // stays bounded even for arbitrarily long mantissas.
             int take = Math.Min(width, precision + 1 - captured);
             leading = (leading << take) | (ulong)(digit >> (width - take));
+
             if ((digit & ((1 << (width - take)) - 1)) != 0)
             {
                 sticky = true;
             }
+
             captured += take;
         }
+
         if (digits == 0 || i == bytes.Length)
         {
             return false;
         }
+
         i++; // A hexadecimal literal requires a binary exponent.
         bool exponentNegative = i < bytes.Length && bytes[i] == '-';
+
         if (i < bytes.Length && bytes[i] is (byte)'+' or (byte)'-')
         {
             i++;
         }
+
         if (i == bytes.Length)
         {
             return false;
         }
+
         long exponent = 0;
         const long exponentLimit = 1L << 60;
+
         for (; i < bytes.Length; i++)
         {
             int digit = bytes[i] - '0';
@@ -1986,20 +2054,24 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
             {
                 return false;
             }
+
             // Saturation is far beyond any offset possible in an Int32-sized span;
             // it avoids exponent overflow without imposing an input length limit.
             exponent = exponent <= (exponentLimit - digit) / 10 ? exponent * 10 + digit : exponentLimit;
         }
+
         if (exponentNegative)
         {
             exponent = -exponent;
         }
+
         long binaryExponent = significantBits - 1 + exponent - 4L * fractionalDigits;
         if (significantBits == 0 || binaryExponent < minSubnormal - 1)
         {
             result = FloatingPointFromBits<T>(sign);
             return true;
         }
+
         if (binaryExponent > bias)
         {
             result = negative ? T.NegativeInfinity : T.PositiveInfinity;
@@ -2008,6 +2080,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
 
         int keep = binaryExponent < minNormal ? (int)(binaryExponent - minSubnormal + 1) : precision;
         ulong rounded;
+
         if (significantBits <= keep)
         {
             rounded = leading << (keep - captured);
@@ -2024,7 +2097,9 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
                 rounded++;
             }
         }
+
         ulong bits;
+
         if (binaryExponent < minNormal)
         {
             // Carry into bit precision-1 is exactly the smallest normal value.
@@ -2037,14 +2112,17 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
                 rounded >>= 1;
                 binaryExponent++;
             }
+
             if (binaryExponent > bias)
             {
                 result = negative ? T.NegativeInfinity : T.PositiveInfinity;
                 return true;
             }
+
             bits = ((ulong)(binaryExponent + bias) << (precision - 1)) |
                    (rounded & ((1UL << (precision - 1)) - 1));
         }
+
         result = FloatingPointFromBits<T>(sign | bits);
         return true;
     }
@@ -2081,8 +2159,10 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     public static AsciiString Cached(string value)
     {
         ArgumentNullException.ThrowIfNull(value);
+
         byte[] bytes = new byte[value.Length];
         bool allLatin1 = true;
+
         for (int i = 0; i < bytes.Length; i++)
         {
             char c = value[i];
@@ -2251,6 +2331,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
     private static AsciiString[] ToAsciiStringArray(string[] jdkResult)
     {
         AsciiString[] res = new AsciiString[jdkResult.Length];
+
         for (int i = 0; i < jdkResult.Length; i++)
         {
             res[i] = new AsciiString(new StringCharSequence(jdkResult[i]));
@@ -2308,6 +2389,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         }
 
         int bStart = 0;
+
         for (int i = 0; i < a.Length(); ++i)
         {
             if (cmp.Equals(b.CharAt(bStart), a.CharAt(i)))
@@ -2586,6 +2668,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
         }
 
         int sz = cs.Length();
+
         for (int i = start < 0 ? 0 : start; i < sz; i++)
         {
             if (cs.CharAt(i) == searchChar)

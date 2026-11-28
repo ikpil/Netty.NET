@@ -290,6 +290,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
                     return;
                 }
             }
+
             base.OnUnhandledInboundException(cause);
         }
     }
@@ -351,6 +352,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
                 {
                     FireChannelWritabilityChanged(invokeLater);
                 }
+
                 break;
             }
         }
@@ -368,6 +370,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
                 {
                     FireChannelWritabilityChanged(invokeLater);
                 }
+
                 break;
             }
         }
@@ -376,6 +379,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
     private void FireChannelWritabilityChanged(bool invokeLater)
     {
         IChannelPipeline pipeline = Pipeline;
+
         if (invokeLater)
         {
             Action task = fireChannelWritabilityChangedTask;
@@ -383,6 +387,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
             {
                 fireChannelWritabilityChangedTask = task = () => pipeline.FireChannelWritabilityChanged();
             }
+
             EventLoop.Execute(task);
         }
         else
@@ -602,6 +607,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
     internal void FireChildRead(IHttp2Frame frame)
     {
         Debug.Assert(EventLoop.InEventLoop());
+
         if (!IsActive)
         {
             ReferenceCountUtil.Release(frame);
@@ -615,6 +621,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
             IRecvByteBufAllocator.IHandle allocHandle = @unsafe.RecvBufAllocHandle();
 
             @unsafe.DoRead0(frame, allocHandle);
+
             // We currently don't need to check for readEOS because the parent channel and child channel are limited
             // to the same EventLoop thread. There are a limited number of frame types that may come after EOS is
             // read (unknown, reset) and the trade off is less conditionals for the hot path (headers/data) at the
@@ -634,6 +641,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
             {
                 inboundBuffer = new Queue<object>(4);
             }
+
             inboundBuffer.Enqueue(frame);
         }
     }
@@ -691,6 +699,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
                 recvHandle = channel.config.GetRecvByteBufAllocator().NewHandle();
                 recvHandle.Reset(channel.config);
             }
+
             return recvHandle;
         }
 
@@ -738,8 +747,10 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
                     // This means close() was called before so we just register a listener and return
                     AddListener(channel.ParentContext(), channel.CloseFuture, future => promise.SetResult());
                 }
+
                 return;
             }
+
             closeInitiated = true;
             // Just set to false as removing from an underlying queue would even be more expensive.
             channel.readCompletePending = false;
@@ -782,13 +793,16 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
                     {
                         break;
                     }
+
                     ReferenceCountUtil.Release(msg);
                 }
+
                 channel.inboundBuffer = null;
             }
 
             // The promise should be notified before we call fireChannelInactive().
             channel.outboundClosed = true;
+
             // CLR: closePromise.setSuccess(), promise.setSuccess() and fireChannelInactiveAndDeregister(voidPromise(),
             // wasActive): for a registered channel AbstractChannel's close completes CloseFuture and queues the
             // deregistration task; for an unregistered one CloseFuture completes and fireChannelInactiveAndDeregister
@@ -802,6 +816,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
             {
                 channel.CompleteClosePromise();
             }
+
             promise.SetResult();
         }
 
@@ -823,6 +838,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
                                                       bool fireChannelInactive)
         {
             Debug.Assert(!fireChannelInactive);
+
             if (!channel.IsRegistered)
             {
                 promise.SetResult();
@@ -878,6 +894,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
             {
                 return;
             }
+
             bool windowUpdated = UpdateLocalWindowIfNeeded();
 
             // CLR: the switch on the enum is an if/else chain; REQUESTED is the default branch.
@@ -892,6 +909,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
             {
                 channel.readStatus = ReadStatus.REQUESTED;
             }
+
             if (windowUpdated)
             {
                 // A WINDOW_UPDATE was just written above, but no read loop runs in this branch to flush it, so an
@@ -950,12 +968,15 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
                             // still should.
                             continue;
                         }
+
                         CloseIfReadEOSAndDrained();
                         break;
                     }
+
                     IRecvByteBufAllocator.IHandle allocHandle = RecvBufAllocHandle();
                     allocHandle.Reset(channel.config);
                     bool continueReading = false;
+
                     do
                     {
                         DoRead0((IHttp2Frame) message, allocHandle);
@@ -997,6 +1018,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
                 WriteWindowUpdateFrame((IHttp2WindowUpdateFrame) new DefaultHttp2WindowUpdateFrame(bytes).Stream(channel.stream));
                 return true;
             }
+
             return false;
         }
 
@@ -1020,6 +1042,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
             {
                 return;
             }
+
             // Set to false just in case we added the channel multiple times before.
             channel.readCompletePending = false;
 
@@ -1052,6 +1075,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
         internal void DoRead0(IHttp2Frame frame, IRecvByteBufAllocator.IHandle allocHandle)
         {
             int bytes;
+
             if (frame is IHttp2DataFrame)
             {
                 bytes = ((IHttp2DataFrame) frame).InitialFlowControlledBytes();
@@ -1086,6 +1110,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
             // completed but the flow controller _may_ have generated a wire level WINDOW_UPDATE. Therefore we need,
             // to assume there was a write done that needs to be flushed or we risk flow control starvation.
             writeDoneAndNoFlush = true;
+
             // Add a listener which will notify and teardown the stream
             // when a window update fails if needed or check the result of the future directly if it was completed
             // already.
@@ -1098,6 +1123,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
             {
                 AddListener(channel.ParentContext(), future, channel.windowUpdateFrameWriteListener);
             }
+
             return future;
         }
 
@@ -1125,9 +1151,11 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
                 if (msg is IHttp2StreamFrame)
                 {
                     IHttp2StreamFrame frame = ValidateStreamFrame((IHttp2StreamFrame) msg).Stream(channel.Stream());
+
                     if (msg is IHttp2WindowUpdateFrame)
                     {
                         IHttp2WindowUpdateFrame updateFrame = (IHttp2WindowUpdateFrame) msg;
+
                         if (channel.config.autoStreamFlowControl)
                         {
                             ReferenceCountUtil.Release(msg);
@@ -1135,6 +1163,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
                                     Http2StreamChannelOption.AUTO_STREAM_FLOW_CONTROL + " is set to false"));
                             return;
                         }
+
                         try
                         {
                             CheckInRange(updateFrame.WindowSizeIncrement(), 0,
@@ -1146,13 +1175,16 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
                             promise.SetException(e);
                             return;
                         }
+
                         channel.flowControlledBytes -= updateFrame.WindowSizeIncrement();
+
                         if (channel.ParentContext().IsRemoved)
                         {
                             ReferenceCountUtil.Release(msg);
                             promise.SetException(new ClosedChannelException());
                             return;
                         }
+
                         Task f = WriteWindowUpdateFrame(updateFrame);
                         if (f.IsCompleted)
                         {
@@ -1193,6 +1225,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
             {
                 return ((IHttp2DataFrame) frame).IsEndStream();
             }
+
             return false;
         }
 
@@ -1208,6 +1241,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
             }
 
             bool firstWrite;
+
             if (channel.firstFrameWritten)
             {
                 firstWrite = false;
@@ -1246,6 +1280,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
                     {
                         WriteComplete(future, promise);
                     }
+
                     channel.DecrementPendingOutboundBytes(bytes, false);
                 });
                 writeDoneAndNoFlush = true;
@@ -1293,6 +1328,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
                         channel.outboundClosed = true;
                     }
                 }
+
                 promise.SetException(error);
             }
         }
@@ -1305,6 +1341,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
             {
                 return new StreamClosedChannelException(cause);
             }
+
             return cause;
         }
 
@@ -1317,6 +1354,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
                 throw new ArgumentException(
                         "Stream " + frame.Stream() + " must not be set on the frame: " + msgString);
             }
+
             return frame;
         }
 
@@ -1331,6 +1369,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
                 // There is nothing to flush so this is a NOOP.
                 return;
             }
+
             // We need to set this to false before we call flush0(...) as ChannelFutureListener may produce more data
             // that are explicit flushed.
             writeDoneAndNoFlush = false;
@@ -1389,6 +1428,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
                 throw new ArgumentException("allocator.newHandle() must return an object of type: " +
                         typeof(IRecvByteBufAllocator.IExtendedHandle));
             }
+
             base.SetRecvByteBufAllocator(allocator);
             return this;
         }
@@ -1396,10 +1436,12 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
         public override IReadOnlyDictionary<ChannelOption, object> GetOptions()
         {
             Dictionary<ChannelOption, object> options = new Dictionary<ChannelOption, object>();
+
             foreach (KeyValuePair<ChannelOption, object> entry in base.GetOptions())
             {
                 options[entry.Key] = entry.Value;
             }
+
             options[Http2StreamChannelOption.AUTO_STREAM_FLOW_CONTROL] = autoStreamFlowControl;
             return options;
         }
@@ -1411,6 +1453,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
                 value = autoStreamFlowControl;
                 return true;
             }
+
             return base.TryGetValue(option, out value);
         }
 
@@ -1421,11 +1464,13 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
                 bool newValue = (bool) value;
                 bool changed = newValue && !autoStreamFlowControl;
                 autoStreamFlowControl = (bool) value;
+
                 if (changed)
                 {
                     if (Channel.IsRegistered)
                     {
                         Http2ChannelUnsafe @unsafe = ((AbstractHttp2StreamChannel) Channel).@unsafe;
+
                         if (Channel.EventLoop.InEventLoop())
                         {
                             @unsafe.UpdateLocalWindowIfNeededAndFlush();
@@ -1436,8 +1481,10 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
                         }
                     }
                 }
+
                 return true;
             }
+
             return base.SetValue(option, value);
         }
     }

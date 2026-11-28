@@ -35,6 +35,7 @@ public class UnreleasableByteBufTest
         {
             return Unpooled.DirectBuffer(8, 64);
         }
+
         return new CompositeByteBuf().AddComponent(Unpooled.Buffer(4).WriteZero(4), true)
             .AddComponent(Unpooled.Buffer(4).WriteZero(4), true).Clear();
     }
@@ -52,6 +53,7 @@ public class UnreleasableByteBufTest
     {
         ByteBuf owner = Unpooled.CopyInt(1);
         ByteBuf buffer = Unpooled.UnreleasableBuffer(owner);
+
         try
         {
             Assert.Equal(1, buffer.RefCnt);
@@ -77,6 +79,7 @@ public class UnreleasableByteBufTest
     {
         ByteBuf owner = Unpooled.Buffer(1).AsReadOnly();
         ByteBuf buffer = Unpooled.UnreleasableBuffer(owner);
+
         try
         {
             Assert.Same(buffer, buffer.AsReadOnly());
@@ -102,6 +105,7 @@ public class UnreleasableByteBufTest
     public void OriginalRetainedViewCombinationsAcquireNoAdditionalReference(int kind, int shape, bool initial, bool final)
     {
         ByteBuf owner = NewOwner(kind);
+
         try
         {
             ByteBuf first = shape == 2
@@ -137,6 +141,7 @@ public class UnreleasableByteBufTest
     {
         ByteBuf owner = NewOwner(kind).WriteBytes(new byte[] { 1, 2, 3, 4, 5, 6 });
         ByteBuf buffer = Unpooled.UnreleasableBuffer(owner);
+
         try
         {
             Assert.Same(owner, buffer.Unwrap());
@@ -178,12 +183,14 @@ public class UnreleasableByteBufTest
     {
         ByteBuf owner = NewOwner(kind).WriteBytes(new byte[] { 1, 2, 3, 4 });
         ByteBuf buffer = Unpooled.UnreleasableBuffer(owner);
+
         try
         {
             ByteBuf[] views = { buffer.Slice(), buffer.Slice(1, 2), buffer.RetainedSlice(), buffer.RetainedSlice(1, 2),
                 buffer.Duplicate(), buffer.RetainedDuplicate(), buffer.AsReadOnly(), buffer.ReadSlice(1), buffer.ReadRetainedSlice(1) };
             Assert.Equal(2, owner.ReaderIndex);
             Assert.Equal(1, owner.RefCnt);
+
             foreach (ByteBuf view in views)
             {
                 Assert.Same(view, view.Retain(-1));
@@ -191,6 +198,7 @@ public class UnreleasableByteBufTest
                 Assert.Same(view, view.Touch("ignored"));
                 Assert.Equal(1, view.RefCnt);
             }
+
             views[0].ReaderIndex = 1;
             Assert.Equal(2, buffer.ReaderIndex);
             ByteBuf readOnly = views[6];
@@ -198,6 +206,7 @@ public class UnreleasableByteBufTest
             Assert.Throws<NotSupportedException>(() => readOnly.SetByte(0, 1));
             Assert.Throws<NotSupportedException>(() => readOnly.AsMemory(0, 0));
             Assert.True(owner.Release());
+
             foreach (ByteBuf view in views)
             {
                 Assert.Equal(0, view.RefCnt);
@@ -219,10 +228,12 @@ public class UnreleasableByteBufTest
     {
         ByteBuf owner = NewOwner(kind);
         ByteBuf first = Unpooled.UnreleasableBuffer(owner), second = Unpooled.UnreleasableBuffer(first);
+
         try
         {
             Assert.NotSame(first, second);
             Assert.Same(owner, second.Unwrap());
+
             foreach (int count in new[] { int.MinValue, -1, 0, 1, int.MaxValue })
             {
                 IReferenceCounted reference = second;
@@ -232,6 +243,7 @@ public class UnreleasableByteBufTest
                 Assert.Same(second, reference.Touch(count));
                 Assert.Equal(1, owner.RefCnt);
             }
+
             first.WriteByte(7);
             Assert.Equal(1, second.WriterIndex);
             Assert.Equal(7, second.ReadByte());
@@ -256,6 +268,7 @@ public class UnreleasableByteBufTest
         ByteBuf owner = NewOwner(kind).WriteBytes(new byte[] { 1, 2, 3, 4 });
         ByteBuf buffer = Unpooled.UnreleasableBuffer(owner);
         ByteBuf copy = null, read = null;
+
         try
         {
             copy = buffer.Copy(1, 2);
@@ -285,6 +298,7 @@ public class UnreleasableByteBufTest
         ByteBuf first = Unpooled.CopyShort(0x0102), second = Unpooled.CopyShort(0x0304), third = Unpooled.CopyShort(0x0506);
         CompositeByteBuf owner = new CompositeByteBuf().AddComponents(new[] { first, second, third }, true);
         ByteBuf buffer = Unpooled.UnreleasableBuffer(owner);
+
         try
         {
             buffer.ReaderIndex = 3;
@@ -302,6 +316,7 @@ public class UnreleasableByteBufTest
         {
             Free(owner);
         }
+
         Assert.Equal(0, second.RefCnt);
         Assert.Equal(0, third.RefCnt);
     }
@@ -312,6 +327,7 @@ public class UnreleasableByteBufTest
         var allocator = new NativeMemoryAllocator(128);
         ByteBuf owner = new UnpooledDirectByteBuf(4, 64, allocator).WriteInt(0x01020304);
         ByteBuf buffer = Unpooled.UnreleasableBuffer(owner);
+
         try
         {
             buffer.WriteBytes(owner.AsReadOnlySpan(0, 4));
@@ -330,6 +346,7 @@ public class UnreleasableByteBufTest
         {
             Free(owner);
         }
+
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -338,6 +355,7 @@ public class UnreleasableByteBufTest
     {
         ByteBuf owner = Unpooled.CopyInt(0x01020304);
         CompositeByteBuf composite = Unpooled.CompositeBuffer();
+
         try
         {
             composite.AddComponent(Unpooled.UnreleasableBuffer(owner), true);
@@ -378,6 +396,7 @@ public class UnreleasableByteBufTest
     public void TouchDoesNotReachTheUnderlyingOwner()
     {
         var owner = new ObservedHeapByteBuf();
+
         try
         {
             ByteBuf buffer = Unpooled.UnreleasableBuffer(owner);
@@ -403,6 +422,7 @@ public class UnreleasableByteBufTest
     {
         ByteBuf owner = NewOwner(kind).WriteInt(1);
         ByteBuf buffer = Unpooled.UnreleasableBuffer(owner);
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => buffer.ReadSlice(-1));
@@ -427,6 +447,7 @@ public class UnreleasableByteBufTest
     {
         ByteBuf owner = NewOwner(kind).WriteBytes(new byte[] { 1, 2, 3, 4 });
         ByteBuf destination = NewOwner(kind);
+
         try
         {
             ByteBuf buffer = Unpooled.UnreleasableBuffer(owner);
@@ -475,12 +496,14 @@ public class UnreleasableByteBufTest
         ByteBuf owner = NewOwner(kind).WriteBytes(new byte[] { 1, 2, 3, 4 });
         ByteBuf source = readOnly ? owner.AsReadOnly() : owner;
         ByteBuf buffer = Unpooled.UnreleasableBuffer(source);
+
         try
         {
             foreach (ByteBuf view in new[] { buffer.Slice(1, 2), buffer.Slice().Slice(1, 2),
                          buffer.Duplicate().Slice(1, 2), buffer.RetainedSlice(1, 2) })
             {
                 ByteBuf copy = view.Copy();
+
                 try
                 {
                     Assert.Equal(kind == 1, copy.IsDirect);

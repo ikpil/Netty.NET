@@ -181,6 +181,7 @@ internal static class SslUtils
     {
         TLSV1_3_JDK_SUPPORTED = IsTLSv13SupportedByJDK0();
         TLSV1_3_JDK_DEFAULT_ENABLED = IsTLSv13EnabledByJDK0();
+
         if (TLSV1_3_JDK_SUPPORTED)
         {
             DEFAULT_TLSV13_CIPHER_SUITES = TLSV13_CIPHER_SUITES;
@@ -309,6 +310,7 @@ internal static class SslUtils
         clientThread.IsBackground = true;
         clientThread.Name = "netty-ssl-probe";
         clientThread.Start();
+
         try
         {
             server.AuthenticateAsServer(new SslServerAuthenticationOptions
@@ -321,15 +323,18 @@ internal static class SslUtils
         {
             // CLR: a failed server must not leave the client waiting either.
             serverToClient.CompleteAdding();
+
             if (!clientThread.Join(PROBE_TIMEOUT_MILLIS))
             {
                 clientFailure ??= new TimeoutException("TLS probe client did not finish");
             }
         }
+
         if (clientFailure != null)
         {
             throw new AuthenticationException("TLS probe client failed", clientFailure);
         }
+
         return server.SslProtocol;
     }
 
@@ -374,8 +379,10 @@ internal static class SslUtils
                     pendingOffset = 0;
                     return 0;
                 }
+
                 pendingOffset = 0;
             }
+
             int n = Math.Min(buffer.Length, pending.Length - pendingOffset);
             pending.AsSpan(pendingOffset, n).CopyTo(buffer);
             pendingOffset += n;
@@ -423,6 +430,7 @@ internal static class SslUtils
                 return true;
             }
         }
+
         return false;
     }
 
@@ -450,6 +458,7 @@ internal static class SslUtils
                 {
                     continue;
                 }
+
                 defaultCiphers.Add(cipher);
             }
         }
@@ -497,9 +506,11 @@ internal static class SslUtils
         {
             return NOT_ENOUGH_DATA;
         }
+
         int packetLength = 0;
         // SSLv3 or TLS - Check ContentType
         bool tls;
+
         switch (buffer.GetByte(offset))
         {
             case SSL_CONTENT_TYPE_CHANGE_CIPHER_SPEC:
@@ -515,6 +526,7 @@ internal static class SslUtils
                 {
                     return NOT_ENCRYPTED;
                 }
+
                 tls = false;
                 break;
         }
@@ -540,6 +552,7 @@ internal static class SslUtils
                 {
                     return NOT_ENOUGH_DATA;
                 }
+
                 // length is the last 2 bytes in the 13 byte header.
                 packetLength = UnsignedShortBE(buffer, offset + DTLS_RECORD_HEADER_LENGTH - 2) +
                         DTLS_RECORD_HEADER_LENGTH;
@@ -572,6 +585,7 @@ internal static class SslUtils
                 return NOT_ENCRYPTED;
             }
         }
+
         return packetLength;
     }
 
@@ -638,6 +652,7 @@ internal static class SslUtils
             {
                 next = next.Slice(0, tmp.Length - tmpPosition);
             }
+
             next.CopyTo(tmp.AsSpan(tmpPosition));
             tmpPosition += next.Length;
         } while (tmpPosition < tmp.Length && offset < buffers.Length);
@@ -655,11 +670,13 @@ internal static class SslUtils
         {
             return NOT_ENOUGH_DATA;
         }
+
         int packetLength = 0;
         int pos = 0;
 
         // SSLv3 or TLS - Check ContentType
         bool tls;
+
         switch (UnsignedByte(buffer[pos]))
         {
             case SSL_CONTENT_TYPE_CHANGE_CIPHER_SPEC:
@@ -717,6 +734,7 @@ internal static class SslUtils
                 return NOT_ENCRYPTED;
             }
         }
+
         return packetLength;
     }
 
@@ -726,10 +744,12 @@ internal static class SslUtils
         // We have may haven written some parts of data before an exception was thrown so ensure we always flush.
         // See https://github.com/netty/netty/issues/3900#issuecomment-172481830
         ctx.Flush();
+
         if (notify)
         {
             ctx.FireUserEventTriggered(new SslHandshakeCompletionEvent(cause));
         }
+
         _ = ctx.CloseAsync();
     }
 

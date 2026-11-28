@@ -48,10 +48,13 @@ public class AdaptiveThreadLocalChunkCacheTest
         public void Dispose()
         {
             Cache.Dispose();
+
             foreach (var c in Chunks)
                 c.Dispose();
+
             foreach (var a in Claims)
                 a.Release();
+
             Assert.Equal(0, Registry.TotalCapacity);
         }
     }
@@ -96,6 +99,7 @@ public class AdaptiveThreadLocalChunkCacheTest
         f.Cache.OfferChunk(working);
         f.Cache.OfferChunk(f.Chunk(32));
         f.Cache.OfferChunk(idle);
+
         for (int epoch = 1; epoch <= 3; epoch++)
         {
             Assert.Same(working, f.Cache.ForcePurge());
@@ -103,6 +107,7 @@ public class AdaptiveThreadLocalChunkCacheTest
             Assert.False(idle.IsDeallocated);
             f.Cache.OfferChunk(working);
         }
+
         Assert.Same(working, f.Cache.ForcePurge());
         Assert.True(idle.IsDeallocated);
     }
@@ -181,15 +186,19 @@ public class AdaptiveThreadLocalChunkCacheTest
     public void OfferGrowsRingWhenFull()
     {
         using var f = new Fixture();
+
         // Initial ring size is 8 — offer 9 to trigger growth
         for (int i = 0; i < 9; i++)
             Assert.True(f.Cache.OfferChunk(f.Chunk()));
+
         Assert.Equal(16, f.Cache.RingLength);
         // Purge selects one, 8 remain — all should be retrievable
         Assert.NotNull(f.Cache.ForcePurge());
         var selected = new HashSet<Chunk>();
+
         for (int i = 0; i < 8; i++)
             Assert.True(selected.Add(f.Cache.PollChunk(0)));
+
         Assert.Null(f.Cache.PollChunk(0));
         Assert.Equal(0, f.Cache.Count);
     }
@@ -199,14 +208,18 @@ public class AdaptiveThreadLocalChunkCacheTest
     public void PurgeHandlesWrappedRingCorrectlyAndLeavesNoStaleReferences(int advance)
     {
         using var f = new Fixture();
+
         // Fill 6 slots of the initial ring (size=8), purge, drain to advance head
         // CLR: parameterize the head advance across small and expanded rings.
         for (int i = 0; i < advance; i++)
             f.Cache.OfferChunk(f.Chunk());
+
         Assert.NotNull(f.Cache.ForcePurge());
+
         while (f.Cache.PollChunk(0) != null)
         {
         }
+
         // Offer 4 chunks — wraps past the array boundary
         f.Cache.OfferChunk(f.Chunk(32));
         f.Cache.OfferChunk(f.Chunk());
@@ -230,13 +243,16 @@ public class AdaptiveThreadLocalChunkCacheTest
         f.Cache.OfferChunk(working);
         f.Cache.OfferChunk(f.Chunk(32));
         var idle = Enumerable.Range(0, 10).Select(_ => f.Chunk(0)).ToArray();
+
         foreach (var c in idle)
             Assert.True(f.Cache.OfferChunk(c));
+
         for (int i = 0; i < 4; i++)
         {
             Assert.Same(working, f.Cache.ForcePurge());
             f.Cache.OfferChunk(working);
         }
+
         Assert.All(idle, c => Assert.True(c.IsDeallocated));
         Assert.Equal(2, f.Cache.Count);
     }
@@ -253,6 +269,7 @@ public class AdaptiveThreadLocalChunkCacheTest
         f.Cache.OfferChunk(f.Chunk(32));
         var active = f.Chunk(0);
         f.Cache.OfferChunk(active);
+
         for (int i = 0; i < 20; i++)
         {
             Assert.Same(active, f.Cache.ForcePurge());
@@ -261,6 +278,7 @@ public class AdaptiveThreadLocalChunkCacheTest
             Assert.Equal(0, active.PurgeEpoch);
             f.Cache.OfferChunk(active);
         }
+
         Assert.False(active.IsDeallocated);
     }
 
@@ -281,8 +299,10 @@ public class AdaptiveThreadLocalChunkCacheTest
         Assert.All(f.Slots, c => Assert.Null(c));
         Assert.Null(f.Cache.PollChunk(0));
         Assert.False(f.Cache.OfferChunk(chunk));
+
         foreach (var claim in f.Claims)
             claim.Release();
+
         Assert.True(chunk.IsDeallocated);
     }
 
@@ -293,9 +313,11 @@ public class AdaptiveThreadLocalChunkCacheTest
         using var f = new Fixture(max, min);
         Assert.Equal(max, f.Cache.MaxCachedChunks);
         Assert.Equal(Math.Min(max, min), f.Cache.PurgeRetentionFloor);
+
         // Fill to capacity
         for (int i = 0; i < max; i++)
             Assert.True(f.Cache.OfferChunk(f.Chunk()));
+
         // Next offer should be rejected
         Assert.False(f.Cache.OfferChunk(f.Chunk()));
         Assert.Equal(max, f.Cache.Count);

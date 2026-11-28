@@ -42,6 +42,7 @@ public abstract class DynamicAddressConnectHandler : ChannelOutboundHandlerAdapt
     {
         EndPoint remote;
         EndPoint local;
+
         try
         {
             remote = RemoteAddress(remoteAddress, localAddress);
@@ -51,6 +52,7 @@ public abstract class DynamicAddressConnectHandler : ChannelOutboundHandlerAdapt
         {
             return Task.FromException(e);
         }
+
         Task future = ctx.ConnectAsync(remote, local, cancellationToken);
         _ = future.ContinueWith(f =>
         {

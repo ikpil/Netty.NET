@@ -53,10 +53,12 @@ public abstract class AbstractHttpData : AbstractReferenceCounted, IHttpData
         ObjectUtil.CheckNotNull(name, "name");
 
         this.name = CheckNonEmpty(CleanName(name), "name");
+
         if (charset != null)
         {
             SetCharset(charset);
         }
+
         definedSize = size;
     }
 
@@ -94,6 +96,7 @@ public abstract class AbstractHttpData : AbstractReferenceCounted, IHttpData
                     sb = new StringBuilder(len);
                     sb.Append(name, start, i - start);
                 }
+
                 continue;
             }
 
@@ -104,6 +107,7 @@ public abstract class AbstractHttpData : AbstractReferenceCounted, IHttpData
                     sb = new StringBuilder(len);
                     sb.Append(name, start, i - start);
                 }
+
                 sb.Append(' ');
             }
             else if (sb != null)

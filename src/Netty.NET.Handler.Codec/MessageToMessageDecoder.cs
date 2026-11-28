@@ -84,11 +84,13 @@ public abstract class MessageToMessageDecoder<I> : ChannelInboundHandlerAdapter
     {
         decodeCalled = true;
         CodecOutputList @out = CodecOutputList.NewInstance();
+
         try
         {
             if (AcceptInboundMessage(msg))
             {
                 I cast = (I) msg;
+
                 try
                 {
                     Decode(ctx, cast, @out);
@@ -119,6 +121,7 @@ public abstract class MessageToMessageDecoder<I> : ChannelInboundHandlerAdapter
             {
                 int size = @out.Count;
                 messageProduced |= size > 0;
+
                 for (int i = 0; i < size; i++)
                 {
                     ctx.FireChannelRead(@out.GetUnsafe(i));
@@ -140,9 +143,11 @@ public abstract class MessageToMessageDecoder<I> : ChannelInboundHandlerAdapter
             {
                 ctx.Read();
             }
+
             decodeCalled = false;
             messageProduced = false;
         }
+
         ctx.FireChannelReadComplete();
     }
 

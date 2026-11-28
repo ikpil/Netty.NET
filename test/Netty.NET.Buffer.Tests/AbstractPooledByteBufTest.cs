@@ -52,6 +52,7 @@ public abstract class AbstractPooledByteBufTest : AbstractContiguousByteBufTest
     public void EnsureWritableWithNotEnoughSpaceShouldThrow()
     {
         ByteBuf buf = NewBuffer(1, 10);
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() =>
@@ -108,6 +109,7 @@ public abstract class AbstractPooledByteBufTest : AbstractContiguousByteBufTest
         {
             buffer = buffer.Unwrap();
         }
+
         return (global::Netty.NET.Buffer.PooledByteBuf) buffer;
     }
 
@@ -148,6 +150,7 @@ public abstract class AbstractPooledByteBufTest : AbstractContiguousByteBufTest
         ByteBuf b = NewBuffer(65536);
         a.SetByte(a.Capacity - 1, 1);
         b.SetByte(0, 2);
+
         try
         {
             Assert.Equal(1, a.GetByte(a.Capacity - 1));

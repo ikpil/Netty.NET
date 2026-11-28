@@ -101,10 +101,12 @@ public class ByteBufEndianTest
             {
                 _pooled = new PooledByteBufAllocator(nativeAllocator: Native, maxOrder: 1);
             }
+
             if (kind is 4 or 5)
             {
                 _adaptive = new AdaptiveByteBufAllocator(false, lowMemory: false, nativeAllocator: Native);
             }
+
             Buffer = kind switch
             {
                 0 => new UnpooledHeapByteBuf(64, 512),
@@ -123,6 +125,7 @@ public class ByteBufEndianTest
         {
             if (Buffer.RefCnt > 0)
                 Buffer.Release();
+
             _pooled?.Dispose();
             _adaptive?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
@@ -137,8 +140,10 @@ public class ByteBufEndianTest
     private static long Signed(ReadOnlySpan<byte> bytes, bool little)
     {
         ulong value = 0;
+
         for (int i = 0; i < bytes.Length; i++)
             value = (value << 8) | bytes[little ? bytes.Length - 1 - i : i];
+
         int shift = 64 - bytes.Length * 8;
         return unchecked((long)(value << shift)) >> shift;
     }
@@ -262,6 +267,7 @@ public class ByteBufEndianTest
     {
         using var storage = new Storage(kind);
         ByteBuf b = storage.Buffer;
+
         foreach (int width in new[] { 2, 3, 4, 8 })
             foreach (ulong value in new ulong[] { 0, 1, 0x7fffffffffffffff, 0x8000000000000000, ulong.MaxValue, 0x0123456789abcdef })
             {
@@ -271,8 +277,10 @@ public class ByteBufEndianTest
                 Assert.Equal(expected, ByteBufUtil.GetBytes(b, 1, width));
                 Assert.Equal(2, b.ReaderIndex);
                 Assert.Equal(13, b.WriterIndex);
+
                 foreach (bool accessLittle in new[] { false, true })
                     Assert.Equal(Signed(expected, accessLittle), Get(b, 1, width, accessLittle));
+
                 ulong mask = width == 8 ? ulong.MaxValue : (1UL << (width * 8)) - 1;
                 ulong unsigned = width switch
                 {
@@ -299,50 +307,64 @@ public class ByteBufEndianTest
     {
         using var storage = new Storage(kind);
         ByteBuf b = storage.Buffer;
+
         foreach (uint bits in new uint[] { 0, 0x80000000, 1, 0x7f800000, 0xff800000, 0x7fc00123, 0xffc01234 })
         {
             float value = BitConverter.Int32BitsToSingle(unchecked((int)bits));
+
             if (little)
                 b.SetFloatLE(1, value);
             else
                 b.SetFloat(1, value);
+
             Assert.Equal(Wire(bits, 4, little), ByteBufUtil.GetBytes(b, 1, 4));
             Assert.Equal(bits, unchecked((uint)BitConverter.SingleToInt32Bits(little ? b.GetFloatLE(1) : b.GetFloat(1))));
             b.Clear();
+
             if (little)
                 b.WriteFloatLE(value);
             else
                 b.WriteFloat(value);
+
             Assert.Equal(bits, unchecked((uint)BitConverter.SingleToInt32Bits(little ? b.ReadFloatLE() : b.ReadFloat())));
         }
+
         foreach (ulong bits in new ulong[] { 0, 0x8000000000000000, 1, 0x7ff0000000000000, 0xfff0000000000000, 0x7ff8000000001234 })
         {
             double value = BitConverter.Int64BitsToDouble(unchecked((long)bits));
+
             if (little)
                 b.SetDoubleLE(1, value);
             else
                 b.SetDouble(1, value);
+
             Assert.Equal(Wire(bits, 8, little), ByteBufUtil.GetBytes(b, 1, 8));
             Assert.Equal(bits, unchecked((ulong)BitConverter.DoubleToInt64Bits(little ? b.GetDoubleLE(1) : b.GetDouble(1))));
             b.Clear();
+
             if (little)
                 b.WriteDoubleLE(value);
             else
                 b.WriteDouble(value);
+
             Assert.Equal(bits, unchecked((ulong)BitConverter.DoubleToInt64Bits(little ? b.ReadDoubleLE() : b.ReadDouble())));
         }
+
         foreach (char unit in new[] { '\0', '\u0080', '\ud800', '\udfff', '\uffff' })
         {
             if (little)
                 b.SetShortLE(1, unit);
             else
                 b.SetChar(1, unit);
+
             Assert.Equal(unit, little ? (char)b.GetUnsignedShortLE(1) : b.GetChar(1));
             b.Clear();
+
             if (little)
                 b.WriteShortLE(unit);
             else
                 b.WriteChar(unit);
+
             Assert.Equal(unit, little ? (char)b.ReadUnsignedShortLE() : b.ReadChar());
         }
     }
@@ -354,6 +376,7 @@ public class ByteBufEndianTest
         ByteBuf root = storage.Buffer;
         root.WriteBytes(Enumerable.Range(1, 16).Select(i => (byte)i).ToArray()).SetIndex(1, 15);
         ByteBuf slice = root.Slice(1, 12), duplicate = root.Duplicate(), readOnly = root.AsReadOnly(), copy = root.Copy(1, 12);
+
         try
         {
             long expected = Signed(new byte[] { 2, 3, 4, 5 }, little);
@@ -371,6 +394,7 @@ public class ByteBufEndianTest
             Assert.Equal(0, copy.ReaderIndex);
             root.SetIndex(1, 15);
             ByteBuf allocated = root.ReadBytes(4);
+
             try
             {
                 Assert.Equal(Get(root, 1, 4, little), Get(allocated, 0, 4, little));
@@ -380,6 +404,7 @@ public class ByteBufEndianTest
             {
                 allocated.Release();
             }
+
             root.SetIndex(1, 15);
             ByteBuf borrowed = root.ReadSlice(4);
             Assert.Equal(Get(root, 1, 4, little), Get(borrowed, 0, 4, little));
@@ -404,6 +429,7 @@ public class ByteBufEndianTest
         using var storage = new Storage(kind);
         ByteBuf b = storage.Buffer;
         b.WriteBytes(new byte[] { 1, 2, 3 });
+
         using (b.AcquireReadLease())
         {
             b.Capacity = 256;

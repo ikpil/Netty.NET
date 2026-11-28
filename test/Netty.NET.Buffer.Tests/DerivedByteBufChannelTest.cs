@@ -52,12 +52,14 @@ public class DerivedByteBufChannelTest
                 throw new IOException("parent policy");
             if (DelegateToBase || Pending != null)
                 return 0;
+
             return Commit(root, index, length, input);
         }
 
         public int Commit(ByteBuf root, int index, int length, bool input)
         {
             int count = Math.Min(2, length);
+
             if (input)
             {
                 root.SetBytes(index, new byte[] { 91, 92 }.AsSpan(0, count));
@@ -66,6 +68,7 @@ public class DerivedByteBufChannelTest
             {
                 Written = ByteBufUtil.GetBytes(root, index, count);
             }
+
             return count;
         }
 
@@ -75,6 +78,7 @@ public class DerivedByteBufChannelTest
             {
                 return count;
             }
+
             await Pending.Task.ConfigureAwait(false);
             return Commit(root, index, length, input);
         }
@@ -211,9 +215,11 @@ public class DerivedByteBufChannelTest
             }
 
             Root.SetIndex(2, 14).MarkReaderIndex().MarkWriterIndex();
+
             if (kind is >= 5 and <= 9)
                 Owner = kind is 6 or 8 ? PooledDerivedByteBuf.NewDuplicate(Root, Root, 2, 14)
                     : PooledDerivedByteBuf.NewSlice(Root, Root, 3, 10);
+
             View = kind switch
             {
                 0 => Root.Duplicate(),
@@ -237,10 +243,12 @@ public class DerivedByteBufChannelTest
             {
                 Assert.True(Owner.Release());
             }
+
             if (Root.RefCnt > 0)
             {
                 Assert.True(Root.Release());
             }
+
             Assert.Equal(0, Native.ReservedBytes);
         }
     }
@@ -259,6 +267,7 @@ public class DerivedByteBufChannelTest
                 _path = Path.GetTempFileName();
                 File = System.IO.File.OpenHandle(_path, FileMode.Open, FileAccess.ReadWrite,
                     FileShare.ReadWrite, FileOptions.Asynchronous);
+
                 if (input)
                 {
                     RandomAccess.Write(File, new byte[] { 91, 92 }, 17);
@@ -274,6 +283,7 @@ public class DerivedByteBufChannelTest
                 Local.Connect(listener.LocalEndPoint);
                 Peer = listener.Accept();
                 Peer.ReceiveTimeout = Peer.SendTimeout = 5000;
+
                 if (input)
                 {
                     Assert.Equal(2, Peer.Send(new byte[] { 91, 92 }));
@@ -285,6 +295,7 @@ public class DerivedByteBufChannelTest
         public byte[] ReadOutput(int count)
         {
             byte[] bytes = new byte[count];
+
             if (File != null)
             {
                 Assert.Equal(count, RandomAccess.Read(File, bytes, 17));
@@ -300,6 +311,7 @@ public class DerivedByteBufChannelTest
                     received += n;
                 }
             }
+
             return bytes;
         }
 
@@ -308,6 +320,7 @@ public class DerivedByteBufChannelTest
             Local?.Dispose();
             Peer?.Dispose();
             File?.Dispose();
+
             if (_path != null)
                 System.IO.File.Delete(_path);
         }
@@ -335,16 +348,19 @@ public class DerivedByteBufChannelTest
                 : b.SetBytesAsync(index, t.File, position, length, token))
                 : relative ? b.WriteBytes(t.File, position, length) : b.SetBytes(index, t.File, position, length);
             }
+
             return asynchronous ? await (relative ? b.ReadBytesAsync(t.File, position, length, token)
                 : b.GetBytesAsync(index, t.File, position, length, token))
                 : relative ? b.ReadBytes(t.File, position, length) : b.GetBytes(index, t.File, position, length);
         }
+
         if (input)
         {
             return asynchronous ? await (relative ? b.WriteBytesAsync(t.Local, length, token)
             : b.SetBytesAsync(index, t.Local, length, token))
             : relative ? b.WriteBytes(t.Local, length) : b.SetBytes(index, t.Local, length);
         }
+
         return asynchronous ? await (relative ? b.ReadBytesAsync(t.Local, length, token)
             : b.GetBytesAsync(index, t.Local, length, token))
             : relative ? b.ReadBytes(t.Local, length) : b.GetBytes(index, t.Local, length);
@@ -370,16 +386,19 @@ public class DerivedByteBufChannelTest
         using var s = new Storage(direct, kind);
         using var t = new Transport(file, input);
         s.View.SetIndex(1, 4).MarkReaderIndex().MarkWriterIndex();
+
         if (input && s.View.IsReadOnly)
         {
             await Assert.ThrowsAsync<NotSupportedException>(() => Transfer(s.View, t, input, asynchronous, TestContext.Current.CancellationToken));
             Assert.Equal(0, s.Observation.Calls);
             return;
         }
+
         int refs = s.Root.RefCnt;
         Assert.Equal(2, await Transfer(s.View, t, input, asynchronous, TestContext.Current.CancellationToken));
         Observed(s, t, s.Offset + 2, asynchronous);
         byte[] expected = Enumerable.Range(0, 16).Select(i => (byte)i).ToArray();
+
         if (input)
         {
             expected[s.Offset + 2] = 91;
@@ -387,6 +406,7 @@ public class DerivedByteBufChannelTest
         }
         else
             Assert.Equal(expected.Skip(s.Offset + 2).Take(2), s.Observation.Written);
+
         Assert.Equal(expected, ByteBufUtil.GetBytes(s.Root, 0, 16));
         Assert.Equal(1, s.View.ReaderIndex);
         Assert.Equal(4, s.View.WriterIndex);
@@ -401,11 +421,13 @@ public class DerivedByteBufChannelTest
         Observed(s, t, s.Offset + (input ? 3 : 1), asynchronous);
         Assert.Equal(input ? 1 : 3, s.View.ReaderIndex);
         Assert.Equal(input ? 5 : 4, s.View.WriterIndex);
+
         if (input)
         {
             expected[s.Offset + 3] = 91;
             expected[s.Offset + 4] = 92;
         }
+
         Assert.Equal(expected, ByteBufUtil.GetBytes(s.Root, 0, 16));
 
         s.View.SetIndex(1, input ? 3 : 4);
@@ -420,15 +442,18 @@ public class DerivedByteBufChannelTest
         s.Observation.Calls = 0;
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => Transfer(s.View, t, input, asynchronous, TestContext.Current.CancellationToken, index: s.View.Capacity, length: 1));
         Assert.Equal(0, s.Observation.Calls);
+
         if (file)
         {
             foreach (long position in new[] { -1L, long.MaxValue })
                 await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => Transfer(s.View, t, input, asynchronous, TestContext.Current.CancellationToken, position: position));
+
             Assert.Equal(0, s.Observation.Calls);
             Assert.Equal(2, await Transfer(s.View, t, input, asynchronous, TestContext.Current.CancellationToken, position: (long)int.MaxValue + 123));
             Observed(s, t, s.Offset + 2, asynchronous, position: (long)int.MaxValue + 123);
             s.Observation.Calls = 0;
         }
+
         if (asynchronous)
         {
             CancellationToken testToken = TestContext.Current.CancellationToken;
@@ -447,6 +472,7 @@ public class DerivedByteBufChannelTest
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => operation);
             Assert.Equal(0, s.Observation.Calls);
         }
+
         Assert.Equal(0, await Transfer(s.View, t, input, asynchronous, TestContext.Current.CancellationToken, index: s.View.Capacity, length: 0));
         Observed(s, t, s.Offset + s.View.Capacity, asynchronous, length: 0);
         s.Observation.Calls = 0;
@@ -457,6 +483,7 @@ public class DerivedByteBufChannelTest
         Observed(s, t, s.Offset + (input ? 3 : 1), asynchronous);
         Assert.Equal(input ? 1 : 4, s.View.ReaderIndex);
         Assert.Equal(input ? 5 : 4, s.View.WriterIndex);
+
         if (input)
         {
             expected[s.Offset + 3] = 91;
@@ -464,8 +491,10 @@ public class DerivedByteBufChannelTest
         }
         else
             Assert.Equal(expected.Skip(s.Offset + 1).Take(3), t.ReadOutput(3));
+
         Assert.Equal(expected, ByteBufUtil.GetBytes(s.Root, 0, 16));
         Assert.Equal(refs, s.Root.RefCnt);
+
         if (s.Owner != null)
         {
             s.Observation.Calls = 0;
@@ -498,6 +527,7 @@ public class DerivedByteBufChannelTest
         s.Observation.Pending = new(TaskCreationOptions.RunContinuationsAsynchronously);
         s.View.SetIndex(1, input ? 3 : 4);
         Task<int> operation = Transfer(s.View, t, input, true, relative: true, token: token.Token);
+
         try
         {
             Assert.False(operation.IsCompleted);
@@ -511,11 +541,13 @@ public class DerivedByteBufChannelTest
             s.Observation.Pending.SetResult(2);
             await operation;
         }
+
         Assert.Equal(2, await operation);
         Assert.Equal(input ? 1 : 3, s.View.ReaderIndex);
         Assert.Equal(input ? 5 : 4, s.View.WriterIndex);
         Assert.Equal(2, s.Root.ReaderIndex);
         Assert.Equal(14, s.Root.WriterIndex);
+
         if (input)
             Assert.Equal(new byte[] { 91, 92 }, ByteBufUtil.GetBytes(s.Root, s.Offset + 3, 2));
         else

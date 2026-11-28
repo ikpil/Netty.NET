@@ -133,6 +133,7 @@ public class HttpClientCodecTest
         CountdownEvent responseReceivedLatch = new CountdownEvent(1);
         IEventLoopGroup serverGroup = null;
         IEventLoopGroup clientGroup = null;
+
         try
         {
             serverGroup = new MultiThreadIoEventLoopGroup(2, NioIoHandler.NewFactory());
@@ -318,8 +319,10 @@ public class HttpClientCodecTest
             {
                 break;
             }
+
             Release(msg);
         }
+
         for (;;)
         {
             object msg = ch.ReadInbound();
@@ -327,6 +330,7 @@ public class HttpClientCodecTest
             {
                 break;
             }
+
             responseConsumer.OnResponse(msg);
             Release(msg);
         }

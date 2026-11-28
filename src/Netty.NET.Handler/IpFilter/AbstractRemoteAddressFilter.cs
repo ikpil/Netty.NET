@@ -77,6 +77,7 @@ public abstract class AbstractRemoteAddressFilter<T> : ChannelInboundHandlerAdap
         // the channel is closed instead of silently continuing through the rest of the pipeline unfiltered.
         T remoteAddress;
         bool accepted;
+
         try
         {
             remoteAddress = (T) address;

@@ -37,6 +37,7 @@ public class EchoClientHandler : ChannelInboundHandlerAdapter
     public EchoClientHandler()
     {
         firstMessage = Unpooled.Buffer(EchoClient.SIZE);
+
         for (int i = 0; i < firstMessage.Capacity; i ++)
         {
             firstMessage.WriteByte((byte) i);

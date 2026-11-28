@@ -44,6 +44,7 @@ public class SilenceExceptionHandler : ChannelInboundHandlerAdapter
                 return;
             }
         }
+
         ctx.FireExceptionCaught(cause);
     }
 
@@ -53,10 +54,12 @@ public class SilenceExceptionHandler : ChannelInboundHandlerAdapter
         rules.Enqueue(thr =>
         {
             Exception root = thr;
+
             while (root.InnerException != null)
             {
                 root = root.InnerException;
             }
+
             return type.IsInstanceOfType(root);
         });
         return this;

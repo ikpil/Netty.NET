@@ -66,6 +66,7 @@ public class PipelineExecutorShutdownContractTest
         var log = new ConcurrentQueue<string>();
         var loop = new DefaultEventLoop();
         var executors = new DefaultEventExecutorGroup(1);
+
         try
         {
             var channel = new LocalChannel();
@@ -99,6 +100,7 @@ public class PipelineExecutorShutdownContractTest
         var log = new ConcurrentQueue<string>();
         var group = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         var executors = new DefaultEventExecutorGroup(1);
+
         try
         {
             var channel = new LocalChannel();
@@ -142,6 +144,7 @@ public class PipelineExecutorShutdownContractTest
         var log = new ConcurrentQueue<string>();
         var loop = new DefaultEventLoop();
         var executors = new DefaultEventExecutorGroup(1);
+
         try
         {
             var channel = new LocalChannel();
@@ -184,6 +187,7 @@ public class PipelineExecutorShutdownContractTest
         var loop = new DefaultEventLoop();
         var executors = new DefaultEventExecutorGroup(1);
         var reachedSeparateExecutor = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
         try
         {
             var channel = new LocalChannel();
@@ -235,6 +239,7 @@ public class PipelineExecutorShutdownContractTest
         var log = new ConcurrentQueue<string>();
         var loop = new DefaultEventLoop();
         var executors = new DefaultEventExecutorGroup(1);
+
         try
         {
             var channel = new LocalChannel();
@@ -274,6 +279,7 @@ public class PipelineExecutorShutdownContractTest
         CancellationToken token = TestContext.Current.CancellationToken;
         var log = new ConcurrentQueue<string>();
         var loop = new DefaultEventLoop();
+
         try
         {
             await loop.SubmitAsync(() =>

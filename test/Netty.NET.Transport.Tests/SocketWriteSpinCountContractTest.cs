@@ -150,9 +150,11 @@ public class SocketWriteSpinCountContractTest
         internal void PumpUntil(Func<bool> condition)
         {
             var clock = Stopwatch.StartNew();
+
             while (!condition())
             {
                 TestContext.Current.CancellationToken.ThrowIfCancellationRequested();
+
                 Assert.True(clock.Elapsed < TimeSpan.FromSeconds(5), "Scalar write did not reach its owner.");
                 Loop.RunNow();
                 Thread.Sleep(1);
@@ -163,6 +165,7 @@ public class SocketWriteSpinCountContractTest
         {
             var bytes = new byte[length];
             int offset = 0;
+
             while (offset < length)
             {
                 Assert.True(_peer.Poll(2_000_000, SelectMode.SelectRead));
@@ -170,6 +173,7 @@ public class SocketWriteSpinCountContractTest
                 Assert.True(read > 0);
                 offset += read;
             }
+
             return bytes;
         }
 
@@ -194,6 +198,7 @@ public class SocketWriteSpinCountContractTest
             {
                 throw Failure;
             }
+
             return JavaChannel().Send(buffer[..1].Span, SocketFlags.None);
         }
 
@@ -204,11 +209,13 @@ public class SocketWriteSpinCountContractTest
             {
                 throw Failure;
             }
+
             if (Gather)
             {
                 Gather = false;
                 return base.WriteSocket(buffers, offset, Math.Min(2, length));
             }
+
             return JavaChannel().Send(buffers[offset][..1].Span, SocketFlags.None);
         }
     }

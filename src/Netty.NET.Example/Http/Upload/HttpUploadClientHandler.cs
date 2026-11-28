@@ -61,6 +61,7 @@ public class HttpUploadClientHandler : SimpleChannelInboundHandler<IHttpObject>
                 Console.Error.WriteLine("CONTENT {");
             }
         }
+
         if (msg is IHttpContent)
         {
             IHttpContent chunk = (IHttpContent) msg;
@@ -76,6 +77,7 @@ public class HttpUploadClientHandler : SimpleChannelInboundHandler<IHttpObject>
                 {
                     Console.Error.WriteLine("} END OF CONTENT");
                 }
+
                 readingChunks = false;
             }
             else

@@ -43,6 +43,7 @@ public class ThreadLocalDirectBufferTest
         Assert.True(first.Release());
         Assert.Equal(reused ? capacity : 0, native.ReservedBytes);
         ByteBuf next = cache.Rent();
+
         try
         {
             Assert.NotSame(first, next);
@@ -63,6 +64,7 @@ public class ThreadLocalDirectBufferTest
             next.Release();
             cache.Dispose();
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -204,6 +206,7 @@ public class ThreadLocalDirectBufferTest
         var native = new NativeMemoryAllocator();
         using var cache = new ThreadLocalDirectBufferCache(512, native);
         ByteBuf b = cache.Rent().WriteInt(1234), retained = b.RetainedSlice(0, 4), copy = b.Copy(0, 4);
+
         try
         {
             Assert.Same(b.Alloc(), copy.Alloc());
@@ -223,9 +226,11 @@ public class ThreadLocalDirectBufferTest
             {
                 b.Release(b.RefCnt);
             }
+
             copy.Release();
             cache.Dispose();
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -235,12 +240,16 @@ public class ThreadLocalDirectBufferTest
         var native = new NativeMemoryAllocator();
         using var cache = new ThreadLocalDirectBufferCache(512, native);
         ByteBuf b = cache.Rent();
+
         for (int i = 0; i < 256; i++)
             b.WriteByte(i);
+
         b.WriteBytes(b.AsReadOnlySpan(0, 64));
         Assert.Equal(320, b.WriterIndex);
+
         for (int i = 0; i < 64; i++)
             Assert.Equal((byte)i, b.GetByte(256 + i));
+
         Assert.Equal(b.Capacity, native.ReservedBytes);
         b.Release();
         cache.Dispose();

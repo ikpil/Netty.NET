@@ -65,6 +65,7 @@ public class Http2DataChunkedInputTest
         {
             TMP = PlatformDependent.CreateTempFile("netty-chunk-", ".tmp", null);
             DeleteOnExit(TMP);
+
             using (FileStream @out = new FileStream(TMP.FullName, FileMode.Create, FileAccess.Write))
             {
                 @out.Write(BYTES);
@@ -151,6 +152,7 @@ public class Http2DataChunkedInputTest
         int i = 0;
         int read = 0;
         IHttp2DataFrame http2DataFrame = null;
+
         for (;;)
         {
             IHttp2DataFrame dataFrame = ch.ReadOutbound<IHttp2DataFrame>();
@@ -160,17 +162,20 @@ public class Http2DataChunkedInputTest
             }
 
             ByteBuf buffer = dataFrame.Content;
+
             while (buffer.IsReadable())
             {
                 // CLR: Java compares the signed byte (byte) i with the signed readByte(); both sides are the unsigned
                 // System.Byte here (owner decision: ReadByte returns an unsigned byte), which is equal for every octet.
                 Assert.Equal(BYTES[i++], buffer.ReadByte());
                 read++;
+
                 if (i == BYTES.Length)
                 {
                     i = 0;
                 }
             }
+
             buffer.Release();
 
             // Save last chunk

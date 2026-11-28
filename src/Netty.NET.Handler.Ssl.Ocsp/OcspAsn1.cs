@@ -74,10 +74,12 @@ internal sealed class OcspExtension
     {
         writer.PushSequence();
         writer.WriteObjectIdentifier(ExtnId);
+
         if (Critical)
         {
             writer.WriteBoolean(true);
         }
+
         writer.WriteOctetString(ExtnValue);
         writer.PopSequence();
     }
@@ -87,22 +89,27 @@ internal sealed class OcspExtension
         AsnReader sequence = reader.ReadSequence();
         string extnId = sequence.ReadObjectIdentifier();
         bool critical = false;
+
         if (sequence.PeekTag().HasSameClassAndValue(Asn1Tag.Boolean))
         {
             critical = sequence.ReadBoolean();
         }
+
         byte[] extnValue = sequence.ReadOctetString();
         sequence.ThrowIfNotEmpty();
+
         return new OcspExtension(extnId, critical, extnValue);
     }
 
     internal static void WriteAll(AsnWriter writer, IReadOnlyList<OcspExtension> extensions)
     {
         writer.PushSequence();
+
         foreach (OcspExtension extension in extensions)
         {
             extension.Write(writer);
         }
+
         writer.PopSequence();
     }
 
@@ -110,10 +117,12 @@ internal sealed class OcspExtension
     {
         AsnReader sequence = reader.ReadSequence();
         List<OcspExtension> extensions = new List<OcspExtension>();
+
         while (sequence.HasData)
         {
             extensions.Add(Read(sequence));
         }
+
         return extensions;
     }
 }
@@ -184,15 +193,19 @@ internal sealed class CertificateId
         AsnReader sequence = reader.ReadSequence();
         AsnReader algorithm = sequence.ReadSequence();
         string hashAlgorithm = algorithm.ReadObjectIdentifier();
+
         if (algorithm.HasData)
         {
             algorithm.ReadEncodedValue();
         }
+
         algorithm.ThrowIfNotEmpty();
+
         byte[] issuerNameHash = sequence.ReadOctetString();
         byte[] issuerKeyHash = sequence.ReadOctetString();
         BigInteger serialNumber = sequence.ReadInteger();
         sequence.ThrowIfNotEmpty();
+
         return new CertificateId(hashAlgorithm, issuerNameHash, issuerKeyHash, serialNumber);
     }
 
@@ -201,6 +214,7 @@ internal sealed class CertificateId
         AsnReader spki = new AsnReader(certificate.PublicKey.ExportSubjectPublicKeyInfo(), AsnEncodingRules.DER)
                 .ReadSequence();
         spki.ReadSequence();
+
         return spki.ReadBitString(out _);
     }
 
@@ -253,13 +267,16 @@ internal sealed class OcspReqBuilder
         writer.PushSequence();
         writer.PushSequence();
         writer.PushSequence();
+
         foreach (CertificateId request in requests)
         {
             writer.PushSequence();
             request.Write(writer);
             writer.PopSequence();
         }
+
         writer.PopSequence();
+
         if (requestExtensions != null)
         {
             Asn1Tag tag = new Asn1Tag(TagClass.ContextSpecific, 2, true);
@@ -267,8 +284,10 @@ internal sealed class OcspReqBuilder
             OcspExtension.WriteAll(writer, requestExtensions);
             writer.PopSequence(tag);
         }
+
         writer.PopSequence();
         writer.PopSequence();
+
         return writer.Encode();
     }
 }
@@ -291,17 +310,21 @@ internal sealed class OcspResp
             AsnReader reader = new AsnReader(encoded, AsnEncodingRules.DER);
             AsnReader sequence = reader.ReadSequence();
             reader.ThrowIfNotEmpty();
+
             ReadOnlyMemory<byte> status = sequence.ReadEnumeratedBytes();
             Status = (int) new BigInteger(status.Span, false, true);
+
             if (sequence.HasData)
             {
                 AsnReader explicitTag = sequence.ReadSequence(new Asn1Tag(TagClass.ContextSpecific, 0, true));
                 AsnReader responseBytes = explicitTag.ReadSequence();
                 explicitTag.ThrowIfNotEmpty();
+
                 responseType = responseBytes.ReadObjectIdentifier();
                 response = responseBytes.ReadOctetString();
                 responseBytes.ThrowIfNotEmpty();
             }
+
             sequence.ThrowIfNotEmpty();
         }
         catch (AsnContentException e)
@@ -324,6 +347,7 @@ internal sealed class OcspResp
         {
             return new BasicOcspResp(response);
         }
+
         return response;
     }
 }
@@ -349,27 +373,33 @@ internal sealed class BasicOcspResp
     internal BasicOcspResp(byte[] encoded)
     {
         this.encoded = encoded;
+
         try
         {
             AsnReader reader = new AsnReader(encoded, AsnEncodingRules.DER);
             AsnReader sequence = reader.ReadSequence();
             reader.ThrowIfNotEmpty();
+
             tbsResponseData = sequence.ReadEncodedValue().ToArray();
             AsnReader algorithm = sequence.ReadSequence();
             signatureAlgorithm = algorithm.ReadObjectIdentifier();
             signature = sequence.ReadBitString(out _);
             List<byte[]> certificates = new List<byte[]>();
+
             if (sequence.HasData)
             {
                 AsnReader explicitTag = sequence.ReadSequence(new Asn1Tag(TagClass.ContextSpecific, 0, true));
                 AsnReader certSequence = explicitTag.ReadSequence();
                 explicitTag.ThrowIfNotEmpty();
+
                 while (certSequence.HasData)
                 {
                     certificates.Add(certSequence.ReadEncodedValue().ToArray());
                 }
             }
+
             sequence.ThrowIfNotEmpty();
+
             certs = certificates.ToArray();
 
             AsnReader data = new AsnReader(tbsResponseData, AsnEncodingRules.DER).ReadSequence();
@@ -378,28 +408,34 @@ internal sealed class BasicOcspResp
             {
                 data.ReadSequence(versionTag);
             }
+
             Asn1Tag responderId = data.PeekTag();
             if (responderId.TagClass != TagClass.ContextSpecific || responderId.TagValue is not (1 or 2))
             {
                 throw new AsnContentException("Unexpected ResponderID tag: " + responderId);
             }
+
             data.ReadEncodedValue();
             data.ReadGeneralizedTime();
             AsnReader responseSequence = data.ReadSequence();
             List<SingleResp> singleResponses = new List<SingleResp>();
+
             while (responseSequence.HasData)
             {
                 singleResponses.Add(SingleResp.Read(responseSequence));
             }
+
             responses = singleResponses.ToArray();
             Asn1Tag extensionsTag = new Asn1Tag(TagClass.ContextSpecific, 1, true);
             responseExtensions = new List<OcspExtension>();
+
             if (data.HasData && data.PeekTag().HasSameClassAndValue(extensionsTag))
             {
                 AsnReader explicitTag = data.ReadSequence(extensionsTag);
                 responseExtensions = OcspExtension.ReadAll(explicitTag);
                 explicitTag.ThrowIfNotEmpty();
             }
+
             data.ThrowIfNotEmpty();
         }
         catch (AsnContentException e)
@@ -436,6 +472,7 @@ internal sealed class BasicOcspResp
                 return extension;
             }
         }
+
         return null;
     }
 
@@ -538,6 +575,7 @@ internal sealed class SingleResp
         {
             throw new AsnContentException("Unexpected CertStatus tag: " + statusTag);
         }
+
         switch (statusTag.TagValue)
         {
             case 0:
@@ -548,13 +586,16 @@ internal sealed class SingleResp
                 AsnReader revokedInfo = sequence.ReadSequence(new Asn1Tag(TagClass.ContextSpecific, 1, true));
                 DateTimeOffset revocationTime = revokedInfo.ReadGeneralizedTime();
                 int? reason = null;
+
                 if (revokedInfo.HasData)
                 {
                     AsnReader explicitTag = revokedInfo.ReadSequence(new Asn1Tag(TagClass.ContextSpecific, 0, true));
                     reason = (int) new BigInteger(explicitTag.ReadEnumeratedBytes().Span, false, true);
                     explicitTag.ThrowIfNotEmpty();
                 }
+
                 revokedInfo.ThrowIfNotEmpty();
+
                 certStatus = new RevokedStatus(revocationTime, reason);
                 break;
             case 2:
@@ -564,6 +605,7 @@ internal sealed class SingleResp
             default:
                 throw new AsnContentException("Unexpected CertStatus tag: " + statusTag);
         }
+
         DateTimeOffset thisUpdate = sequence.ReadGeneralizedTime();
         DateTimeOffset? nextUpdate = null;
         Asn1Tag nextUpdateTag = new Asn1Tag(TagClass.ContextSpecific, 0, true);
@@ -573,12 +615,15 @@ internal sealed class SingleResp
             nextUpdate = explicitTag.ReadGeneralizedTime();
             explicitTag.ThrowIfNotEmpty();
         }
+
         Asn1Tag extensionsTag = new Asn1Tag(TagClass.ContextSpecific, 1, true);
         if (sequence.HasData && sequence.PeekTag().HasSameClassAndValue(extensionsTag))
         {
             sequence.ReadEncodedValue();
         }
+
         sequence.ThrowIfNotEmpty();
+
         return new SingleResp(certId, certStatus, thisUpdate, nextUpdate);
     }
 }

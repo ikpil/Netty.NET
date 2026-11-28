@@ -55,6 +55,7 @@ public class Socks5CommandRequestDecoderTest
     {
         string[] hosts = { "127.0.0.1", };
         int[] ports = { 1, 32769, 65535 };
+
         foreach (Socks5CommandType cmdType in new[] { Socks5CommandType.BIND,
                                                       Socks5CommandType.CONNECT,
                                                       Socks5CommandType.UDP_ASSOCIATE })
@@ -75,6 +76,7 @@ public class Socks5CommandRequestDecoderTest
         string[] hosts = {
                 NetUtil.BytesToIpAddress(IPAddress.Parse("::1").GetAddressBytes()) };
         int[] ports = { 1, 32769, 65535 };
+
         foreach (Socks5CommandType cmdType in new[] { Socks5CommandType.BIND,
                                                       Socks5CommandType.CONNECT,
                                                       Socks5CommandType.UDP_ASSOCIATE })
@@ -105,6 +107,7 @@ public class Socks5CommandRequestDecoderTest
                           "실례.테스트",
                           "உதாரணம்.பரிட்சை" };
         int[] ports = { 1, 32769, 65535 };
+
         foreach (Socks5CommandType cmdType in new[] { Socks5CommandType.BIND,
                                                       Socks5CommandType.CONNECT,
                                                       Socks5CommandType.UDP_ASSOCIATE })

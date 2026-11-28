@@ -291,6 +291,7 @@ public class OcspServerCertificateValidatorTest : AbstractOcspTest
         IChannel tlsServer = null;
         IChannel client = null;
         AtomicReference<IChannel> acceptedServerChannel = new AtomicReference<IChannel>();
+
         try
         {
             AtomicReference<byte[]> ocspResponseBytes = new AtomicReference<byte[]>();
@@ -366,11 +367,13 @@ public class OcspServerCertificateValidatorTest : AbstractOcspTest
             // Wait until the channel was closed or the payload of the server was delivered, so assertions on the
             // received bytes are not racy.
             Stopwatch deadline = Stopwatch.StartNew();
+
             while (!outcome.channelClosedFuture.IsCompleted && outcome.bytesReceived < SERVER_PAYLOAD_LENGTH &&
                     deadline.Elapsed < TimeSpan.FromSeconds(10))
             {
                 await Task.Delay(10, token);
             }
+
             outcome.ocspRequests = ocspRequests.Get();
             Assert.True(sslEventLatch.Wait(TimeSpan.FromSeconds(10)));
             assertions(outcome);
@@ -381,6 +384,7 @@ public class OcspServerCertificateValidatorTest : AbstractOcspTest
             {
                 await client.CloseAsync();
             }
+
             // The server-side child channel accepted for the TLS connection is independent of the listening
             // socket, so closing 'tlsServer' below does not close it. It must be closed explicitly here so that
             // its SSLEngine (and the key material cached by 'serverSslContext') is released deterministically,
@@ -390,14 +394,17 @@ public class OcspServerCertificateValidatorTest : AbstractOcspTest
             {
                 await acceptedChannel.CloseAsync();
             }
+
             if (tlsServer != null)
             {
                 await tlsServer.CloseAsync();
             }
+
             if (ocspResponder != null)
             {
                 await ocspResponder.CloseAsync();
             }
+
             dnsNameResolver.Dispose();
             ReferenceCountUtil.Release(clientSslContext);
             ReferenceCountUtil.Release(serverSslContext);
@@ -420,8 +427,10 @@ public class OcspServerCertificateValidatorTest : AbstractOcspTest
         {
             return;
         }
+
         using X509Store store = new X509Store(StoreName.CertificateAuthority, StoreLocation.CurrentUser);
         store.Open(OpenFlags.ReadWrite | OpenFlags.OpenExistingOnly);
+
         foreach (X509Certificate2 found in store.Certificates.Find(X509FindType.FindByThumbprint, certificate.Thumbprint,
                                                                     false))
         {
@@ -480,10 +489,12 @@ public class OcspServerCertificateValidatorTest : AbstractOcspTest
                 outcome.status = ((OcspValidationEvent) evt).Response().Status_();
                 CountDown(verdictLatch);
             }
+
             if (evt is SslHandshakeCompletionEvent)
             {
                 CountDown(sslEventLatch);
             }
+
             ctx.FireUserEventTriggered(evt);
         }
 
@@ -493,6 +504,7 @@ public class OcspServerCertificateValidatorTest : AbstractOcspTest
             {
                 outcome.failure = cause;
             }
+
             CountDown(verdictLatch);
         }
 
@@ -502,6 +514,7 @@ public class OcspServerCertificateValidatorTest : AbstractOcspTest
             {
                 outcome.bytesReceived += ((ByteBuf) msg).ReadableBytes;
             }
+
             ReferenceCountUtil.Release(msg);
         }
 

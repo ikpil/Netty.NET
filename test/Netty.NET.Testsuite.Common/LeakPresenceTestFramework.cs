@@ -74,6 +74,7 @@ public sealed class LeakPresenceTestFramework : XunitTestFramework
         {
             return base.CreateExecutor(assembly);
         }
+
         // CLR: the arguments of XunitTestFramework.CreateExecutor.
         return new Executor(new XunitTestAssembly(assembly, configFileName, null, null, null, null, null));
     }
@@ -172,6 +173,7 @@ public sealed class LeakPresenceTestFramework : XunitTestFramework
             {
                 ctxt.Aggregator.Add(leak);
             }
+
             return base.OnTestCollectionFinished(ctxt, summary);
         }
     }
@@ -201,6 +203,7 @@ public sealed class LeakPresenceTestFramework : XunitTestFramework
             LeakPresenceExtension.BeforeAll(testClass.Class, testClass.TestClassSimpleName);
             LeakPresenceExtension.ScopeWrapper scope = LeakPresenceExtension.WithTransferableScope.SCOPE.Value;
             RunSummary summary = await base.RunTestClass(testClass, testCases);
+
             try
             {
                 await AfterAll(scope, testClass.Class);
@@ -209,6 +212,7 @@ public sealed class LeakPresenceTestFramework : XunitTestFramework
             {
                 Leaks.Add(leak);
             }
+
             return summary;
         }
 

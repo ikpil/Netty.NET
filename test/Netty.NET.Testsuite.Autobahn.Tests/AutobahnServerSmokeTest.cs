@@ -44,6 +44,7 @@ public sealed class AutobahnServerSmokeTest : IAsyncLifetime
         {
             await serverChannel.CloseAsync();
         }
+
         await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
     }
 
@@ -60,6 +61,7 @@ public sealed class AutobahnServerSmokeTest : IAsyncLifetime
     {
         var message = new MemoryStream();
         byte[] buffer = new byte[1024];
+
         while (true)
         {
             WebSocketReceiveResult result = await socket.ReceiveAsync(buffer, token);
@@ -177,11 +179,13 @@ public sealed class AutobahnServerSmokeTest : IAsyncLifetime
     {
         var bytes = new List<byte>();
         byte[] one = new byte[1];
+
         while (bytes.Count < 4 || bytes[^4] != '\r' || bytes[^3] != '\n' || bytes[^2] != '\r' || bytes[^1] != '\n')
         {
             await stream.ReadExactlyAsync(one, token);
             bytes.Add(one[0]);
         }
+
         return Encoding.ASCII.GetString(bytes.ToArray());
     }
 }

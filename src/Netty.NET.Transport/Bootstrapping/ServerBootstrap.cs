@@ -111,11 +111,13 @@ public class ServerBootstrap : AbstractBootstrap
         {
             throw new InvalidOperationException("group set already");
         }
+
         _parentGroup = parentGroup;
         if (_childGroup != null)
         {
             throw new InvalidOperationException("childGroup set already");
         }
+
         _childGroup = ObjectUtil.CheckNotNull(childGroup, "childGroup");
         return this;
     }
@@ -153,6 +155,7 @@ public class ServerBootstrap : AbstractBootstrap
     {
         // CLR: check separately so the trimming annotation on channelClass reaches the reflective factory (IL2072).
         ObjectUtil.CheckNotNull(channelClass, "channelClass");
+
         return ChannelFactory(new ReflectiveChannelFactory<IServerChannel>(channelClass).NewChannel);
     }
 
@@ -222,6 +225,7 @@ public class ServerBootstrap : AbstractBootstrap
     public ServerBootstrap Option<T>(ChannelOption<T> option, T value)
     {
         ObjectUtil.CheckNotNull(option, "option");
+
         lock (_optionsGate)
         {
             if (value is null)
@@ -233,6 +237,7 @@ public class ServerBootstrap : AbstractBootstrap
                 _options[option] = value;
             }
         }
+
         return this;
     }
 
@@ -244,6 +249,7 @@ public class ServerBootstrap : AbstractBootstrap
     public ServerBootstrap ChildOption<T>(ChannelOption<T> childOption, T value)
     {
         ObjectUtil.CheckNotNull(childOption, "childOption");
+
         lock (_optionsGate)
         {
             if (value is null)
@@ -255,6 +261,7 @@ public class ServerBootstrap : AbstractBootstrap
                 _childOptions[childOption] = value;
             }
         }
+
         return this;
     }
 
@@ -265,6 +272,7 @@ public class ServerBootstrap : AbstractBootstrap
     public ServerBootstrap Attr<T>(AttributeKey<T> key, T value) where T : class
     {
         ObjectUtil.CheckNotNull(key, "key");
+
         if (value == null)
         {
             _attributes.TryRemove(key, out _);
@@ -273,6 +281,7 @@ public class ServerBootstrap : AbstractBootstrap
         {
             _attributes[key] = (value, channel => channel.Attr(key).Set(value));
         }
+
         return this;
     }
 
@@ -283,6 +292,7 @@ public class ServerBootstrap : AbstractBootstrap
     public ServerBootstrap ChildAttr<T>(AttributeKey<T> childKey, T value) where T : class
     {
         ObjectUtil.CheckNotNull(childKey, "childKey");
+
         if (value == null)
         {
             _childAttributes.TryRemove(childKey, out _);
@@ -291,6 +301,7 @@ public class ServerBootstrap : AbstractBootstrap
         {
             _childAttributes[childKey] = (value, channel => channel.Attr(childKey).Set(value));
         }
+
         return this;
     }
 
@@ -313,11 +324,13 @@ public class ServerBootstrap : AbstractBootstrap
         {
             throw new InvalidOperationException("childHandler not set");
         }
+
         if (_childGroup == null)
         {
             Logger.Warn("childGroup is not set. Using parentGroup instead.");
             _childGroup = _parentGroup;
         }
+
         return this;
     }
 
@@ -329,12 +342,14 @@ public class ServerBootstrap : AbstractBootstrap
     public ServerBootstrap Clone()
     {
         var copy = new ServerBootstrap { _parentGroup = _parentGroup, _childGroup = _childGroup, _factory = _factory, _handler = _handler, _childHandler = _childHandler, _local = _local };
+
         lock (_optionsGate)
         {
             foreach (var pair in _options)
             {
                 copy._options.Add(pair.Key, pair.Value);
             }
+
             foreach (var pair in _childOptions)
             {
                 copy._childOptions.Add(pair.Key, pair.Value);
@@ -345,6 +360,7 @@ public class ServerBootstrap : AbstractBootstrap
         {
             copy._attributes[pair.Key] = pair.Value;
         }
+
         foreach (var pair in _childAttributes)
         {
             copy._childAttributes[pair.Key] = pair.Value;
@@ -364,6 +380,7 @@ public class ServerBootstrap : AbstractBootstrap
         {
             throw new InvalidOperationException("localAddress not set");
         }
+
         return BindAsync(localAddress, cancellationToken);
     }
 
@@ -405,6 +422,7 @@ public class ServerBootstrap : AbstractBootstrap
         {
             return Task.FromCanceled<IChannel>(cancellationToken);
         }
+
         Task regFuture = InitAndRegister(cancellationToken, out IChannel channel);
         return AbstractBootstrap.DoBind(regFuture, channel, address, cancellationToken);
     }
@@ -419,6 +437,7 @@ public class ServerBootstrap : AbstractBootstrap
         {
             return Task.FromCanceled<IChannel>(cancellationToken);
         }
+
         Task regFuture = InitAndRegister(cancellationToken, out IChannel channel);
         return Bootstrap.RegisteredChannelAsync(regFuture, channel);
     }
@@ -458,6 +477,7 @@ public class ServerBootstrap : AbstractBootstrap
                         extensions));
             });
         }));
+
         if (extensions.Count != 0 && channel is IServerChannel serverChannel)
         {
             foreach (ChannelInitializerExtension extension in extensions)
@@ -519,6 +539,7 @@ public class ServerBootstrap : AbstractBootstrap
                 ForceClose(child, cause);
                 return;
             }
+
             foreach (var childAttr in _childAttrs)
                 childAttr(child);
 
@@ -567,6 +588,7 @@ public class ServerBootstrap : AbstractBootstrap
                 unsafeChannel.CloseForcibly();
             else
                 _ = child.CloseAsync();
+
             Logger.Warn("Failed to register an accepted channel: {}", child, t);
         }
 
@@ -580,6 +602,7 @@ public class ServerBootstrap : AbstractBootstrap
                 config.SetAutoRead(false);
                 _ = ctx.Channel.EventLoop.ScheduleAsync(_enableAutoReadTask, TimeSpan.FromSeconds(1));
             }
+
             // still let the exceptionCaught event flow through the pipeline to give the user
             // a chance to do something with it
             ctx.FireExceptionCaught(cause);

@@ -208,6 +208,7 @@ public class ChannelCoreContractTest
         var second = Unpooled.Buffer(1).WriteByte(2);
         var third = Unpooled.Buffer(1).WriteByte(3);
         Task firstWrite = null, secondWrite = null, unflushed = null;
+
         try
         {
             await channel.RegisterAsync(loop);
@@ -254,10 +255,12 @@ public class ChannelCoreContractTest
             var message = new ReleaseObserver(Unpooled.Buffer(1).WriteByte(1), () =>
             {
                 maximumDepth = Math.Max(maximumDepth, ++depth);
+
                 if (--remaining != 0)
                 {
                     Enqueue();
                 }
+
                 depth--;
             });
             writes.Add(channel.WriteAndFlushAsync(message));
@@ -268,8 +271,10 @@ public class ChannelCoreContractTest
             await channel.RegisterAsync(loop.Object);
             Enqueue();
             Assert.Equal(8, writes.Count);
+
             foreach (var write in writes)
                 Assert.Equal(SocketError.NotConnected, (await Assert.ThrowsAsync<SocketException>(() => write)).SocketErrorCode);
+
             Assert.Equal(1, maximumDepth);
             Assert.Equal(0, channel.OutboundBuffer.TotalPendingWriteBytes);
             Assert.Equal(0, channel.OutboundBuffer.Size);
@@ -330,6 +335,7 @@ public class ChannelCoreContractTest
             {
                 released();
             }
+
             return result;
         }
     }
@@ -432,6 +438,7 @@ public class ChannelCoreContractTest
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken)
         {
             calls.Add(name + ".out");
+
             return ctx.WriteAsync(msg, cancellationToken);
         }
     }

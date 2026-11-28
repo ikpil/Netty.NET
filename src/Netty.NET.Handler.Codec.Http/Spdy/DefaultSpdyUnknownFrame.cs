@@ -97,6 +97,7 @@ public sealed class DefaultSpdyUnknownFrame : DefaultByteBufHolder, ISpdyUnknown
         {
             return false;
         }
+
         DefaultSpdyUnknownFrame that = (DefaultSpdyUnknownFrame) o;
         return frameType == that.frameType
             && flags == that.flags

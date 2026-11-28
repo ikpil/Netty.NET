@@ -136,6 +136,7 @@ public class DefaultHttp2ConnectionEncoderTest
                     {
                         streamClosed = endStream;
                     }
+
                     writtenPadding.Add(padding);
                     writtenData.Add(data.ToString(Encoding.UTF8));
                     // Release the buffer just as DefaultHttp2FrameWriter does
@@ -158,6 +159,7 @@ public class DefaultHttp2ConnectionEncoderTest
                     {
                         streamClosed = endStream;
                     }
+
                     promise.SetResult();
                     return promise.Task;
                 });
@@ -174,6 +176,7 @@ public class DefaultHttp2ConnectionEncoderTest
                     {
                         streamClosed = endStream;
                     }
+
                     promise.SetResult();
                     return promise.Task;
                 });
@@ -486,10 +489,12 @@ public class DefaultHttp2ConnectionEncoderTest
         WriteAllFlowControlledFrames();
         int streamId = 6;
         IHttp2Headers infoHeaders = InformationalHeaders();
+
         for (int i = 0; i < infoHeaderCount; ++i)
         {
             encoder.WriteHeadersAsync(ctx, streamId, infoHeaders, 0, false, NewPromise());
         }
+
         TaskCompletionSource promise2 = NewPromise();
         encoder.WriteHeadersAsync(ctx, streamId, EmptyHttp2Headers.INSTANCE, 0, false, promise2);
 
@@ -502,6 +507,7 @@ public class DefaultHttp2ConnectionEncoderTest
                 0, false, It.IsAny<TaskCompletionSource>()), Times.Exactly(infoHeaderCount));
         writer.Verify(w => w.WriteHeadersAsync(ctx, streamId, EmptyHttp2Headers.INSTANCE,
                 0, false, promise2), Times.Exactly(1));
+
         if (eos)
         {
             writer.Verify(w => w.WriteHeadersAsync(ctx, streamId, EmptyHttp2Headers.INSTANCE,
@@ -581,6 +587,7 @@ public class DefaultHttp2ConnectionEncoderTest
         WriteAllFlowControlledFrames();
         int streamId = 6;
         IHttp2Headers infoHeaders = InformationalHeaders();
+
         for (int i = 0; i < infoHeaderCount; ++i)
         {
             encoder.WriteHeadersAsync(ctx, streamId, infoHeaders, 0, false, NewPromise());
@@ -601,6 +608,7 @@ public class DefaultHttp2ConnectionEncoderTest
                 0, false, It.IsAny<TaskCompletionSource>()), Times.Exactly(infoHeaderCount));
         writer.Verify(w => w.WriteHeadersAsync(ctx, streamId, EmptyHttp2Headers.INSTANCE,
                 0, false, promise2), Times.Exactly(1));
+
         if (eos)
         {
             writer.Verify(w => w.WriteHeadersAsync(ctx, streamId, EmptyHttp2Headers.INSTANCE,
@@ -772,6 +780,7 @@ public class DefaultHttp2ConnectionEncoderTest
                     {
                         promise.SetResult();
                     }
+
                     return promise.Task;
                 });
 

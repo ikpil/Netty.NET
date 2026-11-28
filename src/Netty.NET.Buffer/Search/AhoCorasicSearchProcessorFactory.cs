@@ -37,6 +37,7 @@ public class AhoCorasicSearchProcessorFactory : AbstractMultiSearchProcessorFact
     internal AhoCorasicSearchProcessorFactory(byte[][] needles)
     {
         ArgumentNullException.ThrowIfNull(needles);
+
         foreach (byte[] needle in needles)
         {
             ArgumentNullException.ThrowIfNull(needle, nameof(needles));
@@ -45,8 +46,10 @@ public class AhoCorasicSearchProcessorFactory : AbstractMultiSearchProcessorFact
                 throw new ArgumentException("Needle must be non empty.", nameof(needles));
             }
         }
+
         (_jumpTable, _matchForNeedleId) = BuildTrie(needles);
         LinkSuffixes();
+
         for (int i = 0; i < _jumpTable.Length; i++)
             if (_matchForNeedleId[_jumpTable[i] >> BitsPerSymbol] >= 0)
                 _jumpTable[i] = -_jumpTable[i];
@@ -62,9 +65,11 @@ public class AhoCorasicSearchProcessorFactory : AbstractMultiSearchProcessorFact
         }
 
         var matches = new List<int> { -1 };
+
         for (int needleId = 0; needleId < needles.Length; needleId++)
         {
             int position = 0;
+
             foreach (byte value in needles[needleId])
             {
                 int next = position + value;
@@ -81,10 +86,13 @@ public class AhoCorasicSearchProcessorFactory : AbstractMultiSearchProcessorFact
 
                     matches.Add(-1);
                 }
+
                 position = jumps[next];
             }
+
             matches[position >> BitsPerSymbol] = needleId;
         }
+
         return (jumps.ToArray(), matches.ToArray());
     }
 
@@ -94,16 +102,20 @@ public class AhoCorasicSearchProcessorFactory : AbstractMultiSearchProcessorFact
         queue.Enqueue(0);
         int[] suffixLinks = new int[_matchForNeedleId.Length];
         Array.Fill(suffixLinks, -1);
+
         while (queue.Count != 0)
         {
             int v = queue.Dequeue(), vPosition = v >> BitsPerSymbol;
             int u = suffixLinks[vPosition] == -1 ? 0 : suffixLinks[vPosition];
+
             if (_matchForNeedleId[vPosition] == -1)
                 _matchForNeedleId[vPosition] = _matchForNeedleId[u >> BitsPerSymbol];
+
             for (int ch = 0; ch < AlphabetSize; ch++)
             {
                 int vIndex = v | ch, uIndex = u | ch;
                 int jumpV = _jumpTable[vIndex], jumpU = _jumpTable[uIndex];
+
                 if (jumpV != -1)
                 {
                     suffixLinks[jumpV >> BitsPerSymbol] = v > 0 && jumpU != -1 ? jumpU : 0;
@@ -143,6 +155,7 @@ public class AhoCorasicSearchProcessorFactory : AbstractMultiSearchProcessorFact
                 _currentPosition = -_currentPosition;
                 return false;
             }
+
             return true;
         }
 

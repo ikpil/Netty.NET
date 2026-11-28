@@ -37,6 +37,7 @@ public class NioDatagramChannelTest
     {
         var channelGroup = new DefaultChannelGroup();
         var group = new MultiThreadIoEventLoopGroup(2, NioIoHandler.NewFactory());
+
         try
         {
             for (int i = 0; i < 100; i++)
@@ -46,6 +47,7 @@ public class NioDatagramChannelTest
                 IChannel channel = await bootstrap.BindAsync(new IPEndPoint(IPAddress.Any, 0));
                 channelGroup.Add(channel);
             }
+
             Assert.Equal(100, channelGroup.Count);
         }
         finally

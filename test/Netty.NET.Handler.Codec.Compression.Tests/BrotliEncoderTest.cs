@@ -88,6 +88,7 @@ public class BrotliEncoderTest : AbstractEncoderTest, IAsyncLifetime
 
         ByteBuf aggregatedBuffer = Unpooled.Buffer();
         ByteBuf decompressed = DECODER_CHANNEL.ReadInbound<ByteBuf>();
+
         while (decompressed != null)
         {
             aggregatedBuffer.WriteBytes(decompressed);
@@ -103,6 +104,7 @@ public class BrotliEncoderTest : AbstractEncoderTest, IAsyncLifetime
     {
         CompositeByteBuf decompressed = Unpooled.CompositeBuffer();
         ByteBuf msg;
+
         while ((msg = channel.ReadOutbound<ByteBuf>()) != null)
         {
             if (msg.IsReadable())
@@ -114,6 +116,7 @@ public class BrotliEncoderTest : AbstractEncoderTest, IAsyncLifetime
                 msg.Release();
             }
         }
+
         return decompressed;
     }
 }

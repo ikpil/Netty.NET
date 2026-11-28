@@ -67,6 +67,7 @@ public sealed class Http2FrameClient
 
         // Configure SSL.
         SslContext sslCtx;
+
         if (SSL)
         {
             SslProvider provider =

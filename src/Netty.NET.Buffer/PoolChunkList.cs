@@ -88,6 +88,7 @@ internal sealed class PoolChunkList : IPoolChunkListMetric
             // If the minUsage is 100 we can not allocate anything out of this list.
             return 0;
         }
+
         // Calculate the maximum amount of bytes that can be allocated from a PoolChunk in this PoolChunkList.
         //
         // As an example:
@@ -114,20 +115,24 @@ internal sealed class PoolChunkList : IPoolChunkListMetric
             // be handled by the PoolChunks that are contained in this PoolChunkList.
             return false;
         }
+
         for (PoolChunk cur = _head; cur != null; cur = cur.Next)
         {
             handle = _arena.AllocateHandle(cur, sizeIdx, normCapacity, out chunk);
             if (handle >= 0)
             {
                 Debug.Assert(ReferenceEquals(cur, chunk));
+
                 if (cur.FreeBytes <= _freeMinThreshold)
                 {
                     Remove(cur);
                     _nextList.Add(cur);
                 }
+
                 return true;
             }
         }
+
         return false;
     }
 
@@ -135,12 +140,15 @@ internal sealed class PoolChunkList : IPoolChunkListMetric
     {
         Debug.Assert(System.Threading.Monitor.IsEntered(_arena.SyncRoot));
         PoolArena.FreeHandle(chunk, handle);
+
         if (chunk.FreeBytes > _freeMaxThreshold)
         {
             Remove(chunk);
+
             // Move the PoolChunk down the PoolChunkList linked-list.
             return Move0(chunk);
         }
+
         return true;
     }
 
@@ -152,6 +160,7 @@ internal sealed class PoolChunkList : IPoolChunkListMetric
             // Move the PoolChunk down the PoolChunkList linked-list.
             return Move0(chunk);
         }
+
         // PoolChunk fits into this PoolChunkList, adding it here.
         Add0(chunk);
         return true;
@@ -170,17 +179,20 @@ internal sealed class PoolChunkList : IPoolChunkListMetric
             Debug.Assert(chunk.Usage == 0);
             return false;
         }
+
         return _prevList.Move(chunk);
     }
 
     internal void Add(PoolChunk chunk)
     {
         Debug.Assert(System.Threading.Monitor.IsEntered(_arena.SyncRoot));
+
         if (chunk.FreeBytes <= _freeMinThreshold)
         {
             _nextList.Add(chunk);
             return;
         }
+
         Add0(chunk);
     }
 
@@ -192,10 +204,12 @@ internal sealed class PoolChunkList : IPoolChunkListMetric
         chunk.Parent = this;
         chunk.Prev = null;
         chunk.Next = _head;
+
         if (_head != null)
         {
             _head.Prev = chunk;
         }
+
         _head = chunk;
     }
 
@@ -213,11 +227,13 @@ internal sealed class PoolChunkList : IPoolChunkListMetric
         {
             PoolChunk next = cur.Next;
             cur.Prev.Next = next;
+
             if (next != null)
             {
                 next.Prev = cur.Prev;
             }
         }
+
         // CLR: detached chunks do not retain stale list/neighbor references.
         cur.Parent = null;
         cur.Prev = cur.Next = null;
@@ -260,6 +276,7 @@ internal sealed class PoolChunkList : IPoolChunkListMetric
     {
         Debug.Assert(System.Threading.Monitor.IsEntered(_arena.SyncRoot));
         PoolChunk chunk = _head;
+
         while (chunk != null)
         {
             PoolChunk next = chunk.Next;

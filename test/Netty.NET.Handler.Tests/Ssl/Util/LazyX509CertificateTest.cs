@@ -97,6 +97,7 @@ public class LazyX509CertificateTest
             Assert.Null(actualSans);
             return;
         }
+
         Assert.Equal(expectedSans, actualSans);
     }
 

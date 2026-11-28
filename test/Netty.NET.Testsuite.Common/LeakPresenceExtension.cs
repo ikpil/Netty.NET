@@ -97,6 +97,7 @@ public static class LeakPresenceExtension
             reason = "Leak presence detection disabled by " + LEAK_PRESENCE_DETECTION_DISABLED_PROPERTY;
             return false;
         }
+
         reason = "Leak presence detection enabled";
         return true;
     }
@@ -124,6 +125,7 @@ public static class LeakPresenceExtension
         {
             throw new InvalidOperationException("Weird context lifecycle");
         }
+
         WithTransferableScope.SCOPE.Value = existingScope;
     }
 
@@ -142,6 +144,7 @@ public static class LeakPresenceExtension
 
         // Wait some time for resources to close. Many tests do loop.shutdownGracefully without waiting, and that's ok.
         long start = Stopwatch.GetTimestamp();
+
         while (scope.scope.HasOpenResources() && Stopwatch.GetElapsedTime(start) < TimeSpan.FromSeconds(5))
         {
             await Task.Delay(100);
@@ -160,15 +163,18 @@ public static class LeakPresenceExtension
     private static bool IsOwnedBy(Type testClass, Type owner)
     {
         Type current = testClass;
+
         while (current != null)
         {
             if (current == owner)
             {
                 return true;
             }
+
             // CLR: Class.getEnclosingClass() is Type.DeclaringType.
             current = current.DeclaringType;
         }
+
         return false;
     }
 
@@ -199,6 +205,7 @@ public static class LeakPresenceExtension
             {
                 throw new NullReferenceException("Resource created outside test?");
             }
+
             return scope.scope;
         }
     }

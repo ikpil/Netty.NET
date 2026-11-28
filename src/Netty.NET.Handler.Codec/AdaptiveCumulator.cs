@@ -40,6 +40,7 @@ public sealed class AdaptiveCumulator : ByteToMessageDecoder.ICumulator
     public AdaptiveCumulator(int composeMinSize)
     {
         ObjectUtil.CheckPositiveOrZero(composeMinSize, "composeMinSize");
+
         this.composeMinSize = composeMinSize;
     }
 
@@ -84,19 +85,23 @@ public sealed class AdaptiveCumulator : ByteToMessageDecoder.ICumulator
             @in.Release();
             return cumulation;
         }
+
         if (!cumulation.IsReadable())
         {
             cumulation.Release();
             return @in;
         }
+
         CompositeByteBuf composite = null;
         bool cumulationTransferred = false;
+
         try
         {
             if (IsOwnedCompositeBuf(cumulation))
             {
                 composite = (CompositeByteBuf) cumulation;
                 cumulationTransferred = true;
+
                 // Writer index must equal capacity if we are going to "write"
                 // new components to the end
                 if (composite.WriterIndex != composite.Capacity)
@@ -110,6 +115,7 @@ public sealed class AdaptiveCumulator : ByteToMessageDecoder.ICumulator
                 composite.AddFlattenedComponents(cumulation, true);
                 cumulationTransferred = true;
             }
+
             ByteBuf b = @in;
             @in = null;
             AddInput(alloc, composite, b);
@@ -127,6 +133,7 @@ public sealed class AdaptiveCumulator : ByteToMessageDecoder.ICumulator
             {
                 cumulation.Retain();
             }
+
             throw;
         }
         finally
@@ -137,6 +144,7 @@ public sealed class AdaptiveCumulator : ByteToMessageDecoder.ICumulator
                 // produce a leak
                 @in.Release();
             }
+
             // Also release any new buffer allocated if we're not returning it
             if (composite != null && composite != cumulation)
             {
@@ -171,6 +179,7 @@ public sealed class AdaptiveCumulator : ByteToMessageDecoder.ICumulator
         {
             return true;
         }
+
         int inputSize = @in.ReadableBytes;
         int tailStart = composite.ToByteIndex(componentCount - 1);
         long tailSize = composite.WriterIndex - tailStart;
@@ -214,6 +223,7 @@ public sealed class AdaptiveCumulator : ByteToMessageDecoder.ICumulator
         ByteBuf newTail = null;
         // Use componentSlice() to get the correct view of the indices.
         ByteBuf componentView = composite.ComponentSlice(tailComponentIndex);
+
         try
         {
             // Ideal case: The tail is not shared and can be expanded in-place.
@@ -279,6 +289,7 @@ public sealed class AdaptiveCumulator : ByteToMessageDecoder.ICumulator
         finally
         {
             @in.Release();
+
             // If new tail's ownership isn't transferred to the composite buf.
             // Release it to prevent a leak.
             if (newTail != null)

@@ -50,6 +50,7 @@ public sealed class Http2ServerSmokeTest : IAsyncLifetime
         {
             await serverChannel.CloseAsync();
         }
+
         await group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.FromSeconds(5));
     }
 
@@ -177,6 +178,7 @@ public sealed class Http2ServerSmokeTest : IAsyncLifetime
         byte[] headers = null;
         var body = new MemoryStream();
         byte[] header = new byte[9];
+
         while (true)
         {
             await stream.ReadExactlyAsync(header, token);
@@ -186,14 +188,17 @@ public sealed class Http2ServerSmokeTest : IAsyncLifetime
             int id = BinaryPrimitives.ReadInt32BigEndian(header.AsSpan(5)) & 0x7FFFFFFF;
             byte[] payload = new byte[length];
             await stream.ReadExactlyAsync(payload, token);
+
             if (type == SETTINGS && (flags & ACK) == 0)
             {
                 await stream.WriteAsync(Frame(SETTINGS, ACK, 0, default), token);
             }
+
             if (id != streamId)
             {
                 continue;
             }
+
             if (type == HEADERS)
             {
                 Assert.Equal(END_HEADERS, flags & END_HEADERS);
@@ -204,6 +209,7 @@ public sealed class Http2ServerSmokeTest : IAsyncLifetime
                 Assert.NotNull(headers);
                 body.Write(payload);
             }
+
             if ((type == HEADERS || type == DATA) && (flags & END_STREAM) != 0)
             {
                 return (headers, body.ToArray());
@@ -216,11 +222,13 @@ public sealed class Http2ServerSmokeTest : IAsyncLifetime
         // One byte at a time, so that the HTTP/2 frames after the 101 response stay in the stream.
         var bytes = new List<byte>();
         byte[] one = new byte[1];
+
         while (bytes.Count < 4 || bytes[^4] != '\r' || bytes[^3] != '\n' || bytes[^2] != '\r' || bytes[^1] != '\n')
         {
             await stream.ReadExactlyAsync(one, token);
             bytes.Add(one[0]);
         }
+
         return Encoding.ASCII.GetString(bytes.ToArray());
     }
 }

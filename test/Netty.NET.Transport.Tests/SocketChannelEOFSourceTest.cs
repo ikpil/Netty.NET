@@ -50,6 +50,7 @@ public class SocketChannelEOFSourceTest : AbstractClientSocketTest
         {
             PayloadServer server = new PayloadServer(PAYLOAD_BYTES);
             IChannel ch = null;
+
             try
             {
                 EndPoint address = server.BindAndAccept();
@@ -73,6 +74,7 @@ public class SocketChannelEOFSourceTest : AbstractClientSocketTest
             finally
             {
                 server.Close();
+
                 if (ch != null)
                 {
                     await ch.CloseAsync();
@@ -84,10 +86,12 @@ public class SocketChannelEOFSourceTest : AbstractClientSocketTest
     private static byte[] CreateChunk()
     {
         byte[] bytes = new byte[CHUNK_BYTES];
+
         for (int index = 0; index < bytes.Length; index++)
         {
             bytes[index] = (byte) ((index * 31 + 7) & 0xff);
         }
+
         return bytes;
     }
 
@@ -99,10 +103,12 @@ public class SocketChannelEOFSourceTest : AbstractClientSocketTest
     private static byte[] Digest(long length)
     {
         IncrementalHash digest = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+
         for (long remaining = length; remaining > 0; remaining -= CHUNK.Length)
         {
             digest.AppendData(CHUNK, 0, (int) Math.Min(remaining, CHUNK.Length));
         }
+
         return digest.GetHashAndReset();
     }
 
@@ -143,6 +149,7 @@ public class SocketChannelEOFSourceTest : AbstractClientSocketTest
             {
                 ByteBuf bytes = (ByteBuf) message;
                 receivedBytes += bytes.ReadableBytes;
+
                 // CLR: this port's ByteBuf exposes its readable bytes as borrowed ReadOnlySequence segments
                 // (ByteBuf.ReadableSequence, src/Netty.NET.Buffer/ByteBuf.cs) instead of nioBuffer(); each
                 // segment is appended in order.
@@ -183,6 +190,7 @@ public class SocketChannelEOFSourceTest : AbstractClientSocketTest
                 {
                     Fail(failure);
                 }
+
                 Assert.Equal(PAYLOAD_BYTES, receivedBytes);
                 Assert.Equal(EXPECTED_DIGEST, digest.GetHashAndReset());
             }
@@ -191,6 +199,7 @@ public class SocketChannelEOFSourceTest : AbstractClientSocketTest
                 result.SetException(cause);
                 return;
             }
+
             result.SetResult();
         }
 
@@ -200,12 +209,14 @@ public class SocketChannelEOFSourceTest : AbstractClientSocketTest
             {
                 failure = error;
             }
+
             _ = context.CloseAsync();
         }
 
         public override void HandlerRemoved(IChannelHandlerContext ctx)
         {
             base.HandlerRemoved(ctx);
+
             if (readFuture != null)
             {
                 readFutureCancellation.Cancel();
@@ -262,6 +273,7 @@ public class SocketChannelEOFSourceTest : AbstractClientSocketTest
             {
                 long sent = 0;
                 Exception failure = null;
+
                 try
                 {
                     Socket socket = serverSocket.Accept();
@@ -271,12 +283,14 @@ public class SocketChannelEOFSourceTest : AbstractClientSocketTest
                     // is Shutdown(SocketShutdown.Send), "Disable sending on this Socket"
                     // (https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket.shutdown).
                     Stream output = new NetworkStream(socket);
+
                     for (long remaining = sendBytes; remaining > 0; remaining -= CHUNK.Length)
                     {
                         int length = (int) Math.Min(remaining, CHUNK.Length);
                         output.Write(CHUNK, 0, length);
                         sent += length;
                     }
+
                     output.Flush();
                     socket.Shutdown(SocketShutdown.Send);
                 }
@@ -284,12 +298,14 @@ public class SocketChannelEOFSourceTest : AbstractClientSocketTest
                 {
                     failure = error;
                 }
+
                 try
                 {
                     if (failure != null)
                     {
                         Fail(failure);
                     }
+
                     Assert.Equal(PAYLOAD_BYTES, sent);
                 }
                 catch (Exception error)
@@ -297,6 +313,7 @@ public class SocketChannelEOFSourceTest : AbstractClientSocketTest
                     result.SetException(error);
                     return;
                 }
+
                 result.SetResult();
             });
             thread.Name = "payload-server";
@@ -320,6 +337,7 @@ public class SocketChannelEOFSourceTest : AbstractClientSocketTest
             {
                 socket.Close();
             }
+
             if (thread != null)
             {
                 thread.Join(TimeSpan.FromSeconds(5));

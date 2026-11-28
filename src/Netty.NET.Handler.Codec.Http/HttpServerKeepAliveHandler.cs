@@ -66,12 +66,14 @@ public class HttpServerKeepAliveHandler : ChannelDuplexHandler
         if (msg is IHttpRequest)
         {
             IHttpRequest request = (IHttpRequest) msg;
+
             if (persistentConnection)
             {
                 pendingResponses += 1;
                 persistentConnection = IsKeepAlive(request);
             }
         }
+
         base.ChannelRead(ctx, msg);
     }
 
@@ -82,6 +84,7 @@ public class HttpServerKeepAliveHandler : ChannelDuplexHandler
         {
             IHttpResponse response = (IHttpResponse) msg;
             TrackResponse(response);
+
             // Assume the response writer knows if they can persist or not and sets isKeepAlive on the response
             if (!IsKeepAlive(response) || !IsSelfDefinedMessageLength(response))
             {
@@ -89,16 +92,19 @@ public class HttpServerKeepAliveHandler : ChannelDuplexHandler
                 pendingResponses = 0;
                 persistentConnection = false;
             }
+
             // Server might think it can keep connection alive, but we should fix response header if we know better
             if (!ShouldKeepAlive())
             {
                 SetKeepAlive(response, false);
             }
         }
+
         if (msg is ILastHttpContent && !ShouldKeepAlive())
         {
             IChannel channel = ctx.Channel;
             Task future;
+
             try
             {
                 future = base.WriteAsync(ctx, msg, cancellationToken);
@@ -108,6 +114,7 @@ public class HttpServerKeepAliveHandler : ChannelDuplexHandler
                 _ = channel.CloseAsync();
                 throw;
             }
+
             // CLR: the scheduler's lambda captures this branch's copy of ctx, so the other writes allocate no closure
             // (see EventExecutorTaskScheduler).
             IChannelHandlerContext listenerCtx = ctx;
@@ -116,6 +123,7 @@ public class HttpServerKeepAliveHandler : ChannelDuplexHandler
                     new EventExecutorTaskScheduler(() => listenerCtx.Executor));
             return future;
         }
+
         return base.WriteAsync(ctx, msg, cancellationToken);
     }
 

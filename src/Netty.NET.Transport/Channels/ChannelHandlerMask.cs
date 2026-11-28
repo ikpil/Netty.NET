@@ -52,6 +52,7 @@ internal static class ChannelHandlerMask
     private static int Mask0(Type handlerType, IChannelHandler handler)
     {
         int mask = MaskExceptionCaught;
+
         // CLR: a bound interface delegate identifies the actual virtual or explicit implementation, including in NativeAOT.
         // The source Class parameter remains the cache/type discriminator; the representative instance is not invoked.
         try
@@ -60,76 +61,94 @@ internal static class ChannelHandlerMask
             {
                 var inbound = (IChannelInboundHandler)handler;
                 mask |= MaskAllInbound;
+
                 if (IsSkippable(inbound.ChannelRegistered))
                 {
                     mask &= ~MaskChannelRegistered;
                 }
+
                 if (IsSkippable(inbound.ChannelUnregistered))
                 {
                     mask &= ~MaskChannelUnregistered;
                 }
+
                 if (IsSkippable(inbound.ChannelActive))
                 {
                     mask &= ~MaskChannelActive;
                 }
+
                 if (IsSkippable(inbound.ChannelInactive))
                 {
                     mask &= ~MaskChannelInactive;
                 }
+
                 if (IsSkippable(inbound.ChannelRead))
                 {
                     mask &= ~MaskChannelRead;
                 }
+
                 if (IsSkippable(inbound.ChannelReadComplete))
                 {
                     mask &= ~MaskChannelReadComplete;
                 }
+
                 if (IsSkippable(inbound.ChannelWritabilityChanged))
                 {
                     mask &= ~MaskChannelWritabilityChanged;
                 }
+
                 if (IsSkippable(inbound.UserEventTriggered))
                 {
                     mask &= ~MaskUserEventTriggered;
                 }
             }
+
             if (typeof(IChannelOutboundHandler).IsAssignableFrom(handlerType))
             {
                 var outbound = (IChannelOutboundHandler)handler;
                 mask |= MaskAllOutbound;
+
                 if (IsSkippable(outbound.BindAsync))
                 {
                     mask &= ~MaskBind;
                 }
+
                 if (IsSkippable(outbound.ConnectAsync))
                 {
                     mask &= ~MaskConnect;
                 }
+
                 if (IsSkippable(outbound.DisconnectAsync))
                 {
                     mask &= ~MaskDisconnect;
                 }
+
                 if (IsSkippable(outbound.CloseAsync))
                 {
                     mask &= ~MaskClose;
                 }
+
                 if (IsSkippable(outbound.DeregisterAsync))
                 {
                     mask &= ~MaskDeregister;
                 }
+
                 if (IsSkippable(outbound.Read))
                 {
                     mask &= ~MaskRead;
                 }
+
                 if (IsSkippable(outbound.WriteAsync))
                 {
                     mask &= ~MaskWrite;
                 }
+
                 if (IsSkippable(outbound.Flush))
                 {
                     mask &= ~MaskFlush;
                 }
             }
+
             if (IsSkippable(handler.ExceptionCaught))
             {
                 mask &= ~MaskExceptionCaught;

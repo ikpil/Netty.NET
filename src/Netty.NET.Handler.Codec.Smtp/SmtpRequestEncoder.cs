@@ -58,6 +58,7 @@ public sealed class SmtpRequestEncoder : MessageToMessageEncoder<object>
         if (msg is ISmtpRequest)
         {
             ISmtpRequest req = (ISmtpRequest) msg;
+
             if (contentExpected)
             {
                 if (req.Command().Equals(SmtpCommand.RSET))
@@ -69,8 +70,10 @@ public sealed class SmtpRequestEncoder : MessageToMessageEncoder<object>
                     throw new InvalidOperationException("SmtpContent expected");
                 }
             }
+
             bool release = true;
             ByteBuf buffer = ctx.Alloc().Buffer();
+
             try
             {
                 req.Command().Encode(buffer);
@@ -79,6 +82,7 @@ public sealed class SmtpRequestEncoder : MessageToMessageEncoder<object>
                 ByteBufUtil.WriteShortBE(buffer, CRLF_SHORT);
                 @out.Add(buffer);
                 release = false;
+
                 if (req.Command().IsContentExpected())
                 {
                     contentExpected = true;
@@ -99,8 +103,10 @@ public sealed class SmtpRequestEncoder : MessageToMessageEncoder<object>
             {
                 throw new InvalidOperationException("No SmtpContent expected");
             }
+
             ByteBuf content = ((ISmtpContent) msg).Content;
             @out.Add(content.Retain());
+
             if (msg is ILastSmtpContent)
             {
                 @out.Add(DOT_CRLF_BUFFER.RetainedDuplicate());
@@ -115,16 +121,20 @@ public sealed class SmtpRequestEncoder : MessageToMessageEncoder<object>
         {
             return;
         }
+
         if (commandNotEmpty)
         {
             @out.WriteByte(SP);
         }
+
         int sizeMinusOne = parameters.Count - 1;
+
         for (int i = 0; i < sizeMinusOne; i++)
         {
             ByteBufUtil.WriteAscii(@out, parameters[i].ToString());
             @out.WriteByte(SP);
         }
+
         ByteBufUtil.WriteAscii(@out, parameters[sizeMinusOne].ToString());
     }
 }

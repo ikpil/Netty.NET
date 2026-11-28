@@ -60,6 +60,7 @@ public sealed class Http3SpecTestServer
     public static async Task Main(string[] args)
     {
         int port;
+
         // Allow to pass in the port so we can also use it to run h3spec against
         if (args.Length == 1)
         {
@@ -69,6 +70,7 @@ public sealed class Http3SpecTestServer
         {
             port = PORT;
         }
+
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         X509Bundle cert = new CertificateBuilder()
                 .Subject("cn=localhost")
@@ -95,6 +97,7 @@ public sealed class Http3SpecTestServer
                                 ch.Pipeline.AddLast(new RequestStreamHandler());
                             }), null, null, null, true));
                 })).Build();
+
         try
         {
             Bootstrap bs = new Bootstrap();

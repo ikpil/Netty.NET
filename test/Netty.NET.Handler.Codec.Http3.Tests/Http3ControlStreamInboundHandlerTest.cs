@@ -51,6 +51,7 @@ public class Http3ControlStreamInboundHandlerTest :
     public static TheoryData<bool, bool> TestData()
     {
         TheoryData<bool, bool> config = new TheoryData<bool, bool>();
+
         for (int a = 0; a < 2; a++)
         {
             for (int b = 0; b < 2; b++)
@@ -58,6 +59,7 @@ public class Http3ControlStreamInboundHandlerTest :
                 config.Add(a == 0, b == 0);
             }
         }
+
         return config;
     }
 
@@ -185,6 +187,7 @@ public class Http3ControlStreamInboundHandlerTest :
     {
         SetUp(server);
         EmbeddedChannel channel = NewStream(server, forwardControlFrames);
+
         if (server)
         {
             WriteValidFrame(forwardControlFrames, channel, new DefaultHttp3GoAwayFrame(3));
@@ -195,6 +198,7 @@ public class Http3ControlStreamInboundHandlerTest :
                     new DefaultHttp3GoAwayFrame(3));
             VerifyClose(Http3ErrorCode.H3_FRAME_UNEXPECTED, parent);
         }
+
         Assert.False(channel.Finish());
     }
 
@@ -204,6 +208,7 @@ public class Http3ControlStreamInboundHandlerTest :
     {
         SetUp(server);
         EmbeddedChannel channel = NewStream(server, forwardControlFrames);
+
         if (server)
         {
             WriteValidFrame(forwardControlFrames, channel, new DefaultHttp3MaxPushIdFrame(0));
@@ -215,6 +220,7 @@ public class Http3ControlStreamInboundHandlerTest :
                     new DefaultHttp3MaxPushIdFrame(4));
             VerifyClose(Http3ErrorCode.H3_FRAME_UNEXPECTED, parent);
         }
+
         Assert.False(channel.Finish());
     }
 
@@ -241,6 +247,7 @@ public class Http3ControlStreamInboundHandlerTest :
         // We always need to start with a settings frame.
         IHttp3SettingsFrame settingsFrame = new DefaultHttp3SettingsFrame();
         Assert.Equal(forwardControlFrames, channel.WriteInbound(settingsFrame));
+
         if (forwardControlFrames)
         {
             AssertFrameSame(settingsFrame, channel.ReadInbound<IHttp3Frame>());
@@ -249,6 +256,7 @@ public class Http3ControlStreamInboundHandlerTest :
         {
             AssertFrameReleased(settingsFrame);
         }
+
         object streamType = QPACKEncoderStream().ReadOutbound();
         Assert.NotNull(streamType);
         ReferenceCountUtil.Release(streamType);
@@ -263,6 +271,7 @@ public class Http3ControlStreamInboundHandlerTest :
                                  IHttp3ControlStreamFrame controlStreamFrame)
     {
         Assert.Equal(forwardControlFrames, channel.WriteInbound(controlStreamFrame));
+
         if (forwardControlFrames)
         {
             AssertFrameSame(controlStreamFrame, channel.ReadInbound<IHttp3Frame>());
@@ -285,6 +294,7 @@ public class Http3ControlStreamInboundHandlerTest :
         {
             Assert.False(channel.WriteInbound(frame));
         }
+
         AssertFrameReleased(frame);
     }
 

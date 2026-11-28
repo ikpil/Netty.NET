@@ -325,6 +325,7 @@ public class WeightedFairQueueByteDistributorTest : AbstractWeightedFairQueueByt
         {
             VerifyNeverWrite(STREAM_A);
         }
+
         VerifyWrite(Times.AtMost(1), STREAM_C, 0);
         VerifyWrite(Times.AtMost(1), STREAM_D, 0);
 
@@ -333,6 +334,7 @@ public class WeightedFairQueueByteDistributorTest : AbstractWeightedFairQueueByt
 
         // Now test that writes get delegated from A (which is blocked) to its children
         Assert.True(Write(5));
+
         if (streamAShouldWriteZero)
         {
             VerifyWrite(Times.Exactly(1), STREAM_A, 0);
@@ -341,10 +343,12 @@ public class WeightedFairQueueByteDistributorTest : AbstractWeightedFairQueueByt
         {
             VerifyNeverWrite(STREAM_A);
         }
+
         VerifyWrite(STREAM_D, 5);
         VerifyWrite(Times.AtMost(1), STREAM_C, 0);
 
         Assert.True(Write(5));
+
         if (streamAShouldWriteZero)
         {
             VerifyWrite(Times.Exactly(1), STREAM_A, 0);
@@ -353,10 +357,12 @@ public class WeightedFairQueueByteDistributorTest : AbstractWeightedFairQueueByt
         {
             VerifyNeverWrite(STREAM_A);
         }
+
         Assert.Equal(10, CaptureWrites(STREAM_C) + CaptureWrites(STREAM_D));
 
         Assert.True(Write(5));
         Assert.False(Write(5));
+
         if (streamAShouldWriteZero)
         {
             VerifyWrite(Times.Exactly(1), STREAM_A, 0);
@@ -365,6 +371,7 @@ public class WeightedFairQueueByteDistributorTest : AbstractWeightedFairQueueByt
         {
             VerifyNeverWrite(STREAM_A);
         }
+
         VerifyWrite(Times.Exactly(2), STREAM_C, 5);
         VerifyWrite(Times.Exactly(2), STREAM_D, 5);
     }
@@ -991,12 +998,14 @@ public class WeightedFairQueueByteDistributorTest : AbstractWeightedFairQueueByt
         writer.Verify(w => w.Write(It.Is<IHttp2Stream>(s => ReferenceEquals(s, stream)), It.IsAny<int>()),
             Times.AtLeastOnce());
         int total = 0;
+
         foreach (int x in writer.Invocations.Where(i => i.Method.Name == nameof(IStreamByteDistributor.IWriter.Write) &&
                                                        ReferenceEquals(i.Arguments[0], stream))
                                             .Select(i => (int) i.Arguments[1]))
         {
             total += x;
         }
+
         return total;
     }
 }

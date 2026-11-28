@@ -67,6 +67,7 @@ public class Http2ServerUpgradeCodecTest
                 new ChannelInboundHandlerAdapter());
         IChannelHandlerContext ctx = channel.Pipeline.FirstContext;
         Http2ServerUpgradeCodec codec;
+
         if (multiplexer == null)
         {
             codec = new Http2ServerUpgradeCodec(handler);
@@ -75,6 +76,7 @@ public class Http2ServerUpgradeCodecTest
         {
             codec = new Http2ServerUpgradeCodec((Http2FrameCodec) (Http2ConnectionHandler) handler, multiplexer);
         }
+
         Assert.True(codec.PrepareUpgradeResponse(ctx, request, new DefaultHttpHeaders()));
         codec.UpgradeTo(ctx, request);
         // Flush the channel to ensure we write out all buffered data

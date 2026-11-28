@@ -62,6 +62,7 @@ public sealed class ByteBufOutputStream : Stream
     public ByteBufOutputStream(ByteBuf buffer, bool releaseOnDispose)
     {
         ArgumentNullException.ThrowIfNull(buffer);
+
         buffer.AsReadOnlySequence(buffer.ReaderIndex, 0);
         _buffer = buffer;
         _startIndex = buffer.WriterIndex;
@@ -91,6 +92,7 @@ public sealed class ByteBufOutputStream : Stream
             if (!_closed)
             {
                 _closed = true;
+
                 if (disposing && _releaseOnDispose)
                 {
                     _buffer.Release();
@@ -106,18 +108,21 @@ public sealed class ByteBufOutputStream : Stream
     public override void Write(byte[] buffer, int offset, int count)
     {
         ValidateBufferArguments(buffer, offset, count);
+
         Write(buffer.AsSpan(offset, count));
     }
 
     public override void Write(ReadOnlySpan<byte> source)
     {
         ThrowIfClosed();
+
         _buffer.WriteBytes(source);
     }
 
     public override void WriteByte(byte value)
     {
         ThrowIfClosed();
+
         _buffer.WriteByte(value);
     }
 
@@ -129,12 +134,14 @@ public sealed class ByteBufOutputStream : Stream
     public void WriteBoolean(bool value)
     {
         ThrowIfClosed();
+
         _buffer.WriteBoolean(value);
     }
 
     public void WriteInt16(int value)
     {
         ThrowIfClosed();
+
         _buffer.WriteShort(value);
     }
 
@@ -146,30 +153,35 @@ public sealed class ByteBufOutputStream : Stream
     public void WriteChar(char value)
     {
         ThrowIfClosed();
+
         _buffer.WriteChar(value);
     }
 
     public void WriteInt32(int value)
     {
         ThrowIfClosed();
+
         _buffer.WriteInt(value);
     }
 
     public void WriteInt64(long value)
     {
         ThrowIfClosed();
+
         _buffer.WriteLong(value);
     }
 
     public void WriteSingle(float value)
     {
         ThrowIfClosed();
+
         _buffer.WriteFloat(value);
     }
 
     public void WriteDouble(double value)
     {
         ThrowIfClosed();
+
         _buffer.WriteDouble(value);
     }
 
@@ -178,6 +190,7 @@ public sealed class ByteBufOutputStream : Stream
     {
         ThrowIfClosed();
         ArgumentNullException.ThrowIfNull(value);
+
         // We don't use `ByteBuf.writeCharSequence` here, because `writeBytes` is specified to only write the
         // lower-order by of multibyte characters (exactly one byte per character in the string), while
         // `writeCharSequence` will instead write a '?' replacement character.
@@ -197,6 +210,7 @@ public sealed class ByteBufOutputStream : Stream
     {
         ThrowIfClosed();
         ArgumentNullException.ThrowIfNull(value);
+
         // CLR: validate permission even for an empty string. Preserve per-character progress
         // on capacity failure, rather than making the original loop transactional.
         _buffer.EnsureWritable(0);
@@ -212,21 +226,26 @@ public sealed class ByteBufOutputStream : Stream
     {
         ThrowIfClosed();
         ArgumentNullException.ThrowIfNull(value);
+
         // lazily-instantiated
         // Suppress a warning since the stream is closed in the close() method
         // CLR: encode a complete frame directly; no lazily created DataOutputStream is needed.
         int length = 0;
+
         foreach (char character in value)
         {
             int width = character is > '\0' and < '\u0080' ? 1 : character <= '\u07FF' ? 2 : 3;
             if (width > ushort.MaxValue - length)
                 throw new InvalidDataException("The modified UTF-8 payload exceeds 65535 bytes.");
+
             length += width;
         }
+
         byte[] bytes = new byte[length + 2];
         bytes[0] = unchecked((byte)(length >>> 8));
         bytes[1] = unchecked((byte)length);
         int offset = 2;
+
         foreach (char character in value)
         {
             if (character is > '\0' and < '\u0080')
@@ -245,6 +264,7 @@ public sealed class ByteBufOutputStream : Stream
                 bytes[offset++] = (byte)(0x80 | character & 0x3F);
             }
         }
+
         Write(bytes);
     }
 
@@ -254,6 +274,7 @@ public sealed class ByteBufOutputStream : Stream
         {
             return ValueTask.FromCanceled(cancellationToken);
         }
+
         try
         {
             Write(source.Span);
@@ -268,6 +289,7 @@ public sealed class ByteBufOutputStream : Stream
     public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
     {
         ValidateBufferArguments(buffer, offset, count);
+
         return WriteAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
     }
 

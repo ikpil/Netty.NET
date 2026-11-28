@@ -81,16 +81,21 @@ public abstract class AbstractBootstrapConfig
     {
         if (Group != null)
             values.Add("group: " + StringUtil.SimpleClassName(Group));
+
         if (ChannelFactory != null)
             values.Add("channelFactory: " + ChannelFactory);
+
         if (LocalAddress != null)
             values.Add("localAddress: " + LocalAddress);
+
         var options = Options;
         if (options.Count != 0)
             values.Add("options: " + Map(options));
+
         var attrs = Attributes;
         if (attrs.Count != 0)
             values.Add("attrs: " + Map(attrs));
+
         if (Handler != null)
             values.Add("handler: " + Handler);
     }

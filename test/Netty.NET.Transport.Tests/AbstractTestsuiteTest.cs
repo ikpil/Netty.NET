@@ -59,9 +59,11 @@ public abstract class AbstractTestsuiteTest<T> where T : class
     {
         List<TestsuitePermutation.IBootstrapFactory<T>> combos = NewFactories();
         string methodName = TestUtils.TestMethodName(testInfo);
+
         foreach (IByteBufAllocator allocator in NewAllocators())
         {
             int i = 0;
+
             foreach (TestsuitePermutation.IBootstrapFactory<T> e in combos)
             {
                 cb = e.NewInstance();

@@ -35,6 +35,7 @@ public class DomainSocketSourceTest
         using var socket = NewSocket();
         var child = new NioDomainSocketChannel(parent, socket);
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+
         try
         {
             Assert.Same(parent, child.Parent);
@@ -54,6 +55,7 @@ public class DomainSocketSourceTest
         using var socket = NewSocket();
         var server = new ProbeServer(socket);
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+
         try
         {
             await group.RegisterAsync(server);
@@ -73,6 +75,7 @@ public class DomainSocketSourceTest
         RequireDomainSockets();
         var server = new NioServerDomainSocketChannel();
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+
         try
         {
             await group.RegisterAsync(server);
@@ -96,13 +99,16 @@ public class DomainSocketSourceTest
     {
         RequireDomainSockets();
         using var socket = NewSocket();
+
         if (bindSocket)
         {
             socket.Bind(NewAddress());
             socket.Listen(128);
         }
+
         var server = new NioServerDomainSocketChannel(socket);
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
+
         try
         {
             await group.RegisterAsync(server);

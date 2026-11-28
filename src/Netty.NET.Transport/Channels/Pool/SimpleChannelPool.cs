@@ -119,6 +119,7 @@ public class SimpleChannelPool : IChannelPool
         bool releaseHealthCheck, bool lastRecentUsed)
     {
         ArgumentNullException.ThrowIfNull(bootstrap);
+
         Handler = handler ?? throw new ArgumentNullException(nameof(handler));
         HealthChecker = healthCheck ?? throw new ArgumentNullException(nameof(healthCheck));
         ReleaseHealthCheck = releaseHealthCheck;
@@ -147,6 +148,7 @@ public class SimpleChannelPool : IChannelPool
     private async Task AcquireHealthyAsync(TaskCompletionSource<IChannel> producer, CancellationTokenRegistration registration)
     {
         IChannel channel = null;
+
         try
         {
             for (;;)
@@ -165,6 +167,7 @@ public class SimpleChannelPool : IChannelPool
                 Task<bool> healthCheck = null;
                 await OnLoopAsync(channel, () => healthCheck = HealthChecker(channel)).ConfigureAwait(false);
                 bool healthy;
+
                 try
                 {
                     healthy = await healthCheck.ConfigureAwait(false);
@@ -173,11 +176,13 @@ public class SimpleChannelPool : IChannelPool
                 {
                     healthy = false;
                 }
+
                 if (healthy)
                 {
                     await NotifyAcquiredAsync(channel, producer).ConfigureAwait(false);
                     return;
                 }
+
                 await CloseChannelAsync(channel).ConfigureAwait(false);
                 channel = null;
             }
@@ -188,6 +193,7 @@ public class SimpleChannelPool : IChannelPool
             {
                 await CloseChannelAsync(channel).ConfigureAwait(false);
             }
+
             producer.TrySetException(error);
         }
         finally
@@ -205,6 +211,7 @@ public class SimpleChannelPool : IChannelPool
             Handler.ChannelAcquired(channel);
             returned = !producer.TrySetResult(channel);
         }).ConfigureAwait(false);
+
         if (returned)
         {
             // Promise was completed in the meantime (like cancelled), just release the channel again
@@ -241,6 +248,7 @@ public class SimpleChannelPool : IChannelPool
     public virtual async Task ReleaseAsync(IChannel channel)
     {
         ArgumentNullException.ThrowIfNull(channel);
+
         try
         {
             await OnLoopAsync(channel, () =>
@@ -254,6 +262,7 @@ public class SimpleChannelPool : IChannelPool
             }).ConfigureAwait(false);
 
             bool healthy = true;
+
             if (ReleaseHealthCheck)
             {
                 Task<bool> check = null;
@@ -270,6 +279,7 @@ public class SimpleChannelPool : IChannelPool
                     {
                         throw new ChannelPoolFullException();
                     }
+
                     Handler.ChannelReleased(channel);
                 }
                 else
@@ -298,6 +308,7 @@ public class SimpleChannelPool : IChannelPool
         {
             return channel.EventLoop.SubmitAsync(action);
         }
+
         action();
         return Task.CompletedTask;
     }
@@ -324,6 +335,7 @@ public class SimpleChannelPool : IChannelPool
             {
                 return null;
             }
+
             _channels.Remove(node);
             return node.Value;
         }
@@ -342,6 +354,7 @@ public class SimpleChannelPool : IChannelPool
         {
             _channels.AddLast(channel);
         }
+
         return true;
     }
 
@@ -360,6 +373,7 @@ public class SimpleChannelPool : IChannelPool
             {
                 return;
             }
+
             // Just ignore any errors that are reported back from close().
             await CloseChannelAsync(channel).ConfigureAwait(false);
         }

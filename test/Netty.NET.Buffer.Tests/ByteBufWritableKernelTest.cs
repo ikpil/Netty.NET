@@ -39,6 +39,7 @@ public class ByteBufWritableKernelTest
         public override ByteBuf EnsureWritable(int minimumWritableBytes)
         {
             calls.Visit();
+
             return base.EnsureWritable(minimumWritableBytes);
         }
     }
@@ -48,6 +49,7 @@ public class ByteBufWritableKernelTest
         public override ByteBuf EnsureWritable(int minimumWritableBytes)
         {
             calls.Visit();
+
             return base.EnsureWritable(minimumWritableBytes);
         }
     }
@@ -119,6 +121,7 @@ public class ByteBufWritableKernelTest
         ByteBuf buffer = Create(direct, calls, scenario, native);
         int capacity = buffer.Capacity, writer = buffer.WriterIndex;
         byte[] before = buffer.AsReadOnlySpan(0, capacity).ToArray(), wire = WireBytes(operation);
+
         try
         {
             if (scenario == 2)
@@ -129,16 +132,19 @@ public class ByteBufWritableKernelTest
             {
                 Assert.Same(buffer, Write(buffer, operation));
             }
+
             Assert.Equal(0, calls.Count);
             Assert.Equal(scenario == 1 ? 64 : capacity, buffer.Capacity);
             Assert.Equal(1, buffer.ReaderIndex);
             Assert.Equal(scenario == 2 ? writer : writer + wire.Length, buffer.WriterIndex);
             byte[] expectedPrefix = (byte[])before.Clone();
+
             if (scenario != 2)
             {
                 wire.AsSpan(0, Math.Min(wire.Length, capacity - writer)).CopyTo(expectedPrefix.AsSpan(writer));
                 Assert.Equal(wire, buffer.AsReadOnlySpan(writer, wire.Length).ToArray());
             }
+
             Assert.Equal(expectedPrefix, buffer.AsReadOnlySpan(0, capacity).ToArray());
             buffer.SetIndex(0, buffer.Capacity).ResetReaderIndex().ResetWriterIndex();
             Assert.Equal(1, buffer.ReaderIndex);
@@ -171,6 +177,7 @@ public class ByteBufWritableKernelTest
         ByteBuf buffer = Create(direct, calls, scenario, native);
         int capacity = buffer.Capacity, writer = buffer.WriterIndex;
         byte[] before = buffer.AsReadOnlySpan(0, capacity).ToArray();
+
         try
         {
             if (reject)
@@ -185,6 +192,7 @@ public class ByteBufWritableKernelTest
             {
                 Assert.Same(buffer, buffer.EnsureWritable(8));
             }
+
             Assert.Equal(1, calls.Count);
             Assert.Equal(!reject && scenario == 1 ? 64 : capacity, buffer.Capacity);
             Assert.Equal(before, buffer.AsReadOnlySpan(0, capacity).ToArray());
@@ -215,6 +223,7 @@ public class ByteBufWritableKernelTest
     {
         var native = new NativeMemoryAllocator();
         ByteBuf buffer = NewBuffer(direct, 8, native);
+
         try
         {
             buffer.WriterIndex = buffer.Capacity;
@@ -237,6 +246,7 @@ public class ByteBufWritableKernelTest
     {
         var native = new NativeMemoryAllocator();
         ByteBuf buffer = NewBuffer(direct, 8, native);
+
         try
         {
             buffer.WriterIndex = buffer.Capacity;
@@ -275,6 +285,7 @@ public class ByteBufWritableKernelTest
         ByteBuf buffer = NewBuffer(direct, 4096, native);
         buffer.WriterIndex = buffer.ReaderIndex;
         buffer.WriteByte(1);
+
         try
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => buffer.EnsureWritable(int.MaxValue));

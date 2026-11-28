@@ -52,6 +52,7 @@ public sealed class SocksAuthStatus
                 return code;
             }
         }
+
         return FAILURE;
     }
 

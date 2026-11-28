@@ -159,6 +159,7 @@ internal sealed class Bzip2BlockCompressor
         crc.UpdateCRC(value, runLength);
 
         byte byteValue = (byte) value;
+
         switch (runLength)
         {
             case 1:
@@ -200,6 +201,7 @@ internal sealed class Bzip2BlockCompressor
         {
             return false;
         }
+
         int rleCurrentValue = this.rleCurrentValue;
         int rleLength = this.rleLength;
 
@@ -227,6 +229,7 @@ internal sealed class Bzip2BlockCompressor
                 this.rleLength = rleLength + 1;
             }
         }
+
         return true;
     }
 
@@ -298,6 +301,7 @@ internal sealed class Bzip2BlockCompressor
         {
             return blockLengthLimit + 2;
         }
+
         return blockLengthLimit - blockLength + 1;
     }
 

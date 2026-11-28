@@ -54,6 +54,7 @@ public class JavaStringConversionContractTest
         Assert.Equal("DefaultChannelGroup(name: g, size: 0)", new DefaultChannelGroup("g").ToString());
 
         var group = new DefaultEventLoopGroup(1);
+
         try
         {
             Assert.Equal("ServerBootstrap(ServerBootstrapConfig(group: DefaultEventLoopGroup, childGroup: DefaultEventLoopGroup))",
@@ -69,6 +70,7 @@ public class JavaStringConversionContractTest
     public void PipelineAndContextToStringFollowTheSource()
     {
         var channel = new EmbeddedChannel(new ChannelInboundHandlerAdapter(), new ChannelInboundHandlerAdapter());
+
         try
         {
             const string handler = "Netty.NET.Transport.Channels.ChannelInboundHandlerAdapter";

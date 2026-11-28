@@ -40,6 +40,7 @@ public class ReflectiveChannelFactory<T> where T : IChannel
             throw new ArgumentException("Class " + StringUtil.SimpleClassName(clazz) + " is not a " +
                     StringUtil.SimpleClassName(typeof(T)), nameof(clazz));
         }
+
         // CLR: Type.GetConstructor returns null where Class.getConstructor throws NoSuchMethodException.
         ConstructorInfo constructor = clazz.GetConstructor(Type.EmptyTypes);
         if (constructor == null)
@@ -47,6 +48,7 @@ public class ReflectiveChannelFactory<T> where T : IChannel
             throw new ArgumentException("Class " + StringUtil.SimpleClassName(clazz) +
                     " does not have a public non-arg constructor", nameof(clazz));
         }
+
         _constructor = constructor;
     }
 

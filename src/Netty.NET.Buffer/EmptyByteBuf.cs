@@ -28,6 +28,7 @@ internal sealed class EmptyByteBuf : ByteBuf
     internal EmptyByteBuf(IByteBufAllocator allocator) : base(0)
     {
         ArgumentNullException.ThrowIfNull(allocator);
+
         _allocator = allocator;
     }
 
@@ -79,18 +80,21 @@ internal sealed class EmptyByteBuf : ByteBuf
     public override ByteBuf ReadBytes(int length)
     {
         CheckIndex(0, length);
+
         return this;
     }
 
     public override ByteBuf Copy(int index, int length)
     {
         CheckIndex(index, length);
+
         return this;
     }
 
     public override ByteBuf Slice(int index, int length)
     {
         CheckIndex(index, length);
+
         return this;
     }
 
@@ -104,6 +108,7 @@ internal sealed class EmptyByteBuf : ByteBuf
     {
         CheckIndex(fromIndex, 0);
         CheckIndex(toIndex, 0);
+
         return -1;
     }
 }

@@ -42,16 +42,19 @@ public class HttpVersionLocaleTest
         // The constructor must use Locale.US so an HTTP-derived protocol name like "icap"
         // round-trips to the ASCII "ICAP" instead of being corrupted to "İCAP".
         CultureInfo original = CultureInfo.CurrentCulture;
+
         try
         {
             CultureInfo.CurrentCulture = new CultureInfo("tr-TR");
             HttpVersion version = HttpVersion.ValueOf("icap/1.0");
             Assert.Equal("ICAP", version.ProtocolName());
+
             for (int i = 0; i < version.ProtocolName().Length; i++)
             {
                 Assert.True(version.ProtocolName()[i] < 0x80,
                         "protocolName must remain ASCII regardless of JVM default locale");
             }
+
             Assert.Equal("ICAP/1.0", version.Text());
         }
         finally
@@ -65,6 +68,7 @@ public class HttpVersionLocaleTest
     {
         // Same Locale.US guarantee for the (protocolName, major, minor, ...) constructor.
         CultureInfo original = CultureInfo.CurrentCulture;
+
         try
         {
             CultureInfo.CurrentCulture = new CultureInfo("tr-TR");

@@ -26,6 +26,7 @@ public class CodecOutputListTest
     public void TestCodecOutputListAdd()
     {
         CodecOutputList codecOutputList = CodecOutputList.NewInstance();
+
         try
         {
             Assert.Equal(0, codecOutputList.Count);

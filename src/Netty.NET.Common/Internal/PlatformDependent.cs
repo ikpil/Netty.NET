@@ -84,6 +84,7 @@ public static class PlatformDependent
         {
             return;
         }
+
         ProcessOsReleaseFile("/usr/lib/os-release", availableClassifiers);
     }
 
@@ -91,6 +92,7 @@ public static class PlatformDependent
     internal static bool ProcessOsReleaseFile(string osReleaseFileName, ICollection<string> availableClassifiers)
     {
         string file = osReleaseFileName;
+
         try
         {
             if (File.Exists(file))
@@ -103,6 +105,7 @@ public static class PlatformDependent
                     using var reader = new StreamReader(stream, Encoding.UTF8);
 
                     string line;
+
                     while ((line = reader.ReadLine()) != null)
                     {
                         if (line.StartsWith(LINUX_ID_PREFIX, StringComparison.Ordinal))
@@ -130,6 +133,7 @@ public static class PlatformDependent
                     // Java AccessDeniedException is an IOException; CLR access denial is separate.
                     logger.Debug("Unable to read {}", osReleaseFileName, e);
                 }
+
                 // specification states we should only fall back if /etc/os-release does not exist
                 return true;
             }
@@ -139,6 +143,7 @@ public static class PlatformDependent
         {
             logger.Debug("Unable to check if {} exists", osReleaseFileName, e);
         }
+
         return false;
     }
 
@@ -160,11 +165,14 @@ public static class PlatformDependent
             // let users omit classifiers with just -Dio.netty.osClassifiers
             return true;
         }
+
         string[] classifiers = osClassifiers.Split(',');
         // String.split(regex) discards trailing empty fields on the JVM.
         int classifierCount = classifiers.Length;
+
         while (classifierCount > 0 && classifiers[classifierCount - 1].Length == 0)
             classifierCount--;
+
         Array.Resize(ref classifiers, classifierCount);
         if (classifiers.Length == 0)
         {
@@ -178,10 +186,12 @@ public static class PlatformDependent
             throw new ArgumentException(
                     osClassifiersPropertyName + " property contains more than 2 classifiers: " + osClassifiers);
         }
+
         foreach (string classifier in classifiers)
         {
             AddClassifier(availableClassifiers, classifier);
         }
+
         return true;
     }
 
@@ -238,6 +248,7 @@ public static class PlatformDependent
                     // High order int
                     HashCodeAsciiSanitizeInt(value, offset));
         }
+
         return unchecked(hash * HASH_CODE_C1 +
                 // Low order int
                 HashCodeAsciiSanitizeInt(value, offset) * HASH_CODE_C2 +
@@ -258,6 +269,7 @@ public static class PlatformDependent
                    (value.CharAt(offset + 1) & 0x1f) << 16 |
                    (value.CharAt(offset) & 0x1f) << 24;
         }
+
         return (value.CharAt(offset + 3) & 0x1f) << 24 |
                (value.CharAt(offset + 2) & 0x1f) << 16 |
                (value.CharAt(offset + 1) & 0x1f) << 8 |
@@ -275,6 +287,7 @@ public static class PlatformDependent
             return (value.CharAt(offset + 1) & 0x1f) |
                     (value.CharAt(offset) & 0x1f) << 8;
         }
+
         return (value.CharAt(offset + 1) & 0x1f) << 8 |
                 (value.CharAt(offset) & 0x1f);
     }
@@ -291,6 +304,7 @@ public static class PlatformDependent
     {
         ArgumentNullException.ThrowIfNull(src);
         ArgumentNullException.ThrowIfNull(dst);
+
         int count = checked((int)length);
         // CLR adaptation: bounded CopyTo also supports overlapping ranges. No
         // JVM object-header offset, native pin or manual safe-point loop is needed.
@@ -300,6 +314,7 @@ public static class PlatformDependent
     public static void SetMemory(byte[] dst, int dstIndex, long bytes, byte value)
     {
         ArgumentNullException.ThrowIfNull(dst);
+
         dst.AsSpan(dstIndex, checked((int)bytes)).Fill(value);
     }
 
@@ -326,6 +341,7 @@ public static class PlatformDependent
         // Keep the existing empty result for nonpositive comparison lengths.
         if (length <= 0)
             return true;
+
         return bytes1.AsSpan(startPos1, length).SequenceEqual(bytes2.AsSpan(startPos2, length));
     }
 
@@ -341,6 +357,7 @@ public static class PlatformDependent
         ArgumentNullException.ThrowIfNull(bytes);
         if (length <= 0)
             return true;
+
         return bytes.AsSpan(startPos, length).IndexOfAnyExcept((byte)0) < 0;
     }
 
@@ -383,16 +400,19 @@ public static class PlatformDependent
     public static int HashCodeAscii(byte[] bytes, int startPos, int length)
     {
         ArgumentNullException.ThrowIfNull(bytes);
+
         ReadOnlySpan<byte> data = bytes.AsSpan(startPos, length);
         // Native-order words preserve Netty's low-five-bit hash contract. The
         // complete range is validated before any word or tail is inspected.
         int hash = HASH_CODE_ASCII_SEED;
         int remainingBytes = length & 7;
         int end = remainingBytes;
+
         for (int i = length - 8; i >= end; i -= 8)
         {
             hash = HashCodeAsciiCompute(MemoryMarshal.Read<long>(data.Slice(i)), hash);
         }
+
         switch(remainingBytes)
         {
         case 7:
@@ -441,6 +461,7 @@ public static class PlatformDependent
         int length = bytes.Length();
         int remainingBytes = length & 7;
         int hash = HASH_CODE_ASCII_SEED;
+
         // Benchmarking shows that by just naively looping for inputs 8~31 bytes long we incur a relatively large
         // performance penalty (only achieve about 60% performance of loop which iterates over each char). So because
         // of this we take special provisions to unroll the looping for these conditions.
@@ -454,26 +475,32 @@ public static class PlatformDependent
         else if (length >= 8)
         {
             hash = HashCodeAsciiCompute(bytes, length - 8, hash);
+
             if (length >= 16)
             {
                 hash = HashCodeAsciiCompute(bytes, length - 16, hash);
+
                 if (length >= 24)
                 {
                     hash = HashCodeAsciiCompute(bytes, length - 24, hash);
                 }
             }
         }
+
         if (remainingBytes == 0)
         {
             return hash;
         }
+
         int offset = 0;
+
         if (remainingBytes != 2 & remainingBytes != 4 & remainingBytes != 6)
         {
             // 1, 3, 5, 7
             hash = unchecked(hash * HASH_CODE_C1 + HashCodeAsciiSanitizeByte(bytes.CharAt(0)));
             offset = 1;
         }
+
         if (remainingBytes != 1 & remainingBytes != 4 & remainingBytes != 5)
         {
             // 2, 3, 6, 7
@@ -481,18 +508,21 @@ public static class PlatformDependent
                     + HashCodeAsciiSanitize(HashCodeAsciiSanitizeShort(bytes, offset)));
             offset += 2;
         }
+
         if (remainingBytes >= 4)
         {
             // 4, 5, 6, 7
             return unchecked(hash * ((offset == 0 | offset == 3) ? HASH_CODE_C1 : HASH_CODE_C2)
                     + HashCodeAsciiSanitizeInt(bytes, offset));
         }
+
         return hash;
     }
 
     private static DirectoryInfo Tmpdir0()
     {
         DirectoryInfo f;
+
         try
         {
             f = ToDirectory(SystemPropertyUtil.Get("io.netty.tmpdir"));
@@ -615,6 +645,7 @@ public static class PlatformDependent
         {
             AddFilesystemOsClassifiers(available);
         }
+
         return Array.AsReadOnly(available.ToArray());
     }
 
@@ -634,6 +665,7 @@ public static class PlatformDependent
 
         string dirPath = directory?.FullName ?? Path.GetTempPath();
         var options = new FileStreamOptions { Mode = FileMode.CreateNew, Access = FileAccess.Write, Share = FileShare.None };
+
         if (!OperatingSystem.IsWindows())
             options.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
 
@@ -641,6 +673,7 @@ public static class PlatformDependent
         {
             string filePath = Path.Combine(dirPath, prefix + Path.GetRandomFileName() + suffix);
             FileStream stream;
+
             try
             {
                 // CreateNew reserves the name atomically; never truncate or follow an existing file/link.
@@ -655,7 +688,9 @@ public static class PlatformDependent
                 // Retry only a name collision, with a bound as in the CLR Windows temp-file API.
                 continue;
             }
+
             stream.Dispose();
+
             return new FileInfo(filePath);
         }
     }
@@ -696,6 +731,7 @@ public static class PlatformDependent
     {
         string trimmed = value.Trim();
         StringBuilder sb = new StringBuilder(trimmed.Length);
+
         for (int i = 0; i < trimmed.Length; i++)
         {
             char c = trimmed[i];
@@ -704,6 +740,7 @@ public static class PlatformDependent
                 sb.Append(c);
             }
         }
+
         return sb.ToString();
     }
 
@@ -712,6 +749,7 @@ public static class PlatformDependent
     private static string Normalize(string value)
     {
         StringBuilder sb = new StringBuilder(value.Length);
+
         for (int i = 0; i < value.Length; i++)
         {
             char c = char.ToLowerInvariant(value[i]);
@@ -720,12 +758,14 @@ public static class PlatformDependent
                 sb.Append(c);
             }
         }
+
         return sb.ToString();
     }
 
     private static string NormalizeArch(string value)
     {
         value = Normalize(value);
+
         switch (value)
         {
             case "x8664":
@@ -805,6 +845,7 @@ public static class PlatformDependent
         {
             return "hpux";
         }
+
         if (value.StartsWith("os400"))
         {
             // Avoid the names such as os4000
@@ -813,6 +854,7 @@ public static class PlatformDependent
                 return "os400";
             }
         }
+
         if (value.StartsWith("linux"))
         {
             return "linux";

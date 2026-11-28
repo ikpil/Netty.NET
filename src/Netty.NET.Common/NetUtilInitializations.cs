@@ -38,7 +38,9 @@ internal static class NetUtilInitializations
     internal static IReadOnlyList<NetworkInterface> NetworkInterfaces(Func<IEnumerable<NetworkInterface>> getInterfaces)
     {
         ArgumentNullException.ThrowIfNull(getInterfaces);
+
         List<NetworkInterface> networkInterfaces = new List<NetworkInterface>();
+
         try
         {
             foreach (NetworkInterface iface in getInterfaces())
@@ -68,8 +70,10 @@ internal static class NetUtilInitializations
         ArgumentNullException.ThrowIfNull(localhost4);
         ArgumentNullException.ThrowIfNull(localhost6);
         ArgumentNullException.ThrowIfNull(isAddressAssigned);
+
         // Retrieve the list of available network interfaces.
         List<NetworkInterface> ifaces = new List<NetworkInterface>();
+
         foreach (NetworkInterface iface in networkInterfaces)
         {
             // Use the interface with proper INET addresses only.
@@ -91,11 +95,13 @@ internal static class NetUtilInitializations
         // on a certain environment. (e.g. Windows with -Djava.net.preferIPv4Stack=true)
         NetworkInterface loopbackIface = null;
         IPAddress loopbackAddr = null;
+
         foreach (NetworkInterface iface in ifaces)
         {
             try
             {
                 var addrs = iface.GetIPProperties().UnicastAddresses;
+
                 foreach (UnicastIPAddressInformation address in addrs)
                 {
                     IPAddress addr = address.Address;
@@ -127,6 +133,7 @@ internal static class NetUtilInitializations
                     if (iface.NetworkInterfaceType == NetworkInterfaceType.Loopback)
                     {
                         var addrs = iface.GetIPProperties().UnicastAddresses;
+
                         foreach (UnicastIPAddressInformation address in addrs)
                         {
                             IPAddress addr = address.Address;
@@ -198,6 +205,7 @@ internal static class NetUtilInitializations
         {
             return true;
         }
+
         Span<byte> bytes = stackalloc byte[16];
         address.TryWriteBytes(bytes, out int written);
         if (written != 16)
@@ -210,6 +218,7 @@ internal static class NetUtilInitializations
         {
             return bytes[12] == 127;
         }
+
         return bytes[15] == 1 && bytes[..15].IndexOfAnyExcept((byte)0) < 0;
     }
 
@@ -222,10 +231,12 @@ internal static class NetUtilInitializations
     {
         ArgumentNullException.ThrowIfNull(address);
         ArgumentNullException.ThrowIfNull(interfaces);
+
         Span<byte> requestedBytes = stackalloc byte[16];
         address.TryWriteBytes(requestedBytes, out int requestedLength);
         ReadOnlySpan<byte> requested = address.IsIPv4MappedToIPv6 ? requestedBytes[12..] : requestedBytes[..requestedLength];
         Span<byte> candidateBytes = stackalloc byte[16];
+
         // Java factories normalize mapped IPv4; address equality ignores IPv6 scope.
         foreach (NetworkInterface iface in interfaces)
         {

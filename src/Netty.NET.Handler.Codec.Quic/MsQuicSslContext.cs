@@ -84,10 +84,12 @@ internal sealed class MsQuicSslContext : QuicSslContext
         {
             throw new ArgumentException("No KeyManagerFactory");
         }
+
         this.keyManagerFactory = keyManagerFactory;
         this.serverKeyManager = serverKeyManager;
         this.clientKeyManager = clientKeyManager;
         this.mapping = mapping;
+
         if (ctxOptions != null)
         {
             foreach (KeyValuePair<SslContextOption, object> ctxOpt in ctxOptions)
@@ -95,6 +97,7 @@ internal sealed class MsQuicSslContext : QuicSslContext
                 LOGGER.Debug("Skipping unsupported " + nameof(SslContextOption) + ": " + ctxOpt.Key);
             }
         }
+
         apn = new ProtocolNegotiator(applicationProtocols);
         this.sessionCacheSize = sessionCacheSize;
         this.sessionTimeout = sessionTimeout;
@@ -161,11 +164,14 @@ internal sealed class MsQuicSslContext : QuicSslContext
         {
             return null;
         }
+
         List<SslApplicationProtocol> protocols = new List<SslApplicationProtocol>(names.Count);
+
         foreach (string name in names)
         {
             protocols.Add(new SslApplicationProtocol(name));
         }
+
         return protocols;
     }
 
@@ -175,8 +181,10 @@ internal sealed class MsQuicSslContext : QuicSslContext
         RemoteCertificateValidationCallback verify = (sender, certificate, chain, errors) =>
         {
             engine.RecordPeerChain(certificate, chain);
+
             return VerifyRemoteCertificate(sender, certificate, chain, errors);
         };
+
         if (server)
         {
             SslServerAuthenticationOptions options = new SslServerAuthenticationOptions
@@ -200,12 +208,15 @@ internal sealed class MsQuicSslContext : QuicSslContext
                 RemoteCertificateValidationCallback = verify,
                 LocalCertificateSelectionCallback = clientKeyManager,
             };
+
             if (keyManagerFactory != null)
             {
                 options.ClientCertificates = new X509CertificateCollection { keyManagerFactory.TargetCertificate };
             }
+
             engine = new MsQuicSslEngine(this, peerHost, peerPort, options, null);
         }
+
         return engine;
     }
 
@@ -225,14 +236,17 @@ internal sealed class MsQuicSslContext : QuicSslContext
         {
             return server && clientAuth != ClientAuth.REQUIRE;
         }
+
         if (string.IsNullOrEmpty(endpointIdentificationAlgorithm))
         {
             sslPolicyErrors &= ~SslPolicyErrors.RemoteCertificateNameMismatch;
         }
+
         if (trustManager != null)
         {
             return trustManager(sender, certificate, chain, sslPolicyErrors);
         }
+
         return sslPolicyErrors == SslPolicyErrors.None;
     }
 

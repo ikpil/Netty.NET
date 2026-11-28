@@ -51,6 +51,7 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
     public static explicit operator string(StringCharSequence charSequence)
     {
         Contract.Requires(charSequence != null);
+
         return charSequence.ToString();
     }
 
@@ -96,6 +97,7 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
             {
                 throw new ArgumentOutOfRangeException(nameof(index));
             }
+
             return _value[_offset + index];
         }
     }
@@ -124,6 +126,7 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
         {
             return -1;
         }
+
         int index = AsSpan().Slice(start).IndexOf(ch);
         return index < 0 ? -1 : start + index;
     }
@@ -134,6 +137,7 @@ public sealed class StringCharSequence : ICharSequence, IEquatable<StringCharSeq
         {
             throw new ArgumentOutOfRangeException(nameof(start));
         }
+
         return _value.Substring(_offset + start, _count - start);
     }
 

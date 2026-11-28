@@ -224,6 +224,7 @@ public class SnappyFrameDecoderTest : IDisposable
     public void TestInvalidChecksumThrowsException()
     {
         EmbeddedChannel channel = new EmbeddedChannel(new SnappyFrameDecoder(true));
+
         try
         {
             // checksum here is presented as 0
@@ -248,6 +249,7 @@ public class SnappyFrameDecoderTest : IDisposable
     public void TestInvalidChecksumDoesNotThrowException()
     {
         EmbeddedChannel channel = new EmbeddedChannel(new SnappyFrameDecoder(true));
+
         try
         {
             // checksum here is presented as a282986f (little endian)
@@ -274,6 +276,7 @@ public class SnappyFrameDecoderTest : IDisposable
     private static void AssertInvalidChunkLength(bool validateChecksums, byte chunkType, int chunkLength)
     {
         EmbeddedChannel channel = new EmbeddedChannel(new SnappyFrameDecoder(validateChecksums));
+
         try
         {
             ByteBuf @in = channel.Alloc().Buffer(14 + chunkLength);

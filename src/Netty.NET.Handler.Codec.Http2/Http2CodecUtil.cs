@@ -200,8 +200,10 @@ public static class Http2CodecUtil
             {
                 return (Http2Exception) cause;
             }
+
             cause = cause.InnerException;
         }
+
         return null;
     }
 
@@ -323,6 +325,7 @@ public static class Http2CodecUtil
             _ = child.Task.ContinueWith(static (t, state) =>
             {
                 SimpleChannelPromiseAggregator aggregator = (SimpleChannelPromiseAggregator) state;
+
                 if (t.IsCompletedSuccessfully)
                 {
                     aggregator.TrySuccess();
@@ -350,6 +353,7 @@ public static class Http2CodecUtil
                     return SetPromise();
                 }
             }
+
             return this;
         }
 
@@ -363,10 +367,12 @@ public static class Http2CodecUtil
                 {
                     return TryPromise();
                 }
+
                 // TODO: We break the interface a bit here.
                 // Multiple failure events can be processed without issue because this is an aggregation.
                 return true;
             }
+
             return false;
         }
 
@@ -387,6 +393,7 @@ public static class Http2CodecUtil
                     return SetPromise();
                 }
             }
+
             return this;
         }
 
@@ -395,11 +402,13 @@ public static class Http2CodecUtil
             if (AwaitingPromises())
             {
                 ++doneCount;
+
                 if (AllPromisesDone())
                 {
                     SetPromise();
                 }
             }
+
             return this;
         }
 
@@ -412,10 +421,12 @@ public static class Http2CodecUtil
                 {
                     return TryPromise();
                 }
+
                 // TODO: We break the interface a bit here.
                 // Multiple success events can be processed without issue because this is an aggregation.
                 return true;
             }
+
             return false;
         }
 
@@ -455,11 +466,13 @@ public static class Http2CodecUtil
             if (aggregateFailure == null)
             {
                 promise.TrySetResult();
+
                 return TrySetResult();
             }
             else
             {
                 promise.TrySetException(aggregateFailure);
+
                 return TrySetException(aggregateFailure);
             }
         }
@@ -493,6 +506,7 @@ public static class Http2CodecUtil
     {
         StringBuilder sb = new StringBuilder(format.Length + 16);
         int argIndex = 0;
+
         for (int i = 0; i < format.Length; i++)
         {
             char c = format[i];
@@ -505,13 +519,16 @@ public static class Http2CodecUtil
                     i++;
                     continue;
                 }
+
                 if (conversion == 'd' || conversion == 's' || conversion == 'b')
                 {
                     if (args == null || argIndex >= args.Length)
                     {
                         throw new FormatException("Format specifier '%" + conversion + "'");
                     }
+
                     object arg = args[argIndex++];
+
                     if (conversion == 'b')
                     {
                         sb.Append(arg == null ? "false" : arg is bool b ? (b ? "true" : "false") : "true");
@@ -520,12 +537,15 @@ public static class Http2CodecUtil
                     {
                         sb.Append(ToJavaString(arg));
                     }
+
                     i++;
                     continue;
                 }
             }
+
             sb.Append(c);
         }
+
         return sb.ToString();
     }
 
@@ -546,6 +566,7 @@ public static class Http2CodecUtil
         {
             return f.ToString(null, CultureInfo.InvariantCulture);
         }
+
         return o.ToString();
     }
 
@@ -591,6 +612,7 @@ public static class Http2CodecUtil
             promise.TrySetFromTask(future);
             return;
         }
+
         _ = future.ContinueWith(static (t, state) => ((TaskCompletionSource) state).TrySetFromTask(t), promise,
                 CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously,
                 new EventExecutorTaskScheduler(() => ctx.Executor));
@@ -618,6 +640,7 @@ public static class Http2CodecUtil
         {
             return new TaskCanceledException(future);
         }
+
         return null;
     }
 }

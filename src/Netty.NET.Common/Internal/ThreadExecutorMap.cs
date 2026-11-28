@@ -50,6 +50,7 @@ public static class ThreadExecutorMap
     {
         ObjectUtil.CheckNotNull(executor, "executor");
         ObjectUtil.CheckNotNull(eventExecutor, "eventExecutor");
+
         return new AnonymousExecutor(command =>
             executor.Execute(Apply(command, eventExecutor))
         );
@@ -60,9 +61,11 @@ public static class ThreadExecutorMap
     {
         ArgumentNullException.ThrowIfNull(executor);
         ArgumentNullException.ThrowIfNull(eventExecutor);
+
         return command =>
         {
             ArgumentNullException.ThrowIfNull(command);
+
             executor(() => RunWithExecutor(command, eventExecutor));
         };
     }
@@ -76,6 +79,7 @@ public static class ThreadExecutorMap
     {
         ObjectUtil.CheckNotNull(command, "command");
         ObjectUtil.CheckNotNull(eventExecutor, "eventExecutor");
+
         return () => RunWithExecutor(command, eventExecutor);
     }
 
@@ -87,6 +91,7 @@ public static class ThreadExecutorMap
     {
         ObjectUtil.CheckNotNull(threadFactory, "threadFactory");
         ObjectUtil.CheckNotNull(eventExecutor, "eventExecutor");
+
         return new AnonymousThreadFactory(r =>
             threadFactory.NewThread(() => RunWithExecutor(r, eventExecutor))
         );
@@ -95,6 +100,7 @@ public static class ThreadExecutorMap
     private static void RunWithExecutor(Action command, IEventExecutor eventExecutor)
     {
         IEventExecutor old = SetCurrentExecutor(eventExecutor);
+
         try
         {
             command();

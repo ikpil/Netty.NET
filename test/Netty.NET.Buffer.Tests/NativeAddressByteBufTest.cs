@@ -35,6 +35,7 @@ public class NativeAddressByteBufTest
     {
         byte[] storage = [0, 1, 2, 3, 4];
         ByteBuf buffer = Unpooled.WrappedBuffer(storage.AsMemory(1, 3));
+
         try
         {
             Assert.Equal(3, buffer.ReadableBytes);

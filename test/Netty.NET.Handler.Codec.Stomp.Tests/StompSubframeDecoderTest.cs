@@ -663,20 +663,24 @@ public class StompSubframeDecoderTest : IDisposable
     private static byte[] FrameWithHeaders(int numHeaders)
     {
         StringBuilder frame = new StringBuilder("SEND\ndestination:/queue/a\n");
+
         for (int i = 1; i < numHeaders; i++)
         {
             frame.Append("header").Append(i).Append(":value").Append(i).Append('\n');
         }
+
         return Encoding.UTF8.GetBytes(frame.Append("\nbody\0").ToString());
     }
 
     private static IStompHeadersSubframe DecodeHeaders(byte[] frame, int readSize, int maxNumHeaders)
     {
         EmbeddedChannel channel = new EmbeddedChannel(new StompSubframeDecoder(1024, 1024, maxNumHeaders, true));
+
         for (int i = 0; i < frame.Length; i += Math.Min(readSize, frame.Length - i))
         {
             channel.WriteInbound(Unpooled.WrappedBuffer(frame, i, Math.Min(readSize, frame.Length - i)));
         }
+
         IStompHeadersSubframe headersSubFrame = channel.ReadInbound<IStompHeadersSubframe>();
         Assert.NotNull(headersSubFrame);
         channel.FinishAndReleaseAll();

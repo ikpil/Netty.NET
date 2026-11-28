@@ -65,18 +65,22 @@ public sealed class QuicServerCodecBuilder : QuicCodecBuilder<QuicServerCodecBui
         {
             options[e.Key] = e.Value;
         }
+
         foreach (KeyValuePair<IAttributeKey, (object Value, Action<IChannel> Apply)> e in builder.attrs)
         {
             attrs[e.Key] = e.Value;
         }
+
         foreach (KeyValuePair<ChannelOption, object> e in builder.streamOptions)
         {
             streamOptions[e.Key] = e.Value;
         }
+
         foreach (KeyValuePair<IAttributeKey, (object Value, Action<IChannel> Apply)> e in builder.streamAttrs)
         {
             streamAttrs[e.Key] = e.Value;
         }
+
         handler = builder.handler;
         streamHandler = builder.streamHandler;
         connectionIdAddressGenerator = builder.connectionIdAddressGenerator;
@@ -101,6 +105,7 @@ public sealed class QuicServerCodecBuilder : QuicCodecBuilder<QuicServerCodecBui
     public QuicServerCodecBuilder Option<T>(ChannelOption<T> option, T value)
     {
         Quic.UpdateOptions(options, option, value);
+
         return Self();
     }
 
@@ -116,6 +121,7 @@ public sealed class QuicServerCodecBuilder : QuicCodecBuilder<QuicServerCodecBui
     public QuicServerCodecBuilder Attr<T>(AttributeKey<T> key, T value) where T : class
     {
         Quic.UpdateAttributes(attrs, key, value);
+
         return Self();
     }
 
@@ -145,6 +151,7 @@ public sealed class QuicServerCodecBuilder : QuicCodecBuilder<QuicServerCodecBui
     public QuicServerCodecBuilder StreamOption<T>(ChannelOption<T> option, T value)
     {
         Quic.UpdateOptions(streamOptions, option, value);
+
         return Self();
     }
 
@@ -160,6 +167,7 @@ public sealed class QuicServerCodecBuilder : QuicCodecBuilder<QuicServerCodecBui
     public QuicServerCodecBuilder StreamAttr<T>(AttributeKey<T> key, T value) where T : class
     {
         Quic.UpdateAttributes(streamAttrs, key, value);
+
         return Self();
     }
 
@@ -248,27 +256,32 @@ public sealed class QuicServerCodecBuilder : QuicCodecBuilder<QuicServerCodecBui
             throw new NotSupportedException("resetTokenGenerator(...) is not supported by System.Net.Quic " +
                                             "(msquic generates the stateless reset tokens)");
         }
+
         IQuicTokenHandler tokenHandler = this.tokenHandler;
         if (tokenHandler == null)
         {
             tokenHandler = NoQuicTokenHandler.INSTANCE;
         }
+
         IQuicConnectionIdGenerator generator = connectionIdAddressGenerator;
         if (generator == null)
         {
             generator = IQuicConnectionIdGenerator.SignGenerator();
         }
+
         IQuicResetTokenGenerator resetTokenGenerator = this.resetTokenGenerator;
         if (resetTokenGenerator == null)
         {
             resetTokenGenerator = IQuicResetTokenGenerator.SignGenerator();
         }
+
         IChannelHandler handler = this.handler;
         IChannelHandler streamHandler = this.streamHandler;
         if (!MsQuicConfig.IsSupportedPlatform)
         {
             throw new PlatformNotSupportedException("System.Net.Quic is not supported on this platform");
         }
+
         return new MsQuicServerCodec(config, localConnIdLength, flushStrategy, sslEngineProvider, handler,
                 Quic.ToOptionsArray(options), Quic.ToAttributesArray(attrs),
                 streamHandler, Quic.ToOptionsArray(streamOptions), Quic.ToAttributesArray(streamAttrs));

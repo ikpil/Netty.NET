@@ -124,6 +124,7 @@ public class SmtpRequestEncoderTest
     public void TestThrowsIfContentExpected()
     {
         EmbeddedChannel channel = new EmbeddedChannel(new SmtpRequestEncoder());
+
         try
         {
             Assert.True(channel.WriteOutbound(SmtpRequests.Data()));
@@ -162,6 +163,7 @@ public class SmtpRequestEncoderTest
             {
                 break;
             }
+
             written.WriteBytes(buffer);
             buffer.Release();
         }

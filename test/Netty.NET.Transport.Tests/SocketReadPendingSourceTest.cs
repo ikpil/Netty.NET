@@ -40,6 +40,7 @@ public class SocketReadPendingSourceTest : AbstractSocketTest
     {
         IChannel serverChannel = null;
         IChannel clientChannel = null;
+
         try
         {
             ReadPendingInitializer serverInitializer = new ReadPendingInitializer();
@@ -80,6 +81,7 @@ public class SocketReadPendingSourceTest : AbstractSocketTest
             {
                 await serverChannel.CloseAsync();
             }
+
             if (clientChannel != null)
             {
                 await clientChannel.CloseAsync();
@@ -124,6 +126,7 @@ public class SocketReadPendingSourceTest : AbstractSocketTest
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
         {
             ReferenceCountUtil.Release(msg);
+
             if (count.IncrementAndGet() == 1)
             {
                 // Call read the first time, to ensure it is not reset the second time.
@@ -134,6 +137,7 @@ public class SocketReadPendingSourceTest : AbstractSocketTest
         public override void ChannelReadComplete(IChannelHandlerContext ctx)
         {
             latch.TrySetResult();
+
             if (latch2Count.DecrementAndGet() == 0)
             {
                 latch2.TrySetResult();

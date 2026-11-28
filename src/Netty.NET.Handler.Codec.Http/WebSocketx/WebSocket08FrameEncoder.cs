@@ -136,10 +136,12 @@ public class WebSocket08FrameEncoder : MessageToMessageEncoder<WebSocketFrame>, 
         }
 
         int b0 = 0;
+
         if (msg.IsFinalFragment())
         {
             b0 |= 1 << 7;
         }
+
         b0 |= (msg.Rsv() & 0x07) << 4;
         b0 |= opcode & 0x7F;
 
@@ -151,9 +153,11 @@ public class WebSocket08FrameEncoder : MessageToMessageEncoder<WebSocketFrame>, 
 
         bool release = true;
         ByteBuf buf = null;
+
         try
         {
             int maskLength = maskGenerator != null ? 4 : 0;
+
             if (length <= 125)
             {
                 int size = 2 + maskLength + length;
@@ -165,10 +169,12 @@ public class WebSocket08FrameEncoder : MessageToMessageEncoder<WebSocketFrame>, 
             else if (length <= 0xFFFF)
             {
                 int size = 4 + maskLength;
+
                 if (maskGenerator != null || length <= GATHERING_WRITE_THRESHOLD)
                 {
                     size += length;
                 }
+
                 buf = ctx.Alloc().Buffer(size);
                 buf.WriteByte(b0);
                 buf.WriteByte(maskGenerator != null ? 0xFE : 126);
@@ -178,10 +184,12 @@ public class WebSocket08FrameEncoder : MessageToMessageEncoder<WebSocketFrame>, 
             else
             {
                 int size = 10 + maskLength;
+
                 if (maskGenerator != null)
                 {
                     size += length;
                 }
+
                 buf = ctx.Alloc().Buffer(size);
                 buf.WriteByte(b0);
                 buf.WriteByte(maskGenerator != null ? 0xFF : 127);
@@ -226,12 +234,14 @@ public class WebSocket08FrameEncoder : MessageToMessageEncoder<WebSocketFrame>, 
                             }
                         }
                         int maskOffset = 0;
+
                         for (; i < end; i++)
                         {
                             byte byteData = data.GetByte(i);
                             buf.WriteByte(byteData ^ WebSocketUtil.ByteAtIndex(mask, maskOffset++ & 3));
                         }
                     }
+
                     @out.Add(buf);
                 }
                 else
@@ -243,6 +253,7 @@ public class WebSocket08FrameEncoder : MessageToMessageEncoder<WebSocketFrame>, 
             {
                 AddBuffers(buf, data, @out);
             }
+
             release = false;
         }
         finally
@@ -280,6 +291,7 @@ public class WebSocket08FrameEncoder : MessageToMessageEncoder<WebSocketFrame>, 
         {
             return OPCODE_CONT;
         }
+
         throw new NotSupportedException("Cannot encode frame of type: " + msg.GetType().FullName);
     }
 
@@ -295,6 +307,7 @@ public class WebSocket08FrameEncoder : MessageToMessageEncoder<WebSocketFrame>, 
         else
         {
             @out.Add(buf);
+
             if (readableBytes > 0)
             {
                 @out.Add(data.Retain());

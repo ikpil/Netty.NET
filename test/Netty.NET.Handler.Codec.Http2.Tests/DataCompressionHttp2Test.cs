@@ -157,17 +157,20 @@ public class DataCompressionHttp2Test : IAsyncLifetime
             await clientChannel.CloseAsync();
             clientChannel = null;
         }
+
         if (serverChannel != null)
         {
             await serverChannel.CloseAsync();
             serverChannel = null;
         }
+
         IChannel serverConnectedChannel = this.serverConnectedChannel;
         if (serverConnectedChannel != null)
         {
             await serverConnectedChannel.CloseAsync();
             this.serverConnectedChannel = null;
         }
+
         if (sb != null)
         {
             Task serverGroup = sb.Config.Group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
@@ -175,6 +178,7 @@ public class DataCompressionHttp2Test : IAsyncLifetime
             await serverGroup;
             await serverChildGroup;
         }
+
         if (cb != null)
         {
             Task clientGroup = cb.Config.Group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
@@ -204,6 +208,7 @@ public class DataCompressionHttp2Test : IAsyncLifetime
     public static TheoryData<int, AsciiString> PaddingAndCompression()
     {
         TheoryData<int, AsciiString> builder = new TheoryData<int, AsciiString>();
+
         foreach (int padding in new int[]{0, 10})
         {
             foreach (AsciiString compression in new AsciiString[]{
@@ -212,6 +217,7 @@ public class DataCompressionHttp2Test : IAsyncLifetime
                 builder.Add(padding, compression);
             }
         }
+
         return builder;
     }
 
@@ -240,6 +246,7 @@ public class DataCompressionHttp2Test : IAsyncLifetime
         ByteBuf data1 = Unpooled.CopiedBuffer(Encoding.UTF8.GetBytes(text1));
         ByteBuf data2 = Unpooled.CopiedBuffer(Encoding.UTF8.GetBytes(text2));
         await BootstrapEnv(data1.ReadableBytes + data2.ReadableBytes);
+
         try
         {
             IHttp2Headers headers = new DefaultHttp2Headers().Method(POST).Path(PATH)
@@ -290,10 +297,12 @@ public class DataCompressionHttp2Test : IAsyncLifetime
                 // Compression codec must reject
                 Assert.IsAssignableFrom<Http2Exception.StreamException>(cause);
                 Exception rootCause = cause;
+
                 while (rootCause.InnerException != null)
                 {
                     rootCause = rootCause.InnerException;
                 }
+
                 Assert.IsAssignableFrom<DecompressionException>(rootCause);
                 Assert.Contains("maximum size", rootCause.Message);
             }
@@ -320,6 +329,7 @@ public class DataCompressionHttp2Test : IAsyncLifetime
     {
         ByteBuf data = Unpooled.CopiedBuffer(text);
         await BootstrapEnv(data.ReadableBytes);
+
         try
         {
             IHttp2Headers headers = new DefaultHttp2Headers().Method(POST).Path(PATH)
@@ -348,6 +358,7 @@ public class DataCompressionHttp2Test : IAsyncLifetime
         Random.Shared.NextBytes(bytes);
         await BootstrapEnv(BUFFER_SIZE);
         ByteBuf data = Unpooled.WrappedBuffer(bytes);
+
         try
         {
             IHttp2Headers headers = new DefaultHttp2Headers().Method(POST).Path(PATH)
@@ -401,6 +412,7 @@ public class DataCompressionHttp2Test : IAsyncLifetime
                         stream.Close();
                     }
                 }
+
                 return processedBytes;
             });
 

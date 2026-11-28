@@ -40,6 +40,7 @@ public sealed class MqttTestUtils
             MqttProperties.MqttProperty actualProperty = actual.GetProperty(propertyId);
             IReadOnlyList<MqttProperties.MqttProperty> actualProperties =
                     actual.GetProperties(propertyId);
+
             switch (propertyId)
             {
                 // one byte value integer property
@@ -108,10 +109,12 @@ public sealed class MqttTestUtils
                     List<MqttProperties.StringPair> actualPairs =
                             ((MqttProperties.UserProperties) actualProperty).value;
                     Assert.Equal(expectedPairs, actualPairs, "User properties count doesn't match");
+
                     for (int i = 0; i < expectedPairs.Count; i++)
                     {
                         Assert.Equal(expectedPairs[i], actualPairs[i], "User property mismatch");
                     }
+
                     break;
                 }
                 // byte[] property
@@ -131,6 +134,7 @@ public sealed class MqttTestUtils
                     break;
             }
         }
+
         foreach (MqttProperties.MqttProperty actualProperty in actual.ListAll())
         {
             MqttProperties.MqttProperty expectedProperty = expected.GetProperty(actualProperty.propertyId);
@@ -154,6 +158,7 @@ public sealed class MqttTestUtils
                 return;
             }
         }
+
         Assert.Fail(message + " - properties didn't contain expected integer value " +
                 expectedValue.ToString(CultureInfo.InvariantCulture) + ": [" + string.Join(", ", properties) + "]");
     }
@@ -167,6 +172,7 @@ public sealed class MqttTestUtils
                 expectedTopicSubscriptions.Count,
                 actualTopicSubscriptions.Count,
                 "MqttSubscribePayload TopicSubscriptionList size mismatch");
+
         for (int i = 0; i < expectedTopicSubscriptions.Count; i++)
         {
             ValidateTopicSubscription(expectedTopicSubscriptions[i], actualTopicSubscriptions[i]);

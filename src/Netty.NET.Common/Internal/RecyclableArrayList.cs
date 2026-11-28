@@ -41,6 +41,7 @@ public sealed class RecyclableArrayList : Collection<object>
     {
         // Validate the CLR capacity argument before claiming a pooled instance.
         ArgumentOutOfRangeException.ThrowIfNegative(minCapacity);
+
         RecyclableArrayList ret = RECYCLER.Get();
         ret._list.EnsureCapacity(minCapacity);
         return ret;
@@ -65,6 +66,7 @@ public sealed class RecyclableArrayList : Collection<object>
     {
         object[] snapshot = Snapshot(items);
         _list.AddRange(snapshot);
+
         if (snapshot.Length != 0)
         {
             _insertSinceRecycled = true;
@@ -75,6 +77,7 @@ public sealed class RecyclableArrayList : Collection<object>
     {
         object[] snapshot = Snapshot(items);
         _list.InsertRange(index, snapshot);
+
         if (snapshot.Length != 0)
         {
             _insertSinceRecycled = true;
@@ -84,9 +87,11 @@ public sealed class RecyclableArrayList : Collection<object>
     private static object[] Snapshot(IEnumerable<object> items)
     {
         ArgumentNullException.ThrowIfNull(items);
+
         // Materialize once before mutation: CLR enumerables may be single-use,
         // throw midway, or alias this list. The snapshot keeps failure atomic.
         object[] snapshot = items.ToArray();
+
         // produce less garbage
         for (int i = 0; i < snapshot.Length; i++)
         {
@@ -95,6 +100,7 @@ public sealed class RecyclableArrayList : Collection<object>
                 throw new ArgumentException("items contains null values", nameof(items));
             }
         }
+
         return snapshot;
     }
 
@@ -103,6 +109,7 @@ public sealed class RecyclableArrayList : Collection<object>
         // Collection<T> routes both generic and non-generic writes through these
         // hooks, so interface callers cannot bypass the non-null/tracking rules.
         ArgumentNullException.ThrowIfNull(item);
+
         base.InsertItem(index, item);
         _insertSinceRecycled = true;
     }
@@ -110,6 +117,7 @@ public sealed class RecyclableArrayList : Collection<object>
     protected override void SetItem(int index, object item)
     {
         ArgumentNullException.ThrowIfNull(item);
+
         base.SetItem(index, item);
         _insertSinceRecycled = true;
     }

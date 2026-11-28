@@ -3,11 +3,13 @@ using Netty.NET.Transport.Tests;
 
 if (args.Contains("--require-native") && RuntimeFeature.IsDynamicCodeSupported)
     throw new InvalidOperationException("This validation requires an actual NativeAOT executable.");
+
 for (int scenario = 0; scenario < NativeAotContractScenarios.Count; scenario++)
 {
     NativeAotContractScenarios.Run(scenario);
     Console.WriteLine($"PASS native pipeline scenario {scenario}");
 }
+
 Console.WriteLine($"Passed {NativeAotContractScenarios.Count} scenarios; dynamic code supported: {RuntimeFeature.IsDynamicCodeSupported}");
 
 for (int scenario = 0; scenario < ChannelIdContractScenarios.Count; scenario++)
@@ -15,6 +17,7 @@ for (int scenario = 0; scenario < ChannelIdContractScenarios.Count; scenario++)
     ChannelIdContractScenarios.Run(scenario);
     Console.WriteLine($"PASS native identity scenario {scenario}");
 }
+
 Console.WriteLine($"Passed {ChannelIdContractScenarios.Count} identity scenarios; dynamic code supported: {RuntimeFeature.IsDynamicCodeSupported}");
 
 for (int scenario = 0; scenario < NativeAotNetworkScenarios.Count; scenario++)
@@ -22,4 +25,5 @@ for (int scenario = 0; scenario < NativeAotNetworkScenarios.Count; scenario++)
     NativeAotNetworkScenarios.Run(scenario);
     Console.WriteLine($"PASS native network scenario {scenario}");
 }
+
 Console.WriteLine($"Passed {NativeAotNetworkScenarios.Count} network scenarios; dynamic code supported: {RuntimeFeature.IsDynamicCodeSupported}");

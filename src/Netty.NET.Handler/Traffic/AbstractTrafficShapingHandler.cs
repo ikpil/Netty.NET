@@ -278,6 +278,7 @@ public abstract class AbstractTrafficShapingHandler : ChannelDuplexHandler
     {
         Volatile.Write(ref writeLimit, newWriteLimit);
         Volatile.Write(ref readLimit, newReadLimit);
+
         if (trafficCounter != null)
         {
             trafficCounter.ResetAccounting(Traffic.TrafficCounter.MilliSecondFromNano());
@@ -292,6 +293,7 @@ public abstract class AbstractTrafficShapingHandler : ChannelDuplexHandler
     public void Configure(long newCheckInterval)
     {
         Volatile.Write(ref checkInterval, newCheckInterval);
+
         if (trafficCounter != null)
         {
             trafficCounter.Configure(Volatile.Read(ref checkInterval));
@@ -318,6 +320,7 @@ public abstract class AbstractTrafficShapingHandler : ChannelDuplexHandler
     public void SetWriteLimit(long writeLimit)
     {
         Volatile.Write(ref this.writeLimit, writeLimit);
+
         if (trafficCounter != null)
         {
             trafficCounter.ResetAccounting(Traffic.TrafficCounter.MilliSecondFromNano());
@@ -344,6 +347,7 @@ public abstract class AbstractTrafficShapingHandler : ChannelDuplexHandler
     public void SetReadLimit(long readLimit)
     {
         Volatile.Write(ref this.readLimit, readLimit);
+
         if (trafficCounter != null)
         {
             trafficCounter.ResetAccounting(Traffic.TrafficCounter.MilliSecondFromNano());
@@ -364,6 +368,7 @@ public abstract class AbstractTrafficShapingHandler : ChannelDuplexHandler
     public void SetCheckInterval(long checkInterval)
     {
         Volatile.Write(ref this.checkInterval, checkInterval);
+
         if (trafficCounter != null)
         {
             trafficCounter.Configure(checkInterval);
@@ -482,6 +487,7 @@ public abstract class AbstractTrafficShapingHandler : ChannelDuplexHandler
                     logger.Debug("Not unsuspend: " + Text(config.IsAutoRead()) + ':' +
                             Text(IsHandlerActive(ctx)));
                 }
+
                 channel.Attr(READ_SUSPENDED).Set(false);
             }
             else
@@ -506,10 +512,12 @@ public abstract class AbstractTrafficShapingHandler : ChannelDuplexHandler
                         }
                     }
                 }
+
                 channel.Attr(READ_SUSPENDED).Set(false);
                 config.SetAutoRead(true);
                 channel.Read();
             }
+
             if (logger.IsDebugEnabled())
             {
                 logger.Debug("Unsuspend final status => " + Text(config.IsAutoRead()) + ':'
@@ -534,6 +542,7 @@ public abstract class AbstractTrafficShapingHandler : ChannelDuplexHandler
     {
         long size = CalculateSize(msg);
         long now = Traffic.TrafficCounter.MilliSecondFromNano();
+
         if (size > 0)
         {
             // compute the number of ms to wait before reopening the channel
@@ -545,11 +554,13 @@ public abstract class AbstractTrafficShapingHandler : ChannelDuplexHandler
                 // Only AutoRead AND HandlerActive True means Context Active
                 IChannel channel = ctx.Channel;
                 IChannelConfig config = channel.Config;
+
                 if (logger.IsDebugEnabled())
                 {
                     logger.Debug("Read suspend: " + wait + ':' + Text(config.IsAutoRead()) + ':'
                             + Text(IsHandlerActive(ctx)));
                 }
+
                 if (config.IsAutoRead() && IsHandlerActive(ctx))
                 {
                     config.SetAutoRead(false);
@@ -563,7 +574,9 @@ public abstract class AbstractTrafficShapingHandler : ChannelDuplexHandler
                         reopenTask = new ReopenReadTimerTask(ctx).Run;
                         attr.Set(reopenTask);
                     }
+
                     _ = ctx.Executor.ScheduleAsync(reopenTask, TimeSpan.FromMilliseconds(wait));
+
                     if (logger.IsDebugEnabled())
                     {
                         logger.Debug("Suspend final status => " + Text(config.IsAutoRead()) + ':'
@@ -572,6 +585,7 @@ public abstract class AbstractTrafficShapingHandler : ChannelDuplexHandler
                 }
             }
         }
+
         InformReadOperation(ctx, now);
         ctx.FireChannelRead(msg);
     }
@@ -584,6 +598,7 @@ public abstract class AbstractTrafficShapingHandler : ChannelDuplexHandler
             //release the reopen task
             channel.Attr(REOPEN_TASK).Set(null);
         }
+
         base.HandlerRemoved(ctx);
     }
 
@@ -628,6 +643,7 @@ public abstract class AbstractTrafficShapingHandler : ChannelDuplexHandler
     {
         long size = CalculateSize(msg);
         long now = Traffic.TrafficCounter.MilliSecondFromNano();
+
         if (size > 0)
         {
             // compute the number of ms to wait before continue with the channel
@@ -639,9 +655,11 @@ public abstract class AbstractTrafficShapingHandler : ChannelDuplexHandler
                     logger.Debug("Write suspend: " + wait + ':' + Text(ctx.Channel.Config.IsAutoRead()) + ':'
                             + Text(IsHandlerActive(ctx)));
                 }
+
                 return SubmitWrite(ctx, msg, size, wait, now, cancellationToken);
             }
         }
+
         // to maintain order of write
         return SubmitWrite(ctx, msg, size, 0, now, cancellationToken);
     }
@@ -672,6 +690,7 @@ public abstract class AbstractTrafficShapingHandler : ChannelDuplexHandler
     internal static TaskCompletionSource NewPromise(CancellationToken cancellationToken)
     {
         TaskCompletionSource promise = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
         if (cancellationToken.CanBeCanceled)
         {
             CancellationTokenRegistration registration = cancellationToken.UnsafeRegister(
@@ -680,6 +699,7 @@ public abstract class AbstractTrafficShapingHandler : ChannelDuplexHandler
                     registration, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously,
                     TaskScheduler.Default);
         }
+
         return promise;
     }
 
@@ -709,6 +729,7 @@ public abstract class AbstractTrafficShapingHandler : ChannelDuplexHandler
         {
             return null;
         }
+
         deque.RemoveFirst();
         return first.Value;
     }
@@ -778,6 +799,7 @@ public abstract class AbstractTrafficShapingHandler : ChannelDuplexHandler
             .Append(" maxDelay: ").Append(Volatile.Read(ref maxWriteDelay).ToString(CultureInfo.InvariantCulture))
             .Append(" maxSize: ").Append(Volatile.Read(ref maxWriteSize).ToString(CultureInfo.InvariantCulture))
             .Append(" and Counter: ");
+
         if (trafficCounter != null)
         {
             builder.Append(trafficCounter);
@@ -786,6 +808,7 @@ public abstract class AbstractTrafficShapingHandler : ChannelDuplexHandler
         {
             builder.Append("none");
         }
+
         return builder.ToString();
     }
 
@@ -812,6 +835,7 @@ public abstract class AbstractTrafficShapingHandler : ChannelDuplexHandler
         {
             return ((IFileRegion)msg).Count();
         }
+
         return -1;
     }
 }

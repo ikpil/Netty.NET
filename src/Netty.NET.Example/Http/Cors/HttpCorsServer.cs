@@ -91,6 +91,7 @@ public sealed class HttpCorsServer
         SslContext sslCtx = ServerUtil.BuildSslContext();
 
         IEventLoopGroup group = new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory());
+
         try
         {
             ServerBootstrap b = new ServerBootstrap();

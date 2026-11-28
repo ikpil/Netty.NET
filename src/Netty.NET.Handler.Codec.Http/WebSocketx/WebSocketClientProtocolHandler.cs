@@ -425,6 +425,7 @@ public class WebSocketClientProtocolHandler : WebSocketProtocolHandler
             _ = ctx.CloseAsync();
             return;
         }
+
         base.Decode(ctx, frame, @out);
     }
 
@@ -442,6 +443,7 @@ public class WebSocketClientProtocolHandler : WebSocketProtocolHandler
             ctx.Pipeline.AddBefore(ctx.Name, typeof(WebSocketClientProtocolHandshakeHandler).FullName,
                 new WebSocketClientProtocolHandshakeHandler(handshaker, clientConfig.HandshakeTimeoutMillis()));
         }
+
         if (clientConfig.WithUTF8Validator() && cp.Get<Utf8FrameValidator>() == null)
         {
             // Add the UFT8 checking before this one.

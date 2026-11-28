@@ -63,6 +63,7 @@ public class ChunkedWriteHandlerTest
         {
             TMP = PlatformDependent.CreateTempFile("netty-chunk-", ".tmp", null);
             DeleteOnExit(TMP);
+
             using (FileStream @out = new FileStream(TMP.FullName, FileMode.Create, FileAccess.Write))
             {
                 @out.Write(BYTES);
@@ -117,6 +118,7 @@ public class ChunkedWriteHandlerTest
     {
         FileStream @in = null;
         const long expectedPosition = 10;
+
         try
         {
             @in = OpenRead(TMP);
@@ -154,6 +156,7 @@ public class ChunkedWriteHandlerTest
     {
         FileInfo file = PlatformDependent.CreateTempFile("netty-chunk-truncated-", ".tmp", null);
         DeleteOnExit(file);
+
         // CLR: new RandomAccessFile(file, "rw") is a read/write FileStream; raf.setLength(512) is SetLength(512).
         using (FileStream raf = new FileStream(file.FullName, FileMode.Open, FileAccess.ReadWrite))
         {
@@ -172,6 +175,7 @@ public class ChunkedWriteHandlerTest
             Assert.Equal(5, Volatile.Read(ref writes.Value));
 
             int read = 0;
+
             for (;;)
             {
                 ByteBuf buffer = ch.ReadOutbound<ByteBuf>();
@@ -179,9 +183,11 @@ public class ChunkedWriteHandlerTest
                 {
                     break;
                 }
+
                 read += buffer.ReadableBytes;
                 buffer.Release();
             }
+
             Assert.Equal(500, read);
             Assert.False(ch.Finish());
         }
@@ -313,6 +319,7 @@ public class ChunkedWriteHandlerTest
 
         // 3 out of 4 chunks were already written
         int read = 0;
+
         for (;;)
         {
             ByteBuf buffer = ch.ReadOutbound<ByteBuf>();
@@ -320,6 +327,7 @@ public class ChunkedWriteHandlerTest
             {
                 break;
             }
+
             read += buffer.ReadableBytes;
             buffer.Release();
         }
@@ -537,6 +545,7 @@ public class ChunkedWriteHandlerTest
 
         int i = 0;
         int read = 0;
+
         for (;;)
         {
             ByteBuf buffer = ch.ReadOutbound<ByteBuf>();
@@ -544,15 +553,18 @@ public class ChunkedWriteHandlerTest
             {
                 break;
             }
+
             while (buffer.IsReadable())
             {
                 Assert.Equal(BYTES[i++], buffer.ReadByte());
                 read++;
+
                 if (i == BYTES.Length)
                 {
                     i = 0;
                 }
             }
+
             buffer.Release();
         }
 
@@ -589,6 +601,7 @@ public class ChunkedWriteHandlerTest
         // we expect to see the second message, chunk by chunk
         int i = 0;
         int read = 0;
+
         for (;;)
         {
             ByteBuf buffer = ch.ReadOutbound<ByteBuf>();
@@ -596,15 +609,18 @@ public class ChunkedWriteHandlerTest
             {
                 break;
             }
+
             while (buffer.IsReadable())
             {
                 Assert.Equal(BYTES[i++], buffer.ReadByte());
                 read++;
+
                 if (i == BYTES.Length)
                 {
                     i = 0;
                 }
             }
+
             buffer.Release();
         }
 
@@ -684,6 +700,7 @@ public class ChunkedWriteHandlerTest
                 _ = ctx.CloseAsync();
                 return failed;
             }
+
             return ctx.WriteAsync(msg, cancellationToken);
         }
     }
@@ -709,6 +726,7 @@ public class ChunkedWriteHandlerTest
         public void Close()
         {
             buffer.Release();
+
             if (closeWasCalled != null)
             {
                 Volatile.Write(ref closeWasCalled.Value, true);
@@ -721,6 +739,7 @@ public class ChunkedWriteHandlerTest
             {
                 return null;
             }
+
             done = true;
             return buffer.RetainedDuplicate();
         }
@@ -758,6 +777,7 @@ public class ChunkedWriteHandlerTest
             {
                 return false;
             }
+
             done = true;
             return 0;
         }
@@ -798,6 +818,7 @@ public class ChunkedWriteHandlerTest
         public ByteBuf ReadChunk(IByteBufAllocator allocator)
         {
             Interlocked.Increment(ref chunks.Value);
+
             return buffer.RetainedDuplicate();
         }
 
@@ -861,6 +882,7 @@ public class ChunkedWriteHandlerTest
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken)
         {
             ReferenceCountUtil.Release(msg);
+
             return Task.FromException(new Exception());
         }
     }
@@ -879,6 +901,7 @@ public class ChunkedWriteHandlerTest
             else
             {
                 ReferenceCountUtil.Release(msg);
+
                 return Task.FromException(new Exception());
             }
         }
@@ -899,6 +922,7 @@ public class ChunkedWriteHandlerTest
             {
                 this.alreadyFailed = true;
                 ReferenceCountUtil.Release(msg);
+
                 return Task.FromException(new Exception());
             }
         }
@@ -1057,6 +1081,7 @@ public class ChunkedWriteHandlerTest
                 streamer.ResumeTransfer();
                 return null;
             }
+
             ByteBuf buffer = allocator.Buffer(4);
             buffer.WriteInt(42);
             return buffer;
@@ -1152,6 +1177,7 @@ public class ChunkedWriteHandlerTest
                 // code (a flush, a writability change, a close notification) would.
                 channel.Flush();
             }
+
             chunkNo++;
             ByteBuf buffer = allocator.Buffer(4);
             buffer.WriteInt(chunkNo);

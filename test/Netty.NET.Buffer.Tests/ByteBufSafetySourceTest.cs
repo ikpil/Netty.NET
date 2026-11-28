@@ -46,6 +46,7 @@ public class ByteBufSafetySourceTest
         ByteBuf root = storage.Root.SetIndex(2, 4);
         ByteBuf b = form switch { 1 => root.Slice(0, 16), 2 => new ByteBufUtilitySourceTest.Wrapper(root), 3 => root.AsReadOnly(), _ => root };
         b.SetIndex(2, 4).MarkReaderIndex().MarkWriterIndex();
+
         if (operation is >= 12 and <= 14)
         {
             Assert.True(root.Release());
@@ -118,7 +119,9 @@ public class ByteBufSafetySourceTest
         {
             Assert.Throws<ArgumentOutOfRangeException>(Access);
         }
+
         Assert.Equal((2, 4), (b.ReaderIndex, b.WriterIndex));
+
         if (root.RefCnt > 0)
         {
             b.ResetReaderIndex().ResetWriterIndex();
@@ -141,15 +144,19 @@ public class ByteBufSafetySourceTest
             RedirectStandardError = true,
             WorkingDirectory = Path.GetDirectoryName(typeof(ByteBufSafetySourceTest).Assembly.Location)!
         };
+
         foreach (string arg in new[] { typeof(ByteBufSafetySourceTest).Assembly.Location, "-method",
                      typeof(ByteBufSafetySourceTest).FullName + ".GuardProbe", "-noLogo", "-noAutoReporters", "-result-xml", report })
             start.ArgumentList.Add(arg);
+
         foreach (string property in properties)
             start.Environment[property] = enabled ? "true" : "false";
+
         using var process = new Process { StartInfo = start };
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         timeout.CancelAfter(TimeSpan.FromSeconds(30));
         bool started = false;
+
         try
         {
             started = process.Start();
@@ -171,6 +178,7 @@ public class ByteBufSafetySourceTest
             {
                 process.Kill(entireProcessTree: true);
             }
+
             File.Delete(report);
         }
     }

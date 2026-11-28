@@ -467,12 +467,14 @@ public class SpdyHeaderBlockRawDecoderTest : IDisposable
         headerBlock.WriteBytes(valueBytes);
 
         int readableBytes = headerBlock.ReadableBytes;
+
         for (int i = 0; i < readableBytes; i++)
         {
             ByteBuf headerBlockSegment = headerBlock.Slice(i, 1);
             decoder.Decode(IByteBufAllocator.Default, headerBlockSegment, frame);
             Assert.False(headerBlockSegment.IsReadable());
         }
+
         decoder.EndHeaderBlock(frame);
 
         Assert.False(frame.IsInvalid());
@@ -521,10 +523,12 @@ public class SpdyHeaderBlockRawDecoderTest : IDisposable
         ByteBuf headerBlock = Unpooled.Buffer(maxHeaderSize + 18);
         headerBlock.WriteInt(1);
         headerBlock.WriteInt(maxHeaderSize + 1);
+
         for (int i = 0; i < maxHeaderSize + 1; i++)
         {
             headerBlock.WriteByte('a');
         }
+
         headerBlock.WriteInt(5);
         headerBlock.WriteBytes(valueBytes);
         decoder.Decode(IByteBufAllocator.Default, headerBlock, frame);
@@ -545,10 +549,12 @@ public class SpdyHeaderBlockRawDecoderTest : IDisposable
         headerBlock.WriteInt(4);
         headerBlock.WriteBytes(nameBytes);
         headerBlock.WriteInt(13);
+
         for (int i = 0; i < maxHeaderSize - 3; i++)
         {
             headerBlock.WriteByte('a');
         }
+
         decoder.Decode(IByteBufAllocator.Default, headerBlock, frame);
         decoder.EndHeaderBlock(frame);
 

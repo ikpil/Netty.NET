@@ -43,6 +43,7 @@ public class RoundRobinInetAddressResolver : InetNameResolver
     public RoundRobinInetAddressResolver(IEventExecutor executor, INameResolver<IPAddress> nameResolver) : base(executor)
     {
         ArgumentNullException.ThrowIfNull(nameResolver);
+
         _nameResolver = nameResolver;
     }
 
@@ -60,6 +61,7 @@ public class RoundRobinInetAddressResolver : InetNameResolver
             // to support the round robin distribution
             return inetAddresses[RandomIndex(numAddresses)];
         }
+
         // CLR: UnknownHostException is Common's UnknownHostException (owner decision 2026-11-25).
         throw new UnknownHostException(inetHost);
     }
@@ -75,12 +77,15 @@ public class RoundRobinInetAddressResolver : InetNameResolver
             // rotate by different distance each time to force round robin distribution
             // CLR: Collections.rotate(result, distance) moves element i to (i + distance) % size.
             int distance = RandomIndex(inetAddresses.Count);
+
             for (int i = 0; i < result.Length; i++)
             {
                 result[(i + distance) % result.Length] = inetAddresses[i];
             }
+
             return result;
         }
+
         return inetAddresses;
     }
 

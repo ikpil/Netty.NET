@@ -104,6 +104,7 @@ public sealed class DefaultHttp2GoAwayFrame : DefaultByteBufHolder, IHttp2GoAway
     public IHttp2GoAwayFrame SetExtraStreamIds(int extraStreamIds)
     {
         CheckPositiveOrZero(extraStreamIds, "extraStreamIds");
+
         this.extraStreamIds = extraStreamIds;
         return this;
     }
@@ -163,6 +164,7 @@ public sealed class DefaultHttp2GoAwayFrame : DefaultByteBufHolder, IHttp2GoAway
         {
             return false;
         }
+
         DefaultHttp2GoAwayFrame other = (DefaultHttp2GoAwayFrame) o;
         return errorCode == other.errorCode && extraStreamIds == other.extraStreamIds && base.Equals(other);
     }

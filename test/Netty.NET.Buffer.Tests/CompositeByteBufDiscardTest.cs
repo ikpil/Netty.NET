@@ -70,6 +70,7 @@ public class CompositeByteBufDiscardTest
         ByteBuf s3 = s2.ReadSlice(2).Retain(); // 4
         ByteBuf s4 = s3.ReadSlice(2).Retain(); // 5
         CompositeByteBuf composite = s.Allocator.CompositeBuffer().AddComponent(s1).AddComponents(s2, s3, s4);
+
         try
         {
             Assert.Equal(1, composite.RefCnt);
@@ -94,6 +95,7 @@ public class CompositeByteBufDiscardTest
             {
                 composite.Release();
             }
+
             if (buffer.RefCnt > 0)
             {
                 buffer.Release(buffer.RefCnt);
@@ -120,6 +122,7 @@ public class CompositeByteBufDiscardTest
         ByteBuf s4 = s3.ReadRetainedSlice(2); // 5
         CompositeByteBuf composite = new UnpooledByteBufAllocator(direct, s.Native).CompositeBuffer()
             .AddComponent(s1).AddComponents(s2, s3, s4);
+
         try
         {
             Assert.Equal(1, composite.RefCnt);
@@ -144,6 +147,7 @@ public class CompositeByteBufDiscardTest
             {
                 composite.Release();
             }
+
             if (buffer.RefCnt > 0)
             {
                 buffer.Release(buffer.RefCnt);
@@ -160,6 +164,7 @@ public class CompositeByteBufDiscardTest
         ByteBuf b2 = s.Allocator.Buffer(2).WriteShort(2);
         // composite takes ownership of s1 and s2
         CompositeByteBuf composite = s.Allocator.CompositeBuffer().AddComponents(b1, b2);
+
         try
         {
             Assert.Equal(4, composite.Capacity);
@@ -199,6 +204,7 @@ public class CompositeByteBufDiscardTest
         ByteBuf b2 = b1.RetainedSlice(b1.ReaderIndex, 2);
         // composite takes ownership of b1 and b2
         CompositeByteBuf composite = new UnpooledByteBufAllocator(direct, s.Native).CompositeBuffer().AddComponents(b1, b2);
+
         try
         {
             Assert.Equal(4, composite.Capacity);
@@ -227,6 +233,7 @@ public class CompositeByteBufDiscardTest
             {
                 composite.Release();
             }
+
             if (buffer.RefCnt > 0)
             {
                 buffer.Release(buffer.RefCnt);
@@ -323,6 +330,7 @@ public class CompositeByteBufDiscardTest
         ByteBuf first = storage.Allocator.Buffer(10, 10).WriteBytes(data).Slice(0, 5);
         ByteBuf second = storage.Allocator.Buffer(10, 10).WriteBytes(data).Slice(5, 5);
         CompositeByteBuf composite = storage.Allocator.CompositeBuffer().AddComponents(new[] { first, second }, true);
+
         try
         {
             contiguous.SkipBytes(6).MarkReaderIndex();
@@ -367,6 +375,7 @@ public class CompositeByteBufDiscardTest
             contiguous.Release();
             composite.Release();
         }
+
         Assert.Equal(0, first.RefCnt);
         Assert.Equal(0, second.RefCnt);
     }
@@ -379,14 +388,17 @@ public class CompositeByteBufDiscardTest
         using var storage = new Storage(pooled, direct);
         CompositeByteBuf composite = storage.Allocator.CompositeBuffer();
         var sources = new List<ByteBuf>();
+
         try
         {
             const int length = 8 * 4;
             var expected = new byte[length];
+
             for (int i = 0; i < length; i += 4)
             {
                 ByteBuf source = storage.Allocator.Buffer();
                 sources.Add(source);
+
                 if (littleEndian)
                 {
                     source.WriteIntLE(i);
@@ -395,11 +407,13 @@ public class CompositeByteBufDiscardTest
                 {
                     source.WriteInt(i);
                 }
+
                 composite.Capacity = composite.WriterIndex;
                 composite.AddComponent(source);
                 composite.WriterIndex = i + 4;
                 expected[littleEndian ? i : i + 3] = (byte)i;
             }
+
             composite.WriteByte(1);
             Assert.Equal(64, composite.Capacity);
             var actual = new byte[length];
@@ -430,6 +444,7 @@ public class CompositeByteBufDiscardTest
         ByteBuf first = storage.Allocator.Buffer(2, 2).WriteBytes(new byte[] { 1, 2 });
         ByteBuf second = storage.Allocator.Buffer(2, 2).WriteBytes(new byte[] { 3, 4 });
         CompositeByteBuf composite = storage.Allocator.CompositeBuffer().AddComponents(new[] { first, second }, true);
+
         try
         {
             var data = new byte[4];
@@ -446,6 +461,7 @@ public class CompositeByteBufDiscardTest
         {
             composite.Release();
         }
+
         Assert.Equal(0, first.RefCnt);
         Assert.Equal(0, second.RefCnt);
     }
@@ -457,10 +473,12 @@ public class CompositeByteBufDiscardTest
     {
         using var storage = new Storage(pooled, direct);
         CompositeByteBuf composite = storage.Allocator.CompositeBuffer();
+
         try
         {
             Assert.Equal(0, composite.NumComponents);
             Assert.Equal(0, composite.Capacity);
+
             for (int i = 0; i < 65; ++i)
             {
                 composite.WriteByte(1);
@@ -469,6 +487,7 @@ public class CompositeByteBufDiscardTest
                 Assert.Equal(i + 1, composite.WriterIndex);
                 Assert.Equal(0, composite.ReadableBytes);
             }
+
             Assert.Equal(128, composite.Capacity);
             Assert.Equal(2, composite.NumComponents);
         }

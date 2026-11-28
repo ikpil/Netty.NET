@@ -23,6 +23,7 @@ internal class AvailableProcessorsHolder
         using (UninterruptibleMonitor.Enter(_lock))
         {
             ObjectUtil.CheckPositive(availableProcessors, "availableProcessors");
+
             if (_availableProcessors != 0)
             {
                 string message = FormattableString.Invariant($"availableProcessors is already set to [{_availableProcessors}], rejecting [{availableProcessors}]");

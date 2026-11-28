@@ -108,6 +108,7 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
         {
             inputShutdown = true;
         }
+
         readable = !inputShutdown;
         SetActive(true);
     }
@@ -232,10 +233,12 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
         {
             direction &= ~QuicAbortDirection.Read;
         }
+
         if (!stream.CanWrite)
         {
             direction &= ~QuicAbortDirection.Write;
         }
+
         if (direction != 0)
         {
             stream.Abort(direction, error);
@@ -255,6 +258,7 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
         if (!finSent)
         {
             finSent = true;
+
             if (stream.CanWrite)
             {
                 stream.CompleteWrites();
@@ -283,11 +287,13 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
         {
             // Just ignore
         }
+
         if (type == QuicStreamType.UNIDIRECTIONAL && localCreated || finReceived)
         {
             inputShutdown = true;
             outputShutdown = true;
         }
+
         readable = false;
         ReleaseStashedRead();
         parent.StreamClosed(this);
@@ -318,6 +324,7 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
     protected override void DoBeginRead()
     {
         readPending = true;
+
         if (hasStashedRead)
         {
             ByteBuf buffer = stashedBuffer;
@@ -327,12 +334,15 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
             stashedBuffer = null;
             stashedError = null;
             OpenBatch();
+
             if (OnReadResult(buffer, bytes, error))
             {
                 Recv(true);
             }
+
             return;
         }
+
         if (readable && !readInFlight)
         {
             Recv(false);
@@ -357,7 +367,9 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
         {
             return;
         }
+
         batchOpen = false;
+
         if (readCompleteNeeded || force)
         {
             readCompleteNeeded = false;
@@ -376,24 +388,30 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
             // be possible that we re-enter this method while still processing it.
             return;
         }
+
         inRecv = true;
+
         try
         {
             while (continueBatch || (IsOpen && readPending && readable && !readInFlight))
             {
                 continueBatch = false;
+
                 if (!IsOpen || !readable || readInFlight)
                 {
                     EndBatch(false);
                     break;
                 }
+
                 OpenBatch();
+
                 for (;;)
                 {
                     IRecvByteBufAllocator.IHandle allocHandle = RecvBufAllocHandle();
                     ByteBuf byteBuf = allocHandle.Allocate(Config.GetAllocator());
                     allocHandle.AttemptedBytesRead(byteBuf.WritableBytes);
                     ValueTask<int> read;
+
                     try
                     {
                         read = stream.ReadAsync(byteBuf.AsMemory(byteBuf.WriterIndex, byteBuf.WritableBytes));
@@ -404,8 +422,10 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
                         {
                             break;
                         }
+
                         continue;
                     }
+
                     if (!read.IsCompleted)
                     {
                         readInFlight = true;
@@ -413,8 +433,10 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
                         EndBatch(false);
                         return;
                     }
+
                     int bytes = -1;
                     Exception error = null;
+
                     try
                     {
                         bytes = read.GetAwaiter().GetResult();
@@ -423,6 +445,7 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
                     {
                         error = e;
                     }
+
                     if (!OnReadResult(byteBuf, bytes, error))
                     {
                         break;
@@ -441,6 +464,7 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
     {
         int bytes = -1;
         Exception error = null;
+
         try
         {
             bytes = await read.ConfigureAwait(false);
@@ -449,16 +473,19 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
         {
             error = e;
         }
+
         try
         {
             EventLoop.Execute(() =>
             {
                 readInFlight = false;
+
                 if (!IsOpen)
                 {
                     byteBuf.Release();
                     return;
                 }
+
                 if (!readPending)
                 {
                     // No read() is pending: keep the result until the next one.
@@ -468,7 +495,9 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
                     stashedError = error;
                     return;
                 }
+
                 OpenBatch();
+
                 if (OnReadResult(byteBuf, bytes, error))
                 {
                     Recv(true);
@@ -500,10 +529,12 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
         MsQuicStreamChannelConfig config = (MsQuicStreamChannelConfig) Config;
         IRecvByteBufAllocator.IHandle allocHandle = RecvBufAllocHandle();
         bool readFrames = config.IsReadFrames();
+
         if (error != null)
         {
             byteBuf.Release();
             readable = false;
+
             if (!IsOpen || inputShutdown || IsSilentReadError(error))
             {
                 parent.ConnectionError(error);
@@ -512,6 +543,7 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
                 EndBatch(false);
                 return false;
             }
+
             HandleReadException(pipeline, null, ReadException(error), readFrames);
             return false;
         }
@@ -520,10 +552,12 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
         // or while we did have auto read disabled. If so we need to ensure we not try to read from it as it
         // would produce an error.
         bool fin = bytes == 0 || stream.ReadsClosed.IsCompletedSuccessfully;
+
         if (bytes > 0)
         {
             byteBuf.WriterIndex += bytes;
         }
+
         if (fin)
         {
             // If we received a FIN we also should mark the channel as non-readable as
@@ -532,13 +566,17 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
             finReceived = true;
             inputShutdown = true;
         }
+
         bool continueReading = false;
+
         try
         {
             allocHandle.LastBytesRead(byteBuf.ReadableBytes);
+
             if (allocHandle.LastBytesRead() <= 0)
             {
                 byteBuf.Release();
+
                 if (finReceived && readFrames)
                 {
                     // If we read QuicStreamFrames we should fire an frame through the pipeline
@@ -550,6 +588,7 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
                     byteBuf = null;
                 }
             }
+
             if (byteBuf != null)
             {
                 // We did read one message.
@@ -562,6 +601,7 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
 
                 ByteBuf message = byteBuf;
                 byteBuf = null;
+
                 if (readFrames)
                 {
                     pipeline.FireChannelRead(new DefaultQuicStreamFrame(message, finReceived));
@@ -570,8 +610,10 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
                 {
                     pipeline.FireChannelRead(message);
                 }
+
                 continueReading = allocHandle.ContinueReading();
             }
+
             if (finReceived)
             {
                 EndBatch(false);
@@ -586,10 +628,12 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
             HandleReadException(pipeline, byteBuf, cause, readFrames);
             return false;
         }
+
         if (continueReading && IsOpen && readable)
         {
             return true;
         }
+
         EndBatch(false);
         return false;
     }
@@ -602,6 +646,7 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
         {
             return true;
         }
+
         return error is System.Net.Quic.QuicException quic &&
                (quic.QuicError == QuicError.OperationAborted || MsQuicChannel.IsConnectionError(quic));
     }
@@ -613,6 +658,7 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
         {
             return new QuicStreamResetException("QUICHE_ERR_STREAM_RESET", quic.ApplicationErrorCode ?? -1);
         }
+
         return MsQuicChannel.ToQuicException(error);
     }
 
@@ -630,6 +676,7 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
                 // to be consistent with other transports.
                 pipeline.FireUserEventTriggered(ChannelInputShutdownEvent.INSTANCE);
                 pipeline.FireUserEventTriggered(ChannelInputShutdownReadComplete.INSTANCE);
+
                 if (finSent)
                 {
                     // This was an unidirectional stream which means as soon as we received FIN and sent a FIN
@@ -662,6 +709,7 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
 
         EndBatch(true);
         pipeline.FireExceptionCaught(cause);
+
         if (finReceived)
         {
             CloseOnRead(pipeline, readFrames);
@@ -678,8 +726,10 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
         if (IsOpen && finSent)
         {
             ReferenceCountUtil.Release(msg);
+
             return Task.FromException(new ChannelOutputShutdownException("Fin was sent already"));
         }
+
         return base.WriteTransportAsync(msg, cancellationToken);
     }
 
@@ -689,6 +739,7 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
         {
             return msg;
         }
+
         throw new NotSupportedException("unsupported message type: " + StringUtil.SimpleClassName(msg));
     }
 
@@ -713,6 +764,7 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
 
             bool fin;
             ByteBuf buffer;
+
             if (msg is ByteBuf byteBuf)
             {
                 fin = false;
@@ -730,17 +782,20 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
             {
                 return Task.CompletedTask;
             }
+
             if (fin)
             {
                 finSent = true;
                 outputShutdown = true;
                 closeAfterFin = true;
             }
+
             if (!readableBuffer)
             {
                 stream.CompleteWrites();
                 return Task.CompletedTask;
             }
+
             return WriteAsync(buffer.ReadableSequence, fin);
         }
         catch (Exception e)
@@ -756,8 +811,10 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
             await WriteSegmentAsync(data.First, fin).ConfigureAwait(false);
             return;
         }
+
         ReadOnlySequence<byte>.Enumerator segments = data.GetEnumerator();
         bool hasSegment = segments.MoveNext();
+
         while (hasSegment)
         {
             ReadOnlyMemory<byte> segment = segments.Current;
@@ -795,17 +852,22 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
             // not read yet by the user.
             stopSendingReceived = true;
             ChannelOutputShutdownException cause = new ChannelOutputShutdownException("STOP_SENDING frame received");
+
             while (OutboundBuffer.Remove(cause))
             {
             }
+
             return;
         }
+
         parent.ConnectionError(t);
         Exception failure = t;
+
         if (t is System.Net.Quic.QuicException || t is ObjectDisposedException)
         {
             failure = IsSilentReadError(t) ? new ClosedChannelException() : MsQuicChannel.ToQuicException(t);
         }
+
         OutboundBuffer.Remove(failure);
     }
 
@@ -824,12 +886,15 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
                 return Task.FromException(e);
             }
         }
+
         TaskCompletionSource promise = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
         try
         {
             loop.Execute(() =>
             {
                 Task task;
+
                 try
                 {
                     task = operation();
@@ -839,6 +904,7 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
                     promise.TrySetException(e);
                     return;
                 }
+
                 MsQuicChannel.Notify(task, promise);
             });
         }
@@ -846,6 +912,7 @@ internal sealed class MsQuicStreamChannel : AbstractChannel, IQuicStreamChannel
         {
             return Task.FromException(e);
         }
+
         return promise.Task;
     }
 

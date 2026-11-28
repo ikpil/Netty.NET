@@ -4691,7 +4691,9 @@ internal sealed class QpackHuffmanDecoder
         {
             throw INVALID_LENGTH;
         }
+
         dest = new byte[length * 8 / 5];
+
         try
         {
             int readerIndex = buf.ReaderIndex;
@@ -4706,6 +4708,7 @@ internal sealed class QpackHuffmanDecoder
                 {
                     throw BAD_ENCODING;
                 }
+
                 return new AsciiString(dest, 0, k, false);
             }
 
@@ -4740,11 +4743,13 @@ internal sealed class QpackHuffmanDecoder
         {
             return false;
         }
+
         if ((state & HUFFMAN_EMIT_SYMBOL_SHIFT) != 0)
         {
             // state is always positive so can cast without mask here
             dest[k++] = (byte) state;
         }
+
         return true;
     }
 }

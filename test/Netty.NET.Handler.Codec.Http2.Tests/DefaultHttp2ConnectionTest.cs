@@ -93,11 +93,13 @@ public class DefaultHttp2ConnectionTest
     {
         IHttp2Connection.IEndpoint<IHttp2RemoteFlowController> remote = client.Remote();
         IHttp2Connection.IEndpoint<IHttp2LocalFlowController> local = client.Local();
+
         for (int c = 3, s = 2; c < 5000; c += 2, s += 2)
         {
             local.CreateStream(c, false);
             remote.CreateStream(s, false);
         }
+
         TestRemoveAllStreams();
     }
 
@@ -111,6 +113,7 @@ public class DefaultHttp2ConnectionTest
             streamA.Close();
             streamB.Close();
         });
+
         try
         {
             client.AddListener(clientListener2.Object);
@@ -127,11 +130,13 @@ public class DefaultHttp2ConnectionTest
     {
         IHttp2Connection.IEndpoint<IHttp2RemoteFlowController> remote = client.Remote();
         IHttp2Connection.IEndpoint<IHttp2LocalFlowController> local = client.Local();
+
         for (int c = 3, s = 2; c < 5000; c += 2, s += 2)
         {
             local.CreateStream(c, false);
             remote.CreateStream(s, false);
         }
+
         TaskCompletionSource promise = new TaskCompletionSource();
         using CountdownEvent latch = new CountdownEvent(client.NumActiveStreams());
         client.ForEachActiveStream(new CloseVisitor(client, promise, latch));
@@ -168,13 +173,16 @@ public class DefaultHttp2ConnectionTest
     {
         IHttp2Connection.IEndpoint<IHttp2RemoteFlowController> remote = client.Remote();
         IHttp2Connection.IEndpoint<IHttp2LocalFlowController> local = client.Local();
+
         for (int c = 3, s = 2; c < 5000; c += 2, s += 2)
         {
             local.CreateStream(c, false);
             remote.CreateStream(s, false);
         }
+
         TaskCompletionSource promise = new TaskCompletionSource();
         using CountdownEvent latch = new CountdownEvent(1);
+
         try
         {
             client.ForEachActiveStream(new CloseAndThrowVisitor(client, remote, promise));
@@ -187,6 +195,7 @@ public class DefaultHttp2ConnectionTest
                 latch.Signal();
             }, TestContext.Current.CancellationToken, TaskContinuationOptions.None, TaskScheduler.Default);
         }
+
         Assert.True(latch.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
     }
 
@@ -711,6 +720,7 @@ public class DefaultHttp2ConnectionTest
     private static void IncrementAndGetStreamShouldRespectOverflow(IHttp2Connection.IEndpoint endpoint, int streamId)
     {
         Assert.True(streamId > 0);
+
         try
         {
             endpoint.CreateStream(streamId, true);
@@ -720,6 +730,7 @@ public class DefaultHttp2ConnectionTest
         {
             Assert.Fail(t.ToString());
         }
+
         Assert.True(streamId < 0);
         int finalStreamId = streamId;
         Assert.ThrowsAny<Http2NoMoreStreamIdsException>(() =>
@@ -737,6 +748,7 @@ public class DefaultHttp2ConnectionTest
                 .Build();
 
         EmbeddedChannel channel = new EmbeddedChannel(handler);
+
         try
         {
             // Feed the client connection preface.
@@ -757,6 +769,7 @@ public class DefaultHttp2ConnectionTest
             {
                 connection.Remote().CreateStream(id, true);
             }
+
             Assert.Equal(Http2CodecUtil.SMALLEST_MAX_CONCURRENT_STREAMS,
                     connection.NumActiveStreams());
 
@@ -785,6 +798,7 @@ public class DefaultHttp2ConnectionTest
                 .Build();
 
         EmbeddedChannel channel = new EmbeddedChannel(handler);
+
         try
         {
             Assert.False(channel.WriteInbound(Http2CodecUtil.ConnectionPrefaceBuf()));
@@ -801,6 +815,7 @@ public class DefaultHttp2ConnectionTest
             {
                 connection.Remote().CreateStream(id, true);
             }
+
             Assert.Equal(maxConcurrentStreams, connection.NumActiveStreams());
 
             // The next stream must be refused.
@@ -832,6 +847,7 @@ public class DefaultHttp2ConnectionTest
                 .Build();
 
         EmbeddedChannel channel = new EmbeddedChannel(handler);
+
         try
         {
             Assert.False(channel.WriteInbound(Http2CodecUtil.ConnectionPrefaceBuf()));
@@ -844,6 +860,7 @@ public class DefaultHttp2ConnectionTest
             {
                 connection.Remote().CreateStream(id, true);
             }
+
             Assert.Equal(Http2CodecUtil.SMALLEST_MAX_CONCURRENT_STREAMS, connection.NumActiveStreams());
 
             int nextStreamId = Http2CodecUtil.SMALLEST_MAX_CONCURRENT_STREAMS * 2 + 1;
@@ -877,6 +894,7 @@ public class DefaultHttp2ConnectionTest
                 .Build();
 
         EmbeddedChannel channel = new EmbeddedChannel(handler);
+
         try
         {
             Assert.False(channel.WriteInbound(Http2CodecUtil.ConnectionPrefaceBuf()));
@@ -888,6 +906,7 @@ public class DefaultHttp2ConnectionTest
             {
                 connection.Remote().CreateStream(id, true);
             }
+
             Assert.Equal(maxConcurrentStreams, connection.NumActiveStreams());
 
             int nextStreamId = maxConcurrentStreams * 2 + 1;

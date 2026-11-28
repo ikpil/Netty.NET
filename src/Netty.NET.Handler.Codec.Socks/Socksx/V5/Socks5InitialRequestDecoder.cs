@@ -66,6 +66,7 @@ public class Socks5InitialRequestDecoder : ReplayingDecoder<Socks5InitialRequest
                 int authMethodCnt = @in.ReadByte();
 
                 Socks5AuthMethod[] authMethods = new Socks5AuthMethod[authMethodCnt];
+
                 for (int i = 0; i < authMethodCnt; i++)
                 {
                     authMethods[i] = Socks5AuthMethod.ValueOf(@in.ReadByte());
@@ -82,6 +83,7 @@ public class Socks5InitialRequestDecoder : ReplayingDecoder<Socks5InitialRequest
                 {
                     @out.Add(@in.ReadRetainedSlice(readableBytes));
                 }
+
                 break;
             }
             case State.FAILURE:

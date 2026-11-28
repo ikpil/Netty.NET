@@ -59,6 +59,7 @@ public class Http2SettingsHandler : SimpleChannelInboundHandler<Http2Settings>
         {
             throw new InvalidOperationException("Timed out waiting for settings");
         }
+
         if (!promise.Task.IsCompletedSuccessfully)
         {
             Exception cause = promise.Task.IsCanceled ? new TaskCanceledException(promise.Task)

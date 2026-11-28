@@ -118,6 +118,7 @@ public class SslHandlerCoalescingBufferQueueTest
         TaskCompletionSource promise = new TaskCompletionSource();
         Assert.False(queue.IsEmpty);
         ByteBuf buffer = queue.Remove(UnpooledByteBufAllocator.Default, 128, promise);
+
         try
         {
             Assert.Equal(16, buffer.ReadableBytes);
@@ -128,6 +129,7 @@ public class SslHandlerCoalescingBufferQueueTest
         {
             buffer.Release();
         }
+
         Assert.True(queue.IsEmpty);
         Assert.Equal(8, original.WriterIndex);
         original.WriterIndex = original.Capacity;

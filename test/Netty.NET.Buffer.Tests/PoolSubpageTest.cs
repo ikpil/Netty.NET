@@ -42,35 +42,46 @@ public class PoolSubpageTest
     public void BitmapWordsAndPartialLastWordReuseExactlyTheFreedSlots(int count)
     {
         int order = 0;
+
         while (1 << order < count)
             order++;
+
         SizeClasses sizes = Sizes(order: order);
         var chunk = new PoolChunk(sizes);
         var head = new PoolSubpage(sizes.Size2SizeIdx(4096), sizes);
         long run = chunk.AllocateRun(count * 4096);
         PoolSubpage sub;
+
         lock (head.SyncRoot)
         {
             sub = new PoolSubpage(head, chunk, PoolChunk.RunOffset(run), count * 4096, 4096);
+
             for (int i = 0; i < count; i++)
                 Assert.Equal(i, PoolChunk.BitmapIdx(sub.Allocate()));
+
             Assert.Equal(-1L, sub.Allocate());
             Assert.Same(head, head.Next);
             Assert.Equal(0, sub.NumAvailable);
             sub.Free(count - 1);
+
             if (count > 1)
                 sub.Free(0);
+
             Assert.Same(sub, head.Next);
             Assert.Equal(count > 1 ? 0 : count - 1, PoolChunk.BitmapIdx(sub.Allocate()));
+
             if (count > 1)
                 Assert.Equal(count - 1, PoolChunk.BitmapIdx(sub.Allocate()));
+
             for (int i = 0; i < count; i++)
                 Assert.True(sub.Free(i));
+
             Assert.Equal(count, sub.NumAvailable);
             Assert.True(sub.IsDoNotDestroy);
             Assert.Same(head, sub.Next);
             Assert.Same(head, sub.Prev);
         }
+
         IPoolSubpageMetric metric = sub;
         Assert.Equal(count, metric.MaxNumElements);
         Assert.Equal(4096, metric.ElementSize);
@@ -121,6 +132,7 @@ public class PoolSubpageTest
     public void EverySmallClassPartitionsRunsAndReturnsAllButOneCachedRun(int shifts, int alignment)
     {
         SizeClasses sizes = Sizes(shifts, alignment: alignment);
+
         for (int index = 0; index <= sizes.SmallMaxSizeIdx; index++)
         {
             var chunk = new PoolChunk(sizes);
@@ -130,6 +142,7 @@ public class PoolSubpageTest
             int capacity = expectedRun / elem;
             var handles = new List<long>();
             var offsets = new HashSet<int>();
+
             for (int i = 0; i <= capacity; i++)
             {
                 long h = chunk.AllocateSmall(index, out PoolChunk owner);
@@ -140,14 +153,19 @@ public class PoolSubpageTest
                 Assert.True(offsets.Add(offset));
                 Assert.InRange(offset + elem, 1, chunk.ChunkSize);
             }
+
             int[] sorted = offsets.Order().ToArray();
+
             for (int i = 1; i < sorted.Length; i++)
                 Assert.True(sorted[i - 1] + elem <= sorted[i]);
+
             Assert.Equal(chunk.ChunkSize - 2 * expectedRun, chunk.FreeBytes);
             PoolSubpage first = chunk.SubpageAt(0);
             PoolSubpage second = chunk.SubpageAt(PoolChunk.RunOffset(handles[^1]));
+
             foreach (long h in handles)
                 chunk.FreeSmall(h);
+
             int cachedOffset = capacity == 1 ? 0 : expectedRun / sizes.PageSize;
             int releasedOffset = capacity == 1 ? expectedRun / sizes.PageSize : 0;
             Assert.Null(chunk.SubpageAt(releasedOffset));
@@ -171,11 +189,15 @@ public class PoolSubpageTest
         var chunk = new PoolChunk(sizes);
         int index = sizes.Size2SizeIdx(8192);
         long[] handles = new long[1024];
+
         for (int i = 0; i < handles.Length; i++)
             handles[i] = chunk.AllocateSmall(index, out _);
+
         int before = chunk.FreeBytes;
+
         foreach (long handle in handles)
             chunk.FreeSmall(handle);
+
         Assert.True(before < chunk.FreeBytes);
         Assert.Equal(chunk.ChunkSize - 8192, chunk.FreeBytes);
         Assert.Equal(1, chunk.SubpageAt(0).MaxNumElements);
@@ -217,12 +239,14 @@ public class PoolSubpageTest
         chunk.FreeSmall(h[5]);
         chunk.FreeSmall(h[63]);
         chunk.FreeSmall(h[31]);
+
         foreach (int expected in new[] { 31, 5, 63 })
         {
             long reused = chunk.AllocateSmall(index, out _);
             Assert.Equal(expected, PoolChunk.BitmapIdx(reused));
             h[expected] = reused;
         }
+
         foreach (long handle in h)
             chunk.FreeSmall(handle);
     }
@@ -270,6 +294,7 @@ public class PoolSubpageTest
 
         foreach (long handle in new[] { -1L, 0, 1L << 33, (64L << 49) | (1L << 34) | (3L << 32) })
             Assert.Throws<ArgumentOutOfRangeException>(() => chunk.FreeSmall(handle));
+
         long valid = chunk.AllocateSmall(0, out _);
         int before = chunk.FreeBytes;
         Assert.Throws<ArgumentOutOfRangeException>(() => chunk.FreeSmall(valid | 256L));
@@ -297,9 +322,12 @@ public class PoolSubpageTest
                 long handle = chunks[worker % chunks.Length].AllocateSmall(index, out PoolChunk owner);
                 Assert.True(handle >= 0);
                 Assert.NotNull(owner);
+
                 lock (gate)
                     Assert.True(active.Add((owner, handle)));
+
                 Assert.InRange(owner.SubpageAt(PoolChunk.RunOffset(handle)).NumAvailable, 0, 4096 / 16);
+
                 lock (gate)
                 {
                     owner.FreeSmall(handle);
@@ -310,6 +338,7 @@ public class PoolSubpageTest
         await Task.WhenAll(workers).WaitAsync(TimeSpan.FromSeconds(20), TestContext.Current.CancellationToken);
         Assert.Empty(active);
         int reserved = 0;
+
         foreach (PoolSubpage head in heads)
             lock (head.SyncRoot)
                 if (head.Next != head)
@@ -318,6 +347,7 @@ public class PoolSubpageTest
                     Assert.Equal(head.Next.MaxNumElements, head.Next.NumAvailable);
                     reserved += head.Next.RunSize;
                 }
+
         Assert.Equal(chunks.Sum(c => c.ChunkSize) - reserved, chunks.Sum(c => c.FreeBytes));
     }
 }

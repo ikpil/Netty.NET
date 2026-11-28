@@ -180,6 +180,7 @@ public class HttpObjectAggregator
         {
             // if the request contains an unsupported expectation, we return 417
             pipeline.FireUserEventTriggered(HttpExpectationFailedEvent.INSTANCE);
+
             return EXPECTATION_FAILED.RetainedDuplicate();
         }
         else if (HttpUtil.Is100ContinueExpected(start))
@@ -189,7 +190,9 @@ public class HttpObjectAggregator
             {
                 return CONTINUE.RetainedDuplicate();
             }
+
             pipeline.FireUserEventTriggered(HttpExpectationFailedEvent.INSTANCE);
+
             return TOO_LARGE.RetainedDuplicate();
         }
 
@@ -205,6 +208,7 @@ public class HttpObjectAggregator
         {
             start.Headers().Remove(EXPECT);
         }
+
         return response;
     }
 
@@ -220,6 +224,7 @@ public class HttpObjectAggregator
             IHttpResponse httpResponse = (IHttpResponse) msg;
             return httpResponse.Status().CodeClass().Equals(HttpStatusClass.CLIENT_ERROR);
         }
+
         return false;
     }
 
@@ -287,6 +292,7 @@ public class HttpObjectAggregator
                     {
                         logger.Debug("Failed to send a 413 Request Entity Too Large.", f.Exception?.InnerException);
                     }
+
                     _ = ctx.CloseAsync();
                 }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
             }

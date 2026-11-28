@@ -58,6 +58,7 @@ internal sealed class Socks5ProxyServer : ProxyServer
     protected override void Configure(ISocketChannel ch)
     {
         IChannelPipeline p = ch.Pipeline;
+
         switch (testMode)
         {
         case TestMode.INTERMEDIARY:
@@ -93,6 +94,7 @@ internal sealed class Socks5ProxyServer : ProxyServer
             {
                 // Check if the client requested our private auth method
                 bool hasPrivateMethod = false;
+
                 foreach (Socks5AuthMethod method in initialRequest.AuthMethods())
                 {
                     if (method.ByteValue() == privateAuthMethod)
@@ -163,6 +165,7 @@ internal sealed class Socks5ProxyServer : ProxyServer
         {
             return true;
         }
+
         return a != null && a2 != null && a.AsSpan().SequenceEqual(a2);
     }
 
@@ -231,6 +234,7 @@ internal sealed class Socks5ProxyServer : ProxyServer
 
             ISocks5CommandResponse res;
             bool sendGreeting = false;
+
             if (!req.DstAddr().Equals(GetHostString(server.destination)) ||
                        req.DstPort() != GetPort(server.destination))
             {

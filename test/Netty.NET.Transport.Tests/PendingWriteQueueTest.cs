@@ -96,14 +96,18 @@ public class PendingWriteQueueTest
         channel.Config.SetWriteBufferLowWaterMark(1);
         channel.Config.SetWriteBufferHighWaterMark(3);
         var buffers = new ByteBuf[count];
+
         for (int i = 0; i < count; i++)
             buffers[i] = buffer.RetainedDuplicate();
+
         Assert.True(channel.WriteOutbound(buffers));
         Assert.True(channel.Finish());
         await channel.CloseFuture;
         await Task.WhenAll(handler.Observations).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
         for (int i = 0; i < count; i++)
             AssertBuffer(channel, buffer);
+
         buffer.Release();
         Assert.Null(channel.ReadOutbound());
     }
@@ -131,8 +135,10 @@ public class PendingWriteQueueTest
         var buffer = Unpooled.CopiedBuffer("Test", Encoding.ASCII);
         var channel = new EmbeddedChannel(handler);
         var buffers = new ByteBuf[count];
+
         for (int i = 0; i < count; i++)
             buffers[i] = buffer.RetainedDuplicate();
+
         Assert.Throws<TestException>(() => Assert.False(channel.WriteOutbound(buffers)));
         Assert.False(channel.Finish());
         await channel.CloseFuture;
@@ -366,6 +372,7 @@ public class PendingWriteQueueTest
         {
             if (Queue.Current is not ByteBuf message)
                 return;
+
             Assert.Equal(1, message.RefCnt);
             // This call will trigger another channelWritabilityChanged() event because the number of
             // pending bytes will go below the low watermark.

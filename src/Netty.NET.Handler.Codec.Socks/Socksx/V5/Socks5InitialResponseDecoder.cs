@@ -75,6 +75,7 @@ public class Socks5InitialResponseDecoder : ReplayingDecoder<Socks5InitialRespon
                 {
                     @out.Add(@in.ReadRetainedSlice(readableBytes));
                 }
+
                 break;
             }
             case State.FAILURE:

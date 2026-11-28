@@ -469,6 +469,7 @@ public class HttpResponseStatus : IComparable<HttpResponseStatus>
         case 511:
             return NETWORK_AUTHENTICATION_REQUIRED;
         }
+
         return null;
     }
 
@@ -583,6 +584,7 @@ public class HttpResponseStatus : IComparable<HttpResponseStatus>
         for (int i = 0; i < reasonPhrase.Length; i ++)
         {
             char c = reasonPhrase[i];
+
             // Check prohibited characters.
             switch (c)
             {
@@ -599,6 +601,7 @@ public class HttpResponseStatus : IComparable<HttpResponseStatus>
         string codeString = code.ToString(CultureInfo.InvariantCulture);
         codeAsText = new AsciiString(codeString);
         this.reasonPhrase = reasonPhrase;
+
         if (bytes)
         {
             this.bytes = Encoding.ASCII.GetBytes(codeString + ' ' + reasonPhrase);

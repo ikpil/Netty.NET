@@ -75,6 +75,7 @@ internal static class SignatureAlgorithmConverter
         {
             return "Ed448";
         }
+
         Match matcher = PATTERN.Match(opensslName);
         if (matcher.Success)
         {
@@ -93,6 +94,7 @@ internal static class SignatureAlgorithmConverter
                 return Group(matcher, 6).ToUpperInvariant() + "with" + Group(matcher, 5).ToUpperInvariant();
             }
         }
+
         return null;
     }
 

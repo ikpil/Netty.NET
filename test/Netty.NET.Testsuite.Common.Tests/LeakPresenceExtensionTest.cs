@@ -67,6 +67,7 @@ public class LeakPresenceExtensionTest
     {
         string previous = Environment.GetEnvironmentVariable(LEAK_PRESENCE_DETECTION_DISABLED_PROPERTY);
         Environment.SetEnvironmentVariable(LEAK_PRESENCE_DETECTION_DISABLED_PROPERTY, "true");
+
         try
         {
             // CLR: the condition that skips the explicitly extended class (results.containerEvents().skipped());
@@ -78,6 +79,7 @@ public class LeakPresenceExtensionTest
         {
             Environment.SetEnvironmentVariable(LEAK_PRESENCE_DETECTION_DISABLED_PROPERTY, previous);
         }
+
         Assert.True(EvaluateExecutionCondition(out string enabled));
         Assert.Equal("Leak presence detection enabled", enabled);
     }

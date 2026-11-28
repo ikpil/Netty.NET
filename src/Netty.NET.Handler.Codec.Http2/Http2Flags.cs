@@ -170,6 +170,7 @@ public sealed class Http2Flags
         {
             value &= (short) ~mask;
         }
+
         return this;
     }
 
@@ -213,27 +214,34 @@ public sealed class Http2Flags
     {
         StringBuilder builder = new StringBuilder();
         builder.Append("value = ").Append(value.ToString(CultureInfo.InvariantCulture)).Append(" (");
+
         if (Ack())
         {
             builder.Append("ACK,");
         }
+
         if (EndOfHeaders())
         {
             builder.Append("END_OF_HEADERS,");
         }
+
         if (EndOfStream())
         {
             builder.Append("END_OF_STREAM,");
         }
+
         if (PriorityPresent())
         {
             builder.Append("PRIORITY_PRESENT,");
         }
+
         if (PaddingPresent())
         {
             builder.Append("PADDING_PRESENT,");
         }
+
         builder.Append(')');
+
         return builder.ToString();
     }
 }

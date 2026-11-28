@@ -133,6 +133,7 @@ public class InputBufferingDecompressorTest
             {
                 throw processInputException;
             }
+
             if (buf.IsReadable())
             {
                 buf.ReadByte();
@@ -157,6 +158,7 @@ public class InputBufferingDecompressorTest
             {
                 throw statusException;
             }
+
             return Available() == 0 ? IDecompressor.Status.NEED_INPUT : IDecompressor.Status.NEED_OUTPUT;
         }
     }

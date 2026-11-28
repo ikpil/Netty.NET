@@ -31,6 +31,7 @@ public class SequenceComparisonContractTest
     public void UnicodeComparisonsFollowNativeOrdinalRulesForEveryRepresentation(string culture, int leftType, int rightType)
     {
         CultureInfo previous = CultureInfo.CurrentCulture;
+
         try
         {
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture);
@@ -42,12 +43,14 @@ public class SequenceComparisonContractTest
                 ("\ud800", "\ud800", true), ("\ud800", "\ud801", false),
                 ("a\0B", "A\0b", true), ("", "", true)
             };
+
             foreach (var pair in pairs)
             {
                 ICharSequence left = Sequence(pair.Left, leftType), right = Sequence(pair.Right, rightType);
                 Assert.Equal(string.Equals(pair.Left, pair.Right, StringComparison.Ordinal), left.ContentEquals(right));
                 Assert.Equal(pair.IgnoreCase, left.ContentEqualsIgnoreCase(right));
                 Assert.Equal(pair.IgnoreCase, right.ContentEqualsIgnoreCase(left));
+
                 if (pair.Left.Length == pair.Right.Length)
                 {
                     Assert.Equal(pair.IgnoreCase, left.RegionMatchesIgnoreCase(0, right, 0, left.Count));
@@ -90,6 +93,7 @@ public class SequenceComparisonContractTest
     {
         var bytes = new AsciiString[256];
         var text = new StringCharSequence[256];
+
         for (int i = 0; i < 256; i++)
         {
             bytes[i] = new AsciiString(new byte[] { (byte)i });
@@ -110,6 +114,7 @@ public class SequenceComparisonContractTest
             Assert.Equal(expected, AsciiString.ContentEqualsIgnoreCase(text[left], text[right]));
             Assert.Equal(expected, AsciiString.RegionMatchesAscii(text[left], true, 0, text[right], 0, 1));
         }
+
         Assert.False(AsciiString.RegionMatchesAscii(new StringCharSequence("I"), true, 0, new StringCharSequence("İ"), 0, 1));
         Assert.False(new AsciiString("I").ContentEqualsIgnoreCase(new StringCharSequence("İ")));
         Assert.False(AsciiString.ContainsIgnoreCase(new StringCharSequence("xÉy"), new StringCharSequence("é")));
@@ -191,6 +196,7 @@ public class SequenceComparisonContractTest
     public void IgnoreCaseEqualityDoesNotDependOnTurkishCulture(bool appendable)
     {
         CultureInfo previous = CultureInfo.CurrentCulture;
+
         try
         {
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("tr-TR");

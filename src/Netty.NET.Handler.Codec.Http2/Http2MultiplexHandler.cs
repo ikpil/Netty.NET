@@ -166,6 +166,7 @@ public sealed class Http2MultiplexHandler : Http2ChannelDuplexHandler
         {
             throw new InvalidOperationException("EventExecutor must be EventLoop of Channel");
         }
+
         this.ctx = ctx;
     }
 
@@ -191,12 +192,14 @@ public sealed class Http2MultiplexHandler : Http2ChannelDuplexHandler
                 }
             }
         }
+
         ctx.FireChannelInactive();
     }
 
     public override void ChannelRead(IChannelHandlerContext ctx, object msg)
     {
         parentReadInProgress = true;
+
         if (msg is IHttp2StreamFrame)
         {
             if (msg is IHttp2WindowUpdateFrame)
@@ -204,11 +207,13 @@ public sealed class Http2MultiplexHandler : Http2ChannelDuplexHandler
                 // We dont want to propagate update frames to the user
                 return;
             }
+
             IHttp2StreamFrame streamFrame = (IHttp2StreamFrame) msg;
             Http2FrameCodec.DefaultHttp2FrameStream s =
                     (Http2FrameCodec.DefaultHttp2FrameStream) streamFrame.Stream();
 
             AbstractHttp2StreamChannel channel = (AbstractHttp2StreamChannel) s.attachment;
+
             if (msg is IHttp2ResetFrame || msg is IHttp2PriorityFrame)
             {
                 // Reset and Priority frames needs to be propagated via user events as these are not flow-controlled and
@@ -222,6 +227,7 @@ public sealed class Http2MultiplexHandler : Http2ChannelDuplexHandler
             {
                 channel.FireChildRead(streamFrame);
             }
+
             return;
         }
 
@@ -254,6 +260,7 @@ public sealed class Http2MultiplexHandler : Http2ChannelDuplexHandler
         {
             Http2FrameStreamEvent @event = (Http2FrameStreamEvent) evt;
             Http2FrameCodec.DefaultHttp2FrameStream stream = (Http2FrameCodec.DefaultHttp2FrameStream) @event.Stream();
+
             if (@event.Type_() == Http2FrameStreamEvent.Type.State)
             {
                 IHttp2Stream.State state = stream.State();
@@ -272,6 +279,7 @@ public sealed class Http2MultiplexHandler : Http2ChannelDuplexHandler
                     else
                     {
                         AbstractHttp2StreamChannel ch;
+
                         // We need to handle upgrades special when on the client side.
                         if (stream.Id() == Http2CodecUtil.HTTP_UPGRADE_STREAM_ID && !IsServer(ctx))
                         {
@@ -281,6 +289,7 @@ public sealed class Http2MultiplexHandler : Http2ChannelDuplexHandler
                                 throw ConnectionError(INTERNAL_ERROR,
                                         "Client is misconfigured for upgrade requests");
                             }
+
                             ch = new Http2MultiplexHandlerStreamChannel(this, stream, upgradeStreamHandler);
                             ch.CloseOutbound();
                         }
@@ -288,6 +297,7 @@ public sealed class Http2MultiplexHandler : Http2ChannelDuplexHandler
                         {
                             ch = new Http2MultiplexHandlerStreamChannel(this, stream, inboundStreamHandler);
                         }
+
                         Task future = ctx.Channel.EventLoop.RegisterAsync(ch);
                         if (future.IsCompleted)
                         {
@@ -312,8 +322,10 @@ public sealed class Http2MultiplexHandler : Http2ChannelDuplexHandler
                     // ignore for now
                 }
             }
+
             return;
         }
+
         if (evt == ChannelInputShutdownReadComplete.INSTANCE)
         {
             ForEachActiveStream(CHANNEL_INPUT_SHUTDOWN_READ_COMPLETE_VISITOR);
@@ -326,6 +338,7 @@ public sealed class Http2MultiplexHandler : Http2ChannelDuplexHandler
         {
             ForEachActiveStream(SSL_CLOSE_COMPLETION_EVENT_VISITOR);
         }
+
         ctx.FireUserEventTriggered(evt);
     }
 
@@ -347,6 +360,7 @@ public sealed class Http2MultiplexHandler : Http2ChannelDuplexHandler
             IHttp2FrameStream stream = exception.Stream();
             AbstractHttp2StreamChannel childChannel = (AbstractHttp2StreamChannel)
                     ((Http2FrameCodec.DefaultHttp2FrameStream) stream).attachment;
+
             try
             {
                 childChannel.FireChildExceptionCaught(cause.InnerException);
@@ -357,8 +371,10 @@ public sealed class Http2MultiplexHandler : Http2ChannelDuplexHandler
                 // See https://github.com/netty/netty/issues/13235#issuecomment-1441994672
                 childChannel.CloseWithError(exception.Error());
             }
+
             return;
         }
+
         if (cause is Http2MultiplexActiveStreamsException)
         {
             // Unwrap the cause that was used to create it and fire it for all the active streams.
@@ -370,6 +386,7 @@ public sealed class Http2MultiplexHandler : Http2ChannelDuplexHandler
         {
             FireExceptionCaughtForActiveStream(cause);
         }
+
         ctx.FireExceptionCaught(cause);
     }
 
@@ -409,6 +426,7 @@ public sealed class Http2MultiplexHandler : Http2ChannelDuplexHandler
             // None of the streams can have an id greater than Integer.MAX_VALUE
             return;
         }
+
         // Notify which streams were not processed by the remote peer and are safe to retry on another connection:
         try
         {
@@ -443,6 +461,7 @@ public sealed class Http2MultiplexHandler : Http2ChannelDuplexHandler
                         ((Http2FrameCodec.DefaultHttp2FrameStream) stream).attachment;
                 childChannel.FireChildUserEventTriggered(goAwayFrame.RetainedDuplicate());
             }
+
             return true;
         }
     }

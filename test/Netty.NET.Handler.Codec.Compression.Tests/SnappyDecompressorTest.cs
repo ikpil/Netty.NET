@@ -97,6 +97,7 @@ public class SnappyDecompressorTest : AbstractDecompressorTest
 
             ByteBuf expected = Unpooled.WrappedBuffer(new byte[] { (byte) 'n', (byte) 'e', (byte) 't', (byte) 't', (byte) 'y' });
             ByteBuf actual = decompressor.TakeOutput();
+
             try
             {
                 Assert.Equal(expected, actual);

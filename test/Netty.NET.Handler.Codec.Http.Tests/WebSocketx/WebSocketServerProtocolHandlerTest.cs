@@ -453,6 +453,7 @@ public class WebSocketServerProtocolHandlerTest
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken)
         {
             writtenAfterProtocolHandler.Enqueue(msg);
+
             return ctx.WriteAsync(msg, cancellationToken);
         }
     }
@@ -462,6 +463,7 @@ public class WebSocketServerProtocolHandlerTest
         Queue<object> writtenAfterProtocolHandler = new Queue<object>();
         EmbeddedChannel client = CreateClient();
         EmbeddedChannel server;
+
         if (full)
         {
             server = CreateServer();
@@ -476,6 +478,7 @@ public class WebSocketServerProtocolHandlerTest
                     .DropPongFrames(false)
                     .Build()));
         }
+
         // Added after register() so the recorder really sits behind the WebSocketServerProtocolHandler.
         server.Pipeline.AddLast(new RecordingOutboundHandler(writtenAfterProtocolHandler));
 
@@ -595,6 +598,7 @@ public class WebSocketServerProtocolHandlerTest
                 stalledWrites.Enqueue(promise);
                 return promise.Task;
             }
+
             handshakeResponseSent = true;
             return ctx.WriteAsync(msg, cancellationToken);
         }
@@ -692,6 +696,7 @@ public class WebSocketServerProtocolHandlerTest
     private static void WriteUpgradeRequest(EmbeddedChannel ch, bool full)
     {
         IHttpRequest request = WebSocketRequestBuilder.Successful();
+
         if (full)
         {
             ch.WriteInbound(request);

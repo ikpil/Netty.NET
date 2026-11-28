@@ -48,6 +48,7 @@ public class BootstrapCompletionSourceTest
     {
         var group = new HeldRegistrationGroup();
         RecordingServer channel = null;
+
         try
         {
             var bootstrap = new ServerBootstrap().Group(group).ChannelFactory(() => channel = new RecordingServer(fail))
@@ -59,6 +60,7 @@ public class BootstrapCompletionSourceTest
             Assert.False(channel.BoundOnOwner);
             group.Producer.SetResult();
             bool success;
+
             try
             {
                 await future;
@@ -68,6 +70,7 @@ public class BootstrapCompletionSourceTest
             {
                 success = false;
             }
+
             var queue = new Queue<bool>();
             // Task consumers explicitly regain their owner; Tasks do not inherit Netty Future listener affinity.
             await channel.EventLoop.SubmitAsync(() =>
@@ -90,6 +93,7 @@ public class BootstrapCompletionSourceTest
     public async Task TestLateRegistrationConnect()
     {
         var group = new QueuedRegistrationGroup();
+
         try
         {
             var bootstrap = new Bootstrap().Group(group).Channel<LocalChannel>().Handler(new ChannelInboundHandlerAdapter());
@@ -124,6 +128,7 @@ public class BootstrapCompletionSourceTest
         var groupA = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         var groupB = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         using var resolver = new TestAddressResolverGroup(true);
+
         try
         {
             var bootstrapA = new Bootstrap().Group(groupA).Channel<LocalChannel>().Resolver(resolver).Handler(new ChannelInboundHandlerAdapter());
@@ -148,6 +153,7 @@ public class BootstrapCompletionSourceTest
         var groupB = new MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory());
         using var resolver = new TestAddressResolverGroup(false);
         LocalChannel channel = null;
+
         try
         {
             var bootstrapA = new Bootstrap().Group(groupA).ChannelFactory(() => channel = new LocalChannel()).Resolver(resolver).Handler(new ChannelInboundHandlerAdapter());
@@ -218,6 +224,7 @@ public class BootstrapCompletionSourceTest
             {
                 return base.DoBindAsync(address, token);
             }
+
             // Close the Channel to emulate what NIO and others impl do on bind failure
             // See https://github.com/netty/netty/issues/2586
             _ = CloseAsync();

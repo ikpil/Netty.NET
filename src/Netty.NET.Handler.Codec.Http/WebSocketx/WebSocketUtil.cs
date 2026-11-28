@@ -129,6 +129,7 @@ internal sealed class WebSocketUtil
         IncrementalHash digest = digestFastThreadLocal.Get();
         digest.GetHashAndReset();
         digest.AppendData(data);
+
         return digest.GetHashAndReset();
     }
 

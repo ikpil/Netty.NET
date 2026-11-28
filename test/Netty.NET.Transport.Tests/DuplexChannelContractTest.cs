@@ -20,10 +20,12 @@ public class DuplexChannelContractTest
     public async Task BothSocketFamiliesExposeIndependentShutdownThroughTheCommonInterface(bool domain)
     {
         var cancellation = TestContext.Current.CancellationToken;
+
         if (domain)
         {
             DomainSocketSourceTest.RequireDomainSockets();
         }
+
         await using var fixture = new ShutdownFixture(false, domain);
         var received = new TaskCompletionSource<byte>(TaskCreationOptions.RunContinuationsAsynchronously);
         var accepted = new TaskCompletionSource<IChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -31,6 +33,7 @@ public class DuplexChannelContractTest
         var server = await fixture.Server.ChildOption(ChannelOption.AUTO_READ, false)
             .ChildHandler(new ActionChannelInitializer<IChannel>(channel => accepted.TrySetResult(channel))).BindAsync(address, cancellation);
         IChannel client = null;
+
         try
         {
             client = await fixture.Client.Option(ChannelOption.AUTO_READ, false).Handler(new Signal(received)).RegisterAsync(cancellation);
@@ -64,6 +67,7 @@ public class DuplexChannelContractTest
             {
                 await client.CloseAsync();
             }
+
             await server.CloseAsync();
         }
     }

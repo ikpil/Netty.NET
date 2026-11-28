@@ -30,6 +30,7 @@ public class NonStickyEventExecutorGroupTest
     public void TestInvalidGroup()
     {
         IEventExecutorGroup group = new DefaultEventExecutorGroup(1);
+
         try
         {
             Assert.Throws<ArgumentException>(() =>
@@ -58,11 +59,13 @@ public class NonStickyEventExecutorGroupTest
         int threads = NettyRuntime.AvailableProcessors() * 2;
         IEventExecutorGroup group = new UnorderedThreadPoolEventExecutor(threads);
         NonStickyEventExecutorGroup nonStickyGroup = new NonStickyEventExecutorGroup(group, maxTaskExecutePerRun);
+
         try
         {
             CountdownEvent startLatch = new CountdownEvent(1);
             AtomicReference<Exception> error = new AtomicReference<Exception>();
             List<Thread> threadList = new List<Thread>(threads);
+
             for (int i = 0; i < threads; i++)
             {
                 Thread thread = new Thread(() =>
@@ -81,6 +84,7 @@ public class NonStickyEventExecutorGroupTest
             }
 
             startLatch.Signal();
+
             foreach (Thread t in threadList)
             {
                 Assert.True(t.Join(TimeSpan.FromSeconds(30)));
@@ -113,6 +117,7 @@ public class NonStickyEventExecutorGroupTest
             {
                 CountdownEvent firstCompleted = new CountdownEvent(1);
                 CountdownEvent latch = new CountdownEvent(2);
+
                 for (int i = 0; i < 2; i++)
                 {
                     executor.Execute(() =>
@@ -121,6 +126,7 @@ public class NonStickyEventExecutorGroupTest
                         {
                             firstCompleted.Signal();
                         }
+
                         latch.Signal();
                     });
 
@@ -139,10 +145,12 @@ public class NonStickyEventExecutorGroupTest
     private static void Stop(IEventExecutorGroup group)
     {
         group.ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero);
+
         if (!group.AwaitTermination(TimeSpan.FromSeconds(5)))
         {
             _ = group.StopAsync();
         }
+
         Assert.True(group.AwaitTermination(TimeSpan.FromSeconds(5)));
     }
 
@@ -249,6 +257,7 @@ public class NonStickyEventExecutorGroupTest
             // 2nd call: reschedule after maxTaskExecutePerRun
             if (Interlocked.Increment(ref executeCount) == 2)
                 throw new RejectedExecutionException("Simulated queue full");
+
             underlying.Execute(command);
         }
     }
@@ -261,6 +270,7 @@ public class NonStickyEventExecutorGroupTest
 
         // Use maxTaskExecutePerRun=1 so reschedule happens after first task
         var nonStickyGroup = new NonStickyEventExecutorGroup(wrapper, 1);
+
         try
         {
             var executor = nonStickyGroup.Next();

@@ -245,6 +245,7 @@ public class ByteBufScalarCompositionTest
             {
                 throw new InvalidOperationException("GetChar must use GetShort directly.");
             }
+
             return base.GetUnsignedShort(index);
         }
     }
@@ -449,6 +450,7 @@ public class ByteBufScalarCompositionTest
             {
                 throw new InvalidOperationException("GetChar must use GetShort directly.");
             }
+
             return base.GetUnsignedShort(index);
         }
     }
@@ -524,6 +526,7 @@ public class ByteBufScalarCompositionTest
         ByteBuf buffer = direct ? new Direct(o, native) : new Heap(o);
         buffer.SetBytes(0, new byte[64]);
         buffer.SetIndex(3, 32).MarkReaderIndex().MarkWriterIndex();
+
         try
         {
             if (failure)
@@ -547,6 +550,7 @@ public class ByteBufScalarCompositionTest
                     Assert.Equal(expected, Assert.IsType<long>(result));
                 }
             }
+
             Assert.Equal(1, o.Count);
             Assert.Equal(Hooks[operation], o.Hook);
             Assert.Equal(operation < 18 ? 2 : -1, o.Index);
@@ -572,6 +576,7 @@ public class ByteBufScalarCompositionTest
         {
             Assert.True(buffer.Release());
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 }

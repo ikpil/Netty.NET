@@ -21,6 +21,7 @@ public class AsciiStringNativeMemoryContractTest
         Assert.Equal(new byte[] { 128, 233 }, value.AsSpan().ToArray());
         Assert.Equal("\u0080é", value.ToString());
         Assert.True(MemoryMarshal.TryGetArray(value.AsMemory(), out ArraySegment<byte> storage));
+
         if (copy)
         {
             Assert.NotSame(bytes, storage.Array);
@@ -53,11 +54,13 @@ public class AsciiStringNativeMemoryContractTest
     public void NonArrayMemoryCopiesBeforeOwnerDisposal(bool copy)
     {
         AsciiString value;
+
         using (MemoryManager<byte> owner = new NonArrayMemoryOwner(new byte[] { 1, 128, 255, 2 }))
         {
             value = new AsciiString(owner.Memory.Slice(1, 2), copy);
             owner.GetSpan()[1] = 0;
         }
+
         Assert.Equal(new byte[] { 128, 255 }, value.AsSpan().ToArray());
         Assert.Equal("\u0080ÿ", value.ToString());
     }

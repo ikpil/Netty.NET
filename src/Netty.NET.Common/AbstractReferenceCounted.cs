@@ -62,6 +62,7 @@ public abstract class AbstractReferenceCounted : IReferenceCounted
             Deallocate();
             return true;
         }
+
         return false;
     }
 
@@ -72,6 +73,7 @@ public abstract class AbstractReferenceCounted : IReferenceCounted
             Deallocate();
             return true;
         }
+
         return false;
     }
 

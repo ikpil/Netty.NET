@@ -77,6 +77,7 @@ public class HttpSnoopServerHandler : SimpleChannelInboundHandler<object>
                     string value = h.GetValue();
                     buf.Append("HEADER: ").Append(key).Append(" = ").Append(value).Append("\r\n");
                 }
+
                 buf.Append("\r\n");
             }
 
@@ -88,11 +89,13 @@ public class HttpSnoopServerHandler : SimpleChannelInboundHandler<object>
                 {
                     string key = p.Key;
                     IList<string> vals = p.Value;
+
                     foreach (string val in vals)
                     {
                         buf.Append("PARAM: ").Append(key).Append(" = ").Append(val).Append("\r\n");
                     }
                 }
+
                 buf.Append("\r\n");
             }
 
@@ -120,6 +123,7 @@ public class HttpSnoopServerHandler : SimpleChannelInboundHandler<object>
                 if (!trailer.TrailingHeaders().IsEmpty())
                 {
                     buf.Append("\r\n");
+
                     foreach (string name in trailer.TrailingHeaders().Names())
                     {
                         foreach (string value in trailer.TrailingHeaders().GetAll(name))
@@ -128,6 +132,7 @@ public class HttpSnoopServerHandler : SimpleChannelInboundHandler<object>
                             buf.Append(name).Append(" = ").Append(value).Append("\r\n");
                         }
                     }
+
                     buf.Append("\r\n");
                 }
 

@@ -291,6 +291,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
             DefaultHttpHeadersFactory builder = (DefaultHttpHeadersFactory) headersFactory;
             return builder.IsValidatingHeaderNames() || builder.IsValidatingHeaderValues();
         }
+
         return true; // We can't actually tell in this case, but we assume some validation is taking place.
     }
 
@@ -314,6 +315,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                 {
                     return;
                 }
+
                 string[] initialLine = SplitInitialLine(line);
                 Debug.Assert(initialLine.Length == 3, "initialLine::length must be 3");
 
@@ -326,6 +328,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                 @out.Add(InvalidMessage(message, buffer, e));
                 return;
             }
+
             goto case State.READ_HEADER;
         case State.READ_HEADER:
             try
@@ -335,8 +338,10 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                 {
                     return;
                 }
+
                 State nextState = nextStateOrNull.Value;
                 currentState = nextState;
+
                 switch (nextState)
                 {
                 case State.SKIP_CONTROL_CHARS:
@@ -351,6 +356,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                     {
                         throw new ArgumentException("Chunked messages not supported");
                     }
+
                     // Chunked encoding - generate HttpMessage first.  HttpChunks will follow.
                     AddCurrentMessage(@out);
                     return;
@@ -398,6 +404,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                 ByteBuf content = buffer.ReadRetainedSlice(toRead);
                 @out.Add(new DefaultHttpContent(content));
             }
+
             return;
         }
         case State.READ_FIXED_LENGTH_CONTENT:
@@ -420,6 +427,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
             {
                 toRead = (int) chunkSize;
             }
+
             ByteBuf content = buffer.ReadRetainedSlice(toRead);
             chunkSize -= toRead;
 
@@ -433,6 +441,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
             {
                 @out.Add(new DefaultHttpContent(content));
             }
+
             return;
         }
         /*
@@ -447,15 +456,18 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                 {
                     return;
                 }
+
                 CheckChunkExtensions(line);
                 byte[] lineArray = LineArray(line, out int lineStart);
                 int chunkSize = GetChunkSize(lineArray, lineStart, line.ReadableBytes);
                 this.chunkSize = chunkSize;
+
                 if (chunkSize == 0)
                 {
                     currentState = State.READ_CHUNK_FOOTER;
                     return;
                 }
+
                 currentState = State.READ_CHUNKED_CONTENT;
                 // fall-through
             }
@@ -464,6 +476,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                 @out.Add(InvalidChunk(buffer, e));
                 return;
             }
+
             goto case State.READ_CHUNKED_CONTENT;
         case State.READ_CHUNKED_CONTENT:
         {
@@ -473,11 +486,13 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
             {
                 return;
             }
+
             toRead = Math.Min(toRead, buffer.ReadableBytes);
             if (toRead == 0)
             {
                 return;
             }
+
             IHttpContent chunk = new DefaultHttpContent(buffer.ReadRetainedSlice(toRead));
             chunkSize -= toRead;
 
@@ -487,6 +502,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
             {
                 return;
             }
+
             currentState = State.READ_CHUNK_DELIMITER;
             // fall-through
             goto case State.READ_CHUNK_DELIMITER;
@@ -507,6 +523,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                     @out.Add(InvalidChunk(buffer, new InvalidChunkTerminationException()));
                 }
             }
+
             return;
         }
         case State.READ_CHUNK_FOOTER:
@@ -517,6 +534,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                 {
                     return;
                 }
+
                 @out.Add(trailer);
                 ResetNow();
                 return;
@@ -543,6 +561,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                 // See https://github.com/netty/netty/issues/2173
                 @out.Add(buffer.ReadBytes(readableBytes));
             }
+
             break;
         }
         default:
@@ -571,6 +590,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                     @out.Add(ILastHttpContent.EMPTY_LAST_CONTENT);
                     ResetNow();
                 }
+
                 return;
             case State.READ_HEADER:
                 // If we are still in the state of reading headers we need to create a new invalid message that
@@ -586,6 +606,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
             case State.READ_FIXED_LENGTH_CONTENT:
                 // Check if the closure of the connection signifies the end of the content.
                 bool prematureClosure;
+
                 if (IsDecodingRequest() || chunked)
                 {
                     // The last request did not wait for a response.
@@ -598,10 +619,12 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                     // the connection, so it is perfectly fine.
                     prematureClosure = contentLength > 0;
                 }
+
                 if (!prematureClosure)
                 {
                     @out.Add(ILastHttpContent.EMPTY_LAST_CONTENT);
                 }
+
                 ResetNow();
                 return;
             case State.SKIP_CONTROL_CHARS: // fall-trough
@@ -631,6 +654,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                 break;
             }
         }
+
         base.UserEventTriggered(ctx, evt);
     }
 
@@ -672,6 +696,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                 return false;
             }
         }
+
         return false;
     }
 
@@ -685,6 +710,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
         {
             return false;
         }
+
         string newProtocol = msg.Headers().Get(HttpHeaderNames.UPGRADE);
         return newProtocol == null ||
                 !newProtocol.Contains(HttpVersion.HTTP_1_0.Text(), StringComparison.Ordinal) &&
@@ -710,6 +736,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
         lineParser.Reset();
         headerParser.Reset();
         trailer = null;
+
         if (isSwitchingToNonHttp1Protocol)
         {
             isSwitchingToNonHttp1Protocol = false;
@@ -735,6 +762,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
         {
             current = CreateInvalidMessage();
         }
+
         current.SetDecoderResult(global::Netty.NET.Handler.Codec.DecoderResult.Failure(cause));
 
         return current;
@@ -747,6 +775,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
         {
             return;
         }
+
         HttpChunkLineValidatingByteProcessor processor = new HttpChunkLineValidatingByteProcessor();
         line.ForEachByte(processor.Process);
         processor.Finish();
@@ -776,6 +805,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
             start = segment.Offset;
             return segment.Array;
         }
+
         start = 0;
         return memory.ToArray();
     }
@@ -792,7 +822,9 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
         {
             return null;
         }
+
         int lineLength = line.ReadableBytes;
+
         while (lineLength > 0)
         {
             byte[] lineContent = LineArray(line, out int startLine);
@@ -811,6 +843,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                 {
                     headers.Add(name, value);
                 }
+
                 SplitHeader(lineContent, startLine, lineLength);
             }
 
@@ -819,6 +852,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
             {
                 return null;
             }
+
             lineLength = line.ReadableBytes;
         }
 
@@ -862,16 +896,19 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
             // Content-Length header is missing.
             contentLength = HttpUtil.GetWebSocketContentLength(message);
         }
+
         if (!IsDecodingRequest() && message is IHttpResponse)
         {
             IHttpResponse res = (IHttpResponse) message;
             this.isSwitchingToNonHttp1Protocol = IsSwitchingToNonHttp1Protocol(res);
         }
+
         if (IsContentAlwaysEmpty(message))
         {
             HttpUtil.SetTransferEncodingChunked(message, false);
             return State.SKIP_CONTROL_CHARS;
         }
+
         bool hasTransferEncoding = message.Headers().Contains(HttpHeaderNames.TRANSFER_ENCODING);
         if (hasTransferEncoding &&
                 message.ProtocolVersion() != HttpVersion.HTTP_1_1 &&
@@ -881,6 +918,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
             // and such requests must be rejected.
             throw TRANSFER_ENCODING_NOT_ALLOWED;
         }
+
         bool isTransferEncodingChunked = HttpUtil.IsTransferEncodingChunked(message);
         // Unlike responses, requests without a final chunked coding cannot use connection close for framing.
         // See https://datatracker.ietf.org/doc/html/rfc9112#section-6.3-4
@@ -888,6 +926,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
         {
             throw new ArgumentException("The final transfer coding must be chunked for HTTP requests");
         }
+
         if (isTransferEncodingChunked)
         {
             this.chunked = true;
@@ -903,6 +942,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                 throw new ArgumentException(
                         "chunked must be the last encoding present in the Transfer-Encoding header");
             }
+
             if (message.ProtocolVersion() == HttpVersion.HTTP_1_1)
             {
                 if (contentLengthFields.Count != 0)
@@ -910,12 +950,15 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                     HandleTransferEncodingChunkedWithContentLength(message);
                 }
             }
+
             return State.READ_CHUNK_SIZE;
         }
+
         if (contentLength >= 0)
         {
             return State.READ_FIXED_LENGTH_CONTENT;
         }
+
         return State.READ_VARIABLE_LENGTH_CONTENT;
     }
 
@@ -924,22 +967,27 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
         bool chunkedSeen = false;
         bool lastChunked = false;
         int chunkedLength = HttpHeaderValues.CHUNKED.Length();
+
         for (int i = 0; i < transferEncodingFields.Count; ++i)
         {
             string value = transferEncodingFields[i];
             int start = 0;
+
             while (start <= value.Length)
             {
                 int comma = value.IndexOf(',', start);
                 int end = comma == -1 ? value.Length : comma;
+
                 while (start < end && (value[start] == ' ' || value[start] == '\t'))
                 {
                     ++start;
                 }
+
                 while (end > start && (value[end - 1] == ' ' || value[end - 1] == '\t'))
                 {
                     --end;
                 }
+
                 if (start < end)
                 {
                     lastChunked = end - start == chunkedLength &&
@@ -952,16 +1000,20 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                             throw new ArgumentException(
                                     "chunked transfer coding must not be applied more than once");
                         }
+
                         chunkedSeen = true;
                     }
                 }
+
                 if (comma == -1)
                 {
                     break;
                 }
+
                 start = comma + 1;
             }
         }
+
         return lastChunked;
     }
 
@@ -1027,6 +1079,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
     protected virtual void HandleTransferEncodingChunkedWithContentLength(IHttpMessage message)
     {
         ClearContentLength();
+
         if (useRfc9112TransferEncoding)
         {
             throw new ContentLengthNotAllowedException(
@@ -1035,6 +1088,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
         else
         {
             message.Headers().Remove(HttpHeaderNames.CONTENT_LENGTH);
+
             if (IsDecodingRequest())
             {
                 HttpUtil.SetKeepAlive(message, false);
@@ -1055,6 +1109,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
         {
             return null;
         }
+
         ILastHttpContent trailer = this.trailer;
         int lineLength = line.ReadableBytes;
         if (lineLength == 0 && trailer == null)
@@ -1068,6 +1123,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
         {
             trailer = this.trailer = new DefaultLastHttpContent(Unpooled.EmptyBuffer, trailersFactory);
         }
+
         while (lineLength > 0)
         {
             byte[] lineContent = LineArray(line, out int startLine);
@@ -1086,6 +1142,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                 {
                     trailer.TrailingHeaders().Add(name, value);
                 }
+
                 SplitHeader(lineContent, startLine, lineLength);
             }
 
@@ -1094,6 +1151,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
             {
                 return null;
             }
+
             lineLength = line.ReadableBytes;
         }
 
@@ -1134,7 +1192,9 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
             // Empty case - not allowed
             throw new FormatException("Empty chunk size");
         }
+
         long result = 0;
+
         for (int i = 0; i < length; i++)
         {
             int digit = StringUtil.DecodeHexNibble(hex[start + i]);
@@ -1145,6 +1205,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                 // or a ';' character for chunk-extensions, or the "bad whitespace" allowed to precede ';'.
                 byte b = hex[start + i];
                 int j = 0;
+
                 while (b == HttpConstants.SP || b == HttpConstants.HT)
                 { // Skip BWS
                     int index = i + (++j);
@@ -1152,8 +1213,10 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                     {
                         throw new FormatException("Invalid chunk size; expected extensions");
                     }
+
                     b = hex[start + index];
                 }
+
                 if (b == ';')
                 {
                     if (i == 0)
@@ -1161,11 +1224,14 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                         // Empty case - not allowed
                         throw new FormatException("Empty chunk size");
                     }
+
                     return (int) result;
                 }
+
                 // non-hex char fail-fast path
                 throw new FormatException("Invalid character in chunk size");
             }
+
             result *= 16;
             result += digit;
             if (result > int.MaxValue)
@@ -1173,6 +1239,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                 throw new FormatException("Chunk size overflow: " + result.ToString(CultureInfo.InvariantCulture));
             }
         }
+
         return (int) result;
     }
 
@@ -1236,6 +1303,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
         {
             return StringUtil.EMPTY_STRING;
         }
+
         // DON'T REMOVE: it helps JIT to use a simpler intrinsic stub for System::arrayCopy based on the call-site
         if (start == 0)
         {
@@ -1243,8 +1311,10 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
             {
                 return Encoding.Latin1.GetString(asciiContent, 0, asciiContent.Length);
             }
+
             return Encoding.Latin1.GetString(asciiContent, 0, length);
         }
+
         return Encoding.Latin1.GetString(asciiContent, start, length);
     }
 
@@ -1255,6 +1325,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
         int nameStart = start;
         // hoist this load out of the loop, because it won't change!
         bool isDecodingRequest = IsDecodingRequest();
+
         for (nameEnd = nameStart; nameEnd < end; nameEnd ++)
         {
             byte ch = line[nameEnd];
@@ -1283,7 +1354,9 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
             // There was no colon present at all.
             throw new ArgumentException("No colon found");
         }
+
         int colonEnd;
+
         for (colonEnd = nameEnd; colonEnd < end; colonEnd ++)
         {
             if (line[colonEnd] == ':')
@@ -1292,6 +1365,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                 break;
             }
         }
+
         name = SplitHeaderName(line, nameStart, nameEnd - nameStart);
         int valueStart = FindNonWhitespace(line, colonEnd, end);
         if (valueStart == end)
@@ -1326,8 +1400,10 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                 // Any other whitespace delimiter is invalid
                 throw new ArgumentException("Invalid separator");
             }
+
             return result;
         }
+
         return end;
     }
 
@@ -1340,6 +1416,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                 return result;
             }
         }
+
         return end;
     }
 
@@ -1357,12 +1434,14 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
         SP_LENIENT_BYTES[128 + 0x0D] = true;
         // TO SAVE PERFORMING Character::isWhitespace ceremony
         LATIN_WHITESPACE = new bool[256];
+
         for (sbyte b = sbyte.MinValue; b < sbyte.MaxValue; b++)
         {
             LATIN_WHITESPACE[128 + b] = IsJavaWhitespace(b);
         }
 
         ISO_CONTROL_OR_WHITESPACE = new bool[256];
+
         for (sbyte b = sbyte.MinValue; b < sbyte.MaxValue; b++)
         {
             ISO_CONTROL_OR_WHITESPACE[128 + b] = IsISOControl(b) || IsWhitespace(unchecked((byte) b));
@@ -1417,6 +1496,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                         ToHexString(c) + ")");
             }
         }
+
         return end;
     }
 
@@ -1429,6 +1509,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                 return result + 1;
             }
         }
+
         return 0;
     }
 
@@ -1472,9 +1553,12 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                     //       If decoding a response, just throw an exception.
                     throw NewException(maxLength);
                 }
+
                 return null;
             }
+
             int endOfSeqIncluded;
+
             if (indexOfLf > readerIndex && buffer.GetByte(indexOfLf - 1) == HttpConstants.CR)
             {
                 // Drop CR if we had a CRLF pair
@@ -1486,8 +1570,10 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                 {
                     strictCRLFCheck();
                 }
+
                 endOfSeqIncluded = indexOfLf;
             }
+
             int newSize = endOfSeqIncluded - readerIndex;
             if (newSize == 0)
             {
@@ -1495,11 +1581,13 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                 buffer.ReaderIndex = indexOfLf + 1;
                 return seq;
             }
+
             int size = this.size + newSize;
             if (size > maxLength)
             {
                 throw NewException(maxLength);
             }
+
             this.size = size;
             seq.Clear();
             seq.WriteBytes(buffer, readerIndex, newSize);
@@ -1542,6 +1630,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
             {
                 return null;
             }
+
             return base.Parse(buffer, strictCRLFCheck);
         }
 
@@ -1558,8 +1647,10 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                 {
                     throw NewException(maxLength);
                 }
+
                 return true;
             }
+
             if (strictCRLFCheck != null)
             {
                 int b = buffer.GetByte(firstNonLineIndex) & 0xFF;
@@ -1568,6 +1659,7 @@ public abstract class HttpObjectDecoder : ByteToMessageDecoder
                     strictCRLFCheck();
                 }
             }
+
             // from now on we don't care about control chars
             buffer.ReaderIndex = firstNonLineIndex;
             decoder.currentState = State.READ_INITIAL;

@@ -36,6 +36,7 @@ public class DefaultByteBufHolderTest
     {
         IByteBufHolder holder = new DefaultByteBufHolder(Unpooled.EmptyBuffer);
         IByteBufHolder copy = holder.Copy();
+
         try
         {
             Assert.Equal(holder, copy);
@@ -57,6 +58,7 @@ public class DefaultByteBufHolderTest
         IByteBufHolder other = new OtherByteBufHolder(Unpooled.EmptyBuffer, 123);
         IByteBufHolder constant1 = new FirstConstantHolder(Unpooled.EmptyBuffer);
         IByteBufHolder constant2 = new SecondConstantHolder(Unpooled.EmptyBuffer);
+
         try
         {
             // not using 'assertNotEquals' to be explicit about which object we are calling .equals() on
@@ -103,6 +105,7 @@ public class DefaultByteBufHolderTest
             {
                 return false;
             }
+
             return _extraField == ((OtherByteBufHolder)obj)._extraField;
         }
 
@@ -138,6 +141,7 @@ public class DefaultByteBufHolderTest
         data.SetIndex(1, 5).MarkReaderIndex().MarkWriterIndex();
         var holder = new ReplacingHolder(data, 123);
         IByteBufHolder copy = holder.Copy();
+
         try
         {
             var derived = Assert.IsType<ReplacingHolder>(copy);
@@ -168,6 +172,7 @@ public class DefaultByteBufHolderTest
             {
                 holder.Release();
             }
+
             copy.Release();
         }
     }
@@ -181,6 +186,7 @@ public class DefaultByteBufHolderTest
         data.SetIndex(1, 5).MarkReaderIndex().MarkWriterIndex();
         var holder = new ReplacingHolder(data, 7);
         IByteBufHolder duplicate = holder.Duplicate();
+
         try
         {
             Assert.Equal(7, Assert.IsType<ReplacingHolder>(duplicate).Tag);
@@ -192,11 +198,13 @@ public class DefaultByteBufHolderTest
             duplicate.Content.SetIndex(2, 4);
             Assert.Equal(1, data.ReaderIndex);
             Assert.Equal(5, data.WriterIndex);
+
             if (!data.IsReadOnly)
             {
                 duplicate.Content.SetByte(2, 99);
                 Assert.Equal(99, data.GetByte(2));
             }
+
             Assert.True(duplicate.Release());
             Assert.Equal(0, holder.RefCnt);
             Assert.Throws<IllegalReferenceCountException>(() => holder.Content);
@@ -222,6 +230,7 @@ public class DefaultByteBufHolderTest
         ByteBuf data = Owner(kind);
         var holder = new ReplacingHolder(data, 11);
         IByteBufHolder retained = holder.RetainedDuplicate();
+
         try
         {
             Assert.Equal(11, Assert.IsType<ReplacingHolder>(retained).Tag);
@@ -249,6 +258,7 @@ public class DefaultByteBufHolderTest
         var holder = new ReplacingHolder(Unpooled.Buffer(1, 1).WriteByte(1), 5);
         ByteBuf next = Unpooled.Buffer(1, 1).WriteByte(2);
         IByteBufHolder replacement = holder.Replace(next);
+
         try
         {
             Assert.Equal(5, Assert.IsType<ReplacingHolder>(replacement).Tag);
@@ -266,6 +276,7 @@ public class DefaultByteBufHolderTest
             {
                 holder.Release();
             }
+
             replacement.Release();
         }
     }
@@ -276,6 +287,7 @@ public class DefaultByteBufHolderTest
         Assert.Throws<ArgumentNullException>(() => new DefaultByteBufHolder(null));
         ByteBuf data = Unpooled.Buffer(1, 1);
         var holder = new DefaultByteBufHolder(data);
+
         try
         {
             Assert.Same(data, holder.Content);
@@ -287,6 +299,7 @@ public class DefaultByteBufHolderTest
         {
             holder.Release();
         }
+
         Assert.Throws<IllegalReferenceCountException>(() => holder.Content);
         Assert.Throws<IllegalReferenceCountException>(() => holder.Retain());
         Assert.Throws<IllegalReferenceCountException>(() => holder.Release());
@@ -299,6 +312,7 @@ public class DefaultByteBufHolderTest
         IByteBufHolder holder = new DefaultByteBufHolder(data);
         IReferenceCounted counted = holder;
         object hint = new();
+
         try
         {
             Assert.Same(holder, holder.Retain());
@@ -344,6 +358,7 @@ public class DefaultByteBufHolderTest
         var b = new OtherByteBufHolder(Unpooled.WrappedBuffer(new byte[] { 9, 1, 2, 3 }), 7);
         var c = new OtherByteBufHolder(Unpooled.WrappedBuffer(new byte[] { 1, 2, 3 }), 8);
         var plain = new DefaultByteBufHolder(Unpooled.WrappedBuffer(new byte[] { 1, 2, 3 }));
+
         try
         {
             b.Content.ReaderIndex = 1;
@@ -376,6 +391,7 @@ public class DefaultByteBufHolderTest
         var holder = new ReplacingHolder(Unpooled.WrappedBuffer(new byte[] { 1, 2 }), 4);
         holder.HideContent = true;
         IByteBufHolder copy = holder.Copy(), duplicate = holder.Duplicate(), retained = holder.RetainedDuplicate();
+
         try
         {
             Assert.Equal("0102", ByteBufUtil.HexDump(copy.Content));
@@ -391,6 +407,7 @@ public class DefaultByteBufHolderTest
         finally
         {
             copy.Release();
+
             if (holder.RefCnt > 0)
             {
                 holder.Release(holder.RefCnt);
@@ -435,6 +452,7 @@ public class DefaultByteBufHolderTest
     {
         ByteBuf data = Owner(kind);
         IByteBufConvertible convertible = data;
+
         try
         {
             Assert.Same(data, convertible.AsByteBuf());
@@ -465,6 +483,7 @@ public class DefaultByteBufHolderTest
         ByteBuf root = Unpooled.Buffer(1, 1).WriteByte(8);
         ByteBuf wrapper = Unpooled.UnreleasableBuffer(root);
         IByteBufHolder holder = new DefaultByteBufHolder(wrapper);
+
         try
         {
             Assert.Same(wrapper, ((IByteBufConvertible)wrapper).AsByteBuf());

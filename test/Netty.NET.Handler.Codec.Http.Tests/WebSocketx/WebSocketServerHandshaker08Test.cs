@@ -85,6 +85,7 @@ public class WebSocketServerHandshaker08Test : WebSocketServerHandshakerTest
 
         Assert.Equal(
                 "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=", res.Headers().Get(HttpHeaderNames.SEC_WEBSOCKET_ACCEPT));
+
         if (subProtocol)
         {
             Assert.Equal("chat", res.Headers().Get(HttpHeaderNames.SEC_WEBSOCKET_PROTOCOL));
@@ -93,6 +94,7 @@ public class WebSocketServerHandshaker08Test : WebSocketServerHandshakerTest
         {
             Assert.Null(res.Headers().Get(HttpHeaderNames.SEC_WEBSOCKET_PROTOCOL));
         }
+
         ReferenceCountUtil.Release(res);
         req.Release();
     }

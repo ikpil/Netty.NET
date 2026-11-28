@@ -53,6 +53,7 @@ internal sealed class RedisCodecUtil
     internal static byte[] ShortToBytes(short value)
     {
         byte[] bytes = new byte[2];
+
         if (PlatformDependent.BIG_ENDIAN_NATIVE_ORDER)
         {
             bytes[1] = (byte) ((value >> 8) & 0xff);
@@ -63,6 +64,7 @@ internal sealed class RedisCodecUtil
             bytes[0] = (byte) ((value >> 8) & 0xff);
             bytes[1] = (byte) (value & 0xff);
         }
+
         return bytes;
     }
 }

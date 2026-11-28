@@ -130,6 +130,7 @@ public abstract class AbstractEncoderTest : AbstractCompressionTest, IAsyncLifet
         int dataLength = data.ReadableBytes;
         int written = 0, length = rand.Next(100);
         ByteBuf @in;
+
         while (written + length < dataLength)
         {
             @in = data.RetainedSlice(written, length);
@@ -138,6 +139,7 @@ public abstract class AbstractEncoderTest : AbstractCompressionTest, IAsyncLifet
             written += length;
             length = rand.Next(100);
         }
+
         @in = data.RetainedSlice(written, dataLength - written);
         Assert.True(channel.WriteOutbound(@in));
         Assert.True(channel.Finish());
@@ -154,10 +156,12 @@ public abstract class AbstractEncoderTest : AbstractCompressionTest, IAsyncLifet
     {
         CompositeByteBuf compressed = Unpooled.CompositeBuffer();
         ByteBuf msg;
+
         while ((msg = channel.ReadOutbound<ByteBuf>()) != null)
         {
             compressed.AddComponent(msg, true);
         }
+
         return Decompress(compressed, dataLength);
     }
 }

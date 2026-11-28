@@ -188,17 +188,21 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
     {
         ObjectUtil.CheckNotNull(name, "name");
         ObjectUtil.CheckNotNull(valuePredicate, "valuePredicate");
+
         int h = hashingStrategy.GetHashCode(name);
         int i = Index(h);
         HeaderEntry e = entries[i];
+
         while (e != null)
         {
             if (e.hash == h && hashingStrategy.Equals(name, e.key) && valuePredicate(e.value, predicateArg))
             {
                 return true;
             }
+
             e = e.next;
         }
+
         return false;
     }
 
@@ -210,6 +214,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
         int i = Index(h);
         HeaderEntry e = entries[i];
         V value = null;
+
         // loop until the first header was found
         while (e != null)
         {
@@ -220,6 +225,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
 
             e = e.next;
         }
+
         return value;
     }
 
@@ -230,6 +236,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
         {
             return defaultValue;
         }
+
         return value;
     }
 
@@ -246,6 +253,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
         {
             return defaultValue;
         }
+
         return value;
     }
 
@@ -263,6 +271,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
         List<V> values = null;
         V value = null;
         HeaderEntry e = entries[i];
+
         while (e != null)
         {
             if (e.hash == h && hashingStrategy.Equals(name, e.key))
@@ -278,9 +287,11 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
                         values = new List<V>(2);
                         values.Add(value);
                     }
+
                     values.Add(e.GetValue());
                 }
             }
+
             e = e.next;
         }
 
@@ -290,6 +301,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
             {
                 return ReadOnlyCollection<V>.Empty;
             }
+
             return new ReadOnlyCollection<V>(new V[] { value });
         }
 
@@ -383,14 +395,17 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
         int h = hashingStrategy.GetHashCode(name);
         int i = Index(h);
         HeaderEntry e = entries[i];
+
         while (e != null)
         {
             if (e.hash == h && hashingStrategy.Equals(name, e.key) && valueHashingStrategy.Equals(value, e.value))
             {
                 return true;
             }
+
             e = e.next;
         }
+
         return false;
     }
 
@@ -413,13 +428,16 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
         {
             return ImmutableHashSet<K>.Empty;
         }
+
         ISet<K> names = new LinkedHashSet<K>(Size());
         HeaderEntry e = head.after;
+
         while (e != head)
         {
             names.Add(e.GetKey());
             e = e.after;
         }
+
         return names;
     }
 
@@ -428,9 +446,11 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
         ValidateName(nameValidator, true, name);
         ValidateValue(valueValidator, name, value);
         ObjectUtil.CheckNotNull(value, "value");
+
         int h = hashingStrategy.GetHashCode(name);
         int i = Index(h);
         Add0(h, i, name, value);
+
         return ThisT();
     }
 
@@ -439,11 +459,13 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
         ValidateName(nameValidator, true, name);
         int h = hashingStrategy.GetHashCode(name);
         int i = Index(h);
+
         foreach (V v in values)
         {
             ValidateValue(valueValidator, name, v);
             Add0(h, i, name, v);
         }
+
         return ThisT();
     }
 
@@ -452,11 +474,13 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
         ValidateName(nameValidator, true, name);
         int h = hashingStrategy.GetHashCode(name);
         int i = Index(h);
+
         foreach (V v in values)
         {
             ValidateValue(valueValidator, name, v);
             Add0(h, i, name, v);
         }
+
         return ThisT();
     }
 
@@ -471,6 +495,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
         {
             AddObject(name, value);
         }
+
         return ThisT();
     }
 
@@ -480,6 +505,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
         {
             AddObject(name, value);
         }
+
         return ThisT();
     }
 
@@ -534,7 +560,9 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
         {
             throw new ArgumentException("can't add to itself.");
         }
+
         AddImpl(headers);
+
         return ThisT();
     }
 
@@ -547,6 +575,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
         {
             DefaultHeaders<K, V, T2> defaultHeaders = (DefaultHeaders<K, V, T2>) headers;
             DefaultHeaders<K, V, T2>.HeaderEntry e = defaultHeaders.head.after;
+
             if (defaultHeaders.hashingStrategy == hashingStrategy &&
                     defaultHeaders.nameValidator == nameValidator)
             {
@@ -582,10 +611,12 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
         ValidateName(nameValidator, false, name);
         ValidateValue(valueValidator, name, value);
         ObjectUtil.CheckNotNull(value, "value");
+
         int h = hashingStrategy.GetHashCode(name);
         int i = Index(h);
         Remove0(h, i, name);
         Add0(h, i, name, value);
+
         return ThisT();
     }
 
@@ -598,12 +629,14 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
         int i = Index(h);
 
         Remove0(h, i, name);
+
         foreach (V v in values)
         {
             if (v == null)
             {
                 break;
             }
+
             ValidateValue(valueValidator, name, v);
             Add0(h, i, name, v);
         }
@@ -620,12 +653,14 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
         int i = Index(h);
 
         Remove0(h, i, name);
+
         foreach (V v in values)
         {
             if (v == null)
             {
                 break;
             }
+
             ValidateValue(valueValidator, name, v);
             Add0(h, i, name, v);
         }
@@ -647,12 +682,14 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
         int i = Index(h);
 
         Remove0(h, i, name);
+
         foreach (object v in values)
         {
             if (v == null)
             {
                 break;
             }
+
             V converted = FromObject(name, v);
             ValidateValue(valueValidator, name, converted);
             Add0(h, i, name, converted);
@@ -669,12 +706,14 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
         int i = Index(h);
 
         Remove0(h, i, name);
+
         foreach (object v in values)
         {
             if (v == null)
             {
                 break;
             }
+
             V converted = FromObject(name, v);
             ValidateValue(valueValidator, name, converted);
             Add0(h, i, name, converted);
@@ -735,6 +774,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
             Clear();
             AddImpl(headers);
         }
+
         return ThisT();
     }
 
@@ -746,8 +786,10 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
             {
                 Remove(key);
             }
+
             AddImpl(headers);
         }
+
         return ThisT();
     }
 
@@ -787,6 +829,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
     public virtual bool? GetBoolean(K name)
     {
         V v = Get(name);
+
         try
         {
             return v != null ? ToBoolean(name, v) : null;
@@ -806,6 +849,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
     public virtual sbyte? GetByte(K name)
     {
         V v = Get(name);
+
         try
         {
             return v != null ? ToByte(name, v) : null;
@@ -825,6 +869,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
     public virtual char? GetChar(K name)
     {
         V v = Get(name);
+
         try
         {
             return v != null ? ToChar(name, v) : null;
@@ -844,6 +889,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
     public virtual short? GetShort(K name)
     {
         V v = Get(name);
+
         try
         {
             return v != null ? ToShort(name, v) : null;
@@ -863,6 +909,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
     public virtual int? GetInt(K name)
     {
         V v = Get(name);
+
         try
         {
             return v != null ? ToInt(name, v) : null;
@@ -882,6 +929,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
     public virtual long? GetLong(K name)
     {
         V v = Get(name);
+
         try
         {
             return v != null ? ToLong(name, v) : null;
@@ -901,6 +949,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
     public virtual float? GetFloat(K name)
     {
         V v = Get(name);
+
         try
         {
             return v != null ? ToFloat(name, v) : null;
@@ -920,6 +969,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
     public virtual double? GetDouble(K name)
     {
         V v = Get(name);
+
         try
         {
             return v != null ? ToDouble(name, v) : null;
@@ -939,6 +989,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
     public virtual long? GetTimeMillis(K name)
     {
         V v = Get(name);
+
         try
         {
             return v != null ? ToTimeMillis(name, v) : null;
@@ -958,6 +1009,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
     public virtual bool? GetBooleanAndRemove(K name)
     {
         V v = GetAndRemove(name);
+
         try
         {
             return v != null ? ToBoolean(name, v) : null;
@@ -977,6 +1029,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
     public virtual sbyte? GetByteAndRemove(K name)
     {
         V v = GetAndRemove(name);
+
         try
         {
             return v != null ? ToByte(name, v) : null;
@@ -996,6 +1049,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
     public virtual char? GetCharAndRemove(K name)
     {
         V v = GetAndRemove(name);
+
         try
         {
             return v != null ? ToChar(name, v) : null;
@@ -1015,6 +1069,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
     public virtual short? GetShortAndRemove(K name)
     {
         V v = GetAndRemove(name);
+
         try
         {
             return v != null ? ToShort(name, v) : null;
@@ -1034,6 +1089,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
     public virtual int? GetIntAndRemove(K name)
     {
         V v = GetAndRemove(name);
+
         try
         {
             return v != null ? ToInt(name, v) : null;
@@ -1053,6 +1109,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
     public virtual long? GetLongAndRemove(K name)
     {
         V v = GetAndRemove(name);
+
         try
         {
             return v != null ? ToLong(name, v) : null;
@@ -1072,6 +1129,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
     public virtual float? GetFloatAndRemove(K name)
     {
         V v = GetAndRemove(name);
+
         try
         {
             return v != null ? ToFloat(name, v) : null;
@@ -1091,6 +1149,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
     public virtual double? GetDoubleAndRemove(K name)
     {
         V v = GetAndRemove(name);
+
         try
         {
             return v != null ? ToDouble(name, v) : null;
@@ -1110,6 +1169,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
     public virtual long? GetTimeMillisAndRemove(K name)
     {
         V v = GetAndRemove(name);
+
         try
         {
             return v != null ? ToTimeMillis(name, v) : null;
@@ -1177,6 +1237,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
             {
                 return false;
             }
+
             for (int i = 0; i < otherValues.Count; i++)
             {
                 if (!valueHashingStrategy.Equals(otherValues[i], values[i]))
@@ -1185,6 +1246,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
                 }
             }
         }
+
         return true;
     }
 
@@ -1196,15 +1258,18 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
     public int HashCode(IEqualityComparer<V> valueHashingStrategy)
     {
         int result = DefaultHeaders.HASH_CODE_SEED;
+
         foreach (K name in Names())
         {
             result = unchecked(31 * result + hashingStrategy.GetHashCode(name));
             IList<V> values = GetAll(name);
+
             for (int i = 0; i < values.Count; ++i)
             {
                 result = unchecked(31 * result + valueHashingStrategy.GetHashCode(values[i]));
             }
         }
+
         return result;
     }
 
@@ -1283,6 +1348,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
 
         V value = null;
         HeaderEntry next = e.next;
+
         while (next != null)
         {
             if (next.hash == h && hashingStrategy.Equals(name, next.key))
@@ -1307,6 +1373,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
             {
                 value = e.value;
             }
+
             entries[i] = e.next;
             e.Remove();
             --size;
@@ -1329,11 +1396,13 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
             // If we don't have any existing starting point, then start from the beginning.
             previous = firstEntry;
             HeaderEntry next = firstEntry.next;
+
             while (next != null && next != entry)
             {
                 previous = next;
                 next = next.next;
             }
+
             Debug.Assert(next != null, "Entry not found in its hash bucket: " + entry);
             previous.next = entry.next;
         }
@@ -1341,6 +1410,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
         {
             previous.next = entry.next;
         }
+
         entry.Remove();
         --size;
         return previous;
@@ -1662,6 +1732,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
             {
                 return false;
             }
+
             Next();
             return true;
         }
@@ -1709,10 +1780,12 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
             {
                 throw new InvalidOperationException();
             }
+
             if (previous != null)
             {
                 removalPrevious = previous;
             }
+
             previous = next;
             CalculateNext(next.next);
             return previous.value;
@@ -1724,6 +1797,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
             {
                 throw new InvalidOperationException();
             }
+
             removalPrevious = _headers.Remove0(previous, removalPrevious);
             previous = null;
         }
@@ -1737,8 +1811,10 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
                     next = entry;
                     return;
                 }
+
                 entry = entry.next;
             }
+
             next = null;
         }
 
@@ -1753,6 +1829,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
             {
                 return false;
             }
+
             _current = Next();
             return true;
         }
@@ -1843,6 +1920,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
         public V SetValue(V value)
         {
             ObjectUtil.CheckNotNull(value, "value");
+
             V oldValue = this.value;
             this.value = value;
             return oldValue;
@@ -1861,6 +1939,7 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
             {
                 return false;
             }
+
             IEntry<K, V> other = (IEntry<K, V>) o;
             return (GetKey() == null ? other.GetKey() == null : GetKey().Equals(other.GetKey()))  &&
                    (GetValue() == null ? other.GetValue() == null : GetValue().Equals(other.GetValue()));

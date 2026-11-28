@@ -221,6 +221,7 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
         {
             throw new ErrorDataEncoderException("Cannot create a Encoder if request is a TRACE");
         }
+
         // Fill default values
         bodyListDatas = new List<IInterfaceHttpData>();
         // default mode
@@ -229,6 +230,7 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
         isMultipart = multipart;
         multipartHttpDatas = new List<IInterfaceHttpData>();
         this.encoderMode = encoderMode;
+
         if (isMultipart)
         {
             InitDataMultipart();
@@ -326,11 +328,13 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
     public virtual void SetBodyHttpDatas(IList<IInterfaceHttpData> datas)
     {
         ObjectUtil.CheckNotNull(datas, "datas");
+
         globalBodySize = 0;
         bodyListDatas.Clear();
         currentFileUpload = null;
         duringMixedMode = false;
         multipartHttpDatas.Clear();
+
         foreach (IInterfaceHttpData data in datas)
         {
             AddBodyHttpData(data);
@@ -400,12 +404,15 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
     {
         CheckNotNull(name, "name");
         CheckNotNull(file, "file");
+
         if (filename == null)
         {
             filename = StringUtil.EMPTY_STRING;
         }
+
         string scontentType = contentType;
         string contentTransferEncoding = null;
+
         if (contentType == null)
         {
             if (isText)
@@ -417,12 +424,15 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
                 scontentType = HttpPostBodyUtil.DEFAULT_BINARY_CONTENT_TYPE;
             }
         }
+
         if (!isText)
         {
             contentTransferEncoding = HttpPostBodyUtil.TransferEncodingMechanism.BINARY.Value();
         }
+
         IFileUpload fileUpload = factory.CreateFileUpload(request, name, filename, scontentType,
                 contentTransferEncoding, null, AbstractDiskHttpData.FileLength(file));
+
         try
         {
             fileUpload.SetContent(file);
@@ -431,6 +441,7 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
         {
             throw new ErrorDataEncoderException(e);
         }
+
         AddBodyHttpData(fileUpload);
     }
 
@@ -456,6 +467,7 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
         {
             throw new ArgumentException("Different array length");
         }
+
         for (int i = 0; i < file.Length; i++)
         {
             AddBodyFileUpload(name, file[i], contentType[i], isText[i]);
@@ -476,12 +488,15 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
         {
             throw new ErrorDataEncoderException("Cannot add value once finalized");
         }
+
         bodyListDatas.Add(CheckNotNull(data, "data"));
+
         if (!isMultipart)
         {
             if (data is IAttribute)
             {
                 IAttribute attribute = (IAttribute) data;
+
                 try
                 {
                     // name=value& with encoded name and attribute
@@ -507,8 +522,10 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
                 multipartHttpDatas.Add(newattribute);
                 globalBodySize += newattribute.GetName().Length + 1 + newattribute.Length() + 1;
             }
+
             return;
         }
+
         /*
          * Logic:
          * if not Attribute:
@@ -552,12 +569,15 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
                 currentFileUpload = null;
                 duringMixedMode = false;
             }
+
             InternalAttribute @internal = new InternalAttribute(charset);
+
             if (multipartHttpDatas.Count != 0)
             {
                 // previously a data field so CRLF
                 @internal.AddValue("\r\n");
             }
+
             @internal.AddValue("--" + multipartDataBoundary + "\r\n");
             // content-disposition: form-data; name="field1"
             IAttribute attribute = (IAttribute) data;
@@ -575,6 +595,7 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
                         HttpHeaderValues.CHARSET + '='
                         + HttpPostBodyUtil.CharsetName(localcharset) + "\r\n");
             }
+
             // CRLF between body header and data
             @internal.AddValue("\r\n");
             multipartHttpDatas.Add(@internal);
@@ -585,12 +606,15 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
         {
             IFileUpload fileUpload = (IFileUpload) data;
             InternalAttribute @internal = new InternalAttribute(charset);
+
             if (multipartHttpDatas.Count != 0)
             {
                 // previously a data field so CRLF
                 @internal.AddValue("\r\n");
             }
+
             bool localMixed;
+
             if (duringMixedMode)
             {
                 if (currentFileUpload != null && currentFileUpload.GetName().Equals(fileUpload.GetName()))
@@ -757,6 +781,7 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
                             + HttpHeaderValues.FILENAME + "=\"" + fileUpload.GetFilename() + "\"\r\n");
                 }
             }
+
             // Add Content-Length: xxx
             @internal.AddValue(HttpHeaderNames.CONTENT_LENGTH + ": " +
                     fileUpload.Length() + "\r\n");
@@ -780,6 +805,7 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
             {
                 @internal.AddValue("\r\n\r\n");
             }
+
             multipartHttpDatas.Add(@internal);
             multipartHttpDatas.Add(data);
             globalBodySize += fileUpload.Length() + @internal.Size();
@@ -809,10 +835,12 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
             if (isMultipart)
             {
                 InternalAttribute @internal = new InternalAttribute(charset);
+
                 if (duringMixedMode)
                 {
                     @internal.AddValue("\r\n--" + multipartMixedBoundary + "--");
                 }
+
                 @internal.AddValue("\r\n--" + multipartDataBoundary + "--\r\n");
                 multipartHttpDatas.Add(@internal);
                 multipartMixedBoundary = null;
@@ -820,6 +848,7 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
                 duringMixedMode = false;
                 globalBodySize += @internal.Size();
             }
+
             headerFinalized = true;
         }
         else
@@ -830,9 +859,11 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
         HttpHeaders headers = request.Headers();
         IList<string> contentTypes = headers.GetAll(HttpHeaderNames.CONTENT_TYPE);
         IList<string> transferEncoding = headers.GetAll(HttpHeaderNames.TRANSFER_ENCODING);
+
         if (contentTypes != null)
         {
             headers.Remove(HttpHeaderNames.CONTENT_TYPE);
+
             foreach (string contentType in contentTypes)
             {
                 // "multipart/form-data; boundary=--89421926422648"
@@ -854,6 +885,7 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
                 }
             }
         }
+
         if (isMultipart)
         {
             string value = HttpHeaderValues.MULTIPART_FORM_DATA + "; " + HttpHeaderValues.BOUNDARY + '='
@@ -865,21 +897,27 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
             // Not multipart
             headers.Add(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.APPLICATION_X_WWW_FORM_URLENCODED);
         }
+
         // Now consider size for chunk or not
         long realSize = globalBodySize;
+
         if (!isMultipart)
         {
             realSize -= 1; // last '&' removed
         }
+
         iterator = 0;
 
         headers.Set(HttpHeaderNames.CONTENT_LENGTH, realSize.ToString(CultureInfo.InvariantCulture));
+
         if (realSize > HttpPostBodyUtil.chunkSize || isMultipart)
         {
             isChunked = true;
+
             if (transferEncoding != null)
             {
                 headers.Remove(HttpHeaderNames.TRANSFER_ENCODING);
+
                 foreach (string v in transferEncoding)
                 {
                     if (HttpHeaderValues.CHUNKED.ContentEqualsIgnoreCase(new StringCharSequence(v)))
@@ -892,6 +930,7 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
                     }
                 }
             }
+
             HttpUtil.SetTransferEncodingChunked(request, true);
 
             // wrap to hide the possible content
@@ -901,6 +940,7 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
         {
             // get the only one body and set it to the request
             IHttpContent chunk = NextChunk();
+
             if (request is IFullHttpRequest)
             {
                 IFullHttpRequest fullRequest = (IFullHttpRequest) request;
@@ -910,6 +950,7 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
                     fullRequest.Content.Clear().WriteBytes(chunkContent);
                     chunkContent.Release();
                 }
+
                 return fullRequest;
             }
             else
@@ -940,13 +981,16 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
         {
             return "";
         }
+
         string encoded = UrlEncode(s, charset);
+
         if (encoderMode == EncoderMode.RFC3986)
         {
             encoded = encoded.Replace(ASTERISK, ASTERISK_REPLACEMENT)
                              .Replace(PLUS, PLUS_REPLACEMENT)
                              .Replace(TILDE, TILDE_REPLACEMENT);
         }
+
         return encoded;
     }
 
@@ -999,7 +1043,9 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
         {
             return null;
         }
+
         ByteBuf buffer;
+
         if (currentData is InternalAttribute)
         {
             buffer = ((InternalAttribute) currentData).ToByteBuf();
@@ -1015,6 +1061,7 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
             {
                 throw new ErrorDataEncoderException(e);
             }
+
             if (buffer.Capacity == 0)
             {
                 // end for current InterfaceHttpData, need more data
@@ -1022,6 +1069,7 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
                 return null;
             }
         }
+
         if (currentBuffer == null)
         {
             currentBuffer = buffer;
@@ -1030,11 +1078,13 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
         {
             currentBuffer = Unpooled.WrappedBuffer(currentBuffer, buffer);
         }
+
         if (currentBuffer.ReadableBytes < HttpPostBodyUtil.chunkSize)
         {
             currentData = null;
             return null;
         }
+
         buffer = FillByteBuf();
         return new DefaultHttpContent(buffer);
     }
@@ -1055,6 +1105,7 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
         {
             return null;
         }
+
         int size = sizeleft;
         ByteBuf buffer;
 
@@ -1064,6 +1115,7 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
             string key = currentData.GetName();
             buffer = Unpooled.WrappedBuffer(charset.GetBytes(key));
             isKey = false;
+
             if (currentBuffer == null)
             {
                 currentBuffer = Unpooled.WrappedBuffer(buffer, Unpooled.WrappedBuffer(charset.GetBytes("=")));
@@ -1072,8 +1124,10 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
             {
                 currentBuffer = Unpooled.WrappedBuffer(currentBuffer, buffer, Unpooled.WrappedBuffer(charset.GetBytes("=")));
             }
+
             // continue
             size -= buffer.ReadableBytes + 1;
+
             if (currentBuffer.ReadableBytes >= HttpPostBodyUtil.chunkSize)
             {
                 buffer = FillByteBuf();
@@ -1093,6 +1147,7 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
 
         // Figure out delimiter
         ByteBuf delimiter = null;
+
         if (buffer.ReadableBytes < size)
         {
             isKey = true;
@@ -1105,6 +1160,7 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
         {
             isKey = true;
             currentData = null;
+
             if (currentBuffer == null)
             {
                 if (delimiter == null)
@@ -1123,11 +1179,13 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
                     currentBuffer = Unpooled.WrappedBuffer(currentBuffer, delimiter);
                 }
             }
+
             if (currentBuffer.ReadableBytes >= HttpPostBodyUtil.chunkSize)
             {
                 buffer = FillByteBuf();
                 return new DefaultHttpContent(buffer);
             }
+
             return null;
         }
 
@@ -1159,6 +1217,7 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
         {
             return new DefaultHttpContent(FillByteBuf());
         }
+
         return null;
     }
 
@@ -1205,6 +1264,7 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
             isLastChunkSent = true;
             return ILastHttpContent.EMPTY_LAST_CONTENT;
         }
+
         // first test if previous buffer is not empty
         int size = CalculateRemainingSize();
         if (size <= 0)
@@ -1213,11 +1273,13 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
             ByteBuf buffer = FillByteBuf();
             return new DefaultHttpContent(buffer);
         }
+
         // size > 0
         if (currentData != null)
         {
             // continue to read data
             IHttpContent chunk;
+
             if (isMultipart)
             {
                 chunk = EncodeNextChunkMultipart(size);
@@ -1226,21 +1288,26 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
             {
                 chunk = EncodeNextChunkUrlEncoded(size);
             }
+
             if (chunk != null)
             {
                 // NextChunk from data
                 return chunk;
             }
+
             size = CalculateRemainingSize();
         }
+
         if (!(iterator < multipartHttpDatas.Count))
         {
             return LastChunk();
         }
+
         while (size > 0 && iterator < multipartHttpDatas.Count)
         {
             currentData = multipartHttpDatas[iterator++];
             IHttpContent chunk;
+
             if (isMultipart)
             {
                 chunk = EncodeNextChunkMultipart(size);
@@ -1249,15 +1316,18 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
             {
                 chunk = EncodeNextChunkUrlEncoded(size);
             }
+
             if (chunk == null)
             {
                 // not enough
                 size = CalculateRemainingSize();
                 continue;
             }
+
             // NextChunk from data
             return chunk;
         }
+
         // end since no more data
         return LastChunk();
     }
@@ -1265,22 +1335,26 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
     private int CalculateRemainingSize()
     {
         int size = HttpPostBodyUtil.chunkSize;
+
         if (currentBuffer != null)
         {
             size -= currentBuffer.ReadableBytes;
         }
+
         return size;
     }
 
     private IHttpContent LastChunk()
     {
         isLastChunk = true;
+
         if (currentBuffer == null)
         {
             isLastChunkSent = true;
             // LastChunk with no more data
             return ILastHttpContent.EMPTY_LAST_CONTENT;
         }
+
         // NextChunk as last non empty from buffer
         ByteBuf buffer = currentBuffer;
         currentBuffer = null;
@@ -1307,6 +1381,7 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
     {
         StringBuilder @out = new StringBuilder(s.Length);
         int i = 0;
+
         while (i < s.Length)
         {
             char c = s[i];
@@ -1318,18 +1393,22 @@ public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
             else
             {
                 int start = i;
+
                 do
                 {
                     i++;
                 }
                 while (i < s.Length && !DontNeedEncoding(s[i]));
+
                 byte[] ba = charset.GetBytes(s.Substring(start, i - start));
+
                 foreach (byte b in ba)
                 {
                     @out.Append('%').Append(UPPER_HEX_DIGITS[b >> 4]).Append(UPPER_HEX_DIGITS[b & 0xF]);
                 }
             }
         }
+
         return @out.ToString();
     }
 

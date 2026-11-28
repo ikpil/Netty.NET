@@ -24,6 +24,7 @@ public class NotificationRecursionContractTest
         void Visit(int index)
         {
             maximum = Math.Max(maximum, ++depth);
+
             try
             {
                 ++calls;
@@ -32,6 +33,7 @@ public class NotificationRecursionContractTest
                 {
                     return;
                 }
+
                 if (throughCompletion)
                 {
                     completions[index].Register(_ => reporters[index + 1].Report(new TransferProgress(1, 2)));
@@ -53,9 +55,11 @@ public class NotificationRecursionContractTest
             {
                 int captured = index;
                 reporters[index] = new ExecutorProgress(ImmediateEventExecutor.INSTANCE, source.Task, _ => Visit(captured));
+
                 if (throughCompletion)
                     completions[index] = new ExecutorCompletion(ImmediateEventExecutor.INSTANCE, Task.CompletedTask);
             }
+
             reporters[0].Report(new TransferProgress(1, 2));
             Assert.Equal(count, calls);
             Assert.Equal(Enumerable.Range(0, count), delivered);
@@ -68,6 +72,7 @@ public class NotificationRecursionContractTest
             {
                 reporter?.Dispose();
             }
+
             foreach (var completion in completions)
             {
                 completion?.Dispose();

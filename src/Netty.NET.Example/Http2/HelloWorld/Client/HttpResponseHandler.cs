@@ -92,6 +92,7 @@ public class HttpResponseHandler : SimpleChannelInboundHandler<IFullHttpResponse
             {
                 throw NewRuntimeException(writeFuture);
             }
+
             TaskCompletionSource promise = entry.Value.Value;
             if (await Task.WhenAny(promise.Task, Task.Delay(timeout)) != promise.Task)
             {
@@ -101,6 +102,7 @@ public class HttpResponseHandler : SimpleChannelInboundHandler<IFullHttpResponse
             {
                 throw NewRuntimeException(promise.Task);
             }
+
             Console.WriteLine("---Stream id: " + entry.Key + " received---");
             streamidPromiseMap.TryRemove(entry.Key, out _);
         }

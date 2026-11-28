@@ -86,6 +86,7 @@ public sealed class PemX509Certificate : IPemEncoded
 
         bool success = false;
         ByteBuf pem = null;
+
         try
         {
             foreach (object cert in chain)
@@ -150,9 +151,11 @@ public sealed class PemX509Certificate : IPemEncoded
     {
 
         ByteBuf encoded = Unpooled.WrappedBuffer(cert.GetRawCertData());
+
         try
         {
             ByteBuf base64 = SslUtils.ToBase64(allocator, encoded);
+
             try
             {
                 if (pem == null)

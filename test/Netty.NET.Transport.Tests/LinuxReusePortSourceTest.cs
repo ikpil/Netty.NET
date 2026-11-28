@@ -47,6 +47,7 @@ public class LinuxReusePortSourceTest
         RequireReusePort();
         var loop = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var token = TestContext.Current.CancellationToken;
+
         try
         {
             var handler = new DiscardHandler();
@@ -75,6 +76,7 @@ public class LinuxReusePortSourceTest
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         deadline.CancelAfter(TimeSpan.FromSeconds(9));
         var loop = new MultiThreadIoEventLoopGroup(2, NioIoHandler.NewFactory());
+
         try
         {
             var firstHandler = new AcceptHandler();
@@ -84,12 +86,14 @@ public class LinuxReusePortSourceTest
             var address = Assert.IsType<IPEndPoint>(first.LocalAddress);
             var second = await bootstrap.ChildHandler(secondHandler).BindAsync(address, deadline.Token);
             Assert.Equal(address, second.LocalAddress);
+
             while (!firstHandler.Accepted || !secondHandler.Accepted)
             {
                 using var peer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 await peer.ConnectAsync(address, deadline.Token);
                 peer.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
             }
+
             Assert.True(firstHandler.Accepted);
             Assert.True(secondHandler.Accepted);
         }
@@ -107,6 +111,7 @@ public class LinuxReusePortSourceTest
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         deadline.CancelAfter(TimeSpan.FromSeconds(9));
         var loop = new MultiThreadIoEventLoopGroup(2, NioIoHandler.NewFactory());
+
         try
         {
             var firstHandler = new DatagramHandler();
@@ -123,6 +128,7 @@ public class LinuxReusePortSourceTest
             await Task.WhenAll(Enumerable.Range(0, 16).Select(_ => Task.Run(async () =>
             {
                 using var sender = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+
                 while (!firstHandler.Received || !secondHandler.Received)
                     await sender.SendToAsync(bytes.AsMemory(), SocketFlags.None, address, deadline.Token);
             }, deadline.Token)));

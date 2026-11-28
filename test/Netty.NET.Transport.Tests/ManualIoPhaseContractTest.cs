@@ -28,6 +28,7 @@ public class ManualIoPhaseContractTest
         receiver.Config.SetRecvByteBufAllocator(allocator);
         var reads = new ReadBytes();
         receiver.Pipeline.AddLast(reads);
+
         try
         {
             loop.RegisterAsync(receiver, cancellation).GetAwaiter().GetResult();
@@ -86,6 +87,7 @@ public class ManualIoPhaseContractTest
         {
             DomainSocketSourceTest.RequireDomainSockets();
         }
+
         var cancellation = TestContext.Current.CancellationToken;
         var family = domain ? AddressFamily.Unix : AddressFamily.InterNetwork;
         var protocol = domain ? ProtocolType.Unspecified : ProtocolType.Tcp;
@@ -99,6 +101,7 @@ public class ManualIoPhaseContractTest
         var reads = new ReadBytes();
         channel.Pipeline.AddLast(reads);
         var loop = new ManualIoEventLoop(Thread.CurrentThread, NioIoHandler.NewFactory());
+
         try
         {
             loop.RegisterAsync(channel, cancellation).GetAwaiter().GetResult();
@@ -124,11 +127,13 @@ public class ManualIoPhaseContractTest
     {
         var watch = Stopwatch.StartNew();
         int count = 0;
+
         while (!done() && watch.Elapsed < TimeSpan.FromSeconds(3))
         {
             count += loop.Run(10_000_000, -1);
             Thread.Yield();
         }
+
         Assert.True(done(), "The socket completion did not arrive on the I/O phase.");
         return count;
     }

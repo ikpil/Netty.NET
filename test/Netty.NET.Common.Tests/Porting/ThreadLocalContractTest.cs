@@ -46,12 +46,14 @@ public class ThreadLocalContractTest : IDisposable
     public void IndexedStorageGrowsWithoutLosingExistingValues()
     {
         var locals = new List<FastThreadLocal<string>>();
+
         for (int i = 0; i < 100; i++)
         {
             var local = new FastThreadLocal<string>();
             local.Set(i.ToString());
             locals.Add(local);
         }
+
         Assert.Equal(100, FastThreadLocal.Size());
 
         for (int i = 0; i < locals.Count; i++)
@@ -89,10 +91,12 @@ public class ThreadLocalContractTest : IDisposable
         Assert.True(thread.IsBackground);
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
+
         if (failure != null)
         {
             System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failure).Throw();
         }
+
         Assert.Equal(thread.Name, local.Removed);
     }
 
@@ -185,6 +189,7 @@ public class ThreadLocalContractTest : IDisposable
     public void CleanupSnapshotsBindingsWhileRemovalCallbacksRemoveOtherBindings(bool scoped)
     {
         var locals = new RemovalLocal<string>[3];
+
         for (int index = 0; index < locals.Length; index++)
             locals[index] = new RemovalLocal<string>
             {
@@ -206,6 +211,7 @@ public class ThreadLocalContractTest : IDisposable
             }
 
             Assert.Equal(3, FastThreadLocal.Size());
+
             if (!scoped)
             {
                 FastThreadLocal.RemoveAll();
@@ -220,12 +226,14 @@ public class ThreadLocalContractTest : IDisposable
         {
             Work();
         }
+
         for (int index = 0; index < locals.Length; index++)
         {
             Assert.Equal(1, locals[index].RemovalCount);
             Assert.Equal(index.ToString(), locals[index].Removed);
             Assert.False(locals[index].IsSet());
         }
+
         Assert.Null(InternalThreadLocalMap.GetIfSet());
         Assert.Equal(0, FastThreadLocal.Size());
     }

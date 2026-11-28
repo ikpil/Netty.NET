@@ -25,6 +25,7 @@ public class MockTickerPhaseContractTest
             }
         }) { IsBackground = true };
         sleeper.Start();
+
         try
         {
             ticker.AwaitSleepingThread(sleeper);
@@ -42,6 +43,7 @@ public class MockTickerPhaseContractTest
             {
                 sleeper.Interrupt();
             }
+
             Assert.True(sleeper.Join(TimeSpan.FromSeconds(5)));
         }
     }
@@ -87,6 +89,7 @@ public class MockTickerPhaseContractTest
             }
         }) { IsBackground = true };
         first.Start();
+
         try
         {
             ticker.AwaitSleepingThread(first);
@@ -110,10 +113,12 @@ public class MockTickerPhaseContractTest
                 {
                     continue;
                 }
+
                 if (thread.IsAlive)
                 {
                     thread.Interrupt();
                 }
+
                 Assert.True(thread.Join(TimeSpan.FromSeconds(5)));
             }
         }
@@ -135,6 +140,7 @@ public class MockTickerPhaseContractTest
             try
             {
                 ticker.Advance(7);
+
                 try
                 {
                     Thread.Sleep(1);
@@ -153,6 +159,7 @@ public class MockTickerPhaseContractTest
                 done.Set();
             }
         }) { IsBackground = true };
+
         try
         {
             lock (gate)
@@ -163,6 +170,7 @@ public class MockTickerPhaseContractTest
                 advancer.Interrupt();
                 Assert.False(done.Wait(TimeSpan.FromMilliseconds(25)), "Advance must wait for admission despite interruption");
             }
+
             Assert.True(advancer.Join(TimeSpan.FromSeconds(5)));
             Assert.Null(failure);
             Assert.True(preserved);
@@ -174,6 +182,7 @@ public class MockTickerPhaseContractTest
             {
                 advancer.Interrupt();
             }
+
             Assert.True(advancer.Join(TimeSpan.FromSeconds(5)));
         }
     }
@@ -201,6 +210,7 @@ public class MockTickerPhaseContractTest
             }
         }) { IsBackground = true };
         sleeper.Start();
+
         try
         {
             for (int phase = 0; phase < phases; phase++)
@@ -208,6 +218,7 @@ public class MockTickerPhaseContractTest
                 ticker.AwaitSleepingThread(sleeper);
                 ticker.Advance(1);
             }
+
             Assert.True(sleeper.Join(TimeSpan.FromSeconds(2)),
                 "Each advancement must reach the next sleep phase, rather than advancing past a stale registration");
             Assert.Null(failure);
@@ -219,6 +230,7 @@ public class MockTickerPhaseContractTest
             {
                 sleeper.Interrupt();
             }
+
             Assert.True(sleeper.Join(TimeSpan.FromSeconds(5)));
         }
     }

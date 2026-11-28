@@ -83,6 +83,7 @@ public sealed class DeflateFrameClientExtensionHandshaker : IWebSocketClientExte
                     "compressionLevel: " + compressionLevel.ToString(CultureInfo.InvariantCulture) +
                     " (expected: 0-9)");
         }
+
         this.compressionLevel = compressionLevel;
         this.useWebkitExtensionName = useWebkitExtensionName;
         this.extensionFilterProvider = CheckNotNull(extensionFilterProvider, "extensionFilterProvider");

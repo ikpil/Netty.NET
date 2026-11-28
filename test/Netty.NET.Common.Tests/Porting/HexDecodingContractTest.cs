@@ -10,16 +10,19 @@ public class HexDecodingContractTest
     {
         const string digits = "0123456789abcdef";
         const string upperDigits = "0123456789ABCDEF";
+
         for (int codeUnit = 0; codeUnit <= char.MaxValue; codeUnit++)
         {
             char value = (char)codeUnit;
             int expected = Math.Max(digits.IndexOf(value), upperDigits.IndexOf(value));
             Assert.Equal(expected, StringUtil.DecodeHexNibble(value));
+
             if (codeUnit <= byte.MaxValue)
             {
                 Assert.Equal(expected, StringUtil.DecodeHexNibble((byte)codeUnit));
             }
         }
+
         for (int value = 0; value <= byte.MaxValue; value++)
         {
             string pair = string.Concat(upperDigits[value / 16], digits[value % 16]);
@@ -58,11 +61,13 @@ public class HexDecodingContractTest
     {
         Assert.Equal("str", Assert.Throws<ArgumentNullException>(() => StringUtil.DecodeHexByte((string)null, 0)).ParamName);
         Assert.Equal("s", Assert.Throws<ArgumentNullException>(() => StringUtil.DecodeHexByte((ICharSequence)null, 0)).ParamName);
+
         foreach (int position in new[] { -1, 1, 2, int.MaxValue })
         {
             Assert.Equal("index", Assert.Throws<ArgumentOutOfRangeException>(() => StringUtil.DecodeHexByte("ff", position)).ParamName);
             Assert.Equal("pos", Assert.Throws<ArgumentOutOfRangeException>(() => StringUtil.DecodeHexByte(new StringCharSequence("ff"), position)).ParamName);
         }
+
         Assert.Throws<ArgumentOutOfRangeException>(() => StringUtil.DecodeHexByte("", 0));
         Assert.Throws<ArgumentOutOfRangeException>(() => StringUtil.DecodeHexByte("f", 0));
     }
@@ -76,8 +81,10 @@ public class HexDecodingContractTest
         Assert.Equal("fromIndex", Assert.Throws<ArgumentOutOfRangeException>(() => StringUtil.DecodeHexDump(slice, -1, 2)).ParamName);
         Assert.Equal("fromIndex", Assert.Throws<ArgumentOutOfRangeException>(() => StringUtil.DecodeHexDump(slice, int.MaxValue, 2)).ParamName);
         Assert.Equal("length", Assert.Throws<ArgumentOutOfRangeException>(() => StringUtil.DecodeHexDump(slice, 4, 4)).ParamName);
+
         foreach (int length in new[] { -2, -1, 1, 3 })
             Assert.Equal("length: " + length, Assert.Throws<ArgumentException>(() => StringUtil.DecodeHexDump(slice, 0, length)).Message);
+
         Assert.Same(EmptyArrays.EMPTY_BYTES, StringUtil.DecodeHexDump((ICharSequence)null, int.MinValue, 0));
         Assert.Same(EmptyArrays.EMPTY_BYTES, StringUtil.DecodeHexDump(slice, int.MaxValue, 0));
         Assert.Same(EmptyArrays.EMPTY_BYTES, StringUtil.DecodeHexDump(""));

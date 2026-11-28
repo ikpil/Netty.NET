@@ -127,14 +127,17 @@ public sealed class ServerCookieEncoder : CookieEncoder
         {
             Add(buf, CookieHeaderNames.DOMAIN, cookie.Domain());
         }
+
         if (cookie.IsSecure())
         {
             Add(buf, CookieHeaderNames.SECURE);
         }
+
         if (cookie.IsHttpOnly())
         {
             Add(buf, CookieHeaderNames.HTTPONLY);
         }
+
         if (cookie is DefaultCookie)
         {
             DefaultCookie c = (DefaultCookie) cookie;
@@ -142,6 +145,7 @@ public sealed class ServerCookieEncoder : CookieEncoder
             {
                 Add(buf, CookieHeaderNames.SAMESITE, c.SameSite().Name());
             }
+
             if (c.IsPartitioned())
             {
                 Add(buf, CookieHeaderNames.PARTITIONED);
@@ -166,11 +170,14 @@ public sealed class ServerCookieEncoder : CookieEncoder
     private static IList<string> Dedup(IList<string> encoded, Dictionary<string, int> nameToLastIndex)
     {
         bool[] isLastInstance = new bool[encoded.Count];
+
         foreach (int idx in nameToLastIndex.Values)
         {
             isLastInstance[idx] = true;
         }
+
         List<string> dedupd = new List<string>(nameToLastIndex.Count);
+
         for (int i = 0, n = encoded.Count; i < n; i++)
         {
             if (isLastInstance[i])
@@ -178,6 +185,7 @@ public sealed class ServerCookieEncoder : CookieEncoder
                 dedupd.Add(encoded[i]);
             }
         }
+
         return dedupd;
     }
 
@@ -205,15 +213,18 @@ public sealed class ServerCookieEncoder : CookieEncoder
         List<string> encoded = new List<string>(cookies.Length);
         Dictionary<string, int> nameToIndex = strict && cookies.Length > 1 ? new Dictionary<string, int>() : null;
         bool hasDupdName = false;
+
         for (int i = 0; i < cookies.Length; i++)
         {
             ICookie c = cookies[i];
             encoded.Add(Encode(c));
+
             if (nameToIndex != null)
             {
                 hasDupdName |= Put(nameToIndex, c.Name(), i);
             }
         }
+
         return hasDupdName ? Dedup(encoded, nameToIndex) : encoded;
     }
 
@@ -234,14 +245,17 @@ public sealed class ServerCookieEncoder : CookieEncoder
         Dictionary<string, int> nameToIndex = strict && cookies.Count > 1 ? new Dictionary<string, int>() : null;
         int i = 0;
         bool hasDupdName = false;
+
         foreach (ICookie c in cookies)
         {
             encoded.Add(Encode(c));
+
             if (nameToIndex != null)
             {
                 hasDupdName |= Put(nameToIndex, c.Name(), i++);
             }
         }
+
         return hasDupdName ? Dedup(encoded, nameToIndex) : encoded;
     }
 
@@ -266,16 +280,20 @@ public sealed class ServerCookieEncoder : CookieEncoder
         int i = 0;
         encoded.Add(Encode(firstCookie));
         bool hasDupdName = nameToIndex != null && Put(nameToIndex, firstCookie.Name(), i++);
+
         while (hasNext)
         {
             ICookie c = cookiesIt.Current;
             encoded.Add(Encode(c));
+
             if (nameToIndex != null)
             {
                 hasDupdName |= Put(nameToIndex, c.Name(), i++);
             }
+
             hasNext = cookiesIt.MoveNext();
         }
+
         return hasDupdName ? Dedup(encoded, nameToIndex) : encoded;
     }
 }

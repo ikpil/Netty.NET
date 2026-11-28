@@ -182,6 +182,7 @@ public class SniHandler : AbstractSniHandler<SslContext>
 
         SslContext sslContext = future.Result;
         selection = new Selection(sslContext, hostname);
+
         try
         {
             ReplaceHandler(ctx, hostname, sslContext);
@@ -209,6 +210,7 @@ public class SniHandler : AbstractSniHandler<SslContext>
     protected virtual void ReplaceHandler(IChannelHandlerContext ctx, string hostname, SslContext sslContext)
     {
         SslHandler sslHandler = null;
+
         try
         {
             sslHandler = NewSslHandler(sslContext, ctx.Alloc());
@@ -253,6 +255,7 @@ public class SniHandler : AbstractSniHandler<SslContext>
         public Task<SslContext> MapAsync(string input, CancellationToken cancellationToken = default)
         {
             SslContext context;
+
             try
             {
                 context = mapping(input);
@@ -261,6 +264,7 @@ public class SniHandler : AbstractSniHandler<SslContext>
             {
                 return Task.FromException<SslContext>(cause);
             }
+
             return Task.FromResult(context);
         }
     }

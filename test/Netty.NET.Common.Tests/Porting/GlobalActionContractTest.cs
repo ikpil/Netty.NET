@@ -19,6 +19,7 @@ public class GlobalActionContractTest
         {
             Assert.True(executor.AwaitInactivity(TimeSpan.FromSeconds(5)));
         }
+
         using var entered = new ManualResetEventSlim();
         using var release = new ManualResetEventSlim();
         var order = new List<int>();
@@ -32,6 +33,7 @@ public class GlobalActionContractTest
             entered.Set();
             release.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         }));
+
         try
         {
             Assert.True(entered.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
@@ -70,6 +72,7 @@ public class GlobalActionContractTest
         {
             release.Set();
         }
+
         await finished.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         Assert.Equal(new[] { 1, 2, 3, 4 }, order);
         Assert.True(ownedThread);
@@ -83,10 +86,12 @@ public class GlobalActionContractTest
         {
             Assert.True(executor.AwaitInactivity(TimeSpan.FromSeconds(5)));
         }
+
         var ambient = new AsyncLocal<string>();
         using var cancellation = new CancellationTokenSource();
         int canceledRuns = 0;
         Thread firstWorker = null;
+
         try
         {
             ambient.Value = "caller";

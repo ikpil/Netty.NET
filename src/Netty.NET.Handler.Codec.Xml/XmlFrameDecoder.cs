@@ -145,6 +145,7 @@ public class XmlFrameDecoder : ByteToMessageDecoder
 
         int readerIndex = @in.ReaderIndex;
         int i;
+
         for (i = readerIndex + scanOffset; i < bufferLength; i++)
         {
             byte readByte = @in.GetByte(i);
@@ -190,6 +191,7 @@ public class XmlFrameDecoder : ByteToMessageDecoder
                     else if (peekAheadByte == '!')
                     {
                         BangMarkupKind markupKind = ClassifyBangMarkup(@in, i, bufferLength);
+
                         switch (markupKind)
                         {
                             case BangMarkupKind.INDETERMINATE:
@@ -316,6 +318,7 @@ public class XmlFrameDecoder : ByteToMessageDecoder
             {
                 xmlElementLength = @in.ReadableBytes;
             }
+
             ByteBuf frame =
                     ExtractFrame(@in, readerIndex + leadingWhiteSpaceCount, xmlElementLength - leadingWhiteSpaceCount);
             @in.SkipBytes(xmlElementLength);
@@ -438,6 +441,7 @@ public class XmlFrameDecoder : ByteToMessageDecoder
         {
             return BangMarkupKind.INDETERMINATE;
         }
+
         byte b = @in.GetByte(commentOrCDATAMarker);
         if (b == '-')
         {
@@ -446,8 +450,10 @@ public class XmlFrameDecoder : ByteToMessageDecoder
             {
                 return BangMarkupKind.INDETERMINATE;
             }
+
             return @in.GetByte(secondDash) == '-' ? BangMarkupKind.COMMENT : BangMarkupKind.NONE;
         }
+
         if (b == '[')
         {
             for (int k = 0; k < CDATA_START_SUFFIX.Length; k++)
@@ -462,8 +468,10 @@ public class XmlFrameDecoder : ByteToMessageDecoder
                     return BangMarkupKind.NONE;
                 }
             }
+
             return BangMarkupKind.CDATA;
         }
+
         return BangMarkupKind.NONE;
     }
 

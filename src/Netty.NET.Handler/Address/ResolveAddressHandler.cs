@@ -70,6 +70,7 @@ public class ResolveAddressHandler<T> : ChannelOutboundHandlerAdapter where T : 
                             static (connect, state) => ((TaskCompletionSource) state).TrySetFromTask(connect), promise,
                             CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
                 }
+
                 ctx.Pipeline.Remove(this);
             }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
             return promise.Task;

@@ -31,6 +31,7 @@ public class ByteBufMutationIterationSourceTest
             if (provider >= 3)
                 _pool = new PooledByteBufAllocator(nativeAllocator: Native, maxOrder: 1,
                     smallCacheSize: 0, normalCacheSize: 0);
+
             Root = provider switch
             {
                 0 => new UnpooledHeapByteBuf(length),
@@ -51,6 +52,7 @@ public class ByteBufMutationIterationSourceTest
             {
                 Root.Release();
             }
+
             Assert.Equal(0, Root.RefCnt);
             _pool?.Dispose();
             Assert.Equal(0, Native.ReservedBytes);
@@ -87,33 +89,45 @@ public class ByteBufMutationIterationSourceTest
         const int capacity = 4096;
         using var s = new Storage(provider, scenario is ZeroCase.SetAfterRelease or ZeroCase.WriteAfterRelease ? 8 : capacity);
         ByteBuf buffer = s.Root;
+
         if (scenario is ZeroCase.SetAfterRelease or ZeroCase.WriteAfterRelease)
         {
             ReleaseBuffer(buffer);
+
             if (scenario == ZeroCase.SetAfterRelease)
                 Assert.Throws<IllegalReferenceCountException>(() => buffer.SetZero(0, 1));
             else
                 Assert.Throws<IllegalReferenceCountException>(() => buffer.WriteZero(1));
+
             Assert.Equal(0, buffer.WriterIndex);
             return;
         }
+
         if (scenario == ZeroCase.Write)
             Assert.Throws<ArgumentOutOfRangeException>(() => buffer.WriteZero(-1));
+
         buffer.Clear();
+
         while (buffer.IsWritable())
             buffer.WriteByte(0xFF);
+
         if (scenario == ZeroCase.Write)
             buffer.Clear();
+
         var random = new Random(12345);
+
         for (int i = 0; i < buffer.Capacity;)
         {
             int length = Math.Min(buffer.Capacity - i, random.Next(32));
+
             if (scenario == ZeroCase.Set)
                 Assert.Same(buffer, buffer.SetZero(i, length));
             else
                 Assert.Same(buffer, buffer.WriteZero(length));
+
             i += length;
         }
+
         Assert.Equal(0, buffer.ReaderIndex);
         Assert.Equal(capacity, buffer.WriterIndex);
         Assert.Equal(new byte[capacity], ByteBufUtil.GetBytes(buffer, 0, capacity));
@@ -142,6 +156,7 @@ public class ByteBufMutationIterationSourceTest
         const int capacity = 4096;
         using var s = new Storage(provider, scenario is IterationCase.ForwardAfterRelease or IterationCase.IndexedForwardAfterRelease or IterationCase.DescendingAfterRelease or IterationCase.IndexedDescendingAfterRelease ? 8 : scenario is IterationCase.FourBytesDescending or IterationCase.FourBytesForward or IterationCase.ForwardAfterRelease or IterationCase.IndexedForwardAfterRelease or IterationCase.DescendingAfterRelease or IterationCase.IndexedDescendingAfterRelease ? 4 : capacity);
         ByteBuf buffer = s.Root;
+
         if (scenario is IterationCase.ForwardAfterRelease or IterationCase.IndexedForwardAfterRelease or IterationCase.DescendingAfterRelease or IterationCase.IndexedDescendingAfterRelease)
         {
             ReleaseBuffer(buffer);
@@ -166,6 +181,7 @@ public class ByteBufMutationIterationSourceTest
             Assert.Equal(0, buffer.WriterIndex);
             return;
         }
+
         if (scenario is IterationCase.FourBytesDescending or IterationCase.FourBytesForward or IterationCase.ForwardAfterRelease or IterationCase.IndexedForwardAfterRelease or IterationCase.DescendingAfterRelease or IterationCase.IndexedDescendingAfterRelease)
         {
             byte[] expected = [1, 2, 3, 4];
@@ -195,6 +211,7 @@ public class ByteBufMutationIterationSourceTest
             {
                 buffer.SetIndex(capacity / 4, capacity * 3 / 4);
             }
+
             int reader = buffer.ReaderIndex, writer = buffer.WriterIndex;
             int index = scenario switch { IterationCase.ReadableForward => capacity / 4, IterationCase.AbortAtMiddle => capacity / 3, _ => capacity * 3 / 4 - 1 };
             int lastIndex = 0, calls = 0;
@@ -209,6 +226,7 @@ public class ByteBufMutationIterationSourceTest
                 {
                     return false;
                 }
+
                 index += scenario == IterationCase.IndexedDescending ? -1 : 1;
                 return true;
             };
@@ -224,6 +242,7 @@ public class ByteBufMutationIterationSourceTest
             Assert.Equal(reader, buffer.ReaderIndex);
             Assert.Equal(writer, buffer.WriterIndex);
         }
+
         Assert.Equal(1, buffer.RefCnt);
     }
 

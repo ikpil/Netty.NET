@@ -119,6 +119,7 @@ public class Http2StreamFrameToHttpObjectCodec : MessageToMessageCodec<IHttp2Str
                 {
                     req.Headers().Add(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED);
                 }
+
                 @out.Add(req);
             }
         }
@@ -145,6 +146,7 @@ public class Http2StreamFrameToHttpObjectCodec : MessageToMessageCodec<IHttp2Str
         {
             @out.Add(new DefaultHttp2DataFrame(last.Content.Retain(), last.TrailingHeaders().IsEmpty()));
         }
+
         if (!last.TrailingHeaders().IsEmpty())
         {
             IHttp2Headers headers = HttpConversionUtil.ToHttp2Headers(last.TrailingHeaders(), validateHeaders);
@@ -195,6 +197,7 @@ public class Http2StreamFrameToHttpObjectCodec : MessageToMessageCodec<IHttp2Str
         {
             IHttp2Headers headers = ToHttp2Headers(ctx, (IHttpMessage) obj);
             bool noMoreFrames = false;
+
             if (obj is IFullHttpMessage)
             {
                 IFullHttpMessage full = (IFullHttpMessage) obj;
@@ -301,6 +304,7 @@ public class Http2StreamFrameToHttpObjectCodec : MessageToMessageCodec<IHttp2Str
                 && char1 >= '0' && char1 <= '9'
                 && char2 >= '0' && char2 <= '9' && char2 != '1';
         }
+
         return false;
     }
 
@@ -319,6 +323,7 @@ public class Http2StreamFrameToHttpObjectCodec : MessageToMessageCodec<IHttp2Str
                 && char1 == '0'
                 && char2 == '4';
         }
+
         return false;
     }
 }

@@ -135,12 +135,14 @@ public class LoopbackSelectionContractTest
     private static Mock<NetworkInterface> Interface(params IPAddress[] values)
     {
         var information = new UnicastIPAddressInformation[values.Length];
+
         for (int index = 0; index < values.Length; index++)
         {
             var info = new Mock<UnicastIPAddressInformation>();
             info.SetupGet(x => x.Address).Returns(values[index]);
             information[index] = info.Object;
         }
+
         var addresses = new Mock<UnicastIPAddressInformationCollection>();
         addresses.SetupGet(x => x.Count).Returns(values.Length);
         addresses.Setup(x => x.GetEnumerator()).Returns(() => ((IEnumerable<UnicastIPAddressInformation>)information).GetEnumerator());

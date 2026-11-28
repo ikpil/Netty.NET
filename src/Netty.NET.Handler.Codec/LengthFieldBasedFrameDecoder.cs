@@ -390,6 +390,7 @@ public class LengthFieldBasedFrameDecoder : ByteToMessageDecoder
             bytesToDiscard = discard;
             @in.SkipBytes(@in.ReadableBytes);
         }
+
         FailIfNecessary(true);
     }
 
@@ -414,6 +415,7 @@ public class LengthFieldBasedFrameDecoder : ByteToMessageDecoder
     protected virtual object Decode(IChannelHandlerContext ctx, ByteBuf @in)
     {
         long frameLength = 0;
+
         if (frameLengthInt == -1)
         { // new frame
 
@@ -447,13 +449,16 @@ public class LengthFieldBasedFrameDecoder : ByteToMessageDecoder
                 ExceededFrameLength(@in, frameLength);
                 return null;
             }
+
             // never overflows because it's less than maxFrameLength
             frameLengthInt = (int) frameLength;
         }
+
         if (@in.ReadableBytes < frameLengthInt)
         { // frameLengthInt exist , just check buf
             return null;
         }
+
         if (initialBytesToStrip > frameLengthInt)
         {
             // Reset the state before failing so the next frame is decoded again. Use frameLengthInt, as frameLength
@@ -462,6 +467,7 @@ public class LengthFieldBasedFrameDecoder : ByteToMessageDecoder
             frameLengthInt = -1;
             FailOnFrameLengthLessThanInitialBytesToStrip(@in, frameLengthToSkip, initialBytesToStrip);
         }
+
         @in.SkipBytes(initialBytesToStrip);
 
         // extract frame
@@ -490,6 +496,7 @@ public class LengthFieldBasedFrameDecoder : ByteToMessageDecoder
     {
         bool littleEndian = CheckNotNull(order, "endianness") == ByteOrder.LITTLE_ENDIAN;
         long frameLength;
+
         switch (length)
         {
         case 1:
@@ -512,6 +519,7 @@ public class LengthFieldBasedFrameDecoder : ByteToMessageDecoder
                     "unsupported lengthFieldLength: " + lengthFieldLength.ToString(CultureInfo.InvariantCulture) +
                     " (expected: 1, 2, 3, 4, or 8)");
         }
+
         return frameLength;
     }
 
@@ -524,6 +532,7 @@ public class LengthFieldBasedFrameDecoder : ByteToMessageDecoder
             long tooLongFrameLength = this.tooLongFrameLength;
             this.tooLongFrameLength = 0;
             discardingTooLongFrame = false;
+
             if (!failFast || firstDetectionOfTooLongFrame)
             {
                 Fail(tooLongFrameLength);

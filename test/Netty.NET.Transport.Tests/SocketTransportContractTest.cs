@@ -28,6 +28,7 @@ public class SocketTransportContractTest
         IChannel server = null, client = null;
         var received = new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
         byte[] bytes = Enumerable.Range(0, 65536).Select(i => unchecked((byte)i)).ToArray();
+
         try
         {
             server = await new ServerBootstrap().Group(group).Channel<NioServerSocketChannel>()
@@ -51,8 +52,10 @@ public class SocketTransportContractTest
         {
             if (client != null)
                 await client.CloseAsync();
+
             if (server != null)
                 await server.CloseAsync();
+
             await group.StopAsync().WaitAsync(TimeSpan.FromSeconds(10));
         }
     }
@@ -65,6 +68,7 @@ public class SocketTransportContractTest
         using var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
         var received = new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
+
         try
         {
             Task<TcpClient> accepting = listener.AcceptTcpClientAsync();
@@ -81,6 +85,7 @@ public class SocketTransportContractTest
         {
             if (channel != null)
                 await channel.CloseAsync();
+
             await group.StopAsync().WaitAsync(TimeSpan.FromSeconds(10));
         }
     }
@@ -91,11 +96,13 @@ public class SocketTransportContractTest
         var group = new MultiThreadIoEventLoopGroup(1, NioIoHandler.NewFactory());
         var channel = new NioSocketChannel();
         var endpoint = new IPEndPoint(IPAddress.Loopback, 0);
+
         using (var listener = new TcpListener(endpoint))
         {
             listener.Start();
             endpoint = (IPEndPoint)listener.LocalEndpoint;
         }
+
         try
         {
             await Assert.ThrowsAnyAsync<Exception>(() => new Bootstrap().Group(group).ChannelFactory(() => channel)
@@ -114,6 +121,7 @@ public class SocketTransportContractTest
         {
             if (!ctx.Executor.InEventLoop())
                 throw new InvalidOperationException("Wrong event loop.");
+
             _ = ctx.WriteAndFlushAsync(msg.Retain());
         }
     }
@@ -124,7 +132,9 @@ public class SocketTransportContractTest
         {
             if (!ctx.Executor.InEventLoop())
                 throw new InvalidOperationException("Wrong event loop.");
+
             _bytes.AddRange(msg.ReadableMemory.ToArray());
+
             if (_bytes.Count >= size)
                 received.TrySetResult(_bytes.ToArray());
         }

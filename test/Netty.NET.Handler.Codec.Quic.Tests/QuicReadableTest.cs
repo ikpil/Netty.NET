@@ -57,6 +57,7 @@ public class QuicReadableTest : AbstractQuicTest
         IChannel channel = await QuicTestUtils.NewClient(executor);
         QuicChannelValidationHandler clientHandler = new QuicChannelValidationHandler();
         ByteBuf data = Unpooled.DirectBuffer().WriteLong(8);
+
         try
         {
             IQuicChannel quicChannel = await QuicTestUtils.NewQuicChannelBootstrap(channel)
@@ -66,6 +67,7 @@ public class QuicReadableTest : AbstractQuicTest
                     .ConnectAsync(cancellationToken);
 
             List<IChannel> streams = new List<IChannel>();
+
             for (int i = 0; i < numOfStreams; i++)
             {
                 IQuicStreamChannel stream = await quicChannel.CreateStreamAsync(
@@ -73,15 +75,19 @@ public class QuicReadableTest : AbstractQuicTest
                 await stream.WriteAndFlushAsync(data.RetainedSlice(), cancellationToken);
                 streams.Add(stream);
             }
+
             Assert.True(latch.Wait(TIMEOUT, cancellationToken));
+
             while (Volatile.Read(ref bytesRead.Value) < expectedDataRead)
             {
                 await Task.Delay(50, cancellationToken);
             }
+
             foreach (IChannel stream in streams)
             {
                 await stream.CloseAsync(cancellationToken);
             }
+
             await quicChannel.CloseAsync(cancellationToken);
 
             ThrowIfNotNull(serverErrorRef);
@@ -128,10 +134,12 @@ public class QuicReadableTest : AbstractQuicTest
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
             counter++;
+
             if (latch.CurrentCount > 0)
             {
                 latch.Signal();
             }
+
             if (counter > readStreams)
             {
                 // Now set it to readable again for some channels

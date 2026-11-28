@@ -138,10 +138,12 @@ public sealed class ReadOnlyHttp2Headers : IHttp2Headers
         {
             throw NewInvalidArraySizeException();
         }
+
         if (validateHeaders)
         {
             ValidateHeaders(pseudoHeaders, otherHeaders);
         }
+
         this.pseudoHeaders = pseudoHeaders;
         this.otherHeaders = otherHeaders;
     }
@@ -164,10 +166,12 @@ public sealed class ReadOnlyHttp2Headers : IHttp2Headers
 
         bool seenNonPseudoHeader = false;
         int otherHeadersEnd = otherHeaders.Length - 1;
+
         for (int i = 0; i < otherHeadersEnd; i += 2)
         {
             AsciiString name = otherHeaders[i];
             DefaultHtt2NameValidator().ValidateName(name);
+
             if (!seenNonPseudoHeader && !name.IsEmpty() && name.ByteAt(0) != PSEUDO_HEADER_TOKEN)
             {
                 seenNonPseudoHeader = true;
@@ -178,6 +182,7 @@ public sealed class ReadOnlyHttp2Headers : IHttp2Headers
                      "otherHeaders name at index " + i.ToString(CultureInfo.InvariantCulture) +
                      " is a pseudo header that appears after non-pseudo headers.");
             }
+
             AsciiString value = otherHeaders[i + 1];
             CheckNotNullArrayParam(value, i + 1, "otherHeaders");
             DefaultHttp2ValueValidator().Validate(value);
@@ -189,6 +194,7 @@ public sealed class ReadOnlyHttp2Headers : IHttp2Headers
         int nameHash = AsciiString.HashCode(name);
 
         int pseudoHeadersEnd = pseudoHeaders.Length - 1;
+
         for (int i = 0; i < pseudoHeadersEnd; i += 2)
         {
             AsciiString roName = pseudoHeaders[i];
@@ -199,6 +205,7 @@ public sealed class ReadOnlyHttp2Headers : IHttp2Headers
         }
 
         int otherHeadersEnd = otherHeaders.Length - 1;
+
         for (int i = 0; i < otherHeadersEnd; i += 2)
         {
             AsciiString roName = otherHeaders[i];
@@ -207,6 +214,7 @@ public sealed class ReadOnlyHttp2Headers : IHttp2Headers
                 return otherHeaders[i + 1];
             }
         }
+
         return null;
     }
 
@@ -237,6 +245,7 @@ public sealed class ReadOnlyHttp2Headers : IHttp2Headers
         List<ICharSequence> values = new List<ICharSequence>();
 
         int pseudoHeadersEnd = pseudoHeaders.Length - 1;
+
         for (int i = 0; i < pseudoHeadersEnd; i += 2)
         {
             AsciiString roName = pseudoHeaders[i];
@@ -247,6 +256,7 @@ public sealed class ReadOnlyHttp2Headers : IHttp2Headers
         }
 
         int otherHeadersEnd = otherHeaders.Length - 1;
+
         for (int i = 0; i < otherHeadersEnd; i += 2)
         {
             AsciiString roName = otherHeaders[i];
@@ -478,6 +488,7 @@ public sealed class ReadOnlyHttp2Headers : IHttp2Headers
         {
             return Contains(name, (ICharSequence) value);
         }
+
         return Contains(name, CharSequenceValueConverter.INSTANCE.ConvertObject(value));
     }
 
@@ -542,18 +553,22 @@ public sealed class ReadOnlyHttp2Headers : IHttp2Headers
         {
             return ImmutableHashSet<ICharSequence>.Empty;
         }
+
         ISet<ICharSequence> names = new LinkedHashSet<ICharSequence>(Size());
         int pseudoHeadersEnd = pseudoHeaders.Length - 1;
+
         for (int i = 0; i < pseudoHeadersEnd; i += 2)
         {
             names.Add(pseudoHeaders[i]);
         }
 
         int otherHeadersEnd = otherHeaders.Length - 1;
+
         for (int i = 0; i < otherHeadersEnd; i += 2)
         {
             names.Add(otherHeaders[i]);
         }
+
         return names;
     }
 
@@ -820,6 +835,7 @@ public sealed class ReadOnlyHttp2Headers : IHttp2Headers
                                     IEqualityComparer<ICharSequence> hashingStrategy, AsciiString[] headers)
     {
         int headersEnd = headers.Length - 1;
+
         for (int i = 0; i < headersEnd; i += 2)
         {
             AsciiString roName = headers[i];
@@ -830,6 +846,7 @@ public sealed class ReadOnlyHttp2Headers : IHttp2Headers
                 return true;
             }
         }
+
         return false;
     }
 
@@ -837,12 +854,14 @@ public sealed class ReadOnlyHttp2Headers : IHttp2Headers
     {
         StringBuilder builder = new StringBuilder(GetType().Name).Append('[');
         string separator = "";
+
         foreach (IEntry<ICharSequence, ICharSequence> entry in this)
         {
             builder.Append(separator);
             builder.Append(entry.GetKey()).Append(": ").Append(entry.GetValue());
             separator = ", ";
         }
+
         return builder.Append(']').ToString();
     }
 
@@ -877,6 +896,7 @@ public sealed class ReadOnlyHttp2Headers : IHttp2Headers
             {
                 throw new InvalidOperationException();
             }
+
             ICharSequence current = next;
             CalculateNext();
             return current;
@@ -899,9 +919,11 @@ public sealed class ReadOnlyHttp2Headers : IHttp2Headers
                         next = current[i + 1];
                         i += 2;
                     }
+
                     return;
                 }
             }
+
             if (current == headers.pseudoHeaders)
             {
                 i = 0;
@@ -924,6 +946,7 @@ public sealed class ReadOnlyHttp2Headers : IHttp2Headers
             {
                 return false;
             }
+
             enumeratorCurrent = Next();
             return true;
         }
@@ -966,6 +989,7 @@ public sealed class ReadOnlyHttp2Headers : IHttp2Headers
             {
                 throw new InvalidOperationException();
             }
+
             key = current[i];
             value = current[i + 1];
             i += 2;
@@ -974,6 +998,7 @@ public sealed class ReadOnlyHttp2Headers : IHttp2Headers
                 current = headers.otherHeaders;
                 i = 0;
             }
+
             started = true;
             return this;
         }
@@ -1013,6 +1038,7 @@ public sealed class ReadOnlyHttp2Headers : IHttp2Headers
             {
                 return false;
             }
+
             Next();
             return true;
         }

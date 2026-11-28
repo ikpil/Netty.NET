@@ -105,6 +105,7 @@ public class HttpUploadServerHandler : SimpleChannelInboundHandler<IHttpObject>
                 WriteMenu(ctx);
                 return;
             }
+
             responseContent.Clear();
             responseContent.Append("WELCOME TO THE WILD WILD WEB SERVER\r\n");
             responseContent.Append("===================================\r\n");
@@ -119,6 +120,7 @@ public class HttpUploadServerHandler : SimpleChannelInboundHandler<IHttpObject>
             {
                 responseContent.Append("HEADER: " + entry.GetKey() + '=' + entry.GetValue() + "\r\n");
             }
+
             responseContent.Append("\r\n\r\n");
 
             // new getMethod
@@ -132,14 +134,17 @@ public class HttpUploadServerHandler : SimpleChannelInboundHandler<IHttpObject>
             {
                 cookies = ServerCookieDecoder.STRICT.Decode(value);
             }
+
             foreach (ICookie cookie in cookies)
             {
                 responseContent.Append("COOKIE: " + cookie + "\r\n");
             }
+
             responseContent.Append("\r\n\r\n");
 
             QueryStringDecoder decoderQuery = new QueryStringDecoder(request.Uri());
             IDictionary<string, IList<string>> uriAttributes = decoderQuery.Parameters();
+
             foreach (KeyValuePair<string, IList<string>> attr in uriAttributes)
             {
                 foreach (string attrVal in attr.Value)
@@ -147,6 +152,7 @@ public class HttpUploadServerHandler : SimpleChannelInboundHandler<IHttpObject>
                     responseContent.Append("URI: " + attr.Key + '=' + attrVal + "\r\n");
                 }
             }
+
             responseContent.Append("\r\n\r\n");
 
             // if GET Method: should not try to create an HttpPostRequestDecoder
@@ -158,6 +164,7 @@ public class HttpUploadServerHandler : SimpleChannelInboundHandler<IHttpObject>
                 // Not now: LastHttpContent will be sent writeResponse(ctx.channel());
                 return;
             }
+
             try
             {
                 decoder = new HttpPostRequestDecoder(factory, request);
@@ -173,6 +180,7 @@ public class HttpUploadServerHandler : SimpleChannelInboundHandler<IHttpObject>
             bool readingChunks = HttpUtil.IsTransferEncodingChunked(request);
             responseContent.Append("Is Chunked: " + (readingChunks ? "true" : "false") + "\r\n");
             responseContent.Append("IsMultipart: " + (decoder.IsMultipart() ? "true" : "false") + "\r\n");
+
             if (readingChunks)
             {
                 // Chunk version
@@ -188,6 +196,7 @@ public class HttpUploadServerHandler : SimpleChannelInboundHandler<IHttpObject>
             {
                 // New chunk is received
                 IHttpContent chunk = (IHttpContent) msg;
+
                 try
                 {
                     decoder.Offer(chunk);
@@ -199,10 +208,12 @@ public class HttpUploadServerHandler : SimpleChannelInboundHandler<IHttpObject>
                     WriteResponse(ctx.Channel, true);
                     return;
                 }
+
                 responseContent.Append('o');
                 // example of reading chunk by chunk (minimize memory usage due to
                 // Factory)
                 ReadHttpDataChunkByChunk();
+
                 // example of reading only if at the end
                 if (chunk is ILastHttpContent)
                 {
@@ -245,15 +256,18 @@ public class HttpUploadServerHandler : SimpleChannelInboundHandler<IHttpObject>
                         logger.Info(" 100% (FinalSize: " + partialContent.Length() + ")");
                         partialContent = null;
                     }
+
                     // new value
                     WriteHttpData(data);
                 }
             }
+
             // Check partial decoding for a FileUpload
             IInterfaceHttpData currentData = decoder.CurrentPartialHttpData();
             if (currentData != null)
             {
                 StringBuilder builder = new StringBuilder();
+
                 if (partialContent == null)
                 {
                     partialContent = (IHttpData) currentData;
@@ -267,8 +281,10 @@ public class HttpUploadServerHandler : SimpleChannelInboundHandler<IHttpObject>
                         builder.Append("Start Attribute: ")
                             .Append(partialContent.GetName()).Append(" ");
                     }
+
                     builder.Append("(DefinedSize: ").Append(partialContent.DefinedLength()).Append(")");
                 }
+
                 if (partialContent.DefinedLength() > 0)
                 {
                     builder.Append(" ").Append(partialContent.Length() * 100 / partialContent.DefinedLength())
@@ -295,6 +311,7 @@ public class HttpUploadServerHandler : SimpleChannelInboundHandler<IHttpObject>
         {
             IAttribute attribute = (IAttribute) data;
             string value;
+
             try
             {
                 value = attribute.GetValue();
@@ -307,6 +324,7 @@ public class HttpUploadServerHandler : SimpleChannelInboundHandler<IHttpObject>
                         + attribute.GetName() + " Error while reading value: " + e1.Message + "\r\n");
                 return;
             }
+
             if (value.Length > 100)
             {
                 responseContent.Append("\r\nBODY Attribute: " + attribute.GetHttpDataType() + ": "
@@ -322,6 +340,7 @@ public class HttpUploadServerHandler : SimpleChannelInboundHandler<IHttpObject>
         {
             responseContent.Append("\r\nBODY FileUpload: " + data.GetHttpDataType() + ": " + data
                     + "\r\n");
+
             if (data.GetHttpDataType() == HttpDataType.FileUpload)
             {
                 IFileUpload fileUpload = (IFileUpload) data;
@@ -330,6 +349,7 @@ public class HttpUploadServerHandler : SimpleChannelInboundHandler<IHttpObject>
                     if (fileUpload.Length() < 10000)
                     {
                         responseContent.Append("\tContent of file\r\n");
+
                         try
                         {
                             responseContent.Append(fileUpload.GetString(fileUpload.GetCharset()));
@@ -339,6 +359,7 @@ public class HttpUploadServerHandler : SimpleChannelInboundHandler<IHttpObject>
                             // do nothing for the example
                             Console.Error.WriteLine(e1);
                         }
+
                         responseContent.Append("\r\n");
                     }
                     else
@@ -399,6 +420,7 @@ public class HttpUploadServerHandler : SimpleChannelInboundHandler<IHttpObject>
         {
             cookies = ServerCookieDecoder.STRICT.Decode(value);
         }
+
         if (cookies.Count != 0)
         {
             // Reset the cookies if necessary.
@@ -407,8 +429,10 @@ public class HttpUploadServerHandler : SimpleChannelInboundHandler<IHttpObject>
                 response.Headers().Add(HttpHeaderNames.SET_COOKIE, ServerCookieEncoder.STRICT.Encode(cookie));
             }
         }
+
         // Write the response.
         Task future = channel.WriteAndFlushAsync(response);
+
         // Close the connection after the write operation is done if necessary.
         if (!keepAlive)
         {
@@ -512,6 +536,7 @@ public class HttpUploadServerHandler : SimpleChannelInboundHandler<IHttpObject>
         // Write the response.
         IChannel channel = ctx.Channel;
         Task future = channel.WriteAndFlushAsync(response);
+
         // Close the connection after the write operation is done if necessary.
         if (!keepAlive)
         {

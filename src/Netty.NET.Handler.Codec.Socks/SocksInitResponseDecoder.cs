@@ -46,6 +46,7 @@ public class SocksInitResponseDecoder : ReplayingDecoder<SocksInitResponseDecode
                     @out.Add(SocksCommonUtils.UNKNOWN_SOCKS_RESPONSE);
                     break;
                 }
+
                 Checkpoint(State.READ_PREFERRED_AUTH_TYPE);
                 goto case State.READ_PREFERRED_AUTH_TYPE;
             }
@@ -60,6 +61,7 @@ public class SocksInitResponseDecoder : ReplayingDecoder<SocksInitResponseDecode
                 throw new InvalidOperationException("Unexpected response decoder type: " + base.State());
             }
         }
+
         ctx.Pipeline.Remove(this);
     }
 

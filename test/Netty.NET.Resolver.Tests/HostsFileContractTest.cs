@@ -54,6 +54,7 @@ public class HostsFileContractTest
     public void FileParserTriesEncodingsInOrderAndStopsAtFirstNonemptyResult()
     {
         string path = Path.GetTempFileName();
+
         try
         {
             File.WriteAllText(path, "127.0.0.1 host\n::1 host\n", new UnicodeEncoding(true, false));
@@ -74,6 +75,7 @@ public class HostsFileContractTest
     public void Utf16BomDoesNotHideFirstEntry()
     {
         string path = Path.GetTempFileName();
+
         try
         {
             foreach (bool bigEndian in new[] { false, true })
@@ -107,6 +109,7 @@ public class HostsFileContractTest
     public void HostNormalizationDoesNotDependOnCurrentCulture()
     {
         var previous = CultureInfo.CurrentCulture;
+
         try
         {
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("tr-TR");

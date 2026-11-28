@@ -73,6 +73,7 @@ public class HttpContentCompressorOptionsTest
                 "br; q=0.5, identity", "br",
                 "br; q=0, deflate", "br",
         };
+
         for (int i = 0; i < tests.Length; i += 2)
         {
             string acceptEncoding = tests[i];
@@ -101,6 +102,7 @@ public class HttpContentCompressorOptionsTest
                 "snappy; q=0.5, identity", "snappy",
                 "snappy; q=0, deflate", "snappy",
         };
+
         for (int i = 0; i < tests.Length; i += 2)
         {
             string acceptEncoding = tests[i];

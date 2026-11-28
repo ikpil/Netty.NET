@@ -127,6 +127,7 @@ public class DynamicAddressConnectHandlerTest
             {
                 throw exception;
             }
+
             return base.LocalAddress(remoteAddress, localAddress);
         }
 
@@ -136,6 +137,7 @@ public class DynamicAddressConnectHandlerTest
             {
                 throw exception;
             }
+
             return base.RemoteAddress(remoteAddress, localAddress);
         }
     }

@@ -182,6 +182,7 @@ public class WebSocket08FrameDecoder : ByteToMessageDecoder, IWebSocketFrameDeco
         }
 
         byte b;
+
         switch (state)
         {
         case State.READING_FIRST:
@@ -210,6 +211,7 @@ public class WebSocket08FrameDecoder : ByteToMessageDecoder, IWebSocketFrameDeco
             {
                 return;
             }
+
             // MASK, PAYLOAD LEN 1
             b = @in.ReadByte();
             frameMasked = (b & 0x80) != 0;
@@ -301,6 +303,7 @@ public class WebSocket08FrameDecoder : ByteToMessageDecoder, IWebSocketFrameDeco
                 {
                     return;
                 }
+
                 framePayloadLength = @in.ReadUnsignedShort();
                 if (framePayloadLength < 126)
                 {
@@ -314,6 +317,7 @@ public class WebSocket08FrameDecoder : ByteToMessageDecoder, IWebSocketFrameDeco
                 {
                     return;
                 }
+
                 framePayloadLength = @in.ReadLong();
                 if (framePayloadLength < 0)
                 {
@@ -354,8 +358,10 @@ public class WebSocket08FrameDecoder : ByteToMessageDecoder, IWebSocketFrameDeco
                 {
                     return;
                 }
+
                 mask = @in.ReadInt();
             }
+
             state = State.PAYLOAD;
             goto case State.PAYLOAD;
         case State.PAYLOAD:
@@ -365,6 +371,7 @@ public class WebSocket08FrameDecoder : ByteToMessageDecoder, IWebSocketFrameDeco
             }
 
             ByteBuf payloadBuffer = Unpooled.EmptyBuffer;
+
             try
             {
                 if (framePayloadLength > 0)
@@ -390,12 +397,14 @@ public class WebSocket08FrameDecoder : ByteToMessageDecoder, IWebSocketFrameDeco
                     payloadBuffer = null;
                     return;
                 }
+
                 if (frameOpcode == OPCODE_PONG)
                 {
                     @out.Add(new PongWebSocketFrame(frameFinalFlag, frameRsv, payloadBuffer));
                     payloadBuffer = null;
                     return;
                 }
+
                 if (frameOpcode == OPCODE_CLOSE)
                 {
                     receivedClosingHandshake = true;
@@ -459,6 +468,7 @@ public class WebSocket08FrameDecoder : ByteToMessageDecoder, IWebSocketFrameDeco
                 // we can't return null if no bytes read and state not changed.
                 @in.ReadByte();
             }
+
             return;
         default:
             throw new UnreachableException("Shouldn't reach here (state: " + state + ")");
@@ -476,6 +486,7 @@ public class WebSocket08FrameDecoder : ByteToMessageDecoder, IWebSocketFrameDeco
             // If the mask is 0 we can just return directly as the XOR operations will just produce the same value.
             return;
         }
+
         // Avoid sign extension on widening primitive conversion
         long longMask = intMask & 0xFFFFFFFFL;
         longMask |= longMask << 32;
@@ -492,6 +503,7 @@ public class WebSocket08FrameDecoder : ByteToMessageDecoder, IWebSocketFrameDeco
         }
 
         int maskOffset = 0;
+
         for (; i < end; i++)
         {
             frame.SetByte(i, frame.GetByte(i) ^ WebSocketUtil.ByteAtIndex(intMask, maskOffset++ & 3));
@@ -518,9 +530,11 @@ public class WebSocket08FrameDecoder : ByteToMessageDecoder, IWebSocketFrameDeco
             // buffer 'cumulation' is released ONLY when no more readable bytes available.
             @in.SkipBytes(readableBytes);
         }
+
         if (ctx.Channel.IsActive && config.CloseOnProtocolViolation())
         {
             object closeMessage;
+
             if (receivedClosingHandshake)
             {
                 closeMessage = Unpooled.EmptyBuffer;
@@ -533,11 +547,14 @@ public class WebSocket08FrameDecoder : ByteToMessageDecoder, IWebSocketFrameDeco
                 {
                     reasonText = closeStatus.ReasonText();
                 }
+
                 closeMessage = new CloseWebSocketFrame(closeStatus, reasonText);
             }
+
             _ = ctx.WriteAndFlushAsync(closeMessage).ContinueWith(_ => ctx.Channel.CloseAsync(),
                     CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
+
         throw ex;
     }
 
@@ -563,6 +580,7 @@ public class WebSocket08FrameDecoder : ByteToMessageDecoder, IWebSocketFrameDeco
         {
             return;
         }
+
         if (buffer.ReadableBytes < 2)
         {
             ProtocolViolation(ctx, buffer, WebSocketCloseStatus.INVALID_PAYLOAD_DATA, "Invalid close frame body");

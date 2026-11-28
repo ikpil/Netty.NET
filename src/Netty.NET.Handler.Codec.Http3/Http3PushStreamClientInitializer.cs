@@ -42,6 +42,7 @@ public abstract class Http3PushStreamClientInitializer : ChannelInitializer<IQui
             throw new ArgumentException("Using client push stream initializer for server stream: " +
                     ch.StreamId().ToString(CultureInfo.InvariantCulture));
         }
+
         Http3CodecUtils.VerifyIsUnidirectional(ch);
 
         Http3ConnectionHandler connectionHandler =
@@ -51,6 +52,7 @@ public abstract class Http3PushStreamClientInitializer : ChannelInitializer<IQui
             // connection should have been closed
             return;
         }
+
         IChannelPipeline pipeline = ch.Pipeline;
         Http3RequestStreamDecodeStateValidator decodeStateValidator = new Http3RequestStreamDecodeStateValidator();
         // Add the encoder and decoder in the pipeline, so we can handle Http3Frames

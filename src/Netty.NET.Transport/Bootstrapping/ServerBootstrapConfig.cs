@@ -59,14 +59,18 @@ public sealed class ServerBootstrapConfig : AbstractBootstrapConfig
     protected override void Describe(List<string> values)
     {
         base.Describe(values);
+
         if (ChildGroup != null)
             values.Add("childGroup: " + StringUtil.SimpleClassName(ChildGroup));
+
         var options = ChildOptions;
         if (options.Count != 0)
             values.Add("childOptions: " + Map(options));
+
         var attrs = ChildAttributes;
         if (attrs.Count != 0)
             values.Add("childAttrs: " + Map(attrs));
+
         if (ChildHandler != null)
             values.Add("childHandler: " + ChildHandler);
     }

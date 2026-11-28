@@ -63,6 +63,7 @@ public abstract class ChannelHandlerAdapter : IChannelHandler
                 sharable = new StrongBox<bool>(clazz.IsDefined(typeof(SharableAttribute), true));
                 cache.AddOrUpdate(clazz, sharable);
             }
+
             return sharable.Value;
         }
     }

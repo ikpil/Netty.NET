@@ -113,6 +113,7 @@ public class PlatformDependentTest
 
         bytes1 = new byte[100];
         bytes2 = new byte[100];
+
         for (int i = 0; i < 100; i++)
         {
             bytes1[i] = (byte)i;
@@ -156,6 +157,7 @@ public class PlatformDependentTest
             // byte[] and char[] need to be initialized such that there values are within valid "ascii" range
             byte[] bytes = new byte[i];
             char[] bytesChar = new char[i];
+
             for (int j = 0; j < bytesChar.Length; ++j)
             {
                 bytesChar[j] = RandomCharInByteRange();
@@ -175,6 +177,7 @@ public class PlatformDependentTest
     public void TestAllocateWithCapacity0()
     {
         var allocator = new NativeMemoryAllocator();
+
         using (var buffer = allocator.Allocate(0))
         {
             using var pin = buffer.Memory.Pin();
@@ -182,6 +185,7 @@ public class PlatformDependentTest
             Assert.NotEqual(0, address);
             Assert.Equal(0, buffer.Memory.Length);
         }
+
         Assert.Equal(0, allocator.ReservedBytes);
     }
 
@@ -192,11 +196,13 @@ public class PlatformDependentTest
         // cleaner provider. Exact original scenario/comment mapping is recorded
         // in docs/common-native-memory.md.
         var allocator = new NativeMemoryAllocator();
+
         using (var owner = allocator.Allocate(16, clear: true))
         {
             Assert.Equal(16, allocator.ReservedBytes);
             Assert.True(owner.Memory.Span.IndexOfAnyExcept((byte)0) < 0);
         }
+
         Assert.Equal(0, allocator.ReservedBytes);
         // Note: we're not testing on `PlatformDependent.directBufferPreferred()` because some builds
         // might intentionally disable it, in order to exercise those code paths.

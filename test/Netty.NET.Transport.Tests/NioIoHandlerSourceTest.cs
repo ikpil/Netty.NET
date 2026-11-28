@@ -53,10 +53,12 @@ public class NioIoHandlerSourceTest
         IIoRegistration registration = handler.Register(new AcceptingHandle(channel, acceptedConnection));
         registration.Submit(NioIoOps.ACCEPT);
         t.Start();
+
         // Let's loop until our registration was cancelled.
         while (registration.IsValid())
         {
             handler.Run(context);
+
             for (;;)
             {
                 // Execute all tasks that were dispatched.
@@ -64,14 +66,17 @@ public class NioIoHandlerSourceTest
                 {
                     break;
                 }
+
                 r();
             }
+
             if (acceptedConnection.Get())
             {
                 // We accepted the connection, let's cancel the registration.
                 Assert.True(registration.Cancel());
             }
         }
+
         // Wait until the connect thread is done.
         t.Join();
         // Let's now close the ServerSocketChannel and after that destroy the IoHandler.

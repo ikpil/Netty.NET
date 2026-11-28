@@ -129,6 +129,7 @@ public class FlowControlHandlerTest : IClassFixture<FlowControlHandlerTest.Befor
         {
             server = new IPEndPoint(IPAddress.IPv6Loopback, address.Port);
         }
+
         return bootstrap.ConnectAsync(server)
                 .GetAwaiter().GetResult();
     }
@@ -294,6 +295,7 @@ public class FlowControlHandlerTest : IClassFixture<FlowControlHandlerTest.Befor
         FlowControlHandler flow = new FlowControlHandler();
         IChannel server = NewServer(true, flow, handler);
         IChannel client = NewClient(server.LocalAddress);
+
         try
         {
             // The client connection on the server side
@@ -358,6 +360,7 @@ public class FlowControlHandlerTest : IClassFixture<FlowControlHandlerTest.Befor
         FlowControlHandler flow = new FlowControlHandler();
         IChannel server = NewServer(true, flow, handler);
         IChannel client = NewClient(server.LocalAddress);
+
         try
         {
             // The client connection on the server side
@@ -427,21 +430,26 @@ public class FlowControlHandlerTest : IClassFixture<FlowControlHandlerTest.Befor
             {
                 return;
             }
+
             switch (msgRcvCount)
             {
                 case 1:
                     CountDown(msgRcvLatch1);
+
                     if (setAutoReadLatch1.Wait(TimeSpan.FromSeconds(1L)))
                     {
                         ++expectedMsgCount;
                     }
+
                     break;
                 case 2:
                     CountDown(msgRcvLatch2);
+
                     if (setAutoReadLatch2.Wait(TimeSpan.FromSeconds(1L)))
                     {
                         ++expectedMsgCount;
                     }
+
                     break;
                 default:
                     CountDown(msgRcvLatch3);
@@ -469,6 +477,7 @@ public class FlowControlHandlerTest : IClassFixture<FlowControlHandlerTest.Befor
         FlowControlHandler flow = new FlowControlHandler();
         IChannel server = NewServer(false, flow, handler);
         IChannel client = NewClient(server.LocalAddress);
+
         try
         {
             // The client connection on the server side
@@ -548,6 +557,7 @@ public class FlowControlHandlerTest : IClassFixture<FlowControlHandlerTest.Befor
         FlowControlHandler flow = new FlowControlHandler();
         IChannel server = NewServer(false, flow, handler);
         IChannel client = NewClient(server.LocalAddress);
+
         try
         {
             // The client connection on the server side
@@ -592,6 +602,7 @@ public class FlowControlHandlerTest : IClassFixture<FlowControlHandlerTest.Befor
         FlowControlHandler flow = new FlowControlHandler();
         IChannel server = NewServer(false, flow, handler);
         IChannel client = NewClient(server.LocalAddress);
+
         try
         {
             // The client connection on the server side
@@ -721,6 +732,7 @@ public class FlowControlHandlerTest : IClassFixture<FlowControlHandlerTest.Befor
             {
                 userEvents.Enqueue((IdleStateEvent)evt);
             }
+
             ctx.FireUserEventTriggered(evt);
         }
     }
@@ -739,6 +751,7 @@ public class FlowControlHandlerTest : IClassFixture<FlowControlHandlerTest.Befor
 
         IChannel server = NewServer(false /* no auto read */, flow, handler, tail);
         IChannel client = NewClient(server.LocalAddress);
+
         try
         {
             // The client connection on the server side
@@ -792,6 +805,7 @@ public class FlowControlHandlerTest : IClassFixture<FlowControlHandlerTest.Befor
         {
             base.ChannelRead(ctx, msg);
             ++num;
+
             if (num >= 3)
             {
                 //We have received 3 messages. Remove myself later
@@ -1371,6 +1385,7 @@ public class FlowControlHandlerTest : IClassFixture<FlowControlHandlerTest.Befor
                 @out.Add("2");
                 @out.Add("3");
             }
+
             @in.ReaderIndex = @in.ReadableBytes;
         }
     }
@@ -1417,9 +1432,11 @@ public class FlowControlHandlerTest : IClassFixture<FlowControlHandlerTest.Befor
                     Monitor.PulseAll(gate);
                     return other;
                 }
+
                 offered = x;
                 waiting = true;
                 long deadline = Environment.TickCount64 + (long)timeout.TotalMilliseconds;
+
                 while (!answered)
                 {
                     long remaining = deadline - Environment.TickCount64;
@@ -1433,6 +1450,7 @@ public class FlowControlHandlerTest : IClassFixture<FlowControlHandlerTest.Befor
                         }
                     }
                 }
+
                 V result = answer;
                 answer = null;
                 answered = false;

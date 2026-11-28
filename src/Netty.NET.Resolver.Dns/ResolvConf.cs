@@ -74,6 +74,7 @@ internal sealed class ResolvConf
         {
             return resolvConv;
         }
+
         throw new InvalidOperationException("/etc/resolv.conf could not be read");
     }
 
@@ -81,6 +82,7 @@ internal sealed class ResolvConf
     {
         List<EndPoint> nameservers = new List<EndPoint>();
         string ln;
+
         while ((ln = reader.ReadLine()) != null)
         {
             ln = JavaTrim(ln);
@@ -97,14 +99,17 @@ internal sealed class ResolvConf
                 {
                     ln = ln.Substring(0, cIndex);
                 }
+
                 ln = JavaTrim(ln);
                 if (ln.Length == 0)
                 {
                     continue;
                 }
+
                 nameservers.Add(DnsServerAddresses.SocketAddress(ln, 53));
             }
         }
+
         this.nameservers = nameservers.AsReadOnly();
     }
 
@@ -123,10 +128,12 @@ internal sealed class ResolvConf
     private static char[] CreateJavaTrimChars()
     {
         char[] chars = new char[0x21];
+
         for (int i = 0; i < chars.Length; i++)
         {
             chars[i] = (char) i;
         }
+
         return chars;
     }
 
@@ -146,6 +153,7 @@ internal sealed class ResolvConf
         static ResolvConfLazy()
         {
             ResolvConf resolvConf;
+
             try
             {
                 resolvConf = ResolvConf.FromFile("/etc/resolv.conf");
@@ -154,6 +162,7 @@ internal sealed class ResolvConf
             {
                 resolvConf = null;
             }
+
             machineResolvConf = resolvConf;
         }
     }

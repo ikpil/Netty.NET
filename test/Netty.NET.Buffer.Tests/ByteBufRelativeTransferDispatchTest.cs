@@ -46,6 +46,7 @@ public class ByteBufRelativeTransferDispatchTest
             {
                 throw Error;
             }
+
             return result;
         }
     }
@@ -56,6 +57,7 @@ public class ByteBufRelativeTransferDispatchTest
         {
             if (calls.Mode < 4)
                 return base.ReadBytes(destination, length);
+
             calls.Before(destination, -1, length);
             return destination;
         }
@@ -64,6 +66,7 @@ public class ByteBufRelativeTransferDispatchTest
         {
             if (calls.Mode < 4)
                 return base.WriteBytes(source, length);
+
             calls.Before(source, -1, length);
             return source;
         }
@@ -88,6 +91,7 @@ public class ByteBufRelativeTransferDispatchTest
         {
             if (calls.Mode < 4)
                 return base.ReadBytes(destination, length);
+
             calls.Before(destination, -1, length);
             return destination;
         }
@@ -96,6 +100,7 @@ public class ByteBufRelativeTransferDispatchTest
         {
             if (calls.Mode < 4)
                 return base.WriteBytes(source, length);
+
             calls.Before(source, -1, length);
             return source;
         }
@@ -135,6 +140,7 @@ public class ByteBufRelativeTransferDispatchTest
         ByteBuf owner = direct ? new Direct(calls, write ? 4 : 8, native) : new Heap(calls, write ? 4 : 8);
         ByteBuf peer = new UnpooledHeapByteBuf(8, 16);
         ByteBuf source = write ? peer : owner, destination = write ? owner : peer;
+
         try
         {
             source.WriteBytes(new byte[] { 10, 11, 12, 13, 14, 15, 16, 17 });
@@ -161,12 +167,14 @@ public class ByteBufRelativeTransferDispatchTest
 
             bool dispatched = write ? scenario is not (4 or 5 or 7) : scenario != 5;
             Assert.Equal(dispatched ? 1 : 0, calls.Count);
+
             if (dispatched)
             {
                 Assert.Same(peer, calls.Peer);
                 Assert.Equal(write ? 2 : 1, calls.Index);
                 Assert.Equal(length, calls.Length);
             }
+
             bool copied = scenario is 0 or 1 or 3 or 6;
             int copiedLength = copied ? length : 0;
             bool succeeded = scenario is 0 or 1 or 6 or 8;
@@ -197,6 +205,7 @@ public class ByteBufRelativeTransferDispatchTest
             Assert.True(owner.Release());
             Assert.True(peer.Release());
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 
@@ -211,6 +220,7 @@ public class ByteBufRelativeTransferDispatchTest
         var native = new NativeMemoryAllocator();
         ByteBuf owner = direct ? new Direct(calls, 8, native) : new Heap(calls, 8);
         ByteBuf peer = new UnpooledHeapByteBuf(8, 16);
+
         try
         {
             owner.SetIndex(2, 7);
@@ -229,6 +239,7 @@ public class ByteBufRelativeTransferDispatchTest
             {
                 Assert.Same(owner, Invoke());
             }
+
             Assert.Equal(1, calls.Count);
             Assert.Same(peer, calls.Peer);
             Assert.Equal(-1, calls.Index);
@@ -245,6 +256,7 @@ public class ByteBufRelativeTransferDispatchTest
             Assert.True(owner.Release());
             Assert.True(peer.Release());
         }
+
         Assert.Equal(0, native.ReservedBytes);
     }
 }

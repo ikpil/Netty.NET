@@ -284,6 +284,7 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
     {
         TaskCompletionSource<IQuicStreamChannel> promise =
                 new TaskCompletionSource<IQuicStreamChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
+
         try
         {
             ExecuteOnLoop(() => ConnectStream(type, handler, promise));
@@ -292,6 +293,7 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
         {
             promise.TrySetException(e);
         }
+
         return promise.Task;
     }
 
@@ -304,12 +306,14 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
             promise.TrySetException(new ClosedChannelException());
             return;
         }
+
         if (streamCapacityKnown && PeerAllowedStreams(type) <= 0)
         {
             promise.TrySetException(new QuicException("STREAM_LIMIT_ERROR: QUICHE_ERR_STREAM_LIMIT",
                     QuicTransportError.STREAM_LIMIT_ERROR));
             return;
         }
+
         if (type == QuicStreamType.UNIDIRECTIONAL)
         {
             Interlocked.Decrement(ref uniStreamsLeft);
@@ -318,6 +322,7 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
         {
             Interlocked.Decrement(ref bidiStreamsLeft);
         }
+
         _ = OpenStreamAsync(conn, type, handler, promise);
     }
 
@@ -325,6 +330,7 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
                                        TaskCompletionSource<IQuicStreamChannel> promise)
     {
         QuicStream stream;
+
         try
         {
             stream = await conn.OpenOutboundStreamAsync(type == QuicStreamType.BIDIRECTIONAL
@@ -343,8 +349,10 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
             {
                 promise.TrySetException(e);
             }
+
             return;
         }
+
         if (!TryExecute(() => StreamOpened(stream, handler, promise)))
         {
             promise.TrySetException(new ClosedChannelException());
@@ -361,13 +369,16 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
             _ = DisposeAsync(stream);
             return;
         }
+
         MsQuicStreamChannel streamChannel = new MsQuicStreamChannel(this, stream);
         long streamId = streamChannel.StreamId();
         streams[streamId] = streamChannel;
+
         if (handler != null)
         {
             streamChannel.Pipeline.AddLast(handler);
         }
+
         Task registration = EventLoop.RegisterAsync(streamChannel);
         if (registration.IsCompleted)
         {
@@ -411,7 +422,9 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
         {
             return;
         }
+
         ClosedChannelException closedChannelException;
+
         if (IsTimedOut())
         {
             // Close the streams because of a timeout.
@@ -421,12 +434,14 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
         {
             closedChannelException = new ClosedChannelException();
         }
+
         // Make a copy to ensure we not run into a situation when we change the underlying iterator from
         // another method and so run in an assert error.
         foreach (MsQuicStreamChannel stream in streams.Values.ToArray())
         {
             stream.CloseOnConnectionClose(closedChannelException);
         }
+
         streams.Clear();
     }
 
@@ -434,23 +449,27 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
                            CancellationToken cancellationToken = default)
     {
         TaskCompletionSource promise = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
         try
         {
             ExecuteOnLoop(() =>
             {
                 // System.Net.Quic sends no reason phrase.
                 reason.Release();
+
                 if (!applicationClose && error != 0)
                 {
                     promise.TrySetException(new NotSupportedException(
                             "System.Net.Quic closes a connection with an application error code only"));
                     return;
                 }
+
                 if (!hasCloseData)
                 {
                     hasCloseData = true;
                     closeError = error;
                 }
+
                 Notify(Pipeline.CloseAsync(cancellationToken), promise);
             });
         }
@@ -458,6 +477,7 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
         {
             promise.TrySetException(e);
         }
+
         return promise.Task;
     }
 
@@ -476,6 +496,7 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
             // ConnectionPendingException
             return Task.FromException(new SocketException((int) SocketError.AlreadyInProgress));
         }
+
         if (remoteAddress is QuicConnectionAddress remoteId)
         {
             if (connection != null || state != ChannelState.OPEN)
@@ -528,6 +549,7 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
             }
 
             Task parentConnect;
+
             try
             {
                 parentConnect = Parent.ConnectAsync(new MsQuicChannelAddress(this));
@@ -536,6 +558,7 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
             {
                 parentConnect = Task.FromException(e);
             }
+
             _ = parentConnect.ContinueWith(f =>
             {
                 if (!f.IsCompletedSuccessfully)
@@ -572,6 +595,7 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
         {
             throw new ArgumentException("QuicSslEngine is not created in client mode");
         }
+
         this.config = config;
         engine = msQuicSslEngine;
         QuicClientConnectionOptions options = new QuicClientConnectionOptions
@@ -580,10 +604,12 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
             ClientAuthenticationOptions = msQuicSslEngine.ClientAuthenticationOptions(),
             StreamCapacityCallback = OnStreamCapacity,
         };
+
         if (local is IPEndPoint localEndPoint)
         {
             options.LocalEndPoint = localEndPoint;
         }
+
         config.Apply(options);
         _ = ConnectCoreAsync(options);
     }
@@ -592,6 +618,7 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
     {
         QuicConnection conn = null;
         Exception error = null;
+
         try
         {
             conn = await QuicConnection.ConnectAsync(options, closeCts.Token).ConfigureAwait(false);
@@ -600,6 +627,7 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
         {
             error = e;
         }
+
         if (!TryExecute(() =>
             {
                 if (conn != null)
@@ -624,6 +652,7 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
             _ = CloseConnectionAsync(conn, 0);
             return;
         }
+
         connectPromise = null;
         connectTimeoutFuture?.Cancel();
         connection = conn;
@@ -644,6 +673,7 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
         NotifyAboutHandshakeCompletionIfNeeded(null);
         NotifyStreamLimitChangedIfNeeded();
         StartAcceptLoop(conn);
+
         if (!promiseSet)
         {
             _ = Close();
@@ -657,20 +687,24 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
         {
             return;
         }
+
         connectPromise = null;
         connectTimeoutFuture?.Cancel();
         Exception cause = error is AuthenticationException || error is SocketException ||
                           error is OperationCanceledException
                 ? error
                 : ToQuicException(error);
+
         if (error is System.Net.Quic.QuicException quic)
         {
             FireConnectCloseEventIfNeeded(quic);
         }
+
         if (cause is AuthenticationException)
         {
             NotifyAboutHandshakeCompletionIfNeeded(cause);
         }
+
         promise.TrySetException(cause);
         _ = Close();
     }
@@ -681,6 +715,7 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
         {
             return;
         }
+
         handshakeCompletionNotified = true;
         Pipeline.FireUserEventTriggered(cause == null
                 ? SslHandshakeCompletionEvent.SUCCESS
@@ -744,11 +779,14 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
     {
         Interlocked.Add(ref bidiStreamsLeft, args.BidirectionalIncrement);
         Interlocked.Add(ref uniStreamsLeft, args.UnidirectionalIncrement);
+
         if (args.BidirectionalIncrement != 0 || args.UnidirectionalIncrement != 0)
         {
             Interlocked.Increment(ref streamCapacityChanges);
         }
+
         streamCapacityKnown = true;
+
         if (state == ChannelState.ACTIVE && IsRegistered)
         {
             TryExecute(NotifyStreamLimitChangedIfNeeded);
@@ -767,6 +805,7 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
         {
             return;
         }
+
         notifiedStreamCapacityChanges = changes;
         Pipeline.FireUserEventTriggered(QuicStreamLimitChangedEvent.INSTANCE);
     }
@@ -780,12 +819,14 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
             // connection is then seen by the stream operations (ConnectionError).
             return;
         }
+
         _ = AcceptLoopAsync(conn);
     }
 
     private async Task AcceptLoopAsync(QuicConnection conn)
     {
         CancellationToken token = closeCts.Token;
+
         try
         {
             for (;;)
@@ -811,9 +852,11 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
             _ = DisposeAsync(stream);
             return;
         }
+
         MsQuicStreamChannel streamChannel = new MsQuicStreamChannel(this, stream);
         streams[streamChannel.StreamId()] = streamChannel;
         acceptedStreams.Enqueue(streamChannel);
+
         if (readPending)
         {
             DeliverAcceptedStreams();
@@ -827,11 +870,13 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
         {
             return;
         }
+
         while (acceptedStreams.Count != 0 && state != ChannelState.CLOSED)
         {
             readPending = false;
             Pipeline.FireChannelRead(acceptedStreams.Dequeue());
         }
+
         Pipeline.FireChannelReadComplete();
     }
 
@@ -841,12 +886,14 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
         {
             return;
         }
+
         DoBeginRead();
     }
 
     protected override void DoBeginRead()
     {
         readPending = true;
+
         if (state == ChannelState.ACTIVE)
         {
             DeliverAcceptedStreams();
@@ -861,10 +908,12 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
         {
             return;
         }
+
         if (quic.QuicError == QuicError.ConnectionIdle || quic.QuicError == QuicError.ConnectionTimeout)
         {
             timedOut = true;
         }
+
         FireConnectCloseEventIfNeeded(quic);
         _ = Close();
     }
@@ -875,9 +924,11 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
         {
             return;
         }
+
         connectionCloseEvent = quic.ApplicationErrorCode is long applicationError
                 ? new QuicConnectionCloseEvent(true, (int) applicationError, EmptyArrays.EMPTY_BYTES)
                 : new QuicConnectionCloseEvent(false, (int) (quic.TransportErrorCode ?? 0), EmptyArrays.EMPTY_BYTES);
+
         if (IsRegistered)
         {
             Pipeline.FireUserEventTriggered(connectionCloseEvent);
@@ -902,8 +953,10 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
         {
             return;
         }
+
         state = ChannelState.CLOSED;
         connectTimeoutFuture?.Cancel();
+
         try
         {
             closeCts.Cancel();
@@ -916,6 +969,7 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
         QuicConnection conn = connection;
         long error = hasCloseData ? closeError : 0;
         FailPendingConnectPromise();
+
         try
         {
             if (conn != null)
@@ -982,6 +1036,7 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
         {
             return msg;
         }
+
         throw new NotSupportedException("Unsupported message type: " + StringUtil.SimpleClassName(msg));
     }
 
@@ -1046,7 +1101,9 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
         {
             return error;
         }
+
         QuicTransportError transportError = QuicTransportError.INTERNAL_ERROR;
+
         if (quic.TransportErrorCode is long code)
         {
             try
@@ -1062,6 +1119,7 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
         {
             transportError = QuicTransportError.APPLICATION_ERROR;
         }
+
         return new QuicException(quic.Message, quic, transportError);
     }
 
@@ -1073,6 +1131,7 @@ internal sealed class MsQuicChannel : AbstractChannel, IQuicChannel
             Complete(task, promise);
             return;
         }
+
         _ = task.ContinueWith(static (t, state) => Complete(t, (TaskCompletionSource) state), promise,
                 CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
     }

@@ -44,6 +44,7 @@ public static class SystemTimer
             return unchecked(timestamp * (unitsPerSecond / frequency));
         if (frequency % unitsPerSecond == 0)
             return timestamp / (frequency / unitsPerSecond);
+
         return unchecked((long)((Int128)timestamp * unitsPerSecond / frequency));
     }
 }

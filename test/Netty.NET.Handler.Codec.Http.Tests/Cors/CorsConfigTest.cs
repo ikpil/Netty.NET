@@ -68,10 +68,12 @@ public class CorsConfigTest
     {
         string[] origins = { "http://localhost:7888", "https://localhost:7888" };
         CorsConfig cors = ForOrigins(origins).Build();
+
         foreach (string origin in origins)
         {
             Assert.Contains(origin, cors.Origins());
         }
+
         Assert.False(cors.IsAnyOriginSupported());
     }
 

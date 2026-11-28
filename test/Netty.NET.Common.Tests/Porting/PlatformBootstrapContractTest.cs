@@ -60,16 +60,20 @@ public class PlatformBootstrapContractTest
             Assert.NotNull(first);
             var items = Assert.IsAssignableFrom<IEnumerable<string>>(first);
             var snapshot = new List<string>(items);
+
             if (expected != null)
                 Assert.Equal(expected.Length == 0 ? Array.Empty<string>() : expected.Split(','), items);
+
             Assert.Equal(snapshot.Count, new HashSet<string>(snapshot, StringComparer.Ordinal).Count);
             Assert.All(snapshot, item => Assert.Contains(item, new[] { "arch", "fedora", "suse" }));
+
             // Consumers receive a read-only snapshot, never the cached mutable builder.
             if (first is ICollection<string> collection)
             {
                 Assert.True(collection.IsReadOnly);
                 Assert.Throws<NotSupportedException>(() => collection.Add("arch"));
             }
+
             Environment.SetEnvironmentVariable("io.netty.osClassifiers", "fedora");
             Assert.Same(first, Invoke(platform, "NormalizedLinuxClassifiers"));
             Assert.Equal(snapshot, items);
@@ -99,6 +103,7 @@ public class PlatformBootstrapContractTest
     public void OsReleaseFileParsingKeepsAllowedIdentityPriority(string text, string expected)
     {
         string path = Path.GetTempFileName();
+
         try
         {
             File.WriteAllText(path, text, new UTF8Encoding(false));
@@ -128,6 +133,7 @@ public class PlatformBootstrapContractTest
     {
         var saved = new Dictionary<string, string>();
         var context = new AssemblyLoadContext("Netty platform state", isCollectible: true);
+
         try
         {
             foreach (var setting in settings)
@@ -135,6 +141,7 @@ public class PlatformBootstrapContractTest
                 saved.Add(setting.Key, Environment.GetEnvironmentVariable(setting.Key));
                 Environment.SetEnvironmentVariable(setting.Key, setting.Value);
             }
+
             Assembly assembly = context.LoadFromAssemblyPath(typeof(PlatformDependent).Assembly.Location);
             assertion(assembly.GetType(typeof(PlatformDependent).FullName, true));
         }

@@ -74,6 +74,7 @@ public sealed class DefaultHttp3SettingsFrame : IHttp3SettingsFrame
         {
             return false;
         }
+
         DefaultHttp3SettingsFrame that = (DefaultHttp3SettingsFrame) o;
         return that.settings.Equals(settings);
     }
@@ -93,6 +94,7 @@ public sealed class DefaultHttp3SettingsFrame : IHttp3SettingsFrame
     {
         Http3Settings settingsCopy = new Http3Settings(settingsFrame.Settings().nonStandardSettingsValidator);
         DefaultHttp3SettingsFrame copy = new DefaultHttp3SettingsFrame(settingsCopy);
+
         if (settingsFrame is DefaultHttp3SettingsFrame)
         {
             copy.settings.PutAll(((DefaultHttp3SettingsFrame) settingsFrame).settings);
@@ -104,6 +106,7 @@ public sealed class DefaultHttp3SettingsFrame : IHttp3SettingsFrame
                 ((IHttp3SettingsFrame) copy).Put(entry.Key, entry.Value);
             }
         }
+
         return copy;
     }
 }

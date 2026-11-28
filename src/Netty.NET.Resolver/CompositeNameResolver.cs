@@ -42,16 +42,19 @@ public sealed class CompositeNameResolver<T> : SimpleNameResolver<T>
     public CompositeNameResolver(IEventExecutor executor, params INameResolver<T>[] resolvers) : base(executor)
     {
         ObjectUtil.CheckNotNull(resolvers, "resolvers");
+
         for (int i = 0; i < resolvers.Length; i++)
         {
             ObjectUtil.CheckNotNull(resolvers[i], "resolvers[" + i.ToString(CultureInfo.InvariantCulture) + ']');
         }
+
         if (resolvers.Length < 2)
         {
             // CLR: Arrays.asList(resolvers).toString() formats as "[a, b]".
             throw new ArgumentException("resolvers: [" + string.Join(", ", (object[])resolvers) +
                     "] (expected: at least 2 resolvers)");
         }
+
         _resolvers = (INameResolver<T>[])resolvers.Clone();
     }
 
@@ -68,9 +71,12 @@ public sealed class CompositeNameResolver<T> : SimpleNameResolver<T>
         {
             ExceptionDispatchInfo.Throw(lastFailure);
         }
+
         cancellationToken.ThrowIfCancellationRequested();
+
         INameResolver<T> resolver = _resolvers[resolverIndex];
         Exception cause;
+
         try
         {
             return await resolver.ResolveAsync(inetHost, cancellationToken).ConfigureAwait(false);
@@ -78,8 +84,10 @@ public sealed class CompositeNameResolver<T> : SimpleNameResolver<T>
         catch (Exception e)
         {
             cancellationToken.ThrowIfCancellationRequested();
+
             cause = e;
         }
+
         return await DoResolveRecAsync(inetHost, resolverIndex + 1, cause, cancellationToken).ConfigureAwait(false);
     }
 
@@ -95,9 +103,12 @@ public sealed class CompositeNameResolver<T> : SimpleNameResolver<T>
         {
             ExceptionDispatchInfo.Throw(lastFailure);
         }
+
         cancellationToken.ThrowIfCancellationRequested();
+
         INameResolver<T> resolver = _resolvers[resolverIndex];
         Exception cause;
+
         try
         {
             return await resolver.ResolveAllAsync(inetHost, cancellationToken).ConfigureAwait(false);
@@ -105,8 +116,10 @@ public sealed class CompositeNameResolver<T> : SimpleNameResolver<T>
         catch (Exception e)
         {
             cancellationToken.ThrowIfCancellationRequested();
+
             cause = e;
         }
+
         return await DoResolveAllRecAsync(inetHost, resolverIndex + 1, cause, cancellationToken).ConfigureAwait(false);
     }
     // Like the original, this composite does not own or close its component resolvers.

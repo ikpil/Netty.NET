@@ -56,6 +56,7 @@ public class MemcacheClientHandler : ChannelDuplexHandler
             {
                 throw new ArgumentException("Malformed Command: " + command);
             }
+
             string keyString = parts[1];
             string value = parts[2];
 

@@ -67,6 +67,7 @@ public class DefaultSocks4CommandResponse : AbstractSocks4Message, ISocks4Comman
                         "dstAddr: " + dstAddr + " (expected: a valid IPv4 address)");
             }
         }
+
         if (dstPort < 0 || dstPort > 65535)
         {
             throw new ArgumentException("dstPort: " + dstPort.ToString(CultureInfo.InvariantCulture) + " (expected: 0~65535)");
@@ -108,6 +109,7 @@ public class DefaultSocks4CommandResponse : AbstractSocks4Message, ISocks4Comman
         {
             buf.Append("(dstAddr: ");
         }
+
         // CLR: StringBuilder.append(String) appends "the four characters "null"" for null
         // (https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/StringBuilder.html), while
         // StringBuilder.Append(string) makes no change ("If value is null, no changes are made",

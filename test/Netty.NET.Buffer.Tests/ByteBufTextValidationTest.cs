@@ -68,8 +68,10 @@ public class ByteBufTextValidationTest
     {
         foreach (string hex in OriginalValidUtf8)
             Check(kind, hex, Encoding.UTF8, true);
+
         foreach (string hex in OriginalInvalidUtf8)
             Check(kind, hex, Encoding.UTF8, false);
+
         Check(kind, "0001377F", Encoding.ASCII, true);
         Check(kind, "80FF", Encoding.ASCII, false);
         Check(kind, "01D837DC", Encoding.Unicode, true);
@@ -79,6 +81,7 @@ public class ByteBufTextValidationTest
     private static void Check(int kind, string hex, Encoding encoding, bool expected)
     {
         ByteBuf b = Owner(kind, Convert.FromHexString(hex));
+
         try
         {
             Assert.Equal(expected, ByteBufUtil.IsText(b, encoding));
@@ -96,6 +99,7 @@ public class ByteBufTextValidationTest
     {
         string[] valid = { "", "00", "7F", "C280", "DFBF", "E0A080", "ED9FBF", "EE8080", "EFBFBF", "F0908080", "F48FBFBF", "EFBBBF" };
         string[] invalid = { "C080", "C1BF", "E09FBF", "EDA080", "EDBFBF", "F08FBFBF", "F4908080", "F5808080", "FF", "FE", "F888808080", "80", "BF" };
+
         foreach (string hex in valid)
         {
             Check(kind, hex, Encoding.UTF8, true);
@@ -133,12 +137,15 @@ public class ByteBufTextValidationTest
             ("000000410001370000000042", new UTF32Encoding(true, false), true),
             ("0000004100013700000000", new UTF32Encoding(true, false), false)
         };
+
         foreach (var vector in vectors)
         {
             byte[] bytes = Convert.FromHexString(vector.Hex);
+
             for (int split = 0; split <= bytes.Length; split++)
             {
                 ByteBuf b = Owner(kind, bytes, split);
+
                 try
                 {
                     Assert.Equal(vector.Expected, ByteBufUtil.IsText(b, vector.Encoding));
@@ -157,13 +164,17 @@ public class ByteBufTextValidationTest
     public void OriginalBoundsAndWriterBoundBeforeReaderKeepMarksAndLifetime(int kind)
     {
         ByteBuf b = Owner(kind, new byte[8]);
+
         try
         {
             b.SetIndex(0, 4);
+
             foreach (var (index, length) in new[] { (4, 0), (0, 4), (1, 3) })
                 Assert.True(ByteBufUtil.IsText(b, index, length, Encoding.ASCII));
+
             foreach (var (index, length) in new[] { (4, 1), (-1, 2), (3, -1), (3, -2), (5, 0), (1, 5), (int.MaxValue, 1), (1, int.MaxValue) })
                 Assert.Throws<ArgumentOutOfRangeException>(() => ByteBufUtil.IsText(b, index, length, Encoding.ASCII));
+
             b.SetIndex(2, 4).MarkReaderIndex().MarkWriterIndex();
             Assert.True(ByteBufUtil.IsText(b, Encoding.UTF8));
             Assert.True(ByteBufUtil.IsText(b, 0, 4, Encoding.UTF8));
@@ -211,6 +222,7 @@ public class ByteBufTextValidationTest
         {
             byte[] bytes = encoding.GetBytes(text);
             ByteBuf b = Owner(kind, bytes, 1);
+
             try
             {
                 Assert.True(ByteBufUtil.IsText(b, encoding));
@@ -229,6 +241,7 @@ public class ByteBufTextValidationTest
     public async Task OriginalConcurrentValidationUsesIndependentDecoderState(int kind)
     {
         ByteBuf b = Owner(kind, Encoding.Latin1.GetBytes("Hello, World!"));
+
         try
         {
             int remaining = 60000;
@@ -256,6 +269,7 @@ public class ByteBufTextValidationTest
         Assert.Throws<ArgumentNullException>(() => ByteBufUtil.IsText(Unpooled.EmptyBuffer, null));
         ByteBuf b = Unpooled.WrappedBuffer(new byte[] { 255, 65 });
         ByteBuf wrapper = Unpooled.UnreleasableBuffer(b);
+
         try
         {
             wrapper.ReaderIndex = 1;
@@ -268,6 +282,7 @@ public class ByteBufTextValidationTest
         {
             b.Release();
         }
+
         foreach (Encoding encoding in new[] { Encoding.UTF8, Encoding.ASCII, Encoding.Unicode, Encoding.Latin1 })
         {
             Assert.True(ByteBufUtil.IsText(Unpooled.EmptyBuffer, encoding));
@@ -284,6 +299,7 @@ public class ByteBufTextValidationTest
         var encoding = new AsciiDecoderEncoding();
         DecoderFallback originalFallback = encoding.DecoderFallback;
         ByteBuf b = Unpooled.WrappedBuffer(new byte[] { 194, 162 });
+
         try
         {
             Assert.Equal(Encoding.UTF8.CodePage, encoding.CodePage);
@@ -311,6 +327,7 @@ public class ByteBufTextValidationTest
     public void CustomDecoderErrorsPropagateAndNoProgressCannotLoop()
     {
         ByteBuf b = Unpooled.WrappedBuffer(new byte[] { 65 });
+
         try
         {
             Assert.Throws<InvalidOperationException>(() => ByteBufUtil.IsText(b, new FaultingEncoding()));

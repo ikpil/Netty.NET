@@ -166,6 +166,7 @@ internal class WrappedCompositeByteBuf : CompositeByteBuf
     internal override ReadOnlySequence<byte> BorrowCopySequence(int index, int length)
     {
         CheckIndex(index, length);
+
         return Wrapped.BorrowCopySequence(index, length);
     }
 

@@ -58,6 +58,7 @@ public sealed class SocksInitRequest : SocksRequest
     {
         byteBuf.WriteByte(ProtocolVersion().ByteValue());
         byteBuf.WriteByte(authSchemes.Count);
+
         foreach (SocksAuthScheme authScheme in authSchemes)
         {
             byteBuf.WriteByte(authScheme.ByteValue());

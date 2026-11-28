@@ -97,6 +97,7 @@ public class Bootstrap : AbstractBootstrap
         {
             throw new InvalidOperationException("group set already");
         }
+
         _group = group;
         return this;
     }
@@ -133,6 +134,7 @@ public class Bootstrap : AbstractBootstrap
     {
         // CLR: check separately so the trimming annotation on channelClass reaches the reflective factory (IL2072).
         ObjectUtil.CheckNotNull(channelClass, "channelClass");
+
         return ChannelFactory(new ReflectiveChannelFactory<IChannel>(channelClass).NewChannel);
     }
 
@@ -220,6 +222,7 @@ public class Bootstrap : AbstractBootstrap
     public Bootstrap Option<T>(ChannelOption<T> option, T value)
     {
         ObjectUtil.CheckNotNull(option, "option");
+
         lock (_optionsGate)
         {
             if (value is null)
@@ -231,6 +234,7 @@ public class Bootstrap : AbstractBootstrap
                 _options[option] = value;
             }
         }
+
         return this;
     }
 
@@ -241,6 +245,7 @@ public class Bootstrap : AbstractBootstrap
     public Bootstrap Attr<T>(AttributeKey<T> key, T value) where T : class
     {
         ObjectUtil.CheckNotNull(key, "key");
+
         if (value == null)
         {
             _attributes.TryRemove(key, out _);
@@ -249,6 +254,7 @@ public class Bootstrap : AbstractBootstrap
         {
             _attributes[key] = (value, channel => channel.Attr(key).Set(value));
         }
+
         return this;
     }
 
@@ -296,6 +302,7 @@ public class Bootstrap : AbstractBootstrap
         {
             throw new InvalidOperationException("handler not set");
         }
+
         return this;
     }
 
@@ -307,6 +314,7 @@ public class Bootstrap : AbstractBootstrap
     public Bootstrap Clone()
     {
         var copy = new Bootstrap { _group = _group, _registrationLoop = _registrationLoop, _factory = _factory, _handler = _handler, _remote = _remote, _local = _local, _externalResolver = _externalResolver, _disableResolver = _disableResolver };
+
         foreach (var option in NewOptionsArray())
             copy._options.Add(option.Key, option.Value);
 
@@ -328,6 +336,7 @@ public class Bootstrap : AbstractBootstrap
     public Bootstrap Clone(IEventLoop eventLoop)
     {
         ArgumentNullException.ThrowIfNull(eventLoop);
+
         var copy = Clone();
         copy._registrationLoop = eventLoop;
         return copy;
@@ -343,6 +352,7 @@ public class Bootstrap : AbstractBootstrap
         {
             return Task.FromCanceled<IChannel>(cancellationToken);
         }
+
         Task regFuture = InitAndRegister(cancellationToken, out IChannel channel);
         return RegisteredChannelAsync(regFuture, channel);
     }
@@ -423,7 +433,9 @@ public class Bootstrap : AbstractBootstrap
     public Task<IChannel> ConnectAsync(EndPoint remoteAddress, CancellationToken cancellationToken = default)
     {
         ObjectUtil.CheckNotNull(remoteAddress, "remoteAddress");
+
         Validate();
+
         return DoResolveAndConnectAsync(remoteAddress, _local, cancellationToken);
     }
 
@@ -433,7 +445,9 @@ public class Bootstrap : AbstractBootstrap
     public Task<IChannel> ConnectAsync(EndPoint remoteAddress, EndPoint localAddress, CancellationToken cancellationToken = default)
     {
         ObjectUtil.CheckNotNull(remoteAddress, "remoteAddress");
+
         Validate();
+
         return DoResolveAndConnectAsync(remoteAddress, localAddress, cancellationToken);
     }
 
@@ -447,6 +461,7 @@ public class Bootstrap : AbstractBootstrap
         {
             return Task.FromCanceled<IChannel>(cancellationToken);
         }
+
         Task regFuture = InitAndRegister(cancellationToken, out IChannel channel);
 
         if (regFuture.IsCompleted)
@@ -455,6 +470,7 @@ public class Bootstrap : AbstractBootstrap
             {
                 return AbstractBootstrap.Failed(regFuture);
             }
+
             return DoResolveAndConnect0(channel, remoteAddress, localAddress, AbstractBootstrap.NewPromise(), cancellationToken);
         }
         else
@@ -509,6 +525,7 @@ public class Bootstrap : AbstractBootstrap
 
             IEventLoop eventLoop = channel.EventLoop;
             ExternalAddressResolver.Resolver resolver;
+
             try
             {
                 resolver = ExternalAddressResolver.GetOrDefault(_externalResolver).GetResolver(eventLoop);
@@ -542,6 +559,7 @@ public class Bootstrap : AbstractBootstrap
                     // Succeeded to resolve immediately; cached? (or did a blocking lookup)
                     DoConnect(resolveFuture.Result, localAddress, promise, channel, cancellationToken);
                 }
+
                 return promise.Task;
             }
 
@@ -557,6 +575,7 @@ public class Bootstrap : AbstractBootstrap
                     DoConnect(future.Result, localAddress, promise, channel, cancellationToken);
                 }
             }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+
             // CLR: cancelling the connect does not wait for a third-party resolver to honor the token; the promise
             // is cancelled and the close-on-failure continuation closes the channel.
             if (cancellationToken.CanBeCanceled)
@@ -571,6 +590,7 @@ public class Bootstrap : AbstractBootstrap
         {
             promise.TrySetException(cause);
         }
+
         return promise.Task;
     }
 
@@ -605,6 +625,7 @@ public class Bootstrap : AbstractBootstrap
         {
             throw new InvalidOperationException("localAddress not set");
         }
+
         return BindAsync(localAddress, cancellationToken);
     }
 
@@ -638,6 +659,7 @@ public class Bootstrap : AbstractBootstrap
     public Task<IChannel> BindAsync(EndPoint localAddress, CancellationToken cancellationToken = default)
     {
         Validate();
+
         return DoBind(ObjectUtil.CheckNotNull(localAddress, "localAddress"), cancellationToken);
     }
 
@@ -648,6 +670,7 @@ public class Bootstrap : AbstractBootstrap
         {
             return Task.FromCanceled<IChannel>(cancellationToken);
         }
+
         Task regFuture = InitAndRegister(cancellationToken, out IChannel channel);
         return AbstractBootstrap.DoBind(regFuture, channel, localAddress, cancellationToken);
     }

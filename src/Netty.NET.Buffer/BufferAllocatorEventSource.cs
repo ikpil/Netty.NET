@@ -80,6 +80,7 @@ public sealed class BufferAllocatorEventSource : EventSource
         {
             return null;
         }
+
         long address = buffer.IsDirect ? StorageAddress(memory) : 0;
         return new Snapshot(buffer.Capacity, buffer.MaxFastWritableBytes + buffer.WriterIndex,
             buffer.MaxCapacity, buffer.IsDirect, address, chunkPooled, chunkThreadLocal);
@@ -92,6 +93,7 @@ public sealed class BufferAllocatorEventSource : EventSource
         {
             return;
         }
+
         var pooled = buffer as PooledByteBuf;
         Snapshot? snapshot = Capture(buffer, Keywords.AllocateBuffer,
             buffer.IsDirect ? buffer.AsReadOnlyMemory(0, buffer.Capacity) : default,
@@ -107,6 +109,7 @@ public sealed class BufferAllocatorEventSource : EventSource
         {
             return null;
         }
+
         bool direct = allocation.IsDirect;
         long address = direct && allocation.TryGetAddress(0, out nint start) ? (long)start : 0;
         // Final release has already made ByteBuf inaccessible. The live allocation
@@ -122,6 +125,7 @@ public sealed class BufferAllocatorEventSource : EventSource
         {
             return;
         }
+
         bool direct = storage.IsDirect;
         long address = direct ? StorageAddress(storage.AsReadOnlyMemory(0, storage.Capacity)) : 0;
         Record(new PendingEvent(allocated ? 4 : 5, default,
@@ -151,6 +155,7 @@ public sealed class BufferAllocatorEventSource : EventSource
             {
                 return;
             }
+
             List<PendingEvent> entries = _pendingEvents;
             _pendingEvents = null;
             if (entries == null)
@@ -232,6 +237,7 @@ public sealed class BufferAllocatorEventSource : EventSource
         {
             return;
         }
+
         long address = direct ? StorageAddress(storage.Memory) : 0;
         Record(new PendingEvent(allocated ? 4 : 5, default,
             new ChunkSnapshot(storage.Memory.Length, direct, address, storage.Chunk != null), 0));
@@ -242,6 +248,7 @@ public sealed class BufferAllocatorEventSource : EventSource
     {
         if (MemoryMarshal.TryGetMemoryManager<byte, ThreadLocalDirectAllocation>(memory, out var storage, out int offset, out _))
             return storage.TryGetAddress(offset, out nint start) ? (long)start : 0;
+
         return NativeMemoryOwner.TryGetAddress(memory, out nint address) ? (long)address : 0;
     }
 
@@ -251,6 +258,7 @@ public sealed class BufferAllocatorEventSource : EventSource
         Snapshot value = entry.Buffer;
         ChunkSnapshot chunk = entry.Chunk;
         string allocatorType = value.Adaptive || chunk.Adaptive ? typeof(AdaptiveByteBufAllocator).FullName : typeof(PooledByteBufAllocator).FullName;
+
         switch (entry.Id)
         {
             case 1:

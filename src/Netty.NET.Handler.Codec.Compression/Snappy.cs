@@ -137,12 +137,14 @@ public sealed class Snappy
         if (length - inIndex >= MIN_COMPRESSIBLE_BYTES)
         {
             int nextHash = Hash(@in, ++inIndex, shift);
+
             while (true)
             {
                 int skip = 32;
 
                 int candidate;
                 int nextIndex = inIndex;
+
                 do
                 {
                     inIndex = nextIndex;
@@ -169,6 +171,7 @@ public sealed class Snappy
                 EncodeLiteral(@in, @out, inIndex - nextEmit);
 
                 int insertTail;
+
                 do
                 {
                     int @base = inIndex;
@@ -179,6 +182,7 @@ public sealed class Snappy
                     @in.ReaderIndex = @in.ReaderIndex + matched;
                     insertTail = inIndex - 1;
                     nextEmit = inIndex;
+
                     if (inIndex >= length - 4)
                     {
                         goto outer;
@@ -233,6 +237,7 @@ public sealed class Snappy
         {
             return GetHashTableFastThreadLocalArrayFill(hashTableSize);
         }
+
         return new short[hashTableSize];
     }
 
@@ -310,6 +315,7 @@ public sealed class Snappy
     {
         int highestOneBit = value & (int.MinValue >>> BitOperations.LeadingZeroCount((uint) value));
         int bitLength = 0;
+
         while ((highestOneBit >>= 1) != 0)
         {
             bitLength++;
@@ -338,6 +344,7 @@ public sealed class Snappy
             int bitLength = BitsToEncode(length - 1);
             int bytesToEncode = 1 + bitLength / 8;
             @out.WriteByte(59 + bytesToEncode << 2);
+
             for (int i = 0; i < bytesToEncode; i++)
             {
                 @out.WriteByte(length - 1 >> i * 8 & 0x0ff);
@@ -404,6 +411,7 @@ public sealed class Snappy
                     // Should never happen, but it does mean we have nothing further to do
                     return;
                 }
+
                 @out.EnsureWritable(uncompressedLength);
                 state = State.READING_TAG;
                 // fall through
@@ -413,7 +421,9 @@ public sealed class Snappy
                 {
                     return;
                 }
+
                 tag = @in.ReadByte();
+
                 switch (tag & 0x03)
                 {
                 case LITERAL:
@@ -425,6 +435,7 @@ public sealed class Snappy
                     state = State.READING_COPY;
                     break;
                 }
+
                 break;
             case State.READING_LITERAL:
                 int literalWritten = DecodeLiteral(tag, @in, @out);
@@ -438,9 +449,11 @@ public sealed class Snappy
                     // Need to wait for more data
                     return;
                 }
+
                 break;
             case State.READING_COPY:
                 int decodeWritten;
+
                 switch (tag & 0x03)
                 {
                 case COPY_1_BYTE_OFFSET:
@@ -455,6 +468,7 @@ public sealed class Snappy
                         // Need to wait for more data
                         return;
                     }
+
                     break;
                 case COPY_2_BYTE_OFFSET:
                     decodeWritten = DecodeCopyWith2ByteOffset(tag, @in, @out, written);
@@ -468,6 +482,7 @@ public sealed class Snappy
                         // Need to wait for more data
                         return;
                     }
+
                     break;
                 case COPY_4_BYTE_OFFSET:
                     decodeWritten = DecodeCopyWith4ByteOffset(tag, @in, @out, written);
@@ -481,8 +496,10 @@ public sealed class Snappy
                         // Need to wait for more data
                         return;
                     }
+
                     break;
                 }
+
                 break;
             }
         }
@@ -502,6 +519,7 @@ public sealed class Snappy
     {
         int length = 0;
         int byteIndex = 0;
+
         while (@in.IsReadable())
         {
             int current = @in.ReadByte();
@@ -534,6 +552,7 @@ public sealed class Snappy
         if (state == State.READING_PREAMBLE)
         {
             int readerIndex = @in.ReaderIndex;
+
             try
             {
                 return ReadPreamble(@in);
@@ -543,6 +562,7 @@ public sealed class Snappy
                 @in.ReaderIndex = readerIndex;
             }
         }
+
         return 0;
     }
 
@@ -562,6 +582,7 @@ public sealed class Snappy
     {
         @in.MarkReaderIndex();
         int length;
+
         switch(tag >> 2 & 0x3F)
         {
         case 60:
@@ -569,6 +590,7 @@ public sealed class Snappy
             {
                 return NOT_ENOUGH_INPUT;
             }
+
             length = @in.ReadByte();
             break;
         case 61:
@@ -576,6 +598,7 @@ public sealed class Snappy
             {
                 return NOT_ENOUGH_INPUT;
             }
+
             length = @in.ReadUnsignedShortLE();
             break;
         case 62:
@@ -583,6 +606,7 @@ public sealed class Snappy
             {
                 return NOT_ENOUGH_INPUT;
             }
+
             length = @in.ReadUnsignedMediumLE();
             break;
         case 63:
@@ -590,12 +614,14 @@ public sealed class Snappy
             {
                 return NOT_ENOUGH_INPUT;
             }
+
             length = @in.ReadIntLE();
             break;
         default:
             length = tag >> 2 & 0x3F;
             break;
         }
+
         length += 1;
 
         if (@in.ReadableBytes < length)
@@ -635,14 +661,17 @@ public sealed class Snappy
         ValidateOffset(offset, writtenSoFar);
 
         @out.MarkReaderIndex();
+
         if (offset < length)
         {
             int copies = length / offset;
+
             for (; copies > 0; copies--)
             {
                 @out.ReaderIndex = initialIndex - offset;
                 @out.ReadBytes(@out, offset);
             }
+
             if (length % offset != 0)
             {
                 @out.ReaderIndex = initialIndex - offset;
@@ -654,6 +683,7 @@ public sealed class Snappy
             @out.ReaderIndex = initialIndex - offset;
             @out.ReadBytes(@out, length);
         }
+
         @out.ResetReaderIndex();
 
         return length;
@@ -686,14 +716,17 @@ public sealed class Snappy
         ValidateOffset(offset, writtenSoFar);
 
         @out.MarkReaderIndex();
+
         if (offset < length)
         {
             int copies = length / offset;
+
             for (; copies > 0; copies--)
             {
                 @out.ReaderIndex = initialIndex - offset;
                 @out.ReadBytes(@out, offset);
             }
+
             if (length % offset != 0)
             {
                 @out.ReaderIndex = initialIndex - offset;
@@ -705,6 +738,7 @@ public sealed class Snappy
             @out.ReaderIndex = initialIndex - offset;
             @out.ReadBytes(@out, length);
         }
+
         @out.ResetReaderIndex();
 
         return length;
@@ -737,14 +771,17 @@ public sealed class Snappy
         ValidateOffset(offset, writtenSoFar);
 
         @out.MarkReaderIndex();
+
         if (offset < length)
         {
             int copies = length / offset;
+
             for (; copies > 0; copies--)
             {
                 @out.ReaderIndex = initialIndex - offset;
                 @out.ReadBytes(@out, offset);
             }
+
             if (length % offset != 0)
             {
                 @out.ReaderIndex = initialIndex - offset;
@@ -756,6 +793,7 @@ public sealed class Snappy
             @out.ReaderIndex = initialIndex - offset;
             @out.ReadBytes(@out, length);
         }
+
         @out.ResetReaderIndex();
 
         return length;
@@ -809,9 +847,11 @@ public sealed class Snappy
     internal static int CalculateChecksum(ByteBuf data, int offset, int length)
     {
         Crc32c crc32 = new Crc32c();
+
         try
         {
             crc32.Update(data, offset, length);
+
             return MaskChecksum(crc32.GetValue());
         }
         finally

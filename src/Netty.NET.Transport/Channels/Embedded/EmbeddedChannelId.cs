@@ -72,6 +72,7 @@ internal sealed class EmbeddedChannelId : IChannelId
         {
             if (reader.TokenType != JsonTokenType.String || reader.GetString() != "embedded")
                 throw new JsonException("Expected the embedded channel identity.");
+
             return new EmbeddedChannelId();
         }
 

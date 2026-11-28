@@ -38,6 +38,7 @@ public class SocketConditionalWritabilitySourceTest : AbstractSocketTest
     {
         IChannel serverChannel = null;
         IChannel clientChannel = null;
+
         try
         {
             int expectedBytes = 100 * 1024 * 1024;
@@ -72,6 +73,7 @@ public class SocketConditionalWritabilitySourceTest : AbstractSocketTest
             {
                 _ = serverChannel.CloseAsync();
             }
+
             if (clientChannel != null)
             {
                 _ = clientChannel.CloseAsync();
@@ -107,6 +109,7 @@ public class SocketConditionalWritabilitySourceTest : AbstractSocketTest
             {
                 WriteRemainingBytes(ctx);
             }
+
             ctx.FireChannelWritabilityChanged();
         }
 
@@ -118,6 +121,7 @@ public class SocketConditionalWritabilitySourceTest : AbstractSocketTest
                 bytesWritten += chunkSize;
                 _ = ctx.WriteAsync(ctx.Alloc().Buffer(chunkSize).WriteZero(chunkSize));
             }
+
             ctx.Flush();
         }
     }
@@ -141,6 +145,7 @@ public class SocketConditionalWritabilitySourceTest : AbstractSocketTest
                     latch.TrySetResult();
                 }
             }
+
             ReferenceCountUtil.Release(msg);
         }
     }

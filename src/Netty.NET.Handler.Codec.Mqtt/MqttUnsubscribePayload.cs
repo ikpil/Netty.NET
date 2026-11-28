@@ -45,14 +45,17 @@ public sealed class MqttUnsubscribePayload
     public override string ToString()
     {
         StringBuilder builder = new StringBuilder(StringUtil.SimpleClassName(this)).Append('[');
+
         for (int i = 0; i < topics.Count; i++)
         {
             builder.Append("topicName = ").Append(topics[i] ?? "null").Append(", ");
         }
+
         if (topics.Count != 0)
         {
             builder.Length = builder.Length - 2;
         }
+
         return builder.Append("]").ToString();
     }
 }
