@@ -20,6 +20,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Netty.NET.Common.Internal;
 using Netty.NET.Handler.Codec.Dns;
+using DnsResponseCode = Netty.NET.Handler.Codec.Dns.DnsResponseCode;
 
 namespace Netty.NET.Resolver.Dns;
 

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <!-- testsuite-common is a test-support library (skipDeploy): the leak presence extension of the test projects. -->
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <IsPackable>false</IsPackable>
     <RootNamespace>Netty.NET.Common.Test</RootNamespace>
     <WarningsAsErrors>$(WarningsAsErrors);CS9191</WarningsAsErrors>

@@ -29,6 +29,7 @@ using Netty.NET.Common.Internal;
 using Netty.NET.Common.Internal.Logging;
 using Netty.NET.Handler.Codec;
 using Netty.NET.Handler.Codec.Dns;
+using DnsResponseCode = Netty.NET.Handler.Codec.Dns.DnsResponseCode;
 using Netty.NET.Transport.Channels;
 using static Netty.NET.Resolver.Dns.DnsResolveContext;
 

@@ -11,7 +11,7 @@
   -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <RootNamespace>Netty.NET.Handler.Codec.Http3</RootNamespace>
     <StartupObject>Netty.NET.Handler.Codec.Http3.Example.ExampleLauncher</StartupObject>
     <WarningsAsErrors>$(WarningsAsErrors);CS9191</WarningsAsErrors>

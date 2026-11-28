@@ -24,8 +24,8 @@ namespace Netty.NET.Handler.Codec.Compression;
 // CLR: CLR-only internal stand-in for java.util.zip.Deflater
 // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/zip/Deflater.html), named after the JDK type so
 // that JdkZlibEncoder and codec-http's SPDY header block encoder (InternalsVisibleTo) keep the Java call shape (setInput,
-// setDictionary, deflate with SYNC_FLUSH, needsInput, finish, finished, getTotalIn, end) and its constants. Owner decision 2026-11-23: the solution stays on .NET 10 and java.util.zip is
-// replaced by the BCL System.IO.Compression streams. The stand-in writes through a raw DeflateStream (nowrap) or a
+// setDictionary, deflate with SYNC_FLUSH, needsInput, finish, finished, getTotalIn, end) and its constants.
+// The CLR port uses the BCL System.IO.Compression streams. The stand-in writes through a raw DeflateStream (nowrap) or a
 // ZLibStream (https://learn.microsoft.com/en-us/dotnet/api/system.io.compression.zlibstream?view=net-10.0) into the
 // private Sink, from which deflate() copies the compressed bytes.
 // - The level is ZLibCompressionOptions.CompressionLevel, which "Can accept any value between -1 and 9 (inclusive). 0
@@ -39,11 +39,11 @@ namespace Netty.NET.Handler.Codec.Compression;
 //   https://raw.githubusercontent.com/dotnet/runtime/v10.0.8/src/libraries/System.IO.Compression/src/System/IO/Compression/DeflateZLib/DeflateStream.cs,
 //   https://raw.githubusercontent.com/dotnet/runtime/v10.0.8/src/libraries/System.IO.Compression/src/System/IO/Compression/DeflateZLib/Deflater.cs),
 //   the flush mode Java's SYNC_FLUSH selects.
-// - finish() makes the next deflate() call dispose the stream (leaveOpen), which finishes it (PurgeBuffers). A stream
-//   that never received a byte writes nothing when it is disposed ("make sure to only flush when we actually had some
-//   input", PurgeBuffers), while java.util.zip writes a complete empty stream. In that case the stand-in writes the
-//   empty stream itself: a final fixed-Huffman block holding only the end-of-block code (BFINAL 1, BTYPE 01 and the
-//   seven-bit code 0000000 of symbol 256, RFC 1951 sections 3.2.3 and 3.2.6, https://www.rfc-editor.org/rfc/rfc1951),
+// - finish() makes the next deflate() call dispose the stream (leaveOpen), which finishes it (PurgeBuffers).
+//   Disposing a stream that never received a byte can produce no output. When the BCL writes nothing, the stand-in
+//   supplies a complete empty stream: a final fixed-Huffman block holding only the end-of-block code (BFINAL 1,
+//   BTYPE 01 and the seven-bit code 0000000 of symbol 256, RFC 1951 sections 3.2.3 and 3.2.6,
+//   https://www.rfc-editor.org/rfc/rfc1951),
 //   that is 0x03 0x00, and for the ZLIB wrapper the RFC 1950 header and the Adler-32 of no data, 1
 //   (https://www.rfc-editor.org/rfc/rfc1950), with the header zlib writes (CMF 0x78, FLEVEL from the level,
 //   "header += 31 - (header % 31)", https://raw.githubusercontent.com/madler/zlib/v1.3.1/deflate.c).
@@ -150,7 +150,7 @@ internal sealed class Deflater
 
             if (!nowrap)
             {
-                // The ZLibStream received no byte and writes nothing when it is disposed.
+                // Replace the unused zlib stream. Its output is discarded with the dictionary's compressed bytes.
                 stream.Dispose();
                 stream = new DeflateStream(sink, new ZLibCompressionOptions { CompressionLevel = level }, true);
                 dictionaryAdler = new Adler32();
@@ -249,7 +249,7 @@ internal sealed class Deflater
             // The raw stream received the dictionary and wrote the final block; the ADLER32 trailer follows.
             WriteInt(adler.GetCurrentHashAsUInt32());
         }
-        else if (bytesRead == 0 && !hasDictionary)
+        else if (bytesRead == 0 && !hasDictionary && sink.Available == 0)
         {
             if (!nowrap)
             {
