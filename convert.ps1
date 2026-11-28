@@ -1,1 +1,0 @@
-Get-ChildItem -Path "./" -Recurse -Filter *.java | Rename-Item -NewName { $_.Name -replace '\.java$', '.cs' }
