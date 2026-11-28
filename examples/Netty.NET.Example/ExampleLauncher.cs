@@ -4,29 +4,26 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace Netty.NET.Handler.Codec.Http3.Example;
+namespace Netty.NET.Example;
 
-// CLR: no Java counterpart (CLR-only, copied from src/Netty.NET.Example/ExampleLauncher.cs). The HTTP/3 programs of
-// codec-http3's test sources have one main(String[]) per class and are run as
-// "java io.netty.handler.codec.http3.example.Http3ServerExample" or "java io.netty.handler.codec.http3.Http3SpecTestServer".
-// C# allows several Main methods in one assembly only with an explicit startup object, so this launcher takes the Java
-// class name (with or without the io.netty.handler.codec.http3 prefix) and the program's arguments:
+// CLR: no Java counterpart. The Maven example module has one main(String[]) per example class and is run as
+// "java -Dport=8080 io.netty.example.echo.EchoServer". C# allows several Main methods in one assembly only with an
+// explicit startup object, so this launcher takes the Java class name (with or without the io.netty.example prefix)
+// and the example's arguments:
 //
-//   dotnet run --project test/Netty.NET.Handler.Codec.Http3.Examples -- example.Http3ServerExample 19000
-//   dotnet run --project test/Netty.NET.Handler.Codec.Http3.Examples -- example.Http3ClientExample -Dport=19000
-//   dotnet run --project test/Netty.NET.Handler.Codec.Http3.Examples -- Http3SpecTestServer 19002
+//   dotnet run --project examples/Netty.NET.Example -- echo.EchoServer -Dport=8080
 //
-// -Dname=value arguments are the Java system properties of the run: a program reads them with GetProperty, in place of
-// System.getProperty and SystemPropertyUtil.get. Like JVM system properties they are not environment variables (on
+// -Dname=value arguments are the Java system properties of the run: the examples read them with GetProperty, in place
+// of System.getProperty and SystemPropertyUtil.get. Like JVM system properties they are not environment variables (on
 // Windows the PATH and USERNAME variables would otherwise answer "path" and "userName"). The io.netty.* properties are
 // also set as process environment variables, where Netty.NET.Common's SystemPropertyUtil reads the library's
-// properties (io.netty.leakDetection.level and the like). The remaining arguments go to the program's Main. The Java
-// package and class name are matched case-insensitively against the C# namespace (Netty.NET.Handler.Codec.Http3[.Example])
-// and type name.
+// properties (io.netty.leakDetection.level and the like). The remaining arguments go to the example's Main. The Java
+// package and class name are matched case-insensitively against the C# namespace (Netty.NET.Example.<Package>) and
+// type name.
 public static class ExampleLauncher
 {
-    private const string JavaPrefix = "io.netty.handler.codec.http3.";
-    private const string ClrPrefix = "Netty.NET.Handler.Codec.Http3.";
+    private const string JavaPrefix = "io.netty.example.";
+    private const string ClrPrefix = "Netty.NET.Example.";
     private const string LibraryPropertyPrefix = "io.netty.";
 
     private static readonly Dictionary<string, string> Properties = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -65,8 +62,8 @@ public static class ExampleLauncher
 
         if (args.Length == 0)
         {
-            Console.Error.WriteLine("Usage: <program class, e.g. example.Http3ServerExample> [-Dname=value ...] [arguments]");
-            Console.Error.WriteLine("Programs:");
+            Console.Error.WriteLine("Usage: <example class, e.g. echo.EchoServer> [-Dname=value ...] [arguments]");
+            Console.Error.WriteLine("Examples:");
 
             foreach (var type in examples)
             {
@@ -80,7 +77,7 @@ public static class ExampleLauncher
         var example = examples.FirstOrDefault(type => string.Equals(JavaName(type), name, StringComparison.OrdinalIgnoreCase));
         if (example == null)
         {
-            Console.Error.WriteLine("Unknown program: " + args[0]);
+            Console.Error.WriteLine("Unknown example: " + args[0]);
             return 1;
         }
 
@@ -124,8 +121,7 @@ public static class ExampleLauncher
         return type.GetMethod("Main", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(string[]) }, null);
     }
 
-    // Netty.NET.Handler.Codec.Http3.Example.Http3ServerExample -> Example.Http3ServerExample and
-    // Netty.NET.Handler.Codec.Http3.Http3SpecTestServer -> Http3SpecTestServer (compared case-insensitively).
+    // Netty.NET.Example.Http.Snoop.HttpSnoopServer -> http.snoop.HttpSnoopServer (compared case-insensitively).
     private static string JavaName(Type type)
     {
         string fullName = type.FullName ?? type.Name;

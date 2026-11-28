@@ -73,7 +73,7 @@ namespace Netty.NET.Example.Http.Cors;
  *
  */
 // CLR: the Maven resource src/main/resources/cors/cors.html (and css/cors.css) is the byte-identical copy
-// src/Netty.NET.Example/Resources/cors/cors.html (and Resources/cors/css/cors.css), which the project copies next to
+// examples/Netty.NET.Example/Resources/cors/cors.html (and Resources/cors/css/cors.css), which the project copies next to
 // the assembly (Resources/cors/... in the output directory). As in Java, no code loads it: it is opened in a browser or
 // served by a web server. System.getProperty is ExampleLauncher.GetProperty (the -Dname=value arguments) and Integer.parseInt is int.Parse with an optional sign and the invariant culture.
 // main blocks on bind(PORT).sync() and closeFuture().sync(); it is the async Main, which awaits the Task<IChannel> of

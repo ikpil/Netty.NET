@@ -1,6 +1,6 @@
 // CLR-only: no Java counterpart (a supplemental test of this port, not one of codec-http3's original tests). It checks
 // the HTTP/3 port end to end against .NET's own HTTP/3 client: a server built as
-// io.netty.handler.codec.http3.example.Http3ServerExample (test/Netty.NET.Handler.Codec.Http3.Examples) binds a
+// io.netty.handler.codec.http3.example.Http3ServerExample (examples/Netty.NET.Handler.Codec.Http3.Examples) binds a
 // QuicEndpointChannel on a loopback ephemeral port (msquic, docs/codec-classes-quic-porting.md, Stage 2), and
 // System.Net.Http.HttpClient sends a GET and a POST with HttpRequestMessage.Version = HttpVersion.Version30 and
 // VersionPolicy = RequestVersionExact, so the request fails instead of falling back to HTTP/1.1 or HTTP/2. Its certificate

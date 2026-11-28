@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    CLR: the Maven example module is one executable that keeps every example's Main(string[]) (as each Java example
+    class has its own main). C# allows several Main methods only with an explicit startup object, so ExampleLauncher
+    (CLR-only) picks the example by its Java class name, as "java io.netty.example.echo.EchoServer" does, and maps
+    -Dname=value arguments to the process environment that SystemPropertyUtil reads.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
+    <StartupObject>Netty.NET.Example.ExampleLauncher</StartupObject>
+    <WarningsAsErrors>$(WarningsAsErrors);CS9191</WarningsAsErrors>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Netty.NET.Handler\Netty.NET.Handler.csproj" />
+    <ProjectReference Include="..\..\src\Netty.NET.Handler.Codec\Netty.NET.Handler.Codec.csproj" />
+    <ProjectReference Include="..\..\src\Netty.NET.Handler.Codec.Compression\Netty.NET.Handler.Codec.Compression.csproj" />
+    <ProjectReference Include="..\..\src\Netty.NET.Handler.Codec.Dns\Netty.NET.Handler.Codec.Dns.csproj" />
+    <ProjectReference Include="..\..\src\Netty.NET.Handler.Codec.HAProxy\Netty.NET.Handler.Codec.HAProxy.csproj" />
+    <ProjectReference Include="..\..\src\Netty.NET.Handler.Codec.Http\Netty.NET.Handler.Codec.Http.csproj" />
+    <ProjectReference Include="..\..\src\Netty.NET.Handler.Codec.Http2\Netty.NET.Handler.Codec.Http2.csproj" />
+    <ProjectReference Include="..\..\src\Netty.NET.Handler.Codec.Memcache\Netty.NET.Handler.Codec.Memcache.csproj" />
+    <ProjectReference Include="..\..\src\Netty.NET.Handler.Codec.Mqtt\Netty.NET.Handler.Codec.Mqtt.csproj" />
+    <ProjectReference Include="..\..\src\Netty.NET.Handler.Codec.Redis\Netty.NET.Handler.Codec.Redis.csproj" />
+    <ProjectReference Include="..\..\src\Netty.NET.Handler.Codec.Socks\Netty.NET.Handler.Codec.Socks.csproj" />
+    <ProjectReference Include="..\..\src\Netty.NET.Handler.Codec.Stomp\Netty.NET.Handler.Codec.Stomp.csproj" />
+    <ProjectReference Include="..\..\src\Netty.NET.Handler.Proxy\Netty.NET.Handler.Proxy.csproj" />
+    <ProjectReference Include="..\..\src\Netty.NET.PkiTesting\Netty.NET.PkiTesting.csproj" />
+    <ProjectReference Include="..\..\src\Netty.NET.Resolver.Dns\Netty.NET.Resolver.Dns.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Class-path resources of the examples, under their Java resource names (Class.getResource). -->
+    <None Remove="Resources\io\netty\example\http2\tiles\*.jpeg" />
+    <EmbeddedResource Include="Resources\io\netty\example\http2\tiles\*.jpeg" LogicalName="io/netty/example/http2/tiles/%(Filename)%(Extension)" />
+    <!-- Files the examples read next to the assembly (the STOMP over WebSocket page) or that Java ships beside the
+         classes without loading them (the CORS page), under the same relative paths. -->
+    <None Update="Resources\io\netty\example\stomp\**;Resources\cors\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

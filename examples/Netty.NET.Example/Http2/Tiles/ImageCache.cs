@@ -27,7 +27,7 @@ namespace Netty.NET.Example.Http2.Tiles;
  */
 // CLR: getClass().getResourceAsStream(name) resolves name against the class's package in the class path
 // (io/netty/example/http2/tiles/). The tile images are copied byte for byte to
-// src/Netty.NET.Example/Resources/io/netty/example/http2/tiles/ and embedded in the assembly under that Java resource
+// examples/Netty.NET.Example/Resources/io/netty/example/http2/tiles/ and embedded in the assembly under that Java resource
 // name (EmbeddedResource with LogicalName io/netty/example/http2/tiles/%(Filename)%(Extension)), so the stream is
 // Assembly.GetManifestResourceStream of the package path and the name, which returns null for a missing resource as
 // getResourceAsStream does. Map/HashMap are IDictionary/Dictionary (imageBank.get of a missing name returns null, as

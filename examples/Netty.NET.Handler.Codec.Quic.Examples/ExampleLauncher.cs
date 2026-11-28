@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace Netty.NET.Handler.Codec.Quic.Example;
 
-// CLR: no Java counterpart (CLR-only, copied from src/Netty.NET.Example/ExampleLauncher.cs). The QUIC examples of
+// CLR: no Java counterpart (CLR-only, copied from examples/Netty.NET.Example/ExampleLauncher.cs). The QUIC examples of
 // codec-native-quic have one main(String[]) per example class and are run as
 // "java io.netty.handler.codec.quic.example.QuicServerExample". C# allows several Main methods in one assembly only with
 // an explicit startup object, so this launcher takes the Java class name (with or without the
 // io.netty.handler.codec.quic.example prefix) and the example's arguments:
 //
-//   dotnet run --project test/Netty.NET.Handler.Codec.Quic.Examples -- QuicServerExample
+//   dotnet run --project examples/Netty.NET.Handler.Codec.Quic.Examples -- QuicServerExample
 //
 // -Dname=value arguments are the Java system properties of the run: an example reads them with GetProperty, in place
 // of System.getProperty and SystemPropertyUtil.get. Like JVM system properties they are not environment variables (on
