@@ -58,7 +58,7 @@ public class ByteBufScalarRoundTripSourceTest
         }
     }
 
-    // Supplemental independent BCL wire model; original bodies live in AbstractByteBufTest.ScalarRoundTrip.cs.
+    // Supplemental independent BCL wire model; original bodies live in AbstractByteBufTest.cs.
     public enum ScalarKind
     {
         SignedByte, UnsignedByte, SignedShort, UnsignedShort, SignedMedium, UnsignedMedium,

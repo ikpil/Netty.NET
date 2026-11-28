@@ -17,6 +17,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
+using System.Text;
+using System.Threading;
 using Netty.NET.Common;
 using Netty.NET.Common.Internal;
 
@@ -24,7 +27,7 @@ namespace Netty.NET.Buffer;
 
 // CLR: Memory<byte> shares the allocation kernel across heap and native storage.
 // Buffer and chunk lifecycle events are published after allocator/cache/arena locks.
-internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
+internal abstract class PoolArena : IDisposable, IPoolArenaMetric
 {
     private readonly object _sync = new();
     private readonly Dictionary<PoolChunk, ChunkStorage> _chunks = new();
@@ -480,5 +483,325 @@ internal abstract partial class PoolArena : IDisposable, IPoolArenaMetric
                 _arena.Free(this);
             }
         }
+    }
+
+    public override string ToString()
+    {
+        lock (_sync)
+        {
+            var text = new StringBuilder();
+            text.Append("Chunk(s) at 0~25%:").Append(Environment.NewLine).Append(_qInit).Append(Environment.NewLine)
+                .Append("Chunk(s) at 0~50%:").Append(Environment.NewLine).Append(_q000).Append(Environment.NewLine)
+                .Append("Chunk(s) at 25~75%:").Append(Environment.NewLine).Append(_q025).Append(Environment.NewLine)
+                .Append("Chunk(s) at 50~100%:").Append(Environment.NewLine).Append(_q050).Append(Environment.NewLine)
+                .Append("Chunk(s) at 75~100%:").Append(Environment.NewLine).Append(_q075).Append(Environment.NewLine)
+                .Append("Chunk(s) at 100%:").Append(Environment.NewLine).Append(_q100).Append(Environment.NewLine)
+                .Append("small subpages:");
+            for (int i = 0; i < _smallSubpagePools.Length; i++)
+            {
+                PoolSubpage head = _smallSubpagePools[i];
+                if (head == null)
+                {
+                    continue; // CLR disposal removes heads; live reservations may still exist.
+                }
+                // CLR mutations use the head lock even while holding the arena lock.
+                lock (head.SyncRoot)
+                {
+                    if (head.Next == head || head.Next == null)
+                    {
+                        continue;
+                    }
+                    text.Append(Environment.NewLine).Append(i.ToString(CultureInfo.InvariantCulture)).Append(": ");
+                    for (PoolSubpage subpage = head.Next; subpage != null && subpage != head; subpage = subpage.Next)
+                        text.Append(subpage);
+                }
+            }
+            return text.Append(Environment.NewLine).ToString();
+        }
+    }
+
+    // Metrics for allocations and deallocations
+    // CLR: one arena Monitor protects every counter, replacing Java's split
+    // LongCounter/lock strategy. Counts refer to arena handles (including cached
+    // free handles), not wrapper objects. Cache hits do not increment allocations;
+    // only physical arena returns increment deallocations. Pinned bytes track leases.
+    // Original Java counter rationale (CLR: these counters now share the arena lock):
+    // We need to use the LongCounter here as this is not guarded via synchronized block.
+    // We need to use the LongCounter here as this is not guarded via synchronized block.
+    private long _smallAllocations, _normalAllocations, _hugeAllocations;
+    private long _smallDeallocations, _normalDeallocations, _hugeDeallocations;
+    /**
+     * Accounting of pinned memory – memory that is currently in use by ByteBuf instances.
+     */
+    // CLR: aggregate the original per-chunk pinned accounting at the owning arena.
+    private long _chunkAllocations, _chunkDeallocations, _activeBytesHuge, _pinnedBytes;
+    // Huge chunks are exact-sized for the buffers they were allocated to.
+    // CLR: huge reservations include normalized size, excluding native alignment headroom.
+
+    // Number of thread caches backed by this arena.
+    private int _threadBindings;
+    // Java counts a thread's arena binding even when its region cache sizes are zero.
+    public int NumThreadCaches => Volatile.Read(ref _threadBindings);
+    internal void AddThreadBinding()
+    {
+        Interlocked.Increment(ref _threadBindings);
+    }
+
+    internal void RemoveThreadBinding()
+    {
+        Interlocked.Decrement(ref _threadBindings);
+    }
+    [Obsolete("Tiny allocations have been merged into small allocations.")]
+    public int NumTinySubpages => 0;
+    public int NumSmallSubpages => SizeClass.NSubpages;
+    public int NumChunkLists => ChunkLists.Count;
+    [Obsolete("Tiny allocations have been merged into small allocations.")]
+    public IReadOnlyList<IPoolSubpageMetric> TinySubpages => Array.Empty<IPoolSubpageMetric>();
+    public IReadOnlyList<IPoolSubpageMetric> SmallSubpages
+    {
+        get
+        {
+            lock (_sync)
+            {
+                var result = new List<IPoolSubpageMetric>();
+                foreach (PoolSubpage head in _smallSubpagePools)
+                {
+                    if (head == null)
+                    {
+                        continue;
+                    }
+                    lock (head.SyncRoot)
+                        for (PoolSubpage subpage = head.Next; subpage != head; subpage = subpage.Next)
+                            result.Add(subpage);
+                }
+                return result.AsReadOnly();
+            }
+        }
+    }
+    IReadOnlyList<IPoolChunkListMetric> IPoolArenaMetric.ChunkLists => ChunkLists;
+
+    public long NumAllocations
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return unchecked(_smallAllocations + _normalAllocations + _hugeAllocations);
+            }
+        }
+    }
+    public long NumDeallocations
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return unchecked(_smallDeallocations + _normalDeallocations + _hugeDeallocations);
+            }
+        }
+    }
+    public long NumSmallAllocations
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return _smallAllocations;
+            }
+        }
+    }
+    public long NumNormalAllocations
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return _normalAllocations;
+            }
+        }
+    }
+    public long NumHugeAllocations
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return _hugeAllocations;
+            }
+        }
+    }
+    public long NumSmallDeallocations
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return _smallDeallocations;
+            }
+        }
+    }
+    public long NumNormalDeallocations
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return _normalDeallocations;
+            }
+        }
+    }
+    public long NumHugeDeallocations
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return _hugeDeallocations;
+            }
+        }
+    }
+    public long NumChunkAllocations
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return _chunkAllocations;
+            }
+        }
+    }
+    public long NumChunkDeallocations
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return _chunkDeallocations;
+            }
+        }
+    }
+    public long NumActiveAllocations
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return Math.Max(unchecked(_smallAllocations + _normalAllocations + _hugeAllocations - _smallDeallocations - _normalDeallocations - _hugeDeallocations), 0);
+            }
+        }
+    }
+    public long NumActiveSmallAllocations
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return Math.Max(unchecked(_smallAllocations - _smallDeallocations), 0);
+            }
+        }
+    }
+    public long NumActiveNormalAllocations
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return Math.Max(unchecked(_normalAllocations - _normalDeallocations), 0);
+            }
+        }
+    }
+    public long NumActiveHugeAllocations
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return Math.Max(unchecked(_hugeAllocations - _hugeDeallocations), 0);
+            }
+        }
+    }
+    public long NumActiveChunks
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return Math.Max(unchecked(_chunkAllocations - _chunkDeallocations), 0);
+            }
+        }
+    }
+    public long NumActiveBytes
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return Math.Max(unchecked(_chunks.Count * (long)SizeClass.ChunkSize + _activeBytesHuge), 0);
+            }
+        }
+    }
+
+    [Obsolete("Tiny allocations have been merged into small allocations.")]
+    public long NumTinyAllocations => 0;
+    [Obsolete("Tiny allocations have been merged into small allocations.")]
+    public long NumTinyDeallocations => 0;
+    [Obsolete("Tiny allocations have been merged into small allocations.")]
+    public long NumActiveTinyAllocations => 0;
+
+    /**
+     * Return an estimate of the number of bytes that are currently pinned to buffer instances, by the arena. The
+     * pinned memory is not accessible for use by any other allocation, until the buffers using have all been released.
+     */
+    // CLR: internal operation leases also hold reservations. Raw native pins alone
+    // preserve physical storage but do not contribute to this logical count.
+    public long NumPinnedBytes
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return Math.Max(_pinnedBytes, 0);
+            }
+        }
+    }
+
+    public int SizeIdx2Size(int sizeIdx)
+    {
+        return SizeClass.SizeIdx2Size(sizeIdx);
+    }
+
+    public int SizeIdx2SizeCompute(int sizeIdx)
+    {
+        return SizeClass.SizeIdx2SizeCompute(sizeIdx);
+    }
+
+    public long PageIdx2Size(int pageIdx)
+    {
+        return SizeClass.PageIdx2Size(pageIdx);
+    }
+
+    public long PageIdx2SizeCompute(int pageIdx)
+    {
+        return SizeClass.PageIdx2SizeCompute(pageIdx);
+    }
+
+    public int Size2SizeIdx(int size)
+    {
+        return SizeClass.Size2SizeIdx(size);
+    }
+
+    public int Pages2PageIdx(int pages)
+    {
+        return SizeClass.Pages2PageIdx(pages);
+    }
+
+    public int Pages2PageIdxFloor(int pages)
+    {
+        return SizeClass.Pages2PageIdxFloor(pages);
+    }
+
+    public int NormalizeSize(int size)
+    {
+        return SizeClass.NormalizeSize(size);
     }
 }

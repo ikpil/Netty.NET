@@ -17,6 +17,7 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Collections;
 using Netty.NET.Common;
 
 namespace Netty.NET.Buffer;
@@ -29,8 +30,545 @@ namespace Netty.NET.Buffer;
 /// <remarks>Adding a component transfers one existing reference without retaining it.
 /// Retain before adding if the caller needs independent ownership. Component layout
 /// changes, storage resizing and release must be excluded while borrowing memory.</remarks>
-public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
+public class CompositeByteBuf : AbstractReferenceCountedByteBuf, IEnumerable<ByteBuf>
 {
+    /**
+     * Add the given {@link ByteBuf}s.
+     * <p>
+     * Be aware that this method does not increase the {@code writerIndex} of the {@link CompositeByteBuf}.
+     * If you need to have it increased use {@link #addComponents(boolean, ByteBuf[])}.
+     * <p>
+     * {@link ByteBuf#release()} ownership of all {@link ByteBuf} objects in {@code buffers} is transferred to this
+     * {@link CompositeByteBuf}.
+     * @param buffers the {@link ByteBuf}s to add. {@link ByteBuf#release()} ownership of all {@link ByteBuf#release()}
+     * ownership of all {@link ByteBuf} objects is transferred to this {@link CompositeByteBuf}.
+     */
+    public virtual CompositeByteBuf AddComponents(params ByteBuf[] buffers)
+    {
+        return AddComponents(buffers, false);
+    }
+
+    /**
+     * Add the given {@link ByteBuf}s and increase the {@code writerIndex} if {@code increaseWriterIndex} is
+     * {@code true}.
+     *
+     * {@link ByteBuf#release()} ownership of all {@link ByteBuf} objects in {@code buffers} is transferred to this
+     * {@link CompositeByteBuf}.
+     * @param buffers the {@link ByteBuf}s to add. {@link ByteBuf#release()} ownership of all {@link ByteBuf#release()}
+     * ownership of all {@link ByteBuf} objects is transferred to this {@link CompositeByteBuf}.
+     */
+    public virtual CompositeByteBuf AddComponents(ByteBuf[] buffers, bool increaseWriterIndex)
+    {
+        return AddComponentsCore(_components.Count, buffers, 0, increaseWriterIndex);
+    }
+
+    /**
+     * Add the given {@link ByteBuf}s on the specific index
+     * <p>
+     * Be aware that this method does not increase the {@code writerIndex} of the {@link CompositeByteBuf}.
+     * If you need to have it increased you need to handle it by your own.
+     * <p>
+     * {@link ByteBuf#release()} ownership of all {@link ByteBuf} objects in {@code buffers} is transferred to this
+     * {@link CompositeByteBuf}.
+     * @param cIndex the index on which the {@link ByteBuf} will be added. {@link ByteBuf#release()} ownership of all
+     * {@link ByteBuf#release()} ownership of all {@link ByteBuf} objects is transferred to this
+     * {@link CompositeByteBuf}.
+     * @param buffers the {@link ByteBuf}s to add. {@link ByteBuf#release()} ownership of all {@link ByteBuf#release()}
+     * ownership of all {@link ByteBuf} objects is transferred to this {@link CompositeByteBuf}.
+     */
+    /// <remarks>Array capacity/index/cycle preflight fails before ownership transfer.
+    /// Null ends additions; remaining entries are safely released. A later insertion
+    /// failure keeps the successful prefix, including its writer-index increase.
+    /// Consolidation runs once after the complete batch.</remarks>
+    public virtual CompositeByteBuf AddComponents(int componentIndex, ByteBuf[] buffers, bool increaseWriterIndex = false)
+    {
+        return AddComponentsCore(componentIndex, buffers, 0, increaseWriterIndex);
+    }
+
+    private CompositeByteBuf AddComponentsCore(int componentIndex, ByteBuf[] buffers, int offset, bool increaseWriterIndex)
+    {
+        ArgumentNullException.ThrowIfNull(buffers);
+        int readableBytes = 0;
+        int capacity = Capacity;
+        for (int i = offset; i < buffers.Length; ++i)
+        {
+            ByteBuf buffer = buffers[i];
+            if (buffer == null)
+            {
+                break;
+            }
+            int length = buffer.ReadableBytes;
+            // Check if we would overflow.
+            // See https://github.com/netty/netty/issues/10194
+            if (length < 0 || length > MaxCapacity - capacity - readableBytes)
+                throw new ArgumentOutOfRangeException(nameof(buffers));
+            readableBytes += length;
+        }
+        CheckComponentRange(componentIndex, 0);
+        // CLR: cyclic references, including discarded tails, cannot transfer ownership.
+        for (int i = offset; i < buffers.Length; ++i)
+        {
+            ByteBuf buffer = buffers[i];
+            if (buffer != null && ContainsBuffer(buffer, this))
+                throw new ArgumentException("Component ownership must be acyclic.", nameof(buffers));
+        }
+
+        // only set ci after we've shifted so that finally block logic is always correct
+        // CLR: List insertion needs no shifted null slots. Track the next unconsumed
+        // entry explicitly; AddComponentCore consumes a failing entry itself.
+        int next = offset, addedBytes = 0;
+        try
+        {
+            while (next < buffers.Length)
+            {
+                ByteBuf buffer = buffers[next++];
+                if (buffer == null)
+                {
+                    break;
+                }
+                // will increase componentCount
+                addedBytes += AddComponentCore(componentIndex++, buffer, false);
+            }
+        }
+        finally
+        {
+            // ci is now the index following the last successfully added component
+            // we bailed early
+            for (; next < buffers.Length; ++next)
+            {
+                ReferenceCountUtil.SafeRelease(buffers[next]);
+            }
+
+            // only need to do this here for components after the added ones
+            // CLR: each List insertion has already updated offsets; only indices remain.
+            if (increaseWriterIndex && addedBytes != 0)
+            {
+                WriterIndex += addedBytes;
+            }
+        }
+        ConsolidateIfNeeded();
+        return this;
+    }
+
+    // CLR: factory-only offset entry points avoid copying arrays or replacing
+    // the original array preflight with streaming ownership semantics.
+    internal CompositeByteBuf AddWrappedComponents(ByteBuf[] buffers, int offset)
+    {
+        return AddComponentsCore(0, buffers, offset, true);
+    }
+
+    internal CompositeByteBuf AddWrappedArrays(byte[][] arrays, int offset)
+    {
+        // No need for consolidation
+        // CLR: the Java ByteWrapper<byte[]> strategy is a direct byte-array loop.
+        // Delay consolidation until every nonempty array has been wrapped.
+        for (int i = offset; i < arrays.Length; ++i)
+        {
+            byte[] array = arrays[i];
+            if (array == null)
+            {
+                break;
+            }
+            if (array.Length != 0)
+            {
+                AddComponentCore(_components.Count, Unpooled.WrappedBuffer(array), false);
+            }
+        }
+        ConsolidateIfNeeded();
+        WriterIndex = Capacity;
+        return this;
+    }
+
+    // support passing arrays of other types instead of having to copy to a ByteBuf[] first
+    // CLR: cached static delegates replace Java ByteWrapper strategies for the two Memory types.
+    internal CompositeByteBuf AddWrappedMemory<T>(T[] buffers, int offset,
+        Func<T, bool> isEmpty, Func<T, ByteBuf> wrap) where T : struct
+    {
+        // No need for consolidation
+        // CLR: preserve the original batch boundary, rather than consolidating each insertion.
+        for (int i = offset; i < buffers.Length; ++i)
+            if (!isEmpty(buffers[i]))
+            {
+                AddComponentCore(_components.Count, wrap(buffers[i]), false);
+            }
+        ConsolidateIfNeeded();
+        WriterIndex = Capacity;
+        return this;
+    }
+
+    /**
+     * Add the given {@link ByteBuf}s.
+     * <p>
+     * Be aware that this method does not increase the {@code writerIndex} of the {@link CompositeByteBuf}.
+     * If you need to have it increased use {@link #addComponents(boolean, Iterable)}.
+     * <p>
+     * {@link ByteBuf#release()} ownership of all {@link ByteBuf} objects in {@code buffers} is transferred to this
+     * {@link CompositeByteBuf}.
+     * @param buffers the {@link ByteBuf}s to add. {@link ByteBuf#release()} ownership of all {@link ByteBuf#release()}
+     * ownership of all {@link ByteBuf} objects is transferred to this {@link CompositeByteBuf}.
+     */
+    /**
+     * Add the given {@link ByteBuf}s and increase the {@code writerIndex} if {@code increaseWriterIndex} is
+     * {@code true}.
+     *
+     * {@link ByteBuf#release()} ownership of all {@link ByteBuf} objects in {@code buffers} is transferred to this
+     * {@link CompositeByteBuf}.
+     * @param buffers the {@link ByteBuf}s to add. {@link ByteBuf#release()} ownership of all {@link ByteBuf#release()}
+     * ownership of all {@link ByteBuf} objects is transferred to this {@link CompositeByteBuf}.
+     */
+    public virtual CompositeByteBuf AddComponents(IEnumerable<ByteBuf> buffers, bool increaseWriterIndex = false)
+    {
+        return AddComponentsCore(_components.Count, buffers, increaseWriterIndex);
+    }
+
+    /**
+     * Add the given {@link ByteBuf}s on the specific index
+     *
+     * Be aware that this method does not increase the {@code writerIndex} of the {@link CompositeByteBuf}.
+     * If you need to have it increased you need to handle it by your own.
+     * <p>
+     * {@link ByteBuf#release()} ownership of all {@link ByteBuf} objects in {@code buffers} is transferred to this
+     * {@link CompositeByteBuf}.
+     * @param cIndex the index on which the {@link ByteBuf} will be added.
+     * @param buffers the {@link ByteBuf}s to add.  {@link ByteBuf#release()} ownership of all
+     * {@link ByteBuf#release()} ownership of all {@link ByteBuf} objects is transferred to this
+     * {@link CompositeByteBuf}.
+     */
+    /// <remarks>Streaming insertion keeps the successful prefix on failure. Null
+    /// ends additions; remaining yielded entries are safely released. Enumeration
+    /// and disposal follow the supplied IEnumerator's CLR contract.</remarks>
+    public virtual CompositeByteBuf AddComponents(int componentIndex, IEnumerable<ByteBuf> buffers, bool increaseWriterIndex = false)
+    {
+        return AddComponentsCore(componentIndex, buffers, increaseWriterIndex);
+    }
+
+    // The original iterable kernel is private, including its use during construction.
+    private CompositeByteBuf AddComponentsCore(int componentIndex, IEnumerable<ByteBuf> buffers, bool increaseWriterIndex)
+    {
+        // TODO optimize further, similar to ByteBuf[] version
+        // (difference here is that we don't know *always* know precise size increase in advance,
+        // but we do in the most common case that the Iterable is a Collection)
+        // CLR: preserve streaming ownership even for ICollection; no materialization/preflight.
+        if (buffers is ByteBuf buffer)
+        {
+            // If buffers also implements ByteBuf (e.g. CompositeByteBuf), it has to go to addComponent(ByteBuf).
+            return AddComponent(componentIndex, buffer, increaseWriterIndex);
+        }
+        ArgumentNullException.ThrowIfNull(buffers);
+        using IEnumerator<ByteBuf> iterator = buffers.GetEnumerator();
+        try
+        {
+            CheckComponentRange(componentIndex, 0);
+            // No need for consolidation
+            while (iterator.MoveNext())
+            {
+                ByteBuf next = iterator.Current;
+                if (next == null)
+                {
+                    break;
+                }
+                AddComponentCore(componentIndex++, next, increaseWriterIndex);
+            }
+        }
+        finally
+        {
+            while (iterator.MoveNext())
+            {
+                ByteBuf next = iterator.Current;
+                // CLR: rejected cyclic references remain caller-owned, including in cleanup.
+                if (next != null && !ContainsBuffer(next, this))
+                {
+                    ReferenceCountUtil.SafeRelease(next);
+                }
+            }
+        }
+        ConsolidateIfNeeded();
+        return this;
+    }
+
+    /**
+     * Add the given {@link ByteBuf} and increase the {@code writerIndex} if {@code increaseWriterIndex} is
+     * {@code true}. If the provided buffer is a {@link CompositeByteBuf} itself, a "shallow copy" of its
+     * readable components will be performed. Thus the actual number of new components added may vary
+     * and in particular will be zero if the provided buffer is not readable.
+     * <p>
+     * {@link ByteBuf#release()} ownership of {@code buffer} is transferred to this {@link CompositeByteBuf}.
+     * @param buffer the {@link ByteBuf} to add. {@link ByteBuf#release()} ownership is transferred to this
+     * {@link CompositeByteBuf}.
+     */
+    /// <remarks>Only an actual CompositeByteBuf is flattened, one level deep.
+    /// Derived/read-only views remain a single component to preserve their semantics.
+    /// A composite source stays caller-owned on failure; newly retained components
+    /// are rolled back. Successful transfer releases the source's existing reference.</remarks>
+    public virtual CompositeByteBuf AddFlattenedComponents(ByteBuf buffer, bool increaseWriterIndex = false)
+    {
+        ArgumentNullException.ThrowIfNull(buffer);
+        if (ContainsBuffer(buffer, this))
+        {
+            throw new ArgumentException("Component ownership must be acyclic.", nameof(buffer));
+        }
+        EnsureAccessible();
+        int readerIndex = buffer.ReaderIndex, writerIndex = buffer.WriterIndex;
+        if (readerIndex == writerIndex)
+        {
+            buffer.Release();
+            return this;
+        }
+        if (buffer is not CompositeByteBuf source)
+        {
+            AddComponentCore(_components.Count, buffer, increaseWriterIndex);
+            ConsolidateIfNeeded();
+            return this;
+        }
+
+        source.CheckIndex(readerIndex, writerIndex - readerIndex);
+        // CLR: checked capacity prevents the original unchecked flatten-offset overflow.
+        int length = writerIndex - readerIndex;
+        if (length > MaxCapacity - Capacity)
+        {
+            throw new ArgumentOutOfRangeException(nameof(buffer));
+        }
+        int countBefore = _components.Count, writerBefore = WriterIndex;
+        int first = source.FindComponentIndex(readerIndex);
+        var additions = new List<ComponentEntry>(source._components.Count - first);
+        bool committed = false;
+        try
+        {
+            for (int i = first; i < source._components.Count; ++i)
+            {
+                ComponentEntry component = source._components[i];
+                int fromIndex = Math.Max(readerIndex, component.Offset);
+                int toIndex = Math.Min(writerIndex, component.EndOffset);
+                int count = toIndex - fromIndex;
+                if (count > 0) // skip empty components
+                {
+                    var addition = new ComponentEntry(component.Source,
+                        component.SourceIndex + (fromIndex - component.Offset), count, reuseWholeSource: false);
+                    // Retain the original source, not an unwrapped parent with possibly different ownership.
+                    component.Source.Retain();
+                    additions.Add(addition); // capacity is reserved before any retain
+                }
+                if (writerIndex == toIndex)
+                {
+                    break;
+                }
+            }
+            _components.EnsureCapacity(checked(countBefore + additions.Count));
+            _components.AddRange(additions);
+            UpdateOffsets();
+            if (increaseWriterIndex)
+            {
+                WriterIndex = writerBefore + length;
+            }
+            ConsolidateIfNeeded();
+            committed = true;
+        }
+        finally
+        {
+            if (!committed)
+            {
+                // if we did not succeed, attempt to rollback any components that were added
+                if (_components.Count > countBefore)
+                {
+                    _components.RemoveRange(countBefore, _components.Count - countBefore);
+                }
+                UpdateOffsets();
+                if (increaseWriterIndex)
+                {
+                    WriterIndex = writerBefore;
+                }
+
+                foreach (ComponentEntry addition in additions)
+                {
+                    addition.Free();
+                }
+            }
+        }
+        buffer.Release();
+        return this;
+    }
+
+    /**
+     * This should only be called as last operation from a method as this may adjust the underlying
+     * array of components and so affect the index etc.
+     */
+    private void ConsolidateIfNeeded()
+    {
+        // Consolidate if the number of components will exceed the allowed maximum by the current
+        // operation.
+        if (_components.Count > MaxNumComponents)
+        {
+            ConsolidateCore(0, _components.Count);
+        }
+    }
+
+    public override ByteBuf GetBytes(int index, Span<byte> destination)
+    {
+        CheckIndex(index, destination.Length);
+        if (destination.IsEmpty)
+        {
+            return this;
+        }
+        ComponentEntry component = _components[FindComponentIndex(index)];
+        if (destination.Length <= component.EndOffset - index)
+            component.Source.GetBytes(component.SourceIndex + (index - component.Offset), destination);
+        else
+        {
+            // CLR snapshots preserve memmove semantics across aliased components.
+            byte[] bytes = new byte[destination.Length];
+            GetBytesCore(index, bytes);
+            bytes.AsSpan().CopyTo(destination);
+        }
+        return this;
+    }
+
+    public override ByteBuf GetBytes(int index, ByteBuf destination, int destinationIndex, int length)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        CheckIndex(index, length);
+        destination.EnsureCanWrite();
+        destination.CheckIndex(destinationIndex, length);
+        if (length == 0)
+            return this;
+        if (BulkRangesOverlap(this, index, destination, destinationIndex, length))
+        {
+            ByteBuf snapshot = new UnpooledHeapByteBuf(length);
+            try
+            {
+                GetBufferComponents(index, snapshot, 0, length);
+                destination.SetBytes(destinationIndex, snapshot, 0, length);
+            }
+            finally
+            {
+                snapshot.Release();
+            }
+        }
+        else
+            GetBufferComponents(index, destination, destinationIndex, length);
+        return this;
+    }
+
+    private void GetBufferComponents(int index, ByteBuf destination, int destinationIndex, int length)
+    {
+        CheckIndex(index, length);
+        int componentIndex = FindComponentIndex(index);
+
+        while (length > 0)
+        {
+            ComponentEntry component = _components[componentIndex++];
+            int count = Math.Min(length, component.EndOffset - index);
+            component.Source.GetBytes(component.SourceIndex + (index - component.Offset), destination, destinationIndex, count);
+            index += count;
+            destinationIndex += count;
+            length -= count;
+        }
+    }
+
+    public override ByteBuf SetBytes(int index, ByteBuf source, int sourceIndex, int length)
+    {
+        EnsureCanWrite();
+        ArgumentNullException.ThrowIfNull(source);
+        CheckIndex(index, length);
+        source.CheckIndex(sourceIndex, length);
+        if (length == 0)
+            return this;
+        if (BulkRangesOverlap(source, sourceIndex, this, index, length))
+        {
+            ByteBuf snapshot = new UnpooledHeapByteBuf(length);
+            try
+            {
+                snapshot.SetBytes(0, source, sourceIndex, length);
+                SetBufferComponents(index, snapshot, 0, length);
+            }
+            finally
+            {
+                snapshot.Release();
+            }
+        }
+        else
+            SetBufferComponents(index, source, sourceIndex, length);
+        return this;
+    }
+
+    private void SetBufferComponents(int index, ByteBuf source, int sourceIndex, int length)
+    {
+        int componentIndex = FindComponentIndex(index);
+
+        while (length > 0)
+        {
+            ComponentEntry component = _components[componentIndex++];
+            int count = Math.Min(length, component.EndOffset - index);
+            component.Source.SetBytes(component.SourceIndex + (index - component.Offset), source, sourceIndex, count);
+            index += count;
+            sourceIndex += count;
+            length -= count;
+        }
+    }
+
+    /// <summary>Creates a composite adopting the supplied buffer references and their captured readable ranges.</summary>
+    /// <remarks>Array preflight failures leave inputs caller-owned. Once insertion begins,
+    /// failure releases acquired components and the unvisited tail, following AddComponents.
+    /// Null terminates insertion. Consolidation runs once after the batch; all bytes are readable.</remarks>
+    public CompositeByteBuf(IByteBufAllocator allocator, bool direct, int maxNumComponents, params ByteBuf[] buffers)
+        : this(allocator, direct, maxNumComponents, buffers, 0)
+    {
+    }
+
+    // Original package-private array constructor. Only the suffix participates in
+    // capacity preflight and ownership transfer; preceding entries remain untouched.
+    internal CompositeByteBuf(IByteBufAllocator allocator, bool direct, int maxNumComponents,
+        ByteBuf[] buffers, int offset)
+        : this(allocator, direct, maxNumComponents)
+    {
+        try
+        {
+            ArgumentNullException.ThrowIfNull(buffers);
+            ArgumentOutOfRangeException.ThrowIfNegative(offset);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(offset, buffers.Length);
+            AddComponentsCore(0, buffers, offset, false);
+            SetIndex(0, Capacity);
+        }
+        catch
+        {
+            ReleaseFailedConstruction();
+            throw;
+        }
+    }
+
+    /// <summary>Creates a composite adopting references from an enumerable without materializing it.</summary>
+    /// <remarks>Streaming ownership, null termination and enumerator disposal follow AddComponents.
+    /// Failure releases acquired components; buffers not yielded by a failing enumerator remain caller-owned.
+    /// A composite passed as IEnumerable is adopted as one buffer rather than enumerating its components.</remarks>
+    public CompositeByteBuf(IByteBufAllocator allocator, bool direct, int maxNumComponents, IEnumerable<ByteBuf> buffers)
+        : this(allocator, direct, maxNumComponents)
+    {
+        try
+        {
+            AddComponentsCore(0, buffers, false);
+            SetIndex(0, Capacity);
+        }
+        catch
+        {
+            ReleaseFailedConstruction();
+            throw;
+        }
+    }
+
+    private void ReleaseFailedConstruction()
+    {
+        // CLR: a failed constructor cannot return its partial composite for caller cleanup.
+        // Release only references already acquired; do not invoke a derived Deallocate
+        // callback before the derived constructor has initialized its state.
+        SetReferenceCount(0);
+
+        for (int i = 0; i < _components.Count; ++i)
+        {
+            ReferenceCountUtil.SafeRelease(_components[i].Source);
+        }
+
+        _components.Clear();
+    }
+
     // resized when needed
     private readonly List<ComponentEntry> _components;
     private int _deallocatedComponentCount;
@@ -892,5 +1430,322 @@ public partial class CompositeByteBuf : AbstractReferenceCountedByteBuf
             next.RunningIndex = RunningIndex + Memory.Length;
             Next = next;
         }
+    }
+
+    /// <summary>Enumerates borrowed component views, including empty components.</summary>
+    /// <remarks>Views share the component cache and do not acquire references.
+    /// Retain a view before keeping it beyond component removal or buffer release.
+    /// As in Netty, a changed component count invalidates a nonempty enumerator;
+    /// replacing components while keeping the same count is not detected.
+    /// This is not a synchronization mechanism.</remarks>
+    public virtual IEnumerator<ByteBuf> GetEnumerator()
+    {
+        EnsureAccessible();
+        // CLR: the original empty iterator is independent of subsequent additions.
+        return _components.Count == 0
+            ? ((IEnumerable<ByteBuf>)Array.Empty<ByteBuf>()).GetEnumerator()
+            : new ComponentEnumerator(this);
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    /**
+     * Return the internal {@link ByteBuf} on the specified index. Note that updating the indexes of the returned
+     * buffer will lead to an undefined behavior of this buffer.
+     *
+     * @param cIndex the index for which the {@link ByteBuf} should be returned
+     */
+    public ByteBuf InternalComponent(int componentIndex)
+    {
+        CheckComponentRange(componentIndex, 1);
+        return _components[componentIndex].Slice();
+    }
+
+    /**
+     * Return the internal {@link ByteBuf} on the specified offset. Note that updating the indexes of the returned
+     * buffer will lead to an undefined behavior of this buffer.
+     *
+     * @param offset the offset for which the {@link ByteBuf} should be returned
+     */
+    public ByteBuf InternalComponentAtOffset(int offset)
+    {
+        return InternalComponent(ToComponentIndex(offset));
+    }
+
+    private sealed class ComponentEnumerator : IEnumerator<ByteBuf>
+    {
+        private readonly CompositeByteBuf _buffer;
+        private readonly int _size;
+        private int _index;
+        private ByteBuf _current;
+        private bool _disposed;
+
+        internal ComponentEnumerator(CompositeByteBuf buffer)
+        {
+            _buffer = buffer;
+            _size = buffer.NumComponents;
+        }
+
+        public ByteBuf Current => _current ?? throw new InvalidOperationException("The enumerator is not positioned on a component.");
+        object IEnumerator.Current => Current;
+
+        public bool MoveNext()
+        {
+            _current = null;
+            if (_disposed)
+            {
+                return false;
+            }
+            // CLR: MoveNext combines Java hasNext/next. Count changes map to
+            // InvalidOperationException, while ordinary exhaustion returns false.
+            if (_size != _buffer.NumComponents)
+                throw new InvalidOperationException("The component count changed during enumeration.");
+            if (_index == _size)
+            {
+                return false;
+            }
+            _current = _buffer._components[_index++].Slice();
+            return true;
+        }
+
+        // Read-Only
+        // CLR: IEnumerator has no remove operation. Reset is unsupported;
+        // Dispose ends enumeration without releasing any borrowed component.
+        public void Reset()
+        {
+            throw new NotSupportedException("Read-Only");
+        }
+
+        public void Dispose()
+        {
+            _current = null;
+            _disposed = true;
+        }
+    }
+
+    internal override int ForEachByteAscending(int start, int end, Func<byte, bool> processor)
+    {
+        if (end <= start)
+        {
+            return -1;
+        }
+        int componentIndex = FindComponentIndex(start);
+        while (start < end)
+        {
+            CheckIndex(start, end - start);
+            ComponentEntry component = _components[componentIndex++];
+            if (component.Length == 0)
+            {
+                continue; // empty
+            }
+            int count = Math.Min(end - start, component.EndOffset - start);
+            int local = component.SourceIndex + (start - component.Offset);
+            component.Source.CheckIndex(local, count);
+            ByteBuf storage = component.Source.UnwrapIterationStorage(ref local);
+            // avoid additional checks in AbstractByteBuf case
+            // CLR: all storage providers expose this internal loop, independently of public iteration overrides.
+            int remaining = count;
+
+            bool Process(byte value)
+            {
+                if (!processor(value))
+                {
+                    return false;
+                }
+                if (--remaining > 0)
+                {
+                    EnsureAccessible();
+                    component.Source.CheckIndex(0, 0);
+                }
+                return true;
+            }
+
+            int result = storage.ForEachByteAscending(local, local + count, Process);
+            if (result != -1)
+            {
+                return start + (result - local);
+            }
+            start += count;
+        }
+        return -1;
+    }
+
+    internal override int ForEachByteDescending(int start, int end, Func<byte, bool> processor)
+    {
+        // rStart *and* rEnd are inclusive
+        if (end > start)
+        {
+            return -1;
+        }
+        int componentIndex = FindComponentIndex(start);
+        while (start >= end)
+        {
+            CheckIndex(end, start - end + 1);
+            ComponentEntry component = _components[componentIndex--];
+            if (component.Length == 0)
+            {
+                continue; // empty
+            }
+            // CLR: clamp at the captured component boundary. The original localRStart-based
+            // length can include bytes before a component's captured readable start.
+            int count = Math.Min(start - end + 1, start - component.Offset + 1);
+            int componentStart = start - count + 1;
+            int local = component.SourceIndex + (componentStart - component.Offset);
+            component.Source.CheckIndex(local, count);
+            ByteBuf storage = component.Source.UnwrapIterationStorage(ref local);
+            // avoid additional checks in AbstractByteBuf case
+            int remaining = count;
+
+            bool Process(byte value)
+            {
+                if (!processor(value))
+                {
+                    return false;
+                }
+                if (--remaining > 0)
+                {
+                    EnsureAccessible();
+                    component.Source.CheckIndex(0, 0);
+                }
+                return true;
+            }
+
+            int result = storage.ForEachByteDescending(local + count - 1, local, Process);
+            if (result != -1)
+            {
+                return componentStart + (result - local);
+            }
+            start -= count;
+        }
+        return -1;
+    }
+
+    // CompositeByteBuf._get*/_set* dispatch through the selected component's public
+    // primitive operations. Direct memory access would skip observable overrides.
+    internal override byte ReadByteCore(int index)
+    {
+        CheckIndex(index, 1);
+        return (byte)ReadComponentWord(index, 1, false);
+    }
+
+    internal override void WriteByteCore(int index, int value)
+    {
+        EnsureCanWrite();
+        CheckIndex(index, 1);
+        WriteComponentWord(index, unchecked((ulong)value), 1, false);
+    }
+
+    internal override ulong ReadWord(int index, int width, bool littleEndian)
+    {
+        CheckIndex(index, width);
+        return ReadComponentWord(index, width, littleEndian);
+    }
+
+    internal override ByteBuf SetWord(int index, ulong value, int width, bool littleEndian)
+    {
+        EnsureCanWrite();
+        CheckIndex(index, width);
+        WriteComponentWord(index, value, width, littleEndian);
+        return this;
+    }
+
+    private ulong ReadComponentWord(int index, int width, bool littleEndian)
+    {
+        ComponentEntry component = _components[FindComponentIndex(index)];
+        if (width <= component.EndOffset - index)
+        {
+            int local = component.SourceIndex + (index - component.Offset);
+            ByteBuf source = component.Source;
+            return width switch
+            {
+                1 => source.GetByte(local),
+                2 => unchecked((ushort)(littleEndian ? source.GetShortLE(local) : source.GetShort(local))),
+                3 => unchecked((uint)(littleEndian ? source.GetUnsignedMediumLE(local) : source.GetUnsignedMedium(local))),
+                4 => unchecked((uint)(littleEndian ? source.GetIntLE(local) : source.GetInt(local))),
+                8 => unchecked((ulong)(littleEndian ? source.GetLongLE(local) : source.GetLong(local))),
+                _ => throw new ArgumentOutOfRangeException(nameof(width))
+            };
+        }
+        int firstWidth = width == 3 ? 2 : width / 2;
+        ulong first = ReadComponentWord(index, firstWidth, littleEndian);
+        ulong second = ReadComponentWord(index + firstWidth, width - firstWidth, littleEndian);
+        return littleEndian ? first | second << (firstWidth * 8) : first << ((width - firstWidth) * 8) | second;
+    }
+
+    private void WriteComponentWord(int index, ulong value, int width, bool littleEndian)
+    {
+        ComponentEntry component = _components[FindComponentIndex(index)];
+        if (width <= component.EndOffset - index)
+        {
+            int local = component.SourceIndex + (index - component.Offset);
+            ByteBuf source = component.Source;
+            switch (width)
+            {
+                case 1:
+                    source.SetByte(local, unchecked((int)value));
+                    break;
+                case 2:
+                    if (littleEndian)
+                    {
+                        source.SetShortLE(local, unchecked((int)value));
+                    }
+                    else
+                    {
+                        source.SetShort(local, unchecked((int)value));
+                    }
+                    break;
+                case 3:
+                    if (littleEndian)
+                    {
+                        source.SetMediumLE(local, unchecked((int)value));
+                    }
+                    else
+                    {
+                        source.SetMedium(local, unchecked((int)value));
+                    }
+                    break;
+                case 4:
+                    if (littleEndian)
+                    {
+                        source.SetIntLE(local, unchecked((int)value));
+                    }
+                    else
+                    {
+                        source.SetInt(local, unchecked((int)value));
+                    }
+                    break;
+                case 8:
+                    if (littleEndian)
+                    {
+                        source.SetLongLE(local, unchecked((long)value));
+                    }
+                    else
+                    {
+                        source.SetLong(local, unchecked((long)value));
+                    }
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(width));
+            }
+            return;
+        }
+        int firstWidth = width == 3 ? 2 : width / 2, secondWidth = width - firstWidth;
+        // Match the original byte/short/int casts before each recursive setter call.
+        WriteComponentWord(index, NarrowPart(littleEndian ? value : value >> (secondWidth * 8), firstWidth), firstWidth, littleEndian);
+        WriteComponentWord(index + firstWidth, NarrowPart(littleEndian ? value >> (firstWidth * 8) : value, secondWidth), secondWidth, littleEndian);
+    }
+
+    private static ulong NarrowPart(ulong value, int width)
+    {
+        return width switch
+        {
+            1 => unchecked((ulong)(sbyte)value),
+            2 => unchecked((ulong)(short)value),
+            4 => unchecked((ulong)(int)value),
+            _ => throw new ArgumentOutOfRangeException(nameof(width))
+        };
     }
 }

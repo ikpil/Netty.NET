@@ -665,7 +665,7 @@ is CLR-inapplicable.
   `ByteBufUtil.readBytes(alloc, buffer, length)` is `using static ByteBufUtil`: since 2026-11-24 the Buffer port's
   `ByteBufUtil.ReadBytes` reads through `buffer.ReadBytes(dst)`, which `ReplayingDecoderByteBuf` supports, when the
   allocator returns exactly `length` writable bytes (every Netty.NET allocator), as Java does
-  (`src/Netty.NET.Buffer/ByteBufUtil.Allocation.cs`). The private `ReadBytes` copy of the Java body is gone; before,
+  (`src/Netty.NET.Buffer/ByteBufUtil.cs`). The private `ReadBytes` copy of the Java body is gone; before,
   `ByteBufUtil.ReadBytes` called `ReadBytes(dst, length)`, which the replaying buffer rejects as Java's does, and the
   two `WebSocketClientHandshaker00Test` cases that decode a 00 frame failed with "not a replayable operation".
 - `Utf8FrameValidator` and `WebSocket08FrameDecoder` close with synchronous continuations (see

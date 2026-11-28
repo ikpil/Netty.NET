@@ -251,7 +251,7 @@ public abstract class AbstractByteBufAllocatorTest<T> : ByteBufAllocatorTest whe
             }
             int srcStartIndex = size / 2;
             // The source is this buffer's own internal NIO buffer.
-            // CLR: AsReadOnlyMemory replaces internalNioBuffer(index, length) (jvm-nio-platform; src/Netty.NET.Buffer/ByteBuf.ReadOnly.cs).
+            // CLR: AsReadOnlyMemory replaces internalNioBuffer(index, length) (jvm-nio-platform; src/Netty.NET.Buffer/ByteBuf.cs).
             ReadOnlyMemory<byte> srcByteBuf = directBuffer.AsReadOnlyMemory(srcStartIndex, size - srcStartIndex);
             directBuffer.SetBytes(0, srcByteBuf.Span);
             for (int i = 0; i < srcStartIndex; i++)

@@ -825,7 +825,7 @@ contracts remain pending.
 GetBytesAsync, SetBytesAsync, ReadBytesAsync and WriteBytesAsync expose the four
 stream-transfer contracts through ValueTask and CancellationToken. These are CLR
 asynchronous counterparts of the Java synchronous APIs; Java has no matching async
-stream overloads. The original four API comments remain in ByteBuf.Streams.cs.
+stream overloads. The original four API comments remain in ByteBuf.cs.
 The implementation awaits Memory-based Stream.ReadAsync/WriteAsync directly with
 ConfigureAwait(false), without wrapping synchronous calls in Task.Run. Underlying
 streams still determine how their own asynchronous operations execute.
@@ -2913,7 +2913,7 @@ Public CLR range/permission/lifetime checks precede memory access; unchecked Jav
 partial out-of-bounds writes are not replicated. Mixed-readonly composite policies remain
 separate. No atomicity/volatile, JVM loading or performance equivalence is claimed.
 
-Original licenses/class descriptions are retained in ByteBuf.Segmented.cs. JVM-only
+Original licenses/class descriptions are retained in ByteBuf.cs. JVM-only
 IntelliJ directives and group labels are preserved verbatim as referenceComments in the
 existing JSON rather than inserted into CLR code. Comment counts explicitly distinguish
 implementation preservation from archived references; both classes have no missing comments.
@@ -6310,9 +6310,8 @@ Evidence: ignored artifacts/buffer-original-endian.
 
 Eight more original AbstractByteBufTest methods now run as named inherited tests
 on the seven heap/direct, unpooled/pooled/adaptive and canonical composite roots.
-Their shared bodies live in AbstractByteBufTest.ConcurrentIo.cs, a partial of the
-existing fixture; its allocation, initialization and final native-reservation checks
-are unchanged. These tests replace no existing assertions or supplemental tests.
+Their shared bodies live in AbstractByteBufTest.cs and use the fixture’s existing
+allocation, initialization and final native-reservation checks. These tests replace no existing assertions or supplemental tests.
 
 The string and copy regressions keep ten dedicated workers, a ten-party start
 barrier with a ten-second wait, and 3,000 iterations per worker. Latin1 GetString
@@ -6355,7 +6354,7 @@ mappings still require review. Evidence: ignored artifacts/buffer-original-concu
 ## Original bounded memory transfer tests
 
 Ten further AbstractByteBufTest methods now retain named shared bodies on the
-seven actual inherited roots, in AbstractByteBufTest.MemoryTransfer.cs. The four
+seven actual inherited roots, in AbstractByteBufTest.cs. The four
 heap/native destination tests preserve negative-index validation even for zero
 length, and the original zeroed four-byte destination, offset-one/two-byte transfer,
 two content bytes and two guard bytes. Scoped NativeMemory.AllocZeroed preserves
@@ -6969,8 +6968,7 @@ Hierarchies:
 Java's `newBuffer` assumption `maxCapacity == Integer.MAX_VALUE` (sliced, composite and
 wrapped-address fixtures) is expressed in the class structure instead of as a skip.
 Those fixtures do not inherit `AbstractContiguousByteBufTest`. Bodies that ran only in
-CLR provider-matrix classes now live in the inherited base:
-`AbstractByteBufTest.DerivedViews.cs`, `.Text.cs` and `.Lifetime.cs`. The
+CLR provider-matrix classes now live in the inherited base `AbstractByteBufTest.cs`. The
 provider-matrix classes stay as separately named CLR supplements. The same applies
 to the composite bodies that use `newCompositeBuffer()`, which is now a virtual
 factory that `WrappedCompositeByteBufTest` overrides as in Java. CLR supplement tests

@@ -24,8 +24,70 @@ namespace Netty.NET.Buffer;
  * {@link ByteBuf} implementation which allows to wrap an array of {@link ByteBuf} in a read-only mode.
  * This is useful to write an array of {@link ByteBuf}s.
  */
-internal sealed partial class FixedCompositeByteBuf : AbstractReferenceCountedByteBuf
+internal sealed class FixedCompositeByteBuf : AbstractReferenceCountedByteBuf
 {
+    public override ByteBuf GetBytes(int index, Span<byte> destination)
+    {
+        CheckIndex(index, destination.Length);
+        if (destination.IsEmpty)
+        {
+            return this;
+        }
+        Component component = _components[FindComponent(index)];
+        if (destination.Length <= component.EndOffset - index)
+            component.Source.GetBytes(index - component.Offset, destination);
+        else
+        {
+            // CLR snapshots preserve memmove semantics across aliased components.
+            byte[] bytes = new byte[destination.Length];
+            GetBytesCore(index, bytes);
+            bytes.AsSpan().CopyTo(destination);
+        }
+        return this;
+    }
+
+    public override ByteBuf GetBytes(int index, ByteBuf destination, int destinationIndex, int length)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        CheckIndex(index, length);
+        destination.EnsureCanWrite();
+        destination.CheckIndex(destinationIndex, length);
+        if (length == 0)
+            return this;
+        if (BulkRangesOverlap(this, index, destination, destinationIndex, length))
+        {
+            ByteBuf snapshot = new UnpooledHeapByteBuf(length);
+            try
+            {
+                GetBufferComponents(index, snapshot, 0, length);
+                destination.SetBytes(destinationIndex, snapshot, 0, length);
+            }
+            finally
+            {
+                snapshot.Release();
+            }
+        }
+        else
+            GetBufferComponents(index, destination, destinationIndex, length);
+        return this;
+    }
+
+    private void GetBufferComponents(int index, ByteBuf destination, int destinationIndex, int length)
+    {
+        CheckIndex(index, length);
+        int componentIndex = FindComponent(index);
+
+        while (length > 0)
+        {
+            Component component = _components[componentIndex++];
+            int count = Math.Min(length, component.EndOffset - index);
+            component.Source.GetBytes(index - component.Offset, destination, destinationIndex, count);
+            index += count;
+            destinationIndex += count;
+            length -= count;
+        }
+    }
+
     private readonly Component[] _components;
     private readonly bool _direct;
 

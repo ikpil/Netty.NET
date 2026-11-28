@@ -1344,7 +1344,7 @@
         "scope": "Public sealed class InsecureQuicTokenHandler : IQuicTokenHandler; getBytes(US_ASCII) is Encoding.ASCII, InetAddress.getAddress() IPAddress.GetAddressBytes(), NetUtil.LOCALHOST6 Common's NetUtil; ByteBuf.equals is ByteBuf.Equals (content equality). The constructor keeps Quic.ensureAvailability().",
         "sourceEvidence": [
           "src/Netty.NET.Handler.Codec.Quic/InsecureQuicTokenHandler.cs",
-          "src/Netty.NET.Buffer/ByteBuf.Comparison.cs",
+          "src/Netty.NET.Buffer/ByteBuf.cs",
           "src/Netty.NET.Common/NetUtil.cs"
         ]
       }

@@ -187,7 +187,7 @@ public class Http2ServerUpgradeCodec : HttpServerUpgradeHandler.IUpgradeCodec
         // CLR: CharBuffer.wrap(csq) is a read-only buffer whose "content ... will be the content of the given character
         // sequence" (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/CharBuffer.html);
         // ByteBufUtil.EncodeString takes that content as a ReadOnlySpan<char> (src/Netty.NET.Buffer/
-        // ByteBufUtil.Allocation.cs), and CharsetUtil.UTF_8 is Encoding.UTF8.
+        // ByteBufUtil.cs), and CharsetUtil.UTF_8 is Encoding.UTF8.
         ByteBuf header = ByteBufUtil.EncodeString(ctx.Alloc(), settingsHeader.ToString(), Encoding.UTF8);
         try
         {

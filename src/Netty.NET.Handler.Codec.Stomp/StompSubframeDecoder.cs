@@ -68,7 +68,7 @@ namespace Netty.NET.Handler.Codec.Stomp;
 // (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/selection-statements).
 // The static import ByteBufUtil.* is using static ByteBufUtil: ReadBytes(ctx.Alloc(), in, length) reads through
 // in.ReadBytes(ByteBuf dst), which the ReplayingDecoderByteBuf view supports, when the allocator returns exactly length
-// writable bytes (src/Netty.NET.Buffer/ByteBufUtil.Allocation.cs; the owner-revisit item of 2026-11-19, done
+// writable bytes (src/Netty.NET.Buffer/ByteBufUtil.cs; the owner-revisit item of 2026-11-19, done
 // 2026-11-24).
 public class StompSubframeDecoder : ReplayingDecoder<StompSubframeDecoder.State>
 {

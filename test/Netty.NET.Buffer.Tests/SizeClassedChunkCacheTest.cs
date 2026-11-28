@@ -26,12 +26,12 @@ using static Netty.NET.Buffer.AdaptivePoolingAllocator;
 namespace Netty.NET.Buffer.Tests;
 
 // CLR: Mockito mocks of SizeClassedChunk are replaced by real 4096-byte SizeClassedChunk instances with eight
-// 512-byte segments (src/Netty.NET.Buffer/AdaptivePoolingAllocator.SizeClassedChunk.cs); the class is sealed and
+// 512-byte segments (src/Netty.NET.Buffer/AdaptivePoolingAllocator.cs); the class is sealed and
 // its capacity queries are not virtual. Holding 7, 8 or 0 segment claims reproduces each stub exactly:
 // remainingCapacity 512/0/4096 of capacity 4096 with the stubbed hasRemainingCapacity/hasFullCapacity values. A
 // stubbed capacity change becomes a real external segment return, and verify(chunk[, mode]).markToDeallocate()
 // becomes the chunk's retirement flag, which only Chunk.MarkToDeallocate sets
-// (src/Netty.NET.Buffer/AdaptivePoolingAllocator.Chunk.cs). Mockito: https://javadoc.io/doc/org.mockito/mockito-core/latest/org/mockito/Mockito.html
+// (src/Netty.NET.Buffer/AdaptivePoolingAllocator.cs). Mockito: https://javadoc.io/doc/org.mockito/mockito-core/latest/org/mockito/Mockito.html
 public class SizeClassedChunkCacheTest : IDisposable
 {
     // CLR: the source reads these AdaptivePoolingAllocator class-initializer statics; the CLR pool carries them per
@@ -665,7 +665,7 @@ public class SizeClassedChunkCacheTest : IDisposable
         cache.OfferChunk(cap2);
         cache.OfferChunk(noCap2);
 
-        // CLR: free() is IChunkCache.Dispose() (src/Netty.NET.Buffer/AdaptivePoolingAllocator.ChunkCache.cs).
+        // CLR: free() is IChunkCache.Dispose() (src/Netty.NET.Buffer/AdaptivePoolingAllocator.cs).
         cache.Dispose();
 
         Assert.True(cache.IsEmpty);
@@ -686,7 +686,7 @@ public class SizeClassedChunkCacheTest : IDisposable
         cache.OfferChunk(cap);
         cache.OfferChunk(noCap);
 
-        // CLR: free() is IChunkCache.Dispose() (src/Netty.NET.Buffer/AdaptivePoolingAllocator.ChunkCache.cs).
+        // CLR: free() is IChunkCache.Dispose() (src/Netty.NET.Buffer/AdaptivePoolingAllocator.cs).
         cache.Dispose();
 
         Assert.True(cache.IsEmpty);

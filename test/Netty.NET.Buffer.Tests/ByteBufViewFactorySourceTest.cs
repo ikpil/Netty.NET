@@ -88,7 +88,7 @@ public class ByteBufViewFactorySourceTest
     }
 
     // Supplemental ownership/mark checks use the original nested-slice helper's flag combinations.
-    // Named original bodies execute in AbstractByteBufTest.ViewFactories.cs on seven actual roots.
+    // Named original bodies execute in AbstractByteBufTest.cs on seven actual roots.
     [Theory]
     [MemberData(nameof(NestedBoundsCases))]
     public void NestedSliceBoundsDoNotEscapeTheOriginalWindow(int provider, bool initialRetained, bool finalRetained, bool invalidIndex)

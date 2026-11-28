@@ -281,7 +281,6 @@
           "docs/codec-base-porting.md",
           "src/Netty.NET.Handler.Codec/MessageToByteEncoder.cs",
           "src/Netty.NET.Buffer/ByteBuf.cs",
-          "src/Netty.NET.Buffer/ByteBuf.Segmented.cs",
           "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types",
           "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/bitwise-and-shift-operators",
           "https://docs.oracle.com/javase/specs/jls/se17/html/jls-3.html#jls-3.10.1",

@@ -241,7 +241,7 @@ public class JdkSslEngineTest : SSLEngineTest
 
     // CLR: testEnablingAnAlreadyDisabledSslProtocol is CLR-inapplicable: it calls SSLEngine.setEnabledProtocols/
     // getEnabledProtocols on an engine of newEngine (SSLEngineTest's helper of the same name), and SslStream has no
-    // engine-level protocol list (see SSLEngineTest.NotApplicable.cs).
+    // engine-level protocol list (see SSLEngineTest.cs).
 
     // CLR: @Disabled overrides of the SSLEngineTest tests; the theories stay declared once in SSLEngineTest and their
     // virtual bodies are overridden here with Assert.Skip and the @Disabled comment (see SSLEngineTest).

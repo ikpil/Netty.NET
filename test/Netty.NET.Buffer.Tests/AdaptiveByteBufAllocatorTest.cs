@@ -171,7 +171,7 @@ public class AdaptiveByteBufAllocatorTest : AbstractByteBufAllocatorTest<Adaptiv
         try
         {
             // CLR: ArgumentOutOfRangeException replaces IndexOutOfBoundsException; a positioned SafeFileHandle replaces
-            // FileChannel (src/Netty.NET.Buffer/ByteBuf.Files.cs).
+            // FileChannel (src/Netty.NET.Buffer/ByteBuf.cs).
             Assert.Throws<ArgumentOutOfRangeException>(() =>
             {
                 // capacity 7，4+8=12 <= maxFastCapacity 32
@@ -193,7 +193,7 @@ public class AdaptiveByteBufAllocatorTest : AbstractByteBufAllocatorTest<Adaptiv
         try
         {
             // CLR: ArgumentOutOfRangeException replaces IndexOutOfBoundsException; a connected Socket replaces the
-            // GatheringByteChannel (src/Netty.NET.Buffer/ByteBuf.Sockets.cs).
+            // GatheringByteChannel (src/Netty.NET.Buffer/ByteBuf.cs).
             Assert.Throws<ArgumentOutOfRangeException>(() =>
             {
                 // capacity 7，4+8=12 <= maxFastCapacity 32

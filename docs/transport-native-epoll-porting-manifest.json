@@ -634,13 +634,11 @@
       "kind": "test",
       "status": "clr-adapted",
       "implementation": [
-        "test/Netty.NET.Transport.Tests/DatagramMulticastSourceTest.Mixed.cs",
         "test/Netty.NET.Transport.Tests/DatagramMulticastSourceTest.cs"
       ],
       "review": {
         "scope": "Retain INET6 socket and INET group, interface selection, join/send/leave sequence and both allocators. When the exact IPv6 source bind produces the original NetworkUnreachable failure, verify that error on the CLR channel, then use a wildcard sender for the remaining assertions.",
         "sourceEvidence": [
-          "test/Netty.NET.Transport.Tests/DatagramMulticastSourceTest.Mixed.cs",
           "test/Netty.NET.Transport.Tests/DatagramMulticastSourceTest.cs",
           "src/Netty.NET.Transport/Channels/Sockets/NioDatagramChannel.cs"
         ]

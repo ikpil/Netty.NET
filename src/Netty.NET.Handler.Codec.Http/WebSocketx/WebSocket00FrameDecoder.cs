@@ -37,7 +37,7 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx;
 // (type & 0x80, b & 0x7f, b & 0x80) give the same values as for the signed Java byte. The seven length bits are widened
 // as uint before the OR (CS0675; the value is never negative). The static import ByteBufUtil.readBytes is using static
 // ByteBufUtil, whose ReadBytes(alloc, buffer, length) reads through buffer.ReadBytes(dst), which the replaying buffer
-// supports, when the allocator returns exactly length writable bytes (src/Netty.NET.Buffer/ByteBufUtil.Allocation.cs);
+// supports, when the allocator returns exactly length writable bytes (src/Netty.NET.Buffer/ByteBufUtil.cs);
 // IllegalArgumentException is ArgumentException, and numbers in messages use the invariant culture.
 public class WebSocket00FrameDecoder : ReplayingDecoder<object>, IWebSocketFrameDecoder
 {

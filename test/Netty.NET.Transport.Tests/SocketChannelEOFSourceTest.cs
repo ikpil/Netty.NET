@@ -144,7 +144,7 @@ public class SocketChannelEOFSourceTest : AbstractClientSocketTest
                 ByteBuf bytes = (ByteBuf) message;
                 receivedBytes += bytes.ReadableBytes;
                 // CLR: this port's ByteBuf exposes its readable bytes as borrowed ReadOnlySequence segments
-                // (ByteBuf.ReadableSequence, src/Netty.NET.Buffer/ByteBuf.Segmented.cs) instead of nioBuffer(); each
+                // (ByteBuf.ReadableSequence, src/Netty.NET.Buffer/ByteBuf.cs) instead of nioBuffer(); each
                 // segment is appended in order.
                 foreach (ReadOnlyMemory<byte> segment in bytes.ReadableSequence)
                 {

@@ -14,6 +14,22 @@
  * under the License.
  */
 
+/*
+ * Copyright 2021 The Netty Project
+ *
+ * The Netty Project licenses this file to you under the Apache License,
+ * version 2.0 (the "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at:
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -30,9 +46,9 @@ using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
 
-#pragma warning disable xUnit1051 // The source's sync()/await() calls and its channel teardown take no cancellation.
-public partial class DatagramMulticastSourceTest : AbstractDatagramTest
+public class DatagramMulticastSourceTest : AbstractDatagramTest
 {
+#pragma warning disable xUnit1051 // The source's sync()/await() calls and its channel teardown take no cancellation.
     [Fact]
     public async Task TestMulticast()
     {
@@ -337,7 +353,7 @@ public partial class DatagramMulticastSourceTest : AbstractDatagramTest
         return new IPEndPoint(address, port);
     }
 
-    // CLR: the first address of the family on the interface; DatagramMulticastSourceTest.Mixed.cs uses it too.
+    // CLR: the first address of that family on the interface, also used by the mixed-family tests.
     private static IPAddress InterfaceAddress(NetworkInterface iface, AddressFamily family)
     {
         return iface.GetIPProperties().UnicastAddresses.First(a => a.Address.AddressFamily == family).Address;
@@ -347,7 +363,7 @@ public partial class DatagramMulticastSourceTest : AbstractDatagramTest
     private bool MixedFamily => SocketInternetProtocalFamily() != GroupInternetProtocalFamily();
 
     // CLR: see TestMulticast0. Returns the IPv6 wildcard to bind instead of the interface address when a socket bound
-    // to that address cannot route the INET group (BoundSenderRouteError in DatagramMulticastSourceTest.Mixed.cs),
+    // to that address cannot route the INET group (BoundSenderRouteError),
     // after verifying that the channel reports the same error and stays open.
     private async Task<IPEndPoint> BoundSenderRouteFailure(Bootstrap sb, NetworkInterface iface)
     {
@@ -372,7 +388,7 @@ public partial class DatagramMulticastSourceTest : AbstractDatagramTest
         return new IPEndPoint(IPAddress.IPv6Any, 0);
     }
 
-    // CLR: entry point of the TestMixedFamilyMulticast theory in DatagramMulticastSourceTest.Mixed.cs, the counterpart
+    // CLR: entry point of the TestMixedFamilyMulticast theory, the counterpart
     // of EpollDatagramMulticastIpv6WithIpv4AddrTest. That fixture extends DatagramMulticastTest and overrides
     // socketInternetProtocalFamily() to INET6 and groupInternetProtocalFamily() to INET; the private
     // FamilyOverrideTest carries those overrides and runs the inherited testMulticast body through the harness with
@@ -428,5 +444,37 @@ public partial class DatagramMulticastSourceTest : AbstractDatagramTest
 
         public override bool IsSharable => true;
     }
-}
 #pragma warning restore xUnit1051
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public Task TestMixedFamilyMulticast(bool adaptive)
+    {
+        if (!OperatingSystem.IsLinux() || !Socket.OSSupportsIPv6)
+            Assert.Skip("Requires a Linux dual-mode socket.");
+        return RunMulticastAsync(adaptive, AddressFamily.InterNetworkV6, mixed: true);
+    }
+
+    private static SocketError? BoundSenderRouteError(NetworkInterface iface, IPAddress source, IPAddress multicast)
+    {
+        using var socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp) { DualMode = true };
+        socket.Bind(new IPEndPoint(source, 0));
+        SetIPv4MulticastInterface(socket, iface);
+        try
+        {
+            socket.SendTo(new byte[4], new IPEndPoint(multicast, 12345));
+        }
+        catch (SocketException error) when (error.SocketErrorCode == SocketError.NetworkUnreachable)
+        {
+            return error.SocketErrorCode;
+        }
+        return null;
+    }
+
+    private static void SetIPv4MulticastInterface(Socket socket, NetworkInterface iface)
+    {
+        socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface,
+            InterfaceAddress(iface, AddressFamily.InterNetwork).GetAddressBytes());
+    }
+}

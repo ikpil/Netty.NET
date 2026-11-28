@@ -397,7 +397,7 @@
           "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/new-modifier",
           "docs/codec-base-porting.md",
           "src/Netty.NET.Handler.Codec/ReplayingDecoderByteBuf.cs",
-          "src/Netty.NET.Buffer/ByteBufUtil.Allocation.cs",
+          "src/Netty.NET.Buffer/ByteBufUtil.cs",
           "https://learn.microsoft.com/en-us/dotnet/api/system.enum.parse",
           "https://learn.microsoft.com/en-us/dotnet/api/system.enum.isdefined",
           "https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types",

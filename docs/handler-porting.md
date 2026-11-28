@@ -1075,8 +1075,8 @@ times TLSv1.2/TLSv1.3, without the `delegate = true` half. The server engine's `
 `EndpointIdentificationAlgorithm("HTTPS")`; the negotiated suite is checked against the context's suites (SslStream
 applies no Netty cipher order). A mapped C# test must be declared `public void|Task Name(`, so the base theories of the
 two `@Disabled` overrides call virtual bodies (`...ClientAuth0`) that `JdkSslEngineTest` overrides with
-`Assert.Skip`. `SSLEngineTest.NotApplicable.cs` holds no code: it keeps the original comments of the inapplicable tests
-and their helpers in source order, because the checker requires every original test comment in the mapped files.
+`Assert.Skip`. `SSLEngineTest.cs` keeps the original comments of the inapplicable tests and their helpers in
+source order for the porting checker.
 CLR-inapplicable: 50 of the 64 `SSLEngineTest` tests, whose subjects are SSLEngine `wrap`/`unwrap` and state, the
 `SSLSession`/`SSLSessionContext` (ids, times, invalidation, cache size and timeout, binding events), trust and key
 manager callbacks that receive a handshake session, `ResumableX509ExtendedTrustManager`, `SslMasterKeyHandler`, the

@@ -188,7 +188,7 @@ public class SimpleLeakAwareByteBufTest : BigEndianHeapByteBufTest
         ByteBuf buf = Wrap(origin, detector.Track(origin));
         OriginalCloseCall(buf, mechanism);
         // CLR: the package-private ByteBuf.isAccessible() (refCnt() != 0) is ByteBufUtil.IsAccessible
-        // (src/Netty.NET.Buffer/ByteBufUtil.Scalar.cs).
+        // (src/Netty.NET.Buffer/ByteBufUtil.cs).
         Assert.False(ByteBufUtil.IsAccessible(buf));
         IllegalReferenceCountException irce = Assert.Throws<IllegalReferenceCountException>(() => buf.Release());
         Assert.Contains(nameof(OriginalCloseCall), StackTraceOf(irce));

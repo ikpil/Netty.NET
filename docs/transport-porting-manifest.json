@@ -176,7 +176,7 @@
       "unixHalfCloseJavaWrappersPassed": 1,
       "unixHalfCloseJavaAllocatorRunsPassed": 2,
       "unixHalfCloseClrCasesPassed": 8,
-      "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedCompletionSourceTest.cs"
+      "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedSourceTest.cs"
     },
     "linuxMulticastOriginalRerun": {
       "regularJavaWrappersPassed": 2,
@@ -1655,7 +1655,7 @@
           "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
           "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs",
           "test/Netty.NET.Transport.Tests/SocketHalfClosedContractTest.cs",
-          "test/Netty.NET.Transport.Tests/SocketHalfClosedCompletionSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/SocketHalfClosedSourceTest.cs",
           "src/Netty.NET.Transport/Channels/DefaultEventLoop.cs",
           "test/Netty.NET.Transport.Tests/IoLifecycleContractTest.cs",
           "test/Netty.NET.Transport.Tests/AbstractChannelTest.cs",
@@ -3045,7 +3045,7 @@
         "evidence": {
           "files": [
             "docs/common-task-composition.md",
-            "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.Operations.cs",
+            "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs",
             "src/Netty.NET.Transport/Channels/PendingWriteQueue.cs",
             "test/Netty.NET.Transport.Tests/PendingWriteQueueTest.cs",
             "test/Netty.NET.Transport.Tests/ChannelGroupContractTest.cs"
@@ -4677,9 +4677,7 @@
       "kind": "implementation",
       "status": "clr-adapted",
       "implementation": [
-        "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs",
-        "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.Operations.cs",
-        "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.Set.cs"
+        "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs"
       ],
       "comments": {
         "status": "reviewed",
@@ -4709,7 +4707,6 @@
         "scope": "Reviewed server-first lifecycle/enumeration, matcher fan-out, retained buffer/holder views, stayClosed admission, close snapshots and immutable per-channel Task lookup/iteration/live completion. RemoveById preserves native typed removal and existing Remove(null) behavior; replacement channels remain protected from old close callbacks. Reviewed against the pinned source: the matcher-less flush/disconnect/close/deregister overloads delegate to ChannelMatchers.All() as in DefaultChannelGroup; deregister() is ported although @Deprecated because its tag names no replacement. The deprecated flushAndWrite overloads (replacement writeAndFlush) are not ported.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs",
-          "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.Operations.cs",
           "src/Netty.NET.Transport/Channels/Groups/ChannelGroupException.cs",
           "test/Netty.NET.Transport.Tests/ChannelGroupContractTest.cs",
           "test/Netty.NET.Transport.Tests/DefaultChannelGroupTest.cs"
@@ -4750,14 +4747,12 @@
       "status": "clr-adapted",
       "implementation": [
         "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs",
-        "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.Operations.cs",
         "src/Netty.NET.Transport/Channels/Groups/ChannelGroupException.cs"
       ],
       "review": {
         "scope": "The aggregate Task and immutable channel-to-Task dictionary jointly retain completion, channel lookup, read-only iteration, live partial success/failure and original cause correlation. Group identity remains the receiver. Native await/WaitAsync replaces JVM listener and blocking methods; caller cancellation withdraws observation without canceling channel producers. Task has no external completion setters. The JVM future deadlock hook is intentionally absent from native Task; library owner paths remain nonblocking. All original comments are preserved next to the corresponding shared Task/map construction and completion roles.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs",
-          "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.Operations.cs",
           "src/Netty.NET.Transport/Channels/Groups/ChannelGroupException.cs",
           "test/Netty.NET.Transport.Tests/ChannelGroupContractTest.cs"
         ]
@@ -4787,7 +4782,6 @@
         "evidence": {
           "files": [
             "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs",
-            "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.Operations.cs",
             "src/Netty.NET.Transport/Channels/Groups/ChannelGroupException.cs",
             "test/Netty.NET.Transport.Tests/ChannelGroupContractTest.cs"
           ],
@@ -4916,15 +4910,10 @@
       "comments": {
         "status": "clr-replaced",
         "uniqueCount": 2,
-        "preservedCount": 1,
+        "preservedCount": 2,
         "unreviewedCount": 0,
-        "notApplicableCount": 1,
-        "notApplicable": [
-          {
-            "sourceComment": "Copyright 2012 The Netty Project The Netty Project licenses this file to you under the Apache License, version 2.0 (the \"License\"); you may not use this file except in compliance with the License. You may obtain a copy of the License at: https://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.",
-            "reason": "License header of the replaced wrapper file; the replacing DefaultChannelGroup.cs carries its own original header."
-          }
-        ]
+        "notApplicableCount": 0,
+        "notApplicable": []
       },
       "publicNameReview": {
         "date": "2026-11-16",
@@ -4955,9 +4944,7 @@
       "kind": "implementation",
       "status": "clr-adapted",
       "implementation": [
-        "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs",
-        "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.Operations.cs",
-        "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.Set.cs"
+        "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs"
       ],
       "comments": {
         "status": "preserved",
@@ -4970,11 +4957,9 @@
         "scope": "Reviewed complete group behavior: server-first lifecycle/enumeration and snapshots, Func predicates, retained fan-out views, stayClosed admission, immutable per-channel Task inspection, Id removal, ISet bulk mutation/query/copy and ordinal-name/identity comparison. Standard collection operations retain channel ownership and use the existing Add/Remove admission rules. Task observation replaces redundant void-future/typed-listener APIs; no JVM collection, matcher or future facade is added. Membership operations have per-call snapshots, not a cross-call atomic transaction. ChannelIds retain the source uniqueness precondition.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs",
-          "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.Operations.cs",
           "src/Netty.NET.Transport/Channels/Groups/ChannelGroupException.cs",
           "test/Netty.NET.Transport.Tests/ChannelGroupContractTest.cs",
           "test/Netty.NET.Transport.Tests/DefaultChannelGroupTest.cs",
-          "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.Set.cs",
           "test/Netty.NET.Transport.Tests/ChannelGroupSetContractTest.cs"
         ]
       },
@@ -5020,14 +5005,12 @@
       "status": "clr-adapted",
       "implementation": [
         "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs",
-        "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.Operations.cs",
         "src/Netty.NET.Transport/Channels/Groups/ChannelGroupException.cs"
       ],
       "review": {
         "scope": "The aggregate Task and immutable channel-to-Task dictionary jointly retain completion, channel lookup, read-only iteration, live partial success/failure and original cause correlation. Group identity remains the receiver. Native await/WaitAsync replaces JVM listener and blocking methods; caller cancellation withdraws observation without canceling channel producers. Task has no external completion setters. The JVM future deadlock hook is intentionally absent from native Task; library owner paths remain nonblocking. All original comments are preserved next to the corresponding shared Task/map construction and completion roles.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs",
-          "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.Operations.cs",
           "src/Netty.NET.Transport/Channels/Groups/ChannelGroupException.cs",
           "test/Netty.NET.Transport.Tests/ChannelGroupContractTest.cs"
         ]
@@ -5225,7 +5208,6 @@
         "evidence": {
           "files": [
             "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs",
-            "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.Operations.cs",
             "test/Netty.NET.Transport.Tests/ChannelGroupContractTest.cs"
           ],
           "urls": [
@@ -5606,12 +5588,10 @@
         "scope": "Reviewed original read budgets/coalescing/manual-read wakeups plus connect/close ownership and write ordering against all 32 LocalChannelTest declarations. Native cancellation closes a pending client without touching the server-owned queued peer. Explicit local addresses are honored even after an earlier bind. A synchronous local bind failure or refused connect closes the channel and releases the registered address. Closed connect and peer-closed writes fail with ClosedChannelException as in close and doWrite, replacing the earlier IOException(\"Channel is closed.\"/\"Peer is closed.\"). 2026-11-17 structure port: LocalChannel follows the pinned Java class: the State machine (OPEN/BOUND/CONNECTED/CLOSED, null until bound or connected) updated with Interlocked as STATE_UPDATER does; readTask and finishReadTask; inboundBuffer; doBind, doDisconnect and doClose with closedFrom, the peer hand-off through peer.eventLoop().execute(tryClose(peerIsActive)) and its rejection fallback; tryClose; readInbound with buffer coalescing; doBeginRead with readInProgress and the MAX_READER_STACK_DEPTH bound kept in InternalThreadLocalMap; doWrite(ChannelOutboundBuffer) with writeInProgress (AbstractChannel flush0() now calls it for this transport); finishPeerRead, runFinishTask0, runFinishPeerReadTask and finishPeerRead0 with finishReadFuture; releaseInboundBuffers; LocalUnsafe registered(), unregistered(), closeNow() and connect(...). CLR adaptations: reference State constants keep the enum's null initial state; AbstractChannel's active flag follows the CONNECTED state (isOpen()/isActive() combine both); LocalUnsafe.connect(...) overrides the folded AbstractUnsafe.connect(...) and its Task is connectPromise; AlreadyConnectedException, ConnectionPendingException, NotYetConnectedException and ConnectException are SocketException with SocketError.IsConnected, AlreadyInProgress, NotConnected and ConnectionRefused (with the source messages); ConcurrentQueue replaces the SPSC queue; submit(...) is SubmitAsync, whose rejected Task is rethrown as submit(...) throws; a CancellationToken still aborts a pending connect by closing the channel; a gate orders a writer's inboundBuffer add with this channel's state change in doClose(), so a retained message is never published into an already drained queue. All 64 original comments are at their C# counterparts. Tests: testConnectedAlready asserts SocketError.IsConnected; the supplemental LocalChannelOwnershipContractTest adds connection-pending, refused-message and reader-stack-depth cases, and its reentrant write case and LocalCoalescingContractTest hook the message release in in.remove() instead of the removed per-message write-completion hook.",
         "sourceEvidence": [
           "src/Netty.NET.Transport/Channels/Local/LocalChannel.cs",
-          "test/Netty.NET.Transport.Tests/LocalChannelLifecycleSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/LocalChannelWriteSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/LocalChannelSourceTest.cs",
           "test/Netty.NET.Transport.Tests/LocalChannelOwnershipContractTest.cs",
           "test/Netty.NET.Transport.Tests/LocalTransportThreadModel2SourceTest.cs",
           "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
-          "test/Netty.NET.Transport.Tests/LocalChannelSourceTest.cs",
           "test/Netty.NET.Transport.Tests/LocalCoalescingContractTest.cs"
         ]
       }
@@ -10234,7 +10214,7 @@
           "src/Netty.NET.Transport/Channels/StacklessClosedChannelException.cs",
           "src/Netty.NET.Transport/Channels/ClosedChannelException.cs",
           "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
-          "test/Netty.NET.Transport.Tests/LocalChannelLifecycleSourceTest.cs",
+          "test/Netty.NET.Transport.Tests/LocalChannelSourceTest.cs",
           "test/Netty.NET.Transport.Tests/AbstractChannelTest.cs"
         ]
       },
@@ -12922,10 +12902,7 @@
       "kind": "test",
       "status": "verified",
       "implementation": [
-        "test/Netty.NET.Transport.Tests/LocalChannelSourceTest.cs",
-        "test/Netty.NET.Transport.Tests/LocalChannelReadSourceTest.cs",
-        "test/Netty.NET.Transport.Tests/LocalChannelLifecycleSourceTest.cs",
-        "test/Netty.NET.Transport.Tests/LocalChannelWriteSourceTest.cs"
+        "test/Netty.NET.Transport.Tests/LocalChannelSourceTest.cs"
       ],
       "comments": {
         "status": "preserved",
@@ -12938,9 +12915,6 @@
         "scope": "All 32 declared LocalChannelTest methods and corresponding helper assertions are mapped. Source test inputs, comments, close/write/completion order, worker sharing and timeouts are retained with the explicit CLR operation-task, exception and final-cleanup adaptations below. This does not imply all LocalChannel runtime or Transport contracts are reviewed. 2026-11-17: testConnectedAlready asserts SocketException with SocketError.IsConnected, the CLR stand-in for AlreadyConnectedException, now that LocalUnsafe.connect(...) is ported; the testWriteFailsFastOnClosedChannel channel counts doWrite(ChannelOutboundBuffer) attempts; testNotLeakBuffersWhenCloseByRemotePeer reads the package-visible inboundBuffer as the source does.",
         "sourceEvidence": [
           "test/Netty.NET.Transport.Tests/LocalChannelSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/LocalChannelReadSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/LocalChannelLifecycleSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/LocalChannelWriteSourceTest.cs",
           "src/Netty.NET.Transport/Channels/Local/LocalChannel.cs",
           "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
           "test/Netty.NET.Transport.Tests/LocalChannelOwnershipContractTest.cs"
@@ -13122,8 +13096,7 @@
       "kind": "test",
       "status": "verified",
       "implementation": [
-        "test/Netty.NET.Transport.Tests/LocalTransportThreadModelSourceTest.cs",
-        "test/Netty.NET.Transport.Tests/LocalTransportThreadModelSourceTest.Buffer.cs"
+        "test/Netty.NET.Transport.Tests/LocalTransportThreadModelSourceTest.cs"
       ],
       "caseMappings": [
         {
@@ -13154,7 +13127,6 @@
         "scope": "Active staged execution passed on Windows and Linux. The two source-disabled bodies compile and retain their source execution gates. CLR attempts own and tear down their server groups. 2026-11-16: every declared method is mapped with its source condition; source-disabled bodies keep the original @Disabled gates as xUnit Skip, as in the verified SingleThreadIoEventLoopTest. 2026-11-16: every declared method is mapped with its source condition; source-disabled bodies keep the original @Disabled gates as xUnit Skip, as in the verified SingleThreadIoEventLoopTest. 2026-11-16: every declared method is mapped with its source condition; source-disabled bodies keep the original @Disabled gates as xUnit Skip, as in the verified SingleThreadIoEventLoopTest. 2026-11-16: every declared method is mapped with its source condition; source-disabled bodies keep the original @Disabled gates as xUnit Skip, as in the verified SingleThreadIoEventLoopTest. 2026-11-16: every declared method is mapped with its source condition; source-disabled bodies keep the original @Disabled gates as xUnit Skip, as in the verified SingleThreadIoEventLoopTest. 2026-11-16: every declared method is mapped with its source condition; source-disabled bodies keep the original @Disabled gates as xUnit Skip, as in the verified SingleThreadIoEventLoopTest. 2026-11-16: every declared method is mapped with its source condition; source-disabled bodies keep the original @Disabled gates as xUnit Skip, as in the verified SingleThreadIoEventLoopTest. 2026-11-16: every declared method is mapped with its source condition; source-disabled bodies keep the original @Disabled gates as xUnit Skip, as in the verified SingleThreadIoEventLoopTest.",
         "sourceEvidence": [
           "test/Netty.NET.Transport.Tests/LocalTransportThreadModelSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/LocalTransportThreadModelSourceTest.Buffer.cs",
           "src/Netty.NET.Transport/Channels/Local/LocalChannel.cs"
         ]
       },
@@ -15459,7 +15431,7 @@
         "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs",
         "src/Netty.NET.Transport/Channels/AbstractChannel.cs",
         "src/Netty.NET.Transport/Channels/ChannelOutboundBuffer.cs",
-        "test/Netty.NET.Transport.Tests/SocketHalfClosedCompletionSourceTest.cs",
+        "test/Netty.NET.Transport.Tests/SocketHalfClosedSourceTest.cs",
         "test/Netty.NET.Transport.Tests/SocketHalfClosedContractTest.cs"
       ]
     },
@@ -15632,8 +15604,7 @@
         "src/Netty.NET.Transport/Channels/Local/LocalChannel.cs",
         "test/Netty.NET.Transport.Tests/LocalTransportThreadModelSourceTest.cs",
         "test/Netty.NET.Transport.Tests/LocalTransportThreadModel2SourceTest.cs",
-        "test/Netty.NET.Transport.Tests/LocalTransportThreadModel3SourceTest.cs",
-        "test/Netty.NET.Transport.Tests/LocalTransportThreadModelSourceTest.Buffer.cs"
+        "test/Netty.NET.Transport.Tests/LocalTransportThreadModel3SourceTest.cs"
       ]
     },
     {
@@ -15698,7 +15669,7 @@
         "test/Netty.NET.Transport.Tests/DatagramLinuxConfigSourceTest.cs",
         "test/Netty.NET.Transport.Tests/DatagramUnicastSourceTest.cs",
         "test/Netty.NET.Transport.Tests/DatagramOriginalDestinationContractTest.cs",
-        "test/Netty.NET.Transport.Tests/DatagramMulticastSourceTest.Mixed.cs"
+        "test/Netty.NET.Transport.Tests/DatagramMulticastSourceTest.cs"
       ],
       "platformSources": [
         "https://github.com/torvalds/linux/blob/v6.12/include/uapi/linux/in.h"
@@ -15802,7 +15773,6 @@
       "decision": "Async methods return a native aggregate Task and optionally an out IReadOnlyDictionary<IChannel, Task>. The immutable snapshot supplies lookup and Values iteration; standard Task status queries supply source partial completion. Successful = IsCompletedSuccessfully; failed = IsCompleted && !IsCompletedSuccessfully, including cancellation. The group is the receiver. There is no new Future/Promise wrapper or public producer. WaitAsync cancellation withdraws the observer; it does not cancel children. JVM listener removal and the blocking deadlock hook are adapted to the native async-observer model; Task.Wait itself has no JVM guard. RemoveById avoids making existing Remove(null) ambiguous.",
       "sourceEvidence": [
         "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs",
-        "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.Operations.cs",
         "test/Netty.NET.Transport.Tests/ChannelGroupContractTest.cs"
       ]
     },
@@ -15897,7 +15867,6 @@
       "decision": "Use ISet<IChannel>, IComparable<DefaultChannelGroup> and standard reference-based HashSet algorithms. Union/symmetric difference admit through Add so stayClosed and close observation remain intact; removal/intersection do not close channels. Identity equality/hash remain independent of membership, name comparison is ordinal and same-name ties use RuntimeHelpers identity hashes. CLR null comparison follows the BCL convention. ToArray gives a server-first, non-null, independent membership snapshot. CopyTo follows native array argument/capacity rules; no transaction across concurrent separate calls is promised. As with other concurrent ICollection implementations, prefer the concrete snapshot ToArray when concurrent membership changes matter; arbitrary external Count-plus-CopyTo/LINQ optimizations are not an atomic operation. ChannelIds have the original uniqueness precondition. Func predicates, Boolean composition and ordinary enumeration replace ChannelMatcher/CombinedIterator facades.",
       "sourceEvidence": [
         "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.cs",
-        "src/Netty.NET.Transport/Channels/Groups/DefaultChannelGroup.Set.cs",
         "test/Netty.NET.Transport.Tests/ChannelGroupSetContractTest.cs"
       ],
       "upstreamSources": [
@@ -16140,7 +16109,7 @@
         "src/Netty.NET.Transport/Channels/Pool/FixedChannelPool.cs",
         "src/Netty.NET.Transport/Channels/Nio/AbstractNioByteChannel.cs",
         "test/Netty.NET.Transport.Tests/AbstractChannelTest.cs",
-        "test/Netty.NET.Transport.Tests/LocalChannelLifecycleSourceTest.cs"
+        "test/Netty.NET.Transport.Tests/LocalChannelSourceTest.cs"
       ],
       "upstreamSources": [
         "https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/channels/ClosedChannelException.html",
@@ -16284,8 +16253,7 @@
       "hashMode": "utf8-lf",
       "sourceEvidence": [
         "test/Netty.NET.Transport.Tests/DatagramMulticastIsolationContractTest.cs",
-        "test/Netty.NET.Transport.Tests/DatagramMulticastSourceTest.cs",
-        "test/Netty.NET.Transport.Tests/DatagramMulticastSourceTest.Mixed.cs"
+        "test/Netty.NET.Transport.Tests/DatagramMulticastSourceTest.cs"
       ],
       "state": "platform-limited"
     },
@@ -18941,7 +18909,7 @@
           "unixHalfCloseJavaWrappersPassed": 1,
           "unixHalfCloseJavaAllocatorRunsPassed": 2,
           "unixHalfCloseClrCasesPassed": 8,
-          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedCompletionSourceTest.cs"
+          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedSourceTest.cs"
         }
       }
     },
@@ -19100,7 +19068,7 @@
           "unixHalfCloseJavaWrappersPassed": 1,
           "unixHalfCloseJavaAllocatorRunsPassed": 2,
           "unixHalfCloseClrCasesPassed": 8,
-          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedCompletionSourceTest.cs"
+          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedSourceTest.cs"
         },
         "linuxMulticastOriginalRerun": {
           "regularJavaWrappersPassed": 2,
@@ -19267,7 +19235,7 @@
           "unixHalfCloseJavaWrappersPassed": 1,
           "unixHalfCloseJavaAllocatorRunsPassed": 2,
           "unixHalfCloseClrCasesPassed": 8,
-          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedCompletionSourceTest.cs"
+          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedSourceTest.cs"
         },
         "linuxMulticastOriginalRerun": {
           "regularJavaWrappersPassed": 2,
@@ -19443,7 +19411,7 @@
           "unixHalfCloseJavaWrappersPassed": 1,
           "unixHalfCloseJavaAllocatorRunsPassed": 2,
           "unixHalfCloseClrCasesPassed": 8,
-          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedCompletionSourceTest.cs"
+          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedSourceTest.cs"
         },
         "linuxMulticastOriginalRerun": {
           "regularJavaWrappersPassed": 2,
@@ -19629,7 +19597,7 @@
           "unixHalfCloseJavaWrappersPassed": 1,
           "unixHalfCloseJavaAllocatorRunsPassed": 2,
           "unixHalfCloseClrCasesPassed": 8,
-          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedCompletionSourceTest.cs"
+          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedSourceTest.cs"
         },
         "linuxMulticastOriginalRerun": {
           "regularJavaWrappersPassed": 2,
@@ -19823,7 +19791,7 @@
           "unixHalfCloseJavaWrappersPassed": 1,
           "unixHalfCloseJavaAllocatorRunsPassed": 2,
           "unixHalfCloseClrCasesPassed": 8,
-          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedCompletionSourceTest.cs"
+          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedSourceTest.cs"
         },
         "linuxMulticastOriginalRerun": {
           "regularJavaWrappersPassed": 2,
@@ -20028,7 +19996,7 @@
           "unixHalfCloseJavaWrappersPassed": 1,
           "unixHalfCloseJavaAllocatorRunsPassed": 2,
           "unixHalfCloseClrCasesPassed": 8,
-          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedCompletionSourceTest.cs"
+          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedSourceTest.cs"
         },
         "linuxMulticastOriginalRerun": {
           "regularJavaWrappersPassed": 2,
@@ -20244,7 +20212,7 @@
           "unixHalfCloseJavaWrappersPassed": 1,
           "unixHalfCloseJavaAllocatorRunsPassed": 2,
           "unixHalfCloseClrCasesPassed": 8,
-          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedCompletionSourceTest.cs"
+          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedSourceTest.cs"
         },
         "linuxMulticastOriginalRerun": {
           "regularJavaWrappersPassed": 2,
@@ -20472,7 +20440,7 @@
           "unixHalfCloseJavaWrappersPassed": 1,
           "unixHalfCloseJavaAllocatorRunsPassed": 2,
           "unixHalfCloseClrCasesPassed": 8,
-          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedCompletionSourceTest.cs"
+          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedSourceTest.cs"
         },
         "linuxMulticastOriginalRerun": {
           "regularJavaWrappersPassed": 2,
@@ -20712,7 +20680,7 @@
           "unixHalfCloseJavaWrappersPassed": 1,
           "unixHalfCloseJavaAllocatorRunsPassed": 2,
           "unixHalfCloseClrCasesPassed": 8,
-          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedCompletionSourceTest.cs"
+          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedSourceTest.cs"
         },
         "linuxMulticastOriginalRerun": {
           "regularJavaWrappersPassed": 2,
@@ -20965,7 +20933,7 @@
           "unixHalfCloseJavaWrappersPassed": 1,
           "unixHalfCloseJavaAllocatorRunsPassed": 2,
           "unixHalfCloseClrCasesPassed": 8,
-          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedCompletionSourceTest.cs"
+          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedSourceTest.cs"
         },
         "linuxMulticastOriginalRerun": {
           "regularJavaWrappersPassed": 2,
@@ -21231,7 +21199,7 @@
           "unixHalfCloseJavaWrappersPassed": 1,
           "unixHalfCloseJavaAllocatorRunsPassed": 2,
           "unixHalfCloseClrCasesPassed": 8,
-          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedCompletionSourceTest.cs"
+          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedSourceTest.cs"
         },
         "linuxMulticastOriginalRerun": {
           "regularJavaWrappersPassed": 2,
@@ -21469,7 +21437,7 @@
           "unixHalfCloseJavaWrappersPassed": 1,
           "unixHalfCloseJavaAllocatorRunsPassed": 2,
           "unixHalfCloseClrCasesPassed": 8,
-          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedCompletionSourceTest.cs"
+          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedSourceTest.cs"
         },
         "linuxMulticastOriginalRerun": {
           "regularJavaWrappersPassed": 2,
@@ -21724,7 +21692,7 @@
           "unixHalfCloseJavaWrappersPassed": 1,
           "unixHalfCloseJavaAllocatorRunsPassed": 2,
           "unixHalfCloseClrCasesPassed": 8,
-          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedCompletionSourceTest.cs"
+          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedSourceTest.cs"
         },
         "linuxMulticastOriginalRerun": {
           "regularJavaWrappersPassed": 2,
@@ -21997,7 +21965,7 @@
           "unixHalfCloseJavaWrappersPassed": 1,
           "unixHalfCloseJavaAllocatorRunsPassed": 2,
           "unixHalfCloseClrCasesPassed": 8,
-          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedCompletionSourceTest.cs"
+          "halfCloseClrEvidence": "test/Netty.NET.Transport.Tests/SocketHalfClosedSourceTest.cs"
         },
         "linuxMulticastOriginalRerun": {
           "regularJavaWrappersPassed": 2,
@@ -24002,7 +23970,7 @@
           "test/Netty.NET.Transport.Tests/TestsuitePermutation.cs",
           "src/Netty.NET.Buffer/PooledByteBufAllocator.cs",
           "src/Netty.NET.Buffer/AdaptiveByteBufAllocator.cs",
-          "src/Netty.NET.Buffer/Unpooled.Wrapping.cs"
+          "src/Netty.NET.Buffer/Unpooled.cs"
         ]
       },
       "comments": {
@@ -24437,11 +24405,10 @@
         "unreviewedMethods": []
       },
       "review": {
-        "scope": "Concrete INET fixture on AbstractDatagramTest; TestMulticast0 is protected virtual for DatagramMulticastIPv6SourceTest. The EpollDatagramMulticastIpv6WithIpv4AddrTest theory in DatagramMulticastSourceTest.Mixed.cs runs the same body through a private family-override subclass, and its mixed-family route adaptation lives in TestMulticast0.",
+        "scope": "Concrete INET fixture on AbstractDatagramTest; TestMulticast0 is protected virtual for DatagramMulticastIPv6SourceTest. The EpollDatagramMulticastIpv6WithIpv4AddrTest theory in DatagramMulticastSourceTest.cs runs the same body through a private family-override subclass, and its mixed-family route adaptation lives in TestMulticast0.",
         "sourceEvidence": [
           "test/Netty.NET.Transport.Tests/DatagramMulticastSourceTest.cs",
           "test/Netty.NET.Transport.Tests/DatagramMulticastSourceTest.IPv6.cs",
-          "test/Netty.NET.Transport.Tests/DatagramMulticastSourceTest.Mixed.cs",
           "test/Netty.NET.Transport.Tests/AbstractDatagramTest.cs",
           "test/Netty.NET.Transport.Tests/AbstractComboTestsuiteTest.cs",
           "test/Netty.NET.Transport.Tests/SocketTestPermutation.cs",
@@ -24954,7 +24921,7 @@
           "test/Netty.NET.Transport.Tests/SocketTestPermutation.cs",
           "src/Netty.NET.Transport/Bootstrapping/Bootstrap.cs",
           "src/Netty.NET.Common/Concurrent/EventExecutorSchedulingExtensions.cs",
-          "src/Netty.NET.Buffer/ByteBuf.Segmented.cs",
+          "src/Netty.NET.Buffer/ByteBuf.cs",
           "src/Netty.NET.Transport/Channels/FixedRecvByteBufAllocator.cs",
           "src/Netty.NET.Common/Concurrent/AtomicReference.cs"
         ]
@@ -25607,7 +25574,6 @@
       "status": "verified",
       "implementation": [
         "test/Netty.NET.Transport.Tests/SocketHalfClosedSourceTest.cs",
-        "test/Netty.NET.Transport.Tests/SocketHalfClosedCompletionSourceTest.cs",
         "test/Netty.NET.Transport.Tests/SocketHalfClosedContractTest.cs"
       ],
       "caseMappings": [
@@ -25662,7 +25628,6 @@
         "scope": "All eight declared tests are [Fact]s on SocketHalfClosedSourceTest : AbstractSocketTest (partial over the two source files) with the class-level 20 s timeout, looping the source's flag combinations inside the body over both allocators x the NIO combo. testAllDataReadEventTriggeredAfterHalfClosure is now mapped: its unchanged wrapper skips the NIO transport exactly as in Java, so the former clr-not-applicable decision is withdrawn. testAutoCloseFalseDoesShutdownOutput keeps the Windows assumption and is not executed on this host. A CountDownLatch helper keeps the no-op countDown at zero; StrongBox/Interlocked replace the atomics and ContinueWith replaces future listeners. SocketHalfClosedContractTest stays a supplemental CLR class.",
         "sourceEvidence": [
           "test/Netty.NET.Transport.Tests/SocketHalfClosedSourceTest.cs",
-          "test/Netty.NET.Transport.Tests/SocketHalfClosedCompletionSourceTest.cs",
           "test/Netty.NET.Transport.Tests/SocketHalfClosedContractTest.cs",
           "test/Netty.NET.Transport.Tests/AbstractSocketTest.cs",
           "src/Netty.NET.Transport/Channels/Sockets/NioSocketChannel.cs",
@@ -27065,13 +27030,11 @@
       "kind": "test",
       "status": "clr-adapted",
       "implementation": [
-        "test/Netty.NET.Transport.Tests/DatagramMulticastSourceTest.Mixed.cs",
         "test/Netty.NET.Transport.Tests/DatagramMulticastSourceTest.cs"
       ],
       "review": {
         "scope": "Retain INET6 socket and INET group, interface selection, join/send/leave sequence and both allocators. When the exact IPv6 source bind produces the original NetworkUnreachable failure, verify that error on the CLR channel, then use a wildcard sender for the remaining assertions.",
         "sourceEvidence": [
-          "test/Netty.NET.Transport.Tests/DatagramMulticastSourceTest.Mixed.cs",
           "test/Netty.NET.Transport.Tests/DatagramMulticastSourceTest.cs",
           "src/Netty.NET.Transport/Channels/Sockets/NioDatagramChannel.cs"
         ]
