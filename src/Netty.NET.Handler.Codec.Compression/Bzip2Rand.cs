@@ -19,7 +19,6 @@ namespace Netty.NET.Handler.Codec.Compression;
 /**
  * Random numbers for decompress Bzip2 blocks.
  */
-// CLR: the package-private final class with a private constructor is an internal sealed class.
 internal sealed class Bzip2Rand
 {
     /**

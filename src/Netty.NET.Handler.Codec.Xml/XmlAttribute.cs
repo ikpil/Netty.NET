@@ -20,22 +20,22 @@ namespace Netty.NET.Handler.Codec.Xml;
 /**
  * XML attributes, it is part of {@link XmlElement}
  */
-// CLR: the accessors are virtual: a Java method that is not final can be overridden ("A method may be declared final
-// (§8.4.3.3), in which case it cannot be hidden or overridden", https://docs.oracle.com/javase/specs/jls/se17/html/jls-8.html),
-// while in C# "By default, methods are non-virtual. You can't override a non-virtual method"
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/virtual). equals/hashCode/toString are
-// the overrides Equals(object)/GetHashCode()/ToString(). The field namespace is @namespace, because "You can't use
-// them [keywords] as identifiers in your program unless you prefix them with @"
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/).
-// Java string conversion writes a null reference as "null"
-// (https://docs.oracle.com/javase/specs/jls/se17/html/jls-5.html#jls-5.1.11), while in C# "the string representation
-// of null is an empty string"
+// CLR: the accessors are virtual: a Java method that is not final can be overridden ("A method may be declared
+// final (§8.4.3.3), in which case it cannot be hidden or overridden",
+// https://docs.oracle.com/javase/specs/jls/se17/html/jls-8.html), while in C# "By default, methods are
+// non-virtual. You can't override a non-virtual method"
+// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/virtual). equals/hashCode/toString
+// are the overrides Equals(object)/GetHashCode()/ToString(). The field namespace is @namespace, because "You can't
+// use them [keywords] as identifiers in your program unless you prefix them with @"
+// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/). Java string conversion writes a
+// null reference as "null" (https://docs.oracle.com/javase/specs/jls/se17/html/jls-5.html#jls-5.1.11), while in C#
+// "the string representation of null is an empty string"
 // (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/addition-operator), so ToString()
-// writes (field ?? "null"). String.hashCode() is s[0]*31^(n-1) + ... + s[n-1]
-// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html), while for string.GetHashCode()
-// "The hash code itself is not guaranteed to be stable"
-// (https://learn.microsoft.com/en-us/dotnet/api/system.string.gethashcode?view=net-10.0): the hash values differ from
-// the JVM's, and equal attributes still hash equally, which is the contract Equals relies on.
+// writes (field ?? "null"). String.hashCode() is s[0]*31^(n-1) +... + s[n-1]
+// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html), while for
+// string.GetHashCode() "The hash code itself is not guaranteed to be stable"
+// (https://learn.microsoft.com/en-us/dotnet/api/system.string.gethashcode?view=net-10.0): the hash values differ
+// from the JVM's, and equal attributes still hash equally, which is the contract Equals relies on.
 public class XmlAttribute
 {
 

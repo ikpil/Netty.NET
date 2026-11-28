@@ -31,34 +31,11 @@ using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Handler.Codec.Quic;
 
-// CLR-only: the IQuicStreamChannel of the msquic implementation, the counterpart of the JNI unit QuicheQuicStreamChannel
-// (jvm-only-replaced), over one System.Net.Quic QuicStream. It derives from the Transport's AbstractChannel and keeps the
-// semantics of QuicheQuicStreamChannel:
-//   - it is open and active from its creation and fires channelRegistered/channelActive when the parent's event loop
-//     registers it (only that event loop is compatible); a locally created unidirectional stream has its input shut
-//     down from the start;
-//   - reads honor read()/AUTO_READ: each read() starts a read batch of QuicStream.ReadAsync calls into buffers of the
-//     RecvByteBufAllocator handle, which continues while the handle's continueReading() allows it and data is already
-//     buffered (a read that does not complete synchronously ends the batch with channelReadComplete and is delivered by
-//     the next batch; a result that arrives while no read() is pending is kept until the next one). A FIN (ReadAsync
-//     returns 0, or ReadsClosed completed with the last bytes) shuts the input down and fires
-//     ChannelInputShutdownEvent and ChannelInputShutdownReadComplete with half-closure (the default), or closes the
-//     stream; READ_FRAMES delivers IQuicStreamFrames whose FIN flag carries it. A RESET_STREAM from the peer is a
-//     QuicStreamResetException with the peer's application error code (QuicException StreamAborted);
-//   - writes go through the ChannelOutboundBuffer (so writability follows the write buffer water marks, where quiche's
-//     stream capacity decides it in Java) and are QuicStream.WriteAsync calls, one message at a time (AbstractChannel's
-//     per-message drain); an IQuicStreamFrame with FIN completes the writes (FIN), after which writes fail with
-//     ChannelOutputShutdownException("Fin was sent already"); a STOP_SENDING from the peer fails the flushed writes
-//     with ChannelOutputShutdownException("STOP_SENDING frame received") without closing the stream; a write on a
-//     unidirectional stream that the peer created fails with NotSupportedException;
-//   - ShutdownOutputAsync() writes IQuicStreamFrame.EMPTY_FIN, ShutdownOutputAsync(error) and ShutdownInputAsync(error)
-//     are QuicStream.Abort(Write/Read, error) (RESET_STREAM/STOP_SENDING), and the stream closes itself once its FIN was
-//     sent and the peer's FIN received, as closeIfDone() does;
-//   - close() sends the FIN if none was sent and disposes the QuicStream, which also stops a read side that is still
-//     open (STOP_SENDING with DefaultStreamErrorCode 0, as System.Net.Quic's DisposeAsync does; quiche keeps the unread
-//     data instead).
-// Stream priorities have no System.Net.Quic counterpart: UpdatePriorityAsync reports NotSupportedException and
-// Priority() stays null. Events and errors complete on the parent's event loop.
+// CLR: Streams use the parent event loop. Pending reads and AUTO_READ control delivery, with FIN driving input
+// half-closure. A stream closes after both sides finish.
+// Writability follows outbound-buffer watermarks. Peer STOP_SENDING fails flushed writes while leaving the input
+// side open; a peer reset reports its application error code.
+// Disposing the QUIC stream may stop an unread input side. The backend does not expose stream priorities.
 [SupportedOSPlatform("windows")]
 [SupportedOSPlatform("linux")]
 [SupportedOSPlatform("macos")]

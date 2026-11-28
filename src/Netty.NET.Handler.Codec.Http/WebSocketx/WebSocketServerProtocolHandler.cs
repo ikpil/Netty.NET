@@ -45,18 +45,18 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx;
  * of {@link HandshakeComplete}, the event will contain extra information about the handshake such as the request and
  * selected subprotocol.
  */
-// CLR: the enum ServerHandshakeStateEvent is a simple C# enum; its @Deprecated HANDSHAKE_COMPLETE, whose @deprecated
-// text names the HandshakeComplete class, is not ported (owner decision 2026-11-16), so the handshake handler fires
-// only the HandshakeComplete event. The static import of WebSocketServerProtocolConfig.DEFAULT_HANDSHAKE_TIMEOUT_MILLIS
-// and HttpVersion.HTTP_1_1 are using static, and checkNotNull is the Common ObjectUtil.CheckNotNull. Class.getName() of
-// the handler names is Type.FullName. AttributeKey.valueOf(Class, String) is AttributeKey<T>.ValueOf(Type, string) and
-// channel.attr(key).get()/set() are Attr(key).Get()/Set(). ChannelFutureListener.CLOSE closes the channel from a
-// synchronous continuation of the write Task (docs/codec-base-porting.md, MessageAggregator), and ctx.newPromise() is a
-// TaskCompletionSource (see WebSocketClientHandshaker). cause.getMessage().getBytes() encodes with the platform default
-// charset, which "typically depends upon the locale and charset of the underlying operating system"
-// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/charset/Charset.html); the port encodes the
-// Message with Encoding.UTF8. buildHandshakeException narrows the return type with a C# 9 covariant override. The
-// package-private getHandshaker/setHandshaker are internal.
+// CLR: the enum ServerHandshakeStateEvent is a simple C# enum; its @Deprecated HANDSHAKE_COMPLETE, whose
+// @deprecated text names the HandshakeComplete class, is not ported, so the handshake handler fires only the
+// HandshakeComplete event. The static import of WebSocketServerProtocolConfig.DEFAULT_HANDSHAKE_TIMEOUT_MILLIS and
+// HttpVersion.HTTP_1_1 are using static, and checkNotNull is the Common ObjectUtil.CheckNotNull. Class.getName()
+// of the handler names is Type.FullName. AttributeKey.valueOf(Class, String) is AttributeKey<T>.ValueOf(Type,
+// string) and channel.attr(key).get()/set() are Attr(key).Get()/Set(). ChannelFutureListener.CLOSE closes the
+// channel from a synchronous continuation of the write Task, and ctx.newPromise() is a TaskCompletionSource (see
+// WebSocketClientHandshaker). cause.getMessage().getBytes() encodes with the platform default charset, which
+// "typically depends upon the locale and charset of the underlying operating system"
+// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/charset/Charset.html); the port encodes
+// the Message with Encoding.UTF8. buildHandshakeException narrows the return type with a C# 9 covariant override.
+// The package-private getHandshaker/setHandshaker are internal.
 public class WebSocketServerProtocolHandler : WebSocketProtocolHandler
 {
 

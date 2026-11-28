@@ -85,7 +85,6 @@ public sealed class DateFormatter
 
     private static readonly FastThreadLocal<DateFormatter> INSTANCES = new DateFormatterThreadLocal();
 
-    // CLR: the anonymous FastThreadLocal is a named nested subclass.
     private sealed class DateFormatterThreadLocal : FastThreadLocal<DateFormatter>
     {
         protected override DateFormatter InitialValue()

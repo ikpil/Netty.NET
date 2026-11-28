@@ -16,9 +16,8 @@
 
 namespace Netty.NET.Handler.Codec.Http;
 
-// CLR: the Java interface takes the I prefix (owner rule). The @Deprecated getDecoderResult(), whose @deprecated text
-// names decoderResult(), is not ported (owner decision 2026-11-16); IDecoderResultProvider.DecoderResult() is the
-// accessor.
+// CLR: the Java interface takes the I prefix (owner rule). The @Deprecated getDecoderResult(), whose @deprecated
+// text names decoderResult(), is not ported.
 public interface IHttpObject : IDecoderResultProvider
 {
 }

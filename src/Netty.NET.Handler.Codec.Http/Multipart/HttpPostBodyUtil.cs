@@ -24,13 +24,11 @@ namespace Netty.NET.Handler.Codec.Http.Multipart;
 /**
  * Shared Static object between HttpMessageDecoder, HttpPostRequestDecoder and HttpPostRequestEncoder
  */
-// CLR: the package-private final class with a private constructor is an internal static class (as core's
-// HttpMessageUtil); the constants keep their Java names. TransferEncodingMechanism has a field, a constructor and
-// methods, so it is a sealed class with static readonly instances (docs/codec-base-porting.md, as Base64Dialect).
-// Character.isWhitespace is core's HttpVersion.IsJavaWhitespace. The Buffer port throws ArgumentOutOfRangeException where
-// a Java ByteBuf throws IndexOutOfBoundsException (docs/codec-dns-porting.md). CharsetName is a CLR-only helper that
-// the multipart classes share for Charset.name() (see its comment); Charset.forName(String) is Common's
-// CharsetUtil.ForName.
+// CLR: The constants keep their Java names. TransferEncodingMechanism has a field, a constructor and methods, so
+// it is a sealed class with static readonly instances. Character.isWhitespace is core's
+// HttpVersion.IsJavaWhitespace. The Buffer port throws ArgumentOutOfRangeException where a Java ByteBuf throws
+// IndexOutOfBoundsException. CharsetName is a CLR-only helper that the multipart classes share for Charset.name()
+// (see its comment).
 internal static class HttpPostBodyUtil
 {
 
@@ -91,10 +89,10 @@ internal static class HttpPostBodyUtil
     * This class intends to decrease the CPU in seeking ahead some bytes in
     * HttpPostRequestDecoder
     */
-    // CLR: ByteBuf.hasArray()/array()/arrayOffset() are replaced by MemoryMarshal.TryGetArray over the readable memory
-    // (docs/buffer-porting.md, Array extraction; as core's HttpObjectDecoder.LineArray). The segment offset is
-    // arrayOffset() + readerIndex() and its end arrayOffset() + writerIndex(); a buffer whose readable memory is not
-    // backed by a managed array has no backing array, and the constructor throws ArgumentException for it.
+    // CLR: ByteBuf.hasArray()/array()/arrayOffset() are replaced by MemoryMarshal.TryGetArray over the readable
+    // memory. The segment offset is arrayOffset() + readerIndex() and its end arrayOffset() + writerIndex(); a
+    // buffer whose readable memory is not backed by a managed array has no backing array, and the constructor
+    // throws ArgumentException for it.
     internal sealed class SeekAheadOptimize
     {
         internal byte[] bytes;
@@ -375,17 +373,17 @@ internal static class HttpPostBodyUtil
         }
     }
 
-    // CLR: catch (IllegalArgumentException e). IllegalArgumentException is ArgumentException (docs/codec-base-porting.md),
-    // but the BCL also derives ArgumentNullException, which checkNotNull throws where Java throws NullPointerException,
-    // and ArgumentOutOfRangeException, which the Buffer port throws where Java throws IndexOutOfBoundsException
-    // (docs/codec-dns-porting.md), from ArgumentException, so those two do not count as the Java type.
+    // CLR: catch (IllegalArgumentException e). IllegalArgumentException is ArgumentException, but the BCL also
+    // derives ArgumentNullException, which checkNotNull throws where Java throws NullPointerException, and
+    // ArgumentOutOfRangeException, which the Buffer port throws where Java throws IndexOutOfBoundsException, from
+    // ArgumentException, so those two do not count as the Java type.
     internal static bool IsIllegalArgument(Exception e)
     {
         return e is ArgumentException && !(e is ArgumentNullException) && !(e is ArgumentOutOfRangeException);
     }
 
-    // CLR: catch (NullPointerException e): the NullReferenceException of a null dereference or the ArgumentNullException
-    // of ObjectUtil.CheckNotNull (docs/codec-base-porting.md).
+    // CLR: catch (NullPointerException e): the NullReferenceException of a null dereference or the
+    // ArgumentNullException of ObjectUtil.CheckNotNull.
     internal static bool IsNullPointer(Exception e)
     {
         return e is NullReferenceException || e is ArgumentNullException;

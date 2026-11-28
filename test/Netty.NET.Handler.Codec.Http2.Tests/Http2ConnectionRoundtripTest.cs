@@ -678,8 +678,6 @@ public class Http2ConnectionRoundtripTest : IAsyncLifetime
         await assertPromise.Task;
     }
 
-    // CLR: the anonymous ChannelOutboundHandlerAdapter of writeFailureFlowControllerRemoveFrame();
-    // promise.setFailure(e) is the failed Task the outbound write returns.
     private sealed class FailingWriteHandler : ChannelOutboundHandlerAdapter
     {
         private readonly Http2ConnectionRoundtripTest test;
@@ -734,7 +732,6 @@ public class Http2ConnectionRoundtripTest : IAsyncLifetime
         SetClientGracefulShutdownTime(0);
     }
 
-    // CLR: the anonymous ChannelHandlerAdapter classes whose handlerAdded(...) throws the given exception.
     private sealed class ThrowingHandler : ChannelHandlerAdapter
     {
         private readonly Exception exception;
@@ -1169,7 +1166,6 @@ public class Http2ConnectionRoundtripTest : IAsyncLifetime
         http2Server = Volatile.Read(ref serverHandlerRef[0]);
     }
 
-    // CLR: the anonymous ChannelInitializer<Channel> of the server side of bootstrapEnv(...).
     private sealed class ServerInitializer : ChannelInitializer<IChannel>
     {
         private readonly Http2ConnectionRoundtripTest test;
@@ -1209,8 +1205,6 @@ public class Http2ConnectionRoundtripTest : IAsyncLifetime
         }
     }
 
-    // CLR: the anonymous ChannelInitializer<Channel> of the client side of bootstrapEnv(...) and its anonymous
-    // ChannelInboundHandlerAdapter (PrefaceWrittenHandler).
     private sealed class ClientInitializer : ChannelInitializer<IChannel>
     {
         private readonly Http2ConnectionRoundtripTest test;
@@ -1274,8 +1268,6 @@ public class Http2ConnectionRoundtripTest : IAsyncLifetime
         return Http2CodecUtil.NewPromise();
     }
 
-    // CLR: the String/AsciiString values are AsciiString and StringCharSequence values (a C# string is not an
-    // ICharSequence; docs/codec-http-porting.md, Shared CLR adaptations).
     private static IHttp2Headers DummyHeaders()
     {
         return new DefaultHttp2Headers(false).Method(new AsciiString("GET")).Scheme(new AsciiString("https"))

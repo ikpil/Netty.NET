@@ -62,7 +62,6 @@ public sealed class LocalAddress : EndPoint, IComparable<LocalAddress>
     /**
      * Creates a new instance with a random ID based on the given class.
      */
-    // CLR: getSimpleName() is Type.Name and UUID.randomUUID() is Guid.NewGuid() in its "D" format.
     public LocalAddress(Type cls) : this(ObjectUtil.CheckNotNull(cls, "cls").Name + '/' + Guid.NewGuid())
     {
     }

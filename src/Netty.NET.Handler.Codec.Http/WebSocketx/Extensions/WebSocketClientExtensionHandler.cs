@@ -32,12 +32,12 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx.Extensions;
  * Find a basic implementation for compression extensions at
  * <tt>io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketClientCompressionHandler</tt>.
  */
-// CLR: write(ctx, msg, promise) is WriteAsync(ctx, msg, cancellationToken), whose Task replaces the promise
-// (docs/codec-base-porting.md, Outbound operations). The varargs constructor takes a params array, and
-// Arrays.asList(checkNonEmpty(...)) is the array itself as an IList (ArgumentException for an empty array, as
-// checkNonEmpty's IllegalArgumentException). HttpRequest/HttpResponse are the core IHttpRequest/IHttpResponse, the
-// handler names decoder.getClass().getName() are Type.FullName, and ctx.name()/ctx.pipeline() are the Name and Pipeline
-// properties. Iterator over the handshakers is IEnumerator (hasNext()/next() are MoveNext()/Current).
+// CLR: write(ctx, msg, promise) is WriteAsync(ctx, msg, cancellationToken), whose Task replaces the promise. The
+// varargs constructor takes a params array, and Arrays.asList(checkNonEmpty(...)) is the array itself as an IList
+// (ArgumentException for an empty array, as checkNonEmpty's IllegalArgumentException). HttpRequest/HttpResponse
+// are the core IHttpRequest/IHttpResponse, the handler names decoder.getClass().getName() are Type.FullName, and
+// ctx.name()/ctx.pipeline() are the Name and Pipeline properties. Iterator over the handshakers is IEnumerator
+// (hasNext()/next() are MoveNext()/Current).
 public class WebSocketClientExtensionHandler : ChannelDuplexHandler
 {
 

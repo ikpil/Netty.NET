@@ -24,11 +24,11 @@ namespace Netty.NET.Handler.Codec.Http3;
  * Default implementation of {@link Http3SettingsFrame}.
  *
  */
-// CLR: the interface is IHttp3SettingsFrame; Iterable is IEnumerable<KeyValuePair<long, long>>. The @Deprecated overrides
-// get(long) and put(long, Long) ("use settings() and manipulate the Http3Settings directly") name their replacement, so
-// they are not ported (owner decision 2026-11-16, docs/codec-http-porting.md) and their comments are recorded in the
-// manifest; put is the IHttp3SettingsFrame default member, which calls settings().put as the override did, so copyOf
-// calls it through the interface. getClass() != o.getClass() is GetType() != o.GetType().
+// CLR: the interface is IHttp3SettingsFrame; Iterable is IEnumerable<KeyValuePair<long, long>>. The @Deprecated
+// overrides get(long) and put(long, Long) ("use settings() and manipulate the Http3Settings directly") name their
+// replacement, so they are not ported and their comments are recorded in the manifest; put is the
+// IHttp3SettingsFrame default member, which calls settings().put as the override did, so copyOf calls it through
+// the interface. getClass() != o.getClass() is GetType() != o.GetType().
 public sealed class DefaultHttp3SettingsFrame : IHttp3SettingsFrame
 {
 

@@ -55,23 +55,23 @@ namespace Netty.NET.Handler.Pcap;
  *    </ul>
  * </p>
  */
-// CLR: java.io.OutputStream is System.IO.Stream (owner decision: JVM-only I/O is replaced by the BCL), always written
-// in full inside Netty.NET.Handler, where the simple name Stream is the sibling namespace. InetSocketAddress is
-// IPEndPoint (docs/codec-dns-porting.md); getPort() is Port, getAddress() is Address and InetAddress.getAddress() is
-// GetAddressBytes(). SocketChannel, ServerSocketChannel and DatagramChannel are the Transport interfaces
-// ISocketChannel, IServerSocketChannel and IDatagramChannel (docs/transport-porting.md, Interfaces added; isConnected()
-// is IsConnected). instanceof Inet4Address/Inet6Address is AddressFamily.InterNetwork/InterNetworkV6: Java "will never
-// return an IPv4-mapped address" and converts one "into an IPv4 address"
-// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/Inet6Address.html); the Transport channels
-// report IPv4-mapped endpoints in IPv4 form (AbstractNioChannel.Normalize), while a caller-supplied IPEndPoint keeps
-// the family it was created with. write(ctx, msg, promise) is WriteAsync(ctx, msg, cancellationToken), whose returned
-// Task replaces the promise (docs/codec-base-porting.md). The AtomicReference<State> is a volatile State field (get/set
-// are volatile reads and writes) and compareAndSet is Interlocked.CompareExchange, as Interlocked replaces Java's
-// atomic updaters in Transport (docs/transport-porting.md); inside this class the enum is written Pcap.State, because
-// the simple name State is the state() method here. Closeable keeps close() as Close() and IDisposable.Dispose() calls
-// it, as codec-compression's IDecompressor does for AutoCloseable (docs/codec-compression-porting.md). The two
-// @Deprecated constructors, whose @deprecated text names Builder, are not ported (owner decision 2026-11-16). builder()
-// is Builder_(), because a method cannot share the name of the nested Builder type (owner decision 2026-11-23, CS0102).
+// CLR: java.io.OutputStream is System.IO.Stream (owner decision: JVM-only I/O is replaced by the BCL), always
+// written in full inside Netty.NET.Handler, where the simple name Stream is the sibling namespace.
+// InetSocketAddress is IPEndPoint. SocketChannel, ServerSocketChannel and DatagramChannel are the Transport
+// interfaces ISocketChannel, IServerSocketChannel and IDatagramChannel (docs/transport-porting.md, Interfaces
+// added; isConnected() is IsConnected). instanceof Inet4Address/Inet6Address is
+// AddressFamily.InterNetwork/InterNetworkV6: Java "will never return an IPv4-mapped address" and converts one
+// "into an IPv4 address"
+// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/Inet6Address.html); the Transport
+// channels report IPv4-mapped endpoints in IPv4 form (AbstractNioChannel.Normalize), while a caller-supplied
+// IPEndPoint keeps the family it was created with. write(ctx, msg, promise) is WriteAsync(ctx, msg,
+// cancellationToken), whose returned Task replaces the promise. The AtomicReference<State> is a volatile State
+// field (get/set are volatile reads and writes) and compareAndSet is Interlocked.CompareExchange, as Interlocked
+// replaces Java's atomic updaters in Transport; inside this class the enum is written Pcap.State, because the
+// simple name State is the state() method here. Closeable keeps close() as Close() and IDisposable.Dispose() calls
+// it, as codec-compression's IDecompressor does for AutoCloseable. The two @Deprecated constructors, whose
+// @deprecated text names Builder, are not ported. builder() is Builder_(), because a method cannot share the name
+// of the nested Builder type.
 public sealed class PcapWriteHandler : ChannelDuplexHandler, IDisposable
 {
 
@@ -864,10 +864,9 @@ public sealed class PcapWriteHandler : ChannelDuplexHandler, IDisposable
                     "forceTcpChannel or forceUdpChannel before registering the handler.");
     }
 
-    // CLR: Java prints booleans as true/false and numbers without a culture, so the booleans are the Java words and the
-    // numbers use the invariant culture (docs/codec-redis-porting.md); a null field prints "null" as Java string
-    // concatenation does. The addresses are IPEndPoint.ToString() (host:port), not InetSocketAddress's
-    // host/literal:port.
+    // CLR: Java prints booleans as true/false and numbers without a culture, so the booleans are the Java words
+    // and the numbers use the invariant culture; a null field prints "null" as Java string concatenation does. The
+    // addresses are IPEndPoint.ToString() (host:port), not InetSocketAddress's host/literal:port.
     public override string ToString()
     {
         return "PcapWriteHandler{" +
@@ -1044,10 +1043,8 @@ public sealed class PcapWriteHandler : ChannelDuplexHandler, IDisposable
         }
     }
 
-    // CLR: InetAddress.getByAddress(byte[]) is new IPAddress(byte[]), which takes the 4 bytes of an IPv4 or the 16
-    // bytes of an IPv6 address and throws ArgumentException for another length (UnknownHostException in Java). The
-    // static initializer is the static constructor; AssertionError is UnreachableException, "The exception that is
-    // thrown when the program executes an instruction that was thought to be unreachable"
+    // CLR: The static initializer is the static constructor; AssertionError is UnreachableException, "The
+    // exception that is thrown when the program executes an instruction that was thought to be unreachable"
     // (https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.unreachableexception?view=net-10.0).
     private static class WildcardAddressHolder
     {

@@ -32,14 +32,14 @@ namespace Netty.NET.Handler.Ssl;
  * The client will send host name in the handshake data so server could decide
  * which certificate to choose for the host name.</p>
  */
-// CLR: io.netty.util.Mapping is Func<TIn, TOut> and AsyncMapping is IAsyncMapping<TInput, TOutput>, whose MapAsync returns
-// a provider-owned Task instead of completing a caller Promise (docs/common-clr-design.md "Native synchronous domain
-// selection", docs/common-native-async-mapping.md); DomainNameMapping keeps its Map method, used as the Func. Func is
-// covariant in its result, so Mapping<? super String, ? extends SslContext> is Func<string, SslContext>; the input of
-// IAsyncMapping is contravariant but Task<T> is invariant, so AsyncMapping<? super String, ? extends SslContext> is
-// IAsyncMapping<string, SslContext>, and DomainNameMapping<? extends SslContext> is DomainNameMapping<SslContext> (a class
-// type parameter has no variance). Future<SslContext> is Task<SslContext>, as in AbstractSniHandler. The unchecked casts
-// of the source have no counterpart.
+// CLR: io.netty.util.Mapping is Func<TIn, TOut> and AsyncMapping is IAsyncMapping<TInput, TOutput>, whose MapAsync
+// returns a provider-owned Task instead of completing a caller Promise; DomainNameMapping keeps its Map method,
+// used as the Func. Func is covariant in its result, so Mapping<? super String, ? extends SslContext> is
+// Func<string, SslContext>; the input of IAsyncMapping is contravariant but Task<T> is invariant, so
+// AsyncMapping<? super String, ? extends SslContext> is IAsyncMapping<string, SslContext>, and DomainNameMapping<?
+// extends SslContext> is DomainNameMapping<SslContext> (a class type parameter has no variance).
+// Future<SslContext> is Task<SslContext>, as in AbstractSniHandler. The unchecked casts of the source have no
+// counterpart.
 public class SniHandler : AbstractSniHandler<SslContext>
 {
     private static readonly Selection EMPTY_SELECTION = new Selection(null, null);
@@ -203,10 +203,10 @@ public class SniHandler : AbstractSniHandler<SslContext>
      *
      * It's also possible for the hostname argument to be {@code null}.
      */
-    // CLR: SslHandler.class.getName() is the type's FullName. ReferenceCountUtil.safeRelease(sslHandler.engine()) releases
-    // the engine of a handler that did not reach the pipeline; the engine is the SslStream the handler created
-    // (SslHandler.engine() is internal, owner decision 2026-11-24), whose Dispose "Releases the unmanaged resources used
-    // by the SslStream" (https://learn.microsoft.com/en-us/dotnet/api/system.net.security.sslstream?view=net-10.0).
+    // CLR: ReferenceCountUtil.safeRelease(sslHandler.engine()) releases the engine of a handler that did not reach
+    // the pipeline; the engine is the SslStream the handler created (SslHandler.engine() is internal, owner
+    // decision 2026-11-24), whose Dispose "Releases the unmanaged resources used by the SslStream"
+    // (https://learn.microsoft.com/en-us/dotnet/api/system.net.security.sslstream?view=net-10.0).
     protected virtual void ReplaceHandler(IChannelHandlerContext ctx, string hostname, SslContext sslContext)
     {
         SslHandler sslHandler = null;

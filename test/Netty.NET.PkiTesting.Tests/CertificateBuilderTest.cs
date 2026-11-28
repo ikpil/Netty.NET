@@ -311,8 +311,6 @@ public class CertificateBuilderTest
         }
     }
 
-    // CLR: ExtendedKeyUsage.values() is Values(), the TreeSet a SortedSet with ordinal order, getExtendedKeyUsage() the
-    // OIDs of the X509EnhancedKeyUsageExtension, and containsExactlyInAnyOrderElementsOf compares the sorted sequences.
     [Fact]
     public void CreateCertificteWithExtendedKeyUsage()
     {
@@ -368,8 +366,6 @@ public class CertificateBuilderTest
                      new DateTimeOffset(cert.NotAfter).ToUnixTimeMilliseconds());
     }
 
-    // CLR: register(root, provider) is Register(root): the JCA Provider that signs the CRL has no BCL counterpart, so
-    // Providers() keeps only the default row and the parameter is unused (xUnit1026 is suppressed for that reason).
 #pragma warning disable xUnit1026 // the provider row is kept for the 1:1 port; the BCL signs the CRL without a provider.
     [Theory]
     [MemberData(nameof(Providers))]
@@ -421,9 +417,9 @@ public class CertificateBuilderTest
     }
 #pragma warning restore xUnit1026
 
-    // CLR: keyPair.getPublic() is the BCL PublicKey of the key object; Algorithms.GetPublic makes a new PublicKey for
-    // each call, so the test keeps the one it passes and checks that the bundle holds that object (isSameAs). The
-    // NullPointerException of getPrivateKeyPEM() is NullReferenceException.
+    // CLR: Algorithms.GetPublic makes a new PublicKey for each call, so the test keeps the one it passes and
+    // checks that the bundle holds that object (isSameAs). The NullPointerException of getPrivateKeyPEM() is
+    // NullReferenceException.
     [Fact]
     public void GenerateCertificateWithGivenPublicKey()
     {
@@ -512,7 +508,6 @@ public class CertificateBuilderTest
         };
     }
 
-    // CLR: X509TrustManager.checkClientTrusted(chain, authType); see the class comment.
     private static void CheckClientTrusted(X509Chain trustManager, X509Certificate2[] chain)
     {
         for (int i = 1; i < chain.Length; i++)

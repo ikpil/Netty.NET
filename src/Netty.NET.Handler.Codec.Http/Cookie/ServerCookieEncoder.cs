@@ -39,17 +39,15 @@ namespace Netty.NET.Handler.Codec.Http.Cookie;
  *
  * @see ServerCookieDecoder
  */
-// CLR: List<String> is IList<string> and Collections.emptyList() is the immutable ImmutableList<string>.Empty (the core
-// maps emptyMap/singletonList to the immutable collections the same way); Map<String, Integer> is Dictionary<string,
-// int>, and Map.put(...) != null (a previous mapping existed) is the private Put helper. Cookie... is params ICookie[],
-// Collection<? extends Cookie> is the covariant IReadOnlyCollection<ICookie> and Iterable<? extends Cookie> is
-// IEnumerable<ICookie> (see ClientCookieEncoder); Iterator.hasNext()/next() is IEnumerator.MoveNext()/Current.
-// java.util.Date is DateTimeOffset (codec-base DateFormatter), and new Date(millis) is
-// DateTimeOffset.FromUnixTimeMilliseconds, whose range ends at -62,135,596,800,000 and 253,402,300,799,999 ms
-// (https://learn.microsoft.com/en-us/dotnet/api/system.datetimeoffset.fromunixtimemilliseconds?view=net-10.0, years 1 to
-// 9999); a java.util.Date has no such bound, so an Expires instant beyond it (a Max-Age above about 7,975 years) is
-// clamped to the range, where Java prints a year above 9999. System.currentTimeMillis() is
-// DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() (see ClientCookieDecoder).
+// CLR: Map<String, Integer> is Dictionary<string, int>, and Map.put(...) != null (a previous mapping existed) is
+// the private Put helper. Cookie... is params ICookie[], Collection<? extends Cookie> is the covariant
+// IReadOnlyCollection<ICookie> and Iterable<? extends Cookie> is IEnumerable<ICookie> (see ClientCookieEncoder);
+// Iterator.hasNext()/next() is IEnumerator.MoveNext()/Current. java.util.Date is DateTimeOffset (codec-base
+// DateFormatter), and new Date(millis) is DateTimeOffset.FromUnixTimeMilliseconds, whose range ends at
+// -62,135,596,800,000 and 253,402,300,799,999 ms
+// (https://learn.microsoft.com/en-us/dotnet/api/system.datetimeoffset.fromunixtimemilliseconds?view=net-10.0,
+// years 1 to 9999); a java.util.Date has no such bound, so an Expires instant beyond it (a Max-Age above about
+// 7,975 years) is clamped to the range, where Java prints a year above 9999.
 public sealed class ServerCookieEncoder : CookieEncoder
 {
 

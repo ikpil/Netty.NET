@@ -22,10 +22,10 @@ namespace Netty.NET.Handler.Codec.Http;
  * The default {@link HttpMessage} implementation.
  */
 // CLR: the @Deprecated DefaultHttpMessage(HttpVersion, boolean, boolean), whose @deprecated text names
-// DefaultHttpMessage(HttpVersion, HttpHeadersFactory), and the @Deprecated getProtocolVersion() are not ported (owner
-// decision 2026-11-16). setProtocolVersion is virtual so that the subclasses narrow its return type with covariant
-// override returns (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override); equals and
-// hashCode are Equals/GetHashCode.
+// DefaultHttpMessage(HttpVersion, HttpHeadersFactory), and the @Deprecated getProtocolVersion() are not ported.
+// setProtocolVersion is virtual so that the subclasses narrow its return type with covariant override returns
+// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override); equals and hashCode are
+// Equals/GetHashCode.
 public abstract class DefaultHttpMessage : DefaultHttpObject, IHttpMessage
 {
     private const int HASH_CODE_PRIME = 31;

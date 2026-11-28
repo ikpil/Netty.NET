@@ -27,12 +27,11 @@ using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Handler.Tests.Ssl;
 
-// CLR: the anonymous ApplicationProtocolNegotiationHandler and ChannelInboundHandlerAdapter subclasses are named nested
-// classes and AtomicBoolean/AtomicReference are the Common types. SSLContext.getDefault().createSSLEngine() with
-// setUseClientMode(true) is a default SslClientAuthenticationOptions, which SslHandler(options) takes in place of a
-// client-mode SSLEngine (owner decision 2026-11-24, docs/handler-ssl-design.md). SSLHandshakeException is
-// AuthenticationException (ssl design decision 3) and IllegalStateException is InvalidOperationException
-// (docs/codec-base-porting.md); the private Consumer interface is IConsumer (interfaces take the I prefix).
+// CLR: the anonymous ApplicationProtocolNegotiationHandler and ChannelInboundHandlerAdapter subclasses are named
+// nested classes and AtomicBoolean/AtomicReference are the Common types. SSLContext.getDefault().createSSLEngine()
+// with setUseClientMode(true) is a default SslClientAuthenticationOptions, which SslHandler(options) takes in
+// place of a client-mode SSLEngine. SSLHandshakeException is AuthenticationException (ssl design decision 3) and
+// IllegalStateException is InvalidOperationException.
 public class ApplicationProtocolNegotiationHandlerTest
 {
 

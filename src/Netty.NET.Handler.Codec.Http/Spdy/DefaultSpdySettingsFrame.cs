@@ -25,14 +25,14 @@ namespace Netty.NET.Handler.Codec.Spdy;
 /**
  * The default {@link SpdySettingsFrame} implementation.
  */
-// CLR: TreeMap<Integer, Setting> is SortedDictionary<int, Setting>, which enumerates its entries in ascending key order
-// as TreeMap does (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/TreeMap.html,
-// https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.sorteddictionary-2?view=net-10.0). TreeMap's
-// keySet() is a live view of the map; ids() returns a SortedSet<int> snapshot of the keys in the same ascending order,
-// because the BCL has no ISet view of dictionary keys (the callers only iterate it before changing the frame).
-// Set<Map.Entry<Integer, Setting>> is the dictionary's KeyValuePair enumeration. IllegalArgumentException is
-// ArgumentException (docs/codec-base-porting.md); a boolean is appended as Java's "true"/"false" and numbers with the
-// invariant culture; StringBuilder.setLength is the Length setter. Java methods are virtual unless final.
+// CLR: TreeMap<Integer, Setting> is SortedDictionary<int, Setting>, which enumerates its entries in ascending key
+// order as TreeMap does (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/TreeMap.html,
+// https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.sorteddictionary-2?view=net-10.0).
+// TreeMap's keySet() is a live view of the map; ids() returns a SortedSet<int> snapshot of the keys in the same
+// ascending order, because the BCL has no ISet view of dictionary keys (the callers only iterate it before
+// changing the frame). Set<Map.Entry<Integer, Setting>> is the dictionary's KeyValuePair enumeration.
+// IllegalArgumentException is ArgumentException; a boolean is appended as Java's "true"/"false" and numbers with
+// the invariant culture; StringBuilder.setLength is the Length setter. Java methods are virtual unless final.
 public class DefaultSpdySettingsFrame : ISpdySettingsFrame
 {
 

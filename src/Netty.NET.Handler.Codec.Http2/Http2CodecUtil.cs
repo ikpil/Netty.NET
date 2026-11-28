@@ -35,13 +35,12 @@ namespace Netty.NET.Handler.Codec.Http2;
  * Constants and utility method used for encoding/decoding HTTP2 frames.
  */
 // CLR: the final class with a private constructor is a static class. The String constants that Java types as
-// CharSequence are StringCharSequence values (a C# string is not an ICharSequence; docs/codec-http-porting.md, Shared
-// CLR adaptations). MILLISECONDS.convert(30, SECONDS) is TimeSpan.FromSeconds(30) in milliseconds. ChannelPromise is
-// TaskCompletionSource and ChannelFuture is Task (docs/codec-http-porting.md: "Where a handler stores, completes or
-// listens to a promise ..., a TaskCompletionSource stands for it"). The members after verifyPadding (Format,
-// ToJavaString, NewPromise, Write, WriteAndFlush, Close, Cascade, AddListener and Cause) are CLR-only internal helpers
-// of the package: they keep the Java text of String.format/String.valueOf and the timing of
-// ctx.write(msg, promise)/future.addListener(...) (see their comments).
+// CharSequence are StringCharSequence values (a C# string is not an ICharSequence; docs/codec-http-porting.md,
+// Shared CLR adaptations). MILLISECONDS.convert(30, SECONDS) is TimeSpan.FromSeconds(30) in milliseconds.
+// ChannelPromise is TaskCompletionSource and ChannelFuture is Task. The members after verifyPadding (Format,
+// ToJavaString, NewPromise, Write, WriteAndFlush, Close, Cascade, AddListener and Cause) are CLR-only internal
+// helpers of the package: they keep the Java text of String.format/String.valueOf and the timing of ctx.write(msg,
+// promise)/future.addListener(...) (see their comments).
 public static class Http2CodecUtil
 {
     public const int CONNECTION_STREAM_ID = 0;
@@ -570,11 +569,10 @@ public static class Http2CodecUtil
         return o.ToString();
     }
 
-    // CLR: ctx.newPromise()/channel.newPromise(): a TaskCompletionSource without RunContinuationsAsynchronously, so a
-    // listener added with ExecuteSynchronously runs when the promise completes, as DefaultPromise notifies at once on
-    // the event loop (docs/codec-http-porting.md, Handshakers: channel.newPromise()). ctx.voidPromise() is a new
-    // promise whose Task nobody observes (docs/transport-porting.md: VoidChannelPromise, "discard the returned Task"),
-    // and promise.unvoid() returns the promise itself.
+    // CLR: ctx.newPromise()/channel.newPromise(): a TaskCompletionSource without RunContinuationsAsynchronously,
+    // so a listener added with ExecuteSynchronously runs when the promise completes, as DefaultPromise notifies at
+    // once on the event loop (docs/codec-http-porting.md, Handshakers: channel.newPromise()). ctx.voidPromise() is
+    // a new promise whose Task nobody observes, and promise.unvoid() returns the promise itself.
     internal static TaskCompletionSource NewPromise()
     {
         return new TaskCompletionSource();

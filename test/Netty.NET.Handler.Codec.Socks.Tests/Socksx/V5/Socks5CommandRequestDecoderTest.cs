@@ -23,8 +23,8 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Socks.Tests.Socksx.V5;
 
-// CLR: java.net.IDN is the shared Netty.NET.Common.Internal.IDN; SocketUtils.addressByName of a literal is IPAddress.Parse and InetAddress.getAddress() is
-// GetAddressBytes() (docs/common-clr-design.md, as in the codec-dns tests); the UnknownHostException clause has no
+// CLR: java.net.IDN is the shared Netty.NET.Common.Internal.IDN; SocketUtils.addressByName of a literal is
+// IPAddress.Parse and InetAddress.getAddress() is GetAddressBytes(); the UnknownHostException clause has no
 // counterpart and Arrays.asList(...) is an array. The private helper keeps its name test (Test).
 public class Socks5CommandRequestDecoderTest
 {

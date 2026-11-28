@@ -92,8 +92,6 @@ public class ChunkedStream : IChunkedInput<ByteBuf>
             return false;
         }
 
-        // CLR: in.read() is Stream.ReadByte(), which returns -1 at the end of the stream as InputStream.read() does;
-        // in.unread(b) stores the byte in the pushback field.
         int b = @in.ReadByte();
         if (b < 0)
         {
@@ -166,12 +164,11 @@ public class ChunkedStream : IChunkedInput<ByteBuf>
         return offset;
     }
 
-    // CLR: in.available() of the PushbackInputStream, which "returns the sum of the number of bytes that have been
-    // pushed back and the value returned by available" (PushbackInputStream docs above). System.IO.Stream has no
-    // available(): a seekable stream reports Length - Position, the bytes left before its end (Stream.Length is "the
-    // length of the stream in bytes" and is unsupported only when the stream "does not support seeking",
-    // https://learn.microsoft.com/en-us/dotnet/api/system.io.stream.length?view=net-10.0), as ByteArrayInputStream and
-    // FileInputStream report; any other stream reports 0, as "The available method of InputStream always returns 0"
+    // CLR: System.IO.Stream has no available(): a seekable stream reports Length - Position, the bytes left before
+    // its end (Stream.Length is "the length of the stream in bytes" and is unsupported only when the stream "does
+    // not support seeking", https://learn.microsoft.com/en-us/dotnet/api/system.io.stream.length?view=net-10.0),
+    // as ByteArrayInputStream and FileInputStream report; any other stream reports 0, as "The available method of
+    // InputStream always returns 0"
     // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/InputStream.html).
     private int Available()
     {

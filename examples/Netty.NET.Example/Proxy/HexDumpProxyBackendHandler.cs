@@ -22,9 +22,7 @@ using Netty.NET.Transport.Channels;
 namespace Netty.NET.Example.Proxy;
 
 // CLR: writeAndFlush(msg).addListener is a continuation of the write Task on the inbound channel's event loop
-// (EventExecutorTaskScheduler, the timing of DefaultPromise.notifyListeners()); future.isSuccess() is
-// IsCompletedSuccessfully. ctx.close() discards its Task as Java discards the future, and cause.printStackTrace() writes
-// Exception.ToString() to Console.Error.
+// (EventExecutorTaskScheduler, the timing of DefaultPromise.notifyListeners()).
 public class HexDumpProxyBackendHandler : ChannelInboundHandlerAdapter
 {
 

@@ -23,23 +23,23 @@ namespace Netty.NET.Handler.Codec.Http3.Tests;
 /**
  * unit tests for {@link Http3Settings}.
  */
-// CLR: the package-private JUnit methods are public, because xUnit runs public test methods. Http3Settings keeps the
-// Java members (docs/codec-http3-porting.md): Iterable<Map.Entry<Long, Long>> is IEnumerable<KeyValuePair<long, long>>,
-// iterator() is GetEnumerator() and hasNext() is MoveNext(), and a Long/Boolean result that may be null is long?/bool?,
-// so assertEquals(Boolean.TRUE, x) and assertEquals(4096L, x) compare nullable values and assertNull checks the nullable.
-// A long key or value is never null, so assertNotNull(e.getKey()) checks the boxed value, as Java checks the boxed Long.
-// assertEquals(Object, Object) and assertNotEquals(Object, Object) call equals: Http3Settings is an IEnumerable, which
-// xUnit's Assert.Equal would compare entry by entry, so AssertObjectEquals/AssertObjectNotEquals keep JUnit's comparison
-// (as AssertSettingsEquals in codec-http2's InboundHttp2ToHttpAdapterTest). AtomicInteger, which only counts in a
-// for-each loop, is an int. Iterable.forEach(Consumer) and Set.forEach(Consumer) are foreach loops over the same
-// elements. The lambdas (id, v) -> ... given to the Http3Settings(NonStandardHttp3SettingsValidator) constructor are
-// the private nested class FuncValidator over a Func (INonStandardHttp3SettingsValidator is an interface, not a
-// delegate). Http3SettingsFrame is IHttp3SettingsFrame, whose default member Put is called through the interface.
-// assertThrows(IllegalArgumentException.class, ...) is Assert.ThrowsAny<ArgumentException> and checkNotNull's
-// NullPointerException is ArgumentNullException (docs/codec-http-porting.md, Core test notes and Shared CLR
-// adaptations). Long.MAX_VALUE/MIN_VALUE are long.MaxValue/MinValue. testSpliterator (Iterable.spliterator(), a JVM
-// stream API) and testNullValueRejected (put(1, null) with a long value) are recorded as CLR-inapplicable in the
-// manifest.
+// CLR: the package-private JUnit methods are public, because xUnit runs public test methods. Http3Settings keeps
+// the Java members : Iterable<Map.Entry<Long, Long>> is IEnumerable<KeyValuePair<long, long>>, iterator() is
+// GetEnumerator() and hasNext() is MoveNext(), and a Long/Boolean result that may be null is long?/bool?, so
+// assertEquals(Boolean.TRUE, x) and assertEquals(4096L, x) compare nullable values and assertNull checks the
+// nullable. A long key or value is never null, so assertNotNull(e.getKey()) checks the boxed value, as Java checks
+// the boxed Long. assertEquals(Object, Object) and assertNotEquals(Object, Object) call equals: Http3Settings is
+// an IEnumerable, which xUnit's Assert.Equal would compare entry by entry, so
+// AssertObjectEquals/AssertObjectNotEquals keep JUnit's comparison (as AssertSettingsEquals in codec-http2's
+// InboundHttp2ToHttpAdapterTest). AtomicInteger, which only counts in a for-each loop, is an int.
+// Iterable.forEach(Consumer) and Set.forEach(Consumer) are foreach loops over the same elements. The lambdas (id,
+// v) ->... given to the Http3Settings(NonStandardHttp3SettingsValidator) constructor are the private nested class
+// FuncValidator over a Func (INonStandardHttp3SettingsValidator is an interface, not a delegate).
+// Http3SettingsFrame is IHttp3SettingsFrame, whose default member Put is called through the interface.
+// assertThrows(IllegalArgumentException.class,...) is Assert.ThrowsAny<ArgumentException> and checkNotNull's
+// NullPointerException is ArgumentNullException. Long.MAX_VALUE/MIN_VALUE are long.MaxValue/MinValue.
+// testSpliterator (Iterable.spliterator(), a JVM stream API) and testNullValueRejected (put(1, null) with a long
+// value) are recorded as CLR-inapplicable in the manifest.
 public class Http3SettingsTest
 {
 
@@ -399,7 +399,7 @@ public class Http3SettingsTest
         Assert.False(Equals(unexpected, actual), "expected: not equal but was: <" + actual + ">");
     }
 
-    // CLR: the lambdas (id, v) -> ... of the NonStandardHttp3SettingsValidator (see the class comment).
+    // CLR: the lambdas (id, v) ->... of the NonStandardHttp3SettingsValidator (see the class comment).
     private sealed class FuncValidator : Http3Settings.INonStandardHttp3SettingsValidator
     {
         private readonly Func<long, long, bool> validate;

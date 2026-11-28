@@ -29,25 +29,24 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Http3.Tests;
 
-// CLR: the package-private final class is internal sealed; it implements codec-quic's IQuicChannel over Transport's
-// EmbeddedChannel, as the Java class implements QuicChannel over EmbeddedChannel. The QuicChannel API shapes are those
-// of docs/codec-classes-quic-porting.md: createStream(type, handler, promise) is CreateStreamAsync returning a
-// completed Task<IQuicStreamChannel> (promise.setSuccess), close(applicationClose, error, reason, promise) is
-// CloseAsync(bool, int, ByteBuf, CancellationToken), and collectStats/collectPathStats return a faulted Task
-// (promise.setFailure) with NotSupportedException for UnsupportedOperationException. localAddress()/remoteAddress()
-// override the LocalAddress/RemoteAddress properties (null, as in Java); flush() and read() only narrow the return type
-// to QuicChannel, so EmbeddedChannel's Flush()/Read() are inherited unchanged (IQuicChannel does not re-declare them).
-// config() lazily wraps super.config(): AbstractChannel.Config already creates the config lazily through NewConfig(),
-// so NewConfig() returns the EmbeddedQuicChannelConfig around EmbeddedChannel's config (created once, as the Java
-// field). AttributeKey<T> needs a reference type, so the AtomicLong stream id generator is a StrongBox<long> updated
-// with Interlocked.Add (getAndAdd(2) is the new value minus 2); valueOf(String) is AttributeKey<T>.ValueOf(string).
-// EnumMap<QuicStreamType, Long> is a Dictionary<QuicStreamType, long>, AtomicBoolean an int with
-// Interlocked.CompareExchange, ConcurrentLinkedQueue<Integer> a ConcurrentQueue<int>, and unmodifiableCollection the
-// queue as an IReadOnlyCollection<int> (a read-only view). The listener promise.addListener(__ -> reason.release()) is
-// a continuation of the close Task (ExecuteSynchronously, so it runs when the close completes). Consumer<Channel> is
-// Action<IChannel>, and the anonymous ChannelInboundHandlerAdapter of prependChannelConsumer the private nested class
-// ChannelConsumerHandler; System.arraycopy is Array.Copy. SSLEngine is QuicSslEngine and SocketAddress EndPoint.
-// @Nullable (org.jetbrains.annotations) has no counterpart.
+// CLR: The QuicChannel API shapes are those of docs/codec-classes-quic-porting.md: createStream(type, handler,
+// promise) is CreateStreamAsync returning a completed Task<IQuicStreamChannel> (promise.setSuccess),
+// close(applicationClose, error, reason, promise) is CloseAsync(bool, int, ByteBuf, CancellationToken), and
+// collectStats/collectPathStats return a faulted Task (promise.setFailure) with NotSupportedException for
+// UnsupportedOperationException. localAddress()/remoteAddress() override the LocalAddress/RemoteAddress properties
+// (null, as in Java); flush() and read() only narrow the return type to QuicChannel, so EmbeddedChannel's
+// Flush()/Read() are inherited unchanged (IQuicChannel does not re-declare them). config() lazily wraps
+// super.config(): AbstractChannel.Config already creates the config lazily through NewConfig(), so NewConfig()
+// returns the EmbeddedQuicChannelConfig around EmbeddedChannel's config (created once, as the Java field).
+// AttributeKey<T> needs a reference type, so the AtomicLong stream id generator is a StrongBox<long> updated with
+// Interlocked.Add (getAndAdd(2) is the new value minus 2). EnumMap<QuicStreamType, Long> is a
+// Dictionary<QuicStreamType, long>, AtomicBoolean an int with Interlocked.CompareExchange,
+// ConcurrentLinkedQueue<Integer> a ConcurrentQueue<int>, and unmodifiableCollection the queue as an
+// IReadOnlyCollection<int> (a read-only view). The listener promise.addListener(__ -> reason.release()) is a
+// continuation of the close Task (ExecuteSynchronously, so it runs when the close completes). Consumer<Channel> is
+// Action<IChannel>, and the anonymous ChannelInboundHandlerAdapter of prependChannelConsumer the private nested
+// class ChannelConsumerHandler; System.arraycopy is Array.Copy. SSLEngine is QuicSslEngine and SocketAddress
+// EndPoint. @Nullable (org.jetbrains.annotations) has no counterpart.
 internal sealed class EmbeddedQuicChannel : EmbeddedChannel, IQuicChannel
 {
     private static readonly AttributeKey<StrongBox<long>> streamIdGeneratorKey =
@@ -85,7 +84,6 @@ internal sealed class EmbeddedQuicChannel : EmbeddedChannel, IQuicChannel
         return toReturn;
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of prependChannelConsumer.
     private sealed class ChannelConsumerHandler : ChannelInboundHandlerAdapter
     {
         private readonly Action<IChannel> channelConsumer;

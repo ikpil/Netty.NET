@@ -24,10 +24,8 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
 /**
  * Channel initializer useful in tests.
  */
-// CLR: @Sharable is the Transport's [Sharable]; the public initChannel override is the protected InitChannel of the
-// Transport's ChannelInitializer<T>; AtomicInteger is Common's AtomicInteger; the anonymous ExtendedHandle is a private
-// nested class (newHandle() returns IRecvByteBufAllocator.IHandle, which the handle implements through
-// IExtendedHandle), and UncheckedBooleanSupplier is Func<bool>.
+// CLR: @Sharable is the Transport's [Sharable]; the public initChannel override is the protected InitChannel of
+// the Transport's ChannelInitializer<T>; AtomicInteger is Common's AtomicInteger.
 [Sharable]
 public class TestChannelInitializer : ChannelInitializer<IChannel>
 {

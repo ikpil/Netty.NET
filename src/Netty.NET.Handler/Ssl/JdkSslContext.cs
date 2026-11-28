@@ -34,25 +34,24 @@ namespace Netty.NET.Handler.Ssl;
 /**
  * An {@link SslContext} which uses JDK's SSL/TLS implementation.
  */
-// CLR: the SSL/TLS implementation is SslStream (owner decision 2026-11-24, docs/handler-ssl-design.md). The JSSE
-// SSLContext this class wraps is replaced by the trust and key material SslStream takes per connection: the
-// TrustManagerFactory (X509ChainPolicy, the options' CertificateChainPolicy) or TrustManager
-// (RemoteCertificateValidationCallback) and the KeyManagerFactory (SslStreamCertificateContext, built once per context,
-// which "also enables extra features such as TLS session resumption on Linux servers",
-// https://learn.microsoft.com/en-us/dotnet/core/extensions/sslstream-best-practices) or KeyManager
-// (ServerCertificateSelectionCallback/LocalCertificateSelectionCallback). So the public constructors that take a
-// pre-configured SSLContext and context() are not ported (owner decision 2: JSSE-only members; the two @Deprecated ones
-// name the SSLContext constructor as replacement), and SslContextBuilder uses the internal factories
-// NewJdkSslServerContext/NewJdkSslClientContext, which do what the constructors of the @Deprecated JdkSslServerContext/
-// JdkSslClientContext (deprecated-not-ported) did, and the internal constructor. sessionContext() (SSLSessionContext) is
-// not ported, and newEngine(alloc[, peerHost, peerPort]) with configureAndWrapEngine becomes the newHandler overrides
-// that build a fresh SslClientAuthenticationOptions/SslServerAuthenticationOptions per handler (see SslContext). The
-// JdkApplicationProtocolNegotiator types are @Deprecated and not ported (lead decision), so the negotiator is the private
-// ProtocolNegotiator holding the ALPN protocol list. The JCA Provider of the source (DEFAULT_PROVIDER, the
-// non-default-provider branch of the constructor) has no counterpart: the engine is always SslStream. PROTOCOL ("TLS") only
-// served SSLContext.getInstance in the deprecated subclasses and is not ported. SSLException is AuthenticationException,
-// IllegalArgumentException ArgumentException, UnsupportedOperationException NotSupportedException and java.lang.Error
-// UnreachableException (codec-base mappings).
+// CLR: the SSL/TLS implementation is SslStream. The JSSE SSLContext this class wraps is replaced by the trust and
+// key material SslStream takes per connection: the TrustManagerFactory (X509ChainPolicy, the options'
+// CertificateChainPolicy) or TrustManager (RemoteCertificateValidationCallback) and the KeyManagerFactory
+// (SslStreamCertificateContext, built once per context, which "also enables extra features such as TLS session
+// resumption on Linux servers", https://learn.microsoft.com/en-us/dotnet/core/extensions/sslstream-best-practices)
+// or KeyManager (ServerCertificateSelectionCallback/LocalCertificateSelectionCallback). So the public constructors
+// that take a pre-configured SSLContext and context() are not ported, and SslContextBuilder uses the internal
+// factories NewJdkSslServerContext/NewJdkSslClientContext, which do what the constructors of the @Deprecated
+// JdkSslServerContext/ JdkSslClientContext (deprecated-not-ported) did, and the internal constructor.
+// sessionContext() (SSLSessionContext) is not ported, and newEngine(alloc[, peerHost, peerPort]) with
+// configureAndWrapEngine becomes the newHandler overrides that build a fresh
+// SslClientAuthenticationOptions/SslServerAuthenticationOptions per handler (see SslContext). The
+// JdkApplicationProtocolNegotiator types are @Deprecated and not ported (lead decision), so the negotiator is the
+// private ProtocolNegotiator holding the ALPN protocol list. The JCA Provider of the source (DEFAULT_PROVIDER, the
+// non-default-provider branch of the constructor) has no counterpart: the engine is always SslStream. PROTOCOL
+// ("TLS") only served SSLContext.getInstance in the deprecated subclasses and is not ported. SSLException is
+// AuthenticationException, IllegalArgumentException ArgumentException, UnsupportedOperationException
+// NotSupportedException and java.lang.Error UnreachableException (codec-base mappings).
 public class JdkSslContext : SslContext
 {
 
@@ -149,10 +148,9 @@ public class JdkSslContext : SslContext
         return protocols.ToArray();
     }
 
-    // CLR: engine.getSupportedCipherSuites() is the set of TlsCipherSuite names (see TLS_CIPHER_SUITES), the cipher suites
-    // SslStream can be restricted to. The source's addition of the "TLS_" form of IBM J9's "SSL_" names tests each with
-    // engine.setEnabledCipherSuites and has no counterpart (no TlsCipherSuite name starts with "SSL_"); its comments are
-    // recorded.
+    // CLR: The source's addition of the "TLS_" form of IBM J9's "SSL_" names tests each with
+    // engine.setEnabledCipherSuites and has no counterpart (no TlsCipherSuite name starts with "SSL_"); its
+    // comments are recorded.
     private static ISet<string> SupportedCiphers()
     {
         // Choose the sensible default list of cipher suites.
@@ -363,8 +361,6 @@ public class JdkSslContext : SslContext
         return unmodifiableCipherSuites;
     }
 
-    // CLR: newEngine(alloc) is createSSLEngine() without peer information, which newHandler(alloc, startTls) wraps in an
-    // SslHandler; see NewHandler(alloc, peerHost, peerPort, startTls).
     protected internal override SslHandler NewHandler(IByteBufAllocator alloc, bool startTls)
     {
         return NewHandler(alloc, null, -1, startTls);
@@ -795,8 +791,8 @@ public class JdkSslContext : SslContext
      * @return A {@link KeyManagerFactory} based upon a key file, key file password, and a certificate chain.
      * @deprecated will be removed.
      */
-    // CLR: @deprecated names no replacement, so it is ported with [Obsolete] (owner decision 2026-11-16).
-    // KeyStore.getDefaultType() is "PKCS12" (see SslContextBuilder).
+    // CLR: @deprecated names no replacement, so it is ported with [Obsolete]. KeyStore.getDefaultType() is
+    // "PKCS12" (see SslContextBuilder).
     [Obsolete("will be removed.")]
     protected internal static SslStreamCertificateContext BuildKeyManagerFactory(FileInfo certChainFile,
             FileInfo keyFile, string keyPassword, SslStreamCertificateContext kmf)
@@ -840,7 +836,7 @@ public class JdkSslContext : SslContext
      * and a certificate chain.
      * @deprecated will be removed.
      */
-    // CLR: @deprecated names no replacement, so it is ported with [Obsolete] (owner decision 2026-11-16).
+    // CLR: @deprecated names no replacement, so it is ported with [Obsolete].
     [Obsolete("will be removed.")]
     protected internal static SslStreamCertificateContext BuildKeyManagerFactory(FileInfo certChainFile,
                                                               string keyAlgorithm, FileInfo keyFile,

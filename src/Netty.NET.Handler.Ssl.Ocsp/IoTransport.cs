@@ -27,8 +27,7 @@ namespace Netty.NET.Handler.Ssl.Ocsp;
  * and {@link DatagramChannel} for DNS I/O.
  */
 // CLR: ChannelFactory<T> is Func<T>, as resolver-dns's DnsNameResolverBuilder takes it, and SocketChannel/
-// DatagramChannel/EventLoop are ISocketChannel/IDatagramChannel/IEventLoop. The anonymous ChannelFactory classes of
-// DEFAULT are lambdas.
+// DatagramChannel/EventLoop are ISocketChannel/IDatagramChannel/IEventLoop.
 public sealed class IoTransport
 {
     private readonly IEventLoop eventLoop;

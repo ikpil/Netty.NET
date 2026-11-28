@@ -116,10 +116,9 @@ namespace Netty.NET.Handler.Codec.Http;
  * This recommendation stands even when both peers in the HTTP exchange are trusted,
  * as it helps with defence-in-depth.
  */
-// CLR: the four @Deprecated constructors whose @deprecated texts name HttpResponseDecoder(HttpDecoderConfig) are not
-// ported (owner decision 2026-11-16). Integer.parseInt is int.Parse with an optional sign and the invariant culture
-// (a FormatException or OverflowException makes HttpObjectDecoder produce an invalid message, as the Java
-// NumberFormatException does).
+// CLR: the four @Deprecated constructors whose @deprecated texts name HttpResponseDecoder(HttpDecoderConfig) are
+// not ported. Integer.parseInt is int.Parse with an optional sign and the invariant culture (a FormatException or
+// OverflowException makes HttpObjectDecoder produce an invalid message, as the Java NumberFormatException does).
 public class HttpResponseDecoder : HttpObjectDecoder
 {
 

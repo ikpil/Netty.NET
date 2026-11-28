@@ -18,9 +18,9 @@ using Netty.NET.Buffer;
 
 namespace Netty.NET.Handler.Pcap;
 
-// CLR: the package-private final class is an internal sealed class with the private constructor; the TCPFlag... varargs
-// parameter is params TCPFlag[]. The (int) casts of the segment and acknowledgment numbers keep the low 32 bits
-// (unchecked, as Java's narrowing conversion), which is the unsigned 32-bit number written on the wire.
+// CLR: The TCPFlag... varargs parameter is params TCPFlag[]. The (int) casts of the segment and acknowledgment
+// numbers keep the low 32 bits (unchecked, as Java's narrowing conversion), which is the unsigned 32-bit number
+// written on the wire.
 internal sealed class TCPPacket
 {
 

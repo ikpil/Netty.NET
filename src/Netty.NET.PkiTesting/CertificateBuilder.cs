@@ -91,7 +91,6 @@ public sealed class CertificateBuilder
     internal const string OID_PKIX_PE_ACME_IDENTIFIER = "1.3.6.1.5.5.7.1.31";
     internal const string OID_KERBEROS_KEY_PURPOSE_CLIENT_AUTH = "1.3.6.1.5.2.3.4";
     internal const string OID_MICROSOFT_SMARTCARD_LOGIN = "1.3.6.1.4.1.311.20.2.2";
-    // CLR: the anonymous AlgorithmParameterSpec marker instance is a plain object compared by reference.
     private static readonly object UNSUPPORTED_SPEC = new object();
     private const string UNSUPPORTED_SIGN = "UNSUPPORTED_SIGN";
 
@@ -297,7 +296,6 @@ public sealed class CertificateBuilder
      * @param ipAddress The IP address to add to the SANs.
      * @return This certificate builder.
      */
-    // CLR: InetAddress.getHostAddress() is IPAddress.ToString(), the address text in standard notation.
     public CertificateBuilder AddSanIpAddress(IPAddress ipAddress)
     {
         subjectAlternativeNames.Add(GeneralNameUtils.IpAddress(ipAddress.ToString()));
@@ -326,11 +324,11 @@ public sealed class CertificateBuilder
      * @param uri The URI for the CRL file.
      * @return This certificate builder.
      */
-    // CLR: CertificateRevocationListBuilder.BuildCrlDistributionPointExtension builds the DistributionPoint with the URI
-    // as its fullName and no reasons or cRLIssuer, as the Java code does
+    // CLR: CertificateRevocationListBuilder.BuildCrlDistributionPointExtension builds the DistributionPoint with
+    // the URI as its fullName and no reasons or cRLIssuer, as the Java code does
     // (https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography.x509certificates.certificaterevocationlistbuilder.buildcrldistributionpointextension?view=net-10.0);
-    // its one DistributionPoint is taken out of the CRLDistributionPoints SEQUENCE, so that every call adds one point
-    // as in Java. GeneralNameUtils.uriName(uri) is the URI text that AddUri writes, Uri.AbsoluteUri.
+    // its one DistributionPoint is taken out of the CRLDistributionPoints SEQUENCE, so that every call adds one
+    // point as in Java.
     public CertificateBuilder AddCrlDistributionPoint(Uri uri)
     {
         X509Extension fullName = CertificateRevocationListBuilder.BuildCrlDistributionPointExtension(
@@ -412,9 +410,9 @@ public sealed class CertificateBuilder
      * @param algorithm The algorithm to use when generating the private key.
      * @return This certificate builder.
      */
-    // CLR: algorithm(Algorithm) is Algorithm_(Algorithm): a method cannot share the name of the nested Algorithm class
-    // (CS0102, https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0102), as codec-haproxy's type() is Type_()
-    // (docs/handler-porting.md, Name clashes). UnsupportedOperationException is NotSupportedException.
+    // CLR: algorithm(Algorithm) is Algorithm_(Algorithm): a method cannot share the name of the nested Algorithm
+    // class (CS0102, https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0102), as codec-haproxy's type() is
+    // Type_(). UnsupportedOperationException is NotSupportedException.
     public CertificateBuilder Algorithm_(Algorithm algorithm)
     {
         ObjectUtil.CheckNotNull(algorithm, "algorithm");
@@ -783,11 +781,11 @@ public sealed class CertificateBuilder
      * @return The newly created bundle.
      * @throws Exception If something went wrong in the process.
      */
-    // CLR: IllegalStateException is InvalidOperationException. As in Java, a new key pair is generated even when one was
-    // given. The private key is not attached to the X509Certificate2 (the bundle keeps the key pair next to it, as the
-    // Java bundle does); CertificateRequest.CreateSelfSigned would attach it with CopyWithPrivateKey, which fails for
-    // ML-DSA keys on this Windows host (docs/pkitesting-porting.md, ML-DSA), so the certificate is signed with
-    // Create(subject, Signed, ...).
+    // CLR: IllegalStateException is InvalidOperationException. As in Java, a new key pair is generated even when
+    // one was given. The private key is not attached to the X509Certificate2 (the bundle keeps the key pair next
+    // to it, as the Java bundle does); CertificateRequest.CreateSelfSigned would attach it with
+    // CopyWithPrivateKey, which fails for ML-DSA keys on this Windows host, so the certificate is signed with
+    // Create(subject, Signed,...).
     public X509Bundle BuildSelfSigned()
     {
         if (this.keyPair != null &&
@@ -1109,21 +1107,21 @@ public sealed class CertificateBuilder
      * The {@link Algorithm} enum encapsulates both the key type, key generation parameters, and the signature
      * algorithm to use.
      */
-    // CLR: a Java enum with fields, a constructor and methods is a sealed class whose constants are static readonly
-    // instances, as codec-base's Base64Dialect (docs/codec-base-porting.md; a C# enum cannot define methods,
-    // https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/enum). The members java.lang.Enum
-    // supplies and the tests use are kept: Name() and ToString() return the constant name, and Values() returns a new
-    // array in declaration order (JLS 8.9.3, https://docs.oracle.com/javase/specs/jls/se17/html/jls-8.html#jls-8.9.3).
-    // The AlgorithmParameterSpec is the BCL parameter object of the key type: ECGenParameterSpec("secp256r1"/"secp384r1")
-    // is ECCurve.NamedCurves.nistP256/nistP384 (RFC 5480 2.1.1.1: "[FIPS186-3] refers to ... secp256r1 as P-256,
-    // secp384r1 as P-384", https://www.rfc-editor.org/rfc/rfc5480), RSAKeyGenParameterSpec(bits, F4) is the key size,
-    // because RSA.Create(int) generates keys with the public exponent 65537 that F4 names (measured on this host,
-    // https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/security/spec/RSAKeyGenParameterSpec.html), and
-    // the named parameter specs are the MLDsaAlgorithm, MLKemAlgorithm and SlhDsaAlgorithm values (see
-    // NamedParameterSpec). The fields are internal because the enclosing CertificateBuilder reads them: a C# private
-    // member is limited to its containing type ("Access is limited to the containing type",
-    // https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/accessibility-levels), while Java lets
-    // the enclosing class read it.
+    // CLR: a Java enum with fields, a constructor and methods is a sealed class whose constants are static
+    // readonly instances, as codec-base's Base64Dialect. The members java.lang.Enum supplies and the tests use are
+    // kept: Name() and ToString() return the constant name, and Values() returns a new array in declaration order
+    // (JLS 8.9.3, https://docs.oracle.com/javase/specs/jls/se17/html/jls-8.html#jls-8.9.3). The
+    // AlgorithmParameterSpec is the BCL parameter object of the key type:
+    // ECGenParameterSpec("secp256r1"/"secp384r1") is ECCurve.NamedCurves.nistP256/nistP384 (RFC 5480 2.1.1.1:
+    // "[FIPS186-3] refers to... secp256r1 as P-256, secp384r1 as P-384", https://www.rfc-editor.org/rfc/rfc5480),
+    // RSAKeyGenParameterSpec(bits, F4) is the key size, because RSA.Create(int) generates keys with the public
+    // exponent 65537 that F4 names (measured on this host,
+    // https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/security/spec/RSAKeyGenParameterSpec.html),
+    // and the named parameter specs are the MLDsaAlgorithm, MLKemAlgorithm and SlhDsaAlgorithm values (see
+    // NamedParameterSpec). The fields are internal because the enclosing CertificateBuilder reads them: a C#
+    // private member is limited to its containing type ("Access is limited to the containing type",
+    // https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/accessibility-levels), while
+    // Java lets the enclosing class read it.
     public sealed class Algorithm
     {
         /**
@@ -1680,8 +1678,8 @@ public sealed class CertificateBuilder
         }
     }
 
-    // CLR: the private @FunctionalInterface is a delegate, as codec-base turns functional interfaces into delegates
-    // (docs/codec-base-porting.md, Anonymous classes); it is internal because the package-private modifierCallbacks
-    // field holds it (CS0052), and it modifies the request's extension collection. C# has no throws clause.
+    // CLR: the private @FunctionalInterface is a delegate, as codec-base turns functional interfaces into
+    // delegates; it is internal because the package-private modifierCallbacks field holds it (CS0052), and it
+    // modifies the request's extension collection. C# has no throws clause.
     internal delegate void BuilderCallback(Collection<X509Extension> builder);
 }

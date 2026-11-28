@@ -29,24 +29,22 @@ namespace Netty.NET.Handler.Codec.Http.Tests;
 
 #pragma warning disable xUnit1051 // The source's channel.close() observes no test cancellation.
 
-// CLR: @ParameterizedTest @ValueSource(strings) is a [Theory] with one [InlineData] per value; the display-name pattern
-// of @ParameterizedTest(name = ...) has no xUnit counterpart. Package-private JUnit methods are public xUnit methods.
-// CharsetUtil.US_ASCII is Encoding.ASCII and String.getBytes() (the default charset) is Encoding.Default
-// (docs/codec-smtp-porting.md; the bytes are ASCII). IllegalArgumentException is ArgumentException and
-// NumberFormatException FormatException (docs/codec-base-porting.md); assertInstanceOf and AssertJ's isInstanceOf are
-// Assert.IsAssignableFrom, isNotInstanceOf is Assert.False(x is T), hasMessageContaining is Assert.Contains on Message,
-// assertArrayEquals is Assert.Equal on the arrays, and the asserts with messages use XunitAssertMessages.AssertM.
-// ByteBuf.readBytes(byte[]) and readBytes(byte[], int, int) are ReadBytes(Span<byte>) over the array or its slice.
-// testResponseDisallowPartialChunks uses the @Deprecated seven-argument HttpResponseDecoder constructor, whose
-// @deprecated text names HttpResponseDecoder(HttpDecoderConfig); that constructor is not ported (owner decision
-// 2026-11-16), so the test passes the same values through HttpDecoderConfig (setValidateHeaders(DEFAULT_VALIDATE_HEADERS)
-// selects the default factories, as HttpObjectDecoder's deprecated constructor did). ThreadLocalRandom.current() is
-// Random.Shared (the chunk bytes are arbitrary). Java passes Strings as CharSequence header names
-// (HttpHeadersTestUtils.of); C# string is not an ICharSequence, so they are wrapped with Of(...). In
-// testResponseChunked/testResponseChunkedExceedMaxChunkSize the Java byte data[i] = (byte) i only takes 0..63. The
-// private helpers that overload the test methods testLastResponseWithTrailingHeaderFragmented and
-// testResponseWithContentLengthFragmented take the suffix 0, because xUnit does not run a test method that has
-// overloads ("Test methods cannot have overloads", https://xunit.net/xunit.analyzers/rules/xUnit1024).
+// CLR: The display-name pattern of @ParameterizedTest(name =...) has no xUnit counterpart.
+// IllegalArgumentException is ArgumentException and NumberFormatException FormatException; assertInstanceOf and
+// AssertJ's isInstanceOf are Assert.IsAssignableFrom, isNotInstanceOf is Assert.False(x is T),
+// hasMessageContaining is Assert.Contains on Message, assertArrayEquals is Assert.Equal on the arrays, and the
+// asserts with messages use XunitAssertMessages.AssertM. ByteBuf.readBytes(byte[]) and readBytes(byte[], int, int)
+// are ReadBytes(Span<byte>) over the array or its slice. testResponseDisallowPartialChunks uses the @Deprecated
+// seven-argument HttpResponseDecoder constructor, whose @deprecated text names
+// HttpResponseDecoder(HttpDecoderConfig); that constructor is not ported, so the test passes the same values
+// through HttpDecoderConfig (setValidateHeaders(DEFAULT_VALIDATE_HEADERS) selects the default factories, as
+// HttpObjectDecoder's deprecated constructor did). ThreadLocalRandom.current() is Random.Shared (the chunk bytes
+// are arbitrary). Java passes Strings as CharSequence header names (HttpHeadersTestUtils.of); C# string is not an
+// ICharSequence, so they are wrapped with Of(...). In testResponseChunked/testResponseChunkedExceedMaxChunkSize
+// the Java byte data[i] = (byte) i only takes 0..63. The private helpers that overload the test methods
+// testLastResponseWithTrailingHeaderFragmented and testResponseWithContentLengthFragmented take the suffix 0,
+// because xUnit does not run a test method that has overloads ("Test methods cannot have overloads",
+// https://xunit.net/xunit.analyzers/rules/xUnit1024).
 public class HttpResponseDecoderTest
 {
 

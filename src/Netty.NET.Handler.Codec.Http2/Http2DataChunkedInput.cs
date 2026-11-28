@@ -45,11 +45,10 @@ namespace Netty.NET.Handler.Codec.Http2;
 // CLR: ChunkedInput<Http2DataFrame> is the handler port's IChunkedInput<IHttp2DataFrame> and the wrapped
 // ChunkedInput<ByteBuf> is IChunkedInput<ByteBuf> (src/Netty.NET.Handler/Stream/IChunkedInput.cs), as codec-http's
 // HttpChunkedInput (src/Netty.NET.Handler.Codec.Http/HttpChunkedInput.cs). The @Deprecated
-// readChunk(ChannelHandlerContext) override has no counterpart: the interface member it overrides is @Deprecated with
-// the replacement readChunk(ByteBufAllocator) named and is not ported (owner decision 2026-11-16, recorded in
-// IChunkedInput.cs); callers pass ctx.Alloc() to ReadChunk(IByteBufAllocator). checkNotNull is the Common
-// ObjectUtil.CheckNotNull (ArgumentNullException, docs/codec-base-porting.md). "throws Exception" has no C#
-// counterpart. The final class is sealed.
+// readChunk(ChannelHandlerContext) override has no counterpart: the interface member it overrides is @Deprecated
+// with the replacement readChunk(ByteBufAllocator) named and is not ported; callers pass ctx.Alloc() to
+// ReadChunk(IByteBufAllocator). checkNotNull is the Common ObjectUtil.CheckNotNull (ArgumentNullException,
+// docs/codec-base-porting.md). "throws Exception" has no C# counterpart. The final class is sealed.
 public sealed class Http2DataChunkedInput : IChunkedInput<IHttp2DataFrame>
 {
 

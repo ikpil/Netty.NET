@@ -32,12 +32,8 @@ namespace Netty.NET.Handler.Codec.Http2;
 /**
  * Client-side cleartext upgrade codec from HTTP to HTTP/2.
  */
-// CLR: HttpClientUpgradeHandler.UpgradeCodec is the nested IUpgradeCodec (I prefix), CharSequence is ICharSequence,
-// Collection<CharSequence> is ICollection<ICharSequence> and Collections.singletonList is a ReadOnlyCollection over one
-// element (docs/codec-http-porting.md, Shared CLR adaptations). ChannelHandler is IChannelHandler; ctx.pipeline() and
-// ctx.name() are the Pipeline and Name properties (docs/transport-porting.md, Decisions); ctx.close() discards the
-// returned Task (docs/codec-base-porting.md, Outbound operations). checkNotNull's NullPointerException is
-// ArgumentNullException (docs/codec-base-porting.md). The checked "throws" clauses have no counterpart.
+// CLR: ChannelHandler is IChannelHandler; ctx.pipeline() and ctx.name() are the Pipeline and Name properties;
+// ctx.close() discards the returned Task. checkNotNull's NullPointerException is ArgumentNullException.
 public class Http2ClientUpgradeCodec : HttpClientUpgradeHandler.IUpgradeCodec
 {
 
@@ -172,10 +168,10 @@ public class Http2ClientUpgradeCodec : HttpClientUpgradeHandler.IUpgradeCodec
             buf = ctx.Alloc().Buffer(payloadLength);
 
             // CLR: CharObjectMap.PrimitiveEntry<Long> is KeyValuePair<char, long>: Http2Settings is a
-            // Dictionary<char, long> (owner decision 2026-11-19, confirmed 2026-11-25), whose entries enumerate in
-            // insertion order where Java's CharObjectHashMap enumerates in hash-slot order, so the entries of the
-            // header may come in another order (neither order is defined: docs/codec-http-porting.md, Shared CLR
-            // adaptations, LinkedHashMap/HashMap row). Long.intValue() is "a narrowing primitive conversion"
+            // Dictionary<char, long>, whose entries enumerate in insertion order where Java's CharObjectHashMap
+            // enumerates in hash-slot order, so the entries of the header may come in another order (neither order
+            // is defined: docs/codec-http-porting.md, Shared CLR adaptations, LinkedHashMap/HashMap row).
+            // Long.intValue() is "a narrowing primitive conversion"
             // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Long.html); the unchecked
             // (int) cast likewise truncates "by discarding its "extra" most significant bits"
             // (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/numeric-conversions).
@@ -187,8 +183,8 @@ public class Http2ClientUpgradeCodec : HttpClientUpgradeHandler.IUpgradeCodec
 
             // Base64 encode the payload and then convert to a string for the header.
             encodedBuf = Base64.Encode(buf, URL_SAFE);
-            // CLR: the String result is returned as a CharSequence, so it is wrapped in StringCharSequence
-            // (docs/codec-http-porting.md, Shared CLR adaptations); UTF_8 is Encoding.UTF8.
+            // CLR: the String result is returned as a CharSequence, so it is wrapped in StringCharSequence; UTF_8
+            // is Encoding.UTF8.
             return new StringCharSequence(encodedBuf.ToString(Encoding.UTF8));
         }
         finally

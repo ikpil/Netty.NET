@@ -23,10 +23,8 @@ namespace Netty.NET.Handler.Codec.Http2;
  * Enforce a limit on the maximum number of RST frames that are allowed per a window
  * before the connection will be closed with a GO_AWAY frame.
  */
-// CLR: the package-private final class is internal sealed; the package-private constructor and frameListener0() are
-// internal. Ticker.systemTicker() is the Common Ticker.SystemTicker(). The unwrapping reads the decorated listener
-// through the listener field of Http2FrameListenerDecorator, which Java reaches through package access (protected
-// internal in C#).
+// CLR: The unwrapping reads the decorated listener through the listener field of Http2FrameListenerDecorator,
+// which Java reaches through package access (protected internal in C#).
 internal sealed class Http2MaxRstFrameDecoder : DecoratingHttp2ConnectionDecoder
 {
     private readonly int maxRstFramesPerWindow;

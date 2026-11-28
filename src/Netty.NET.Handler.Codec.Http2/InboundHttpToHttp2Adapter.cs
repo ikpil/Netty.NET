@@ -22,9 +22,8 @@ namespace Netty.NET.Handler.Codec.Http2;
 /**
  * Translates HTTP/1.x object reads into HTTP/2 frames.
  */
-// CLR: the package-private static handle(...) is internal (Http2ServerUpgradeCodec calls it through Java's package
-// access). FullHttpMessage is IFullHttpMessage, whose content() is the Content property (docs/codec-http-porting.md);
-// "throws Http2Exception"/"throws Exception" have no checked-exception counterpart.
+// CLR: FullHttpMessage is IFullHttpMessage, whose content() is the Content property; "throws
+// Http2Exception"/"throws Exception" have no checked-exception counterpart.
 public class InboundHttpToHttp2Adapter : ChannelInboundHandlerAdapter
 {
     private readonly IHttp2Connection connection;

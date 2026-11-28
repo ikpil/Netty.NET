@@ -22,10 +22,10 @@ namespace Netty.NET.Handler.Codec.Quic;
  * Configuration used for setup
  * <a href="https://quiclog.github.io/internet-drafts/draft-marx-qlog-main-schema.html">qlog</a>.
  */
-// CLR: Objects.requireNonNull(x, name) is ObjectUtil.CheckNotNull (ArgumentNullException for NullPointerException).
-// System.Net.Quic has no QLOG output (msquic traces through its own event tracing; docs/quic-design.md, No counterpart
-// in System.Net.Quic): the type keeps its Java API (owner decision 2026-11-27) and the msquic implementation (stage 2)
-// reports QuicChannelOption.QLOG as unsupported.
+// CLR: Objects.requireNonNull(x, name) is ObjectUtil.CheckNotNull (ArgumentNullException for
+// NullPointerException). System.Net.Quic has no QLOG output (msquic traces through its own event tracing;
+// docs/quic-design.md, No counterpart in System.Net.Quic): the type keeps its Java API and the msquic
+// implementation (stage 2) reports QuicChannelOption.QLOG as unsupported.
 public sealed class QLogConfiguration
 {
 

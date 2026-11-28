@@ -19,9 +19,7 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Handler.Codec.Dns;
 
-// CLR: @ChannelHandler.Sharable is [Sharable]; Class<?> is Type; 'out' is @out; writerIndex(int) is the ByteBuf.WriterIndex
-// property setter of the Buffer port (docs/codec-base-porting.md, Shared CLR adaptations). 'throws Exception' has no
-// C# counterpart.
+// CLR: @ChannelHandler.Sharable is [Sharable]; Class<?> is Type; 'out' is @out.
 [Sharable]
 public sealed class TcpDnsQueryEncoder : MessageToByteEncoder<IDnsQuery>
 {

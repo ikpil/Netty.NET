@@ -22,9 +22,8 @@ namespace Netty.NET.Handler.Ssl;
 /**
  * Utility class for application protocol common operations.
  */
-// CLR: Iterable is IEnumerable, List is IList (a List<string> instance) and String... is params string[] (owner decision
-// 2026-11-16: Java collection interfaces are BCL interfaces). The class is static: the private constructor only
-// prevented instantiation.
+// CLR: Iterable is IEnumerable, List is IList (a List<string> instance) and String... is params string[]. The
+// class is static: the private constructor only prevented instantiation.
 internal static class ApplicationProtocolUtil
 {
     private const int DEFAULT_LIST_SIZE = 2;

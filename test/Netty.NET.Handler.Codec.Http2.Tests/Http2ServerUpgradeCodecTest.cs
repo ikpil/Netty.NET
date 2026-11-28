@@ -21,17 +21,10 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Http2.Tests;
 
-// CLR: Mockito.mock(ServerChannel.class) is a loose Moq mock of IServerChannel (docs/codec-http-porting.md, Shared CLR
-// adaptations); DefaultChannelId.newInstance() is NewInstance(), channel.pipeline().firstContext() is the
-// Pipeline.FirstContext property and channel.flush() is Flush() (docs/transport-porting.md, Decisions).
-// pipeline().remove(handler.getClass())/get(handler.getClass()) are Pipeline.Remove<T>()/Get<T>() with T inferred from
-// the handler argument, which is the handler's runtime class at every call (Http2ConnectionHandlerBuilder builds an
-// Http2ConnectionHandler, Http2FrameCodecBuilder an Http2FrameCodec): a Class<T> argument becomes a generic type
-// argument (src/Netty.NET.Transport/Channels/IChannelPipeline.cs). readOutbound() is ReadOutbound<ByteBuf>(); the
-// Strings that headers().set(...) takes are the String overloads (docs/codec-http-porting.md, Shared CLR adaptations).
-// @Sharable is [Sharable]. testUpgradeToHttp2MultiplexCodec only exercises the deprecated, not ported
-// Http2MultiplexCodecBuilder; its replacement (Http2FrameCodecBuilder with Http2MultiplexHandler) is
-// TestUpgradeToHttp2FrameCodecWithMultiplexer, so it has no C# method (recorded as CLR-inapplicable in the manifest).
+// CLR: The Strings that headers().set(...) takes are the String overloads. @Sharable is [Sharable].
+// testUpgradeToHttp2MultiplexCodec only exercises the deprecated, not ported Http2MultiplexCodecBuilder; its
+// replacement (Http2FrameCodecBuilder with Http2MultiplexHandler) is TestUpgradeToHttp2FrameCodecWithMultiplexer,
+// so it has no C# method (recorded as CLR-inapplicable in the manifest).
 public class Http2ServerUpgradeCodecTest
 {
 

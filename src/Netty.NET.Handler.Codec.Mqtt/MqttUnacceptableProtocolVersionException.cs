@@ -22,8 +22,7 @@ namespace Netty.NET.Handler.Codec.Mqtt;
  * A {@link MqttUnacceptableProtocolVersionException} which is thrown when
  * a CONNECT request contains unacceptable protocol version.
  */
-// CLR: serialVersionUID is JVM serialization metadata and has no counterpart (as DecoderException in codec-base);
-// Throwable is Exception (docs/codec-base-porting.md).
+// CLR: serialVersionUID is JVM serialization metadata and has no counterpart (as DecoderException in codec-base).
 public sealed class MqttUnacceptableProtocolVersionException : DecoderException
 {
     /**

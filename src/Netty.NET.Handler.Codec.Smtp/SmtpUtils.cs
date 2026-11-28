@@ -23,11 +23,9 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Codec.Smtp;
 
-// CLR: the package-private final utility class is an internal static class. CharSequence is ICharSequence, the
-// CharSequence port of Common (AsciiString.Of(ICharSequence)); java.lang.String, a CharSequence in Java, is passed as
-// its ICharSequence wrapper StringCharSequence. Collections.emptyList() is ReadOnlyCollection<T>.Empty and
-// Collections.unmodifiableList(Arrays.asList(array)) is Array.AsReadOnly(array), a read-only view of the array as in
-// Java. IllegalArgumentException is ArgumentException (docs/codec-base-porting.md, Shared CLR adaptations).
+// CLR: Collections.emptyList() is ReadOnlyCollection<T>.Empty and
+// Collections.unmodifiableList(Arrays.asList(array)) is Array.AsReadOnly(array), a read-only view of the array as
+// in Java. IllegalArgumentException is ArgumentException.
 internal static class SmtpUtils
 {
 
@@ -77,8 +75,7 @@ internal static class SmtpUtils
         }
     }
 
-    // CLR: the java.lang.String branch is the StringCharSequence branch (the wrapper of a CLR string); ICharSequence
-    // has IndexOf(char, int start = 0), Length() and CharAt(int).
+    // CLR: ICharSequence has IndexOf(char, int start = 0), Length() and CharAt(int).
     internal static void ValidateSMTPParameter(ICharSequence parameter)
     {
         if (parameter is StringCharSequence)

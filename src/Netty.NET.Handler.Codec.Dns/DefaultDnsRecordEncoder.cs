@@ -25,15 +25,11 @@ namespace Netty.NET.Handler.Codec.Dns;
  *
  * @see DefaultDnsRecordDecoder
  */
-// CLR: Java protected also admits the package: IDnsRecordEncoder.DEFAULT and the tests construct the encoder and call
-// encodeName(String, ByteBuf), so these members are protected internal ("accessible from the current assembly or from
-// types that are derived from the containing class",
-// https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/protected-internal); the package-private
-// calculateEcsAddressLength is internal. Class<?>[] is Type[] (UnsupportedMessageTypeException takes params Type[]),
-// IllegalArgumentException is ArgumentException (docs/codec-base-porting.md, Shared CLR adaptations), and
-// writeBytes(byte[], int, int) is WriteBytes(ReadOnlySpan<byte>) over the array range ("Span replaces array ranges",
-// docs/buffer-porting.md). The ADDRESS bytes are System.Byte; the masks of padWithZeros select the same bits.
-// Numbers in messages use the invariant culture (https://learn.microsoft.com/en-us/dotnet/api/system.int32.tostring).
+// CLR: Class<?>[] is Type[] (UnsupportedMessageTypeException takes params Type[]), IllegalArgumentException is
+// ArgumentException, and writeBytes(byte[], int, int) is WriteBytes(ReadOnlySpan<byte>) over the array range
+// ("Span replaces array ranges", docs/buffer-porting.md). The ADDRESS bytes are System.Byte; the masks of
+// padWithZeros select the same bits. Numbers in messages use the invariant culture
+// (https://learn.microsoft.com/en-us/dotnet/api/system.int32.tostring).
 public class DefaultDnsRecordEncoder : IDnsRecordEncoder
 {
     // CLR: Byte.SIZE is "the number of bits used to represent a byte value in two's complement binary form"
@@ -95,7 +91,6 @@ public class DefaultDnsRecordEncoder : IDnsRecordEncoder
         @out.WriteInt(unchecked((int) record.TimeToLive()));
     }
 
-    // CLR: writerIndex(int) is the ByteBuf.WriterIndex property setter of the Buffer port.
     private void EncodePtrRecord(IDnsPtrRecord record, ByteBuf @out)
     {
         EncodeRecord0(record, @out);

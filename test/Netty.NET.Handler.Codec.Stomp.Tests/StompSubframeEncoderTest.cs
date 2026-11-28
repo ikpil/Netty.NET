@@ -25,17 +25,16 @@ using static Netty.NET.Handler.Codec.Stomp.Tests.StompTestConstants;
 
 namespace Netty.NET.Handler.Codec.Stomp.Tests;
 
-// CLR: xUnit creates a new test class instance for every test, so the @BeforeEach setup() runs from the constructor
-// and the @AfterEach teardown() from Dispose() (https://xunit.net/docs/shared-context). CharsetUtil.UTF_8 and
-// StandardCharsets.UTF_8 are Encoding.UTF8 (docs/codec-base-porting.md). Java passes Strings as CharSequence header names
-// and values; C# string is not an ICharSequence, so Of(...) wraps them in the Common StringCharSequence
-// (docs/codec-base-porting-manifest.json, DefaultHeadersTest: String literals are wrapped in StringCharSequence), and
-// AsciiString.of(CharSequence) takes it too. The AssertJ chain assertThatThrownBy(...).isInstanceOf(EncoderException)
-// .hasRootCauseInstanceOf(IllegalArgumentException).hasMessageContaining(text) is Assert.ThrowsAny<EncoderException>
-// (isInstanceOf accepts subtypes), Exception.GetBaseException() for the root cause
-// (https://learn.microsoft.com/en-us/dotnet/api/system.exception.getbaseexception), Assert.IsAssignableFrom and
-// Assert.Contains on the thrown exception's message, whose Java detail text is cause.toString() (docs/codec-base-porting.md,
-// Exceptions). @ParameterizedTest @ValueSource(chars) is a [Theory] with one [InlineData] per char.
+// CLR: xUnit creates a new test class instance for every test, so the @BeforeEach setup() runs from the
+// constructor and the @AfterEach teardown() from Dispose() (https://xunit.net/docs/shared-context).
+// CharsetUtil.UTF_8 and StandardCharsets.UTF_8 are Encoding.UTF8. Java passes Strings as CharSequence header names
+// and values; C# string is not an ICharSequence, so Of(...) wraps them in the Common StringCharSequence, and
+// AsciiString.of(CharSequence) takes it too. The AssertJ chain
+// assertThatThrownBy(...).isInstanceOf(EncoderException).hasRootCauseInstanceOf(IllegalArgumentException).hasMessageContaining(text)
+// is Assert.ThrowsAny<EncoderException> (isInstanceOf accepts subtypes), Exception.GetBaseException() for the root
+// cause (https://learn.microsoft.com/en-us/dotnet/api/system.exception.getbaseexception), Assert.IsAssignableFrom
+// and Assert.Contains on the thrown exception's message, whose Java detail text is cause.toString().
+// @ParameterizedTest @ValueSource(chars) is a [Theory] with one [InlineData] per char.
 public class StompSubframeEncoderTest : IDisposable
 {
 

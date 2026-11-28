@@ -22,14 +22,13 @@ using Netty.NET.Transport.Channels;
 namespace Netty.NET.Handler.Codec.Quic.Tests;
 
 // CLR: the Java int literals 0xff00_001c and 0xff00_001d are negative ints, so they are unchecked int casts here.
-// Map<AttributeKey<?>, Object> and Map.Entry<AttributeKey<?>, Object>[] are the Dictionary and KeyValuePair array of
-// Quic.ToAttributesArray, whose values carry the attribute value with its typed setter (docs/codec-classes-quic-porting.md,
-// Other adaptations), so attributes.put(key, value) stores the value with the setter Quic.UpdateAttributes would make and
-// entry.getValue() is the stored value; Map<ChannelOption<?>, Object> is Dictionary<ChannelOption, object>.
+// Map<AttributeKey<?>, Object> and Map.Entry<AttributeKey<?>, Object>[] are the Dictionary and KeyValuePair array
+// of Quic.ToAttributesArray, whose values carry the attribute value with its typed setter, so attributes.put(key,
+// value) stores the value with the setter Quic.UpdateAttributes would make and entry.getValue() is the stored
+// value; Map<ChannelOption<?>, Object> is Dictionary<ChannelOption, object>.
 // AttributeKey.valueOf(UUID.randomUUID().toString()) is AttributeKey<string>.ValueOf(Guid.NewGuid().ToString()).
-// test() is CLR-inapplicable (docs/codec-native-quic-porting-manifest.json): it asserts the version string of the
-// quiche JNI library (Quiche.quiche_version(), a JNI unit recorded jvm-only-replaced), and System.Net.Quic reports no
-// version of msquic.
+// test() is CLR-inapplicable : it asserts the version string of the quiche JNI library (Quiche.quiche_version(), a
+// JNI unit recorded jvm-only-replaced), and System.Net.Quic reports no version of msquic.
 public class QuicTest : AbstractQuicTest
 {
 

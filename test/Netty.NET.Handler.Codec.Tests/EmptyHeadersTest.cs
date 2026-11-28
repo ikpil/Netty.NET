@@ -19,10 +19,9 @@ using Netty.NET.Handler.Codec;
 
 namespace Netty.NET.Handler.Codec.Tests;
 
-// CLR: the anonymous Executables are lambdas and UnsupportedOperationException is NotSupportedException.
-// Arrays.asList is Collectives.AsList, Collections.emptyList() is an empty array (List equality is element-wise in
-// both), and Java byte is sbyte (see IValueConverter). assertEquals(double/float, ..., delta) is the tolerance
-// overload of Assert.Equal.
+// CLR: Arrays.asList is Collectives.AsList, Collections.emptyList() is an empty array (List equality is
+// element-wise in both), and Java byte is sbyte (see IValueConverter). assertEquals(double/float,..., delta) is
+// the tolerance overload of Assert.Equal.
 public class EmptyHeadersTest
 {
 

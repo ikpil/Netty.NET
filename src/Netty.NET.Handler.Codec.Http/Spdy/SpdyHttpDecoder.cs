@@ -33,16 +33,15 @@ namespace Netty.NET.Handler.Codec.Spdy;
  * and {@link SpdyDataFrame}s into {@link FullHttpRequest}s and {@link FullHttpResponse}s.
  */
 // CLR: MessageToMessageDecoder<SpdyFrame> is the codec-base MessageToMessageDecoder<ISpdyFrame> with a typeof(...)
-// matcher; the HTTP message types are the core I-prefixed interfaces and HttpHeadersFactory is IHttpHeadersFactory.
-// Map<Integer, FullHttpMessage> is IDictionary<int, IFullHttpMessage>: put/get/remove return the previous value or null
-// through TryGetValue and Remove(key, out value). IntObjectMap<Long> is Dictionary<int, long> (owner decision
-// 2026-11-19 for io.netty.util.collection). The two @Deprecated constructors with validateHeaders, whose @deprecated
-// texts name SpdyHttpDecoder(SpdyVersion, int, Map, HttpHeadersFactory, HttpHeadersFactory), are not ported (owner
-// decision 2026-11-16). Java protected constructors are protected internal, because SpdyHttpCodec (same package) calls
-// them and the tests construct the decoder with them (InternalsVisibleTo). catch (Throwable) is catch (Exception); the
-// writeAndFlush(...) futures are discarded Tasks. Map.Entry<CharSequence, CharSequence> is the codec-base
-// IEntry<ICharSequence, ICharSequence>. setInt(PRIORITY, priority()) widens the CLR byte, the same value 0-7 as the
-// Java byte (setPriority rejects other values). Numbers in exception texts use the invariant culture.
+// matcher; the HTTP message types are the core I-prefixed interfaces and HttpHeadersFactory is
+// IHttpHeadersFactory. IntObjectMap<Long> is Dictionary<int, long>. The two @Deprecated constructors with
+// validateHeaders, whose @deprecated texts name SpdyHttpDecoder(SpdyVersion, int, Map, HttpHeadersFactory,
+// HttpHeadersFactory), are not ported. Java protected constructors are protected internal, because SpdyHttpCodec
+// (same package) calls them and the tests construct the decoder with them (InternalsVisibleTo). catch (Throwable)
+// is catch (Exception); the writeAndFlush(...) futures are discarded Tasks. Map.Entry<CharSequence, CharSequence>
+// is the codec-base IEntry<ICharSequence, ICharSequence>. setInt(PRIORITY, priority()) widens the CLR byte, the
+// same value 0-7 as the Java byte (setPriority rejects other values). Numbers in exception texts use the invariant
+// culture.
 public class SpdyHttpDecoder : MessageToMessageDecoder<ISpdyFrame>
 {
 

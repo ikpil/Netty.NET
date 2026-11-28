@@ -62,7 +62,6 @@ public class Http3RequestStreamValidationHandlerTest : Http3FrameTypeValidationH
         return new ServerValidatorInitializer(this);
     }
 
-    // CLR: the anonymous ChannelInitializer of newHandler(boolean).
     private sealed class ServerValidatorInitializer : ChannelInitializer<IQuicStreamChannel>
     {
         private readonly Http3RequestStreamValidationHandlerTest test;
@@ -636,7 +635,6 @@ public class Http3RequestStreamValidationHandlerTest : Http3FrameTypeValidationH
         return NewStream(QuicStreamType.BIDIRECTIONAL, new ClientValidatorInitializer(this, goAwayReceivedSupplier));
     }
 
-    // CLR: the anonymous ChannelInitializer of newClientStream(BooleanSupplier).
     private sealed class ClientValidatorInitializer : ChannelInitializer<IQuicStreamChannel>
     {
         private readonly Http3RequestStreamValidationHandlerTest test;

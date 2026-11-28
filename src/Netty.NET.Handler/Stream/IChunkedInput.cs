@@ -21,14 +21,14 @@ namespace Netty.NET.Handler.Stream;
 /**
  * A data stream of indefinite length which is consumed by {@link ChunkedWriteHandler}.
  */
-// CLR: the Java interface takes the I prefix. ChunkedWriteHandler matches any ChunkedInput<?>; B is covariant (out), so
-// every IChunkedInput<B> is an IChunkedInput<object> as the wildcard type is ("Covariance enables you to use a more
-// derived type than the generic parameter specifies", and covariance supports reference types only:
-// https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/out-generic-modifier). B has the class
-// constraint because Java type arguments are reference types (as codec-base MessageAggregator,
+// CLR: the Java interface takes the I prefix. ChunkedWriteHandler matches any ChunkedInput<?>; B is covariant
+// (out), so every IChunkedInput<B> is an IChunkedInput<object> as the wildcard type is ("Covariance enables you to
+// use a more derived type than the generic parameter specifies", and covariance supports reference types only:
+// https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/out-generic-modifier). B has the
+// class constraint because Java type arguments are reference types (as codec-base MessageAggregator,
 // docs/codec-base-porting.md). The @Deprecated readChunk(ChannelHandlerContext), whose @deprecated text names
-// readChunk(ByteBufAllocator), is not ported (owner decision 2026-11-16); implementations implement
-// readChunk(ByteBufAllocator) only. "throws Exception" has no C# counterpart: any member may throw.
+// readChunk(ByteBufAllocator), is not ported; implementations implement readChunk(ByteBufAllocator) only. "throws
+// Exception" has no C# counterpart: any member may throw.
 public interface IChunkedInput<out B> where B : class
 {
 

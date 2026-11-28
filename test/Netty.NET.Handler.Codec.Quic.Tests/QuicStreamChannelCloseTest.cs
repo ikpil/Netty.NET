@@ -25,14 +25,13 @@ using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Handler.Codec.Quic.Tests;
 
-// CLR: @ParameterizedTest @MethodSource("newSslTaskExecutors") is a theory over AbstractQuicTest.NewSslTaskExecutors().
-// The ImmediateEventExecutor Promise<Channel> is a TaskCompletionSource<IChannel> (trySuccess is TrySetResult,
-// setFailure TrySetException, await().cause() the exception of the awaited Task), Future.get()/sync() are awaits and
-// closeFuture().get(3000, MILLISECONDS) waits for the CloseFuture at most 3000 ms (TimeoutException as Java's
-// TimeoutException). The ChannelFutureListeners are continuations of the Tasks: ChannelFutureListener.CLOSE closes the
-// stream and QuicStreamChannel.SHUTDOWN_OUTPUT, which has no counterpart, calls ShutdownOutputAsync().
-// java.nio.channels.ClosedChannelException is the Transport's ClosedChannelException and assertInstanceOf(C.class, x)
-// is Assert.IsAssignableFrom<C>. The anonymous handlers are private nested classes.
+// CLR: The ImmediateEventExecutor Promise<Channel> is a TaskCompletionSource<IChannel> (trySuccess is
+// TrySetResult, setFailure TrySetException, await().cause() the exception of the awaited Task),
+// Future.get()/sync() are awaits and closeFuture().get(3000, MILLISECONDS) waits for the CloseFuture at most 3000
+// ms (TimeoutException as Java's TimeoutException). The ChannelFutureListeners are continuations of the Tasks:
+// ChannelFutureListener.CLOSE closes the stream and QuicStreamChannel.SHUTDOWN_OUTPUT, which has no counterpart,
+// calls ShutdownOutputAsync(). java.nio.channels.ClosedChannelException is the Transport's ClosedChannelException
+// and assertInstanceOf(C.class, x) is Assert.IsAssignableFrom<C>.
 public class QuicStreamChannelCloseTest : AbstractQuicTest
 {
 

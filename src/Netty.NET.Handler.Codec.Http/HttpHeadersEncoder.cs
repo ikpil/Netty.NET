@@ -22,8 +22,7 @@ using static Netty.NET.Handler.Codec.Http.HttpObjectEncoder;
 
 namespace Netty.NET.Handler.Codec.Http;
 
-// CLR: the package-private final class with a private constructor is an internal static class; CharSequence is
-// ICharSequence. ByteBuf.setCharSequence(index, seq, US_ASCII) writes AsciiString.c2b(char) for each char in Java
+// CLR: ByteBuf.setCharSequence(index, seq, US_ASCII) writes AsciiString.c2b(char) for each char in Java
 // (AbstractByteBuf.setCharSequence0 -> ByteBufUtil.writeAscii: a char above 0xFF becomes '?', 0x80-0xFF keep their
 // low byte), while Encoding.ASCII would replace every char above 0x7F; the C2b loop keeps the Java bytes, as the
 // Buffer port's ByteBufUtil.WriteAscii does for writes at the writer index.

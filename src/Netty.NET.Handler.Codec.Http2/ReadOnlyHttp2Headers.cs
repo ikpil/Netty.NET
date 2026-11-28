@@ -40,21 +40,15 @@ namespace Netty.NET.Handler.Codec.Http2;
  * This may be a good alternative to {@link DefaultHttp2Headers} if your have a fixed set of headers which will not
  * change.
  */
-// CLR: Http2Headers is IHttp2Headers over the codec-base IHeaders (docs/codec-base-porting.md, Headers): Map.Entry and
-// Iterator are IEntry and IIterator, Iterable<? extends CharSequence>/Iterable<?> are IEnumerable<ICharSequence>/
-// IEnumerable<object>, Headers<? extends CharSequence, ? extends CharSequence, ?> is the generic IHeaders<ICharSequence,
-// ICharSequence, T2> parameter, the boxed getters return bool?/sbyte?/char?/short?/int?/long?/float?/double? (Java's
-// byte is the codec-base sbyte), and GetEnumerator() (foreach) returns iterator(). HashingStrategy is
-// IEqualityComparer and AsciiString.hashCode(CharSequence) is AsciiString.HashCode. AsciiString... is
-// params AsciiString[]. UnsupportedOperationException is NotSupportedException and NoSuchElementException is
-// InvalidOperationException (the IIterator contract); IllegalArgumentException is ArgumentException and the index in
-// its message uses the invariant culture. String.valueOf(value) of the contains* methods is the
-// CharSequenceValueConverter text of the value (Java's true/false and Double.toString text, invariant numbers), and
-// value.toString() of containsObject is CharSequenceValueConverter.ConvertObject (null throws NullReferenceException
-// where Java throws the NullPointerException of the dereference). LinkedHashSet is the Common LinkedHashSet and
-// Collections.emptySet() is ImmutableHashSet.Empty. getClass().getSimpleName() is GetType().Name. The inner iterator
-// classes read the enclosing instance's arrays, so their constructors take the ReadOnlyHttp2Headers. assert is
-// Debug.Assert.
+// CLR: HashingStrategy is IEqualityComparer and AsciiString.hashCode(CharSequence) is AsciiString.HashCode.
+// AsciiString... is params AsciiString[]. UnsupportedOperationException is NotSupportedException and
+// NoSuchElementException is InvalidOperationException (the IIterator contract); IllegalArgumentException is
+// ArgumentException and the index in its message uses the invariant culture. String.valueOf(value) of the
+// contains* methods is the CharSequenceValueConverter text of the value (Java's true/false and Double.toString
+// text, invariant numbers), and value.toString() of containsObject is CharSequenceValueConverter.ConvertObject
+// (null throws NullReferenceException where Java throws the NullPointerException of the dereference). The inner
+// iterator classes read the enclosing instance's arrays, so their constructors take the ReadOnlyHttp2Headers.
+// assert is Debug.Assert.
 public sealed class ReadOnlyHttp2Headers : IHttp2Headers
 {
     private const byte PSEUDO_HEADER_TOKEN = (byte) ':';

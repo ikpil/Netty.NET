@@ -22,7 +22,7 @@ namespace Netty.NET.Resolver.Dns;
 /**
  * Combines two {@link DnsQueryLifecycleObserverFactory} into a single {@link DnsQueryLifecycleObserverFactory}.
  */
-// CLR: DnsQuestion is codec-dns IDnsQuestion; checkNotNull is Common's ObjectUtil.CheckNotNull.
+// CLR: DnsQuestion is codec-dns IDnsQuestion.
 public sealed class BiDnsQueryLifecycleObserverFactory : IDnsQueryLifecycleObserverFactory
 {
     private readonly IDnsQueryLifecycleObserverFactory a;

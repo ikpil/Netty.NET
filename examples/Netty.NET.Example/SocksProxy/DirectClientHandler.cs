@@ -19,9 +19,9 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Example.SocksProxy;
 
-// CLR: Promise<Channel> is TaskCompletionSource<IChannel> (docs/transport-porting.md: TaskCompletionSource producers
-// replace ChannelPromise), so promise.setSuccess is SetResult and promise.setFailure SetException; both also throw when
-// the promise is already complete, as setSuccess/setFailure throw IllegalStateException.
+// CLR: Promise<Channel> is TaskCompletionSource<IChannel>, so promise.setSuccess is SetResult and
+// promise.setFailure SetException; both also throw when the promise is already complete, as setSuccess/setFailure
+// throw IllegalStateException.
 public sealed class DirectClientHandler : ChannelInboundHandlerAdapter
 {
 

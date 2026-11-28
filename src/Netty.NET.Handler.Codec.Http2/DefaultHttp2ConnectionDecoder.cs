@@ -39,19 +39,18 @@ namespace Netty.NET.Handler.Codec.Http2;
  * {@link Http2LocalFlowController}
  */
 // CLR: the non-final Java methods are virtual; calculateMaxHeaderListSizeGoAway is protected virtual and
-// onGoAwayRead0 (package-private) internal. The inner (non-static) listener classes receive the enclosing decoder in
-// their constructors, so the field initializer of internalFrameListener runs in the constructor (a C# field
-// initializer cannot reference the instance, CS0236). The @Deprecated constructor (autoAckPing, no @deprecated text
-// and so no named replacement) is ported with [Obsolete] (owner decision 2026-11-16; docs/codec-http-porting.md,
-// ClientCookieEncoder). Endpoint<?> is the non-generic IHttp2Connection.IEndpoint. A Java switch on Http2Stream.State
-// is an if/else chain on the State instances (a C# case label must be a constant). ctx.newSucceededFuture() is
-// Task.CompletedTask and ctx.newPromise() Http2CodecUtil.NewPromise() (the Task of the auto-ack writes is discarded,
-// as Java discards the future). The catch of Http2Exception | RuntimeException is catch (Exception): every CLR
-// exception is unchecked; IllegalArgumentException is ArgumentException, which is what codec-http's
-// HttpUtil.NormalizeAndGetContentLength throws (docs/codec-base-porting.md, Exceptions). List<? extends CharSequence>
-// is IList<ICharSequence>, Iterator<Entry<...>> the codec-base IIterator<IEntry<...>>, Class equality is Type equality
-// and Http2SettingsReceivedConsumer.class in the message is typeof(IHttp2SettingsReceivedConsumer) (see
-// DecoratingHttp2ConnectionEncoder).
+// onGoAwayRead0 (package-private) internal. The inner (non-static) listener classes receive the enclosing decoder
+// in their constructors, so the field initializer of internalFrameListener runs in the constructor (a C# field
+// initializer cannot reference the instance, CS0236). The @Deprecated constructor (autoAckPing, no @deprecated
+// text and so no named replacement) is ported with [Obsolete]. Endpoint<?> is the non-generic
+// IHttp2Connection.IEndpoint. A Java switch on Http2Stream.State is an if/else chain on the State instances (a C#
+// case label must be a constant). ctx.newSucceededFuture() is Task.CompletedTask and ctx.newPromise()
+// Http2CodecUtil.NewPromise() (the Task of the auto-ack writes is discarded, as Java discards the future). The
+// catch of Http2Exception | RuntimeException is catch (Exception): every CLR exception is unchecked;
+// IllegalArgumentException is ArgumentException, which is what codec-http's HttpUtil.NormalizeAndGetContentLength
+// throws. List<? extends CharSequence> is IList<ICharSequence>, Iterator<Entry<...>> the codec-base
+// IIterator<IEntry<...>>, Class equality is Type equality and Http2SettingsReceivedConsumer.class in the message
+// is typeof(IHttp2SettingsReceivedConsumer) (see DecoratingHttp2ConnectionEncoder).
 public class DefaultHttp2ConnectionDecoder : IHttp2ConnectionDecoder
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(DefaultHttp2ConnectionDecoder));

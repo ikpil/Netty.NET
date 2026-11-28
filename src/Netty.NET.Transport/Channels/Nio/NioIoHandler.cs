@@ -449,8 +449,6 @@ public sealed class NioIoHandler : IIoHandler
         }
     }
 
-    // CLR: SystemTimer.NanoTime() is Common's System.nanoTime(); as in Java the handler does not use the executor's
-    // ticker.
     private static long NanoTime()
     {
         return Netty.NET.Common.SystemTimer.NanoTime();
@@ -755,7 +753,6 @@ public sealed class NioIoHandler : IIoHandler
         return new Factory(selectStrategyFactory);
     }
 
-    // CLR: the anonymous IoHandlerFactory becomes a nested class.
     private sealed class Factory(ISelectStrategyFactory selectStrategyFactory) : IIoHandlerFactory
     {
         public IIoHandler NewHandler(IThreadAwareExecutor executor)

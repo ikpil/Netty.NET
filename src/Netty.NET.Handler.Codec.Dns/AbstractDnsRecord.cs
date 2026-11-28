@@ -157,12 +157,12 @@ public abstract class AbstractDnsRecord : IDnsRecord
     }
 
     // CLR: String.toLowerCase() uses "the rules of the default locale" and String.hashCode() is the polynomial
-    // s[0]*31^(n-1) + ... (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html).
+    // s[0]*31^(n-1) +... (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html).
     // ToLowerInvariant uses "the casing rules of the invariant culture"
-    // (https://learn.microsoft.com/en-us/dotnet/api/system.string.tolowerinvariant?view=net-10.0), and string.GetHashCode()
-    // returns identical values for equal strings but "is not guaranteed to be stable" across runs
-    // (https://learn.microsoft.com/en-us/dotnet/api/system.string.gethashcode?view=net-10.0), so the value differs from
-    // Java while equal records still hash equally, which is the contract Equals relies on.
+    // (https://learn.microsoft.com/en-us/dotnet/api/system.string.tolowerinvariant?view=net-10.0), and
+    // string.GetHashCode() returns identical values for equal strings but "is not guaranteed to be stable" across
+    // runs (https://learn.microsoft.com/en-us/dotnet/api/system.string.gethashcode?view=net-10.0), so the value
+    // differs from Java while equal records still hash equally, which is the contract Equals relies on.
     public override int GetHashCode()
     {
         int hashCode = this.hashCode;

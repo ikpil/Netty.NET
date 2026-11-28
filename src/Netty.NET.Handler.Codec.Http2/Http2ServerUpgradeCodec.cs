@@ -33,14 +33,9 @@ namespace Netty.NET.Handler.Codec.Http2;
 /**
  * Server-side codec for performing a cleartext upgrade from HTTP/1.x to HTTP/2.
  */
-// CLR: HttpServerUpgradeHandler.UpgradeCodec is the nested IUpgradeCodec (I prefix), Collection<CharSequence> is
-// ICollection<ICharSequence> and Collections.singletonList is a ReadOnlyCollection over one element
-// (docs/codec-http-porting.md, Shared CLR adaptations). ChannelHandler is IChannelHandler and the varargs parameters
-// are params arrays. ctx.pipeline(), ctx.name() and ctx.channel() are the Pipeline, Name and Channel properties
-// (docs/transport-porting.md, Decisions); ctx.close() discards the returned Task (docs/codec-base-porting.md, Outbound
-// operations). catch (Throwable) is catch (Exception) (docs/codec-http-porting.md, Shared CLR adaptations). The
-// anonymous Http2FrameAdapter of decodeSettings is the private nested SettingsCopier. The checked "throws" clauses
-// have no counterpart.
+// CLR: ChannelHandler is IChannelHandler and the varargs parameters are params arrays. ctx.pipeline(), ctx.name()
+// and ctx.channel() are the Pipeline, Name and Channel properties; ctx.close() discards the returned Task. catch
+// (Throwable) is catch (Exception).
 public class Http2ServerUpgradeCodec : HttpServerUpgradeHandler.IUpgradeCodec
 {
 
@@ -70,9 +65,9 @@ public class Http2ServerUpgradeCodec : HttpServerUpgradeHandler.IUpgradeCodec
     // CLR: the constructors Http2ServerUpgradeCodec(Http2MultiplexCodec) and Http2ServerUpgradeCodec(String,
     // Http2MultiplexCodec) are absent. They are not @Deprecated themselves, but their parameter type
     // Http2MultiplexCodec is @Deprecated with its replacement named (Http2FrameCodecBuilder together with
-    // Http2MultiplexHandler) and is not ported (owner decision 2026-11-16, deprecated-not-ported), so they cannot
-    // exist. A codec built by Http2FrameCodecBuilder is upgraded through the Http2FrameCodec constructor below, with
-    // the Http2MultiplexHandler as one of its handlers. Their Javadoc comments are kept in place.
+    // Http2MultiplexHandler) and is not ported, so they cannot exist. A codec built by Http2FrameCodecBuilder is
+    // upgraded through the Http2FrameCodec constructor below, with the Http2MultiplexHandler as one of its
+    // handlers. Their Javadoc comments are kept in place.
     /**
      * Creates the codec using a default name for the connection handler when adding to the
      * pipeline.
@@ -141,8 +136,7 @@ public class Http2ServerUpgradeCodec : HttpServerUpgradeHandler.IUpgradeCodec
                         + HTTP_UPGRADE_SETTINGS_HEADER + " header.");
             }
 
-            // CLR: the String header value is passed as a CharSequence, so it is wrapped in StringCharSequence
-            // (docs/codec-http-porting.md, Shared CLR adaptations).
+            // CLR: the String header value is passed as a CharSequence, so it is wrapped in StringCharSequence.
             settings = DecodeSettingsHeader(ctx, new StringCharSequence(upgradeHeaders[0]));
             // Everything looks good.
             return true;
@@ -187,10 +181,6 @@ public class Http2ServerUpgradeCodec : HttpServerUpgradeHandler.IUpgradeCodec
      */
     private Http2Settings DecodeSettingsHeader(IChannelHandlerContext ctx, ICharSequence settingsHeader)
     {
-        // CLR: CharBuffer.wrap(csq) is a read-only buffer whose "content ... will be the content of the given character
-        // sequence" (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/CharBuffer.html);
-        // ByteBufUtil.EncodeString takes that content as a ReadOnlySpan<char> (src/Netty.NET.Buffer/
-        // ByteBufUtil.cs), and CharsetUtil.UTF_8 is Encoding.UTF8.
         ByteBuf header = ByteBufUtil.EncodeString(ctx.Alloc(), settingsHeader.ToString(), Encoding.UTF8);
 
         try

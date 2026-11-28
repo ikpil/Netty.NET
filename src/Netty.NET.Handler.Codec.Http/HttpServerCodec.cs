@@ -45,23 +45,21 @@ namespace Netty.NET.Handler.Codec.Http;
  *
  * @see HttpClientCodec
  */
-// CLR: CombinedChannelDuplexHandler's protected init(...) is Init(...) (docs/transport-porting.md). The inner classes
-// read and write the codec's fields through the codec they receive. Queue<Byte> (ArrayDeque) is Queue<byte>, whose
-// TryDequeue replaces poll()'s null for an empty queue; Long.SIZE is 64. write(ctx, msg, promise) is WriteAsync: Java
-// adds ChannelFutureListener.CLOSE to the caller's promise before encoding, so the channel closes when the write
-// completes or fails, also when encoding throws (the pipeline then fails the promise); the C# encoder closes the channel
-// from a continuation of the returned Task, or before rethrowing an encoding exception (docs/codec-base-porting.md,
-// Outbound operations; promise.unvoid() has no counterpart because there is no void promise). Java notifies that
-// listener at once when the promise completes on the event loop (DefaultPromise.notifyListeners()), while the
-// Transport's write Tasks run their continuations asynchronously (RunContinuationsAsynchronously), so the continuation
-// runs on Common's EventExecutorTaskScheduler over ctx.Executor, the notifyListeners() policy that handler's
-// IdleStateHandler and WriteTimeoutHandler use too (docs/handler-porting.md, Listener timing;
-// src/Netty.NET.Common/Concurrent/EventExecutorTaskScheduler.cs): it runs the continuation on the completing thread
-// when that is the event loop and otherwise hands it to the executor, so the channel is closed when the flush
-// completes the write. The four @Deprecated constructors whose @deprecated texts name
-// HttpServerCodec(HttpDecoderConfig) are not ported (owner decision 2026-11-16). IllegalStateException is
-// InvalidOperationException; the pipeline depth prints with the invariant culture; the package-private
-// DEFAULT_MAX_PIPELINE_DEPTH is internal.
+// CLR: CombinedChannelDuplexHandler's protected init(...) is Init(...). The inner classes read and write the
+// codec's fields through the codec they receive. Queue<Byte> (ArrayDeque) is Queue<byte>, whose TryDequeue
+// replaces poll()'s null for an empty queue; Long.SIZE is 64. write(ctx, msg, promise) is WriteAsync: Java adds
+// ChannelFutureListener.CLOSE to the caller's promise before encoding, so the channel closes when the write
+// completes or fails, also when encoding throws (the pipeline then fails the promise); the C# encoder closes the
+// channel from a continuation of the returned Task, or before rethrowing an encoding exception
+// (docs/codec-base-porting.md, Outbound operations; promise.unvoid() has no counterpart because there is no void
+// promise). Java notifies that listener at once when the promise completes on the event loop
+// (DefaultPromise.notifyListeners()), while the Transport's write Tasks run their continuations asynchronously
+// (RunContinuationsAsynchronously), so the continuation runs on Common's EventExecutorTaskScheduler over
+// ctx.Executor, the notifyListeners() policy that handler's IdleStateHandler and WriteTimeoutHandler use too : it
+// runs the continuation on the completing thread when that is the event loop and otherwise hands it to the
+// executor, so the channel is closed when the flush completes the write. The four @Deprecated constructors whose
+// @deprecated texts name HttpServerCodec(HttpDecoderConfig) are not ported. IllegalStateException is
+// InvalidOperationException; the pipeline depth prints with the invariant culture.
 public sealed class HttpServerCodec : CombinedChannelDuplexHandler<HttpRequestDecoder, HttpResponseEncoder>,
         HttpServerUpgradeHandler.ISourceCodec
 {

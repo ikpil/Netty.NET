@@ -21,13 +21,13 @@ using System.Runtime.InteropServices;
 namespace Netty.NET.Transport.Tests;
 
 // CLR: io.netty.testsuite.util.TestUtils. isSctpSupported() and testMethodName(TestInfo) are ported. The heap and
-// thread dumps (dump, dumpHeap, dumpThreads, timestamp and the HotSpotDiagnosticMXBean fields) and the xz compression
-// of heap dumps (compressHeapDumps) use JVM-only APIs: HotSpotDiagnosticMXBean is the "Diagnostic management interface
-// for the HotSpot Virtual Machine" and ThreadMXBean the JVM thread system's management interface, while a .NET process
-// dump is collected from outside the process with dotnet-dump
+// thread dumps (dump, dumpHeap, dumpThreads, timestamp and the HotSpotDiagnosticMXBean fields) and the xz
+// compression of heap dumps (compressHeapDumps) use JVM-only APIs: HotSpotDiagnosticMXBean is the "Diagnostic
+// management interface for the HotSpot Virtual Machine" and ThreadMXBean the JVM thread system's management
+// interface, while a.NET process dump is collected from outside the process with dotnet-dump
 // (https://learn.microsoft.com/en-us/dotnet/core/diagnostics/dotnet-dump). They are recorded as JVM-only in the
-// Transport manifest and SocketGatheringWriteSourceTest does not call them. The private constructor of the final class
-// is the static class.
+// Transport manifest and SocketGatheringWriteSourceTest does not call them. The private constructor of the final
+// class is the static class.
 internal static class TestUtils
 {
     /**

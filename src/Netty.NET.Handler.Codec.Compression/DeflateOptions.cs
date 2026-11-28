@@ -22,13 +22,12 @@ namespace Netty.NET.Handler.Codec.Compression;
  * {@link DeflateOptions} holds {@link #compressionLevel()},
  * {@link #memLevel()} and {@link #windowBits()} for Deflate compression.
  */
-// CLR: CompressionOptions is the marker interface ICompressionOptions (I prefix). The package-private constructor and
-// DEFAULT are internal (StandardCompressionOptions uses them), and the accessor methods stay methods. windowBits and
-// memLevel keep their Java ranges and values: ZlibCodecFactory hands any value other than 15/8 to JZlibEncoder, which
-// is not ported (owner decision 2026-11-23, library-not-ported). The BCL streams behind JdkZlibEncoder use their own
-// window and memory settings, ZLibNative.Deflate_DefaultWindowBits (15) and Deflate_DefaultMemLevel (8)
+// CLR: The package-private constructor and DEFAULT are internal (StandardCompressionOptions uses them), and the
+// accessor methods stay methods. windowBits and memLevel keep their Java ranges and values: ZlibCodecFactory hands
+// any value other than 15/8 to JZlibEncoder, which is not ported. The BCL streams behind JdkZlibEncoder use their
+// own window and memory settings, ZLibNative.Deflate_DefaultWindowBits (15) and Deflate_DefaultMemLevel (8)
 // (https://raw.githubusercontent.com/dotnet/runtime/v10.0.8/src/libraries/Common/src/System/IO/Compression/ZLibNative.cs),
-// which are the values ZlibCodecFactory routes to JdkZlibEncoder; ZLibCompressionOptions on .NET 10 sets only the
+// which are the values ZlibCodecFactory routes to JdkZlibEncoder; ZLibCompressionOptions on.NET 10 sets only the
 // compression level and strategy
 // (https://learn.microsoft.com/en-us/dotnet/api/system.io.compression.zlibcompressionoptions.compressionlevel?view=net-10.0).
 public class DeflateOptions : ICompressionOptions

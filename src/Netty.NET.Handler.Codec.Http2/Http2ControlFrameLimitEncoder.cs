@@ -26,13 +26,12 @@ namespace Netty.NET.Handler.Codec.Http2;
  * of control frames but will not consume our responses to these.
  * This encoder will tear-down the connection once we reached the configured limit to reduce the risk of DDOS.
  */
-// CLR: the package-private final class is internal sealed and its constructor internal. ChannelPromise is
-// TaskCompletionSource and ChannelFuture Task; the overridden write methods are the Async members of
-// DecoratingHttp2FrameWriter (conventions of this port, docs/codec-http-porting.md Shared CLR adaptations). The
-// ChannelFutureListener lambda is an Action<Task> assigned in the constructor (a field initializer cannot reference
-// the instance, CS0236), and promise.unvoid().addListener(listener) attaches it with Http2CodecUtil.AddListener (the
-// EventExecutorTaskScheduler timing of DefaultPromise listeners) and returns the promise; there is no void promise
-// (docs/transport-porting.md). ctx.close() discards the returned Task.
+// CLR: The overridden write methods are the Async members of DecoratingHttp2FrameWriter (conventions of this port,
+// docs/codec-http-porting.md Shared CLR adaptations). The ChannelFutureListener lambda is an Action<Task> assigned
+// in the constructor (a field initializer cannot reference the instance, CS0236), and
+// promise.unvoid().addListener(listener) attaches it with Http2CodecUtil.AddListener (the
+// EventExecutorTaskScheduler timing of DefaultPromise listeners) and returns the promise; there is no void
+// promise. ctx.close() discards the returned Task.
 internal sealed class Http2ControlFrameLimitEncoder : DecoratingHttp2ConnectionEncoder
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(Http2ControlFrameLimitEncoder));

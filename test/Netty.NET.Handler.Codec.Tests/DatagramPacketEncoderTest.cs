@@ -27,9 +27,9 @@ using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Handler.Codec.Tests;
 
-// CLR: CharsetUtil.UTF_8 is Encoding.UTF8 and Long is long. AddressedEnvelope is IAddressedEnvelope and InetSocketAddress
-// is IPEndPoint; SocketUtils.socketAddress(host, port) is replaced by native socket operations, where a numeric host is
-// an IPAddress in an IPEndPoint (docs/common-clr-design.md, "Native socket operations and network interface access").
+// CLR: AddressedEnvelope is IAddressedEnvelope and InetSocketAddress is IPEndPoint;
+// SocketUtils.socketAddress(host, port) is replaced by native socket operations, where a numeric host is an
+// IPAddress in an IPEndPoint.
 public class DatagramPacketEncoderTest : IDisposable
 {
     private EmbeddedChannel channel;

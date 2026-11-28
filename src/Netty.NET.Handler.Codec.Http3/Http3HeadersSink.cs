@@ -27,15 +27,14 @@ namespace Netty.NET.Handler.Codec.Http3;
  * {@link BiConsumer} that does add header names and values to
  * {@link Http3Headers} while also validate these.
  */
-// CLR: the package-private final class is internal sealed. BiConsumer<CharSequence, CharSequence> has no BCL interface;
-// its counterpart is the delegate Action<ICharSequence, ICharSequence>, so the class keeps accept(...) as Accept(...)
-// and a caller passes the method group (sink.Accept) where Java passes the sink, as the Common ByteProcessor mapping keeps
-// process(byte) (docs/codec-http-porting.md, Shared CLR adaptations). The throws clauses have no counterpart (C# has no
-// checked exceptions). String.format("... (%d)", maxHeaderListSize) formats the long with the invariant culture, and
-// the %s texts of the header names are their toString() (the names are never null here). "*".contentEquals(path) is
-// the private ContentEquals("*", path), which dereferences path as String.contentEquals does. The private enum
-// HeaderType is a C# enum (docs/codec-http2-porting.md, Shared CLR adaptations: simple enums). The static imports of
-// the PseudoHeaderName constants and methods are a using static of IHttp3Headers.PseudoHeaderName.
+// CLR: BiConsumer<CharSequence, CharSequence> has no BCL interface; its counterpart is the delegate
+// Action<ICharSequence, ICharSequence>, so the class keeps accept(...) as Accept(...) and a caller passes the
+// method group (sink.Accept) where Java passes the sink, as the Common ByteProcessor mapping keeps process(byte).
+// The throws clauses have no counterpart (C# has no checked exceptions). String.format("... (%d)",
+// maxHeaderListSize) formats the long with the invariant culture, and the %s texts of the header names are their
+// toString() (the names are never null here). "*".contentEquals(path) is the private ContentEquals("*", path),
+// which dereferences path as String.contentEquals does. The private enum HeaderType is a C# enum. The static
+// imports of the PseudoHeaderName constants and methods are a using static of IHttp3Headers.PseudoHeaderName.
 internal sealed class Http3HeadersSink
 {
     private readonly IHttp3Headers headers;

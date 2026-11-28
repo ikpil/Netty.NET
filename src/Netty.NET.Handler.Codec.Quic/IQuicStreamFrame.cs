@@ -23,11 +23,9 @@ namespace Netty.NET.Handler.Codec.Quic;
  * A QUIC STREAM_FRAME.
  */
 // CLR: ByteBufHolder is IByteBufHolder, whose content() is the read-only Content property and refCnt() the RefCnt
-// property (docs/buffer-porting.md, Buffer holders and conversion). copy(), duplicate(), retainedDuplicate(),
-// replace(ByteBuf), retain(), retain(int), touch() and touch(Object) are re-declared only to narrow the return type, so
-// they are inherited from IByteBufHolder, not repeated; the classes narrow them (owner decision 2026-11-19, as
-// IHttp2DataFrame). The anonymous class of EMPTY_FIN is the private nested EmptyFinQuicStreamFrame, whose narrowed
-// members implement the IByteBufHolder/IReferenceCounted members explicitly (as DefaultHttp2DataFrame does).
+// property. copy(), duplicate(), retainedDuplicate(), replace(ByteBuf), retain(), retain(int), touch() and
+// touch(Object) are re-declared only to narrow the return type, so they are inherited from IByteBufHolder, not
+// repeated; the classes narrow them.
 public interface IQuicStreamFrame : IByteBufHolder
 {
 

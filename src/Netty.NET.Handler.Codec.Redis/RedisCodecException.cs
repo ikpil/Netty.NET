@@ -23,8 +23,7 @@ namespace Netty.NET.Handler.Codec.Redis;
  * An {@link Exception} which is thrown by {@link RedisEncoder} or {@link RedisDecoder}.
  */
 // CLR: serialVersionUID is JVM serialization metadata and has no counterpart; Throwable is Exception, and the
-// cause-only constructor keeps the Java detail message through CodecException (docs/codec-base-porting.md, Shared CLR
-// adaptations).
+// cause-only constructor keeps the Java detail message through CodecException.
 [UnstableApi]
 public sealed class RedisCodecException : CodecException
 {

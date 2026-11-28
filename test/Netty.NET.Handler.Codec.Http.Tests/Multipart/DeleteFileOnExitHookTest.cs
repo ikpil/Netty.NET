@@ -36,14 +36,14 @@ public class DeleteFileOnExitHookCollection
 /**
  * Test DeleteFileOnExitHook
  */
-// CLR: @BeforeEach setUp() runs from the constructor, since xUnit "creates a new instance of the test class for every
-// test that is run" (https://xunit.net/docs/shared-context); it is private, because xUnit flags public non-test methods
-// of a test class (xUnit1013, https://xunit.net/xunit.analyzers/rules/xUnit1013). File is FileInfo (getPath() is
-// FullName, as the port stores FullName in the hook) and new File(dir).mkdirs() is DirectoryInfo.Create().
-// File.exists() is AbstractDiskHttpData.FileExists (FileInfo caches its state until Refresh()).
-// listFiles(FilenameFilter) with the anonymous filter is DirectoryInfo.GetFiles() filtered by the same prefix test, and
-// assertEquals(0, files.length) is Assert.Empty, the form the xUnit analyzer requires for a size check (xUnit2013,
-// https://xunit.net/xunit.analyzers/rules/xUnit2013). UUID.randomUUID() is Guid.NewGuid().
+// CLR: @BeforeEach setUp() runs from the constructor, since xUnit "creates a new instance of the test class for
+// every test that is run" (https://xunit.net/docs/shared-context); it is private, because xUnit flags public
+// non-test methods of a test class (xUnit1013, https://xunit.net/xunit.analyzers/rules/xUnit1013). File is
+// FileInfo (getPath() is FullName, as the port stores FullName in the hook) and new File(dir).mkdirs() is
+// DirectoryInfo.Create(). File.exists() is AbstractDiskHttpData.FileExists (FileInfo caches its state until
+// Refresh()). listFiles(FilenameFilter) with the anonymous filter is DirectoryInfo.GetFiles() filtered by the same
+// prefix test, and assertEquals(0, files.length) is Assert.Empty, the form the xUnit analyzer requires for a size
+// check (xUnit2013, https://xunit.net/xunit.analyzers/rules/xUnit2013).
 [Collection(nameof(DeleteFileOnExitHookCollection))]
 public class DeleteFileOnExitHookTest
 {

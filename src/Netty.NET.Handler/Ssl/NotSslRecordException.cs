@@ -30,12 +30,12 @@ namespace Netty.NET.Handler.Ssl;
  */
 // CLR: javax.net.ssl.SSLException ("Indicates some kind of error detected by an SSL subsystem",
 // https://docs.oracle.com/en/java/javase/17/docs/api/java.base/javax/net/ssl/SSLException.html) is
-// System.Security.Authentication.AuthenticationException, which "The NegotiateStream and SslStream classes throw ...
-// when the client or server cannot be authenticated"
+// System.Security.Authentication.AuthenticationException, which "The NegotiateStream and SslStream classes
+// throw... when the client or server cannot be authenticated"
 // (https://learn.microsoft.com/en-us/dotnet/api/system.security.authentication.authenticationexception?view=net-10.0;
-// ssl design decision 3, docs/handler-ssl-design.md). SSLException extends java.io.IOException, AuthenticationException
-// extends SystemException, so a catch of IOException does not see it. serialVersionUID is JVM serialization metadata
-// and has no counterpart.
+// ssl design decision 3, docs/handler-ssl-design.md). SSLException extends java.io.IOException,
+// AuthenticationException extends SystemException, so a catch of IOException does not see it. serialVersionUID is
+// JVM serialization metadata and has no counterpart.
 public class NotSslRecordException : AuthenticationException
 {
     public NotSslRecordException() : base("")

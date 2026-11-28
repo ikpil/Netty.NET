@@ -19,8 +19,6 @@ namespace Netty.NET.Handler.Codec.Compression;
 /**
  * Constants for both the {@link Bzip2Encoder} and the {@link Bzip2Decoder}.
  */
-// CLR: the package-private final class with a private constructor is an internal sealed class; its static final int
-// fields are const fields, which the other bzip2 files import with using static as Java imports them statically.
 internal sealed class Bzip2Constants
 {
 

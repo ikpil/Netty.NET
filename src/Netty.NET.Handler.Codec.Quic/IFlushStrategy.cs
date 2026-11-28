@@ -22,10 +22,10 @@ namespace Netty.NET.Handler.Codec.Quic;
  * Allows to configure a strategy for when flushes should be happening.
  */
 // CLR: interface FlushStrategy is IFlushStrategy; DEFAULT is a static readonly interface field and afterNumBytes/
-// afterNumPackets are static interface methods returning a private implementation of the lambda. The builders take it
-// (QuicCodecBuilder.FlushStrategy), so the API is ported; System.Net.Quic (msquic) sends the datagrams itself, so the
-// msquic implementation accepts only DEFAULT and reports any other strategy as NotSupportedException when the codec is
-// built (docs/codec-classes-quic-porting.md, Stage 2).
+// afterNumPackets are static interface methods returning a private implementation of the lambda. The builders take
+// it (QuicCodecBuilder.FlushStrategy), so the API is ported; System.Net.Quic (msquic) sends the datagrams itself,
+// so the msquic implementation accepts only DEFAULT and reports any other strategy as NotSupportedException when
+// the codec is built.
 public interface IFlushStrategy
 {
 

@@ -30,20 +30,12 @@ namespace Netty.NET.Handler.Codec.Http.Tests;
 
 #pragma warning disable xUnit1051 // The source's channel.close() observes no test cancellation.
 
-// CLR: CharsetUtil.US_ASCII/UTF_8 are Encoding.ASCII/Encoding.UTF8 (docs/codec-smtp-porting.md). assertInstanceOf is
-// Assert.IsAssignableFrom (https://raw.githubusercontent.com/xunit/assert.xunit/main/TypeAsserts.cs), assertArrayEquals
-// is Assert.Equal of the arrays, and assertThrows(T.class, executable), which also accepts a subclass of T, is
-// Assert.ThrowsAny<T> (https://raw.githubusercontent.com/xunit/assert.xunit/main/ExceptionAsserts.cs); the anonymous
-// Executables are lambdas. IllegalArgumentException/IllegalStateException are ArgumentException/
-// InvalidOperationException (docs/codec-base-porting.md), and java.nio.channels.ClosedChannelException is the
-// Transport ClosedChannelException. Mockito.mock/verifyNoMoreInteractions are Moq's Mock<T>/VerifyNoOtherCalls. The
-// anonymous HttpObjectAggregator subclasses are the named nested PostAggregator/TextAggregator. Boolean.TRUE.toString()
-// is "true", the Java text of a boolean header value. HttpUtil.getContentLength returns a long, so the expected int
-// lengths are widened. The String Content-Type header value is wrapped in StringCharSequence for
-// AsciiString.contentEqualsIgnoreCase (a null String stays null). CompositeByteBuf.numComponents() and decompose(...)
-// are NumComponents and Decompose(...) of the Buffer port. FullHttpRequest/FullHttpResponse.replace(ByteBuf) narrow the
-// return type in Java; the C# interfaces inherit IByteBufHolder.Replace (docs/transport-porting.md, Decisions), so the
-// result is cast. channel.close() discards the CloseAsync Task.
+// CLR: IllegalArgumentException/IllegalStateException are ArgumentException/ InvalidOperationException, and
+// java.nio.channels.ClosedChannelException is the Transport ClosedChannelException. Boolean.TRUE.toString() is
+// "true", the Java text of a boolean header value. HttpUtil.getContentLength returns a long, so the expected int
+// lengths are widened. CompositeByteBuf.numComponents() and decompose(...) are NumComponents and Decompose(...) of
+// the Buffer port. FullHttpRequest/FullHttpResponse.replace(ByteBuf) narrow the return type in Java; the C#
+// interfaces inherit IByteBufHolder.Replace, so the result is cast. channel.close() discards the CloseAsync Task.
 public class HttpObjectAggregatorTest
 {
 

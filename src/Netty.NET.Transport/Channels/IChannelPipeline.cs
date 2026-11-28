@@ -21,12 +21,12 @@ using Netty.NET.Common.Concurrent;
 namespace Netty.NET.Transport.Channels;
 
 // CLR: the fireXxx() and flush() members that Java re-declares here only to narrow their return type to
-// ChannelPipeline are inherited from IChannelInboundInvoker and IChannelOutboundInvoker unchanged, as a C# interface
-// cannot narrow an inherited member's return type without hiding it; newPromise(), newProgressivePromise() and
-// newFailedFuture(Throwable) have no Task counterpart. Iterable<Entry<String, ChannelHandler>> is
-// IEnumerable<KeyValuePair<string, IChannelHandler>>. A Class<T> argument becomes a generic type argument (or a
-// System.Type for context(Class)). first(), last(), firstContext(), lastContext() and channel() keep the property
-// form whose name equals the Java method (owner decision 2026-11-16). The deprecated
+// ChannelPipeline are inherited from IChannelInboundInvoker and IChannelOutboundInvoker unchanged, as a C#
+// interface cannot narrow an inherited member's return type without hiding it; newPromise(),
+// newProgressivePromise() and newFailedFuture(Throwable) have no Task counterpart. Iterable<Entry<String,
+// ChannelHandler>> is IEnumerable<KeyValuePair<string, IChannelHandler>>. A Class<T> argument becomes a generic
+// type argument (or a System.Type for context(Class)). first(), last(), firstContext(), lastContext() and
+// channel() keep the property form whose name equals the Java method. The deprecated
 // addFirst/addLast(EventExecutorGroup, ChannelHandler...) overloads name addFirst/addLast(ChannelHandler...) as
 // their replacement and are not ported.
 /**

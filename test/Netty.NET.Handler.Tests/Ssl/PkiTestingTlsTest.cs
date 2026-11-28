@@ -26,15 +26,14 @@ using Netty.NET.Transport.Channels.Local;
 
 namespace Netty.NET.Handler.Tests.Ssl;
 
-// CLR: SslProvider.OPENSSL is library-not-ported (netty-tcnative; owner decision 2026-11-24, docs/handler-ssl-design.md),
-// so classicalAlgorithms() keeps the JDK provider (SslStream) and drops the OpenSsl rows. @ParameterizedTest with
-// @MethodSource is [Theory] with [MemberData], and @EnabledForJreRange/@EnabledIf conditions are Assert.SkipUnless, as
-// the pkitesting tests skip an algorithm the BCL does not support (docs/pkitesting-porting.md). X509Bundle's
-// toKeyManagerFactory()/toTrustManagerFactory() are its SslStreamCertificateContext/X509ChainPolicy (pkitesting), which
-// SslContextBuilder.ForServer(SslStreamCertificateContext) and TrustManager(X509ChainPolicy) take (ssl context wave);
-// serverName(new SNIHostName("localhost")) is ServerName("localhost"), the SNI host name that SslStream sends as
-// TargetHost. Promise<SslHandshakeCompletionEvent> is a TaskCompletionSource (setSuccess/setFailure/tryFailure are
-// TrySet*), sync() an await, and the bootstrap API is asynchronous; the anonymous handlers are named nested classes.
+// CLR: SslProvider.OPENSSL is library-not-ported (netty-tcnative; owner decision 2026-11-24,
+// docs/handler-ssl-design.md), so classicalAlgorithms() keeps the JDK provider (SslStream) and drops the OpenSsl
+// rows. X509Bundle's toKeyManagerFactory()/toTrustManagerFactory() are its
+// SslStreamCertificateContext/X509ChainPolicy (pkitesting), which
+// SslContextBuilder.ForServer(SslStreamCertificateContext) and TrustManager(X509ChainPolicy) take (ssl context
+// wave); serverName(new SNIHostName("localhost")) is ServerName("localhost"), the SNI host name that SslStream
+// sends as TargetHost. Promise<SslHandshakeCompletionEvent> is a TaskCompletionSource
+// (setSuccess/setFailure/tryFailure are TrySet*), sync() an await, and the bootstrap API is asynchronous.
 public class PkiTestingTlsTest
 {
 

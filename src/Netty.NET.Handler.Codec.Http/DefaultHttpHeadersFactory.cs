@@ -27,11 +27,9 @@ namespace Netty.NET.Handler.Codec.Http;
  * <p>
  * The default builder you most likely want to start with is {@link DefaultHttpHeadersFactory#headersFactory()}.
  */
-// CLR: NameValidator<CharSequence>/ValueValidator<CharSequence> are the codec-base
-// DefaultHeaders.INameValidator<ICharSequence>/IValueValidator<ICharSequence>, whose NOT_NULL and NO_VALIDATION
-// constants need no unchecked cast (docs/codec-base-porting.md, Headers). The anonymous validators are the private
-// nested classes NameValidator_, ValueValidator_ and TrailerNameValidator. IllegalArgumentException is
-// ArgumentException; a null name prints as "null" and Integer.toHexString is the invariant lower-case "x" format.
+// CLR: The anonymous validators are the private nested classes NameValidator_, ValueValidator_ and
+// TrailerNameValidator. IllegalArgumentException is ArgumentException; a null name prints as "null" and
+// Integer.toHexString is the invariant lower-case "x" format.
 public sealed class DefaultHttpHeadersFactory : IHttpHeadersFactory
 {
     private static readonly DefaultHeaders.INameValidator<ICharSequence> DEFAULT_NAME_VALIDATOR = new NameValidator_();

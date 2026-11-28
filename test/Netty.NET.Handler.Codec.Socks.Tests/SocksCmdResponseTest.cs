@@ -22,12 +22,9 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Codec.Socks.Tests;
 
-// CLR: assertInstanceOf(C.class, e) is Assert.IsType<C>(e, exactMatch: false); NullPointerException from
-// checkNotNull is ArgumentNullException and IllegalArgumentException is ArgumentException; the anonymous Executable is
-// a lambda. java.net.IDN is the shared Netty.NET.Common.Internal.IDN; CharBuffer.wrap(s)
-// is compared as the string and readCharSequence(...) through ToString(). CharsetUtil.US_ASCII is Encoding.ASCII.
-// The short port widens to int for the ReadUnsignedShort comparison. encodeAsByteBuf is [Obsolete] (SocksMessage.cs),
-// so its calls suppress CS0618.
+// CLR: NullPointerException from checkNotNull is ArgumentNullException and IllegalArgumentException is
+// ArgumentException. The short port widens to int for the ReadUnsignedShort comparison. encodeAsByteBuf is
+// [Obsolete] (SocksMessage.cs), so its calls suppress CS0618.
 public class SocksCmdResponseTest
 {
     [Fact]

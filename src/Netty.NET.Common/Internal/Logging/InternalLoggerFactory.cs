@@ -95,7 +95,6 @@ public abstract class InternalLoggerFactory : IInternalLoggerFactory
      */
     public static IInternalLogger GetInstance(Type clazz)
     {
-        // CLR: Class.getName() maps to Type.FullName (nested types use '+', not '$').
         return GetInstance(clazz.FullName);
     }
 

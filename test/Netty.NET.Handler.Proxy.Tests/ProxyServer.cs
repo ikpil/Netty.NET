@@ -32,17 +32,15 @@ using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Handler.Proxy.Tests;
 
-// CLR: SocketAddress is EndPoint and InetSocketAddress is IPEndPoint or, unresolved, DnsEndPoint; getHostString() is
-// NetUtil.GetHostname and getPort() the endpoint's Port. SocketUtils.socketAddress(host, port) of the literal hosts the
-// intermediaries receive (the next proxy's numeric address) is new IPEndPoint(IPAddress.Parse(host), port), as in the
-// handler and codec ports (docs/handler-porting.md, Addresses). LinkedBlockingQueue is ConcurrentQueue and ArrayDeque
-// is Queue. The anonymous ChannelInitializer is the nested ServerInitializer, and syncUninterruptibly() blocks on the
-// bind Task. PlatformDependent.throwException(t) rethrows the recorded exception with its stack trace
-// (ExceptionDispatchInfo). The listeners on the backend connect and the terminal write run on the event loop of the
-// frontend channel through Common's EventExecutorTaskScheduler (DefaultPromise.notifyListeners), and
-// ChannelFutureListener.CLOSE closes future.channel() when the write completes. CharsetUtil.US_ASCII is Encoding.ASCII.
-// The inner (non-static) classes IntermediaryHandler and TerminalHandler take the enclosing ProxyServer as a
-// constructor argument, as a C# nested class has no enclosing instance. IllegalStateException is
+// CLR: SocketAddress is EndPoint and InetSocketAddress is IPEndPoint or, unresolved, DnsEndPoint.
+// SocketUtils.socketAddress(host, port) of the literal hosts the intermediaries receive (the next proxy's numeric
+// address) is new IPEndPoint(IPAddress.Parse(host), port), as in the handler and codec ports. LinkedBlockingQueue
+// is ConcurrentQueue and ArrayDeque is Queue. PlatformDependent.throwException(t) rethrows the recorded exception
+// with its stack trace (ExceptionDispatchInfo). The listeners on the backend connect and the terminal write run on
+// the event loop of the frontend channel through Common's EventExecutorTaskScheduler
+// (DefaultPromise.notifyListeners), and ChannelFutureListener.CLOSE closes future.channel() when the write
+// completes. The inner (non-static) classes IntermediaryHandler and TerminalHandler take the enclosing ProxyServer
+// as a constructor argument, as a C# nested class has no enclosing instance. IllegalStateException is
 // InvalidOperationException.
 internal abstract class ProxyServer
 {
@@ -147,8 +145,8 @@ internal abstract class ProxyServer
     /**
      * Logs all recorded exceptions and raises the last one so that the caller can fail.
      */
-    // CLR: poll() is TryDequeue, null when the queue is empty. As in the source, the loop only ends when t is null, so
-    // the final check never raises; the recorded exceptions are logged.
+    // CLR: As in the source, the loop only ends when t is null, so the final check never raises; the recorded
+    // exceptions are logged.
     public void CheckExceptions()
     {
         Exception t;
@@ -175,13 +173,11 @@ internal abstract class ProxyServer
         _ = ch.CloseAsync();
     }
 
-    // CLR: getHostString() of an InetSocketAddress.
     internal static string GetHostString(EndPoint address)
     {
         return NetUtil.GetHostname(address);
     }
 
-    // CLR: getPort() of an InetSocketAddress.
     internal static int GetPort(EndPoint address)
     {
         return address is DnsEndPoint unresolved ? unresolved.Port : ((IPEndPoint) address).Port;

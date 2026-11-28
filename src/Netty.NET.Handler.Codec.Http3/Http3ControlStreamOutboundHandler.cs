@@ -26,15 +26,9 @@ using static Netty.NET.Handler.Codec.Http3.Http3CodecUtils;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the package-private final class is internal sealed; it derives from
-// Http3FrameTypeDuplexValidationHandler<IHttp3ControlStreamFrame>, whose Class<T> constructor argument is the Type
-// typeof(IHttp3ControlStreamFrame), and overrides its internal virtual write(ctx, T, promise), whose ChannelPromise is
-// the TaskCompletionSource that the public WriteAsync returns the Task of. promise.setFailure is SetException;
-// ctx.write(msg, promise) is Http3CodecUtils.Write. ctx.write(buffer) is WriteAsync, whose Task is not awaited, and
-// closeOnFailure(ctx.writeAndFlush(localSettings)) is Http3CodecUtils.CloseOnFailure(ctx.Channel, ...). The Long fields
-// sentMaxPushId/sendGoAwayId are long?; ids print with the invariant culture. ChannelHandler is IChannelHandler and
-// Http3SettingsFrame IHttp3SettingsFrame. assert is Debug.Assert; isSharable() overrides the IsSharable property. The
-// @Nullable (org.jetbrains.annotations) annotations have no counterpart.
+// CLR: The Long fields sentMaxPushId/sendGoAwayId are long?; ids print with the invariant culture. ChannelHandler
+// is IChannelHandler and Http3SettingsFrame IHttp3SettingsFrame. assert is Debug.Assert; isSharable() overrides
+// the IsSharable property. The @Nullable (org.jetbrains.annotations) annotations have no counterpart.
 internal sealed class Http3ControlStreamOutboundHandler
         : Http3FrameTypeDuplexValidationHandler<IHttp3ControlStreamFrame>
 {

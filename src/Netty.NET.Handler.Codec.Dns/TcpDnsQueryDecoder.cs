@@ -20,9 +20,6 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Handler.Codec.Dns;
 
-// CLR: the anonymous DnsMessageUtil.DnsQueryFactory is the named nested class TcpDnsQueryFactory; decode(ctx, in)
-// overrides LengthFieldBasedFrameDecoder.Decode(IChannelHandlerContext, ByteBuf) of codec-base and 'in' is @in.
-// checkNotNull throws ArgumentNullException (docs/codec-base-porting.md). 'throws Exception' has no C# counterpart.
 public sealed class TcpDnsQueryDecoder : LengthFieldBasedFrameDecoder
 {
     private readonly IDnsRecordDecoder decoder;

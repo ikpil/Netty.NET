@@ -44,12 +44,12 @@ public static class ByteBufUtil
     /// On failure the new buffer is released.
     /// Null and negative arguments are checked before allocation; source lifetime/range checks also apply to empty reads.</remarks>
     // CLR: Java calls buffer.readBytes(dst), which transfers "until the destination becomes non-writable", so an
-    // allocator that returns more writable bytes than length makes it read more than length or fail on a short source
-    // (docs/buffer-porting.md, Allocator-returning utilities). The exact-length guarantee stays: when the new buffer has
-    // exactly length writable bytes, the case of every Netty.NET allocator (Unpooled, Pooled, Adaptive and Transport's
-    // PreferHeap, heap and direct, measured 2026-11-24), ReadBytes(ByteBuf) is called as in Java, which
-    // ReplayingDecoderByteBuf supports while it rejects ReadBytes(ByteBuf, int) as Java's does; otherwise
-    // ReadBytes(ByteBuf, int) reads exactly length bytes.
+    // allocator that returns more writable bytes than length makes it read more than length or fail on a short
+    // source. The exact-length guarantee stays: when the new buffer has exactly length writable bytes, the case of
+    // every Netty.NET allocator (Unpooled, Pooled, Adaptive and Transport's PreferHeap, heap and direct, measured
+    // 2026-11-24), ReadBytes(ByteBuf) is called as in Java, which ReplayingDecoderByteBuf supports while it
+    // rejects ReadBytes(ByteBuf, int) as Java's does; otherwise ReadBytes(ByteBuf, int) reads exactly length
+    // bytes.
     public static ByteBuf ReadBytes(IByteBufAllocator allocator, ByteBuf buffer, int length)
     {
         ArgumentNullException.ThrowIfNull(allocator);

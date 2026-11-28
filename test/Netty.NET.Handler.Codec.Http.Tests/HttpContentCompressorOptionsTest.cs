@@ -22,16 +22,16 @@ namespace Netty.NET.Handler.Codec.Http.Tests;
 
 #pragma warning disable xUnit1051 // ch.close() of the source observes no test cancellation.
 
-// CLR: @EnabledIf("isBrotiAvailable") has no xUnit counterpart and needs none: the codec-compression Brotli.IsAvailable()
-// is always true (the BCL BrotliEncoder/BrotliDecoder, docs/codec-compression-porting.md), so every test runs, and the
-// helper keeps its Java name. StandardCompressionOptions.zstd() returns ZstdOptions, which needs zstd-jni and is
-// library-not-ported (owner decision 2026-11-23; docs/codec-compression-porting.md), so the brotli and snappy tests
-// configure the other four options; their expectations do not involve zstd and are unchanged.
-// testGetZstdTargetContentEncoding only exercises the zstd option and is CLR-inapplicable (recorded in the manifest).
-// determineEncoding(String) is the protected DetermineEncoding, reached through the nested TestCompressor (Java tests
-// call it through package access, as handler's IpSubnetFilter tests reach accept(...); docs/handler-porting.md).
-// assertInstanceOf is Assert.IsAssignableFrom, AssertJ's isNotInstanceOf is Assert.False(o is IX), and
-// ch.close().isSuccess() is CloseAsync().IsCompletedSuccessfully (the EmbeddedChannel close completes inline).
+// CLR: @EnabledIf("isBrotiAvailable") has no xUnit counterpart and needs none: the codec-compression
+// Brotli.IsAvailable() is always true (the BCL BrotliEncoder/BrotliDecoder, docs/codec-compression-porting.md), so
+// every test runs, and the helper keeps its Java name. StandardCompressionOptions.zstd() returns ZstdOptions,
+// which needs zstd-jni and is library-not-ported, so the brotli and snappy tests configure the other four options;
+// their expectations do not involve zstd and are unchanged. testGetZstdTargetContentEncoding only exercises the
+// zstd option and is CLR-inapplicable (recorded in the manifest). determineEncoding(String) is the protected
+// DetermineEncoding, reached through the nested TestCompressor (Java tests call it through package access, as
+// handler's IpSubnetFilter tests reach accept(...); docs/handler-porting.md). assertInstanceOf is
+// Assert.IsAssignableFrom, AssertJ's isNotInstanceOf is Assert.False(o is IX), and ch.close().isSuccess() is
+// CloseAsync().IsCompletedSuccessfully (the EmbeddedChannel close completes inline).
 public class HttpContentCompressorOptionsTest
 {
 

@@ -58,23 +58,22 @@ namespace Netty.NET.Resolver.Dns.Tests;
 [CollectionDefinition(nameof(DnsNameResolverTestCollection), DisableParallelization = true)]
 public sealed class DnsNameResolverTestCollection;
 
-// CLR: the apacheds-protocol-dns/MINA imports are the ApacheDs stand-in (owner decision 2026-11-25, see TestDnsServer).
-// The static fields and static blocks run in their textual order in the static constructor; @BeforeAll init() and
-// @AfterAll destroy() run from the class fixture BeforeAndAfterAll, which xUnit creates before the first test of the
-// class and disposes after the last (https://xunit.net/docs/shared-context, "Class Fixtures"; as
-// DnsNameResolverBuilderTest); shutdownGracefully() is ShutdownGracefullyAsync() without waiting, as in the source.
-// @ParameterizedTest @EnumSource(DnsNameResolverChannelStrategy.class) is [Theory] [MemberData(nameof(ChannelStrategies))]
-// over every value of the C# enum (Enum.GetValues), and @Timeout(value, MILLISECONDS) is the theory's Timeout (xUnit
-// fails an async test that runs longer). The resolver API follows the resolver-dns mapping (docs/resolver-porting.md,
-// core notes): resolve/resolveAll/query are ResolveAsync/ResolveAllAsync/QueryAsync, syncUninterruptibly().getNow() is
-// an awaited Task, close() is Dispose(), future.cause() is DnsNameResolver.Cause(task) and awaitUninterruptibly() is
-// the CLR-only AwaitUninterruptibly helper; envelopes and records are released as in the source. java.net
-// UnknownHostException is Common's UnknownHostException (owner decision 2026-11-25). InetAddress is IPAddress,
-// InetSocketAddress IPEndPoint (resolved) or DnsEndPoint (unresolved), DnsRecord IDnsRecord, EventLoop IEventLoop,
-// Throwable Exception, ResolvedAddressTypes.IPV4_ONLY/... Ipv4Only/..., HashMap Dictionary, ConcurrentLinkedQueue
-// ConcurrentQueue, Collections.unmodifiableSet ImmutableHashSet. JUnit asserts with messages use XunitAssertMessages.
-// A private helper that overloads a test method name takes a trailing '_' (xUnit1024: test methods cannot have
-// overloads).
+// CLR: the apacheds-protocol-dns/MINA imports are the ApacheDs stand-in. The static fields and static blocks run
+// in their textual order in the static constructor; @BeforeAll init() and @AfterAll destroy() run from the class
+// fixture BeforeAndAfterAll, which xUnit creates before the first test of the class and disposes after the last
+// (https://xunit.net/docs/shared-context, "Class Fixtures"; as DnsNameResolverBuilderTest); shutdownGracefully()
+// is ShutdownGracefullyAsync() without waiting, as in the source. @ParameterizedTest
+// @EnumSource(DnsNameResolverChannelStrategy.class) is [Theory] [MemberData(nameof(ChannelStrategies))] over every
+// value of the C# enum (Enum.GetValues), and @Timeout(value, MILLISECONDS) is the theory's Timeout (xUnit fails an
+// async test that runs longer). The resolver API follows the resolver-dns mapping : resolve/resolveAll/query are
+// ResolveAsync/ResolveAllAsync/QueryAsync, syncUninterruptibly().getNow() is an awaited Task, close() is
+// Dispose(), future.cause() is DnsNameResolver.Cause(task) and awaitUninterruptibly() is the CLR-only
+// AwaitUninterruptibly helper; envelopes and records are released as in the source. java.net UnknownHostException
+// is Common's UnknownHostException. InetAddress is IPAddress, InetSocketAddress IPEndPoint (resolved) or
+// DnsEndPoint (unresolved), DnsRecord IDnsRecord, EventLoop IEventLoop, Throwable Exception,
+// ResolvedAddressTypes.IPV4_ONLY/... Ipv4Only/..., HashMap Dictionary, ConcurrentLinkedQueue ConcurrentQueue,
+// Collections.unmodifiableSet ImmutableHashSet. JUnit asserts with messages use XunitAssertMessages. A private
+// helper that overloads a test method name takes a trailing '_' (xUnit1024: test methods cannot have overloads).
 // CLR: inside a DnsNameResolver subclass the simple name ResolvedAddressTypes binds to the inherited
 // ResolvedAddressTypes() method, so the enum is written Netty.NET.Resolver.ResolvedAddressTypes there. The anonymous
 // DnsNameResolver subclasses use the internal (package-private) 25-argument constructor with
@@ -324,8 +323,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         {
             if (PlatformDependent.IsWindows())
             {
-                // CLR: InetAddress.getLocalHost().getHostName() is System.Net.Dns.GetHostName(), as in DnsNameResolver
-                // (https://learn.microsoft.com/en-us/dotnet/api/system.net.dns.gethostname?view=net-10.0).
                 windowsHostName = System.Net.Dns.GetHostName();
 
                 // CLR: Charset.defaultCharset() is Encoding.Default and CharsetUtil.UTF_16/UTF_8 are the
@@ -510,9 +507,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
      * test to ensure that some hostnames can be directed toward both the primary and secondary DNS test servers
      * simultaneously.
      */
-    // CLR: the anonymous RecordStore and DnsServerAddressStreamProvider are the nested NameServerCacheRecordStore and
-    // OverriddenHostnamesProvider; ThreadLocalRandom.current().nextBoolean() is Random.Shared.Next(2) != 0 (as
-    // TestDnsServer); isLoopbackAddress() is IPAddress.IsLoopback and getHostAddress() GetHostAddress.
     [Theory]
     [MemberData(nameof(ChannelStrategies))]
     public async Task TestNameServerCache(DnsNameResolverChannelStrategy channelStrategy)
@@ -811,9 +805,9 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         return results;
     }
 
-    // CLR: awaitUninterruptibly().getNow() of a successful query is the awaited envelope; ((ByteBufHolder) r).content()
-    // is the IByteBufHolder.Content of the record; DnsRecordType.name() is Name(); StringBuilder.append(int) appends the
-    // decimal text (invariant culture); isGreaterThan(0) is Assert.True(count > 0) (infra's ResolvConfTest).
+    // CLR: awaitUninterruptibly().getNow() of a successful query is the awaited envelope; ((ByteBufHolder)
+    // r).content() is the IByteBufHolder.Content of the record; StringBuilder.append(int) appends the decimal text
+    // (invariant culture).
     [Theory]
     [MemberData(nameof(ChannelStrategies))]
     public async Task TestQueryMx(DnsNameResolverChannelStrategy strategy)
@@ -1093,7 +1087,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         await TestResolve0(strategy, ResolvedAddressTypes.Ipv6Only, NetUtil.LOCALHOST6, WINDOWS_HOST_NAME);
     }
 
-    // CLR: the @MethodSource method returns TheoryData; the List<Arguments> rows are TheoryData rows.
     public static TheoryData<DnsNameResolverChannelStrategy, ResolvedAddressTypes, IPAddress, string>
             TestResolveLocalhostWithoutDNSArgs()
     {
@@ -1116,8 +1109,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
     }
 
     // CLR: IPAddress is not an xUnit-serializable theory value, so the rows are enumerated when the theory runs
-    // (DisableDiscoveryEnumeration), as codec-http's DefaultHttpRequestTest does for its rows. The anonymous
-    // HostsFileEntriesResolver is the nested NoHostsFileEntriesResolver.
+    // (DisableDiscoveryEnumeration), as codec-http's DefaultHttpRequestTest does for its rows.
     [Theory]
     [MemberData(nameof(TestResolveLocalhostWithoutDNSArgs), DisableDiscoveryEnumeration = true)]
     public async Task TestResolveLocalhostWithoutDNSOrHostsFile(DnsNameResolverChannelStrategy strategy,
@@ -1260,10 +1252,9 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         await TestCNAMERecursiveResolve(strategy, false);
     }
 
-    // CLR: the anonymous RecordStore is the nested CnameChainRecordStore; Collections.singleton is
-    // ImmutableHashSet.Create (as TestDnsServer). assertEquals(firstName, resolvedAddress.getHostName()) has no
-    // counterpart (IPAddress carries no host name; infra's DnsAddressDecoder drops the record name), so the CNAME chain
-    // is verified through the resolved address alone.
+    // CLR: Collections.singleton is ImmutableHashSet.Create (as TestDnsServer). assertEquals(firstName,
+    // resolvedAddress.getHostName()) has no counterpart (IPAddress carries no host name; infra's DnsAddressDecoder
+    // drops the record name), so the CNAME chain is verified through the resolved address alone.
     private static async Task TestCNAMERecursiveResolve(DnsNameResolverChannelStrategy strategy, bool ipv4Preferred)
     {
         string firstName = "firstname.com";
@@ -1388,12 +1379,8 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         await TestCNAMERecursiveResolveMultipleNameServers(strategy, false);
     }
 
-    // CLR: the anonymous RecordStores are the nested FirstNameCnameRecordStore and LastNameRecordStore, and the
-    // anonymous DnsNameResolver subclass is the nested MultipleNameServersDnsNameResolver, whose constructor passes the
-    // source's constructor arguments to the internal 25-argument constructor (core notes: ReflectiveChannelFactory's
-    // NewChannel is the channel factory, HostsFileEntriesResolver.DEFAULT is IHostsFileEntriesResolver.Default) and
-    // whose "internal override NewRedirectServerAddress" is the package-private override. AtomicBoolean is Common's.
-    // assertEquals(firstName, resolvedAddress.getHostName()) has no counterpart (IPAddress carries no host name).
+    // CLR: AtomicBoolean is Common's. assertEquals(firstName, resolvedAddress.getHostName()) has no counterpart
+    // (IPAddress carries no host name).
     private static async Task TestCNAMERecursiveResolveMultipleNameServers(DnsNameResolverChannelStrategy strategy,
                                                                            bool ipv4Preferred)
     {
@@ -1658,10 +1645,9 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         }
     }
 
-    // CLR: the anonymous HostsFileEntriesResolver is the nested FooComHostsFileEntriesResolver.
-    // InetAddress.getByAddress("foo.com", bytes) is new IPAddress(bytes) (the host name has no place in IPAddress; infra
-    // notes "Host names"); the IPAddress constructor declares no UnknownHostException, so the catch that wraps it in an
-    // Error has no counterpart. The resolver is not closed, as in the source.
+    // CLR: InetAddress.getByAddress("foo.com", bytes) is new IPAddress(bytes) (the host name has no place in
+    // IPAddress; infra notes "Host names"); the IPAddress constructor declares no UnknownHostException, so the
+    // catch that wraps it in an Error has no counterpart. The resolver is not closed, as in the source.
     [Theory]
     [MemberData(nameof(ChannelStrategies))]
     public async Task TestResolveAllHostsFile(DnsNameResolverChannelStrategy strategy)
@@ -1916,11 +1902,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         await TestResolvesPreferredWhenNonPreferredFirst0(strategy, ResolvedAddressTypes.Ipv6Preferred);
     }
 
-    // CLR: the anonymous RecordStore over the Iterator is the nested ArbitrarilyOrderedRecordStore over an IEnumerator.
-    // InetAddress.getByAddress("netty.com", InetAddress.getByName(literal).getAddress()) is IPAddress.Parse(literal):
-    // the host name has no place in IPAddress, and InetAddress.equals compares only the address, as IPAddress.Equals
-    // does, so the expected list is unchanged. getHostAddress() is GetHostAddress (the JDK text "0:0:0:0:0:0:1:1").
-    // The resolver is not closed, as in the source.
+    // CLR: The resolver is not closed, as in the source.
     private static async Task TestResolvesPreferredWhenNonPreferredFirst0(
             DnsNameResolverChannelStrategy strategy, ResolvedAddressTypes types)
     {
@@ -1991,7 +1973,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
 
         public ISet<IResourceRecord> GetRecords(QuestionRecord questionRecord)
         {
-            // CLR: Iterator.next() is MoveNext() + Current; NoSuchElementException is InvalidOperationException.
+            // CLR: NoSuchElementException is InvalidOperationException.
             if (!recordsIterator.MoveNext())
             {
                 throw new InvalidOperationException("no more records");
@@ -2468,16 +2450,13 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         await TestMultipleAdditionalRecordsForSameNSRecord_(strategy, true);
     }
 
-    // CLR: new InetSocketAddress(InetAddress.getByAddress(ns1Name, bytes), DNS_PORT) is an IPEndPoint, which keeps no
-    // host name (infra notes, Host names), so the names the source gives the addresses are kept beside them in
+    // CLR: new InetSocketAddress(InetAddress.getByAddress(ns1Name, bytes), DNS_PORT) is an IPEndPoint, which keeps
+    // no host name (infra notes, Host names), so the names the source gives the addresses are kept beside them in
     // hostNames for the anonymous server's newARecord(InetSocketAddress), which reads address.getHostName();
-    // InetSocketAddress.equals compares the resolved address and port, as IPEndPoint.Equals does. The anonymous
-    // TestDnsServer, AuthoritativeDnsServerCache and DnsNameResolver subclasses are the nested
-    // MultipleAdditionalRecordsServer, CachedAddressesAuthoritativeDnsServerCache and
-    // RedirectStreamRecordingResolver; CopyOnWriteArrayList is a ConcurrentQueue (only add and size are used),
-    // AtomicReference is Common's, Collections.reverse(list) is List<T>.Reverse() (in place), and
-    // resolveAll(...).await().cause() is AwaitUninterruptibly with DnsNameResolver.Cause. assertEquals(0,
-    // cached.size()) is Assert.Empty (xUnit2013).
+    // InetSocketAddress.equals compares the resolved address and port, as IPEndPoint.Equals does.
+    // CopyOnWriteArrayList is a ConcurrentQueue (only add and size are used), AtomicReference is Common's,
+    // Collections.reverse(list) is List<T>.Reverse() (in place), and resolveAll(...).await().cause() is
+    // AwaitUninterruptibly with DnsNameResolver.Cause. assertEquals(0, cached.size()) is Assert.Empty (xUnit2013).
     private static async Task TestMultipleAdditionalRecordsForSameNSRecord_(
             DnsNameResolverChannelStrategy strategy, bool reversed)
     {
@@ -2608,15 +2587,12 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             return message;
         }
 
-        // CLR: address.getHostName() is the name kept in hostNames (see the test).
         private IResourceRecord NewARecord(IPEndPoint address)
         {
             return NewARecord(hostNames[address], address.Address.ToString());
         }
     }
 
-    // CLR: the anonymous AuthoritativeDnsServerCache of testMultipleAdditionalRecordsForSameNSRecord and
-    // testNSRecordsFromCache (both identical).
     private sealed class CachedAddressesAuthoritativeDnsServerCache : IAuthoritativeDnsServerCache
     {
         private readonly ConcurrentQueue<EndPoint> cached;
@@ -2837,7 +2813,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
             return message;
         }
 
-        // CLR: address.getHostName() is the name kept in hostNames (see the test).
         private IResourceRecord NewARecord(IPEndPoint address)
         {
             return NewARecord(hostNames[address], address.Address.ToString());
@@ -2858,9 +2833,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         await TestNsLoopFailsResolve(strategy, NoopAuthoritativeDnsServerCache.INSTANCE);
     }
 
-    // CLR: assertThrows(UnknownHostException.class, executable) is Assert.ThrowsAnyAsync<UnknownHostException> over
-    // the awaited helper (JUnit accepts subtypes; docs/codec-http-porting.md: "assertThrows(T.class) is
-    // Assert.ThrowsAny<T>"), and the anonymous Executable is a lambda.
     [Theory]
     [MemberData(nameof(ChannelStrategies))]
     public async Task TestRRNameContainsDifferentSearchDomainNoDomains(DnsNameResolverChannelStrategy strategy)
@@ -2959,9 +2931,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         }
     }
 
-    // CLR: the anonymous TestDnsServer subclass is the nested NsLoopServer; new HashSet(singletonList(domain)) is a
-    // one-element HashSet; resolve(...).await().cause() is AwaitUninterruptibly with DnsNameResolver.Cause and
-    // assertInstanceOf is Assert.IsAssignableFrom.
     private async Task TestNsLoopFailsResolve(DnsNameResolverChannelStrategy strategy,
                                               IAuthoritativeDnsServerCache authoritativeDnsServerCache)
     {
@@ -3028,10 +2997,10 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
 
     // CLR: the anonymous DnsCache is the nested NotCachingDnsCache (fail(...) is Assert.Fail and
     // Collections.emptyList() ImmutableList.Empty). authoritativeDnsServerCache(DnsCache) is @Deprecated and not
-    // ported (core notes, Not-ported rows: "use .AuthoritativeDnsServerCache(new
-    // AuthoritativeDnsServerCacheAdapter(cache)), the deprecated method's own body"), so the adapter is built here.
-    // new InetSocketAddress(NetUtil.LOCALHOST, 12345) is an IPEndPoint. resolve(...).awaitUninterruptibly() is
-    // AwaitUninterruptibly, cause() DnsNameResolver.Cause and getCause() InnerException. The wait observes
+    // ported (core notes, Not-ported rows: "use.AuthoritativeDnsServerCache(new
+    // AuthoritativeDnsServerCacheAdapter(cache)), the deprecated method's own body"), so the adapter is built
+    // here. new InetSocketAddress(NetUtil.LOCALHOST, 12345) is an IPEndPoint. resolve(...).awaitUninterruptibly()
+    // is AwaitUninterruptibly, cause() DnsNameResolver.Cause and getCause() InnerException. The wait observes
     // TestContext.Current.CancellationToken (WaitAsync), so the @Timeout ends it promptly (xUnit1069).
     [Theory(Timeout = 3000)]
     [MemberData(nameof(ChannelStrategies))]
@@ -3116,8 +3085,8 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
 
     // CLR: the anonymous RecordStore is the nested TimeoutOneQueryStore; LinkedHashSet is Common's, toLowerCase()
     // (the default locale) is ToLower(CultureInfo.CurrentCulture) as in TestDnsServer;
-    // InetAddress.getByAddress(bytes) is new IPAddress(bytes); assertTrue(list.contains(x)) is Assert.Contains
-    // (xUnit2017) and assertEquals(1, size()) is Assert.Single (xUnit2013).
+    // assertTrue(list.contains(x)) is Assert.Contains (xUnit2017) and assertEquals(1, size()) is Assert.Single
+    // (xUnit2013).
     private static async Task TestTimeoutOneQuery(DnsNameResolverChannelStrategy strategy, ResolvedAddressTypes type,
                                                   RecordType recordType, RecordType dropType)
     {
@@ -3211,8 +3180,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         Assert.Equal(newChannelFactory, builder.DatagramChannelFactory());
     }
 
-    // CLR: the anonymous RecordStore is the nested FollowCNAMEEvenIfARecordIsPresentStore; Collections.singleton(...)
-    // is ImmutableHashSet.Create and assertTrue(list.contains(x)) Assert.Contains (xUnit2017).
     [Theory]
     [MemberData(nameof(ChannelStrategies))]
     public async Task TestFollowCNAMEEvenIfARecordIsPresent(DnsNameResolverChannelStrategy strategy)
@@ -3360,9 +3327,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         }
     }
 
-    // CLR: the anonymous RecordStore is the nested FollowCNAMELoopStore; Collections.singletonMap(k, v) (an immutable
-    // one-entry map) is ImmutableDictionary<string, object>.Empty.Add(k, v); assertThrows(UnknownHostException.class,
-    // executable) is Assert.ThrowsAnyAsync over the awaited resolve (docs/codec-http-porting.md, as above).
     [Theory]
     [MemberData(nameof(ChannelStrategies))]
     public async Task TestFollowCNAMELoop(DnsNameResolverChannelStrategy strategy)
@@ -3585,11 +3549,9 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
     }
 
     // CLR: Collections.singleton/singletonList are ImmutableHashSet.Create and a one-element list;
-    // ImmediateEventExecutor.INSTANCE.newPromise() is a TaskCompletionSource<IReadOnlyList<IPAddress>> and
-    // promise.sync() awaits its Task (core notes, Future/Promise table); doResolveAllCached and the
-    // searchDomains()/ndots()/ resolvedInternetProtocolFamiliesUnsafe() accessors are internal. HashMap.get is
-    // GetValueOrDefault; assertFalse(entries.isEmpty()) is Assert.NotEmpty and assertEquals(1, size()) Assert.Single
-    // (xUnit2013).
+    // doResolveAllCached and the searchDomains()/ndots()/ resolvedInternetProtocolFamiliesUnsafe() accessors are
+    // internal. HashMap.get is GetValueOrDefault; assertFalse(entries.isEmpty()) is Assert.NotEmpty and
+    // assertEquals(1, size()) Assert.Single (xUnit2013).
     [Theory]
     [MemberData(nameof(ChannelStrategies))]
     public async Task TestResolveACachedWithDotSearchDomain(DnsNameResolverChannelStrategy strategy)
@@ -4283,7 +4245,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         }
     }
 
-    // CLR: the anonymous RecordStore of testQueryTxt.
     private sealed class QueryTxtRecordStore : IRecordStore
     {
         private readonly string hostname;
@@ -4317,9 +4278,8 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         }
     }
 
-    // CLR: getUnsignedByte(index) is the unsigned C# byte of GetByte (owner decision for Java byte) and
-    // toString(index, length, UTF_8) ToString(index, length, Encoding.UTF8); Collections.emptyList() is the immutable
-    // ImmutableList<string>.Empty.
+    // CLR: getUnsignedByte(index) is the unsigned C# byte of GetByte and toString(index, length, UTF_8)
+    // ToString(index, length, Encoding.UTF8).
     private static IList<string> DecodeTxt(IDnsRecord record)
     {
         if (!(record is IDnsRawRecord))
@@ -4381,7 +4341,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         }
     }
 
-    // CLR: the anonymous RecordStore of testNotIncludeDuplicates.
     private sealed class NotIncludeDuplicatesRecordStore : IRecordStore
     {
         private readonly string name;
@@ -4462,7 +4421,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         }
     }
 
-    // CLR: the anonymous RecordStore of testIncludeDuplicates.
     private sealed class IncludeDuplicatesRecordStore : IRecordStore
     {
         private readonly string ipv4Addr;
@@ -4562,8 +4520,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         }
     }
 
-    // CLR: assertInstanceOf(Inet4Address.class, address) is AddressFamily.InterNetwork; the getHostName() assertion
-    // has no counterpart (see testDropAAAA).
+    // CLR: The getHostName() assertion has no counterpart (see testDropAAAA).
     [Theory(Timeout = 2000)]
     [MemberData(nameof(ChannelStrategies))]
     public async Task TestDropAAAAResolveAllFast(DnsNameResolverChannelStrategy strategy)
@@ -4603,7 +4560,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         }
     }
 
-    // CLR: the anonymous RecordStore of testDropAAAAResolveAllFast.
     private sealed class DropAAAAResolveAllFastRecordStore : IRecordStore
     {
         private readonly string host;
@@ -4774,7 +4730,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         }
     }
 
-    // CLR: the anonymous RecordStore of testTruncated0 and testTcpFallbackWhenTimeout (the same body in both).
     private sealed class TxtRecordStore : IRecordStore
     {
         private readonly string host;
@@ -4803,7 +4758,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         }
     }
 
-    // CLR: the anonymous TestDnsServer subclass of testTruncated0.
     private sealed class TruncatedTestDnsServer : TestDnsServer
     {
         private readonly AtomicReference<DnsMessage> messageRef;
@@ -4834,7 +4788,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         }
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of testTruncated0; writerIndex(int) is the WriterIndex setter.
     private sealed class TruncatingPacketHandler : ChannelInboundHandlerAdapter
     {
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
@@ -5035,7 +4988,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         }
     }
 
-    // CLR: the anonymous TestDnsServer subclass of testTcpFallbackWhenTimeout.
     private sealed class TcpFallbackTestDnsServer : TestDnsServer
     {
         private readonly AtomicReference<DnsMessage> messageRef;
@@ -5053,12 +5005,12 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         }
     }
 
-    // CLR: the Promise from eventLoop.newPromise() that resolve(host, promise) completes is the CancellationToken of a
-    // CancellationTokenSource passed to ResolveAsync, and promise.cancel(true) is Cancel(): the resolver cancels its
-    // promise from the token (core notes, "Cancellation"), and the awaited Task is Canceled, so the expected
-    // CancellationException is the OperationCanceledException (TaskCanceledException) that awaiting a canceled Task
-    // throws (core notes, Future/Promise table). assertThrows(Exception.class, ...) is ThrowsAnyAsync<Exception>. As in
-    // the source, the two servers and the resolver are not closed.
+    // CLR: the Promise from eventLoop.newPromise() that resolve(host, promise) completes is the CancellationToken
+    // of a CancellationTokenSource passed to ResolveAsync, and promise.cancel(true) is Cancel(): the resolver
+    // cancels its promise from the token (core notes, "Cancellation"), and the awaited Task is Canceled, so the
+    // expected CancellationException is the OperationCanceledException (TaskCanceledException) that awaiting a
+    // canceled Task throws (core notes, Future/Promise table). assertThrows(Exception.class,...) is
+    // ThrowsAnyAsync<Exception>. As in the source, the two servers and the resolver are not closed.
     [Theory]
     [MemberData(nameof(ChannelStrategies))]
     public async Task TestCancelPromise(DnsNameResolverChannelStrategy strategy)
@@ -5236,7 +5188,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         }
     }
 
-    // CLR: the anonymous DnsServerAddressStreamProvider of testCNAMERecursiveResolveDifferentNameServersForDomains.
     private sealed class DifferentNameServersProvider : IDnsServerAddressStreamProvider
     {
         private readonly string secondName;
@@ -5400,7 +5351,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         }
     }
 
-    // CLR: the anonymous RecordStore of testSrvWithCnameNotCached.
     private sealed class SrvWithCnameRecordStore : IRecordStore
     {
         private readonly AtomicBoolean alias;
@@ -5556,7 +5506,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         }
     }
 
-    // CLR: the anonymous RecordStore of testFollowUpCNAME.
     private sealed class FollowUpCnameRecordStore : IRecordStore
     {
         private readonly AtomicInteger cnameQueries;
@@ -5577,8 +5526,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         }
     }
 
-    // CLR: recordsFuture.get() is an awaited Task; assertFalse(records.isEmpty()) is Assert.NotEmpty (xUnit2013 asks
-    // for the collection assertion).
     private static async Task AssertNotEmptyAndRelease(Task<IReadOnlyList<IDnsRecord>> recordsFuture)
     {
         IReadOnlyList<IDnsRecord> records = await recordsFuture;
@@ -5604,10 +5551,7 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         TestResolveIpv6WithScopeId0(strategy, true);
     }
 
-    // CLR: Inet6Address.getByAddress(null, bytes, scopeId) is new IPAddress(bytes, scopeId)
-    // (https://learn.microsoft.com/en-us/dotnet/api/system.net.ipaddress.-ctor?view=net-10.0) and getNow() the result
-    // of the completed Task, or null when it is not complete (the CLR-only GetNow helper): an IP literal resolves
-    // without a query.
+    // An IP literal resolves immediately without a DNS query.
     private void TestResolveIpv6WithScopeId0(DnsNameResolverChannelStrategy strategy, bool resolveAll)
     {
         DnsNameResolver resolver = NewResolver(strategy).Build();
@@ -5735,7 +5679,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         }
     }
 
-    // CLR: names.poll() is TryDequeue through the local function Poll (null when the queue is empty).
     [Theory]
     [MemberData(nameof(ChannelStrategies))]
     public async Task TestResolveSearchDomainStopOnFirstSuccess(DnsNameResolverChannelStrategy strategy)
@@ -5774,7 +5717,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         }
     }
 
-    // CLR: the anonymous RecordStore of testResolveSearchDomainStopOnFirstSuccess.
     private sealed class SearchDomainStopOnFirstSuccessRecordStore : IRecordStore
     {
         private readonly ConcurrentQueue<string> names;
@@ -5866,7 +5808,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         }
     }
 
-    // CLR: the anonymous RecordStore of testResolveTryWithoutSearchDomainFirst.
     private sealed class TryWithoutSearchDomainFirstRecordStore : IRecordStore
     {
         private readonly ConcurrentQueue<string> names;
@@ -5904,7 +5845,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         }
     }
 
-    // CLR: f.isDone() is Task.IsCompleted and latch.countDown() CountdownEvent.Signal() (see the part header).
     [Theory]
     [MemberData(nameof(ChannelStrategies))]
     public async Task TestInflightQueries(DnsNameResolverChannelStrategy strategy)
@@ -5945,9 +5885,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         }
     }
 
-    // CLR: the anonymous RecordStore of testInflightQueries; latch.await() is CountdownEvent.Wait() and
-    // InterruptedException ThreadInterruptedException, rethrown as InvalidOperationException (IllegalStateException)
-    // whose message is ThrowableUtil.ThrowableToString(e) (new IllegalStateException(e) takes e.toString()).
     private sealed class InflightQueriesRecordStore : IRecordStore
     {
         private readonly AtomicInteger called;
@@ -6099,7 +6036,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         }
     }
 
-    // CLR: the anonymous DnsServerAddressStreamProvider of testResponseFeedbackStream.
     private sealed class ResponseFeedbackStreamProvider : IDnsServerAddressStreamProvider
     {
         private readonly AtomicBoolean successCalled;
@@ -6120,7 +6056,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         }
     }
 
-    // CLR: the anonymous DnsServerResponseFeedbackAddressStream of testResponseFeedbackStream.
     private sealed class ResponseFeedbackStream : IDnsServerResponseFeedbackAddressStream
     {
         private readonly AtomicBoolean successCalled;
@@ -6222,7 +6157,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         }
     }
 
-    // CLR: the anonymous RecordStore of testCnameWithAAndAdditionalsAndAuthorities.
     private sealed class CnameWithAdditionalsRecordStore : IRecordStore
     {
         private readonly string hostname;
@@ -6250,7 +6184,6 @@ public class DnsNameResolverTest : IClassFixture<DnsNameResolverTest.BeforeAndAf
         }
     }
 
-    // CLR: the anonymous TestDnsServer subclass of testCnameWithAAndAdditionalsAndAuthorities.
     private sealed class CnameWithAdditionalsTestDnsServer : TestDnsServer
     {
         private readonly string hostname;

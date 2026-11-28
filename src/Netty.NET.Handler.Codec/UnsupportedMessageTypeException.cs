@@ -25,7 +25,7 @@ namespace Netty.NET.Handler.Codec;
 // CLR: serialVersionUID is JVM serialization metadata and has no counterpart.
 public class UnsupportedMessageTypeException : CodecException
 {
-    // CLR: Class<?>... is params Type[]; Class.getName() is Type.FullName (nested types are spelled Outer+Inner).
+    // CLR: Class<?>... is params Type[].
     public UnsupportedMessageTypeException(
             object message, params Type[] expectedTypes)
         : base(Message(

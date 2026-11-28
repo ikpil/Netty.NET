@@ -29,24 +29,20 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Tests.Stream;
 
-// CLR: ChannelFuture/ChannelPromise are Task (docs/transport-porting.md): ch.write/writeAndFlush are WriteAsync/
-// WriteAndFlushAsync, isDone()/isSuccess() are IsCompleted/IsCompletedSuccessfully and cause() is the Task's inner
-// exception; assertInstanceOf is Assert.IsAssignableFrom (JUnit accepts subtypes) and RuntimeException is Exception
-// (docs/codec-base-porting.md). syncUninterruptibly() is an await of the Task (which rethrows a failure),
-// awaitUninterruptibly() an await with ConfigureAwaitOptions.SuppressThrowing (with ContinueOnCapturedContext, as
-// xUnit1030 requires in test methods), addListener a ContinueWith continuation and CountDownLatch.await(10, SECONDS) a
-// Task.WhenAny of the latch's TaskCompletionSource and a 10 second delay, as in the Transport and codec tests.
-// ch.newPromise() and promise.cancel(false) are a CancellationTokenSource whose token is passed to the write and its
-// Cancel(), after which the write's Task is cancelled. AtomicInteger/AtomicBoolean locals are
-// StrongBox<int>/StrongBox<bool> updated with Interlocked/Volatile (as the Transport tests use StrongBox), and the
-// AtomicInteger/AtomicBoolean fields of the test inputs are int/bool fields updated the same way. File is FileInfo,
-// RandomAccessFile and its FileChannel are FileStream, ByteArrayInputStream and Channels.newChannel(InputStream) are
-// MemoryStream, EOFException is EndOfStreamException, CharsetUtil.ISO_8859_1/US_ASCII are Encoding.Latin1/ASCII and
-// java.nio.channels.ClosedChannelException is the Transport ClosedChannelException. The anonymous ChunkedInput and
-// ChannelOutboundHandlerAdapter classes are named nested classes; the @Deprecated readChunk(ChannelHandlerContext)
-// overrides are not ported with the interface member (see IChunkedInput). The test methods pass
-// TestContext.Current.CancellationToken to the channel operations (xUnit1051), which the source calls without a
-// promise.
+// CLR: ChannelFuture/ChannelPromise are Task : ch.write/writeAndFlush are WriteAsync/ WriteAndFlushAsync,
+// isDone()/isSuccess() are IsCompleted/IsCompletedSuccessfully and cause() is the Task's inner exception;
+// assertInstanceOf is Assert.IsAssignableFrom (JUnit accepts subtypes) and RuntimeException is Exception.
+// syncUninterruptibly() is an await of the Task (which rethrows a failure), awaitUninterruptibly() an await with
+// ConfigureAwaitOptions.SuppressThrowing (with ContinueOnCapturedContext, as xUnit1030 requires in test methods),
+// addListener a ContinueWith continuation and CountDownLatch.await(10, SECONDS) a Task.WhenAny of the latch's
+// TaskCompletionSource and a 10 second delay, as in the Transport and codec tests. ch.newPromise() and
+// promise.cancel(false) are a CancellationTokenSource whose token is passed to the write and its Cancel(), after
+// which the write's Task is cancelled. AtomicInteger/AtomicBoolean locals are StrongBox<int>/StrongBox<bool>
+// updated with Interlocked/Volatile (as the Transport tests use StrongBox), and the AtomicInteger/AtomicBoolean
+// fields of the test inputs are int/bool fields updated the same way. The @Deprecated
+// readChunk(ChannelHandlerContext) overrides are not ported with the interface member (see IChunkedInput). The
+// test methods pass TestContext.Current.CancellationToken to the channel operations (xUnit1051), which the source
+// calls without a promise.
 public class ChunkedWriteHandlerTest
 {
     private static readonly byte[] BYTES = new byte[1024 * 64];
@@ -124,7 +120,6 @@ public class ChunkedWriteHandlerTest
             @in = OpenRead(TMP);
             @in.Position = expectedPosition;
             Check(new NoCloseChunkedNioFile(@in));
-            // CLR: in.isOpen() is FileStream.CanRead (see ChunkedNioFile).
             Assert.True(@in.CanRead);
             Assert.Equal(expectedPosition, @in.Position);
         }
@@ -664,8 +659,6 @@ public class ChunkedWriteHandlerTest
         };
     }
 
-    // CLR: the anonymous ChunkedNioFile subclasses of testChunkedNioFileLeftPositionUnchanged and
-    // testChunkedNioFileFailOnClosedFileChannel.
     private sealed class NoCloseChunkedNioFile : ChunkedNioFile
     {
         internal NoCloseChunkedNioFile(FileStream @in) : base(@in)
@@ -678,9 +671,6 @@ public class ChunkedWriteHandlerTest
         }
     }
 
-    // CLR: the anonymous ChannelOutboundHandlerAdapter of testChunkedFileFailsWhenFileWasTruncated;
-    // promise.setFailure(new IllegalStateException(...)) is the returned failed Task (InvalidOperationException), and
-    // ctx.close() is CloseAsync().
     private sealed class TooManyWritesHandler : ChannelOutboundHandlerAdapter
     {
         private readonly StrongBox<int> writes;
@@ -705,8 +695,6 @@ public class ChunkedWriteHandlerTest
         }
     }
 
-    // CLR: the anonymous ChunkedInput<ByteBuf> of testListenerNotifiedWhenIsEnd (closeWasCalled null) and
-    // testDiscardPendingWritesOnInactive, which also sets closeWasCalled.
     private sealed class SingleChunkInput : IChunkedInput<ByteBuf>
     {
         private readonly StrongBox<bool> closeWasCalled;
@@ -755,8 +743,7 @@ public class ChunkedWriteHandlerTest
         }
     }
 
-    // CLR: the anonymous ChunkedInput<Object> of testChunkedMessageInput; the Integer 0 and the Boolean false are
-    // boxed.
+    // CLR: The Integer 0 and the Boolean false are boxed.
     private sealed class MessageInput : IChunkedInput<object>
     {
         private bool done;
@@ -793,7 +780,6 @@ public class ChunkedWriteHandlerTest
         }
     }
 
-    // CLR: the anonymous ChunkedInput<ByteBuf> of testStopConsumingChunksWhenFailed.
     private sealed class NonClosableInput : IChunkedInput<ByteBuf>
     {
         private readonly ByteBuf buffer;
@@ -833,7 +819,6 @@ public class ChunkedWriteHandlerTest
         }
     }
 
-    // CLR: the anonymous ChunkedInput<ByteBuf> of testEndOfInputWhenChannelIsClosedwhenWrite.
     private sealed class EndOfInput : IChunkedInput<ByteBuf>
     {
 
@@ -862,8 +847,6 @@ public class ChunkedWriteHandlerTest
         }
     }
 
-    // CLR: the anonymous ChannelOutboundHandlerAdapter of testEndOfInputWhenChannelIsClosedwhenWrite;
-    // promise.setSuccess() is the returned completed Task and ctx.close() is CloseAsync().
     private sealed class CloseOnWriteHandler : ChannelOutboundHandlerAdapter
     {
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken)
@@ -875,8 +858,6 @@ public class ChunkedWriteHandlerTest
         }
     }
 
-    // CLR: the anonymous noOpWrites ChannelOutboundHandlerAdapter of testStopConsumingChunksWhenFailed and
-    // checkFirstFailed; promise.tryFailure(new RuntimeException()) is the returned failed Task.
     private sealed class NoOpWritesHandler : ChannelOutboundHandlerAdapter
     {
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken)
@@ -887,7 +868,6 @@ public class ChunkedWriteHandlerTest
         }
     }
 
-    // CLR: the anonymous failLast ChannelOutboundHandlerAdapter of testFailureWhenLastChunkFailed.
     private sealed class FailLastHandler : ChannelOutboundHandlerAdapter
     {
         private int passedWrites;
@@ -907,7 +887,6 @@ public class ChunkedWriteHandlerTest
         }
     }
 
-    // CLR: the anonymous failFirst ChannelOutboundHandlerAdapter of checkSkipFailed.
     private sealed class FailFirstHandler : ChannelOutboundHandlerAdapter
     {
         private bool alreadyFailed;

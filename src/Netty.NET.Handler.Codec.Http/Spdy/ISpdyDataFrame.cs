@@ -22,11 +22,10 @@ namespace Netty.NET.Handler.Codec.Spdy;
  * A SPDY Protocol DATA Frame
  */
 // CLR: the Java interface takes the I prefix (owner rule). ByteBufHolder is IByteBufHolder, whose content() is the
-// read-only Content property (docs/buffer-porting.md, Buffer holders and conversion). setStreamId, setLast, copy(),
-// duplicate(), retainedDuplicate(), replace(ByteBuf), retain(), retain(int), touch() and touch(Object) are re-declared
-// only to narrow the return type, and content() only to document it, so they are inherited from ISpdyStreamFrame and
-// IByteBufHolder, not repeated; DefaultSpdyDataFrame narrows them (owner decision 2026-11-19;
-// docs/transport-porting.md, Decisions).
+// read-only Content property. setStreamId, setLast, copy(), duplicate(), retainedDuplicate(), replace(ByteBuf),
+// retain(), retain(int), touch() and touch(Object) are re-declared only to narrow the return type, and content()
+// only to document it, so they are inherited from ISpdyStreamFrame and IByteBufHolder, not repeated;
+// DefaultSpdyDataFrame narrows them.
 public interface ISpdyDataFrame : IByteBufHolder, ISpdyStreamFrame
 {
 

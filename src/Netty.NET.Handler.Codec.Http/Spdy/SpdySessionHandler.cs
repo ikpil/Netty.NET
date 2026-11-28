@@ -29,26 +29,26 @@ namespace Netty.NET.Handler.Codec.Spdy;
 /**
  * Manages streams within a SPDY session.
  */
-// CLR: ChannelDuplexHandler is the Transport ChannelDuplexHandler. write(ctx, msg, promise) and close(ctx, promise) are
-// WriteAsync/CloseAsync, whose Task replaces the promise (docs/codec-base-porting.md, Outbound operations). The handler
-// completes, stores and listens to its write promises, so each ChannelPromise of the source is a TaskCompletionSource
+// CLR: ChannelDuplexHandler is the Transport ChannelDuplexHandler. write(ctx, msg, promise) and close(ctx,
+// promise) are WriteAsync/CloseAsync, whose Task replaces the promise. The handler completes, stores and listens
+// to its write promises, so each ChannelPromise of the source is a TaskCompletionSource
 // (RunContinuationsAsynchronously, as ChunkedWriteHandler's queued writes, docs/handler-porting.md) whose Task the
-// handler returns: ctx.write(msg, promise)/ctx.writeAndFlush(msg, promise)/ctx.close(promise) are the private Write,
-// WriteAndFlush and Close helpers that complete the promise from the context operation's Task (TrySetFromTask, the
-// PromiseNotifier mapping of docs/common-task-composition.md), promise.setFailure is SetException, ctx.newPromise() is
-// a new TaskCompletionSource and ctx.newSucceededFuture() is Task.CompletedTask. ChannelFuture.addListener is a
-// continuation on Common's EventExecutorTaskScheduler over ctx.Executor, the scheduler that handler's IdleStateHandler
-// uses too (docs/handler-porting.md, Listener timing): the Transport completes its operation Tasks with
-// RunContinuationsAsynchronously, so a continuation on TaskScheduler.Default would run later on a thread-pool thread,
-// while Java's DefaultPromise notifies a listener at once when the promise completes on its event loop.
+// handler returns: ctx.write(msg, promise)/ctx.writeAndFlush(msg, promise)/ctx.close(promise) are the private
+// Write, WriteAndFlush and Close helpers that complete the promise from the context operation's Task
+// (TrySetFromTask, the PromiseNotifier mapping of docs/common-task-composition.md), promise.setFailure is
+// SetException, ctx.newPromise() is a new TaskCompletionSource and ctx.newSucceededFuture() is Task.CompletedTask.
+// ChannelFuture.addListener is a continuation on Common's EventExecutorTaskScheduler over ctx.Executor, the
+// scheduler that handler's IdleStateHandler uses too : the Transport completes its operation Tasks with
+// RunContinuationsAsynchronously, so a continuation on TaskScheduler.Default would run later on a thread-pool
+// thread, while Java's DefaultPromise notifies a listener at once when the promise completes on its event loop.
 // ChannelFutureListener is the operationComplete(Task) of the private ClosingChannelFutureListener, and
 // future.isSuccess() is IsCompletedSuccessfully. A queued data frame is written later without the caller's
-// CancellationToken (Java has no counterpart). AtomicInteger is an int field updated with Interlocked; volatile int is
-// a volatile field. IllegalArgumentException is ArgumentException (docs/codec-base-porting.md) and numbers in exception
-// texts use the invariant culture. The Java byte priority is the CLR byte. The initializer of spdySession reads the
-// fields initialSendWindowSize and initialReceiveWindowSize, which hold DEFAULT_WINDOW_SIZE at that point; a C# field
-// initializer cannot read instance fields (CS0236, https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0236), so it
-// passes DEFAULT_WINDOW_SIZE.
+// CancellationToken (Java has no counterpart). AtomicInteger is an int field updated with Interlocked; volatile
+// int is a volatile field. IllegalArgumentException is ArgumentException and numbers in exception texts use the
+// invariant culture. The Java byte priority is the CLR byte. The initializer of spdySession reads the fields
+// initialSendWindowSize and initialReceiveWindowSize, which hold DEFAULT_WINDOW_SIZE at that point; a C# field
+// initializer cannot read instance fields (CS0236, https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0236),
+// so it passes DEFAULT_WINDOW_SIZE.
 public class SpdySessionHandler : ChannelDuplexHandler
 {
 
@@ -1075,7 +1075,6 @@ public class SpdySessionHandler : ChannelDuplexHandler
         return promise.Task;
     }
 
-    // CLR: ctx.close(promise).
     private static void Close(IChannelHandlerContext ctx, TaskCompletionSource promise)
     {
         Notify(ctx, ctx.CloseAsync(), promise);
@@ -1089,7 +1088,6 @@ public class SpdySessionHandler : ChannelDuplexHandler
                 new EventExecutorTaskScheduler(() => ctx.Executor));
     }
 
-    // CLR: future.addListener(listener).
     private static void AddListener(IChannelHandlerContext ctx, Task future, Action<Task> listener)
     {
         _ = future.ContinueWith(listener, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously,

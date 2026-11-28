@@ -24,11 +24,9 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Handler.Codec.Quic.Tests;
 
-// CLR: @ParameterizedTest @MethodSource("newSslTaskExecutors") is a theory over AbstractQuicTest.NewSslTaskExecutors().
-// The ImmediateEventExecutor promises are TaskCompletionSources (Promise<Throwable>.setSuccess(cause) is
-// TrySetResult(cause), PromiseNotifier a continuation that completes the promise like the write Task, await().isSuccess()
-// an awaited Task that completed successfully); assertInstanceOf(UnsupportedOperationException.class, ...) is
-// Assert.IsAssignableFrom<NotSupportedException> (UnsupportedOperationException is NotSupportedException).
+// CLR: The ImmediateEventExecutor promises are TaskCompletionSources (Promise<Throwable>.setSuccess(cause) is
+// TrySetResult(cause), PromiseNotifier a continuation that completes the promise like the write Task,
+// await().isSuccess() an awaited Task that completed successfully).
 public class QuicStreamTypeTest : AbstractQuicTest
 {
 

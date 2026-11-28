@@ -24,21 +24,19 @@ namespace Netty.NET.Handler.Codec.Http3.Tests;
  * unit tests for {@link DefaultHttp3SettingsFrame}.
  */
 // CLR: the package-private JUnit class and methods are public, because xUnit runs public test classes and methods.
-// DefaultHttp3SettingsFrame's @Deprecated overrides get(long) and put(long, Long) ("use settings() and manipulate the
-// Http3Settings directly") are not ported (owner decision 2026-11-16; the DefaultHttp3SettingsFrame entry of
-// docs/codec-http3-porting-manifest.json): frame.get(key) is its named replacement frame.Settings().Get(key), which is
-// what the override returned (settings.get(key)), and frame.put(key, value) is the IHttp3SettingsFrame default member
-// Put, which calls settings().put(key, value) as the override did; a default interface member is called through the
-// interface, hence ((IHttp3SettingsFrame) frame).Put(...). testDeprecatedMethodsStillWork, which exercises only that
-// deprecated get, is recorded as CLR-inapplicable in the manifest; its original comments are kept at its place below.
-// Map.Entry<Long, Long> is KeyValuePair<long, long> and a Long that may be null is long?; frame.iterator() is
-// GetEnumerator() and hasNext()/next() are MoveNext()/Current; a long key or value is never null, so
-// assertNotNull(entry.getKey()) checks the boxed value, as Java checks the boxed Long. assertEquals(Object, Object) calls
-// equals: DefaultHttp3SettingsFrame is an IEnumerable, which xUnit's Assert.Equal would compare entry by entry, so
-// AssertObjectEquals/AssertObjectNotEquals keep JUnit's comparison (as AssertSettingsEquals in codec-http2's
-// InboundHttp2ToHttpAdapterTest). assertThrows(IllegalArgumentException.class, ...) is
-// Assert.ThrowsAny<ArgumentException> and IllegalStateException is InvalidOperationException (docs/codec-http-porting.md,
-// Core test notes).
+// DefaultHttp3SettingsFrame's @Deprecated overrides get(long) and put(long, Long) ("use settings() and manipulate
+// the Http3Settings directly") are not ported : frame.get(key) is its named replacement frame.Settings().Get(key),
+// which is what the override returned (settings.get(key)), and frame.put(key, value) is the IHttp3SettingsFrame
+// default member Put, which calls settings().put(key, value) as the override did; a default interface member is
+// called through the interface, hence ((IHttp3SettingsFrame) frame).Put(...). testDeprecatedMethodsStillWork,
+// which exercises only that deprecated get, is recorded as CLR-inapplicable in the manifest; its original comments
+// are kept at its place below. Map.Entry<Long, Long> is KeyValuePair<long, long> and a Long that may be null is
+// long?; a long key or value is never null, so assertNotNull(entry.getKey()) checks the boxed value, as Java
+// checks the boxed Long. assertEquals(Object, Object) calls equals: DefaultHttp3SettingsFrame is an IEnumerable,
+// which xUnit's Assert.Equal would compare entry by entry, so AssertObjectEquals/AssertObjectNotEquals keep
+// JUnit's comparison (as AssertSettingsEquals in codec-http2's InboundHttp2ToHttpAdapterTest).
+// assertThrows(IllegalArgumentException.class,...) is Assert.ThrowsAny<ArgumentException> and
+// IllegalStateException is InvalidOperationException.
 public class DefaultHttp3SettingsFrameTest
 {
 

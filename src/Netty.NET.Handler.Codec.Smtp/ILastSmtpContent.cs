@@ -26,13 +26,12 @@ namespace Netty.NET.Handler.Codec.Smtp;
  * and the lines that start with a DOT must be escaped with an extra DOT as
  * specified by <a href="https://www.ietf.org/rfc/rfc2821.txt">RFC2821</a>.
  */
-// CLR: interface with the I prefix; @UnstableApi is the Common [UnstableApi] attribute. The Java members that re-declare
-// ISmtpContent members only to narrow the return type to LastSmtpContent are inherited unchanged, as for the Transport
-// interfaces: C# 9 covariant returns cover class overrides only (docs/transport-porting.md, "Java type names and
-// hierarchy"). The interface field EMPTY_LAST_CONTENT is a static readonly interface field (C# interfaces may declare
-// static fields and nested types, https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface);
-// its anonymous class is the named nested class EmptyLastSmtpContent, whose content()/refCnt() are the Content/RefCnt
-// properties of the Buffer port (docs/buffer-porting.md, Buffer holders and conversion).
+// CLR: The Java members that re-declare ISmtpContent members only to narrow the return type to LastSmtpContent are
+// inherited unchanged, as for the Transport interfaces: C# 9 covariant returns cover class overrides only. The
+// interface field EMPTY_LAST_CONTENT is a static readonly interface field (C# interfaces may declare static fields
+// and nested types, https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface); its
+// anonymous class is the named nested class EmptyLastSmtpContent, whose content()/refCnt() are the Content/RefCnt
+// properties of the Buffer port.
 [UnstableApi]
 public interface ILastSmtpContent : ISmtpContent
 {

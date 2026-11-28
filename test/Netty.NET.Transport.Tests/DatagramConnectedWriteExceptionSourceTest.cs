@@ -129,7 +129,7 @@ public class DatagramConnectedWriteExceptionSourceTest : AbstractClientSocketTes
         }
     }
 
-    // CLR: C# has no anonymous classes; the source's anonymous handlers are the private classes below.
+    // CLR: C# has no anonymous classes.
     private sealed class ServerReceivedHandler(CountDownLatch serverReceivedLatch)
             : SimpleChannelInboundHandler<DatagramPacket>
     {

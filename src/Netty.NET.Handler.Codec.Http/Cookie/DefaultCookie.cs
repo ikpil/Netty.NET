@@ -317,7 +317,7 @@ public class DefaultCookie : ICookie
      * @return the trimmed, validated attribute value
      * @deprecated CookieUtil is package private, will be removed once old Cookie API is dropped
      */
-    // CLR: @deprecated names no replacement, so it is ported with [Obsolete] (owner decision 2026-11-16).
+    // CLR: @deprecated names no replacement, so it is ported with [Obsolete].
     [Obsolete("CookieUtil is package private, will be removed once old Cookie API is dropped")]
     protected virtual string ValidateValue(string name, string value)
     {

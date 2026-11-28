@@ -47,7 +47,6 @@ internal sealed class CodecOutputList : IList<object>
 
     private static readonly FastThreadLocal<CodecOutputLists> CODEC_OUTPUT_LISTS_POOL = new CodecOutputListsPool();
 
-    // CLR: the anonymous FastThreadLocal is a named nested subclass.
     private sealed class CodecOutputListsPool : FastThreadLocal<CodecOutputLists>
     {
         protected override CodecOutputLists InitialValue()

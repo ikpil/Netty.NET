@@ -82,7 +82,7 @@ public class SocketChannelNotYetConnectedSourceTest : AbstractClientSocketTest
             ServerBootstrap sb = new ServerBootstrap().Group(group);
             // CLR: bind(0) binds new InetSocketAddress(0), the wildcard address, and the connect below reaches it
             // because OpenJDK's SocketChannelImpl.checkRemote replaces a wildcard remote address with the loopback
-            // address ("if (address.isAnyLocalAddress()) ... Net.inet4LoopbackAddress()",
+            // address ("if (address.isAnyLocalAddress())... Net.inet4LoopbackAddress()",
             // https://github.com/openjdk/jdk21u/blob/master/src/java.base/share/classes/sun/nio/ch/SocketChannelImpl.java).
             // A CLR socket does not make that replacement, so the server binds the loopback address
             // (NetUtil.LOCALHOST) that the source's connect ends up using, port 0 as in bind(0).
@@ -123,9 +123,6 @@ public class SocketChannelNotYetConnectedSourceTest : AbstractClientSocketTest
         }
     }
 
-    // CLR: the source's anonymous server handler as a named class; C# anonymous types "can't add methods, events, or
-    // custom operators" (https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/
-    // anonymous-types).
     private sealed class SendFortyTwo : ChannelInboundHandlerAdapter
     {
         public override void ChannelActive(IChannelHandlerContext ctx)
@@ -134,11 +131,9 @@ public class SocketChannelNotYetConnectedSourceTest : AbstractClientSocketTest
         }
     }
 
-    // CLR: the source's anonymous ByteToMessageDecoder as a named class (codec-base is ported since 2026-11-18): handlerAdded
-    // asserts the inactive channel and requests a read, and decode asserts at most Integer.BYTES (sizeof(int)) readable
-    // bytes and the integer 42. A failed assertion reaches ExceptionCaught (wrapped in a DecoderException when it comes
-    // from decode), which faults the latch so the test fails without waiting for its Timeout; the source has no
-    // exceptionCaught override and waits for its @Timeout instead.
+    // CLR: A failed assertion reaches ExceptionCaught (wrapped in a DecoderException when it comes from decode),
+    // which faults the latch so the test fails without waiting for its Timeout; the source has no exceptionCaught
+    // override and waits for its @Timeout instead.
     private sealed class ReadFortyTwo(TaskCompletionSource readLatch) : ByteToMessageDecoder
     {
         public override void HandlerAdded(IChannelHandlerContext ctx)

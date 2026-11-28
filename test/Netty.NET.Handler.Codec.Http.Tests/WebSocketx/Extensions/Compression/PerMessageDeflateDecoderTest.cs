@@ -27,15 +27,14 @@ using static Netty.NET.Handler.Codec.Http.WebSocketx.Extensions.IWebSocketExtens
 
 namespace Netty.NET.Handler.Codec.Http.Tests.WebSocketx.Extensions.Compression;
 
-// CLR: WebSocketExtension.RSV1/RSV3 are the constants of IWebSocketExtension; the static imports of ALWAYS_SKIP and
-// EMPTY_DEFLATE_BLOCK are using static directives of IWebSocketExtensionFilter and DeflateDecoder, and
-// CharsetUtil.UTF_8 is Encoding.UTF8 (docs/codec-smtp-porting.md). The anonymous WebSocketExtensionFilter classes are
-// the named nested classes TextShorterThan100Filter and ShorterThan100Filter. java.util.Random and the SplittableRandom
-// seeded from it are an unseeded System.Random filled with NextBytes (the payloads are arbitrary).
-// assertThrows(T.class, Executable) is Assert.ThrowsAny<T> with a lambda; readInbound()/readOutbound() are
-// ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property, slice/wrappedBuffer/decodeHexDump/getBytes are
-// the Buffer port's Slice, WrappedBuffer, ByteBufUtil.DecodeHexDump and ByteBufUtil.GetBytes, and Java's equality of
-// two ByteBufs is Assert.Equal through ByteBuf's IEquatable<ByteBuf>.
+// CLR: WebSocketExtension.RSV1/RSV3 are the constants of IWebSocketExtension. The anonymous
+// WebSocketExtensionFilter classes are the named nested classes TextShorterThan100Filter and ShorterThan100Filter.
+// java.util.Random and the SplittableRandom seeded from it are an unseeded System.Random filled with NextBytes
+// (the payloads are arbitrary). assertThrows(T.class, Executable) is Assert.ThrowsAny<T> with a lambda;
+// readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), content() is the Content property,
+// slice/wrappedBuffer/decodeHexDump/getBytes are the Buffer port's Slice, WrappedBuffer, ByteBufUtil.DecodeHexDump
+// and ByteBufUtil.GetBytes, and Java's equality of two ByteBufs is Assert.Equal through ByteBuf's
+// IEquatable<ByteBuf>.
 public class PerMessageDeflateDecoderTest
 {
 

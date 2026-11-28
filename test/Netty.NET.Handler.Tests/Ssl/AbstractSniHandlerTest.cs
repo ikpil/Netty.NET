@@ -21,7 +21,7 @@ using Netty.NET.Handler.Ssl;
 namespace Netty.NET.Handler.Tests.Ssl;
 
 // CLR: the static extractSniHostname of the generic AbstractSniHandler<T> needs a type argument in C#
-// (AbstractSniHandler<object>); CharsetUtil.US_ASCII is Encoding.ASCII (docs/codec-smtp-porting.md).
+// (AbstractSniHandler<object>).
 public class AbstractSniHandlerTest
 {
 

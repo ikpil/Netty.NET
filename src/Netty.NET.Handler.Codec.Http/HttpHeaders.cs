@@ -33,25 +33,22 @@ namespace Netty.NET.Handler.Codec.Http;
  * Concrete instances of this class are most easily obtained from its default factory:
  * {@link DefaultHttpHeadersFactory#headersFactory()}.
  */
-// CLR: CharSequence is ICharSequence and String is string; both Java overloads are kept, so a string name binds to the
-// String overload and an AsciiString to the CharSequence one. A C# string is not an ICharSequence, so the CharSequence
-// values that the String overloads compare are wrapped in the Common StringCharSequence. Integer/Short/Long results are
-// int?/short?/long?; Iterable<?> is IEnumerable<object> (reference-type covariance: an IEnumerable of a value type, such
-// as List<int>, binds to the Object overload, so value types are passed boxed); List and Set are IList and ISet;
-// Map.Entry and Iterator are the codec-base IEntry and IIterator (docs/codec-base-porting.md, Headers).
-// Iterable<Map.Entry<String, String>> is IEnumerable<IEntry<string, string>>. Its iterator() is @Deprecated and names
-// iteratorCharSequence() and iteratorAsString() as replacements, so it is not ported (owner decision 2026-11-16): the
-// final iteratorAsString(), which only returned iterator(), is the abstract IteratorAsString() that the implementations
+// CLR: CharSequence is ICharSequence and String is string; both Java overloads are kept, so a string name binds to
+// the String overload and an AsciiString to the CharSequence one. A C# string is not an ICharSequence, so the
+// CharSequence values that the String overloads compare are wrapped in the Common StringCharSequence.
+// Integer/Short/Long results are int?/short?/long?; Iterable<?> is IEnumerable<object> (reference-type covariance:
+// an IEnumerable of a value type, such as List<int>, binds to the Object overload, so value types are passed
+// boxed); List and Set are IList and ISet; Map.Entry and Iterator are the codec-base IEntry and IIterator.
+// Iterable<Map.Entry<String, String>> is IEnumerable<IEntry<string, string>>. Its iterator() is @Deprecated and
+// names iteratorCharSequence() and iteratorAsString() as replacements, so it is not ported : the final
+// iteratorAsString(), which only returned iterator(), is the abstract IteratorAsString() that the implementations
 // override with the body of their iterator(), and GetEnumerator() (foreach, the C# form of the Iterable contract)
-// returns IteratorAsString(). The @Deprecated EMPTY_HEADERS, Names, Values and static helpers name their replacements
-// (EmptyHttpHeaders.INSTANCE, HttpHeaderNames, HttpHeaderValues, HttpUtil, the instance methods and AsciiString) and are
-// not ported; encodeAscii(CharSequence, ByteBuf) has no @deprecated text and is ported with [Obsolete]. Iterator-based
-// defaults use the private nested ListIterator/CharSequenceIterator adapters (Java's List.iterator() supports remove()).
-// String.equalsIgnoreCase is string.Equals with StringComparison.OrdinalIgnoreCase. getClass() is GetType(), and
-// ObjectUtil.checkNotNull throws ArgumentNullException (docs/codec-base-porting.md). IEquatable<HttpHeaders> routes generic
-// equality (EqualityComparer<T>.Default, which xUnit consults before treating the headers as an IEnumerable of entries)
-// to the Java equals(Object) of the implementation, as codec-base DefaultHeaders does (docs/codec-base-porting.md,
-// src/Netty.NET.Handler.Codec/DefaultHeaders.cs).
+// returns IteratorAsString(). The @Deprecated EMPTY_HEADERS, Names, Values and static helpers name their
+// replacements (EmptyHttpHeaders.INSTANCE, HttpHeaderNames, HttpHeaderValues, HttpUtil, the instance methods and
+// AsciiString) and are not ported. Iterator-based defaults use the private nested
+// ListIterator/CharSequenceIterator adapters (Java's List.iterator() supports remove()). IEquatable<HttpHeaders>
+// routes generic equality (EqualityComparer<T>.Default, which xUnit consults before treating the headers as an
+// IEnumerable of entries) to the Java equals(Object) of the implementation, as codec-base DefaultHeaders does.
 public abstract class HttpHeaders : IEnumerable<IEntry<string, string>>, IEquatable<HttpHeaders>
 {
     public bool Equals(HttpHeaders other)

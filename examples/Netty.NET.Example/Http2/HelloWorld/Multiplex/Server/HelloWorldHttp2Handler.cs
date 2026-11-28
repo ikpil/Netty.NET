@@ -25,11 +25,11 @@ namespace Netty.NET.Example.Http2.HelloWorld.Multiplex.Server;
 /**
  * A simple handler that responds with the message "Hello World!".
  */
-// CLR: @Sharable is the [Sharable] attribute. Http2HeadersFrame, Http2DataFrame and Http2Headers take the I prefix, as
-// in codec-http2. CharsetUtil.UTF_8 is Encoding.UTF8, data.content() is the Content property and data.release()
-// Release(). ctx.write(msg) is WriteAsync, whose Task is discarded as Java discards the ChannelFuture;
-// cause.printStackTrace() writes the exception to Console.Error, as codec-http2's LastInboundHandler. The
-// package-private static field is internal.
+// CLR: @Sharable is the [Sharable] attribute. Http2HeadersFrame, Http2DataFrame and Http2Headers take the I
+// prefix, as in codec-http2. CharsetUtil.UTF_8 is Encoding.UTF8, data.content() is the Content property and
+// data.release() Release(). ctx.write(msg) is WriteAsync, whose Task is discarded as Java discards the
+// ChannelFuture; cause.printStackTrace() writes the exception to Console.Error, as codec-http2's
+// LastInboundHandler.
 [Sharable]
 public class HelloWorldHttp2Handler : ChannelDuplexHandler
 {

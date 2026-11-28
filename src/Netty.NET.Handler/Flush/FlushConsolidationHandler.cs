@@ -63,9 +63,9 @@ public class FlushConsolidationHandler : ChannelDuplexHandler
     private IChannelHandlerContext ctx;
     // CLR: java.util.concurrent.Future<?> is only kept to cancel(false) the submitted task, so it is the
     // CancellationTokenSource whose token is passed to EventExecutorExtensions.SubmitAsync: "Cancellation before
-    // execution prevents the delegate from running" (src/Netty.NET.Common/Concurrent/EventExecutorExtensions.cs), as a
-    // task that "has not started when cancel is called ... should never run", and with mayInterruptIfRunning false
-    // "in-progress tasks are allowed to complete"
+    // execution prevents the delegate from running" (src/Netty.NET.Common/Concurrent/EventExecutorExtensions.cs),
+    // as a task that "has not started when cancel is called... should never run", and with mayInterruptIfRunning
+    // false "in-progress tasks are allowed to complete"
     // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/concurrent/Future.html#cancel(boolean)).
     private CancellationTokenSource nextScheduledFlush;
 
@@ -173,7 +173,7 @@ public class FlushConsolidationHandler : ChannelDuplexHandler
     }
 
     // CLR: disconnect(ctx, promise) and close(ctx, promise) are the Task-returning DisconnectAsync/CloseAsync; the
-    // returned Task replaces the promise (docs/codec-base-porting.md, Outbound operations).
+    // returned Task replaces the promise.
     public override Task DisconnectAsync(IChannelHandlerContext ctx, CancellationToken cancellationToken)
     {
         // Try to flush one last time if flushes are pending before disconnect the channel.

@@ -35,14 +35,11 @@ namespace Netty.NET.Handler.Codec.Http;
  * This may be a good alternative to {@link DefaultHttpHeaders} if your have a fixed set of headers which will not
  * change.
  */
-// CLR: @UnstableApi has no counterpart. CharSequence... is params ICharSequence[]; the String overloads wrap their
-// names and values in StringCharSequence because a C# string is not an ICharSequence. Map.Entry and Iterator are the
-// codec-base IEntry and IIterator (docs/codec-base-porting.md, Headers); AbstractMap.SimpleImmutableEntry is the private
-// nested ImmutableEntry, LinkedHashSet is the Common LinkedHashSet, and the empty list/set are immutable as
-// Collections.emptyList/emptySet are. NoSuchElementException and the read-only IllegalStateException of an iterator are
-// InvalidOperationException, UnsupportedOperationException is NotSupportedException (the codec-base IIterator
-// contract). The static import CharSequenceValueConverter.INSTANCE is the codec-base converter; iterator() is
-// IteratorAsString() (see HttpHeaders).
+// CLR: @UnstableApi has no counterpart. The String overloads wrap their names and values in StringCharSequence
+// because a C# string is not an ICharSequence. Map.Entry and Iterator are the codec-base IEntry and IIterator.
+// NoSuchElementException and the read-only IllegalStateException of an iterator are InvalidOperationException,
+// UnsupportedOperationException is NotSupportedException (the codec-base IIterator contract). The static import
+// CharSequenceValueConverter.INSTANCE is the codec-base converter.
 public sealed class ReadOnlyHttpHeaders : HttpHeaders
 {
     private readonly ICharSequence[] nameValuePairs;

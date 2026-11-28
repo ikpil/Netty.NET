@@ -26,8 +26,7 @@ namespace Netty.NET.Handler.Codec.Redis;
  * Encodes {@link RedisMessage} into bytes following
  * <a href="https://redis.io/topics/protocol">RESP (REdis Serialization Protocol)</a>.
  */
-// CLR: RedisMessage.class is typeof(IRedisMessage) and ByteBufAllocator is IByteBufAllocator (docs/codec-base-porting.md);
-// content() of a holder is the Content property (docs/buffer-porting.md, Buffer holders and conversion).
+// CLR: RedisMessage.class is typeof(IRedisMessage) and ByteBufAllocator is IByteBufAllocator.
 [UnstableApi]
 public class RedisEncoder : MessageToMessageEncoder<IRedisMessage>
 {

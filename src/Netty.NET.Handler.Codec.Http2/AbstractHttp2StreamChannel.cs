@@ -35,36 +35,15 @@ using static Netty.NET.Common.Internal.ObjectUtil;
 
 namespace Netty.NET.Handler.Codec.Http2;
 
-// CLR: the C# DefaultChannelPipeline only runs on the Transport's AbstractChannel, which folds Channel.Unsafe into the
-// channel (owner decision 2026-11-16, docs/transport-porting.md), so this class derives from AbstractChannel instead of
-// implementing Channel next to its own Unsafe. The folded Unsafe operations are protected internal virtual (owner
-// decision 2026-11-25, docs/transport-porting.md "Overridable Unsafe"), and "If you define the derived class in a
-// different assembly from the base class, overridden members have protected access"
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/protected-internal): the Java
-// Http2ChannelUnsafe is the nested class with the Java code, and this class overrides AbstractChannel's
-// WriteTransportAsync (write), FlushTransport (flush), Close (close), CloseForcibly (closeForcibly),
-// DisconnectTransportAsync (disconnect), DeregisterTransportAsync (deregister), BeginRead (beginRead),
-// BindTransportAsync (bind) and ConnectTransportAsync (connect) with its members, and IsWritable,
-// BytesBeforeUnwritable and BytesBeforeWritable with Java's totalPendingSize/unwritable fields. The writes never reach
-// AbstractChannel's ChannelOutboundBuffer, as Java's outboundBuffer() returns null. ChannelPromise is
-// TaskCompletionSource and ChannelFuture Task (docs/codec-http-porting.md, Shared CLR adaptations): each write, close
-// and deregistration completes a promise of its own (Http2CodecUtil.NewPromise) and returns its Task; a void promise is
-// a promise nobody observes (docs/transport-porting.md, VoidChannelPromise). AbstractChannel keeps three things:
-// - registration: AbstractChannel's RegisterAsync owns the registered flag (IsRegistered) and the event loop
-//   (EventLoop, the parent's loop here), so register(...) checks the re-registration and then lets RegisterAsync set
-//   them and fire channelRegistered and, as the channel is active from its construction (SetActive(true)),
-//   channelActive; its Task completes after these events, where Java completes the promise before them.
-// - closePromise: AbstractChannel's CloseFuture (a TaskCompletionSource created with RunContinuationsAsynchronously, so
-//   its listeners run asynchronously). Java's closePromise.setSuccess() and fireChannelInactiveAndDeregister(...) are
-//   AbstractChannel's close (see Http2ChannelUnsafe.close).
-// - the registered flag cleared by a deregistration: deregister(promise) is AbstractChannel's deregistration.
-// The package-private class is internal.
+// Use AbstractChannel for the shared pipeline and registration lifecycle. Stream writes bypass its outbound
+// buffer, and writability follows the HTTP/2 stream's pending-byte accounting.
+// Registration uses the parent's event loop and completes after the registration and activation events.
+// CloseFuture continuations can run asynchronously.
 internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2StreamChannel
 {
 
     internal static readonly IHttp2FrameStreamVisitor WRITABLE_VISITOR = new WritableVisitor();
 
-    // CLR: the anonymous Http2FrameStreamVisitor of WRITABLE_VISITOR.
     private sealed class WritableVisitor : IHttp2FrameStreamVisitor
     {
         public bool Visit(IHttp2FrameStream stream)
@@ -127,7 +106,6 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
 
         internal static readonly IMessageSizeEstimator.IHandle HANDLE_INSTANCE = new FlowControlledFrameSizeHandle();
 
-        // CLR: the anonymous Handle of HANDLE_INSTANCE.
         private sealed class FlowControlledFrameSizeHandle : IMessageSizeEstimator.IHandle
         {
             public int Size(object msg)
@@ -251,9 +229,9 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
         return new Http2StreamChannelPipeline(this);
     }
 
-    // CLR: the anonymous DefaultChannelPipeline subclass of the constructor. The protected internal members of the
-    // Transport's DefaultChannelPipeline are protected overrides here, as overrides "in a different assembly"
-    // are (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/protected-internal).
+    // CLR: The protected internal members of the Transport's DefaultChannelPipeline are protected overrides here,
+    // as overrides "in a different assembly" are
+    // (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/protected-internal).
     private sealed class Http2StreamChannelPipeline : DefaultChannelPipeline
     {
         private readonly AbstractHttp2StreamChannel channel;
@@ -560,10 +538,10 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
     {
     }
 
-    // CLR: Java's closePromise.setSuccess() followed by fireChannelInactiveAndDeregister(voidPromise(), wasActive):
-    // AbstractChannel's close completes CloseFuture and then runs, in one event-loop task (invokeLater),
-    // fireChannelInactive() (the channel was active) and, while registered, registered = false and
-    // fireChannelUnregistered(), as Java's fireChannelInactiveAndDeregister does. DoClose() is empty.
+    // CLR: Java's closePromise.setSuccess() followed by fireChannelInactiveAndDeregister(voidPromise(),
+    // wasActive): AbstractChannel's close completes CloseFuture and then runs, in one event-loop task
+    // (invokeLater), fireChannelInactive() (the channel was active) and, while registered, registered = false and
+    // fireChannelUnregistered(), as Java's fireChannelInactiveAndDeregister does.
     private Task CloseChannel()
     {
         return base.Close();
@@ -577,8 +555,6 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
         base.CloseForcibly();
     }
 
-    // CLR: fireChannelInactiveAndDeregister(promise, false) of deregister(promise): AbstractChannel's deregistration runs
-    // registered = false and fireChannelUnregistered() in one later event-loop task while registered (see Close).
     private Task DeregisterChannel()
     {
         return base.DeregisterTransportAsync();
@@ -671,8 +647,7 @@ internal abstract class AbstractHttp2StreamChannel : AbstractChannel, IHttp2Stre
     internal sealed class Http2ChannelUnsafe
     {
         private readonly AbstractHttp2StreamChannel channel;
-        // CLR: unsafeVoidPromise is VoidPromise(), a new promise nobody observes (docs/transport-porting.md,
-        // VoidChannelPromise).
+        // CLR: unsafeVoidPromise is VoidPromise(), a new promise nobody observes.
         private IRecvByteBufAllocator.IHandle recvHandle;
         private bool writeDoneAndNoFlush;
         private bool closeInitiated;

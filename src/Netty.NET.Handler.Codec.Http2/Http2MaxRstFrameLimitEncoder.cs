@@ -25,11 +25,10 @@ namespace Netty.NET.Handler.Codec.Http2;
  * of RST frames on an existing connection.
  * This encoder will tear-down the connection once we reached the configured limit to reduce the risk of DDOS.
  */
-// CLR: the package-private final class is internal sealed and its constructors internal. ChannelPromise is
-// TaskCompletionSource and ChannelFuture Task; writeRstStream is the WriteRstStreamAsync override of
-// DecoratingHttp2FrameWriter (docs/codec-http-porting.md, Shared CLR adaptations). TimeUnit.SECONDS.toNanos(seconds)
-// is seconds * 10^9 (an int number of seconds cannot overflow a long) and TimeUnit.NANOSECONDS.toSeconds(nanos) is the
-// truncating division by 10^9: "Conversions from finer to coarser granularities truncate"
+// CLR: ChannelPromise is TaskCompletionSource and ChannelFuture Task; writeRstStream is the WriteRstStreamAsync
+// override of DecoratingHttp2FrameWriter. TimeUnit.SECONDS.toNanos(seconds) is seconds * 10^9 (an int number of
+// seconds cannot overflow a long) and TimeUnit.NANOSECONDS.toSeconds(nanos) is the truncating division by 10^9:
+// "Conversions from finer to coarser granularities truncate"
 // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/concurrent/TimeUnit.html). Ticker is the
 // Common Ticker; ctx.close() discards the returned Task.
 internal sealed class Http2MaxRstFrameLimitEncoder : DecoratingHttp2ConnectionEncoder

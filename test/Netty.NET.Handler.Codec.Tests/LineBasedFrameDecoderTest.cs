@@ -24,9 +24,7 @@ using static Netty.NET.Buffer.Unpooled;
 
 namespace Netty.NET.Handler.Codec.Tests;
 
-// CLR: CharsetUtil.US_ASCII is Encoding.ASCII. assertThrows(Exception.class, ...) accepts any exception, which is
-// Assert.ThrowsAny<Exception>, and assertInstanceOf is Assert.IsAssignableFrom. The char literals of the byte[]
-// initializers are cast to byte, which Java narrows implicitly.
+// CLR: The char literals of the byte[] initializers are cast to byte, which Java narrows implicitly.
 public class LineBasedFrameDecoderTest
 {
     [Fact]

@@ -27,9 +27,8 @@ namespace Netty.NET.Handler.Codec.Socksx.V5;
  * @see Socks5CommandRequestDecoder
  * @see Socks5CommandResponseDecoder
  */
-// CLR: Java interfaces take the I prefix (see Netty.NET.Handler.Codec.Socksx.ISocksMessage). The interface constant
-// DEFAULT is a static readonly field and its anonymous class the nested DefaultSocks5AddressDecoder ("An interface
-// declaration can contain ... Nested types ... Static fields",
+// CLR: The interface constant DEFAULT is a static readonly field and its anonymous class the nested
+// DefaultSocks5AddressDecoder ("An interface declaration can contain... Nested types... Static fields",
 // https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface). throws Exception has no
 // counterpart.
 public interface ISocks5AddressDecoder
@@ -37,7 +36,6 @@ public interface ISocks5AddressDecoder
 
     public static readonly ISocks5AddressDecoder DEFAULT = new DefaultSocks5AddressDecoder();
 
-    // CLR: the anonymous DEFAULT class.
     private sealed class DefaultSocks5AddressDecoder : ISocks5AddressDecoder
     {
 
@@ -52,8 +50,7 @@ public interface ISocks5AddressDecoder
 
             if (addrType == Socks5AddressType.DOMAIN)
             {
-                // CLR: readUnsignedByte() is ReadByte() (unsigned System.Byte, docs/common-clr-design.md);
-                // CharsetUtil.US_ASCII is Encoding.ASCII.
+                // CLR: readUnsignedByte() is ReadByte() (unsigned System.Byte, docs/common-clr-design.md).
                 int length = @in.ReadByte();
                 string domain = @in.ToString(@in.ReaderIndex, length, Encoding.ASCII);
                 @in.SkipBytes(length);
@@ -62,10 +59,10 @@ public interface ISocks5AddressDecoder
 
             if (addrType == Socks5AddressType.IPv6)
             {
-                // CLR: the Buffer port has no hasArray()/array()/arrayOffset(); Memory borrowing replaces them and no
-                // Java array facade is added (docs/buffer-porting.md, Array extraction). The source's other branch,
-                // which reads the 16 bytes into a temporary array, is the only path here; it is also the path the
-                // source takes for every ReplayingDecoder input, whose ReplayingDecoderByteBuf.hasArray() is false.
+                // CLR: the Buffer port has no hasArray()/array()/arrayOffset(); Memory borrowing replaces them and
+                // no Java array facade is added. The source's other branch, which reads the 16 bytes into a
+                // temporary array, is the only path here; it is also the path the source takes for every
+                // ReplayingDecoder input, whose ReplayingDecoderByteBuf.hasArray() is false.
                 byte[] tmp = new byte[IPv6_LEN];
                 @in.ReadBytes(tmp);
 

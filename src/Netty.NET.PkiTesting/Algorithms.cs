@@ -60,8 +60,8 @@ internal static class Algorithms
     {
         // See the Java Security Standard Algorithm Names documentation for names and links to RFCs.
         // https://docs.oracle.com/en/java/javase/22/docs/specs/security/standard-names.html#signature-algorithms
-        // CLR: toLowerCase(Locale.ROOT) is ToLowerInvariant(); UnsupportedOperationException is NotSupportedException
-        // (docs/codec-base-porting.md, Shared CLR adaptations).
+        // CLR: toLowerCase(Locale.ROOT) is ToLowerInvariant(); UnsupportedOperationException is
+        // NotSupportedException.
         switch (algorithmIdentifier.ToLowerInvariant())
         {
             case "sha256withecdsa":

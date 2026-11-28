@@ -124,7 +124,6 @@ public class NioIoHandlerSourceTest
     {
         protected override void Handle(Socket channel, NioIoOps key)
         {
-            // CLR: SelectionKey.isAcceptable() is the OP_ACCEPT bit of the ready NioIoOps.
             if (key.Contains(NioIoOps.ACCEPT))
             {
                 try

@@ -25,9 +25,8 @@ namespace Netty.NET.Common;
  * related with {@link Charset} and its relevant classes.
  */
 // CLR: the charset constants and the cached encoders/decoders of the Java class are System.Text.Encoding with
-// caller-selected fallbacks (docs/common-clr-design.md, Native encoding and codec ownership), so the class holds only
-// the CLR-only ForName (owner decision 2026-11-24), the counterpart of java.nio.charset.Charset.forName(String) that
-// the codec modules share.
+// caller-selected fallbacks, so the class holds only the CLR-only ForName, the counterpart of
+// java.nio.charset.Charset.forName(String) that the codec modules share.
 public static class CharsetUtil
 {
     // CLR: Charset.forName(String), which "Returns a charset object for the named charset", given by its canonical
@@ -67,8 +66,8 @@ public static class CharsetUtil
         return Encoding.GetEncoding(charsetName);
     }
 
-    // CLR: Charset.checkName(String) of OpenJDK, which throws IllegalCharsetNameException(name); the generated exception
-    // passes String.valueOf(name) to super as its detail message (make/scripts/genExceptions.sh).
+    // CLR: The generated exception passes String.valueOf(name) to super as its detail message
+    // (make/scripts/genExceptions.sh).
     private static void CheckName(string s)
     {
         int n = s.Length;

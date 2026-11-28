@@ -25,16 +25,16 @@ namespace Netty.NET.Handler.Codec.Mqtt;
 /**
  * MQTT Properties container
  * */
-// CLR: io.netty.util.collection.IntObjectHashMap is replaced by Dictionary (owner decision 2026-11-19, recorded in
-// docs/common-porting-manifest.json); it exists because Java "Type
-// arguments may be either reference types or wildcards" (https://docs.oracle.com/javase/specs/jls/se17/html/jls-4.html#jls-4.5.1),
-// so a Map<Integer, V> boxes every key. A .NET generic type constructed with a value type gets "a specialized generic
-// type" with the value "substituted" (https://learn.microsoft.com/dotnet/csharp/programming-guide/generics/generics-in-the-run-time),
-// so the map is Dictionary<int, MqttProperty>. Its enumeration order "is undefined"
-// (https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2), and IntObjectHashMap iterates in
-// its hash-slot order; neither order is a documented contract, so listAll() and the encoded property order may
+// CLR: io.netty.util.collection.IntObjectHashMap is replaced by Dictionary; it exists because Java "Type arguments
+// may be either reference types or wildcards"
+// (https://docs.oracle.com/javase/specs/jls/se17/html/jls-4.html#jls-4.5.1), so a Map<Integer, V> boxes every key.
+// A.NET generic type constructed with a value type gets "a specialized generic type" with the value "substituted"
+// (https://learn.microsoft.com/dotnet/csharp/programming-guide/generics/generics-in-the-run-time), so the map is
+// Dictionary<int, MqttProperty>. Its enumeration order "is undefined"
+// (https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2), and IntObjectHashMap iterates
+// in its hash-slot order; neither order is a documented contract, so listAll() and the encoded property order may
 // differ from the JVM's. Map.get returns null for a missing key while the C# indexer throws, so lookups use
-// TryGetValue. UnsupportedOperationException is NotSupportedException (docs/codec-base-porting.md).
+// TryGetValue. UnsupportedOperationException is NotSupportedException.
 public sealed class MqttProperties
 {
 
@@ -77,12 +77,12 @@ public sealed class MqttProperties
     public const int CORRELATION_DATA = 0x09;
     public const int AUTHENTICATION_DATA = 0x16;
 
-    // CLR: @Deprecated without a @deprecated text names no replacement, so the enum is ported with [Obsolete] (owner
-    // decision 2026-11-16, as MessageAggregator.IsHandlingOversizedMessage in codec-base); ObsoleteAttribute "Marks
-    // program elements that are no longer in use" (https://learn.microsoft.com/dotnet/api/system.obsoleteattribute).
-    // The enum with a field and methods is a sealed class with static readonly constants; Name(), Values() and
-    // ToString() stand for the java.lang.Enum members (see MqttQoS), and ArrayIndexOutOfBoundsException is
-    // IndexOutOfRangeException (https://learn.microsoft.com/dotnet/api/system.indexoutofrangeexception).
+    // CLR: @Deprecated without a @deprecated text names no replacement, so the enum is ported with [Obsolete];
+    // ObsoleteAttribute "Marks program elements that are no longer in use"
+    // (https://learn.microsoft.com/dotnet/api/system.obsoleteattribute). The enum with a field and methods is a
+    // sealed class with static readonly constants; Name(), Values() and ToString() stand for the java.lang.Enum
+    // members (see MqttQoS), and ArrayIndexOutOfBoundsException is IndexOutOfRangeException
+    // (https://learn.microsoft.com/dotnet/api/system.indexoutofrangeexception).
     [Obsolete]
     public sealed class MqttPropertyType
     {
@@ -687,8 +687,7 @@ public sealed class MqttProperties
      * @param propertyId ID of the property
      * @return all properties having specified ID
      */
-    // CLR: List<? extends MqttProperty> is the covariant IReadOnlyList<out T> (see listAll()); Collections.emptyList()
-    // and Collections.singletonList are an empty and a one-element array.
+    // CLR: List<? extends MqttProperty> is the covariant IReadOnlyList<out T> (see listAll()).
     public IReadOnlyList<MqttProperty> GetProperties(int propertyId)
     {
         if (propertyId == USER_PROPERTY)

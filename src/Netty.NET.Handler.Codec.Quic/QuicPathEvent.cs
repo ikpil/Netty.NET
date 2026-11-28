@@ -23,13 +23,13 @@ namespace Netty.NET.Handler.Codec.Quic;
 /**
  * A network path specific {@link QuicEvent}.
  */
-// CLR: InetSocketAddress is IPEndPoint, whose ToString() prints "address:port" where Java prints "host/address:port".
-// Objects.requireNonNull(x, name) is ObjectUtil.CheckNotNull (ArgumentNullException for NullPointerException), and
-// Objects.equals is object.Equals(a, b). The package-private constructor is internal; the nested final classes are
-// sealed nested classes. getClass() is GetType(); seq >>> 32 is the C# unsigned right shift. toString() prints numbers
-// with the invariant culture. System.Net.Quic reports no path events (connection migration is internal to msquic;
-// docs/quic-design.md, No counterpart in System.Net.Quic): the events keep their Java API (owner decision 2026-11-27)
-// and the msquic implementation (stage 2) never fires them.
+// CLR: InetSocketAddress is IPEndPoint, whose ToString() prints "address:port" where Java prints
+// "host/address:port". Objects.requireNonNull(x, name) is ObjectUtil.CheckNotNull (ArgumentNullException for
+// NullPointerException), and Objects.equals is object.Equals(a, b). The nested final classes are sealed nested
+// classes. getClass() is GetType(); seq >>> 32 is the C# unsigned right shift. toString() prints numbers with the
+// invariant culture. System.Net.Quic reports no path events (connection migration is internal to msquic;
+// docs/quic-design.md, No counterpart in System.Net.Quic): the events keep their Java API and the msquic
+// implementation (stage 2) never fires them.
 public abstract class QuicPathEvent : IQuicEvent
 {
 

@@ -27,21 +27,19 @@ namespace Netty.NET.Handler.Codec.Compression;
  *
  * See <a href="https://github.com/google/snappy/blob/master/framing_format.txt">Snappy framing format</a>.
  */
-// CLR: @UnstableApi is the Common [UnstableApi] attribute. Decompressor is IDecompressor, its nested Status enum and
-// AbstractDecompressorBuilder are written IDecompressor.Status and IDecompressor.AbstractDecompressorBuilder (a class
-// does not inherit the nested types of its interfaces), and status() is Status_() (owner decision, as the core's
-// IDecompressor). The package-private constructor, processInput and processOutput are internal, as in
-// InputBufferingDecompressor. builder() is Builder_(): a method named Builder cannot be declared next to the nested
-// Builder class ("The type 'type name' already contains a definition for 'identifier'",
-// https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0102), and the nested type keeps its Java name, as
-// HAProxyTLV.type() is Type_() (docs/codec-haproxy-porting.md). getUnsignedByte(idx) is GetByte(idx), which is unsigned
-// in the Buffer port (docs/codec-socks-porting.md); mapChunkType((byte) chunkTypeVal) and checkByte compare bytes of
-// the same type, (byte) 0xff and the 0x80 mask, so the unsigned System.Byte gives the results of the signed Java byte.
-// The body of the COMPRESSED_DATA section is a nested block, because its local checksum would otherwise share the switch
-// block's declaration space with the checksum of a nested block in the UNCOMPRESSED_DATA section
+// CLR: Decompressor is IDecompressor, its nested Status enum and AbstractDecompressorBuilder are written
+// IDecompressor.Status and IDecompressor.AbstractDecompressorBuilder (a class does not inherit the nested types of
+// its interfaces), and status() is Status_() (owner decision, as the core's IDecompressor). The package-private
+// constructor, processInput and processOutput are internal, as in InputBufferingDecompressor. builder() is
+// Builder_(): a method named Builder cannot be declared next to the nested Builder class ("The type 'type name'
+// already contains a definition for 'identifier'", https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0102),
+// and the nested type keeps its Java name, as HAProxyTLV.type() is Type_(). getUnsignedByte(idx) is GetByte(idx),
+// which is unsigned in the Buffer port; mapChunkType((byte) chunkTypeVal) and checkByte compare bytes of the same
+// type, (byte) 0xff and the 0x80 mask, so the unsigned System.Byte gives the results of the signed Java byte. The
+// body of the COMPRESSED_DATA section is a nested block, because its local checksum would otherwise share the
+// switch block's declaration space with the checksum of a nested block in the UNCOMPRESSED_DATA section
 // (https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0136). Numbers in exception messages use the invariant
-// culture (docs/codec-base-porting.md), and Integer.toHexString of the unsigned chunk type is the "x" format
-// (docs/codec-haproxy-porting.md). C# has no throws clauses.
+// culture, and Integer.toHexString of the unsigned chunk type is the "x" format. C# has no throws clauses.
 [UnstableApi]
 public sealed class SnappyFrameDecompressor : InputBufferingDecompressor
 {
@@ -362,8 +360,8 @@ public sealed class SnappyFrameDecompressor : InputBufferingDecompressor
         return new Builder();
     }
 
-    // CLR: the package-private field validateChecksums is internal, because a C# enclosing class cannot read the private
-    // members of its nested class; the package-private constructor is internal.
+    // CLR: the package-private field validateChecksums is internal, because a C# enclosing class cannot read the
+    // private members of its nested class.
     [UnstableApi]
     public sealed class Builder : IDecompressor.AbstractDecompressorBuilder
     {

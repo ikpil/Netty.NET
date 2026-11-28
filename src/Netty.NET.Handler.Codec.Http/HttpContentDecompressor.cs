@@ -30,13 +30,12 @@ namespace Netty.NET.Handler.Codec.Http;
  * handler modifies the message, please refer to {@link HttpContentDecoder}.
  */
 // CLR: the two @Deprecated constructors whose @deprecated texts name HttpContentDecompressor(int) and
-// HttpContentDecompressor(boolean, int) are not ported (owner decision 2026-11-16). zstd-jni is library-not-ported
-// (owner decision 2026-11-23; docs/codec-compression-porting.md), so Zstd and ZstdDecoder have no C# type and the
-// "Zstd.isAvailable() && ZSTD" branch is left out: a "zstd" Content-Encoding is passed through undecoded (null), as in
-// Java when Zstd.isAvailable() is false. Brotli.IsAvailable() is always true (the BCL BrotliDecoder,
-// docs/codec-compression-porting.md). AsciiString.contentEqualsIgnoreCase(CharSequence) takes the String encoding wrapped
-// in StringCharSequence, and EmbeddedChannel.builder() is new EmbeddedChannel.Builder()
-// (src/Netty.NET.Transport/Channels/Embedded/EmbeddedChannel.cs).
+// HttpContentDecompressor(boolean, int) are not ported. zstd-jni is library-not-ported, so Zstd and ZstdDecoder
+// have no C# type and the "Zstd.isAvailable() && ZSTD" branch is left out: a "zstd" Content-Encoding is passed
+// through undecoded (null), as in Java when Zstd.isAvailable() is false. Brotli.IsAvailable() is always true (the
+// BCL BrotliDecoder, docs/codec-compression-porting.md). AsciiString.contentEqualsIgnoreCase(CharSequence) takes
+// the String encoding wrapped in StringCharSequence, and EmbeddedChannel.builder() is new
+// EmbeddedChannel.Builder() (src/Netty.NET.Transport/Channels/Embedded/EmbeddedChannel.cs).
 public class HttpContentDecompressor : HttpContentDecoder
 {
 

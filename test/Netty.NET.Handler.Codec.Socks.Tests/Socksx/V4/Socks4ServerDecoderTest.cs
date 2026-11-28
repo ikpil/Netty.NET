@@ -20,7 +20,7 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Socks.Tests.Socksx.V4;
 
-// CLR: Arrays.asList(...) is an array; the private helper keeps its name test (Test).
+// CLR: The private helper keeps its name test (Test).
 public class Socks4ServerDecoderTest
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(Socks4ServerDecoderTest));

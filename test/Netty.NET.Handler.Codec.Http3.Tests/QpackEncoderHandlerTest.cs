@@ -25,14 +25,11 @@ namespace Netty.NET.Handler.Codec.Http3.Tests;
 // CLR: @AfterEach tearDown() is Dispose() (xUnit creates a test class instance per test and disposes it after the
 // test). Hamcrest's assertThat([reason,] actual, is(expected)) is Assert.Equal(expected, actual[, reason]),
 // assertThat(e.getCause(), instanceOf(T.class)) is Assert.IsAssignableFrom<T>(e.InnerException), and
-// assertThrows(T.class, ...) is Assert.ThrowsAny<T>; errorCode() is ErrorCode(). The QPACK types and members are
-// internal (package-private in Java) and reached through InternalsVisibleTo; the static imports are qualified
-// (Http3.SetQpackAttributes, Http3ErrorCode.QPACK_ENCODER_STREAM_ERROR, QpackUtil.EncodePrefixedInteger),
-// QpackDecoderStateSyncStrategy is the interface IQpackDecoderStateSyncStrategy and QpackSensitivityDetector
-// IQpackSensitivityDetector. parent.createStream(...).get() is the result of the completed Task of CreateStreamAsync
-// (GetAwaiter().GetResult()); alloc() is Alloc(), Integer.MAX_VALUE is int.MaxValue, writeByte('a') passes the char as
-// the int value, and writeCharSequence(s, CharsetUtil.US_ASCII) is WriteCharSequence(s, Encoding.ASCII). The throws
-// clauses have no counterpart.
+// assertThrows(T.class,...) is Assert.ThrowsAny<T>. The static imports are qualified (Http3.SetQpackAttributes,
+// Http3ErrorCode.QPACK_ENCODER_STREAM_ERROR, QpackUtil.EncodePrefixedInteger), QpackDecoderStateSyncStrategy is
+// the interface IQpackDecoderStateSyncStrategy and QpackSensitivityDetector IQpackSensitivityDetector.
+// parent.createStream(...).get() is the result of the completed Task of CreateStreamAsync
+// (GetAwaiter().GetResult()).
 public class QpackEncoderHandlerTest : IDisposable
 {
 

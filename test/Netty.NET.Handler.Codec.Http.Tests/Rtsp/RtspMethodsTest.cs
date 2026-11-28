@@ -20,14 +20,14 @@ using Netty.NET.Handler.Codec.Rtsp;
 
 namespace Netty.NET.Handler.Codec.Http.Tests.Rtsp;
 
-// CLR: Locale.getDefault()/setDefault(Locale) are CultureInfo.CurrentCulture, the culture of culture-sensitive casing,
-// which is "the culture used by the current thread and task-based asynchronous operations"
-// (https://learn.microsoft.com/en-us/dotnet/api/system.globalization.cultureinfo.currentculture?view=net-10.0), so it
-// is not process-global like the JVM default and JUnit's @Isolated has no counterpart (the mapping of core
-// HttpVersionLocaleTest); new Locale("tr", "TR") is new CultureInfo("tr-TR"), and the original value is restored in
-// finally as in Java. The package-private class and methods are public, as xUnit requires. assertSame/assertNotSame are
-// Assert.Same/NotSame and assertThrows(IllegalArgumentException.class, ...), which also accepts a subclass, is
-// Assert.ThrowsAny<ArgumentException> (docs/codec-base-porting.md). catch (IllegalArgumentException) is catch
+// CLR: Locale.getDefault()/setDefault(Locale) are CultureInfo.CurrentCulture, the culture of culture-sensitive
+// casing, which is "the culture used by the current thread and task-based asynchronous operations"
+// (https://learn.microsoft.com/en-us/dotnet/api/system.globalization.cultureinfo.currentculture?view=net-10.0), so
+// it is not process-global like the JVM default and JUnit's @Isolated has no counterpart (the mapping of core
+// HttpVersionLocaleTest); new Locale("tr", "TR") is new CultureInfo("tr-TR"), and the original value is restored
+// in finally as in Java. The package-private class and methods are public, as xUnit requires.
+// assertSame/assertNotSame are Assert.Same/NotSame and assertThrows(IllegalArgumentException.class,...), which
+// also accepts a subclass, is Assert.ThrowsAny<ArgumentException>. catch (IllegalArgumentException) is catch
 // (ArgumentException).
 public class RtspMethodsTest
 {

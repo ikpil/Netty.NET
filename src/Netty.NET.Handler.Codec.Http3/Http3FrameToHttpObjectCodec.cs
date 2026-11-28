@@ -35,22 +35,19 @@ namespace Netty.NET.Handler.Codec.Http3;
  * For simplicity, it converts to chunked encoding unless the entire stream
  * is a single header.
  */
-// CLR: the codec-http interfaces take the I prefix and their getters are methods, ByteBufHolder.content() is the
-// Content property (docs/codec-http-porting.md, Shared CLR adaptations), as in codec-http2's
-// Http2StreamFrameToHttpObjectCodec. The @Deprecated DefaultLastHttpContent(ByteBuf, boolean), whose @deprecated text
-// names DefaultLastHttpContent(ByteBuf), is not ported in codec-http, so channelRead calls the HttpHeadersFactory
-// constructor with trailersFactory().withValidation(validateHeaders), which is what the deprecated constructor does in
-// Java (as codec-http2's port). ChannelOutboundHandler is IChannelOutboundHandler: write(ctx, msg, promise) is
-// WriteAsync(ctx, msg, CancellationToken), which creates the promise with Http3CodecUtils.NewPromise() and returns its
-// Task, and the other outbound operations return the context's Task (docs/codec-http2-porting.md, Shared CLR
-// adaptations). There is no void promise (docs/transport-porting.md), so promise.isVoid() is false: the
-// !promise.isVoid() conditions are left out and unvoid() is the promise itself. PromiseCombiner is a List<Task> that
-// codec-base's ExecutorPromiseCombiner.Combine completes on the event loop (combiner.finish(promise)); ctx.write(msg,
-// promise) is Http3CodecUtils.Write. The ChannelFutureListener QuicStreamChannel.SHUTDOWN_OUTPUT, which codec-quic does
+// CLR: The @Deprecated DefaultLastHttpContent(ByteBuf, boolean), whose @deprecated text names
+// DefaultLastHttpContent(ByteBuf), is not ported in codec-http, so channelRead calls the HttpHeadersFactory
+// constructor with trailersFactory().withValidation(validateHeaders), which is what the deprecated constructor
+// does in Java (as codec-http2's port). ChannelOutboundHandler is IChannelOutboundHandler: write(ctx, msg,
+// promise) is WriteAsync(ctx, msg, CancellationToken), which creates the promise with Http3CodecUtils.NewPromise()
+// and returns its Task, and the other outbound operations return the context's Task. There is no void promise, so
+// promise.isVoid() is false: the !promise.isVoid() conditions are left out and unvoid() is the promise itself.
+// PromiseCombiner is a List<Task> that codec-base's ExecutorPromiseCombiner.Combine completes on the event loop
+// (combiner.finish(promise)). The ChannelFutureListener QuicStreamChannel.SHUTDOWN_OUTPUT, which codec-quic does
 // not port, is the listener that calls ShutdownOutputAsync() on the stream (the future's channel) when the promise
-// completes, added with Http3CodecUtils.AddListener (docs/codec-classes-quic-porting.md). SocketAddress is EndPoint.
-// isSharable() overrides the IsSharable property. "throws Exception"/"throws Http3Exception" have no counterpart; the
-// @Nullable (org.jetbrains.annotations) annotations have no counterpart.
+// completes, added with Http3CodecUtils.AddListener. SocketAddress is EndPoint. isSharable() overrides the
+// IsSharable property. "throws Exception"/"throws Http3Exception" have no counterpart; the @Nullable
+// (org.jetbrains.annotations) annotations have no counterpart.
 public sealed class Http3FrameToHttpObjectCodec : Http3RequestStreamInboundHandler, IChannelOutboundHandler
 {
 
@@ -254,7 +251,6 @@ public sealed class Http3FrameToHttpObjectCodec : Http3RequestStreamInboundHandl
      * Write a message. If there is a combiner, add a new write promise to that combiner. If there is no combiner
      * ({@code null}), use the {@code outerPromise} directly as the write promise.
      */
-    // CLR: unvoid() is the promise itself (see the class comment), so unvoidPromise has no effect.
     private static TaskCompletionSource WriteWithOptionalCombiner(
             IChannelHandlerContext ctx,
             object msg,

@@ -24,8 +24,7 @@ using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Handler.Codec.Quic.Tests;
 
-// CLR: @ParameterizedTest @MethodSource("newSslTaskExecutors") is a theory over AbstractQuicTest.NewSslTaskExecutors().
-// QuicStreamChannel.SHUTDOWN_OUTPUT has no counterpart (IQuicStreamChannel): the write Task is continued with
+// CLR: QuicStreamChannel.SHUTDOWN_OUTPUT has no counterpart (IQuicStreamChannel): the write Task is continued with
 // ShutdownOutputAsync(), as the listener calls shutdownOutput() on the future's channel. BlockingQueue<Integer> is
 // BlockingCollection<int>, whose take() waits at most the test timeout; config().setOption(READ_FRAMES, true) is
 // Config.SetOption.

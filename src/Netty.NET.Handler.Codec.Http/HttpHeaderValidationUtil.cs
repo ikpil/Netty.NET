@@ -23,11 +23,11 @@ namespace Netty.NET.Handler.Codec.Http;
 /**
  * Functions used to perform various validations of HTTP header names and values.
  */
-// CLR: the final class with a private constructor is a static class. CharSequence is ICharSequence. The @Deprecated
-// HttpHeaderNames.KEEP_ALIVE and PROXY_CONNECTION are not ported (their @deprecated text names CONNECTION, owner
-// decision 2026-11-16), so their header names are the private constants KEEP_ALIVE and PROXY_CONNECTION here, with the
-// same AsciiString.cached values. The Java byte[] of AsciiString.array() is the unsigned byte[] of the Common
-// AsciiString, and "& 0xFF" yields the same value for both (docs/codec-compression-porting.md, Byte values).
+// CLR: the final class with a private constructor is a static class. CharSequence is ICharSequence. The
+// @Deprecated HttpHeaderNames.KEEP_ALIVE and PROXY_CONNECTION are not ported (their @deprecated text names
+// CONNECTION, owner decision 2026-11-16), so their header names are the private constants KEEP_ALIVE and
+// PROXY_CONNECTION here, with the same AsciiString.cached values. The Java byte[] of AsciiString.array() is the
+// unsigned byte[] of the Common AsciiString, and "& 0xFF" yields the same value for both.
 public static class HttpHeaderValidationUtil
 {
     private static readonly AsciiString KEEP_ALIVE = AsciiString.Cached("keep-alive");

@@ -21,8 +21,7 @@ namespace Netty.NET.Example.Http2.HelloWorld.Frame.Client;
 /**
  * Configures client pipeline to support HTTP/2 frames via {@link Http2FrameCodec} and {@link Http2MultiplexHandler}.
  */
-// CLR: Channel is IChannel. The anonymous raw SimpleChannelInboundHandler is the nested InboundStreamHandler, a
-// SimpleChannelInboundHandler<object> (the raw type matches every message).
+// CLR: Channel is IChannel.
 public sealed class Http2ClientFrameInitializer : ChannelInitializer<IChannel>
 {
 

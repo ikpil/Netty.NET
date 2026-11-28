@@ -24,8 +24,6 @@ using Netty.NET.Common.Internal;
 namespace Netty.NET.Transport.Channels.Embedded;
 
 /// <summary>A manually driven event loop. Embedded calls are owned by the test thread, as in Netty.</summary>
-// CLR: public so tests can construct it directly (package-private final in Java); the default ticker is the
-// FreezableTicker that EmbeddedChannel passes in Java.
 public sealed class EmbeddedEventLoop : AbstractScheduledEventExecutor, IEventLoop
 {
     private readonly Ticker ticker;

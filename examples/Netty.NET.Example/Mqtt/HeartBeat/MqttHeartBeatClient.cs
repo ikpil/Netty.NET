@@ -26,13 +26,11 @@ using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Example.Mqtt.HeartBeat;
 
-// CLR: System.getProperty is ExampleLauncher.GetProperty (the -Dname=value arguments)
-// and Integer.parseInt is int.Parse with an optional sign and the invariant culture. main blocks on connect(...).sync()
-// and closeFuture().sync(); the async Main awaits the Task<IChannel> of ConnectAsync (ChannelFuture f; f.channel() is its
-// result) and the channel's CloseFuture (docs/transport-porting.md: sync() is awaiting the Task).
-// group.shutdownGracefully() is ShutdownGracefullyAsync(), whose Task is discarded as Java discards the future. The
-// anonymous ChannelInitializer is an ActionChannelInitializer, and IdleStateHandler(0, 20, 0, TimeUnit.SECONDS) is the
-// TimeSpan constructor, whose arguments carry their unit.
+// CLR: System.getProperty is ExampleLauncher.GetProperty (the -Dname=value arguments) and Integer.parseInt is
+// int.Parse with an optional sign and the invariant culture. main blocks on connect(...).sync() and
+// closeFuture().sync(); the async Main awaits the Task<IChannel> of ConnectAsync (ChannelFuture f; f.channel() is
+// its result) and the channel's CloseFuture (docs/transport-porting.md: sync() is awaiting the Task).
+// group.shutdownGracefully() is ShutdownGracefullyAsync(), whose Task is discarded as Java discards the future.
 public sealed class MqttHeartBeatClient
 {
     private MqttHeartBeatClient()

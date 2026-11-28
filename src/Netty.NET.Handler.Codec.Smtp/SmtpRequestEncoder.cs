@@ -26,13 +26,12 @@ namespace Netty.NET.Handler.Codec.Smtp;
 /**
  * Encoder for SMTP requests.
  */
-// CLR: @UnstableApi is the Common [UnstableApi] attribute; Class<?> is Type; List<Object> out is IList<object> @out;
-// IllegalStateException is InvalidOperationException (docs/codec-base-porting.md, Shared CLR adaptations); the Java
-// byte SP is a byte. List<CharSequence> is IList<ICharSequence>, which is always indexable, so the RandomAccess
-// marker test of writeParameters (no CLR counterpart) keeps only its indexed branch; the iterator branch for
-// sequential lists has no input. ByteBufUtil.writeAscii(ByteBuf, CharSequence) has the Buffer port overloads
-// (ReadOnlySpan<char>) and (AsciiString), so a parameter is written through its ToString() text, which gives the same
-// ASCII bytes.
+// CLR: Class<?> is Type; List<Object> out is IList<object> @out; IllegalStateException is
+// InvalidOperationException; the Java byte SP is a byte. List<CharSequence> is IList<ICharSequence>, which is
+// always indexable, so the RandomAccess marker test of writeParameters (no CLR counterpart) keeps only its indexed
+// branch; the iterator branch for sequential lists has no input. ByteBufUtil.writeAscii(ByteBuf, CharSequence) has
+// the Buffer port overloads (ReadOnlySpan<char>) and (AsciiString), so a parameter is written through its
+// ToString() text, which gives the same ASCII bytes.
 [UnstableApi]
 public sealed class SmtpRequestEncoder : MessageToMessageEncoder<object>
 {

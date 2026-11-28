@@ -68,20 +68,19 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx;
  * Decodes a web socket frame from wire protocol version 8 format. This code was forked from <a
  * href="https://github.com/joewalnes/webbit">webbit</a> and modified.
  */
-// CLR: decode overrides the codec-base ByteToMessageDecoder.Decode (List<Object> out is IList<object> @out); the
-// package-private nested enum State is an internal nested C# enum. C# switch sections cannot fall through, so each
-// state that continues with the next one ends with goto case (https://learn.microsoft.com/en-us/dotnet/csharp/language-
-// reference/statements/selection-statements), and the unreachable default's throw new Error(...) is
-// UnreachableException, as AssertionError is in the handler port (docs/handler-porting.md, Exceptions). ByteBuf bytes
-// are unsigned System.Byte (owner decision): the masks of the first and second byte ((b & 0x80) != 0, (b & 0x70) >> 4,
-// b & 0x0F, b & 0x7F) give the same values as for the signed Java byte. getShort returns the signed short in the Buffer
-// port as in Java, so checkCloseFrameBody sees the same (possibly negative) status code. The Buffer port has no
-// ByteBuf.order(): buffers are always big-endian and byte order is chosen by explicit BE/LE accessors
-// (docs/codec-base-porting.md, Byte order), so unmask's ByteOrder lookup and its LITTLE_ENDIAN branch, which Java takes
-// only for a deprecated swapped buffer, have no counterpart. ByteBufUtil.readBytes is the Buffer port's
-// ByteBufUtil.ReadBytes. ctx.writeAndFlush(closeMessage).addListener(ChannelFutureListener.CLOSE) closes ctx.Channel
-// from a synchronous continuation of the write Task on TaskScheduler.Default, as codec-base MessageAggregator does
-// (docs/codec-base-porting.md). UnsupportedOperationException is NotSupportedException, and numbers in messages use the
+// CLR: decode overrides the codec-base ByteToMessageDecoder.Decode (List<Object> out is IList<object> @out). C#
+// switch sections cannot fall through, so each state that continues with the next one ends with goto case
+// (https://learn.microsoft.com/en-us/dotnet/csharp/language- reference/statements/selection-statements), and the
+// unreachable default's throw new Error(...) is UnreachableException, as AssertionError is in the handler port.
+// ByteBuf bytes are unsigned System.Byte (owner decision): the masks of the first and second byte ((b & 0x80) !=
+// 0, (b & 0x70) >> 4, b & 0x0F, b & 0x7F) give the same values as for the signed Java byte. getShort returns the
+// signed short in the Buffer port as in Java, so checkCloseFrameBody sees the same (possibly negative) status
+// code. The Buffer port has no ByteBuf.order(): buffers are always big-endian and byte order is chosen by explicit
+// BE/LE accessors, so unmask's ByteOrder lookup and its LITTLE_ENDIAN branch, which Java takes only for a
+// deprecated swapped buffer, have no counterpart. ByteBufUtil.readBytes is the Buffer port's
+// ByteBufUtil.ReadBytes. ctx.writeAndFlush(closeMessage).addListener(ChannelFutureListener.CLOSE) closes
+// ctx.Channel from a synchronous continuation of the write Task on TaskScheduler.Default, as codec-base
+// MessageAggregator does. UnsupportedOperationException is NotSupportedException, and numbers in messages use the
 // invariant culture. checkCloseFrameBody is protected virtual because the Java method is overridable.
 public class WebSocket08FrameDecoder : ByteToMessageDecoder, IWebSocketFrameDecoder
 {

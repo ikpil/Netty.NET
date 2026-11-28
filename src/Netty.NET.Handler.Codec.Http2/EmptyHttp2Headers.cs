@@ -18,12 +18,10 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Codec.Http2;
 
-// CLR: EmptyHeaders<CharSequence, CharSequence, Http2Headers> is the codec-base EmptyHeaders<ICharSequence,
-// ICharSequence, IHttp2Headers> (docs/codec-base-porting.md, Headers). The pseudo-header setters narrow the return type
-// to EmptyHttp2Headers; C# 9 covariant returns cover class overrides only, so the public methods return
-// EmptyHttp2Headers and the IHttp2Headers members are implemented explicitly with them (as codec-http's message
-// classes, docs/codec-http-porting.md, Shared CLR adaptations). UnsupportedOperationException is
-// NotSupportedException.
+// CLR: The pseudo-header setters narrow the return type to EmptyHttp2Headers; C# 9 covariant returns cover class
+// overrides only, so the public methods return EmptyHttp2Headers and the IHttp2Headers members are implemented
+// explicitly with them (as codec-http's message classes, docs/codec-http-porting.md, Shared CLR adaptations).
+// UnsupportedOperationException is NotSupportedException.
 public sealed class EmptyHttp2Headers
         : EmptyHeaders<ICharSequence, ICharSequence, IHttp2Headers>, IHttp2Headers
 {

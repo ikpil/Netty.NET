@@ -267,7 +267,6 @@ public sealed class Http3ServerPushStreamManager
         }
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of controlStreamListener.
     private sealed class ControlStreamListenerHandler : ChannelInboundHandlerAdapter
     {
         private readonly Http3ServerPushStreamManager manager;
@@ -288,7 +287,7 @@ public sealed class Http3ServerPushStreamManager
                     return;
                 }
 
-                // CLR: pushStreams.computeIfPresent(pushId, (id, existing) -> ...) under the lock (see the type
+                // CLR: pushStreams.computeIfPresent(pushId, (id, existing) ->...) under the lock (see the type
                 // comment).
                 lock (manager.pushStreams)
                 {
@@ -321,7 +320,6 @@ public sealed class Http3ServerPushStreamManager
         }
     }
 
-    // CLR: the anonymous Http3PushStreamServerInitializer of pushStreamInitializer(pushId, handler).
     private sealed class PushStreamInitializerImpl : Http3PushStreamServerInitializer
     {
         private readonly Http3ServerPushStreamManager manager;
@@ -354,7 +352,6 @@ public sealed class Http3ServerPushStreamManager
         }
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter that PushStreamInitializerImpl.InitPushStream adds.
     private sealed class PushStreamStateHandler : ChannelInboundHandlerAdapter
     {
         private readonly Http3ServerPushStreamManager manager;
@@ -390,7 +387,7 @@ public sealed class Http3ServerPushStreamManager
             Debug.Assert(!stateUpdated);
             stateUpdated = true;
 
-            // CLR: pushStreams.compute(pushId, (id, existing) -> ...) under the lock (see the type comment).
+            // CLR: pushStreams.compute(pushId, (id, existing) ->...) under the lock (see the type comment).
             lock (manager.pushStreams)
             {
                 manager.pushStreams.TryGetValue(pushId, out object existing);

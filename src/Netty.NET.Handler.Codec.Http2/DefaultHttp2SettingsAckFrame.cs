@@ -21,7 +21,6 @@ namespace Netty.NET.Handler.Codec.Http2;
 /**
  * The default {@link Http2SettingsAckFrame} implementation.
  */
-// CLR: the package-private final class is internal sealed.
 internal sealed class DefaultHttp2SettingsAckFrame : IHttp2SettingsAckFrame
 {
     public string Name()

@@ -27,26 +27,26 @@ namespace Netty.NET.Handler.Codec.Http.Tests;
 #pragma warning disable xUnit1051 // The source's writeAndFlush(...) observes no test cancellation.
 
 // CLR: getBuffers() builds big- and little-endian heap and NIO-wrapped buffers with the @Deprecated
-// ByteBuf.order(ByteOrder); the Buffer port has no order() and no swapped buffers (docs/codec-base-porting.md, Byte
-// order: "Base64 has only its big-endian branches, because ByteBuf.order() is deprecated and not ported";
+// ByteBuf.order(ByteOrder); the Buffer port has no order() and no swapped buffers (docs/codec-base-porting.md,
+// Byte order: "Base64 has only its big-endian branches, because ByteBuf.order() is deprecated and not ported";
 // docs/buffer-porting.md), so it returns the two big-endian buffers: Unpooled.Buffer(128) and a wrapped managed
 // 128-byte array (ByteBuffer.allocate(128) is a heap NIO buffer) with its writer index reset. The encoder writes
 // with ByteBufUtil.writeShortBE/writeMediumBE, which write the same bytes into either byte order in Java, so the
-// little-endian buffers add no other assertion. The protected encodeInitialLine(...) that the Java test reaches through
-// package access is the internal forwarder InvokeEncodeInitialLine. Future.get() wraps the failure in an
+// little-endian buffers add no other assertion. The protected encodeInitialLine(...) that the Java test reaches
+// through package access is the internal forwarder InvokeEncodeInitialLine. Future.get() wraps the failure in an
 // ExecutionException whose cause is the write's exception; Task.GetAwaiter().GetResult() throws the faulted task's
 // exception itself ("The task completed in a Faulted state",
 // https://learn.microsoft.com/en-us/dotnet/api/system.runtime.compilerservices.taskawaiter.getresult?view=net-10.0),
 // so e.getCause().getCause() is the thrown EncoderException's InnerException. The @Deprecated
 // DefaultHttpRequest(HttpVersion, HttpMethod, String, boolean) and DefaultHttpHeaders(boolean) of
-// CustomFullHttpRequest are not ported, so it uses their named replacements, the HttpHeadersFactory constructor and
-// DefaultHttpHeadersFactory.headersFactory().withValidation(validateHeaders) (owner decision 2026-11-16). The narrowed
-// returns of CustomFullHttpRequest are covariant overrides of DefaultHttpRequest's virtual setters, new public members
-// for the IByteBufHolder members, and explicit IByteBufHolder/IReferenceCounted implementations (as in
-// DefaultFullHttpRequest). CustomHttpRequest's overrides of the @Deprecated getDecoderResult()/getProtocolVersion()/
-// getMethod()/getUri() have no interface member to implement (see IHttpObject, IHttpMessage, IHttpRequest), so
-// protocolVersion() and method() return the values those getters returned. CharsetUtil.US_ASCII/StandardCharsets.US_ASCII
-// are Encoding.ASCII (docs/codec-smtp-porting.md).
+// CustomFullHttpRequest are not ported, so it uses their named replacements, the HttpHeadersFactory constructor
+// and DefaultHttpHeadersFactory.headersFactory().withValidation(validateHeaders). The narrowed returns of
+// CustomFullHttpRequest are covariant overrides of DefaultHttpRequest's virtual setters, new public members for
+// the IByteBufHolder members, and explicit IByteBufHolder/IReferenceCounted implementations (as in
+// DefaultFullHttpRequest). CustomHttpRequest's overrides of the @Deprecated
+// getDecoderResult()/getProtocolVersion()/ getMethod()/getUri() have no interface member to implement (see
+// IHttpObject, IHttpMessage, IHttpRequest), so protocolVersion() and method() return the values those getters
+// returned. CharsetUtil.US_ASCII/StandardCharsets.US_ASCII are Encoding.ASCII.
 public class HttpRequestEncoderTest
 {
 

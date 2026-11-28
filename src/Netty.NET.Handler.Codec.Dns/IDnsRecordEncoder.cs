@@ -23,9 +23,9 @@ namespace Netty.NET.Handler.Codec.Dns;
  *
  * @see DatagramDnsQueryEncoder
  */
-// CLR: interface with the I prefix. The interface field DEFAULT is a static readonly interface field (C# interfaces may
-// declare static fields, https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface).
-// 'throws Exception' has no C# counterpart.
+// CLR: The interface field DEFAULT is a static readonly interface field (C# interfaces may declare static fields,
+// https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface). 'throws Exception' has
+// no C# counterpart.
 public interface IDnsRecordEncoder
 {
 

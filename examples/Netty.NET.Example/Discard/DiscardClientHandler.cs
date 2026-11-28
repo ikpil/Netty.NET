@@ -63,7 +63,7 @@ public class DiscardClientHandler : SimpleChannelInboundHandler<object>
         _ = ctx.CloseAsync();
     }
 
-    // CLR: package-private is internal; the field is unused, as in the source.
+    // CLR: The field is unused, as in the source.
 #pragma warning disable CS0649 // Never assigned, as in the source.
     internal long counter;
 #pragma warning restore CS0649

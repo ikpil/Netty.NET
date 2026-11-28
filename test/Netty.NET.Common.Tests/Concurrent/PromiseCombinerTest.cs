@@ -211,8 +211,7 @@ public class TaskWhenAllPortTest
         }
     }
 
-    // CLR supplements: input duplication, fault/cancellation precedence and revived
-    // pending-write collection (docs/common-task-composition.md, additional cases).
+    // CLR supplements: input duplication, fault/cancellation precedence and revived pending-write collection.
     [Fact]
     public async Task DuplicateInputsDoNotDuplicateOrChangeTheOperation()
     {

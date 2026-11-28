@@ -34,12 +34,12 @@ namespace Netty.NET.Handler.Codec.Protobuf;
  * @see CodedOutputStream
  * @see CodedOutputByteBufferNano
  */
-// CLR: the imports com.google.protobuf.CodedOutputStream and com.google.protobuf.nano.CodedOutputByteBufferNano serve
-// only the @see links above, which are kept verbatim; the encoder implements the varint itself. protobuf-java and
-// protobuf-javanano have no BCL counterpart and are not referenced (owner decision 2026-11-23,
-// docs/codec-protobuf-porting.md), so these imports have no C# using. @Sharable is [Sharable], the Class argument of
-// the MessageToByteEncoder constructor is a Type, ByteBuf out is ByteBuf @out (a C# keyword) and C# has no throws
-// clauses (MessageToByteEncoder in codec-base, docs/codec-base-porting.md).
+// CLR: the imports com.google.protobuf.CodedOutputStream and com.google.protobuf.nano.CodedOutputByteBufferNano
+// serve only the @see links above, which are kept verbatim; the encoder implements the varint itself.
+// protobuf-java and protobuf-javanano have no BCL counterpart and are not referenced, so these imports have no C#
+// using. @Sharable is [Sharable], the Class argument of the MessageToByteEncoder constructor is a Type, ByteBuf
+// out is ByteBuf @out (a C# keyword) and C# has no throws clauses (MessageToByteEncoder in codec-base,
+// docs/codec-base-porting.md).
 [Sharable]
 public class ProtobufVarint32LengthFieldPrepender : MessageToByteEncoder<ByteBuf>
 {
@@ -91,12 +91,11 @@ public class ProtobufVarint32LengthFieldPrepender : MessageToByteEncoder<ByteBuf
      * @param value which is to be encoded.
      * @return size of value encoded as protobuf varint32.
      */
-    // CLR: the package-private method is internal, and the final modifier of the parameter is dropped (the method does
-    // not assign it). The Java literal 0xffffffff is the int -1 (JLS 3.10.1,
+    // CLR: The Java literal 0xffffffff is the int -1 (JLS 3.10.1,
     // https://docs.oracle.com/javase/specs/jls/se17/html/jls-3.html#jls-3.10.1), while the C# literal is the uint
     // 4,294,967,295; "unchecked((int)0xFF_FF_FF_FF) produces -1"
-    // (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types), so the
-    // masks are written unchecked((int) 0xffffffff) << n and keep the Java int values.
+    // (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types),
+    // so the masks are written unchecked((int) 0xffffffff) << n and keep the Java int values.
     internal static int ComputeRawVarint32Size(int value)
     {
         if ((value & (unchecked((int) 0xffffffff) <<  7)) == 0)

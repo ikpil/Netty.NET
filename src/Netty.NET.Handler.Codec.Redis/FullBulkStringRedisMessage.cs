@@ -22,13 +22,12 @@ namespace Netty.NET.Handler.Codec.Redis;
 /**
  * An aggregated bulk string of <a href="https://redis.io/topics/protocol">RESP</a>.
  */
-// CLR: the covariant overrides of the virtual DefaultByteBufHolder members (content(), refCnt(), copy(), duplicate(),
-// retainedDuplicate(), replace(), retain(), touch(), release()) are C# covariant override returns
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override), and content()/refCnt() are the
-// Content/RefCnt properties (docs/buffer-porting.md, Buffer holders and conversion). The module interfaces inherit the
-// holder methods from IByteBufHolder instead of narrowing them (owner decision 2026-11-19; docs/transport-porting.md,
-// Decisions), whose members DefaultByteBufHolder implements. The anonymous subclasses of NULL_INSTANCE and EMPTY_INSTANCE are the named nested classes NullFullBulkStringRedisMessage
-// and EmptyFullBulkStringRedisMessage.
+// CLR: the covariant overrides of the virtual DefaultByteBufHolder members (content(), refCnt(), copy(),
+// duplicate(), retainedDuplicate(), replace(), retain(), touch(), release()) are C# covariant override returns
+// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override), and content()/refCnt()
+// are the Content/RefCnt properties. The module interfaces inherit the holder methods from IByteBufHolder instead
+// of narrowing them, whose members DefaultByteBufHolder implements. The anonymous subclasses of NULL_INSTANCE and
+// EMPTY_INSTANCE are the named nested classes NullFullBulkStringRedisMessage and EmptyFullBulkStringRedisMessage.
 [UnstableApi]
 public class FullBulkStringRedisMessage : DefaultByteBufHolder, ILastBulkStringRedisContent
 {

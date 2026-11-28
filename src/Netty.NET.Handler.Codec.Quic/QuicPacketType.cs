@@ -24,10 +24,9 @@ namespace Netty.NET.Handler.Codec.Quic;
  */
 // CLR: a Java enum with a method is a sealed class with static readonly instances, as codec-http2 Http2Error and
 // codec-haproxy HAProxyTLV.Type ("You can't define a method inside the definition of an enumeration type",
-// https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/enum). Name() and ToString() return
-// the constant name as Enum.name()/toString() do; instances are compared by reference, as Java compares enum constants.
-// The package-private of(byte) is internal; IllegalArgumentException is ArgumentException, and the byte prints signed
-// as Java's byte does.
+// https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/enum). Name() and ToString()
+// return the constant name as Enum.name()/toString() do; instances are compared by reference, as Java compares
+// enum constants. IllegalArgumentException is ArgumentException, and the byte prints signed as Java's byte does.
 public sealed class QuicPacketType
 {
     /**

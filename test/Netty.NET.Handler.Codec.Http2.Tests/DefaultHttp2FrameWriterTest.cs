@@ -32,19 +32,17 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
 /**
  * Tests for {@link DefaultHttp2FrameWriter}.
  */
-// CLR: Mockito mocks are Moq loose mocks; @BeforeEach is the constructor and @AfterEach Dispose() (xUnit creates a
-// test class instance per test, https://xunit.net/docs/shared-context). The answer of ctx.write(msg, promise) is the
-// callback of IChannelHandlerContext.WriteAsync(msg, CancellationToken), the member DefaultHttp2FrameWriter writes
-// through (Http2CodecUtil.Write); it returns the never-completing Task of a TaskCompletionSource that stands for the
-// mocked ChannelFuture, so the write promises stay pending as Java's mocked future leaves them. A DefaultChannelPromise
-// is a TaskCompletionSource. ctx.alloc()/channel()/executor() are the Alloc() method and the Channel/Executor
-// properties. Strings passed as CharSequence are StringCharSequence values (a C# string is not an ICharSequence;
-// docs/codec-http-porting.md, Shared CLR adaptations).
-// assertEquals(ByteBuf, ByteBuf) is ByteBuf.Equals (IEquatable<ByteBuf>, content comparison as Java's equals).
-// OutOfMemoryError is OutOfMemoryException (docs/codec-http-porting.md, Core test notes) and assertThrows is
-// Assert.ThrowsAny; ByteArrayOutputStream is a MemoryStream; Arrays.copyOfRange is an array range; String.format("%d")
-// is invariant text and repeat(...) is string.Concat of Enumerable.Repeat (the same text as the format-and-replace
-// trick). AbstractByteBufAllocator is the Buffer port's AbstractByteBufAllocator, whose isDirectBufferPooled() is the
+// CLR: The answer of ctx.write(msg, promise) is the callback of IChannelHandlerContext.WriteAsync(msg,
+// CancellationToken), the member DefaultHttp2FrameWriter writes through (Http2CodecUtil.Write); it returns the
+// never-completing Task of a TaskCompletionSource that stands for the mocked ChannelFuture, so the write promises
+// stay pending as Java's mocked future leaves them. A DefaultChannelPromise is a TaskCompletionSource.
+// ctx.alloc()/channel()/executor() are the Alloc() method and the Channel/Executor properties. Strings passed as
+// CharSequence are StringCharSequence values (a C# string is not an ICharSequence; docs/codec-http-porting.md,
+// Shared CLR adaptations). assertEquals(ByteBuf, ByteBuf) is ByteBuf.Equals (IEquatable<ByteBuf>, content
+// comparison as Java's equals). OutOfMemoryError is OutOfMemoryException and assertThrows is Assert.ThrowsAny;
+// ByteArrayOutputStream is a MemoryStream; Arrays.copyOfRange is an array range; String.format("%d") is invariant
+// text and repeat(...) is string.Concat of Enumerable.Repeat (the same text as the format-and-replace trick).
+// AbstractByteBufAllocator is the Buffer port's AbstractByteBufAllocator, whose isDirectBufferPooled() is the
 // IsDirectBufferPooled property.
 public class DefaultHttp2FrameWriterTest : IDisposable
 {

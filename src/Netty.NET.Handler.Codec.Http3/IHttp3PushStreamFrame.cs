@@ -20,7 +20,7 @@ namespace Netty.NET.Handler.Codec.Http3;
  * Marker interface for frames that can be sent and received on a
  * <a href="https://tools.ietf.org/html/draft-ietf-quic-http-32#section-7">HTTP3 push stream</a>.
  */
-// CLR: the interface takes the I prefix (docs/codec-http2-porting.md, Shared CLR adaptations).
+// CLR: the interface takes the I prefix.
 public interface IHttp3PushStreamFrame : IHttp3Frame
 {
 }

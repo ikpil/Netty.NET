@@ -50,9 +50,6 @@ public class MessageToMessageEncoderTest
         EmbeddedChannel channel = new EmbeddedChannel(writeThrower, encoder);
         object msg = new object();
         Task write = channel.WriteAndFlushAsync(msg);
-        // CLR: write.cause() is the exception of the faulted Task (Task.Exception.InnerException), read without waiting
-        // as Java reads it: the combined Task completes on the event loop when the last write completes, before
-        // WriteAndFlushAsync returns (ExecutorPromiseCombiner).
         Assert.True(write.IsFaulted);
         Assert.Same(firstWriteException, write.Exception.InnerException);
         Assert.Same(msg, channel.ReadOutbound());
@@ -75,7 +72,6 @@ public class MessageToMessageEncoderTest
         Assert.False(channel.Finish());
     }
 
-    // CLR: the anonymous handlers are named nested classes.
     private sealed class ThrowingEncoder : MessageToMessageEncoder<object>
     {
         protected override void Encode(IChannelHandlerContext ctx, object msg, IList<object> @out)
@@ -97,7 +93,6 @@ public class MessageToMessageEncoderTest
     {
         private bool firstWritten;
 
-        // CLR: promise.setFailure(cause) is returning a faulted Task.
         public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken)
         {
             if (firstWritten)

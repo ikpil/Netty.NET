@@ -89,15 +89,14 @@ namespace Netty.NET.Handler.Timeout;
  * @see ReadTimeoutHandler
  * @see WriteTimeoutHandler
  */
-// CLR: a TimeSpan replaces each (long duration, TimeUnit unit) pair (docs/common-clr-design.md, "Monotonic time and
-// duration conversion"); a positive TimeSpan converts to nanoseconds with saturation, as TimeUnit.toNanos does, and the
-// nanosecond delays passed to the executor round up to the 100 ns TimeSpan tick ("The smallest unit of time is the tick,
-// which is equal to 100 nanoseconds", https://learn.microsoft.com/dotnet/api/system.timespan.ticks), so an idle task
-// runs at most 99 ns after its Java deadline and never before it. Future<?> is the CancellationTokenSource of the
-// scheduled work, as AbstractNioChannel's connectTimeoutFuture (src/Netty.NET.Transport/Channels/Nio/AbstractNioChannel.cs).
+// CLR: a TimeSpan replaces each (long duration, TimeUnit unit) pair; a positive TimeSpan converts to nanoseconds
+// with saturation, as TimeUnit.toNanos does, and the nanosecond delays passed to the executor round up to the 100
+// ns TimeSpan tick ("The smallest unit of time is the tick, which is equal to 100 nanoseconds",
+// https://learn.microsoft.com/dotnet/api/system.timespan.ticks), so an idle task runs at most 99 ns after its Java
+// deadline and never before it. Future<?> is the CancellationTokenSource of the scheduled work, as
+// AbstractNioChannel's connectTimeoutFuture (src/Netty.NET.Transport/Channels/Nio/AbstractNioChannel.cs).
 public class IdleStateHandler : ChannelDuplexHandler
 {
-    // CLR: TimeUnit.MILLISECONDS.toNanos(1).
     private static readonly long MIN_TIMEOUT_NANOS = TimeSpan.TicksPerMillisecond * 100;
 
     private readonly bool observeOutput;
@@ -331,9 +330,9 @@ public class IdleStateHandler : ChannelDuplexHandler
         ctx.FireChannelReadComplete();
     }
 
-    // CLR: write(ctx, msg, promise) is WriteAsync, whose returned Task replaces the promise (docs/codec-base-porting.md,
-    // "Outbound operations"); there is no void promise to unvoid(). addListener(writeListener) is a continuation on
-    // writeListenerScheduler, which runs it when the write completes on the event loop, as Java notifies the listener.
+    // CLR: write(ctx, msg, promise) is WriteAsync, whose returned Task replaces the promise; there is no void
+    // promise to unvoid(). addListener(writeListener) is a continuation on writeListenerScheduler, which runs it
+    // when the write completes on the event loop, as Java notifies the listener.
     public override Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken)
     {
         // Allow writing with void promise if handler is only configured for read timeout events.

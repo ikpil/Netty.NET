@@ -42,10 +42,10 @@ public static class CookieHeaderNames
      * Possible values for the SameSite attribute.
      * See <a href="https://tools.ietf.org/html/draft-ietf-httpbis-rfc6265bis-05">changes to RFC6265bis</a>
      */
-    // CLR: a Java enum with a method is a sealed class with static readonly instances and a private constructor, as
-    // codec-base Base64Dialect (docs/codec-base-porting.md): a C# enum cannot declare the static of(String) method.
-    // name() is Name() and ToString() returns the constant name as Enum.toString() does; getEnumConstants() is the
-    // private VALUES array in declaration order. The implicit values()/valueOf(String) members are not added (no caller).
+    // CLR: a Java enum with a method is a sealed class with static readonly instances and a private constructor,
+    // as codec-base Base64Dialect : a C# enum cannot declare the static of(String) method. name() is Name() and
+    // ToString() returns the constant name as Enum.toString() does. The implicit values()/valueOf(String) members
+    // are not added (no caller).
     public sealed class SameSite
     {
         public static readonly SameSite Lax = new SameSite(nameof(Lax));
@@ -79,10 +79,10 @@ public static class CookieHeaderNames
          * @return enum value for the provided name or null
          */
         // CLR: String.equalsIgnoreCase is string.Equals with StringComparison.OrdinalIgnoreCase ("ordinal (binary)
-        // sort rules and ignoring the case", https://learn.microsoft.com/en-us/dotnet/api/system.stringcomparison?view=net-10.0;
-        // Java compares code points "ignoring case" without the locale,
-        // https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html). The package-private method
-        // is internal.
+        // sort rules and ignoring the case",
+        // https://learn.microsoft.com/en-us/dotnet/api/system.stringcomparison?view=net-10.0; Java compares code
+        // points "ignoring case" without the locale,
+        // https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html).
         internal static SameSite Of(string name)
         {
             if (name != null)

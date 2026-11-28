@@ -21,10 +21,8 @@ using static Netty.NET.Handler.Codec.Http3.QpackUtil;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the package-private final class is internal sealed and its package-private members are internal. The checked
-// QpackException needs no throws clause; IllegalArgumentException is ArgumentException and the capacity prints with the
-// invariant culture. Arrays.fill(fields, null) is Array.Clear and System.arraycopy is Array.Copy. Math.floorDiv is
-// QpackUtil.FloorDiv (Java's floor division).
+// CLR: The checked QpackException needs no throws clause; IllegalArgumentException is ArgumentException and the
+// capacity prints with the invariant culture. Math.floorDiv is QpackUtil.FloorDiv (Java's floor division).
 internal sealed class QpackDecoderDynamicTable
 {
     private static readonly QpackException GET_ENTRY_ILLEGAL_INDEX_VALUE =

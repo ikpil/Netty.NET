@@ -24,11 +24,11 @@ namespace Netty.NET.Handler.Codec.Spdy;
 /**
  * Encodes a SPDY Frame into a {@link ByteBuf}.
  */
-// CLR: ByteBufAllocator is IByteBufAllocator. allocator.ioBuffer(n).order(ByteOrder.BIG_ENDIAN) is IoBuffer(n): the
-// Buffer port has no order(ByteOrder) view, and the plain writeShort/writeMedium/writeInt accessors write big-endian
-// (docs/buffer-porting.md, Explicit endian replacements for swapped buffers). The Java byte flags and priority are CLR
-// bytes; flags are combined with |= on byte values, and (priority & 0xFF) << 13 gives the same short for either sign.
-// Set<Integer> is ISet<int>. Java methods are virtual unless final.
+// CLR: ByteBufAllocator is IByteBufAllocator. allocator.ioBuffer(n).order(ByteOrder.BIG_ENDIAN) is IoBuffer(n):
+// the Buffer port has no order(ByteOrder) view, and the plain writeShort/writeMedium/writeInt accessors write
+// big-endian. The Java byte flags and priority are CLR bytes; flags are combined with |= on byte values, and
+// (priority & 0xFF) << 13 gives the same short for either sign. Set<Integer> is ISet<int>. Java methods are
+// virtual unless final.
 public class SpdyFrameEncoder
 {
 

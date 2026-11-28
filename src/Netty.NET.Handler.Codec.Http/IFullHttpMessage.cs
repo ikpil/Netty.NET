@@ -20,8 +20,6 @@ namespace Netty.NET.Handler.Codec.Http;
  * Combines {@link HttpMessage} and {@link LastHttpContent} into one
  * message. So it represent a <i>complete</i> http message.
  */
-// CLR: the Java interface takes the I prefix (owner rule); the narrowing re-declarations are inherited (see
-// IHttpContent).
 public interface IFullHttpMessage : IHttpMessage, ILastHttpContent
 {
 }

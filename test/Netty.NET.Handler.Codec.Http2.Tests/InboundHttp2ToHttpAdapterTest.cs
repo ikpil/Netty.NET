@@ -761,7 +761,6 @@ public class InboundHttp2ToHttpAdapterTest : IAsyncLifetime
         Assert.True(clientHandlersAddedLatch.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
     }
 
-    // CLR: the anonymous ChannelInitializer<Channel> of the server side of boostrapEnv(...).
     private sealed class ServerInitializer : ChannelInitializer<IChannel>
     {
         private readonly InboundHttp2ToHttpAdapterTest test;
@@ -799,8 +798,6 @@ public class InboundHttp2ToHttpAdapterTest : IAsyncLifetime
         }
     }
 
-    // CLR: the anonymous ChannelInitializer<Channel> of the client side of boostrapEnv(...) and its three anonymous
-    // handlers (ExceptionCatcher, PrefaceWrittenHandler, HandlersAddedHandler).
     private sealed class ClientInitializer : ChannelInitializer<IChannel>
     {
         private readonly InboundHttp2ToHttpAdapterTest test;
@@ -1043,7 +1040,6 @@ public class InboundHttp2ToHttpAdapterTest : IAsyncLifetime
         Assert.True(Equals(expected, actual), "expected: <" + expected + "> but was: <" + actual + ">");
     }
 
-    // CLR: the anonymous Http2Runnable instances (see the class comment).
     private sealed class ActionRunnable : IHttp2Runnable
     {
         private readonly Action action;

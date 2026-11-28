@@ -26,13 +26,13 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Tests.IpFilter;
 
-// CLR: InetSocketAddress is IPEndPoint and SocketUtils.socketAddress of a literal is
-// new IPEndPoint(IPAddress.Parse(...), port), as in the codec ports (docs/codec-dns-porting.md). The protected
-// accept(...) is reached through the internal IpSubnetFilter.InvokeAccept forwarder (Java package access). The anonymous
-// IpFilterRule, RuleBasedIpFilter and EmbeddedChannel subclasses are named nested classes; IllegalArgumentException is
+// CLR: InetSocketAddress is IPEndPoint and SocketUtils.socketAddress of a literal is new
+// IPEndPoint(IPAddress.Parse(...), port), as in the codec ports. The protected accept(...) is reached through the
+// internal IpSubnetFilter.InvokeAccept forwarder (Java package access). The anonymous IpFilterRule,
+// RuleBasedIpFilter and EmbeddedChannel subclasses are named nested classes; IllegalArgumentException is
 // ArgumentException, ArrayList is List, the anonymous Executables are lambdas and String.format("%d") is the
-// invariant-culture text. readOutbound() is ReadOutbound<ByteBuf>() and the Java byte loop compares the values 1..7,
-// which have the same value as a System.Byte (no sign is observable). close().isSuccess() is
+// invariant-culture text. readOutbound() is ReadOutbound<ByteBuf>() and the Java byte loop compares the values
+// 1..7, which have the same value as a System.Byte (no sign is observable). close().isSuccess() is
 // CloseAsync().IsCompletedSuccessfully; the embedded channel completes the close synchronously.
 public class IpSubnetFilterTest
 {
@@ -277,7 +277,6 @@ public class IpSubnetFilterTest
         Assert.True(ch7.CloseAsync(TestContext.Current.CancellationToken).IsCompletedSuccessfully);
     }
 
-    // CLR: Collections.singletonList(rule), an immutable List, is the read-only IList of Array.AsReadOnly.
     [Fact]
     public void TestIpv6MaskCorrectlyApplied()
     {

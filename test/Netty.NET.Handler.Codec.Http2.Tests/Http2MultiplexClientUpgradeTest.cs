@@ -18,15 +18,13 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Http2.Tests;
 
-// CLR: the abstract JUnit fixture is an abstract generic xUnit class whose [Fact] methods run once per derived class,
-// as JUnit runs the inherited tests (owner rule 9); C extends Http2FrameCodec is the constraint where C :
+// CLR: the abstract JUnit fixture is an abstract generic xUnit class whose [Fact] methods run once per derived
+// class, as JUnit runs the inherited tests (owner rule 9); C extends Http2FrameCodec is the constraint where C :
 // Http2FrameCodec. Http2StreamChannel is IHttp2StreamChannel, stream().state()/id() are Stream().State()/Id(),
-// Http2Stream.State is the sealed class IHttp2Stream.State, ctx.channel() is the Channel property
-// (docs/transport-porting.md, Decisions) and @Sharable is [Sharable]. getProperty(codec.streamKey) is the generic
-// GetProperty<object>, and codec.streamKey is the protected Java field that the package's tests read, which needs
-// protected internal access in C# (docs/codec-http-porting.md, Shared CLR adaptations, Package access).
-// assertThrows(Http2Exception.class, Executable) is Assert.ThrowsAny<Http2Exception> with a lambda
-// (docs/codec-http-porting.md, Core test notes).
+// Http2Stream.State is the sealed class IHttp2Stream.State, ctx.channel() is the Channel property and @Sharable is
+// [Sharable]. getProperty(codec.streamKey) is the generic GetProperty<object>, and codec.streamKey is the
+// protected Java field that the package's tests read, which needs protected internal access in C#.
+// assertThrows(Http2Exception.class, Executable) is Assert.ThrowsAny<Http2Exception> with a lambda.
 public abstract class Http2MultiplexClientUpgradeTest<C> where C : Http2FrameCodec
 {
 

@@ -24,8 +24,8 @@ namespace Netty.NET.Handler.Codec.Http;
  * @see HttpRequest
  * @see HttpHeaders
  */
-// CLR: the Java interface takes the I prefix (owner rule). The @Deprecated getProtocolVersion(), whose @deprecated text
-// names protocolVersion(), is not ported (owner decision 2026-11-16).
+// CLR: the Java interface takes the I prefix (owner rule). The @Deprecated getProtocolVersion(), whose @deprecated
+// text names protocolVersion(), is not ported.
 public interface IHttpMessage : IHttpObject
 {
 

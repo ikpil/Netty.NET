@@ -3833,8 +3833,6 @@ public abstract class ByteBuf : IReferenceCounted, IByteBufConvertible, IEquatab
      * @throws IndexOutOfBoundsException
      *         if {@code length} is greater than {@code this.readableBytes}
      */
-    // CLR: CharSequence is ICharSequence. .NET has no Charset identity, so US-ASCII and ISO-8859-1 are recognized by
-    // their code pages (20127, 28591); any other encoding returns the decoded string as a StringCharSequence.
     public virtual ICharSequence GetCharSequence(int index, int length, Encoding charset)
     {
         ArgumentNullException.ThrowIfNull(charset);

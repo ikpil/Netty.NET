@@ -24,16 +24,14 @@ using Netty.NET.Handler.Codec.Http;
 
 namespace Netty.NET.Handler.Codec.Http2.Tests;
 
-// CLR: the @Disabled class has no test methods; its main(String[]) is a standalone diagnostic program. The xunit.v3
-// test project generates its own entry point, and a second static Main would be CS0017 ("Program ... has more than
-// one entry point defined", https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0017), so main is Main_ (trailing
-// underscore, as the owner rule for name clashes). The final class with a private constructor is a static class.
-// Field reflection (Class.getFields(), Field.get(null)) is Type.GetFields(BindingFlags.Public | BindingFlags.Static)
-// and FieldInfo.GetValue(null); File/BufferedReader/FileReader are a StreamReader over the path; PrintStream
-// System.out is Console.Out. List/Map/Set are List/Dictionary/HashSet, Collections.emptyMap() is
-// ImmutableDictionary.Empty, the private Function interface is IFunction and its anonymous classes are the nested
-// OldHasher and AsciiHasher; the labeled break is a goto to a label after the loop. Java string concatenation of the
-// numbers uses the invariant culture.
+// CLR: the @Disabled class has no test methods; its main(String[]) is a standalone diagnostic program. The
+// xunit.v3 test project generates its own entry point, and a second static Main would be CS0017 ("Program... has
+// more than one entry point defined", https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0017), so main is
+// Main_ (trailing underscore, as the owner rule for name clashes). The final class with a private constructor is a
+// static class. Field reflection (Class.getFields(), Field.get(null)) is Type.GetFields(BindingFlags.Public |
+// BindingFlags.Static) and FieldInfo.GetValue(null); File/BufferedReader/FileReader are a StreamReader over the
+// path; PrintStream System.out is Console.Out. The labeled break is a goto to a label after the loop. Java string
+// concatenation of the numbers uses the invariant culture.
 public static class HashCollisionTest
 {
 

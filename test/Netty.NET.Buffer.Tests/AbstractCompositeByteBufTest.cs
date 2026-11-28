@@ -320,8 +320,8 @@ public abstract class AbstractCompositeByteBufTest : AbstractByteBufTest
         ByteBuf s3 = s2.ReadRetainedSlice(2); // 4
         ByteBuf s4 = s3.ReadRetainedSlice(2); // 5
 
-        // CLR: the deprecated .order(ByteOrder.LITTLE_ENDIAN) facade is omitted; it only swaps the
-        // multi-byte accessors and does not affect component ownership.
+        // CLR: the deprecated.order(ByteOrder.LITTLE_ENDIAN) facade is omitted; it only swaps the multi-byte
+        // accessors and does not affect component ownership.
         ByteBuf composite = NewCompositeBuffer()
             .AddComponent(s1)
             .AddComponents(s2, s3, s4);

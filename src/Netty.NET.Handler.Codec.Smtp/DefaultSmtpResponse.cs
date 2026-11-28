@@ -26,12 +26,9 @@ namespace Netty.NET.Handler.Codec.Smtp;
 /**
  * Default {@link SmtpResponse} implementation.
  */
-// CLR: @UnstableApi is the Common [UnstableApi] attribute; CharSequence... is params ICharSequence[] and List<CharSequence>
-// is IList<ICharSequence> (see SmtpUtils). Collections.emptyList() is ReadOnlyCollection<T>.Empty and
-// Collections.unmodifiableList(list) is a ReadOnlyCollection<T> view of the list. The List equals/hashCode/toString
-// used by the source go through SmtpUtils.ListEquals/ListHashCode/ListToString. The package-private constructor is
-// internal; IllegalArgumentException is ArgumentException (docs/codec-base-porting.md). Numbers in text use the
-// invariant culture (https://learn.microsoft.com/en-us/dotnet/api/system.int32.tostring).
+// CLR: The List equals/hashCode/toString used by the source go through
+// SmtpUtils.ListEquals/ListHashCode/ListToString. IllegalArgumentException is ArgumentException. Numbers in text
+// use the invariant culture (https://learn.microsoft.com/en-us/dotnet/api/system.int32.tostring).
 [UnstableApi]
 public sealed class DefaultSmtpResponse : ISmtpResponse
 {

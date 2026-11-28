@@ -39,16 +39,12 @@ namespace Netty.NET.Handler.Codec.Http.Cors;
  * by this handler will carry {@code Vary: Origin}, including responses to requests without
  * {@code Origin} header or with an origin that is not allowed.
  */
-// CLR: write(ctx, msg, promise) is WriteAsync, whose Task replaces the promise (docs/codec-base-porting.md, Outbound
-// operations). ChannelFutureListener.CLOSE added to the writeAndFlush future is a Task continuation that closes the
-// channel; it runs on the channel's executor (Common's EventExecutorTaskScheduler over ctx.Executor), at once when the
-// write completes on the event loop, as a Java listener does (the core HttpServerKeepAliveHandler and
-// HttpServerExpectContinueHandler use the same scheduler, docs/handler-porting.md, Listener timing). List<CorsConfig>
-// is IList<CorsConfig> and Collections.singletonList is a one-element ImmutableList (as the core QueryStringDecoder).
+// CLR: ChannelFutureListener.CLOSE added to the writeAndFlush future is a Task continuation that closes the
+// channel; it runs on the channel's executor (Common's EventExecutorTaskScheduler over ctx.Executor), at once when
+// the write completes on the event loop, as a Java listener does (the core HttpServerKeepAliveHandler and
+// HttpServerExpectContinueHandler use the same scheduler, docs/handler-porting.md, Listener timing).
 // HttpRequest/HttpResponse/HttpContent are IHttpRequest/IHttpResponse/IHttpContent. String.equals is the ordinal
-// string.Equals; a String passed as a CharSequence header value binds to the HttpHeaders Set/Add(ICharSequence, object)
-// overloads, and the Set<T> results of CorsConfig bind to the Iterable overloads (IEnumerable<object>). ctx.alloc() is
-// ctx.Alloc().
+// string.Equals.
 public class CorsHandler : ChannelDuplexHandler
 {
 

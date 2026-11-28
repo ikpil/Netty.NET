@@ -349,8 +349,7 @@ public abstract class AbstractSingleThreadEventLoopTest
             AssertEquals(SCALING_MAX_THREADS, CountActiveExecutors(group),
                          "Group should start with max threads active.");
 
-            // CLR: Stopwatch timestamps replace System.nanoTime(); TimeUnit.SECONDS.toNanos(5) is five seconds of
-            // Stopwatch.Frequency ticks.
+            // CLR: Stopwatch timestamps replace System.nanoTime().
             long deadline = Stopwatch.GetTimestamp() + Stopwatch.Frequency * 5;
 
             while (CountActiveExecutors(group) > SCALING_MIN_THREADS && Stopwatch.GetTimestamp() < deadline)
@@ -444,7 +443,7 @@ public abstract class AbstractSingleThreadEventLoopTest
     {
         int activeCount = 0;
 
-        // CLR: EventExecutorGroup is Iterable<EventExecutor>; IEventExecutorGroup.Iterator() is that sequence.
+        // CLR: EventExecutorGroup is Iterable<EventExecutor>.
         foreach (IEventExecutor executor in group.Iterator())
         {
             if (!executor.IsSuspended())

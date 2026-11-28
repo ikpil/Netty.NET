@@ -28,15 +28,12 @@ namespace Netty.NET.Handler.Codec.Http.Tests;
 
 #pragma warning disable xUnit1051 // The source's writeAndFlush(...) observes no test cancellation.
 
-// CLR: the nested interfaces are HttpClientUpgradeHandler.ISourceCodec/IUpgradeCodec (owner rule: I prefix); the
-// anonymous ChannelInboundHandlerAdapter is the named nested class UpgradeSuccessfulWriter. ChannelPromise is Task
-// (docs/transport-porting.md): channel.newPromise() plus ctx.writeAndFlush(msg, promise) is the Task that
+// CLR: ChannelPromise is Task : channel.newPromise() plus ctx.writeAndFlush(msg, promise) is the Task that
 // ctx.WriteAndFlushAsync(msg) returns, kept in a field of the writer, and promise.isSuccess() is
 // IsCompletedSuccessfully. The String values that Java passes as CharSequence (protocol(),
 // headers().contains(AsciiString, String, boolean)) are wrapped in StringCharSequence (HttpHeadersTestUtils.Of),
 // Collections.emptyList() is Array.Empty, assertThrows with an Executable or lambda is Assert.Throws and
-// IllegalStateException is InvalidOperationException (docs/codec-base-porting.md). Messages are read with
-// ReadInbound<T>/ReadOutbound<T>.
+// IllegalStateException is InvalidOperationException. Messages are read with ReadInbound<T>/ReadOutbound<T>.
 public class HttpClientUpgradeHandlerTest
 {
 

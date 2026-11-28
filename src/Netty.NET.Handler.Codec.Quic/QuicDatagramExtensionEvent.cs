@@ -23,9 +23,9 @@ namespace Netty.NET.Handler.Codec.Quic;
  * Used when the remote peer supports the
  * <a href="https://tools.ietf.org/html/draft-ietf-quic-datagram-01">QUIC DATAGRAM extension.</a>
  */
-// CLR: the package-private constructor is internal; the length prints with the invariant culture. System.Net.Quic has no
-// datagram extension (RFC 9221; docs/quic-design.md, No counterpart in System.Net.Quic): the event keeps its Java API
-// (owner decision 2026-11-27) and the msquic implementation (stage 2) never fires it.
+// CLR: The length prints with the invariant culture. System.Net.Quic has no datagram extension (RFC 9221;
+// docs/quic-design.md, No counterpart in System.Net.Quic): the event keeps its Java API and the msquic
+// implementation (stage 2) never fires it.
 public sealed class QuicDatagramExtensionEvent : IQuicExtensionEvent
 {
 

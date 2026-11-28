@@ -30,18 +30,18 @@ namespace Netty.NET.Resolver.Dns;
  * <p>
  * This may use the JDK's blocking DNS resolution to bootstrap the default DNS server addresses.
  */
-// CLR: the static initializer is a static constructor (after the INSTANCE field initializer, as in the source order);
-// List<InetSocketAddress> is List<EndPoint>/IReadOnlyList<EndPoint> and SocketUtils.socketAddress is
+// CLR: the static initializer is a static constructor (after the INSTANCE field initializer, as in the source
+// order); List<InetSocketAddress> is List<EndPoint>/IReadOnlyList<EndPoint> and SocketUtils.socketAddress is
 // DnsServerAddresses.SocketAddress. PlatformDependent, NetUtil and SystemPropertyUtil are Common's;
-// NetUtil.LOCALHOST instanceof Inet6Address is its AddressFamily InterNetworkV6 (docs/handler-porting.md Addresses).
-// The PlatformDependent.javaVersion() < 9 branch, which reads sun.net.dns.ResolverConfiguration by reflection, is not
-// ported: the CLR is not a Java 8 runtime and Common has no javaVersion(); its comments are recorded in the manifest
-// (jvm-only-replaced). ExceptionInInitializerError is an InvalidOperationException thrown from the static constructor,
-// which reaches callers as TypeInitializationException (docs/codec-compression-porting.md). A List argument of a log
-// message prints as the AbstractCollection.toString() text "[a, b]" (docs/handler-porting.md), with each address as
-// EndPoint.ToString(). String.split(",") drops trailing empty strings
-// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html), which string.Split keeps, and
-// String.trim() is ResolvConf.JavaTrim.
+// NetUtil.LOCALHOST instanceof Inet6Address is its AddressFamily InterNetworkV6. The
+// PlatformDependent.javaVersion() < 9 branch, which reads sun.net.dns.ResolverConfiguration by reflection, is not
+// ported: the CLR is not a Java 8 runtime and Common has no javaVersion(); its comments are recorded in the
+// manifest (jvm-only-replaced). ExceptionInInitializerError is an InvalidOperationException thrown from the static
+// constructor, which reaches callers as TypeInitializationException. A List argument of a log message prints as
+// the AbstractCollection.toString() text "[a, b]", with each address as EndPoint.ToString(). String.split(",")
+// drops trailing empty strings
+// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html), which string.Split keeps,
+// and String.trim() is ResolvConf.JavaTrim.
 public sealed class DefaultDnsServerAddressStreamProvider : IDnsServerAddressStreamProvider
 {
     private static readonly IInternalLogger logger =
@@ -199,7 +199,6 @@ public sealed class DefaultDnsServerAddressStreamProvider : IDnsServerAddressStr
         return DEFAULT_NAME_SERVERS;
     }
 
-    // CLR: AbstractCollection.toString() of a log argument (see the class comment).
     private static string ListToString(List<EndPoint> list)
     {
         return "[" + string.Join(", ", list) + "]";

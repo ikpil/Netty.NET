@@ -24,12 +24,12 @@ namespace Netty.NET.Resolver.Dns;
 /**
  * A {@link RuntimeException} raised when {@link DnsNameResolver} failed to perform a successful query.
  */
-// CLR: RuntimeException is Exception (docs/codec-base-porting.md); InetSocketAddress is EndPoint (the name server
-// address, an IPEndPoint when the core passes a resolved one; docs/handler-porting.md Addresses) and DnsQuestion is
-// codec-dns IDnsQuestion. serialVersionUID has no counterpart. The fillInStackTrace() override, which replaces the stack
-// trace that the JDK records at construction with EMPTY_STACK_TRACE
-// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html), has no counterpart: a CLR
-// exception records its stack trace only when it is thrown
+// CLR: RuntimeException is Exception; InetSocketAddress is EndPoint (the name server address, an IPEndPoint when
+// the core passes a resolved one; docs/handler-porting.md Addresses) and DnsQuestion is codec-dns IDnsQuestion.
+// serialVersionUID has no counterpart. The fillInStackTrace() override, which replaces the stack trace that the
+// JDK records at construction with EMPTY_STACK_TRACE
+// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html), has no counterpart: a
+// CLR exception records its stack trace only when it is thrown
 // (https://learn.microsoft.com/en-us/dotnet/api/system.exception.stacktrace?view=net-10.0), so an instance that is
 // passed to a Task without being thrown has none.
 public class DnsNameResolverException : Exception

@@ -21,7 +21,6 @@ namespace Netty.NET.Handler.Codec.Redis;
 /**
  * Abstract class for Simple Strings or Errors.
  */
-// CLR: the package-private constructor is internal.
 [UnstableApi]
 public abstract class AbstractStringRedisMessage : IRedisMessage
 {

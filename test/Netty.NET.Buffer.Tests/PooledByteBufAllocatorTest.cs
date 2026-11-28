@@ -463,8 +463,7 @@ public class PooledByteBufAllocatorTest : AbstractByteBufAllocatorTest<PooledByt
         Assert.True(Volatile.Read(ref threadCachesCreated));
     }
 
-    // CLR: the anonymous FastThreadLocalThread subclass that overrides run(); a CLR Thread cannot be subclassed
-    // (src/Netty.NET.Common/Concurrent/FastThreadLocalThread.cs).
+    // CLR: A CLR Thread cannot be subclassed (src/Netty.NET.Common/Concurrent/FastThreadLocalThread.cs).
     private sealed class RunOverridingFastThreadLocalThread(Action task) : FastThreadLocalThread
     {
         public override void Run()

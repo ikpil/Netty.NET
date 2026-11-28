@@ -20,9 +20,6 @@ using Netty.NET.Handler.Codec.Http.WebSocketx;
 
 namespace Netty.NET.Handler.Codec.Http.Tests.WebSocketx;
 
-// CLR: java.net.URI is System.Uri and CharSequence is ICharSequence (see WebSocketClientHandshakerTest); the
-// package-private eleven-argument constructor of WebSocketClientHandshaker13 is internal and reached through
-// InternalsVisibleTo.
 public class WebSocketClientHandshaker13Test : WebSocketClientHandshaker07Test
 {
 

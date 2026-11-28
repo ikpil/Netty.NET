@@ -30,47 +30,10 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx;
 /**
  * Base class for web socket client handshake implementations
  */
-// CLR: java.net.URI is System.Uri, as in core (docs/codec-http-porting.md; QueryStringDecoder, HttpUtil). Java's URI
-// keeps every component as written and reports getHost() "or null if the host is undefined" (with the brackets of an
-// IPv6 literal), getPort() "or -1 if the port is undefined", getRawPath()/getRawQuery() raw and null when undefined,
-// and toString() as the original input string
-// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/URI.html). System.Uri canonicalizes instead:
-// Host throws InvalidOperationException for a relative URI
-// (https://learn.microsoft.com/en-us/dotnet/api/system.uri.host?view=net-10.0), ToString() returns the canonical form
-// with a lower-cased host while OriginalString returns "the exact URI specified when this instance was constructed"
-// (https://learn.microsoft.com/en-us/dotnet/api/system.uri.originalstring?view=net-10.0). The private UriComponents
-// helper therefore reads scheme, host, port, raw path and raw query from Uri.OriginalString with the generic syntax
-// [scheme:][//authority][path][?query][#fragment] of the Java page (a scheme not followed by '/' is opaque: no host,
-// path or query; a server-based authority is [userinfo@]host[:port], an empty or non-numeric port is undefined), as
-// core's QueryStringDecoder reads the raw path and query; toString() is OriginalString. Java also treats an authority
-// whose host is not a legal host name (for example one with '_') as registry-based with getHost() null, which the
-// helper does not check. String.split(",") keeps Java's result in Split ("Trailing empty strings are therefore not
-// included in the resulting array"; "If the expression does not match any part of the input then the resulting array
-// has just one element, namely this string",
-// https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html), trim() (code points up to
-// U+0020) is core's HttpUtil.TrimJava, String.format("%s", null) prints "null", and toLowerCase(Locale.US) is
-// ToLowerInvariant ("converted to lowercase using the casing rules of the invariant culture",
-// https://learn.microsoft.com/en-us/dotnet/api/system.string.tolowerinvariant?view=net-10.0). ChannelFuture is Task and
-// ChannelPromise is TaskCompletionSource (docs/transport-porting.md: promise arguments are the returned Task;
-// docs/handler-porting.md, Task promises): the promise overloads take the TaskCompletionSource the caller completes and
-// return its Task, channel.newPromise()/ctx.newPromise() is a new TaskCompletionSource without
-// RunContinuationsAsynchronously, so a listener added with ExecuteSynchronously runs when the promise completes, as
-// DefaultPromise notifies at once on the event loop (docs/handler-porting.md, Listener timing), setSuccess/setFailure
-// are SetResult/SetException, tryFailure is TrySetException, and the Task-returning methods take the Async suffix.
-// Listeners are synchronous continuations on TaskScheduler.Default (docs/codec-base-porting.md, MessageAggregator), and
-// future.cause() is copied with TrySetFromTask, which "attempts to transition the underlying Task<TResult> into the
-// same completion state as the specified completedTask"
-// (https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.taskcompletionsource.trysetfromtask?view=net-10.0).
-// C# does not allow a volatile long, so forceCloseTimeoutMillis is read and written with Volatile.Read/Write, and the
-// AtomicIntegerFieldUpdater compareAndSet(handshaker, 0, 1) is Interlocked.CompareExchange(ref forceCloseInit, 1, 0).
-// channel.eventLoop().schedule(...) is ScheduleAsync with a CancellationTokenSource standing for the Future and its
-// cancel(false) (docs/handler-porting.md, Executors and scheduling). The anonymous handshake response handler is the
-// named private nested class HandshakeResponseHandler, and the anonymous Runnables are lambdas. The protected
-// newHandshakeRequest(), newWebsocketDecoder(), newWebSocketEncoder() and isForceCloseComplete(), which the Java tests
-// reach through package access, have internal forwarders (InvokeNewHandshakeRequest, ...), as core's
-// HttpObjectEncoder.InvokeEncodeInitialLine. Non-final Java methods are virtual. pipeline.get/context/remove(Class) are
-// Get<T>(), Context(Type) and Remove<T>(). IllegalStateException is InvalidOperationException and
-// IllegalArgumentException is ArgumentException.
+// CLR: Parse Uri.OriginalString for the handshake target and authority because System.Uri can canonicalize those
+// components. The helper does not validate Java's registry-based hostname distinction.
+// Promise continuations preserve inline completion when possible. Forced close uses a cancellable event-loop timer
+// and an atomic guard to arm it only once.
 public abstract class WebSocketClientHandshaker
 {
 
@@ -947,7 +910,6 @@ public abstract class WebSocketClientHandshaker
         return schemePrefix + host;
     }
 
-    // CLR: AsciiString.contentEquals(CharSequence) of a String argument (false for null).
     private static bool ContentEquals(AsciiString name, string value)
     {
         return value != null && name.ToString().Equals(value, StringComparison.Ordinal);

@@ -32,14 +32,13 @@ namespace Netty.NET.Handler.Codec.Http2;
  * Typically this thread is the event loop thread for the {@link ChannelHandlerContext} managed by this class.
  */
 // CLR: the inner classes (FlowState, WritabilityMonitor, ListenerWritabilityMonitor and the anonymous
-// Http2ConnectionAdapter and Http2StreamVisitor, here the private nested StreamListener and InitialWindowSizeVisitor)
-// receive the controller explicitly, because a C# nested class has no enclosing instance; the package-private methods
-// of the monitors that ListenerWritabilityMonitor overrides are internal virtual. The Deque<FlowControlled> of a
-// FlowState is a LinkedList (peekLast is Last, offer AddLast, peek/poll/remove the first node), because Queue<T> has no
-// access to its tail. ctx.channel().config().getWriteBufferLowWaterMark(), bytesBeforeUnwritable() and isWritable()
-// are the Transport members Config.GetWriteBufferLowWaterMark(), BytesBeforeUnwritable and IsWritable. Throwable is
-// Exception, RuntimeException is Exception and IllegalStateException is InvalidOperationException
-// (docs/codec-http-porting.md, Shared CLR adaptations); assert is Debug.Assert.
+// Http2ConnectionAdapter and Http2StreamVisitor, here the private nested StreamListener and
+// InitialWindowSizeVisitor) receive the controller explicitly, because a C# nested class has no enclosing
+// instance. The Deque<FlowControlled> of a FlowState is a LinkedList (peekLast is Last, offer AddLast,
+// peek/poll/remove the first node), because Queue<T> has no access to its tail.
+// ctx.channel().config().getWriteBufferLowWaterMark(), bytesBeforeUnwritable() and isWritable() are the Transport
+// members Config.GetWriteBufferLowWaterMark(), BytesBeforeUnwritable and IsWritable. Throwable is Exception,
+// RuntimeException is Exception and IllegalStateException is InvalidOperationException; assert is Debug.Assert.
 public class DefaultHttp2RemoteFlowController : IHttp2RemoteFlowController
 {
     private static readonly IInternalLogger logger =
@@ -89,7 +88,6 @@ public class DefaultHttp2RemoteFlowController : IHttp2RemoteFlowController
         connection.AddListener(new StreamListener(this));
     }
 
-    // CLR: the anonymous Http2ConnectionAdapter registered by the constructor.
     private sealed class StreamListener : Http2ConnectionAdapter
     {
         private readonly DefaultHttp2RemoteFlowController controller;
@@ -775,7 +773,6 @@ public class DefaultHttp2RemoteFlowController : IHttp2RemoteFlowController
         }
     }
 
-    // CLR: the anonymous Http2StreamVisitor of WritabilityMonitor.initialWindowSize(int).
     private sealed class InitialWindowSizeVisitor : IHttp2StreamVisitor
     {
         private readonly DefaultHttp2RemoteFlowController controller;

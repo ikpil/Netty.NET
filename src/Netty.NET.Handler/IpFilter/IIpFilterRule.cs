@@ -21,7 +21,7 @@ namespace Netty.NET.Handler.IpFilter;
 /**
  * Implement this interface to create new rules.
  */
-// CLR: InetSocketAddress is IPEndPoint, as in the codec ports (docs/codec-dns-porting.md).
+// CLR: InetSocketAddress is IPEndPoint, as in the codec ports.
 public interface IIpFilterRule
 {
     /**

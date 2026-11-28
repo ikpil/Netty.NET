@@ -105,12 +105,10 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
                 return int.MaxValue;
             }
         }
-        // CLR: capacity(int newCapacity) is the Capacity setter.
         set => throw Reject();
     }
 
-    // CLR: maxCapacity() is the non-virtual MaxCapacity, fixed at int.MaxValue by the constructors (see the class
-    // comment); the source returns capacity().
+    // CLR: The source returns capacity().
 
     public override IByteBufAllocator Alloc()
     {
@@ -131,7 +129,7 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
     // CLR: hasArray(), array(), arrayOffset(), hasMemoryAddress() and memoryAddress() have no ByteBuf counterpart; the
     // Buffer port replaces them with borrowed Memory (MemoryMarshal.TryGetArray) and scoped pins.
 
-    // CLR: clear() is non-virtual (see the class comment); the source throws reject().
+    // CLR: The source throws reject().
 
     public override bool Equals(object obj)
     {
@@ -525,9 +523,8 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
     // former to the wrapped buffer and throws reject() from the latter.
 
     // CLR: order() and order(ByteOrder) are not ported: ByteBuf.order is @deprecated "use the Little Endian
-    // accessors, e.g. getShortLE, getIntLE instead of creating a buffer with swapped endianness", and the Buffer port
-    // has explicit BE/LE accessors and no SwappedByteBuf (docs/buffer-porting.md, Explicit endian replacements for
-    // swapped buffers).
+    // accessors, e.g. getShortLE, getIntLE instead of creating a buffer with swapped endianness", and the Buffer
+    // port has explicit BE/LE accessors and no SwappedByteBuf.
 
     // CLR: isReadable() is non-virtual; while not terminated this view's writer index is int.MaxValue, so it is true
     // as the source's "!terminated || buffer.isReadable()" (see the class comment).
@@ -539,8 +536,6 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
         return !terminated || buffer.IsReadable(size);
     }
 
-    // CLR: readableBytes() is non-virtual; with this view's writer index it is int.MaxValue - readerIndex while not
-    // terminated and the wrapped readable bytes once terminated, as in the source (see the class comment).
 
     public override bool ReadBoolean()
     {
@@ -859,7 +854,7 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
         throw Reject();
     }
 
-    // CLR: setIndex(int, int) is non-virtual (see the class comment); the source throws reject().
+    // CLR: The source throws reject().
 
     public override ByteBuf SetInt(int index, int value)
     {
@@ -954,7 +949,6 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
     // ReadableMemory and ReadableSequence properties, which range over ReadableBytes and so reach CheckIndex below
     // (REPLAY while not terminated) instead of throwing reject().
 
-    // CLR: nioBuffer(int, int) is AsReadOnlyMemory, which carries its Javadoc in the Buffer port.
     public override ReadOnlyMemory<byte> AsReadOnlyMemory(int index, int length)
     {
         CheckIndex(index, length);
@@ -962,7 +956,6 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
         return buffer.AsReadOnlyMemory(index, length);
     }
 
-    // CLR: nioBuffers(int, int) is AsReadOnlySequence, whose segments replace the NIO buffer array.
     public override ReadOnlySequence<byte> AsReadOnlySequence(int index, int length)
     {
         CheckIndex(index, length);
@@ -1003,7 +996,6 @@ internal sealed class ReplayingDecoderByteBuf : ByteBuf
                ')';
     }
 
-    // CLR: isWritable() is non-virtual; it is false while not terminated, as in the source (see the class comment).
 
     public override bool IsWritable(int size)
     {

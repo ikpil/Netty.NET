@@ -23,7 +23,6 @@ namespace Netty.NET.Example.Util;
  */
 public static class ServerUtil
 {
-    // CLR: System.getProperty("ssl") is ExampleLauncher.GetProperty("ssl"), which reads the -Dssl argument of the launcher.
     private static readonly bool SSL = ExampleLauncher.GetProperty("ssl") != null;
 
     public static SslContext BuildSslContext()

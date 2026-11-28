@@ -21,8 +21,6 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Tests.Frame;
 
-// CLR: CharsetUtil.ISO_8859_1 is Encoding.Latin1, and the char literals of the byte[] initializers are cast to byte,
-// which Java narrows implicitly.
 public class LengthFieldBasedFrameDecoderTest
 {
     [Fact]

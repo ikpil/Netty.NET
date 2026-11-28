@@ -35,10 +35,6 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Codec.Http2.Tests;
 
-// CLR: the package-private final class is internal sealed; List is IList. add(CharSequence, CharSequence) narrows the
-// return type with a covariant override of DefaultHeaders.Add (C# 9 covariant returns,
-// https://github.com/dotnet/csharplang/blob/main/proposals/csharp-9.0/covariant-returns.md, recorded in
-// docs/codec-http-porting.md).
 internal sealed class TestHeaderListener : DefaultHttp2Headers
 {
 

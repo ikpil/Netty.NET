@@ -23,10 +23,10 @@ namespace Netty.NET.Example.Http2.HelloWorld.Client;
 /**
  * Reads the first {@link Http2Settings} object and notifies a {@link io.netty.channel.ChannelPromise}
  */
-// CLR: ChannelPromise is TaskCompletionSource (docs/transport-porting.md); promise.setSuccess() is SetResult().
-// awaitSettings(long, TimeUnit) blocks with promise.awaitUninterruptibly(timeout, unit); it is AwaitSettingsAsync(TimeSpan)
-// (a (long, TimeUnit) pair is a TimeSpan, docs/common-clr-design.md), which awaits Task.WhenAny of the promise's Task and a
-// delay of the timeout, as the ported HAProxyMessageDecoderTest maps awaitUninterruptibly. isSuccess() is
+// CLR: ChannelPromise is TaskCompletionSource; promise.setSuccess() is SetResult(). awaitSettings(long, TimeUnit)
+// blocks with promise.awaitUninterruptibly(timeout, unit); it is AwaitSettingsAsync(TimeSpan) (a (long, TimeUnit)
+// pair is a TimeSpan, docs/common-clr-design.md), which awaits Task.WhenAny of the promise's Task and a delay of
+// the timeout, as the ported HAProxyMessageDecoderTest maps awaitUninterruptibly. isSuccess() is
 // IsCompletedSuccessfully and cause() the InnerException of the faulted Task (a canceled Task is a
 // TaskCanceledException, as Java's cause() is a CancellationException). IllegalStateException is
 // InvalidOperationException, and new RuntimeException(cause) is an Exception whose message is cause.toString()

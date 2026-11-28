@@ -21,9 +21,9 @@ namespace Netty.NET.Handler.Codec.Http3;
  * href="https://www.rfc-editor.org/rfc/rfc9204.html#name-section-acknowledgment">acknowledgment</a> of new table
  * entries on the QPACK decoder stream.
  */
-// CLR: the interface takes the I prefix (docs/codec-http2-porting.md, Shared CLR adaptations). The static interface
-// method ackEachInsert() is a static interface member, and the anonymous class it returns is the private nested class
-// AckEachInsertStrategy (a new instance per call, as in Java).
+// CLR: the interface takes the I prefix. The static interface method ackEachInsert() is a static interface member,
+// and the anonymous class it returns is the private nested class AckEachInsertStrategy (a new instance per call,
+// as in Java).
 public interface IQpackDecoderStateSyncStrategy
 {
 
@@ -60,7 +60,6 @@ public interface IQpackDecoderStateSyncStrategy
         return new AckEachInsertStrategy();
     }
 
-    // CLR: the anonymous QpackDecoderStateSyncStrategy of ackEachInsert().
     private sealed class AckEachInsertStrategy : IQpackDecoderStateSyncStrategy
     {
         private int lastCountAcknowledged;

@@ -241,8 +241,6 @@ public class HAProxyMessageDecoderTest
         Assert.False(ch.Finish());
     }
 
-    // CLR: closeFuture() is the CloseFuture Task; awaitUninterruptibly(5000) is an await of Task.WhenAny with a 5 second
-    // delay, and isDone()/isSuccess() are IsCompleted/IsCompletedSuccessfully.
     [Fact]
     public async Task TestCloseOnInvalid()
     {
@@ -1336,8 +1334,7 @@ public class HAProxyMessageDecoderTest
         Assert.Throws<HAProxyProtocolException>(() => ch.WriteInbound(data));
     }
 
-    // CLR: @ParameterizedTest with @ValueSource(shorts) is [Theory] with [InlineData]; the stream and buffer mappings are
-    // those of testNestedTLV.
+    // CLR: The stream and buffer mappings are those of testNestedTLV.
     [Theory]
     [InlineData(
             (short) 4)] // Use a length which is < 5.

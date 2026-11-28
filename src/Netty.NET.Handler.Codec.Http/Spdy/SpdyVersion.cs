@@ -17,10 +17,10 @@
 namespace Netty.NET.Handler.Codec.Spdy;
 
 // CLR: a Java enum with a constructor, fields and methods is a sealed class with static readonly instances, as
-// codec-base Base64Dialect and core HttpStatusClass (docs/codec-base-porting.md): "You can't define a method inside the
-// definition of an enumeration type"
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/enum). ToString() returns the
-// constant name as Enum.toString() does; the implicit values()/valueOf(String) members are not added (no caller).
+// codec-base Base64Dialect and core HttpStatusClass : "You can't define a method inside the definition of an
+// enumeration type" (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/enum).
+// ToString() returns the constant name as Enum.toString() does; the implicit values()/valueOf(String) members are
+// not added (no caller).
 public sealed class SpdyVersion
 {
     public static readonly SpdyVersion SPDY_3_1 = new SpdyVersion(nameof(SPDY_3_1), 3, 1);

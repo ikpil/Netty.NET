@@ -33,14 +33,14 @@ namespace Netty.NET.Example.PortUnification;
  * Because SSL and GZIP are enabled on demand, 5 combinations per protocol
  * are possible: none, SSL only, GZIP only, SSL + GZIP, and GZIP + SSL.
  */
-// CLR: System.getProperty is ExampleLauncher.GetProperty (the -Dname=value arguments)
-// and Integer.parseInt is int.Parse with an optional sign and the invariant culture. The self-signed certificate comes
-// from PkiTesting's CertificateBuilder, as in the source, and the SSL context is built by the JDK (SslStream) provider:
-// OPENSSL and tcnative are library-not-ported (docs/handler-porting.md). The anonymous ChannelInitializer<SocketChannel>
-// is Transport's ActionChannelInitializer<ISocketChannel> (Netty.NET.Transport.Bootstrapping), whose delegate is the
-// initChannel body. main blocks on bind(PORT).sync() and closeFuture().sync(); it is the async Main, which awaits the
-// Task<IChannel> of BindAsync and the channel's CloseFuture (docs/transport-porting.md: sync() is awaiting the Task).
-// NioServerSocketChannel.class is Channel<NioServerSocketChannel>() and group.shutdownGracefully() is
+// CLR: System.getProperty is ExampleLauncher.GetProperty (the -Dname=value arguments) and Integer.parseInt is
+// int.Parse with an optional sign and the invariant culture. The self-signed certificate comes from PkiTesting's
+// CertificateBuilder, as in the source, and the SSL context is built by the JDK (SslStream) provider: OPENSSL and
+// tcnative are library-not-ported. The anonymous ChannelInitializer<SocketChannel> is Transport's
+// ActionChannelInitializer<ISocketChannel> (Netty.NET.Transport.Bootstrapping), whose delegate is the initChannel
+// body. main blocks on bind(PORT).sync() and closeFuture().sync(); it is the async Main, which awaits the
+// Task<IChannel> of BindAsync and the channel's CloseFuture (docs/transport-porting.md: sync() is awaiting the
+// Task). NioServerSocketChannel.class is Channel<NioServerSocketChannel>() and group.shutdownGracefully() is
 // ShutdownGracefullyAsync(), whose Task is discarded as Java discards the future.
 public sealed class PortUnificationServer
 {

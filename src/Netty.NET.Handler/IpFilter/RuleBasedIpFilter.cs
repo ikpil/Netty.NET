@@ -36,9 +36,9 @@ namespace Netty.NET.Handler.IpFilter;
  * <p> Consider using {@link IpSubnetFilter} for better performance while not as
  * general purpose as this filter. </p>
  */
-// CLR: the @Deprecated RuleBasedIpFilter(IpFilterRule...) names its replacement
-// RuleBasedIpFilter(boolean, IpFilterRule...), so it is not ported (owner decision 2026-11-16); its Javadoc is
-// recorded in the manifest. ArrayList is List and InetSocketAddress is IPEndPoint.
+// CLR: the @Deprecated RuleBasedIpFilter(IpFilterRule...) names its replacement RuleBasedIpFilter(boolean,
+// IpFilterRule...), so it is not ported; its Javadoc is recorded in the manifest. ArrayList is List and
+// InetSocketAddress is IPEndPoint.
 [Sharable]
 public class RuleBasedIpFilter : AbstractRemoteAddressFilter<IPEndPoint>
 {

@@ -21,8 +21,8 @@ namespace Netty.NET.Handler.Codec.Rtsp;
 /**
  * The getStatus code and its description of a RTSP response.
  */
-// CLR: the final class with a private constructor is a static class of static readonly HttpResponseStatus constants;
-// valueOf(int) is ValueOf(int).
+// CLR: the final class with a private constructor is a static class of static readonly HttpResponseStatus
+// constants.
 public static class RtspResponseStatuses
 {
 

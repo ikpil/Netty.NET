@@ -261,10 +261,9 @@ public class OcspClientTest : AbstractOcspTest
             () => OcspClient.ValidateSignature(forgedResponse, caRoot.GetCertificate()));
     }
 
-    // CLR: the anonymous ChannelOutboundHandlerAdapter is the nested ForgedResponseHandler, whose ConnectAsync returns a
-    // completed Task (promise.setSuccess()) and then fires channelActive and the forged response on the channel's event
-    // loop. The GeneralName/AccessDescription/AuthorityInformationAccess encoding is OcspTestBuilders'
-    // AuthorityInformationAccess.OcspUri. resolver.close() is Dispose() and group.shutdownGracefully() discards the Task.
+    // CLR: The GeneralName/AccessDescription/AuthorityInformationAccess encoding is OcspTestBuilders'
+    // AuthorityInformationAccess.OcspUri. resolver.close() is Dispose() and group.shutdownGracefully() discards
+    // the Task.
     [Theory]
     [InlineData("unrelated-certificate")]
     [InlineData("non-basic-response-type")]

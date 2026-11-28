@@ -47,9 +47,8 @@ namespace Netty.NET.Handler.IpFilter;
  *
  */
 // CLR: InetSocketAddress is IPEndPoint and instanceof Inet4Address/Inet6Address is the AddressFamily test (see
-// IpSubnetFilterRule.cs). List<IpSubnetFilterRule> is IList<IpSubnetFilterRule> (an array of rules is one, as
-// Arrays.asList makes the array a List). The null "no common rule type" state of the enum fields is
-// IpFilterRuleType? (see IpFilterRuleType.cs).
+// IpSubnetFilterRule.cs). The null "no common rule type" state of the enum fields is IpFilterRuleType? (see
+// IpFilterRuleType.cs).
 [Sharable]
 public class IpSubnetFilter : AbstractRemoteAddressFilter<IPEndPoint>
 {
@@ -187,8 +186,6 @@ public class IpSubnetFilter : AbstractRemoteAddressFilter<IPEndPoint>
         this.ipv6Rules = unsortedIPv6Rules.Count == 0 ? null : SortAndFilter(unsortedIPv6Rules);
     }
 
-    // CLR: Arrays.binarySearch(rules, remoteAddress, comparator) is Array.BinarySearch<object> over the rule array
-    // (see IpSubnetFilterRuleComparator.cs); both return a negative value when the address is in no rule.
     protected override bool Accept(IChannelHandlerContext ctx, IPEndPoint remoteAddress)
     {
         if (ipv4Rules != null && remoteAddress.Address.AddressFamily == AddressFamily.InterNetwork)
@@ -226,9 +223,8 @@ public class IpSubnetFilter : AbstractRemoteAddressFilter<IPEndPoint>
     }
 
     // CLR: the tests call the protected accept(...) through Java package access; C# protected access is limited to
-    // derived classes and an override cannot change its accessibility, so this internal forwarder serves the friend
-    // test assembly, like MessageToMessageDecoder.InvokeDecode in codec-base (docs/codec-base-porting.md, Package
-    // access).
+    // derived classes and an override cannot change its accessibility, so this internal forwarder serves the
+    // friend test assembly, like MessageToMessageDecoder.InvokeDecode in codec-base.
     internal bool InvokeAccept(IChannelHandlerContext ctx, IPEndPoint remoteAddress)
     {
         return Accept(ctx, remoteAddress);

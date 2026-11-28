@@ -23,13 +23,13 @@ using Netty.NET.Common.Internal;
 namespace Netty.NET.Handler.Ssl;
 
 // CLR: Java keeps one ConstantPool<SslContextOption<Object>> for every T and casts its constants unchecked, which
-// erasure permits. Static fields of a C# generic class belong to each closed type and a constant created for one T is not
-// an SslContextOption<U>, so the pool, the static valueOf/exists methods and the AbstractConstant base live on this
-// non-generic SslContextOption, as Common AttributeKey keeps its registry ("Java shares static fields across all uses of
-// AttributeKey<T>. CLR closed generic types do not, so names and IDs must live in a non-generic registry",
-// src/Netty.NET.Common/AttributeKey.cs). The pool is a ConcurrentDictionary of name to option whose first ValueOf<T>
-// fixes T; ValueOf<U> of the same name with another U throws ArgumentException where Java returns the same object.
-// Class.getName() is Type.FullName, as ConstantPool.ValueOf(Type, string) uses it (src/Netty.NET.Common/ConstantPool.cs).
+// erasure permits. Static fields of a C# generic class belong to each closed type and a constant created for one T
+// is not an SslContextOption<U>, so the pool, the static valueOf/exists methods and the AbstractConstant base live
+// on this non-generic SslContextOption, as Common AttributeKey keeps its registry ("Java shares static fields
+// across all uses of AttributeKey<T>. CLR closed generic types do not, so names and IDs must live in a non-generic
+// registry", src/Netty.NET.Common/AttributeKey.cs). The pool is a ConcurrentDictionary of name to option whose
+// first ValueOf<T> fixes T; ValueOf<U> of the same name with another U throws ArgumentException where Java returns
+// the same object.
 public abstract class SslContextOption : AbstractConstant<SslContextOption>
 {
 
@@ -69,7 +69,6 @@ public abstract class SslContextOption : AbstractConstant<SslContextOption>
         return pool.ContainsKey(ObjectUtil.CheckNonEmpty(name, "name"));
     }
 
-    // CLR: ConstantPool.nextId() of the shared pool.
     internal static int NextId()
     {
         return Interlocked.Increment(ref nextId);

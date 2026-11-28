@@ -112,7 +112,6 @@ public sealed class HostsFileEntriesProvider
         return ParserImpl.Instance;
     }
 
-    // CLR: package-private static final EMPTY becomes internal; tests see it through InternalsVisibleTo.
     internal static readonly HostsFileEntriesProvider Empty = new(
         new Dictionary<string, IReadOnlyList<IPAddress>>(), new Dictionary<string, IReadOnlyList<IPAddress>>());
 
@@ -148,7 +147,7 @@ public sealed class HostsFileEntriesProvider
 
     // CLR: Java StandardCharsets.UTF_16 decoding has no Encoding counterpart: a leading BOM selects the byte order
     // and is consumed, and input without a BOM is big-endian. Encoding.Unicode is little-endian only, so this
-    // instance is recognized by identity and decoded explicitly (see docs/common-clr-design.md, UTF-16 row).
+    // instance is recognized by identity and decoded explicitly.
     internal static readonly Encoding UTF_16 = new UnicodeEncoding(bigEndian: true, byteOrderMark: true);
 
     private sealed class ParserImpl : IParser

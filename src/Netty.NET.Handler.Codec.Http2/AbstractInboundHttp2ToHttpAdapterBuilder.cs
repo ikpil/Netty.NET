@@ -21,14 +21,14 @@ namespace Netty.NET.Handler.Codec.Http2;
 /**
  * A skeletal builder implementation of {@link InboundHttp2ToHttpAdapter} and its subtypes.
  */
-// CLR: the self-typed generic keeps its two type parameters with the same constraints, and self() casts through object
-// (an unchecked cast in Java), as AbstractHttp2ConnectionHandlerBuilder does. The protected non-final Java methods are
-// protected virtual; a Java subclass widens them to public with @Override, which a C# override cannot ("An override
-// declaration can't change the accessibility of the virtual method",
-// https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override), so InboundHttp2ToHttpAdapterBuilder
-// exposes them with public members declared new that call base, as Http2ConnectionHandlerBuilder does. Throwable is
-// Exception and IllegalStateException is InvalidOperationException (docs/codec-base-porting.md); the abstract build(...)
-// "throws Exception" has no checked-exception counterpart.
+// CLR: the self-typed generic keeps its two type parameters with the same constraints, and self() casts through
+// object (an unchecked cast in Java), as AbstractHttp2ConnectionHandlerBuilder does. The protected non-final Java
+// methods are protected virtual; a Java subclass widens them to public with @Override, which a C# override cannot
+// ("An override declaration can't change the accessibility of the virtual method",
+// https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override), so
+// InboundHttp2ToHttpAdapterBuilder exposes them with public members declared new that call base, as
+// Http2ConnectionHandlerBuilder does. Throwable is Exception and IllegalStateException is
+// InvalidOperationException; the abstract build(...) "throws Exception" has no checked-exception counterpart.
 public abstract class AbstractInboundHttp2ToHttpAdapterBuilder<T, B>
     where T : InboundHttp2ToHttpAdapter
     where B : AbstractInboundHttp2ToHttpAdapterBuilder<T, B>

@@ -19,10 +19,9 @@ namespace Netty.NET.Handler.Codec.Dns;
 /**
  * A DNS response message.
  */
-// CLR: interface with the I prefix. The Java members that re-declare IDnsMessage members only to narrow their return
-// type to DnsResponse are inherited unchanged, as for the Transport interfaces: C# 9 covariant returns cover class
-// overrides only (docs/transport-porting.md, "Java type names and hierarchy"). DefaultDnsResponse and
-// DatagramDnsResponse keep the narrowed return types.
+// CLR: The Java members that re-declare IDnsMessage members only to narrow their return type to DnsResponse are
+// inherited unchanged, as for the Transport interfaces: C# 9 covariant returns cover class overrides only.
+// DefaultDnsResponse and DatagramDnsResponse keep the narrowed return types.
 public interface IDnsResponse : IDnsMessage
 {
 

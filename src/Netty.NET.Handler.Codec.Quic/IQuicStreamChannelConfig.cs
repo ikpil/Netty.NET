@@ -22,10 +22,10 @@ namespace Netty.NET.Handler.Codec.Quic;
  * {@link DuplexChannelConfig} for QUIC streams.
  */
 // CLR: DuplexChannelConfig is IDuplexChannelConfig. setAllowHalfClosure, setMaxMessagesPerRead, setWriteSpinCount,
-// setAllocator, setRecvByteBufAllocator, setAutoRead, setAutoClose, setMessageSizeEstimator, setWriteBufferWaterMark,
-// setConnectTimeoutMillis, setWriteBufferHighWaterMark and setWriteBufferLowWaterMark are re-declared only to narrow the
-// return type to QuicStreamChannelConfig, so they are inherited from IDuplexChannelConfig/IChannelConfig unchanged
-// (docs/transport-porting.md, Decisions; the IDuplexChannelConfig rule).
+// setAllocator, setRecvByteBufAllocator, setAutoRead, setAutoClose, setMessageSizeEstimator,
+// setWriteBufferWaterMark, setConnectTimeoutMillis, setWriteBufferHighWaterMark and setWriteBufferLowWaterMark are
+// re-declared only to narrow the return type to QuicStreamChannelConfig, so they are inherited from
+// IDuplexChannelConfig/IChannelConfig unchanged.
 public interface IQuicStreamChannelConfig : IDuplexChannelConfig
 {
     /**

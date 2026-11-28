@@ -19,8 +19,7 @@ using Netty.NET.Handler.Codec.Socksx.V5;
 
 namespace Netty.NET.Handler.Codec.Socks.Tests.Socksx.V5;
 
-// CLR: assertInstanceOf(C.class, e) is Assert.IsType<C>(e, exactMatch: false); NullPointerException from
-// checkNotNull is ArgumentNullException.
+// CLR: NullPointerException from checkNotNull is ArgumentNullException.
 public class DefaultSocks5PasswordAuthResponseTest
 {
     [Fact]

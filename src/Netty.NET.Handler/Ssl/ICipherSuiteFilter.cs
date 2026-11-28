@@ -21,8 +21,8 @@ namespace Netty.NET.Handler.Ssl;
 /**
  * Provides a means to filter the supplied cipher suite based upon the supported and default cipher suites.
  */
-// CLR: Iterable, List and Set are IEnumerable, IList and ISet (owner decision 2026-11-16: Java collection interfaces are
-// BCL interfaces); the SSLEngine of the Javadoc is the SslStream that SslHandler drives.
+// CLR: Iterable, List and Set are IEnumerable, IList and ISet; the SSLEngine of the Javadoc is the SslStream that
+// SslHandler drives.
 public interface ICipherSuiteFilter
 {
     /**

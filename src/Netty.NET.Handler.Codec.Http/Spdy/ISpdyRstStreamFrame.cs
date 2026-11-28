@@ -19,9 +19,9 @@ namespace Netty.NET.Handler.Codec.Spdy;
 /**
  * A SPDY Protocol RST_STREAM Frame
  */
-// CLR: the Java interface takes the I prefix (owner rule). setStreamId and setLast are re-declared only to narrow the
-// return type, so they are inherited from ISpdyStreamFrame; DefaultSpdyRstStreamFrame narrows them with covariant
-// override returns (owner decision 2026-11-19; docs/transport-porting.md, Decisions).
+// CLR: the Java interface takes the I prefix (owner rule). setStreamId and setLast are re-declared only to narrow
+// the return type, so they are inherited from ISpdyStreamFrame; DefaultSpdyRstStreamFrame narrows them with
+// covariant override returns.
 public interface ISpdyRstStreamFrame : ISpdyStreamFrame
 {
 

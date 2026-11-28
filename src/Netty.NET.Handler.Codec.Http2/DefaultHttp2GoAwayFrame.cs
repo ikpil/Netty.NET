@@ -24,11 +24,11 @@ namespace Netty.NET.Handler.Codec.Http2;
 /**
  * The default {@link Http2GoAwayFrame} implementation.
  */
-// CLR: DefaultByteBufHolder is the Buffer port's DefaultByteBufHolder; the overrides that narrow its return types to
-// Http2GoAwayFrame are C# 9 covariant overrides returning IHttp2GoAwayFrame (as codec-smtp's DefaultSmtpContent;
-// docs/codec-http-porting.md, WebSocket frames), and content() is the Content property (docs/buffer-porting.md,
-// Buffer holders and conversion). The package-private constructor is internal. toString() keeps Java's text
-// (invariant numbers; Http2CodecUtil.ToJavaString). errorCode >>> 32 is the C# unsigned right shift.
+// CLR: DefaultByteBufHolder is the Buffer port's DefaultByteBufHolder; the overrides that narrow its return types
+// to Http2GoAwayFrame are C# 9 covariant overrides returning IHttp2GoAwayFrame (as codec-smtp's
+// DefaultSmtpContent; docs/codec-http-porting.md, WebSocket frames), and content() is the Content property. The
+// package-private constructor is internal. toString() keeps Java's text (invariant numbers;
+// Http2CodecUtil.ToJavaString). errorCode >>> 32 is the C# unsigned right shift.
 public sealed class DefaultHttp2GoAwayFrame : DefaultByteBufHolder, IHttp2GoAwayFrame
 {
 

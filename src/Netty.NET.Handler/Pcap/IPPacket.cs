@@ -18,9 +18,8 @@ using Netty.NET.Buffer;
 
 namespace Netty.NET.Handler.Pcap;
 
-// CLR: the package-private final class is an internal sealed class with the private constructor. The Java byte
-// constants are C# byte constants: MAX_TTL ((byte) 255, -1 in Java) is 255 and both write the octet 0xFF through
-// writeByte(int); TCP and UDP are positive, so their values are unchanged.
+// CLR: The Java byte constants are C# byte constants: MAX_TTL ((byte) 255, -1 in Java) is 255 and both write the
+// octet 0xFF through writeByte(int); TCP and UDP are positive, so their values are unchanged.
 internal sealed class IPPacket
 {
 

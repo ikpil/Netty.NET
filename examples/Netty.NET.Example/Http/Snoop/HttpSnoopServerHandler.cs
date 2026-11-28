@@ -29,15 +29,13 @@ using static Netty.NET.Handler.Codec.Http.HttpVersion;
 
 namespace Netty.NET.Example.Http.Snoop;
 
-// CLR: HttpRequest/HttpObject/HttpContent/LastHttpContent/FullHttpResponse are the I-prefixed codec-http interfaces,
-// Cookie is ICookie and Map.Entry<String, String> of the headers is IEntry<string, string>; Map<String, List<String>> is
-// IDictionary<string, IList<string>>. StringBuilder.setLength(0) is Clear(). CharsetUtil.UTF_8 is Encoding.UTF8,
-// Unpooled.EMPTY_BUFFER is Unpooled.EmptyBuffer and content() is the Content property. StringBuilder.append(Throwable)
-// appends Throwable.toString() (the class name, ": " and the message), not the CLR Exception.ToString() with its stack
-// trace. ctx.write(...) returns a Task, discarded as Java discards the future. ChannelFutureListener.CLOSE is a
-// synchronous Task continuation that closes the channel on its event loop (Common's EventExecutorTaskScheduler), as
-// codec-http's CorsHandler maps it; a Task has no channel, so the channel is ctx.Channel. printStackTrace() writes the
-// exception to Console.Error.
+// CLR: HttpRequest/HttpObject/HttpContent/LastHttpContent/FullHttpResponse are the I-prefixed codec-http
+// interfaces, Cookie is ICookie and Map.Entry<String, String> of the headers is IEntry<string, string>.
+// StringBuilder.append(Throwable) appends Throwable.toString() (the class name, ": " and the message), not the CLR
+// Exception.ToString() with its stack trace. ctx.write(...) returns a Task, discarded as Java discards the future.
+// ChannelFutureListener.CLOSE is a synchronous Task continuation that closes the channel on its event loop
+// (Common's EventExecutorTaskScheduler), as codec-http's CorsHandler maps it; a Task has no channel, so the
+// channel is ctx.Channel. printStackTrace() writes the exception to Console.Error.
 public class HttpSnoopServerHandler : SimpleChannelInboundHandler<object>
 {
     private IHttpRequest request;

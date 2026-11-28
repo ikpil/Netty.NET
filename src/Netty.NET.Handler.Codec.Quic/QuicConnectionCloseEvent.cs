@@ -24,10 +24,10 @@ namespace Netty.NET.Handler.Codec.Quic;
  * <a href="https://www.rfc-editor.org/rfc/rfc9000#name-connection_close-frames">CLOSE_CONNECTION frame</a>.
  * This allows to inspect the various details of the cause of the close.
  */
-// CLR: the package-private fields and constructor are internal. byte[].clone() is Array.Clone(). Arrays.toString(byte[])
-// is the private ArraysToString below; toString() keeps Java's boolean text and the invariant culture. System.Net.Quic
-// reports a peer's close as a System.Net.Quic.QuicException (QuicError.ConnectionAborted with ApplicationErrorCode,
-// docs/quic-design.md, probe) without a reason phrase; the msquic implementation (stage 2) builds this event from it.
+// CLR: Arrays.toString(byte[]) is the private ArraysToString below; toString() keeps Java's boolean text and the
+// invariant culture. System.Net.Quic reports a peer's close as a System.Net.Quic.QuicException
+// (QuicError.ConnectionAborted with ApplicationErrorCode, docs/quic-design.md, probe) without a reason phrase; the
+// msquic implementation (stage 2) builds this event from it.
 public sealed class QuicConnectionCloseEvent : IQuicEvent
 {
 

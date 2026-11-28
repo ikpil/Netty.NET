@@ -39,8 +39,7 @@ namespace Netty.NET.Handler.Codec.Redis;
  * Be aware that you need to have the {@link RedisEncoder} before the {@link RedisBulkStringAggregator}
  * in the {@link ChannelPipeline}.
  */
-// CLR: RedisMessage.class is typeof(IRedisMessage) (docs/codec-base-porting.md, Type matching), and
-// UnsupportedOperationException is NotSupportedException (docs/codec-base-porting.md, Shared CLR adaptations).
+// CLR: RedisMessage.class is typeof(IRedisMessage), and UnsupportedOperationException is NotSupportedException.
 [UnstableApi]
 public sealed class RedisBulkStringAggregator : MessageAggregator<IRedisMessage, BulkStringHeaderRedisMessage,
                                                                  IBulkStringRedisContent, FullBulkStringRedisMessage>

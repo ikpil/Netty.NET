@@ -27,5 +27,4 @@ public interface IHttp2SettingsAckFrame : IHttp2Frame
     // CLR: the interface constant is a static readonly interface field (as codec-http ILastHttpContent.EMPTY_LAST_CONTENT).
     public static readonly IHttp2SettingsAckFrame INSTANCE = new DefaultHttp2SettingsAckFrame();
 
-    // CLR: name() is re-declared with the same type and inherited from IHttp2Frame (CS0108).
 }

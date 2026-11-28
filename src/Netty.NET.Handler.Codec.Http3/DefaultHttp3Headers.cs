@@ -22,30 +22,24 @@ using static Netty.NET.Common.AsciiString;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: DefaultHeaders<CharSequence, CharSequence, Http3Headers> is the codec-base DefaultHeaders<ICharSequence,
-// ICharSequence, IHttp3Headers> (docs/codec-base-porting.md, Headers), as codec-http2's DefaultHttp2Headers;
-// HashingStrategy is IEqualityComparer and the AsciiString CASE_SENSITIVE_HASHER/CASE_INSENSITIVE_HASHER are the Common
-// comparers. NameValidator<CharSequence> is DefaultHeaders.INameValidator<ICharSequence>, whose NOT_NULL constant needs
-// no unchecked cast; the anonymous NameValidator of HTTP3_NAME_VALIDATOR is the private nested class Http3NameValidator,
-// and the anonymous ByteProcessor is a Func<byte, bool> (the Common ByteProcessor mapping). The final class is sealed,
-// so the Java public methods are not virtual. The inner class Http3HeaderEntry reads the enclosing instance's
-// firstNonPseudo and head, so its constructor takes the DefaultHttp3Headers (a C# nested class has no enclosing
-// instance), and the field initializer firstNonPseudo = head is an assignment in the constructors that call the base
-// constructor, because a C# field initializer cannot read an instance field (CS0236,
-// https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0236). The protected members of the base class are protected
-// (they are protected internal in codec-base, another assembly), except HeaderEntry.Remove(): codec-base gives this
-// assembly its internals (InternalsVisibleTo, for ExecutorPromiseCombiner), and an override of a protected internal
-// member it can see keeps both modifiers (CS0507).
-// String.format("...[%s]", name) keeps the Java text,
-// "null" for a null name; catch (Http3HeadersValidationException e) { throw e; } is throw; and Throwable is Exception.
-// The @Nullable annotation has no counterpart (no nullable annotation context).
+// CLR: HashingStrategy is IEqualityComparer and the AsciiString CASE_SENSITIVE_HASHER/CASE_INSENSITIVE_HASHER are
+// the Common comparers. The final class is sealed, so the Java public methods are not virtual. The inner class
+// Http3HeaderEntry reads the enclosing instance's firstNonPseudo and head, so its constructor takes the
+// DefaultHttp3Headers (a C# nested class has no enclosing instance), and the field initializer firstNonPseudo =
+// head is an assignment in the constructors that call the base constructor, because a C# field initializer cannot
+// read an instance field (CS0236, https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0236). The protected
+// members of the base class are protected (they are protected internal in codec-base, another assembly), except
+// HeaderEntry.Remove(): codec-base gives this assembly its internals (InternalsVisibleTo, for
+// ExecutorPromiseCombiner), and an override of a protected internal member it can see keeps both modifiers
+// (CS0507). String.format("...[%s]", name) keeps the Java text, "null" for a null name; catch
+// (Http3HeadersValidationException e) { throw e; } is throw; and Throwable is Exception. The @Nullable annotation
+// has no counterpart (no nullable annotation context).
 public sealed class DefaultHttp3Headers
         : DefaultHeaders<ICharSequence, ICharSequence, IHttp3Headers>, IHttp3Headers
 {
     private static readonly Func<byte, bool> HTTP3_NAME_VALIDATOR_PROCESSOR = static value => !IsUpperCase(value);
     internal static readonly DefaultHeaders.INameValidator<ICharSequence> HTTP3_NAME_VALIDATOR = new Http3NameValidator();
 
-    // CLR: the anonymous NameValidator of HTTP3_NAME_VALIDATOR.
     private sealed class Http3NameValidator : DefaultHeaders.INameValidator<ICharSequence>
     {
         public void ValidateName(ICharSequence name)

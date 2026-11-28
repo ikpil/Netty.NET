@@ -37,16 +37,16 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Codec.Http2;
 
-// CLR: the package-private final class is internal sealed. ByteProcessor is the Common Func<byte, bool>
-// (docs/codec-http-porting.md, Shared CLR adaptations: "ByteProcessor | Process(byte) as the Common Func<byte, bool>"):
-// the processors keep process(byte) as Process(byte), and AsciiString.forEachByte receives a delegate to it that is
-// created once with the processor. The inner (non-static) processor classes read codes and lengths of their
-// encoder, so they receive it in their constructor. The catch (Exception) blocks that rethrew with
-// PlatformDependent.throwException only satisfied Java's checked ByteProcessor.process(...) throws Exception and are
-// left out (the process methods throw nothing; handler's SslHandler maps throwException to a plain rethrow).
-// AsciiString.c2b is AsciiString.C2b. The Java byte value & 0xFF and the System.Byte value are the same index. The
-// codes (below 2^30) and the EOS padding bits are non-negative, so OR-ing them into the long as uint (zero
-// extension, which avoids the C# sign-extension warning CS0675) gives the value of Java's int to long widening.
+// CLR: ByteProcessor is the Common Func<byte, bool> (docs/codec-http-porting.md, Shared CLR adaptations:
+// "ByteProcessor | Process(byte) as the Common Func<byte, bool>"): the processors keep process(byte) as
+// Process(byte), and AsciiString.forEachByte receives a delegate to it that is created once with the processor.
+// The inner (non-static) processor classes read codes and lengths of their encoder, so they receive it in their
+// constructor. The catch (Exception) blocks that rethrew with PlatformDependent.throwException only satisfied
+// Java's checked ByteProcessor.process(...) throws Exception and are left out (the process methods throw nothing;
+// handler's SslHandler maps throwException to a plain rethrow). AsciiString.c2b is AsciiString.C2b. The Java byte
+// value & 0xFF and the System.Byte value are the same index. The codes (below 2^30) and the EOS padding bits are
+// non-negative, so OR-ing them into the long as uint (zero extension, which avoids the C# sign-extension warning
+// CS0675) gives the value of Java's int to long widening.
 internal sealed class HpackHuffmanEncoder
 {
 

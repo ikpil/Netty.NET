@@ -22,9 +22,8 @@ using System.Text;
 
 namespace Netty.NET.Handler.Codec;
 
-// CLR: Collections.emptyList() is ReadOnlyCollection<V>.Empty and Collections.emptySet() is ImmutableHashSet<K>.Empty,
-// as in DefaultHeaders; UnsupportedOperationException is NotSupportedException. The non-final Java methods are
-// virtual. IEquatable<T> routes generic equality to equals(Object), as in DefaultHeaders.
+// CLR: UnsupportedOperationException is NotSupportedException. The non-final Java methods are virtual.
+// IEquatable<T> routes generic equality to equals(Object), as in DefaultHeaders.
 public class EmptyHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
     where K : class
     where V : class
@@ -495,7 +494,6 @@ public class EmptyHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
      * @param name the name of the header to retrieve
      * @return an {@link Iterator} of header values corresponding to {@code name}.
      */
-    // CLR: the iterator of Collections.emptyList() is the empty IIterator below.
     public virtual IIterator<V> ValueIterator(K name)
     {
         return new EmptyIterator<V>();
@@ -506,7 +504,6 @@ public class EmptyHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
         return new EmptyIterator<IEntry<K, V>>();
     }
 
-    // CLR: Iterable.iterator() is IEnumerable<T>.GetEnumerator(); both return the empty iterator.
     public IEnumerator<IEntry<K, V>> GetEnumerator()
     {
         return Iterator();

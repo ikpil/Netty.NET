@@ -29,11 +29,11 @@ namespace Netty.NET.Example.SecureChat;
 /**
  * Simple SSL chat server modified from {@link TelnetServer}.
  */
-// CLR: System.getProperty is ExampleLauncher.GetProperty (the -Dname=value arguments) and Integer.parseInt is int.Parse with an
-// optional sign and the invariant culture. main(String[]) blocks on bind(PORT).sync() and closeFuture().sync(); it is the
-// async Main, which awaits the Task of BindAsync and the channel's CloseFuture. group.shutdownGracefully() is
-// ShutdownGracefullyAsync(), whose Task is discarded as Java discards the future. NioServerSocketChannel.class is
-// Channel<NioServerSocketChannel>(). The package-private static field is internal.
+// CLR: System.getProperty is ExampleLauncher.GetProperty (the -Dname=value arguments) and Integer.parseInt is
+// int.Parse with an optional sign and the invariant culture. main(String[]) blocks on bind(PORT).sync() and
+// closeFuture().sync(); it is the async Main, which awaits the Task of BindAsync and the channel's CloseFuture.
+// group.shutdownGracefully() is ShutdownGracefullyAsync(), whose Task is discarded as Java discards the future.
+// NioServerSocketChannel.class is Channel<NioServerSocketChannel>().
 public sealed class SecureChatServer
 {
 

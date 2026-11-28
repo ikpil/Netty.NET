@@ -19,12 +19,11 @@ using Netty.NET.Buffer;
 
 namespace Netty.NET.Handler.Codec.Compression.Tests;
 
-// CLR: Decompressor is IDecompressor and status() is Status_() (see IDecompressor); the local and field delegate are
-// @delegate (a C# keyword). IllegalStateException is InvalidOperationException (docs/codec-base-porting.md); the thrown
-// exceptions have exactly the asserted types, so assertThrows is Assert.Throws. The anonymous Executable is a lambda.
-// assertDoesNotThrow(decompressor::close) is Assert.Null(Record.Exception(...)), which "Returns the exception that was
-// thrown by the code; null, otherwise" (https://raw.githubusercontent.com/xunit/assert.xunit/main/Record.cs). The
-// package-private fields of the nested TestDecompressor are internal.
+// CLR: Decompressor is IDecompressor and status() is Status_() (see IDecompressor); the local and field delegate
+// are @delegate (a C# keyword). IllegalStateException is InvalidOperationException; the thrown exceptions have
+// exactly the asserted types, so assertThrows is Assert.Throws. The anonymous Executable is a lambda.
+// assertDoesNotThrow(decompressor::close) is Assert.Null(Record.Exception(...)), which "Returns the exception that
+// was thrown by the code; null, otherwise" (https://raw.githubusercontent.com/xunit/assert.xunit/main/Record.cs).
 public class DefensiveDecompressorTest
 {
 

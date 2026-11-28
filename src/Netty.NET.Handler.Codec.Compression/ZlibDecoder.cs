@@ -27,9 +27,9 @@ namespace Netty.NET.Handler.Codec.Compression;
  */
 // CLR: checkPositiveOrZero is the Common ObjectUtil.CheckPositiveOrZero, whose IllegalArgumentException is
 // ArgumentException. ctx.alloc().heapBuffer(...) is ctx.Alloc().HeapBuffer(...), and the ByteBuf accessors
-// (readableBytes(), maxCapacity(), isWritable()) are the Buffer port's properties and methods. The overridable Java
-// methods prepareDecompressBuffer and decompressionBufferExhausted are virtual. Numbers in the exception message use the
-// invariant culture (docs/codec-base-porting.md).
+// (readableBytes(), maxCapacity(), isWritable()) are the Buffer port's properties and methods. The overridable
+// Java methods prepareDecompressBuffer and decompressionBufferExhausted are virtual. Numbers in the exception
+// message use the invariant culture.
 public abstract class ZlibDecoder : ByteToMessageDecoder
 {
 

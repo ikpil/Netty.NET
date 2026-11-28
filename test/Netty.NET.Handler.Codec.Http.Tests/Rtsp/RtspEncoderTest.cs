@@ -25,8 +25,8 @@ namespace Netty.NET.Handler.Codec.Http.Tests.Rtsp;
 /**
  * Test cases for RTSP encoder.
  */
-// CLR: CharsetUtil.UTF_8 is Encoding.UTF8 (docs/codec-base-porting.md); "" + content.length is the invariant text of
-// the length. The HTTP message types are the core I-prefixed interfaces, and content() is the Content property.
+// CLR: CharsetUtil.UTF_8 is Encoding.UTF8; "" + content.length is the invariant text of the length. The HTTP
+// message types are the core I-prefixed interfaces, and content() is the Content property.
 public class RtspEncoderTest
 {
 

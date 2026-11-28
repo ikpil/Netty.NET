@@ -25,8 +25,7 @@ namespace Netty.NET.Handler.Codec.Http2;
  * closing only after all of the streams have closed.
  */
 // CLR: ChannelPromise is TaskCompletionSource and ChannelFuture (also as a parameter) is Task; the Task-returning
-// methods take the Async suffix and return the promise's Task (docs/codec-http-porting.md, Shared CLR adaptations;
-// owner rule 2).
+// methods take the Async suffix and return the promise's Task.
 public interface IHttp2LifecycleManager
 {
 

@@ -23,16 +23,15 @@ namespace Netty.NET.Handler.Codec.Compression;
  * Although conceptually these two stages are separate, it is computationally efficient to perform
  * them in one pass.
  */
-// CLR: the package-private final class is an internal sealed class. The MTF block is a char[] in both languages (an
-// unsigned 16-bit value). Java narrows the int constants HUFFMAN_SYMBOL_RUNA/RUNB to char implicitly; C# converts a
-// constant int implicitly only "to sbyte, byte, short, ushort, uint, ulong, nint, or nuint"
+// CLR: The MTF block is a char[] in both languages (an unsigned 16-bit value). Java narrows the int constants
+// HUFFMAN_SYMBOL_RUNA/RUNB to char implicitly; C# converts a constant int implicitly only "to sbyte, byte, short,
+// ushort, uint, ulong, nint, or nuint"
 // (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/numeric-conversions), so those
 // stores are written (char). (byte) totalUniqueValues++ stores the value 0..255 with the same eight bits, and the
 // symbol map is read back only through valueToFront's byte comparison. bwtBlock holds the block bytes that the BWT
-// copied into int, -128..127 in Java and 0..255 in C# (see Bzip2DivSufSort); bwtBlock[i] & 0xff gives the same index
-// for both.
-// Java's >>> is C#'s >>>. The accessors mtfBlock(), mtfLength(), mtfAlphabetSize() and mtfSymbolFrequencies() are the
-// methods MtfBlock() ... MtfSymbolFrequencies(); the fields keep the Java names.
+// copied into int, -128..127 in Java and 0..255 in C# (see Bzip2DivSufSort); bwtBlock[i] & 0xff gives the same
+// index for both. Java's >>> is C#'s >>>. The accessors mtfBlock(), mtfLength(), mtfAlphabetSize() and
+// mtfSymbolFrequencies() are the methods MtfBlock()... MtfSymbolFrequencies(); the fields keep the Java names.
 internal sealed class Bzip2MTFAndRLE2StageEncoder
 {
     /**

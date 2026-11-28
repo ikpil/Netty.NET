@@ -21,11 +21,10 @@ namespace Netty.NET.Handler.Ssl;
 /**
  * A marker interface for PEM encoded values.
  */
-// CLR: ByteBufHolder is IByteBufHolder, whose content() is the Content property (docs/buffer-porting.md, Buffer holders
-// and conversion). copy(), duplicate(), retainedDuplicate(), replace(ByteBuf), retain(), retain(int), touch() and
-// touch(Object) are re-declared only to narrow the return type, so they are inherited from IByteBufHolder, not repeated
-// (owner decision 2026-11-19; docs/transport-porting.md, Decisions); callers cast the IByteBufHolder results to
-// IPemEncoded, as the implementations return their own type.
+// CLR: ByteBufHolder is IByteBufHolder, whose content() is the Content property. copy(), duplicate(),
+// retainedDuplicate(), replace(ByteBuf), retain(), retain(int), touch() and touch(Object) are re-declared only to
+// narrow the return type, so they are inherited from IByteBufHolder, not repeated; callers cast the IByteBufHolder
+// results to IPemEncoded, as the implementations return their own type.
 internal interface IPemEncoded : IByteBufHolder
 {
 

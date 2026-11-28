@@ -27,10 +27,10 @@ namespace Netty.NET.Handler.Codec.Quic;
  *
  * <strong>This shouldn't be used in production.</strong>
  */
-// CLR: InetSocketAddress is IPEndPoint and InetAddress.getAddress() IPAddress.GetAddressBytes(); getBytes(US_ASCII) is
-// Encoding.ASCII.GetBytes. ByteBuf.equals compares the readable bytes as in Java (ByteBuf.Equals). The private
-// constructor still calls Quic.ensureAvailability(), so INSTANCE cannot be created where QUIC is unavailable, as in Java.
-// The static fields keep their Java order, which the C# static field initializers follow.
+// CLR: InetSocketAddress is IPEndPoint and InetAddress.getAddress() IPAddress.GetAddressBytes(). ByteBuf.equals
+// compares the readable bytes as in Java (ByteBuf.Equals). The private constructor still calls
+// Quic.ensureAvailability(), so INSTANCE cannot be created where QUIC is unavailable, as in Java. The static
+// fields keep their Java order, which the C# static field initializers follow.
 public sealed class InsecureQuicTokenHandler : IQuicTokenHandler
 {
 

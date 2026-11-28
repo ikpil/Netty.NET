@@ -66,10 +66,10 @@ public abstract class AbstractBinaryMemcacheDecoder<M>
         this.chunkSize = chunkSize;
     }
 
-    // CLR: a C# switch section cannot fall through to the next one, so each section that falls through in the source
-    // ends with goto case to the next state (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/selection-statements).
-    // The default branch throws UnreachableException for java.lang.Error, as codec-base LengthFieldPrepender does
-    // (docs/codec-base-porting-manifest.json; https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.unreachableexception).
+    // CLR: a C# switch section cannot fall through to the next one, so each section that falls through in the
+    // source ends with goto case to the next state
+    // (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/selection-statements). The
+    // default branch throws UnreachableException for java.lang.Error, as codec-base LengthFieldPrepender does.
     // extrasLength() & 0xFF of the System.Byte value is the same unsigned length as of the Java signed byte.
     protected override void Decode(IChannelHandlerContext ctx, ByteBuf @in, IList<object> @out)
     {

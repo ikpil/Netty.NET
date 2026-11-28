@@ -27,17 +27,14 @@ using static Netty.NET.Handler.Codec.Http.HttpHeaderValues;
 
 namespace Netty.NET.Handler.Codec.Http2.Tests;
 
-// CLR: @ParameterizedTest @ValueSource(booleans = { false, true }) is a [Theory] with two InlineData rows. Mockito's
-// mock/when/doThrow are Moq Setup(...).Returns/Throws (https://github.com/devlooped/moq/wiki/Quickstart); eq(x) is the
-// value itself and any(Http2Headers.class) It.IsAny<IHttp2Headers>(). ChannelPromise is TaskCompletionSource
-// (docs/codec-http-porting.md, Shared CLR adaptations): new DefaultChannelPromise(mock(Channel.class),
+// CLR: ChannelPromise is TaskCompletionSource : new DefaultChannelPromise(mock(Channel.class),
 // ImmediateEventExecutor.INSTANCE) is a new TaskCompletionSource, isDone()/isSuccess() are Task.IsCompleted/
-// IsCompletedSuccessfully, setFailure is SetException and cause() is Http2CodecUtil.Cause. The Java promise notifies its
-// listeners on ImmediateEventExecutor; the encoder attaches its listeners with Http2CodecUtil.AddListener on
-// ctx.Executor, so the mocked context returns ImmediateEventExecutor.INSTANCE (as DefaultHttp2ConnectionEncoderTest).
-// TestEmbeddedChannel overrides EmbeddedChannel.FinishAndReleaseAll(), which the Transport port declares virtual as
-// Java's public non-final finishAndReleaseAll() (src/Netty.NET.Transport/Channels/Embedded/EmbeddedChannel.cs).
-// RuntimeException is Exception.
+// IsCompletedSuccessfully, setFailure is SetException and cause() is Http2CodecUtil.Cause. The Java promise
+// notifies its listeners on ImmediateEventExecutor; the encoder attaches its listeners with
+// Http2CodecUtil.AddListener on ctx.Executor, so the mocked context returns ImmediateEventExecutor.INSTANCE (as
+// DefaultHttp2ConnectionEncoderTest). TestEmbeddedChannel overrides EmbeddedChannel.FinishAndReleaseAll(), which
+// the Transport port declares virtual as Java's public non-final finishAndReleaseAll()
+// (src/Netty.NET.Transport/Channels/Embedded/EmbeddedChannel.cs). RuntimeException is Exception.
 public class CompressorHttp2ConnectionEncoderTest
 {
     private const int STREAM_ID = 3;

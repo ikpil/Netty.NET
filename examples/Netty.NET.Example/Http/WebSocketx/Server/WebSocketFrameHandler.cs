@@ -22,10 +22,10 @@ namespace Netty.NET.Example.Http.WebSocketx.Server;
 /**
  * Echoes uppercase content of text frames.
  */
-// CLR: toUpperCase(Locale.US) is ToUpperInvariant (the invariant culture's casing, as Locale.US cases ASCII and other
-// letters without locale-specific rules); getClass().getName() is GetType().FullName and UnsupportedOperationException is
-// NotSupportedException (docs/codec-base-porting.md). writeAndFlush returns a Task, discarded as Java discards the
-// future. pipeline().remove(WebSocketIndexPageHandler.class) is Remove<WebSocketIndexPageHandler>().
+// CLR: toUpperCase(Locale.US) is ToUpperInvariant (the invariant culture's casing, as Locale.US cases ASCII and
+// other letters without locale-specific rules); getClass().getName() is GetType().FullName and
+// UnsupportedOperationException is NotSupportedException. writeAndFlush returns a Task, discarded as Java discards
+// the future. pipeline().remove(WebSocketIndexPageHandler.class) is Remove<WebSocketIndexPageHandler>().
 public class WebSocketFrameHandler : SimpleChannelInboundHandler<WebSocketFrame>
 {
     protected override void ChannelRead0(IChannelHandlerContext ctx, WebSocketFrame frame)

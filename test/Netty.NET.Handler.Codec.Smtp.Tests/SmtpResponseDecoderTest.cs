@@ -24,11 +24,8 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Smtp.Tests;
 
-// CLR: List<CharSequence> is IList<ICharSequence> (size() is Count, get(i) the indexer); readInbound() states its type
-// argument; Throwable.getCause() is Exception.InnerException; Integer.MAX_VALUE is int.MaxValue and
-// CharsetUtil.US_ASCII is Encoding.ASCII (docs/codec-base-porting.md); the anonymous Executable instances are lambdas.
-// The helper newBuffer(CharSequence) takes the string its callers pass, since Unpooled.CopiedBuffer has a string
-// overload and no ICharSequence overload.
+// CLR: The helper newBuffer(CharSequence) takes the string its callers pass, since Unpooled.CopiedBuffer has a
+// string overload and no ICharSequence overload.
 public class SmtpResponseDecoderTest
 {
 

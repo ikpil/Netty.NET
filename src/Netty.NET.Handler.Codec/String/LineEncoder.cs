@@ -43,8 +43,6 @@ namespace Netty.NET.Handler.Codec.String;
  * }
  * </pre>
  */
-// CLR: as in StringEncoder, the CharSequence message type is IEnumerable<char> (shared by string and ICharSequence) and
-// java.nio.charset.Charset is System.Text.Encoding.
 [Sharable]
 public class LineEncoder : MessageToMessageEncoder<IEnumerable<char>>
 {
@@ -54,7 +52,6 @@ public class LineEncoder : MessageToMessageEncoder<IEnumerable<char>>
     /**
      * Creates a new instance with the current system line separator and UTF-8 charset encoding.
      */
-    // CLR: CharsetUtil.UTF_8 is Encoding.UTF8 (replacement fallback; GetBytes writes no preamble, see LineSeparator).
     public LineEncoder() : this(LineSeparator.DEFAULT, Encoding.UTF8)
     {
     }

@@ -65,8 +65,7 @@ public class InetSocketAddressResolver : AbstractAddressResolver<IPEndPoint>
             IReadOnlyList<IPEndPoint> socketAddresses = await DoResolveAllAsync(endpoint, cancellationToken).ConfigureAwait(false);
             if (socketAddresses.Count == 0)
             {
-                // CLR: Common's UnknownHostException (owner decision 2026-11-25), as DefaultNameResolver reports a host
-                // without addresses.
+                // CLR: Common's UnknownHostException, as DefaultNameResolver reports a host without addresses.
                 throw new UnknownHostException(endpoint.Host);
             }
 

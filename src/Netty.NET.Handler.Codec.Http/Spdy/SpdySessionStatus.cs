@@ -24,8 +24,8 @@ namespace Netty.NET.Handler.Codec.Spdy;
  * The SPDY session status code and its description.
  */
 // CLR: Comparable<SpdySessionStatus> is IComparable<SpdySessionStatus>; hashCode/equals/toString are
-// GetHashCode/Equals/ToString; IllegalArgumentException is ArgumentException (docs/codec-base-porting.md); the code in
-// the UNKNOWN phrase uses the invariant culture, as Java's int-to-String conversion is locale-independent.
+// GetHashCode/Equals/ToString; IllegalArgumentException is ArgumentException; the code in the UNKNOWN phrase uses
+// the invariant culture, as Java's int-to-String conversion is locale-independent.
 public class SpdySessionStatus : IComparable<SpdySessionStatus>
 {
 

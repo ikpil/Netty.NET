@@ -109,17 +109,12 @@ namespace Netty.NET.Handler.Codec.Spdy;
  * All pushed resources should be sent before sending the response
  * that corresponds to the initial request.
  */
-// CLR: MessageToMessageEncoder<HttpObject> is the codec-base MessageToMessageEncoder<IHttpObject> with a typeof(...)
-// matcher, and the HTTP message types are the core I-prefixed interfaces. headers.getInt(name) returns int? (Integer)
-// and its unboxing into an int is .Value, which throws InvalidOperationException for a missing header where Java's
-// unboxing throws NullPointerException; both propagate out of encode. (byte) getInt(PRIORITY, 0) is an unchecked
-// narrowing to the CLR byte (the same low eight bits as the Java byte), and setPriority then rejects a value above 7 as
-// Java rejects a value outside 0-7. The String names "Keep-Alive"/"Proxy-Connection" use the core
-// HttpHeaders.Remove(string) overload, and the String scheme "https" and the String values of the request line are
-// wrapped in the Common StringCharSequence (the core codec-http mapping of a String passed as CharSequence).
-// Iterator<Entry<CharSequence, CharSequence>> is the codec-base IIterator<IEntry<ICharSequence, ICharSequence>>
-// (HasNext/Next); AsciiString.of(...).toLowerCase() is AsciiString.Of(...).ToLowerCase(). The @SuppressWarnings line
-// has no counterpart.
+// CLR: MessageToMessageEncoder<HttpObject> is the codec-base MessageToMessageEncoder<IHttpObject> with a
+// typeof(...) matcher, and the HTTP message types are the core I-prefixed interfaces. headers.getInt(name) returns
+// int? (Integer) and its unboxing into an int is.Value, which throws InvalidOperationException for a missing
+// header where Java's unboxing throws NullPointerException; both propagate out of encode. (byte) getInt(PRIORITY,
+// 0) is an unchecked narrowing to the CLR byte (the same low eight bits as the Java byte), and setPriority then
+// rejects a value above 7 as Java rejects a value outside 0-7. The @SuppressWarnings line has no counterpart.
 public class SpdyHttpEncoder : MessageToMessageEncoder<IHttpObject>
 {
 

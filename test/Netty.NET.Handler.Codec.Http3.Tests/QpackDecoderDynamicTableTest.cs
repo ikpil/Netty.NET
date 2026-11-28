@@ -20,13 +20,11 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Codec.Http3.Tests;
 
-// CLR: the internal QpackDecoderDynamicTable and QpackHeaderField (package-private in Java) are reached through
-// InternalsVisibleTo; the fixture field fooBar is private readonly. A Java String passed as a CharSequence is a
-// StringCharSequence (Cs), because a C# string is not an ICharSequence (docs/codec-http-porting.md, Shared CLR
-// adaptations). assertEquals(int, long) widens the int as Java does (a long literal), assertEquals of two
-// QpackHeaderField values compares references in both runtimes (QpackHeaderField does not override equals), and
-// assertThrows(QpackException.class, ...) is Assert.ThrowsAny<QpackException> (docs/codec-http-porting.md, Core test
-// notes); the throws clauses have no counterpart.
+// CLR: The fixture field fooBar is private readonly. A Java String passed as a CharSequence is a
+// StringCharSequence (Cs), because a C# string is not an ICharSequence. assertEquals(int, long) widens the int as
+// Java does (a long literal), assertEquals of two QpackHeaderField values compares references in both runtimes
+// (QpackHeaderField does not override equals), and assertThrows(QpackException.class,...) is
+// Assert.ThrowsAny<QpackException>.
 public class QpackDecoderDynamicTableTest
 {
 
@@ -140,7 +138,6 @@ public class QpackDecoderDynamicTableTest
         return table;
     }
 
-    // CLR: a Java String passed as a CharSequence (see the class comment).
     private static ICharSequence Cs(string s)
     {
         return new StringCharSequence(s);

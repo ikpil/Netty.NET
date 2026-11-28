@@ -23,9 +23,9 @@ namespace Netty.NET.Handler.Codec.Mqtt;
  * Return Code of {@link MqttConnAckMessage}
  */
 // CLR: an enum with a field and methods is a sealed class with static readonly constants; Name(), Values() and
-// ToString() stand for the java.lang.Enum members (see MqttQoS). The return codes stay bytes (owner decision for Java
-// byte protocol values); the static block is the static constructor, and ArrayIndexOutOfBoundsException is the CLR
-// IndexOutOfRangeException of an array access (https://learn.microsoft.com/dotnet/api/system.indexoutofrangeexception).
+// ToString() stand for the java.lang.Enum members (see MqttQoS). The return codes stay bytes; the static block is
+// the static constructor, and ArrayIndexOutOfBoundsException is the CLR IndexOutOfRangeException of an array
+// access (https://learn.microsoft.com/dotnet/api/system.indexoutofrangeexception).
 public sealed class MqttConnectReturnCode
 {
     public static readonly MqttConnectReturnCode CONNECTION_ACCEPTED =

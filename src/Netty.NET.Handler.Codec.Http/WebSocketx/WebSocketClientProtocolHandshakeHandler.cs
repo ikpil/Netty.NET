@@ -24,15 +24,14 @@ using static Netty.NET.Handler.Codec.Http.WebSocketx.WebSocketClientProtocolHand
 
 namespace Netty.NET.Handler.Codec.Http.WebSocketx;
 
-// CLR: the package-private class is internal. The ChannelPromise handshakePromise is a TaskCompletionSource (see
-// WebSocketClientHandshaker); trySuccess/tryFailure are TrySetResult/TrySetException and isDone() is Task.IsCompleted.
-// The handshake listener is a synchronous continuation on TaskScheduler.Default (docs/codec-base-porting.md,
-// MessageAggregator) and future.cause() is the Task's InnerException. ctx.executor().schedule(...) is ScheduleAsync
-// with a CancellationTokenSource for the Future and its cancel(false) (docs/handler-porting.md, Executors and
-// scheduling); ctx.flush().fireUserEventTriggered(...).close() are three calls, because the Transport's Flush() and
-// FireUserEventTriggered() return the outbound/inbound invoker interfaces, not the context. checkPositive is the Common
-// ObjectUtil.CheckPositive, and the package-private getHandshakeFuture() is internal. IllegalStateException is
-// InvalidOperationException.
+// CLR: The ChannelPromise handshakePromise is a TaskCompletionSource (see WebSocketClientHandshaker);
+// trySuccess/tryFailure are TrySetResult/TrySetException and isDone() is Task.IsCompleted. The handshake listener
+// is a synchronous continuation on TaskScheduler.Default and future.cause() is the Task's InnerException.
+// ctx.executor().schedule(...) is ScheduleAsync with a CancellationTokenSource for the Future and its
+// cancel(false); ctx.flush().fireUserEventTriggered(...).close() are three calls, because the Transport's Flush()
+// and FireUserEventTriggered() return the outbound/inbound invoker interfaces, not the context. checkPositive is
+// the Common ObjectUtil.CheckPositive, and the package-private getHandshakeFuture() is internal.
+// IllegalStateException is InvalidOperationException.
 internal class WebSocketClientProtocolHandshakeHandler : ChannelInboundHandlerAdapter
 {
     private const long DEFAULT_HANDSHAKE_TIMEOUT_MS = 10000L;

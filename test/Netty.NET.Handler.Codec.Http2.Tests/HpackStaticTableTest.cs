@@ -18,9 +18,6 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Codec.Http2.Tests;
 
-// CLR: the String arguments, which Java passes as CharSequence, are StringCharSequence values (a C# string is not
-// an ICharSequence; docs/codec-http-porting.md, Shared CLR adaptations) built by the private Of(string); the
-// package-private HpackStaticTable is reached through InternalsVisibleTo.
 public class HpackStaticTableTest
 {
 

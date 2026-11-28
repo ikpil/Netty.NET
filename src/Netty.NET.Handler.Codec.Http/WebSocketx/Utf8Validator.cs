@@ -41,11 +41,9 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx;
 /**
  * Checks UTF8 bytes for validity
  */
-// CLR: the package-private final class implements ByteProcessor, which is Func<byte, bool> in the Common port, through
-// Process(byte) (ForEachByte(Process)), as core's HttpChunkLineValidatingByteProcessor does; the package-private
-// check(ByteBuf, int, int) is internal and the int constants are const. ByteBuf bytes are unsigned System.Byte (owner
-// decision), so TYPES[b & 0xFF] is TYPES[b]; b & 0x3f and (0xff >> type) & b give the same values for the signed Java
-// byte and the unsigned octet, because both masks clear the bits that sign extension sets.
+// CLR: ByteBuf bytes are unsigned System.Byte (owner decision), so TYPES[b & 0xFF] is TYPES[b]; b & 0x3f and (0xff
+// >> type) & b give the same values for the signed Java byte and the unsigned octet, because both masks clear the
+// bits that sign extension sets.
 internal sealed class Utf8Validator
 {
     private const int UTF8_ACCEPT = 0;

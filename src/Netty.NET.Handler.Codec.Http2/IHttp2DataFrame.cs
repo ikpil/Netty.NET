@@ -21,11 +21,10 @@ namespace Netty.NET.Handler.Codec.Http2;
 /**
  * HTTP/2 DATA frame.
  */
-// CLR: ByteBufHolder is IByteBufHolder, whose content() is the read-only Content property (docs/buffer-porting.md,
-// Buffer holders and conversion). copy(), duplicate(), retainedDuplicate(), replace(ByteBuf), retain(),
-// retain(int), touch() and touch(Object) are re-declared only to narrow the return type, so they are inherited
-// from IByteBufHolder, not repeated; the classes narrow them with covariant overrides (owner decision
-// 2026-11-19; docs/transport-porting.md, Decisions).
+// CLR: ByteBufHolder is IByteBufHolder, whose content() is the read-only Content property. copy(), duplicate(),
+// retainedDuplicate(), replace(ByteBuf), retain(), retain(int), touch() and touch(Object) are re-declared only to
+// narrow the return type, so they are inherited from IByteBufHolder, not repeated; the classes narrow them with
+// covariant overrides.
 public interface IHttp2DataFrame : IHttp2StreamFrame, IByteBufHolder
 {
 
@@ -37,7 +36,6 @@ public interface IHttp2DataFrame : IHttp2StreamFrame, IByteBufHolder
     /**
      * Payload of DATA frame. Will not be {@code null}.
      */
-    // CLR: content() is IByteBufHolder.Content (see the type comment).
 
     /**
      * Returns the number of bytes that are flow-controlled initially, so even if the {@link #content()} is consumed

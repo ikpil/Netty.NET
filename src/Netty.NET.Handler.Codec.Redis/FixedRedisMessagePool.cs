@@ -24,23 +24,20 @@ namespace Netty.NET.Handler.Codec.Redis;
 /**
  * A default fixed redis message pool.
  */
-// CLR: Map/HashMap(initialCapacity, 1.0f) is Dictionary(capacity), whose lookups return null for a missing key through
-// GetValueOrDefault as HashMap.get does. HashMap "permits null values and the null key"
+// CLR: Map/HashMap(initialCapacity, 1.0f) is Dictionary(capacity), whose lookups return null for a missing key
+// through GetValueOrDefault as HashMap.get does. HashMap "permits null values and the null key"
 // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/HashMap.html) while Dictionary throws
-// ArgumentNullException for a null key (https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.dictionary-2.trygetvalue),
-// so the lookups by string or ByteBuf return null for a null key. ByteBuf keys use the content-based ByteBuf
+// ArgumentNullException for a null key
+// (https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.dictionary-2.trygetvalue), so the
+// lookups by string or ByteBuf return null for a null key. ByteBuf keys use the content-based ByteBuf
 // Equals/GetHashCode, as in Java. LongObjectMap/LongObjectHashMap (io.netty.util.collection; owner decision
-// 2026-11-19 keeps Dictionary, docs/common-porting-manifest.json) is
-// Dictionary<long, V>: the primitive maps exist because "Type arguments may be either reference types or wildcards"
-// (JLS 4.5.1: https://docs.oracle.com/javase/specs/jls/se17/html/jls-4.html#jls-4.5.1), while the CLR creates a
-// specialized generic type for a value type argument, so Dictionary<long, V> stores long keys without boxing
+// 2026-11-19 keeps Dictionary, docs/common-porting-manifest.json) is Dictionary<long, V>: the primitive maps exist
+// because "Type arguments may be either reference types or wildcards" (JLS 4.5.1:
+// https://docs.oracle.com/javase/specs/jls/se17/html/jls-4.html#jls-4.5.1), while the CLR creates a specialized
+// generic type for a value type argument, so Dictionary<long, V> stores long keys without boxing
 // (https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/generics/generics-in-the-run-time).
-// ByteBuf.array() has no C# ByteBuf counterpart (docs/codec-base-porting-manifest.json, ReplayingDecoderByteBuf), so
-// new String(buffer.array()) decodes the same wrapped bytes with ToString(Encoding.Default), the default charset as in
-// codec-base (Charset.defaultCharset() is Encoding.Default). RedisReplyKey.name() is the C# enum name from ToString()
-// (https://learn.microsoft.com/en-us/dotnet/api/system.enum.tostring) and RedisReplyKey.values() is
-// Enum.GetValues<RedisReplyKey>(), which is sorted by value and so in declaration order
-// (https://learn.microsoft.com/en-us/dotnet/api/system.enum.getvalues).
+// ByteBuf.array() has no C# ByteBuf counterpart, so new String(buffer.array()) decodes the same wrapped bytes with
+// ToString(Encoding.Default), the default charset as in codec-base (Charset.defaultCharset() is Encoding.Default).
 [UnstableApi]
 public sealed class FixedRedisMessagePool : IRedisMessagePool
 {

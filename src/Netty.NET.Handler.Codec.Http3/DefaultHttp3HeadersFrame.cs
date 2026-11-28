@@ -18,9 +18,9 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the interfaces are IHttp3HeadersFrame and IHttp3Headers (docs/codec-http2-porting.md, Shared CLR adaptations).
-// Objects.equals is object.Equals(a, b) and Objects.hash(headers) is spelled out (31 + hashCode) to keep the Java
-// value. getClass() != o.getClass() is GetType() != o.GetType().
+// CLR: the interfaces are IHttp3HeadersFrame and IHttp3Headers. Objects.equals is object.Equals(a, b) and
+// Objects.hash(headers) is spelled out (31 + hashCode) to keep the Java value. getClass() != o.getClass() is
+// GetType() != o.GetType().
 public sealed class DefaultHttp3HeadersFrame : IHttp3HeadersFrame
 {
 

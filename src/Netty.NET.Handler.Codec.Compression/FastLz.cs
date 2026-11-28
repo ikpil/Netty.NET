@@ -29,15 +29,13 @@ namespace Netty.NET.Handler.Codec.Compression;
  * This is refactored code of <a href="https://code.google.com/p/jfastlz/">jfastlz</a>
  * library written by William Kinney.
  */
-// CLR: the package-private final class with a private constructor is an internal sealed class, as the codec modules port
-// their package-private utility classes (CompressionUtil); its static final constants are const. The local ref is @ref
-// (a C# keyword). getUnsignedByte(i) is GetByte(i), which is unsigned in the Buffer port (docs/codec-socks-porting.md).
-// The getByte results are only compared for equality or copied with setByte, which writes the low eight bits, so the
-// unsigned bytes give the Java results; the one sign-dependent read is the level in decompress (see there). Each (byte)
-// cast of a setByte argument keeps the low eight bits as Java's narrowing does, and long distance/len/ofs/ctrl
-// arithmetic keeps the Java types. String.format("%d") is string.Format with the invariant culture
-// (docs/codec-base-porting.md). The C# compiler reports nothing for compress(), so @SuppressWarnings
-// ("IdentityBinaryExpression"), which silences an IDE inspection of the source, has no counterpart.
+// CLR: The local ref is @ref (a C# keyword). getUnsignedByte(i) is GetByte(i), which is unsigned in the Buffer
+// port. The getByte results are only compared for equality or copied with setByte, which writes the low eight
+// bits, so the unsigned bytes give the Java results; the one sign-dependent read is the level in decompress (see
+// there). Each (byte) cast of a setByte argument keeps the low eight bits as Java's narrowing does, and long
+// distance/len/ofs/ctrl arithmetic keeps the Java types. String.format("%d") is string.Format with the invariant
+// culture. The C# compiler reports nothing for compress(), so @SuppressWarnings ("IdentityBinaryExpression"),
+// which silences an IDE inspection of the source, has no counterpart.
 internal sealed class FastLz
 {
 

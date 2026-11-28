@@ -86,7 +86,6 @@ public class SpdyHttpResponseStreamIdHandler : MessageToMessageCodec<object, IHt
         @out.Add(ReferenceCountUtil.Retain(msg));
     }
 
-    // CLR: Queue.poll() of the ArrayDeque: the head, or null when the queue is empty.
     private int? Poll()
     {
         if (ids.First == null)

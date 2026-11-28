@@ -26,8 +26,7 @@ namespace Netty.NET.Handler.Codec.Dns;
 /**
  * Provides some utility methods for DNS message implementations.
  */
-// CLR: the final utility class with a private constructor is an internal static class (the package-private Java class
-// is used only by this assembly). 'throws Exception' has no C# counterpart. Numbers in text use the invariant culture
+// CLR: Numbers in text use the invariant culture
 // (https://learn.microsoft.com/en-us/dotnet/api/system.int32.tostring).
 internal static class DnsMessageUtil
 {

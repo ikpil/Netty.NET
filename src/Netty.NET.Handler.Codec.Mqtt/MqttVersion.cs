@@ -24,8 +24,8 @@ namespace Netty.NET.Handler.Codec.Mqtt;
  * Mqtt version specific constant values used by multiple classes in mqtt-codec.
  */
 // CLR: an enum with fields and methods is a sealed class with static readonly constants; Name(), Values() and
-// ToString() stand for the java.lang.Enum members (see MqttQoS). The protocol level stays a byte (owner decision for
-// Java byte protocol values). CharsetUtil.UTF_8 is Encoding.UTF8 (docs/codec-base-porting.md).
+// ToString() stand for the java.lang.Enum members (see MqttQoS). The protocol level stays a byte.
+// CharsetUtil.UTF_8 is Encoding.UTF8.
 public sealed class MqttVersion
 {
     public static readonly MqttVersion MQTT_3_1 = new MqttVersion(nameof(MQTT_3_1), "MQIsdp", (byte) 3);

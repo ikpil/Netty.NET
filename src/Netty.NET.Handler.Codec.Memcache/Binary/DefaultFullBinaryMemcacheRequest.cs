@@ -23,12 +23,9 @@ namespace Netty.NET.Handler.Codec.Memcache.Binary;
 /**
  * The default implementation of a {@link FullBinaryMemcacheRequest}.
  */
-// CLR: content() is the IByteBufHolder Content property (docs/buffer-porting.md, Buffer holders and conversion);
-// covariant override returns as in AbstractBinaryMemcacheMessage
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override). The module interfaces inherit
-// the holder methods instead of narrowing them (owner decision 2026-11-19; docs/transport-porting.md, Decisions), so only
-// the IByteBufHolder members, which the shared interface re-declares with its own return type, are explicit
-// implementations that forward to the public members, as Transport DatagramPacket does
+// CLR: The module interfaces inherit the holder methods instead of narrowing them, so only the IByteBufHolder
+// members, which the shared interface re-declares with its own return type, are explicit implementations that
+// forward to the public members, as Transport DatagramPacket does
 // (https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/interfaces/explicit-interface-implementation).
 [UnstableApi]
 public class DefaultFullBinaryMemcacheRequest : DefaultBinaryMemcacheRequest

@@ -27,15 +27,15 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Codec.Http.Tests;
 
-// CLR: the anonymous MessageToByteEncoder<ByteBuf>, HttpContentEncoder and ChannelInboundHandlerAdapter classes are the
-// named nested classes LengthEncoder, CleanupThrowsEncoder, InactiveThrowsHandler and InactiveCountingHandler.
-// assertInstanceOf(X.class, o) is Assert.IsAssignableFrom<IX>(o) and AssertJ's isNotInstanceOf is Assert.False(o is
-// IX); assertThrows(CodecException.class, ...) accepts subclasses, so it is Assert.ThrowsAny<CodecException> (the
-// EncoderException of the inner channel), while the other assertThrows keep the exact types. EmbeddedChannel's
-// readOutbound()/readInbound() are ReadOutbound<T>()/ReadInbound<T>(), refCnt() is RefCnt and isOpen() is IsOpen
-// (docs/transport-porting.md). String.valueOf(int).getBytes(US_ASCII) is Encoding.ASCII.GetBytes of the invariant decimal
-// text; CharsetUtil.US_ASCII/UTF_8 are Encoding.ASCII/UTF8 (docs/codec-smtp-porting.md). UnsupportedOperationException
-// is NotSupportedException and AtomicBoolean is the Common AtomicBoolean.
+// CLR: the anonymous MessageToByteEncoder<ByteBuf>, HttpContentEncoder and ChannelInboundHandlerAdapter classes
+// are the named nested classes LengthEncoder, CleanupThrowsEncoder, InactiveThrowsHandler and
+// InactiveCountingHandler. assertInstanceOf(X.class, o) is Assert.IsAssignableFrom<IX>(o) and AssertJ's
+// isNotInstanceOf is Assert.False(o is IX); assertThrows(CodecException.class,...) accepts subclasses, so it is
+// Assert.ThrowsAny<CodecException> (the EncoderException of the inner channel), while the other assertThrows keep
+// the exact types. EmbeddedChannel's readOutbound()/readInbound() are ReadOutbound<T>()/ReadInbound<T>(), refCnt()
+// is RefCnt and isOpen() is IsOpen. String.valueOf(int).getBytes(US_ASCII) is Encoding.ASCII.GetBytes of the
+// invariant decimal text; CharsetUtil.US_ASCII/UTF_8 are Encoding.ASCII/UTF8. UnsupportedOperationException is
+// NotSupportedException and AtomicBoolean is the Common AtomicBoolean.
 public class HttpContentEncoderTest
 {
 

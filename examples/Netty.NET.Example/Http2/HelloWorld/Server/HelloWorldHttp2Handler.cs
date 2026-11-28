@@ -28,15 +28,9 @@ namespace Netty.NET.Example.Http2.HelloWorld.Server;
 /**
  * A simple handler that responds with the message "Hello World!".
  */
-// CLR: Http2FrameListener is IHttp2FrameListener, implemented by the public members; Http2Headers,
-// Http2ConnectionDecoder and Http2ConnectionEncoder take the I prefix, as in codec-http2. FullHttpRequest is
-// IFullHttpRequest. request.headers().get(HOST) returns a String that Java keeps as a CharSequence, and request.uri()
-// is passed as one; both are wrapped in Common's StringCharSequence (docs/codec-http-porting.md, Shared CLR
-// adaptations). CharsetUtil.UTF_8 is Encoding.UTF8. encoder().writeHeaders/writeData are WriteHeadersAsync and
-// WriteDataAsync, whose Tasks are discarded as Java discards the futures; ctx.newPromise() is a new
-// TaskCompletionSource, as codec-http2's Http2CodecUtil.NewPromise(). cause.printStackTrace() writes the exception to
-// Console.Error, as codec-http2's LastInboundHandler. The package-private static field and constructor are internal.
-// The class is the same as testsuite-http2's HelloWorldHttp2Handler (test/Netty.NET.Testsuite.Http2).
+// CLR: FullHttpRequest is IFullHttpRequest. request.headers().get(HOST) returns a String that Java keeps as a
+// CharSequence, and request.uri() is passed as one. The class is the same as testsuite-http2's
+// HelloWorldHttp2Handler (test/Netty.NET.Testsuite.Http2).
 public sealed class HelloWorldHttp2Handler : Http2ConnectionHandler, IHttp2FrameListener
 {
 

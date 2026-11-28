@@ -21,13 +21,8 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Codec.Http.Multipart;
 
-// CLR: the package-private final class with a private constructor is an internal static class. String.hashCode() is
-// string.GetHashCode() (equal names hash alike, which is what hashCode() of the uploads needs), String.equalsIgnoreCase
-// is string.Equals with StringComparison.OrdinalIgnoreCase (as core's DefaultHttpRequest) and compareToIgnoreCase is
-// string.Compare with StringComparison.OrdinalIgnoreCase, whose sign is that of the Java comparison for the
-// case-folded names (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html). The
-// String.format patterns "0x%02x" and "%d" are the invariant-culture formats "x2" and the decimal integer.
-// HttpHeaderValidationUtil.validateValidHeaderValue takes an ICharSequence, so the String is wrapped in
+// CLR: The String.format patterns "0x%02x" and "%d" are the invariant-culture formats "x2" and the decimal
+// integer. HttpHeaderValidationUtil.validateValidHeaderValue takes an ICharSequence, so the String is wrapped in
 // StringCharSequence, as core's CombinedHttpHeaders does. IllegalArgumentException is ArgumentException.
 internal static class FileUploadUtil
 {

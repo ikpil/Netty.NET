@@ -6706,7 +6706,6 @@ public abstract class AbstractByteBufTest : IDisposable
     // BOM, so Encoding.BigEndianUnicode stands in for CharsetUtil.UTF_16
     // (https://learn.microsoft.com/en-us/dotnet/api/system.text.encoding.bigendianunicode?view=net-10.0).
     // ByteBufTextSourceTest keeps the additional five-provider CLR wire/cursor checks.
-    // CLR: Encoding.BigEndianUnicode stands in for CharsetUtil.UTF_16 without its BOM.
     private static readonly Encoding UTF_16 = Encoding.BigEndianUnicode;
 
     [Fact]
@@ -6941,7 +6940,6 @@ public abstract class AbstractByteBufTest : IDisposable
         string sequence = Encoding.ASCII.Equals(charset)
                 ? ASCII_CHARS : EXTENDED_ASCII_CHARS;
         int bytes = buf.SetCharSequence(1, sequence, charset);
-        // CLR: the ICharSequence content is compared through ToString(), as CharBuffer.wrap does in the source.
         Assert.Equal(sequence, buf.GetCharSequence(1, bytes, charset).ToString());
         buf.Release();
     }
@@ -6978,7 +6976,6 @@ public abstract class AbstractByteBufTest : IDisposable
         buf.WriterIndex = 1;
         int bytes = buf.WriteCharSequence(sequence, charset);
         buf.ReaderIndex = 1;
-        // CLR: the ICharSequence content is compared through ToString(), as CharBuffer.wrap does in the source.
         Assert.Equal(sequence, buf.ReadCharSequence(bytes, charset).ToString());
         buf.Release();
     }

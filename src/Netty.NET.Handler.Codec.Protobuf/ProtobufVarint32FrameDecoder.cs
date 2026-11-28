@@ -40,13 +40,12 @@ namespace Netty.NET.Handler.Codec.Protobuf;
  * @see CodedInputStream
  * @see CodedInputByteBufferNano
  */
-// CLR: the imports com.google.protobuf.CodedInputStream and com.google.protobuf.nano.CodedInputByteBufferNano serve
-// only the @see links above, which are kept verbatim; the decoder implements the varint itself. protobuf-java and
-// protobuf-javanano have no BCL counterpart and are not referenced (owner decision 2026-11-23,
-// docs/codec-protobuf-porting.md), so these imports have no C# using. List<Object> out is IList<object> @out and 'in'
-// is @in (C# keywords), and C# has no throws clauses (docs/codec-base-porting.md). Numbers in exception messages use
-// the invariant culture (Int32.ToString() uses "the NumberFormatInfo object of the current culture",
-// https://learn.microsoft.com/en-us/dotnet/api/system.int32.tostring).
+// CLR: the imports com.google.protobuf.CodedInputStream and com.google.protobuf.nano.CodedInputByteBufferNano
+// serve only the @see links above, which are kept verbatim; the decoder implements the varint itself.
+// protobuf-java and protobuf-javanano have no BCL counterpart and are not referenced, so these imports have no C#
+// using. List<Object> out is IList<object> @out and 'in' is @in (C# keywords), and C# has no throws clauses.
+// Numbers in exception messages use the invariant culture (Int32.ToString() uses "the NumberFormatInfo object of
+// the current culture", https://learn.microsoft.com/en-us/dotnet/api/system.int32.tostring).
 public class ProtobufVarint32FrameDecoder : ByteToMessageDecoder
 {
 

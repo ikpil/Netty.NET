@@ -22,9 +22,8 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Codec.Compression;
 
-// CLR: the package-private final class is an internal sealed class with the private constructor, as the codec modules
-// port their package-private utility classes (docs/codec-redis-porting.md). String.format("%d") is string.Format with
-// the invariant culture, because Java decimal text does not depend on a culture (docs/codec-base-porting.md).
+// CLR: String.format("%d") is string.Format with the invariant culture, because Java decimal text does not depend
+// on a culture.
 internal sealed class CompressionUtil
 {
 

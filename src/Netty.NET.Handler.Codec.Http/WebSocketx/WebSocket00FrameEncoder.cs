@@ -29,9 +29,9 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx;
  */
 [Sharable]
 // CLR: @Sharable is [Sharable]; encode overrides the codec-base MessageToMessageEncoder<WebSocketFrame>.Encode and
-// super(WebSocketFrame.class) is base(typeof(WebSocketFrame)) (docs/codec-base-porting.md, Type matching). The static
-// buffers keep LeakPresenceDetector.StaticInitializer, Unpooled.UnreleasableBuffer, DirectBuffer and AsReadOnly of the
-// Common and Buffer ports, as core's HttpObjectEncoder does. ByteBuf.WriteByte takes an int and writes its low eight
+// super(WebSocketFrame.class) is base(typeof(WebSocketFrame)). The static buffers keep
+// LeakPresenceDetector.StaticInitializer, Unpooled.UnreleasableBuffer, DirectBuffer and AsReadOnly of the Common
+// and Buffer ports, as core's HttpObjectEncoder does. ByteBuf.WriteByte takes an int and writes its low eight
 // bits, so (byte) 0xFF and (byte) 0x80 are written as 0xFF and 0x80.
 public class WebSocket00FrameEncoder : MessageToMessageEncoder<WebSocketFrame>, IWebSocketFrameEncoder
 {

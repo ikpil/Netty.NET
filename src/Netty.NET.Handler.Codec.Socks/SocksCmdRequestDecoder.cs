@@ -30,7 +30,7 @@ namespace Netty.NET.Handler.Codec.Socks;
  */
 // CLR: the new State enum with base.State(), goto case for the Java fall-through and InvalidOperationException for
 // java.lang.Error, with the evidence given in SocksInitRequestDecoder.cs; the switch over SocksAddressType is an
-// if/else chain (see SocksAddressType.cs); CharsetUtil.US_ASCII is Encoding.ASCII.
+// if/else chain (see SocksAddressType.cs).
 public class SocksCmdRequestDecoder : ReplayingDecoder<SocksCmdRequestDecoder.State>
 {
 

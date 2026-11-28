@@ -20,13 +20,12 @@ using static Netty.NET.Buffer.Unpooled;
 
 namespace Netty.NET.Handler.Codec.Protobuf.Tests;
 
-// CLR: readOutbound() is ReadOutbound<T>(); the final int locals are const int and the final byte[] buf is a plain
-// local. The Java byte literal -2 is unchecked((byte) -2), the same eight bits 0xFE: "Constant expressions are
-// evaluated by default in a checked context"
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/checked-and-unchecked), and the
-// unchecked conversion keeps the low bits
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/numeric-conversions);
-// (byte) (0x8A & 0xFF) and (byte) (0x80 & 0xFF) are the same bit patterns in both languages.
+// CLR: The final int locals are const int and the final byte[] buf is a plain local. The Java byte literal -2 is
+// unchecked((byte) -2), the same eight bits 0xFE: "Constant expressions are evaluated by default in a checked
+// context" (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/checked-and-unchecked),
+// and the unchecked conversion keeps the low bits
+// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/numeric-conversions); (byte)
+// (0x8A & 0xFF) and (byte) (0x80 & 0xFF) are the same bit patterns in both languages.
 public class ProtobufVarint32LengthFieldPrependerTest
 {
 

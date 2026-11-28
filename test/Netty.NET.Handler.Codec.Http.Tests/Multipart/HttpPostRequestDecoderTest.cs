@@ -26,27 +26,23 @@ namespace Netty.NET.Handler.Codec.Http.Tests.Multipart;
 /**
  * {@link HttpPostRequestDecoder} test case.
  */
-// CLR: FullHttpRequest/HttpRequest/LastHttpContent are the I-prefixed interfaces and DecoderResult the codec-base type.
-// CharsetUtil.UTF_8/US_ASCII/ISO_8859_1 are Encoding.UTF8/ASCII/Latin1, and String.getBytes() without a charset uses the
-// default charset, Encoding.Default (docs/codec-stomp-porting.md); the texts are ASCII except the encoded file names.
-// Arrays.asList of the data strings is an array; String.replaceAll("\r", "\\\\r") is Replace("\r", "\\r"), the same
-// literal replacement. The charset of the multipart decoder goes through Common's CharsetUtil.ForName, whose
-// ArgumentException is the counterpart of UnsupportedCharsetException (the decoder's CLR comment), so
-// assertInstanceOf(UnsupportedCharsetException.class, e.getCause()) is Assert.IsAssignableFrom<ArgumentException>;
-// ArrayIndexOutOfBoundsException is IndexOutOfRangeException and IllegalArgumentException ArgumentException.
-// URLEncoder.encode(name, "utf-8") of the test file names is WebUtility.UrlEncode, which encodes them to the same
-// %XY UTF-8 bytes as the JDK ("Converts a text string into a URL-encoded string",
-// https://learn.microsoft.com/en-us/dotnet/api/system.net.webutility.urlencode?view=net-10.0; the names contain only
-// letters, '_', '.' and non-ASCII characters, on which both agree). assertThrows(T.class, ...) is Assert.Throws<T> where
-// the decoder throws T itself and Assert.ThrowsAny<DecoderException> where JUnit's assertThrows admits the subclasses
-// that the test then tells apart by getClass(); the anonymous Executables are lambdas. assertInstanceOf(T.class, x) is
-// Assert.IsAssignableFrom<T> (AssertM.True of an `is` test when a message is given), assertFalse(list.isEmpty())
-// Assert.NotEmpty, AssertJ assertThat(x).hasSize(1) Assert.Single and isInstanceOf/isEqualTo Assert.IsAssignableFrom/
-// Assert.Equal, and fail(message) Assert.Fail.
-// UnpooledByteBufAllocator(true).heapBuffer(n, n) is the Buffer port's UnpooledByteBufAllocator(true).HeapBuffer(n, n),
-// Unpooled.directBuffer(n) DirectBuffer(n), and writeCharSequence(text, US_ASCII) WriteCharSequence(text, ASCII). The
-// unused StringBuffer of testHttpPostStandardRequestDecoderToDiskNameContainingUnauthorizedChar is a StringBuilder. The
-// test methods with package access (no modifier in JUnit 5) are public, as xUnit requires.
+// CLR: FullHttpRequest/HttpRequest/LastHttpContent are the I-prefixed interfaces and DecoderResult the codec-base
+// type. The texts are ASCII except the encoded file names. ArrayIndexOutOfBoundsException is
+// IndexOutOfRangeException and IllegalArgumentException ArgumentException. URLEncoder.encode(name, "utf-8") of the
+// test file names is WebUtility.UrlEncode, which encodes them to the same %XY UTF-8 bytes as the JDK ("Converts a
+// text string into a URL-encoded string",
+// https://learn.microsoft.com/en-us/dotnet/api/system.net.webutility.urlencode?view=net-10.0; the names contain
+// only letters, '_', '.' and non-ASCII characters, on which both agree). assertThrows(T.class,...) is
+// Assert.Throws<T> where the decoder throws T itself and Assert.ThrowsAny<DecoderException> where JUnit's
+// assertThrows admits the subclasses that the test then tells apart by getClass(); the anonymous Executables are
+// lambdas. assertInstanceOf(T.class, x) is Assert.IsAssignableFrom<T> (AssertM.True of an `is` test when a message
+// is given), assertFalse(list.isEmpty()) Assert.NotEmpty, AssertJ assertThat(x).hasSize(1) Assert.Single and
+// isInstanceOf/isEqualTo Assert.IsAssignableFrom/ Assert.Equal, and fail(message) Assert.Fail.
+// UnpooledByteBufAllocator(true).heapBuffer(n, n) is the Buffer port's
+// UnpooledByteBufAllocator(true).HeapBuffer(n, n), Unpooled.directBuffer(n) DirectBuffer(n), and
+// writeCharSequence(text, US_ASCII) WriteCharSequence(text, ASCII). The unused StringBuffer of
+// testHttpPostStandardRequestDecoderToDiskNameContainingUnauthorizedChar is a StringBuilder. The test methods with
+// package access (no modifier in JUnit 5) are public, as xUnit requires.
 public class HttpPostRequestDecoderTest
 {
 

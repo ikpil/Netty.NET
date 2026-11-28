@@ -26,19 +26,18 @@ namespace Netty.NET.Handler.Codec.Http3;
 /**
  * Handler that handles <a href="https://datatracker.ietf.org/doc/html/rfc9114">HTTP3</a> connections.
  */
-// CLR: QuicChannel, QuicStreamChannel and QuicStreamType are codec-quic's IQuicChannel, IQuicStreamChannel and the C#
-// enum QuicStreamType (docs/codec-classes-quic-porting.md, API shapes); ChannelHandler is IChannelHandler. The
-// package-private fields and members are internal (Http3, the initializers and the subclasses reach them); the
-// package-private abstract initBidirectionalStream/initUnidirectionalStream are protected internal, because
-// Http3ClientConnectionHandler widens them to protected and an override cannot change the accessibility. LongFunction
-// <ChannelHandler> is Func<long, IChannelHandler>; the lambda (id, value) -> false is the private nested class
+// CLR: QuicChannel, QuicStreamChannel and QuicStreamType are codec-quic's IQuicChannel, IQuicStreamChannel and the
+// C# enum QuicStreamType; ChannelHandler is IChannelHandler. The package-private abstract
+// initBidirectionalStream/initUnidirectionalStream are protected internal, because Http3ClientConnectionHandler
+// widens them to protected and an override cannot change the accessibility. LongFunction <ChannelHandler> is
+// Func<long, IChannelHandler>; the lambda (id, value) -> false is the private nested class
 // IgnoreNonStandardSettings and localControlStreamHandler::isGoAwayReceived the method group (Func<bool>). Long
-// maxFieldSectionSize is a long (getOrDefault returns a long); toIntExact is a checked conversion (OverflowException
-// where Java throws ArithmeticException). createStream(...).addListener(f -> ...) is Http3CodecUtils.AddListener over
-// the Task<IQuicStreamChannel> of CreateStreamAsync; f.cause() is Http3CodecUtils.Cause and f.getNow() the Task's
-// Result. ctx.close() is CloseAsync, whose Task is not awaited. java.lang.Error is InvalidOperationException; assert is
-// Debug.Assert. isSharable() overrides the IsSharable property. The @Nullable (org.jetbrains.annotations) annotations
-// have no counterpart.
+// maxFieldSectionSize is a long (getOrDefault returns a long); toIntExact is a checked conversion
+// (OverflowException where Java throws ArithmeticException). createStream(...).addListener(f ->...) is
+// Http3CodecUtils.AddListener over the Task<IQuicStreamChannel> of CreateStreamAsync; f.cause() is
+// Http3CodecUtils.Cause and f.getNow() the Task's Result. ctx.close() is CloseAsync, whose Task is not awaited.
+// java.lang.Error is InvalidOperationException; assert is Debug.Assert. isSharable() overrides the IsSharable
+// property. The @Nullable (org.jetbrains.annotations) annotations have no counterpart.
 public abstract class Http3ConnectionHandler : ChannelInboundHandlerAdapter
 {
 

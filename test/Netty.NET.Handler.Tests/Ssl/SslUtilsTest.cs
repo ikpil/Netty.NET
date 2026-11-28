@@ -24,8 +24,7 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Tests.Ssl;
 
-// CLR: SslUtils members are internal (package-private in Java) and visible through InternalsVisibleTo; the static imports
-// are SslUtils-qualified names. @ParameterizedTest with @ValueSource is [Theory] with InlineData.
+// CLR: The static imports are SslUtils-qualified names.
 public class SslUtilsTest
 {
 

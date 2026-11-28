@@ -106,8 +106,8 @@ public class SocketStringEchoTest : AbstractSocketTest
         StringEchoHandler sh = new StringEchoHandler(autoRead, serverDonePromise);
         StringEchoHandler ch = new StringEchoHandler(autoRead, clientDonePromise);
 
-        // CLR: the anonymous ChannelInitializer bodies are ActionChannelInitializer delegates, as in SocketEchoSourceTest;
-        // CharsetUtil.ISO_8859_1 is Encoding.Latin1.
+        // CLR: the anonymous ChannelInitializer bodies are ActionChannelInitializer delegates, as in
+        // SocketEchoSourceTest.
         sb.ChildHandler(new ActionChannelInitializer<IChannel>(sch =>
         {
             sch.Pipeline.AddLast("framer", new DelimiterBasedFrameDecoder(512, Delimiters.LineDelimiter()));

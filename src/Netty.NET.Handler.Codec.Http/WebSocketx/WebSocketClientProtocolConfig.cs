@@ -25,14 +25,14 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx;
  * WebSocket server configuration.
  */
 // CLR: java.net.URI is System.Uri (see WebSocketClientHandshaker): URI.create(String) is new Uri(string,
-// UriKind.RelativeOrAbsolute), which accepts the relative references java.net.URI accepts and throws UriFormatException
-// where URI.create throws IllegalArgumentException, and the URI's toString() is OriginalString. The package-private
-// DEFAULT_* constants are internal consts, and the static imports of WebSocketServerProtocolConfig's
-// DEFAULT_HANDSHAKE_TIMEOUT_MILLIS/DEFAULT_FORCE_CLOSE_TIMEOUT_MILLIS are using static. The private Builder
-// constructors are internal, because a C# enclosing class cannot call the private members of its nested class
-// (docs/handler-porting.md, Access and names). checkPositive is the Common ObjectUtil.CheckPositive
-// (ArgumentException). The Java toString() text is kept: booleans print as true/false, numbers use the invariant
-// culture and a null value prints "null" as in Java string concatenation.
+// UriKind.RelativeOrAbsolute), which accepts the relative references java.net.URI accepts and throws
+// UriFormatException where URI.create throws IllegalArgumentException, and the URI's toString() is OriginalString.
+// The package-private DEFAULT_* constants are internal consts, and the static imports of
+// WebSocketServerProtocolConfig's DEFAULT_HANDSHAKE_TIMEOUT_MILLIS/DEFAULT_FORCE_CLOSE_TIMEOUT_MILLIS are using
+// static. The private Builder constructors are internal, because a C# enclosing class cannot call the private
+// members of its nested class. checkPositive is the Common ObjectUtil.CheckPositive (ArgumentException). The Java
+// toString() text is kept: booleans print as true/false, numbers use the invariant culture and a null value prints
+// "null" as in Java string concatenation.
 public sealed class WebSocketClientProtocolConfig
 {
 

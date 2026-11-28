@@ -66,9 +66,9 @@ public sealed class QuicChannelBootstrap
      * @param parent    the {@link Channel} that is used as the transport layer.
      * @deprecated Use QuicChannel.newBootstrap() instead.
      */
-    // CLR: @Deprecated whose @deprecated text names its replacement, so it is not public (owner decision 2026-11-16:
-    // such members are not ported); IQuicChannel.NewBootstrap(IChannel), the replacement, creates the bootstrap through
-    // this internal constructor, as Java's newBootstrap calls the deprecated one.
+    // CLR: @Deprecated whose @deprecated text names its replacement, so it is not public;
+    // IQuicChannel.NewBootstrap(IChannel), the replacement, creates the bootstrap through this internal
+    // constructor, as Java's newBootstrap calls the deprecated one.
     internal QuicChannelBootstrap(IChannel parent)
     {
         Quic.EnsureAvailability();
@@ -195,8 +195,7 @@ public sealed class QuicChannelBootstrap
      * @return                      this instance.
      * @deprecated                  use {@link #localConnectionAddress(QuicConnectionAddress)}.
      */
-    // CLR: @Deprecated whose @deprecated text names its replacement (LocalConnectionAddress), so it is not ported (owner
-    // decision 2026-11-16).
+    // CLR: @Deprecated whose @deprecated text names its replacement (LocalConnectionAddress), so it is not ported.
 
     /**
      * Set the {@link QuicConnectionAddress} to use. If none is specified a random address is generated on your

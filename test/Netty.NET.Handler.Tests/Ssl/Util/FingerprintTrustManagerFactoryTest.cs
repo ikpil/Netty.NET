@@ -100,11 +100,11 @@ public class FingerprintTrustManagerFactoryTest
         });
     }
 
-    // CLR: the SHA-1 constructor FingerprintTrustManagerFactory(String...) is @Deprecated with "@deprecated This deprecated
-    // constructor uses SHA-1 that is considered insecure. It is recommended to specify a stronger hash algorithm, such as
-    // SHA-256, by calling {@link FingerprintTrustManagerFactory#builder(String)} method." and is not ported (owner
-    // decision 2026-11-16); the test builds the same factory with builder("SHA1"), the algorithm that constructor passes
-    // to this("SHA1", ...).
+    // CLR: the SHA-1 constructor FingerprintTrustManagerFactory(String...) is @Deprecated with "@deprecated This
+    // deprecated constructor uses SHA-1 that is considered insecure. It is recommended to specify a stronger hash
+    // algorithm, such as SHA-256, by calling {@link FingerprintTrustManagerFactory#builder(String)} method." and
+    // is not ported; the test builds the same factory with builder("SHA1"), the algorithm that constructor passes
+    // to this("SHA1",...).
     [Fact]
     public void TestValidSHA1Fingerprint()
     {

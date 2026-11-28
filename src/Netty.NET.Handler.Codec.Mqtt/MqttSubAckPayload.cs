@@ -25,9 +25,6 @@ namespace Netty.NET.Handler.Codec.Mqtt;
 /**
  * Payload of the {@link MqttSubAckMessage}
  */
-// CLR: int... and MqttReasonCodes.SubAck... are params arrays, Iterable<Integer> is IEnumerable<int>, java.util.List is
-// IList<T> and Collections.unmodifiableList is a ReadOnlyCollection<T> view (see MqttSubscribePayload). Integer.byteValue()
-// is the unchecked (byte) narrowing of the int.
 public class MqttSubAckPayload
 {
     private readonly IList<MqttReasonCodes.SubAck> reasonCodes;

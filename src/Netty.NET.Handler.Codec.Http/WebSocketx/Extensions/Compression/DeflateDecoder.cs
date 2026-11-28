@@ -27,14 +27,9 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx.Extensions.Compression;
  * Deflate implementation of a payload decompressor for
  * <tt>io.netty.handler.codec.http.websocketx.WebSocketFrame</tt>.
  */
-// CLR: the package-private abstract class and its constructor, FRAME_TAIL and EMPTY_DEFLATE_BLOCK are internal. The
-// (byte) 0xff octets of FRAME_TAIL are the unsigned 0xFF of a C# byte, the same bits (Java byte sign rule: the bytes
-// are only written, never compared as numbers). EmbeddedChannel.builder() is new EmbeddedChannel.Builder(), and
-// ZlibCodecFactory.newZlibDecoder(ZlibWrapper.NONE, maxAllocation) is codec-compression's JdkZlibDecoder over the BCL
-// raw DeflateStream (whole-buffer feeding for NONE, docs/codec-compression-porting.md). readInbound() is
-// ReadInbound<ByteBuf>(), compositeBuffer() is CompositeBuffer(), addComponent(true, buf) is AddComponent(buf, true)
-// (the Buffer port's parameter order) and numComponents() is the NumComponents property. EMPTY_DEFLATE_BLOCK.equals is
-// ByteBuf.Equals (readable bytes). msg.getClass().getName() is GetType().FullName.
+// CLR: The (byte) 0xff octets of FRAME_TAIL are the unsigned 0xFF of a C# byte, the same bits (Java byte sign
+// rule: the bytes are only written, never compared as numbers). EMPTY_DEFLATE_BLOCK.equals is ByteBuf.Equals
+// (readable bytes). msg.getClass().getName() is GetType().FullName.
 internal abstract class DeflateDecoder : WebSocketExtensionDecoder
 {
 

@@ -26,12 +26,11 @@ namespace Netty.NET.Handler.Codec.Http.Multipart;
 /**
  * Memory implementation of Attributes
  */
-// CLR: Charset is Encoding; String.getBytes(Charset) is Encoding.GetBytes and ByteBuf.toString(Charset) is
-// ToString(Encoding). hashCode()/equals(Object)/toString() are GetHashCode()/Equals(object)/ToString();
-// String.equalsIgnoreCase is string.Equals and compareToIgnoreCase string.Compare with StringComparison.OrdinalIgnoreCase
-// (as FileUploadUtil). ClassCastException is InvalidCastException, "The exception that is thrown for invalid casting or
-// explicit conversion" (https://learn.microsoft.com/en-us/dotnet/api/system.invalidcastexception?view=net-10.0), and
-// the HttpDataType text is the C# enum name, as Enum.toString() is the Java constant name. copy()/duplicate()/
+// CLR: String.equalsIgnoreCase is string.Equals and compareToIgnoreCase string.Compare with
+// StringComparison.OrdinalIgnoreCase (as FileUploadUtil). ClassCastException is InvalidCastException, "The
+// exception that is thrown for invalid casting or explicit conversion"
+// (https://learn.microsoft.com/en-us/dotnet/api/system.invalidcastexception?view=net-10.0), and the HttpDataType
+// text is the C# enum name, as Enum.toString() is the Java constant name. copy()/duplicate()/
 // retainedDuplicate()/replace(ByteBuf)/retain()/touch() narrow the base members with covariant override returns
 // (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override); content() is the Content
 // property and ChannelException the Transport ChannelException.

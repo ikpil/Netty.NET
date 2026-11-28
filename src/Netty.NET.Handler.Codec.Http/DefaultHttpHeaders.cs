@@ -26,21 +26,21 @@ namespace Netty.NET.Handler.Codec.Http;
 /**
  * Default implementation of {@link HttpHeaders}.
  */
-// CLR: the wrapped DefaultHeaders<CharSequence, CharSequence, ?> uses a wildcard for the type that the headers return
-// for "this", which C# cannot express. The headers are a DefaultHeaders<ICharSequence, ICharSequence, HeadersImpl>,
-// where HeadersImpl is a public abstract nested class (CLR-only) that the default headers (DefaultHeadersImpl in Java,
-// the private nested DefaultImpl here) and CombinedHttpHeaders' CombinedHttpHeadersImpl derive from. copy() is
-// new DefaultHttpHeaders(headers.copy()) as in Java: DefaultHeaders.Copy() creates a DefaultHeaders<K, V, T> of its own
-// exact type, which is not a HeadersImpl, and whose this-returning members return null instead of failing, as Java's
-// unchecked (T) this fails only where the result is used (see DefaultHeaders.ThisT); DefaultHttpHeaders ignores those
-// results, and, as in Java, the copy of combined headers is a plain DefaultHeaders. The @Deprecated
-// DefaultHttpHeaders(boolean validate) names DefaultHttpHeaders() and is not ported
-// (owner decision 2026-11-16); the deprecated iterator() is IteratorAsString() (see HttpHeaders). The
-// BiPredicate<CharSequence, CharSequence> constants are Func<ICharSequence, ICharSequence, bool>; the static imports
-// CASE_INSENSITIVE_HASHER/CASE_SENSITIVE_HASHER are the Common AsciiString comparers. In HeaderValueConverter, a C#
-// string (a CharSequence in Java, but not an ICharSequence) becomes a StringCharSequence, java.util.Date is
-// DateTimeOffset (docs/codec-base-porting.md, Headers) and java.util.Calendar is DateTime: Calendar.getTime() is the
-// instant of the DateTimeOffset(DateTime) constructor, which keeps a Utc DateTime as UTC and reads a Local or
+// CLR: the wrapped DefaultHeaders<CharSequence, CharSequence, ?> uses a wildcard for the type that the headers
+// return for "this", which C# cannot express. The headers are a DefaultHeaders<ICharSequence, ICharSequence,
+// HeadersImpl>, where HeadersImpl is a public abstract nested class (CLR-only) that the default headers
+// (DefaultHeadersImpl in Java, the private nested DefaultImpl here) and CombinedHttpHeaders'
+// CombinedHttpHeadersImpl derive from. copy() is new DefaultHttpHeaders(headers.copy()) as in Java:
+// DefaultHeaders.Copy() creates a DefaultHeaders<K, V, T> of its own exact type, which is not a HeadersImpl, and
+// whose this-returning members return null instead of failing, as Java's unchecked (T) this fails only where the
+// result is used (see DefaultHeaders.ThisT); DefaultHttpHeaders ignores those results, and, as in Java, the copy
+// of combined headers is a plain DefaultHeaders. The @Deprecated DefaultHttpHeaders(boolean validate) names
+// DefaultHttpHeaders() and is not ported; the deprecated iterator() is IteratorAsString() (see HttpHeaders). The
+// BiPredicate<CharSequence, CharSequence> constants are Func<ICharSequence, ICharSequence, bool>; the static
+// imports CASE_INSENSITIVE_HASHER/CASE_SENSITIVE_HASHER are the Common AsciiString comparers. In
+// HeaderValueConverter, a C# string (a CharSequence in Java, but not an ICharSequence) becomes a
+// StringCharSequence, java.util.Date is DateTimeOffset and java.util.Calendar is DateTime: Calendar.getTime() is
+// the instant of the DateTimeOffset(DateTime) constructor, which keeps a Utc DateTime as UTC and reads a Local or
 // Unspecified one in the local time zone
 // (https://learn.microsoft.com/en-us/dotnet/api/system.datetimeoffset.-ctor?view=net-10.0). The package-private
 // static helpers are internal. Equals/GetHashCode are the Java equals/hashCode.
@@ -353,7 +353,6 @@ public class DefaultHttpHeaders : HttpHeaders
         return new StringValueIterator(itr);
     }
 
-    // CLR: the anonymous Iterator<String> of valueStringIterator(CharSequence).
     private sealed class StringValueIterator : IIterator<string>
     {
         private readonly IIterator<ICharSequence> itr;

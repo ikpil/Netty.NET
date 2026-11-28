@@ -27,25 +27,25 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
 /**
  * Tests for {@link DefaultHttp2RemoteFlowController}.
  */
-// CLR: the abstract fixture stays abstract; xUnit runs its tests for each derived class, as JUnit does (owner rule 9).
-// Mockito's @Mock fields are Moq Mock<T> fields created in the constructor (@BeforeEach; xUnit creates a test class
-// instance per test, https://xunit.net/docs/shared-context). reset(ctx) is Mock.Reset() followed by the same setups,
-// reset(listener) clears the listener's recorded invocations (it has no setups), verify(mock, times(n)) is
-// Verify(..., Times.Exactly(n)), never() Times.Never(), atLeastOnce() Times.AtLeastOnce(), verifyNoMoreInteractions
-// is VerifyNoOtherCalls and verifyNoInteractions asserts that the mock recorded no invocation at all (Moq Quickstart,
-// https://github.com/devlooped/moq/wiki/Quickstart; docs/codec-http-porting.md, Shared CLR adaptations).
-// channel.config()/bytesBeforeUnwritable()/isWritable() are the Transport members Config, BytesBeforeUnwritable and
-// IsWritable. ctx.newPromise() is not stubbed: the controller does not create promises. ctx.flush() throwing
-// AssertionFailedError("forbidden") is a Flush() setup that throws xUnit's FailException. The doAnswer stubs of the
-// mocked FlowControlled are Moq callbacks; the answer that re-stubs size() to 10 before throwing changes the value that
-// the size() setup returns, and AtomicInteger is a captured int. RuntimeException is Exception, assertThrows(T.class,
-// ...) is Assert.ThrowsAny<T> (docs/codec-http-porting.md, Core test notes) and the anonymous Executables and Answers
-// are lambdas. assertThrows(AssertionError.class, ...) checks the Java assert statements of updateDependencyTree,
-// which the JUnit run enables (-ea); a failing Debug.Assert in a test run throws xUnit's TraceAssertException, "thrown
-// when a failure from Trace.Assert or Debug.Assert has been detected"
-// (https://raw.githubusercontent.com/xunit/xunit/main/src/xunit.v3.core/Exceptions/TraceAssertException.cs), so these
-// tests need a Debug build of the library, as the JUnit tests need -ea. assertEquals(int, int, int delta) is the
-// double overload with a tolerance, as Java widens the ints to the floating-point assertEquals.
+// CLR: the abstract fixture stays abstract; xUnit runs its tests for each derived class, as JUnit does (owner rule
+// 9). Mockito's @Mock fields are Moq Mock<T> fields created in the constructor (@BeforeEach; xUnit creates a test
+// class instance per test, https://xunit.net/docs/shared-context). reset(ctx) is Mock.Reset() followed by the same
+// setups, reset(listener) clears the listener's recorded invocations (it has no setups), verify(mock, times(n)) is
+// Verify(..., Times.Exactly(n)), never() Times.Never(), atLeastOnce() Times.AtLeastOnce(),
+// verifyNoMoreInteractions is VerifyNoOtherCalls and verifyNoInteractions asserts that the mock recorded no
+// invocation at all (Moq Quickstart, https://github.com/devlooped/moq/wiki/Quickstart; docs/codec-http-porting.md,
+// Shared CLR adaptations). channel.config()/bytesBeforeUnwritable()/isWritable() are the Transport members Config,
+// BytesBeforeUnwritable and IsWritable. ctx.newPromise() is not stubbed: the controller does not create promises.
+// ctx.flush() throwing AssertionFailedError("forbidden") is a Flush() setup that throws xUnit's FailException. The
+// answer that re-stubs size() to 10 before throwing changes the value that the size() setup returns, and
+// AtomicInteger is a captured int. RuntimeException is Exception, assertThrows(T.class,...) is Assert.ThrowsAny<T>
+// and the anonymous Executables and Answers are lambdas. assertThrows(AssertionError.class,...) checks the Java
+// assert statements of updateDependencyTree, which the JUnit run enables (-ea); a failing Debug.Assert in a test
+// run throws xUnit's TraceAssertException, "thrown when a failure from Trace.Assert or Debug.Assert has been
+// detected"
+// (https://raw.githubusercontent.com/xunit/xunit/main/src/xunit.v3.core/Exceptions/TraceAssertException.cs), so
+// these tests need a Debug build of the library, as the JUnit tests need -ea. assertEquals(int, int, int delta) is
+// the double overload with a tolerance, as Java widens the ints to the floating-point assertEquals.
 public abstract class DefaultHttp2RemoteFlowControllerTest
 {
     private const int STREAM_A = 1;

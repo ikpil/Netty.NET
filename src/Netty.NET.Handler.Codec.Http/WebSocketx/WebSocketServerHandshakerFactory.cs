@@ -26,10 +26,10 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx;
  * {@link WebSocketServerHandshaker}.
  */
 // CLR: the CharSequence returned by headers().get(SEC_WEBSOCKET_VERSION) is a string, so version.equals(String) is
-// string.Equals. ChannelFuture is Task and ChannelPromise is TaskCompletionSource (see WebSocketClientHandshaker); the
-// promise overload completes the caller's promise from the write Task with TrySetFromTask, and the Task-returning
-// methods take the Async suffix. The @Deprecated sendUnsupportedWebSocketVersionResponse(Channel), whose @deprecated
-// text names sendUnsupportedVersionResponse(Channel), is not ported (owner decision 2026-11-16). The public methods are
+// string.Equals. ChannelFuture is Task and ChannelPromise is TaskCompletionSource (see WebSocketClientHandshaker);
+// the promise overload completes the caller's promise from the write Task with TrySetFromTask, and the
+// Task-returning methods take the Async suffix. The @Deprecated sendUnsupportedWebSocketVersionResponse(Channel),
+// whose @deprecated text names sendUnsupportedVersionResponse(Channel), is not ported. The public methods are
 // virtual because the Java class is not final.
 public class WebSocketServerHandshakerFactory
 {

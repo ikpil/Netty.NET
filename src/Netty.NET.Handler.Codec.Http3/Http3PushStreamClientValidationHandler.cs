@@ -20,9 +20,7 @@ using static Netty.NET.Handler.Codec.Http3.Http3RequestStreamValidationUtils;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the package-private final class is an internal sealed class. channelRead(ctx, frame) overrides the internal
-// virtual member of Http3FrameTypeInboundValidationHandler; Http3RequestStreamFrame.class is
-// typeof(IHttp3RequestStreamFrame). The isSharable() override is the IsSharable property of ChannelHandlerAdapter.
+// CLR: Http3RequestStreamFrame.class is typeof(IHttp3RequestStreamFrame).
 internal sealed class Http3PushStreamClientValidationHandler
         : Http3FrameTypeInboundValidationHandler<IHttp3RequestStreamFrame>
 {

@@ -23,16 +23,16 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Resolver.Dns.Tests;
 
-// CLR: the @TempDir Path parameter is the tempDir field: JUnit creates a temporary directory for the test and deletes it
-// recursively afterwards (https://docs.junit.org/current/api/org.junit.jupiter.api/org/junit/jupiter/api/io/TempDir.html);
-// xUnit creates a test class instance per test, so the constructor creates the directory with
-// Directory.CreateTempSubdirectory, "a uniquely named, empty directory in the current user's temporary directory"
-// (https://learn.microsoft.com/en-us/dotnet/api/system.io.directory.createtempsubdirectory?view=net-10.0), and Dispose()
-// deletes it. File is FileInfo and Path a string; Files.write(path, bytes) is File.WriteAllBytes;
-// tempDir.resolve(name).toFile().listFiles() of a missing directory is null (File.listFiles); UUID.randomUUID() is
-// Guid.NewGuid(). InetSocketAddress.getHostString() of the resolved name servers is the IPEndPoint's address text
-// (DefaultAuthoritativeDnsServerCache.GetHostString), which equals the literal of the file for these IPv4 addresses.
-// assertEquals with a message is XunitAssertMessages.AssertM.
+// CLR: the @TempDir Path parameter is the tempDir field: JUnit creates a temporary directory for the test and
+// deletes it recursively afterwards
+// (https://docs.junit.org/current/api/org.junit.jupiter.api/org/junit/jupiter/api/io/TempDir.html); xUnit creates
+// a test class instance per test, so the constructor creates the directory with Directory.CreateTempSubdirectory,
+// "a uniquely named, empty directory in the current user's temporary directory"
+// (https://learn.microsoft.com/en-us/dotnet/api/system.io.directory.createtempsubdirectory?view=net-10.0), and
+// Dispose() deletes it. File is FileInfo and Path a string; tempDir.resolve(name).toFile().listFiles() of a
+// missing directory is null (File.listFiles). InetSocketAddress.getHostString() of the resolved name servers is
+// the IPEndPoint's address text (DefaultAuthoritativeDnsServerCache.GetHostString), which equals the literal of
+// the file for these IPv4 addresses. assertEquals with a message is XunitAssertMessages.AssertM.
 public class UnixResolverDnsServerAddressStreamProviderTest : IDisposable
 {
     private readonly string tempDir = Directory.CreateTempSubdirectory("netty-dns-test").FullName;

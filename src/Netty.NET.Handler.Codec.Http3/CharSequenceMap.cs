@@ -22,11 +22,8 @@ namespace Netty.NET.Handler.Codec.Http3;
 /**
  * Internal use only!
  */
-// CLR: the package-private final class is internal sealed. DefaultHeaders<CharSequence, V, CharSequenceMap<V>> is the
-// codec-base DefaultHeaders<ICharSequence, V, CharSequenceMap<V>> (docs/codec-base-porting.md, Headers), whose value
-// type must be a reference type (V : class); ValueConverter is IValueConverter, UnsupportedValueConverter.<V>instance()
-// is UnsupportedValueConverter<V>.Instance() and NameValidator.NOT_NULL is DefaultHeaders.INameValidator<ICharSequence>
-// .NOT_NULL (no unchecked cast), as codec-http2's CharSequenceMap. The package-private constructors are internal.
+// CLR: DefaultHeaders<CharSequence, V, CharSequenceMap<V>> is the codec-base DefaultHeaders<ICharSequence, V,
+// CharSequenceMap<V>>, whose value type must be a reference type (V : class).
 internal sealed class CharSequenceMap<V> : DefaultHeaders<ICharSequence, V, CharSequenceMap<V>>
     where V : class
 {

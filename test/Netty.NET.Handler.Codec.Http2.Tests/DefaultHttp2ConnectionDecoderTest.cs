@@ -32,22 +32,16 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
 /**
  * Tests for {@link DefaultHttp2ConnectionDecoder}.
  */
-// CLR: @Mock fields and MockitoAnnotations.initMocks are Moq mocks created in the constructor, which runs the
-// @BeforeEach setup() (xUnit creates a test class instance per test, https://xunit.net/docs/shared-context). The fields
-// hold the mocked objects and Mock.Get(x) reaches their Moq mocks; when/doAnswer/verify/never/times are
-// Setup(...).Returns/Callback, Verify(...), Times.Never()/Times.Exactly(n) and verify(mock) without a count is
-// Times.Once() (Mockito's default times(1)); verifyNoMoreInteractions is VerifyNoOtherCalls(); isNull() is a null
-// argument; ArgumentCaptor is a Callback that stores the argument (https://github.com/devlooped/moq/wiki/Quickstart).
-// The generic getProperty/setProperty stubs match any type argument with It.IsAnyType and answer through
-// InvocationFunc over a Dictionary with ReferenceEqualityComparer (IdentityHashMap); AtomicInteger is an int updated with
-// Interlocked. The decoder creates its own promises (Http2CodecUtil.NewPromise()) and passes Task.CompletedTask for
-// ctx.newSucceededFuture() (docs/codec-http-porting.md, Shared CLR adaptations), so the stubs of
-// ctx.newPromise()/newSucceededFuture()/write(...) have no counterpart and the verifications that compared the stubbed
-// promise or future match any TaskCompletionSource or any successfully completed Task. Strings passed as CharSequence
-// are StringCharSequence values (a C# string is not an ICharSequence). assertThrows is Assert.ThrowsAny, AssertJ
-// isNotInstanceOf is Assert.IsNotAssignableFrom and contains is Assert.Contains (docs/codec-http-porting.md, Core test
-// notes); @ParameterizedTest @ValueSource is a [Theory] with InlineData rows. The anonymous Executables are lambdas and
-// the anonymous Http2PromisedRequestVerifier is the private nested NotAuthoritativeVerifier.
+// CLR: The fields hold the mocked objects and Mock.Get(x) reaches their Moq mocks;
+// when/doAnswer/verify/never/times are Setup(...).Returns/Callback, Verify(...), Times.Never()/Times.Exactly(n)
+// and verify(mock) without a count is Times.Once() (Mockito's default times(1)); verifyNoMoreInteractions is
+// VerifyNoOtherCalls(); isNull() is a null argument; ArgumentCaptor is a Callback that stores the argument
+// (https://github.com/devlooped/moq/wiki/Quickstart). The generic getProperty/setProperty stubs match any type
+// argument with It.IsAnyType and answer through InvocationFunc over a Dictionary with ReferenceEqualityComparer
+// (IdentityHashMap); AtomicInteger is an int updated with Interlocked. The decoder creates its own promises
+// (Http2CodecUtil.NewPromise()) and passes Task.CompletedTask for ctx.newSucceededFuture(), so the stubs of
+// ctx.newPromise()/newSucceededFuture()/write(...) have no counterpart and the verifications that compared the
+// stubbed promise or future match any TaskCompletionSource or any successfully completed Task.
 public class DefaultHttp2ConnectionDecoderTest
 {
     private const int STREAM_ID = 3;
@@ -930,7 +924,6 @@ public class DefaultHttp2ConnectionDecoderTest
         Assert.Equal(PUSH_STREAM_ID, Http2Exception.StreamId(followUpEx));
     }
 
-    // CLR: the anonymous Http2PromisedRequestVerifier of pushPromiseReadRejectedByVerifierShouldStillReserveStream.
     private sealed class NotAuthoritativeVerifier : IHttp2PromisedRequestVerifier
     {
         public bool IsAuthoritative(IChannelHandlerContext ctx, IHttp2Headers headers)
@@ -1130,7 +1123,6 @@ public class DefaultHttp2ConnectionDecoderTest
         Mock.Get(listener).Verify(l => l.OnPingAckRead(ctx, It.IsAny<long>()), Times.Never());
     }
 
-    // CLR: the source calls the @Deprecated constructor (autoAckPing), which is ported with [Obsolete] (CS0612).
 #pragma warning disable CS0612
     [Fact]
     public void PingReadShouldRespectNoAutoAck()

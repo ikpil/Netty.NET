@@ -19,9 +19,6 @@ namespace Netty.NET.Handler.Codec.Socksx;
 /**
  * An interface that all SOCKS protocol messages implement.
  */
-// CLR: Java interfaces take the I prefix ("DO prefix interface names with the letter I",
-// https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/names-of-classes-structs-and-interfaces);
-// DecoderResultProvider is codec-base's IDecoderResultProvider.
 public interface ISocksMessage : IDecoderResultProvider
 {
 

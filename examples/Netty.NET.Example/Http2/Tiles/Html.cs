@@ -24,11 +24,9 @@ namespace Netty.NET.Example.Http2.Tiles;
  * Static and dynamically generated HTML for the example.
  */
 // CLR: the class only holds statics, so it is a static class (the private constructor of the final class has no
-// counterpart). System.getProperty is ExampleLauncher.GetProperty (the -Dname=value arguments); String.getBytes(UTF_8) is
-// Encoding.UTF8.GetBytes and Integer.toString(value) is ToString(CultureInfo.InvariantCulture). new Random().nextInt()
-// covers every int, and Math.abs keeps Integer.MIN_VALUE negative; Random.Next() returns a non-negative int and
-// Math.Abs(int.MinValue) throws OverflowException, so the random number is Math.Abs(Random.Next()). The static fields
-// are initialized in textual order after IP, as in Java.
+// counterpart). System.getProperty is ExampleLauncher.GetProperty (the -Dname=value arguments); Random.Next()
+// returns a non-negative int and Math.Abs(int.MinValue) throws OverflowException, so the random number is
+// Math.Abs(Random.Next()). The static fields are initialized in textual order after IP, as in Java.
 public static class Html
 {
 

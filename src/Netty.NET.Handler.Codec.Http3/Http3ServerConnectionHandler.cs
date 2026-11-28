@@ -25,11 +25,10 @@ namespace Netty.NET.Handler.Codec.Http3;
  * Handler that handles <a href="https://tools.ietf.org/html/draft-ietf-quic-http-32">HTTP3</a> for the server-side.
  */
 // CLR: ChannelHandler is IChannelHandler, ChannelPipeline IChannelPipeline, QuicStreamChannel codec-quic's
-// IQuicStreamChannel, LongFunction<ChannelHandler> Func<long, IChannelHandler>, Http3SettingsFrame IHttp3SettingsFrame
-// and QpackSensitivityDetector IQpackSensitivityDetector. The overrides of the package-private abstract methods are
-// protected internal overrides of Http3ConnectionHandler's protected internal members (an override keeps the
-// accessibility). The suppliers () -> new QpackEncoderHandler(...) and () -> new QpackDecoderHandler(...) are
-// Func<IChannelHandler> lambdas. The @Nullable (org.jetbrains.annotations) annotations have no counterpart.
+// IQuicStreamChannel, LongFunction<ChannelHandler> Func<long, IChannelHandler>, Http3SettingsFrame
+// IHttp3SettingsFrame and QpackSensitivityDetector IQpackSensitivityDetector. The suppliers () -> new
+// QpackEncoderHandler(...) and () -> new QpackDecoderHandler(...) are Func<IChannelHandler> lambdas. The @Nullable
+// (org.jetbrains.annotations) annotations have no counterpart.
 public sealed class Http3ServerConnectionHandler : Http3ConnectionHandler
 {
     private readonly IChannelHandler requestStreamHandler;

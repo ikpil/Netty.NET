@@ -538,14 +538,12 @@ public abstract class AbstractDnsMessage : AbstractReferenceCounted, IDnsMessage
         }
     }
 
-    // CLR: Enum.ordinal() is the underlying int value of the C# enum, whose members keep the Java order. A C# enum
-    // value cannot be null, so the checkNotNull of the source has nothing to check.
+    // CLR: A C# enum value cannot be null, so the checkNotNull of the source has nothing to check.
     private static int SectionOrdinal(DnsSection section)
     {
         return (int) section;
     }
 
-    // CLR: StringUtil.simpleClassName(DnsQuestion.class) is the simple name of the CLR interface, IDnsQuestion.
     private static IDnsRecord CheckQuestion(int section, IDnsRecord record)
     {
         if (section == SECTION_QUESTION && !(CheckNotNull(record, "record") is IDnsQuestion))

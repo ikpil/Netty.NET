@@ -18,8 +18,6 @@ using System;
 
 namespace Netty.NET.Handler.Codec.Dns.Tests;
 
-// CLR: the anonymous AbstractDnsRecord subclasses are the named nested class TestDnsRecord, the anonymous Executable
-// instances are lambdas, and IllegalArgumentException is ArgumentException (docs/codec-base-porting.md).
 public class AbstractDnsRecordTest
 {
 

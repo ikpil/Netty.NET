@@ -487,11 +487,10 @@ public class LengthFieldBasedFrameDecoder : ByteToMessageDecoder
      *
      * @throws DecoderException if failed to decode the specified region
      */
-    // CLR: the Buffer port has no order(ByteOrder) view: ByteBuf.order is @deprecated "use the Little Endian accessors,
-    // e.g. getShortLE, getIntLE instead of creating a buffer with swapped endianness", and the port keeps explicit
-    // BE/LE accessors (docs/buffer-porting.md, Explicit endian replacements for swapped buffers). The order selects
-    // the accessor instead of a swapped buffer; a null order fails as order(null)'s checkNotNull does. getUnsignedByte
-    // is GetByte (an unsigned octet).
+    // CLR: the Buffer port has no order(ByteOrder) view: ByteBuf.order is @deprecated "use the Little Endian
+    // accessors, e.g. getShortLE, getIntLE instead of creating a buffer with swapped endianness", and the port
+    // keeps explicit BE/LE accessors. The order selects the accessor instead of a swapped buffer; a null order
+    // fails as order(null)'s checkNotNull does. getUnsignedByte is GetByte (an unsigned octet).
     protected virtual long GetUnadjustedFrameLength(ByteBuf buf, int offset, int length, ByteOrder order)
     {
         bool littleEndian = CheckNotNull(order, "endianness") == ByteOrder.LITTLE_ENDIAN;

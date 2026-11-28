@@ -20,9 +20,8 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Codec.Http3.Tests;
 
-// CLR: the internal QpackStaticTable (package-private in Java) is reached through InternalsVisibleTo. A Java String
-// passed as a CharSequence is a StringCharSequence (Cs), because a C# string is not an ICharSequence
-// (docs/codec-http-porting.md, Shared CLR adaptations).
+// CLR: A Java String passed as a CharSequence is a StringCharSequence (Cs), because a C# string is not an
+// ICharSequence.
 public class QpackStaticTableTest
 {
     [Fact]
@@ -74,7 +73,6 @@ public class QpackStaticTableTest
         Assert.Equal(15, nameIndex ^ QpackStaticTable.MASK_NAME_REF);
     }
 
-    // CLR: a Java String passed as a CharSequence (see the class comment).
     private static ICharSequence Cs(string s)
     {
         return new StringCharSequence(s);

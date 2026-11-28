@@ -2342,8 +2342,7 @@ public sealed class AsciiString : ICharSequence, IEquatable<AsciiString>, ICompa
 
 
     // CLR: Java's private nested CharEqualityComparator family (interface named with the CLR I prefix).
-    // GeneralCaseInsensitiveCharEqualityComparator is replaced by ordinal-ignore-case UTF-16 comparison
-    // (docs/common-clr-design.md#native-utf-16-comparison-and-ascii-protocol-comparison).
+    // GeneralCaseInsensitiveCharEqualityComparator is replaced by ordinal-ignore-case UTF-16 comparison.
     private interface ICharEqualityComparator
     {
         bool Equals(char a, char b);

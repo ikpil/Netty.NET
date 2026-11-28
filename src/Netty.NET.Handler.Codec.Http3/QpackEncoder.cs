@@ -30,18 +30,15 @@ namespace Netty.NET.Handler.Codec.Http3;
 /**
  * A QPACK encoder.
  */
-// CLR: the package-private final class is internal sealed and its package-private members are internal.
-// QuicStreamChannel is codec-quic's IQuicStreamChannel, QpackSensitivityDetector IQpackSensitivityDetector and
-// Http3Headers IHttp3Headers, whose entries are codec-base IEntry<ICharSequence, ICharSequence> (for (Map.Entry<...>
-// header : headers) is a foreach over them, as codec-http2's HpackEncoder). The checked QpackException needs no throws
-// clause; assert is Debug.Assert. LongObjectHashMap<Queue<Indices>> is Dictionary<long, Queue<Indices>> and
-// ArrayDeque/Queue is Queue<T> (owner decision 2026-11-19; poll() is TryDequeue, isEmpty() Count == 0, computeIfAbsent
-// TryGetValue plus Add). The encoder stream writes are closeOnFailure(stream, stream.WriteAndFlushAsync(...))
-// (Http3CodecUtils.CloseOnFailure takes the channel, as a Task has no channel()). The (byte) prefix masks are CLR bytes
-// with the same bits. Arrays.copyOf is Array.Resize. The @Nullable (javax.annotation) annotations have no counterpart.
-// The nested @FunctionalInterface Indices.IndexConsumer is the interface Indices.IIndexConsumer, and the method
-// references dynamicTable::acknowledgeInsertCountOnAck/OnCancellation passed to Indices.forEach are the private nested
-// class ActionIndexConsumer around the method group.
+// CLR: The checked QpackException needs no throws clause; assert is Debug.Assert.
+// LongObjectHashMap<Queue<Indices>> is Dictionary<long, Queue<Indices>> and ArrayDeque/Queue is Queue<T> (owner
+// decision 2026-11-19; poll() is TryDequeue, isEmpty() Count == 0, computeIfAbsent TryGetValue plus Add). The
+// encoder stream writes are closeOnFailure(stream, stream.WriteAndFlushAsync(...)) (Http3CodecUtils.CloseOnFailure
+// takes the channel, as a Task has no channel()). The (byte) prefix masks are CLR bytes with the same bits. The
+// @Nullable (javax.annotation) annotations have no counterpart. The nested @FunctionalInterface
+// Indices.IndexConsumer is the interface Indices.IIndexConsumer, and the method references
+// dynamicTable::acknowledgeInsertCountOnAck/OnCancellation passed to Indices.forEach are the private nested class
+// ActionIndexConsumer around the method group.
 internal sealed class QpackEncoder
 {
     private static readonly QpackException INVALID_SECTION_ACKNOWLEDGMENT =

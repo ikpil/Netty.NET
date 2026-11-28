@@ -20,9 +20,8 @@ namespace Netty.NET.Handler.Codec.Quic;
  * Statistics about the {@code QUIC} connection. If unknown by the implementation it might return {@code -1} values
  * for the various methods.
  */
-// CLR: System.Net.Quic reports no connection statistics (docs/quic-design.md, No counterpart in System.Net.Quic); the
-// interface keeps its Java API (owner decision 2026-11-27) and the msquic implementation (stage 2) reports
-// collectStats as unsupported.
+// CLR: System.Net.Quic reports no connection statistics; the interface keeps its Java API and the msquic
+// implementation (stage 2) reports collectStats as unsupported.
 public interface IQuicConnectionStats
 {
     /**

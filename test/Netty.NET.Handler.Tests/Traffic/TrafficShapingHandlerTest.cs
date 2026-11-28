@@ -28,16 +28,11 @@ using Netty.NET.Transport.Channels.Local;
 
 namespace Netty.NET.Handler.Tests.Traffic;
 
-// CLR: Executors.newSingleThreadScheduledExecutor() is a DefaultEventExecutor, the single-thread executor whose
-// deadline scheduling serves the TrafficCounter (ScheduledExecutorService is IEventExecutorGroup), and shutdown() is
-// ShutdownGracefullyAsync(). The static @AfterAll destroy() runs from the class fixture AfterAll, which xUnit disposes
-// after the last test of the class (https://xunit.net/docs/shared-context, "Class Fixtures"). The ChannelPromise of
-// writeOneOutbound(holder, promise) is the Task that WriteOneOutboundAsync returns (the Transport port has no promise
-// overload); isDone() is IsCompleted and cause() the Task's exception. The Transport port's bootstrap and channel
-// operations are asynchronous: bind/connect/close().sync() and await() wait for their Tasks and eventLoop().submit()
-// is SubmitAsync. The anonymous ChannelInitializers and the echo handler are named nested classes.
-// "foo".getBytes(CharsetUtil.UTF_8) is Encoding.UTF8.GetBytes, Attribute<Runnable> is IAttribute<Action>, and
-// LocalAddress(TrafficShapingHandlerTest.class) is LocalAddress(typeof(TrafficShapingHandlerTest)).
+// CLR: The static @AfterAll destroy() runs from the class fixture AfterAll, which xUnit disposes after the last
+// test of the class (https://xunit.net/docs/shared-context, "Class Fixtures"). The ChannelPromise of
+// writeOneOutbound(holder, promise) is the Task that WriteOneOutboundAsync returns (the Transport port has no
+// promise overload). The Transport port's bootstrap and channel operations are asynchronous:
+// bind/connect/close().sync() and await() wait for their Tasks and eventLoop().submit() is SubmitAsync.
 public class TrafficShapingHandlerTest : IClassFixture<TrafficShapingHandlerTest.AfterAll>
 {
 

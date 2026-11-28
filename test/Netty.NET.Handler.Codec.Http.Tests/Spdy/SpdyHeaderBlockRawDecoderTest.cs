@@ -24,13 +24,11 @@ namespace Netty.NET.Handler.Codec.Http.Tests.Spdy;
 
 #pragma warning disable xUnit2013 // assertEquals(n, collection.size()) of the source stays Assert.Equal(n, Count).
 
-// CLR: @BeforeEach is the constructor and @AfterEach is Dispose(): xUnit "creates a new instance of the test class for
-// every test that is run", and cleanup code goes in Dispose() (https://xunit.net/docs/shared-context).
-// ByteBufAllocator.DEFAULT is IByteBufAllocator.Default. String.getBytes() (the default charset) of the ASCII name and
-// value is Encoding.UTF8. The Strings that Java passes as CharSequence header names are wrapped by the core test helper
-// HttpHeadersTestUtils.Of (StringCharSequence). assertEquals(String, headers.get(name)) compares the String with the
-// stored value through equals; the C# value is a StringCharSequence, so the assertions read it as text with
-// GetAsString/GetAllAsString (the ISpdyHeaders members that "convert the result to a String").
+// CLR: ByteBufAllocator.DEFAULT is IByteBufAllocator.Default. String.getBytes() (the default charset) of the ASCII
+// name and value is Encoding.UTF8. The Strings that Java passes as CharSequence header names are wrapped by the
+// core test helper HttpHeadersTestUtils.Of (StringCharSequence). assertEquals(String, headers.get(name)) compares
+// the String with the stored value through equals; the C# value is a StringCharSequence, so the assertions read it
+// as text with GetAsString/GetAllAsString (the ISpdyHeaders members that "convert the result to a String").
 public class SpdyHeaderBlockRawDecoderTest : IDisposable
 {
 

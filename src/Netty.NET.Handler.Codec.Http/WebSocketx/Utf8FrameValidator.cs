@@ -25,15 +25,14 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx;
 /**
  *
  */
-// CLR: channelRead/exceptionCaught override the Transport ChannelInboundHandlerAdapter members; getMessage() is the
-// Message property (never null in .NET, so the null check keeps its Java shape only).
+// CLR: channelRead/exceptionCaught override the Transport ChannelInboundHandlerAdapter members; getMessage() is
+// the Message property (never null in.NET, so the null check keeps its Java shape only).
 // ctx.writeAndFlush(closeFrame).addListener(ChannelFutureListener.CLOSE) closes ctx.Channel from a synchronous
-// continuation of the write Task on TaskScheduler.Default, as codec-base MessageAggregator does
-// (docs/codec-base-porting.md, MessageAggregator: "Future listeners are Task continuations that run synchronously").
-// With ExecuteSynchronously, "If the antecedent is already complete when the continuation is created, the continuation
+// continuation of the write Task on TaskScheduler.Default, as codec-base MessageAggregator does. With
+// ExecuteSynchronously, "If the antecedent is already complete when the continuation is created, the continuation
 // will run on the thread that creates the continuation"
-// (https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.taskcontinuationoptions?view=net-10.0), as a
-// listener added to a completed future runs at once; the EmbeddedChannel completes the flushed write before
+// (https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.taskcontinuationoptions?view=net-10.0), as
+// a listener added to a completed future runs at once; the EmbeddedChannel completes the flushed write before
 // writeAndFlush returns.
 public class Utf8FrameValidator : ChannelInboundHandlerAdapter
 {

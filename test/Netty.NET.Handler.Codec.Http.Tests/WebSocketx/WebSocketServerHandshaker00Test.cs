@@ -22,13 +22,10 @@ using static Netty.NET.Handler.Codec.Http.HttpVersion;
 
 namespace Netty.NET.Handler.Codec.Http.Tests.WebSocketx;
 
-// CLR: handshake(ch, req) is HandshakeAsync(ch, req) with the Task discarded, as the source discards the ChannelFuture;
-// assertThrows is Assert.ThrowsAny, getMessage() is Message, CharsetUtil.US_ASCII is Encoding.ASCII, Integer.MAX_VALUE
-// is int.MaxValue and readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(). The three inherited tests
-// that the Java class overrides with an empty body ("// ignore") override the protected virtual bodies (suffix 0) that
-// the base tests call, because the manifest checker requires the [Fact] declaration as public void in the base. Inside
-// the class, the method WebSocketVersion() hides the type in expressions, so the constant is written
-// Http.WebSocketx.WebSocketVersion.V00.
+// CLR: The three inherited tests that the Java class overrides with an empty body ("// ignore") override the
+// protected virtual bodies (suffix 0) that the base tests call, because the manifest checker requires the [Fact]
+// declaration as public void in the base. Inside the class, the method WebSocketVersion() hides the type in
+// expressions, so the constant is written Http.WebSocketx.WebSocketVersion.V00.
 public class WebSocketServerHandshaker00Test : WebSocketServerHandshakerTest
 {
 

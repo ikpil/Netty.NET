@@ -32,23 +32,21 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
 /**
  * Tests for {@link DefaultHttp2ConnectionEncoder}
  */
-// CLR: @Mock fields and MockitoAnnotations.initMocks are Moq mocks created in the constructor, which runs the
-// @BeforeEach setup() (xUnit creates a test class instance per test, https://xunit.net/docs/shared-context). Mockito
-// when/doAnswer/verify/never/times are Moq Setup(...).Returns/Callback, Verify(...), Times.Never()/Times.Exactly(n)
-// (https://github.com/devlooped/moq/wiki/Quickstart); verifyNoMoreInteractions is VerifyNoOtherCalls(). The
-// ArgumentCaptor of addFlowControlled is a Callback that appends to a list (getValue() is the last element,
-// getAllValues() the list), and InOrder is a list of the recorded lifecycle calls. ChannelPromise is
-// TaskCompletionSource (newPromise() is a new TaskCompletionSource; setSuccess()/setFailure(e) are
-// SetResult()/SetException(e) followed by returning the Task) and ChannelFuture is Task; isDone()/isSuccess() are
-// IsCompleted/IsCompletedSuccessfully and cause() is Http2CodecUtil.Cause (docs/codec-http-porting.md, Shared CLR
-// adaptations). The Java promises run their listeners on ImmediateEventExecutor; the encoder attaches its listeners
-// with Http2CodecUtil.AddListener on ctx.Executor, so the mocked context returns ImmediateEventExecutor.INSTANCE. The
-// stubs of ctx.newPromise()/newSucceededFuture() and channel.newFailedFuture()/unsafe() only serve DefaultChannelPromise
-// and have no counterpart (the encoder creates TaskCompletionSource promises itself). ctx.alloc()/channel.alloc() are
-// Alloc() and the channel's config is a DefaultChannelConfig. assertInstanceOf is Assert.IsAssignableFrom and
-// assertThrows Assert.ThrowsAny (docs/codec-http-porting.md, Core test notes). A mocked ByteBuf is a Moq mock of the
-// abstract ByteBuf (its constructor takes maxCapacity), whose release() is the abstract Release(int) called with 1.
-// newVoidPromise(channel) is Http2TestUtil.NewVoidPromise(IChannel): a TaskCompletionSource whose failure calls
+// CLR: Mockito when/doAnswer/verify/never/times are Moq Setup(...).Returns/Callback, Verify(...),
+// Times.Never()/Times.Exactly(n) (https://github.com/devlooped/moq/wiki/Quickstart); verifyNoMoreInteractions is
+// VerifyNoOtherCalls(). The ArgumentCaptor of addFlowControlled is a Callback that appends to a list (getValue()
+// is the last element, getAllValues() the list), and InOrder is a list of the recorded lifecycle calls.
+// ChannelPromise is TaskCompletionSource (newPromise() is a new TaskCompletionSource; setSuccess()/setFailure(e)
+// are SetResult()/SetException(e) followed by returning the Task) and ChannelFuture is Task; isDone()/isSuccess()
+// are IsCompleted/IsCompletedSuccessfully and cause() is Http2CodecUtil.Cause. The Java promises run their
+// listeners on ImmediateEventExecutor; the encoder attaches its listeners with Http2CodecUtil.AddListener on
+// ctx.Executor, so the mocked context returns ImmediateEventExecutor.INSTANCE. The stubs of
+// ctx.newPromise()/newSucceededFuture() and channel.newFailedFuture()/unsafe() only serve DefaultChannelPromise
+// and have no counterpart (the encoder creates TaskCompletionSource promises itself). ctx.alloc()/channel.alloc()
+// are Alloc() and the channel's config is a DefaultChannelConfig. assertInstanceOf is Assert.IsAssignableFrom and
+// assertThrows Assert.ThrowsAny. A mocked ByteBuf is a Moq mock of the abstract ByteBuf (its constructor takes
+// maxCapacity), whose release() is the abstract Release(int) called with 1. newVoidPromise(channel) is
+// Http2TestUtil.NewVoidPromise(IChannel): a TaskCompletionSource whose failure calls
 // channel.Pipeline.FireExceptionCaught(cause), Java's tryFailure override and unvoid() listener folded into one
 // promise, because promise.unvoid() is the promise itself in the C# encoder (there is no void promise,
 // docs/transport-porting.md: VoidChannelPromise is JVM-only); promise.isVoid() has no counterpart.

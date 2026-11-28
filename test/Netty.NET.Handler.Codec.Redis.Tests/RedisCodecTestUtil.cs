@@ -20,10 +20,9 @@ using Netty.NET.Buffer;
 
 namespace Netty.NET.Handler.Codec.Redis.Tests;
 
-// CLR: the package-private final helper class is an internal sealed class with the private constructor; the tests
-// import its members with using static. Long.toString(long) is the invariant-culture decimal text
+// CLR: The tests import its members with using static. Long.toString(long) is the invariant-culture decimal text
 // (https://learn.microsoft.com/en-us/dotnet/api/system.int32.tostring), CharsetUtil.UTF_8 is Encoding.UTF8, and
-// new String(byte[]) decodes with the default charset, Encoding.Default (docs/codec-base-porting.md).
+// new String(byte[]) decodes with the default charset, Encoding.Default.
 internal sealed class RedisCodecTestUtil
 {
 

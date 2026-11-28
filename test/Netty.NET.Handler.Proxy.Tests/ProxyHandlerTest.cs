@@ -44,19 +44,17 @@ using Netty.NET.Transport.Channels.Sockets;
 namespace Netty.NET.Handler.Proxy.Tests;
 
 // CLR: InetSocketAddress.createUnresolved(host, port) is DnsEndPoint and SocketUtils.socketAddress of a literal is
-// new IPEndPoint(IPAddress.Parse(...), port) (docs/handler-porting.md, Addresses). The static initializers and the static
-// block run in their textual order in the static constructor. @AfterAll is the class fixture StopServersFixture,
-// @BeforeEach the constructor and @AfterEach Dispose(). @ParameterizedTest @MethodSource are [Theory] [MemberData];
-// TestItem is public because a theory's parameter type must be as accessible as the method. The X509Bundle key pair is
-// the certificate's AsymmetricAlgorithm, as in handler's CipherSuiteCanaryTest; InsecureTrustManagerFactory.INSTANCE is
-// its RemoteCertificateValidationCallback. Future.await(timeout) is Await(Task, TimeSpan) (true when the Task completed
-// in time, whatever its outcome) and future.cause() is Cause(Task). LinkedBlockingQueue is ConcurrentQueue,
-// CountDownLatch is CountdownEvent (see CountDown) and java.lang.AssertionError is xUnit's FailException. AssertJ's
-// isInstanceOf and JUnit's assertInstanceOf are Assert.IsAssignableFrom; String.valueOf(e) is the Java toString()
-// text, Common's ThrowableUtil.ThrowableToString. java.net.ConnectException is the Transport's
-// SocketException(SocketError.ConnectionRefused) (src/Netty.NET.Transport/Channels/Local/LocalChannel.cs).
-// CharsetUtil.US_ASCII is Encoding.ASCII. The lifecycle methods are private (xUnit1013), assertEquals(1, size()) is
-// Assert.Single (xUnit2013) and the channel operations receive TestContext.Current.CancellationToken (xUnit1051).
+// new IPEndPoint(IPAddress.Parse(...), port). The static initializers and the static block run in their textual
+// order in the static constructor. TestItem is public because a theory's parameter type must be as accessible as
+// the method. The X509Bundle key pair is the certificate's AsymmetricAlgorithm, as in handler's
+// CipherSuiteCanaryTest; InsecureTrustManagerFactory.INSTANCE is its RemoteCertificateValidationCallback.
+// LinkedBlockingQueue is ConcurrentQueue, CountDownLatch is CountdownEvent (see CountDown) and
+// java.lang.AssertionError is xUnit's FailException. AssertJ's isInstanceOf and JUnit's assertInstanceOf are
+// Assert.IsAssignableFrom; String.valueOf(e) is the Java toString() text, Common's
+// ThrowableUtil.ThrowableToString. java.net.ConnectException is the Transport's
+// SocketException(SocketError.ConnectionRefused) (src/Netty.NET.Transport/Channels/Local/LocalChannel.cs). The
+// lifecycle methods are private (xUnit1013), assertEquals(1, size()) is Assert.Single (xUnit2013) and the channel
+// operations receive TestContext.Current.CancellationToken (xUnit1051).
 public class ProxyHandlerTest : IClassFixture<ProxyHandlerTest.StopServersFixture>, IDisposable
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(ProxyHandlerTest));
@@ -171,9 +169,8 @@ public class ProxyHandlerTest : IClassFixture<ProxyHandlerTest.StopServersFixtur
         };
     }
 
-    // CLR: Collections.shuffle(list, rnd) swaps, for i from size down to 2, element i - 1 with element rnd.nextInt(i);
-    // the same walk draws from System.Random, so a seed reproduces a C# order, not the Java order.
-    // System.currentTimeMillis() is DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().
+    // CLR: Collections.shuffle(list, rnd) swaps, for i from size down to 2, element i - 1 with element
+    // rnd.nextInt(i); the same walk draws from System.Random, so a seed reproduces a C# order, not the Java order.
     public static IEnumerable<object[]> TestItems()
     {
 
@@ -570,8 +567,7 @@ public class ProxyHandlerTest : IClassFixture<ProxyHandlerTest.StopServersFixtur
         }
     }
 
-    // CLR: register().sync().channel() awaits the registration Task<IChannel>; shutdownGracefully(0, 0, SECONDS) is
-    // ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero), whose Task the source does not wait for either.
+    // CLR: register().sync().channel() awaits the registration Task<IChannel>.
     [Theory]
     [MemberData(nameof(ProxyTypes))]
     public async Task TestPendingWritesFailedWhenConnectionToProxyFails(string type)
@@ -607,7 +603,6 @@ public class ProxyHandlerTest : IClassFixture<ProxyHandlerTest.StopServersFixtur
         }
     }
 
-    // CLR: the anonymous EmbeddedChannel subclass is the nested InactiveEmbeddedChannel.
     [Theory]
     [MemberData(nameof(ProxyTypes))]
     public void TestPendingWritesFailedWhenHandlerRemoved(string type)
@@ -957,8 +952,7 @@ public class ProxyHandlerTest : IClassFixture<ProxyHandlerTest.StopServersFixtur
         }
     }
 
-    // CLR: see SuccessTestItem for connect(...).channel(); latch.await(10, SECONDS) is CountdownEvent.Wait(TimeSpan),
-    // which also returns false when the time elapses.
+    // CLR: see SuccessTestItem for connect(...).channel().
     private sealed class FailureTestItem : TestItem
     {
 

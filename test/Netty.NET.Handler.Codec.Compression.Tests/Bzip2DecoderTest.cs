@@ -318,14 +318,14 @@ public class Bzip2DecoderTest : AbstractDecoderTest
     }
 
     // CLR: commons-compress BZip2CompressorOutputStream(os, MIN_BLOCK_SIZE) is SharpZipLib's
-    // BZip2OutputStream(Stream, int blockSize), the independent bzip2 implementation of the C# tests (owner decision
-    // 2026-11-23). Its block size has the same meaning: "Valid block sizes are in the range 1..9, with 1 giving the lowest
-    // compression and 9 the highest" (BZip2OutputStream constructor remarks,
+    // BZip2OutputStream(Stream, int blockSize), the independent bzip2 implementation of the C# tests. Its block
+    // size has the same meaning: "Valid block sizes are in the range 1..9, with 1 giving the lowest compression
+    // and 9 the highest" (BZip2OutputStream constructor remarks,
     // https://raw.githubusercontent.com/icsharpcode/SharpZipLib/v1.4.2/src/ICSharpCode.SharpZipLib/BZip2/BZip2OutputStream.cs).
-    // write(byte[]) is Write(data, 0, data.Length), and close() is Dispose, which on its first call ends the block, writes
-    // the end-of-stream marker with the combined CRC and closes the underlying stream (IsStreamOwner "The default value is
-    // true"). ByteArrayOutputStream is MemoryStream; ToArray "works when the MemoryStream is closed"
-    // (https://learn.microsoft.com/en-us/dotnet/api/system.io.memorystream.toarray?view=net-10.0).
+    // write(byte[]) is Write(data, 0, data.Length), and close() is Dispose, which on its first call ends the
+    // block, writes the end-of-stream marker with the combined CRC and closes the underlying stream (IsStreamOwner
+    // "The default value is true"). ByteArrayOutputStream is MemoryStream; ToArray "works when the MemoryStream is
+    // closed" (https://learn.microsoft.com/en-us/dotnet/api/system.io.memorystream.toarray?view=net-10.0).
     protected override byte[] Compress(byte[] data)
     {
         MemoryStream os = new MemoryStream();

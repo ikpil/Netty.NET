@@ -20,7 +20,6 @@ using Netty.NET.Handler.Codec.Memcache.Binary;
 
 namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary;
 
-// CLR: CharsetUtil.UTF_8 is Encoding.UTF8 (docs/codec-base-porting.md).
 public class BinaryMemcacheMessageTest
 {
 

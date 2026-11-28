@@ -22,13 +22,10 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Codec.Http;
 
-// CLR: HttpHeaders.EMPTY_HEADERS is @Deprecated and not ported (its @deprecated text names EmptyHttpHeaders.INSTANCE),
-// so there is no cyclic static initialization to break: the @Deprecated instance() (whose @deprecated text names
-// INSTANCE) and InstanceInitializer, which only serve that cycle, are not ported (owner decision 2026-11-16), and
-// INSTANCE is created directly. The empty lists and set are immutable (Array.Empty, ImmutableHashSet, as
-// Collections.emptyList/emptySet are), and EMPTY_CHARS_ITERATOR is the private nested EmptyIterator, an IIterator with
-// no elements (the codec-base IIterator for java.util.Iterator). iterator() is IteratorAsString() (see HttpHeaders).
-// UnsupportedOperationException is NotSupportedException (docs/codec-base-porting.md).
+// CLR: HttpHeaders.EMPTY_HEADERS is @Deprecated and not ported (its @deprecated text names
+// EmptyHttpHeaders.INSTANCE), so there is no cyclic static initialization to break: the @Deprecated instance()
+// (whose @deprecated text names INSTANCE) and InstanceInitializer, which only serve that cycle, are not ported,
+// and INSTANCE is created directly. UnsupportedOperationException is NotSupportedException.
 public class EmptyHttpHeaders : HttpHeaders
 {
     internal static readonly IIterator<IEntry<ICharSequence, ICharSequence>> EMPTY_CHARS_ITERATOR =

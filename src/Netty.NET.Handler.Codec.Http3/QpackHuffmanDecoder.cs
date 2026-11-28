@@ -20,15 +20,15 @@ using Netty.NET.Common;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the package-private final class is internal sealed. It implements ByteProcessor, the Common
-// Func<byte, bool> (docs/codec-http-porting.md, Shared CLR adaptations): process(byte) stays Process(byte), and
-// ByteBuf.forEachByte(index, length, this) receives the delegate created once in the constructor. The byte
-// constants are const byte; the table expressions combine them as int, as Java widens them. input >> 4 of the Java
-// (signed) byte and of the System.Byte differ only in the bits above the low nibble, which processNibble masks
-// away (input & 0x0F), and (byte) state keeps the low eight bits in both. The table, the fields and the methods are
-// those of codec-http2's HpackHuffmanDecoder (the HUFFS tables of the two Java files are identical). The static
-// exceptions are QpackException.NewStatic; Class is Type. readerIndex(int) and readableBytes() are the ReaderIndex
-// and ReadableBytes properties. The throws clause has no counterpart (C# has no checked exceptions).
+// CLR: the package-private final class is internal sealed. It implements ByteProcessor, the Common Func<byte,
+// bool> : process(byte) stays Process(byte), and ByteBuf.forEachByte(index, length, this) receives the delegate
+// created once in the constructor. The byte constants are const byte; the table expressions combine them as int,
+// as Java widens them. input >> 4 of the Java (signed) byte and of the System.Byte differ only in the bits above
+// the low nibble, which processNibble masks away (input & 0x0F), and (byte) state keeps the low eight bits in
+// both. The table, the fields and the methods are those of codec-http2's HpackHuffmanDecoder (the HUFFS tables of
+// the two Java files are identical). The static exceptions are QpackException.NewStatic; Class is Type.
+// readerIndex(int) and readableBytes() are the ReaderIndex and ReadableBytes properties. The throws clause has no
+// counterpart (C# has no checked exceptions).
 internal sealed class QpackHuffmanDecoder
 {
 

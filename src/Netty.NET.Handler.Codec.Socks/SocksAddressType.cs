@@ -17,20 +17,20 @@
 namespace Netty.NET.Handler.Codec.Socks;
 
 // CLR: a Java enum constant is an instance of its enum class, created with the arguments that follow it ("An enum
-// constant may be followed by arguments, which are passed to the constructor"), and "An enum class has no instances
-// other than those defined by its enum constants" (JLS 8.9, 8.9.1:
-// https://docs.oracle.com/javase/specs/jls/se21/html/jls-8.html#jls-8.9). A C# enum is a value type of named integral
-// constants and "You can't define a method inside the definition of an enumeration type"
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/enum), so the constants are the
-// static readonly instances of a sealed class with a private constructor, as Base64Dialect in codec-base. Values() is
-// the implicit values(), "which returns an array containing the enum constants of E, in the same order as they appear"
-// (JLS 8.9.3), used by valueOf(byte) and the tests; ToString() returns the constant name, as Enum.toString() does
-// (https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Enum.html). Code that switches over the
-// constants uses an if/else chain, because a case label needs a constant pattern
+// constant may be followed by arguments, which are passed to the constructor"), and "An enum class has no
+// instances other than those defined by its enum constants" (JLS 8.9, 8.9.1:
+// https://docs.oracle.com/javase/specs/jls/se21/html/jls-8.html#jls-8.9). A C# enum is a value type of named
+// integral constants and "You can't define a method inside the definition of an enumeration type"
+// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/enum), so the constants are
+// the static readonly instances of a sealed class with a private constructor, as Base64Dialect in codec-base.
+// Values() is the implicit values(), "which returns an array containing the enum constants of E, in the same order
+// as they appear" (JLS 8.9.3), used by valueOf(byte) and the tests; ToString() returns the constant name, as
+// Enum.toString() does (https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Enum.html). Code
+// that switches over the constants uses an if/else chain, because a case label needs a constant pattern
 // (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/selection-statements). The
-// @Deprecated fromByte(byte), whose @deprecated text names valueOf(byte) as the replacement, is not ported (owner
-// decision 2026-11-16). The byte values are unsigned System.Byte (owner decision, docs/common-clr-design.md): 0xff is
-// 255 where the Java byte is -1; valueOf(byte) only compares for equality, which does not depend on the sign.
+// @Deprecated fromByte(byte), whose @deprecated text names valueOf(byte) as the replacement, is not ported. The
+// byte values are unsigned System.Byte (owner decision, docs/common-clr-design.md): 0xff is 255 where the Java
+// byte is -1; valueOf(byte) only compares for equality, which does not depend on the sign.
 public sealed class SocksAddressType
 {
     public static readonly SocksAddressType IPv4 = new SocksAddressType(nameof(IPv4), (byte) 0x01);

@@ -44,18 +44,14 @@ using static Netty.NET.Common.AsciiString;
 
 namespace Netty.NET.Handler.Codec.Http2.Tests;
 
-// CLR: @BeforeEach is the constructor ("xUnit creates a new instance of the test class for every test that is run",
-// docs/codec-http-porting.md, Shared CLR adaptations), which calls the Java-named setUp(). mock(Http2Headers.class) is a
-// loose Moq mock (Mock<IHttp2Headers>, its Object passed to the decoder); verify(mock, times(n)).add(a, b) is
-// Verify(m => m.Add(Cs(a), Cs(b)), Times.Exactly(n)), verifyNoMoreInteractions is VerifyNoOtherCalls, reset is Reset, and Moq
-// matches the AsciiString arguments with Equals as Mockito does (https://github.com/devlooped/moq/wiki/Quickstart,
-// recorded in docs/codec-http-porting.md). AsciiString.of(CharSequence) with a String is the private Of(string), and
-// the Strings that Java passes as CharSequence to headers are StringCharSequence values (the private Cs(string)). The
-// anonymous Executables are lambdas and assertThrows(T.class) is Assert.ThrowsAny<T>. @CsvSource rows are InlineData
-// rows; '' is the empty string. String.format("%0100d", 0) is 0.ToString("D100") (zero-padded to 100 digits).
-// String.getBytes() is Encoding.Default (UTF-8; the strings are ASCII). assertThat(a).isGreaterThanOrEqualTo(b) is
-// Assert.True(a >= b). Integer.MAX_VALUE is int.MaxValue. Header equality calls Equals directly
-// (docs/codec-http-porting.md, Shared CLR adaptations).
+// CLR: @BeforeEach is the constructor ("xUnit creates a new instance of the test class for every test that is
+// run", docs/codec-http-porting.md, Shared CLR adaptations), which calls the Java-named setUp().
+// mock(Http2Headers.class) is a loose Moq mock (Mock<IHttp2Headers>, its Object passed to the decoder);
+// verify(mock, times(n)).add(a, b) is Verify(m => m.Add(Cs(a), Cs(b)), Times.Exactly(n)), verifyNoMoreInteractions
+// is VerifyNoOtherCalls, reset is Reset, and Moq matches the AsciiString arguments with Equals as Mockito does
+// (https://github.com/devlooped/moq/wiki/Quickstart, recorded in docs/codec-http-porting.md). @CsvSource rows are
+// InlineData rows; '' is the empty string. Integer.MAX_VALUE is int.MaxValue. Header equality calls Equals
+// directly.
 public class HpackDecoderTest
 {
 

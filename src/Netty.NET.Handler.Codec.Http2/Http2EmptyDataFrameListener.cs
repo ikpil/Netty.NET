@@ -23,8 +23,7 @@ namespace Netty.NET.Handler.Codec.Http2;
  * Enforce a limit on the maximum number of consecutive empty DATA frames (without end_of_stream flag) that are allowed
  * before the connection will be closed.
  */
-// CLR: the package-private final class is internal sealed and its constructor internal; the overridden listener
-// methods override the virtual Http2FrameListenerDecorator members.
+// CLR: The overridden listener methods override the virtual Http2FrameListenerDecorator members.
 internal sealed class Http2EmptyDataFrameListener : Http2FrameListenerDecorator
 {
     private readonly int maxConsecutiveEmptyFrames;

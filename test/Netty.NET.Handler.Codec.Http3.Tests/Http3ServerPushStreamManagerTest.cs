@@ -29,24 +29,18 @@ using static Netty.NET.Handler.Codec.Http3.Tests.Http3TestUtils;
 
 namespace Netty.NET.Handler.Codec.Http3.Tests;
 
-// CLR: @BeforeEach setUp() runs in the constructor and @AfterEach tearDown() is Dispose() (xUnit creates a test class
-// instance per test and disposes it after the test). The project has no Moq (docs/codec-http3-porting.md), so
-// mock(ChannelHandlerContext.class) with when(controlStreamHandlerCtx.channel()).thenReturn(localControlStream) is the
-// private nested class MockChannelHandlerContext with Mockito's default answers: Channel returns the stubbed stream and
-// every other member does nothing and returns null, false or the default value (the frames reach the handlers only
-// through it, as in Java). The anonymous Http3RequestStreamInboundHandler is the private nested class
-// ReleasingRequestStreamHandler. Http3ServerPushStreamManager.newPushStream(pushId, handler) is NewPushStreamAsync
-// returning Task<IQuicStreamChannel> (get() is GetAwaiter().GetResult()); newPushStream(pushId, handler,
-// bootstrapConfigurator, promise) with channel.eventLoop().newPromise() is the Task overload
-// NewPushStreamAsync(pushId, handler, bootstrapConfigurator), into which the Promise overload folds
-// (docs/codec-http3-porting.md, Shared CLR adaptations), and UnaryOperator.identity() is the lambda b => b.
-// Callable<EmbeddedQuicStreamChannel> is Func<EmbeddedQuicStreamChannel>, and the @FunctionalInterface PushStreamFactory
-// is a private delegate. PushStreamListener's write(ctx, msg, promise) is WriteAsync(ctx, msg, cancellationToken)
-// returning base.WriteAsync (docs/codec-base-porting.md, Outbound operations). assertThrows(IllegalStateException.class,
-// ...) is Assert.ThrowsAny<InvalidOperationException>, assertInstanceOf(T.class, x) Assert.IsAssignableFrom<T>, and
-// assertEquals(int, long) a long literal. Http3.getLocalControlStream is Http3.GetLocalControlStream; the
-// connection handler's localControlStreamHandler is the internal field. The throws clauses and @Nullable
-// (org.jetbrains.annotations) have no counterpart.
+// CLR: @BeforeEach setUp() runs in the constructor and @AfterEach tearDown() is Dispose() (xUnit creates a test
+// class instance per test and disposes it after the test). The project has no Moq, so
+// mock(ChannelHandlerContext.class) with when(controlStreamHandlerCtx.channel()).thenReturn(localControlStream) is
+// the private nested class MockChannelHandlerContext with Mockito's default answers: Channel returns the stubbed
+// stream and every other member does nothing and returns null, false or the default value (the frames reach the
+// handlers only through it, as in Java). Callable<EmbeddedQuicStreamChannel> is Func<EmbeddedQuicStreamChannel>,
+// and the @FunctionalInterface PushStreamFactory is a private delegate. PushStreamListener's write(ctx, msg,
+// promise) is WriteAsync(ctx, msg, cancellationToken) returning base.WriteAsync.
+// assertThrows(IllegalStateException.class,...) is Assert.ThrowsAny<InvalidOperationException>,
+// assertInstanceOf(T.class, x) Assert.IsAssignableFrom<T>, and assertEquals(int, long) a long literal.
+// Http3.getLocalControlStream is Http3.GetLocalControlStream; the connection handler's localControlStreamHandler
+// is the internal field. The throws clauses and @Nullable (org.jetbrains.annotations) have no counterpart.
 public class Http3ServerPushStreamManagerTest : IDisposable
 {
 
@@ -76,7 +70,6 @@ public class Http3ServerPushStreamManagerTest : IDisposable
         manager = new Http3ServerPushStreamManager(channel);
     }
 
-    // CLR: the anonymous Http3RequestStreamInboundHandler of setUp().
     private sealed class ReleasingRequestStreamHandler : Http3RequestStreamInboundHandler
     {
         protected override void ChannelRead(IChannelHandlerContext ctx, IHttp3HeadersFrame frame)

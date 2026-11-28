@@ -24,16 +24,15 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Handler.Tests.Ssl;
 
-// CLR: Mockito is Moq (codec-base porting rules): the @Mock fields are Mock<T> fields created in their initializers, so
-// MockitoAnnotations.initMocks has no counterpart and @BeforeEach setUp() runs from the constructor; when(...).thenReturn
-// is Setup/Returns, verify(pipeline).remove/replace is Verify and verifyNoInteractions(pipeline) is VerifyNoOtherCalls on a
-// mock that saw no verified call. Mockito.mock(SslHandler.class) is a Mock<SslHandler> built with server authentication
-// options, as SslHandler has no constructor without its engine (src/Netty.NET.Handler/Ssl/SslHandler.cs). The tests call
-// the protected decode(...) through Java package access, while C# protected access is limited to derived classes (as
-// recorded at the InvokeDecode forwarder of src/Netty.NET.Handler.Codec.Mqtt/MqttDecoder.cs); OptionalSslHandler has no
-// such forwarder, so the handlers of the tests are nested subclasses whose InvokeDecode forwards to the protected Decode,
-// and the anonymous OptionalSslHandler subclasses derive from it. "plaintext".getBytes() uses the default charset,
-// Encoding.Default (docs/codec-stomp-porting.md).
+// CLR: Mockito is Moq (codec-base porting rules): the @Mock fields are Mock<T> fields created in their
+// initializers, so MockitoAnnotations.initMocks has no counterpart and @BeforeEach setUp() runs from the
+// constructor; when(...).thenReturn is Setup/Returns, verify(pipeline).remove/replace is Verify and
+// verifyNoInteractions(pipeline) is VerifyNoOtherCalls on a mock that saw no verified call. The tests call the
+// protected decode(...) through Java package access, while C# protected access is limited to derived classes (as
+// recorded at the InvokeDecode forwarder of src/Netty.NET.Handler.Codec.Mqtt/MqttDecoder.cs); OptionalSslHandler
+// has no such forwarder, so the handlers of the tests are nested subclasses whose InvokeDecode forwards to the
+// protected Decode, and the anonymous OptionalSslHandler subclasses derive from it. "plaintext".getBytes() uses
+// the default charset, Encoding.Default.
 public class OptionalSslHandlerTest
 {
 
@@ -126,7 +125,6 @@ public class OptionalSslHandlerTest
         }
     }
 
-    // CLR: see the class comment.
     private class DecodingOptionalSslHandler : OptionalSslHandler
     {
         internal DecodingOptionalSslHandler(SslContext sslContext) : base(sslContext)

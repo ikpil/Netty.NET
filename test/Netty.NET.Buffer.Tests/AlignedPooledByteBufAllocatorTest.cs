@@ -91,8 +91,7 @@ public class AlignedPooledByteBufAllocatorTest : PooledByteBufAllocatorTest
         ByteBuf wrapper = allocator.DirectBuffer(initialCapacity, 16);
         PooledByteBuf unwrapped = PooledByteBuf(wrapper);
         // Get the smallSubpagePools[] array in arena.
-        // CLR: the arena keeps its subpage heads in a private field; reflection stands in for the Java test's
-        // package-private access (src/Netty.NET.Buffer/PoolArena.cs).
+        // CLR: the arena keeps its subpage heads in a private field.
         PoolSubpage[] smallSubpagePools = (PoolSubpage[])typeof(PoolArena)
                 .GetField("_smallSubpagePools", BindingFlags.Instance | BindingFlags.NonPublic)!
                 .GetValue(unwrapped.Allocation.Arena)!;

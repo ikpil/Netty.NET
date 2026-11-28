@@ -24,10 +24,6 @@ namespace Netty.NET.Handler.Codec.Http.Tests.Rtsp;
 /**
  * Test cases for RTSP decoder.
  */
-// CLR: String.getBytes() (the default charset) of the ASCII request is Encoding.UTF8 and CharsetUtil.ISO_8859_1 is
-// Encoding.Latin1 (docs/codec-base-porting.md). assertInstanceOf is Assert.IsAssignableFrom, which returns the cast
-// value as assertInstanceOf does (https://raw.githubusercontent.com/xunit/assert.xunit/main/TypeAsserts.cs), and the
-// HTTP message types are the core I-prefixed interfaces.
 public class RtspDecoderTest
 {
 

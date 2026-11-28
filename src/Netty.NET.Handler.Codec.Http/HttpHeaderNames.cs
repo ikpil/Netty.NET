@@ -24,9 +24,9 @@ namespace Netty.NET.Handler.Codec.Http;
  * These are all defined as lowercase to support HTTP/2 requirements while also not
  * violating HTTP/1.x requirements.  New header names should always be lowercase.
  */
-// CLR: the final class with a private constructor is a static class. The @Deprecated KEEP_ALIVE and PROXY_CONNECTION,
-// whose @deprecated text names CONNECTION, are not ported (owner decision 2026-11-16); HttpHeaderValidationUtil keeps
-// their header names as private constants.
+// CLR: the final class with a private constructor is a static class. The @Deprecated KEEP_ALIVE and
+// PROXY_CONNECTION, whose @deprecated text names CONNECTION, are not ported; HttpHeaderValidationUtil keeps their
+// header names as private constants.
 public static class HttpHeaderNames
 {
     /**

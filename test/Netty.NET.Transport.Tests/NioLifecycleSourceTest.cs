@@ -181,7 +181,6 @@ public class NioEventLoopSourceTest
         }
     }
 
-    // CLR: the anonymous NioSelectableChannelIoHandle subclass of the Java method is a nested class.
     private sealed class LatchHandle(Socket channel, CountdownEvent latch) : NioSelectableChannelIoHandle<Socket>(channel)
     {
         protected override void Handle(Socket channel, NioIoOps key)

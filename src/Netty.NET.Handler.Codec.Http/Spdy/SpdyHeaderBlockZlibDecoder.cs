@@ -25,19 +25,16 @@ using static Netty.NET.Handler.Codec.Spdy.SpdyCodecUtil;
 
 namespace Netty.NET.Handler.Codec.Spdy;
 
-// CLR: java.util.zip.Inflater is codec-compression's internal stand-in Inflater (InternalsVisibleTo; owner decisions
-// 2026-11-23 and 2026-11-24), which implements needsDictionary()/setDictionary() with java.util.zip semantics on the
-// BCL streams (docs/codec-compression-porting.md). It is created with exactRemaining (new Inflater(false, true)): a
-// SPDY header block stream sets FDICT, after which the stand-in reads the deflate data one byte per Read and
-// getRemaining() is exact anyway; exactRemaining makes getRemaining() exact for a stream without FDICT too, so a
-// complete zlib stream followed by more bytes is an invalid header block as in Java. DataFormatException is the
-// InvalidDataException the stand-in throws, and setDictionary's IllegalArgumentException is ArgumentException. The
-// Buffer port has no hasArray()/array()/arrayOffset(); the readable range of one managed array (AsReadOnlySequence and
-// MemoryMarshal.TryGetArray) replaces them, as in codec-compression's JdkZlibDecoder (docs/buffer-porting.md, Array
-// extraction), see TryGetArray and ArrayOf below. ByteBufAllocator is IByteBufAllocator; the package-private
-// constructor, calculateMaxDecompressedSizePerBlock and the overrides are internal (end() is public in Java, but an
-// override keeps the internal accessibility of SpdyHeaderBlockDecoder.end()). The number in the exception text uses the
-// invariant culture.
+// CLR: java.util.zip.Inflater is codec-compression's internal stand-in Inflater (InternalsVisibleTo; owner
+// decisions 2026-11-23 and 2026-11-24), which implements needsDictionary()/setDictionary() with java.util.zip
+// semantics on the BCL streams. It is created with exactRemaining (new Inflater(false, true)): a SPDY header block
+// stream sets FDICT, after which the stand-in reads the deflate data one byte per Read and getRemaining() is exact
+// anyway; exactRemaining makes getRemaining() exact for a stream without FDICT too, so a complete zlib stream
+// followed by more bytes is an invalid header block as in Java. DataFormatException is the InvalidDataException
+// the stand-in throws, and setDictionary's IllegalArgumentException is ArgumentException. The Buffer port has no
+// hasArray()/array()/arrayOffset(); the readable range of one managed array (AsReadOnlySequence and
+// MemoryMarshal.TryGetArray) replaces them, as in codec-compression's JdkZlibDecoder, see TryGetArray and ArrayOf
+// below. ByteBufAllocator is IByteBufAllocator. The number in the exception text uses the invariant culture.
 internal sealed class SpdyHeaderBlockZlibDecoder : SpdyHeaderBlockRawDecoder
 {
 

@@ -20,13 +20,13 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Redis.Tests;
 
-// CLR: CharsetUtil.US_ASCII is Encoding.ASCII (docs/codec-base-porting.md). JUnit assertThrows passes "if the thrown
-// exception type is the same as expectedType or a subtype thereof"
-// (https://docs.junit.org/current/api/org.junit.jupiter.api/org/junit/jupiter/api/Assertions.html); the aggregator's
-// CodecException reaches the caller wrapped in a DecoderException (a CodecException subtype) by MessageToMessageDecoder,
-// so assertThrows(CodecException.class, ...) is Assert.ThrowsAny<CodecException>, which accepts derived types
-// (https://raw.githubusercontent.com/xunit/assert.xunit/main/ExceptionAsserts.cs); the exact PrematureChannelClosureException
-// stays Assert.Throws. assertFalse(BooleanSupplier) and the method references are lambdas or direct calls.
+// CLR: JUnit assertThrows passes "if the thrown exception type is the same as expectedType or a subtype thereof"
+// (https://docs.junit.org/current/api/org.junit.jupiter.api/org/junit/jupiter/api/Assertions.html); the
+// aggregator's CodecException reaches the caller wrapped in a DecoderException (a CodecException subtype) by
+// MessageToMessageDecoder, so assertThrows(CodecException.class,...) is Assert.ThrowsAny<CodecException>, which
+// accepts derived types (https://raw.githubusercontent.com/xunit/assert.xunit/main/ExceptionAsserts.cs); the exact
+// PrematureChannelClosureException stays Assert.Throws. assertFalse(BooleanSupplier) and the method references are
+// lambdas or direct calls.
 public class RedisArrayAggregatorTest
 {
 
@@ -90,9 +90,9 @@ public class RedisArrayAggregatorTest
         Assert.Throws<PrematureChannelClosureException>(() => channel.Finish());
     }
 
-    // CLR: the @Deprecated RedisArrayAggregator() is not ported (docs/codec-redis-porting.md); the test checks the
-    // release on close, so it uses its replacement RedisArrayAggregator(int, int) with the arguments the deprecated
-    // constructor passed, this(DEFAULT_MAX_ARRAY_LENGTH, 1024).
+    // CLR: the @Deprecated RedisArrayAggregator() is not ported; the test checks the release on close, so it uses
+    // its replacement RedisArrayAggregator(int, int) with the arguments the deprecated constructor passed,
+    // this(DEFAULT_MAX_ARRAY_LENGTH, 1024).
     [Fact]
     public void TestDoesNotLeakOnClose()
     {

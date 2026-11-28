@@ -6,8 +6,8 @@
 // "case var _ when x == OpCode.QUERY" as in codec-haproxy HAProxyMessage, and == stays the reference comparison of
 // enum constants. convert() is Convert(), the static convert(value) is Convert(byte) over a Dictionary built in
 // declaration order (ReverseEnumMap.get throws IllegalArgumentException for an unknown value, ArgumentException
-// here), and name(), ordinal(), values() and toString() keep the java.lang.Enum results. The Java byte value is the
-// C# byte (owner decision for Java byte); every constant is between 0 and 5, so no value depends on the sign.
+// here), and name(), ordinal(), values() and toString() keep the java.lang.Enum results. The Java byte value is
+// the C# byte; every constant is between 0 and 5, so no value depends on the sign.
 
 using System;
 using System.Collections.Generic;

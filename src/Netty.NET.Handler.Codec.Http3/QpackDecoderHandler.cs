@@ -25,11 +25,11 @@ using static Netty.NET.Handler.Codec.Http3.QpackUtil;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the package-private final class is internal sealed; ByteToMessageDecoder is codec-base's (decode(ctx, in, out)
-// is Decode(IChannelHandlerContext, ByteBuf, IList<object>)). The checked QpackException needs no throws clause.
-// ChannelInputShutdownEvent is the Transport's (Netty.NET.Transport.Channels.Sockets). The instruction byte is the CLR
-// byte; the masks test the same bits, and the "Unknown decoder instruction" text prints Java's signed value through
-// (sbyte); numbers print with the invariant culture.
+// CLR: ByteToMessageDecoder is codec-base's (decode(ctx, in, out) is Decode(IChannelHandlerContext, ByteBuf,
+// IList<object>)). The checked QpackException needs no throws clause. ChannelInputShutdownEvent is the Transport's
+// (Netty.NET.Transport.Channels.Sockets). The instruction byte is the CLR byte; the masks test the same bits, and
+// the "Unknown decoder instruction" text prints Java's signed value through (sbyte); numbers print with the
+// invariant culture.
 internal sealed class QpackDecoderHandler : ByteToMessageDecoder
 {
 

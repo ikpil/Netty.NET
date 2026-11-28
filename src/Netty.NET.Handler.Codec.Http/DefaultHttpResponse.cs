@@ -25,9 +25,9 @@ namespace Netty.NET.Handler.Codec.Http;
  * The default {@link HttpResponse} implementation.
  */
 // CLR: the two @Deprecated constructors with boolean flags, whose @deprecated texts name
-// DefaultHttpResponse(HttpVersion, HttpResponseStatus, HttpHeadersFactory), and the @Deprecated getStatus() are not
-// ported (owner decision 2026-11-16). setProtocolVersion narrows its return type with a covariant override return, and
-// setStatus is virtual so that DefaultFullHttpResponse narrows it
+// DefaultHttpResponse(HttpVersion, HttpResponseStatus, HttpHeadersFactory), and the @Deprecated getStatus() are
+// not ported. setProtocolVersion narrows its return type with a covariant override return, and setStatus is
+// virtual so that DefaultFullHttpResponse narrows it
 // (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override).
 public class DefaultHttpResponse : DefaultHttpMessage, IHttpResponse
 {

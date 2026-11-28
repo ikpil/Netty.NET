@@ -20,7 +20,6 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Socks.Tests.Socksx.V5;
 
-// CLR: assertInstanceOf(C.class, o) is Assert.IsType<C>(o, exactMatch: false).
 public class Socks5InitialRequestDecoderTest
 {
     [Fact]

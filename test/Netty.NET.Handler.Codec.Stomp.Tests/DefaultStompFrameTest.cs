@@ -19,9 +19,8 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Codec.Stomp.Tests;
 
-// CLR: Java passes the String "localhost" as a CharSequence; C# string is not an ICharSequence, so the value is the
-// Common StringCharSequence, whose Equals matches String.equals (docs/codec-base-porting-manifest.json,
-// DefaultHeadersTest: String literals are wrapped in StringCharSequence). xUnit2013 is suppressed because
+// CLR: Java passes the String "localhost" as a CharSequence; C# string is not an ICharSequence, so the value is
+// the Common StringCharSequence, whose Equals matches String.equals. xUnit2013 is suppressed because
 // assertEquals(n, size()) keeps the source assertions, as in codec-base.
 #pragma warning disable xUnit2013 // assertEquals(n, size()) keeps the source assertions.
 public class DefaultStompFrameTest
@@ -36,8 +35,8 @@ public class DefaultStompFrameTest
 
         sourceFrame.Headers().Set(IStompHeaders.HOST, new StringCharSequence("localhost"));
 
-        // CLR: IStompFrame inherits copy() from IByteBufHolder instead of narrowing it (owner decision 2026-11-19;
-        // docs/transport-porting.md, Decisions), so the interface-typed result is cast to IStompFrame.
+        // CLR: IStompFrame inherits copy() from IByteBufHolder instead of narrowing it, so the interface-typed
+        // result is cast to IStompFrame.
         IStompFrame copyFrame = (IStompFrame) sourceFrame.Copy();
 
         Assert.Equal(sourceFrame.Headers(), copyFrame.Headers());

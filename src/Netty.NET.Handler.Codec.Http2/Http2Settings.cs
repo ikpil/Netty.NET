@@ -26,18 +26,18 @@ namespace Netty.NET.Handler.Codec.Http2;
  * the spec for the SETTINGS frame. Permits storage of arbitrary key/value pairs but provides helper
  * methods for standard settings.
  */
-// CLR: CharObjectHashMap<Long> is the BCL Dictionary<char, long> (owner decision 2026-11-19, confirmed 2026-11-25), so
-// the inherited map members keep their BCL names (Count, ContainsKey, TryGetValue, Remove, Clear, enumeration of
-// KeyValuePair<char, long>); Java's get(char) returning null when absent is TryGetValue (the private Get here). The
-// overridden put(char, Long) is Put(char, long), which verifies the value as Java does; the Dictionary indexer and
-// Add are not virtual, so they store without verification. The Java Long/Integer/Boolean getters that return null
-// when the setting is absent return long?/int?/bool?, and the value is a long, so checkNotNull(value) has nothing to
-// check. Dictionary enumerates in insertion order where CharObjectHashMap enumerates in hash-slot order, so the order
-// of the entries in toString() and in a written SETTINGS frame may differ from Java's (a SETTINGS frame holds each
-// identifier once; owner decision 2026-11-25). The load factor of CharObjectHashMap has no Dictionary counterpart:
-// the constructor checks its range as CharObjectHashMap does and passes only the capacity. toString() keeps the
-// CharObjectHashMap text "{key=value, ...}" with keyToString(char) for the keys. Integer.toHexString is the invariant
-// "x" format.
+// CLR: CharObjectHashMap<Long> is the BCL Dictionary<char, long>, so the inherited map members keep their BCL
+// names (Count, ContainsKey, TryGetValue, Remove, Clear, enumeration of KeyValuePair<char, long>); Java's
+// get(char) returning null when absent is TryGetValue (the private Get here). The overridden put(char, Long) is
+// Put(char, long), which verifies the value as Java does; the Dictionary indexer and Add are not virtual, so they
+// store without verification. The Java Long/Integer/Boolean getters that return null when the setting is absent
+// return long?/int?/bool?, and the value is a long, so checkNotNull(value) has nothing to check. Dictionary
+// enumerates in insertion order where CharObjectHashMap enumerates in hash-slot order, so the order of the entries
+// in toString() and in a written SETTINGS frame may differ from Java's (a SETTINGS frame holds each identifier
+// once; owner decision 2026-11-25). The load factor of CharObjectHashMap has no Dictionary counterpart: the
+// constructor checks its range as CharObjectHashMap does and passes only the capacity. toString() keeps the
+// CharObjectHashMap text "{key=value,...}" with keyToString(char) for the keys. Integer.toHexString is the
+// invariant "x" format.
 public sealed class Http2Settings : Dictionary<char, long>
 {
     // CLR: CharObjectHashMap.DEFAULT_LOAD_FACTOR, which DEFAULT_CAPACITY uses.

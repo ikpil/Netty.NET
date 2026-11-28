@@ -22,10 +22,9 @@ namespace Netty.NET.Handler.Codec.Http2;
 /**
  * Utility methods for creating {@link Http2Connection.PropertyKey}s.
  */
-// CLR: the final package-private class with a private constructor is an internal static class; AtomicInteger is an int
-// updated with Interlocked (docs/codec-http-porting.md, Shared CLR adaptations: "AtomicInteger ... int with
-// Interlocked"), getAndIncrement() is Interlocked.Increment - 1, decrementAndGet() Interlocked.Decrement and get()
-// Volatile.Read. The package-private members are internal; the count in the message uses the invariant culture.
+// CLR: AtomicInteger is an int updated with Interlocked, getAndIncrement() is Interlocked.Increment - 1,
+// decrementAndGet() Interlocked.Decrement and get() Volatile.Read. The count in the message uses the invariant
+// culture.
 internal static class Http2ConnectionPropertyKeys
 {
 

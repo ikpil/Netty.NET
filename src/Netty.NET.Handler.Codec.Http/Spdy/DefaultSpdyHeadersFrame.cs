@@ -26,11 +26,10 @@ namespace Netty.NET.Handler.Codec.Spdy;
  * The default {@link SpdyHeadersFrame} implementation.
  */
 // CLR: setStreamId/setLast narrow the base class members with covariant override returns
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override), and the other Java methods
-// are virtual (Java methods are virtual unless final). Map.Entry<CharSequence, CharSequence> is the codec-base
-// IEntry<ICharSequence, ICharSequence> of the headers' enumeration (docs/codec-base-porting.md, Headers).
-// StringBuilder.setLength is the Length setter; a boolean is appended as Java's "true"/"false" and numbers with the
-// invariant culture.
+// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override), and the other Java
+// methods are virtual (Java methods are virtual unless final). Map.Entry<CharSequence, CharSequence> is the
+// codec-base IEntry<ICharSequence, ICharSequence> of the headers' enumeration. StringBuilder.setLength is the
+// Length setter; a boolean is appended as Java's "true"/"false" and numbers with the invariant culture.
 public class DefaultSpdyHeadersFrame : DefaultSpdyStreamFrame, ISpdyHeadersFrame
 {
 

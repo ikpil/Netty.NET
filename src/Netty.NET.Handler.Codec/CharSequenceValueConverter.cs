@@ -23,10 +23,9 @@ namespace Netty.NET.Handler.Codec;
 /**
  * Converts to/from native types, general {@link Object}, and {@link CharSequence}s.
  */
-// CLR: a Java String is a CharSequence, the CLR string is not, so text results are StringCharSequence values. Numbers
-// are formatted and parsed with the invariant culture: the Java digit grammar does not depend on a locale. Integer
-// parsing allows only a leading sign, as Integer.parseInt does (it also accepts non-ASCII Unicode digits, which the
-// BCL parsers reject). NumberFormatException is FormatException or OverflowException.
+// CLR: Numbers are formatted and parsed with the invariant culture: the Java digit grammar does not depend on a
+// locale. Integer parsing allows only a leading sign, as Integer.parseInt does (it also accepts non-ASCII Unicode
+// digits, which the BCL parsers reject). NumberFormatException is FormatException or OverflowException.
 public class CharSequenceValueConverter : IValueConverter<ICharSequence>
 {
     public static readonly CharSequenceValueConverter INSTANCE = new CharSequenceValueConverter();
@@ -169,7 +168,6 @@ public class CharSequenceValueConverter : IValueConverter<ICharSequence>
             throw new FormatException("header can't be parsed into a Date: " + value);
         }
 
-        // CLR: Date.getTime() is DateTimeOffset.ToUnixTimeMilliseconds().
         return date.Value.ToUnixTimeMilliseconds();
     }
 

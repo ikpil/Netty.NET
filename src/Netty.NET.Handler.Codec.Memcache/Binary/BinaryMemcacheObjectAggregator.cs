@@ -41,8 +41,7 @@ public class BinaryMemcacheObjectAggregator : AbstractMemcacheObjectAggregator<I
         return msg is IBinaryMemcacheMessage;
     }
 
-    // CLR: java.lang.Error is UnreachableException, as in codec-base LengthFieldPrepender
-    // (docs/codec-base-porting-manifest.json; https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.unreachableexception).
+    // CLR: java.lang.Error is UnreachableException, as in codec-base LengthFieldPrepender.
     protected override IFullMemcacheMessage BeginAggregation(IBinaryMemcacheMessage start, ByteBuf content)
     {
         if (start is IBinaryMemcacheRequest)

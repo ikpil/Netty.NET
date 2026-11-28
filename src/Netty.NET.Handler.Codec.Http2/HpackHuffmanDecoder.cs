@@ -37,13 +37,13 @@ using static Netty.NET.Handler.Codec.Http2.Http2Error;
 
 namespace Netty.NET.Handler.Codec.Http2;
 
-// CLR: the package-private final class is internal sealed. It implements ByteProcessor, the Common
-// Func<byte, bool> (docs/codec-http-porting.md, Shared CLR adaptations): process(byte) stays Process(byte), and
-// ByteBuf.forEachByte(index, length, this) receives the delegate created once in the constructor. The byte
-// constants are const byte; the table expressions combine them as int, as Java widens them. input >> 4 of the Java
-// (signed) byte and of the System.Byte differ only in the bits above the low nibble, which processNibble masks
-// away (input & 0x0F), and (byte) state keeps the low eight bits in both. The static exception is a Netty
-// Http2Exception.NewStatic; Class is Type. readerIndex(int) is the ReaderIndex property.
+// CLR: the package-private final class is internal sealed. It implements ByteProcessor, the Common Func<byte,
+// bool> : process(byte) stays Process(byte), and ByteBuf.forEachByte(index, length, this) receives the delegate
+// created once in the constructor. The byte constants are const byte; the table expressions combine them as int,
+// as Java widens them. input >> 4 of the Java (signed) byte and of the System.Byte differ only in the bits above
+// the low nibble, which processNibble masks away (input & 0x0F), and (byte) state keeps the low eight bits in
+// both. The static exception is a Netty Http2Exception.NewStatic; Class is Type. readerIndex(int) is the
+// ReaderIndex property.
 internal sealed class HpackHuffmanDecoder
 {
 

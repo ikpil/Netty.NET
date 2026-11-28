@@ -59,7 +59,6 @@ public sealed class UniformStreamByteDistributor : IStreamByteDistributor
         connection.AddListener(new StreamListener(this));
     }
 
-    // CLR: the anonymous Http2ConnectionAdapter registered by the constructor.
     private sealed class StreamListener : Http2ConnectionAdapter
     {
         private readonly UniformStreamByteDistributor distributor;

@@ -38,38 +38,8 @@ using UnsupportedMessageTypeException = Netty.NET.Handler.Codec.UnsupportedMessa
 
 namespace Netty.NET.Handler.Codec.Http2.Tests;
 
-// CLR: the abstract JUnit fixture is an abstract generic xUnit class whose [Fact]/[Theory] methods run once per derived
-// class, as JUnit runs the inherited tests (owner rule 9); C extends Http2FrameCodec is the constraint where C :
-// Http2FrameCodec. @BeforeEach is the constructor and @AfterEach Dispose() (xUnit creates a test-class instance per
-// test, docs/codec-http-porting.md, Shared CLR adaptations); setUp()/tearDown() are private, as in Http2FrameCodecTest,
-// because xUnit1013 reports a public non-test method of a test class. The constructor calls the abstract newCodec and
-// newMultiplexer, as Java's setUp() does; the derived class has no state of its own.
-// Mockito is Moq (docs/codec-http-porting.md, Shared CLR adaptations): the mocked frame writer is the shared
-// Http2TestUtil.MockedFrameWriter() and verify(frameWriter)/verify(frameWriter, never()) are
-// Mock.Get(frameWriter).Verify(..., Times.Once()/Times.Never()); eq(x) is the value x (Moq compares it with Equals),
-// eqCodecCtx() codec.ctx, any(...)/anyInt()/anyLong()/anyBoolean() It.IsAny and argThat(matcher) It.Is(predicate);
-// when(...).thenAnswer(answer) is Setup(...).Returns(...) whose callback completes the TaskCompletionSource argument
-// and returns its Task, as the Answer returns the completed promise. ChannelFuture is Task and ChannelPromise
-// TaskCompletionSource; the ChannelPromise overloads fold into the Task-returning members (docs/transport-porting.md,
-// Decisions), so close(promise) is the Task of CloseAsync(), and a void promise is a discarded Task
-// (docs/transport-porting.md, Not-ported Transport sources: VoidChannelPromise). syncUninterruptibly() is an await,
-// which throws the failure, awaitUninterruptibly() an await with SuppressThrowing | ContinueOnCapturedContext, and a
-// test that awaits is async (docs/handler-porting.md, Test notes: ChunkedWriteHandlerTest); isDone() is IsCompleted,
-// isSuccess() IsCompletedSuccessfully and cause() Http2CodecUtil.Cause. The EmbeddedChannel's operations complete on
-// the test thread, as in Java, so every awaited Task is already complete. Http2StreamChannel is IHttp2StreamChannel,
-// Http2Stream.State the sealed class IHttp2Stream.State (state() is State()), and the Channel getters (isActive(),
-// isOpen(), isWritable(), bytesBeforeUnwritable(), config(), pipeline(), parent(), closeFuture()) are properties of the
-// Transport's IChannel (src/Netty.NET.Transport/Channels/IChannel.cs). channel.unsafe() is the internal
-// Unsafe() of AbstractHttp2StreamChannel, which returns its Http2ChannelUnsafe
-// (src/Netty.NET.Handler.Codec.Http2/AbstractHttp2StreamChannel.cs), and parentChannel.unsafe().outboundBuffer() is the
-// public OutboundBuffer of the Transport's AbstractChannel (src/Netty.NET.Transport/Channels/AbstractChannel.cs).
-// assertThrows is Assert.ThrowsAny/ThrowsAnyAsync (docs/codec-http-porting.md, Core test notes); the JUnit message
-// overloads use XunitAssertMessages.AssertM. HttpHeaders equality calls Equals directly, as Java's assertEquals calls
-// equals (docs/codec-http-porting.md, Shared CLR adaptations). Java Strings passed as CharSequence are Http2TestUtil.Of
-// (StringCharSequence); new InetSocketAddress(0) is an IPEndPoint of IPAddress.Any and port 0 (Http2FrameCodecTest).
-// The Common AtomicBoolean/AtomicInteger/AtomicReference replace the java.util.concurrent.atomic classes. The anonymous
-// classes are private nested classes; identical anonymous bodies share one. The checked "throws" clauses have no
-// counterpart.
+// The inherited cases run against both multiplexers. The embedded channel completes writes on the test thread; the
+// tests distinguish awaiting a failure from waiting for completion without throwing.
 public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCodec
 {
     private readonly IHttp2Headers request = new DefaultHttp2Headers()
@@ -168,7 +138,6 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
                 It.IsAny<Http2Flags>(), It.IsAny<ByteBuf>(), It.IsAny<TaskCompletionSource>()), Times.Once());
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of writeUnknownFrame; ctx.writeAndFlush(msg) discards the Task.
     private sealed class UnknownFrameWritingHandler : ChannelInboundHandlerAdapter
     {
         public override void ChannelActive(IChannelHandlerContext ctx)
@@ -199,7 +168,6 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
         return channel;
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of newInboundStream.
     private sealed class StreamChannelCapturingHandler : ChannelInboundHandlerAdapter
     {
         private readonly AtomicReference<IHttp2StreamChannel> streamChannelRef;
@@ -330,10 +298,8 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
         inboundHandler.CheckException();
     }
 
-    // CLR: the anonymous LastInboundHandler of noRstFrameSentOnCloseViaListener. The switch on the simple enum is a C#
-    // switch; fail() is Assert.Fail(null). ChannelFutureListener.CLOSE closes the channel of the write
-    // (docs/codec-http-porting.md, Shared CLR adaptations) and is added with Http2CodecUtil.AddListener, the listener
-    // timing of DefaultPromise.notifyListeners() (docs/codec-http-porting.md, Listener timing).
+    // CLR: The switch on the simple enum is a C# switch. ChannelFutureListener.CLOSE closes the channel of the
+    // write and is added with Http2CodecUtil.AddListener, the listener timing of DefaultPromise.notifyListeners().
     private sealed class EndStreamCloseHandler : LastInboundHandler
     {
         private readonly RstFrameTestMode mode;
@@ -722,7 +688,6 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
         VerifyFramesMultiplexedToCorrectChannel(childChannel, inboundHandler, 0);
     }
 
-    // CLR: the anonymous Consumer of noAutoReadWithReentrantReadDoesNotSOOE; obj.read() discards the invoker.
     private sealed class ReadIfRequestedConsumer : LastInboundHandler.IConsumer<IChannelHandlerContext>
     {
         private readonly AtomicBoolean shouldRead;
@@ -797,8 +762,6 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
         inboundHandler.CheckException();
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of channelReadShouldRespectAutoReadAndNotProduceNPE; ctx.close()
-    // discards the Task.
     private sealed class CloseAfterTwoReadsHandler : ChannelInboundHandlerAdapter
     {
         private int count;
@@ -851,7 +814,6 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
         VerifyFramesMultiplexedToCorrectChannel(childChannel, inboundHandler, 6);
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of useReadWithoutAutoRead.
     private sealed class ReadRequestingHandler : ChannelInboundHandlerAdapter
     {
         private readonly bool readComplete;
@@ -981,8 +943,6 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
                 EqStreamId(childChannel), Http2Error.CANCEL.Code(), AnyChannelPromise()), Times.Once());
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of outboundStreamShouldWriteResetFrameOnClose_headersSent and
-    // outboundStreamShouldNotWriteResetFrameOnClose_IfStreamDidntExist (identical bodies).
     private sealed class HeadersWritingHandler : ChannelInboundHandlerAdapter
     {
         public override void ChannelActive(IChannelHandlerContext ctx)
@@ -1015,8 +975,7 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
         Assert.Empty(parentChannel.OutboundMessages());
     }
 
-    // CLR: the anonymous Answer<ChannelFuture> of outboundStreamShouldNotWriteResetFrameOnClose_IfStreamDidntExist; the
-    // promise is getArgument(5) and setFailure/setSuccess return it as the future.
+    // CLR: The promise is getArgument(5) and setFailure/setSuccess return it as the future.
     private sealed class FailFirstHeadersAnswer
     {
         private bool headersWritten;
@@ -1167,9 +1126,9 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
     }
 
     // CLR: close(promise) has no counterpart (the ChannelPromise overloads fold into CloseAsync(),
-    // docs/transport-porting.md, Decisions), so the listener is added to the Task of CloseAsync(), the child channel's
-    // own close promise; future.channel() is the child channel. AddListener gives the listener Java's timing: the Task
-    // is complete, so it runs at once on the EmbeddedChannel's thread.
+    // docs/transport-porting.md, Decisions), so the listener is added to the Task of CloseAsync(), the child
+    // channel's own close promise. AddListener gives the listener Java's timing: the Task is complete, so it runs
+    // at once on the EmbeddedChannel's thread.
     [Fact]
     public async Task ChannelClosedWhenCloseListenerCompletes()
     {
@@ -1197,8 +1156,8 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
         Assert.False(childChannel.IsActive);
     }
 
-    // CLR: the listener on closeFuture() is added with AddListener (Java's timing: the continuation runs on the event
-    // loop when closeFuture completes there); future.channel() is the child channel.
+    // CLR: the listener on closeFuture() is added with AddListener (Java's timing: the continuation runs on the
+    // event loop when closeFuture completes there).
     [Fact]
     public async Task ChannelClosedWhenChannelClosePromiseCompletes()
     {
@@ -1325,8 +1284,7 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
         Assert.False(childChannel.IsWritable);
     }
 
-    // CLR: addMessage(msg, size, parentChannel.voidPromise()) discards the Task of AddMessage(msg, size)
-    // (docs/transport-porting.md, Not-ported Transport sources: VoidChannelPromise).
+    // CLR: addMessage(msg, size, parentChannel.voidPromise()) discards the Task of AddMessage(msg, size).
     [Fact]
     public void WritabilityOfParentIsRespected()
     {
@@ -1400,7 +1358,6 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
         Assert.False(channelActive.Get());
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of channelClosedWhenInactiveFired.
     private sealed class InactiveStateRecorder : ChannelInboundHandlerAdapter
     {
         private readonly AtomicBoolean channelOpen;
@@ -1490,8 +1447,6 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
         }
     }
 
-    // CLR: childChannel.unsafe() is the internal Unsafe() of AbstractHttp2StreamChannel, voidPromise() a promise nobody
-    // observes and newPromise() a TaskCompletionSource (see the type comment).
     [Fact]
     public async Task CallUnsafeCloseMultipleTimes()
     {
@@ -1567,8 +1522,6 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
         await childChannel.CloseFuture;
     }
 
-    // CLR: the anonymous Consumer of endOfStreamDoesNotDiscardData (no counter) and of the two
-    // childQueueIsDrainedAndNewDataIsDispatchedInParentReadLoop tests (with channelReadCompleteCount).
     private sealed class DisableAutoReadConsumer : LastInboundHandler.IConsumer<IChannelHandlerContext>
     {
         private readonly AtomicBoolean shouldDisableAutoRead;
@@ -1594,8 +1547,6 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
         }
     }
 
-    // CLR: the anonymous readCompleteSupressHandler of endOfStreamDoesNotDiscardData and of the two
-    // childQueueIsDrainedAndNewDataIsDispatchedInParentReadLoop tests (identical bodies).
     private sealed class ReadCompleteSuppressingHandler : ChannelInboundHandlerAdapter
     {
         public override void ChannelReadComplete(IChannelHandlerContext ctx)
@@ -1797,7 +1748,6 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
         VerifyFramesMultiplexedToCorrectChannel(childChannel, inboundHandler, 3);
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of useReadWithoutAutoReadBuffered.
     private sealed class DoubleReadRequestingHandler : ChannelInboundHandlerAdapter
     {
         private readonly bool triggerOnReadComplete;
@@ -2141,8 +2091,6 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
         Assert.False(childChannel.IsActive);
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of endOfStreamDeliveredReentrantlyDoesNotDropQueuedFrames;
-    // armed.getAndSet(false) is AtomicBoolean.Set(false) (see ReentrantDataWritingHandler).
     private sealed class ReentrantEndStreamWritingHandler : ChannelInboundHandlerAdapter
     {
         private readonly AtomicBoolean armed;
@@ -2239,10 +2187,10 @@ public abstract class Http2MultiplexTest<C> : IDisposable where C : Http2FrameCo
     }
 
     // CLR: future.addListener(listener) on a Task of the stream channel: the continuation runs on Common's
-    // EventExecutorTaskScheduler over the channel's event loop, the timing of DefaultPromise.notifyListeners()
-    // (docs/codec-http-porting.md, Listener timing), so it runs on the EmbeddedChannel's thread as Java's listener
-    // does, and with ExecuteSynchronously "If the antecedent is already complete when the continuation is created, the
-    // continuation will run on the thread that creates the continuation"
+    // EventExecutorTaskScheduler over the channel's event loop, the timing of DefaultPromise.notifyListeners(), so
+    // it runs on the EmbeddedChannel's thread as Java's listener does, and with ExecuteSynchronously "If the
+    // antecedent is already complete when the continuation is created, the continuation will run on the thread
+    // that creates the continuation"
     // (https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.taskcontinuationoptions?view=net-10.0).
     private static Task AddListener(IChannel channel, Task future, Action<Task> listener)
     {

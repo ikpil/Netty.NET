@@ -38,14 +38,13 @@ namespace Netty.NET.Handler.Ssl.Ocsp;
 // OcspAsn1.cs: CertificateID is CertificateId, OCSPReqBuilder OcspReqBuilder, OCSPResp OcspResp, BasicOCSPResp
 // BasicOcspResp, Extension OcspExtension, and the DigestCalculatorProvider is the hash algorithm the CertificateId
 // computes with (HASH_SHA1 is OcspObjectIdentifiers.IdSha1). OCSPException, OperatorCreationException and the JCA
-// CertificateException are CryptographicException (docs/pkitesting-porting.md maps CertificateException so);
-// IllegalStateException is InvalidOperationException and IllegalArgumentException ArgumentException
-// (docs/codec-base-porting.md). Promise<T> is TaskCompletionSource<T> (created without
+// CertificateException are CryptographicException; IllegalStateException is InvalidOperationException and
+// IllegalArgumentException ArgumentException. Promise<T> is TaskCompletionSource<T> (created without
 // RunContinuationsAsynchronously, as Http2CodecUtil.NewPromise()), and each listener is a continuation on Common's
 // EventExecutorTaskScheduler over the event loop of the IoTransport, the executor of the Java promises and of the
-// DnsNameResolver, which notifies at once on that event loop (docs/handler-porting.md, "Task promises"). eventLoop.execute
-// takes a lambda for the anonymous Runnable. SecureRandom is RandomNumberGenerator. java.net.URL is Uri; InetAddress is
-// IPAddress, and dnsNameResolver.resolve(host) is ResolveAsync(host). The JDK's CertPathBuilder ("PKIX") is X509Chain.
+// DnsNameResolver, which notifies at once on that event loop. eventLoop.execute takes a lambda for the anonymous
+// Runnable. SecureRandom is RandomNumberGenerator. java.net.URL is Uri; InetAddress is IPAddress, and
+// dnsNameResolver.resolve(host) is ResolveAsync(host). The JDK's CertPathBuilder ("PKIX") is X509Chain.
 internal sealed class OcspClient
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(OcspClient));

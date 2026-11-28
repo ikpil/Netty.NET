@@ -24,9 +24,6 @@ namespace Netty.NET.Handler.Codec.Mqtt;
 /**
  * Payload for MQTT unsuback message as in V5.
  */
-// CLR: short... is a params array, Iterable<Short> is IEnumerable<short>, java.util.List is IList<T> and
-// Collections.unmodifiableList is a ReadOnlyCollection<T> view (see MqttSubscribePayload). Short.byteValue() is the
-// unchecked (byte) narrowing of the short.
 public sealed class MqttUnsubAckPayload
 {
     private readonly IList<MqttReasonCodes.UnsubAck> unsubscribeReasonCodes;

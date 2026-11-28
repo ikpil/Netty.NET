@@ -28,32 +28,10 @@ namespace Netty.NET.Handler.Codec.Compression;
  * <p>
  * See <a href="https://github.com/google/brotli">brotli</a>.
  */
-// CLR: owner decision 2026-11-23: brotli4j's DecoderJNI.Wrapper is replaced by the BCL System.IO.Compression.BrotliDecoder
-// struct (written with its namespace, because this class has the same simple name). The wrapper keeps an input buffer
-// that push(length) decodes, keeps the decoded output inside the native decoder until pull() takes it, and reports
-// ERROR, DONE, NEEDS_MORE_INPUT, NEEDS_MORE_OUTPUT or OK
-// (https://raw.githubusercontent.com/hyperxpro/Brotli4j/v1.23.0/brotli4j/src/main/java/com/aayushatharva/brotli4j/decoder/DecoderJNI.java,
-// https://raw.githubusercontent.com/hyperxpro/Brotli4j/v1.23.0/natives/src/main/cpp/decoder_jni.cc). The BCL decoder
-// has one call, Decompress(source, destination, out bytesConsumed, out bytesWritten), which decodes input and writes
-// output into the caller's span in the same step and returns an OperationStatus
-// (https://learn.microsoft.com/en-us/dotnet/api/system.io.compression.brotlidecoder.decompress?view=net-10.0). The class
-// therefore keeps the wrapper's state in CLR fields: inputBuffer with inputOffset/inputLength (getInputBuffer() and the
-// unconsumed pushed input), outputBuffer with outputLength (the output that pull() would take) and lastStatus, the
-// OperationStatus of the last call, which stands for the wrapper status: Done is DONE once the output was taken (the
-// Decompress call that finishes the stream may also write its last output), NeedMoreData ("at least one more
-// byte is required") is NEEDS_MORE_INPUT, DestinationTooSmall ("There is not enough space in destination") is
-// NEEDS_MORE_OUTPUT, and InvalidData ("The data in source is invalid") is ERROR. OK, which brotli4j reports after a pull
-// when pushed input is left, does not occur: the pull continues decoding at once (Pull). decoder_jni.cc reports ERROR
-// when the stream ends before the pushed input does ("Bytes after stream end are not allowed"); the DONE branch keeps
-// that check. The BCL decoder is a mutable struct without a constructor that creates its native state lazily on the first
-// Decompress call
-// (https://raw.githubusercontent.com/dotnet/dotnet/297acf930fb0f5c07fd4e51d78e521b4ad2e5d1f/src/runtime/src/libraries/System.IO.Compression.Brotli/src/System/IO/Compression/dec/BrotliDecoder.cs),
-// so the field is not readonly (a readonly field would hand each call a copy) and destroy() is Dispose(). The static
-// initializer is the static constructor; Brotli.EnsureAvailability() never throws, and an exception thrown by a static
-// constructor reaches callers as TypeInitializationException
-// (https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/static-constructors), the CLR
-// counterpart of ExceptionInInitializerError, so the try/catch is not repeated. List<Object> out is IList<object> @out
-// and in is @in (docs/codec-base-porting.md); the rethrow of catch (Exception e) { ...; throw e; } is throw;.
+// CLR: Keep the input, pending output and last decoder status separately because the BCL consumes input and emits
+// output in the same call.
+// Done can include final output. Drain it before reporting completion and reject trailing bytes in the pushed
+// input. Keep the mutable decoder in a writable field so calls share its native state.
 public sealed class BrotliDecoder : ByteToMessageDecoder
 {
 
@@ -136,8 +114,7 @@ public sealed class BrotliDecoder : ByteToMessageDecoder
                 new BrotliDecoder();
     }
 
-    // CLR: decoder.pull(outputBufferSize) is the output that the last Decompress call wrote into outputBuffer; Pull()
-    // then releases it and continues decoding when the decoder may hold more (see Pull).
+    // CLR: Pull() then releases it and continues decoding when the decoder may hold more (see Pull).
     private void ForwardOutput(IChannelHandlerContext ctx)
     {
         ReadOnlySpan<byte> nativeBuffer = outputBuffer.AsSpan(0, outputLength);

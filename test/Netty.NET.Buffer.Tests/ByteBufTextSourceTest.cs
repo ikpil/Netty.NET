@@ -64,7 +64,6 @@ public class ByteBufTextSourceTest
         }
     }
 
-    // CLR: Encoding.BigEndianUnicode stands in for CharsetUtil.UTF_16 without its BOM.
     private static readonly Encoding UTF_16 = Encoding.BigEndianUnicode;
 
     private static readonly string EXTENDED_ASCII_CHARS, ASCII_CHARS;
@@ -315,7 +314,6 @@ public class ByteBufTextSourceTest
         string sequence = Encoding.ASCII.Equals(charset)
                 ? ASCII_CHARS : EXTENDED_ASCII_CHARS;
         int bytes = buf.SetCharSequence(1, sequence, charset);
-        // CLR: the ICharSequence content is compared through ToString(), as CharBuffer.wrap does in the source.
         Assert.Equal(sequence, buf.GetCharSequence(1, bytes, charset).ToString());
         // CLR: exact byte count and unchanged cursors.
         Assert.Equal(ExpectedLength(charset), bytes);
@@ -361,7 +359,6 @@ public class ByteBufTextSourceTest
         buf.WriterIndex = 1;
         int bytes = buf.WriteCharSequence(sequence, charset);
         buf.ReaderIndex = 1;
-        // CLR: the ICharSequence content is compared through ToString(), as CharBuffer.wrap does in the source.
         Assert.Equal(sequence, buf.ReadCharSequence(bytes, charset).ToString());
         // CLR: exact byte count and consumed cursors.
         Assert.Equal(ExpectedLength(charset), bytes);

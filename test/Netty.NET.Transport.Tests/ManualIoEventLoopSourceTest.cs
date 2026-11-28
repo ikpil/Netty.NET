@@ -351,7 +351,6 @@ public class ManualIoEventLoopSourceTest
             return new TestIoRegistration();
         }
 
-        // CLR: the anonymous IoRegistration of register(IoHandle) becomes a nested class.
         private sealed class TestIoRegistration : IIoRegistration
         {
             private readonly AtomicBoolean _canceled = new AtomicBoolean();

@@ -19,9 +19,8 @@ using Netty.NET.Common;
 
 namespace Netty.NET.Handler.Codec.Smtp.Tests;
 
-// CLR: CharSequence is ICharSequence (see SmtpUtils), so the Java String arguments are passed as StringCharSequence;
-// the anonymous Executable instances are lambdas and IllegalArgumentException is ArgumentException
-// (docs/codec-base-porting.md).
+// CLR: CharSequence is ICharSequence (see SmtpUtils), so the Java String arguments are passed as
+// StringCharSequence.
 public class SmtpRequestsTest
 {
     [Fact]

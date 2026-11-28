@@ -483,7 +483,6 @@ public class Http2StaticFileServerHandler : ChannelDuplexHandler
         headers.Set(HttpHeaderNames.CONTENT_TYPE, new StringCharSequence(contentType));
     }
 
-    // CLR-only: File.isHidden().
     private static bool IsHidden(FileSystemInfo file)
     {
         return file.Exists && (file.Attributes & FileAttributes.Hidden) != 0;

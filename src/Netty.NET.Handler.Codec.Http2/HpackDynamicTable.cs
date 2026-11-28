@@ -36,9 +36,8 @@ using static Netty.NET.Handler.Codec.Http2.Http2CodecUtil;
 
 namespace Netty.NET.Handler.Codec.Http2;
 
-// CLR: the package-private final class is internal sealed; its package-private fields and constructor are internal.
-// IndexOutOfBoundsException is ArgumentOutOfRangeException and IllegalArgumentException is ArgumentException
-// (docs/codec-base-porting.md); numbers in messages use the invariant culture.
+// CLR: IndexOutOfBoundsException is ArgumentOutOfRangeException and IllegalArgumentException is ArgumentException;
+// numbers in messages use the invariant culture.
 internal sealed class HpackDynamicTable
 {
 

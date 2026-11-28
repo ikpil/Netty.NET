@@ -25,8 +25,7 @@ namespace Netty.NET.Handler.Codec.Http2;
  * this interface write to the context, but DO NOT FLUSH. To perform a flush, you must separately
  * call {@link ChannelHandlerContext#flush()}.
  */
-// CLR: ChannelPromise is TaskCompletionSource and ChannelFuture is Task; the Task-returning methods take the Async
-// suffix and return the promise's Task (docs/codec-http-porting.md, Shared CLR adaptations; owner rule 2).
+// CLR: The Task-returning methods take the Async suffix and return the promise's Task.
 // CLR: Closeable keeps close() as Close() and implements IDisposable.Dispose() with it (docs/handler-porting.md:
 // "Closeable keeps close() as Close() and implements IDisposable.Dispose() with it").
 // CLR: the nested interface Configuration takes the I prefix.

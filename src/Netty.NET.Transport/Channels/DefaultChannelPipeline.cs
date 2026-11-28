@@ -129,8 +129,7 @@ public class DefaultChannelPipeline : IChannelPipeline
         {
             return null;
         }
-        // CLR: TryGetOption reports an unset option as false where getOption returns null (docs/common-clr-design.md,
-        // "Public name categories").
+        // CLR: TryGetOption reports an unset option as false where getOption returns null.
         if (_channel.Config.TryGetOption(ChannelOption.SINGLE_EVENTEXECUTOR_PER_GROUP, out bool pinEventExecutor) &&
             !pinEventExecutor)
         {

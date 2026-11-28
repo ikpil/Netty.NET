@@ -19,14 +19,14 @@ using System.Text;
 
 namespace Netty.NET.Handler.Codec.Http.Tests;
 
-// CLR: new URI(String) is new Uri(string, UriKind.RelativeOrAbsolute), the counterpart of QueryStringEncoder.toUri().
-// StandardCharsets.UTF_16 is Encoding.BigEndianUnicode (UTF-16 in big-endian byte order). The JDK "UTF-16" charset
-// writes a big-endian byte-order mark when encoding
+// CLR: new URI(String) is new Uri(string, UriKind.RelativeOrAbsolute), the counterpart of
+// QueryStringEncoder.toUri(). StandardCharsets.UTF_16 is Encoding.BigEndianUnicode (UTF-16 in big-endian byte
+// order). The JDK "UTF-16" charset writes a big-endian byte-order mark when encoding
 // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/charset/Charset.html), so Java expects
-// "%FE%FF%00%A5"; .NET Encoding.GetBytes never writes the preamble, which "can be prefixed to the sequence of bytes
+// "%FE%FF%00%A5";.NET Encoding.GetBytes never writes the preamble, which "can be prefixed to the sequence of bytes
 // resulting from the encoding process"
-// (https://learn.microsoft.com/en-us/dotnet/api/system.text.encoding.getpreamble?view=net-10.0), so the C# expectation
-// of testNonDefaultEncoding is "%00%A5": the same big-endian UTF-16 code unit without the mark.
+// (https://learn.microsoft.com/en-us/dotnet/api/system.text.encoding.getpreamble?view=net-10.0), so the C#
+// expectation of testNonDefaultEncoding is "%00%A5": the same big-endian UTF-16 code unit without the mark.
 public class QueryStringEncoderTest
 {
 

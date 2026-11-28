@@ -23,8 +23,8 @@ namespace Netty.NET.Handler.Codec.Mqtt;
 /**
  * Variable Header of the {@link MqttPublishMessage}
  */
-// CLR: the @Deprecated messageId() ("Use packetId() instead") is not ported (owner decision 2026-11-16 for deprecated
-// members whose replacement is named); its Javadoc is recorded in docs/codec-mqtt-porting-manifest.json.
+// CLR: the @Deprecated messageId() ("Use packetId() instead") is not ported; its Javadoc is recorded in
+// docs/codec-mqtt-porting-manifest.json.
 public sealed class MqttPublishVariableHeader
 {
     private readonly string topicName;

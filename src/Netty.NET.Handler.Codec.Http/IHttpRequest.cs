@@ -37,10 +37,9 @@ namespace Netty.NET.Handler.Codec.Http;
  * @see io.netty.handler.codec.http.cookie.ClientCookieEncoder
  */
 // CLR: the Java interface takes the I prefix (owner rule). The @Deprecated getMethod() and getUri(), whose
-// @deprecated texts name method() and uri(), are not ported (owner decision 2026-11-16). The setProtocolVersion
-// re-declaration that only narrows the return type is inherited from IHttpMessage, not repeated: C# 9 covariant returns
-// cover class overrides only, so the implementations narrow it (owner decision 2026-11-19; docs/transport-porting.md,
-// Decisions).
+// @deprecated texts name method() and uri(), are not ported. The setProtocolVersion re-declaration that only
+// narrows the return type is inherited from IHttpMessage, not repeated: C# 9 covariant returns cover class
+// overrides only, so the implementations narrow it.
 public interface IHttpRequest : IHttpMessage
 {
 

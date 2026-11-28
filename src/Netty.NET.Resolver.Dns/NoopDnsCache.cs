@@ -25,8 +25,6 @@ namespace Netty.NET.Resolver.Dns;
 /**
  * A noop DNS cache that actually never caches anything.
  */
-// CLR: Collections.emptyList() is Array.Empty; getClass().getSimpleName() is the type name; InetAddress.toString() is
-// IPAddress.ToString(), the literal (IPAddress carries no host name).
 public sealed class NoopDnsCache : IDnsCache
 {
 

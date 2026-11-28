@@ -19,10 +19,9 @@ using Netty.NET.Buffer;
 namespace Netty.NET.Handler.Codec.Compression.Tests;
 
 // CLR: Decompressor is IDecompressor and status() is Status_() (see IDecompressor). ByteBufAllocator.DEFAULT is
-// IByteBufAllocator.Default and refCnt() is the Buffer port's RefCnt property. The anonymous Executable is a lambda. The
-// nested subclass overrides the internal processInput/processOutput of InputBufferingDecompressor as internal members
-// (InternalsVisibleTo), and its package-private fields are internal. readByte() returns the unsigned byte 2, which equals
-// the Java byte 2.
+// IByteBufAllocator.Default and refCnt() is the Buffer port's RefCnt property. The nested subclass overrides the
+// internal processInput/processOutput of InputBufferingDecompressor as internal members (InternalsVisibleTo), and
+// its package-private fields are internal. readByte() returns the unsigned byte 2, which equals the Java byte 2.
 public class InputBufferingDecompressorTest
 {
 

@@ -368,8 +368,8 @@ internal sealed class BasicOcspResp
     private readonly SingleResp[] responses;
     private readonly List<OcspExtension> responseExtensions;
 
-    // CLR: getResponseObject() throws OCSPException ("problem decoding object: ...") when the BasicOCSPResponse cannot be
-    // decoded.
+    // CLR: getResponseObject() throws OCSPException ("problem decoding object:...") when the BasicOCSPResponse
+    // cannot be decoded.
     internal BasicOcspResp(byte[] encoded)
     {
         this.encoded = encoded;
@@ -525,8 +525,7 @@ internal sealed class BasicOcspResp
 // CLR-only: org.bouncycastle.cert.ocsp.SingleResp (RFC 6960 section 4.2.1): "SingleResponse ::= SEQUENCE { certID
 // CertID, certStatus CertStatus, thisUpdate GeneralizedTime, nextUpdate [0] EXPLICIT GeneralizedTime OPTIONAL,
 // singleExtensions [1] EXPLICIT Extensions OPTIONAL }". GetCertStatus() is getCertStatus(): null for good (Bouncy
-// Castle's CertificateStatus.GOOD is null), a RevokedStatus or an UnknownStatus. java.util.Date is DateTimeOffset
-// (docs/codec-http-porting.md).
+// Castle's CertificateStatus.GOOD is null), a RevokedStatus or an UnknownStatus. java.util.Date is DateTimeOffset.
 internal sealed class SingleResp
 {
     private SingleResp(CertificateId certId, object certStatus, DateTimeOffset thisUpdate, DateTimeOffset? nextUpdate)

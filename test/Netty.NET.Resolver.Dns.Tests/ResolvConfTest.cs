@@ -21,14 +21,13 @@ using System.Net;
 
 namespace Netty.NET.Resolver.Dns.Tests;
 
-// CLR: @DisabledOnOs(WINDOWS) is Assert.SkipWhen(OperatingSystem.IsWindows()), the dynamic skip that the other test
-// projects use for assumptions (test/Netty.NET.Handler.Codec.Compression.Tests/JdkZlibDecompressorTest.cs); AssertJ
-// isGreaterThan(0) is Assert.True(count > 0). @ParameterizedTest @MethodSource is [Theory] [MemberData] over
-// TheoryData<string, string[]> (List<String> is a string array); the source method scenarios() is Scenarios_(), because
-// xUnit rejects a test method that shares its name with an overload (xUnit1024), the trailing-underscore rule of
-// docs/codec-http-porting.md (Name clashes). new BufferedReader(new StringReader(..)) is a
-// StringReader; new InetSocketAddress(n, 53) of an address literal is new IPEndPoint(IPAddress.Parse(n), 53) (the literal
-// mapping of the resolver-dns brief), built with LINQ Select in place of the anonymous Function; assertIterableEquals is
+// CLR: @DisabledOnOs(WINDOWS) is Assert.SkipWhen(OperatingSystem.IsWindows()), the dynamic skip that the other
+// test projects use for assumptions (test/Netty.NET.Handler.Codec.Compression.Tests/JdkZlibDecompressorTest.cs);
+// AssertJ isGreaterThan(0) is Assert.True(count > 0). The source method scenarios() is Scenarios_(), because xUnit
+// rejects a test method that shares its name with an overload (xUnit1024), the trailing-underscore rule of
+// docs/codec-http-porting.md (Name clashes). new BufferedReader(new StringReader(..)) is a StringReader; new
+// InetSocketAddress(n, 53) of an address literal is new IPEndPoint(IPAddress.Parse(n), 53) (the literal mapping of
+// the resolver-dns brief), built with LINQ Select in place of the anonymous Function; assertIterableEquals is
 // Assert.Equal over the sequences.
 public class ResolvConfTest
 {

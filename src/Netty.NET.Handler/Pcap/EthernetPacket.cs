@@ -18,7 +18,6 @@ using Netty.NET.Buffer;
 
 namespace Netty.NET.Handler.Pcap;
 
-// CLR: the package-private final class is an internal sealed class with the private constructor.
 internal sealed class EthernetPacket
 {
 

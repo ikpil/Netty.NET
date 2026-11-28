@@ -22,8 +22,8 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx;
  * An {@link DecoderException} which is thrown when the received {@link WebSocketFrame} data could not be decoded by
  * an inbound handler.
  */
-// CLR: serialVersionUID is JVM serialization metadata and has no counterpart. CorruptedFrameException is the codec-base
-// class; Throwable is Exception.
+// CLR: serialVersionUID is JVM serialization metadata and has no counterpart. CorruptedFrameException is the
+// codec-base class.
 public sealed class CorruptedWebSocketFrameException : CorruptedFrameException
 {
 

@@ -30,23 +30,22 @@ namespace Netty.NET.Handler.Codec.Http2;
 /**
  * Default implementation of {@link Http2ConnectionEncoder}.
  */
-// CLR: ChannelPromise is TaskCompletionSource and ChannelFuture Task; the Task-returning methods take the Async suffix
-// and return the promise's Task (docs/codec-http-porting.md, Shared CLR adaptations). promise.unvoid() returns the
-// promise itself (there is no void promise, docs/transport-porting.md), so those assignments are left out.
+// CLR: The Task-returning methods take the Async suffix and return the promise's Task. promise.unvoid() returns
+// the promise itself (there is no void promise, docs/transport-porting.md), so those assignments are left out.
 // promise.setFailure(e)/tryFailure(e) are SetException/TrySetException followed by returning the promise's Task;
-// future.cause() is Http2CodecUtil.Cause(future) (null for a pending or successful Task) and future.isSuccess()/isDone()
-// are IsCompletedSuccessfully/IsCompleted. future.addListener(...) and ctx.newPromise().addListener(this) are
-// Http2CodecUtil.AddListener, a continuation on Common's EventExecutorTaskScheduler over ctx.Executor that keeps
-// DefaultPromise's listener timing (docs/codec-http-porting.md, Listener timing). The ChannelFutureListener inner
-// classes have an OperationComplete(Task) method. A Java switch on Http2Stream.State is an if/else chain on the State
-// instances (a C# case label must be a constant). The non-final Java methods are virtual. The inner (non-static)
-// classes receive the enclosing encoder in their constructors. ArrayDeque<OutstandingLocalSettings> is a LinkedList,
-// because operationComplete removes an arbitrary element (Queue<T> has no Remove(T)); the remote settings ArrayDeque is
-// a Queue. IllegalStateException is InvalidOperationException, IllegalArgumentException ArgumentException and
-// UnsupportedOperationException NotSupportedException (docs/codec-base-porting.md); numbers and booleans in messages
-// keep their Java text (Http2CodecUtil.ToJavaString). The CoalescingBufferQueue of FlowControlledData is created for
-// promise.channel() in Java; a TaskCompletionSource has no channel, so writeData passes ctx.Channel (the channel of the
-// context whose promise Java receives).
+// future.cause() is Http2CodecUtil.Cause(future) (null for a pending or successful Task) and
+// future.isSuccess()/isDone() are IsCompletedSuccessfully/IsCompleted. future.addListener(...) and
+// ctx.newPromise().addListener(this) are Http2CodecUtil.AddListener, a continuation on Common's
+// EventExecutorTaskScheduler over ctx.Executor that keeps DefaultPromise's listener timing. The
+// ChannelFutureListener inner classes have an OperationComplete(Task) method. A Java switch on Http2Stream.State
+// is an if/else chain on the State instances (a C# case label must be a constant). The non-final Java methods are
+// virtual. The inner (non-static) classes receive the enclosing encoder in their constructors.
+// ArrayDeque<OutstandingLocalSettings> is a LinkedList, because operationComplete removes an arbitrary element
+// (Queue<T> has no Remove(T)); the remote settings ArrayDeque is a Queue. IllegalStateException is
+// InvalidOperationException, IllegalArgumentException ArgumentException and UnsupportedOperationException
+// NotSupportedException; numbers and booleans in messages keep their Java text (Http2CodecUtil.ToJavaString). The
+// CoalescingBufferQueue of FlowControlledData is created for promise.channel() in Java; a TaskCompletionSource has
+// no channel, so writeData passes ctx.Channel (the channel of the context whose promise Java receives).
 public class DefaultHttp2ConnectionEncoder : IHttp2ConnectionEncoder, IHttp2SettingsReceivedConsumer
 {
     private readonly IHttp2FrameWriter frameWriter;
@@ -768,10 +767,9 @@ public class DefaultHttp2ConnectionEncoder : IHttp2ConnectionEncoder, IHttp2Sett
     /**
      * Common base type for payloads to deliver via flow-control.
      */
-    // CLR: the public abstract inner class keeps its public shape with an internal constructor (the Java constructor is
-    // package-private) that also takes the enclosing encoder. The FlowControlled members that Java leaves to the
-    // subclasses are declared abstract, because a C# class must map every interface member. ChannelFutureListener's
-    // operationComplete(ChannelFuture) is OperationComplete(Task).
+    // CLR: The FlowControlled members that Java leaves to the subclasses are declared abstract, because a C# class
+    // must map every interface member. ChannelFutureListener's operationComplete(ChannelFuture) is
+    // OperationComplete(Task).
     public abstract class FlowControlledBase : IHttp2RemoteFlowController.IFlowControlled
     {
         // CLR: the enclosing instance of the Java inner class.

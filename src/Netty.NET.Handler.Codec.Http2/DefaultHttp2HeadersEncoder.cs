@@ -21,15 +21,11 @@ using static Netty.NET.Common.Internal.ObjectUtil;
 
 namespace Netty.NET.Handler.Codec.Http2;
 
-// CLR: Closeable is IDisposable with close() kept as Close() and Dispose() calling it (docs/handler-porting.md:
-// "Closeable keeps close() as Close() and implements IDisposable.Dispose() with it"); DefaultHttp2FrameWriter tests
-// "is IDisposable" where Java tests "instanceof Closeable". SensitivityDetector is
-// IHttp2HeadersEncoder.ISensitivityDetector, and the interface constant NEVER_SENSITIVE is reached through the
-// interface name (an implementing class does not expose interface statics by its simple name). The package-private
-// constructor taking the package-private HpackEncoder is internal. The public members of the non-final class are
-// virtual (docs/codec-http-porting.md, Cookie and CORS: "The members of the non-final DefaultCookie are virtual").
-// catch (Http2Exception e) { throw e; } is a rethrow (throw;), which keeps the stack trace as Java's throw e does;
-// catch (Throwable) is catch (Exception) and getMessage() is Message.
+// CLR: SensitivityDetector is IHttp2HeadersEncoder.ISensitivityDetector, and the interface constant
+// NEVER_SENSITIVE is reached through the interface name (an implementing class does not expose interface statics
+// by its simple name). The public members of the non-final class are virtual. catch (Http2Exception e) { throw e;
+// } is a rethrow (throw;), which keeps the stack trace as Java's throw e does; catch (Throwable) is catch
+// (Exception) and getMessage() is Message.
 public class DefaultHttp2HeadersEncoder :
     IHttp2HeadersEncoder, IHttp2HeadersEncoder.IConfiguration, IDisposable
 {

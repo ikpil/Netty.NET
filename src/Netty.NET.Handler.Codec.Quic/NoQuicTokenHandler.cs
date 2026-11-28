@@ -22,7 +22,7 @@ namespace Netty.NET.Handler.Codec.Quic;
 /**
  * {@link QuicTokenHandler} which will not use any token and so also fail to validate any given token.
  */
-// CLR: the package-private class is internal; InetSocketAddress is IPEndPoint.
+// CLR: InetSocketAddress is IPEndPoint.
 internal sealed class NoQuicTokenHandler : IQuicTokenHandler
 {
 

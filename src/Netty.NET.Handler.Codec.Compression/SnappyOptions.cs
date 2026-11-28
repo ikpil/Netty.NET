@@ -20,7 +20,7 @@ namespace Netty.NET.Handler.Codec.Compression;
  * {@link SnappyOptions} holds config for
  * Snappy compression.
  */
-// CLR: CompressionOptions is the marker interface ICompressionOptions (I prefix); the public final class is sealed.
+// CLR: The public final class is sealed.
 public sealed class SnappyOptions : ICompressionOptions
 {
     // Will add config if Snappy supports this

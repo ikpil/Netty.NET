@@ -26,7 +26,7 @@ namespace Netty.NET.Handler.Codec.Http;
  * and that the delimiter must follow the given chunk-size number of octets in chunk-data.
  */
 // CLR: serialVersionUID has no counterpart, Throwable is Exception and the cause-only constructor keeps the
-// codec-base detail message (docs/codec-base-porting.md, Exceptions).
+// codec-base detail message.
 public sealed class InvalidChunkTerminationException : CorruptedFrameException
 {
 

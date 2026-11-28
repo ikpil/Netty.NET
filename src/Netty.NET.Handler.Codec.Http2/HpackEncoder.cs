@@ -51,21 +51,17 @@ namespace Netty.NET.Handler.Codec.Http2;
  * as security sensitive or not.  If a header is considered not sensitive, methods names "insensitive" are used which
  * are fast, but don't provide any security guarantees.
  */
-// CLR: the package-private final class is internal sealed and its package-private members are internal (the tests
-// reach them through InternalsVisibleTo). Http2Headers is IEnumerable<IEntry<ICharSequence, ICharSequence>>, so
-// for (Map.Entry<...> header : headers) is a foreach over codec-base IEntry (docs/codec-base-porting.md, Headers).
-// SensitivityDetector is IHttp2HeadersEncoder.ISensitivityDetector. The field initializer latest = head reads an
-// instance field, which a C# field initializer cannot do (CS0236,
+// CLR: SensitivityDetector is IHttp2HeadersEncoder.ISensitivityDetector. The field initializer latest = head reads
+// an instance field, which a C# field initializer cannot do (CS0236,
 // https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0236), so the constructor assigns it. The simple enum
-// IndexType is switched as a C# enum; throw new Error(...) is UnreachableException (docs/codec-http-porting.md,
-// Shared CLR adaptations). AsciiString.array()/arrayOffset() are Array()/ArrayOffset();
-// out.writeCharSequence(string, ISO_8859_1) writes AsciiString.c2b of each char (Java's
-// AbstractByteBuf.setCharSequence0 takes the ByteBufUtil.writeAscii path for ISO_8859_1), which is
-// ByteBufUtil.WriteAscii (docs/codec-http-porting.md: writeCharSequence(..., US_ASCII) is ByteBufUtil.WriteAscii).
-// hashMask is a byte below 128 (the array length is at most 128), so the Java byte and System.Byte masks are
-// equal; the non-negative mask is OR-ed into the long as uint (zero extension, which avoids the sign-extension
-// warning CS0675) with the value of Java's widening. The private nested entry classes' fields are internal so the
-// encoder reads them.
+// IndexType is switched as a C# enum; throw new Error(...) is UnreachableException.
+// AsciiString.array()/arrayOffset() are Array()/ArrayOffset(); out.writeCharSequence(string, ISO_8859_1) writes
+// AsciiString.c2b of each char (Java's AbstractByteBuf.setCharSequence0 takes the ByteBufUtil.writeAscii path for
+// ISO_8859_1), which is ByteBufUtil.WriteAscii (docs/codec-http-porting.md: writeCharSequence(..., US_ASCII) is
+// ByteBufUtil.WriteAscii). hashMask is a byte below 128 (the array length is at most 128), so the Java byte and
+// System.Byte masks are equal; the non-negative mask is OR-ed into the long as uint (zero extension, which avoids
+// the sign-extension warning CS0675) with the value of Java's widening. The private nested entry classes' fields
+// are internal so the encoder reads them.
 internal sealed class HpackEncoder
 {
     internal const int NOT_FOUND = -1;

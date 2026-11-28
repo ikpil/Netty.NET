@@ -25,14 +25,10 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Codec.Http.Tests;
 
-// CLR: CharsetUtil.UTF_8/US_ASCII are Encoding.UTF8/Encoding.ASCII (docs/codec-smtp-porting.md); String.getBytes(UTF_8)
-// is Encoding.UTF8.GetBytes. assertThat(x).isInstanceOf(T.class) and assertInstanceOf are Assert.IsAssignableFrom
-// (https://raw.githubusercontent.com/xunit/assert.xunit/main/TypeAsserts.cs); assertDoesNotThrow(executable) records the
-// exception with Record.Exception and asserts that none was thrown
-// (https://raw.githubusercontent.com/xunit/assert.xunit/main/Record.cs). The Java messages of assertTrue/assertFalse use
-// XunitAssertMessages.AssertM. Numbers concatenated into request text use the invariant culture. A C# local is in
-// scope in its whole block, so the method-level buf/encoded of the Java HEAD checks, declared after loop-scoped locals
-// of the same names, are headBuf/headEncoded (CS0136: https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0136).
+// CLR: The Java messages of assertTrue/assertFalse use XunitAssertMessages.AssertM. Numbers concatenated into
+// request text use the invariant culture. A C# local is in scope in its whole block, so the method-level
+// buf/encoded of the Java HEAD checks, declared after loop-scoped locals of the same names, are
+// headBuf/headEncoded (CS0136: https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0136).
 public class HttpServerCodecTest
 {
 

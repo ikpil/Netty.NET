@@ -32,20 +32,15 @@ namespace Netty.NET.Handler.Codec.Stomp;
  * Encodes a {@link StompFrame} or a {@link StompSubframe} into a {@link ByteBuf}.
  */
 // CLR: StompSubframe.class is typeof(IStompSubframe), IllegalArgumentException is ArgumentException and
-// List<Object> out is IList<object> @out (docs/codec-base-porting.md). The anonymous FastThreadLocal and the anonymous
-// LinkedHashMap with removeEldestEntry are the named nested classes EscapeHeaderKeyCacheThreadLocal and
-// EscapeHeaderKeyCache over the Common FastThreadLocal and LinkedHashMap (access order); the Common LinkedHashMap has no
-// removeEldestEntry hook, so EscapeHeaderKeyCache.Put adds the entry and then removes the eldest one when
-// removeEldestEntry returns true, as Java's LinkedHashMap.put does after an insertion
-// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/LinkedHashMap.html#removeEldestEntry(java.util.Map.Entry)),
-// and LinkedHashMap.get is TryGetValue, which moves the key in access order; the Common map has no load factor, so
-// DEFAULT_LOAD_FACTOR is unused. PlatformDependent.throwException(e) rethrows the caught exception unchanged, which is
-// throw; in the catch block ("use a throw; statement to re-throw the exception that the catch block handles",
+// List<Object> out is IList<object> @out. PlatformDependent.throwException(e) rethrows the caught exception
+// unchanged, which is throw; in the catch block ("use a throw; statement to re-throw the exception that the catch
+// block handles",
 // https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/exception-handling-statements).
-// ByteBufUtil.writeUtf8(ByteBuf, CharSequence) has no ICharSequence overload in the Buffer port; WriteUtf8 below picks
-// the AsciiString overload for an AsciiString and the character overload (ReadOnlySpan<char> of ToString()) otherwise,
-// as the Java method dispatches on the AsciiString type. The enum command prints its constant name
-// (https://learn.microsoft.com/en-us/dotnet/api/system.enum.tostring); numbers in messages use the invariant culture.
+// ByteBufUtil.writeUtf8(ByteBuf, CharSequence) has no ICharSequence overload in the Buffer port; WriteUtf8 below
+// picks the AsciiString overload for an AsciiString and the character overload (ReadOnlySpan<char> of ToString())
+// otherwise, as the Java method dispatches on the AsciiString type. The enum command prints its constant name
+// (https://learn.microsoft.com/en-us/dotnet/api/system.enum.tostring); numbers in messages use the invariant
+// culture.
 public class StompSubframeEncoder : MessageToMessageEncoder<IStompSubframe>
 {
 

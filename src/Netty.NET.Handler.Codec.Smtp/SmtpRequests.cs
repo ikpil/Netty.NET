@@ -23,12 +23,8 @@ namespace Netty.NET.Handler.Codec.Smtp;
 /**
  * Provides utility methods to create {@link SmtpRequest}s.
  */
-// CLR: @UnstableApi is the Common [UnstableApi] attribute; the final utility class with a private constructor is a
-// static class. CharSequence... is params ICharSequence[] (see SmtpUtils); the String results of the source
-// concatenations and help(String) are passed as their ICharSequence wrapper StringCharSequence, and the conditional
-// between a StringCharSequence and the AsciiString FROM_NULL_SENDER is typed ICharSequence explicitly.
-// Collections.addAll(list, array) is List<T>.AddRange; the local 'params' is @params (a C# keyword). checkNotNull
-// throws ArgumentNullException (docs/codec-base-porting.md).
+// CLR: The final utility class with a private constructor is a static class. The local 'params' is @params (a C#
+// keyword). checkNotNull throws ArgumentNullException.
 [UnstableApi]
 public static class SmtpRequests
 {

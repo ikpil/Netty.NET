@@ -21,10 +21,9 @@ namespace Netty.NET.Handler.Codec.Http2;
  */
 // CLR: stream(Http2FrameStream) narrows its return type to AbstractHttp2StreamFrame, which the subclasses narrow
 // further; C# 9 covariant returns cover class overrides only, so the virtual Stream(IHttp2FrameStream) returns
-// AbstractHttp2StreamFrame and IHttp2StreamFrame.Stream is implemented explicitly with it (owner decision 2026-11-19;
-// docs/codec-http-porting.md, Shared CLR adaptations). The abstract Java class leaves name() of Http2Frame to its
-// subclasses; a C# class must map every interface member, so it declares the abstract Name(). The non-final Java
-// methods are virtual; equals/hashCode are Equals/GetHashCode.
+// AbstractHttp2StreamFrame and IHttp2StreamFrame.Stream is implemented explicitly with it. The abstract Java class
+// leaves name() of Http2Frame to its subclasses; a C# class must map every interface member, so it declares the
+// abstract Name(). The non-final Java methods are virtual; equals/hashCode are Equals/GetHashCode.
 public abstract class AbstractHttp2StreamFrame : IHttp2StreamFrame
 {
 

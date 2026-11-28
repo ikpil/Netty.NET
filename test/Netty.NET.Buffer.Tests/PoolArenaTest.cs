@@ -159,8 +159,6 @@ public class PoolArenaTest
         Assert.True(b1.Release());
         Assert.True(b2.Release());
 
-        // CLR: PooledByteBufAllocator.directArenas() is @deprecated "use PooledByteBufAllocatorMetric#directArenas()";
-        // the CLR exposes only that replacement publicly (PooledByteBufAllocatorMetric.DirectArenas).
         Assert.True(allocator.Metric.DirectArenas.Count >= 1);
         IPoolArenaMetric metric = allocator.Metric.DirectArenas[0];
 

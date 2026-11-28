@@ -30,11 +30,8 @@ namespace Netty.NET.Example.Redis;
 /**
  * An example Redis client handler. This handler read input from STDIN and write output to STDOUT.
  */
-// CLR: write(ctx, msg, promise) is WriteAsync, which returns the Task of ctx.WriteAsync in place of completing the
-// caller's promise (docs/transport-porting.md: promise arguments are the returned Task). String.split("\\s+") is
-// Regex.Split over the same pattern; Java also drops trailing empty strings, which a trimmed line never yields. The Java
-// interface RedisMessage is IRedisMessage, ArrayList is List, and CharsetUtil.UTF_8 is Encoding.UTF8.
-// cause.printStackTrace(System.err) writes Exception.ToString() to Console.Error.
+// CLR: String.split("\\s+") is Regex.Split over the same pattern; Java also drops trailing empty strings, which a
+// trimmed line never yields.
 public class RedisClientHandler : ChannelDuplexHandler
 {
 

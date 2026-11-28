@@ -22,8 +22,7 @@ namespace Netty.NET.Handler.Codec.Http.Cookie;
  * An interface defining an
  * <a href="https://en.wikipedia.org/wiki/HTTP_cookie">HTTP cookie</a>.
  */
-// CLR: the Java interface takes the I prefix; Comparable<Cookie> is IComparable<ICookie> (CompareTo keeps its BCL name).
-// The interface constant UNDEFINED_MAX_AGE is a C# interface constant, which implementing classes name as
+// CLR: The interface constant UNDEFINED_MAX_AGE is a C# interface constant, which implementing classes name as
 // ICookie.UNDEFINED_MAX_AGE (static interface members are not inherited into the implementing class's scope).
 public interface ICookie : IComparable<ICookie>
 {

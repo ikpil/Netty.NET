@@ -25,9 +25,9 @@ namespace Netty.NET.Resolver.Dns;
 /**
  * A cache for DNS resolution entries.
  */
-// CLR: List<? extends DnsCacheEntry> is IReadOnlyList<IDnsCacheEntry> (covariant, so an implementation may return a list
-// of its own entry type); InetAddress is IPAddress, Throwable is Exception and EventLoop the Transport IEventLoop
-// (docs/handler-porting.md, Addresses).
+// CLR: List<? extends DnsCacheEntry> is IReadOnlyList<IDnsCacheEntry> (covariant, so an implementation may return
+// a list of its own entry type); InetAddress is IPAddress, Throwable is Exception and EventLoop the Transport
+// IEventLoop.
 public interface IDnsCache
 {
 

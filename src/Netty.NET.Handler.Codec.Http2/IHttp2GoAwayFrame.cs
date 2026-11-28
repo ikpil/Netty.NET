@@ -28,11 +28,10 @@ namespace Netty.NET.Handler.Codec.Http2;
  * <p>Graceful shutdown as described in the HTTP/2 spec can be accomplished by calling
  * {@code #setExtraStreamIds(Integer.MAX_VALUE)}.
  */
-// CLR: ByteBufHolder is IByteBufHolder, whose content() is the read-only Content property (docs/buffer-porting.md,
-// Buffer holders and conversion). copy(), duplicate(), retainedDuplicate(), replace(ByteBuf), retain(),
-// retain(int), touch() and touch(Object) are re-declared only to narrow the return type, so they are inherited
-// from IByteBufHolder, not repeated; the classes narrow them with covariant overrides (owner decision
-// 2026-11-19; docs/transport-porting.md, Decisions).
+// CLR: ByteBufHolder is IByteBufHolder, whose content() is the read-only Content property. copy(), duplicate(),
+// retainedDuplicate(), replace(ByteBuf), retain(), retain(int), touch() and touch(Object) are re-declared only to
+// narrow the return type, so they are inherited from IByteBufHolder, not repeated; the classes narrow them with
+// covariant overrides.
 public interface IHttp2GoAwayFrame : IHttp2Frame, IByteBufHolder
 {
     /**
@@ -64,5 +63,4 @@ public interface IHttp2GoAwayFrame : IHttp2Frame, IByteBufHolder
      * Optional debugging information describing cause the GOAWAY. Will not be {@code null}, but may
      * be empty.
      */
-    // CLR: content() is IByteBufHolder.Content (see the type comment).
 }

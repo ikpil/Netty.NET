@@ -34,44 +34,12 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Handler.Codec.Quic;
 
-// CLR-only: the IQuicChannel of the msquic implementation, the counterpart of the JNI unit QuicheQuicChannel
-// (jvm-only-replaced), over one System.Net.Quic QuicConnection. Its parent is the QuicEndpointChannel that took the
-// DatagramChannel's place (docs/codec-classes-quic-porting.md, Stage 2) and it runs on the parent's event loop (the only
-// compatible one). It keeps the semantics of QuicheQuicChannel:
-//   - a server channel is created by MsQuicServerCodec when msquic asks for the options of a new connection
-//     (QuicListenerOptions.ConnectionOptionsCallback, where the handler, options and attributes of the builder are applied
-//     and the sslEngineProvider returns its QuicSslEngine) and is registered with channelActive once the listener
-//     accepted the connection (handshake done); a client channel is created by QuicChannelBootstrap, registered, and
-//     connected through its parent's pipeline (connect(MsQuicChannelAddress), which MsQuicClientCodec turns into
-//     QuicConnection.ConnectAsync), with the connect timeout, cancellation, ConnectionPendingException
-//     (SocketError.AlreadyInProgress) and AlreadyConnectedException (SocketError.IsConnected) of QuicChannelUnsafe;
-//     channelActive and SslHandshakeCompletionEvent.SUCCESS follow the handshake, a failed handshake fires
-//     SslHandshakeCompletionEvent with the AuthenticationException (SSLHandshakeException) and fails the connect;
-//   - inbound streams are accepted as soon as the connection is established (AcceptInboundStreamAsync also reports the
-//     end of the connection) and delivered as channelRead(IQuicStreamChannel) when a read() is pending (all accepted
-//     streams per read, then channelReadComplete); the pipeline sets up and registers a stream that reaches its tail
-//     with the stream handler, options and attributes (onUnhandledInboundMessage);
-//   - CreateStreamAsync opens an outbound stream (OpenOutboundStreamAsync), adds the handler and registers it; it fails
-//     with QuicException STREAM_LIMIT_ERROR when the peer allows no stream of the type;
-//   - PeerAllowedStreams counts the stream capacity that msquic reports (QuicConnectionOptions.StreamCapacityCallback,
-//     minus the streams opened here); QuicStreamLimitChangedEvent fires once the connection is established (the
-//     peer's initial limits, which msquic reports before ConnectAsync completes) and on every later increase.
-//     System.Net.Quic does not call the callback of a server connection for the client's initial limits (measured with
-//     .NET 10.0.11), so a server channel's PeerAllowedStreams stays 0 and its CreateStreamAsync waits for stream
-//     capacity (OpenOutboundStreamAsync) instead of failing with STREAM_LIMIT_ERROR;
-//   - the end of the connection closes the channel: a peer's CONNECTION_CLOSE (QuicError.ConnectionAborted) fires the
-//     QuicConnectionCloseEvent with its application (or transport) error code, an idle timeout (QuicError
-//     .ConnectionIdle, ConnectionTimeout) sets IsTimedOut(), and the open streams close with
-//     QuicTimeoutClosedChannelException or ClosedChannelException, as doClose() and closeStreams() do;
-//   - close() closes the connection with QuicConnection.CloseAsync(error) and disposes it; CloseAsync(applicationClose,
-//     error, reason) chooses the error code. System.Net.Quic sends application CONNECTION_CLOSE frames only and no
-//     reason phrase, so the reason is released unused and a transport close with an error code reports
-//     NotSupportedException (a transport close with error 0 is the plain close).
-// System.Net.Quic hides the connection IDs, so LocalAddress/RemoteAddress are QuicConnectionAddress values that identify
-// the connection in this process (the ones given to QuicChannelBootstrap, otherwise random ones of Quic.MAX_CONN_ID_LEN
-// bytes), not the IDs on the wire; they are null before the connection is established. The datagram extension
-// (writes on this channel), statistics (CollectStatsAsync, CollectPathStatsAsync), the peer's transport parameters,
-// QLOG and path events have no counterpart and report NotSupportedException where they are used.
+// CLR: The connection runs on its endpoint's event loop. A server child becomes active after the listener accepts
+// the handshake. Accepted streams are queued until a read is pending.
+// On runtimes that do not report initial server stream capacity through the callback, opening a stream waits for
+// capacity. Connection IDs in channel addresses identify the connection locally and are not wire IDs.
+// System.Net.Quic sends application close codes without a reason phrase. Transport close codes, connection
+// datagrams, statistics and path notifications are unavailable through this backend.
 [SupportedOSPlatform("windows")]
 [SupportedOSPlatform("linux")]
 [SupportedOSPlatform("macos")]

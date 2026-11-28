@@ -26,11 +26,11 @@ using Netty.NET.Transport.Channels.Local;
 
 namespace Netty.NET.Resolver.Dns.Tests;
 
-// CLR: InetSocketAddress is EndPoint: new InetSocketAddress(InetAddress.getByAddress(host, bytes), port) is an IPEndPoint
-// of new IPAddress(bytes), which carries no host name, and createUnresolved a DnsEndPoint (docs/handler-porting.md
-// Addresses). loop.schedule(Callable, 1, SECONDS).get() is loop.ScheduleAsync(Func, TimeSpan) awaited; the anonymous
-// Callable is a lambda and the anonymous Comparator the nested UnresolvedLastComparator. A recorded error is rethrown
-// with ExceptionDispatchInfo. shutdownGracefully() is ShutdownGracefullyAsync() without waiting, as in the source.
+// CLR: InetSocketAddress is EndPoint: new InetSocketAddress(InetAddress.getByAddress(host, bytes), port) is an
+// IPEndPoint of new IPAddress(bytes), which carries no host name, and createUnresolved a DnsEndPoint.
+// loop.schedule(Callable, 1, SECONDS).get() is loop.ScheduleAsync(Func, TimeSpan) awaited. A recorded error is
+// rethrown with ExceptionDispatchInfo. shutdownGracefully() is ShutdownGracefullyAsync() without waiting, as in
+// the source.
 public class DefaultAuthoritativeDnsServerCacheTest
 {
 

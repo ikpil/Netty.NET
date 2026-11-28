@@ -33,8 +33,8 @@ namespace Netty.NET.Handler.Codec.Http;
  * @see io.netty.handler.codec.http.cookie.ServerCookieEncoder
  * @see io.netty.handler.codec.http.cookie.ClientCookieEncoder
  */
-// CLR: the Java interface takes the I prefix (owner rule). The @Deprecated getStatus(), whose @deprecated text names
-// status(), is not ported (owner decision 2026-11-16); the narrowed setProtocolVersion is inherited (see IHttpRequest).
+// CLR: the Java interface takes the I prefix (owner rule). The @Deprecated getStatus(), whose @deprecated text
+// names status(), is not ported; the narrowed setProtocolVersion is inherited (see IHttpRequest).
 public interface IHttpResponse : IHttpMessage
 {
 

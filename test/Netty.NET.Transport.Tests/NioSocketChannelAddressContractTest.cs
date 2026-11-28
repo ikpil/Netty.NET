@@ -9,13 +9,13 @@ using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
 
-// CLR supplemental: NioSocketChannel.remoteAddress0() and localAddress0() return javaChannel().socket()
-// .getRemoteSocketAddress() and getLocalSocketAddress(), which are the SocketChannelImpl.remoteAddress and localAddress
-// fields. The JDK records the remote address when the channel is accepted and when it begins to connect (after
-// checkRemote replaced a wildcard address with loopback), and the local address when the channel is accepted, bound or
-// its connect completes; close clears neither. Socket.RemoteEndPoint and LocalEndPoint throw once the socket is closed,
-// so these cases read the channel under test only after close, before any earlier read could fill AbstractChannel's
-// cache.
+// CLR supplemental: NioSocketChannel.remoteAddress0() and localAddress0() return
+// javaChannel().socket().getRemoteSocketAddress() and getLocalSocketAddress(), which are the
+// SocketChannelImpl.remoteAddress and localAddress fields. The JDK records the remote address when the channel is
+// accepted and when it begins to connect (after checkRemote replaced a wildcard address with loopback), and the
+// local address when the channel is accepted, bound or its connect completes; close clears neither.
+// Socket.RemoteEndPoint and LocalEndPoint throw once the socket is closed, so these cases read the channel under
+// test only after close, before any earlier read could fill AbstractChannel's cache.
 #pragma warning disable xUnit1051 // Independently owned channel and group teardown.
 public class NioSocketChannelAddressContractTest
 {

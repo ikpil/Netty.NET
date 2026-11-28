@@ -66,21 +66,21 @@ namespace Netty.NET.Handler.Codec.Http2;
  * @param <T> The type of handler created by this builder.
  * @param <B> The concrete type of this builder.
  */
-// CLR: the self-typed generic <T extends Http2ConnectionHandler, B extends AbstractHttp2ConnectionHandlerBuilder<T, B>>
-// keeps its two type parameters with the same constraints; self() casts through object, because C# only converts
-// this to the type parameter B through an object conversion (an unchecked cast in Java). The protected non-final
-// Java methods are protected virtual. A Java subclass widens them to public with @Override; a C# override cannot
-// ("An override declaration can't change the accessibility of the virtual method",
-// https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override), so subclasses expose them
-// with public members declared new ("you explicitly hide a member that a base class provides",
-// https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/new-modifier) that call base
-// (Http2ConnectionHandlerBuilder). The Boolean/Integer/Long fields and locals
-// that may be null are bool?/int?/long?. SensitivityDetector is IHttp2HeadersEncoder.ISensitivityDetector and
-// ALWAYS_VERIFY is IHttp2PromisedRequestVerifier.ALWAYS_VERIFY. IllegalArgumentException is ArgumentException,
-// IllegalStateException InvalidOperationException, Throwable Exception (docs/codec-base-porting.md) and assert
-// Debug.Assert; a long or boolean concatenated into an exception text keeps the Java text (Http2CodecUtil.ToJavaString).
-// The @Deprecated initialHuffmanDecodeCapacity(int) names no replacement, so it is ported with [Obsolete] (owner
-// decision 2026-11-16). Channel#close() in the Javadoc is IChannel.CloseAsync().
+// CLR: the self-typed generic <T extends Http2ConnectionHandler, B extends
+// AbstractHttp2ConnectionHandlerBuilder<T, B>> keeps its two type parameters with the same constraints; self()
+// casts through object, because C# only converts this to the type parameter B through an object conversion (an
+// unchecked cast in Java). The protected non-final Java methods are protected virtual. A Java subclass widens them
+// to public with @Override; a C# override cannot ("An override declaration can't change the accessibility of the
+// virtual method", https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override), so
+// subclasses expose them with public members declared new ("you explicitly hide a member that a base class
+// provides", https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/new-modifier) that call
+// base (Http2ConnectionHandlerBuilder). The Boolean/Integer/Long fields and locals that may be null are
+// bool?/int?/long?. SensitivityDetector is IHttp2HeadersEncoder.ISensitivityDetector and ALWAYS_VERIFY is
+// IHttp2PromisedRequestVerifier.ALWAYS_VERIFY. IllegalArgumentException is ArgumentException,
+// IllegalStateException InvalidOperationException, Throwable Exception and assert Debug.Assert; a long or boolean
+// concatenated into an exception text keeps the Java text (Http2CodecUtil.ToJavaString). The @Deprecated
+// initialHuffmanDecodeCapacity(int) names no replacement, so it is ported with [Obsolete]. Channel#close() in the
+// Javadoc is IChannel.CloseAsync().
 public abstract class AbstractHttp2ConnectionHandlerBuilder<T, B>
     where T : Http2ConnectionHandler
     where B : AbstractHttp2ConnectionHandlerBuilder<T, B>

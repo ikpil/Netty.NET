@@ -33,35 +33,10 @@ namespace Netty.NET.Handler.Codec.Http.Multipart;
  * You <strong>MUST</strong> call {@link #destroy()} after completion to release all resources.
  *
  */
-// CLR: HttpRequest is IHttpRequest, HttpContent IHttpContent, LastHttpContent ILastHttpContent and Charset Encoding;
-// Charset.forName is Common's CharsetUtil.ForName (Java's standard charset names, then Encoding.GetEncoding), whose
-// ArgumentException stands for both IllegalCharsetNameException and UnsupportedCharsetException, so the catches of either
-// one catch ArgumentException: the constructor therefore also wraps an unsupported (legal) charset name in
-// ErrorDataDecoderException, which Java lets through as UnsupportedCharsetException, and the FIELD/FILEUPLOAD steps also
-// wrap an illegal name, which Java lets through as IllegalCharsetNameException. CharsetUtil.US_ASCII/ISO_8859_1 are
-// Encoding.ASCII/Latin1. The TreeMaps with CaseIgnoringComparator.INSTANCE are SortedDictionary instances with its
-// IComparer<string>; the Map<CharSequence, Attribute> of the field attributes is keyed by the string text of the
-// AsciiString/String keys, which compare alike under that comparator, and map.get() returning null is the Get helper.
-// offer(HttpContent) returns this class, so IInterfaceHttpPostRequestDecoder.Offer is implemented explicitly. The
-// constructor's catch (Throwable) with PlatformDependent.throwException(e) is catch (Exception) with a rethrow;
-// IllegalStateException is InvalidOperationException. The Buffer port throws ArgumentOutOfRangeException where Java
-// throws IndexOutOfBoundsException (docs/codec-dns-porting.md), and catch (NullPointerException | IllegalArgumentException)
-// keeps the Java types with HttpPostBodyUtil.IsNullPointer/IsIllegalArgument; ArrayIndexOutOfBoundsException is
-// IndexOutOfRangeException and NumberFormatException FormatException. Long.parseLong is core's HttpUtil.ParseLong,
-// toLowerCase(Locale.US) ToLowerInvariant ("the casing rules of the invariant culture",
-// https://learn.microsoft.com/en-us/dotnet/api/system.string.tolowerinvariant?view=net-10.0), String.trim() core's
-// HttpUtil.TrimJava, Character.isISOControl char.IsControl (U+0000-U+001F and U+007F-U+009F,
-// https://learn.microsoft.com/en-us/dotnet/api/system.char.iscontrol?view=net-10.0) and Character.isWhitespace core's
-// HttpVersion.IsJavaWhitespace. String.split(regex, limit) with a positive limit is string.Split(char, count), and
-// split(regex) with limit 0, which discards trailing empty strings
-// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html), is SplitDiscardingTrailingEmpty.
-// String concatenation of a null String gives "null" in Java, which the mixed boundary keeps. The switch of cleanString
-// casts the byte constants of HttpConstants to char, because a C# case label must convert implicitly to char. readByte()
-// and readUnsignedByte() are the unsigned ReadByte() of the Buffer port; every byte comparison is with an ASCII
-// constant, so the Java sign does not change any result. InternalThreadLocalMap.get().arrayList(1) is a local list
-// (as the Common AsciiString.Split does, src/Netty.NET.Common/AsciiString.cs). The second and third ByteBuf content
-// locals of loadDataMultipartOptimized are content2/content3, because a C# local's scope is its whole block and the
-// nested blocks before declare the same name (CS0136).
+// Charset lookup uses one exception type for invalid and unsupported names, so both failures are wrapped in
+// ErrorDataDecoderException here.
+// Field names use case-insensitive text keys. Keep Java's trailing-empty split and null boundary concatenation
+// behavior.
 public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
 {
 
@@ -1860,7 +1835,6 @@ public class HttpPostMultipartRequestDecoder : IInterfaceHttpPostRequestDecoder
         return undecodedChunk.Capacity;
     }
 
-    // CLR: Map.get(key) of the field attributes, null when the key is absent.
     private static IAttribute Get(SortedDictionary<string, IAttribute> map, string key)
     {
         return map.TryGetValue(key, out IAttribute value) ? value : null;

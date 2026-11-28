@@ -20,28 +20,27 @@ using Netty.NET.Common.Internal;
 namespace Netty.NET.Handler.Codec.Http3;
 
 // CLR: Headers<CharSequence, CharSequence, Http3Headers> is the codec-base IHeaders<ICharSequence, ICharSequence,
-// IHttp3Headers> (docs/codec-base-porting.md, Headers), and the interface takes the I prefix, as codec-http2's
-// IHttp2Headers. iterator() is re-declared in Java only to document the iteration order; its signature equals the
-// inherited IHeaders member IIterator<IEntry<K, V>> Iterator(), so the comment stays here and the member is inherited
-// (a repeated interface member would hide it, CS0108). valueIterator(CharSequence) is declared here, as in Java
-// (codec-base IHeaders has no valueIterator; DefaultHeaders implements it). method()/method(CharSequence) and the other
-// pseudo-header accessors are the overloads Method()/Method(ICharSequence) and so on; the default methods
-// protocol(CharSequence) and protocol() are default interface members. The @Nullable (org.jetbrains.annotations) return
-// annotations have no counterpart: the project does not enable the nullable annotation context.
+// IHttp3Headers>, and the interface takes the I prefix, as codec-http2's IHttp2Headers. iterator() is re-declared
+// in Java only to document the iteration order; its signature equals the inherited IHeaders member
+// IIterator<IEntry<K, V>> Iterator(), so the comment stays here and the member is inherited (a repeated interface
+// member would hide it, CS0108). valueIterator(CharSequence) is declared here, as in Java (codec-base IHeaders has
+// no valueIterator; DefaultHeaders implements it). method()/method(CharSequence) and the other pseudo-header
+// accessors are the overloads Method()/Method(ICharSequence) and so on; the default methods protocol(CharSequence)
+// and protocol() are default interface members. The @Nullable (org.jetbrains.annotations) return annotations have
+// no counterpart: the project does not enable the nullable annotation context.
 public interface IHttp3Headers : IHeaders<ICharSequence, ICharSequence, IHttp3Headers>
 {
 
     /**
      * HTTP/2 (and HTTP/3) pseudo-headers names.
      */
-    // CLR: the Java enum with a constructor, fields and methods is a sealed class with static readonly instances, as
-    // codec-http2's IHttp2Headers.PseudoHeaderName (docs/codec-http2-porting.md, Shared CLR adaptations): "You can't
-    // define a method inside the definition of an enumeration type"
-    // (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/enum). The implicit values() is
-    // Values() (a new array per call, as Java's values() clones), ToString() returns the constant name, and the static
-    // initializer is the static constructor, which runs after the static field initializers (the constants and
-    // PSEUDO_HEADERS), as Java runs the enum constants and static fields before the static block. CharSequenceMap
-    // requires a reference value type, which this class is.
+    // CLR: the Java enum with a constructor, fields and methods is a sealed class with static readonly instances,
+    // as codec-http2's IHttp2Headers.PseudoHeaderName : "You can't define a method inside the definition of an
+    // enumeration type" (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/enum).
+    // The implicit values() is Values() (a new array per call, as Java's values() clones), ToString() returns the
+    // constant name, and the static initializer is the static constructor, which runs after the static field
+    // initializers (the constants and PSEUDO_HEADERS), as Java runs the enum constants and static fields before
+    // the static block. CharSequenceMap requires a reference value type, which this class is.
     public sealed class PseudoHeaderName
     {
         /**
@@ -176,7 +175,6 @@ public interface IHttp3Headers : IHeaders<ICharSequence, ICharSequence, IHttp3He
              return flag;
         }
 
-        // CLR: Enum.toString() is the constant name.
         public override string ToString()
         {
             return name;

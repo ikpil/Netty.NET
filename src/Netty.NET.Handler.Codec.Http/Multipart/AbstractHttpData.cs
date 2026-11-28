@@ -27,17 +27,16 @@ namespace Netty.NET.Handler.Codec.Http.Multipart;
 /**
  * Abstract HttpData implementation
  */
-// CLR: Charset is Encoding and HttpConstants.DEFAULT_CHARSET is Encoding.UTF8; content() is the virtual read-only
-// Content property of IByteBufHolder (docs/buffer-porting.md, Buffer holders and conversion) and refCnt() the RefCnt
-// property of the Common AbstractReferenceCounted. Character.isWhitespace is core's HttpVersion.IsJavaWhitespace and
-// StringBuilder.append(CharSequence, start, end) is Append(string, start, end - start). retain()/retain(int) and the
-// abstract touch()/touch(Object) narrow the AbstractReferenceCounted members with covariant override returns
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override). A Java abstract class need not
-// declare the interface methods it leaves to its subclasses; a C# class must map every member of IHttpData, so the
-// members this class does not implement (getHttpDataType(), compareTo(InterfaceHttpData), the content mutators and
-// accessors, copy()/duplicate()/retainedDuplicate()/replace(ByteBuf)) are declared abstract here, and the
-// IByteBufHolder members, which that interface declares with its own return types, are implemented explicitly and call
-// them (as core's DefaultHttpContent does). The ChannelException of content() is the Transport ChannelException.
+// CLR: Character.isWhitespace is core's HttpVersion.IsJavaWhitespace and StringBuilder.append(CharSequence, start,
+// end) is Append(string, start, end - start). retain()/retain(int) and the abstract touch()/touch(Object) narrow
+// the AbstractReferenceCounted members with covariant override returns
+// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override). A Java abstract class
+// need not declare the interface methods it leaves to its subclasses; a C# class must map every member of
+// IHttpData, so the members this class does not implement (getHttpDataType(), compareTo(InterfaceHttpData), the
+// content mutators and accessors, copy()/duplicate()/retainedDuplicate()/replace(ByteBuf)) are declared abstract
+// here, and the IByteBufHolder members, which that interface declares with its own return types, are implemented
+// explicitly and call them (as core's DefaultHttpContent does). The ChannelException of content() is the Transport
+// ChannelException.
 public abstract class AbstractHttpData : AbstractReferenceCounted, IHttpData
 {
 

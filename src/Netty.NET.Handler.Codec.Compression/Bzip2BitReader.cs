@@ -25,12 +25,12 @@ namespace Netty.NET.Handler.Codec.Compression;
  * arbitrary length (up to 32 bits), and bit aligned 32-bit integers. A single byte
  * at a time is read from the {@link ByteBuf} when more bits are required.
  */
-// CLR: the package-private class is internal and the field in is @in. readUnsignedByte() is the Buffer port's ReadByte(),
-// which returns the unsigned octet (docs/buffer-porting.md, "Raw integer access and CLR octets"); readUnsignedShort()
-// and readUnsignedInt() return ushort and uint, which widen to the long readData with zero extension as Java's int and
-// long results do. Java's >>> is C#'s >>>, the int and long arithmetic wraps as in Java (the projects are unchecked) and
-// the (int) narrowing of the long keeps its low 32 bits. IllegalArgumentException is ArgumentException
-// (docs/codec-base-porting.md) and the numbers in its messages use the invariant culture.
+// CLR: the package-private class is internal and the field in is @in. readUnsignedByte() is the Buffer port's
+// ReadByte(), which returns the unsigned octet; readUnsignedShort() and readUnsignedInt() return ushort and uint,
+// which widen to the long readData with zero extension as Java's int and long results do. Java's >>> is C#'s >>>,
+// the int and long arithmetic wraps as in Java (the projects are unchecked) and the (int) narrowing of the long
+// keeps its low 32 bits. IllegalArgumentException is ArgumentException and the numbers in its messages use the
+// invariant culture.
 internal class Bzip2BitReader
 {
     /**

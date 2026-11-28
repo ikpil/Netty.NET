@@ -20,12 +20,12 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Codec.Spdy;
 
-// CLR: Throwable is Exception; serialVersionUID is JVM serialization metadata and has no counterpart. The cause-only
-// constructor keeps Java's detail message, cause.toString() (class name, ": ", message), through Common's
-// ThrowableUtil.ThrowableToString (docs/codec-base-porting.md, Exceptions). Class<?> is Type and assert is
-// Debug.Assert. The private shared constructor calls super(message, null, false, true): the CLR Exception has no
-// suppression or writable-stack-trace switches, and a null message gives the CLR default message where Java's
-// getMessage() returns null (only PROTOCOL_EXCEPTION of SpdySessionHandler has one, and no code reads it).
+// CLR: Throwable is Exception; serialVersionUID is JVM serialization metadata and has no counterpart. The
+// cause-only constructor keeps Java's detail message, cause.toString() (class name, ": ", message), through
+// Common's ThrowableUtil.ThrowableToString. Class<?> is Type and assert is Debug.Assert. The private shared
+// constructor calls super(message, null, false, true): the CLR Exception has no suppression or
+// writable-stack-trace switches, and a null message gives the CLR default message where Java's getMessage()
+// returns null (only PROTOCOL_EXCEPTION of SpdySessionHandler has one, and no code reads it).
 public class SpdyProtocolException : Exception
 {
 

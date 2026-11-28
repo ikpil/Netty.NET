@@ -19,12 +19,10 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Http2.Tests;
 
-// CLR: channel.pipeline().firstContext() is the Pipeline.FirstContext property, channel.flush() is Flush() and
-// pipeline().get(Http2MultiplexHandler.class) is Pipeline.Get<Http2MultiplexHandler>() (docs/transport-porting.md,
-// Decisions; src/Netty.NET.Transport/Channels/IChannelPipeline.cs: a Class<T> argument becomes a generic type
-// argument). @Sharable is [Sharable]. testUpgradeToHttp2MultiplexCodec only exercises the deprecated, not ported
+// CLR: @Sharable is [Sharable]. testUpgradeToHttp2MultiplexCodec only exercises the deprecated, not ported
 // Http2MultiplexCodecBuilder; its replacement (Http2FrameCodecBuilder with Http2MultiplexHandler) is
-// TestUpgradeToHttp2FrameCodecWithMultiplexer, so it has no C# method (recorded as CLR-inapplicable in the manifest).
+// TestUpgradeToHttp2FrameCodecWithMultiplexer, so it has no C# method (recorded as CLR-inapplicable in the
+// manifest).
 public class Http2ClientUpgradeCodecTest
 {
 

@@ -24,11 +24,9 @@ using static Netty.NET.Handler.Codec.Http3.Http3RequestStreamValidationUtils;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the package-private final class is an internal sealed class. BooleanSupplier is Func<bool> and the lambda
-// () -> false of newServerValidator a static lambda. write(ctx, frame, promise) and channelRead(ctx, frame) override
-// the internal virtual members of Http3FrameTypeDuplexValidationHandler (the promise is the TaskCompletionSource that
-// its WriteAsync returns); ctx.write(frame, promise) is Http3CodecUtils.Write. HttpMethod.HEAD.asciiName() is codec-http's
-// HttpMethod.HEAD.AsciiName(). The isSharable() override is the IsSharable property of ChannelHandlerAdapter.
+// CLR: BooleanSupplier is Func<bool> and the lambda () -> false of newServerValidator a static lambda. write(ctx,
+// frame, promise) and channelRead(ctx, frame) override the internal virtual members of
+// Http3FrameTypeDuplexValidationHandler (the promise is the TaskCompletionSource that its WriteAsync returns).
 internal sealed class Http3RequestStreamValidationHandler : Http3FrameTypeDuplexValidationHandler<IHttp3RequestStreamFrame>
 {
     private readonly bool server;

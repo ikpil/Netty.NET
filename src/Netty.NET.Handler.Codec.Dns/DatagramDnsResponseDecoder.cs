@@ -25,13 +25,12 @@ namespace Netty.NET.Handler.Codec.Dns;
 /**
  * Decodes a {@link DatagramPacket} into a {@link DatagramDnsResponse}.
  */
-// CLR: @ChannelHandler.Sharable is [Sharable]; Class<?> is Type; List<Object> out is IList<object> @out; the anonymous
-// DnsResponseDecoder subclass is the named nested class DatagramResponseDecoder; packet.content()/sender()/recipient()
-// are the DatagramPacket properties Content/Sender/Recipient of the Transport port. ByteBuf reads past the readable
-// bytes throw ArgumentOutOfRangeException, the Buffer port's replacement of IndexOutOfBoundsException
-// ("ArgumentOutOfRangeException follows the existing CLR argument-validation policy in place of
-// IndexOutOfBoundsException", docs/buffer-porting.md), so that is the exception wrapped into CorruptedFrameException.
-// 'throws Exception' has no C# counterpart.
+// CLR: @ChannelHandler.Sharable is [Sharable]; Class<?> is Type; List<Object> out is IList<object> @out;
+// packet.content()/sender()/recipient() are the DatagramPacket properties Content/Sender/Recipient of the
+// Transport port. ByteBuf reads past the readable bytes throw ArgumentOutOfRangeException, the Buffer port's
+// replacement of IndexOutOfBoundsException ("ArgumentOutOfRangeException follows the existing CLR
+// argument-validation policy in place of IndexOutOfBoundsException", docs/buffer-porting.md), so that is the
+// exception wrapped into CorruptedFrameException. 'throws Exception' has no C# counterpart.
 [Sharable]
 public class DatagramDnsResponseDecoder : MessageToMessageDecoder<DatagramPacket>
 {

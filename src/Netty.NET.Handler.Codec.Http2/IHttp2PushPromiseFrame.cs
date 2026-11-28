@@ -20,8 +20,7 @@ namespace Netty.NET.Handler.Codec.Http2;
  * HTTP/2 Push Promise Frame
  */
 // CLR: stream(Http2FrameStream) is re-declared only to narrow the return type, so it is inherited from
-// IHttp2StreamFrame, not repeated; the classes narrow it with a covariant override (owner decision 2026-11-19;
-// docs/transport-porting.md, Decisions).
+// IHttp2StreamFrame, not repeated; the classes narrow it with a covariant override.
 public interface IHttp2PushPromiseFrame : IHttp2StreamFrame
 {
 

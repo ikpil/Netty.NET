@@ -803,8 +803,7 @@ public class SniHandlerTest
         TestWithFragmentSize(provider, fragmentSize);
     }
 
-    // CLR: server.config().setAllocator(...) is Config.SetAllocator; the anonymous AbstractByteBufAllocator and
-    // WrappedByteBuf are the nested CountingAllocator and CountingBuffer; fragments.remove(size - 1) takes and removes
+    // CLR: server.config().setAllocator(...) is Config.SetAllocator; fragments.remove(size - 1) takes and removes
     // the last element.
     [Theory]
     [MemberData(nameof(Data))]
@@ -891,15 +890,15 @@ public class SniHandlerTest
         TestWithFragmentSize(provider, maxFragmentSize, maxFragmentSize);
     }
 
-    // CLR: platform limit (measured on Windows 11 10.0.26300, .NET 10.0.8): the SChannel-based SslStream server rejects a
-    // ClientHello whose first TLS record carries only a few of its bytes. A raw SslStream server (no Netty) fed the same
-    // ClientHello re-fragmented with a first record of 1, 4 or 5 bytes fails with AuthenticationException (inner
-    // Win32Exception "The message received was unexpected or badly formatted") and writes a 7-byte alert, while first
-    // records of 10, 20, 30, 40 or 50 bytes and an unfragmented record are accepted (the server answers with its
-    // handshake flight). SniHandler itself aggregates the tiny fragments (testTinyFragmentsAreAggregatedOnlyOnce passes);
-    // the SslHandler it installs then hands the same records to SslStream, so testTinyFragments (1 to 4 bytes) and
-    // testTinyFirstFragment (1 byte) skip on Windows with this reason, as other measured SslStream platform limits do
-    // (docs/handler-ssl-design.md).
+    // CLR: platform limit (measured on Windows 11 10.0.26300,.NET 10.0.8): the SChannel-based SslStream server
+    // rejects a ClientHello whose first TLS record carries only a few of its bytes. A raw SslStream server (no
+    // Netty) fed the same ClientHello re-fragmented with a first record of 1, 4 or 5 bytes fails with
+    // AuthenticationException (inner Win32Exception "The message received was unexpected or badly formatted") and
+    // writes a 7-byte alert, while first records of 10, 20, 30, 40 or 50 bytes and an unfragmented record are
+    // accepted (the server answers with its handshake flight). SniHandler itself aggregates the tiny fragments
+    // (testTinyFragmentsAreAggregatedOnlyOnce passes); the SslHandler it installs then hands the same records to
+    // SslStream, so testTinyFragments (1 to 4 bytes) and testTinyFirstFragment (1 byte) skip on Windows with this
+    // reason, as other measured SslStream platform limits do.
     private void TestWithFragmentSize(SslProvider provider, int firstFragmentSize, int maxFragmentSize)
     {
         if (OperatingSystem.IsWindows() && firstFragmentSize <= 5)
@@ -1180,13 +1179,12 @@ public class SniHandlerTest
         }
     }
 
-    // CLR: mock(DomainNameMapping.class); see the class comment.
+    // CLR: mock(DomainNameMapping.class).
     private static DomainNameMapping<SslContext> MockDomainNameMapping()
     {
         return new Mock<DomainNameMapping<SslContext>>(new Mock<SslContext>().Object).Object;
     }
 
-    // CLR: CachedSelfSignedCertificate.getCachedCertificate(); see the class comment.
     private static readonly Lazy<X509Bundle> CACHED_CERTIFICATE = new Lazy<X509Bundle>(
             () => new CertificateBuilder()
                     .Subject("CN=localhost")

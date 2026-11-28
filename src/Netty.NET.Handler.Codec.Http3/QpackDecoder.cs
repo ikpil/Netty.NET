@@ -27,18 +27,15 @@ using static Netty.NET.Handler.Codec.Http3.QpackUtil;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the package-private final class is internal sealed and its package-private members are internal; decode stays
-// public. QuicStreamChannel is codec-quic's IQuicStreamChannel. The checked QpackException needs no throws clause;
-// IllegalArgumentException(e) is ArgumentException with the cause's toString() text as its message; assert is
-// Debug.Assert. BiConsumer<CharSequence, CharSequence> is Action<ICharSequence, ICharSequence> (callers pass
-// Http3HeadersSink.Accept as a method group) and sink.accept(...) is an invocation of it; Runnable whenDecoded is an
-// Action. IntObjectHashMap<List<BlockedStream>> is Dictionary<int, List<BlockedStream>> (owner decision 2026-11-19 for
-// the primitive maps): computeIfAbsent is TryGetValue plus Add, and releaseBlockedStream removes the entry of the
-// list it changed and returns at once, which Dictionary allows during enumeration (.NET Core 3.0+). The decoder
-// stream writes are closeOnFailure(stream, stream.WriteAndFlushAsync(...)) (Http3CodecUtils.CloseOnFailure takes the
-// channel, as a Task has no channel()). The instruction bytes are CLR bytes; the masks test the same bits as Java's
-// signed bytes. Math.floorDiv is QpackUtil.FloorDiv. new AsciiString(buf, false) is the Common AsciiString(byte[],
-// bool). The private static nested class BlockedStream keeps its fields internal for the decoder.
+// CLR: QuicStreamChannel is codec-quic's IQuicStreamChannel. The checked QpackException needs no throws clause;
+// assert is Debug.Assert. Runnable whenDecoded is an Action. IntObjectHashMap<List<BlockedStream>> is
+// Dictionary<int, List<BlockedStream>> : computeIfAbsent is TryGetValue plus Add, and releaseBlockedStream removes
+// the entry of the list it changed and returns at once, which Dictionary allows during enumeration (.NET Core
+// 3.0+). The decoder stream writes are closeOnFailure(stream, stream.WriteAndFlushAsync(...))
+// (Http3CodecUtils.CloseOnFailure takes the channel, as a Task has no channel()). The instruction bytes are CLR
+// bytes; the masks test the same bits as Java's signed bytes. Math.floorDiv is QpackUtil.FloorDiv. new
+// AsciiString(buf, false) is the Common AsciiString(byte[], bool). The private static nested class BlockedStream
+// keeps its fields internal for the decoder.
 internal sealed class QpackDecoder
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(QpackDecoder));

@@ -25,15 +25,14 @@ using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Example.Stomp.WebSocket;
 
-// CLR: System.getProperty is ExampleLauncher.GetProperty (the -Dname=value arguments)
-// and Integer.parseInt is int.Parse with an optional sign and the invariant culture. start(port) blocks on
-// bind(port).addListener(...).channel().closeFuture().sync(); StartAsync adds the listener as a continuation of the
-// BindAsync Task and then awaits the bound channel's CloseFuture (docs/transport-porting.md: sync() is awaiting the
-// Task). A failed bind closes its channel, so Java's closeFuture().sync() returns at once there; Task.WhenAny waits for
-// the bind without rethrowing its failure, and only a bound channel's CloseFuture is awaited. The Task does not carry the
-// channel, so the listener runs synchronously on the thread that completes it (the channel's event loop, where Java
-// notifies it); future.cause() is the Task's exception. group.shutdownGracefully() is ShutdownGracefullyAsync(), whose
-// Task is discarded as Java discards the future, and string + char appends the character as in Java.
+// CLR: System.getProperty is ExampleLauncher.GetProperty (the -Dname=value arguments) and Integer.parseInt is
+// int.Parse with an optional sign and the invariant culture. start(port) blocks on
+// bind(port).addListener(...).channel().closeFuture().sync(); StartAsync adds the listener as a continuation of
+// the BindAsync Task and then awaits the bound channel's CloseFuture (docs/transport-porting.md: sync() is
+// awaiting the Task). A failed bind closes its channel, so Java's closeFuture().sync() returns at once there;
+// Task.WhenAny waits for the bind without rethrowing its failure, and only a bound channel's CloseFuture is
+// awaited. The Task does not carry the channel, so the listener runs synchronously on the thread that completes it
+// (the channel's event loop, where Java notifies it).
 public class StompWebSocketChatServer
 {
 

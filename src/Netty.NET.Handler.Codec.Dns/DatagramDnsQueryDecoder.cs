@@ -24,10 +24,9 @@ namespace Netty.NET.Handler.Codec.Dns;
 /**
  * Decodes a {@link DatagramPacket} into a {@link DatagramDnsQuery}.
  */
-// CLR: @ChannelHandler.Sharable is [Sharable]; Class<?> is Type; List<Object> out is IList<object> @out; the
-// anonymous DnsMessageUtil.DnsQueryFactory is the named nested class DatagramDnsQueryFactory capturing the packet;
-// packet.content()/sender()/recipient() are the DatagramPacket properties Content/Sender/Recipient of the Transport
-// port (docs/codec-base-porting.md, Shared CLR adaptations; docs/transport-porting.md).
+// CLR: @ChannelHandler.Sharable is [Sharable]; Class<?> is Type; List<Object> out is IList<object> @out;
+// packet.content()/sender()/recipient() are the DatagramPacket properties Content/Sender/Recipient of the
+// Transport port.
 [Sharable]
 public class DatagramDnsQueryDecoder : MessageToMessageDecoder<DatagramPacket>
 {

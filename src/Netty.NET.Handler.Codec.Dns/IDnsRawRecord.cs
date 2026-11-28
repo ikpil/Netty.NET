@@ -21,10 +21,10 @@ namespace Netty.NET.Handler.Codec.Dns;
 /**
  * A generic {@link DnsRecord} that contains an undecoded {@code RDATA}.
  */
-// CLR: interface with the I prefix. The Java re-declarations of copy(), duplicate(), retainedDuplicate(),
-// replace(ByteBuf), retain(), retain(int), touch() and touch(Object) only narrow the return type; they are inherited
-// unchanged from IByteBufHolder, as for the Transport interfaces: C# 9 covariant returns cover class overrides only
-// (docs/transport-porting.md, "Java type names and hierarchy"). DefaultDnsRawRecord keeps the narrowed return types.
+// CLR: The Java re-declarations of copy(), duplicate(), retainedDuplicate(), replace(ByteBuf), retain(),
+// retain(int), touch() and touch(Object) only narrow the return type; they are inherited unchanged from
+// IByteBufHolder, as for the Transport interfaces: C# 9 covariant returns cover class overrides only.
+// DefaultDnsRawRecord keeps the narrowed return types.
 public interface IDnsRawRecord : IDnsRecord, IByteBufHolder
 {
 }

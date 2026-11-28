@@ -20,8 +20,8 @@ namespace Netty.NET.Handler.Ssl;
  * Indicates the state of the {@link javax.net.ssl.SSLEngine} with respect to client authentication.
  * This configuration item really only applies when building the server-side {@link SslContext}.
  */
-// CLR: a simple Java enum is a C# enum with the same constants in declaration order (docs/codec-base-porting.md); the
-// SSLEngine of the Javadoc is the SslStream that SslHandler drives (ssl design decision 2, docs/handler-ssl-design.md).
+// CLR: a simple Java enum is a C# enum with the same constants in declaration order; the SSLEngine of the Javadoc
+// is the SslStream that SslHandler drives (ssl design decision 2, docs/handler-ssl-design.md).
 public enum ClientAuth
 {
     /**

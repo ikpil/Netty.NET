@@ -37,17 +37,11 @@ namespace Netty.NET.Resolver.Dns.Tests;
 [CollectionDefinition(nameof(IsolatedDnsNameResolverTestCollection), DisableParallelization = true)]
 public sealed class IsolatedDnsNameResolverTestCollection;
 
-// CLR: the static fields are initialized in their textual order; @BeforeAll captureSetting() and @AfterAll
-// restoreSetting() run from the class fixture BeforeAndAfterAll (https://xunit.net/docs/shared-context, "Class
-// Fixtures"), as in DnsNameResolverTest; shutdownGracefully() is ShutdownGracefullyAsync() without waiting.
-// @ParameterizedTest @EnumSource(DnsNameResolverChannelStrategy.class) is [Theory] over DnsNameResolverTest's
-// ChannelStrategies (every value of the C# enum). The static imports of DnsNameResolverTest.DOMAINS_ALL/newResolver and
-// TestDnsServer.newARecord are using static directives (the members are internal, the package access of the source).
-// The anonymous RecordStore and HostsFileEntriesResolver classes are the nested NameRecordStore and
-// NullHostsFileEntriesResolver; RecordStore and the ApacheDs types are the stand-in (owner decision 2026-11-25), and
-// Collections.singleton/emptySet are ImmutableHashSet.Create/ImmutableHashSet.Empty. resolve(h).syncUninterruptibly()
-// .getNow() is an awaited ResolveAsync and close() Dispose() (core notes); getHostAddress() of the IPv4 answer is
-// IPAddress.ToString(); dnsQueryLifecycleObserverFactory() is the internal DnsQueryLifecycleObserverFactory(); AssertJ's
+// CLR: The static imports of DnsNameResolverTest.DOMAINS_ALL/newResolver and TestDnsServer.newARecord are using
+// static directives (the members are internal, the package access of the source). RecordStore and the ApacheDs
+// types are the stand-in, and Collections.singleton/emptySet are ImmutableHashSet.Create/ImmutableHashSet.Empty.
+// resolve(h).syncUninterruptibly().getNow() is an awaited ResolveAsync and close() Dispose() (core notes);
+// getHostAddress() of the IPv4 answer is IPAddress.ToString(); AssertJ's
 // assumeThat(PlatformDependent.isWindows()).isFalse() is Assert.SkipWhen (xUnit v3 dynamic skip).
 [Collection(nameof(IsolatedDnsNameResolverTestCollection))]
 public class IsolatedDnsNameResolverTest : IClassFixture<IsolatedDnsNameResolverTest.BeforeAndAfterAll>
@@ -166,8 +160,6 @@ public class IsolatedDnsNameResolverTest : IClassFixture<IsolatedDnsNameResolver
         }
     }
 
-    // CLR: the anonymous RecordStore of both tests: an A record for the name, with or without the trailing dot
-    // (equalsIgnoreCase is OrdinalIgnoreCase), else an empty set.
     private sealed class NameRecordStore : IRecordStore
     {
         private readonly string hostname;
@@ -195,7 +187,6 @@ public class IsolatedDnsNameResolverTest : IClassFixture<IsolatedDnsNameResolver
         }
     }
 
-    // CLR: the anonymous HostsFileEntriesResolver of both tests.
     private sealed class NullHostsFileEntriesResolver : IHostsFileEntriesResolver
     {
         public IPAddress Address(string inetHost, ResolvedAddressTypes resolvedAddressTypes)

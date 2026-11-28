@@ -19,9 +19,9 @@ namespace Netty.NET.Handler.Codec.Dns;
 /**
  * A DNS resource record.
  */
-// CLR: interface with the I prefix. The Java interface constants are C# interface constants; C# classes do not
-// inherit an interface's static members, so implementers and callers name them through the interface
-// (IDnsRecord.CLASS_IN), as static interface members are called on the interface type
+// CLR: The Java interface constants are C# interface constants; C# classes do not inherit an interface's static
+// members, so implementers and callers name them through the interface (IDnsRecord.CLASS_IN), as static interface
+// members are called on the interface type
 // (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface).
 public interface IDnsRecord
 {

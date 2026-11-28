@@ -40,16 +40,16 @@ namespace Netty.NET.Example.Spdy.Client;
  * </pre>
  */
 // CLR: run-example.sh is the Maven example module's launcher; this port runs the example with ExampleLauncher
-// ("spdy.client.SpdyClient"). System.getProperty is ExampleLauncher.GetProperty (the -Dname=value arguments) and Integer.parseInt is int.Parse with an optional sign and the invariant culture.
-// The SSL context is built by the JDK (SslStream) provider, which negotiates ALPN through SslStream's application
-// protocols: OPENSSL and tcnative are library-not-ported (docs/handler-porting.md). The nested ApplicationProtocolConfig
-// enums are named by using aliases, as the Java imports name them. main blocks on connect().syncUninterruptibly(),
-// writeAndFlush(...).sync(), queue().take().sync() and close().syncUninterruptibly(); it is the async Main, which
-// awaits those Tasks (docs/transport-porting.md: sync() is awaiting the Task; a Task wait has no interruption to
-// ignore) and takes from the BlockingCollection on its own thread. NioSocketChannel.class is
-// Channel<NioSocketChannel>(), Unpooled.EMPTY_BUFFER is Unpooled.EmptyBuffer, group.shutdownGracefully() is
-// ShutdownGracefullyAsync(), whose Task is discarded as Java discards the future, and System.out.println is
-// Console.WriteLine.
+// ("spdy.client.SpdyClient"). System.getProperty is ExampleLauncher.GetProperty (the -Dname=value arguments) and
+// Integer.parseInt is int.Parse with an optional sign and the invariant culture. The SSL context is built by the
+// JDK (SslStream) provider, which negotiates ALPN through SslStream's application protocols: OPENSSL and tcnative
+// are library-not-ported. The nested ApplicationProtocolConfig enums are named by using aliases, as the Java
+// imports name them. main blocks on connect().syncUninterruptibly(), writeAndFlush(...).sync(),
+// queue().take().sync() and close().syncUninterruptibly(); it is the async Main, which awaits those Tasks
+// (docs/transport-porting.md: sync() is awaiting the Task; a Task wait has no interruption to ignore) and takes
+// from the BlockingCollection on its own thread. NioSocketChannel.class is Channel<NioSocketChannel>(),
+// Unpooled.EMPTY_BUFFER is Unpooled.EmptyBuffer, group.shutdownGracefully() is ShutdownGracefullyAsync(), whose
+// Task is discarded as Java discards the future, and System.out.println is Console.WriteLine.
 public sealed class SpdyClient
 {
     internal static readonly string HOST = ExampleLauncher.GetProperty("host", "127.0.0.1");

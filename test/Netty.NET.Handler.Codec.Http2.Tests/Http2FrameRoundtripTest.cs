@@ -35,18 +35,18 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
  * Tests encoding/decoding each HTTP2 frame type.
  */
 // CLR: Mockito mocks are Moq loose mocks; @BeforeEach is the constructor and @AfterEach Dispose().
-// verify(mock).m(eq(...)) is Verify(..., Times.Once()) and atLeastOnce()/never() are Times.AtLeastOnce()/Times.Never()
-// (Moq Quickstart, https://github.com/devlooped/moq/wiki/Quickstart; docs/codec-http-porting.md, Shared CLR
-// adaptations). An ArgumentCaptor is read from the mock's recorded invocations (Mock.Invocations) of the verified
-// member, in call order, as captor.getAllValues() returns them. ctx.write(msg, promise) is the
-// IChannelHandlerContext.WriteAsync(msg, CancellationToken) that DefaultHttp2FrameWriter writes through
-// (Http2CodecUtil.Write), so captureWrites() reads its msg arguments; the loose mock returns a completed Task for it.
-// alloc.buffer() and alloc.buffer(int) are the one C# member Buffer(int initialCapacity = 256, int maxCapacity =
-// int.MaxValue), so the answer allocates Unpooled.Buffer(initialCapacity) for both. ctx.newPromise() (a
-// DefaultChannelPromise) is a new TaskCompletionSource. EmptyByteBuf is internal to Netty.NET.Buffer, so "buf
-// instanceof EmptyByteBuf" compares the runtime type name. String.getBytes() (default charset) is
-// Encoding.Default.GetBytes and getBytes(UTF_8) is Encoding.UTF8.GetBytes (docs/codec-http-porting.md, Shared CLR
-// adaptations); System.arraycopy is Array.Copy and AsciiString.of(String) is new AsciiString(string).
+// verify(mock).m(eq(...)) is Verify(..., Times.Once()) and atLeastOnce()/never() are
+// Times.AtLeastOnce()/Times.Never() (Moq Quickstart, https://github.com/devlooped/moq/wiki/Quickstart;
+// docs/codec-http-porting.md, Shared CLR adaptations). An ArgumentCaptor is read from the mock's recorded
+// invocations (Mock.Invocations) of the verified member, in call order, as captor.getAllValues() returns them.
+// ctx.write(msg, promise) is the IChannelHandlerContext.WriteAsync(msg, CancellationToken) that
+// DefaultHttp2FrameWriter writes through (Http2CodecUtil.Write), so captureWrites() reads its msg arguments; the
+// loose mock returns a completed Task for it. alloc.buffer() and alloc.buffer(int) are the one C# member
+// Buffer(int initialCapacity = 256, int maxCapacity = int.MaxValue), so the answer allocates
+// Unpooled.Buffer(initialCapacity) for both. ctx.newPromise() (a DefaultChannelPromise) is a new
+// TaskCompletionSource. EmptyByteBuf is internal to Netty.NET.Buffer, so "buf instanceof EmptyByteBuf" compares
+// the runtime type name. String.getBytes() (default charset) is Encoding.Default.GetBytes and getBytes(UTF_8) is
+// Encoding.UTF8.GetBytes; System.arraycopy is Array.Copy and AsciiString.of(String) is new AsciiString(string).
 // assertThrows(Http2Exception.class) is Assert.ThrowsAny<Http2Exception>.
 public class Http2FrameRoundtripTest : IDisposable
 {
@@ -112,7 +112,6 @@ public class Http2FrameRoundtripTest : IDisposable
         }
     }
 
-    // CLR: ctx.newPromise() of the mocked context, answered with a new DefaultChannelPromise.
     private static TaskCompletionSource NewPromise()
     {
         return new TaskCompletionSource();

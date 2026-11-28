@@ -23,12 +23,7 @@ using static Netty.NET.Handler.Codec.Http.WebSocketx.Extensions.Compression.PerM
 
 namespace Netty.NET.Handler.Codec.Http.Tests.WebSocketx.Extensions.Compression;
 
-// CLR: the static import of PerMessageDeflateServerExtensionHandshaker.* is a using static (its package-private
-// constants are internal). WebSocketServerExtension.RSV1 is the constant IWebSocketExtension.RSV1. HashMap is
-// Dictionary, Collections.emptyMap() is ImmutableDictionary<string, string>.Empty, Map.get(key) is the indexer (the key
-// is present in every case; a missing key would fail with KeyNotFoundException instead of the assertion), containsKey
-// is ContainsKey, size() is Count and isEmpty() is Count == 0. assertInstanceOf is Assert.IsAssignableFrom and
-// assertThrows(IllegalArgumentException.class, Executable) is Assert.ThrowsAny<ArgumentException> with a lambda.
+// CLR: WebSocketServerExtension.RSV1 is the constant IWebSocketExtension.RSV1.
 public class PerMessageDeflateServerExtensionHandshakerTest
 {
 

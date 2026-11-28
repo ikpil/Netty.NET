@@ -114,7 +114,6 @@ public sealed class Http3SpecTestServer
         }
     }
 
-    // CLR: the anonymous Http3RequestStreamInboundHandler added for each request stream (see the class comment).
     private sealed class RequestStreamHandler : Http3RequestStreamInboundHandler
     {
         protected override void ChannelRead(

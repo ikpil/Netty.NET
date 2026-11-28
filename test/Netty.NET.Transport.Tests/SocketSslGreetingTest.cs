@@ -30,13 +30,12 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Transport.Tests;
 
-// CLR: the TLS engine is SslStream (owner decision 2026-11-24, docs/handler-ssl-design.md). @ParameterizedTest with
-// @MethodSource("data") is [Theory] with [MemberData(nameof(Data))] and @Timeout(30000 ms) its Timeout, as in the handler
-// ssl tests (docs/handler-porting.md, "SSL tests"); the JUnit display-name pattern has no counterpart, xUnit names a case
-// by its arguments. Each case runs through the testsuite harness (both allocators x the NIO socket combination).
-// SslProvider.OPENSSL is library-not-ported and SslContext.newHandler(alloc, Executor) is not ported (see data() and
-// newSslHandler), so data() holds the JDK pair without the delegate rows. CountDownLatch is a TaskCompletionSource and
-// AtomicReference the Common type; Throwable is Exception.
+// CLR: the TLS engine is SslStream. @ParameterizedTest with @MethodSource("data") is [Theory] with
+// [MemberData(nameof(Data))] and @Timeout(30000 ms) its Timeout, as in the handler ssl tests; the JUnit
+// display-name pattern has no counterpart, xUnit names a case by its arguments. Each case runs through the
+// testsuite harness (both allocators x the NIO socket combination). SslProvider.OPENSSL is library-not-ported and
+// SslContext.newHandler(alloc, Executor) is not ported (see data() and newSslHandler), so data() holds the JDK
+// pair without the delegate rows. CountDownLatch is a TaskCompletionSource and AtomicReference the Common type.
 #pragma warning disable xUnit1069 // The xUnit Timeout bounds the Runner body, whose latch wait has no timeout in the source.
 #pragma warning disable xUnit1051 // The source's bind/connect/write/close calls and latch wait do not observe the test cancellation.
 public class SocketSslGreetingTest : AbstractSocketTest
@@ -77,11 +76,11 @@ public class SocketSslGreetingTest : AbstractSocketTest
         // contexts that the source adds when OpenSSL is available, and the warning it logs otherwise, are not ported;
         // the JDK pair remains, as in ParameterizedSslHandlerTest and CloseNotifyTest.
 
-        // CLR: the source adds each pair twice, with delegate = true and false. delegate = true makes newSslHandler
-        // call sslCtx.newHandler(allocator, executor), which passes the executor for SSLEngine.getDelegatedTask();
-        // SslStream has no delegated tasks, so those overloads are not ported (class comment of
-        // src/Netty.NET.Handler/Ssl/SslContext.cs) and only the delegate = false row remains, without the parameter, as
-        // CipherSuiteCanaryTest drops its delegate rows (docs/handler-porting.md, "SSL tests").
+        // CLR: the source adds each pair twice, with delegate = true and false. delegate = true makes
+        // newSslHandler call sslCtx.newHandler(allocator, executor), which passes the executor for
+        // SSLEngine.getDelegatedTask(); SslStream has no delegated tasks, so those overloads are not ported (class
+        // comment of src/Netty.NET.Handler/Ssl/SslContext.cs) and only the delegate = false row remains, without
+        // the parameter, as CipherSuiteCanaryTest drops its delegate rows.
         List<object[]> @params = new List<object[]>();
 
         foreach (SslContext sc in serverContexts)

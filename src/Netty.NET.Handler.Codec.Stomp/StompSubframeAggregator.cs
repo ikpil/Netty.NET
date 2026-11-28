@@ -27,8 +27,7 @@ namespace Netty.NET.Handler.Codec.Stomp;
  * It is useful when you don't want to take care of STOMP frames whose content is 'chunked'.  Insert this
  * handler after {@link StompSubframeDecoder} in the {@link ChannelPipeline}:
  */
-// CLR: StompSubframe.class is typeof(IStompSubframe) (docs/codec-base-porting.md, Type matching), and
-// UnsupportedOperationException is NotSupportedException (docs/codec-base-porting.md, Shared CLR adaptations).
+// CLR: StompSubframe.class is typeof(IStompSubframe), and UnsupportedOperationException is NotSupportedException.
 public class StompSubframeAggregator
         : MessageAggregator<IStompSubframe, IStompHeadersSubframe, IStompContentSubframe, IStompFrame>
 {

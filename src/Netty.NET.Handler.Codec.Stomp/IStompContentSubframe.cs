@@ -25,11 +25,10 @@ namespace Netty.NET.Handler.Codec.Stomp;
  * {@link StompFrame}, place {@link StompSubframeAggregator} after {@link StompSubframeDecoder} in the
  * {@link ChannelPipeline}.
  */
-// CLR: ByteBufHolder is IByteBufHolder, whose content() is the read-only Content property (docs/buffer-porting.md,
-// Buffer holders and conversion).
+// CLR: ByteBufHolder is IByteBufHolder, whose content() is the read-only Content property.
 // CLR: copy(), duplicate(), retainedDuplicate(), replace(ByteBuf), retain(), retain(int), touch() and
 // touch(Object) are re-declared only to narrow the return type, so they are inherited from IByteBufHolder, not
-// repeated (owner decision 2026-11-19; docs/transport-porting.md, Decisions).
+// repeated.
 public interface IStompContentSubframe : IByteBufHolder, IStompSubframe
 {
 }

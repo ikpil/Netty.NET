@@ -80,40 +80,12 @@ namespace Netty.NET.Example.Http.File;
  *
  * </pre>
  */
-// CLR adaptations:
-// - java.io.File is a FileSystemInfo: a DirectoryInfo when the path names a directory, otherwise a FileInfo.
-//   isDirectory()/isFile() are those types, exists() is Exists, isHidden() is the Hidden attribute (which .NET also sets
-//   for a Unix name that starts with '.', as java.io.File does), lastModified() is LastWriteTimeUtc in milliseconds since
-//   the epoch, listFiles() is GetFileSystemInfos() and getName() is Name. canRead() has no BCL check short of opening the
-//   file, so the listing skips hidden and vanished entries only. The namespace segment File hides System.IO.File here,
-//   so only the FileSystemInfo types are used.
-// - RandomAccessFile(file, "r") is a read-only FileStream, which DefaultFileRegion (raf.getChannel()) and ChunkedFile
-//   take; FileNotFoundException is System.IO.FileNotFoundException.
-// - SimpleDateFormat(HTTP_DATE_FORMAT, Locale.US) with the GMT time zone is the .NET custom format
-//   "ddd, dd MMM yyyy HH:mm:ss 'GMT'" (the Java pattern "EEE, dd MMM yyyy HH:mm:ss zzz", whose zzz prints the zone name
-//   GMT) with the invariant culture's English day and month names over UTC times (GMT); parse is
-//   DateTimeOffset.ParseExact with AssumeUniversal and throws FormatException where Java throws ParseException. new
-//   GregorianCalendar() is DateTime.UtcNow and Calendar.add(SECOND, n) is AddSeconds(n).
-// - javax.activation's MimetypesFileTypeMap (the com.sun.activation:javax.activation library) has no BCL counterpart:
-//   setContentTypeHeader maps common file extensions to the System.Net.Mime.MediaTypeNames media types and any other
-//   name to application/octet-stream, MimetypesFileTypeMap's type for an unknown extension.
-// - URLDecoder.decode(uri, "UTF-8") is WebUtility.UrlDecode, which decodes UTF-8 and '+' as a space; it cannot fail on
-//   an encoding name, so the UnsupportedEncodingException catch has no counterpart, and a malformed escape is kept as
-//   is where Java throws IllegalArgumentException. File.separator/separatorChar are Path.DirectorySeparatorChar.
-//   SystemPropertyUtil.get("user.dir") is ExampleLauncher.GetProperty("user.dir", ...) defaulting to the current directory,
-//   because the CLR has no user.dir property (-Duser.dir=... still overrides it). Pattern.matcher(s).matches() is a
-//   Regex anchored with \A and \z.
-// - Writes return a Task (ChannelFuture). ctx.newProgressivePromise() and the anonymous
-//   ChannelProgressiveFutureListener are the channel's write-progress observer (IChannelConfig.WriteProgress,
-//   docs/transport-porting.md: ChannelProgressivePromise), a private nested IProgress<ChannelWriteProgress>: it is
-//   installed only while the file is queued, so only that write reports progress (the SSL branch therefore splits
-//   writeAndFlush into the write and flush() that writeAndFlush is), and operationComplete is a continuation on the send
-//   Task. ChannelFutureListener.CLOSE is a synchronous Task continuation that closes the channel on its event loop
-//   (Common's EventExecutorTaskScheduler); a Task has no channel, so the channel is ctx.Channel.
-// - FullHttpRequest/HttpResponse/FullHttpResponse are the I-prefixed codec-http interfaces, LastHttpContent.
-//   EMPTY_LAST_CONTENT is ILastHttpContent.EMPTY_LAST_CONTENT, Unpooled.EMPTY_BUFFER is Unpooled.EmptyBuffer,
-//   pipeline().get(SslHandler.class) is Get<SslHandler>(), CharsetUtil.UTF_8 is Encoding.UTF8, printStackTrace() and
-//   System.err.println write to Console.Error, and the Java public static final constants are C# constants.
+// Directory listings omit hidden or vanished entries. Readability is checked when the file is opened. Common
+// extensions map to MIME types; unknown extensions use application/octet-stream.
+// HTTP dates use UTC and invariant English names. URL decoding retains malformed escapes. The user.dir override
+// selects the root, which defaults to the working directory.
+// Install the channel's write-progress observer only while the file is queued. Run completion and close handlers
+// on the channel executor.
 public class HttpStaticFileServerHandler : SimpleChannelInboundHandler<IFullHttpRequest>
 {
     public const string HTTP_DATE_FORMAT = "ddd, dd MMM yyyy HH:mm:ss 'GMT'";
@@ -261,8 +233,8 @@ public class HttpStaticFileServerHandler : SimpleChannelInboundHandler<IFullHttp
         }
     }
 
-    // CLR: the anonymous ChannelProgressiveFutureListener (see the class comment). Report(...) forwards each progress
-    // report of the observed write to operationProgressed; an unknown total (null) is the source's negative total.
+    // CLR: Report(...) forwards each progress report of the observed write to operationProgressed; an unknown
+    // total (null) is the source's negative total.
     private sealed class TransferProgressListener : IProgress<ChannelWriteProgress>
     {
         private readonly IChannel channel;

@@ -22,7 +22,7 @@ namespace Netty.NET.Resolver.Dns;
  * An infinite stream of DNS server addresses.
  */
 // CLR: InetSocketAddress is EndPoint: an IPEndPoint, or a DnsEndPoint for an unresolved name server that the
-// authoritative cache may hold (docs/handler-porting.md Addresses, docs/codec-http-porting.md).
+// authoritative cache may hold.
 public interface IDnsServerAddressStream
 {
     /**

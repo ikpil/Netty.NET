@@ -42,56 +42,10 @@ using AuthSslProtocols = System.Security.Authentication.SslProtocols;
 
 namespace Netty.NET.Handler.Tests.Ssl;
 
-// CLR: the abstract fixture of the SSLEngine suite; xUnit runs the [Theory]/[Fact] methods of an abstract base class for
-// each derived test class, as JUnit does (test/Netty.NET.Handler.Codec.Compression.Tests/AbstractIntegrationTest.cs), and
-// the only concrete fixture is JdkSslEngineTest (the OpenSSL, Conscrypt and Amazon Corretto fixtures are
-// library-not-ported, owner decision 4). The engine is SslStream behind SslHandler (owner decisions 2026-11-24,
-// docs/handler-ssl-design.md), which has no SSLEngine facade: the tests that drive an SSLEngine directly (wrap/unwrap,
-// beginHandshake/closeInbound/closeOutbound, SSLSession, SSLSessionContext, enabled/supported protocols and cipher suites,
-// SSLParameters, delegated tasks, handshake-session trust managers) are CLR-inapplicable and recorded in
-// docs/handler-porting-manifest.json records those cases. Their original comments are kept below. The tests that run
-// through SslContext, SslHandler and a socket pipeline are ported here:
-// - @TestInstance(PER_CLASS) with @BeforeEach setup()/@AfterEach tearDown(): xUnit creates an instance per test, and
-//   setup()/tearDown() run from IAsyncLifetime.InitializeAsync/DisposeAsync, "Called immediately after the class has been
-//   created, before it is used" (https://raw.githubusercontent.com/xunit/xunit/main/src/xunit.v3.core/IAsyncLifetime.cs,
-//   as AbstractDecoderTest of codec-compression).
-// - @MethodSource("newTestParams") is [MemberData(nameof(NewTestParams))]; xUnit member data is "The name of the public
-//   static member on the test class that will provide the test data"
-//   (https://raw.githubusercontent.com/xunit/xunit/main/src/xunit.v3.core/Attributes/MemberDataAttributeBase.cs), so
-//   newTestParams() is static and asks the JDK provider (the only fixture) whether TLSv1.3 is supported, which is the
-//   tlsv13Supported that JdkSslEngineTest passed to the constructor; the constructor parameter and field are therefore
-//   not ported. The parameter types are public because a public theory takes them (CS0051).
-// - The delegate=true parameters ran the delegated SSLEngine tasks on the DelayingExecutor through
-//   newHandler(alloc, Executor), which is jvm-only-replaced (SslStream has no delegated tasks, see SslContext and
-//   SslHandler), so only delegate=false is generated and the delegatingExecutor field with its tearDown check is not
-//   ported.
-// - The JCA Provider hooks clientSslContextProvider()/serverSslContextProvider() and SslContextBuilder.sslContextProvider
-//   (jvm-only-replaced) have no counterpart: the engine is always SslStream; wrapEngine(SSLEngine) and unwrapEngine only
-//   serve the SSLEngine tests.
-// - SelfSignedCertificate/CachedSelfSignedCertificate are @Deprecated ("Use the CertificateBuilder from netty-pkitesting
-//   instead") and not ported: the certificate is built as CertificateBuilderCertGenerator builds it (a self-signed CA
-//   "CN=localhost" with an RSA 2048 key) with Netty.NET.PkiTesting.CertificateBuilder; ssc.cert()/key() are
-//   GetCertificate()/GetKeyPair() and the files ssc.certificate()/privateKey() are ToTempCertChainPem()/
-//   ToTempPrivateKeyPem().
-// - SSLException and SSLHandshakeException are both AuthenticationException, which "The NegotiateStream and SslStream
-//   classes throw ... when the client or server cannot be authenticated"
-//   (https://learn.microsoft.com/en-us/dotnet/api/system.security.authentication.authenticationexception?view=net-10.0;
-//   the mapping of the ssl port, src/Netty.NET.Handler/Ssl/SslHandler.cs), Throwable is Exception, getCause() is
-//   InnerException, IllegalStateException is InvalidOperationException, java.lang.Error is UnreachableException, and
-//   ClosedChannelException is the Transport ClosedChannelException.
-// - The Transport bootstrap API is asynchronous: bind(...)/connect(...).sync() are awaited BindAsync/ConnectAsync,
-//   close().sync() an awaited CloseAsync, Future.await(timeout) a Task.WhenAny with a delay, and shutdownGracefully(0, 0,
-//   MILLISECONDS) is ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero). CountDownLatch is CountdownEvent
-//   (CountDown below), BlockingQueue<ByteBuf> a BlockingCollection<ByteBuf> ("The default collection type for
-//   BlockingCollection<T> is ConcurrentQueue<T>", FIFO, as LinkedBlockingQueue;
-//   https://learn.microsoft.com/en-us/dotnet/api/system.collections.concurrent.blockingcollection-1?view=net-10.0) and the
-//   onNextMessages queue a ConcurrentQueue. The anonymous ChannelInitializer/ChannelInboundHandlerAdapter classes are
-//   named nested classes.
-// - Windows has no CipherSuitesPolicy (docs/handler-ssl-design.md): a context built with cipher suites fails in
-//   SslContext.NewHandler with PlatformNotSupportedException, so a ported test whose handlers come from such a context
-//   calls Assert.Skip there (xUnit v3: "Three new assertions have been added to support dynamically skipping a test at
-//   runtime", https://xunit.net/docs/getting-started/v3/whats-new). The tests that configure param.ciphers() and then
-//   ciphers(null, IdentityCipherSuiteFilter.INSTANCE) build contexts without cipher suites and run everywhere.
+// CLR: These tests run through SslStream via SslContext and SslHandler. Direct SSLEngine session, wrap/unwrap and
+// delegated-task scenarios have no equivalent in this fixture.
+// Windows skips tests that set an explicit CipherSuitesPolicy. Tests that leave cipher selection to the platform
+// can still run.
 public abstract class SSLEngineTest : IAsyncLifetime
 {
     private const string PRINCIPAL_NAME = "CN=e8ac02fa0d65a84219016045db8b05c485b4ecdf.netty.test";
@@ -131,7 +85,6 @@ public abstract class SSLEngineTest : IAsyncLifetime
                 .BuildSelfSigned();
     }
 
-    // CLR: CachedSelfSignedCertificate.getCachedCertificate().
     internal static X509Bundle GetCachedCertificate()
     {
         return CACHED_CERTIFICATE.Value;
@@ -262,7 +215,6 @@ public abstract class SSLEngineTest : IAsyncLifetime
             return @delegate;
         }
 
-        // CLR: Collections.singletonList is a one-element read-only list.
         internal IList<string> Protocols()
         {
             return new[] { protocolCipherCombo.protocol };
@@ -318,9 +270,9 @@ public abstract class SSLEngineTest : IAsyncLifetime
         }
 
         // CLR: the Buffer port folds buffer(), buffer(int) and buffer(int, int) into one method with the default
-        // capacities (src/Netty.NET.Buffer/IByteBufAllocator.cs), and the same for the other allocation methods; the
-        // no-argument Java calls pass those defaults. ThreadLocalRandom.current().nextBoolean() is Random.Shared
-        // (docs/common-clr-design.md, "Native random consumers and scalar counters").
+        // capacities (src/Netty.NET.Buffer/IByteBufAllocator.cs), and the same for the other allocation methods;
+        // the no-argument Java calls pass those defaults. ThreadLocalRandom.current().nextBoolean() is
+        // Random.Shared.
         public ByteBuf Buffer(int initialCapacity = 256, int maxCapacity = int.MaxValue)
         {
             switch (type)
@@ -998,7 +950,6 @@ public abstract class SSLEngineTest : IAsyncLifetime
         sb.Channel<NioServerSocketChannel>();
         sb.ChildHandler(new HostnameValidationServerInitializer(this, param, failureExpected));
 
-        // CLR: ImmediateEventExecutor.INSTANCE.newPromise() is a TaskCompletionSource.
         TaskCompletionSource clientWritePromise = new TaskCompletionSource();
         cb.Group(new MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory()));
         cb.Channel<NioSocketChannel>();
@@ -1848,7 +1799,7 @@ public abstract class SSLEngineTest : IAsyncLifetime
     {
         // CLR: assumeTrue(PlatformDependent.javaVersion() >= 11) has no counterpart. The contexts enable
         // param.ciphers(), which needs a CipherSuitesPolicy: Windows has none, and SslContext.NewHandler throws
-        // PlatformNotSupportedException there (docs/handler-ssl-design.md, Known differences).
+        // PlatformNotSupportedException there.
         if (OperatingSystem.IsWindows())
         {
             Assert.Skip("CipherSuitesPolicy is not supported on Windows (docs/handler-ssl-design.md); the contexts of " +

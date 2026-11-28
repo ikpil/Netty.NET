@@ -35,14 +35,12 @@ namespace Netty.NET.Handler.Codec.Http;
  * the requested protocol is supported. Once an upgrade is performed, this handler removes itself
  * from the pipeline.
  */
-// CLR: the nested interfaces take the I prefix (ISourceCodec, IUpgradeCodec, IUpgradeCodecFactory).
-// Collection<CharSequence> is ICollection<ICharSequence> and the String values of the request headers are wrapped in
-// StringCharSequence (the Java StringBuilder text of splitHeader becomes a StringCharSequence). UpgradeEvent implements
-// IReferenceCounted; its narrowed retain/touch members return UpgradeEvent and the IReferenceCounted members are
-// implemented explicitly. ChannelFutureListener.CLOSE_ON_FAILURE is a synchronous Task continuation that closes the
-// channel when the write did not succeed (src/Netty.NET.Transport/Bootstrapping/AbstractBootstrap.cs records the same
-// mapping); ctx.pipeline().remove(this) discards the returned pipeline. Character.isWhitespace(char) keeps the Java
-// rule (see HttpVersion.IsJavaWhitespace), StringBuilder.setLength is the Length setter, and assert is Debug.Assert.
+// CLR: UpgradeEvent implements IReferenceCounted; its narrowed retain/touch members return UpgradeEvent and the
+// IReferenceCounted members are implemented explicitly. ChannelFutureListener.CLOSE_ON_FAILURE is a synchronous
+// Task continuation that closes the channel when the write did not succeed
+// (src/Netty.NET.Transport/Bootstrapping/AbstractBootstrap.cs records the same mapping);
+// ctx.pipeline().remove(this) discards the returned pipeline. Character.isWhitespace(char) keeps the Java rule
+// (see HttpVersion.IsJavaWhitespace), StringBuilder.setLength is the Length setter, and assert is Debug.Assert.
 public class HttpServerUpgradeHandler : HttpObjectAggregator
 {
 

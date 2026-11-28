@@ -171,7 +171,6 @@ public static class CipherSuiteConverter
         o2jTls13 = new ReadOnlyDictionary<string, IDictionary<string, string>>(o2jTls13Map);
     }
 
-    // CLR: Collections.singletonMap(key, value), an immutable one-entry map.
     private static IDictionary<string, string> SingletonMap(string key, string value)
     {
         return new ReadOnlyDictionary<string, string>(new Dictionary<string, string> { [key] = value });

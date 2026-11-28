@@ -40,7 +40,6 @@ public class MessageToMessageDecoderTest
         Assert.True(channel.FinishAndReleaseAll());
     }
 
-    // CLR: the anonymous decoder is a named nested class.
     private sealed class SkipFirstDecoder : MessageToMessageDecoder<string>
     {
         private int count;

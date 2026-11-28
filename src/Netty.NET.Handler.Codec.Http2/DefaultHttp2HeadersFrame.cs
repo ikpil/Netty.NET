@@ -23,8 +23,6 @@ namespace Netty.NET.Handler.Codec.Http2;
 /**
  * The default {@link Http2HeadersFrame} implementation.
  */
-// CLR: stream(Http2FrameStream) is a covariant override of AbstractHttp2StreamFrame.Stream. toString() keeps Java's
-// text: a null stream prints "null" and booleans print true/false (Http2CodecUtil.ToJavaString).
 public sealed class DefaultHttp2HeadersFrame : AbstractHttp2StreamFrame, IHttp2HeadersFrame
 {
     private readonly IHttp2Headers headers;

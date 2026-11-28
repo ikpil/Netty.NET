@@ -19,10 +19,8 @@ using Netty.NET.Common;
 
 namespace Netty.NET.Handler.Codec.Smtp.Tests;
 
-// CLR: CharSequence is ICharSequence (see SmtpUtils), so the Java String arguments are passed as StringCharSequence;
-// @ParameterizedTest with @ValueSource(strings) is [Theory] with one [InlineData] per string; IllegalArgumentException is
-// ArgumentException (docs/codec-base-porting.md). The package-private isContentExpected() is internal and visible to
-// this assembly.
+// CLR: CharSequence is ICharSequence (see SmtpUtils), so the Java String arguments are passed as
+// StringCharSequence; IllegalArgumentException is ArgumentException.
 public class SmtpCommandTest
 {
     [Fact]

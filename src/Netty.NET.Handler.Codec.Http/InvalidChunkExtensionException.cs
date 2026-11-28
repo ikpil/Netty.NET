@@ -26,7 +26,7 @@ namespace Netty.NET.Handler.Codec.Http;
  * and that a lone LF octet is not allowed within the chunk header line.
  */
 // CLR: serialVersionUID has no counterpart, Throwable is Exception and the cause-only constructor keeps the
-// codec-base detail message (docs/codec-base-porting.md, Exceptions).
+// codec-base detail message.
 public sealed class InvalidChunkExtensionException : CorruptedFrameException
 {
 

@@ -22,8 +22,8 @@ namespace Netty.NET.Handler.Codec.Smtp;
 /**
  * Default implementation of {@link LastSmtpContent} that does no validation of the raw data passed in.
  */
-// CLR: @UnstableApi is the Common [UnstableApi] attribute. The Java overrides narrow the return types with C# 9 covariant
-// overrides: "an overriding method can declare a more derived return type the method it overrides"
+// CLR: The Java overrides narrow the return types with C# 9 covariant overrides: "an overriding method can declare
+// a more derived return type the method it overrides"
 // (https://learn.microsoft.com/en-us/dotnet/standard/generics/covariance-and-contravariance).
 [UnstableApi]
 public sealed class DefaultLastSmtpContent : DefaultSmtpContent, ILastSmtpContent

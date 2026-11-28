@@ -27,8 +27,7 @@ namespace Netty.NET.Handler.Codec.Socks;
  * @see SocksAuthResponse
  * @see SocksAuthRequestDecoder
  */
-// CLR: IllegalArgumentException is ArgumentException; CharsetUtil.US_ASCII is Encoding.ASCII
-// (docs/codec-base-porting.md, Text).
+// CLR: IllegalArgumentException is ArgumentException.
 public sealed class SocksAuthRequest : SocksRequest
 {
     private static readonly SocksSubnegotiationVersion SUBNEGOTIATION_VERSION = SocksSubnegotiationVersion.AUTH_PASSWORD;

@@ -210,8 +210,8 @@ public class SocketShutdownOutputByPeerSourceTest : AbstractServerSocketTest
         if (Domain)
         {
             // CLR: the epoll override puts data into a four-byte direct buffer in native order and sends it.
-            // BitConverter.GetBytes(int) uses the machine byte order: "The order of bytes in the array returned by the
-            // GetBytes method overloads ... depends on whether the computer architecture is little-endian or
+            // BitConverter.GetBytes(int) uses the machine byte order: "The order of bytes in the array returned by
+            // the GetBytes method overloads... depends on whether the computer architecture is little-endian or
             // big-endian" (https://learn.microsoft.com/en-us/dotnet/api/system.bitconverter).
             s.Send(BitConverter.GetBytes(data));
             return;

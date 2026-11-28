@@ -29,10 +29,10 @@ namespace Netty.NET.Example.PortUnification;
  * Manipulates the current pipeline dynamically to switch protocols or enable
  * SSL or GZIP.
  */
-// CLR: List<Object> out is IList<object> and getUnsignedByte(index) is GetByte(index), which returns the unsigned C#
-// byte (docs/buffer-porting.md); readerIndex() and readableBytes() are the ReaderIndex and ReadableBytes properties.
-// ChannelPipeline is IChannelPipeline and ctx.close() is CloseAsync(), whose Task is discarded as Java discards the
-// future. CompressionOptions is the marker interface ICompressionOptions (codec-compression).
+// CLR: List<Object> out is IList<object> and getUnsignedByte(index) is GetByte(index), which returns the unsigned
+// C# byte; readerIndex() and readableBytes() are the ReaderIndex and ReadableBytes properties. ChannelPipeline is
+// IChannelPipeline and ctx.close() is CloseAsync(), whose Task is discarded as Java discards the future.
+// CompressionOptions is the marker interface ICompressionOptions (codec-compression).
 public class PortUnificationServerHandler : ByteToMessageDecoder
 {
     private const int MAX_CONTENT_LENGTH = 65536;

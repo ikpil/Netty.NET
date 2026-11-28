@@ -21,9 +21,9 @@ namespace Netty.NET.Example.Http.WebSocketx.Server;
 /**
  * Generates the demo HTML page which is served at http://localhost:8080/
  */
-// CLR: CharsetUtil.US_ASCII is Encoding.ASCII and Unpooled.copiedBuffer is Unpooled.CopiedBuffer. The page text is the
-// source's string expression unchanged: C# also concatenates a char literal such as '}' with a string. The final class
-// with only static members and a private constructor stays a sealed class with that constructor.
+// CLR: The page text is the source's string expression unchanged: C# also concatenates a char literal such as '}'
+// with a string. The final class with only static members and a private constructor stays a sealed class with that
+// constructor.
 public sealed class WebSocketServerIndexPage
 {
     private const string NEWLINE = "\r\n";

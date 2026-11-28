@@ -23,26 +23,25 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Codec.Http3.Tests;
 
-// CLR: as codec-http2's HttpConversionUtilTest port (docs/codec-http2-porting.md, HTTP/1.x conversion): the
-// @Deprecated DefaultHttpRequest(HttpVersion, HttpMethod, String, boolean validateHeaders) is not ported in codec-http
-// (its @deprecated text names the (HttpVersion, HttpMethod, String) constructor, "to always have header validation
-// enabled"; docs/codec-http-porting.md, Core not ported); every call here passes true, so it is that constructor. new
-// DefaultHttpHeaders(validate) is DefaultHttpHeadersFactory.HeadersFactory().WithValidation(validate).NewHeaders(), and
-// the deprecated HttpHeaderNames.KEEP_ALIVE/PROXY_CONNECTION are local AsciiString constants with the same names
-// (docs/codec-http-porting.md, Core test notes). A Java String passed as a CharSequence is a StringCharSequence (Cs),
-// because a C# string is not an ICharSequence (docs/codec-http-porting.md, Shared CLR adaptations). assertEquals of two
-// CharSequences calls equals, which AssertCsEquals keeps (xUnit would compare two ICharSequence values,
-// IReadOnlyList<char>, element by element), and a CharSequence result that Java compares with a String is compared as a
-// string. assertSame("world", out.get("hello")) holds in Java because the conversion copies the String instance the
-// HttpHeaders store; here the headers store an ICharSequence for the C# string, so the assertion compares the text (the
-// AsciiString assertSame(TRAILERS, ...) and assertSame(EMPTY_STRING, ...) checks stay reference checks).
-// assertThrows(T.class, ...) is Assert.ThrowsAny<T> (docs/codec-http-porting.md, Core test notes) and the lambdas are
-// lambdas. The @MethodSource tests are [Theory] methods with [MemberData] over TheoryData (List<String> is string[],
-// asList/singletonList are array literals), and the @ValueSource(strings) test is a [Theory] with InlineData rows. The
-// static imports of HttpHeaderValues.GZIP and TRAILERS are written HttpHeaderValues.GZIP/TRAILERS: C# imports all
-// static members of a class at once, and HttpHeaderValues.UPGRADE would clash with HttpHeaderNames.UPGRADE (CS0229).
-// The package-private HttpConversionUtil members are reached through InternalsVisibleTo; the throws clauses have no
-// counterpart.
+// CLR: as codec-http2's HttpConversionUtilTest port : the @Deprecated DefaultHttpRequest(HttpVersion, HttpMethod,
+// String, boolean validateHeaders) is not ported in codec-http (its @deprecated text names the (HttpVersion,
+// HttpMethod, String) constructor, "to always have header validation enabled"; docs/codec-http-porting.md, Core
+// not ported); every call here passes true, so it is that constructor. new DefaultHttpHeaders(validate) is
+// DefaultHttpHeadersFactory.HeadersFactory().WithValidation(validate).NewHeaders(), and the deprecated
+// HttpHeaderNames.KEEP_ALIVE/PROXY_CONNECTION are local AsciiString constants with the same names. A Java String
+// passed as a CharSequence is a StringCharSequence (Cs), because a C# string is not an ICharSequence. assertEquals
+// of two CharSequences calls equals, which AssertCsEquals keeps (xUnit would compare two ICharSequence values,
+// IReadOnlyList<char>, element by element), and a CharSequence result that Java compares with a String is compared
+// as a string. assertSame("world", out.get("hello")) holds in Java because the conversion copies the String
+// instance the HttpHeaders store; here the headers store an ICharSequence for the C# string, so the assertion
+// compares the text (the AsciiString assertSame(TRAILERS,...) and assertSame(EMPTY_STRING,...) checks stay
+// reference checks). assertThrows(T.class,...) is Assert.ThrowsAny<T> and the lambdas are lambdas. The
+// @MethodSource tests are [Theory] methods with [MemberData] over TheoryData (List<String> is string[],
+// asList/singletonList are array literals), and the @ValueSource(strings) test is a [Theory] with InlineData rows.
+// The static imports of HttpHeaderValues.GZIP and TRAILERS are written HttpHeaderValues.GZIP/TRAILERS: C# imports
+// all static members of a class at once, and HttpHeaderValues.UPGRADE would clash with HttpHeaderNames.UPGRADE
+// (CS0229). The package-private HttpConversionUtil members are reached through InternalsVisibleTo; the throws
+// clauses have no counterpart.
 public class HttpConversionUtilTest
 {
 
@@ -519,7 +518,6 @@ public class HttpConversionUtilTest
         AssertCsEquals(new AsciiString("request-target.example:8080"), @out.Authority());
     }
 
-    // CLR: a Java String passed as a CharSequence (see the class comment).
     private static ICharSequence Cs(string s)
     {
         return new StringCharSequence(s);
@@ -531,7 +529,6 @@ public class HttpConversionUtilTest
         return s?.ToString();
     }
 
-    // CLR: assertEquals(Object, Object) of two CharSequences, which calls equals (see the class comment).
     private static void AssertCsEquals(ICharSequence expected, ICharSequence actual)
     {
         Assert.True(Equals(expected, actual), "expected: <" + expected + "> but was: <" + actual + ">");

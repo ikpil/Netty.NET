@@ -28,7 +28,7 @@ namespace Netty.NET.Handler.Ssl.Ocsp.Tests;
 // counterpart of the module's CLR-only OcspAsn1.cs, and the AIA extension with the BCL's
 // X509AuthorityInformationAccessExtension.
 
-// CLR-only: OCSPRespBuilder/OCSPResponseStatus constants (RFC 6960: "successful (0) ... unauthorized (6)").
+// CLR-only: OCSPRespBuilder/OCSPResponseStatus constants (RFC 6960: "successful (0)... unauthorized (6)").
 internal enum OcspResponseStatus
 {
     Successful = 0,
@@ -197,9 +197,9 @@ internal sealed class BasicOcspRespBuilder
     }
 }
 
-// CLR-only: OCSPRespBuilder.build(status, basicResponse).getEncoded() and new OCSPResponse(status, responseBytes)
-// .getEncoded(), with ResponseBytes(responseType, new DEROctetString(response)); a null responseType leaves the
-// responseBytes out.
+// CLR-only: OCSPRespBuilder.build(status, basicResponse).getEncoded() and new OCSPResponse(status,
+// responseBytes).getEncoded(), with ResponseBytes(responseType, new DEROctetString(response)); a null responseType
+// leaves the responseBytes out.
 internal static class OcspRespBuilder
 {
     internal static byte[] Build(OcspResponseStatus status, BasicOcspResp basicResponse)

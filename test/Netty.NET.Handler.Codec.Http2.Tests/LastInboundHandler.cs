@@ -28,10 +28,10 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
 /**
  * Channel handler that allows to easily access inbound messages.
  */
-// CLR: the Consumer interface is IConsumer<in T> (contravariant, so the shared no-op consumer of object serves every
-// reference type, as Java's unchecked cast does); synchronized (queue) is lock (queue); PlatformDependent.throwException
-// is ExceptionDispatchInfo.Throw and printStackTrace() writes the exception to the error stream; LockSupport.parkNanos
-// of 10 ms is Thread.Sleep(10). ctx.write(msg) discards the Task (docs/transport-porting.md, VoidChannelPromise).
+// CLR: the Consumer interface is IConsumer<in T> (contravariant, so the shared no-op consumer of object serves
+// every reference type, as Java's unchecked cast does); synchronized (queue) is lock (queue);
+// PlatformDependent.throwException is ExceptionDispatchInfo.Throw and printStackTrace() writes the exception to
+// the error stream; LockSupport.parkNanos of 10 ms is Thread.Sleep(10). ctx.write(msg) discards the Task.
 public class LastInboundHandler : ChannelDuplexHandler
 {
     private readonly List<object> queue = new List<object>();
@@ -49,7 +49,6 @@ public class LastInboundHandler : ChannelDuplexHandler
 
     private static readonly IConsumer<object> NOOP_CONSUMER = new NoopConsumerImpl();
 
-    // CLR: the anonymous Consumer of NOOP_CONSUMER.
     private sealed class NoopConsumerImpl : IConsumer<object>
     {
         public void Accept(object obj)

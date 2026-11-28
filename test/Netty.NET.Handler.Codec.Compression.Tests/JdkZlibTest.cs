@@ -25,26 +25,23 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Compression.Tests;
 
-// CLR: the @Override of testZLIB_OR_NONE3() overrides TestZLIB_OR_NONE3Core(), which ZlibTest's [Fact]
-// TestZLIB_OR_NONE3 runs (see ZlibTest), and JdkZlibTest.super.testZLIB_OR_NONE3() is base.TestZLIB_OR_NONE3Core().
-// getClass().getResourceAsStream("/multiple.gz") is the manifest resource "multiple.gz" of the test assembly
-// (Assembly.GetManifestResourceStream), and commons-compress IOUtils.toByteArray is Stream.CopyTo a MemoryStream (owner
-// decision 2026-11-23). The java.util.zip test helpers are the BCL streams (owner decision 2026-11-23):
-// GZIPOutputStream/GZIPInputStream are GZipStream, DeflaterOutputStream with new Deflater(BEST_COMPRESSION, nowrap) is
-// a DeflateStream (nowrap) or ZLibStream with ZLibCompressionOptions.CompressionLevel 9, the level java.util.zip's
-// BEST_COMPRESSION names ("9 gives best compression",
+// CLR: The java.util.zip test helpers are the BCL streams : GZIPOutputStream/GZIPInputStream are GZipStream,
+// DeflaterOutputStream with new Deflater(BEST_COMPRESSION, nowrap) is a DeflateStream (nowrap) or ZLibStream with
+// ZLibCompressionOptions.CompressionLevel 9, the level java.util.zip's BEST_COMPRESSION names ("9 gives best
+// compression",
 // https://learn.microsoft.com/en-us/dotnet/api/system.io.compression.zlibcompressionoptions.compressionlevel?view=net-10.0),
-// and InflaterInputStream with new Inflater(nowrap) is a DeflateStream or ZLibStream in CompressionMode.Decompress; the
-// tests compare inflated data only, and InputStream.read's -1 at the end is Stream.Read's 0. ByteArrayOutputStream is a
-// MemoryStream, readBytes(OutputStream, int) is ReadBytes(Stream, int), System.arraycopy is Array.Copy, Arrays.fill is
-// Array.Fill, Arrays.copyOfRange is a span copy, ThreadLocalRandom.current() is Random.Shared and CharsetUtil.UTF_8 is
-// Encoding.UTF8. Deflater.DEFAULT_COMPRESSION is the constant of the internal stand-in Deflater (InternalsVisibleTo).
+// and InflaterInputStream with new Inflater(nowrap) is a DeflateStream or ZLibStream in
+// CompressionMode.Decompress; the tests compare inflated data only, and InputStream.read's -1 at the end is
+// Stream.Read's 0. ByteArrayOutputStream is a MemoryStream, readBytes(OutputStream, int) is ReadBytes(Stream,
+// int), System.arraycopy is Array.Copy, Arrays.fill is Array.Fill, Arrays.copyOfRange is a span copy,
+// ThreadLocalRandom.current() is Random.Shared and CharsetUtil.UTF_8 is Encoding.UTF8.
+// Deflater.DEFAULT_COMPRESSION is the constant of the internal stand-in Deflater (InternalsVisibleTo).
 // @MethodSource("highlyCompressibleStreams") is MemberData, which must be a public static member
-// (https://raw.githubusercontent.com/xunit/xunit/main/src/xunit.v3.core/Attributes/MemberDataAttributeBase.cs). The
-// anonymous Executable is a lambda; assertThrows is Assert.Throws and assertDoesNotThrow is Record.Exception, which
-// "Returns the exception that was thrown by the code; null, otherwise"
-// (https://raw.githubusercontent.com/xunit/assert.xunit/main/Record.cs). close() is CloseAsync(), whose Task the source
-// ignores; xUnit1051 is suppressed for these calls, because the source's close() observes no cancellation.
+// (https://raw.githubusercontent.com/xunit/xunit/main/src/xunit.v3.core/Attributes/MemberDataAttributeBase.cs).
+// The anonymous Executable is a lambda; assertThrows is Assert.Throws and assertDoesNotThrow is Record.Exception,
+// which "Returns the exception that was thrown by the code; null, otherwise"
+// (https://raw.githubusercontent.com/xunit/assert.xunit/main/Record.cs). close() is CloseAsync(), whose Task the
+// source ignores; xUnit1051 is suppressed for these calls, because the source's close() observes no cancellation.
 public class JdkZlibTest : ZlibTest
 {
 
@@ -666,7 +663,7 @@ public class JdkZlibTest : ZlibTest
         return baos.ToArray();
     }
 
-    // CLR: commons-compress IOUtils.toByteArray(InputStream) is Stream.CopyTo a MemoryStream (owner decision 2026-11-23).
+    // CLR: commons-compress IOUtils.toByteArray(InputStream) is Stream.CopyTo a MemoryStream.
     private static byte[] ToByteArray(Stream stream)
     {
         MemoryStream bytes = new MemoryStream();

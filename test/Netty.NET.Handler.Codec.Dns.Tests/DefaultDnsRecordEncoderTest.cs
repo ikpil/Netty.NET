@@ -22,13 +22,13 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Codec.Dns.Tests;
 
-// CLR: the char literals of the byte[] initializers are cast to byte, which Java narrows implicitly. The tests reach the
-// protected encodeName of the same package through its protected internal C# declaration. SocketUtils.addressByName of
-// a literal is IPAddress.Parse and InetAddress.getAddress() is GetAddressBytes() (docs/common-clr-design.md, "Native
-// socket operations and network interface access"); 'address instanceof Inet4Address' is AddressFamily.InterNetwork.
-// ThreadLocalRandom.current() is Random.Shared, "a thread-safe Random instance that may be used concurrently from any
-// thread" (https://learn.microsoft.com/en-us/dotnet/api/system.random.shared?view=net-10.0). readUnsignedByte() is
-// ByteBuf.ReadByte(), which returns the unsigned System.Byte (docs/buffer-porting.md).
+// CLR: the char literals of the byte[] initializers are cast to byte, which Java narrows implicitly. The tests
+// reach the protected encodeName of the same package through its protected internal C# declaration.
+// SocketUtils.addressByName of a literal is IPAddress.Parse and InetAddress.getAddress() is GetAddressBytes();
+// 'address instanceof Inet4Address' is AddressFamily.InterNetwork. ThreadLocalRandom.current() is Random.Shared,
+// "a thread-safe Random instance that may be used concurrently from any thread"
+// (https://learn.microsoft.com/en-us/dotnet/api/system.random.shared?view=net-10.0). readUnsignedByte() is
+// ByteBuf.ReadByte(), which returns the unsigned System.Byte.
 public class DefaultDnsRecordEncoderTest
 {
 

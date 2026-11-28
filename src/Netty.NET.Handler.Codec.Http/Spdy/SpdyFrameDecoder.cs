@@ -25,14 +25,14 @@ namespace Netty.NET.Handler.Codec.Spdy;
 /**
  * Decodes {@link ByteBuf}s into SPDY Frames.
  */
-// CLR: SpdyFrameDecoderDelegate is ISpdyFrameDecoderDelegate and the field delegate is @delegate (a C# keyword). The
-// package-private DEFAULT_MAX_NUM_SETTINGS is an internal constant. The simple enum State is a private C# enum; the
-// unreachable default branch (java.lang.Error) throws InvalidOperationException, as codec-base AsciiHeadersEncoder does
-// for an unexpected constant. Java methods are virtual unless final. ByteBuf.getByte returns the unsigned CLR byte
-// (owner decision); the Java results are kept: the control bit is masked (& 0x80), the priority is shifted and masked
-// (>> 5 & 0x07, the same three bits for a signed or unsigned octet), and the flag tests (flags & flag, flags == 0)
-// compare bit patterns. The Java byte flags and priority passed to the delegate are CLR bytes (the wire octets).
-// Numbers in the frame error text use the invariant culture.
+// CLR: SpdyFrameDecoderDelegate is ISpdyFrameDecoderDelegate and the field delegate is @delegate (a C# keyword).
+// The simple enum State is a private C# enum; the unreachable default branch (java.lang.Error) throws
+// InvalidOperationException, as codec-base AsciiHeadersEncoder does for an unexpected constant. Java methods are
+// virtual unless final. ByteBuf.getByte returns the unsigned CLR byte (owner decision); the Java results are kept:
+// the control bit is masked (& 0x80), the priority is shifted and masked (>> 5 & 0x07, the same three bits for a
+// signed or unsigned octet), and the flag tests (flags & flag, flags == 0) compare bit patterns. The Java byte
+// flags and priority passed to the delegate are CLR bytes (the wire octets). Numbers in the frame error text use
+// the invariant culture.
 public class SpdyFrameDecoder
 {
 

@@ -31,20 +31,20 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Transport.Tests;
 
-// CLR: the TLS engine is SslStream behind SslHandler (owner decision 2026-11-24, docs/handler-ssl-design.md), which has
-// no SSLEngine facade, so SslContext.newEngine(alloc) is not ported; new SslHandler(engine[, startTls]) over an engine of
-// a context is that context's NewHandler(alloc, startTls), whose source body is new SslHandler(newEngine(alloc),
-// startTls) (handler/src/main/java/io/netty/handler/ssl/SslContext.java, newHandler(alloc, startTls); protected
-// internal in Netty.NET.Handler, which opens its internals to this assembly as to Netty.NET.Handler.Tests). The
-// engines' setUseClientMode(true/false) calls have no counterpart: JdkSslContext gives every engine its own mode
+// CLR: the TLS engine is SslStream behind SslHandler, which has no SSLEngine facade, so
+// SslContext.newEngine(alloc) is not ported; new SslHandler(engine[, startTls]) over an engine of a context is
+// that context's NewHandler(alloc, startTls), whose source body is new SslHandler(newEngine(alloc), startTls)
+// (handler/src/main/java/io/netty/handler/ssl/SslContext.java, newHandler(alloc, startTls); protected internal in
+// Netty.NET.Handler, which opens its internals to this assembly as to Netty.NET.Handler.Tests). The engines'
+// setUseClientMode(true/false) calls have no counterpart: JdkSslContext gives every engine its own mode
 // (configureAndWrapEngine calls setUseClientMode(isClient())), which is the options type of the handler here.
 // @ParameterizedTest with @MethodSource("data") is [Theory] with [MemberData(nameof(Data))], and the
-// @Timeout(value, MILLISECONDS) the Timeout of the [Theory]; DisableDiscoveryEnumeration builds the contexts when the
-// theory runs, as JUnit calls data() for each test (as AbstractEncoderTest of codec-compression). The static
+// @Timeout(value, MILLISECONDS) the Timeout of the [Theory]; DisableDiscoveryEnumeration builds the contexts when
+// the theory runs, as JUnit calls data() for each test (as AbstractEncoderTest of codec-compression). The static
 // @BeforeAll/@AfterAll executor lifecycle is a class fixture, as in SocketEchoSourceTest. The certificate is the
 // pkitesting bundle of the source; an exception of the static constructor fails every test as
-// TypeInitializationException, the counterpart of ExceptionInInitializerError, so the try/catch is not repeated (as
-// BrotliDecoderTest of codec-compression).
+// TypeInitializationException, the counterpart of ExceptionInInitializerError, so the try/catch is not repeated
+// (as BrotliDecoderTest of codec-compression).
 #pragma warning disable xUnit1069 // The xUnit Timeout bounds the Runner body, whose polling loops have no timeout in the source.
 #pragma warning disable xUnit1051 // The source's bind/connect/write/close calls and polling sleeps do not observe the test cancellation.
 public class SocketStartTlsTest : AbstractSocketTest, IClassFixture<SocketStartTlsTest.ExecutorFixture>
@@ -255,8 +255,7 @@ public class SocketStartTlsTest : AbstractSocketTest, IClassFixture<SocketStartT
     {
         private readonly SslHandler sslHandler;
         private readonly bool autoRead;
-        // CLR: Future<Channel> is the Task<IChannel> of SslHandler.HandshakeFuture() (docs/handler-porting.md, SslHandler
-        // on SslStream); isSuccess() is IsCompletedSuccessfully.
+        // CLR: Future<Channel> is the Task<IChannel> of SslHandler.HandshakeFuture().
         private Task<IChannel> handshakeFuture;
         internal readonly AtomicReference<Exception> exception = new AtomicReference<Exception>();
 

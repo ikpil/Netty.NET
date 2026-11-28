@@ -21,13 +21,12 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Codec.Quic.Tests;
 
-// CLR: SipHash is internal (package-private in Java) and java.nio.ByteBuffer is ReadOnlyMemory<byte>
-// (docs/codec-classes-quic-porting.md, NIO buffers), so ByteBuffer.wrap(bytes) is the memory over the array. The
-// little-endian ByteBuffer of params() (put the eight bytes, flip, getLong) is BinaryPrimitives.ReadInt64LittleEndian
-// over the eight bytes. @ParameterizedTest @MethodSource("params") is a theory over the rows of Params(); a
-// ReferenceTestParam is not serializable, so the rows are not enumerated at discovery. The nested ReferenceTestParam is
-// public because the public theory takes it, and its private fields are internal because the outer class reads them
-// (Java lets the outer class read a nested class's private members). ThreadLocalRandom.current() is Random.Shared.
+// CLR: The little-endian ByteBuffer of params() (put the eight bytes, flip, getLong) is
+// BinaryPrimitives.ReadInt64LittleEndian over the eight bytes. @ParameterizedTest @MethodSource("params") is a
+// theory over the rows of Params(); a ReferenceTestParam is not serializable, so the rows are not enumerated at
+// discovery. The nested ReferenceTestParam is public because the public theory takes it, and its private fields
+// are internal because the outer class reads them (Java lets the outer class read a nested class's private
+// members). ThreadLocalRandom.current() is Random.Shared.
 public class SipHashTest
 {
 

@@ -72,7 +72,6 @@ public static class InsecureTrustManagerFactory
         return true;
     }
 
-    // CLR: getSubjectDN() is X509Certificate.Subject (the distinguished name of the subject).
     private static void CheckClientTrusted(X509Certificate[] chain, string s)
     {
         if (logger.IsDebugEnabled())

@@ -23,10 +23,10 @@ namespace Netty.NET.Handler.Codec.Http2;
  */
 // CLR: the non-final Java methods are virtual (the limit encoders and StreamBufferingEncoder override them); the
 // field and parameter delegate are @delegate (a C# keyword). Http2SettingsReceivedConsumer.class in the message is
-// typeof(IHttp2SettingsReceivedConsumer), whose ToString() is the type's full name, where Java's Class.toString() is
-// "the string "class" or "interface", followed by a space, and then by the name of the class"
+// typeof(IHttp2SettingsReceivedConsumer), whose ToString() is the type's full name, where Java's Class.toString()
+// is "the string "class" or "interface", followed by a space, and then by the name of the class"
 // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Class.html#toString()).
-// IllegalStateException is InvalidOperationException (docs/codec-base-porting.md).
+// IllegalStateException is InvalidOperationException.
 public class DecoratingHttp2ConnectionEncoder : DecoratingHttp2FrameWriter, IHttp2ConnectionEncoder,
         IHttp2SettingsReceivedConsumer
 {

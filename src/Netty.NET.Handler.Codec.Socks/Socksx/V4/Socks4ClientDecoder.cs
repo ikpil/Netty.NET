@@ -30,12 +30,12 @@ namespace Netty.NET.Handler.Codec.Socksx.V4;
  * other handler can remove this decoder later.  On failed decode, this decoder will discard the
  * received data, so that other handler closes the connection later.
  */
-// CLR: List<Object> out is IList<object> @out and 'in' is @in (C# keywords). The new State enum with base.State() and
-// goto case for the Java fall-through follow Netty.NET.Handler.Codec.Socks.SocksInitRequestDecoder (evidence there).
-// Signal is an Exception here but a java.lang.Error in the source, which catch (Exception) does not catch, so the
-// catch filters when (e is not Signal) and the REPLAY signal still reaches ReplayingDecoder (docs/codec-base-porting.md,
-// Signals). readUnsignedByte() is ReadByte() (unsigned System.Byte, docs/common-clr-design.md); numbers in messages use
-// the invariant culture (see Netty.NET.Handler.Codec.Socks.SocksCmdRequest).
+// CLR: List<Object> out is IList<object> @out and 'in' is @in (C# keywords). The new State enum with base.State()
+// and goto case for the Java fall-through follow Netty.NET.Handler.Codec.Socks.SocksInitRequestDecoder (evidence
+// there). Signal is an Exception here but a java.lang.Error in the source, which catch (Exception) does not catch,
+// so the catch filters when (e is not Signal) and the REPLAY signal still reaches ReplayingDecoder.
+// readUnsignedByte() is ReadByte() (unsigned System.Byte, docs/common-clr-design.md); numbers in messages use the
+// invariant culture (see Netty.NET.Handler.Codec.Socks.SocksCmdRequest).
 public class Socks4ClientDecoder : ReplayingDecoder<Socks4ClientDecoder.State>
 {
 

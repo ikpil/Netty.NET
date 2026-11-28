@@ -25,11 +25,10 @@ namespace Netty.NET.Handler.Codec.Dns;
 /**
  * Default {@link DnsOptEcsRecord} implementation.
  */
-// CLR: the @Deprecated DefaultDnsOptEcsRecord(int, InternetProtocolFamily) constructor is not ported: its @deprecated
-// tag names the replacement DefaultDnsOptEcsRecord(int, SocketProtocolFamily) (owner decision 2026-11-16, recorded in
-// docs/codec-dns-porting.md). SocketProtocolFamily is the Transport enum with the members Inet, Inet6 and Unix
-// (src/Netty.NET.Transport/Channels/Sockets/SocketProtocolFamily.cs). The ADDRESS bytes are System.Byte; clone() is
-// Array.Clone().
+// CLR: the @Deprecated DefaultDnsOptEcsRecord(int, InternetProtocolFamily) constructor is not ported: its
+// @deprecated tag names the replacement DefaultDnsOptEcsRecord(int, SocketProtocolFamily). SocketProtocolFamily is
+// the Transport enum with the members Inet, Inet6 and Unix
+// (src/Netty.NET.Transport/Channels/Sockets/SocketProtocolFamily.cs). The ADDRESS bytes are System.Byte.
 public sealed class DefaultDnsOptEcsRecord : AbstractDnsOptPseudoRrRecord, IDnsOptEcsRecord
 {
     private readonly int srcPrefixLength;
@@ -91,8 +90,7 @@ public sealed class DefaultDnsOptEcsRecord : AbstractDnsOptPseudoRrRecord, IDnsO
     }
 
     // CLR: as in the source, '&&' binds tighter than '||', so a null array fails on bytes.length (a
-    // NullReferenceException in place of the NullPointerException). IllegalArgumentException is ArgumentException
-    // (docs/codec-base-porting.md, Shared CLR adaptations).
+    // NullReferenceException in place of the NullPointerException). IllegalArgumentException is ArgumentException.
     private static byte[] VerifyAddress(byte[] bytes)
     {
         if (bytes != null && bytes.Length == 4 || bytes.Length == 16)

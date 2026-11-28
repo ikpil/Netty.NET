@@ -24,15 +24,14 @@ namespace Netty.NET.Handler.Codec.Compression;
  * Creates a new {@link ZlibEncoder} and a new {@link ZlibDecoder}.
  */
 // CLR: the final class is a sealed class with the private constructor. The static initializer is the static
-// constructor; SystemPropertyUtil and InternalLoggerFactory are the Common ports. JZlibEncoder and JZlibDecoder need
-// com.jcraft.jzlib, which has no BCL counterpart, and are not ported (owner decision 2026-11-23, library-not-ported).
-// So the Class.forName probe always takes its ClassNotFoundException branch: JZLIB_AVAILABLE is false (Java's value
-// without jzlib on the class path) and isSupportingWindowSizeAndMemLevel() returns false. The branches that create a
-// JZlib codec (io.netty.noJdkZlibEncoder/io.netty.noJdkZlibDecoder set, or a window size and memory level other than 15
-// and 8) throw NotSupportedException, where the JVM without jzlib fails with NoClassDefFoundError; the other branches
+// constructor; SystemPropertyUtil and InternalLoggerFactory are the Common ports. JZlibEncoder and JZlibDecoder
+// need com.jcraft.jzlib, which has no BCL counterpart, and are not ported. So the Class.forName probe always takes
+// its ClassNotFoundException branch: JZLIB_AVAILABLE is false (Java's value without jzlib on the class path) and
+// isSupportingWindowSizeAndMemLevel() returns false. The branches that create a JZlib codec
+// (io.netty.noJdkZlibEncoder/io.netty.noJdkZlibDecoder set, or a window size and memory level other than 15 and 8)
+// throw NotSupportedException, where the JVM without jzlib fails with NoClassDefFoundError; the other branches
 // create the Jdk codecs as in Java. The @Deprecated newZlibDecoder(), newZlibDecoder(ZlibWrapper) and
-// newZlibDecoder(byte[]) name their replacements and are not ported (owner decision 2026-11-16); their comments are
-// recorded in the manifest.
+// newZlibDecoder(byte[]) name their replacements and are not ported; their comments are recorded in the manifest.
 public sealed class ZlibCodecFactory
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(ZlibCodecFactory));

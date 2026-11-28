@@ -23,13 +23,11 @@ using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Handler.Codec.Dns.Tests;
 
-// CLR: @ParameterizedTest with @MethodSource is [Theory] with [MemberData]; the Stream<DnsOpCode>/Stream<Arguments>
-// sources are IEnumerable<object[]> rows. SocketUtils.socketAddress(host, port) is an IPEndPoint over IPAddress.Parse
-// (docs/common-clr-design.md, "Native socket operations and network interface access"), and new InetSocketAddress(0),
-// "the wildcard address and the port number a specified value"
-// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/InetSocketAddress.html), is
-// new IPEndPoint(IPAddress.Any, 0). EmbeddedChannel.readOutbound()/readInbound() state their type argument, and
-// channel.alloc() is the IChannel.Alloc() of the Transport port.
+// CLR: The Stream<DnsOpCode>/Stream<Arguments> sources are IEnumerable<object[]> rows.
+// SocketUtils.socketAddress(host, port) is an IPEndPoint over IPAddress.Parse, and new InetSocketAddress(0), "the
+// wildcard address and the port number a specified value"
+// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/InetSocketAddress.html), is new
+// IPEndPoint(IPAddress.Any, 0).
 public class DnsQueryTest
 {
 

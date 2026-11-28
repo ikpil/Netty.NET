@@ -21,9 +21,9 @@ using static Netty.NET.Common.Internal.ObjectUtil;
 namespace Netty.NET.Handler.Codec.Dns;
 
 // CLR: the package-private abstract class is internal; <A extends SocketAddress> is A : EndPoint, the CLR base of
-// socket addresses used by IChannel.LocalAddress/RemoteAddress. The package-private final decode(...) is internal and
-// non-virtual. checkNotNull throws ArgumentNullException (docs/codec-base-porting.md). readUnsignedShort() returns the
-// unsigned ushort of the Buffer port, widened to int. 'throws Exception' has no C# counterpart.
+// socket addresses used by IChannel.LocalAddress/RemoteAddress. The package-private final decode(...) is internal
+// and non-virtual. checkNotNull throws ArgumentNullException. readUnsignedShort() returns the unsigned ushort of
+// the Buffer port, widened to int. 'throws Exception' has no C# counterpart.
 internal abstract class DnsResponseDecoder<A> where A : EndPoint
 {
 

@@ -130,34 +130,34 @@ namespace Netty.NET.Handler.Ssl;
  * For more details see
  * <a href="https://github.com/netty/netty/issues/832">#832</a> in our issue tracker.
  */
-// CLR: the TLS engine is System.Net.Security.SslStream (owner decision 2026-11-24, docs/handler-ssl-design.md): "An
-// SslStream instance transmits data using a stream that you supply when creating the SslStream"
-// (https://learn.microsoft.com/en-us/dotnet/api/system.net.security.sslstream?view=net-10.0). The supplied stream is the
-// private nested MediationStream, a CLR-only helper of this class (no Java counterpart, so it has no manifest entry of
-// its own): decode(...) still cuts the input at SslUtils.getEncryptedPacketLength and hands one whole TLS record per
-// unwrap to it, and SslStream's pending read of it completes inline on the event loop, so the handshake, the
-// certificate callbacks and the reads run inside the call, as SSLEngine.unwrap does. The structure, fields, state flags,
-// futures, timeouts and events of the Java class are kept; only the SSLEngine calls are replaced, by the private
-// Engine* methods at the end of this class, which return an EngineResult with SSLEngineResult's Status/HandshakeStatus
-// so that the wrap/unwrap loops keep their Java shape. Owner decision 2026-11-24 (no SSLEngine facade): the
-// constructors take SslClientAuthenticationOptions/SslServerAuthenticationOptions (owned by the handler) instead of an
-// SSLEngine, engine() is not public (the internal Engine() serves the ported tests), and the Executor
-// (delegatedTaskExecutor) constructors and the ResumptionController constructor are not ported. SslEngineType's
-// TCNATIVE/CONSCRYPT branches serve the library-not-ported OpenSSL/Conscrypt engines; its JDK branch (heap buffers,
-// MERGE_CUMULATOR, one record per unwrap) is the behaviour kept here. ChannelFuture/ChannelPromise/Future/Promise are
-// Task/TaskCompletionSource (docs/transport-porting.md, docs/handler-porting.md "Task promises"); listeners that touch
-// this handler run on Common's EventExecutorTaskScheduler over ctx.Executor (at once on the event loop, else through
-// Execute: DefaultPromise.notifyListeners), and ScheduledFuture is the CancellationTokenSource of
-// ctx.Executor.ScheduleAsync, as AbstractSniHandler does. SSLException/SSLHandshakeException are AuthenticationException
-// (ssl design decision 3); (long, TimeUnit) pairs are TimeSpan (docs/common-clr-design.md, "Monotonic time and duration
-// conversion"); Java's checked "throws" clauses have no counterpart.
+// CLR: the TLS engine is System.Net.Security.SslStream : "An SslStream instance transmits data using a stream that
+// you supply when creating the SslStream"
+// (https://learn.microsoft.com/en-us/dotnet/api/system.net.security.sslstream?view=net-10.0). The supplied stream
+// is the private nested MediationStream, a CLR-only helper of this class (no Java counterpart, so it has no
+// manifest entry of its own): decode(...) still cuts the input at SslUtils.getEncryptedPacketLength and hands one
+// whole TLS record per unwrap to it, and SslStream's pending read of it completes inline on the event loop, so the
+// handshake, the certificate callbacks and the reads run inside the call, as SSLEngine.unwrap does. The structure,
+// fields, state flags, futures, timeouts and events of the Java class are kept; only the SSLEngine calls are
+// replaced, by the private Engine* methods at the end of this class, which return an EngineResult with
+// SSLEngineResult's Status/HandshakeStatus so that the wrap/unwrap loops keep their Java shape. Owner decision
+// 2026-11-24 (no SSLEngine facade): the constructors take
+// SslClientAuthenticationOptions/SslServerAuthenticationOptions (owned by the handler) instead of an SSLEngine,
+// engine() is not public (the internal Engine() serves the ported tests), and the Executor (delegatedTaskExecutor)
+// constructors and the ResumptionController constructor are not ported. SslEngineType's TCNATIVE/CONSCRYPT
+// branches serve the library-not-ported OpenSSL/Conscrypt engines; its JDK branch (heap buffers, MERGE_CUMULATOR,
+// one record per unwrap) is the behaviour kept here. ChannelFuture/ChannelPromise/Future/Promise are
+// Task/TaskCompletionSource; listeners that touch this handler run on Common's EventExecutorTaskScheduler over
+// ctx.Executor (at once on the event loop, else through Execute: DefaultPromise.notifyListeners), and
+// ScheduledFuture is the CancellationTokenSource of ctx.Executor.ScheduleAsync, as AbstractSniHandler does.
+// SSLException/SSLHandshakeException are AuthenticationException (ssl design decision 3); (long, TimeUnit) pairs
+// are TimeSpan; Java's checked "throws" clauses have no counterpart.
 public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
 {
     private static readonly IInternalLogger logger =
             InternalLoggerFactory.GetInstance(typeof(SslHandler));
     // CLR: Pattern.compile(..., CASE_INSENSITIVE) matched with matches() is a Regex of the pattern wrapped in
-    // \A(?:...)\z whose letters are written as [xX] classes (CASE_INSENSITIVE alone matches US-ASCII only) and whose
-    // "." excludes the Java line terminators (\n, \r, \u0085, \u2028, \u2029); the .NET "." only excludes \n
+    // \A(?:...)\z whose letters are written as [xX] classes (CASE_INSENSITIVE alone matches US-ASCII only) and
+    // whose "." excludes the Java line terminators (\n, \r, \u0085, \u2028, \u2029); the.NET "." only excludes \n
     // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/regex/Pattern.html,
     // https://learn.microsoft.com/en-us/dotnet/standard/base-types/character-classes-in-regular-expressions), as
     // CipherSuiteConverter maps it.
@@ -249,9 +249,8 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
      *
      * @param engine  the {@link SSLEngine} this handler will use
      */
-    // CLR: the SSLEngine argument is the client authentication options of the SslStream that this handler creates
-    // (owner decision 2026-11-24); SslStream runs its certificate callbacks and cryptography inline, so there is no
-    // delegated task.
+    // CLR: the SSLEngine argument is the client authentication options of the SslStream that this handler creates;
+    // SslStream runs its certificate callbacks and cryptography inline, so there is no delegated task.
     public SslHandler(SslClientAuthenticationOptions options) : this(options, false)
     {
     }
@@ -394,17 +393,17 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
                 "closeNotifyReadTimeoutMillis"));
     }
 
-    // CLR: engine() is not public (owner decision 2026-11-24): SslStream is the engine, and the session facts of
-    // SSLSession are its SslProtocol, NegotiatedCipherSuite, RemoteCertificate and LocalCertificate. The internal
-    // accessor serves the ported tests through InternalsVisibleTo; a public accessor waits for an owner naming decision.
+    // CLR: engine() is not public : SslStream is the engine, and the session facts of SSLSession are its
+    // SslProtocol, NegotiatedCipherSuite, RemoteCertificate and LocalCertificate. The internal accessor serves the
+    // ported tests through InternalsVisibleTo; a public accessor waits for an owner naming decision.
     internal SslStream Engine()
     {
         return engine;
     }
 
-    // CLR-only: the authentication options this handler's SslStream uses, which hold what Java reads from the engine's
-    // configuration (engine().getEnabledProtocols(), getNeedClientAuth(), ...); exactly one of them is non-null. Internal
-    // for the ported tests (DelegatingSslContextTest, SslContextBuilderTest), like Engine().
+    // CLR-only: the authentication options this handler's SslStream uses, which hold what Java reads from the
+    // engine's configuration (engine().getEnabledProtocols(), getNeedClientAuth(),...); exactly one of them is
+    // non-null. Internal for the ported tests (DelegatingSslContextTest, SslContextBuilderTest), like Engine().
     internal SslClientAuthenticationOptions ClientOptions()
     {
         return clientOptions;
@@ -535,7 +534,7 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
      * {@link ChannelHandlerContext#close()}
      */
     // CLR: closeOutbound() and closeOutbound(ChannelPromise) fold into one Task-returning member, as the Transport
-    // folds the ChannelPromise overloads (docs/transport-porting.md); the Task replaces ctx.newPromise().
+    // folds the ChannelPromise overloads; the Task replaces ctx.newPromise().
     public Task CloseOutbound()
     {
         IChannelHandlerContext ctx = this.ctx;
@@ -672,9 +671,9 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         return new InvalidOperationException("pendingUnencryptedWrites is null, handlerRemoved0 called?");
     }
 
-    // CLR: the ChannelPromise is the returned Task: a TaskCompletionSource queued with the buffer, whose continuations
-    // run asynchronously as the Transport's write Tasks do; the CancellationToken cancels the queued promise, as
-    // ChannelPromise.cancel(...) does (docs/handler-porting.md, "Task promises").
+    // CLR: the ChannelPromise is the returned Task: a TaskCompletionSource queued with the buffer, whose
+    // continuations run asynchronously as the Transport's write Tasks do; the CancellationToken cancels the queued
+    // promise, as ChannelPromise.cancel(...) does.
     public virtual Task WriteAsync(IChannelHandlerContext ctx, object msg, CancellationToken cancellationToken)
     {
         if (!(msg is ByteBuf))
@@ -1700,9 +1699,8 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         ExecuteDelegatedTask(GetTaskRunner(inUnwrap));
     }
 
-    // CLR: delegatedTaskExecutor.execute(task) is the registration of the runner that OnEngineProgress hands SslStream's
-    // next progress to; SslStream may already have progressed between the status check and the registration, so the
-    // status is checked again and the runner runs at once if it changed.
+    // CLR: SslStream may already have progressed between the status check and the registration, so the status is
+    // checked again and the runner runs at once if it changed.
     private void ExecuteDelegatedTask(SslTasksRunner task)
     {
         SetState(STATE_PROCESS_TASK);
@@ -1921,8 +1919,8 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
 
                     default:
                         // Should never reach here as we handle all cases.
-                        // CLR: AssertionError is an Error; InvalidOperationException reaches the catch below as the
-                        // Error reaches catch (Throwable).
+                        // CLR: InvalidOperationException reaches the catch below as the Error reaches catch
+                        // (Throwable).
                         throw new InvalidOperationException();
                 }
             }
@@ -2132,11 +2130,10 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         }
     }
 
-    // CLR: the ChannelPromise is the returned Task. A channel that is not active returns the Task of the next
-    // handler's disconnect/close; otherwise a TaskCompletionSource stands for the promise and is completed with
-    // TrySet* only, which is what PromiseNotifier.cascade(false, ctx.newPromise(), promise) provides
-    // (docs/common-task-composition.md), so safeClose(...) completes it directly. A Task cannot be cancelled by its
-    // consumer, so the cascade's cancellation propagation has no counterpart.
+    // CLR: A channel that is not active returns the Task of the next handler's disconnect/close; otherwise a
+    // TaskCompletionSource stands for the promise and is completed with TrySet* only, which is what
+    // PromiseNotifier.cascade(false, ctx.newPromise(), promise) provides, so safeClose(...) completes it directly.
+    // A Task cannot be cancelled by its consumer, so the cascade's cancellation propagation has no counterpart.
     private Task CloseOutboundAndChannel(
             IChannelHandlerContext ctx, CancellationToken cancellationToken, bool disconnect)
     {
@@ -2209,9 +2206,9 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         IChannel channel = ctx.Channel;
         pendingUnencryptedWrites = new PendingWritesQueue(this, channel, 16, wantsDirectBuffer);
 
-        // CLR: getOption(TCP_FASTOPEN_CONNECT) is the try pattern; Channel.Unsafe is folded into AbstractChannel, whose
-        // OutboundBuffer is unsafe().outboundBuffer() (as IdleStateHandler reads it). setOpensslEngineSocketFd(...) only
-        // serves the library-not-ported OpenSSL engine.
+        // CLR: Channel.Unsafe is folded into AbstractChannel, whose OutboundBuffer is unsafe().outboundBuffer()
+        // (as IdleStateHandler reads it). setOpensslEngineSocketFd(...) only serves the library-not-ported OpenSSL
+        // engine.
         bool fastOpen = channel.Config.TryGetOption(ChannelOption.TCP_FASTOPEN_CONNECT, out bool fastOpenValue) &&
                 fastOpenValue;
         bool active = channel.IsActive;
@@ -2232,7 +2229,6 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         }
     }
 
-    // CLR: the anonymous SslHandlerCoalescingBufferQueue subclass of handlerAdded(...).
     private sealed class PendingWritesQueue : SslHandlerCoalescingBufferQueue
     {
         private readonly SslHandler handler;
@@ -2634,11 +2630,11 @@ public class SslHandler : ByteToMessageDecoder, IChannelOutboundHandler
         _ = future.ContinueWith(listener, CancellationToken.None, TaskContinuationOptions.None, listenerScheduler);
     }
 
-    // CLR: ctx.write(msg, promise) / PromiseNotifier.cascade(future, promise): the outcome of the Task is copied into
-    // the producer with TrySetFromTask (docs/common-task-composition.md). The continuation runs on listenerScheduler
-    // (Common's EventExecutorTaskScheduler over ctx.Executor): the Transport completes its operation Tasks with
-    // RunContinuationsAsynchronously, which queues the continuation to its scheduler from the completing thread, and
-    // this scheduler runs it at once on the event loop, as DefaultPromise notifies a ChannelPromise there;
+    // CLR: ctx.write(msg, promise) / PromiseNotifier.cascade(future, promise): the outcome of the Task is copied
+    // into the producer with TrySetFromTask. The continuation runs on listenerScheduler (Common's
+    // EventExecutorTaskScheduler over ctx.Executor): the Transport completes its operation Tasks with
+    // RunContinuationsAsynchronously, which queues the continuation to its scheduler from the completing thread,
+    // and this scheduler runs it at once on the event loop, as DefaultPromise notifies a ChannelPromise there;
     // TaskScheduler.Default would complete the producers on a thread-pool thread.
     private void Cascade(Task future, TaskCompletionSource promise)
     {

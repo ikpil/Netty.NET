@@ -27,11 +27,11 @@ namespace Netty.NET.Handler.Ssl;
  * @see PemPrivateKey#toPEM(ByteBufAllocator, boolean, java.security.PrivateKey)
  * @see PemX509Certificate#toPEM(ByteBufAllocator, boolean, java.security.cert.X509Certificate[])
  */
-// CLR: content() is the IByteBufHolder Content property (docs/buffer-porting.md, Buffer holders and conversion). The
-// covariant overrides of retain()/retain(int)/touch()/touch(Object) are C# covariant override returns and
+// CLR: The covariant overrides of retain()/retain(int)/touch()/touch(Object) are C# covariant override returns and
 // copy()/duplicate()/retainedDuplicate()/replace(ByteBuf) return PemValue; the IByteBufHolder members are explicit
 // implementations that forward to them, as codec-memcache DefaultMemcacheContent does
-// (src/Netty.NET.Handler.Codec.Memcache/DefaultMemcacheContent.cs). IllegalReferenceCountException is the Common type.
+// (src/Netty.NET.Handler.Codec.Memcache/DefaultMemcacheContent.cs). IllegalReferenceCountException is the Common
+// type.
 internal class PemValue : AbstractReferenceCounted, IPemEncoded
 {
 

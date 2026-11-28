@@ -32,8 +32,8 @@ namespace Netty.NET.Handler.Codec.Socksx.V5;
  * discard the received data, so that other handler closes the connection later.
  */
 // CLR: as Socks5CommandRequestDecoder: the new State enum, goto case, the when (e is not Signal) filter and the
-// version printed as the signed Java byte ((sbyte) version, invariant culture). getUnsignedByte is GetByte (unsigned
-// System.Byte); CharsetUtil.US_ASCII is Encoding.ASCII.
+// version printed as the signed Java byte ((sbyte) version, invariant culture). getUnsignedByte is GetByte
+// (unsigned System.Byte).
 public class Socks5PasswordAuthRequestDecoder : ReplayingDecoder<Socks5PasswordAuthRequestDecoder.State>
 {
 

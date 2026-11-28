@@ -22,8 +22,7 @@ namespace Netty.NET.Handler.Codec.Spdy;
 // CLR: the Java interface takes the I prefix (owner rule). ByteBufHolder is IByteBufHolder; copy(), duplicate(),
 // retainedDuplicate(), replace(ByteBuf), retain(), retain(int), touch() and touch(Object) are re-declared only to
 // narrow the return type, so they are inherited from IByteBufHolder; DefaultSpdyUnknownFrame narrows them with
-// covariant override returns (owner decision 2026-11-19; docs/transport-porting.md, Decisions). The Java byte flags is
-// the CLR byte (the wire octet).
+// covariant override returns. The Java byte flags is the CLR byte (the wire octet).
 public interface ISpdyUnknownFrame : ISpdyFrame, IByteBufHolder
 {
     int FrameType();

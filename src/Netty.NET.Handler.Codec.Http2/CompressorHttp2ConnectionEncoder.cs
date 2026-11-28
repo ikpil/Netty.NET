@@ -31,33 +31,19 @@ namespace Netty.NET.Handler.Codec.Http2;
  * A decorating HTTP2 encoder that will compress data frames according to the {@code content-encoding} header for each
  * stream. The compression provided by this class will be applied to the data for the entire stream.
  */
-// CLR: ChannelPromise is TaskCompletionSource and ChannelFuture is Task; the Write*Async overrides return the promise's
-// Task (docs/codec-http-porting.md, Shared CLR adaptations). promise.setSuccess() is SetResult(), tryFailure is
-// TrySetException and ctx.newPromise() is Http2CodecUtil.NewPromise(). PromiseCombiner is a list of the buffer promises'
-// Tasks, and combiner.finish(promise) is codec-base's ExecutorPromiseCombiner.Combine, which completes the promise on
-// ctx.Executor when the last buffer promise completes, as new PromiseCombiner(ctx.executor()) does, with the outcome of
-// Task.WhenAll of them (docs/common-task-composition.md; src/Netty.NET.Handler.Codec/ExecutorPromiseCombiner.cs).
-// The two anonymous Http2ConnectionAdapter instances of the constructors are the same code and are one nested class,
-// StreamRemovedListener. CompressionOptions is codec-compression's marker
-// interface ICompressionOptions (CompressionOptions... is params ICompressionOptions[]) and the option and encoder types
-// are the codec-compression ports (docs/codec-compression-porting.md); EmbeddedChannel.builder() is new
-// EmbeddedChannel.Builder() (docs/codec-http-porting.md, HttpContentCompressor). zstd-jni is library-not-ported (owner
-// decision 2026-11-23; docs/codec-compression-porting.md: the BCL Zstandard types exist only from .NET 11,
-// https://learn.microsoft.com/en-us/dotnet/api/system.io.compression.zstandardstream), so ZstdOptions, Zstd and
-// ZstdEncoder have no C# type and this class behaves as Java does when Zstd.isAvailable() is false, as codec-http's
-// HttpContentCompressor does (docs/codec-http-porting.md): defaultCompressionOptions() never adds
-// StandardCompressionOptions.zstd(), no option can be a ZstdOptions (the instanceof ZstdOptions branch has no type to
-// test), and the zstdOptions field stays an always-null ICompressionOptions, so the zstd branch of
-// newContentCompressor is never taken (it throws NotSupportedException if it were). brotli4j is not ported either:
-// Brotli.IsAvailable() is always true (the BCL BrotliEncoder) and BrotliOptions.parameters(), which returns brotli4j's
-// Encoder.Parameters, is not ported, so the BrotliEncoder is created from the BrotliOptions themselves
-// (BrotliEncoder(BrotliOptions), docs/codec-compression-porting.md). The @Deprecated constructor (int, int, int) has no
-// @deprecated text and names no replacement, so it is ported with [Obsolete] (owner decision 2026-11-16); a window
-// size or memory level other than 15/8 makes ZlibCodecFactory.NewZlibEncoder throw NotSupportedException (jzlib is not
-// ported, docs/codec-compression-porting.md). CompressionOptions.class.getSimpleName() is nameof(ICompressionOptions),
-// as in HttpContentCompressor. ZlibWrapper is a C# enum, whose ToString() is the constant name, as Java's
-// Enum.toString(). The package-private cleanup(...) is internal. Throwable is Exception and IllegalArgumentException is
-// ArgumentException (docs/codec-base-porting.md); "throws Http2Exception" has no counterpart.
+// CLR: The Write*Async overrides return the promise's Task. promise.setSuccess() is SetResult(), tryFailure is
+// TrySetException and ctx.newPromise() is Http2CodecUtil.NewPromise(). PromiseCombiner is a list of the buffer
+// promises' Tasks, and combiner.finish(promise) is codec-base's ExecutorPromiseCombiner.Combine, which completes
+// the promise on ctx.Executor when the last buffer promise completes, as new PromiseCombiner(ctx.executor()) does,
+// with the outcome of Task.WhenAll of them. The two anonymous Http2ConnectionAdapter instances of the constructors
+// are the same code and are one nested class, StreamRemovedListener. CompressionOptions is codec-compression's
+// marker interface ICompressionOptions (CompressionOptions... is params ICompressionOptions[]) and the option and
+// encoder types are the codec-compression ports. The @Deprecated constructor (int, int, int) has no @deprecated
+// text and names no replacement, so it is ported with [Obsolete]; a window size or memory level other than 15/8
+// makes ZlibCodecFactory.NewZlibEncoder throw NotSupportedException (jzlib is not ported,
+// docs/codec-compression-porting.md). ZlibWrapper is a C# enum, whose ToString() is the constant name, as Java's
+// Enum.toString(). Throwable is Exception and IllegalArgumentException is ArgumentException; "throws
+// Http2Exception" has no counterpart.
 public class CompressorHttp2ConnectionEncoder : DecoratingHttp2ConnectionEncoder
 {
     // We cannot remove this because it'll be breaking change
@@ -170,7 +156,6 @@ public class CompressorHttp2ConnectionEncoder : DecoratingHttp2ConnectionEncoder
         Connection().AddListener(new StreamRemovedListener(this));
     }
 
-    // CLR: the anonymous Http2ConnectionAdapter of both constructors.
     private sealed class StreamRemovedListener : Http2ConnectionAdapter
     {
         private readonly CompressorHttp2ConnectionEncoder encoder;

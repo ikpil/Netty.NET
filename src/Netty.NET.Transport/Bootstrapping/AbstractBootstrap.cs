@@ -63,10 +63,10 @@ public abstract class AbstractBootstrap
     // CLR: SocketUtils.socketAddress(hostname, port), used by localAddress(String, int) and bind(String, int), is
     // new InetSocketAddress(hostname, port). That constructor rejects a null host, looks the host up with
     // InetAddress.getByName and keeps the address unresolved when the lookup throws UnknownHostException.
-    // SocketUtils is replaced by native socket operations (docs/common-clr-design.md); the InetAddress.getByName rules
-    // (literals, BSD-form rejection, java.net.preferIPv6Addresses order) are ported in DefaultNameResolver, which the
-    // source also resolves through SocketUtils.addressByName, so the lookup goes through it. Like getByName it blocks
-    // the caller. An unresolved InetSocketAddress is a DnsEndPoint here, as in NioDatagramChannel.
+    // SocketUtils is replaced by native socket operations; the InetAddress.getByName rules (literals, BSD-form
+    // rejection, java.net.preferIPv6Addresses order) are ported in DefaultNameResolver, which the source also
+    // resolves through SocketUtils.addressByName, so the lookup goes through it. Like getByName it blocks the
+    // caller. An unresolved InetSocketAddress is a DnsEndPoint here, as in NioDatagramChannel.
     internal static EndPoint SocketAddress(string hostname, int port)
     {
         if (hostname == null)
@@ -80,9 +80,9 @@ public abstract class AbstractBootstrap
         {
             addr = new DefaultNameResolver(ImmediateEventExecutor.INSTANCE).ResolveAsync(hostname).GetAwaiter().GetResult();
         }
-        // CLR: DefaultNameResolver reports UnknownHostException as Common's UnknownHostException (owner decision
-        // 2026-11-25). Dns.GetHostAddressesAsync rejects a name longer than 255 characters with
-        // ArgumentOutOfRangeException and an invalid address with ArgumentException
+        // CLR: DefaultNameResolver reports UnknownHostException as Common's UnknownHostException.
+        // Dns.GetHostAddressesAsync rejects a name longer than 255 characters with ArgumentOutOfRangeException and
+        // an invalid address with ArgumentException
         // (https://learn.microsoft.com/dotnet/api/system.net.dns.gethostaddressesasync); the JDK reports both as
         // UnknownHostException.
         catch (Exception e) when (e is UnknownHostException || e is ArgumentException)
@@ -284,7 +284,7 @@ public abstract class AbstractBootstrap
         return new TaskCompletionSource<IChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
     }
 
-    // CLR: Future.cause() of a completed Task; a cancelled Task has no exception and is reported through IsCanceled.
+    // CLR: A cancelled Task has no exception and is reported through IsCanceled.
     internal static Exception Cause(Task future)
     {
         return future.IsFaulted ? (future.Exception.InnerExceptions.Count == 1 ? future.Exception.InnerException : future.Exception) : null;

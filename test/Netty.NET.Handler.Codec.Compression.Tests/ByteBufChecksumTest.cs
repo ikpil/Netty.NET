@@ -20,24 +20,24 @@ using Netty.NET.Buffer;
 
 namespace Netty.NET.Handler.Codec.Compression.Tests;
 
-// CLR: owner decision 2026-11-23: java.util.zip.Checksum, CRC32 and Adler32 are System.IO.Hashing's
-// NonCryptographicHashAlgorithm, Crc32 and Adler32, and the jpountz XXHash32 that the test uses as an independent
-// reference is System.IO.Hashing.XxHash32 with the same seed. Crc32 is written System.IO.Hashing.Crc32 because
-// codec-compression's own Crc32 (bzip2) is in an enclosing namespace. checksum.update(BYTE_ARRAY, off, len) is
-// Append over the same array range, and checksum.getValue() of the reference algorithm is GetValue(checksum), which reads
-// GetCurrentHashAsUInt32() of these types directly
+// CLR: java.util.zip.Checksum, CRC32 and Adler32 are System.IO.Hashing's NonCryptographicHashAlgorithm, Crc32 and
+// Adler32, and the jpountz XXHash32 that the test uses as an independent reference is System.IO.Hashing.XxHash32
+// with the same seed. Crc32 is written System.IO.Hashing.Crc32 because codec-compression's own Crc32 (bzip2) is in
+// an enclosing namespace. checksum.update(BYTE_ARRAY, off, len) is Append over the same array range, and
+// checksum.getValue() of the reference algorithm is GetValue(checksum), which reads GetCurrentHashAsUInt32() of
+// these types directly
 // (https://learn.microsoft.com/en-us/dotnet/api/system.io.hashing.crc32.getcurrenthashasuint32?view=net-10.0-pp,
 // https://learn.microsoft.com/en-us/dotnet/api/system.io.hashing.adler32.getcurrenthashasuint32?view=net-10.0-pp,
-// https://learn.microsoft.com/en-us/dotnet/api/system.io.hashing.xxhash32.getcurrenthashasuint32?view=net-10.0-pp) and
-// does not go through ByteBufChecksum. The static @BeforeAll setUp() runs from the static constructor and is private
-// (xUnit1013 asks public methods of a test class to be tests), and
-// ThreadLocalRandom.current().nextBytes is Random.Shared.NextBytes, "a thread-safe Random instance"
+// https://learn.microsoft.com/en-us/dotnet/api/system.io.hashing.xxhash32.getcurrenthashasuint32?view=net-10.0-pp)
+// and does not go through ByteBufChecksum. The static @BeforeAll setUp() runs from the static constructor and is
+// private (xUnit1013 asks public methods of a test class to be tests), and ThreadLocalRandom.current().nextBytes
+// is Random.Shared.NextBytes, "a thread-safe Random instance"
 // (https://learn.microsoft.com/en-us/dotnet/api/system.random.shared?view=net-10.0).
 public class ByteBufChecksumTest
 {
 
-    // CLR: Lz4Constants.DEFAULT_SEED (0x9747b28c) of the Lz4 family, which needs lz4-java and is not ported (owner
-    // decision 2026-11-23); the value is repeated here. The literal is a uint in C#, so it is cast to the Java int.
+    // CLR: Lz4Constants.DEFAULT_SEED (0x9747b28c) of the Lz4 family, which needs lz4-java and is not ported; the
+    // value is repeated here. The literal is a uint in C#, so it is cast to the Java int.
     private const int DEFAULT_SEED = unchecked((int) 0x9747b28c);
 
     private static readonly byte[] BYTE_ARRAY = new byte[1024];
@@ -115,7 +115,6 @@ public class ByteBufChecksumTest
         return new System.IO.Hashing.XxHash32(seed);
     }
 
-    // CLR: checksum.getValue() of the reference algorithm (see the class comment).
     private static long GetValue(NonCryptographicHashAlgorithm checksum)
     {
         switch (checksum)

@@ -24,15 +24,14 @@ namespace Netty.NET.Handler.Ssl;
 /**
  * Provides an {@link SSLEngine} agnostic way to configure a {@link ApplicationProtocolNegotiator}.
  */
-// CLR: the methods protocol(), selectorFailureBehavior() and selectedListenerFailureBehavior() would have the names of the
-// nested enums Protocol, SelectorFailureBehavior and SelectedListenerFailureBehavior (CS0102), so they take a trailing
-// underscore (owner decision 2026-11-23, as haproxy Type_()). Collections.unmodifiableList is a ReadOnlyCollection,
-// "a collection with a wrapper that prevents modifying the collection"
+// CLR: the methods protocol(), selectorFailureBehavior() and selectedListenerFailureBehavior() would have the
+// names of the nested enums Protocol, SelectorFailureBehavior and SelectedListenerFailureBehavior (CS0102), so
+// they take a trailing underscore (owner decision 2026-11-23, as haproxy Type_()). Collections.unmodifiableList is
+// a ReadOnlyCollection, "a collection with a wrapper that prevents modifying the collection"
 // (https://learn.microsoft.com/en-us/dotnet/api/system.collections.objectmodel.readonlycollection-1?view=net-10.0);
-// Collections.emptyList() is an empty one. The simple Java enums are C# enums (docs/codec-base-porting.md), value types,
-// so the checkNotNull calls of the enum arguments have no counterpart. IllegalArgumentException is ArgumentException.
-// The SSLEngine of the Javadoc is the SslStream that SslHandler drives (ssl design decision 2,
-// docs/handler-ssl-design.md).
+// Collections.emptyList() is an empty one. The simple Java enums are C# enums, value types, so the checkNotNull
+// calls of the enum arguments have no counterpart. IllegalArgumentException is ArgumentException. The SSLEngine of
+// the Javadoc is the SslStream that SslHandler drives (ssl design decision 2, docs/handler-ssl-design.md).
 public sealed class ApplicationProtocolConfig
 {
 

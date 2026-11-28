@@ -20,8 +20,8 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx.Extensions;
  * Extension filter provider that is responsible to provide filters for a certain {@link WebSocketExtension} extension.
  */
 // CLR: the Java interface takes the I prefix (owner rule). DEFAULT is a static readonly field of the interface
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface) and its anonymous class is
-// the private nested class DefaultFilterProvider (docs/codec-base-porting.md, Anonymous classes).
+// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface) and its anonymous class
+// is the private nested class DefaultFilterProvider.
 public interface IWebSocketExtensionFilterProvider
 {
 

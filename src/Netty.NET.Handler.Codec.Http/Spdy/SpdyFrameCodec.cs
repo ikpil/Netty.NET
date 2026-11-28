@@ -28,17 +28,16 @@ namespace Netty.NET.Handler.Codec.Spdy;
 /**
  * A {@link ChannelHandler} that encodes and decodes SPDY Frames.
  */
-// CLR: SpdyFrameDecoderDelegate and ChannelOutboundHandler are ISpdyFrameDecoderDelegate and IChannelOutboundHandler.
-// The ChannelOutboundHandler operations are the Task-returning *Async members of IChannelOutboundHandler, whose Task
-// replaces the promise (docs/codec-base-porting.md, Outbound operations), as core HttpClientUpgradeHandler implements
-// them; an exception thrown by WriteAsync fails the write's Task in the pipeline, as Java's pipeline fails the promise.
-// SocketAddress is EndPoint (docs/handler-porting.md, Addresses). The anonymous SpdyFrameDecoder subclass of
-// createDecoder is the private nested SpdyFrameDecoder_ (docs/codec-base-porting.md, Anonymous classes). The close
-// future listener of handlerAdded is a continuation of IChannel.CloseFuture that runs the listener at once on the event
-// loop and otherwise through executor.Execute, the ChunkedWriteHandler listener policy of docs/handler-porting.md
-// (Listener timing). Java's protected members are protected (the anonymous decoder is nested and reaches the codec's
-// isValidUnknownFrameHeader), and Java methods are virtual unless final. List<Object> out is IList<object> @out and
-// ByteBuf in is @in. The Java byte priority and flags are CLR bytes (the wire octets).
+// CLR: SpdyFrameDecoderDelegate and ChannelOutboundHandler are ISpdyFrameDecoderDelegate and
+// IChannelOutboundHandler. The ChannelOutboundHandler operations are the Task-returning *Async members of
+// IChannelOutboundHandler, whose Task replaces the promise, as core HttpClientUpgradeHandler implements them; an
+// exception thrown by WriteAsync fails the write's Task in the pipeline, as Java's pipeline fails the promise.
+// SocketAddress is EndPoint. The close future listener of handlerAdded is a continuation of IChannel.CloseFuture
+// that runs the listener at once on the event loop and otherwise through executor.Execute, the ChunkedWriteHandler
+// listener policy of docs/handler-porting.md (Listener timing). Java's protected members are protected (the
+// anonymous decoder is nested and reaches the codec's isValidUnknownFrameHeader), and Java methods are virtual
+// unless final. List<Object> out is IList<object> @out and ByteBuf in is @in. The Java byte priority and flags are
+// CLR bytes (the wire octets).
 public class SpdyFrameCodec : ByteToMessageDecoder, ISpdyFrameDecoderDelegate, IChannelOutboundHandler
 {
 

@@ -22,14 +22,9 @@ using static Netty.NET.Handler.Codec.Http2.Http2Exception;
 
 namespace Netty.NET.Handler.Codec.Http2;
 
-// CLR: Configuration is IHttp2HeadersDecoder.IConfiguration. The package-private constructor taking the
-// package-private HpackDecoder is internal. The public members of the non-final class are virtual, as is the
-// protected non-final validateHeaderValues()/newHeaders(); the protected final members are non-virtual
-// (docs/codec-http-porting.md, Cookie and CORS: "The members of the non-final DefaultCookie are virtual"). The
-// @Deprecated annotation on the initialHuffmanDecodeCapacity parameter has no C# counterpart for a parameter (the
-// constructor itself is not deprecated), and its Javadoc already says "Does nothing, do not use".
-// catch (Http2Exception e) { throw e; } is a rethrow (throw;), catch (Throwable) is catch (Exception) and
-// getMessage() is Message. The float moving average uses the same single-precision arithmetic.
+// CLR: Configuration is IHttp2HeadersDecoder.IConfiguration. The public members of the non-final class are
+// virtual, as is the protected non-final validateHeaderValues()/newHeaders(); the protected final members are
+// non-virtual. The float moving average uses the same single-precision arithmetic.
 public class DefaultHttp2HeadersDecoder : IHttp2HeadersDecoder, IHttp2HeadersDecoder.IConfiguration
 {
     private const float HEADERS_COUNT_WEIGHT_NEW = 1 / 5f;

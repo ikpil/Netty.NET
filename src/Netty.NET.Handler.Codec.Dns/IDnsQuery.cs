@@ -19,10 +19,9 @@ namespace Netty.NET.Handler.Codec.Dns;
 /**
  * A DNS query message.
  */
-// CLR: interface with the I prefix. Every Java member re-declares an IDnsMessage member only to narrow its return
-// type to DnsQuery; they are inherited unchanged, as for the Transport interfaces: C# 9 covariant returns cover class
-// overrides only (docs/transport-porting.md, "Java type names and hierarchy"). DefaultDnsQuery and DatagramDnsQuery
-// keep the narrowed return types.
+// CLR: Every Java member re-declares an IDnsMessage member only to narrow its return type to DnsQuery; they are
+// inherited unchanged, as for the Transport interfaces: C# 9 covariant returns cover class overrides only.
+// DefaultDnsQuery and DatagramDnsQuery keep the narrowed return types.
 public interface IDnsQuery : IDnsMessage
 {
 }

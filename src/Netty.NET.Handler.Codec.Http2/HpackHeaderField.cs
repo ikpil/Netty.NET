@@ -36,8 +36,6 @@ using static Netty.NET.Common.Internal.ObjectUtil;
 
 namespace Netty.NET.Handler.Codec.Http2;
 
-// CLR: the package-private class is internal; its package-private fields, constructor and members are internal
-// (the tests reach them through InternalsVisibleTo). name + ": " + value concatenates the CharSequence texts.
 internal class HpackHeaderField
 {
 

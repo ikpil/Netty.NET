@@ -24,11 +24,11 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Tests;
 
-// CLR: CharsetUtil.US_ASCII is Encoding.ASCII and ByteBufHolder is IByteBufHolder. Mockito's spy(MockMessageAggregator.class)
-// is a Moq mock with CallBase = true, which invokes the base implementation when no setup overrides a member
-// (https://github.com/devlooped/moq/wiki/Quickstart); the abstract members without a setup return the default value,
-// as the spy's do. The stubbed methods are protected, so they are set up through Protected(), whose argument matching
-// must use ItExpr; ItExpr.Is with Equals keeps the equals() matching of when(agg.isStartMessage(first)).
+// CLR: Mockito's spy(MockMessageAggregator.class) is a Moq mock with CallBase = true, which invokes the base
+// implementation when no setup overrides a member (https://github.com/devlooped/moq/wiki/Quickstart); the abstract
+// members without a setup return the default value, as the spy's do. The stubbed methods are protected, so they
+// are set up through Protected(), whose argument matching must use ItExpr; ItExpr.Is with Equals keeps the
+// equals() matching of when(agg.isStartMessage(first)).
 public class MessageAggregatorTest
 {
     private sealed class ReadCounter : ChannelOutboundHandlerAdapter
@@ -115,7 +115,6 @@ public class MessageAggregatorTest
         Assert.False(embedded.WriteInbound(first));
 
         Assert.Equal(2, counter.value);
-        // CLR: the anonymous Executable is a lambda.
         Assert.Throws<PrematureChannelClosureException>(() => embedded.Finish());
         Assert.Equal(0, first.RefCnt);
     }

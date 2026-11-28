@@ -40,21 +40,21 @@ namespace Netty.NET.Handler.Codec.Http.Multipart;
  *   decoder.destroy();
  *  }</pre>
  */
-// CLR: Charset is Encoding and HttpRequest IHttpRequest. Collections.synchronizedMap(new IdentityHashMap<>()), a map
-// that uses "reference-equality in place of object-equality when comparing keys"
-// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/IdentityHashMap.html) and serializes every
-// access (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Collections.html), is a Dictionary with
-// ReferenceEqualityComparer.Instance, which "uses reference equality ... instead of value equality"
+// CLR: Collections.synchronizedMap(new IdentityHashMap<>()), a map that uses "reference-equality in place of
+// object-equality when comparing keys"
+// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/IdentityHashMap.html) and serializes
+// every access (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Collections.html), is a
+// Dictionary with ReferenceEqualityComparer.Instance, which "uses reference equality... instead of value equality"
 // (https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.referenceequalitycomparer?view=net-10.0),
-// guarded by lock (requestFileDeleteMap) in each method; the traversal of cleanAllHttpData, which the Java code does not
-// synchronize, runs under the same lock over a snapshot of the entries, so removing an entry does not disturb it.
-// map.get() returning null is TryGetValue. IOException is System.IO.IOException and IllegalArgumentException is
-// ArgumentException (new IllegalArgumentException(e) keeps Java's detail message cause.toString(), Common's
-// ThrowableUtil.ThrowableToString). The last MemoryAttribute/MemoryFileUpload locals of createAttribute(request,
-// name[, definedSize]) and createFileUpload are named memoryAttribute/memoryFileUpload, because a C# local's scope is
-// its whole block and the if blocks before declare the same names (CS0136). The overrides of the @Deprecated
-// cleanRequestHttpDatas(HttpRequest) and cleanAllHttpDatas() are not ported with the interface members (see
-// IHttpDataFactory).
+// guarded by lock (requestFileDeleteMap) in each method; the traversal of cleanAllHttpData, which the Java code
+// does not synchronize, runs under the same lock over a snapshot of the entries, so removing an entry does not
+// disturb it. map.get() returning null is TryGetValue. IOException is System.IO.IOException and
+// IllegalArgumentException is ArgumentException (new IllegalArgumentException(e) keeps Java's detail message
+// cause.toString(), Common's ThrowableUtil.ThrowableToString). The last MemoryAttribute/MemoryFileUpload locals of
+// createAttribute(request, name[, definedSize]) and createFileUpload are named memoryAttribute/memoryFileUpload,
+// because a C# local's scope is its whole block and the if blocks before declare the same names (CS0136). The
+// overrides of the @Deprecated cleanRequestHttpDatas(HttpRequest) and cleanAllHttpDatas() are not ported with the
+// interface members (see IHttpDataFactory).
 public class DefaultHttpDataFactory : IHttpDataFactory
 {
 

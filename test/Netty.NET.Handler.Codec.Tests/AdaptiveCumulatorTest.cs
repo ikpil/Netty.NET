@@ -24,9 +24,7 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Codec.Tests;
 
-// CLR: JUnit @Nested classes are public nested xUnit test classes; @BeforeEach is the constructor (xUnit creates one
-// instance per test). CharsetUtil.US_ASCII is Encoding.ASCII. Mockito mocks of ByteBufAllocator are Moq mocks of
-// IByteBufAllocator; like Mockito, unconfigured members return default values.
+// CLR: JUnit @Nested classes are public nested xUnit test classes.
 public class AdaptiveCumulatorTest
 {
     public class CumulateTests
@@ -143,7 +141,6 @@ public class AdaptiveCumulatorTest
             Assert.Equal(1, contiguous.RefCnt);
         }
 
-        // CLR: the anonymous CompositeByteBuf subclass is a named nested class.
         private sealed class SecondAddThrowingCompositeByteBuf(IByteBufAllocator alloc, Exception error)
             : CompositeByteBuf(alloc, false, int.MaxValue)
         {
@@ -636,7 +633,6 @@ public class AdaptiveCumulatorTest
             int newTailSize = tail.ReadableBytes + @in.ReadableBytes;
             ByteBuf newTail = alloc.Buffer(alloc.CalculateNewCapacity(newTailSize, int.MaxValue));
             Mock<IByteBufAllocator> mock = new Mock<IByteBufAllocator>();
-            // CLR: buffer(int) is Buffer(initialCapacity, maxCapacity = int.MaxValue), so both arguments are matched.
             mock.Setup(a => a.Buffer(It.IsAny<int>(), It.IsAny<int>())).Returns(newTail);
             IByteBufAllocator mockAlloc = mock.Object;
 

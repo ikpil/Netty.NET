@@ -166,13 +166,13 @@ public class LengthFieldPrepender : MessageToMessageEncoder<ByteBuf>
         this.lengthAdjustment = lengthAdjustment;
     }
 
-    // CLR: the Buffer port has no order(ByteOrder) view: ByteBuf.order is @deprecated "use the Little Endian accessors,
-    // e.g. getShortLE, getIntLE instead of creating a buffer with swapped endianness", and the port keeps explicit
-    // BE/LE accessors (docs/buffer-porting.md, Explicit endian replacements for swapped buffers). The byte order picks
-    // the BE or LE write, and 'out' gets the allocated buffer itself instead of its swapped view (a single byte has no
-    // order). The short cast is unchecked, as Java's narrowing (length < 65536 may exceed short.MaxValue). The default
-    // branch throws UnreachableException for java.lang.Error: "thrown when the program executes an instruction that
-    // was thought to be unreachable" (https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.unreachableexception).
+    // CLR: the Buffer port has no order(ByteOrder) view: ByteBuf.order is @deprecated "use the Little Endian
+    // accessors, e.g. getShortLE, getIntLE instead of creating a buffer with swapped endianness", and the port
+    // keeps explicit BE/LE accessors. The byte order picks the BE or LE write, and 'out' gets the allocated buffer
+    // itself instead of its swapped view (a single byte has no order). The short cast is unchecked, as Java's
+    // narrowing (length < 65536 may exceed short.MaxValue). The default branch throws UnreachableException for
+    // java.lang.Error: "thrown when the program executes an instruction that was thought to be unreachable"
+    // (https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.unreachableexception).
     protected override void Encode(IChannelHandlerContext ctx, ByteBuf msg, IList<object> @out)
     {
         int length = msg.ReadableBytes + lengthAdjustment;

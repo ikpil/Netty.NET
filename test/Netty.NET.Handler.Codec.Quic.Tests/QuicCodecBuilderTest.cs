@@ -25,17 +25,16 @@ namespace Netty.NET.Handler.Codec.Quic.Tests;
 
 // CLR: getClass().getSuperclass().getDeclaredFields() is the declared instance fields of the generic base
 // QuicCodecBuilder<TestQuicCodecBuilder> (Type.BaseType with BindingFlags.DeclaredOnly), and Field.set is
-// FieldInfo.SetValue, which also sets the readonly field server as Java's setAccessible(true) does for the final field.
-// The boxed field types are the nullable values of the CLR builder (Boolean bool?, Integer int?, Long long?,
-// QuicCongestionControlAlgorithm QuicCongestionControlAlgorithm?), FlushStrategy is IFlushStrategy, Executor IExecutor,
-// boolean/int bool/int, and Function<QuicChannel, ? extends QuicSslEngine> is Func<IQuicChannel, QuicSslEngine>, for which
-// Function.identity() is a delegate that returns its argument when it is a QuicSslEngine (no function maps a QuicChannel
-// to itself as an engine; the test only compares the reference). Integer.MIN_VALUE/Long.MIN_VALUE are
-// int.MinValue/long.MinValue and IllegalArgumentException is ArgumentException. AssertJ's
-// usingRecursiveComparison().isEqualTo(original) is AssertRecursiveEquals, which compares every instance field of both
-// builders, recursing into objects and comparing arrays element by element. The overridden build(...) takes the CLR
-// MsQuicConfig in place of QuicheConfig (docs/codec-classes-quic-porting.md, Stage 2); it is internal abstract as the Java
-// method is package-private.
+// FieldInfo.SetValue, which also sets the readonly field server as Java's setAccessible(true) does for the final
+// field. The boxed field types are the nullable values of the CLR builder (Boolean bool?, Integer int?, Long
+// long?, QuicCongestionControlAlgorithm QuicCongestionControlAlgorithm?), FlushStrategy is IFlushStrategy,
+// Executor IExecutor, boolean/int bool/int, and Function<QuicChannel, ? extends QuicSslEngine> is
+// Func<IQuicChannel, QuicSslEngine>, for which Function.identity() is a delegate that returns its argument when it
+// is a QuicSslEngine (no function maps a QuicChannel to itself as an engine; the test only compares the
+// reference). Integer.MIN_VALUE/Long.MIN_VALUE are int.MinValue/long.MinValue and IllegalArgumentException is
+// ArgumentException. AssertJ's usingRecursiveComparison().isEqualTo(original) is AssertRecursiveEquals, which
+// compares every instance field of both builders, recursing into objects and comparing arrays element by element.
+// The overridden build(...) takes the CLR MsQuicConfig in place of QuicheConfig.
 public class QuicCodecBuilderTest
 {
 

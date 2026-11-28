@@ -115,7 +115,7 @@ public abstract class AbstractTrafficShapingHandler : ChannelDuplexHandler
     protected long checkInterval = DEFAULT_CHECK_INTERVAL; // default 1 s
 
     // CLR: AttributeKey<T> requires a reference type, so the Boolean attribute holds a boxed bool as object; the
-    // Runnable attribute holds an Action. Class.getName() is Type.FullName.
+    // Runnable attribute holds an Action.
     internal static readonly AttributeKey<object> READ_SUSPENDED = AttributeKey<object>
             .ValueOf(typeof(AbstractTrafficShapingHandler).FullName + ".READ_SUSPENDED");
     internal static readonly AttributeKey<Action> REOPEN_TASK = AttributeKey<Action>.ValueOf(typeof(AbstractTrafficShapingHandler)
@@ -623,7 +623,6 @@ public abstract class AbstractTrafficShapingHandler : ChannelDuplexHandler
         // default noop
     }
 
-    // CLR: Boolean.FALSE.equals(suspended) is false.Equals(suspended), true only for a boxed false.
     protected static bool IsHandlerActive(IChannelHandlerContext ctx)
     {
         object suspended = ctx.Channel.Attr(READ_SUSPENDED).Get();
@@ -664,8 +663,7 @@ public abstract class AbstractTrafficShapingHandler : ChannelDuplexHandler
         return SubmitWrite(ctx, msg, size, 0, now, cancellationToken);
     }
 
-    // CLR: @Deprecated without a @deprecated tag names no replacement, so the method is ported with [Obsolete] (owner
-    // decision 2026-11-16, https://learn.microsoft.com/dotnet/api/system.obsoleteattribute).
+    // CLR: @Deprecated without a @deprecated tag names no replacement, so the method is ported with [Obsolete].
     [Obsolete]
     protected Task SubmitWrite(IChannelHandlerContext ctx, object msg,
             long delay, CancellationToken cancellationToken)
@@ -703,7 +701,6 @@ public abstract class AbstractTrafficShapingHandler : ChannelDuplexHandler
         return promise;
     }
 
-    // CLR: ctx.write(msg, promise) of a queued write: the write's outcome completes the promise.
     internal static void Write(IChannelHandlerContext ctx, object msg, TaskCompletionSource promise,
             CancellationToken cancellationToken)
     {

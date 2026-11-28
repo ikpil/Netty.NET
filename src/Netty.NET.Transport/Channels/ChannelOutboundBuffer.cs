@@ -95,7 +95,7 @@ public sealed class ChannelOutboundBuffer
     // flag stands for that null reference: no message or flush is admitted once output shutdown or close began.
     private volatile bool _closed;
 
-    // CLR: public for transports and fixtures outside this assembly; the source constructor is package-private.
+    // CLR: public for transports and fixtures outside this assembly.
     public ChannelOutboundBuffer(IChannel channel)
     {
         ArgumentNullException.ThrowIfNull(channel);
@@ -234,7 +234,7 @@ public sealed class ChannelOutboundBuffer
      * Increment the pending bytes which will be written at some point.
      * This method is thread-safe!
      */
-    // CLR: public for PendingBytesTracker and tests in other assemblies; the source method is package-private.
+    // CLR: public for PendingBytesTracker and tests in other assemblies.
     public void IncrementPendingOutboundBytes(long size)
     {
         IncrementPendingOutboundBytes(size, true);
@@ -1298,7 +1298,6 @@ public sealed class ChannelOutboundBuffer
             return TrySetException(cause);
         }
 
-        // CLR: DefaultChannelProgressivePromise.tryProgress(progress, total).
         internal void TryProgress(long progress, long total)
         {
             if (total < 0)

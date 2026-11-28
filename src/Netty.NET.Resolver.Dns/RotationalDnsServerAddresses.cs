@@ -20,9 +20,8 @@ using System.Threading;
 
 namespace Netty.NET.Resolver.Dns;
 
-// CLR: the AtomicIntegerFieldUpdater startIdxUpdater is Interlocked.CompareExchange on the startIdx field, which is read
-// with Volatile.Read in place of the volatile modifier (docs/handler-porting.md and docs/transport-porting.md record
-// Atomic*FieldUpdater as Interlocked on the field).
+// CLR: the AtomicIntegerFieldUpdater startIdxUpdater is Interlocked.CompareExchange on the startIdx field, which
+// is read with Volatile.Read in place of the volatile modifier.
 internal sealed class RotationalDnsServerAddresses : DefaultDnsServerAddresses
 {
 

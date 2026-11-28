@@ -26,35 +26,35 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx.Extensions.Compression;
  * <a href="https://tools.ietf.org/html/draft-ietf-hybi-permessage-compression-18">permessage-deflate</a>
  * handshake implementation.
  */
-// CLR: the package-private extension and parameter names are internal constants. The four @Deprecated constructors (),
-// (int, boolean, int, boolean, boolean), (int, boolean, int, boolean, boolean, WebSocketExtensionFilterProvider) and
-// (int, boolean, int, boolean, boolean, WebSocketExtensionFilterProvider, int) name their replacements and are not
-// ported (owner decision 2026-11-16). ZlibCodecFactory.isSupportingWindowSizeAndMemLevel() is false, because jzlib is
-// library-not-ported (owner decision 2026-11-23, src/Netty.NET.Handler.Codec.Compression/ZlibCodecFactory.cs), so the
-// default configuration never lets the client choose the server window, as Java without jzlib; a configured window size
-// below 15 or a memory level other than 8 makes the encoder fail at the first compressed frame (see DeflateEncoder).
-// IllegalArgumentException is ArgumentException with the numbers in the invariant culture; checkInRange,
-// checkPositiveOrZero and checkNotNull are the Common ObjectUtil checks. HashMap<String, String> is Dictionary<string,
-// string>: neither defines an iteration order ("no guarantees as to the order of the map",
-// https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/HashMap.html; "The order in which the items
-// are returned is undefined",
-// https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.dictionary-2?view=net-10.0), and both allow
-// null values. The Iterator over parameters().entrySet() is an IEnumerator<KeyValuePair<string, string>>;
+// CLR: The four @Deprecated constructors (), (int, boolean, int, boolean, boolean), (int, boolean, int, boolean,
+// boolean, WebSocketExtensionFilterProvider) and (int, boolean, int, boolean, boolean,
+// WebSocketExtensionFilterProvider, int) name their replacements and are not ported.
+// ZlibCodecFactory.isSupportingWindowSizeAndMemLevel() is false, because jzlib is library-not-ported, so the
+// default configuration never lets the client choose the server window, as Java without jzlib; a configured window
+// size below 15 or a memory level other than 8 makes the encoder fail at the first compressed frame (see
+// DeflateEncoder). IllegalArgumentException is ArgumentException with the numbers in the invariant culture;
+// checkInRange, checkPositiveOrZero and checkNotNull are the Common ObjectUtil checks. HashMap<String, String> is
+// Dictionary<string, string>: neither defines an iteration order ("no guarantees as to the order of the map",
+// https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/HashMap.html; "The order in which the
+// items are returned is undefined",
+// https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.dictionary-2?view=net-10.0), and both
+// allow null values. The Iterator over parameters().entrySet() is an IEnumerator<KeyValuePair<string, string>>;
 // equalsIgnoreCase is string.Equals with StringComparison.OrdinalIgnoreCase, the same for these ASCII names
-// (https://learn.microsoft.com/en-us/dotnet/api/system.stringcomparison?view=net-10.0). Integer.parseInt is ParseInt
-// (internal, also used by PerMessageDeflateClientExtensionHandshaker through its static import of this class):
-// Integer.parseInt accepts an optional ASCII sign and decimal digits and throws NumberFormatException for null, for
-// non-digits and for values outside the int range
+// (https://learn.microsoft.com/en-us/dotnet/api/system.stringcomparison?view=net-10.0). Integer.parseInt is
+// ParseInt (internal, also used by PerMessageDeflateClientExtensionHandshaker through its static import of this
+// class): Integer.parseInt accepts an optional ASCII sign and decimal digits and throws NumberFormatException for
+// null, for non-digits and for values outside the int range
 // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Integer.html#parseInt(java.lang.String,int)),
-// and int.TryParse with NumberStyles.AllowLeadingSign and the invariant culture fails for null, for non-digits and for
-// values outside the Int32 range (https://learn.microsoft.com/en-us/dotnet/api/system.int32.tryparse?view=net-10.0),
-// where ParseInt throws FormatException, the counterpart of NumberFormatException, with the messages of OpenJDK 17's
-// parseInt and NumberFormatException.forInputString
+// and int.TryParse with NumberStyles.AllowLeadingSign and the invariant culture fails for null, for non-digits and
+// for values outside the Int32 range
+// (https://learn.microsoft.com/en-us/dotnet/api/system.int32.tryparse?view=net-10.0), where ParseInt throws
+// FormatException, the counterpart of NumberFormatException, with the messages of OpenJDK 17's parseInt and
+// NumberFormatException.forInputString
 // (https://raw.githubusercontent.com/openjdk/jdk17u/jdk-17+35/src/java.base/share/classes/java/lang/Integer.java,
 // https://raw.githubusercontent.com/openjdk/jdk17u/jdk-17+35/src/java.base/share/classes/java/lang/NumberFormatException.java);
 // Java also accepts non-ASCII Unicode decimal digits (Character.digit), which the BCL rejects. Integer.toString is
-// ToString with the invariant culture, the private static nested class PermessageDeflateExtension is a private nested
-// class, and its RSV1 is IWebSocketExtension.RSV1.
+// ToString with the invariant culture, the private static nested class PermessageDeflateExtension is a private
+// nested class, and its RSV1 is IWebSocketExtension.RSV1.
 public sealed class PerMessageDeflateServerExtensionHandshaker : IWebSocketServerExtensionHandshaker
 {
 

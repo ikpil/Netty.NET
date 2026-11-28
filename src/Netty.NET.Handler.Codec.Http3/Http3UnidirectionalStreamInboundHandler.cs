@@ -27,17 +27,15 @@ namespace Netty.NET.Handler.Codec.Http3;
 /**
  * {@link ByteToMessageDecoder} which helps to detect the type of unidirectional stream.
  */
-// CLR: the package-private abstract class is internal; ByteToMessageDecoder is codec-base's ByteToMessageDecoder, whose
-// decode(ctx, in, List<Object> out) is Decode(ctx, ByteBuf @in, IList<object> @out) (docs/codec-base-porting.md).
-// AttributeKey<Boolean> is AttributeKey<object> holding a boxed bool (AttributeKey<T> needs a reference type; as
-// handler-ssl-ocsp and resolver-dns), so setIfAbsent(true) stores the boxed true. Http3FrameCodecFactory is the
-// nested Http3FrameCodec.IHttp3FrameCodecFactory and NonStandardHttp3SettingsValidator
-// Http3Settings.INonStandardHttp3SettingsValidator. Supplier<ChannelHandler> is Func<IChannelHandler>,
-// LongFunction<ChannelHandler> Func<long, IChannelHandler> (get()/apply(x) are delegate invocations) and the lambda
-// type -> ReleaseHandler.INSTANCE a C# lambda. in.getByte(in.readerIndex()) is the CLR byte that selects the byte
-// overload of numBytesForVariableLengthInteger. pipeline().replace(this, null, handler) is Replace(this, null,
-// handler). The package-private nested ReleaseHandler is an internal sealed nested class whose isSharable() overrides
-// the IsSharable property. The @Nullable (org.jetbrains.annotations) annotations have no counterpart.
+// CLR: ByteToMessageDecoder is codec-base's ByteToMessageDecoder, whose decode(ctx, in, List<Object> out) is
+// Decode(ctx, ByteBuf @in, IList<object> @out). AttributeKey<Boolean> is AttributeKey<object> holding a boxed bool
+// (AttributeKey<T> needs a reference type; as handler-ssl-ocsp and resolver-dns), so setIfAbsent(true) stores the
+// boxed true. Http3FrameCodecFactory is the nested Http3FrameCodec.IHttp3FrameCodecFactory and
+// NonStandardHttp3SettingsValidator Http3Settings.INonStandardHttp3SettingsValidator. Supplier<ChannelHandler> is
+// Func<IChannelHandler>, LongFunction<ChannelHandler> Func<long, IChannelHandler> (get()/apply(x) are delegate
+// invocations) and the lambda type -> ReleaseHandler.INSTANCE a C# lambda. in.getByte(in.readerIndex()) is the CLR
+// byte that selects the byte overload of numBytesForVariableLengthInteger. pipeline().replace(this, null, handler)
+// is Replace(this, null, handler). The @Nullable (org.jetbrains.annotations) annotations have no counterpart.
 internal abstract class Http3UnidirectionalStreamInboundHandler : ByteToMessageDecoder
 {
     private static readonly AttributeKey<object> REMOTE_CONTROL_STREAM =

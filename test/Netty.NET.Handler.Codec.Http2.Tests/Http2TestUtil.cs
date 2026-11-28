@@ -32,17 +32,17 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
  * Utilities for the integration tests.
  */
 // CLR: the final class with a private constructor is a static class; its package-private members are internal.
-// ChannelPromise is TaskCompletionSource and ChannelFuture is Task (docs/codec-http-porting.md, Shared CLR
-// adaptations). CountDownLatch is CountdownEvent (docs/codec-http-porting.md: "@BeforeEach/@AfterEach, Mockito,
-// CountDownLatch (tests) | test-class constructor/Dispose(), Moq, CountdownEvent"); CountDownLatch.countDown() does
-// nothing at zero while CountdownEvent.Signal() throws, so FrameCountDown counts down through CountDown(latch), which
-// stops at zero. Mockito's mock/when/thenAnswer/doAnswer are Moq Setup/Returns/Callback (Moq Quickstart,
+// ChannelPromise is TaskCompletionSource and ChannelFuture is Task. CountDownLatch is CountdownEvent
+// (docs/codec-http-porting.md: "@BeforeEach/@AfterEach, Mockito, CountDownLatch (tests) | test-class
+// constructor/Dispose(), Moq, CountdownEvent"); CountDownLatch.countDown() does nothing at zero while
+// CountdownEvent.Signal() throws, so FrameCountDown counts down through CountDown(latch), which stops at zero.
+// Mockito's mock/when/thenAnswer/doAnswer are Moq Setup/Returns/Callback (Moq Quickstart,
 // https://github.com/devlooped/moq/wiki/Quickstart); any(X.class) is It.IsAny<X>(). ThreadLocalRandom is
-// Random.Shared, "a thread-safe Random instance that may be used concurrently from any thread"
-// (docs/codec-http-porting.md). new RuntimeException(e) keeps Java's detail message e.toString() through Common's
-// ThrowableUtil.ThrowableToString, and new Error(msg, e) is UnreachableException (docs/handler-porting.md,
-// Exceptions). of(String) returns a StringCharSequence (a C# string is not an ICharSequence). The public factories of
-// the package-private HpackEncoder/HpackDecoder are internal (a public member cannot expose an internal type, CS0050).
+// Random.Shared, "a thread-safe Random instance that may be used concurrently from any thread". new
+// RuntimeException(e) keeps Java's detail message e.toString() through Common's ThrowableUtil.ThrowableToString,
+// and new Error(msg, e) is UnreachableException. of(String) returns a StringCharSequence (a C# string is not an
+// ICharSequence). The public factories of the package-private HpackEncoder/HpackDecoder are internal (a public
+// member cannot expose an internal type, CS0050).
 public static class Http2TestUtil
 {
     /**
@@ -51,8 +51,8 @@ public static class Http2TestUtil
      */
     internal static readonly Exception FAKE_EXCEPTION = new FakeException("Fake exception");
 
-    // CLR: the anonymous RuntimeException subclass of FAKE_EXCEPTION. There is no fillInStackTrace(): a CLR exception
-    // records its stack trace only when it is thrown, so an exception that is only passed to promises carries none.
+    // CLR: There is no fillInStackTrace(): a CLR exception records its stack trace only when it is thrown, so an
+    // exception that is only passed to promises carries none.
     private sealed class FakeException : Exception
     {
         internal FakeException(string message) : base(message)
@@ -322,11 +322,10 @@ public static class Http2TestUtil
     }
 
     // CLR: DefaultChannelPromise over ImmediateEventExecutor with the void-promise overrides. The port has no void
-    // promise (docs/transport-porting.md: VoidChannelPromise, "discard the returned Task") and unvoid() returns the
-    // promise itself, so the overrides that matter to the code under test are folded into one TaskCompletionSource:
-    // a failure fires exceptionCaught on the channel's pipeline, as Java's tryFailure/setFailure and the listener of
-    // unvoid() do. The addListener overrides that fail() the test have no counterpart (a Task continuation cannot be
-    // intercepted).
+    // promise and unvoid() returns the promise itself, so the overrides that matter to the code under test are
+    // folded into one TaskCompletionSource: a failure fires exceptionCaught on the channel's pipeline, as Java's
+    // tryFailure/setFailure and the listener of unvoid() do. The addListener overrides that fail() the test have
+    // no counterpart (a Task continuation cannot be intercepted).
     internal static TaskCompletionSource NewVoidPromise(IChannel channel)
     {
         TaskCompletionSource promise = new TaskCompletionSource();
@@ -470,7 +469,6 @@ public static class Http2TestUtil
         return promise.Task;
     }
 
-    // CLR: the anonymous Http2FrameWriter.Configuration of mockedFrameWriter().
     private sealed class MockedConfiguration : IHttp2FrameWriter.IConfiguration
     {
         private readonly IHttp2HeadersEncoder.IConfiguration headerConfiguration = new MockedHeadersConfiguration();
@@ -488,7 +486,6 @@ public static class Http2TestUtil
         }
     }
 
-    // CLR: the anonymous Http2HeadersEncoder.Configuration of mockedFrameWriter().
     private sealed class MockedHeadersConfiguration : IHttp2HeadersEncoder.IConfiguration
     {
         public void MaxHeaderTableSize(long max)
@@ -512,7 +509,6 @@ public static class Http2TestUtil
         }
     }
 
-    // CLR: the anonymous Http2FrameSizePolicy of mockedFrameWriter().
     private sealed class MockedFrameSizePolicy : IHttp2FrameSizePolicy
     {
         public void MaxFrameSize(int max)

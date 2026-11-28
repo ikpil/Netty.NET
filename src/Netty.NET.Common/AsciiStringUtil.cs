@@ -31,8 +31,7 @@ namespace Netty.NET.Common;
 // (linearContainsUpperCase, linearContainsLowerCase, linearToLowerCase, linearToUpperCase)
 // have no separate method; their byte-at-a-time results equal the word path for every input.
 // CLR adaptation: a static class supplies the original non-instantiable utility.
-// CLR: Java declares this helper package-private (final class with static members); the CLR
-// counterpart is internal. Tests reach it through InternalsVisibleTo.
+// CLR: Tests reach it through InternalsVisibleTo.
 internal static class AsciiStringUtil
 {
     /**

@@ -26,7 +26,6 @@ namespace Netty.NET.Handler.Codec.Socksx.V5;
  *
  * @see <a href="https://www.ietf.org/rfc/rfc1928.txt">RFC 1928 Section 3</a>
  */
-// CLR: Java interfaces take the I prefix (see Netty.NET.Handler.Codec.Socksx.ISocksMessage).
 public interface ISocks5PrivateAuthRequest : ISocks5Message
 {
 

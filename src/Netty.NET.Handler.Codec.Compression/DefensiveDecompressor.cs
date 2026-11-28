@@ -24,13 +24,12 @@ namespace Netty.NET.Handler.Codec.Compression;
  * Most decompressor implementations play fast and loose with {@link Decompressor} API contracts. This wrapper makes
  * sure callers follow that contract.
  */
-// CLR: the package-private final class is an internal sealed class with an internal constructor. The field delegate is
-// @delegate (a C# keyword). The nullable Status field is a nullable enum (IDecompressor.Status?): the nested type of the
-// implemented interface is written IDecompressor.Status because a class does not inherit the nested types of its
-// interfaces. IllegalStateException is InvalidOperationException and checkNotNull's NullPointerException is
-// ArgumentNullException (docs/codec-base-porting.md). The rethrow of catch (Exception e) { ...; throw e; } is throw;,
-// which rethrows the same exception object. In checkState, the string concatenation keeps Java's text for a null
-// status ("null").
+// CLR: The field delegate is @delegate (a C# keyword). The nullable Status field is a nullable enum
+// (IDecompressor.Status?): the nested type of the implemented interface is written IDecompressor.Status because a
+// class does not inherit the nested types of its interfaces. IllegalStateException is InvalidOperationException
+// and checkNotNull's NullPointerException is ArgumentNullException. The rethrow of catch (Exception e) {...; throw
+// e; } is throw;, which rethrows the same exception object. In checkState, the string concatenation keeps Java's
+// text for a null status ("null").
 internal sealed class DefensiveDecompressor : IDecompressor
 {
     private readonly IDecompressor @delegate;

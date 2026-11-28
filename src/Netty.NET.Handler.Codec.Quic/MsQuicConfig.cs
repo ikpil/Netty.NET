@@ -22,29 +22,9 @@ using System.Threading;
 
 namespace Netty.NET.Handler.Codec.Quic;
 
-// CLR-only: the settings of a QUIC codec for System.Net.Quic, the counterpart of the JNI unit QuicheConfig
-// (jvm-only-replaced), which QuicCodecBuilder.Build() creates from the builder (createConfig()). The settings that
-// System.Net.Quic exposes become QuicConnectionOptions members (Apply); the others keep their builder API and are
-// reported here as NotSupportedException when they hold a value other than quiche's documented default (owner decision
-// 2026-11-27, docs/quic-design.md: "API features that System.Net.Quic lacks keep their Java API; the msquic
-// implementation reports them as unsupported where they are used", as SslHandler does for a client renegotiation).
-//
-// | Builder setting | System.Net.Quic |
-// | --- | --- |
-// | maxIdleTimeout | QuicConnectionOptions.IdleTimeout; unset or 0 is Timeout.InfiniteTimeSpan (quiche: no idle timeout) |
-// | initialMaxData | InitialReceiveWindowSizes.Connection |
-// | initialMaxStreamDataBidirectionalLocal | InitialReceiveWindowSizes.LocallyInitiatedBidirectionalStream |
-// | initialMaxStreamDataBidirectionalRemote | InitialReceiveWindowSizes.RemotelyInitiatedBidirectionalStream |
-// | initialMaxStreamDataUnidirectional | InitialReceiveWindowSizes.UnidirectionalStream |
-// | initialMaxStreamsBidirectional | MaxInboundBidirectionalStreams (unset: 0, the quiche default) |
-// | initialMaxStreamsUnidirectional | MaxInboundUnidirectionalStreams (unset: 0, the quiche default) |
-//
-// msquic takes receive windows that are powers of two (a QuicReceiveWindowSizes member that is not one fails the
-// connection options, measured on Windows 11 with .NET 10.0.11), so a window is rounded up to the next power of two, at
-// most 2^30 (the largest int power of two); an unset window keeps the msquic default and 0 (no credit) is unsupported.
-// msquic allows at most 65535 inbound streams of each type. The application error codes System.Net.Quic sends when a
-// stream or connection is disposed without an explicit code (DefaultStreamErrorCode, DefaultCloseErrorCode) are 0, the
-// error code that the Java shutdownInput()/close() use.
+// Unsupported settings accept their documented defaults. An unset receive window keeps the platform default;
+// explicit windows round up to a power of two, capped at 2^30. Zero credit is unsupported.
+// An unset or zero idle timeout disables it. Inbound stream limits are capped at 65,535 per stream type.
 internal sealed class MsQuicConfig
 {
     private const long MAX_WINDOW = 1L << 30;

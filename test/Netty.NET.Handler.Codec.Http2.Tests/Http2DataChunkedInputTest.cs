@@ -24,15 +24,14 @@ using Assert = XunitAssertMessages.AssertM;
 namespace Netty.NET.Handler.Codec.Http2.Tests;
 
 // CLR: as codec-http's HttpChunkedInputTest (test/Netty.NET.Handler.Codec.Http.Tests/HttpChunkedInputTest.cs): the
-// static initializer is the static constructor; File is FileInfo, FileOutputStream a FileStream, ByteArrayInputStream
-// and Channels.newChannel(InputStream) are MemoryStream, and File.deleteOnExit() is the AppDomain.ProcessExit deletion
-// that handler's ChunkedWriteHandlerTest uses for the same temporary file (test/Netty.NET.Handler.Tests/Stream/
-// ChunkedWriteHandlerTest.cs; docs/handler-porting.md, java.io and NIO). RuntimeException is Exception
-// (docs/codec-base-porting.md). ByteBufAllocator.DEFAULT is the Buffer port's IByteBufAllocator.Default. The anonymous
-// Http2FrameStream and ChunkedInput are the named nested classes DummyStream and NullChunkedInput; the @Deprecated
-// readChunk(ChannelHandlerContext) override of the test input is not ported with the interface member
-// (src/Netty.NET.Handler/Stream/IChunkedInput.cs). ChunkedInput<?>... is params object[] (the inputs are written as
-// messages), readOutbound() is ReadOutbound<IHttp2DataFrame>() and content() is the Content property.
+// static initializer is the static constructor; File is FileInfo, FileOutputStream a FileStream,
+// ByteArrayInputStream and Channels.newChannel(InputStream) are MemoryStream, and File.deleteOnExit() is the
+// AppDomain.ProcessExit deletion that handler's ChunkedWriteHandlerTest uses for the same temporary file
+// (test/Netty.NET.Handler.Tests/Stream/ ChunkedWriteHandlerTest.cs; docs/handler-porting.md, java.io and NIO).
+// RuntimeException is Exception. ByteBufAllocator.DEFAULT is the Buffer port's IByteBufAllocator.Default. The
+// @Deprecated readChunk(ChannelHandlerContext) override of the test input is not ported with the interface member
+// (src/Netty.NET.Handler/Stream/IChunkedInput.cs). ChunkedInput<?>... is params object[] (the inputs are written
+// as messages), readOutbound() is ReadOutbound<IHttp2DataFrame>() and content() is the Content property.
 public class Http2DataChunkedInputTest
 {
     private static readonly byte[] BYTES = new byte[1024 * 64];

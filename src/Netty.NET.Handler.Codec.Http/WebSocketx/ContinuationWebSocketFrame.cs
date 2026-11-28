@@ -23,10 +23,8 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx;
  * Web Socket continuation frame containing continuation text or binary data. This is used for
  * fragmented messages where the contents of a messages is contained more than 1 frame.
  */
-// CLR: CharsetUtil.UTF_8 is Encoding.UTF8 (docs/codec-smtp-porting.md). Unpooled.copiedBuffer(text, UTF_8) is
-// Unpooled.CopiedBuffer(text, Encoding.UTF8), which writes an unpaired surrogate as EF BF BD where Java writes '?'
-// (docs/buffer-porting.md, text copying), and content().toString(UTF_8) is Content.ToString(Encoding.UTF8). The Java
-// overrides that narrow the return types of WebSocketFrame are C# 9 covariant overrides (see WebSocketFrame).
+// CLR: The Java overrides that narrow the return types of WebSocketFrame are C# 9 covariant overrides (see
+// WebSocketFrame).
 public class ContinuationWebSocketFrame : WebSocketFrame
 {
 

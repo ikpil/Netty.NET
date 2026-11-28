@@ -452,7 +452,6 @@ public class ReadOnlyDirectByteBufferBufTest : IDisposable
 
         Assert.Equal(1, buf.ReadInt());
 
-        // CLR: nioBuffer() is the readable ReadOnlyMemory<byte> view.
         ReadOnlyMemory<byte> readable = buf.ReadableMemory;
 
         // Ensure this can be accessed without throwing a BufferUnderflowException

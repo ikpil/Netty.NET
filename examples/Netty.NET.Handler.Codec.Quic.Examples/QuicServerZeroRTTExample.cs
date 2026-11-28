@@ -29,11 +29,11 @@ using Netty.NET.Transport.Channels.Nio;
 namespace Netty.NET.Handler.Codec.Quic.Example;
 
 // CLR: ported as written, with the adaptations of QuicServerExample (the async Main of ExampleLauncher, the
-// QuicEndpointChannel in place of NioDatagramChannel, IPEndPoint(IPAddress.Any, 9999), the PkiTesting certificate in
-// place of the deprecated SelfSignedCertificate, the nested handler classes, the SHUTDOWN_OUTPUT continuation and
-// Encoding.ASCII). System.Net.Quic exposes no 0-RTT early data, so QuicSslContextBuilder.EarlyData(true) makes Build()
-// throw NotSupportedException (docs/codec-classes-quic-porting.md, Unsupported features): run, the example ends with
-// that exception before it binds. tokenHandler(null) is accepted (msquic validates addresses with its own retry tokens).
+// QuicEndpointChannel in place of NioDatagramChannel, IPEndPoint(IPAddress.Any, 9999), the PkiTesting certificate
+// in place of the deprecated SelfSignedCertificate, the nested handler classes, the SHUTDOWN_OUTPUT continuation
+// and Encoding.ASCII). System.Net.Quic exposes no 0-RTT early data, so QuicSslContextBuilder.EarlyData(true) makes
+// Build() throw NotSupportedException : run, the example ends with that exception before it binds.
+// tokenHandler(null) is accepted (msquic validates addresses with its own retry tokens).
 public sealed class QuicServerZeroRTTExample
 {
 

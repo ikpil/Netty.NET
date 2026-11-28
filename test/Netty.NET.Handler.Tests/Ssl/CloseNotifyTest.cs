@@ -34,16 +34,16 @@ using static Netty.NET.Handler.Codec.ByteToMessageDecoder;
 
 namespace Netty.NET.Handler.Tests.Ssl;
 
-// CLR: SslProvider.OPENSSL is library-not-ported (netty-tcnative; owner decision 2026-11-24, docs/handler-ssl-design.md),
-// so data() keeps the JDK rows (SslStream) and the OPENSSL rows with their OpenSsl.isAvailable() assumption are dropped.
-// @ParameterizedTest with @MethodSource is [Theory] with [MemberData]; @Timeout(30) (seconds) is the Timeout of the
-// [Theory] in milliseconds, which xUnit applies to async tests, so the test returns a Task. assumeTrue is
-// Assert.SkipUnless. The @Deprecated CachedSelfSignedCertificate is CachedSelfSignedCertificate() below.
-// BlockingQueue/LinkedBlockingQueue are ConcurrentQueue<object> (the test only polls without waiting), the anonymous
-// INACTIVE object and SimpleChannelInboundHandler are named nested classes, UnpooledByteBufAllocator.DEFAULT is
-// UnpooledByteBufAllocator.Default and US_ASCII is Encoding.ASCII. The TLSv1.2 row's "client automatically responds with
-// close_notify" is SslHandler's engine answering a received close_notify below TLS 1.3, as the JDK engine does
-// (SslHandler.EngineAcknowledgeCloseNotify; SslStream itself does not answer, measured).
+// CLR: SslProvider.OPENSSL is library-not-ported (netty-tcnative; owner decision 2026-11-24,
+// docs/handler-ssl-design.md), so data() keeps the JDK rows (SslStream) and the OPENSSL rows with their
+// OpenSsl.isAvailable() assumption are dropped. @ParameterizedTest with @MethodSource is [Theory] with
+// [MemberData]; @Timeout(30) (seconds) is the Timeout of the [Theory] in milliseconds, which xUnit applies to
+// async tests, so the test returns a Task. assumeTrue is Assert.SkipUnless. BlockingQueue/LinkedBlockingQueue are
+// ConcurrentQueue<object> (the test only polls without waiting), the anonymous INACTIVE object and
+// SimpleChannelInboundHandler are named nested classes, UnpooledByteBufAllocator.DEFAULT is
+// UnpooledByteBufAllocator.Default and US_ASCII is Encoding.ASCII. The TLSv1.2 row's "client automatically
+// responds with close_notify" is SslHandler's engine answering a received close_notify below TLS 1.3, as the JDK
+// engine does (SslHandler.EngineAcknowledgeCloseNotify; SslStream itself does not answer, measured).
 public class CloseNotifyTest
 {
 

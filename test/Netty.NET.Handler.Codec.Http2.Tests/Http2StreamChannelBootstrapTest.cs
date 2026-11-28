@@ -28,18 +28,16 @@ using static Netty.NET.Handler.Codec.Http2.Http2FrameCodecBuilder;
 namespace Netty.NET.Handler.Codec.Http2.Tests;
 
 // CLR: the Local transport is the Transport port (MultiThreadIoEventLoopGroup with LocalIoHandler.NewFactory(),
-// LocalServerChannel, LocalChannel, docs/transport-porting.md, Tests); sync()/syncUninterruptibly() on a ChannelFuture
-// is awaiting its Task, and Promise<Http2StreamChannel> is TaskCompletionSource<IHttp2StreamChannel>
+// LocalServerChannel, LocalChannel, docs/transport-porting.md, Tests); sync()/syncUninterruptibly() on a
+// ChannelFuture is awaiting its Task, and Promise<Http2StreamChannel> is TaskCompletionSource<IHttp2StreamChannel>
 // (src/Netty.NET.Handler.Codec.Http2/Http2StreamChannelBootstrap.cs, docs/codec-http-porting.md, Shared CLR
-// adaptations). getClass().getName() is GetType().FullName (docs/common-clr-design.md, Source class names in text). The
-// anonymous ChannelInitializer bodies are ActionChannelInitializer delegates (docs/transport-porting.md: "the anonymous
-// ChannelInitializer is an ActionChannelInitializer<IChannel>"), CountDownLatch is CountdownEvent and await(timeout)
-// Wait(timeout, TestContext.Current.CancellationToken) (docs/handler-porting.md, SSL tests: Concurrency helpers), and
-// Mockito's mock/when(...).thenReturn are Moq Mock<T>/Setup(...).Returns (docs/codec-http-porting.md, Shared CLR
-// adaptations). Future.get() throws ExecutionException with the cause, awaiting the Task throws the cause itself, so
-// assertThrows(ExecutionException) with assertInstanceOf(T, e.getCause()) is Assert.ThrowsAnyAsync<T>
-// (docs/codec-http-porting.md, Core test notes), and assertInstanceOf is Assert.IsAssignableFrom (same section).
-// InterruptedException is ThreadInterruptedException, which Thread.Interrupt() raises in a blocked thread
+// adaptations). getClass().getName() is GetType().FullName. The anonymous ChannelInitializer bodies are
+// ActionChannelInitializer delegates, CountDownLatch is CountdownEvent and await(timeout) Wait(timeout,
+// TestContext.Current.CancellationToken), and Mockito's mock/when(...).thenReturn are Moq
+// Mock<T>/Setup(...).Returns. Future.get() throws ExecutionException with the cause, awaiting the Task throws the
+// cause itself, so assertThrows(ExecutionException) with assertInstanceOf(T, e.getCause()) is
+// Assert.ThrowsAnyAsync<T>, and assertInstanceOf is Assert.IsAssignableFrom (same section). InterruptedException
+// is ThreadInterruptedException, which Thread.Interrupt() raises in a blocked thread
 // (https://learn.microsoft.com/en-us/dotnet/api/system.threading.thread.interrupt?view=net-10.0).
 public class Http2StreamChannelBootstrapTest
 {
@@ -84,9 +82,6 @@ public class Http2StreamChannelBootstrapTest
 
             CountdownEvent closeLatch = new CountdownEvent(1);
             IChannel clientChannelToClose = clientChannel;
-            // CLR: the anonymous Runnable is a lambda; closeLatch.await() is Wait() and
-            // close().syncUninterruptibly() blocks on the close Task, which the local channel completes inside the
-            // close it runs on its own event loop (Wait returns at once, as Java's sync finds the future done).
             group.Execute(() =>
             {
                 try
@@ -106,7 +101,6 @@ public class Http2StreamChannelBootstrapTest
             Assert.False(promise.Task.IsCompleted);
             closeLatch.Signal();
 
-            // CLR: promise.get(3, SECONDS) is the promise's Task awaited with a 3 s WaitAsync.
             await Assert.ThrowsAnyAsync<ClosedChannelException>(
                     () => promise.Task.WaitAsync(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken));
         }
@@ -123,7 +117,6 @@ public class Http2StreamChannelBootstrapTest
         }
     }
 
-    // CLR: the anonymous ChannelInitializer<Http2StreamChannel> is an ActionChannelInitializer<IHttp2StreamChannel>.
     private static Http2MultiplexHandler NewMultiplexedHandler()
     {
         return new Http2MultiplexHandler(new ActionChannelInitializer<IHttp2StreamChannel>(ch =>
@@ -150,12 +143,12 @@ public class Http2StreamChannelBootstrapTest
 
     // CLR: the @Deprecated open0(ChannelHandlerContext, Promise), whose @deprecated text names open() and
     // open(Promise), is not ported as a public member
-    // (src/Netty.NET.Handler.Codec.Http2/Http2StreamChannelBootstrap.cs: its body is the private Open0 that OpenAsync
-    // runs), so the test reaches the same body through the named replacement OpenAsync(promise): the mocked channel's
-    // pipeline returns the mocked context for Context(typeof(Http2MultiplexHandler)), which is how open(Promise) finds
-    // the context that the source passes to open0 directly, and the mocked executor reports InEventLoop(), so OpenAsync
-    // runs Open0 at once, as the direct call does. new DefaultPromise<Http2StreamChannel>(mock(EventExecutor.class)) is
-    // a TaskCompletionSource; promise.isDone() is Task.IsCompleted and promise.cause() Http2CodecUtil.Cause(task);
+    // (src/Netty.NET.Handler.Codec.Http2/Http2StreamChannelBootstrap.cs: its body is the private Open0 that
+    // OpenAsync runs), so the test reaches the same body through the named replacement OpenAsync(promise): the
+    // mocked channel's pipeline returns the mocked context for Context(typeof(Http2MultiplexHandler)), which is
+    // how open(Promise) finds the context that the source passes to open0 directly, and the mocked executor
+    // reports InEventLoop(), so OpenAsync runs Open0 at once, as the direct call does. new
+    // DefaultPromise<Http2StreamChannel>(mock(EventExecutor.class)) is a TaskCompletionSource;
     // IllegalStateException is InvalidOperationException (Http2ChannelDuplexHandler.NewStream throws it when no
     // Http2FrameCodec was found).
     [Fact]

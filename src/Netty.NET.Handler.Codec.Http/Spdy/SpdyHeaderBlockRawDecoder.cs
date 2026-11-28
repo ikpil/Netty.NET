@@ -25,12 +25,11 @@ namespace Netty.NET.Handler.Codec.Spdy;
 
 // CLR: the package-private overrides are internal and the protected decodeHeaderBlock is protected virtual (Java
 // methods are virtual unless final). The simple enum State is a private C# enum; the unreachable default branch
-// (java.lang.Error) throws InvalidOperationException, as codec-base AsciiHeadersEncoder does. new String(bytes, UTF_8)
-// is Encoding.UTF8.GetString, which also replaces malformed input with U+FFFD. The header name and values, Strings that
-// Java adds to the CharSequence headers, are wrapped in the Common StringCharSequence (docs/codec-base-porting.md,
-// Headers; the core codec-http mapping of a String passed as CharSequence). catch (IllegalArgumentException) is catch
-// (ArgumentException) (docs/codec-base-porting.md). readBytes(byte[]) is ReadBytes(Span<byte>). The Java byte
-// comparisons with (byte) 0 compare bit patterns.
+// (java.lang.Error) throws InvalidOperationException, as codec-base AsciiHeadersEncoder does. new String(bytes,
+// UTF_8) is Encoding.UTF8.GetString, which also replaces malformed input with U+FFFD. The header name and values,
+// Strings that Java adds to the CharSequence headers, are wrapped in the Common StringCharSequence. catch
+// (IllegalArgumentException) is catch (ArgumentException). readBytes(byte[]) is ReadBytes(Span<byte>). The Java
+// byte comparisons with (byte) 0 compare bit patterns.
 public class SpdyHeaderBlockRawDecoder : SpdyHeaderBlockDecoder
 {
 

@@ -39,36 +39,9 @@ namespace Netty.NET.Resolver.Dns;
 /**
  * A DNS-based {@link InetNameResolver}.
  */
-// CLR: Resolver API policy (docs/resolver-porting-manifest.json contractPolicy, src/Netty.NET.Resolver): the
-// Future-returning resolve/resolveAll/query methods are Task-returning ResolveAsync/ResolveAllAsync/QueryAsync with a
-// CancellationToken, and each overload that takes a Promise folds into the Task-returning overload with its original
-// comments beside it; close() is Dispose(). Future<InetAddress> is Task<IPAddress>, Future<List<InetAddress>>
-// Task<IReadOnlyList<IPAddress>> (SimpleNameResolver), Future<List<DnsRecord>> Task<IReadOnlyList<IDnsRecord>> and
-// Future<AddressedEnvelope<DnsResponse, InetSocketAddress>> Task<IAddressedEnvelope<IDnsResponse, IPEndPoint>> (the
-// covariant codec-dns envelope; the sender of a response is resolved). The protected doResolve/doResolveAll hooks that
-// complete a caller's Promise are the Task-returning DoResolveAsync/DoResolveAllAsync with the additionals and cache.
-// Internally a Promise is a TaskCompletionSource created with RunContinuationsAsynchronously (handler-porting.md,
-// "Promise, ChannelPromise, Future": TaskCompletionSource/Task); the CancellationToken of a caller stands for
-// Future.cancel(...) and cancels that promise (NewPromise), which the resolve contexts read as isCancelled().
-// Listeners are continuations on Common's EventExecutorTaskScheduler over the resolver's event loop, which runs them at
-// once on the event loop and otherwise through the executor, the DefaultPromise.notifyListeners() timing
-// (src/Netty.NET.Common/Concurrent/EventExecutorTaskScheduler.cs); a listener that throws (setSuccess/setFailure of a
-// completed promise throws IllegalStateException in Java, InvalidOperationException in SetResult/SetException) faults
-// its continuation Task, where DefaultPromise logs it
-// (https://github.com/netty/netty/blob/64cc10f38ea5f5bd7eae48507817c66680d0afdc/common/src/main/java/io/netty/util/concurrent/DefaultPromise.java).
-// ChannelFactory<? extends DatagramChannel/SocketChannel> is Func<IDatagramChannel>/Func<ISocketChannel> and
-// ChannelFuture the Task<IChannel> of Bootstrap.RegisterAsync/BindAsync/ConnectAsync (docs/transport-porting.md); a
-// faulted Task<IChannel> carries no channel ("RegisterAsync/BindAsync/ConnectAsync return a faulted Task<IChannel>,
-// which has no channel accessor", docs/transport-porting.md), so the transport setup failure message names no channel.
-// InetAddress is IPAddress and a resolved InetSocketAddress IPEndPoint (docs/handler-porting.md, Addresses); a name
-// server stream element is an EndPoint. AttributeKey<Boolean> is AttributeKey<object> holding a boxed bool, as handler's
-// AbstractTrafficShapingHandler maps it (AttributeKey<T> requires a reference type). The anonymous ChannelHandlerAdapter,
-// DatagramDnsResponseDecoder and ChannelInitializer are the nested NoopHandler, DatagramDecoder and
-// DatagramChannelInitializer; anonymous Runnables and listeners are lambdas. Map/HashMap is Dictionary (owner decision
-// 2026-11-19). UnknownHostException is Common's UnknownHostException (owner decision 2026-11-25) and initCause(cause) its
-// (string, Exception) constructor. IllegalArgumentException/IllegalStateException/UnsupportedOperationException are
-// ArgumentException/InvalidOperationException/NotSupportedException, assert is Debug.Assert, equalsIgnoreCase is
-// StringComparison.OrdinalIgnoreCase and toLowerCase(Locale.US) ToLowerInvariant (docs/codec-http-porting.md).
+// CLR: Cancellation completes the resolver's internal promise. Listeners run on the resolver event loop so they
+// observe the same ordering as the resolution state machine.
+// A failed transport setup task carries no channel, so the diagnostic can only include the failure.
 public class DnsNameResolver : InetNameResolver
 {
     /**
@@ -101,7 +74,6 @@ public class DnsNameResolver : InetNameResolver
 
     private static readonly IChannelHandler NOOP_HANDLER = new NoopHandler();
 
-    // CLR: the anonymous ChannelHandlerAdapter of NOOP_HANDLER.
     private sealed class NoopHandler : ChannelHandlerAdapter
     {
         public override bool IsSharable => true;
@@ -131,16 +103,16 @@ public class DnsNameResolver : InetNameResolver
     internal static readonly string[] DEFAULT_SEARCH_DOMAINS;
     private static readonly UnixResolverOptions DEFAULT_OPTIONS;
 
-    // CLR: the static initializer is the static constructor; the static field initializers (including DATAGRAM_DECODER,
-    // DATAGRAM_ENCODER and RELEASE_LISTENER below) run before it, which no initializer depends on. The Windows host name
-    // of InetAddress.getLocalHost().getHostName() ("retrieving the name of the host from the system", and getHostName()
-    // returns the name the InetAddress "was created with",
-    // https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/InetAddress.html) is Dns.GetHostName(), which
-    // "Gets the host name of the local computer"
-    // (https://learn.microsoft.com/en-us/dotnet/api/system.net.dns.gethostname?view=net-10.0). On Windows the search
-    // domains come from getSearchDomainsHack(), whose reflective sun.net.dns.ResolverConfiguration branch only runs on
-    // Java 8 (javaVersion() < 9) and is not ported, so it returns an empty list as it does on Java 9 and later (see
-    // GetSearchDomainsHack). Arrays.toString(array) is "equal to ... Arrays.asList(a).toString()"
+    // CLR: the static initializer is the static constructor; the static field initializers (including
+    // DATAGRAM_DECODER, DATAGRAM_ENCODER and RELEASE_LISTENER below) run before it, which no initializer depends
+    // on. The Windows host name of InetAddress.getLocalHost().getHostName() ("retrieving the name of the host from
+    // the system", and getHostName() returns the name the InetAddress "was created with",
+    // https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/InetAddress.html) is
+    // Dns.GetHostName(), which "Gets the host name of the local computer"
+    // (https://learn.microsoft.com/en-us/dotnet/api/system.net.dns.gethostname?view=net-10.0). On Windows the
+    // search domains come from getSearchDomainsHack(), whose reflective sun.net.dns.ResolverConfiguration branch
+    // only runs on Java 8 (javaVersion() < 9) and is not ported, so it returns an empty list as it does on Java 9
+    // and later (see GetSearchDomainsHack). Arrays.toString(array) is "equal to... Arrays.asList(a).toString()"
     // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Arrays.html), the "[a, b]" text of
     // ArraysToString.
     static DnsNameResolver()
@@ -258,7 +230,6 @@ public class DnsNameResolver : InetNameResolver
 
     private static readonly DatagramDnsResponseDecoder DATAGRAM_DECODER = new DatagramDecoder();
 
-    // CLR: the anonymous DatagramDnsResponseDecoder of DATAGRAM_DECODER; [Sharable] is inherited (Inherited = true).
     private sealed class DatagramDecoder : DatagramDnsResponseDecoder
     {
         protected override IDnsResponse DecodeResponse(IChannelHandlerContext ctx, DatagramPacket packet)
@@ -339,13 +310,11 @@ public class DnsNameResolver : InetNameResolver
     // CLR: the scheduler of every listener of this resolver (see the class comment).
     private readonly EventExecutorTaskScheduler listenerScheduler;
 
-    // CLR: the package-private constructor is internal (DnsNameResolverBuilder and the tests of the package call it). The
-    // two public constructors are @Deprecated with "Use {@link DnsNameResolverBuilder}" and are not ported (owner
-    // decision 2026-11-16); their comments are recorded in the manifest. The ResolvedAddressTypes enum cannot be null,
-    // so "resolvedAddressTypes != null ?" has no counterpart. TimeUnit.SECONDS.toMillis(s) is s * 1000.
-    // searchDomains.clone() is Array.Clone (a shallow copy, like the JDK array clone). Bootstrap.group(EventLoop) takes
-    // the IEventLoop, which is an IEventLoopGroup (Transport); channelFactory(...)/attr(...)/option(...)/handler(...) are
-    // the Bootstrap methods of the same names.
+    // CLR: The two public constructors are @Deprecated with "Use {@link DnsNameResolverBuilder}" and are not
+    // ported; their comments are recorded in the manifest. The ResolvedAddressTypes enum cannot be null, so
+    // "resolvedAddressTypes != null ?" has no counterpart. Bootstrap.group(EventLoop) takes the IEventLoop, which
+    // is an IEventLoopGroup (Transport); channelFactory(...)/attr(...)/option(...)/handler(...) are the Bootstrap
+    // methods of the same names.
     internal DnsNameResolver(
             IEventLoop eventLoop,
             Func<IDatagramChannel> channelFactory,
@@ -487,7 +456,6 @@ public class DnsNameResolver : InetNameResolver
         this.resolveChannelProvider = NewProvider(datagramChannelStrategy, bootstrap, localAddress, listenerScheduler);
     }
 
-    // CLR: the anonymous ChannelInitializer<DatagramChannel> of the datagram bootstrap.
     private sealed class DatagramChannelInitializer : ChannelInitializer<IDatagramChannel>
     {
         private readonly int maxPayloadSize;
@@ -1086,8 +1054,7 @@ public class DnsNameResolver : InetNameResolver
         return e;
     }
 
-    // CLR: Iterable<DnsRecord> is IEnumerable<IDnsRecord> and instanceof Collection is ICollection<IDnsRecord>;
-    // toArray(new DnsRecord[size]) is CopyTo.
+    // CLR: Iterable<DnsRecord> is IEnumerable<IDnsRecord> and instanceof Collection is ICollection<IDnsRecord>.
     private static IDnsRecord[] ToArray(IEnumerable<IDnsRecord> additionals, bool validateType)
     {
         ObjectUtil.CheckNotNull(additionals, "additionals");
@@ -1257,8 +1224,8 @@ public class DnsNameResolver : InetNameResolver
     }
 
     // CLR: Class<? extends InetAddress> is the AddressFamily of the address (Inet4Address.class InterNetwork,
-    // Inet6Address.class InterNetworkV6), the mapping infra's NameServerComparator takes (docs/handler-porting.md,
-    // Addresses); isInstance(address) is an AddressFamily comparison and the null Class a null AddressFamily?.
+    // Inet6Address.class InterNetworkV6), the mapping infra's NameServerComparator takes; isInstance(address) is
+    // an AddressFamily comparison and the null Class a null AddressFamily?.
     internal static AddressFamily? AddressType(SocketProtocolFamily f)
     {
         switch (f)
@@ -1330,7 +1297,7 @@ public class DnsNameResolver : InetNameResolver
      * instead of using the global one.
      */
     // CLR: the hook that completes the caller's Promise returns the Task of the promise it creates (see
-    // DoResolveAsync); Collections.singletonList is a read-only one-element list.
+    // DoResolveAsync).
     protected virtual Task<IReadOnlyList<IPAddress>> DoResolveAllAsync(string inetHost,
                                 IDnsRecord[] additionals,
                                 IDnsCache resolveCache,
@@ -1618,7 +1585,7 @@ public class DnsNameResolver : InetNameResolver
      * These methods can be used on the {@link Future#cause()} that is returned by the various methods exposed by this
      * {@link DnsNameResolver}.
      */
-    // CLR: getCause() is InnerException; the cause of a faulted Task is its exception (Cause(Task)).
+    // CLR: The cause of a faulted Task is its exception (Cause(Task)).
     public static bool IsTransportOrTimeoutError(Exception cause)
     {
         return cause != null && cause.InnerException is DnsNameResolverException;
@@ -1634,9 +1601,9 @@ public class DnsNameResolver : InetNameResolver
         return cause != null && cause.InnerException is DnsNameResolverTimeoutException;
     }
 
-    // CLR: the Future returned is the promise itself (castPromise), so the promise is returned; the unchecked cast(...)
-    // between the Promise<AddressedEnvelope<? extends DnsResponse, ...>> and Promise<AddressedEnvelope<DnsResponse, ...>>
-    // views has no counterpart (one TaskCompletionSource type).
+    // CLR: the Future returned is the promise itself (castPromise), so the promise is returned; the unchecked
+    // cast(...) between the Promise<AddressedEnvelope<? extends DnsResponse,...>> and
+    // Promise<AddressedEnvelope<DnsResponse,...>> views has no counterpart (one TaskCompletionSource type).
     internal TaskCompletionSource<IAddressedEnvelope<IDnsResponse, IPEndPoint>> DoQuery(
             IChannel channel,
             IPEndPoint nameServerAddr, IDnsQuestion question,
@@ -1830,7 +1797,7 @@ public class DnsNameResolver : InetNameResolver
         return "[" + string.Join(", ", a.Select(e => e == null ? "null" : e.ToString())) + "]";
     }
 
-    // CLR: the inbound handler casts msg to DatagramDnsResponse; sender() is the Sender of the envelope.
+    // CLR: the inbound handler casts msg to DatagramDnsResponse.
     private sealed class DnsResponseHandler : ChannelInboundHandlerAdapter
     {
 
@@ -1883,8 +1850,6 @@ public class DnsNameResolver : InetNameResolver
         }
     }
 
-    // CLR: the private interface takes the I prefix; ChannelFuture is Task<IChannel> and the generic
-    // <T> nextResolveChannel(Future<T>) takes the Task of the resolution (its result type is not read).
     private interface IDnsResolveChannelProvider
     {
 

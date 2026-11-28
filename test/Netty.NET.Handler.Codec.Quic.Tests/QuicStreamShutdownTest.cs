@@ -26,11 +26,10 @@ using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Handler.Codec.Quic.Tests;
 
-// CLR: @ParameterizedTest @MethodSource("newSslTaskExecutors") is a theory over AbstractQuicTest.NewSslTaskExecutors().
-// A ChannelFutureListener is a continuation of the write Task (Task.Exception is its cause), shutdownInput().sync() is
-// await ShutdownInputAsync(); CountDownLatch is CountdownEvent, counted down at most to zero as Java's latch is
-// (CountDown); AtomicReference/AtomicLong are Interlocked fields; fail(message, cause) is Assert.Fail with the cause's
-// text. The decoder's anonymous ByteToMessageDecoder is the private FourBytesDecoder.
+// CLR: A ChannelFutureListener is a continuation of the write Task (Task.Exception is its cause),
+// shutdownInput().sync() is await ShutdownInputAsync(); CountDownLatch is CountdownEvent, counted down at most to
+// zero as Java's latch is (CountDown); AtomicReference/AtomicLong are Interlocked fields. The decoder's anonymous
+// ByteToMessageDecoder is the private FourBytesDecoder.
 public class QuicStreamShutdownTest : AbstractQuicTest
 {
 

@@ -26,14 +26,13 @@ namespace Netty.NET.Handler.Codec.Http.Multipart;
 /**
  * Disk implementation of Attributes
  */
-// CLR: the public static fields keep their Java names (baseDirectory and deleteOnExitTemporaryFile stay mutable static
-// fields; the static final prefix/postfix are constants). Charset is Encoding; String.getBytes(Charset) is
-// Encoding.GetBytes and new String(bytes, charset) Encoding.GetString. hashCode()/equals(Object)/toString() are
-// GetHashCode()/Equals(object)/ToString(); String.equalsIgnoreCase/compareToIgnoreCase are string.Equals/string.Compare
-// with StringComparison.OrdinalIgnoreCase, and ClassCastException is InvalidCastException (as MemoryAttribute). The
-// IOException text of toString() is Throwable.toString() (Common's ThrowableUtil.ThrowableToString).
-// getBaseDirectory() and deleteOnExit() are protected internal overrides (see AbstractDiskHttpData); the narrowed
-// copy/duplicate/retainedDuplicate/replace/retain/touch members are covariant override returns.
+// CLR: the public static fields keep their Java names (baseDirectory and deleteOnExitTemporaryFile stay mutable
+// static fields; the static final prefix/postfix are constants). String.equalsIgnoreCase/compareToIgnoreCase are
+// string.Equals/string.Compare with StringComparison.OrdinalIgnoreCase, and ClassCastException is
+// InvalidCastException (as MemoryAttribute). The IOException text of toString() is Throwable.toString() (Common's
+// ThrowableUtil.ThrowableToString). getBaseDirectory() and deleteOnExit() are protected internal overrides (see
+// AbstractDiskHttpData); the narrowed copy/duplicate/retainedDuplicate/replace/retain/touch members are covariant
+// override returns.
 public class DiskAttribute : AbstractDiskHttpData, IAttribute
 {
     public static string baseDirectory;

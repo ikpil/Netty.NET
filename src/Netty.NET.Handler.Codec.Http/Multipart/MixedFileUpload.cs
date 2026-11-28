@@ -22,9 +22,8 @@ namespace Netty.NET.Handler.Codec.Http.Multipart;
 /**
  * Mixed implementation using both in Memory and in File with a limit of size
  */
-// CLR: Charset is Encoding. The package-private makeDiskData() is the internal override of
-// AbstractMixedHttpData.MakeDiskData. The overrides "for binary compatibility" are kept as overrides of the
-// AbstractMixedHttpData<IFileUpload> members, which already return IFileUpload.
+// CLR: The overrides "for binary compatibility" are kept as overrides of the AbstractMixedHttpData<IFileUpload>
+// members, which already return IFileUpload.
 public class MixedFileUpload : AbstractMixedHttpData<IFileUpload>, IFileUpload
 {
 

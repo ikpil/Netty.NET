@@ -30,24 +30,21 @@ namespace Netty.NET.Resolver.Dns;
  *
  * @param <E>
  */
-// CLR: ConcurrentMap<String, Entries> is ConcurrentDictionary<string, Entries>; ConcurrentMap.remove(key, value) is
-// TryRemove(KeyValuePair), which removes the entry only when "both the specified key and value" match
+// CLR: ConcurrentMap<String, Entries> is ConcurrentDictionary<string, Entries>; ConcurrentMap.remove(key, value)
+// is TryRemove(KeyValuePair), which removes the entry only when "both the specified key and value" match
 // (https://learn.microsoft.com/en-us/dotnet/api/system.collections.concurrent.concurrentdictionary-2.tryremove?view=net-10.0);
-// putIfAbsent is GetOrAdd. List<? extends E> is IReadOnlyList<E>: emptyList() is Array.Empty, singletonList(e) a
-// one-element read-only collection and Collections.unmodifiableList a List.AsReadOnly() view. The cached values are
-// reference types (E : class) because the source tests them against null. EventLoop is the Transport IEventLoop.
+// putIfAbsent is GetOrAdd. The cached values are reference types (E : class) because the source tests them against
+// null. EventLoop is the Transport IEventLoop.
 internal abstract class Cache<E> where E : class
 {
-    // CLR: FUTURE_UPDATER (an AtomicReferenceFieldUpdater over Entries.expirationFuture) is Interlocked.CompareExchange
-    // and Interlocked.Exchange on that field and Volatile.Read for get (docs/handler-porting.md and
-    // docs/transport-porting.md record Atomic*FieldUpdater and AtomicReference as Interlocked on the field).
+    // CLR: FUTURE_UPDATER (an AtomicReferenceFieldUpdater over Entries.expirationFuture) is
+    // Interlocked.CompareExchange and Interlocked.Exchange on that field and Volatile.Read for get.
 
     // CLR: the anonymous ScheduledFuture is the named CancelledScheduledFuture (see ScheduledFuture below).
     private static readonly ScheduledFuture CANCELLED = new CancelledScheduledFuture();
 
     // Two years are supported by all our EventLoop implementations and so safe to use as maximum.
     // See also: https://github.com/netty/netty/commit/b47fb817991b42ec8808c7d26538f3f2464e1fa6
-    // CLR: (int) TimeUnit.DAYS.toSeconds(365 * 2) is the constant 365 * 2 days in seconds.
     internal const int MAX_SUPPORTED_TTL_SECS = 365 * 2 * 24 * 60 * 60;
 
     private readonly ConcurrentDictionary<string, Entries> resolveCache = new ConcurrentDictionary<string, Entries>();
@@ -91,8 +88,8 @@ internal abstract class Cache<E> where E : class
     /**
      * Cache a value for the given hostname that will automatically expire once the TTL is reached.
      */
-    // CLR: cache(...) is Cache_, because a member cannot have the name of its enclosing type (CS0542); the owner rule
-    // for such clashes (CS0102) is a trailing underscore (docs/codec-http-porting.md, Name clashes).
+    // CLR: cache(...) is Cache_, because a member cannot have the name of its enclosing type (CS0542); the owner
+    // rule for such clashes (CS0102) is a trailing underscore.
     internal void Cache_(string hostname, E value, int ttl, IEventLoop loop)
     {
         resolveCache.TryGetValue(hostname, out Entries entries);

@@ -23,9 +23,9 @@ namespace Netty.NET.Resolver.Dns;
 
 // CLR: List<? extends InetSocketAddress> is the covariant IReadOnlyList<EndPoint> and Collection<? extends
 // InetSocketAddress> IReadOnlyCollection<EndPoint>. The covariant duplicate() return is the public
-// SequentialDnsServerAddressStream Duplicate() with an explicit IDnsServerAddressStream.Duplicate(), because C# covariant
-// returns cover class overrides only (docs/transport-porting.md). The method-local i shadows the field as in the
-// source (this.i). An address prints as EndPoint.ToString() and the index with the invariant culture.
+// SequentialDnsServerAddressStream Duplicate() with an explicit IDnsServerAddressStream.Duplicate(), because C#
+// covariant returns cover class overrides only. The method-local i shadows the field as in the source (this.i). An
+// address prints as EndPoint.ToString() and the index with the invariant culture.
 internal sealed class SequentialDnsServerAddressStream : IDnsServerAddressStream
 {
 

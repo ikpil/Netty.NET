@@ -23,8 +23,7 @@ namespace Netty.NET.Example.Http.Upload;
 /**
  * Handler that just dumps the contents of the response from the server
  */
-// CLR: HttpObject/HttpResponse/HttpContent/LastHttpContent are the I-prefixed codec-http interfaces; names() is a set of
-// strings and getAll(name) a list of strings. CharsetUtil.UTF_8 is Encoding.UTF8 and content() is the Content property.
+// CLR: HttpObject/HttpResponse/HttpContent/LastHttpContent are the I-prefixed codec-http interfaces.
 // System.err.println is Console.Error.WriteLine, printStackTrace() writes the exception to Console.Error and
 // ctx.channel().close() is CloseAsync(), whose Task is discarded as Java discards the future.
 public class HttpUploadClientHandler : SimpleChannelInboundHandler<IHttpObject>

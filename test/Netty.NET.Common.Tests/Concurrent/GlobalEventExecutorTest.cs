@@ -167,8 +167,8 @@ public class GlobalEventExecutorTest
         Assert.IsAssignableFrom<NotSupportedException>(cause);
 
         string before = cause.StackTrace;
-        // CLR: a StackTraceElement maps to one "   at " frame line of Exception.StackTrace; the CLR
-        // may append its "--- End of stack trace from previous location ---" separator line.
+        // CLR: a StackTraceElement maps to one " at " frame line of Exception.StackTrace; the CLR may append its
+        // "--- End of stack trace from previous location ---" separator line.
         string[] frames = Array.FindAll(before.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries),
             line => line.TrimStart().StartsWith("at ", StringComparison.Ordinal));
         Assert.Single(frames);

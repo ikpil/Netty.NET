@@ -67,18 +67,18 @@ namespace Netty.NET.Handler.Ssl.Util;
  * </pre>
  * </p>
  */
-// CLR: TrustManagerFactory/TrustManager map to X509ChainPolicy or a RemoteCertificateValidationCallback (owner decision
-// 2026-11-24, docs/handler-ssl-design.md); a fingerprint check cannot be expressed as a chain policy, so the trust
-// manager is a callback (the .NET TLS best-practices page implements certificate pinning as a validation callback,
-// https://learn.microsoft.com/en-us/dotnet/core/extensions/sslstream-best-practices). The class does not derive from the
-// JCA SPI helper SimpleTrustManagerFactory (jvm-only-replaced): engineGetTrustManagers() is internal (protected members
-// of a sealed class have no subclass) and returns that callback, and an implicit conversion to
+// CLR: TrustManagerFactory/TrustManager map to X509ChainPolicy or a RemoteCertificateValidationCallback; a
+// fingerprint check cannot be expressed as a chain policy, so the trust manager is a callback (the.NET TLS
+// best-practices page implements certificate pinning as a validation callback,
+// https://learn.microsoft.com/en-us/dotnet/core/extensions/sslstream-best-practices). The class does not derive
+// from the JCA SPI helper SimpleTrustManagerFactory (jvm-only-replaced): engineGetTrustManagers() is internal
+// (protected members of a sealed class have no subclass) and returns that callback, and an implicit conversion to
 // RemoteCertificateValidationCallback keeps the Java call site SslContextBuilder.trustManager(factory) working
 // (SslContextBuilder.TrustManager(RemoteCertificateValidationCallback)). engineInit(KeyStore) and
 // engineInit(ManagerFactoryParameters), which do nothing, have no counterpart. java.util.regex.Pattern is Regex:
-// Matcher.matches() matches the whole input, so the pattern is wrapped in \A(?:...)\z (the .NET $ also matches before a
-// final newline, which Java's matches() rejects); replaceAll is Regex.Replace. The three @Deprecated SHA-1 constructors,
-// whose @deprecated text names builder(String), are not ported (owner decision 2026-11-16).
+// Matcher.matches() matches the whole input, so the pattern is wrapped in \A(?:...)\z (the.NET $ also matches
+// before a final newline, which Java's matches() rejects); replaceAll is Regex.Replace. The three @Deprecated
+// SHA-1 constructors, whose @deprecated text names builder(String), are not ported.
 public sealed class FingerprintTrustManagerFactory
 {
 
@@ -171,7 +171,6 @@ public sealed class FingerprintTrustManagerFactory
         tm = new TrustManager(this);
     }
 
-    // CLR: see the constructor comment.
     private static HashAlgorithmName ToHashAlgorithmName(string algorithm)
     {
         string name = algorithm.ToUpperInvariant();
@@ -210,7 +209,7 @@ public sealed class FingerprintTrustManagerFactory
         return list.ToArray();
     }
 
-    // CLR: engineGetTrustManagers() returns the one trust manager; see the class comment.
+    // CLR: engineGetTrustManagers() returns the one trust manager.
     internal RemoteCertificateValidationCallback[] EngineGetTrustManagers()
     {
         return new RemoteCertificateValidationCallback[] { tm.Verify };
@@ -223,18 +222,18 @@ public sealed class FingerprintTrustManagerFactory
         return factory == null ? null : factory.tm.Verify;
     }
 
-    // CLR: the anonymous X509TrustManager is a named nested class. checkClientTrusted/checkServerTrusted keep their
-    // bodies; CertificateException (and CertificateEncodingException) is CryptographicException and getSubjectDN() is
+    // CLR: CertificateException (and CertificateEncodingException) is CryptographicException and getSubjectDN() is
     // X509Certificate.Subject. getAcceptedIssuers() has no callback counterpart. Verify is the
-    // RemoteCertificateValidationCallback: the sender is the authenticating SslStream (measured), whose IsServer tells
-    // whether the peer is a client (checkClientTrusted) or a server (checkServerTrusted; also for a sender that is not
-    // an SslStream), chain[0] is the remote certificate, and a check that fails throws its CryptographicException, which
-    // SslStream passes on to the authenticating caller (measured: AuthenticateAsClientAsync throws the callback's
-    // exception), as the JSSE handshake fails with the trust manager's CertificateException as cause. This trust manager
-    // is a plain X509TrustManager, which JSSE wraps "with AbstractTrustManagerWrapper and add hostname verification by
-    // itself" (InsecureTrustManagerFactory); so a remote certificate that SslStream reports with
-    // RemoteCertificateNameMismatch is rejected (SslContext clears that flag when endpoint identification is disabled).
-    // A missing remote certificate cannot be fingerprinted and is rejected.
+    // RemoteCertificateValidationCallback: the sender is the authenticating SslStream (measured), whose IsServer
+    // tells whether the peer is a client (checkClientTrusted) or a server (checkServerTrusted; also for a sender
+    // that is not an SslStream), chain[0] is the remote certificate, and a check that fails throws its
+    // CryptographicException, which SslStream passes on to the authenticating caller (measured:
+    // AuthenticateAsClientAsync throws the callback's exception), as the JSSE handshake fails with the trust
+    // manager's CertificateException as cause. This trust manager is a plain X509TrustManager, which JSSE wraps
+    // "with AbstractTrustManagerWrapper and add hostname verification by itself" (InsecureTrustManagerFactory); so
+    // a remote certificate that SslStream reports with RemoteCertificateNameMismatch is rejected (SslContext
+    // clears that flag when endpoint identification is disabled). A missing remote certificate cannot be
+    // fingerprinted and is rejected.
     private sealed class TrustManager
     {
         private readonly FingerprintTrustManagerFactory parent;

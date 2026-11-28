@@ -56,8 +56,7 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx;
 /**
  * Decodes a web socket frame from wire protocol version 7 format. V7 is essentially the same as V8.
  */
-// CLR: The constructors chain to WebSocket08FrameDecoder; WebSocketDecoderConfig.newBuilder() and its builder methods
-// are NewBuilder() and the PascalCase builder methods.
+// CLR: The constructors chain to WebSocket08FrameDecoder.
 public class WebSocket07FrameDecoder : WebSocket08FrameDecoder
 {
 

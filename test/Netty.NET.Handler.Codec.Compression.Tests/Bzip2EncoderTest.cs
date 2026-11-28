@@ -23,16 +23,16 @@ using static Netty.NET.Handler.Codec.Compression.Bzip2Constants;
 namespace Netty.NET.Handler.Codec.Compression.Tests;
 
 // CLR: the inherited AbstractEncoderTest tests run for this class (createChannel and decompress are the overrides
-// CreateChannel and Decompress). commons-compress BZip2CompressorInputStream is SharpZipLib's BZip2InputStream(Stream),
-// the independent bzip2 implementation of the C# tests (owner decision 2026-11-23); it reads the block size from the
+// CreateChannel and Decompress). commons-compress BZip2CompressorInputStream is SharpZipLib's
+// BZip2InputStream(Stream), the independent bzip2 implementation of the C# tests; it reads the block size from the
 // stream header ('h' and a digit 1..9) as commons-compress does
 // (https://raw.githubusercontent.com/icsharpcode/SharpZipLib/v1.4.2/src/ICSharpCode.SharpZipLib/BZip2/BZip2InputStream.cs).
-// Its Read(byte[], int, int) returns "zero if the end of the stream is reached" where InputStream.read returns -1, which
-// the loop's read > 0 test covers in both languages, and ReadByte() returns "byte read or -1 on end of stream", so
-// assertEquals(-1, bzip2Is.read()) is Assert.Equal(-1, bzip2Is.ReadByte()). try-with-resources is two using
-// statements; BZip2InputStream disposes the ByteBufInputStream it owns (IsStreamOwner defaults to true) and the Buffer
-// port's ByteBufInputStream releases its buffer only on the first Dispose (src/Netty.NET.Buffer/ByteBufInputStream.cs),
-// as Java closes both streams.
+// Its Read(byte[], int, int) returns "zero if the end of the stream is reached" where InputStream.read returns -1,
+// which the loop's read > 0 test covers in both languages, and ReadByte() returns "byte read or -1 on end of
+// stream", so assertEquals(-1, bzip2Is.read()) is Assert.Equal(-1, bzip2Is.ReadByte()). try-with-resources is two
+// using statements; BZip2InputStream disposes the ByteBufInputStream it owns (IsStreamOwner defaults to true) and
+// the Buffer port's ByteBufInputStream releases its buffer only on the first Dispose
+// (src/Netty.NET.Buffer/ByteBufInputStream.cs), as Java closes both streams.
 public class Bzip2EncoderTest : AbstractEncoderTest
 {
 

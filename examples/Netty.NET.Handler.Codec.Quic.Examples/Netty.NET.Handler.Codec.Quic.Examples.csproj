@@ -1,11 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!--
-    CLR: the QUIC examples of codec-native-quic (src/test/java/io/netty/handler/codec/quic/example, package
-    io.netty.handler.codec.quic.example) are one executable that keeps every example's Main(string[]), as each Java example
-    class has its own main. C# allows several Main methods only with an explicit startup object, so ExampleLauncher
-    (CLR-only, copied from examples/Netty.NET.Example/ExampleLauncher.cs) picks the example by its Java class name and maps
-    -Dname=value arguments to GetProperty (docs/codec-native-quic-porting.md, Examples).
-  -->
+  <!-- ExampleLauncher selects a QUIC example by its Java class name. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net10.0;net11.0</TargetFrameworks>

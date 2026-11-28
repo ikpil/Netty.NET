@@ -502,7 +502,7 @@ public sealed class QuicSslContextBuilder
         }
     }
 
-    // CLR: toArray(Iterable, T[]) of the option entries; the prototype only gave the element type.
+    // CLR: The prototype only gave the element type.
     private static KeyValuePair<SslContextOption, object>[] ToArray(
             IEnumerable<KeyValuePair<SslContextOption, object>> iterable)
     {

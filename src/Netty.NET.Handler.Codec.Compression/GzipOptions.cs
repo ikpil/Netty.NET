@@ -21,10 +21,10 @@ namespace Netty.NET.Handler.Codec.Compression;
  * {@link #memLevel()} and {@link #windowBits()} for Gzip compression.
  * This class is an extension of {@link DeflateOptions}
  */
-// CLR: the final class is sealed; the package-private constructor and DEFAULT are internal (StandardCompressionOptions
-// uses them). DEFAULT hides DeflateOptions.DEFAULT, as the Java static field does, so it carries the new modifier
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/new-modifier). windowBits and memLevel
-// keep their Java meaning; see DeflateOptions for the window and memory settings of the BCL streams.
+// CLR: the final class is sealed. DEFAULT hides DeflateOptions.DEFAULT, as the Java static field does, so it
+// carries the new modifier
+// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/new-modifier). windowBits and
+// memLevel keep their Java meaning; see DeflateOptions for the window and memory settings of the BCL streams.
 public sealed class GzipOptions : DeflateOptions
 {
 

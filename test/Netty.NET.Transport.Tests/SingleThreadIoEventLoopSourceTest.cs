@@ -81,7 +81,6 @@ public class SingleThreadIoEventLoopSourceTest
         }
     }
 
-    // CLR: the anonymous TestIoHandle subclass of the Java method is a nested class.
     private sealed class AnonymousTestIoHandle : TestIoHandle { }
 
     [Fact]
@@ -196,7 +195,6 @@ public class SingleThreadIoEventLoopSourceTest
             return new TestIoRegistration();
         }
 
-        // CLR: the anonymous IoRegistration of register(IoHandle) becomes a nested class.
         private sealed class TestIoRegistration : IIoRegistration
         {
             private readonly AtomicBoolean _canceled = new AtomicBoolean();

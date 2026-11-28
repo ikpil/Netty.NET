@@ -22,9 +22,9 @@ namespace Netty.NET.Handler.Codec.Http2;
 /**
  * ChannelId implementation which is used by our {@link Http2StreamChannel} implementation.
  */
-// CLR: serialVersionUID is JVM serialization metadata and has no counterpart (docs/codec-http-porting.md). The
-// package-private class is internal. The sequence number is appended with the invariant culture, the String.valueOf
-// text of a Java int (Http2CodecUtil.ToJavaString).
+// CLR: serialVersionUID is JVM serialization metadata and has no counterpart. The package-private class is
+// internal. The sequence number is appended with the invariant culture, the String.valueOf text of a Java int
+// (Http2CodecUtil.ToJavaString).
 internal sealed class Http2StreamChannelId : IChannelId
 {
     private readonly int id;

@@ -23,17 +23,15 @@ using static Netty.NET.Handler.Codec.Http3.Tests.Http3TestUtils;
 namespace Netty.NET.Handler.Codec.Http3.Tests;
 
 // CLR: @AfterEach tearDown() is Dispose() (xUnit creates a test class instance per test and disposes it after the
-// test). Hamcrest's assertThat([reason,] actual, is(expected)) is Assert.Equal(expected, actual[, reason]) (is(true)
-// and is(false) are Assert.True/Assert.False with the reason), assertThat(e.getCause(), instanceOf(T.class)) is
-// Assert.IsAssignableFrom<T>(e.InnerException), and assertThrows(T.class, ...) is Assert.ThrowsAny<T>. The QPACK types
-// and members are internal (package-private in Java) and reached through InternalsVisibleTo; the static imports are
-// qualified (Http3.SetQpackAttributes, Http3ErrorCode.QPACK_DECODER_STREAM_ERROR,
-// Http3SettingIdentifier.HTTP3_SETTINGS_QPACK_MAX_TABLE_CAPACITY, QpackUtil.EncodePrefixedInteger), and
-// QpackSensitivityDetector is the interface IQpackSensitivityDetector. Consumer<Http3Headers> is Action<IHttp3Headers>.
-// parent.createStream(...).get() is the result of the completed Task of CreateStreamAsync (GetAwaiter().GetResult());
-// alloc() is Alloc(); getByte(int) returns the unsigned CLR byte, so & 0xFF keeps the same value; Math.toIntExact is a
-// checked conversion. A Java String passed as a CharSequence (new QpackHeaderField("foo", "bar")) is a
-// StringCharSequence (Http3TestUtils.Cs). The throws clauses have no counterpart.
+// test). Hamcrest's assertThat([reason,] actual, is(expected)) is Assert.Equal(expected, actual[, reason])
+// (is(true) and is(false) are Assert.True/Assert.False with the reason), assertThat(e.getCause(),
+// instanceOf(T.class)) is Assert.IsAssignableFrom<T>(e.InnerException), and assertThrows(T.class,...) is
+// Assert.ThrowsAny<T>. The static imports are qualified (Http3.SetQpackAttributes,
+// Http3ErrorCode.QPACK_DECODER_STREAM_ERROR, Http3SettingIdentifier.HTTP3_SETTINGS_QPACK_MAX_TABLE_CAPACITY,
+// QpackUtil.EncodePrefixedInteger), and QpackSensitivityDetector is the interface IQpackSensitivityDetector.
+// Consumer<Http3Headers> is Action<IHttp3Headers>. parent.createStream(...).get() is the result of the completed
+// Task of CreateStreamAsync (GetAwaiter().GetResult()); getByte(int) returns the unsigned CLR byte, so & 0xFF
+// keeps the same value; Math.toIntExact is a checked conversion.
 public class QpackDecoderHandlerTest : IDisposable
 {
     private static readonly QpackHeaderField fooBar = new QpackHeaderField(Cs("foo"), Cs("bar"));

@@ -22,12 +22,9 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Socks.Tests.Socksx.V5;
 
-// CLR: the package-private test class is public (xUnit discovers public classes). Stream.generate(() -> x).limit(n)
-// joined is string.Join/string.Concat over Enumerable.Repeat(x, n); AssertJ
+// CLR: Stream.generate(() -> x).limit(n) joined is string.Join/string.Concat over Enumerable.Repeat(x, n); AssertJ
 // assertThatThrownBy(...).isInstanceOf(C.class).hasMessageContaining(s) is Assert.ThrowsAny<C> and
-// Assert.Contains(s, e.Message); assertThat(s).hasSize(n) is Assert.Equal(n, s.Length). The anonymous
-// Socks5CommandResponse implementations are the named nested class TestCommandResponse with the bndAddr they return;
-// inside it the DecoderResult type is qualified in expressions (see Socks5ClientEncoderTest).
+// Assert.Contains(s, e.Message); assertThat(s).hasSize(n) is Assert.Equal(n, s.Length).
 public class Socks5ServerEncoderTest
 {
     [Fact]
@@ -66,7 +63,6 @@ public class Socks5ServerEncoderTest
         Assert.False(encoder.Finish());
     }
 
-    // CLR: the anonymous Socks5CommandResponse implementations; bndAddr is the value their bndAddr() returns.
     private sealed class TestCommandResponse : ISocks5CommandResponse
     {
         private readonly string bndAddr;

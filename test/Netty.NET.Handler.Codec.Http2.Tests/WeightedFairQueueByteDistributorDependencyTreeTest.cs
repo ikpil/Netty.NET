@@ -83,7 +83,6 @@ public class WeightedFairQueueByteDistributorDependencyTreeTest :
         connection.ForEachActiveStream(new CloseWhileIteratingVisitor(this, streamA, streamB, streamC));
     }
 
-    // CLR: the anonymous Http2StreamVisitor of closeWhileIteratingDoesNotNPE.
     private sealed class CloseWhileIteratingVisitor : IHttp2StreamVisitor
     {
         private readonly WeightedFairQueueByteDistributorDependencyTreeTest test;

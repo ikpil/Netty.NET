@@ -19,12 +19,11 @@ namespace Netty.NET.Handler.Codec.Http2;
  * All error codes identified by the HTTP/2 spec.
  */
 // CLR: a Java enum with a constructor, a field and methods is a sealed class with static readonly instances, as
-// codec-base Base64Dialect and codec-http HttpStatusClass (docs/codec-base-porting.md, docs/codec-http-porting.md):
-// "You can't define a method inside the definition of an enumeration type"
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/enum). ToString() returns the
-// constant name as Enum.toString() does; the implicit values() is the private VALUES array that the static
-// initializer walks (no other caller), and valueOf(String) is not added (no caller). Instances are compared by
-// reference, as Java compares enum constants.
+// codec-base Base64Dialect and codec-http HttpStatusClass : "You can't define a method inside the definition of an
+// enumeration type" (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/enum).
+// ToString() returns the constant name as Enum.toString() does; the implicit values() is the private VALUES array
+// that the static initializer walks (no other caller), and valueOf(String) is not added (no caller). Instances are
+// compared by reference, as Java compares enum constants.
 public sealed class Http2Error
 {
     public static readonly Http2Error NO_ERROR = new Http2Error(nameof(NO_ERROR), 0x0);

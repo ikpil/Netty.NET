@@ -27,13 +27,13 @@ namespace Netty.NET.Resolver.Dns;
  * of randomness.
  * The query id will be between 0 (inclusive) and 65535 (inclusive) as defined by the RFC.
  */
-// CLR: java.security.SecureRandom is RandomNumberGenerator (docs/handler-porting.md, JDK API table): nextInt(bound) is the
-// static RandomNumberGenerator.GetInt32(toExclusive), which uses "a cryptographically strong random number generator"
+// CLR: java.security.SecureRandom is RandomNumberGenerator : nextInt(bound) is the static
+// RandomNumberGenerator.GetInt32(toExclusive), which uses "a cryptographically strong random number generator"
 // (https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography.randomnumbergenerator.getint32?view=net-10.0),
-// and nextBoolean() is GetInt32(2) != 0. The static generator needs no instance, so the shared SecureRandom field and the
-// random parameters of newBucket and DnsQueryIdRange have no counterpart. In nextId() the locals bucket and id after the
-// loop are newBucket and nextId, because C# rejects a local that a nested scope of the same method also declares
-// (CS0136, docs/codec-compression-porting.md). Java assert is Debug.Assert and
+// and nextBoolean() is GetInt32(2) != 0. The static generator needs no instance, so the shared SecureRandom field
+// and the random parameters of newBucket and DnsQueryIdRange have no counterpart. In nextId() the locals bucket
+// and id after the loop are newBucket and nextId, because C# rejects a local that a nested scope of the same
+// method also declares (CS0136, docs/codec-compression-porting.md). Java assert is Debug.Assert and
 // IllegalArgumentException/IllegalStateException are ArgumentException/InvalidOperationException.
 internal sealed class DnsQueryIdSpace
 {

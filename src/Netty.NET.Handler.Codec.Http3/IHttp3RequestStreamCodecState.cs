@@ -21,9 +21,8 @@ namespace Netty.NET.Handler.Codec.Http3;
  * href="https://quicwg.org/base-drafts/draft-ietf-quic-http.html#name-http-message-exchanges">
  * HTTP message exchange semantics</a>
  */
-// CLR: the package-private interface is an internal interface with the I prefix (docs/codec-http2-porting.md, Shared CLR
-// adaptations). The interface constant NO_STATE is a static readonly interface field and its anonymous class is the
-// private nested class NoState, as codec-http2's IHttp2HeadersEncoder.NEVER_SENSITIVE.
+// CLR: The interface constant NO_STATE is a static readonly interface field and its anonymous class is the private
+// nested class NoState, as codec-http2's IHttp2HeadersEncoder.NEVER_SENSITIVE.
 internal interface IHttp3RequestStreamCodecState
 {
     /**
@@ -31,7 +30,6 @@ internal interface IHttp3RequestStreamCodecState
      */
     static readonly IHttp3RequestStreamCodecState NO_STATE = new NoState();
 
-    // CLR: the anonymous Http3RequestStreamCodecState of NO_STATE.
     private sealed class NoState : IHttp3RequestStreamCodecState
     {
         public bool Started()

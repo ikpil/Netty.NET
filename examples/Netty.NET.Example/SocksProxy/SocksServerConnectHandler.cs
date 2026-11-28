@@ -28,12 +28,12 @@ namespace Netty.NET.Example.SocksProxy;
 
 // CLR: @ChannelHandler.Sharable is the [Sharable] attribute, and channelRead0 is protected as the abstract
 // SimpleChannelInboundHandler.ChannelRead0 it overrides (an override cannot change the accessibility). The Java
-// interfaces SocksMessage, Socks4CommandRequest and Socks5CommandRequest are ISocksMessage, ISocks4CommandRequest and
-// ISocks5CommandRequest. ctx.executor().newPromise() is a TaskCompletionSource<IChannel> that runs its continuations
-// asynchronously, and promise.addListener((FutureListener<Channel>) ...) is a continuation of its Task on the context's
-// event loop (EventExecutorTaskScheduler, the timing of DefaultPromise.notifyListeners()); future.getNow() is the
-// channel when the Task succeeded and null otherwise. The listeners added to ChannelFutures are continuations of the
-// operation Tasks on the event loop of the channel they belong to; future.isSuccess() is IsCompletedSuccessfully.
+// interfaces SocksMessage, Socks4CommandRequest and Socks5CommandRequest are ISocksMessage, ISocks4CommandRequest
+// and ISocks5CommandRequest. ctx.executor().newPromise() is a TaskCompletionSource<IChannel> that runs its
+// continuations asynchronously, and promise.addListener((FutureListener<Channel>)...) is a continuation of its
+// Task on the context's event loop (EventExecutorTaskScheduler, the timing of DefaultPromise.notifyListeners());
+// future.getNow() is the channel when the Task succeeded and null otherwise. The listeners added to ChannelFutures
+// are continuations of the operation Tasks on the event loop of the channel they belong to.
 // SocksServerConnectHandler.this is this, NioSocketChannel.class is Channel<NioSocketChannel>(), and writeAndFlush
 // discards its Task where Java discards the future.
 [Sharable]

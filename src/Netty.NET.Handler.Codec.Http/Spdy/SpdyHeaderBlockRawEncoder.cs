@@ -23,11 +23,8 @@ using static Netty.NET.Handler.Codec.Spdy.SpdyCodecUtil;
 
 namespace Netty.NET.Handler.Codec.Spdy;
 
-// CLR: Set<CharSequence> is ISet<ICharSequence> (the codec-base IHeaders.Names()). ByteBufUtil.writeAscii(ByteBuf,
-// CharSequence) is ByteBufUtil.WriteAscii over the text of the ICharSequence, which writes AsciiString.c2b per char as
-// Java does (the Buffer port has span and AsciiString overloads only). writerIndex(int) is the WriterIndex setter.
-// IllegalArgumentException is ArgumentException (docs/codec-base-porting.md). Encode is public as in Java (see
-// SpdyHeaderBlockEncoder); end() stays internal.
+// CLR: IllegalArgumentException is ArgumentException. Encode is public as in Java (see SpdyHeaderBlockEncoder);
+// end() stays internal.
 public class SpdyHeaderBlockRawEncoder : SpdyHeaderBlockEncoder
 {
 

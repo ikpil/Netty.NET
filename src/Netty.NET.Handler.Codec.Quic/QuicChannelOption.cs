@@ -49,8 +49,7 @@ public static class QuicChannelOption
      * Use <a href="https://blog.cloudflare.com/accelerating-udp-packet-transmission-for-quic/">GSO</a>
      * for QUIC packets if possible.
      */
-    // CLR: SEGMENTED_DATAGRAM_PACKET_ALLOCATOR is a ChannelOption<SegmentedDatagramPacketAllocator>; that type belongs to
-    // the datagram writes of the quiche codec, which msquic performs itself, so SegmentedDatagramPacketAllocator is
-    // recorded jvm-only-replaced in stage 2 and the option has no counterpart (docs/codec-classes-quic-porting.md,
-    // Stage 2).
+    // CLR: SEGMENTED_DATAGRAM_PACKET_ALLOCATOR is a ChannelOption<SegmentedDatagramPacketAllocator>; that type
+    // belongs to the datagram writes of the quiche codec, which msquic performs itself, so
+    // SegmentedDatagramPacketAllocator is recorded jvm-only-replaced in stage 2 and the option has no counterpart.
 }

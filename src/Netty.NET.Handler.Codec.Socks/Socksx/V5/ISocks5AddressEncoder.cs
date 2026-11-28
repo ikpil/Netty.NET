@@ -27,15 +27,13 @@ namespace Netty.NET.Handler.Codec.Socksx.V5;
  * @see Socks5ClientEncoder
  * @see Socks5ServerEncoder
  */
-// CLR: Java interfaces take the I prefix; the interface constant DEFAULT is a static readonly field and its anonymous
-// class the nested DefaultSocks5AddressEncoder (see ISocks5AddressDecoder). throws Exception has no counterpart;
-// CharsetUtil.US_ASCII is Encoding.ASCII and numbers in messages use the invariant culture.
+// CLR: The interface constant DEFAULT is a static readonly field and its anonymous class the nested
+// DefaultSocks5AddressEncoder (see ISocks5AddressDecoder). throws Exception has no counterpart.
 public interface ISocks5AddressEncoder
 {
 
     public static readonly ISocks5AddressEncoder DEFAULT = new DefaultSocks5AddressEncoder();
 
-    // CLR: the anonymous DEFAULT class.
     private sealed class DefaultSocks5AddressEncoder : ISocks5AddressEncoder
     {
         public void EncodeAddress(Socks5AddressType addrType, string addrValue, ByteBuf @out)

@@ -29,13 +29,13 @@ using Netty.NET.Transport.Channels.Sockets;
 namespace Netty.NET.Handler.Codec.Quic.Example;
 
 // CLR: main is the async Main of ExampleLauncher (CLR-only); bind(0).sync().channel(), connect().get(),
-// createStream(...).sync().getNow(), closeFuture().sync() and close().sync() are awaits, and group.shutdownGracefully()
-// is ShutdownGracefullyAsync() with the Task discarded. NioDatagramChannel.class is Channel<QuicEndpointChannel>(): msquic
-// owns the UDP socket, so the codec runs on the QuicEndpointChannel that takes the datagram channel's place (owner
-// decision 2026-11-27, docs/codec-classes-quic-porting.md, Stage 2), and QuicChannel.newBootstrap(channel) is
-// IQuicChannel.NewBootstrap(channel). InsecureTrustManagerFactory.INSTANCE is the RemoteCertificateValidationCallback of
-// the handler port, maxIdleTimeout(5000, MILLISECONDS) takes a TimeSpan, the anonymous handlers are the private nested
-// classes below and QuicStreamChannel.SHUTDOWN_OUTPUT is a continuation that calls ShutdownOutputAsync(). System.err is
+// createStream(...).sync().getNow(), closeFuture().sync() and close().sync() are awaits, and
+// group.shutdownGracefully() is ShutdownGracefullyAsync() with the Task discarded. NioDatagramChannel.class is
+// Channel<QuicEndpointChannel>(): msquic owns the UDP socket, so the codec runs on the QuicEndpointChannel that
+// takes the datagram channel's place, and QuicChannel.newBootstrap(channel) is IQuicChannel.NewBootstrap(channel).
+// InsecureTrustManagerFactory.INSTANCE is the RemoteCertificateValidationCallback of the handler port,
+// maxIdleTimeout(5000, MILLISECONDS) takes a TimeSpan, the anonymous handlers are the private nested classes below
+// and QuicStreamChannel.SHUTDOWN_OUTPUT is a continuation that calls ShutdownOutputAsync(). System.err is
 // Console.Error and CharsetUtil.US_ASCII Encoding.ASCII. close(true, 0, reason) is CloseAsync(true, 0, reason):
 // System.Net.Quic sends no reason phrase, so the reason buffer is released unused.
 public sealed class QuicClientExample

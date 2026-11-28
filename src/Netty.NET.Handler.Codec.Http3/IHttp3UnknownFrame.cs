@@ -29,12 +29,11 @@ namespace Netty.NET.Handler.Codec.Http3;
  *    }
  * </pre>
  */
-// CLR: the interface takes the I prefix (docs/codec-http2-porting.md, Shared CLR adaptations). ByteBufHolder is
-// IByteBufHolder, whose content() is the read-only Content property (docs/buffer-porting.md). copy(), duplicate(),
-// retainedDuplicate(), replace(ByteBuf), retain(), retain(int), touch() and touch(Object) are re-declared only to narrow
-// the return type, so they are inherited from IByteBufHolder, not repeated; an implementation narrows them with
-// covariant overrides (owner decision 2026-11-19; docs/transport-porting.md, Decisions), as codec-http2's
-// IHttp2UnknownFrame. The default method length() is a default interface member.
+// CLR: the interface takes the I prefix. ByteBufHolder is IByteBufHolder, whose content() is the read-only Content
+// property. copy(), duplicate(), retainedDuplicate(), replace(ByteBuf), retain(), retain(int), touch() and
+// touch(Object) are re-declared only to narrow the return type, so they are inherited from IByteBufHolder, not
+// repeated; an implementation narrows them with covariant overrides, as codec-http2's IHttp2UnknownFrame. The
+// default method length() is a default interface member.
 public interface IHttp3UnknownFrame :
         IHttp3RequestStreamFrame, IHttp3PushStreamFrame, IHttp3ControlStreamFrame, IByteBufHolder
 {

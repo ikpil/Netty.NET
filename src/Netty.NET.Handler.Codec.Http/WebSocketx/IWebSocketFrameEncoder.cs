@@ -23,8 +23,6 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx;
  *
  * This makes it easier to access the added encoder later in the {@link ChannelPipeline}.
  */
-// CLR: the Java interface takes the I prefix (owner rule); ChannelOutboundHandler is the Transport's
-// IChannelOutboundHandler.
 public interface IWebSocketFrameEncoder : IChannelOutboundHandler
 {
 }

@@ -22,18 +22,18 @@ namespace Netty.NET.Handler.Codec.Compression;
  * {@link BrotliOptions} holds {@link Encoder.Parameters} for
  * Brotli compression.
  */
-// CLR: brotli4j's Encoder.Parameters has no counterpart (owner decision 2026-11-23: brotli4j is not ported), so the
-// options hold the three values that Netty puts into it: the quality, the window and the mode. The BCL
-// System.IO.Compression.BrotliEncoder that BrotliEncoder uses is created from the quality ("0 is the minimum (no
-// compression), 11 is the maximum") and the window ("The minimum value is 10, and the maximum value is 24")
-// (https://learn.microsoft.com/en-us/dotnet/api/system.io.compression.brotliencoder.-ctor?view=net-10.0); it has no
-// mode parameter, so the mode is kept but not used (see BrotliMode). The public parameters() accessor only returns the
-// brotli4j type and is not ported; the encoder reads the internal fields. The package-private constructor
-// BrotliOptions(Encoder.Parameters) is the internal constructor BrotliOptions(int quality, int window, BrotliMode mode),
-// which StandardCompressionOptions calls with the values it validated, as it calls setQuality/setWindow/setMode in Java.
-// BrotliMode is a C# enum and cannot be null, so checkNotNull(parameters, "Parameters") has no counterpart. The
-// IllegalStateException of an unavailable Brotli is InvalidOperationException (docs/codec-base-porting.md); it is never
-// thrown, because Brotli.IsAvailable() is always true.
+// CLR: brotli4j's Encoder.Parameters has no counterpart, so the options hold the three values that Netty puts into
+// it: the quality, the window and the mode. The BCL System.IO.Compression.BrotliEncoder that BrotliEncoder uses is
+// created from the quality ("0 is the minimum (no compression), 11 is the maximum") and the window ("The minimum
+// value is 10, and the maximum value is 24")
+// (https://learn.microsoft.com/en-us/dotnet/api/system.io.compression.brotliencoder.-ctor?view=net-10.0); it has
+// no mode parameter, so the mode is kept but not used (see BrotliMode). The public parameters() accessor only
+// returns the brotli4j type and is not ported; the encoder reads the internal fields. The package-private
+// constructor BrotliOptions(Encoder.Parameters) is the internal constructor BrotliOptions(int quality, int window,
+// BrotliMode mode), which StandardCompressionOptions calls with the values it validated, as it calls
+// setQuality/setWindow/setMode in Java. BrotliMode is a C# enum and cannot be null, so checkNotNull(parameters,
+// "Parameters") has no counterpart. The IllegalStateException of an unavailable Brotli is
+// InvalidOperationException; it is never thrown, because Brotli.IsAvailable() is always true.
 public sealed class BrotliOptions : ICompressionOptions
 {
 

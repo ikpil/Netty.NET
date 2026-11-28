@@ -61,9 +61,9 @@ namespace Netty.NET.Handler.Ssl;
  */
 // CLR: SSLException is AuthenticationException (ssl design decision 3, docs/handler-ssl-design.md), so
 // exceptionCaught(...) checks a DecoderException whose InnerException is an AuthenticationException. Throwable is
-// Exception and IllegalStateException is InvalidOperationException (docs/codec-base-porting.md); ctx.close() discards the
-// Task of CloseAsync(); RecyclableArrayList is the Common port, whose recycle() is Recycle(). The checked
-// "throws Exception" clauses have no counterpart.
+// Exception and IllegalStateException is InvalidOperationException; ctx.close() discards the Task of CloseAsync();
+// RecyclableArrayList is the Common port, whose recycle() is Recycle(). The checked "throws Exception" clauses
+// have no counterpart.
 public abstract class ApplicationProtocolNegotiationHandler : ChannelInboundHandlerAdapter
 {
 

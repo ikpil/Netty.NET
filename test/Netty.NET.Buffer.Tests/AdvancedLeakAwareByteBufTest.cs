@@ -36,14 +36,10 @@ public class AdvancedLeakAwareByteBufTest : SimpleLeakAwareByteBufTest
     {
         NoopResourceLeakTracker<ByteBuf> tracker = new NoopResourceLeakTracker<ByteBuf>();
 
-        // CLR: CharsetUtil.US_ASCII is System.Text.Encoding.ASCII
-        // (https://learn.microsoft.com/en-us/dotnet/api/system.text.encoding.ascii?view=net-10.0).
         ByteBuf buffer = Unpooled.WrappedBuffer(Encoding.ASCII.GetBytes("hello world")).Slice(6, 5);
         ByteBuf leakAwareBuf = Wrap(buffer, tracker);
 
         CompositeByteBuf composite = Unpooled.CompositeBuffer();
-        // CLR: addComponent(boolean increaseWriterIndex, ByteBuf buffer) is
-        // AddComponent(ByteBuf buffer, bool increaseWriterIndex) (src/Netty.NET.Buffer/CompositeByteBuf.cs).
         composite.AddComponent(leakAwareBuf, true);
         byte[] result = new byte[5];
         ByteBuf bb = composite.Component(0);

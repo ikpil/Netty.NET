@@ -23,8 +23,8 @@ using DnsResponseCode = Netty.NET.Handler.Codec.Dns.DnsResponseCode;
 
 namespace Netty.NET.Resolver.Dns;
 
-// CLR: the parameter types follow IDnsQueryLifecycleObserver (EndPoint, Task, IReadOnlyList<EndPoint>, IDnsQuestion,
-// Exception); the package-private singleton is internal.
+// CLR: the parameter types follow IDnsQueryLifecycleObserver (EndPoint, Task, IReadOnlyList<EndPoint>,
+// IDnsQuestion, Exception).
 internal sealed class NoopDnsQueryLifecycleObserver : IDnsQueryLifecycleObserver
 {
     internal static readonly NoopDnsQueryLifecycleObserver INSTANCE = new NoopDnsQueryLifecycleObserver();

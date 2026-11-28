@@ -173,7 +173,6 @@ public class SniClientTest
         }
     }
 
-    // CLR: CachedSelfSignedCertificate.getCachedCertificate(); see the class comment.
     private static readonly Lazy<X509Bundle> CACHED_CERTIFICATE = new Lazy<X509Bundle>(
             () => new CertificateBuilder()
                     .Subject("CN=localhost")

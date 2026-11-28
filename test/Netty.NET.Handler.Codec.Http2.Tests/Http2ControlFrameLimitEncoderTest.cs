@@ -32,16 +32,16 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
  * Tests for {@link Http2ControlFrameLimitEncoder}.
  */
 // CLR: @Mock fields and MockitoAnnotations.initMocks are Moq mocks created in the constructor, which runs the
-// @BeforeEach setup(); @AfterEach teardown() is Dispose() (https://xunit.net/docs/shared-context). when/thenAnswer/
-// verify/atLeast/times are Moq Setup(...).Returns, Verify(..., Times.AtLeast(n)/Times.Exactly(n))
+// @BeforeEach setup(); @AfterEach teardown() is Dispose() (https://xunit.net/docs/shared-context).
+// when/thenAnswer/ verify/atLeast/times are Moq Setup(...).Returns, Verify(..., Times.AtLeast(n)/Times.Exactly(n))
 // (https://github.com/devlooped/moq/wiki/Quickstart); the answers receive the promise argument directly, so
 // handlePromise takes the TaskCompletionSource where Java takes the InvocationOnMock and the argument index.
-// ChannelPromise is TaskCompletionSource (newPromise() is a new TaskCompletionSource; setSuccess()/trySuccess() are
-// SetResult()/TrySetResult()) and ChannelFuture is Task, whose IsCompleted/IsCompletedSuccessfully are isDone()/
-// isSuccess() (docs/codec-http-porting.md, Shared CLR adaptations). The encoder's listeners run on ctx.Executor, the
-// mocked executor whose InEventLoop() is true. ctx.close() is CloseAsync(CancellationToken) and channel.unsafe() and
-// the ctx.newPromise() stub have no counterpart (a TaskCompletionSource has no channel or executor). Queue/ArrayDeque
-// is Queue<T> and poll() is TryDequeue.
+// ChannelPromise is TaskCompletionSource (newPromise() is a new TaskCompletionSource; setSuccess()/trySuccess()
+// are SetResult()/TrySetResult()) and ChannelFuture is Task, whose IsCompleted/IsCompletedSuccessfully are
+// isDone()/ isSuccess(). The encoder's listeners run on ctx.Executor, the mocked executor whose InEventLoop() is
+// true. ctx.close() is CloseAsync(CancellationToken) and channel.unsafe() and the ctx.newPromise() stub have no
+// counterpart (a TaskCompletionSource has no channel or executor). Queue/ArrayDeque is Queue<T> and poll() is
+// TryDequeue.
 public class Http2ControlFrameLimitEncoderTest : IDisposable
 {
 

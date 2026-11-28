@@ -21,9 +21,8 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Smtp.Tests;
 
-// CLR: CharSequence is ICharSequence (see SmtpUtils), so the Java String arguments are passed as StringCharSequence;
-// CharsetUtil.US_ASCII is Encoding.ASCII (docs/codec-base-porting.md); readOutbound() states its type argument; the
-// anonymous Executable instance is a lambda.
+// CLR: CharSequence is ICharSequence (see SmtpUtils), so the Java String arguments are passed as
+// StringCharSequence; readOutbound() states its type argument.
 public class SmtpRequestEncoderTest
 {
 

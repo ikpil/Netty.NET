@@ -20,8 +20,7 @@ namespace Netty.NET.Handler.Codec.Redis;
 /**
  * Constant values for Redis encoder/decoder.
  */
-// CLR: the package-private final class is an internal sealed class with the private constructor; the compile-time
-// constants are const and the values computed at class initialization are static readonly.
+// CLR: The compile-time constants are const and the values computed at class initialization are static readonly.
 internal sealed class RedisConstants
 {
 

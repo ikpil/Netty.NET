@@ -511,7 +511,6 @@ public class DefaultHttp2FrameReader : IHttp2FrameReader, IHttp2FrameSizePolicy,
         ResetHeadersContinuationIfEnd(flags.EndOfHeaders());
     }
 
-    // CLR: the anonymous HeadersContinuation of readHeadersFrame for a HEADERS frame with priority fields.
     private sealed class PriorityHeadersContinuation : HeadersContinuation
     {
         private readonly IChannelHandlerContext ctx;
@@ -554,7 +553,6 @@ public class DefaultHttp2FrameReader : IHttp2FrameReader, IHttp2FrameSizePolicy,
         }
     }
 
-    // CLR: the anonymous HeadersContinuation of readHeadersFrame for a HEADERS frame without priority fields.
     private sealed class HeadersContinuationWithoutPriority : HeadersContinuation
     {
         private readonly IChannelHandlerContext ctx;
@@ -674,7 +672,6 @@ public class DefaultHttp2FrameReader : IHttp2FrameReader, IHttp2FrameSizePolicy,
         ResetHeadersContinuationIfEnd(flags.EndOfHeaders());
     }
 
-    // CLR: the anonymous HeadersContinuation of readPushPromiseFrame.
     private sealed class PushPromiseHeadersContinuation : HeadersContinuation
     {
         private readonly IChannelHandlerContext ctx;

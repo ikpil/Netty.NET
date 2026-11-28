@@ -20,7 +20,6 @@ namespace Netty.NET.Handler.Codec.Socksx.V5;
  * A SOCKS5 request detail message, as defined in
  * <a href="https://tools.ietf.org/html/rfc1928#section-4">the section 4, RFC1928</a>.
  */
-// CLR: Java interfaces take the I prefix (see Netty.NET.Handler.Codec.Socksx.ISocksMessage).
 public interface ISocks5CommandRequest : ISocks5Message
 {
 

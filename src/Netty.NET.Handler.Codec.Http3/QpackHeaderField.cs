@@ -19,9 +19,6 @@ using static Netty.NET.Common.Internal.ObjectUtil;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the package-private class is internal; its package-private fields, constructor and members are internal, as
-// codec-http2's HpackHeaderField. CharSequence is the Common ICharSequence; name + ": " + value concatenates the
-// CharSequence texts.
 internal class QpackHeaderField
 {
 

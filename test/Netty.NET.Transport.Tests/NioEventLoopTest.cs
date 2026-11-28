@@ -21,11 +21,9 @@ using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Transport.Tests;
 
-// CLR: io.netty.testsuite.transport.NioEventLoopTest. The transport module's io.netty.channel.nio.NioEventLoopTest is
-// ported as NioEventLoopSourceTest, so the two same-named sources stay distinct in this one test namespace.
-// The source runs on the @Deprecated NioEventLoopGroup/NioEventLoop, which are deprecated-not-ported; each is replaced
-// by what its @deprecated tag names: MultiThreadIoEventLoopGroup with NioIoHandler.newFactory(), whose children are
-// SingleThreadIoEventLoop.
+// CLR: The transport module's io.netty.channel.nio.NioEventLoopTest is ported as NioEventLoopSourceTest, so the
+// two same-named sources stay distinct in this one test namespace. The source runs on the @Deprecated
+// NioEventLoopGroup/NioEventLoop, which are deprecated-not-ported.
 public class NioEventLoopTest : AbstractSingleThreadEventLoopTest
 {
     // CLR: the source returns true because NioEventLoop overrides registeredChannelsIterator() with a selection-key

@@ -23,21 +23,17 @@ using static Netty.NET.Handler.Codec.Http3.Tests.Http3TestUtils;
 
 namespace Netty.NET.Handler.Codec.Http3.Tests;
 
-// CLR: the @ParameterizedTest methods with @MethodSource("data") are [Theory]s with [MemberData(nameof(Data))] over a
-// public static TheoryData<int, int> with the same eight rows (Collection<Object[]> of Integers); the display-name
-// pattern has no xUnit counterpart. assumeTrue(condition) is Assert.SkipUnless(condition, ...), which reports the case
-// as skipped, as JUnit reports an aborted test ("will skip the test if condition is false",
+// CLR: the @ParameterizedTest methods with @MethodSource("data") are [Theory]s with [MemberData(nameof(Data))]
+// over a public static TheoryData<int, int> with the same eight rows (Collection<Object[]> of Integers); the
+// display-name pattern has no xUnit counterpart. assumeTrue(condition) is Assert.SkipUnless(condition,...), which
+// reports the case as skipped, as JUnit reports an aborted test ("will skip the test if condition is false",
 // https://xunit.net/docs/getting-started/v3/whats-new). Hamcrest's assertThat(actual, is(expected)) is
-// Assert.Equal(expected, actual); assertThrows(T.class, ...) is Assert.ThrowsAny<T>. The QPACK types and members are
-// internal (package-private in Java) and reached through InternalsVisibleTo;
-// QpackDecoderStateSyncStrategy.ackEachInsert() is IQpackDecoderStateSyncStrategy.AckEachInsert() and the static
-// imports are qualified (QpackUtil.MAX_UNSIGNED_INT, Http3SettingIdentifier.HTTP3_SETTINGS_QPACK_MAX_TABLE_CAPACITY);
-// Math.toIntExact is a checked conversion. The BiConsumer<CharSequence, CharSequence> sink is an Action<ICharSequence,
-// ICharSequence> and the Runnable an Action; AtomicInteger is an int updated with Interlocked.Increment and read with
-// Volatile.Read (incrementAndGet as a method reference is a lambda). A Java String passed as a CharSequence
-// (insertLiteral) is a StringCharSequence (Http3TestUtils.Cs), and QpackHeaderField's CharSequence name and value are
-// compared with the expected String as text (Hamcrest's is(String) calls String.equals). readUnsignedByte() is
-// ReadByte(), which returns the unsigned CLR byte, compared as a short as in Java.
+// Assert.Equal(expected, actual). Math.toIntExact is a checked conversion. AtomicInteger is an int updated with
+// Interlocked.Increment and read with Volatile.Read (incrementAndGet as a method reference is a lambda). A Java
+// String passed as a CharSequence (insertLiteral) is a StringCharSequence (Http3TestUtils.Cs), and
+// QpackHeaderField's CharSequence name and value are compared with the expected String as text (Hamcrest's
+// is(String) calls String.equals). readUnsignedByte() is ReadByte(), which returns the unsigned CLR byte, compared
+// as a short as in Java.
 public class QpackDecoderTest
 {
     private const string FOO = "foo";

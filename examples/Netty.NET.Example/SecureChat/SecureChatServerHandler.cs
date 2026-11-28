@@ -27,14 +27,14 @@ namespace Netty.NET.Example.SecureChat;
 /**
  * Handles a server-side channel.
  */
-// CLR: ChannelGroup is DefaultChannelGroup, which takes no EventExecutor (GlobalEventExecutor.INSTANCE notified the
-// group futures, which are Tasks here, docs/transport-porting.md) and also removes a member when its channel closes.
-// ctx.pipeline().get(SslHandler.class) is Pipeline.Get<SslHandler>() and handshakeFuture().addListener(...) is a
-// continuation of the HandshakeFuture() Task on the channel's executor (Common's EventExecutorTaskScheduler, the timing
-// of DefaultPromise listeners); the lambda runs whether the handshake succeeded or not, as the listener does.
-// engine().getSession().getCipherSuite() is the CLR-only CipherSuite(SslHandler) below. ctx.writeAndFlush/c.writeAndFlush
-// are WriteAndFlushAsync, whose Tasks are discarded; msg.toLowerCase() is ToLowerInvariant() and
-// cause.printStackTrace() writes the exception to Console.Error.
+// CLR: ChannelGroup is DefaultChannelGroup, which takes no EventExecutor (GlobalEventExecutor.INSTANCE notified
+// the group futures, which are Tasks here, docs/transport-porting.md) and also removes a member when its channel
+// closes. ctx.pipeline().get(SslHandler.class) is Pipeline.Get<SslHandler>() and
+// handshakeFuture().addListener(...) is a continuation of the HandshakeFuture() Task on the channel's executor
+// (Common's EventExecutorTaskScheduler, the timing of DefaultPromise listeners); the lambda runs whether the
+// handshake succeeded or not, as the listener does. engine().getSession().getCipherSuite() is the CLR-only
+// CipherSuite(SslHandler) below. ctx.writeAndFlush/c.writeAndFlush are WriteAndFlushAsync, whose Tasks are
+// discarded.
 public class SecureChatServerHandler : SimpleChannelInboundHandler<string>
 {
 
@@ -58,10 +58,9 @@ public class SecureChatServerHandler : SimpleChannelInboundHandler<string>
                 new EventExecutorTaskScheduler(() => ctx.Executor));
     }
 
-    // CLR-only: sslHandler.engine().getSession().getCipherSuite(). SslHandler.engine() is not public in Netty.NET (owner
-    // decision 2026-11-24, docs/handler-porting.md: the engine is an SslStream and its public accessor waits for an owner
-    // naming decision); Netty.NET.Handler opens the internal Engine() to this assembly (InternalsVisibleTo), and its
-    // NegotiatedCipherSuite is a TlsCipherSuite whose name is the IANA name that the JSSE getCipherSuite() returns.
+    // CLR-only: sslHandler.engine().getSession().getCipherSuite(). Netty.NET.Handler opens the internal Engine()
+    // to this assembly (InternalsVisibleTo), and its NegotiatedCipherSuite is a TlsCipherSuite whose name is the
+    // IANA name that the JSSE getCipherSuite() returns.
     private static string CipherSuite(SslHandler sslHandler)
     {
         return sslHandler.Engine().NegotiatedCipherSuite.ToString();

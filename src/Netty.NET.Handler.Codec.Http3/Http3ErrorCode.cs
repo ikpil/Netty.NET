@@ -20,11 +20,10 @@ namespace Netty.NET.Handler.Codec.Http3;
  * Different <a href="https://datatracker.ietf.org/doc/html/rfc9114#name-http-3-error-codes">HTTP3 error codes</a>.
  */
 // CLR: the Java enum with a constructor, a field and a method is a sealed class with static readonly instances, as
-// codec-http2 Http2Error and codec-base Base64Dialect (docs/codec-http2-porting.md, Shared CLR adaptations): "You can't
-// define a method inside the definition of an enumeration type"
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/enum). The instances are compared
-// by reference, the implicit values() is Values() (a new array per call, as Java's values() clones) and ToString()
-// returns the constant name. The package-private field code is internal.
+// codec-http2 Http2Error and codec-base Base64Dialect : "You can't define a method inside the definition of an
+// enumeration type" (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/enum). The
+// instances are compared by reference, the implicit values() is Values() (a new array per call, as Java's values()
+// clones) and ToString() returns the constant name. The package-private field code is internal.
 public sealed class Http3ErrorCode
 {
 
@@ -174,7 +173,6 @@ public sealed class Http3ErrorCode
         return code;
     }
 
-    // CLR: Enum.toString() is the constant name.
     public override string ToString()
     {
         return name;

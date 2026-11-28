@@ -30,13 +30,13 @@ using static Netty.NET.Handler.Codec.Http3.QpackUtil;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the package-private final class is internal sealed; ByteToMessageDecoder is codec-base's (decode(ctx, in, __)
-// is Decode(IChannelHandlerContext, ByteBuf, IList<object>), keeping the parameter name __). The @Nullable Long
-// maxTableCapacity is a long?; the other @Nullable (org.jetbrains.annotations) annotations have no counterpart.
-// QuicStreamChannel is codec-quic's IQuicStreamChannel. The checked QpackException needs no throws clause; assert is
-// Debug.Assert. ChannelInputShutdownEvent is the Transport's (Netty.NET.Transport.Channels.Sockets). The instruction
-// byte is the CLR byte; the masks test the same bits, and the "Unknown encoder instruction" text prints Java's signed
-// value through (sbyte) with the invariant culture. new AsciiString(buf, false) is the Common AsciiString(byte[], bool).
+// CLR: ByteToMessageDecoder is codec-base's (decode(ctx, in, __) is Decode(IChannelHandlerContext, ByteBuf,
+// IList<object>), keeping the parameter name __). The @Nullable Long maxTableCapacity is a long?; the other
+// @Nullable (org.jetbrains.annotations) annotations have no counterpart. QuicStreamChannel is codec-quic's
+// IQuicStreamChannel. The checked QpackException needs no throws clause; assert is Debug.Assert.
+// ChannelInputShutdownEvent is the Transport's (Netty.NET.Transport.Channels.Sockets). The instruction byte is the
+// CLR byte; the masks test the same bits, and the "Unknown encoder instruction" text prints Java's signed value
+// through (sbyte) with the invariant culture. new AsciiString(buf, false) is the Common AsciiString(byte[], bool).
 internal sealed class QpackEncoderHandler : ByteToMessageDecoder
 {
     private static readonly QpackException INVALID_LENGTH_STRING_LITERAL =

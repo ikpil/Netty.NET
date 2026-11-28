@@ -24,7 +24,7 @@ namespace Netty.NET.Handler.Codec.Memcache;
  */
 // CLR: copy(), duplicate(), retainedDuplicate(), replace(ByteBuf), retain(), retain(int), touch() and
 // touch(Object) are re-declared only to narrow the return type, so they are inherited from IByteBufHolder, not
-// repeated (owner decision 2026-11-19; docs/transport-porting.md, Decisions).
+// repeated.
 [UnstableApi]
 public interface IFullMemcacheMessage : IMemcacheMessage, ILastMemcacheContent
 {

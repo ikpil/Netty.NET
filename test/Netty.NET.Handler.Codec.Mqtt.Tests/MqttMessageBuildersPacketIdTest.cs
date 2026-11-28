@@ -19,10 +19,10 @@ using System.Collections.Generic;
 namespace Netty.NET.Handler.Codec.Mqtt.Tests;
 
 // CLR: @ParameterizedTest with @MethodSource("data") is [Theory] with [MemberData(nameof(Data))]; Integer is int.
-// testUnsubAckMessageIdAsShort, testSubAckMessageIdAsShort and testPubAckMessageIdAsShort only exercise the @Deprecated
-// packetId(short) overloads, which name packetId(int) as their replacement and are not ported (owner decision
-// 2026-11-16); they are recorded as CLR-inapplicable in docs/codec-mqtt-porting-manifest.json, and the AsInt tests
-// below cover packetId(int) with the same inputs.
+// testUnsubAckMessageIdAsShort, testSubAckMessageIdAsShort and testPubAckMessageIdAsShort only exercise the
+// @Deprecated packetId(short) overloads, which name packetId(int) as their replacement and are not ported; they
+// are recorded as CLR-inapplicable in docs/codec-mqtt-porting-manifest.json, and the AsInt tests below cover
+// packetId(int) with the same inputs.
 public class MqttMessageBuildersPacketIdTest
 {
 

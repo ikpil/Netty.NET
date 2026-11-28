@@ -33,16 +33,11 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
 /**
  * Tests for {@link CleartextHttp2ServerUpgradeHandler}
  */
-// CLR: UpgradeCodec/UpgradeCodecFactory/UpgradeEvent are HttpServerUpgradeHandler.IUpgradeCodec/IUpgradeCodecFactory/
-// UpgradeEvent (owner rule: I prefix), and the anonymous UpgradeCodecFactory and ChannelInboundHandlerAdapter classes
-// are the named nested classes ConnectionHandlerUpgradeCodecFactory, FrameCodecUpgradeCodecFactory and
-// UserEventCollector. Mockito mock/verify(...)/any/eq are a loose Moq mock, Verify(..., Times.Once()), It.IsAny and the
-// expected value compared with Equals (docs/codec-http-porting.md, Shared CLR adaptations); @AfterEach is Dispose().
-// Http2Stream.State is the sealed class IHttp2Stream.State and state() is State_() (CS0102 owner rule).
-// assertInstanceOf is Assert.IsAssignableFrom, the request getters method()/uri()/protocolVersion() are Method()/Uri()/
-// ProtocolVersion(), and headers equality calls Equals directly, as Java's assertEquals calls equals
-// (docs/codec-http-porting.md, Core test notes and Shared CLR adaptations). CharsetUtil.US_ASCII is Encoding.ASCII
-// (docs/codec-smtp-porting.md) and CharsetUtil.UTF_8 is Encoding.UTF8.
+// CLR: Mockito mock/verify(...)/any/eq are a loose Moq mock, Verify(..., Times.Once()), It.IsAny and the expected
+// value compared with Equals. Http2Stream.State is the sealed class IHttp2Stream.State and state() is State_()
+// (CS0102 owner rule). assertInstanceOf is Assert.IsAssignableFrom, the request getters
+// method()/uri()/protocolVersion() are Method()/Uri()/ ProtocolVersion(), and headers equality calls Equals
+// directly, as Java's assertEquals calls equals.
 public class CleartextHttp2ServerUpgradeHandlerTest : IDisposable
 {
     private EmbeddedChannel channel;
@@ -213,13 +208,13 @@ public class CleartextHttp2ServerUpgradeHandlerTest : IDisposable
     public void UsedHttp2MultiplexCodec()
     {
         // CLR: Http2MultiplexCodec/Http2MultiplexCodecBuilder are @Deprecated with the replacement named
-        // (Http2FrameCodecBuilder together with Http2MultiplexHandler) and are not ported (owner decision 2026-11-16).
-        // The test also checks CleartextHttp2ServerUpgradeHandler's prior-knowledge path with a frame codec that hands
-        // the frames on, so it runs with the replacement: new Http2MultiplexCodecBuilder(true, childHandler).build()
-        // is new Http2FrameCodecBuilder(true).Build() with new Http2MultiplexHandler(childHandler); the upgrade codec
-        // takes the pair through Http2ServerUpgradeCodec(Http2FrameCodec, params IChannelHandler[]), and the single
-        // http2ServerHandler is the nested Http2ServerHandlerInitializer, a ChannelInitializer that installs the pair
-        // where Java adds the codec (right after the cleartext handler) and removes itself.
+        // (Http2FrameCodecBuilder together with Http2MultiplexHandler) and are not ported. The test also checks
+        // CleartextHttp2ServerUpgradeHandler's prior-knowledge path with a frame codec that hands the frames on,
+        // so it runs with the replacement: new Http2MultiplexCodecBuilder(true, childHandler).build() is new
+        // Http2FrameCodecBuilder(true).Build() with new Http2MultiplexHandler(childHandler); the upgrade codec
+        // takes the pair through Http2ServerUpgradeCodec(Http2FrameCodec, params IChannelHandler[]), and the
+        // single http2ServerHandler is the nested Http2ServerHandlerInitializer, a ChannelInitializer that
+        // installs the pair where Java adds the codec (right after the cleartext handler) and removes itself.
         Http2FrameCodec http2Codec = new Http2FrameCodecBuilder(true).Build();
         Http2MultiplexHandler http2MultiplexHandler = new Http2MultiplexHandler(new EmptyChannelInitializer());
         IUpgradeCodecFactory upgradeCodecFactory = new FrameCodecUpgradeCodecFactory(http2Codec, http2MultiplexHandler);

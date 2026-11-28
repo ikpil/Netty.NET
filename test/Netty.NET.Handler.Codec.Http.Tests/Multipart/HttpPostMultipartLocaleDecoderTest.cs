@@ -27,13 +27,12 @@ namespace Netty.NET.Handler.Codec.Http.Tests.Multipart;
  * default Locale is process-global state and codec-http runs tests with
  * {@code junit.jupiter.execution.parallel.mode.default = concurrent}.
  */
-// CLR: Locale.getDefault()/setDefault(Locale) are CultureInfo.CurrentCulture, "the culture used by the current thread
-// and task-based asynchronous operations"
-// (https://learn.microsoft.com/en-us/dotnet/api/system.globalization.cultureinfo.currentculture?view=net-10.0), so it
-// is not process-global like the JVM default and @Isolated has no counterpart (as core's HttpVersionLocaleTest); the
-// original value is restored in finally as in Java. FullHttpRequest is IFullHttpRequest, CharsetUtil.US_ASCII
-// Encoding.ASCII, and content.length() the string Length. The package-private class and method are public, as xUnit
-// requires.
+// CLR: Locale.getDefault()/setDefault(Locale) are CultureInfo.CurrentCulture, "the culture used by the current
+// thread and task-based asynchronous operations"
+// (https://learn.microsoft.com/en-us/dotnet/api/system.globalization.cultureinfo.currentculture?view=net-10.0), so
+// it is not process-global like the JVM default and @Isolated has no counterpart (as core's
+// HttpVersionLocaleTest); the original value is restored in finally as in Java. The package-private class and
+// method are public, as xUnit requires.
 public class HttpPostMultipartLocaleDecoderTest
 {
 

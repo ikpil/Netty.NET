@@ -28,30 +28,9 @@ namespace Netty.NET.Handler.Codec.Compression;
 /**
  * Decompress a {@link ByteBuf} using the inflate algorithm.
  */
-// CLR: @UnstableApi is the Common [UnstableApi] attribute. Decompressor is IDecompressor, its nested Status enum and
-// AbstractDecompressorBuilder are written IDecompressor.Status and IDecompressor.AbstractDecompressorBuilder (a class
-// does not inherit the nested types of its interfaces), and status() is Status_() (owner decision, as the core's
-// IDecompressor). The package-private constructor, processInput and processOutput are internal, as in
-// InputBufferingDecompressor. builder() is Builder_(): a method named Builder cannot be declared next to the nested
-// Builder class ("The type 'type name' already contains a definition for 'identifier'",
-// https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0102), as SnappyFrameDecompressor.builder() is Builder_().
-// java.util.zip.Inflater is the internal stand-in Inflater (Inflater.cs, owner decision 2026-11-23) over the BCL
-// DeflateStream/ZLibStream, and DataFormatException is the InvalidDataException those streams throw. The GZIP wrapper
-// creates it with exactRemaining (one byte per Read), so that getRemaining() is exact at the end of the deflate body and
-// consumeInput() leaves the trailer in the buffer; ZLIB and NONE feed whole buffers, so after the end of such a stream the
-// bytes the BCL stream read past it count as consumed (the decompressor is COMPLETE then). The BCL streams have no
-// dictionary API; the stand-in implements needsDictionary/setDictionary on them (owner decision 2026-11-24, see
-// Inflater.cs), so a stream with the zlib FDICT flag decodes with the configured dictionary as in Java (after the
-// dictionary the stand-in reads the deflate data one byte per Read). java.util.zip.CRC32 is System.IO.Hashing.Crc32
-// (owner decision 2026-11-23), wrapped by ByteBufChecksum.WrapChecksum; Deflater.DEFLATED is the stand-in Deflater's
-// constant. Objects.requireNonNull(wrapper) has no counterpart because ZlibWrapper is a C# enum
-// (a value type). The Buffer port has no hasArray()/array()/arrayOffset(); borrowed memory and MemoryMarshal.TryGetArray
-// replace them (docs/buffer-porting.md, Array extraction), see TryGetArray and ArrayOf below. readUnsignedByte() is
-// ReadByte(), which is unsigned in the Buffer port (owner decision). C# switch sections cannot fall through, so each
-// "fall through" is a goto case
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/selection-statements). assert is
-// Debug.Assert, IllegalStateException is InvalidOperationException, IllegalArgumentException is ArgumentException, and
-// numbers in exception messages use the invariant culture (docs/codec-base-porting.md). C# has no throws clauses.
+// Feed GZIP bodies one byte at a time to leave the trailer unread. Zlib streams with a preset dictionary need the
+// same handling after the dictionary. Raw and other zlib inputs use whole buffers, so BCL read-ahead counts as
+// consumed.
 [UnstableApi]
 public sealed class JdkZlibDecompressor : InputBufferingDecompressor
 {
@@ -659,9 +638,8 @@ public sealed class JdkZlibDecompressor : InputBufferingDecompressor
         return new Builder();
     }
 
-    // CLR: the private fields wrapper, dictionary and maxAllocation and the package-private decompressConcatenated are
-    // internal, because a C# enclosing class cannot read the private members of its nested class; the package-private
-    // constructor is internal.
+    // CLR: the private fields wrapper, dictionary and maxAllocation and the package-private decompressConcatenated
+    // are internal, because a C# enclosing class cannot read the private members of its nested class.
     [UnstableApi]
     public sealed class Builder : IDecompressor.AbstractDecompressorBuilder
     {

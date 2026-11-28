@@ -29,11 +29,11 @@ namespace Netty.NET.Handler.Codec.Http2;
  */
 // CLR: the checked Java exception is a CLR Exception; serialVersionUID is JVM serialization metadata and has no
 // counterpart. The constructors without a message call base(), so Message is the CLR default text where Java's
-// getMessage() is null (docs/codec-http-porting.md: "never null in .NET"). shutdownHint() is ShutdownHint_(): a member
-// cannot share the name of the nested ShutdownHint enum (CS0102, owner rule: trailing underscore); ShutdownHint is a
-// C# enum, a value type, so checkNotNull(shutdownHint) has nothing to check. String.format(fmt, args) is
-// Http2CodecUtil.Format, which keeps the Java text of the %d, %s and %b conversions that this package uses.
-// Iterable<StreamException> is IEnumerable<StreamException>, whose GetEnumerator() is iterator().
+// getMessage() is null. shutdownHint() is ShutdownHint_(): a member cannot share the name of the nested
+// ShutdownHint enum (CS0102, owner rule: trailing underscore); ShutdownHint is a C# enum, a value type, so
+// checkNotNull(shutdownHint) has nothing to check. String.format(fmt, args) is Http2CodecUtil.Format, which keeps
+// the Java text of the %d, %s and %b conversions that this package uses. Iterable<StreamException> is
+// IEnumerable<StreamException>, whose GetEnumerator() is iterator().
 public class Http2Exception : Exception
 {
     private readonly Http2Error error;
@@ -298,7 +298,6 @@ public class Http2Exception : Exception
     /**
      * Represents an exception that can be isolated to a single stream (as opposed to the entire connection).
      */
-    // CLR: the package-private constructors are internal.
     public class StreamException : Http2Exception
     {
         private readonly int streamId;
@@ -321,7 +320,6 @@ public class Http2Exception : Exception
         }
     }
 
-    // CLR: the package-private constructor is internal.
     public sealed class HeaderListSizeException : StreamException
     {
 

@@ -20,15 +20,15 @@ using Netty.NET.PkiTesting;
 namespace Netty.NET.Handler.Ssl.Ocsp.Tests;
 
 // CLR: @BeforeAll checkOcspSupported() assumes OpenSsl.isOcspSupported(); netty-tcnative (OpenSsl,
-// ReferenceCountedOpenSslEngine, ReferenceCountedOpenSslContext and OCSP stapling) is not ported
-// (docs/handler-ssl-design.md, owner decision 3), so there is no such assumption to evaluate. The two JDK cases do not
-// use OpenSSL: they check that the JDK provider rejects enableOcsp(true), which SslContext does for SslProvider.JDK
-// ("OCSP is not supported with this SslProvider"), so they run unconditionally here. The other twelve cases drive
-// OpenSSL engines (testClientOcspNotEnabled*, testServerOcspNotEnabled*, testClientAcceptingOcspStaple*,
-// testClientRejectingOcspStaple*, testServerHasNoStaple*, testClientException*) and are recorded as CLR-inapplicable in
-// the manifest; their original comments are kept at the end of the class.
-// IllegalArgumentException is ArgumentException (docs/codec-base-porting.md), and the anonymous Executable classes are
-// lambdas. ssc.toKeyManagerFactory() is pkitesting's ToKeyManagerFactory(), an SslStreamCertificateContext.
+// ReferenceCountedOpenSslEngine, ReferenceCountedOpenSslContext and OCSP stapling) is not ported, so there is no
+// such assumption to evaluate. The two JDK cases do not use OpenSSL: they check that the JDK provider rejects
+// enableOcsp(true), which SslContext does for SslProvider.JDK ("OCSP is not supported with this SslProvider"), so
+// they run unconditionally here. The other twelve cases drive OpenSSL engines (testClientOcspNotEnabled*,
+// testServerOcspNotEnabled*, testClientAcceptingOcspStaple*, testClientRejectingOcspStaple*,
+// testServerHasNoStaple*, testClientException*) and are recorded as CLR-inapplicable in the manifest; their
+// original comments are kept at the end of the class. IllegalArgumentException is ArgumentException, and the
+// anonymous Executable classes are lambdas. ssc.toKeyManagerFactory() is pkitesting's ToKeyManagerFactory(), an
+// SslStreamCertificateContext.
 public class OcspTest
 {
     private static readonly X509Bundle ssc = new CertificateBuilder()

@@ -20,10 +20,8 @@ using Netty.NET.Buffer;
 
 namespace Netty.NET.Handler.Codec.Dns.Tests;
 
-// CLR: the package-private JUnit 5 test methods are public xUnit facts; readerIndex(int) is the ByteBuf.ReaderIndex
-// property setter; Integer.MAX_VALUE is int.MaxValue and IllegalArgumentException is ArgumentException
-// (docs/codec-base-porting.md). The char literals of the byte[] initializer are cast to byte, which Java narrows
-// implicitly.
+// CLR: Integer.MAX_VALUE is int.MaxValue and IllegalArgumentException is ArgumentException. The char literals of
+// the byte[] initializer are cast to byte, which Java narrows implicitly.
 public class DnsCodecUtilTest
 {
 

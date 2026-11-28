@@ -24,9 +24,8 @@ namespace Netty.NET.Handler.Codec.Http.Cookie;
 /**
  * Parent of Client and Server side cookie encoders
  */
-// CLR: the String name and value are passed to the CharSequence helpers of CookieUtil as StringCharSequence views (a C#
-// string is not an ICharSequence). IllegalArgumentException is ArgumentException; the invalid char is appended as a char,
-// as in the Java string concatenation.
+// CLR: IllegalArgumentException is ArgumentException; the invalid char is appended as a char, as in the Java
+// string concatenation.
 public abstract class CookieEncoder
 {
 

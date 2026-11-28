@@ -31,17 +31,17 @@ using Netty.NET.Transport.Channels.Local;
 
 namespace Netty.NET.Handler.Tests.Ssl;
 
-// CLR: @Timeout(value = 30000, unit = MILLISECONDS) is the Timeout of the [Fact], which xUnit applies to async tests; the
-// abstract class's test runs in each concrete subclass (JdkSslRenegotiateTest), as JUnit runs inherited @Test methods.
-// The @Deprecated CachedSelfSignedCertificate is CachedSelfSignedCertificate() below. Throwable is Exception,
-// CountDownLatch is CountdownEvent, AtomicReference the Common type, the anonymous handlers are named nested classes and
-// the Future listener of renegotiate() is a continuation of its Task. The bootstrap API is asynchronous
-// (syncUninterruptibly() is an await). SslHandler renegotiates on SslStream as a server only, through
-// SslStream.NegotiateClientCertificateAsync ("Negotiates the client certificate on the authenticated connection",
+// CLR: @Timeout(value = 30000, unit = MILLISECONDS) is the Timeout of the [Fact], which xUnit applies to async
+// tests; the abstract class's test runs in each concrete subclass (JdkSslRenegotiateTest), as JUnit runs inherited
+// @Test methods. Throwable is Exception, CountDownLatch is CountdownEvent, AtomicReference the Common type, the
+// anonymous handlers are named nested classes and the Future listener of renegotiate() is a continuation of its
+// Task. The bootstrap API is asynchronous (syncUninterruptibly() is an await). SslHandler renegotiates on
+// SslStream as a server only, through SslStream.NegotiateClientCertificateAsync ("Negotiates the client
+// certificate on the authenticated connection",
 // https://learn.microsoft.com/en-us/dotnet/api/system.net.security.sslstream.negotiateclientcertificateasync?view=net-10.0),
-// which is the side this test renegotiates. That renegotiation always asks the client for a certificate; the server
-// context without client authentication accepts the client of this test, which has none, as a JSSE server checks no client
-// certificate then (JdkSslContext.VerifyRemoteCertificate).
+// which is the side this test renegotiates. That renegotiation always asks the client for a certificate; the
+// server context without client authentication accepts the client of this test, which has none, as a JSSE server
+// checks no client certificate then (JdkSslContext.VerifyRemoteCertificate).
 public abstract class RenegotiateTest
 {
 
@@ -253,13 +253,13 @@ public abstract class RenegotiateTest
         }
     }
 
-    // CLR: CachedSelfSignedCertificate.getCachedCertificate() returns a cached SelfSignedCertificate; both are @Deprecated
-    // test units that are not ported ("@deprecated Use the {@code CertificateBuilder} from {@code netty-pkitesting}
-    // instead", recorded by the lead, docs/handler-ssl-design.md), so the nested SelfSignedCertificateBundle caches the
-    // X509Bundle that SelfSignedCertificate's CertificateBuilderCertGenerator builds by default: a self-signed
-    // certificate authority "CN=localhost" with an RSA 2048 key. Its Cert() is the certificate and Key() the key, which
-    // is the BCL key object of the bundle's key pair (docs/pkitesting-porting.md: "A generated or given key pair is the
-    // BCL key object").
+    // CLR: CachedSelfSignedCertificate.getCachedCertificate() returns a cached SelfSignedCertificate; both are
+    // @Deprecated test units that are not ported ("@deprecated Use the {@code CertificateBuilder} from {@code
+    // netty-pkitesting} instead", recorded by the lead, docs/handler-ssl-design.md), so the nested
+    // SelfSignedCertificateBundle caches the X509Bundle that SelfSignedCertificate's
+    // CertificateBuilderCertGenerator builds by default: a self-signed certificate authority "CN=localhost" with
+    // an RSA 2048 key. Its Cert() is the certificate and Key() the key, which is the BCL key object of the
+    // bundle's key pair.
     private static readonly Lazy<SelfSignedCertificateBundle> CACHED_CERTIFICATE =
             new Lazy<SelfSignedCertificateBundle>(() => new SelfSignedCertificateBundle(new CertificateBuilder()
                     .SetIsCertificateAuthority(true)

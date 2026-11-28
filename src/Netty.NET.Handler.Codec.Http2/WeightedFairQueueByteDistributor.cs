@@ -129,7 +129,6 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
         connection.AddListener(new StreamListener(this));
     }
 
-    // CLR: the anonymous Http2ConnectionAdapter registered by the constructor.
     private sealed class StreamListener : Http2ConnectionAdapter
     {
         private readonly WeightedFairQueueByteDistributor distributor;
@@ -524,7 +523,6 @@ public sealed class WeightedFairQueueByteDistributor : IStreamByteDistributor
         private const byte STATE_IS_DISTRIBUTING = 0x2;
         private const byte STATE_STREAM_ACTIVATED = 0x4;
 
-        // CLR: the IntCollections.emptyMap() of the children (see the class comment).
         private static readonly Dictionary<int, State> EMPTY_CHILDREN = new Dictionary<int, State>(0);
 
         private readonly WeightedFairQueueByteDistributor distributor;

@@ -35,7 +35,6 @@ public class Http3ServerConnectionHandlerTest : AbtractHttp3ConnectionHandlerTes
 {
     private static readonly IChannelHandler REQUEST_HANDLER = new SharableRequestHandler();
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of REQUEST_HANDLER.
     private sealed class SharableRequestHandler : ChannelInboundHandlerAdapter
     {
         public override bool IsSharable => true;

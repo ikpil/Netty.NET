@@ -19,9 +19,8 @@ namespace Netty.NET.Handler.Codec.Http3;
 /**
  * See <a href="https://tools.ietf.org/html/draft-ietf-quic-http-32#section-7.2.5">PUSH_PROMISE</a>.
  */
-// CLR: the interface takes the I prefix (docs/codec-http2-porting.md, Shared CLR adaptations). The default method type()
-// that overrides Http3Frame.type() is an explicit default interface member of IHttp3Frame.Type(), so it is reached
-// through an interface reference.
+// CLR: the interface takes the I prefix. The default method type() that overrides Http3Frame.type() is an explicit
+// default interface member of IHttp3Frame.Type(), so it is reached through an interface reference.
 public interface IHttp3PushPromiseFrame : IHttp3RequestStreamFrame
 {
 

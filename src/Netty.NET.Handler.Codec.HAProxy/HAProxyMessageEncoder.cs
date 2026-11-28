@@ -31,12 +31,12 @@ namespace Netty.NET.Handler.Codec.HAProxy;
  *
  * @see <a href="https://www.haproxy.org/download/1.8/doc/proxy-protocol.txt">Proxy Protocol Specification</a>
  */
-// CLR: @Sharable is [Sharable] and the MessageToByteEncoder<HAProxyMessage> constructor takes typeof(HAProxyMessage),
-// as in codec-base; 'out' is @out. A switch over the HAProxyProtocolVersion/AddressFamily constants uses case guards,
-// because a C# case label is a pattern (https://learn.microsoft.com/dotnet/csharp/language-reference/statements/selection-statements).
+// CLR: @Sharable is [Sharable] and the MessageToByteEncoder<HAProxyMessage> constructor takes
+// typeof(HAProxyMessage), as in codec-base; 'out' is @out. A switch over the HAProxyProtocolVersion/AddressFamily
+// constants uses case guards, because a C# case label is a pattern
+// (https://learn.microsoft.com/dotnet/csharp/language-reference/statements/selection-statements).
 // writeCharSequence(CharSequence, Charset) is WriteCharSequence(ReadOnlySpan<char>, Encoding) with Encoding.ASCII,
-// readerIndex() is the ReaderIndex property and content() the Content property (docs/buffer-porting.md); numbers use
-// the invariant culture. The package-private constants are internal.
+// readerIndex() is the ReaderIndex property and content() the Content property; numbers use the invariant culture.
 [Sharable]
 public sealed class HAProxyMessageEncoder : MessageToByteEncoder<HAProxyMessage>
 {

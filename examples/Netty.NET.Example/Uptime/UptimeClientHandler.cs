@@ -25,13 +25,12 @@ namespace Netty.NET.Example.Uptime;
  * connection attempt getStatus.
  */
 // CLR: @Sharable is the [Sharable] attribute, and channelRead0 is protected as the abstract
-// SimpleChannelInboundHandler.ChannelRead0 it overrides (an override cannot change the accessibility). The
-// package-private startTime and println are internal. System.currentTimeMillis() is
-// DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), System.err.format with %s and %5d (right-aligned, width 5) and %n is
-// Console.Error.WriteLine with {0} and {0,5}, and string + char appends the character as in Java.
-// eventLoop().schedule(Runnable, delay, TimeUnit.SECONDS) is ScheduleAsync with a TimeSpan, whose Task is discarded as
-// Java discards the ScheduledFuture; the anonymous Runnable is the scheduled Action. close() discards its Task, and
-// cause.printStackTrace() writes Exception.ToString() to Console.Error.
+// SimpleChannelInboundHandler.ChannelRead0 it overrides (an override cannot change the accessibility).
+// System.currentTimeMillis() is DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), System.err.format with %s and %5d
+// (right-aligned, width 5) and %n is Console.Error.WriteLine with {0} and {0,5}, and string + char appends the
+// character as in Java. eventLoop().schedule(Runnable, delay, TimeUnit.SECONDS) is ScheduleAsync with a TimeSpan,
+// whose Task is discarded as Java discards the ScheduledFuture; the anonymous Runnable is the scheduled Action.
+// close() discards its Task, and cause.printStackTrace() writes Exception.ToString() to Console.Error.
 [Sharable]
 public class UptimeClientHandler : SimpleChannelInboundHandler<object>
 {

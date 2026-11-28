@@ -25,10 +25,9 @@ namespace Netty.NET.Handler.Codec.Smtp;
  * and the lines that start with a DOT must be escaped with an extra DOT as
  * specified by <a href="https://www.ietf.org/rfc/rfc2821.txt">RFC2821</a>.
  */
-// CLR: interface with the I prefix; @UnstableApi is the Common [UnstableApi] attribute. Every Java member re-declares an
-// IByteBufHolder member only to narrow its return type to SmtpContent; they are inherited unchanged, as for the
-// Transport interfaces: C# 9 covariant returns cover class overrides only (docs/transport-porting.md, "Java type names
-// and hierarchy"). DefaultSmtpContent keeps the narrowed return types.
+// CLR: Every Java member re-declares an IByteBufHolder member only to narrow its return type to SmtpContent; they
+// are inherited unchanged, as for the Transport interfaces: C# 9 covariant returns cover class overrides only.
+// DefaultSmtpContent keeps the narrowed return types.
 [UnstableApi]
 public interface ISmtpContent : IByteBufHolder
 {

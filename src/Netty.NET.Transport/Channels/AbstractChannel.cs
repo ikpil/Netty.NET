@@ -173,9 +173,9 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
      */
     // CLR: Channel.Unsafe is folded into AbstractChannel (2026-11-16 owner decision); this member is Unsafe.outboundBuffer().
     public ChannelOutboundBuffer OutboundBuffer { get; }
-    // CLR: IsWritable, BytesBeforeUnwritable and BytesBeforeWritable are virtual (owner decision 2026-11-25) because a
-    // channel whose writes bypass the ChannelOutboundBuffer computes them itself, as Java's AbstractHttp2StreamChannel
-    // does (codec-http2, src/Netty.NET.Handler.Codec.Http2/AbstractHttp2StreamChannel.cs).
+    // CLR: IsWritable, BytesBeforeUnwritable and BytesBeforeWritable are virtual because a channel whose writes
+    // bypass the ChannelOutboundBuffer computes them itself, as Java's AbstractHttp2StreamChannel does
+    // (codec-http2, src/Netty.NET.Handler.Codec.Http2/AbstractHttp2StreamChannel.cs).
     public virtual bool IsWritable => _open && !OutboundBuffer.IsClosed && OutboundBuffer.IsWritable;
     // isWritable() is currently assuming if there is no outboundBuffer then the channel is not writable.
     // We should be consistent with that here.
@@ -1397,7 +1397,6 @@ public abstract class AbstractChannel : DefaultAttributeMap, IChannel
         return cause;
     }
 
-    // CLR: InetAddress.isAnyLocalAddress().
     internal static bool IsAnyLocalAddress(IPAddress address)
     {
         return address.Equals(IPAddress.Any) || address.Equals(IPAddress.IPv6Any);

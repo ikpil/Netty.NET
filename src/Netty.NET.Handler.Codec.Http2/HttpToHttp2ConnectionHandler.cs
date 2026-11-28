@@ -31,14 +31,12 @@ namespace Netty.NET.Handler.Codec.Http2;
  */
 // CLR: the protected constructors are protected internal, because HttpToHttp2ConnectionHandlerBuilder creates the
 // handler through Java's package access (as Http2ConnectionHandler's constructors). write(ctx, msg, promise) is
-// WriteAsync(ctx, msg, cancellationToken), whose returned Task replaces the promise (docs/codec-base-porting.md, Outbound
-// operations: "the returned Task replaces the promise"): the handler creates the promise (Http2CodecUtil.NewPromise, a
-// TaskCompletionSource) that SimpleChannelPromiseAggregator completes and returns its Task, and a message that is not
-// HTTP is passed on with ctx.WriteAsync(msg, cancellationToken). The token is not used otherwise (Java has none). The
-// Write*Async Tasks of the encoder are discarded, as Java ignores the returned futures. ChannelPromise is
-// TaskCompletionSource; HttpMessage, HttpContent, LastHttpContent and FullHttpMessage are the codec-http I-prefixed
-// interfaces whose content() is the Content property (docs/codec-http-porting.md); Throwable is Exception
-// (docs/codec-base-porting.md).
+// WriteAsync(ctx, msg, cancellationToken), whose returned Task replaces the promise : the handler creates the
+// promise (Http2CodecUtil.NewPromise, a TaskCompletionSource) that SimpleChannelPromiseAggregator completes and
+// returns its Task, and a message that is not HTTP is passed on with ctx.WriteAsync(msg, cancellationToken). The
+// token is not used otherwise (Java has none). The Write*Async Tasks of the encoder are discarded, as Java ignores
+// the returned futures. HttpMessage, HttpContent, LastHttpContent and FullHttpMessage are the codec-http
+// I-prefixed interfaces whose content() is the Content property.
 public class HttpToHttp2ConnectionHandler : Http2ConnectionHandler
 {
 

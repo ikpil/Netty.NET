@@ -32,21 +32,19 @@ namespace Netty.NET.Handler.Codec.Compression;
  * This API is still in progress as part of the decompression migration tracked by
  * <a href="https://github.com/netty/netty/issues/16743">#16743</a>.
  */
-// CLR: @UnstableApi is the Common [UnstableApi] attribute. Decompressor is IDecompressor, its nested Status enum and
-// AbstractDecompressorBuilder are written IDecompressor.Status and IDecompressor.AbstractDecompressorBuilder (a class
-// does not inherit the nested types of its interfaces), and status() is Status_() (owner decision, as the core's
-// IDecompressor). The package-private constructor, processInput and processOutput are internal, as in
-// InputBufferingDecompressor. builder() is Builder_(): a method named Builder cannot be declared next to the nested
-// Builder class (https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0102), and the nested type keeps its Java name,
-// as HAProxyTLV.type() is Type_() (docs/codec-haproxy-porting.md). Owner decision 2026-11-23: java.util.zip.Checksum is
+// CLR: Decompressor is IDecompressor, its nested Status enum and AbstractDecompressorBuilder are written
+// IDecompressor.Status and IDecompressor.AbstractDecompressorBuilder (a class does not inherit the nested types of
+// its interfaces), and status() is Status_() (owner decision, as the core's IDecompressor). The package-private
+// constructor, processInput and processOutput are internal, as in InputBufferingDecompressor. builder() is
+// Builder_(): a method named Builder cannot be declared next to the nested Builder class
+// (https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0102), and the nested type keeps its Java name, as
+// HAProxyTLV.type() is Type_(). Owner decision 2026-11-23: java.util.zip.Checksum is
 // System.IO.Hashing.NonCryptographicHashAlgorithm and java.util.zip.Adler32 is System.IO.Hashing.Adler32
 // (https://learn.microsoft.com/en-us/dotnet/api/system.io.hashing.adler32?view=net-10.0-pp), wrapped with
-// ByteBufChecksum.WrapChecksum. Java switch fall-through is goto case (docs/codec-memcache-porting.md).
-// IllegalStateException is InvalidOperationException, and AssertionError, a java.lang.Error, is UnreachableException
-// (docs/codec-memcache-porting.md, src/Netty.NET.Handler.Codec.Mqtt/MqttMessageType.cs). readUnsignedShort() returns a
-// ushort; options & 0x01 and options & 0x10 mask the byte, so the unsigned System.Byte gives the Java results.
-// String.format("%d") is string.Format with the invariant culture (docs/codec-base-porting.md). C# has no throws
-// clauses.
+// ByteBufChecksum.WrapChecksum. Java switch fall-through is goto case. IllegalStateException is
+// InvalidOperationException, and AssertionError, a java.lang.Error, is UnreachableException. readUnsignedShort()
+// returns a ushort; options & 0x01 and options & 0x10 mask the byte, so the unsigned System.Byte gives the Java
+// results. String.format("%d") is string.Format with the invariant culture. C# has no throws clauses.
 [UnstableApi]
 public sealed class FastLzFrameDecompressor : InputBufferingDecompressor
 {
@@ -246,8 +244,8 @@ public sealed class FastLzFrameDecompressor : InputBufferingDecompressor
         return new Builder();
     }
 
-    // CLR: the private field checksum is internal, because a C# enclosing class cannot read the private members of its
-    // nested class (the Java constructor reads builder.checksum); the package-private constructor is internal.
+    // CLR: the private field checksum is internal, because a C# enclosing class cannot read the private members of
+    // its nested class (the Java constructor reads builder.checksum).
     [UnstableApi]
     public sealed class Builder : IDecompressor.AbstractDecompressorBuilder
     {

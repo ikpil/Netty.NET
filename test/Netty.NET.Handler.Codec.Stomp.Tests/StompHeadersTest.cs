@@ -18,9 +18,8 @@ using Netty.NET.Common;
 
 namespace Netty.NET.Handler.Codec.Stomp.Tests;
 
-// CLR: Java passes the Strings "Foo" and foo.toString() as CharSequence names; C# string is not an ICharSequence, so
-// they are the Common StringCharSequence (docs/codec-base-porting-manifest.json, DefaultHeadersTest: String literals
-// are wrapped in StringCharSequence).
+// CLR: Java passes the Strings "Foo" and foo.toString() as CharSequence names; C# string is not an ICharSequence,
+// so they are the Common StringCharSequence.
 public class StompHeadersTest
 {
     [Fact]

@@ -22,10 +22,8 @@ using static Netty.NET.Handler.Codec.Http.HttpVersion;
 
 namespace Netty.NET.Handler.Codec.Http.Tests.WebSocketx;
 
-// CLR: handshake(ch, req) is HandshakeAsync(ch, req) with the Task discarded, as the source discards the ChannelFuture;
-// the static import of HttpVersion.* is using static, Integer.MAX_VALUE is int.MaxValue and
-// readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(). Inside the class, the method WebSocketVersion()
-// hides the type in expressions, so the constant is written Http.WebSocketx.WebSocketVersion.V08.
+// CLR: Inside the class, the method WebSocketVersion() hides the type in expressions, so the constant is written
+// Http.WebSocketx.WebSocketVersion.V08.
 public class WebSocketServerHandshaker08Test : WebSocketServerHandshakerTest
 {
 

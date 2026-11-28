@@ -24,17 +24,16 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Transport.Tests;
 
-// CLR: the testsuite's TrafficShapingHandlerTest (Netty.NET.Transport.Tests), not the handler module's class of the same
-// name (Netty.NET.Handler.Tests.Traffic). The static @BeforeAll createGroup()/@AfterAll destroyGroup() run from a class
-// fixture, as the GroupFixture of SocketEchoSourceTest. Each @Test is a [Fact] with the @Timeout of the source that
-// runs the body through the harness (both allocators x the NIO socket combination; OIO is deprecated-not-ported).
-// Promise<Boolean> from group.next().newPromise() is a TaskCompletionSource<bool> (docs/handler-porting.md, Task
-// promises): setSuccess/setFailure are SetResult/SetException (which throw on a completed promise, as DefaultPromise
-// does), await() is an await that suppresses the failure (ConfigureAwaitOptions.SuppressThrowing, as
-// DatagramMulticastSourceTest), isSuccess() is IsCompletedSuccessfully and cause() the Task's exception. Java string
-// concatenation prints numbers with the locale-independent Integer/Long/Float.toString and booleans as "true"/"false"
-// (docs/handler-porting.md, Text: numbers use the invariant culture, booleans keep Java's text), so the messages use
-// FormattableString.Invariant and Str(bool).
+// CLR: the testsuite's TrafficShapingHandlerTest (Netty.NET.Transport.Tests), not the handler module's class of
+// the same name (Netty.NET.Handler.Tests.Traffic). The static @BeforeAll createGroup()/@AfterAll destroyGroup()
+// run from a class fixture, as the GroupFixture of SocketEchoSourceTest. Each @Test is a [Fact] with the @Timeout
+// of the source that runs the body through the harness (both allocators x the NIO socket combination; OIO is
+// deprecated-not-ported). Promise<Boolean> from group.next().newPromise() is a TaskCompletionSource<bool> :
+// setSuccess/setFailure are SetResult/SetException (which throw on a completed promise, as DefaultPromise does),
+// await() is an await that suppresses the failure (ConfigureAwaitOptions.SuppressThrowing, as
+// DatagramMulticastSourceTest), isSuccess() is IsCompletedSuccessfully and cause() the Task's exception. Java
+// string concatenation prints numbers with the locale-independent Integer/Long/Float.toString and booleans as
+// "true"/"false", so the messages use FormattableString.Invariant and Str(bool).
 #pragma warning disable xUnit1069 // The xUnit Timeout bounds the Runner body, whose promise wait has no timeout in the source.
 #pragma warning disable xUnit1051 // The source's bind/connect/write/close calls and sleeps do not observe the test cancellation.
 public class TrafficShapingHandlerTest : AbstractSocketTest, IClassFixture<TrafficShapingHandlerTest.GroupFixture>
@@ -66,7 +65,7 @@ public class TrafficShapingHandlerTest : AbstractSocketTest, IClassFixture<Traff
     // schedule(runnable, delay, MILLISECONDS) is ScheduleAsync(action, TimeSpan.FromMilliseconds(delay)).
     private static readonly IEventExecutorGroup executor = new DefaultEventExecutorGroup(10);
 
-    // CLR: ThreadLocalRandom.current() is Random.Shared (docs/handler-porting.md, JSSE and JCA on the BCL).
+    // CLR: ThreadLocalRandom.current() is Random.Shared.
     static TrafficShapingHandlerTest()
     {
         Random.Shared.NextBytes(data);
@@ -294,7 +293,6 @@ public class TrafficShapingHandlerTest : AbstractSocketTest, IClassFixture<Traff
         await Run(TestContext.Current, TestAutoReadTrafficShapping0);
     }
 
-    // CLR: Arrays.fill(multipleMessage, 1) is Array.Fill(multipleMessage, 1).
     private async Task TestAutoReadTrafficShapping0(ServerBootstrap sb, Bootstrap cb)
     {
         int[] autoRead = { 1, -1, -1, 1, -2, 0, 1, 0, -3, 0, 1, 2, 0 };
@@ -484,15 +482,14 @@ public class TrafficShapingHandlerTest : AbstractSocketTest, IClassFixture<Traff
         }
     }
 
-    // CLR: Promise.cause() is null unless the promise failed; String.valueOf(null) is "null" (docs/handler-porting.md,
-    // Text).
+    // CLR: Promise.cause() is null unless the promise failed; String.valueOf(null) is "null".
     private static string Cause(Task task)
     {
         Exception cause = task.IsFaulted ? task.Exception.InnerException : null;
         return cause != null ? cause.ToString() : "null";
     }
 
-    // CLR: a boolean concatenated into a Java string is "true"/"false" (docs/handler-porting.md, Text).
+    // CLR: a boolean concatenated into a Java string is "true"/"false".
     private static string Str(bool value)
     {
         return value ? "true" : "false";
@@ -516,7 +513,6 @@ public class TrafficShapingHandlerTest : AbstractSocketTest, IClassFixture<Traff
         private readonly int[] autoRead;
         internal readonly TaskCompletionSource<bool> promise;
 
-        // CLR: Arrays.copyOf(multipleMessage, multipleMessage.length) is a full copy, Clone().
         internal ClientHandler(TaskCompletionSource<bool> promise, long[] minimalWaitBetween, int[] multipleMessage,
                                int[] autoRead)
         {
@@ -603,7 +599,6 @@ public class TrafficShapingHandlerTest : AbstractSocketTest, IClassFixture<Traff
         internal volatile int step;
         internal readonly AtomicReference<Exception> exception = new AtomicReference<Exception>();
 
-        // CLR: Arrays.copyOf(multipleMessage, multipleMessage.length) is a full copy, Clone().
         internal ServerHandler(int[] autoRead, int[] multipleMessage)
         {
             this.autoRead = autoRead;
@@ -685,7 +680,6 @@ public class TrafficShapingHandlerTest : AbstractSocketTest, IClassFixture<Traff
                             wait = stepms * 3;
                         }
 
-                        // CLR: the anonymous Runnable is a lambda (see the executor field).
                         _ = executor.ScheduleAsync(() =>
                         {
                             loggerServer.Info(FormattableString.Invariant($"Step: {exactStep} Reset AutoRead"));

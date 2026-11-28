@@ -19,7 +19,6 @@ namespace Netty.NET.Handler.Codec.Quic;
 /**
  * Signals a stream reset.
  */
-// CLR: super(message) is the internal QuicException(string) constructor (package-private in Java).
 public sealed class QuicStreamResetException : QuicException
 {
 

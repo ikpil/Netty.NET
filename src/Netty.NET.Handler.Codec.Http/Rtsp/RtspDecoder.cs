@@ -51,17 +51,17 @@ namespace Netty.NET.Handler.Codec.Rtsp;
  * </table>
  */
 // CLR: the @Deprecated constructor RtspDecoder(int, int, int, boolean), whose @deprecated text names
-// RtspDecoder(HttpDecoderConfig) and RtspDecoder(int, int, int), is not ported (owner decision 2026-11-16). HttpMessage
-// is IHttpMessage. java.util.regex.Pattern is System.Text.RegularExpressions.Regex: Matcher.matches() matches the
-// entire input (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/regex/Matcher.html), so the
-// pattern is wrapped in \A(?:...)\z, the whole-match form of docs/common-clr-design.md (Native regular expressions);
-// Java's \d is "A digit: [0-9]"
-// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/regex/Pattern.html) while the .NET \d accepts
-// "any character classified as a Unicode decimal digit"
-// (https://learn.microsoft.com/en-us/dotnet/standard/base-types/character-classes-in-regular-expressions), so \d is
-// written [0-9]. Integer.parseInt is int.Parse with an optional sign and the invariant culture, as core
-// HttpResponseStatus parses a code; an overflow throws OverflowException where Java throws NumberFormatException, and
-// both reach the catch (Exception) of HttpObjectDecoder, which produces the invalid message.
+// RtspDecoder(HttpDecoderConfig) and RtspDecoder(int, int, int), is not ported. HttpMessage is IHttpMessage.
+// java.util.regex.Pattern is System.Text.RegularExpressions.Regex: Matcher.matches() matches the entire input
+// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/regex/Matcher.html), so the pattern is
+// wrapped in \A(?:...)\z, the whole-match form of docs/common-clr-design.md (Native regular expressions); Java's
+// \d is "A digit: [0-9]"
+// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/regex/Pattern.html) while the.NET \d
+// accepts "any character classified as a Unicode decimal digit"
+// (https://learn.microsoft.com/en-us/dotnet/standard/base-types/character-classes-in-regular-expressions), so \d
+// is written [0-9]. Integer.parseInt is int.Parse with an optional sign and the invariant culture, as core
+// HttpResponseStatus parses a code; an overflow throws OverflowException where Java throws NumberFormatException,
+// and both reach the catch (Exception) of HttpObjectDecoder, which produces the invalid message.
 public class RtspDecoder : HttpObjectDecoder
 {
     /**

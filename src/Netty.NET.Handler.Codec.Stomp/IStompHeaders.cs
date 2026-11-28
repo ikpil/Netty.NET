@@ -25,10 +25,9 @@ namespace Netty.NET.Handler.Codec.Stomp;
  * The multimap data structure for the STOMP header names and values. It also provides the constants for the standard
  * STOMP header names and values.
  */
-// CLR: CharSequence is the Common ICharSequence and Headers is the codec-base IHeaders<K, V, T>, whose Map.Entry and
-// Iterator are IEntry<K, V> and IIterator<E> (docs/codec-base-porting.md, Headers). The interface constants are static
-// readonly fields of the interface (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface),
-// and List<String> is IList<string>.
+// CLR: The interface constants are static readonly fields of the interface
+// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface), and List<String> is
+// IList<string>.
 public interface IStompHeaders : IHeaders<ICharSequence, ICharSequence, IStompHeaders>
 {
 

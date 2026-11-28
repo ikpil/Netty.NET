@@ -61,8 +61,6 @@ public class DatagramConnectNotExistsSourceTest : AbstractClientSocketTest
         {
             IChannel datagramChannel = await future;
             Assert.True(datagramChannel.IsActive);
-            // CLR: CharsetUtil.US_ASCII is Encoding.ASCII, "an encoding for the ASCII (7-bit) character set"
-            // (https://learn.microsoft.com/en-us/dotnet/api/system.text.encoding.ascii).
             await datagramChannel.WriteAndFlushAsync(
                     Unpooled.CopiedBuffer("test", Encoding.ASCII));
             // CLR: OioDatagramChannel is deprecated-not-ported, so every channel takes the source's non-OIO branch.
@@ -87,7 +85,7 @@ public class DatagramConnectNotExistsSourceTest : AbstractClientSocketTest
         }
     }
 
-    // CLR: C# has no anonymous classes; the source's anonymous ChannelInboundHandlerAdapter is this class.
+    // CLR: C# has no anonymous classes.
     private sealed class ExceptionPromiseHandler(TaskCompletionSource<Exception> promise) : ChannelInboundHandlerAdapter
     {
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception cause)

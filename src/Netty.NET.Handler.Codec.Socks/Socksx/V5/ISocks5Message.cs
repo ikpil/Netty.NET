@@ -19,7 +19,6 @@ namespace Netty.NET.Handler.Codec.Socksx.V5;
 /**
  * A tag interface that all SOCKS5 protocol messages implement.
  */
-// CLR: Java interfaces take the I prefix (see Netty.NET.Handler.Codec.Socksx.ISocksMessage).
 public interface ISocks5Message : ISocksMessage
 {
     // Tag interface

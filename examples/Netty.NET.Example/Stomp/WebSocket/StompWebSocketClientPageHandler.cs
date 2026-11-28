@@ -30,20 +30,19 @@ namespace Netty.NET.Example.Stomp.WebSocket;
 
 // CLR: @Sharable is the [Sharable] attribute, and channelRead0 is protected as the abstract
 // SimpleChannelInboundHandler.ChannelRead0 it overrides (an override cannot change the accessibility). The static
-// imports are using static directives; C# reports a name found in two of them as ambiguous instead of preferring the
-// single-static-import of HttpHeaderValues.KEEP_ALIVE, so that constant is qualified. The Java interfaces
+// imports are using static directives; C# reports a name found in two of them as ambiguous instead of preferring
+// the single-static-import of HttpHeaderValues.KEEP_ALIVE, so that constant is qualified. The Java interfaces
 // FullHttpRequest, FullHttpResponse, HttpResponse and LastHttpContent are IFullHttpRequest, IFullHttpResponse,
-// IHttpResponse and ILastHttpContent. INSTANCE.getClass().getResource(requestResource) resolves the name against the
-// class's package, io/netty/example/stomp/websocket, in the class path; the example's resources are copied byte for
-// byte to Resources/io/netty/example/stomp/websocket next to the assembly (Content items copied to the output
-// directory), so GetResource returns that file's path. A name that leaves the directory, such as one with "..", or that
-// names neither a file nor a directory has no resource, as getResource returns null outside the class path. new
-// RandomAccessFile(file, "r") is a read-only FileStream and raf.length() its Length; opening a directory throws
-// UnauthorizedAccessException where RandomAccessFile throws FileNotFoundException, so both print "File not found".
-// raf.getChannel() is the FileStream that DefaultFileRegion takes, and close() is Dispose(). ChannelFutureListener.CLOSE
-// is a continuation of the write Task that closes the context's channel whatever the outcome, and the other writes
-// discard their Tasks as Java discards the futures. String.isEmpty() is Length == 0, startsWith/endsWith are ordinal,
-// and CharsetUtil.UTF_8 is Encoding.UTF8.
+// IHttpResponse and ILastHttpContent. INSTANCE.getClass().getResource(requestResource) resolves the name against
+// the class's package, io/netty/example/stomp/websocket, in the class path; the example's resources are copied
+// byte for byte to Resources/io/netty/example/stomp/websocket next to the assembly (Content items copied to the
+// output directory), so GetResource returns that file's path. A name that leaves the directory, such as one with
+// "..", or that names neither a file nor a directory has no resource, as getResource returns null outside the
+// class path. new RandomAccessFile(file, "r") is a read-only FileStream and raf.length() its Length; opening a
+// directory throws UnauthorizedAccessException where RandomAccessFile throws FileNotFoundException, so both print
+// "File not found". raf.getChannel() is the FileStream that DefaultFileRegion takes, and close() is Dispose().
+// ChannelFutureListener.CLOSE is a continuation of the write Task that closes the context's channel whatever the
+// outcome, and the other writes discard their Tasks as Java discards the futures.
 [Sharable]
 public sealed class StompWebSocketClientPageHandler : SimpleChannelInboundHandler<IFullHttpRequest>
 {

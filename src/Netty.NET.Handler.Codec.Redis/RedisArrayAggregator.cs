@@ -27,10 +27,9 @@ namespace Netty.NET.Handler.Codec.Redis;
  * Aggregates {@link RedisMessage} parts into {@link ArrayRedisMessage}. This decoder
  * should be used together with {@link RedisDecoder}.
  */
-// CLR: the @Deprecated no-argument constructor ("Use RedisArrayAggregator(int, int) instead") is not ported (owner
-// decision 2026-11-16, docs/codec-redis-porting.md), and with it the private DEFAULT_MAX_ARRAY_LENGTH that only it used.
-// RedisMessage.class is typeof(IRedisMessage) (docs/codec-base-porting.md, Type matching). The ArrayDeque used as a
-// stack (push/pop/peek at its head) is Stack<T>, a last-in-first-out collection
+// CLR: the @Deprecated no-argument constructor ("Use RedisArrayAggregator(int, int) instead") is not ported, and
+// with it the private DEFAULT_MAX_ARRAY_LENGTH that only it used. RedisMessage.class is typeof(IRedisMessage). The
+// ArrayDeque used as a stack (push/pop/peek at its head) is Stack<T>, a last-in-first-out collection
 // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/ArrayDeque.html,
 // https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.stack-1); the order in which
 // releaseAndClearDepths() releases the states does not matter. Numbers in the messages use the invariant culture

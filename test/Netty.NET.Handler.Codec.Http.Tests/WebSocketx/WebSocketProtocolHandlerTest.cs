@@ -31,16 +31,14 @@ namespace Netty.NET.Handler.Codec.Http.Tests.WebSocketx;
 /**
  * Tests common, abstract class functionality in {@link WebSocketClientProtocolHandler}.
  */
-// CLR: the anonymous WebSocketProtocolHandler subclasses are the named nested class ProtocolHandler (the
-// package-private constructors of the abstract class are internal and reached through InternalsVisibleTo), and the
-// anonymous ChannelOutboundHandlerAdapter subclasses are StallingOutboundHandler and DroppingOutboundHandler. The Java
-// write(ctx, msg, promise) that keeps the promise without completing it is a WriteAsync that returns the Task of a
-// TaskCompletionSource it never completes; AtomicReference<ChannelPromise> is that TaskCompletionSource kept in the
-// handler (isDone() is Task.IsCompleted). ChannelFuture is Task: cause() is the InnerException of Task.Exception and
-// isDone() is IsCompleted; handler.close(ctx, ctx.newPromise()) is CloseAsync(ctx, CancellationToken.None) with the
-// Task discarded. channel.config().setAutoRead(false) is Config.SetAutoRead(false), Thread.sleep is Thread.Sleep,
-// CharsetUtil.UTF_8 is Encoding.UTF8 and readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>().
-// assertInstanceOf is Assert.IsAssignableFrom.
+// CLR: The Java write(ctx, msg, promise) that keeps the promise without completing it is a WriteAsync that returns
+// the Task of a TaskCompletionSource it never completes; AtomicReference<ChannelPromise> is that
+// TaskCompletionSource kept in the handler (isDone() is Task.IsCompleted). ChannelFuture is Task: cause() is the
+// InnerException of Task.Exception and isDone() is IsCompleted; handler.close(ctx, ctx.newPromise()) is
+// CloseAsync(ctx, CancellationToken.None) with the Task discarded. channel.config().setAutoRead(false) is
+// Config.SetAutoRead(false), Thread.sleep is Thread.Sleep, CharsetUtil.UTF_8 is Encoding.UTF8 and
+// readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(). assertInstanceOf is
+// Assert.IsAssignableFrom.
 public class WebSocketProtocolHandlerTest
 {
 

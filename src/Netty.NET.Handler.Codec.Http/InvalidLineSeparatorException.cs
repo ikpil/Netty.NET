@@ -29,7 +29,7 @@ namespace Netty.NET.Handler.Codec.Http;
  * See <a href="https://datatracker.ietf.org/doc/html/rfc9112#name-message-format">RFC 9112 Section 2.1</a>.
  */
 // CLR: serialVersionUID has no counterpart, Throwable is Exception and the cause-only constructor keeps the
-// codec-base detail message (docs/codec-base-porting.md, Exceptions).
+// codec-base detail message.
 public sealed class InvalidLineSeparatorException : DecoderException
 {
 

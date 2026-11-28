@@ -56,19 +56,18 @@ namespace Netty.NET.Handler.Codec.Stomp;
  * to simplify upstream message parsing.
  */
 // CLR: Java keeps types and methods in separate name spaces, but the nested type State hides the inherited
-// ReplayingDecoder.State() methods in C# ("a constant, field, property, or type ... hides all base class members that
-// share its name", https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/new-modifier), so the
-// enum is declared new and state() is called as base.State(). Signal is an Exception here but a java.lang.Error in the
-// source, which catch (Exception) does not catch, so the two catch (Exception) blocks filter when (e is not Signal)
-// and the REPLAY signal reaches ReplayingDecoder as in Java (docs/codec-base-porting.md, Signals). The C#
-// ReplayingDecoderByteBuf view reads WriterIndex as int.MaxValue while not terminated, where the Java view returns the
-// cumulation's writer index (docs/codec-base-porting.md, ReplayingDecoder; recorded in
-// docs/codec-base-porting-manifest.json), so in.writerIndex() is the cumulation's InternalBuffer().WriterIndex. The
-// switch sections that fall through end with goto case
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/selection-statements).
-// The static import ByteBufUtil.* is using static ByteBufUtil: ReadBytes(ctx.Alloc(), in, length) reads through
-// in.ReadBytes(ByteBuf dst), which the ReplayingDecoderByteBuf view supports, when the allocator returns exactly length
-// writable bytes (src/Netty.NET.Buffer/ByteBufUtil.cs; the owner-revisit item of 2026-11-19, done
+// ReplayingDecoder.State() methods in C# ("a constant, field, property, or type... hides all base class members
+// that share its name", https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/new-modifier),
+// so the enum is declared new and state() is called as base.State(). Signal is an Exception here but a
+// java.lang.Error in the source, which catch (Exception) does not catch, so the two catch (Exception) blocks
+// filter when (e is not Signal) and the REPLAY signal reaches ReplayingDecoder as in Java. The C#
+// ReplayingDecoderByteBuf view reads WriterIndex as int.MaxValue while not terminated, where the Java view returns
+// the cumulation's writer index, so in.writerIndex() is the cumulation's InternalBuffer().WriterIndex. The switch
+// sections that fall through end with goto case
+// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/selection-statements). The static
+// import ByteBufUtil.* is using static ByteBufUtil: ReadBytes(ctx.Alloc(), in, length) reads through
+// in.ReadBytes(ByteBuf dst), which the ReplayingDecoderByteBuf view supports, when the allocator returns exactly
+// length writable bytes (src/Netty.NET.Buffer/ByteBufUtil.cs; the owner-revisit item of 2026-11-19, done
 // 2026-11-24).
 public class StompSubframeDecoder : ReplayingDecoder<StompSubframeDecoder.State>
 {
@@ -391,13 +390,13 @@ public class StompSubframeDecoder : ReplayingDecoder<StompSubframeDecoder.State>
         lastContent = null;
     }
 
-    // CLR: the class implements ByteProcessor, which is Func<byte, bool> in the Buffer port, through its virtual Process
-    // method group; the package-private parse()/charSequence() are internal and the overridable protected members are
-    // virtual. Sign: the INITIAL BRANCH tests nextByte >= 0 on the signed Java byte (an ASCII byte); the System.Byte is
-    // read as (sbyte) there (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types).
-    // The other masks (& 0x3F, & 0xE0, & 0x1F, & 0x0F) give the same bits for the signed and the unsigned value. The
-    // char compound assignment casts its int operand, which Java narrows implicitly. The line length in the message uses
-    // the invariant culture.
+    // CLR: the class implements ByteProcessor, which is Func<byte, bool> in the Buffer port, through its virtual
+    // Process method group. Sign: the INITIAL BRANCH tests nextByte >= 0 on the signed Java byte (an ASCII byte);
+    // the System.Byte is read as (sbyte) there
+    // (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types).
+    // The other masks (& 0x3F, & 0xE0, & 0x1F, & 0x0F) give the same bits for the signed and the unsigned value.
+    // The char compound assignment casts its int operand, which Java narrows implicitly. The line length in the
+    // message uses the invariant culture.
     private class Utf8LineParser
     {
 
@@ -501,13 +500,9 @@ public class StompSubframeDecoder : ReplayingDecoder<StompSubframeDecoder.State>
         }
     }
 
-    // CLR: Java String is a CharSequence, but C# string is not an ICharSequence, so the header name and value Strings
-    // are added as the Common StringCharSequence, whose Equals matches String.equals
-    // (docs/codec-base-porting-manifest.json, DefaultHeadersTest). StringUtil.isNullOrEmpty(String) is
-    // string.IsNullOrEmpty, which "indicates whether the specified string is null or an empty string"
-    // (https://learn.microsoft.com/en-us/dotnet/api/system.string.isnullorempty). IllegalArgumentException is
-    // ArgumentException (docs/codec-base-porting.md, Shared CLR adaptations), and the header count uses the invariant
-    // culture.
+    // CLR: Java String is a CharSequence, but C# string is not an ICharSequence, so the header name and value
+    // Strings are added as the Common StringCharSequence, whose Equals matches String.equals.
+    // IllegalArgumentException is ArgumentException, and the header count uses the invariant culture.
     private sealed class HeaderParser : Utf8LineParser
     {
 

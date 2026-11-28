@@ -29,22 +29,16 @@ namespace Netty.NET.Handler.Codec.Http;
 /**
  * Utility methods useful in the HTTP context.
  */
-// CLR: the final class with a private constructor is a static class; CharSequence is ICharSequence and the String
-// arguments that Java passes as CharSequence are wrapped in StringCharSequence. java.net.URI is System.Uri, and
-// URI.toString() (the original string of a parsed URI) is Uri.OriginalString. java.nio.charset.Charset is
-// System.Text.Encoding and CharsetUtil.ISO_8859_1 is Encoding.Latin1; Charset.forName is Common's CharsetUtil.ForName,
-// which resolves the Java charset names and aliases (such as "UTF8") as Java does and throws ArgumentException for
-// both IllegalCharsetNameException and UnsupportedCharsetException, so their catch is catch (ArgumentException).
-// Long.parseLong is ParseLong (long.Parse with an optional sign; NumberFormatException is FormatException, also for an
-// overflow, which long.Parse reports as OverflowException). InetSocketAddress is EndPoint: an unresolved address is a
-// DnsEndPoint and a resolved one an IPEndPoint, whose getHostString() is the Common NetUtil.GetHostname (the numeric
-// address, as an IPEndPoint keeps no host name; docs/handler-porting.md, Addresses). method.getClass() !=
-// HttpMethod.class is GetType() != typeof(HttpMethod). The @Deprecated getCharsetAsString(HttpMessage), whose
-// @deprecated text names getCharsetAsSequence(HttpMessage), is not ported (owner decision 2026-11-16). Java byte
-// octets of AsciiString.array() are unsigned in C#; isValidTokenChar keeps the Java signed test with (sbyte), so the
-// octets 0x80-0xFF are still invalid. String.trim() (chars up to U+0020) is TrimJava; ParseLong and TrimJava are internal
-// CLR helpers that HttpObjectDecoder shares. IllegalArgumentException is ArgumentException; the package-private
-// members are internal.
+// CLR: Long.parseLong is ParseLong (long.Parse with an optional sign; NumberFormatException is FormatException,
+// also for an overflow, which long.Parse reports as OverflowException). InetSocketAddress is EndPoint: an
+// unresolved address is a DnsEndPoint and a resolved one an IPEndPoint, whose getHostString() is the Common
+// NetUtil.GetHostname (the numeric address, as an IPEndPoint keeps no host name; docs/handler-porting.md,
+// Addresses). method.getClass() != HttpMethod.class is GetType() != typeof(HttpMethod). The @Deprecated
+// getCharsetAsString(HttpMessage), whose @deprecated text names getCharsetAsSequence(HttpMessage), is not ported.
+// Java byte octets of AsciiString.array() are unsigned in C#; isValidTokenChar keeps the Java signed test with
+// (sbyte), so the octets 0x80-0xFF are still invalid. String.trim() (chars up to U+0020) is TrimJava; ParseLong
+// and TrimJava are internal CLR helpers that HttpObjectDecoder shares. IllegalArgumentException is
+// ArgumentException.
 public static class HttpUtil
 {
 
@@ -461,8 +455,6 @@ public static class HttpUtil
                 return;
             }
 
-            // CLR: the ArrayList<CharSequence> copy of the String values and its Iterator.remove() loop are a List of
-            // StringCharSequence values filtered in place.
             List<object> values = new List<object>(encodings.Count);
 
             foreach (string encoding in encodings)
@@ -755,9 +747,7 @@ public static class HttpUtil
      * @return the normalized content length from the headers or {@code -1} if the fields were empty.
      * @throws IllegalArgumentException if the content-length fields are not valid
      */
-    // CLR: List<? extends CharSequence> is the generic IList<T> (HttpObjectDecoder passes the String values of
-    // headers().getAll(...), and a C# string is not an ICharSequence); each field is read through ToString(). The
-    // list prints as Java's AbstractCollection.toString() ("[a, b]") in the exception messages.
+    // CLR: The list prints as Java's AbstractCollection.toString() ("[a, b]") in the exception messages.
     public static long NormalizeAndGetContentLength<T>(
             IList<T> contentLengthFields, bool isHttp10OrEarlier,
             bool allowDuplicateContentLengths)
@@ -863,7 +853,6 @@ public static class HttpUtil
         return value.Substring(start, end - start);
     }
 
-    // CLR: AbstractCollection.toString() of the fields.
     private static string ToJavaString<T>(IList<T> list)
     {
         StringBuilder sb = new StringBuilder("[");

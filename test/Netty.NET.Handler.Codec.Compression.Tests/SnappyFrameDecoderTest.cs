@@ -21,12 +21,12 @@ using Netty.NET.Transport.Channels.Embedded;
 namespace Netty.NET.Handler.Codec.Compression.Tests;
 
 // CLR: xUnit creates a new test class instance for every test, so the @BeforeEach initChannel() runs from the
-// constructor and the @AfterEach tearDown() from Dispose() (https://xunit.net/docs/shared-context); both are private
-// (xUnit1013 asks public methods of a test class to be tests). The anonymous Executable classes are lambdas, readInbound()
-// is ReadInbound<ByteBuf>(), and channel.alloc() is the Alloc() of the Transport EmbeddedChannel. Each @CsvSource row of
-// a @ParameterizedTest is an [InlineData] row of a [Theory]. The byte[] initializers keep the bit patterns of the Java
-// byte literals: negative values are unchecked((byte) ...) and char literals are cast to byte, because only int
-// constants in range convert implicitly
+// constructor and the @AfterEach tearDown() from Dispose() (https://xunit.net/docs/shared-context); both are
+// private (xUnit1013 asks public methods of a test class to be tests). The anonymous Executable classes are
+// lambdas, readInbound() is ReadInbound<ByteBuf>(), and channel.alloc() is the Alloc() of the Transport
+// EmbeddedChannel. Each @CsvSource row of a @ParameterizedTest is an [InlineData] row of a [Theory]. The byte[]
+// initializers keep the bit patterns of the Java byte literals: negative values are unchecked((byte)...) and char
+// literals are cast to byte, because only int constants in range convert implicitly
 // (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types).
 public class SnappyFrameDecoderTest : IDisposable
 {

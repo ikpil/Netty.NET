@@ -24,8 +24,8 @@ namespace Netty.NET.Handler.Codec.Mqtt;
  * Payload of {@link MqttConnectMessage}
  */
 // CLR: the @Deprecated String-based constructor and the @Deprecated willMessage()/password() accessors name their
-// replacements (the byte[] constructor, willMessageInBytes() and passwordInBytes()), so they are not ported (owner
-// decision 2026-11-16); their Javadoc is recorded in docs/codec-mqtt-porting-manifest.json.
+// replacements (the byte[] constructor, willMessageInBytes() and passwordInBytes()), so they are not ported; their
+// Javadoc is recorded in docs/codec-mqtt-porting-manifest.json.
 public sealed class MqttConnectPayload
 {
     private readonly string clientIdentifier;

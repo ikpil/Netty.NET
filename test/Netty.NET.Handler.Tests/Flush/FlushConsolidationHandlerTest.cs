@@ -24,11 +24,11 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Tests.Flush;
 
-// CLR: the anonymous handlers are named nested classes, AtomicInteger is the Common AtomicInteger, readOutbound() with
-// the (Long) cast is ReadOutbound<long>() (the boxed long the inbound handler wrote back) and readOutbound() alone is
-// ReadOutbound(). IllegalStateException is InvalidOperationException; the anonymous Executable is a lambda.
-// pipeline().remove(Class) is Pipeline.Remove<T>(). The write future's addListener(...) is a synchronous continuation,
-// run when the write completes during flushOutbound(), as the listener of the source
+// CLR: the anonymous handlers are named nested classes, AtomicInteger is the Common AtomicInteger, readOutbound()
+// with the (Long) cast is ReadOutbound<long>() (the boxed long the inbound handler wrote back) and readOutbound()
+// alone is ReadOutbound(). IllegalStateException is InvalidOperationException. The write future's addListener(...)
+// is a synchronous continuation, run when the write completes during flushOutbound(), as the listener of the
+// source
 // (https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.taskcontinuationoptions?view=net-10.0).
 public class FlushConsolidationHandlerTest
 {

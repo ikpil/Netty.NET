@@ -20,11 +20,11 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the package-private final class is internal sealed. Http3FrameCodecFactory is the nested
-// Http3FrameCodec.IHttp3FrameCodecFactory, LongFunction<ChannelHandler> Func<long, IChannelHandler> (apply(x) is the
-// delegate invocation), Supplier<ChannelHandler> Func<IChannelHandler> and the lambda __ -> ReleaseHandler.INSTANCE a
-// C# lambda. The Long sentMaxPushId() is long?; ids print with the invariant culture. The package-private override of
-// initPushStream is internal. The @Nullable (org.jetbrains.annotations) annotations have no counterpart.
+// CLR: Http3FrameCodecFactory is the nested Http3FrameCodec.IHttp3FrameCodecFactory, LongFunction<ChannelHandler>
+// Func<long, IChannelHandler> (apply(x) is the delegate invocation), Supplier<ChannelHandler>
+// Func<IChannelHandler> and the lambda __ -> ReleaseHandler.INSTANCE a C# lambda. The Long sentMaxPushId() is
+// long?; ids print with the invariant culture. The @Nullable (org.jetbrains.annotations) annotations have no
+// counterpart.
 internal sealed class Http3UnidirectionalStreamInboundClientHandler : Http3UnidirectionalStreamInboundHandler
 {
     private readonly Func<long, IChannelHandler> pushStreamHandlerFactory;

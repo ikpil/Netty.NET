@@ -36,11 +36,10 @@ namespace Netty.NET.Example.Http2.Tiles;
  * pipeline is setup.
  */
 // CLR: FullHttpRequest/FullHttpResponse are IFullHttpRequest/IFullHttpResponse, ctx.alloc() is ctx.Alloc() and
-// Unpooled.EMPTY_BUFFER is Unpooled.EmptyBuffer; Integer.parseInt is int.Parse with an optional sign and the invariant
-// culture. ctx.executor().schedule(Runnable, latency, MILLISECONDS) is ctx.Executor.ScheduleAsync with a TimeSpan of the
-// latency (Common's EventExecutorSchedulingExtensions), whose Task is discarded as Java discards the ScheduledFuture;
-// the anonymous Runnable is the lambda. ctx.writeAndFlush(msg) is WriteAndFlushAsync, whose Task is discarded.
-// cause.printStackTrace() writes the exception to Console.Error.
+// Unpooled.EMPTY_BUFFER is Unpooled.EmptyBuffer; Integer.parseInt is int.Parse with an optional sign and the
+// invariant culture. ctx.executor().schedule(Runnable, latency, MILLISECONDS) is ctx.Executor.ScheduleAsync with a
+// TimeSpan of the latency (Common's EventExecutorSchedulingExtensions), whose Task is discarded as Java discards
+// the ScheduledFuture.
 public class Http2RequestHandler : SimpleChannelInboundHandler<IFullHttpRequest>
 {
 

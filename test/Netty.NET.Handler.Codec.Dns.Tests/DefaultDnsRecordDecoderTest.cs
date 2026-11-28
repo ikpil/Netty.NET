@@ -21,8 +21,8 @@ namespace Netty.NET.Handler.Codec.Dns.Tests;
 
 // CLR: the char literals of the byte[] initializers are cast to byte, which Java narrows implicitly; the record
 // accessors are the C# methods and properties of the port (content() is Content); decodeRecord(ByteBuf) states its
-// type argument because C# does not infer it from the assignment target. The tests reach the protected decodeName0 and
-// decodeRecord(String, ...) of the same package through their protected internal C# declarations.
+// type argument because C# does not infer it from the assignment target. The tests reach the protected decodeName0
+// and decodeRecord(String,...) of the same package through their protected internal C# declarations.
 public class DefaultDnsRecordDecoderTest
 {
 

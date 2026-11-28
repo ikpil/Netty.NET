@@ -22,10 +22,10 @@ namespace Netty.NET.Handler.Codec.Compression.Tests;
 /**
  * Hand-crafted, minimal bzip2 byte streams used to test handling of malformed input.
  */
-// CLR: the package-private final test helper with a private constructor is an internal sealed class.
-// ByteArrayOutputStream is MemoryStream: write(int) writes "the eight low-order bits of the argument b. The 24 high-order
-// bits of b are ignored" (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/OutputStream.html), which
-// is WriteByte((byte) value), an unchecked narrowing that keeps the low eight bits ("the source value is truncated by
+// CLR: ByteArrayOutputStream is MemoryStream: write(int) writes "the eight low-order bits of the argument b. The
+// 24 high-order bits of b are ignored"
+// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/OutputStream.html), which is
+// WriteByte((byte) value), an unchecked narrowing that keeps the low eight bits ("the source value is truncated by
 // discarding its "extra" most significant bits",
 // https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/numeric-conversions);
 // write(byte[], int, int) is Write and toByteArray() is ToArray(). Java's >>> is C#'s >>>.

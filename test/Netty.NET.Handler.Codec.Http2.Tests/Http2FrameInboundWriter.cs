@@ -29,13 +29,7 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
 /**
  * Utility class which allows easy writing of HTTP2 frames via {@link EmbeddedChannel#writeInbound(Object...)}.
  */
-// CLR: the package-private final class is an internal sealed class with internal methods. ctx.newPromise() is a new
-// TaskCompletionSource (the TaskCompletionSource that stands for a ChannelPromise, docs/codec-http-porting.md, Shared
-// CLR adaptations) and future.syncUninterruptibly() is GetAwaiter().GetResult(), which waits and throws the failure
-// ("The task completed in a Faulted state",
-// https://learn.microsoft.com/en-us/dotnet/api/system.runtime.compilerservices.taskawaiter.getresult?view=net-10.0,
-// as recorded in docs/codec-http-porting.md, Core test notes). The write methods take the Async suffix of the C#
-// frame writer.
+// CLR: The write methods take the Async suffix of the C# frame writer.
 internal sealed class Http2FrameInboundWriter
 {
 
@@ -127,12 +121,12 @@ internal sealed class Http2FrameInboundWriter
     }
 
     // CLR: the C# IChannelHandlerContext has properties for channel()/executor()/name()/handler()/isRemoved()/
-    // pipeline() and folds the ChannelPromise overloads into its Task-returning members (docs/transport-porting.md:
-    // "The ChannelPromise overloads fold into the Task-returning members"); newPromise(), newProgressivePromise(),
-    // newSucceededFuture(), newFailedFuture(Throwable) and voidPromise() are not members of the C# context, so the
-    // promise overloads and those factories have no counterpart here. writeAndFlush(msg, promise) is
-    // WriteAndFlushAsync(msg, CancellationToken), which completes a new TaskCompletionSource the same way; write(msg)
-    // calls it as write(msg, newPromise()) does. channel.alloc() is the IChannel default member Alloc().
+    // pipeline() and folds the ChannelPromise overloads into its Task-returning members; newPromise(),
+    // newProgressivePromise(), newSucceededFuture(), newFailedFuture(Throwable) and voidPromise() are not members
+    // of the C# context, so the promise overloads and those factories have no counterpart here. writeAndFlush(msg,
+    // promise) is WriteAndFlushAsync(msg, CancellationToken), which completes a new TaskCompletionSource the same
+    // way; write(msg) calls it as write(msg, newPromise()) does. channel.alloc() is the IChannel default member
+    // Alloc().
     private sealed class WriteInboundChannelHandlerContext : ChannelOutboundHandlerAdapter,
             IChannelHandlerContext
     {

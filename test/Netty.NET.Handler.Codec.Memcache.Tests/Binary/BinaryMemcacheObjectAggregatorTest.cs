@@ -25,9 +25,6 @@ namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary;
 /**
  * Verifies the correct functionality of the {@link BinaryMemcacheObjectAggregator}.
  */
-// CLR: CharsetUtil.UTF_8 is Encoding.UTF8 (docs/codec-base-porting.md), assertInstanceOf is Assert.IsAssignableFrom
-// (https://raw.githubusercontent.com/xunit/assert.xunit/main/TypeAsserts.cs), and the (byte) 0x80 of the request is the
-// System.Byte value with the same bits (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types).
 public class BinaryMemcacheObjectAggregatorTest
 {
 

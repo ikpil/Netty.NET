@@ -29,22 +29,21 @@ namespace Netty.NET.Handler.Ssl;
  *
  * {@link <a href="https://tools.ietf.org/html/rfc5246">rfc5246</a>}
  */
-// CLR: javax.crypto.Mac is IncrementalHash.CreateHMAC, which throws CryptographicException when "hashAlgorithm is not a
-// known hash algorithm"
+// CLR: javax.crypto.Mac is IncrementalHash.CreateHMAC, which throws CryptographicException when "hashAlgorithm is
+// not a known hash algorithm"
 // (https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography.incrementalhash.createhmac?view=net-10.0);
-// getMacLength() is HashLengthInBytes and doFinal(input) is AppendData(input) and GetHashAndReset(). The JCA Mac names
-// are "HmacSHA256" and so on and "Standard names are not case-sensitive"
-// (https://docs.oracle.com/en/java/javase/17/docs/specs/security/standard-names.html), while "Hash algorithm names are
-// case-sensitive" in the BCL
-// (https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography.hashalgorithmname?view=net-10.0), so the
-// hash name is the part after a case-insensitive "Hmac" prefix, upper-cased ("SHA256", "SHA3-256"); names the BCL does
-// not know (HmacSHA224, HmacSHA512/224, ...) fail with "Could not find algo" as a missing JCA algorithm does.
-// SecretKeySpec throws IllegalArgumentException "if algorithm is null or key is null or empty"
-// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/javax/crypto/spec/SecretKeySpec.html), while an HMAC key
-// may be empty in the BCL, so that check is written out after the algorithm lookup, in the source's order.
-// GeneralSecurityException is CryptographicException (as pkitesting Algorithms maps it,
-// src/Netty.NET.PkiTesting/Algorithms.cs) and IllegalArgumentException is ArgumentException; Arrays.copyOf and
-// System.arraycopy are Array.Copy.
+// getMacLength() is HashLengthInBytes and doFinal(input) is AppendData(input) and GetHashAndReset(). The JCA Mac
+// names are "HmacSHA256" and so on and "Standard names are not case-sensitive"
+// (https://docs.oracle.com/en/java/javase/17/docs/specs/security/standard-names.html), while "Hash algorithm names
+// are case-sensitive" in the BCL
+// (https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography.hashalgorithmname?view=net-10.0), so
+// the hash name is the part after a case-insensitive "Hmac" prefix, upper-cased ("SHA256", "SHA3-256"); names the
+// BCL does not know (HmacSHA224, HmacSHA512/224,...) fail with "Could not find algo" as a missing JCA algorithm
+// does. SecretKeySpec throws IllegalArgumentException "if algorithm is null or key is null or empty"
+// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/javax/crypto/spec/SecretKeySpec.html), while an
+// HMAC key may be empty in the BCL, so that check is written out after the algorithm lookup, in the source's
+// order. GeneralSecurityException is CryptographicException (as pkitesting Algorithms maps it,
+// src/Netty.NET.PkiTesting/Algorithms.cs) and IllegalArgumentException is ArgumentException.
 internal sealed class PseudoRandomFunction
 {
 
@@ -120,7 +119,6 @@ internal sealed class PseudoRandomFunction
         return new HashAlgorithmName(hash.ToUpperInvariant());
     }
 
-    // CLR: Mac.doFinal(input).
     private static byte[] DoFinal(IncrementalHash hmac, byte[] input)
     {
         hmac.AppendData(input);

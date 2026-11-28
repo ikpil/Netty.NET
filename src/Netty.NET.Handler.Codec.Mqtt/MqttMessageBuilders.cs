@@ -22,8 +22,8 @@ using static Netty.NET.Common.Internal.ObjectUtil;
 namespace Netty.NET.Handler.Codec.Mqtt;
 
 // CLR: the @Deprecated ConnectBuilder.willMessage(String)/password(String) and PubAckBuilder/SubAckBuilder/
-// UnsubAckBuilder.packetId(short) name their replacements (willMessage(byte[]), password(byte[]) and packetId(int)), so
-// they are not ported (owner decision 2026-11-16); their Javadoc is recorded in docs/codec-mqtt-porting-manifest.json.
+// UnsubAckBuilder.packetId(short) name their replacements (willMessage(byte[]), password(byte[]) and
+// packetId(int)), so they are not ported; their Javadoc is recorded in docs/codec-mqtt-porting-manifest.json.
 // Package-private constructors are internal. Boxed Long/Byte/Boolean/Integer fields are nullable value types, and
 // longValue/intValue narrowing is the unchecked C# cast.
 public sealed class MqttMessageBuilders

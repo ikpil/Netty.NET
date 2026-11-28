@@ -27,20 +27,20 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
 /**
  * Tests for {@link DefaultHttp2Connection}.
  */
-// CLR: the static EventLoopGroup of @BeforeAll/@AfterAll only creates the promises of close(Promise); a promise is a
-// TaskCompletionSource (Http2CodecUtil.NewPromise; docs/codec-http-porting.md, Shared CLR adaptations), so the group
-// and its beforeClass/afterClass have no counterpart, and promise.addListener(...) is a continuation of the returned
-// Task (future.isDone() is IsCompleted). CountDownLatch is CountdownEvent (docs/codec-http-porting.md, Shared CLR
-// adaptations). Mockito's @Mock listeners are Moq mocks created in the constructor (@BeforeEach; xUnit creates a test
-// class instance per test, https://xunit.net/docs/shared-context); doAnswer(answer).when(listener).onX(...) is a Moq
-// Setup with a Callback (the Answer classes keep an Answer() method that the callback calls), verify(...) is
-// Verify(..., Times.Once()) and never() is Times.Never() (Moq Quickstart, https://github.com/devlooped/moq/wiki/Quickstart).
-// streamEq is a Moq custom matcher (Match.Create) that matches null or a stream equal to the argument, as
-// ArgumentMatchers.isNull()/eq(stream) do. assertThrows(T.class, ...) is Assert.ThrowsAny<T>
-// (docs/codec-http-porting.md, Core test notes) and the anonymous Executables and Http2StreamVisitors are lambdas or
-// private nested classes. Endpoint<?> is the non-generic IHttp2Connection.IEndpoint. MAX_VALUE + 1/+ 2 overflow as in
-// Java (unchecked). fail(Throwable) is Assert.Fail with the exception's text. The generic getProperty/removeProperty
-// calls name their type argument (string), which Java infers. @Nonnull and @SuppressWarnings have no counterpart.
+// CLR: the static EventLoopGroup of @BeforeAll/@AfterAll only creates the promises of close(Promise); a promise is
+// a TaskCompletionSource (Http2CodecUtil.NewPromise; docs/codec-http-porting.md, Shared CLR adaptations), so the
+// group and its beforeClass/afterClass have no counterpart, and promise.addListener(...) is a continuation of the
+// returned Task (future.isDone() is IsCompleted). CountDownLatch is CountdownEvent. Mockito's @Mock listeners are
+// Moq mocks created in the constructor (@BeforeEach; xUnit creates a test class instance per test,
+// https://xunit.net/docs/shared-context); doAnswer(answer).when(listener).onX(...) is a Moq Setup with a Callback
+// (the Answer classes keep an Answer() method that the callback calls), verify(...) is Verify(..., Times.Once())
+// and never() is Times.Never() (Moq Quickstart, https://github.com/devlooped/moq/wiki/Quickstart). streamEq is a
+// Moq custom matcher (Match.Create) that matches null or a stream equal to the argument, as
+// ArgumentMatchers.isNull()/eq(stream) do. assertThrows(T.class,...) is Assert.ThrowsAny<T> and the anonymous
+// Executables and Http2StreamVisitors are lambdas or private nested classes. Endpoint<?> is the non-generic
+// IHttp2Connection.IEndpoint. MAX_VALUE + 1/+ 2 overflow as in Java (unchecked). fail(Throwable) is Assert.Fail
+// with the exception's text. The generic getProperty/removeProperty calls name their type argument (string), which
+// Java infers. @Nonnull and @SuppressWarnings have no counterpart.
 public class DefaultHttp2ConnectionTest
 {
 
@@ -143,7 +143,6 @@ public class DefaultHttp2ConnectionTest
         Assert.True(latch.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
     }
 
-    // CLR: the anonymous Http2StreamVisitor of removeAllStreamsWhileIteratingActiveStreams.
     private sealed class CloseVisitor : IHttp2StreamVisitor
     {
         private readonly DefaultHttp2Connection client;
@@ -199,7 +198,6 @@ public class DefaultHttp2ConnectionTest
         Assert.True(latch.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
     }
 
-    // CLR: the anonymous Http2StreamVisitor of removeAllStreamsWhileIteratingActiveStreamsAndExceptionOccurs.
     private sealed class CloseAndThrowVisitor : IHttp2StreamVisitor
     {
         private readonly DefaultHttp2Connection client;

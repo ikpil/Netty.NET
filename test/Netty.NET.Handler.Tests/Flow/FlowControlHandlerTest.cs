@@ -507,7 +507,6 @@ public class FlowControlHandlerTest : IClassFixture<FlowControlHandlerTest.Befor
         }
     }
 
-    // CLR: the anonymous ChannelDuplexHandler shared by testFlowAutoReadOff and testFlowAutoReadOffAndQueueNonEmpty.
     private sealed class CountingPeerHandler : ChannelDuplexHandler
     {
         private readonly Exchanger<IChannel> peerRef;
@@ -857,7 +856,6 @@ public class FlowControlHandlerTest : IClassFixture<FlowControlHandlerTest.Befor
         Assert.False(channel.FinishAndReleaseAll());
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter that counts reads and read completions, shared by several tests.
     private sealed class ReadCountingHandler : ChannelInboundHandlerAdapter
     {
         private readonly AtomicInteger reads;

@@ -33,33 +33,9 @@ namespace Netty.NET.Handler.Codec.Http;
  * information on how this handler modifies the message, please refer to
  * {@link HttpContentEncoder}.
  */
-// CLR: CompressionOptions is codec-compression's marker interface ICompressionOptions (CompressionOptions... is params
-// ICompressionOptions[]), and the option and encoder types are the codec-compression ports
-// (docs/codec-compression-porting.md). zstd-jni is library-not-ported there (owner decision 2026-11-23: the BCL
-// ZstandardStream/Encoder exist only from .NET 11, https://learn.microsoft.com/en-us/dotnet/api/system.io.compression.zstandardstream),
-// so ZstdOptions, Zstd and ZstdEncoder have no C# type: the code behaves as Java does when Zstd.isAvailable() is false,
-// that is, StandardCompressionOptions.zstd() is never a default option, no option can select zstd and the zstd case of
-// createEncoderFor fails with "Zstd not configured"; the zstdOptions field stays as an always-null ICompressionOptions
-// so that determineEncoding keeps its Java shape. brotli4j is not ported either: Brotli.IsAvailable() is always true
-// (the BCL BrotliEncoder) and BrotliOptions.parameters(), which returns the brotli4j Encoder.Parameters, is not ported, so
-// the BrotliEncoder is created from the BrotliOptions themselves (BrotliEncoder(BrotliOptions), the codec-compression
-// constructor that reads the quality and window). The three @Deprecated constructors and determineWrapper(String) have
-// no @deprecated text and name no replacement, so they are ported with [Obsolete] (owner decision 2026-11-16), as the
-// private @Deprecated defaultCompressionOptions(...) that serves them; they still validate the levels with
-// checkInRange, but ZlibCodecFactory.NewZlibEncoder throws NotSupportedException for a window size or memory level
-// other than 15/8, which need the not-ported jzlib (docs/codec-compression-porting.md, ZlibCodecFactory). The static
-// initializer is the static constructor. Float.parseFloat is float.Parse with NumberStyles.Float and the invariant
-// culture (FormatException is the NumberFormatException, see ParseFloat; Java also accepts a trailing f/F/d/D
-// suffix and hexadecimal floats, which float.Parse rejects, so such a q-value takes the catch branch and counts as
-// 0.0f; the Java grammar is that of Double.valueOf(String),
-// https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Double.html#valueOf(java.lang.String)),
-// String.contains is the ordinal string.Contains and the switch on the encoding string is a C# string switch.
-// IllegalStateException is InvalidOperationException and IllegalArgumentException is ArgumentException
-// (docs/codec-base-porting.md). The
-// EmbeddedChannel builder is new EmbeddedChannel.Builder() with ChannelId/HasDisconnect/Config/Handlers/Build
-// (src/Netty.NET.Transport/Channels/Embedded/EmbeddedChannel.cs). MessageToByteEncoder<ByteBuf> is the codec-base
-// MessageToByteEncoder<ByteBuf>. ZlibWrapper is a C# enum (a value type), so determineWrapper returns ZlibWrapper?, where
-// Java returns a null ZlibWrapper reference.
+// CLR: No zstd encoder is configured, so content negotiation leaves zstd unavailable. The BCL zlib encoder
+// supports only the default window size and memory level.
+// Quality values use invariant float parsing. Java numeric suffixes and hexadecimal float forms fall back to zero.
 public class HttpContentCompressor : HttpContentEncoder
 {
 
@@ -567,10 +543,10 @@ public class HttpContentCompressor : HttpContentEncoder
     }
 
     // CLR: java.lang.Float.parseFloat(String): leading and trailing whitespace is ignored as Java trims it
-    // (String.trim), an invalid number is the FormatException (NumberFormatException). OverflowException cannot occur:
-    // "In .NET Core 3.0 and later, values that are too large to represent are rounded to PositiveInfinity or
-    // NegativeInfinity" (https://learn.microsoft.com/en-us/dotnet/api/system.single.parse?view=net-10.0), as Java's
-    // parseFloat returns infinity.
+    // (String.trim), an invalid number is the FormatException (NumberFormatException). OverflowException cannot
+    // occur: "In.NET Core 3.0 and later, values that are too large to represent are rounded to PositiveInfinity or
+    // NegativeInfinity" (https://learn.microsoft.com/en-us/dotnet/api/system.single.parse?view=net-10.0), as
+    // Java's parseFloat returns infinity.
     private static float ParseFloat(string s)
     {
         return float.Parse(HttpUtil.TrimJava(s), NumberStyles.Float, CultureInfo.InvariantCulture);

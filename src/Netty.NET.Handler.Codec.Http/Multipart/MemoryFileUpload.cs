@@ -27,11 +27,11 @@ namespace Netty.NET.Handler.Codec.Http.Multipart;
  *
  * Warning: be aware of the memory limitation.
  */
-// CLR: Charset is Encoding and Charset.name() is HttpPostBodyUtil.CharsetName (the Java canonical name). In toString()
-// the boolean texts are Java's "true"/"false" (C# bool.ToString() gives "True"/"False"). hashCode()/equals(Object)/
-// toString() are GetHashCode()/Equals(object)/ToString(); ClassCastException is InvalidCastException (as
-// MemoryAttribute). The narrowed copy/duplicate/retainedDuplicate/replace/retain/touch members are covariant override
-// returns; content() is the Content property and ChannelException the Transport ChannelException.
+// CLR: Charset is Encoding and Charset.name() is HttpPostBodyUtil.CharsetName (the Java canonical name). In
+// toString() the boolean texts are Java's "true"/"false" (C# bool.ToString() gives "True"/"False").
+// hashCode()/equals(Object)/ toString() are GetHashCode()/Equals(object)/ToString(); ClassCastException is
+// InvalidCastException (as MemoryAttribute). The narrowed copy/duplicate/retainedDuplicate/replace/retain/touch
+// members are covariant override returns.
 public class MemoryFileUpload : AbstractMemoryHttpData, IFileUpload
 {
 

@@ -19,11 +19,10 @@ using static Netty.NET.Handler.Codec.Http.WebSocketx.WebSocketCloseStatus;
 namespace Netty.NET.Handler.Codec.Http.Tests.WebSocketx;
 
 // CLR: the static import of WebSocketCloseStatus.* is using static. AssertJ's assertThat(a).isGreaterThan(b) and
-// isLessThan(b) compare through Comparable, so they are Assert.True(a.CompareTo(b) > 0) and < 0; the anonymous
-// ThrowingCallable is a lambda for Assert.ThrowsAny<ArgumentException> (AssertJ accepts subtypes too).
-// SortedSet<Integer>/TreeSet is SortedSet<int> (first()/last() are Min/Max, retainAll is IntersectWith), Arrays.asList
-// is a List<T>, and assertEquals(invalidCodes, Collections.emptySet()) is Assert.Empty. Short.MIN_VALUE/MAX_VALUE are
-// short.MinValue/MaxValue. assertSame/assertNotSame are Assert.Same/NotSame.
+// isLessThan(b) compare through Comparable, so they are Assert.True(a.CompareTo(b) > 0) and < 0.
+// SortedSet<Integer>/TreeSet is SortedSet<int> (first()/last() are Min/Max, retainAll is IntersectWith),
+// Arrays.asList is a List<T>, and assertEquals(invalidCodes, Collections.emptySet()) is Assert.Empty.
+// Short.MIN_VALUE/MAX_VALUE are short.MinValue/MaxValue. assertSame/assertNotSame are Assert.Same/NotSame.
 public class WebSocketCloseStatusTest
 {
 

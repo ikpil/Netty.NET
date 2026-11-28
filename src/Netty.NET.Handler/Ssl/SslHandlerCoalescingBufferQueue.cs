@@ -26,10 +26,6 @@ namespace Netty.NET.Handler.Ssl;
  * goodput by aggregating the plaintext in chunks of {@link #wrapDataSize}. If many small chunks are written
  * this can increase goodput, decrease the amount of calls to SSL_write, and decrease overall encryption operations.
  */
-// CLR: the package-private constructor is internal; catch (Throwable) is catch (Exception) and
-// PlatformDependent.throwException(cause) rethrows the cause unchanged, which is throw; (as
-// src/Netty.NET.Handler.Codec/Base64Codec/Base64.cs records); ByteBuf capacity() is the Capacity property of the Buffer
-// port.
 internal abstract class SslHandlerCoalescingBufferQueue : AbstractCoalescingBufferQueue
 {
 

@@ -29,12 +29,11 @@ namespace Netty.NET.Resolver.Dns;
  * {@link #compare(InetSocketAddress, InetSocketAddress)}. This is completely fine as this should only be used
  * to sort {@link List}s.
  */
-// CLR: Comparator<InetSocketAddress> is IComparer<EndPoint>; isUnresolved() is a DnsEndPoint and getAddress() the
-// IPEndPoint's Address (docs/handler-porting.md Addresses). Class<? extends InetAddress> preferredAddressType is the
-// AddressFamily of the preferred address (Inet4Address.class is InterNetwork, Inet6Address.class InterNetworkV6), the
-// handler port's mapping of instanceof Inet4Address/Inet6Address (docs/handler-porting.md Addresses), so getClass()
-// equality and isAssignableFrom are AddressFamily comparisons; an AddressFamily is a value and cannot be null, so
-// checkNotNull has no counterpart. Serializable (serialVersionUID) has no counterpart.
+// CLR: Comparator<InetSocketAddress> is IComparer<EndPoint>. Class<? extends InetAddress> preferredAddressType is
+// the AddressFamily of the preferred address (Inet4Address.class is InterNetwork, Inet6Address.class
+// InterNetworkV6), the handler port's mapping of instanceof Inet4Address/Inet6Address, so getClass() equality and
+// isAssignableFrom are AddressFamily comparisons; an AddressFamily is a value and cannot be null, so checkNotNull
+// has no counterpart. Serializable (serialVersionUID) has no counterpart.
 public sealed class NameServerComparator : IComparer<EndPoint>
 {
 

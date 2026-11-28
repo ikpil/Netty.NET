@@ -2,8 +2,8 @@
 // https://github.com/apache/mina/blob/2.2.3/mina-core/src/main/java/org/apache/mina/transport/socket/DatagramAcceptor.java
 // The interface takes the I prefix. The covariant InetSocketAddress getLocalAddress() hides the IIoAcceptor member
 // (new). setDefaultLocalAddress(InetSocketAddress) takes an EndPoint because InetSocketAddress is IPEndPoint when
-// resolved and DnsEndPoint when unresolved (docs/handler-porting.md, Addresses); binding an unresolved address fails
-// with IOException, as DatagramSocket.bind does under MINA.
+// resolved and DnsEndPoint when unresolved; binding an unresolved address fails with IOException, as
+// DatagramSocket.bind does under MINA.
 
 using System.Net;
 

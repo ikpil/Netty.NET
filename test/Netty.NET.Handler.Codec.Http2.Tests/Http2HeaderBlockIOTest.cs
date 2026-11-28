@@ -23,10 +23,8 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
 /**
  * Tests for encoding/decoding HTTP2 header blocks.
  */
-// CLR: @BeforeEach/@AfterEach are the constructor and Dispose() ("xUnit creates a new instance of the test class
-// for every test that is run", docs/codec-http-porting.md, Shared CLR adaptations), which call the Java-named
-// methods. Header equality calls Equals directly, as Java's assertEquals calls equals (xUnit would
-// compare the headers as an IEnumerable of entries; docs/codec-http-porting.md, Shared CLR adaptations).
+// CLR: Header equality calls Equals directly, as Java's assertEquals calls equals (xUnit would compare the headers
+// as an IEnumerable of entries; docs/codec-http-porting.md, Shared CLR adaptations).
 public class Http2HeaderBlockIOTest : IDisposable
 {
 

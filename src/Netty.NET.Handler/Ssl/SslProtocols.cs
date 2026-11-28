@@ -20,10 +20,9 @@ namespace Netty.NET.Handler.Ssl;
  * SSL/TLS protocols
  */
 // CLR: SSL_v2_HELLO, SSL_v2, SSL_v3, TLS_v1 and TLS_v1_1 are @Deprecated and their @deprecated text names the
-// replacements ("Consider using {@link #TLS_v1_2} or {@link #TLS_v1_3}"), so they are not ported (owner decision
-// 2026-11-16, docs/handler-ssl-design.md); code that must name those protocols uses their text ("SSLv2Hello", "SSLv2",
-// "SSLv3", "TLSv1", "TLSv1.1"). Inside this namespace the simple name SslProtocols is this class, not
-// System.Security.Authentication.SslProtocols.
+// replacements ("Consider using {@link #TLS_v1_2} or {@link #TLS_v1_3}"), so they are not ported; code that must
+// name those protocols uses their text ("SSLv2Hello", "SSLv2", "SSLv3", "TLSv1", "TLSv1.1"). Inside this namespace
+// the simple name SslProtocols is this class, not System.Security.Authentication.SslProtocols.
 public sealed class SslProtocols
 {
 

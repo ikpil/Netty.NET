@@ -27,11 +27,10 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Xml.Tests;
 
-// CLR: CharsetUtil.UTF_8 is Encoding.UTF8, each anonymous Executable passed to assertThrows is a lambda and
-// IllegalArgumentException is ArgumentException (docs/codec-base-porting.md). Arrays.asList is Collectives.AsList and
-// Collections.singletonList is Collectives.SingletonList (src/Netty.NET.Common/Collections/Collectives.cs, as codec-base
-// EmptyHeadersTest uses them), so the List<String> parameter of the helper is IReadOnlyList<string>, the type both
-// return; the helper only iterates it. Foo.class is typeof(Foo) and cause.getClass() is cause.GetType().
+// CLR: Arrays.asList is Collectives.AsList and Collections.singletonList is Collectives.SingletonList
+// (src/Netty.NET.Common/Collections/Collectives.cs, as codec-base EmptyHeadersTest uses them), so the List<String>
+// parameter of the helper is IReadOnlyList<string>, the type both return; the helper only iterates it. Foo.class
+// is typeof(Foo) and cause.getClass() is cause.GetType().
 public class XmlFrameDecoderTest
 {
 

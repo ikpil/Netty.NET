@@ -29,19 +29,11 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Codec.Http.Tests;
 
-// CLR: UpgradeCodec/UpgradeCodecFactory are HttpServerUpgradeHandler.IUpgradeCodec/IUpgradeCodecFactory (owner rule: I
-// prefix); the anonymous classes are the named nested classes TestUpgradeCodecFactory, FailingUpgradeCodecFactory,
-// SkippingUpgradeHandler and InStackFrameHandler. pipeline().get(Class)/context(Class) are Pipeline.Get<T>() and
-// Pipeline.Context(Type). ChannelPromise is Task (docs/transport-porting.md): InStackFrameHandler's write(ctx, msg,
-// promise) is WriteAsync, whose deferred ctx.write(msg, promise) completes a TaskCompletionSource that stands for the
-// promise from the deferred write's Task (TrySetFromTask, the PromiseNotifier mapping of
-// docs/common-task-composition.md), and promise.addListener(...) is a synchronous continuation of that Task;
-// eventLoop().execute(Runnable) is Execute(Action), which EmbeddedChannel runs in FlushOutbound() (RunPendingTasks).
-// The Strings that Java passes as CharSequence to headers().contains(AsciiString, String, boolean) are wrapped in
-// StringCharSequence (HttpHeadersTestUtils.Of). AssertJ assertThat(req).isNotInstanceOf(FullHttpRequest.class) is
-// Assert.False of an `is` test, assertInstanceOf is Assert.IsAssignableFrom, fail(...) is Assert.Fail, @ValueSource
-// (booleans) is a [Theory] with InlineData rows, and CharsetUtil.US_ASCII is Encoding.ASCII
-// (docs/codec-smtp-porting.md).
+// CLR: ChannelPromise is Task : InStackFrameHandler's write(ctx, msg, promise) is WriteAsync, whose deferred
+// ctx.write(msg, promise) completes a TaskCompletionSource that stands for the promise from the deferred write's
+// Task (TrySetFromTask, the PromiseNotifier mapping of docs/common-task-composition.md), and
+// promise.addListener(...) is a synchronous continuation of that Task; eventLoop().execute(Runnable) is
+// Execute(Action), which EmbeddedChannel runs in FlushOutbound() (RunPendingTasks).
 #pragma warning disable xUnit1051 // The source's write(...) observes no test cancellation.
 public class HttpServerUpgradeHandlerTest
 {

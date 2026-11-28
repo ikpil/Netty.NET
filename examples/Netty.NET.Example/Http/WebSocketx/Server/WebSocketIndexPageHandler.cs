@@ -31,12 +31,12 @@ namespace Netty.NET.Example.Http.WebSocketx.Server;
  * Outputs index page content.
  */
 // CLR: FullHttpRequest/FullHttpResponse/HttpRequest are the I-prefixed codec-http interfaces, ChannelPipeline is
-// IChannelPipeline, content() is the Content property and ctx.alloc() is ctx.Alloc(); cp.get(SslHandler.class) is
-// Get<SslHandler>() and String.equals is the ordinal string.Equals. ctx.writeAndFlush returns a Task (ChannelFuture);
-// ChannelFutureListener.CLOSE is a synchronous Task continuation that closes the channel on its event loop (Common's
+// IChannelPipeline, content() is the Content property and ctx.alloc() is ctx.Alloc(); ChannelFutureListener.CLOSE
+// is a synchronous Task continuation that closes the channel on its event loop (Common's
 // EventExecutorTaskScheduler), as codec-http's CorsHandler maps it; a Task has no channel, so the channel is
 // ctx.Channel. Java string concatenation writes a missing Host header as "null", which getWebSocketLocation keeps.
-// printStackTrace() writes the exception to Console.Error and ctx.close() is CloseAsync(), whose Task is discarded.
+// printStackTrace() writes the exception to Console.Error and ctx.close() is CloseAsync(), whose Task is
+// discarded.
 public class WebSocketIndexPageHandler : SimpleChannelInboundHandler<IFullHttpRequest>
 {
     private readonly string websocketPath;

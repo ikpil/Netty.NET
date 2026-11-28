@@ -30,14 +30,10 @@ namespace Netty.NET.Handler.Codec.Http;
  * <a href="https://en.wikipedia.org/wiki/Real_Time_Streaming_Protocol">RTSP</a> and
  * <a href="https://en.wikipedia.org/wiki/Internet_Content_Adaptation_Protocol">ICAP</a>.
  */
-// CLR: Comparable<HttpResponseStatus> is IComparable<HttpResponseStatus>. Integer.parseInt(String), which accepts an
-// optional sign and decimal digits only, is int.Parse with NumberStyles.AllowLeadingSign and the invariant culture; the
-// AsciiString overloads are the Common AsciiString.ParseInt members. The Java catch (Exception) that rewraps a parse
-// failure as IllegalArgumentException is catch (Exception) with ArgumentException (docs/codec-base-porting.md).
-// ByteProcessor.FIND_ASCII_SPACE is the Common Func<byte, bool> constant, CharsetUtil.US_ASCII is Encoding.ASCII
-// (docs/codec-smtp-porting.md), buf.writeCharSequence(..., US_ASCII) is ByteBufUtil.WriteAscii (AsciiString.c2b per
-// char, as Java writes), String.contentEquals(String) is string.Equals, and the package-private encode(ByteBuf) is
-// internal.
+// CLR: Comparable<HttpResponseStatus> is IComparable<HttpResponseStatus>. Integer.parseInt(String), which accepts
+// an optional sign and decimal digits only, is int.Parse with NumberStyles.AllowLeadingSign and the invariant
+// culture; the AsciiString overloads are the Common AsciiString.ParseInt members. The Java catch (Exception) that
+// rewraps a parse failure as IllegalArgumentException is catch (Exception) with ArgumentException.
 public class HttpResponseStatus : IComparable<HttpResponseStatus>
 {
 

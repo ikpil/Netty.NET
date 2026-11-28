@@ -24,13 +24,13 @@ namespace Netty.NET.Handler.Codec.Compression;
  * {@link io.netty.handler.codec.ByteToMessageDecoder}.
  */
 // CLR: the package-private abstract class is public with an internal constructor, because its subclasses
-// JdkZlibDecompressor, SnappyFrameDecompressor (and the not-ported Lz4FrameDecompressor and LzfDecompressor) are public
-// and a C# class cannot be more accessible than its base class; the internal constructor keeps it closed to other
-// assemblies as the package-private constructor does. The package-private processInput, processOutput and available()
-// are internal. An abstract C# class that implements an interface declares the members it leaves to subclasses
-// (status(), endOfInput()) as public abstract. The final addInput/takeOutput are non-virtual and close() is virtual.
-// Unpooled.EMPTY_BUFFER is the Buffer port's Unpooled.EmptyBuffer, and catch (Throwable t) { ...; throw t; } is
-// catch (Exception) { ...; throw; }.
+// JdkZlibDecompressor, SnappyFrameDecompressor (and the not-ported Lz4FrameDecompressor and LzfDecompressor) are
+// public and a C# class cannot be more accessible than its base class; the internal constructor keeps it closed to
+// other assemblies as the package-private constructor does. The package-private processInput, processOutput and
+// available() are internal. An abstract C# class that implements an interface declares the members it leaves to
+// subclasses (status(), endOfInput()) as public abstract. The final addInput/takeOutput are non-virtual and
+// close() is virtual. Unpooled.EMPTY_BUFFER is the Buffer port's Unpooled.EmptyBuffer, and catch (Throwable t)
+// {...; throw t; } is catch (Exception) {...; throw; }.
 public abstract class InputBufferingDecompressor : IDecompressor
 {
     protected readonly IByteBufAllocator allocator;

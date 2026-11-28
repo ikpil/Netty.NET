@@ -85,15 +85,13 @@ namespace Netty.NET.Handler.Codec.Http2;
  * directly write a {@link Http2ResetFrame} to the {@link Http2StreamChannel}l.
  */
 // CLR: ChannelFuture is Task and future.addListener is Http2CodecUtil.AddListener (EventExecutorTaskScheduler over
-// ctx.Executor, docs/codec-http-porting.md, Listener timing). A Task has no channel(), so registerDone takes the child
-// channel and the close listener of the outbound child channels is one lambda per channel that captures it.
+// ctx.Executor, docs/codec-http-porting.md, Listener timing). A Task has no channel(), so registerDone takes the
+// child channel and the close listener of the outbound child channels is one lambda per channel that captures it.
 // Channel.unsafe().closeForcibly() is AbstractHttp2StreamChannel.Unsafe().CloseForcibly() (the channel's internal
-// Http2ChannelUnsafe; Channel.Unsafe is folded into the channel, docs/transport-porting.md). The switch on the stream state (an enum class here, compared by reference) is an
-// if/else chain that keeps the fall-through order. SSLException is AuthenticationException (docs/handler-porting.md,
-// SSL; src/Netty.NET.Handler/Ssl/ApplicationProtocolNegotiationHandler.cs). ServerChannel is IServerChannel,
-// IllegalStateException InvalidOperationException, ArrayDeque Queue (MaxCapacityQueue) and HashSet the BCL HashSet.
-// The anonymous Http2FrameStreamVisitor classes are private nested classes and the inner stream channel class takes
-// this handler as a constructor argument. The checked "throws" clauses have no counterpart.
+// Http2ChannelUnsafe; Channel.Unsafe is folded into the channel, docs/transport-porting.md). The switch on the
+// stream state (an enum class here, compared by reference) is an if/else chain that keeps the fall-through order.
+// SSLException is AuthenticationException. ServerChannel is IServerChannel, IllegalStateException
+// InvalidOperationException, ArrayDeque Queue (MaxCapacityQueue) and HashSet the BCL HashSet.
 public sealed class Http2MultiplexHandler : Http2ChannelDuplexHandler
 {
 
@@ -395,7 +393,6 @@ public sealed class Http2MultiplexHandler : Http2ChannelDuplexHandler
         ForEachActiveStream(new ExceptionCaughtVisitor(cause));
     }
 
-    // CLR: the anonymous Http2FrameStreamVisitor of fireExceptionCaughtForActiveStream.
     private sealed class ExceptionCaughtVisitor : IHttp2FrameStreamVisitor
     {
         private readonly Exception cause;
@@ -440,7 +437,6 @@ public sealed class Http2MultiplexHandler : Http2ChannelDuplexHandler
         }
     }
 
-    // CLR: the anonymous Http2FrameStreamVisitor of onHttp2GoAwayFrame.
     private sealed class GoAwayVisitor : IHttp2FrameStreamVisitor
     {
         private readonly IHttp2GoAwayFrame goAwayFrame;

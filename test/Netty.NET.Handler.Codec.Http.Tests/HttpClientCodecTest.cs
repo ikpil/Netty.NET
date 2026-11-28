@@ -36,26 +36,21 @@ namespace Netty.NET.Handler.Codec.Http.Tests;
 #pragma warning disable xUnit1051 // The source's writeAndFlush(...)/shutdownOutput() observe no test cancellation.
 #pragma warning disable xUnit1031 // The source blocks with bind(...).sync(), connect(...).awaitUninterruptibly() and shutdownGracefully().syncUninterruptibly().
 
-// CLR: CharsetUtil.ISO_8859_1/US_ASCII/UTF_8 are Encoding.Latin1/ASCII/UTF8 and String.getBytes() encodes with the
-// default charset, Encoding.Default (docs/codec-smtp-porting.md; codec-stomp's tests). assertInstanceOf and
-// assertThat(x).isNotInstanceOf(T.class) are Assert.IsAssignableFrom/IsNotAssignableFrom, and assertThrows(T.class, ...),
-// which also accepts a subclass of T, is Assert.ThrowsAny<T>
-// (https://raw.githubusercontent.com/xunit/assert.xunit/main/TypeAsserts.cs,
-// https://raw.githubusercontent.com/xunit/assert.xunit/main/ExceptionAsserts.cs); the Java messages use
-// XunitAssertMessages.AssertM. The @Deprecated constructors that the source calls are replaced by the ones their
-// @deprecated texts name (owner decision 2026-11-16): HttpClientCodec(int, int, int, boolean, boolean validateHeaders)
-// by HttpClientCodec(int, int, int, boolean) (validateHeaders true is the default), HttpClientCodec(int, int, int,
-// boolean, boolean, boolean parseHttpAfterConnectRequest) by HttpClientCodec(HttpDecoderConfig, boolean, boolean), and
+// CLR: The @Deprecated constructors that the source calls are replaced by the ones their @deprecated texts name :
+// HttpClientCodec(int, int, int, boolean, boolean validateHeaders) by HttpClientCodec(int, int, int, boolean)
+// (validateHeaders true is the default), HttpClientCodec(int, int, int, boolean, boolean, boolean
+// parseHttpAfterConnectRequest) by HttpClientCodec(HttpDecoderConfig, boolean, boolean), and
 // HttpRequestDecoder(int, int, int, boolean) by HttpRequestDecoder(HttpDecoderConfig), with the same values. The
 // abstract Consumer callback and the anonymous ChannelInitializers/SimpleChannelInboundHandlers are named nested
 // classes. In testServerCloseSocketInputProvidesData, the Transport port's bootstrap API is asynchronous
-// (bind(...).sync().channel() and connect(...).awaitUninterruptibly() wait for BindAsync/ConnectAsync), ChannelFuture
-// listeners are Task continuations, CountDownLatch is CountdownEvent
-// (https://learn.microsoft.com/dotnet/api/system.threading.countdownevent), shutdownOutput() is ShutdownOutputAsync and
-// shutdownGracefully().syncUninterruptibly() waits for ShutdownGracefullyAsync, as the handler tests do
-// (test/Netty.NET.Handler.Tests/Flow/FlowControlHandlerTest.cs). new InetSocketAddress(0) is the IPv4 wildcard, as the
-// Transport's ServerBootstrap.BindAsync(int) binds it (src/Netty.NET.Transport/Bootstrapping/ServerBootstrap.cs), so the
-// client connects to the IPv4 loopback NetUtil.LOCALHOST4.
+// (bind(...).sync().channel() and connect(...).awaitUninterruptibly() wait for BindAsync/ConnectAsync),
+// ChannelFuture listeners are Task continuations, CountDownLatch is CountdownEvent
+// (https://learn.microsoft.com/dotnet/api/system.threading.countdownevent), shutdownOutput() is
+// ShutdownOutputAsync and shutdownGracefully().syncUninterruptibly() waits for ShutdownGracefullyAsync, as the
+// handler tests do (test/Netty.NET.Handler.Tests/Flow/FlowControlHandlerTest.cs). new InetSocketAddress(0) is the
+// IPv4 wildcard, as the Transport's ServerBootstrap.BindAsync(int) binds it
+// (src/Netty.NET.Transport/Bootstrapping/ServerBootstrap.cs), so the client connects to the IPv4 loopback
+// NetUtil.LOCALHOST4.
 public class HttpClientCodecTest
 {
 

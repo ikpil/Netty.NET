@@ -29,24 +29,24 @@ namespace Netty.NET.Handler.Codec.Compression;
 /**
  * Decompress a {@link ByteBuf} using the inflate algorithm.
  */
-// CLR: java.util.zip.Inflater is the internal stand-in Inflater (Inflater.cs, owner decision 2026-11-23) over the BCL
-// DeflateStream/ZLibStream, and DataFormatException is the InvalidDataException those streams throw. The GZIP wrapper
-// creates it with exactRemaining (one byte per Read), so that getRemaining() is exact at the end of the deflate body and
-// the trailer is read from the right offset; ZLIB and NONE feed whole buffers (see Inflater.cs for the measured
-// throughput). The BCL streams have no dictionary API; the stand-in implements needsDictionary/setDictionary on them
-// (owner decision 2026-11-24, see Inflater.cs), so a stream with the zlib FDICT flag decodes with the configured
-// dictionary as in Java (after the dictionary the stand-in reads the deflate data one byte per Read). java.util.zip.CRC32
-// is System.IO.Hashing.Crc32 (owner decision 2026-11-23), wrapped by ByteBufChecksum.WrapChecksum. Deflater.DEFLATED is
-// the stand-in Deflater's constant. The @Deprecated constructors name their replacements and are not ported (owner
-// decision 2026-11-16); their comments are recorded in the manifest. checkNotNull(wrapper) has no counterpart because
-// ZlibWrapper is a C# enum (a value type). The Buffer port has no hasArray()/array()/arrayOffset(); borrowed memory and
-// MemoryMarshal.TryGetArray replace them (docs/buffer-porting.md, Array extraction), see TryGetArray and ArrayOf below.
-// readByte() returns the unsigned byte in the Buffer port (owner decision), so the signed Java value of magic0 is
-// restored with (sbyte); readUnsignedByte() is ReadByte(). C# switch sections cannot fall through, so each "fall
-// through" is a goto case ("To imitate the fall-through behavior and pass control to other switch section, you can use
-// the goto statement", https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/selection-statements).
-// assert is Debug.Assert, IllegalStateException is InvalidOperationException, and numbers in exception messages use the
-// invariant culture (docs/codec-base-porting.md).
+// CLR: java.util.zip.Inflater is the internal stand-in Inflater (Inflater.cs, owner decision 2026-11-23) over the
+// BCL DeflateStream/ZLibStream, and DataFormatException is the InvalidDataException those streams throw. The GZIP
+// wrapper creates it with exactRemaining (one byte per Read), so that getRemaining() is exact at the end of the
+// deflate body and the trailer is read from the right offset; ZLIB and NONE feed whole buffers (see Inflater.cs
+// for the measured throughput). The BCL streams have no dictionary API; the stand-in implements
+// needsDictionary/setDictionary on them, so a stream with the zlib FDICT flag decodes with the configured
+// dictionary as in Java (after the dictionary the stand-in reads the deflate data one byte per Read).
+// java.util.zip.CRC32 is System.IO.Hashing.Crc32, wrapped by ByteBufChecksum.WrapChecksum. Deflater.DEFLATED is
+// the stand-in Deflater's constant. The @Deprecated constructors name their replacements and are not ported; their
+// comments are recorded in the manifest. checkNotNull(wrapper) has no counterpart because ZlibWrapper is a C# enum
+// (a value type). The Buffer port has no hasArray()/array()/arrayOffset(); borrowed memory and
+// MemoryMarshal.TryGetArray replace them, see TryGetArray and ArrayOf below. readByte() returns the unsigned byte
+// in the Buffer port (owner decision), so the signed Java value of magic0 is restored with (sbyte). C# switch
+// sections cannot fall through, so each "fall through" is a goto case ("To imitate the fall-through behavior and
+// pass control to other switch section, you can use the goto statement",
+// https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/selection-statements). assert is
+// Debug.Assert, IllegalStateException is InvalidOperationException, and numbers in exception messages use the
+// invariant culture.
 public class JdkZlibDecoder : ZlibDecoder
 {
     private const int FHCRC = 0x02;

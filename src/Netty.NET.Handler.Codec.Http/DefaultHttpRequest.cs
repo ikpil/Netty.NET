@@ -25,11 +25,11 @@ namespace Netty.NET.Handler.Codec.Http;
  * The default {@link HttpRequest} implementation.
  */
 // CLR: the @Deprecated DefaultHttpRequest(HttpVersion, HttpMethod, String, boolean), whose @deprecated text names
-// DefaultHttpRequest(HttpVersion, HttpMethod, String), and the @Deprecated getMethod()/getUri() are not ported (owner
-// decision 2026-11-16). setProtocolVersion narrows its return type with a covariant override return, and setMethod/
-// setUri are virtual so that DefaultFullHttpRequest narrows them the same way
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override). String.equalsIgnoreCase is
-// string.Equals with StringComparison.OrdinalIgnoreCase.
+// DefaultHttpRequest(HttpVersion, HttpMethod, String), and the @Deprecated getMethod()/getUri() are not ported.
+// setProtocolVersion narrows its return type with a covariant override return, and setMethod/ setUri are virtual
+// so that DefaultFullHttpRequest narrows them the same way
+// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override). String.equalsIgnoreCase
+// is string.Equals with StringComparison.OrdinalIgnoreCase.
 public class DefaultHttpRequest : DefaultHttpMessage, IHttpRequest
 {
     private const int HASH_CODE_PRIME = 31;

@@ -27,28 +27,8 @@ namespace Netty.NET.Handler.Codec.Compression;
  *
  * See <a href="https://github.com/google/brotli">brotli</a>.
  */
-// CLR: @UnstableApi is the Common [UnstableApi] attribute. Decompressor is IDecompressor, its nested Status enum and
-// AbstractDecompressorBuilder are written IDecompressor.Status and IDecompressor.AbstractDecompressorBuilder (a class does
-// not inherit the nested types of its interfaces), and status() is Status_() (owner decision, as the core's
-// IDecompressor). builder() is Builder_(): a method named Builder cannot be declared next to the nested Builder class
-// (https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0102), and the nested type keeps its Java name, as
-// HAProxyTLV.type() is Type_() (docs/codec-haproxy-porting.md). Owner decision 2026-11-23: brotli4j's
-// DecoderJNI.Wrapper is the BCL System.IO.Compression.BrotliDecoder struct, with the wrapper's state kept in CLR fields
-// exactly as in BrotliDecoder (see its class comment for the mapping of the statuses, Push and Pull): ERROR is
-// InvalidData, DONE is Done once the output was taken (with the "Bytes after stream end are not allowed" check of
-// decoder_jni.cc), NEEDS_MORE_INPUT is NeedMoreData, NEEDS_MORE_OUTPUT is DestinationTooSmall, and OK does not occur. The
-// package-private constructor is internal. new DecoderJNI.Wrapper(inputBufferSize, maxOutputChunkSize) throws
-// IOException when the native decoder cannot be created, which the constructor wraps in DecompressionException; the BCL
-// decoder creates its native state on the first Decompress call, so that failure surfaces there as IOException and the
-// constructor has nothing to wrap. destroy() is Dispose(), which close() may call again: "If an object's Dispose
-// method is called more than once, the object must ignore all calls after the first one"
-// (https://learn.microsoft.com/en-us/dotnet/api/system.idisposable.dispose?view=net-10.0); decoder = null has no
-// counterpart for the struct. The static initializer is the static constructor (see BrotliDecoder).
-// IllegalStateException is InvalidOperationException, AssertionError, a java.lang.Error, is UnreachableException
-// (docs/codec-memcache-porting.md, src/Netty.NET.Handler.Codec.Mqtt/MqttMessageType.cs), assert is Debug.Assert, which
-// "works only in debug builds" (https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.debug.assert?view=net-10.0),
-// as codec-base's DatagramPacketEncoder ports assert, and the rethrow of catch (Throwable t) { ...; throw t; } is
-// catch (Exception) { ...; throw; }. ByteBufAllocator is IByteBufAllocator. C# has no throws clauses.
+// CLR: The BCL creates native decoder state on the first decode, so initialization errors surface there. Drain
+// pending output before treating Done as complete, then reject any remaining input.
 [UnstableApi]
 public sealed class BrotliDecompressor : IDecompressor
 {
@@ -80,8 +60,8 @@ public sealed class BrotliDecompressor : IDecompressor
         this.outputBuffer = new byte[Math.Min(builder.maxOutputChunkSize, MAX_OUTPUT_BUFFER_SIZE)];
     }
 
-    // CLR: decoder.hasOutput() is outputLength != 0; DONE with output left reports NEED_OUTPUT first, and DONE with
-    // pushed input left is the ERROR of decoder_jni.cc.
+    // CLR: DONE with output left reports NEED_OUTPUT first, and DONE with pushed input left is the ERROR of
+    // decoder_jni.cc.
     public IDecompressor.Status Status_()
     {
         while (true)
@@ -176,8 +156,7 @@ public sealed class BrotliDecompressor : IDecompressor
         }
     }
 
-    // CLR: decoder.pull() is the output that the last Decompress call wrote into outputBuffer; Pull() then releases it
-    // and continues decoding when the decoder may hold more (see BrotliDecoder).
+    // CLR: Pull() then releases it and continues decoding when the decoder may hold more (see BrotliDecoder).
     public ByteBuf TakeOutput()
     {
         ReadOnlySpan<byte> nativeBuffer = outputBuffer.AsSpan(0, outputLength);
@@ -244,9 +223,8 @@ public sealed class BrotliDecompressor : IDecompressor
         return new Builder();
     }
 
-    // CLR: the private fields are internal, because a C# enclosing class cannot read the private members of its nested
-    // class (the Java constructor reads builder.inputBufferSize and builder.maxOutputChunkSize); the package-private
-    // constructor is internal. checkPositive's IllegalArgumentException is ArgumentException (docs/codec-base-porting.md).
+    // CLR: the private fields are internal, because a C# enclosing class cannot read the private members of its
+    // nested class (the Java constructor reads builder.inputBufferSize and builder.maxOutputChunkSize).
     [UnstableApi]
     public sealed class Builder : IDecompressor.AbstractDecompressorBuilder
     {

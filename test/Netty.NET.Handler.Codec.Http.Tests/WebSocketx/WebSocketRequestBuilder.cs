@@ -20,10 +20,7 @@ using static Netty.NET.Handler.Codec.Http.HttpVersion;
 
 namespace Netty.NET.Handler.Codec.Http.Tests.WebSocketx;
 
-// CLR: the CharSequence parameters are IEnumerable<char>, so both a string and an AsciiString (the HttpHeaderValues
-// constants, an ICharSequence) bind to them, as codec-base's StringEncoder takes CharSequence messages
-// (docs/codec-base-porting.md, Text); toString() is ToString(). The static import of HttpVersion.HTTP_1_1 is using
-// static.
+// CLR: The static import of HttpVersion.HTTP_1_1 is using static.
 public class WebSocketRequestBuilder
 {
 

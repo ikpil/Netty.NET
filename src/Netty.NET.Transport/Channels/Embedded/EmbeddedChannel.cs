@@ -239,7 +239,6 @@ public class EmbeddedChannel : AbstractChannel
         }
     }
 
-    // CLR: the source's anonymous ChannelInitializer<Channel> in setup(boolean, ChannelHandler...).
     private sealed class SetupInitializer : ChannelInitializer<IChannel>
     {
         private readonly IChannelHandler[] _handlers;
@@ -951,8 +950,7 @@ public class EmbeddedChannel : AbstractChannel
      * Advance the clock of the event loop of this channel by the given duration. Any scheduled tasks will execute
      * sooner by the given time (but {@link #runScheduledPendingTasks()} still needs to be called).
      */
-    // CLR: a TimeSpan replaces the (long duration, TimeUnit unit) pair (docs/common-clr-design.md, "Monotonic time and
-    // duration conversion").
+    // CLR: a TimeSpan replaces the (long duration, TimeUnit unit) pair.
     public void AdvanceTimeBy(TimeSpan amount)
     {
         FreezableTicker().Advance(amount);

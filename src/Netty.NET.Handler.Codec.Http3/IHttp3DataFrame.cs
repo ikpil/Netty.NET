@@ -21,12 +21,11 @@ namespace Netty.NET.Handler.Codec.Http3;
 /**
  * See <a href="https://tools.ietf.org/html/draft-ietf-quic-http-32#section-7.2.1">DATA</a>.
  */
-// CLR: the interface takes the I prefix (docs/codec-http2-porting.md, Shared CLR adaptations). ByteBufHolder is
-// IByteBufHolder, whose content() is the read-only Content property (docs/buffer-porting.md). copy(), duplicate(),
-// retainedDuplicate(), replace(ByteBuf), retain(), retain(int), touch() and touch(Object) are re-declared only to narrow
-// the return type, so they are inherited from IByteBufHolder, not repeated; DefaultHttp3DataFrame narrows them with
-// covariant overrides (owner decision 2026-11-19; docs/transport-porting.md, Decisions), as IHttp3UnknownFrame. The
-// default method type() that overrides Http3Frame.type() is an explicit default interface member of IHttp3Frame.Type().
+// CLR: the interface takes the I prefix. ByteBufHolder is IByteBufHolder, whose content() is the read-only Content
+// property. copy(), duplicate(), retainedDuplicate(), replace(ByteBuf), retain(), retain(int), touch() and
+// touch(Object) are re-declared only to narrow the return type, so they are inherited from IByteBufHolder, not
+// repeated; DefaultHttp3DataFrame narrows them with covariant overrides, as IHttp3UnknownFrame. The default method
+// type() that overrides Http3Frame.type() is an explicit default interface member of IHttp3Frame.Type().
 public interface IHttp3DataFrame : IByteBufHolder, IHttp3RequestStreamFrame, IHttp3PushStreamFrame
 {
 

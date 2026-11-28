@@ -36,7 +36,7 @@ public class ReadOnlyHttp2HeadersTest
     }
 
     // CLR: Java's NullPointerException comes from otherHeaders.length on the null array (a dereference, not a
-    // checkNotNull), whose CLR counterpart is NullReferenceException (docs/codec-http-porting.md, Core test notes).
+    // checkNotNull), whose CLR counterpart is NullReferenceException.
     [Fact]
     public void NullTrailersNotAllowed()
     {
@@ -277,7 +277,6 @@ public class ReadOnlyHttp2HeadersTest
         };
     }
 
-    // CLR: a Java String passed as a CharSequence (see the class comment).
     private static ICharSequence Cs(string s)
     {
         return new StringCharSequence(s);

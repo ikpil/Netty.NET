@@ -21,8 +21,8 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Resolver.Dns;
 
-// CLR: the package-private final class is internal sealed. The resolved name server address is IPEndPoint and the
-// Promise a TaskCompletionSource<IAddressedEnvelope<IDnsResponse, IPEndPoint>>, as in DnsQueryContext; DnsQuery is the
+// CLR: The resolved name server address is IPEndPoint and the Promise a
+// TaskCompletionSource<IAddressedEnvelope<IDnsResponse, IPEndPoint>>, as in DnsQueryContext; DnsQuery is the
 // codec-dns IDnsQuery and new DefaultDnsQuery(id) is unchanged.
 internal sealed class TcpDnsQueryContext : DnsQueryContext
 {

@@ -113,7 +113,6 @@ public static class DnsServerAddressStreamProviders
         STREAM_PROVIDER_CONSTRUCTOR = constructor;
     }
 
-    // CLR: the run() of the anonymous PrivilegedAction (see the class comment).
     private static object LoadProviderClass()
     {
         try
@@ -160,7 +159,6 @@ public static class DnsServerAddressStreamProviders
     private static class DefaultProviderHolder
     {
         // We use 5 minutes which is the same as what OpenJDK is using in sun.net.dns.ResolverConfigurationImpl.
-        // CLR: TimeUnit.MINUTES.toNanos(5).
         private const long REFRESH_INTERVAL = 5L * 60 * 1_000_000_000;
 
         // TODO(scott): how is this done on Windows? This may require a JNI call to GetNetworkParams
@@ -168,8 +166,8 @@ public static class DnsServerAddressStreamProviders
         internal static readonly IDnsServerAddressStreamProvider DEFAULT_DNS_SERVER_ADDRESS_STREAM_PROVIDER =
                 new RefreshingDnsServerAddressStreamProvider();
 
-        // CLR: the anonymous DnsServerAddressStreamProvider; the volatile field's initializer calls the instance method
-        // provider(), so the constructor assigns it.
+        // CLR: The volatile field's initializer calls the instance method provider(), so the constructor assigns
+        // it.
         private sealed class RefreshingDnsServerAddressStreamProvider : IDnsServerAddressStreamProvider
         {
             private volatile IDnsServerAddressStreamProvider currentProvider;

@@ -439,8 +439,7 @@ public class OcspServerCertificateValidatorTest : AbstractOcspTest
         }
     }
 
-    // CLR: the anonymous SimpleChannelInboundHandler<FullHttpRequest> of the responder. ChannelFutureListener.CLOSE on
-    // the writeAndFlush Task closes the channel when the write completes.
+    // CLR: ChannelFutureListener.CLOSE on the writeAndFlush Task closes the channel when the write completes.
     private sealed class OcspResponderHandler : SimpleChannelInboundHandler<IFullHttpRequest>
     {
         private readonly AtomicInteger ocspRequests;
@@ -468,7 +467,6 @@ public class OcspServerCertificateValidatorTest : AbstractOcspTest
         }
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of the client pipeline.
     private sealed class OutcomeHandler : ChannelInboundHandlerAdapter
     {
         private readonly ValidationOutcome outcome;
@@ -538,8 +536,8 @@ public class OcspServerCertificateValidatorTest : AbstractOcspTest
     /**
      * Build a signed OCSP response for the given certificate, as described by the given {@link ResponseSpec}.
      */
-    // CLR: ocspResponse is OcspResponse_: a method named OcspResponse would hide the OcspResponse type in this class, as
-    // pkitesting's algorithm(Algorithm) is Algorithm_(Algorithm) (docs/pkitesting-porting.md).
+    // CLR: ocspResponse is OcspResponse_: a method named OcspResponse would hide the OcspResponse type in this
+    // class, as pkitesting's algorithm(Algorithm) is Algorithm_(Algorithm).
     private static byte[] OcspResponse_(X509Bundle issuer, X509Certificate2 certificate,
                                         ResponseSpec spec)
     {

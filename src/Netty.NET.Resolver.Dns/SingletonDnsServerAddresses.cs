@@ -18,9 +18,8 @@ using System.Net;
 
 namespace Netty.NET.Resolver.Dns;
 
-// CLR: InetSocketAddress is EndPoint and prints as EndPoint.ToString() (docs/handler-porting.md Addresses). The
-// anonymous DnsServerAddressStream is the named nested SingletonDnsServerAddressStream, which takes the enclosing
-// instance (SingletonDnsServerAddresses.this); a C# field initializer cannot refer to this, so the constructor creates it.
+// CLR: InetSocketAddress is EndPoint and prints as EndPoint.ToString(). A C# field initializer cannot refer to
+// this, so the constructor creates it.
 internal sealed class SingletonDnsServerAddresses : DnsServerAddresses
 {
 

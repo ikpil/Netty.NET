@@ -47,7 +47,6 @@ public class DefaultChannelIdTest
     [Fact]
     public void TestIdempotentProcessId()
     {
-        // CLR: String.substring(17, 21) is Substring(17, 4).
         string a = DefaultChannelId.NewInstance().AsLongText().Substring(17, 4);
         string b = DefaultChannelId.NewInstance().AsLongText().Substring(17, 4);
         Assert.Equal(a, b);

@@ -44,27 +44,24 @@ namespace Netty.NET.Handler.Codec.Http2;
  * {@link Http2LocalFlowController}
  */
 // CLR: ByteToMessageDecoder is the codec-base ByteToMessageDecoder and ChannelOutboundHandler the Transport's
-// IChannelOutboundHandler, whose operations return a Task instead of completing a ChannelPromise argument
-// (docs/codec-base-porting.md, Outbound operations): bind/connect/close create the TaskCompletionSource that the
-// handler completes and return its Task (as handler's SslHandler and codec-http's SpdySessionHandler do), and the
-// CancellationToken is passed on only where the operation goes to the context unchanged. ChannelPromise is
-// TaskCompletionSource and ChannelFuture is Task (docs/codec-http-porting.md, Shared CLR adaptations);
-// ctx.newPromise()/ctx.voidPromise() are Http2CodecUtil.NewPromise(), promise.unvoid() is the promise itself (there is
-// no void promise, docs/transport-porting.md), ctx.write(msg, promise)/ctx.close(promise) are Http2CodecUtil.Write/
-// Close, and ctx.newSucceededFuture() is Task.CompletedTask. A ChannelFutureListener is an Action<Task> run through
-// Http2CodecUtil.AddListener, a continuation on Common's EventExecutorTaskScheduler over ctx.Executor, which keeps
-// DefaultPromise's notification timing (docs/codec-http-porting.md, Listener timing). closeStream(...) adds a
-// listener although Java has no context at hand there; the context of handlerAdded is kept in the CLR-only field
-// listenerCtx for that. ChannelFutureListener.CLOSE_ON_FAILURE closes ctx.Channel, the channel the operation ran on,
-// because a Task has no channel(). The switches on Http2Stream.State are if/else chains on reference equality
-// (IHttp2Stream.State is a class with static readonly instances). The lambdas that implement Http2StreamVisitor and
-// Http2ConnectionAdapter are the private nested PendingDataVisitor and StreamClosedListener. Throwable is Exception,
-// IllegalArgumentException ArgumentException and IllegalStateException InvalidOperationException
-// (docs/codec-base-porting.md); String.valueOf of a number in an exception text uses the invariant culture.
-// Set<Integer> is HashSet<int>. The inner classes BaseDecoder, PrefaceDecoder, FrameDecoder and PrefaceSendListener
-// get the handler instance, which Java's inner classes reach implicitly. The protected constructors and
-// onConnectionError(...) are protected internal, because Http2ConnectionHandlerBuilder and the tests reach them through
-// Java's package access (docs/codec-http-porting.md, Package access).
+// IChannelOutboundHandler, whose operations return a Task instead of completing a ChannelPromise argument :
+// bind/connect/close create the TaskCompletionSource that the handler completes and return its Task (as handler's
+// SslHandler and codec-http's SpdySessionHandler do), and the CancellationToken is passed on only where the
+// operation goes to the context unchanged. ChannelPromise is TaskCompletionSource and ChannelFuture is Task;
+// ctx.newPromise()/ctx.voidPromise() are Http2CodecUtil.NewPromise(), promise.unvoid() is the promise itself
+// (there is no void promise, docs/transport-porting.md), ctx.write(msg, promise)/ctx.close(promise) are
+// Http2CodecUtil.Write/ Close, and ctx.newSucceededFuture() is Task.CompletedTask. A ChannelFutureListener is an
+// Action<Task> run through Http2CodecUtil.AddListener, a continuation on Common's EventExecutorTaskScheduler over
+// ctx.Executor, which keeps DefaultPromise's notification timing. closeStream(...) adds a listener although Java
+// has no context at hand there; the context of handlerAdded is kept in the CLR-only field listenerCtx for that.
+// ChannelFutureListener.CLOSE_ON_FAILURE closes ctx.Channel, the channel the operation ran on, because a Task has
+// no channel(). The switches on Http2Stream.State are if/else chains on reference equality (IHttp2Stream.State is
+// a class with static readonly instances). The lambdas that implement Http2StreamVisitor and
+// Http2ConnectionAdapter are the private nested PendingDataVisitor and StreamClosedListener. String.valueOf of a
+// number in an exception text uses the invariant culture. Set<Integer> is HashSet<int>. The inner classes
+// BaseDecoder, PrefaceDecoder, FrameDecoder and PrefaceSendListener get the handler instance, which Java's inner
+// classes reach implicitly. The protected constructors and onConnectionError(...) are protected internal, because
+// Http2ConnectionHandlerBuilder and the tests reach them through Java's package access.
 public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManager, IChannelOutboundHandler
 {
 
@@ -416,7 +413,6 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
          * @return {@code true} if processing of the client preface string is complete. Since client preface strings can
          *         only be received by servers, returns true immediately for client endpoints.
          */
-        // CLR: in.toString(index, length, US_ASCII) is ToString(index, length, Encoding.ASCII).
         private bool ReadClientPrefaceString(ByteBuf @in)
         {
             if (clientPrefaceString == null)
@@ -469,7 +465,7 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
          * data is required before we can determine the next frame type.
          * @throws Http2Exception thrown if the next frame is NOT a non-ack {@code SETTINGS} frame.
          */
-        // CLR: getUnsignedByte is GetByte, which returns the unsigned octet (docs/buffer-porting.md).
+        // CLR: getUnsignedByte is GetByte, which returns the unsigned octet.
         private static bool VerifyFirstFrameIsSettings(ByteBuf @in)
         {
             if (@in.ReadableBytes < 5)
@@ -577,7 +573,6 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
         Connection().AddListener(new StreamClosedListener(this));
     }
 
-    // CLR: the anonymous Http2ConnectionAdapter of handlerAdded(...).
     private sealed class StreamClosedListener : Http2ConnectionAdapter
     {
         private readonly Http2ConnectionHandler handler;
@@ -1237,7 +1232,6 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
         return connection.IsServer() ? ConnectionPrefaceBuf() : null;
     }
 
-    // CLR: debugData.toString(UTF_8) is ToString(Encoding.UTF8).
     private static void ProcessGoAwayWriteResult(IChannelHandlerContext ctx, int lastStreamId,
                                                  long errorCode, ByteBuf debugData, Task future)
     {
@@ -1289,10 +1283,9 @@ public class Http2ConnectionHandler : ByteToMessageDecoder, IHttp2LifecycleManag
      * Closes the channel when the future completes.
      */
     // CLR: the ChannelFutureListener is the OperationComplete(Task) method. ctx.executor().schedule(task, timeout,
-    // unit) is ctx.Executor.ScheduleAsync with a CancellationTokenSource, whose Cancel() is timeoutTask.cancel(false)
-    // (docs/codec-http-porting.md, WebSocket "scheduled timeouts are ScheduleAsync with a CancellationTokenSource"); the
-    // long timeout with its TimeUnit is a TimeSpan. ctx.close(promise) completes the promise with the context's close
-    // Task (Http2CodecUtil.Close). assert is Debug.Assert.
+    // unit) is ctx.Executor.ScheduleAsync with a CancellationTokenSource, whose Cancel() is
+    // timeoutTask.cancel(false); the long timeout with its TimeUnit is a TimeSpan. ctx.close(promise) completes
+    // the promise with the context's close Task (Http2CodecUtil.Close). assert is Debug.Assert.
     private sealed class ClosingChannelFutureListener
     {
         private readonly IChannelHandlerContext ctx;

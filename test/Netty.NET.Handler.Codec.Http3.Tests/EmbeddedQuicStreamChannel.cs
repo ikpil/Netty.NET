@@ -28,30 +28,27 @@ using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Handler.Codec.Http3.Tests;
 
-// CLR: the package-private final class is internal sealed; it implements codec-quic's IQuicStreamChannel over
-// Transport's EmbeddedChannel, as the Java class implements QuicStreamChannel over EmbeddedChannel. The
-// QuicStreamChannel API shapes are those of docs/codec-classes-quic-porting.md: shutdown(int, promise),
+// CLR: The QuicStreamChannel API shapes are those of docs/codec-classes-quic-porting.md: shutdown(int, promise),
 // shutdownInput(int, promise) and shutdownOutput(int, promise) are ShutdownAsync(int), ShutdownInputAsync(int) and
-// ShutdownOutputAsync(int) returning a completed Task (promise.setSuccess()), shutdown(promise)/shutdownOutput(promise)
-// are IDuplexChannel's ShutdownAsync()/ShutdownOutputAsync(), the default shutdownInput() that
-// writeInboundWithFin/writeInboundFin call is IQuicStreamChannel's default implementation of
-// IDuplexChannel.ShutdownInputAsync() (ShutdownInputAsync(0)), reached through the interface, and
-// updatePriority(priority, promise) returns a faulted Task (promise.setFailure) with NotSupportedException for
+// ShutdownOutputAsync(int) returning a completed Task (promise.setSuccess()),
+// shutdown(promise)/shutdownOutput(promise) are IDuplexChannel's ShutdownAsync()/ShutdownOutputAsync(), the
+// default shutdownInput() that writeInboundWithFin/writeInboundFin call is IQuicStreamChannel's default
+// implementation of IDuplexChannel.ShutdownInputAsync() (ShutdownInputAsync(0)), reached through the interface,
+// and updatePriority(priority, promise) returns a faulted Task (promise.setFailure) with NotSupportedException for
 // UnsupportedOperationException. isInputShutdown(), isOutputShutdown() and isShutdown() are IDuplexChannel's
-// properties. localAddress()/remoteAddress() override the LocalAddress/RemoteAddress properties (null, as in Java);
-// parent(), flush() and read() only narrow the return type (QuicChannel, QuicStreamChannel), so AbstractChannel's
-// Parent and EmbeddedChannel's Flush()/Read() are inherited unchanged (IQuicStreamChannel does not re-declare them).
-// config() lazily wraps super.config(): AbstractChannel.Config already creates the config lazily through NewConfig(),
-// so NewConfig() returns the EmbeddedQuicStreamChannelConfig around EmbeddedChannel's config. AttributeKey<T> needs a
-// reference type, so the Long, QuicStreamType and Boolean attributes are AttributeKey<object> holding the boxed value
-// (docs/codec-http3-porting.md, Shared CLR adaptations); valueOf(String) is AttributeKey<T>.ValueOf(string). The
-// Integer shutdown error codes are int? (null until shut down). The wrapping Unsafe of unsafe() is one override:
-// Channel.Unsafe is folded into AbstractChannel (docs/transport-porting.md), so every delegating method of the
-// anonymous Unsafe is the inherited member, and its write(msg, promise) is WriteTransportAsync(msg, cancellationToken),
-// whose Task is the promise: promise.unvoid().addListener(f -> outputShutdown = 0) is a continuation of that Task
-// (ExecuteSynchronously, so it runs when the write completes), and hasFin() is read before the write, which may release
-// the frame. DefaultChannelId.newInstance() is DefaultChannelId.NewInstance(); @Nullable (org.jetbrains.annotations)
-// has no counterpart.
+// properties. localAddress()/remoteAddress() override the LocalAddress/RemoteAddress properties (null, as in
+// Java); parent(), flush() and read() only narrow the return type (QuicChannel, QuicStreamChannel), so
+// AbstractChannel's Parent and EmbeddedChannel's Flush()/Read() are inherited unchanged (IQuicStreamChannel does
+// not re-declare them). config() lazily wraps super.config(): AbstractChannel.Config already creates the config
+// lazily through NewConfig(), so NewConfig() returns the EmbeddedQuicStreamChannelConfig around EmbeddedChannel's
+// config. AttributeKey<T> needs a reference type, so the Long, QuicStreamType and Boolean attributes are
+// AttributeKey<object> holding the boxed value. The Integer shutdown error codes are int? (null until shut down).
+// The wrapping Unsafe of unsafe() is one override: Channel.Unsafe is folded into AbstractChannel, so every
+// delegating method of the anonymous Unsafe is the inherited member, and its write(msg, promise) is
+// WriteTransportAsync(msg, cancellationToken), whose Task is the promise: promise.unvoid().addListener(f ->
+// outputShutdown = 0) is a continuation of that Task (ExecuteSynchronously, so it runs when the write completes),
+// and hasFin() is read before the write, which may release the frame. DefaultChannelId.newInstance() is
+// DefaultChannelId.NewInstance(); @Nullable (org.jetbrains.annotations) has no counterpart.
 internal sealed class EmbeddedQuicStreamChannel : EmbeddedChannel, IQuicStreamChannel
 {
     private static readonly AttributeKey<object> streamIdKey =
@@ -196,7 +193,6 @@ internal sealed class EmbeddedQuicStreamChannel : EmbeddedChannel, IQuicStreamCh
         return inputShutdown;
     }
 
-    // CLR: the write(msg, promise) of the wrapping Unsafe of unsafe() (see the type comment).
     protected override Task WriteTransportAsync(object msg, CancellationToken cancellationToken)
     {
         bool fin = msg is IQuicStreamFrame && ((IQuicStreamFrame) msg).HasFin();
@@ -212,12 +208,9 @@ internal sealed class EmbeddedQuicStreamChannel : EmbeddedChannel, IQuicStreamCh
         return promise;
     }
 
-    // CLR: the QuicStreamChannelConfig of config(). Every setter returns this as the IChannelConfig of the C# interface
-    // (it does not narrow inherited return types, see IQuicStreamChannelConfig), setAllowHalfClosure returns it as
-    // IDuplexChannelConfig; getOption(option) is TryGetOption(option, out value), and the CLR-only WriteProgress
-    // property is delegated too. getMaxMessagesPerRead/setMaxMessagesPerRead are not @Deprecated here (they are on
-    // ChannelConfig, [Obsolete] on IChannelConfig), so their delegating calls compile with a CS0612 suppression, as
-    // javac compiles the Java calls with a deprecation warning.
+    // CLR: the QuicStreamChannelConfig of config(). Every setter returns this as the IChannelConfig of the C#
+    // interface (it does not narrow inherited return types, see IQuicStreamChannelConfig), setAllowHalfClosure
+    // returns it as IDuplexChannelConfig.
     private sealed class EmbeddedQuicStreamChannelConfig : IQuicStreamChannelConfig
     {
         private readonly IChannelConfig config;

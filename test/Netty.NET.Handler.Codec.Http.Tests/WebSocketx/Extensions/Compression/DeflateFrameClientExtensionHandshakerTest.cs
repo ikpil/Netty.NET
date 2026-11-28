@@ -22,11 +22,10 @@ using static Netty.NET.Handler.Codec.Http.WebSocketx.Extensions.Compression.Defl
 
 namespace Netty.NET.Handler.Codec.Http.Tests.WebSocketx.Extensions.Compression;
 
-// CLR: the static import of DeflateFrameServerExtensionHandshaker.* is a using static (its package-private constants
-// are internal, reached through InternalsVisibleTo). WebSocketClientExtension.RSV1 is the constant
-// IWebSocketExtension.RSV1, because a C# interface's static members are not inherited by derived interfaces' names.
-// assertInstanceOf is Assert.IsAssignableFrom, Collections.emptyMap() is ImmutableDictionary<string, string>.Empty,
-// HashMap is Dictionary and isEmpty() is Count == 0.
+// CLR: WebSocketClientExtension.RSV1 is the constant IWebSocketExtension.RSV1, because a C# interface's static
+// members are not inherited by derived interfaces' names. assertInstanceOf is Assert.IsAssignableFrom,
+// Collections.emptyMap() is ImmutableDictionary<string, string>.Empty, HashMap is Dictionary and isEmpty() is
+// Count == 0.
 public class DeflateFrameClientExtensionHandshakerTest
 {
 

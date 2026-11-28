@@ -19,8 +19,7 @@ namespace Netty.NET.Handler.Codec.Http3;
 /**
  * Marker interface that is implemented by all HTTP3 frames.
  */
-// CLR: the interface takes the I prefix, as every interface of the codec ports (docs/codec-http2-porting.md, Shared CLR
-// adaptations); type() is Type().
+// CLR: the interface takes the I prefix, as every interface of the codec ports.
 public interface IHttp3Frame
 {
     /**

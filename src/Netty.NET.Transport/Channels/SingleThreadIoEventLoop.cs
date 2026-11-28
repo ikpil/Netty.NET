@@ -179,7 +179,6 @@ public class SingleThreadIoEventLoop : SingleThreadEventLoop, IIoEventLoop
         return millis > long.MaxValue / 1_000_000L ? long.MaxValue : millis * 1_000_000L;
     }
 
-    // CLR: the anonymous IoHandlerContext of the Java constructor becomes a nested class.
     private sealed class Context(SingleThreadIoEventLoop loop) : IIoHandlerContext
     {
         public bool CanBlock()

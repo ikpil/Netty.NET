@@ -22,10 +22,9 @@ namespace Netty.NET.Handler.Codec.Http3;
 
 // CLR: ChannelHandler is IChannelHandler, QuicStreamChannel codec-quic's IQuicStreamChannel,
 // LongFunction<ChannelHandler> Func<long, IChannelHandler>, Http3SettingsFrame IHttp3SettingsFrame and
-// QpackSensitivityDetector IQpackSensitivityDetector. The protected overrides of the package-private abstract methods
-// are protected internal overrides of Http3ConnectionHandler's protected internal members (an override keeps the
-// accessibility). The suppliers () -> new QpackEncoderHandler(...) and () -> new QpackDecoderHandler(...) are
-// Func<IChannelHandler> lambdas. The @Nullable (org.jetbrains.annotations) annotations have no counterpart.
+// QpackSensitivityDetector IQpackSensitivityDetector. The suppliers () -> new QpackEncoderHandler(...) and () ->
+// new QpackDecoderHandler(...) are Func<IChannelHandler> lambdas. The @Nullable (org.jetbrains.annotations)
+// annotations have no counterpart.
 public class Http3ClientConnectionHandler : Http3ConnectionHandler
 {
 

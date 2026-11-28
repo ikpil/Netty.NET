@@ -23,10 +23,10 @@ namespace Netty.NET.Handler.Codec.Quic;
  */
 // CLR: every member of the Java interface (setMaxMessagesPerRead, setConnectTimeoutMillis, setWriteSpinCount,
 // setAllocator, setRecvByteBufAllocator, setAutoRead, setAutoClose, setWriteBufferHighWaterMark,
-// setWriteBufferLowWaterMark, setWriteBufferWaterMark, setMessageSizeEstimator) is re-declared only to narrow the return
-// type to QuicChannelConfig, so they are inherited from IChannelConfig unchanged: a C# interface cannot narrow an
-// inherited member's return type without hiding it (docs/transport-porting.md, Decisions; the IDuplexChannelConfig
-// rule). The @Deprecated setMaxMessagesPerRead keeps its [Obsolete] on IChannelConfig.
+// setWriteBufferLowWaterMark, setWriteBufferWaterMark, setMessageSizeEstimator) is re-declared only to narrow the
+// return type to QuicChannelConfig, so they are inherited from IChannelConfig unchanged: a C# interface cannot
+// narrow an inherited member's return type without hiding it. The @Deprecated setMaxMessagesPerRead keeps its
+// [Obsolete] on IChannelConfig.
 public interface IQuicChannelConfig : IChannelConfig
 {
 }

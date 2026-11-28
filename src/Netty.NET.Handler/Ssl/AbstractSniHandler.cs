@@ -155,7 +155,6 @@ public abstract class AbstractSniHandler<T> : SslClientHelloHandler<T>
         return null;
     }
 
-    // CLR: TimeUnit.SECONDS.toMillis(10).
     internal const long DEFAULT_HANDSHAKE_TIMEOUT_MILLIS = 10 * 1000L;
     protected readonly long handshakeTimeoutMillis;
     private CancellationTokenSource timeoutFuture;

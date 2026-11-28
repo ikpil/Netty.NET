@@ -1997,7 +1997,6 @@ public class ConcurrentSkipListIntObjMultimap<V> : IEnumerable<ConcurrentSkipLis
         return new EntryIterator(this);
     }
 
-    // CLR: Iterable.iterator() is IEnumerable<T>.GetEnumerator(); both return the same EntryIterator.
     public IEnumerator<IntEntry> GetEnumerator()
     {
         return Iterator();

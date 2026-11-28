@@ -1,6 +1,3 @@
-// CLR: test-only stand-in for org.apache.mina.filter.codec.ProtocolDecoderOutput of Apache MINA 2.2.3:
-// https://github.com/apache/mina/blob/2.2.3/mina-core/src/main/java/org/apache/mina/filter/codec/ProtocolDecoderOutput.java
-// The interface takes the I prefix; NextFilter is IIoFilter.INextFilter.
 
 namespace Netty.NET.Resolver.Dns.Tests.ApacheDs;
 

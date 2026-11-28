@@ -19,9 +19,8 @@ using Netty.NET.Buffer;
 
 namespace Netty.NET.Handler.Codec.Quic.Tests;
 
-// CLR: NoQuicTokenHandler is internal (package-private in Java). QuicConnectionAddress.random().id() is the internal
-// Id() (a ReadOnlyMemory<byte>, the ByteBuffer that Unpooled.wrappedBuffer wraps); InetAddress.getByAddress(byte[]) is
-// new IPAddress(byte[]) and InetSocketAddress IPEndPoint.
+// CLR: QuicConnectionAddress.random().id() is the internal Id() (a ReadOnlyMemory<byte>, the ByteBuffer that
+// Unpooled.wrappedBuffer wraps).
 public class NoQuicTokenHandlerTest
 {
 

@@ -23,12 +23,11 @@ namespace Netty.NET.Handler.Codec.Memcache;
 /**
  * The default {@link MemcacheContent} implementation.
  */
-// CLR: content() is the IByteBufHolder Content property (docs/buffer-porting.md, Buffer holders and conversion). The
-// covariant overrides of retain()/retain(int)/touch()/touch(Object) and copy()/duplicate()/retainedDuplicate()/
-// replace(ByteBuf) are C# covariant override returns
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override). The IByteBufHolder members,
-// which the shared interface re-declares with its own return type, are explicit implementations that forward to the
-// public members, as Transport DatagramPacket does
+// CLR: The covariant overrides of retain()/retain(int)/touch()/touch(Object) and
+// copy()/duplicate()/retainedDuplicate()/ replace(ByteBuf) are C# covariant override returns
+// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override). The IByteBufHolder
+// members, which the shared interface re-declares with its own return type, are explicit implementations that
+// forward to the public members, as Transport DatagramPacket does
 // (https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/interfaces/explicit-interface-implementation).
 [UnstableApi]
 public class DefaultMemcacheContent : AbstractMemcacheObject, IMemcacheContent

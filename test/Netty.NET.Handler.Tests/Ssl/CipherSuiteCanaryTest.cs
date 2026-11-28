@@ -36,22 +36,22 @@ namespace Netty.NET.Handler.Tests.Ssl;
 /**
  * The purpose of this unit test is to act as a canary and catch changes in supported cipher suites.
  */
-// CLR: the static @BeforeAll init() and @AfterAll destroy() run from the class fixture BeforeAllAndAfterAll, which xUnit
-// creates before the first test of the class and disposes after the last one (docs/handler-porting.md, "Lifecycle").
-// @ParameterizedTest with @MethodSource is [Theory] with [MemberData], and assumeTrue is Assert.SkipUnless. SslProvider is
-// a sealed class (ssl context wave), so SslProvider.values() is its three constants in declaration order; OpenSsl is
-// library-not-ported (netty-tcnative; owner decision 2026-11-24, docs/handler-ssl-design.md) and reports unavailable,
-// so expand(...) keeps the JDK/JDK pair only. SslContext.newHandler(alloc, Executor) is not ported (SslStream has no
-// delegated tasks; ssl context wave), so expand(...) generates no delegate rows and the test has no delegate parameter,
-// executor or ExecutorService. CERT.getKeyPair().getPrivate() is the bundle's BCL key object
-// (docs/pkitesting-porting.md) and getCertificatePath() its X509Certificate2 path. Promise<Object> is a
-// TaskCompletionSource<object> (cancel(true) is TrySetCanceled, trySuccess/tryFailure TrySetResult/TrySetException),
-// await(5, SECONDS) waits for the Task with Task.WhenAny and a five-second delay, and sync()/syncUninterruptibly() are
-// awaits; the bootstrap API is asynchronous. The anonymous handlers are named nested classes and the char literals of the
-// byte[] initializers are cast to byte. The cipher suites become a CipherSuitesPolicy, which SslStream does not support
-// on Windows (SslContext.newHandler throws PlatformNotSupportedException there, docs/handler-ssl-design.md, "No
-// cipher-suite selection on Windows"), so the test is skipped on Windows and runs where CipherSuitesPolicy exists
-// (Linux, macOS).
+// CLR: the static @BeforeAll init() and @AfterAll destroy() run from the class fixture BeforeAllAndAfterAll, which
+// xUnit creates before the first test of the class and disposes after the last one. @ParameterizedTest with
+// @MethodSource is [Theory] with [MemberData], and assumeTrue is Assert.SkipUnless. SslProvider is a sealed class
+// (ssl context wave), so SslProvider.values() is its three constants in declaration order; OpenSsl is
+// library-not-ported (netty-tcnative; owner decision 2026-11-24, docs/handler-ssl-design.md) and reports
+// unavailable, so expand(...) keeps the JDK/JDK pair only. SslContext.newHandler(alloc, Executor) is not ported
+// (SslStream has no delegated tasks; ssl context wave), so expand(...) generates no delegate rows and the test has
+// no delegate parameter, executor or ExecutorService. CERT.getKeyPair().getPrivate() is the bundle's BCL key
+// object and getCertificatePath() its X509Certificate2 path. Promise<Object> is a TaskCompletionSource<object>
+// (cancel(true) is TrySetCanceled, trySuccess/tryFailure TrySetResult/TrySetException), await(5, SECONDS) waits
+// for the Task with Task.WhenAny and a five-second delay, and sync()/syncUninterruptibly() are awaits; the
+// bootstrap API is asynchronous. The anonymous handlers are named nested classes and the char literals of the
+// byte[] initializers are cast to byte. The cipher suites become a CipherSuitesPolicy, which SslStream does not
+// support on Windows (SslContext.newHandler throws PlatformNotSupportedException there,
+// docs/handler-ssl-design.md, "No cipher-suite selection on Windows"), so the test is skipped on Windows and runs
+// where CipherSuitesPolicy exists (Linux, macOS).
 public class CipherSuiteCanaryTest : IClassFixture<CipherSuiteCanaryTest.BeforeAllAndAfterAll>
 {
 

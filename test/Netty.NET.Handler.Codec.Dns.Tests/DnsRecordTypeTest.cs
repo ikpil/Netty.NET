@@ -20,9 +20,6 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Codec.Dns.Tests;
 
-// CLR: Class.getFields() is Type.GetFields(), which "returns all the public fields of the current Type"
-// (https://learn.microsoft.com/en-us/dotnet/api/system.type.getfields?view=net-10.0); Modifier.STATIC is
-// FieldInfo.IsStatic, and the JUnit message overloads use XunitAssertMessages.AssertM.
 public class DnsRecordTypeTest
 {
 

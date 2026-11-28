@@ -465,8 +465,8 @@ public abstract class AbstractNioByteChannel : AbstractNioChannel
     /**
      * Read bytes into the given {@link ByteBuf} and return the amount.
      */
-    // CLR: ByteBuf.WriteBytes(Socket, int) reports EOF as 0, like WouldBlock, so the channel receives directly into
-    // the writable range to keep the Java -1 EOF result of byteBuf.writeBytes(javaChannel(), ...).
+    // CLR: ByteBuf.WriteBytes(Socket, int) reports EOF as 0, like WouldBlock, so the channel receives directly
+    // into the writable range to keep the Java -1 EOF result of byteBuf.writeBytes(javaChannel(),...).
     // https://learn.microsoft.com/dotnet/api/system.net.sockets.socket.receive
     protected virtual int DoReadBytes(ByteBuf byteBuf)
     {

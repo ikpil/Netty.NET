@@ -22,10 +22,7 @@ namespace Netty.NET.Handler.Codec.Http2;
 /**
  * Provides a decorator around a {@link Http2FrameListener} and delegates all method calls
  */
-// CLR: the overridable Java methods are virtual and the protected final field is protected internal readonly: Java's
-// protected also grants package access, which Http2EmptyDataFrameConnectionDecoder and Http2MaxRstFrameDecoder use to
-// unwrap the decorated listener.
-// checkNotNull is ObjectUtil.CheckNotNull (ArgumentNullException, docs/codec-base-porting.md).
+// The decoder decorators need assembly access to unwrap the listener.
 public class Http2FrameListenerDecorator : IHttp2FrameListener
 {
     protected internal readonly IHttp2FrameListener listener;

@@ -28,15 +28,14 @@ namespace Netty.NET.Handler.Codec.Http.Multipart;
  *
  */
 // CLR: HttpRequest is IHttpRequest, HttpContent IHttpContent and Charset Encoding; List<InterfaceHttpData> is
-// IList<IInterfaceHttpData>. The package-private DEFAULT_* constants are internal constants. The protected enum
-// MultiPartStatus and the protected static getMultipartDataBoundary(String), which the other decoders of the package
-// use, are protected internal, as Java protected also admits the package (docs/codec-base-porting.md, Package access;
-// https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/protected-internal). String.startsWith is
-// StartsWith with StringComparison.Ordinal, String.regionMatches(true, 0, other, 0, len) string.Compare with
-// StringComparison.OrdinalIgnoreCase over that length (a shorter string does not match, as in Java,
+// IList<IInterfaceHttpData>. The protected enum MultiPartStatus and the protected static
+// getMultipartDataBoundary(String), which the other decoders of the package use, are protected internal, as Java
+// protected also admits the package. String.startsWith is StartsWith with StringComparison.Ordinal,
+// String.regionMatches(true, 0, other, 0, len) string.Compare with StringComparison.OrdinalIgnoreCase over that
+// length (a shorter string does not match, as in Java,
 // https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html) and String.trim() core's
 // HttpUtil.TrimJava. The nested exceptions extend codec-base DecoderException with the same constructors;
-// serialVersionUID has no counterpart (docs/codec-base-porting.md, Exceptions).
+// serialVersionUID has no counterpart.
 public class HttpPostRequestDecoder : IInterfaceHttpPostRequestDecoder
 {
 

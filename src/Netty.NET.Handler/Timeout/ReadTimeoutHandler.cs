@@ -78,8 +78,7 @@ public class ReadTimeoutHandler : IdleStateHandler
      * @param unit
      *        the {@link TimeUnit} of {@code timeout}
      */
-    // CLR: a TimeSpan replaces the (long timeout, TimeUnit unit) pair (docs/common-clr-design.md, "Monotonic time and
-    // duration conversion").
+    // CLR: a TimeSpan replaces the (long timeout, TimeUnit unit) pair.
     public ReadTimeoutHandler(TimeSpan timeout) : base(timeout, TimeSpan.Zero, TimeSpan.Zero)
     {
     }

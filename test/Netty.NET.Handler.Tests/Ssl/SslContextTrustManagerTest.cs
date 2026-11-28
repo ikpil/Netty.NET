@@ -136,8 +136,8 @@ public class SslContextTrustManagerTest
         return tm;
     }
 
-    // CLR: X509TrustManager.checkServerTrusted(chain, authType); see the class comment. The authentication type has no
-    // X509Chain counterpart; the chain builds from its first (end entity) certificate.
+    // CLR: The authentication type has no X509Chain counterpart; the chain builds from its first (end entity)
+    // certificate.
     private static void CheckServerTrusted(X509Chain tm, X509Certificate2[] chain, string authType)
     {
         if (!tm.Build(chain[0]))

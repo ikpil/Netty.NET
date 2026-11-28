@@ -34,27 +34,26 @@ namespace Netty.NET.Handler.Codec.Http3;
 /**
  * Decodes / encodes {@link Http3Frame}s.
  */
-// CLR: the package-private final class is an internal sealed class. ByteToMessageDecoder is the codec-base
-// ByteToMessageDecoder and ChannelOutboundHandler the Transport's IChannelOutboundHandler, whose operations return a Task
-// instead of completing a ChannelPromise argument (docs/codec-base-porting.md, Outbound operations): write(ctx, msg,
-// promise) is WriteAsync(ctx, msg, cancellationToken), which creates the promise (Http3CodecUtils.NewPromise()), runs the
-// Java body and returns the promise's Task, while the private write helpers keep the TaskCompletionSource parameter and
-// ctx.write(msg, promise) is Http3CodecUtils.Write; bind/connect/disconnect/close/deregister pass their
-// CancellationToken to the context and return its Task. promise.setFailure(e) is SetException, promise.trySuccess()
-// TrySetResult, and ctx.voidPromise() a new promise whose Task is not observed (there is no void promise,
-// docs/transport-porting.md). QuicStreamChannel and QuicStreamFrame are codec-quic's IQuicStreamChannel and
-// IQuicStreamFrame (content() is the Content property). The lambda factory of newFactory is the private nested class
-// CodecFactory, and Http3FrameCodecFactory the nested internal interface IHttp3FrameCodecFactory. The BiFunction<T,
-// ByteBuf, Boolean> writers of writeDynamicFrame are Func<T, ByteBuf, bool> lambdas. ReadResumptionListener keeps
-// Runnable.run() as Run(), passed to QpackDecoder.Decode as the Action whenDecoded, and both listeners keep
-// operationComplete(future) as OperationComplete(Task<IQuicStreamChannel>), registered with
-// QpackAttributes.WhenDecoderStreamAvailable/WhenEncoderStreamAvailable; future.isSuccess() is IsCompletedSuccessfully
-// and future.cause() Http3CodecUtils.Cause. ctx.executor().execute(r) is IEventExecutor.Execute(Action). The
-// BiConsumer sink is the method group Http3HeadersSink.Accept. ReadResumptionListener's byte state keeps the bit masks
-// with explicit narrowing ((byte) casts for Java's compound assignments). Map.Entry<Long, Long> is
-// KeyValuePair<long, long>. UnsupportedOperationException is NotSupportedException; assert is Debug.Assert; the numbers
-// of the messages print with the invariant culture. SocketAddress is EndPoint. The @Nullable annotations and the throws
-// clauses have no counterpart.
+// CLR: ByteToMessageDecoder is the codec-base ByteToMessageDecoder and ChannelOutboundHandler the Transport's
+// IChannelOutboundHandler, whose operations return a Task instead of completing a ChannelPromise argument :
+// write(ctx, msg, promise) is WriteAsync(ctx, msg, cancellationToken), which creates the promise
+// (Http3CodecUtils.NewPromise()), runs the Java body and returns the promise's Task, while the private write
+// helpers keep the TaskCompletionSource parameter and ctx.write(msg, promise) is Http3CodecUtils.Write;
+// bind/connect/disconnect/close/deregister pass their CancellationToken to the context and return its Task.
+// promise.setFailure(e) is SetException, promise.trySuccess() TrySetResult, and ctx.voidPromise() a new promise
+// whose Task is not observed (there is no void promise, docs/transport-porting.md). QuicStreamChannel and
+// QuicStreamFrame are codec-quic's IQuicStreamChannel and IQuicStreamFrame (content() is the Content property).
+// The lambda factory of newFactory is the private nested class CodecFactory, and Http3FrameCodecFactory the nested
+// internal interface IHttp3FrameCodecFactory. The BiFunction<T, ByteBuf, Boolean> writers of writeDynamicFrame are
+// Func<T, ByteBuf, bool> lambdas. ReadResumptionListener keeps Runnable.run() as Run(), passed to
+// QpackDecoder.Decode as the Action whenDecoded, and both listeners keep operationComplete(future) as
+// OperationComplete(Task<IQuicStreamChannel>), registered with
+// QpackAttributes.WhenDecoderStreamAvailable/WhenEncoderStreamAvailable. The BiConsumer sink is the method group
+// Http3HeadersSink.Accept. ReadResumptionListener's byte state keeps the bit masks with explicit narrowing ((byte)
+// casts for Java's compound assignments). Map.Entry<Long, Long> is KeyValuePair<long, long>.
+// UnsupportedOperationException is NotSupportedException; assert is Debug.Assert; the numbers of the messages
+// print with the invariant culture. SocketAddress is EndPoint. The @Nullable annotations and the throws clauses
+// have no counterpart.
 internal sealed class Http3FrameCodec : ByteToMessageDecoder, IChannelOutboundHandler
 {
     private readonly IHttp3FrameTypeValidator validator;

@@ -20,18 +20,17 @@ using System.Collections.Generic;
 
 namespace Netty.NET.Handler.Codec.Http2;
 
-// CLR: java.util.Queue has no BCL interface counterpart. The wrapped Queue<E> is the BCL Queue<T>, the counterpart of
-// the ArrayDeque the callers pass (docs/handler-porting.md: "ArrayDeque is Queue<T>; peek/poll are TryPeek/TryDequeue,
-// and remove() is Dequeue(), which also throws when the queue is empty"). The Queue/Collection methods keep their Java
-// names (Add, Offer, Remove(), Poll, Element, Peek, Size, IsEmpty, Contains, ToArray, Remove(object), ContainsAll,
-// AddAll, RemoveAll, RetainAll, Clear) and delegate to the wrapped queue; iterator() is GetEnumerator() of
-// IEnumerable<E> (Queue extends Iterable). The BCL Queue<T> cannot remove an arbitrary element, so remove(Object),
-// removeAll and retainAll rebuild it in order with the elements that stay (ArrayDeque removes the first occurrence and
-// keeps the order of the others). Collection<?> is the non-generic ICollection and Collection<? extends E> the covariant
-// IReadOnlyCollection<E> (docs/codec-http-porting.md, Shared CLR adaptations). IllegalStateException is
-// InvalidOperationException. Object[] toArray() is object[] ToArray() and <T> T[] toArray(T[]) keeps the
-// Collection.toArray(T[]) contract: the given array when it is large enough (null after the last element), else a new
-// array.
+// CLR: java.util.Queue has no BCL interface counterpart. The wrapped Queue<E> is the BCL Queue<T>, the counterpart
+// of the ArrayDeque the callers pass (docs/handler-porting.md: "ArrayDeque is Queue<T>; peek/poll are
+// TryPeek/TryDequeue, and remove() is Dequeue(), which also throws when the queue is empty"). The Queue/Collection
+// methods keep their Java names (Add, Offer, Remove(), Poll, Element, Peek, Size, IsEmpty, Contains, ToArray,
+// Remove(object), ContainsAll, AddAll, RemoveAll, RetainAll, Clear) and delegate to the wrapped queue. The BCL
+// Queue<T> cannot remove an arbitrary element, so remove(Object), removeAll and retainAll rebuild it in order with
+// the elements that stay (ArrayDeque removes the first occurrence and keeps the order of the others).
+// Collection<?> is the non-generic ICollection and Collection<? extends E> the covariant IReadOnlyCollection<E>.
+// IllegalStateException is InvalidOperationException. Object[] toArray() is object[] ToArray() and <T> T[]
+// toArray(T[]) keeps the Collection.toArray(T[]) contract: the given array when it is large enough (null after the
+// last element), else a new array.
 internal sealed class MaxCapacityQueue<E> : IEnumerable<E>
 {
     private readonly Queue<E> queue;

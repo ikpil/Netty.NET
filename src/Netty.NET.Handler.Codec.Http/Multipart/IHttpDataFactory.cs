@@ -21,9 +21,8 @@ namespace Netty.NET.Handler.Codec.Http.Multipart;
 /**
  * Interface to enable creation of InterfaceHttpData objects
  */
-// CLR: the Java interface HttpDataFactory takes the I prefix (owner rule); HttpRequest is IHttpRequest and Charset is
-// Encoding. The @Deprecated cleanRequestHttpDatas(HttpRequest) and cleanAllHttpDatas(), whose @deprecated texts name
-// cleanRequestHttpData(HttpRequest) and cleanAllHttpData(), are not ported (owner decision 2026-11-16).
+// CLR: The @Deprecated cleanRequestHttpDatas(HttpRequest) and cleanAllHttpDatas(), whose @deprecated texts name
+// cleanRequestHttpData(HttpRequest) and cleanAllHttpData(), are not ported.
 public interface IHttpDataFactory
 {
 

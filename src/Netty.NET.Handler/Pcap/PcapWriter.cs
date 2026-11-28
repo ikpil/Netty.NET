@@ -22,13 +22,12 @@ namespace Netty.NET.Handler.Pcap;
 
 // CLR: the package-private final class is an internal sealed class. java.io.OutputStream is System.IO.Stream and
 // packet.readBytes(outputStream, length) is ByteBuf.ReadBytes(Stream, int). synchronized (outputStream) is lock
-// (outputStream), the statement the Transport port uses for synchronized blocks (docs/transport-porting.md).
-// System.currentTimeMillis() is DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), "the number of milliseconds that have
-// elapsed since 1970-01-01T00:00:00.000Z"
-// (https://learn.microsoft.com/en-us/dotnet/api/system.datetimeoffset.tounixtimemilliseconds?view=net-10.0). Closeable
-// keeps close() as Close() and IDisposable.Dispose() calls it, as codec-compression's IDecompressor does for
-// AutoCloseable (docs/codec-compression-porting.md); toString() appends the stream's ToString(). "throws IOException"
-// has no C# counterpart.
+// (outputStream), the statement the Transport port uses for synchronized blocks. System.currentTimeMillis() is
+// DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), "the number of milliseconds that have elapsed since
+// 1970-01-01T00:00:00.000Z"
+// (https://learn.microsoft.com/en-us/dotnet/api/system.datetimeoffset.tounixtimemilliseconds?view=net-10.0).
+// Closeable keeps close() as Close() and IDisposable.Dispose() calls it, as codec-compression's IDecompressor does
+// for AutoCloseable; toString() appends the stream's ToString(). "throws IOException" has no C# counterpart.
 internal sealed class PcapWriter : IDisposable
 {
 

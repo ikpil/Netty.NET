@@ -21,11 +21,11 @@ namespace Netty.NET.Handler.Codec.Http2;
 /**
  * Default implementation of {@link Http2PushPromiseFrame}
  */
-// CLR: stream(Http2FrameStream) narrows its return type to Http2PushPromiseFrame; C# 9 covariant returns cover class
-// overrides only, so the public Stream(IHttp2FrameStream) returns IHttp2PushPromiseFrame and IHttp2StreamFrame.Stream
-// is implemented explicitly with it (docs/codec-http-porting.md, Shared CLR adaptations). The package-private
-// constructor is internal. toString() keeps Java's text: null members print "null" and numbers use the invariant
-// culture (Http2CodecUtil.ToJavaString).
+// CLR: stream(Http2FrameStream) narrows its return type to Http2PushPromiseFrame; C# 9 covariant returns cover
+// class overrides only, so the public Stream(IHttp2FrameStream) returns IHttp2PushPromiseFrame and
+// IHttp2StreamFrame.Stream is implemented explicitly with it. The package-private constructor is internal.
+// toString() keeps Java's text: null members print "null" and numbers use the invariant culture
+// (Http2CodecUtil.ToJavaString).
 public sealed class DefaultHttp2PushPromiseFrame : IHttp2PushPromiseFrame
 {
 

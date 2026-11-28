@@ -173,7 +173,6 @@ public class ResourceRecordImpl : IResourceRecord
                timeToLive.ToString(CultureInfo.InvariantCulture) + " " + MapToString(attributes) + " ) ]";
     }
 
-    // CLR: java.util.AbstractMap.equals.
     private static bool MapEquals(IDictionary<string, object> a, IDictionary<string, object> b)
     {
         if (ReferenceEquals(a, b))
@@ -197,7 +196,6 @@ public class ResourceRecordImpl : IResourceRecord
         return true;
     }
 
-    // CLR: java.util.AbstractMap.toString.
     internal static string MapToString(IDictionary<string, object> map)
     {
         if (map == null)

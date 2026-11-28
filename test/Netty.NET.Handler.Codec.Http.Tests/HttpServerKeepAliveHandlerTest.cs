@@ -28,14 +28,14 @@ namespace Netty.NET.Handler.Codec.Http.Tests;
 
 #pragma warning disable xUnit1051 // The source's writeAndFlush(...) observes no test cancellation.
 
-// CLR: xUnit creates a new test class instance for every test, so the @BeforeEach setUp() runs from the constructor
-// (https://xunit.net/docs/shared-context). @ParameterizedTest @MethodSource is a [Theory] with MemberData rows, and the
-// static imports HttpHeaderValues.CLOSE/KEEP_ALIVE/MULTIPART_MIXED are written in full because HttpUtil (also imported)
-// has members named like them. writeAndFlush(msg) is WriteAndFlushAsync(msg) whose Task is discarded, as the source
-// discards the ChannelFuture; there is no void promise, so writeAndFlush(msg, channel.voidPromise()) is the same
-// discarded call (docs/codec-base-porting.md, Outbound operations: "has no void-promise path"). Messages are read with
-// ReadInbound<T>/ReadOutbound<T>; assertions with messages use XunitAssertMessages.AssertM. String.toUpperCase of the
-// AsciiString is AsciiString.ToUpperCase(); CharsetUtil.US_ASCII is Encoding.ASCII (docs/codec-smtp-porting.md).
+// CLR: xUnit creates a new test class instance for every test, so the @BeforeEach setUp() runs from the
+// constructor (https://xunit.net/docs/shared-context). @ParameterizedTest @MethodSource is a [Theory] with
+// MemberData rows, and the static imports HttpHeaderValues.CLOSE/KEEP_ALIVE/MULTIPART_MIXED are written in full
+// because HttpUtil (also imported) has members named like them. writeAndFlush(msg) is WriteAndFlushAsync(msg)
+// whose Task is discarded, as the source discards the ChannelFuture; there is no void promise, so
+// writeAndFlush(msg, channel.voidPromise()) is the same discarded call. Messages are read with
+// ReadInbound<T>/ReadOutbound<T>; assertions with messages use XunitAssertMessages.AssertM. String.toUpperCase of
+// the AsciiString is AsciiString.ToUpperCase().
 public class HttpServerKeepAliveHandlerTest
 {
     private const string REQUEST_KEEP_ALIVE = "REQUEST_KEEP_ALIVE";

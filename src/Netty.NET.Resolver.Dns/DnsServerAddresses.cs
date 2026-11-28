@@ -26,14 +26,12 @@ namespace Netty.NET.Resolver.Dns;
 /**
  * Provides an infinite sequence of DNS server addresses to {@link DnsNameResolver}.
  */
-// CLR: InetSocketAddress is EndPoint and isUnresolved() a DnsEndPoint (docs/handler-porting.md Addresses);
-// Iterable<? extends InetSocketAddress> is IEnumerable<EndPoint> (covariant, so a list of IPEndPoint is accepted) and the
-// varargs overloads take params EndPoint[]. The anonymous DefaultDnsServerAddresses subclasses of sequential0 and
-// shuffled0 are the named nested SequentialDnsServerAddresses and ShuffledDnsServerAddresses. The @Deprecated
-// defaultAddressList() and defaultAddresses(), whose @deprecated text names DefaultDnsServerAddressStreamProvider's
-// methods, are not ported (owner decision 2026-11-16). SocketAddress is the CLR counterpart of
-// SocketUtils.socketAddress(hostname, port) that the providers share. IllegalArgumentException is ArgumentException and
-// an address prints as EndPoint.ToString().
+// CLR: InetSocketAddress is EndPoint and isUnresolved() a DnsEndPoint; Iterable<? extends InetSocketAddress> is
+// IEnumerable<EndPoint> (covariant, so a list of IPEndPoint is accepted) and the varargs overloads take params
+// EndPoint[]. The @Deprecated defaultAddressList() and defaultAddresses(), whose @deprecated text names
+// DefaultDnsServerAddressStreamProvider's methods, are not ported. SocketAddress is the CLR counterpart of
+// SocketUtils.socketAddress(hostname, port) that the providers share. IllegalArgumentException is
+// ArgumentException and an address prints as EndPoint.ToString().
 public abstract class DnsServerAddresses
 {
 
@@ -235,13 +233,11 @@ public abstract class DnsServerAddresses
      */
     public abstract IDnsServerAddressStream Stream();
 
-    // CLR: SocketUtils.socketAddress(hostname, port) is new InetSocketAddress(hostname, port), which looks the host up
-    // with InetAddress.getByName and keeps the address unresolved when the lookup fails
-    // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/InetSocketAddress.html). As Transport's
-    // internal AbstractBootstrap.SocketAddress does, the lookup is Resolver's DefaultNameResolver (the JDK literal rules;
-    // UnknownHostException is Common's UnknownHostException) and an unresolved address is a DnsEndPoint. Like getByName it blocks the
-    // caller for a name that is not a literal. Shared by ResolvConf, DirContextUtils,
-    // DefaultDnsServerAddressStreamProvider and UnixResolverDnsServerAddressStreamProvider.
+    // CLR: As Transport's internal AbstractBootstrap.SocketAddress does, the lookup is Resolver's
+    // DefaultNameResolver (the JDK literal rules; UnknownHostException is Common's UnknownHostException) and an
+    // unresolved address is a DnsEndPoint. Like getByName it blocks the caller for a name that is not a literal.
+    // Shared by ResolvConf, DirContextUtils, DefaultDnsServerAddressStreamProvider and
+    // UnixResolverDnsServerAddressStreamProvider.
     internal static EndPoint SocketAddress(string hostname, int port)
     {
         if (hostname == null)

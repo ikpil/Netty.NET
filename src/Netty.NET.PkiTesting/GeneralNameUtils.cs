@@ -101,9 +101,6 @@ internal static class GeneralNameUtils
         return UriName(new Uri(uri));
     }
 
-    // CLR: uri.toASCIIString() is the URI text SubjectAlternativeNameBuilder.AddUri writes, the escaped Uri.AbsoluteUri
-    // (measured: "spiffe://netty.io/ex ample/sän" is written as spiffe://netty.io/ex%20ample/s%C3%A4n, as
-    // toASCIIString() quotes it).
     internal static byte[] UriName(Uri uri)
     {
         SubjectAlternativeNameBuilder builder = new SubjectAlternativeNameBuilder();

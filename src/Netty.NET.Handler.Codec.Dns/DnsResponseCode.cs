@@ -23,11 +23,11 @@ namespace Netty.NET.Handler.Codec.Dns;
 /**
  * The DNS {@code RCODE}, as defined in <a href="https://tools.ietf.org/html/rfc2929">RFC2929</a>.
  */
-// CLR: Comparable<DnsResponseCode> is IComparable<DnsResponseCode>; hashCode()/equals(Object)/toString() are the BCL
-// GetHashCode()/Equals(object)/ToString(), and intValue() stays a method. IllegalArgumentException is
-// ArgumentException and checkNotNull throws ArgumentNullException (docs/codec-base-porting.md, Shared CLR
-// adaptations). Numbers in text use the invariant culture (Int32.ToString() otherwise uses "the NumberFormatInfo
-// object of the current culture", https://learn.microsoft.com/en-us/dotnet/api/system.int32.tostring).
+// CLR: Comparable<DnsResponseCode> is IComparable<DnsResponseCode>; hashCode()/equals(Object)/toString() are the
+// BCL GetHashCode()/Equals(object)/ToString(), and intValue() stays a method. IllegalArgumentException is
+// ArgumentException and checkNotNull throws ArgumentNullException. Numbers in text use the invariant culture
+// (Int32.ToString() otherwise uses "the NumberFormatInfo object of the current culture",
+// https://learn.microsoft.com/en-us/dotnet/api/system.int32.tostring).
 public class DnsResponseCode : IComparable<DnsResponseCode>
 {
 

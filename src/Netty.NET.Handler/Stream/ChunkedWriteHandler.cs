@@ -57,20 +57,18 @@ namespace Netty.NET.Handler.Stream;
  * transfer.  To resume the transfer when a new chunk is available, you have to
  * call {@link #resumeTransfer()}.
  */
-// CLR: ChannelFuture/ChannelPromise are Task/TaskCompletionSource (docs/transport-porting.md): write(ctx, msg, promise)
-// is WriteAsync(ctx, msg, cancellationToken), whose returned Task replaces the promise (docs/codec-base-porting.md). A
-// queued write gets its own TaskCompletionSource, which PendingWrite completes; the token cancels it as
-// ChannelPromise.cancel(...) cancels the promise. ChunkedInput<?> is IChunkedInput<object> (B is covariant, see
-// IChunkedInput). The ArrayDeque is Queue<T>: add is Enqueue, remove() is Dequeue(), which also throws when the queue
-// is empty ("The Queue<T> is empty",
-// https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.queue-1.dequeue?view=net-10.0), and
-// peek()/poll(), which return null when the deque is empty
-// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/ArrayDeque.html), are TryPeek/TryDequeue,
-// which leave "the default value of T" (null) when the queue is empty
-// (https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.queue-1.trypeek?view=net-10.0). Throwable is
-// Exception and java.nio.channels.ClosedChannelException is the Transport ClosedChannelException. The @Deprecated
-// ChunkedWriteHandler(int maxPendingWrites), whose @deprecated text names ChunkedWriteHandler(), is not ported (owner
-// decision 2026-11-16).
+// CLR: ChannelFuture/ChannelPromise are Task/TaskCompletionSource : write(ctx, msg, promise) is WriteAsync(ctx,
+// msg, cancellationToken), whose returned Task replaces the promise. A queued write gets its own
+// TaskCompletionSource, which PendingWrite completes; the token cancels it as ChannelPromise.cancel(...) cancels
+// the promise. ChunkedInput<?> is IChunkedInput<object> (B is covariant, see IChunkedInput). The ArrayDeque is
+// Queue<T>: add is Enqueue, remove() is Dequeue(), which also throws when the queue is empty ("The Queue<T> is
+// empty", https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.queue-1.dequeue?view=net-10.0),
+// and peek()/poll(), which return null when the deque is empty
+// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/ArrayDeque.html), are
+// TryPeek/TryDequeue, which leave "the default value of T" (null) when the queue is empty
+// (https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.queue-1.trypeek?view=net-10.0). The
+// @Deprecated ChunkedWriteHandler(int maxPendingWrites), whose @deprecated text names ChunkedWriteHandler(), is
+// not ported.
 public class ChunkedWriteHandler : ChannelDuplexHandler
 {
 
@@ -133,7 +131,6 @@ public class ChunkedWriteHandler : ChannelDuplexHandler
         else
         {
             // let the transfer resume on the next event loop round
-            // CLR: the anonymous Runnable is a lambda.
             ctx.Executor.Execute(() => ResumeTransfer0(ctx));
         }
     }
@@ -502,9 +499,9 @@ public class ChunkedWriteHandler : ChannelDuplexHandler
 
     // CLR: f.addListener(listener) is a continuation of the write Task (future listeners are Task continuations,
     // docs/codec-base-porting.md). DefaultPromise notifies a listener on its channel's executor: inline when the
-    // promise completes in the event loop, otherwise through executor.execute(...), logging a rejected submission
-    // (docs/common-native-progress.md); the continuation runs the listener the same way, so the listeners touch the
-    // input and the promise in the event loop as in the source. Only a write that is not done yet gets a listener.
+    // promise completes in the event loop, otherwise through executor.execute(...), logging a rejected submission;
+    // the continuation runs the listener the same way, so the listeners touch the input and the promise in the
+    // event loop as in the source. Only a write that is not done yet gets a listener.
     private static void AddListener(IChannelHandlerContext ctx, Task future, Action<Task> listener)
     {
         _ = future.ContinueWith(f =>
@@ -540,11 +537,11 @@ public class ChunkedWriteHandler : ChannelDuplexHandler
         }
     }
 
-    // CLR: the fields are internal because C# does not open a nested class's private members to the enclosing class.
-    // The ChannelPromise is the TaskCompletionSource of the queued write; the CLR-only fields keep what the promise
-    // carries in Java: its CancellationToken (ChannelPromise.cancel(...) cancels the promise, so the token's callback
-    // cancels the TaskCompletionSource, as the Transport ChannelOutboundBuffer's write promise does) and its channel
-    // with the channel's write-progress observer (a ChannelProgressivePromise is IChannelConfig.WriteProgress,
+    // CLR: the fields are internal because C# does not open a nested class's private members to the enclosing
+    // class. The CLR-only fields keep what the promise carries in Java: its CancellationToken
+    // (ChannelPromise.cancel(...) cancels the promise, so the token's callback cancels the TaskCompletionSource,
+    // as the Transport ChannelOutboundBuffer's write promise does) and its channel with the channel's
+    // write-progress observer (a ChannelProgressivePromise is IChannelConfig.WriteProgress,
     // docs/transport-porting.md).
     private sealed class PendingWrite
     {

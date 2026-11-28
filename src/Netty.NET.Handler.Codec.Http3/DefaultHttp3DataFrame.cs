@@ -19,9 +19,8 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: DefaultByteBufHolder is the Buffer port's DefaultByteBufHolder; the overrides that narrow its return types to
-// IHttp3DataFrame are C# 9 covariant overrides, and content() is the Content property (docs/buffer-porting.md, Buffer
-// holders and conversion; as codec-http2's DefaultHttp2UnknownFrame).
+// CLR: DefaultByteBufHolder is the Buffer port's DefaultByteBufHolder; the overrides that narrow its return types
+// to IHttp3DataFrame are C# 9 covariant overrides, and content() is the Content property.
 public sealed class DefaultHttp3DataFrame : DefaultByteBufHolder, IHttp3DataFrame
 {
 

@@ -25,16 +25,15 @@ using static Netty.NET.Handler.Codec.Spdy.SpdyCodecUtil;
 
 namespace Netty.NET.Handler.Codec.Spdy;
 
-// CLR: java.util.zip.Deflater is codec-compression's internal stand-in Deflater (InternalsVisibleTo; owner decisions
-// 2026-11-23 and 2026-11-24), whose setDictionary() writes the zlib header with FDICT and the dictionary's Adler-32 and
-// keeps the dictionary as history on the BCL DeflateStream (docs/codec-compression-porting.md);
-// deflate(..., SYNC_FLUSH) is the stream's sync flush. The compressed bytes can differ from Java's zlib (.NET uses
-// zlib-ng); the format and the inflated data are the same. The Buffer port has no hasArray()/array()/arrayOffset(); the
-// array segment of one managed array (AsReadOnlySequence and MemoryMarshal.TryGetArray) replaces them, as in
-// codec-compression's JdkZlibEncoder (docs/buffer-porting.md, Array extraction), see TryGetArray and ArrayOf below. The
-// package-private class and constructor are internal; IllegalArgumentException is ArgumentException
-// (docs/codec-base-porting.md) and checkNotNullWithIAE is ObjectUtil.CheckNotNullWithIAE. writerIndex(int) is the
-// WriterIndex setter and capacity() is Capacity. Numbers in the exception text use the invariant culture.
+// CLR: java.util.zip.Deflater is codec-compression's internal stand-in Deflater (InternalsVisibleTo; owner
+// decisions 2026-11-23 and 2026-11-24), whose setDictionary() writes the zlib header with FDICT and the
+// dictionary's Adler-32 and keeps the dictionary as history on the BCL DeflateStream. The compressed bytes can
+// differ from Java's zlib (.NET uses zlib-ng); the format and the inflated data are the same. The Buffer port has
+// no hasArray()/array()/arrayOffset(); the array segment of one managed array (AsReadOnlySequence and
+// MemoryMarshal.TryGetArray) replaces them, as in codec-compression's JdkZlibEncoder, see TryGetArray and ArrayOf
+// below. IllegalArgumentException is ArgumentException and checkNotNullWithIAE is ObjectUtil.CheckNotNullWithIAE.
+// writerIndex(int) is the WriterIndex setter and capacity() is Capacity. Numbers in the exception text use the
+// invariant culture.
 internal class SpdyHeaderBlockZlibEncoder : SpdyHeaderBlockRawEncoder
 {
 

@@ -20,13 +20,12 @@ using static Netty.NET.Handler.Codec.Http2.Http2CodecUtil;
 
 namespace Netty.NET.Handler.Codec.Http2;
 
-// CLR: DefaultByteBufHolder is the Buffer port's DefaultByteBufHolder; the overrides that narrow its return types to
-// DefaultHttp2UnknownFrame are C# 9 covariant overrides, and content() is the Content property (docs/buffer-porting.md,
-// Buffer holders and conversion; as codec-smtp's DefaultSmtpContent). stream(Http2FrameStream) narrows the
-// IHttp2StreamFrame member, which C# cannot do for an interface member, so IHttp2StreamFrame.Stream is implemented
-// explicitly with the public Stream(IHttp2FrameStream) (docs/codec-http-porting.md, Shared CLR adaptations). The
-// Java byte frameType is the CLR byte; toString() and hashCode() use its signed Java value through (sbyte), so an
-// unknown frame type 0xFF prints -1 as in Java (owner rule 6). The other numbers use the invariant culture and a null
+// CLR: DefaultByteBufHolder is the Buffer port's DefaultByteBufHolder; the overrides that narrow its return types
+// to DefaultHttp2UnknownFrame are C# 9 covariant overrides, and content() is the Content property.
+// stream(Http2FrameStream) narrows the IHttp2StreamFrame member, which C# cannot do for an interface member, so
+// IHttp2StreamFrame.Stream is implemented explicitly with the public Stream(IHttp2FrameStream). The Java byte
+// frameType is the CLR byte; toString() and hashCode() use its signed Java value through (sbyte), so an unknown
+// frame type 0xFF prints -1 as in Java (owner rule 6). The other numbers use the invariant culture and a null
 // stream prints "null" (Http2CodecUtil.ToJavaString).
 public sealed class DefaultHttp2UnknownFrame : DefaultByteBufHolder, IHttp2UnknownFrame
 {

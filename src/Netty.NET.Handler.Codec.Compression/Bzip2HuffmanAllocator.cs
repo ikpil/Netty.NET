@@ -26,13 +26,13 @@ namespace Netty.NET.Handler.Codec.Compression;
  * and incorporating additional ideas from the implementation of
  * <a href="http://entropyware.info/shcodec/index.html">shcodec</a> by Simakov Alexander.
  */
-// CLR: the package-private final class with a private constructor is an internal sealed class. Java's >>> is C#'s >>>.
-// Integer.numberOfLeadingZeros(i) "Returns 32 if the specified value ... is equal to zero"
-// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Integer.html); it is
-// BitOperations.LeadingZeroCount over the same 32 bits as a uint ("Counts the number of leading zero bits in an unsigned
-// 32-bit integer mask", https://learn.microsoft.com/en-us/dotnet/api/system.numerics.bitoperations.leadingzerocount?view=net-10.0),
-// whose implementation also returns 32 for zero ("LZCNT contract is 0->32" and the software fallback's
-// "if (value == 0) { return 32; }" in
+// CLR: Java's >>> is C#'s >>>. Integer.numberOfLeadingZeros(i) "Returns 32 if the specified value... is equal to
+// zero" (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Integer.html); it is
+// BitOperations.LeadingZeroCount over the same 32 bits as a uint ("Counts the number of leading zero bits in an
+// unsigned 32-bit integer mask",
+// https://learn.microsoft.com/en-us/dotnet/api/system.numerics.bitoperations.leadingzerocount?view=net-10.0),
+// whose implementation also returns 32 for zero ("LZCNT contract is 0->32" and the software fallback's "if (value
+// == 0) { return 32; }" in
 // https://raw.githubusercontent.com/dotnet/dotnet/297acf930fb0f5c07fd4e51d78e521b4ad2e5d1f/src/runtime/src/libraries/System.Private.CoreLib/src/System/Numerics/BitOperations.cs).
 internal sealed class Bzip2HuffmanAllocator
 {

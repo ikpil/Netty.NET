@@ -36,44 +36,10 @@ using static Netty.NET.Handler.Codec.Http3.Tests.Http3TestUtils;
 
 namespace Netty.NET.Handler.Codec.Http3.Tests;
 
-// CLR: readOutbound()/readInbound() are ReadOutbound<T>()/ReadInbound<T>() and content() is the Content property; the
-// codec-http interfaces take the I prefix and their getters are methods (docs/codec-http-porting.md, Shared CLR
-// adaptations), as in codec-http2's Http2StreamFrameToHttpObjectCodecTest. A Java String passed as a CharSequence
-// (Http3Headers.get/set/setInt/add/method/authority/scheme/path/protocol) is a StringCharSequence (Http3TestUtils.Cs).
-// Hamcrest's assertThat(actual, is(expected)) is Assert.Equal(expected, actual), is(nullValue()) Assert.Null,
-// notNullValue() Assert.NotNull and not(instanceOf(T.class)) Assert.IsNotAssignableFrom<T>; is("bar") of the
-// CharSequence that headers().get("foo") returns (in Java the String of the trailers, so equals compares the text) is
-// Assert.Equal<ICharSequence> with Cs("bar"), which compares the text (ICharSequence is an IReadOnlyList<char>, as
-// QpackEncoderDecoderTest compares header values); assertFalse(x instanceof T)
-// is Assert.False(x is T) and assertThrows(T.class, ...) Assert.ThrowsAny<T>. CharsetUtil.UTF_8 and
-// StandardCharsets.UTF_8 are Encoding.UTF8, and String.getBytes(UTF_8) is Encoding.UTF8.GetBytes. The @Deprecated
-// DefaultLastHttpContent(ByteBuf, boolean) is not ported in codec-http (its @deprecated text names
-// DefaultLastHttpContent(ByteBuf), "to always have header validation enabled"; src/Netty.NET.Handler.Codec.Http/
-// DefaultLastHttpContent.cs); every call here passes true, so it is that constructor. writeOneOutbound(msg) is
-// WriteOneOutboundAsync(msg), whose Task is the ChannelFuture (isSuccess() is IsCompletedSuccessfully and isDone()
-// IsCompleted); there is no void promise (docs/transport-porting.md), so writeOneOutbound(msg, ch.voidPromise()) and
-// ctx.write(msg, ctx.voidPromise()) are writes whose Task is not observed, and ch.newPromise() is the returned Task. The
-// @ArgumentsSource(EncodeCombinationsArgumentsProvider.class) of testEncodeCombination is [ClassData] over the private
-// nested EncodeCombinationsArgumentsProvider, a TheoryData<bool, bool, bool, bool, bool> filled by the same loops (32
-// rows in the same order); the display-name pattern has no xUnit counterpart. The anonymous ChannelOutboundHandlerAdapter
-// of testEncodeCombination is the private nested FramePromiseHandler: its write(ctx, msg, promise) is WriteAsync(ctx,
-// msg, cancellationToken), which records a new TaskCompletionSource for the promise (trySuccess() is TrySetResult()) and
-// returns its Task (docs/codec-base-porting.md, Outbound operations); List<ChannelPromise> is a
-// List<TaskCompletionSource>. multipleFramesInFin runs HTTP/3 over QUIC on loopback with the msquic implementation of
-// codec-quic (docs/codec-native-quic-porting.md): the QuicEndpointChannel takes the place of NioDatagramChannel, and
-// because the endpoint needs its codec in the pipeline when it binds, each endpoint binds a clone of the bootstrap whose
-// handler is the codec instead of adding the codec to the bound channel's pipeline. MultiThreadIoEventLoopGroup and
-// NioIoHandler are the Transport's; bind(...).sync().channel(), connect().get() and newRequestStream(...).get() are
-// awaits (the test is an async Task method with the test's cancellation token, xUnit1031/xUnit1051), writeAndFlush and
-// shutdownOutput() are writes whose Tasks are not observed, and shutdownGracefully() is ShutdownGracefullyAsync().
-// QuicChannel.newBootstrap is IQuicChannel.NewBootstrap. SelfSignedCertificate (handler's @Deprecated ssl.util class,
-// deprecated-not-ported in docs/handler-porting.md) is the private nested SelfSignedCertificate of the codec-native-quic
-// tests (test/Netty.NET.Handler.Codec.Quic.Tests/QuicTestUtils.cs): a self-signed ECDSA P-256 certificate for
-// "localhost" created with System.Security.Cryptography, reduced to key() and cert(). CharBuffer.wrap("foo") is the
-// ReadOnlySpan<char> of "foo" (ByteBufUtil.EncodeString), BlockingQueue/LinkedBlockingQueue is BlockingCollection (put is
-// Add and poll(20, SECONDS) TryTake with the timeout, null when it expires), and DuplexChannel is IDuplexChannel. The
-// anonymous ChannelInitializer, ChannelInboundHandlerAdapter and Http3RequestStreamInitializer classes of
-// multipleFramesInFin are private nested classes. The throws clauses have no counterpart.
+// CLR: The QUIC endpoint starts listening at bind time, so each loopback endpoint binds with its codec already
+// installed.
+// The write tests complete controlled tasks to exercise when the aggregate write becomes observable. The FIN test
+// uses a bounded queue wait for the decoded content.
 public class Http3FrameToHttpObjectCodecTest
 {
 
@@ -854,7 +820,6 @@ public class Http3FrameToHttpObjectCodecTest
     public void TestEncodeVoidPromise()
     {
         EmbeddedQuicStreamChannel ch = new EmbeddedQuicStreamChannel(new Http3FrameToHttpObjectCodec(false));
-        // CLR: ch.voidPromise() is a write whose Task is not observed (see the class comment).
         _ = ch.WriteOneOutboundAsync(new DefaultFullHttpRequest(
                 HttpVersion.HTTP_1_1, HttpMethod.POST, "/hello/world", Unpooled.WrappedBuffer(new byte[1])));
         ch.FlushOutbound();
@@ -1021,7 +986,6 @@ public class Http3FrameToHttpObjectCodecTest
         Assert.False(ch.Finish());
     }
 
-    // CLR: the anonymous ChannelOutboundHandlerAdapter of testEncodeCombination (see the class comment).
     private sealed class FramePromiseHandler : ChannelOutboundHandlerAdapter
     {
         private readonly List<TaskCompletionSource> framePromises;
@@ -1285,7 +1249,6 @@ public class Http3FrameToHttpObjectCodecTest
         return queue.TryTake(out object item, timeout) ? item : null;
     }
 
-    // CLR: the anonymous ChannelInitializer<Channel> of the bootstrap in multipleFramesInFin.
     private sealed class NoopChannelInitializer : ChannelInitializer<IChannel>
     {
         protected override void InitChannel(IChannel ch)
@@ -1294,7 +1257,6 @@ public class Http3FrameToHttpObjectCodecTest
         }
     }
 
-    // CLR: the anonymous ChannelInitializer<Channel> of the server codec's handler in multipleFramesInFin.
     private sealed class ServerConnectionInitializer : ChannelInitializer<IChannel>
     {
         protected override void InitChannel(IChannel ch)
@@ -1303,8 +1265,6 @@ public class Http3FrameToHttpObjectCodecTest
         }
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of the server's request streams in multipleFramesInFin;
-    // ctx.write(msg, ctx.voidPromise()) and shutdownOutput() are writes whose Tasks are not observed.
     private sealed class ResponseHandler : ChannelInboundHandlerAdapter
     {
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
@@ -1326,7 +1286,6 @@ public class Http3FrameToHttpObjectCodecTest
         }
     }
 
-    // CLR: the anonymous ChannelInitializer<QuicChannel> of the QuicChannel bootstrap in multipleFramesInFin.
     private sealed class ClientConnectionInitializer : ChannelInitializer<IQuicChannel>
     {
         protected override void InitChannel(IQuicChannel ch)
@@ -1335,7 +1294,6 @@ public class Http3FrameToHttpObjectCodecTest
         }
     }
 
-    // CLR: the anonymous Http3RequestStreamInitializer of multipleFramesInFin.
     private sealed class ReceivingRequestStreamInitializer : Http3RequestStreamInitializer
     {
         private readonly BlockingCollection<object> received;
@@ -1353,7 +1311,6 @@ public class Http3FrameToHttpObjectCodecTest
         }
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of the request stream in multipleFramesInFin.
     private sealed class ReceivingHandler : ChannelInboundHandlerAdapter
     {
         private readonly BlockingCollection<object> received;

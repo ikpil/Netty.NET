@@ -32,11 +32,11 @@ namespace Netty.NET.Example.Http2.Tiles;
  */
 // CLR: FullHttpRequest/FullHttpResponse are IFullHttpRequest/IFullHttpResponse and Unpooled.EMPTY_BUFFER is
 // Unpooled.EmptyBuffer. ctx.write/writeAndFlush are WriteAsync/WriteAndFlushAsync, whose Tasks are discarded;
-// ChannelFutureListener.CLOSE on the write future is a continuation of the write Task that closes ctx.Channel (a Task has
-// no channel), as codec-base's MessageAggregator maps it. ctx.executor().schedule(Runnable, latency, MILLISECONDS) is
-// ctx.Executor.ScheduleAsync with a TimeSpan of the latency, whose Task is discarded; the anonymous Runnable is the
-// lambda. The statically imported HttpHeaderValues.KEEP_ALIVE/CLOSE are qualified: C# using static imports every member,
-// and HttpHeaderNames.KEEP_ALIVE would make the simple name ambiguous.
+// ChannelFutureListener.CLOSE on the write future is a continuation of the write Task that closes ctx.Channel (a
+// Task has no channel), as codec-base's MessageAggregator maps it. ctx.executor().schedule(Runnable, latency,
+// MILLISECONDS) is ctx.Executor.ScheduleAsync with a TimeSpan of the latency, whose Task is discarded. The
+// statically imported HttpHeaderValues.KEEP_ALIVE/CLOSE are qualified: C# using static imports every member, and
+// HttpHeaderNames.KEEP_ALIVE would make the simple name ambiguous.
 public sealed class Http1RequestHandler : Http2RequestHandler
 {
 

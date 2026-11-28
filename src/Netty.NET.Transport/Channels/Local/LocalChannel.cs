@@ -68,7 +68,7 @@ public class LocalChannel : AbstractChannel
     // CLR: ConcurrentQueue replaces PlatformDependent.newSpscQueue(); it is safe for one producer and one consumer.
     // https://learn.microsoft.com/dotnet/api/system.collections.concurrent.concurrentqueue-1
     internal readonly ConcurrentQueue<object> inboundBuffer = new ConcurrentQueue<object>();
-    // CLR: the anonymous Runnable bodies are ReadTask() and FinishReadTask(); the constructors cache their delegates.
+    // CLR: The constructors cache their delegates.
     private readonly Action readTask;
 
     private readonly Action finishReadTask;
@@ -210,7 +210,7 @@ public class LocalChannel : AbstractChannel
         throw new NotSupportedException();
     }
 
-    // CLR: AbstractUnsafe.connect(...) is folded into AbstractChannel; LocalUnsafe.connect(...) overrides it.
+    // CLR: LocalUnsafe.connect(...) overrides it.
     protected internal override Task ConnectTransportAsync(EndPoint remote, EndPoint local, CancellationToken cancellationToken)
     {
         return _unsafe.Connect(remote, local, cancellationToken);

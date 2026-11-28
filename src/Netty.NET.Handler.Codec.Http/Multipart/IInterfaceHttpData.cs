@@ -23,11 +23,11 @@ namespace Netty.NET.Handler.Codec.Http.Multipart;
  * Interface for all Objects that could be encoded/decoded using HttpPostRequestEncoder/Decoder
  */
 // CLR: the Java interface InterfaceHttpData takes the I prefix (owner rule). Comparable<InterfaceHttpData> is
-// IComparable<IInterfaceHttpData> (compareTo is the BCL CompareTo). The nested enum HttpDataType stays nested, so the
-// implementing classes, which do not inherit an interface's nested types by simple name, write
-// IInterfaceHttpData.HttpDataType. retain(), retain(int), touch() and touch(Object) are re-declared only to narrow the
-// return type, so they are inherited from IReferenceCounted, not repeated (owner decision 2026-11-19,
-// docs/transport-porting.md, Decisions); the classes narrow them with covariant override returns.
+// IComparable<IInterfaceHttpData> (compareTo is the BCL CompareTo). The nested enum HttpDataType stays nested, so
+// the implementing classes, which do not inherit an interface's nested types by simple name, write
+// IInterfaceHttpData.HttpDataType. retain(), retain(int), touch() and touch(Object) are re-declared only to narrow
+// the return type, so they are inherited from IReferenceCounted, not repeated; the classes narrow them with
+// covariant override returns.
 public interface IInterfaceHttpData : IComparable<IInterfaceHttpData>, IReferenceCounted
 {
     enum HttpDataType

@@ -27,8 +27,8 @@ namespace Netty.NET.Resolver.Dns;
  * {@link AuthoritativeDnsServerCache} implementation which delegates all operations to a wrapped {@link DnsCache}.
  * This implementation is only present to preserve a upgrade story.
  */
-// CLR: InetSocketAddress is EndPoint; new InetSocketAddress(addr, port) is IPEndPoint, isUnresolved() is a DnsEndPoint
-// and getAddress() the IPEndPoint's Address (docs/handler-porting.md Addresses, docs/handler-proxy-porting.md).
+// CLR: InetSocketAddress is EndPoint; new InetSocketAddress(addr, port) is IPEndPoint, isUnresolved() is a
+// DnsEndPoint and getAddress() the IPEndPoint's Address.
 internal sealed class AuthoritativeDnsServerCacheAdapter : IAuthoritativeDnsServerCache
 {
 

@@ -22,10 +22,10 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Stomp.Tests;
 
-// CLR: xUnit creates a new test class instance for every test, so the @BeforeEach setup() runs from the constructor
-// and the @AfterEach teardown() from Dispose() (https://xunit.net/docs/shared-context). String.getBytes() encodes with
-// the default charset, Encoding.Default, and CharsetUtil.UTF_8 is Encoding.UTF8 (docs/codec-base-porting.md); the
-// anonymous Executable is a lambda.
+// CLR: xUnit creates a new test class instance for every test, so the @BeforeEach setup() runs from the
+// constructor and the @AfterEach teardown() from Dispose() (https://xunit.net/docs/shared-context).
+// String.getBytes() encodes with the default charset, Encoding.Default, and CharsetUtil.UTF_8 is Encoding.UTF8;
+// the anonymous Executable is a lambda.
 public class StompSubframeAggregatorTest : IDisposable
 {
 

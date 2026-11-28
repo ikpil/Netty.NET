@@ -23,16 +23,14 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Codec.Http.Cookie;
 
-// CLR: the package-private final class with a private constructor is an internal static class. java.util.BitSet is
-// BitArray sized to the ASCII range that holds every set bit (0..126). BitSet.get(int) is false for a bit that was never
-// set, also past the set's size (it "grows as needed" and all bits are initially false,
-// https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/BitSet.html), whereas BitArray.Get(int) throws
-// ArgumentOutOfRangeException when the index is not less than the number of elements
-// (https://learn.microsoft.com/en-us/dotnet/api/system.collections.bitarray.get?view=net-10.0), so firstInvalidOctet
-// checks the length first (as codec-base DateFormatter.IsDelim does). CharSequence is the Common ICharSequence; the ""
-// result of unwrapValue is StringCharSequence.Empty. String.trim() is the core HttpUtil.TrimJava (chars up to U+0020).
-// IllegalArgumentException is ArgumentException. StringBuilder.append(long) is the invariant-culture text of the number
-// (Java text conversions keep Java results, docs/codec-compression-porting.md).
+// CLR: BitSet.get(int) is false for a bit that was never set, also past the set's size (it "grows as needed" and
+// all bits are initially false,
+// https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/BitSet.html), whereas BitArray.Get(int)
+// throws ArgumentOutOfRangeException when the index is not less than the number of elements
+// (https://learn.microsoft.com/en-us/dotnet/api/system.collections.bitarray.get?view=net-10.0), so
+// firstInvalidOctet checks the length first (as codec-base DateFormatter.IsDelim does). IllegalArgumentException
+// is ArgumentException. StringBuilder.append(long) is the invariant-culture text of the number (Java text
+// conversions keep Java results, docs/codec-compression-porting.md).
 internal static class CookieUtil
 {
 
@@ -111,10 +109,10 @@ internal static class CookieUtil
         return bits;
     }
 
-    // CLR: InternalThreadLocalMap.get().stringBuilder() is a JVM allocation cache that the Common port retired; its
-    // cookie users take an operation-owned StringBuilder (docs/common-clr-design.md, Operation-owned CSV storage). The
-    // callers in this namespace name the method CookieUtil.StringBuilder(), because a using static import of it would be
-    // ambiguous with the System.Text.StringBuilder type.
+    // CLR: InternalThreadLocalMap.get().stringBuilder() is a JVM allocation cache that the Common port retired;
+    // its cookie users take an operation-owned StringBuilder. The callers in this namespace name the method
+    // CookieUtil.StringBuilder(), because a using static import of it would be ambiguous with the
+    // System.Text.StringBuilder type.
     internal static StringBuilder StringBuilder()
     {
         return new StringBuilder();

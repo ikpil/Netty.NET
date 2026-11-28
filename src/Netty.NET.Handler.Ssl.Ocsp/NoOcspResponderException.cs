@@ -23,10 +23,10 @@ namespace Netty.NET.Handler.Ssl.Ocsp;
  * <p>
  * This exception extends {@link NullPointerException} for backwards compatibility reasons.
  */
-// CLR: NullPointerException is ArgumentNullException (docs/codec-base-porting.md), so the exception derives from it to
-// keep the relation. The message-only constructor passes no parameter name: ArgumentNullException(string) takes the
-// parameter name, and ArgumentNullException(string paramName, string message) "Initializes an instance of the
-// ArgumentNullException class with a specified error message and the name of the parameter that causes this exception"
+// CLR: NullPointerException is ArgumentNullException, so the exception derives from it to keep the relation. The
+// message-only constructor passes no parameter name: ArgumentNullException(string) takes the parameter name, and
+// ArgumentNullException(string paramName, string message) "Initializes an instance of the ArgumentNullException
+// class with a specified error message and the name of the parameter that causes this exception"
 // (https://learn.microsoft.com/en-us/dotnet/api/system.argumentnullexception.-ctor?view=net-10.0).
 public sealed class NoOcspResponderException : ArgumentNullException
 {

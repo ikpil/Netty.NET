@@ -37,21 +37,21 @@ namespace Netty.NET.Resolver.Dns;
 
 // CLR: the static members and static nested classes of the generic Java class DnsResolveContext<T> live in this
 // non-generic static class of the same name. Java has one class and one set of statics for every T, while "Each
-// distinct closed constructed type ... has its own set of static fields"
+// distinct closed constructed type... has its own set of static fields"
 // (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/language-specification/classes#1538-static-and-instance-members):
-// the tests set TRY_FINAL_CNAME_ON_ADDRESS_LOOKUPS and call cnameResolveFromCache/decodeDomainName for every resolve
-// context, and the RedirectAuthoritativeDnsServerCache wrapper must be recognised across DnsAddressResolveContext and
-// DnsRecordResolveContext. DnsResolveContext<T> imports them with using static. Nested classes that are private in Java
-// but used by the generic class (or whose private fields the sibling AuthoritativeNameServerList reads, which Java
-// allows within one top-level class) are internal. RuntimeException is Exception; the
-// DnsResolveContextException(message, null, false, true) constructor and its fillInStackTrace() override are mapped
-// as in DnsErrorCauseException (suppression and the stack trace switch have no CLR counterpart; the comments are
-// recorded in the manifest). String.toLowerCase(Locale.US) is ToLowerInvariant (docs/codec-http-porting.md),
-// equalsIgnoreCase OrdinalIgnoreCase, equals/endsWith ordinal; Map/HashMap is Dictionary (owner decision 2026-11-19) and
+// the tests set TRY_FINAL_CNAME_ON_ADDRESS_LOOKUPS and call cnameResolveFromCache/decodeDomainName for every
+// resolve context, and the RedirectAuthoritativeDnsServerCache wrapper must be recognised across
+// DnsAddressResolveContext and DnsRecordResolveContext. DnsResolveContext<T> imports them with using static.
+// Nested classes that are private in Java but used by the generic class (or whose private fields the sibling
+// AuthoritativeNameServerList reads, which Java allows within one top-level class) are internal. RuntimeException
+// is Exception; the DnsResolveContextException(message, null, false, true) constructor and its fillInStackTrace()
+// override are mapped as in DnsErrorCauseException (suppression and the stack trace switch have no CLR
+// counterpart; the comments are recorded in the manifest). String.toLowerCase(Locale.US) is ToLowerInvariant,
+// equalsIgnoreCase OrdinalIgnoreCase, equals/endsWith ordinal; Map/HashMap is Dictionary and
 // Collections.emptyMap() a new empty Dictionary (the callers check emptiness before remove). InetSocketAddress is
-// EndPoint (an unresolved name server is a DnsEndPoint, createUnresolved(host, port) is new DnsEndPoint(host, port) and
-// getHostString() its Host; docs/handler-porting.md, Addresses) and InetAddress IPAddress. ByteBufHolder.content() is
-// IByteBufHolder.Content. UnknownHostException is Common's UnknownHostException (owner decision 2026-11-25).
+// EndPoint (an unresolved name server is a DnsEndPoint, createUnresolved(host, port) is new DnsEndPoint(host,
+// port) and getHostString() its Host; docs/handler-porting.md, Addresses) and InetAddress IPAddress.
+// ByteBufHolder.content() is IByteBufHolder.Content. UnknownHostException is Common's UnknownHostException.
 internal static class DnsResolveContext
 {
     internal static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(DnsResolveContext));
@@ -267,9 +267,8 @@ internal static class DnsResolveContext
     }
 
     // CLR: AbstractList<InetSocketAddress> is IReadOnlyList<EndPoint>, the parameter type of
-    // IDnsQueryLifecycleObserver.QueryRedirected; get(index) is the indexer, size() Count, and the anonymous Iterator an
-    // iterator block over a duplicate of the stream (remove() has no IEnumerator counterpart). The equals/hashCode/
-    // toString that AbstractList inherits are not reproduced.
+    // IDnsQueryLifecycleObserver.QueryRedirected. The equals/hashCode/ toString that AbstractList inherits are not
+    // reproduced.
     internal sealed class DnsAddressStreamList : IReadOnlyList<EndPoint>
     {
 
@@ -712,21 +711,21 @@ internal static class DnsResolveContext
     }
 }
 
-// CLR: the package-private abstract class is internal; T is a reference type (IPAddress or IDnsRecord), so a
-// converted record can be compared with null. Promise<List<T>> is TaskCompletionSource<IReadOnlyList<T>>
-// (Future<List<T>> is Task<IReadOnlyList<T>>, SimpleNameResolver) and Promise<?> originalPromise, only read for
-// isCancelled(), the Task of the original promise; isDone()/isCancelled() are Task.IsCompleted/IsCanceled,
-// trySuccess/tryFailure TrySetResult/TrySetException, f.cancel(false) TrySetCanceled() and future.cause()
-// DnsNameResolver.Cause. The query Future of DnsNameResolver.DoQuery is the TaskCompletionSource it returns, so
-// queriesInProgress (an identity set, Collections.newSetFromMap(new IdentityHashMap())) is a HashSet with
+// CLR: T is a reference type (IPAddress or IDnsRecord), so a converted record can be compared with null.
+// Promise<List<T>> is TaskCompletionSource<IReadOnlyList<T>> (Future<List<T>> is Task<IReadOnlyList<T>>,
+// SimpleNameResolver) and Promise<?> originalPromise, only read for isCancelled(), the Task of the original
+// promise; isDone()/isCancelled() are Task.IsCompleted/IsCanceled, trySuccess/tryFailure
+// TrySetResult/TrySetException, f.cancel(false) TrySetCanceled() and future.cause() DnsNameResolver.Cause. The
+// query Future of DnsNameResolver.DoQuery is the TaskCompletionSource it returns, so queriesInProgress (an
+// identity set, Collections.newSetFromMap(new IdentityHashMap())) is a HashSet with
 // ReferenceEqualityComparer.Instance holding the promises, and newSucceededFuture(null) is a completed one. The
-// listeners are continuations on the resolver's listener scheduler (DnsNameResolver.AddListener), and the anonymous
-// search domain FutureListener, which re-adds itself, is the nested SearchDomainListener. EventLoop is IEventLoop and
-// parent.executor() the resolver's Executor. Iterator<InetAddress> of CombinedDnsServerAddressStream is a position
-// into the list. Removing from queriesInProgress while iterating it is the removal of each element of a snapshot.
-// System.nanoTime() is SystemTimer.NanoTime() (docs/handler-porting.md). PlatformDependent.throwException(cause) inside
-// the catch of that cause is throw; (docs/codec-http2-porting.md). IllegalArgumentException is ArgumentException,
-// Throwable Exception, assert Debug.Assert, Math.min Math.Min; numbers in messages use the invariant culture.
+// listeners are continuations on the resolver's listener scheduler (DnsNameResolver.AddListener), and the
+// anonymous search domain FutureListener, which re-adds itself, is the nested SearchDomainListener. EventLoop is
+// IEventLoop and parent.executor() the resolver's Executor. Iterator<InetAddress> of
+// CombinedDnsServerAddressStream is a position into the list. Removing from queriesInProgress while iterating it
+// is the removal of each element of a snapshot. PlatformDependent.throwException(cause) inside the catch of that
+// cause is throw;. IllegalArgumentException is ArgumentException, Throwable Exception, assert Debug.Assert,
+// Math.min Math.Min; numbers in messages use the invariant culture.
 internal abstract class DnsResolveContext<T> where T : class
 {
     internal readonly DnsNameResolver parent;
@@ -860,8 +859,6 @@ internal abstract class DnsResolveContext<T> where T : class
         }
     }
 
-    // CLR: the anonymous FutureListener<List<T>> of resolve(...), which keeps searchDomainIdx and adds itself to the
-    // next promise.
     private sealed class SearchDomainListener
     {
         private readonly DnsResolveContext<T> context;
@@ -1716,7 +1713,6 @@ internal abstract class DnsResolveContext<T> where T : class
         }
         else
         {
-            // CLR: initCause(cause) is the (string, Exception) constructor.
             unknownHostException = new UnknownHostException(buf.ToString(), cause);
         }
 

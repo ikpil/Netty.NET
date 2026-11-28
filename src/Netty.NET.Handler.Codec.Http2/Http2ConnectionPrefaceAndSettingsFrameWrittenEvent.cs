@@ -22,7 +22,6 @@ namespace Netty.NET.Handler.Codec.Http2;
  */
 public sealed class Http2ConnectionPrefaceAndSettingsFrameWrittenEvent
 {
-    // CLR: the package-private constant is internal.
     internal static readonly Http2ConnectionPrefaceAndSettingsFrameWrittenEvent INSTANCE =
             new Http2ConnectionPrefaceAndSettingsFrameWrittenEvent();
 

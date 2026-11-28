@@ -21,86 +21,14 @@ using System.IO.Hashing;
 
 namespace Netty.NET.Handler.Codec.Compression;
 
-// CLR: CLR-only internal stand-in for java.util.zip.Inflater
-// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/zip/Inflater.html), named after the JDK type so
-// that JdkZlibDecoder, JdkZlibDecompressor and codec-http's SPDY header block decoder (InternalsVisibleTo) keep the Java
-// call shape (setInput, inflate, needsInput, finished, getRemaining, getTotalOut, needsDictionary, setDictionary, reset,
-// end). Owner decision 2026-11-23: the solution stays on .NET 10 and java.util.zip is replaced by the BCL
-// System.IO.Compression streams. The stand-in reads a raw DeflateStream (nowrap) or a ZLibStream
-// (https://learn.microsoft.com/en-us/dotnet/api/system.io.compression.zlibstream?view=net-10.0) in decompression mode
-// from the private Feed stream, which hands out the bytes that SetInput supplied. DataFormatException is the
-// InvalidDataException the BCL streams throw for corrupt data, "The exception that is thrown when a data stream is in an
-// invalid format" (https://learn.microsoft.com/en-us/dotnet/api/system.io.invaliddataexception?view=net-10.0; Inflater.cs
-// maps zlib's Z_DATA_ERROR to it,
-// https://raw.githubusercontent.com/dotnet/runtime/v10.0.8/src/libraries/System.IO.Compression/src/System/IO/Compression/DeflateZLib/Inflater.cs).
-//
-// Facts this design rests on (DeflateStream.ReadCore,
-// https://raw.githubusercontent.com/dotnet/runtime/v10.0.8/src/libraries/System.IO.Compression/src/System/IO/Compression/DeflateZLib/DeflateStream.cs,
-// and measured on this host with SP\zlibprobe\Program.cs, .NET 10.0.8):
-// - DeflateStream reads its source only when its zlib stream has consumed all input (_inflater.NeedsInput()), into an
-//   8192-byte buffer. Fed whole buffers it therefore reads past the end of the deflate data, so the number of unconsumed
-//   input bytes (Inflater.getRemaining()) is unknown after the end; fed one byte per Read, the bytes it takes are exactly
-//   the deflate data.
-// - A finished stream returns 0 from Read without reading its source ("InflatorIsFinished"); a stream that needs input
-//   returns 0 after one source Read that returned 0. Read returns as soon as zlib produced any byte.
-// - Owner decision: the GZIP wrapper (JdkZlibDecoder/JdkZlibDecompressor parse the gzip header and trailer themselves and
-//   inflate the body raw) feeds one byte per Read (exactRemaining), so getRemaining() is exact at the end of each member
-//   and the trailer is read from the right offset; ZLIB and raw (NONE) input is fed in whole buffers, where the bytes
-//   after the end are not used. Measured: whole buffers 381 MB/s, one byte per Read 21 MB/s of output.
-//
-// Mapping of the Inflater members:
-// - inflate(b, off, len) reads until len bytes are produced or a Read returns 0, like zlib's inflate(), which "stops
-//   when the input buffer becomes empty or the output buffer becomes full". A Read returning 0 after an empty source
-//   Read means more input is needed; without one it means the end of the stream (finished()). When the output buffer
-//   was filled, zlib may already have reached the end in the same call (it decodes the end-of-block code and the
-//   trailer without output space), which Java reports through finished(); the stand-in reads one more byte to learn it
-//   and keeps that byte for the next inflate() call when the stream goes on.
-// - needsInput() is true when the Feed holds no bytes and the last source Read returned 0 (the BCL reads its source only
-//   when its zlib stream needs input) or the stream is finished; getRemaining() is the number of bytes the Feed still
-//   holds; getTotalOut() counts the bytes inflate() returned.
-// - Preset dictionaries (owner decision 2026-11-24): the BCL streams have no dictionary API, and ZLibStream reports
-//   zlib's Z_NEED_DICT as an unexpected ZLibException (an IOException), so the dictionary is implemented on the BCL
-//   streams. RFC 1950 (https://www.rfc-editor.org/rfc/rfc1950, section 2.2): "If FDICT is set, a DICT dictionary
-//   identifier is present immediately after the FLG byte. The dictionary is a sequence of bytes which are initially fed
-//   to the compressor without producing any compressed output. DICT is the Adler-32 checksum of this sequence of
-//   bytes", and ADLER32 is "a checksum value of the uncompressed data (excluding any dictionary data)".
-//   - The Feed hands the two zlib header bytes to the ZLibStream on their own and checks the FDICT flag of a valid
-//     header (CM 8, CINFO up to 7 and a valid FCHECK, the ones zlib accepts before it reads DICTID). With FDICT set it
-//     stops feeding the ZLibStream; the stand-in reads the four DICTID bytes from the input itself and then reports
-//     needsDictionary(), as zlib's inflate() returns Z_NEED_DICT after its DICTID state, having consumed the six header
-//     bytes (inflate.c, https://raw.githubusercontent.com/madler/zlib/v1.3.1/inflate.c), so getRemaining() matches.
-//   - setDictionary follows zlib's inflateSetDictionary (inflate.c): with the zlib wrapper it is allowed only while
-//     the dictionary is needed ("if (state->wrap != 0 && state->mode != DICT) return Z_STREAM_ERROR") and the Adler-32
-//     of the dictionary must equal DICTID ("if (dictid != state->check) return Z_DATA_ERROR"); Java throws
-//     IllegalArgumentException for both (checkSetDictionaryResult in Inflater.c,
-//     https://raw.githubusercontent.com/openjdk/jdk17u/jdk-17+35/src/java.base/share/native/libzip/Inflater.c), here
-//     ArgumentException (docs/codec-base-porting.md), and needsDictionary() stays true after a wrong dictionary because
-//     Java clears needDict only after the native call returned (Inflater.java,
-//     https://raw.githubusercontent.com/openjdk/jdk17u/jdk-17+35/src/java.base/share/classes/java/util/zip/Inflater.java).
-//     Java's message is zlib's strm->msg, which inflateSetDictionary does not set; the messages here say what failed.
-//   - The dictionary goes into the window of a raw DeflateStream as one non-compressed block (BFINAL 0, BTYPE 00, then
-//     LEN and NLEN, RFC 1951 section 3.2.4, https://www.rfc-editor.org/rfc/rfc1951), and setDictionary reads and drops
-//     those bytes from its output, so the window holds the dictionary as zlib's updatewindow leaves it. Only the last
-//     32 KiB are needed: a backward distance is "drawn from (1..32,768)" (RFC 1951, section 3.2.5), and updatewindow
-//     also keeps only the last window size of the dictionary.
-//   - The raw stream cannot check the zlib trailer, so the stand-in computes the Adler-32 of the inflated data with
-//     System.IO.Hashing.Adler32 (https://learn.microsoft.com/en-us/dotnet/api/system.io.hashing.adler32?view=net-10.0-pp)
-//     and reads the four trailer bytes itself. Fed whole buffers, DeflateStream would keep the trailer in its own
-//     buffer at the end, so after the dictionary the stand-in feeds the deflate data one byte per Read, as the GZIP
-//     wrapper does; the end, the trailer and getRemaining() are then exact. Measured through the stand-in (scratch
-//     Debug build, 1 MB of output, three runs): 16-29 MB/s for a dictionary stream, 250-420 MB/s for the same data
-//     without one.
-//     A mismatch throws InvalidDataException with zlib's message "incorrect data check" (inflate.c, CHECK state;
-//     Java's DataFormatException), again on every later inflate() as zlib stays in its BAD state; finished() becomes
-//     true after a matching trailer. Streams without FDICT are read by the ZLibStream exactly as before.
-//   - In nowrap mode zlib allows inflateSetDictionary at any time and amends the window; on the BCL stream the stored
-//     block can only be placed before the first deflate byte, so setDictionary after input was read throws
-//     NotSupportedException. Before that it primes the window the same way, without the Adler-32 and trailer handling
-//     (a raw stream has neither). needsDictionary() is never true in nowrap mode, as in zlib.
-// - The "System.IO.Compression.UseStrictValidation" AppContext switch (off by default, DeflateStream.cs) makes a Read
-//   whose source returns 0 before the end throw InvalidDataException; that exception, thrown right after an empty Feed
-//   read, is the "needs input" answer and is not a data error.
-// - reset() creates a new BCL stream (the BCL streams cannot be reset); end() disposes it.
+// CLR: BCL inflaters can read ahead. Feed GZIP bodies and zlib bodies with preset dictionaries one byte at a time
+// so the caller can locate the trailer and report remaining input accurately.
+// An empty feed read means more input is needed, even if strict validation reports truncation. When an output
+// buffer fills, probe one byte to distinguish stream completion and save any byte read for the next call.
+// Zlib dictionaries are verified against DICTID before their final 32 KiB are loaded as a stored block into the
+// raw inflater. Discard that block's output and verify the data trailer separately. A failed dictionary check
+// leaves the inflater waiting for a dictionary.
+// A raw inflater can accept a preset dictionary only before consuming input.
 internal sealed class Inflater
 {
     // The largest backward distance of RFC 1951, the part of a dictionary that can be referenced.

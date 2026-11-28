@@ -20,8 +20,6 @@ using static Netty.NET.Handler.Codec.Http.WebSocketx.Extensions.WebSocketExtensi
 
 namespace Netty.NET.Handler.Codec.Http.Tests.WebSocketx.Extensions;
 
-// CLR: the package-private isWebsocketUpgrade and computeMergeExtensionsHeaderValue are internal and reached through
-// InternalsVisibleTo; List is IList.
 public class WebSocketExtensionUtilTest
 {
 

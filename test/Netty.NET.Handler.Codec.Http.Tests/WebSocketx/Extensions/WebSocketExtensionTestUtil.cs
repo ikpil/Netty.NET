@@ -22,15 +22,13 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Handler.Codec.Http.Tests.WebSocketx.Extensions;
 
-// CLR: HttpRequest/HttpResponse are the core IHttpRequest/IHttpResponse; toString().toLowerCase() of the ASCII header
-// value is ToLowerInvariant(). Mockito's ArgumentMatcher is the nested WebSocketExtensionDataMatcher with its matches
-// method, and argThat(matcher) is Moq's Match.Create, which builds a custom matcher from a predicate when the helper is
-// called inside a setup or verify expression (https://github.com/devlooped/moq/wiki/Quickstart, custom matchers). The
-// static webSocketExtensionDataMatcher(String) is WebSocketExtensionDataMatcher_(string), because a method cannot be
-// named like the nested WebSocketExtensionDataMatcher class (CS0102,
-// https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0102; owner rule, as Builder_()). The package-private static
-// nested encoder/decoder classes are internal nested classes; encode/decode with List<Object> out are Encode/Decode
-// with IList<object> @out.
+// CLR: HttpRequest/HttpResponse are the core IHttpRequest/IHttpResponse; toString().toLowerCase() of the ASCII
+// header value is ToLowerInvariant(). Mockito's ArgumentMatcher is the nested WebSocketExtensionDataMatcher with
+// its matches method, and argThat(matcher) is Moq's Match.Create, which builds a custom matcher from a predicate
+// when the helper is called inside a setup or verify expression (https://github.com/devlooped/moq/wiki/Quickstart,
+// custom matchers). The static webSocketExtensionDataMatcher(String) is WebSocketExtensionDataMatcher_(string),
+// because a method cannot be named like the nested WebSocketExtensionDataMatcher class (CS0102,
+// https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0102; owner rule, as Builder_()).
 public sealed class WebSocketExtensionTestUtil
 {
 

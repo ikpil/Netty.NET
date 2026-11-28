@@ -19,10 +19,10 @@ namespace Netty.NET.Handler.Codec.Quic;
 /**
  * Generates and hands over the next stream id to use for a QUIC stream.
  */
-// CLR: the package-private class and members are internal. The second local is stream2: C# does not let a local of the
-// method body reuse the name of a local in a nested block (CS0136). msquic assigns the stream IDs of System.Net.Quic
-// streams itself (QuicStream.Id, RFC 9000 2.1; docs/quic-design.md, probe), so the msquic implementation (stage 2)
-// reads them from the stream; the generator is ported as is for code that needs the RFC 9000 numbering.
+// CLR: The second local is stream2: C# does not let a local of the method body reuse the name of a local in a
+// nested block (CS0136). msquic assigns the stream IDs of System.Net.Quic streams itself (QuicStream.Id, RFC 9000
+// 2.1; docs/quic-design.md, probe), so the msquic implementation (stage 2) reads them from the stream; the
+// generator is ported as is for code that needs the RFC 9000 numbering.
 internal sealed class QuicStreamIdGenerator
 {
     private long nextBidirectionalStreamId;

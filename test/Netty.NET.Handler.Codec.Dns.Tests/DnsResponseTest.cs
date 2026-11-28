@@ -23,12 +23,12 @@ using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Handler.Codec.Dns.Tests;
 
-// CLR: the Java byte[] packet literals hold signed values (-127, -64, ...), so they are sbyte arrays here and Bytes()
-// reinterprets each element as the unsigned System.Byte that ByteBuf.WriteBytes/Unpooled.WrappedBuffer take
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types).
-// AddressedEnvelope<DnsResponse, InetSocketAddress> is IAddressedEnvelope<IDnsResponse, IPEndPoint> with the Content
-// property; assertInstanceOf is Assert.IsAssignableFrom; the anonymous Executable instances are lambdas; new
-// InetSocketAddress(0) is new IPEndPoint(IPAddress.Any, 0); channel.alloc() is the IChannel.Alloc() of the Transport port.
+// CLR: the Java byte[] packet literals hold signed values (-127, -64,...), so they are sbyte arrays here and
+// Bytes() reinterprets each element as the unsigned System.Byte that ByteBuf.WriteBytes/Unpooled.WrappedBuffer
+// take (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types).
+// AddressedEnvelope<DnsResponse, InetSocketAddress> is IAddressedEnvelope<IDnsResponse, IPEndPoint> with the
+// Content property; assertInstanceOf is Assert.IsAssignableFrom; new InetSocketAddress(0) is new
+// IPEndPoint(IPAddress.Any, 0).
 public class DnsResponseTest
 {
 

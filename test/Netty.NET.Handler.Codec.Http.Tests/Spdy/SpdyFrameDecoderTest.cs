@@ -23,19 +23,18 @@ using static Netty.NET.Handler.Codec.Spdy.SpdyFrameDecoder;
 
 namespace Netty.NET.Handler.Codec.Http.Tests.Spdy;
 
-// CLR: Mockito is Moq (owner rule 9): mock(SpdyFrameDecoderDelegate.class) is a Mock<ISpdyFrameDecoderDelegate> named
-// @delegate (delegate is a C# keyword) whose Object is passed to TestSpdyFrameDecoderDelegate. verify(delegate).x(...)
-// checks exactly one matching call (Mockito's times(1)), so it is Verify(d => d.X(...), Times.Once()), the Times
-// argument of Moq's Verify (https://github.com/devlooped/moq/wiki/Quickstart); verify(delegate, times(n)) is
-// Times.Exactly(n), verifyNoInteractions(delegate) on a mock without verified calls is VerifyNoOtherCalls(), any() is
-// It.IsAny<string>() and anyString(), which does not match null, is It.IsNotNull<string>(). Mockito compares the
-// ByteBuf arguments with equals(Object) and Moq compares a value argument with Equals, both the readable-content
-// equality of ByteBuf (docs/buffer-porting.md). @BeforeEach is the constructor and @AfterEach is Dispose(): xUnit
-// "creates a new instance of the test class for every test that is run", and cleanup code goes in Dispose()
-// (https://xunit.net/docs/shared-context). The unseeded java.util.Random is an unseeded System.Random (rule 9): only
-// random 32-bit values matter, so nextInt() is the low 32 bits of NextInt64() (all int values, as Java's) and
-// nextLong() is NextInt64(). The uint literal 0x80000000 is unchecked((int) 0x80000000), the Java int value; the Java
-// byte flags are CLR bytes ((byte) 0xFF and friends keep the bit pattern).
+// CLR: Mockito is Moq (owner rule 9): mock(SpdyFrameDecoderDelegate.class) is a Mock<ISpdyFrameDecoderDelegate>
+// named @delegate (delegate is a C# keyword) whose Object is passed to TestSpdyFrameDecoderDelegate.
+// verify(delegate).x(...) checks exactly one matching call (Mockito's times(1)), so it is Verify(d => d.X(...),
+// Times.Once()), the Times argument of Moq's Verify (https://github.com/devlooped/moq/wiki/Quickstart);
+// verify(delegate, times(n)) is Times.Exactly(n), verifyNoInteractions(delegate) on a mock without verified calls
+// is VerifyNoOtherCalls(), any() is It.IsAny<string>() and anyString(), which does not match null, is
+// It.IsNotNull<string>(). Mockito compares the ByteBuf arguments with equals(Object) and Moq compares a value
+// argument with Equals, both the readable-content equality of ByteBuf. The unseeded java.util.Random is an
+// unseeded System.Random (rule 9): only random 32-bit values matter, so nextInt() is the low 32 bits of
+// NextInt64() (all int values, as Java's) and nextLong() is NextInt64(). The uint literal 0x80000000 is
+// unchecked((int) 0x80000000), the Java int value; the Java byte flags are CLR bytes ((byte) 0xFF and friends keep
+// the bit pattern).
 public class SpdyFrameDecoderTest : IDisposable
 {
 
@@ -72,7 +71,6 @@ public class SpdyFrameDecoderTest : IDisposable
         return unchecked((int) RANDOM.NextInt64());
     }
 
-    // CLR: RANDOM.nextLong().
     private static long NextLong()
     {
         return RANDOM.NextInt64();

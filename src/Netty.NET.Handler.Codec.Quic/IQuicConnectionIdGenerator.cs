@@ -21,10 +21,9 @@ namespace Netty.NET.Handler.Codec.Quic;
 /**
  * Creates new connection id instances.
  */
-// CLR: java.nio.ByteBuffer is ReadOnlyMemory<byte> (the bytes from position to limit), as codec-compression and the
-// handler ssl port map it (docs/codec-compression-porting.md, docs/handler-porting.md). msquic generates its own
-// connection IDs (docs/quic-design.md, No counterpart in System.Net.Quic); the interface keeps its Java API (owner
-// decision 2026-11-27) for the codec builders of stage 2.
+// CLR: java.nio.ByteBuffer is ReadOnlyMemory<byte> (the bytes from position to limit), as codec-compression and
+// the handler ssl port map it. msquic generates its own connection IDs; the interface keeps its Java API for the
+// codec builders of stage 2.
 public interface IQuicConnectionIdGenerator
 {
     /**

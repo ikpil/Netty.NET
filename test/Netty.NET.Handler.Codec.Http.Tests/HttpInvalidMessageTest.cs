@@ -23,10 +23,10 @@ using static Netty.NET.Handler.Codec.Http.Tests.HttpHeadersTestUtils;
 
 namespace Netty.NET.Handler.Codec.Http.Tests;
 
-// CLR: CharsetUtil.UTF_8 is Encoding.UTF8 (docs/codec-base-porting.md). The random traffic of
-// ensureInboundTrafficDiscarded comes from PlatformDependent.splittableRandomNextBytes over a SplittableRandom seeded
-// by java.util.Random; only its size matters (it is discarded), so it is System.Random.NextBytes of the instance field
-// rnd (rule 9: java.util.Random sequences are not reproduced). DecoderResult is the codec-base type.
+// CLR: The random traffic of ensureInboundTrafficDiscarded comes from PlatformDependent.splittableRandomNextBytes
+// over a SplittableRandom seeded by java.util.Random; only its size matters (it is discarded), so it is
+// System.Random.NextBytes of the instance field rnd (rule 9: java.util.Random sequences are not reproduced).
+// DecoderResult is the codec-base type.
 public class HttpInvalidMessageTest
 {
 

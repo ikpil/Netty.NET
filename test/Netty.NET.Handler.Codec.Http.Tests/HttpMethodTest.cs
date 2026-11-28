@@ -23,9 +23,7 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Codec.Http.Tests;
 
-// CLR: assertThrows(IllegalArgumentException.class, executable) is Assert.Throws<ArgumentException>(action), and the
-// anonymous Executable of newInstance(String) is an Action. String.getBytes(US_ASCII) is Encoding.ASCII.GetBytes;
-// readInbound() is ReadInbound<T>(). The assertion with a message uses XunitAssertMessages.AssertM.
+// CLR: The assertion with a message uses XunitAssertMessages.AssertM.
 public class HttpMethodTest
 {
 

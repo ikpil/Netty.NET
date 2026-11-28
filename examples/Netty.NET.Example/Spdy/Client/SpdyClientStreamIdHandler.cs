@@ -26,8 +26,8 @@ namespace Netty.NET.Example.Spdy.Client;
  * Adds a unique client stream ID to the SPDY header. Client stream IDs MUST be odd.
  */
 // CLR: write(ctx, msg, promise) is WriteAsync(ctx, msg, cancellationToken), whose returned Task replaces the
-// ChannelPromise (docs/codec-base-porting.md, Outbound operations). HttpMessage is IHttpMessage, and the nested
-// SpdyHttpHeaders.Names is named by a using alias, as the Java import names it.
+// ChannelPromise. HttpMessage is IHttpMessage, and the nested SpdyHttpHeaders.Names is named by a using alias, as
+// the Java import names it.
 public class SpdyClientStreamIdHandler : ChannelOutboundHandlerAdapter
 {
     private int currentStreamId = 1;

@@ -27,10 +27,10 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx.Extensions.Compression;
  * handshake implementation.
  */
 // CLR: the three @Deprecated constructors (boolean), (int, boolean) and (int, boolean,
-// WebSocketExtensionFilterProvider) name their replacements and are not ported (owner decision 2026-11-16).
-// IllegalArgumentException is ArgumentException with the number in the invariant culture; checkPositiveOrZero and
-// checkNotNull are the Common ObjectUtil checks. Collections.emptyMap() is ImmutableDictionary<string, string>.Empty,
-// isEmpty() is Count == 0, and the implicit RSV1 of the implemented interface is IWebSocketExtension.RSV1.
+// WebSocketExtensionFilterProvider) name their replacements and are not ported. IllegalArgumentException is
+// ArgumentException with the number in the invariant culture; checkPositiveOrZero and checkNotNull are the Common
+// ObjectUtil checks. Collections.emptyMap() is ImmutableDictionary<string, string>.Empty, isEmpty() is Count == 0,
+// and the implicit RSV1 of the implemented interface is IWebSocketExtension.RSV1.
 public sealed class DeflateFrameClientExtensionHandshaker : IWebSocketClientExtensionHandshaker
 {
 

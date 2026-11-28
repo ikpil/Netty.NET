@@ -49,7 +49,7 @@ public interface ISelectStrategy
      *         the next step should be to not select but rather jump back to the IO loop and try
      *         again. Any value >= 0 is treated as an indicator that work needs to be done.
      */
-    // CLR: io.netty.util.IntSupplier is replaced by Func<int> (docs/common-clr-design.md); its checked exception
-    // becomes an ordinary CLR exception.
+    // CLR: io.netty.util.IntSupplier is replaced by Func<int>; its checked exception becomes an ordinary CLR
+    // exception.
     int CalculateStrategy(Func<int> selectSupplier, bool hasTasks);
 }

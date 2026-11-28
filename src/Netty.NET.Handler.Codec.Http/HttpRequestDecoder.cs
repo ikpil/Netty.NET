@@ -87,13 +87,13 @@ namespace Netty.NET.Handler.Codec.Http;
  * This recommendation stands even when both peers in the HTTP exchange are trusted,
  * as it helps with defence-in-depth.
  */
-// CLR: the four @Deprecated constructors whose @deprecated texts name HttpRequestDecoder(HttpDecoderConfig) are not
-// ported (owner decision 2026-11-16). The header-name and method fast paths OR the octets as Java does with signed
-// bytes; the C# bytes are unsigned, but every constant is pure ASCII, so a word equals its constant exactly when every
-// octet does in both languages (a Java negative octet sign-extends into bits that no constant has, a C# octet of 0x80 or
-// more sets bit 7 of its byte, which no constant has either), and no sign conversion is needed; the low four octets of a
-// long are widened as uint (CS0675), which keeps that result. msg.getClass() ==
-// DefaultHttpRequest.class is GetType() == typeof(DefaultHttpRequest).
+// CLR: the four @Deprecated constructors whose @deprecated texts name HttpRequestDecoder(HttpDecoderConfig) are
+// not ported. The header-name and method fast paths OR the octets as Java does with signed bytes; the C# bytes are
+// unsigned, but every constant is pure ASCII, so a word equals its constant exactly when every octet does in both
+// languages (a Java negative octet sign-extends into bits that no constant has, a C# octet of 0x80 or more sets
+// bit 7 of its byte, which no constant has either), and no sign conversion is needed; the low four octets of a
+// long are widened as uint (CS0675), which keeps that result. msg.getClass() == DefaultHttpRequest.class is
+// GetType() == typeof(DefaultHttpRequest).
 public class HttpRequestDecoder : HttpObjectDecoder
 {
 

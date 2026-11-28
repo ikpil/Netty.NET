@@ -74,7 +74,6 @@ public abstract class ByteToMessageDecoder : ChannelInboundHandlerAdapter
      */
     public static readonly ICumulator MERGE_CUMULATOR = new MergeCumulator();
 
-    // CLR: the anonymous Cumulator classes are named nested classes.
     private sealed class MergeCumulator : ICumulator
     {
         public ByteBuf Cumulate(IByteBufAllocator alloc, ByteBuf cumulation, ByteBuf @in)

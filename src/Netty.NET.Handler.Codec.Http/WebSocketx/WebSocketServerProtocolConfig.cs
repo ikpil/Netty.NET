@@ -22,11 +22,10 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx;
 /**
  * WebSocket server configuration.
  */
-// CLR: the package-private DEFAULT_* constants are internal consts. The private Builder constructors are internal,
-// because a C# enclosing class cannot call the private members of its nested class (docs/handler-porting.md, Access and
-// names). checkPositive is the Common ObjectUtil.CheckPositive (ArgumentException). The Java toString() text is kept:
-// booleans print as true/false (Boolean.ToString gives True/False), numbers use the invariant culture and a null value
-// prints "null" as in Java string concatenation.
+// CLR: The private Builder constructors are internal, because a C# enclosing class cannot call the private members
+// of its nested class. checkPositive is the Common ObjectUtil.CheckPositive (ArgumentException). The Java
+// toString() text is kept: booleans print as true/false (Boolean.ToString gives True/False), numbers use the
+// invariant culture and a null value prints "null" as in Java string concatenation.
 public sealed class WebSocketServerProtocolConfig
 {
 

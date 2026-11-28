@@ -52,7 +52,6 @@ public class MultiThreadIoEventLoopGroupSourceTest
         }
     }
 
-    // CLR: the anonymous IoHandler and IoRegistration of TestIoHandlerFactory become nested classes.
     private sealed class TestIoHandler : IIoHandler
     {
         public int Run(IIoHandlerContext context)

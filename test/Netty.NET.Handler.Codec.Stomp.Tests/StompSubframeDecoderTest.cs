@@ -26,14 +26,14 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Codec.Stomp.Tests;
 
-// CLR: xUnit creates a new test class instance for every test, so the @BeforeEach setup() runs from the constructor
-// and the @AfterEach teardown() from Dispose() (https://xunit.net/docs/shared-context). String.getBytes() encodes with
-// the default charset, Encoding.Default, and UTF_8 is Encoding.UTF8 (docs/codec-base-porting.md); assertInstanceOf is
-// Assert.IsAssignableFrom (https://raw.githubusercontent.com/xunit/assert.xunit/main/TypeAsserts.cs), and the message
-// assertion uses XunitAssertMessages.AssertM. Java passes Strings as CharSequence header names and compares String
-// header values; C# string is not an ICharSequence, so Of(...) wraps them in the Common StringCharSequence, whose Equals
-// matches String.equals (docs/codec-base-porting-manifest.json, DefaultHeadersTest: String literals are wrapped in
-// StringCharSequence). @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value.
+// CLR: xUnit creates a new test class instance for every test, so the @BeforeEach setup() runs from the
+// constructor and the @AfterEach teardown() from Dispose() (https://xunit.net/docs/shared-context).
+// String.getBytes() encodes with the default charset, Encoding.Default, and UTF_8 is Encoding.UTF8;
+// assertInstanceOf is Assert.IsAssignableFrom
+// (https://raw.githubusercontent.com/xunit/assert.xunit/main/TypeAsserts.cs), and the message assertion uses
+// XunitAssertMessages.AssertM. Java passes Strings as CharSequence header names and compares String header values;
+// C# string is not an ICharSequence, so Of(...) wraps them in the Common StringCharSequence, whose Equals matches
+// String.equals. @ParameterizedTest @ValueSource(ints) is a [Theory] with one [InlineData] per value.
 #pragma warning disable xUnit2013 // assertEquals(n, size()) keeps the source assertions.
 public class StompSubframeDecoderTest : IDisposable
 {

@@ -28,19 +28,19 @@ using Netty.NET.Transport.Channels.Nio;
 
 namespace Netty.NET.Handler.Codec.Quic.Tests;
 
-// CLR: the CLR version of the QUIC test utilities on the QuicEndpointChannel, which takes the DatagramChannel's place
-// (docs/codec-native-quic-porting.md): the client and server "datagram channels" are QuicEndpointChannels with the codec
-// as their handler, on a MultiThreadIoEventLoopGroup with the NIO handler factory. Epoll (EpollDatagramChannel,
-// recvmmsg, SO_REUSEPORT and the EpollQuicUtils segmented allocator) is not ported (transport-classes-epoll is
-// recorded), so the branches for it are gone and soReusePortOption() returns null, as Java does without epoll; the
-// FixedRecvByteBufAllocator for datagrams has no use on an endpoint whose datagrams msquic receives. SelfSignedCertificate
-// (generated with BouncyCastle or the JDK's internal classes) is a self-signed ECDSA P-256 certificate for "localhost"
-// created with System.Security.Cryptography (CertificateRequest.CreateSelfSigned). The builders take TimeSpan for
-// (5000, TimeUnit.MILLISECONDS). The shutdown hook is AppDomain.ProcessExit. Bootstrap.bind().sync().channel() is
-// await BindAsync(); the methods returning a Channel return Task<IChannel>. The builders leave out
-// activeMigration(false): it asks for the disable_active_migration transport parameter, which System.Net.Quic cannot
-// set, so the msquic codec builders report it unsupported (msquic allows migration, which is activeMigration(true));
-// no test migrates a connection.
+// CLR: the CLR version of the QUIC test utilities on the QuicEndpointChannel, which takes the DatagramChannel's
+// place : the client and server "datagram channels" are QuicEndpointChannels with the codec as their handler, on a
+// MultiThreadIoEventLoopGroup with the NIO handler factory. Epoll (EpollDatagramChannel, recvmmsg, SO_REUSEPORT
+// and the EpollQuicUtils segmented allocator) is not ported (transport-classes-epoll is recorded), so the branches
+// for it are gone and soReusePortOption() returns null, as Java does without epoll; the FixedRecvByteBufAllocator
+// for datagrams has no use on an endpoint whose datagrams msquic receives. SelfSignedCertificate (generated with
+// BouncyCastle or the JDK's internal classes) is a self-signed ECDSA P-256 certificate for "localhost" created
+// with System.Security.Cryptography (CertificateRequest.CreateSelfSigned). The builders take TimeSpan for (5000,
+// TimeUnit.MILLISECONDS). The shutdown hook is AppDomain.ProcessExit. Bootstrap.bind().sync().channel() is await
+// BindAsync(); the methods returning a Channel return Task<IChannel>. The builders leave out
+// activeMigration(false): it asks for the disable_active_migration transport parameter, which System.Net.Quic
+// cannot set, so the msquic codec builders report it unsupported (msquic allows migration, which is
+// activeMigration(true)); no test migrates a connection.
 internal static class QuicTestUtils
 {
     internal static readonly string[] PROTOS = new string[] { "hq-29" };

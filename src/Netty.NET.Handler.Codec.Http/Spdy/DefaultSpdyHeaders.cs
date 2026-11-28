@@ -21,14 +21,9 @@ using Netty.NET.Handler.Codec;
 
 namespace Netty.NET.Handler.Codec.Spdy;
 
-// CLR: CharSequence is ICharSequence and the codec-base DefaultHeaders<K, V, T> and HeadersUtils keep their Java
-// members (docs/codec-base-porting.md, Headers), as codec-stomp's DefaultStompHeaders; the static imports
-// AsciiString.CASE_SENSITIVE_HASHER and CASE_INSENSITIVE_HASHER are the Common AsciiString IEqualityComparer fields.
-// NameValidator<CharSequence> is DefaultHeaders.INameValidator<ICharSequence>, whose NOT_NULL constant needs no
-// unchecked cast; the anonymous SpdyNameValidator is the private nested SpdyNameValidator_ class behind the field of
-// the Java name. contains(name, value) overrides the virtual DefaultHeaders.Contains(K, V). The nested INSTANCE hides
-// CharSequenceValueConverter.INSTANCE as the Java field does (new modifier,
-// https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/new-modifier).
+// CLR: The static imports AsciiString.CASE_SENSITIVE_HASHER and CASE_INSENSITIVE_HASHER are the Common AsciiString
+// IEqualityComparer fields. The nested INSTANCE hides CharSequenceValueConverter.INSTANCE as the Java field does
+// (new modifier, https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/new-modifier).
 public class DefaultSpdyHeaders : DefaultHeaders<ICharSequence, ICharSequence, ISpdyHeaders>, ISpdyHeaders
 {
     private static readonly DefaultHeaders.INameValidator<ICharSequence> SpdyNameValidator = new SpdyNameValidator_();

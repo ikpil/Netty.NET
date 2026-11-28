@@ -26,28 +26,26 @@ using Netty.NET.Transport.Channels;
 namespace Netty.NET.Handler.Codec.Http.WebSocketx;
 
 // CLR: the package-private abstract class is public because the public WebSocketServerProtocolHandler and
-// WebSocketClientProtocolHandler derive from it and a C# base class must be at least as accessible as the derived class
-// (CS0060, https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0060); its constructors stay internal, so only this
-// assembly (and the friend test assembly) can derive from it. MessageToMessageDecoder<WebSocketFrame> is the codec-base
-// generic and super(WebSocketFrame.class) is base(typeof(WebSocketFrame)) (docs/codec-base-porting.md, Type matching);
-// ChannelOutboundHandler is the Transport IChannelOutboundHandler, whose bind/connect/disconnect/close/deregister/write
-// operations return the Task that replaces the promise (docs/codec-base-porting.md, Outbound operations). The
-// ChannelPromise closeSent is a TaskCompletionSource that this handler completes: write(CloseWebSocketFrame) returns
-// its Task where Java uses the caller's promise.unvoid() (there is no void promise), a write after the close frame
-// returns a faulted Task where Java fails the promise, and PromiseNotifier(false, ...) is a synchronous continuation
-// that copies the outcome with TrySetFromTask (docs/common-task-composition.md, PromiseNotifier). close(ctx, promise)
-// returns the Task of ctx.close() started once closeSent completes. The listeners on the close-frame write and on
-// closeSent run on Common's EventExecutorTaskScheduler over ctx.Executor, the DefaultPromise.notifyListeners() timing
-// that handler's IdleStateHandler uses too (docs/handler-porting.md, Listener timing): the Transport completes the
+// WebSocketClientProtocolHandler derive from it and a C# base class must be at least as accessible as the derived
+// class (CS0060, https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0060); its constructors stay internal, so
+// only this assembly (and the friend test assembly) can derive from it. MessageToMessageDecoder<WebSocketFrame> is
+// the codec-base generic and super(WebSocketFrame.class) is base(typeof(WebSocketFrame)); ChannelOutboundHandler
+// is the Transport IChannelOutboundHandler, whose bind/connect/disconnect/close/deregister/write operations return
+// the Task that replaces the promise. The ChannelPromise closeSent is a TaskCompletionSource that this handler
+// completes: write(CloseWebSocketFrame) returns its Task where Java uses the caller's promise.unvoid() (there is
+// no void promise), a write after the close frame returns a faulted Task where Java fails the promise, and
+// PromiseNotifier(false,...) is a synchronous continuation that copies the outcome with TrySetFromTask. close(ctx,
+// promise) returns the Task of ctx.close() started once closeSent completes. The listeners on the close-frame
+// write and on closeSent run on Common's EventExecutorTaskScheduler over ctx.Executor, the
+// DefaultPromise.notifyListeners() timing that handler's IdleStateHandler uses too : the Transport completes the
 // write Task with RunContinuationsAsynchronously when the later flush writes it, so a continuation on
-// TaskScheduler.Default closed the channel later on a thread-pool thread, and WebSocketServerProtocolHandlerTest saw
-// the channel still open after close() (measured: 5 of 6 runs had one or two such failures).
-// ctx.executor().schedule(...) is ScheduleAsync, and the Future<?> forceCloseTimeoutTask is the CancellationTokenSource
-// whose Cancel() stands for cancel(false) (docs/handler-porting.md, Executors and scheduling). The anonymous Runnable
-// is a lambda.
+// TaskScheduler.Default closed the channel later on a thread-pool thread, and WebSocketServerProtocolHandlerTest
+// saw the channel still open after close() (measured: 5 of 6 runs had one or two such failures).
+// ctx.executor().schedule(...) is ScheduleAsync, and the Future<?> forceCloseTimeoutTask is the
+// CancellationTokenSource whose Cancel() stands for cancel(false). The anonymous Runnable is a lambda.
 // ctx.channel().config().isAutoRead() is ctx.Channel.Config.IsAutoRead(), and SocketAddress is EndPoint.
-// closeSent(ChannelPromise) and applyCloseSentTimeout(ChannelHandlerContext) are internal because the subclasses call
-// them (package access in Java).
+// closeSent(ChannelPromise) and applyCloseSentTimeout(ChannelHandlerContext) are internal because the subclasses
+// call them (package access in Java).
 public abstract class WebSocketProtocolHandler : MessageToMessageDecoder<WebSocketFrame>, IChannelOutboundHandler
 {
 

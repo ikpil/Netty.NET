@@ -122,12 +122,12 @@ public class XmlFrameDecoder : ByteToMessageDecoder
         this.maxFrameLength = CheckPositive(maxFrameLength, "maxFrameLength");
     }
 
-    // CLR: the labeled "break scan" is "goto scan", whose label sits on the first statement after the scan loop, as the
-    // codec-compression port does (docs/codec-compression-porting.md): a labeled break exists only "Starting in C# 15"
-    // and "The goto statement transfers control to a statement that a label marks"
-    // (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/jump-statements); the plain break
-    // inside the switch only leaves the switch, as in Java. throw new Error() is UnreachableException: "The exception
-    // that is thrown when the program executes an instruction that was thought to be unreachable"
+    // CLR: the labeled "break scan" is "goto scan", whose label sits on the first statement after the scan loop,
+    // as the codec-compression port does : a labeled break exists only "Starting in C# 15" and "The goto statement
+    // transfers control to a statement that a label marks"
+    // (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/jump-statements); the plain
+    // break inside the switch only leaves the switch, as in Java. throw new Error() is UnreachableException: "The
+    // exception that is thrown when the program executes an instruction that was thought to be unreachable"
     // (https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.unreachableexception?view=net-10.0), the
     // java.lang.Error mapping of docs/codec-memcache-porting.md.
     protected override void Decode(IChannelHandlerContext ctx, ByteBuf @in, IList<object> @out)
@@ -391,13 +391,13 @@ public class XmlFrameDecoder : ByteToMessageDecoder
         return b >= 'a' && b <= 'z' || b >= 'A' && b <= 'Z' || b == ':' || b == '_';
     }
 
-    // CLR: the source calls Character.isWhitespace with the byte, which widens with sign extension to the int code point
-    // overload (JLS 5.1.2, https://docs.oracle.com/javase/specs/jls/se17/html/jls-5.html#jls-5.1.2), so 0x80-0xFF are
-    // negative and never white space. Below 0x80 a Java whitespace character is U+0009-U+000D, U+001C-U+001F or a space
-    // separator (U+0020)
-    // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Character.html#isWhitespace(int)), the
-    // rule codec-base's JsonObjectDecoder writes out instead of char.IsWhiteSpace (docs/codec-base-porting.md, Text), so
-    // this helper keeps the Java result for every unsigned byte value.
+    // CLR: the source calls Character.isWhitespace with the byte, which widens with sign extension to the int code
+    // point overload (JLS 5.1.2, https://docs.oracle.com/javase/specs/jls/se17/html/jls-5.html#jls-5.1.2), so
+    // 0x80-0xFF are negative and never white space. Below 0x80 a Java whitespace character is U+0009-U+000D,
+    // U+001C-U+001F or a space separator (U+0020)
+    // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Character.html#isWhitespace(int)),
+    // the rule codec-base's JsonObjectDecoder writes out instead of char.IsWhiteSpace, so this helper keeps the
+    // Java result for every unsigned byte value.
     private static bool IsWhitespace(byte b)
     {
         return b is >= 0x09 and <= 0x0D or >= 0x1C and <= 0x20;

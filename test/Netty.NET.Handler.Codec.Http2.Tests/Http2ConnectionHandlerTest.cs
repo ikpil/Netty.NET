@@ -37,27 +37,26 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
 /**
  * Tests for {@link Http2ConnectionHandler}
  */
-// CLR: Mockito's @Mock fields are Moq Mock<T> fields created per test (xUnit creates a test-class instance per test,
-// https://xunit.net/docs/shared-context), @BeforeEach is the constructor and @AfterEach Dispose(); when(...).thenReturn
-// is Setup(...).Returns, doAnswer is Returns/Callback with the invocation arguments, verify(..., times(n)/never()/
-// atLeastOnce()) is Verify(..., Times.Exactly(n)/Never()/AtLeastOnce()), ArgumentCaptor is a Callback capture,
-// clearInvocations is Invocations.Clear() and verifyNoMoreInteractions/verifyNoInteractions are VerifyNoOtherCalls()
+// CLR: Mockito's @Mock fields are Moq Mock<T> fields created per test (xUnit creates a test-class instance per
+// test, https://xunit.net/docs/shared-context), @BeforeEach is the constructor and @AfterEach Dispose();
+// when(...).thenReturn is Setup(...).Returns, doAnswer is Returns/Callback with the invocation arguments,
+// verify(..., times(n)/never()/ atLeastOnce()) is Verify(..., Times.Exactly(n)/Never()/AtLeastOnce()),
+// ArgumentCaptor is a Callback capture, clearInvocations is Invocations.Clear() and
+// verifyNoMoreInteractions/verifyNoInteractions are VerifyNoOtherCalls()
 // (https://github.com/devlooped/moq/wiki/Quickstart; docs/codec-http-porting.md, Shared CLR adaptations).
-// ChannelPromise is TaskCompletionSource and ChannelFuture is Task. ChannelHandlerContext has no newPromise() or
-// voidPromise() in the Transport port (the handler creates its own TaskCompletionSource, Http2CodecUtil.NewPromise),
-// so the stubs ctx.newPromise()/ctx.voidPromise() have no counterpart, and eq(promise) for a promise that Java's
-// handler took from ctx.newPromise() is It.IsAny<TaskCompletionSource>(); where the test passes promise to the
-// handler (goAway, resetStream) the same TaskCompletionSource is matched. The mocked ChannelFuture whose cause() is
-// FAKE_EXCEPTION and whose addListener runs the listener at once is a completed faulted Task
-// (Task.FromException(FAKE_EXCEPTION)); the tests that stub isDone()/isSuccess() to true use Task.CompletedTask.
-// close(ctx, promise) is CloseAsync(ctx, CancellationToken), which returns the Task of the handler's own promise.
-// The mocked EventExecutor is the private RecordingEventExecutor: the Transport's ScheduleAsync schedules only on an
-// AbstractScheduledEventExecutor (src/Netty.NET.Common/Concurrent/EventExecutorSchedulingExtensions.cs), so a Moq mock
-// cannot record executor.schedule(...); the executor records each scheduled delay (ValidateScheduled is called for
-// every scheduled task), runs execute(...) at once and is always in its event loop, the way the listeners in Java's
-// mocked futures run at once. String.getBytes(UTF_8)/copiedBuffer(s, UTF_8/US_ASCII) are Encoding.UTF8/ASCII;
-// InetSocketAddress(0) is an IPEndPoint of IPAddress.Any and port 0. The anonymous Answers, the anonymous
-// Http2ConnectionHandler subclass and the Executables are lambdas and the nested PrefaceEventHandler.
+// ChannelHandlerContext has no newPromise() or voidPromise() in the Transport port (the handler creates its own
+// TaskCompletionSource, Http2CodecUtil.NewPromise), so the stubs ctx.newPromise()/ctx.voidPromise() have no
+// counterpart, and eq(promise) for a promise that Java's handler took from ctx.newPromise() is
+// It.IsAny<TaskCompletionSource>(); where the test passes promise to the handler (goAway, resetStream) the same
+// TaskCompletionSource is matched. The mocked ChannelFuture whose cause() is FAKE_EXCEPTION and whose addListener
+// runs the listener at once is a completed faulted Task (Task.FromException(FAKE_EXCEPTION)); the tests that stub
+// isDone()/isSuccess() to true use Task.CompletedTask. close(ctx, promise) is CloseAsync(ctx, CancellationToken),
+// which returns the Task of the handler's own promise. The mocked EventExecutor is the private
+// RecordingEventExecutor: the Transport's ScheduleAsync schedules only on an AbstractScheduledEventExecutor
+// (src/Netty.NET.Common/Concurrent/EventExecutorSchedulingExtensions.cs), so a Moq mock cannot record
+// executor.schedule(...); the executor records each scheduled delay (ValidateScheduled is called for every
+// scheduled task), runs execute(...) at once and is always in its event loop, the way the listeners in Java's
+// mocked futures run at once. String.getBytes(UTF_8)/copiedBuffer(s, UTF_8/US_ASCII) are Encoding.UTF8/ASCII.
 public class Http2ConnectionHandlerTest : IDisposable
 {
     private const int STREAM_ID = 1;
@@ -632,7 +631,6 @@ public class Http2ConnectionHandlerTest : IDisposable
         Assert.True(latch.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
     }
 
-    // CLR: the anonymous Http2ConnectionHandler subclass of prefaceUserEventProcessed().
     private sealed class PrefaceEventHandler : Http2ConnectionHandler
     {
         private readonly CountdownEvent latch;
@@ -973,11 +971,11 @@ public class Http2ConnectionHandlerTest : IDisposable
     }
 
     // CLR: client.unsafe().close(client.voidPromise()) closes the transport without passing through the pipeline's
-    // outbound handlers; the folded unsafe operations of the Transport port are internal (docs/transport-porting.md,
-    // EmbeddedChannel), so the test closes from the handler's own context, whose close goes to the pipeline head
-    // only (ctx.close() "will be forwarded to the next ChannelOutboundHandler", which is the head here).
-    // client.pipeline().get(Class) is Pipeline.Get<T>(), server.newPromise() a new TaskCompletionSource and
-    // ChannelFuture.isDone()/isSuccess() Task.IsCompleted/IsCompletedSuccessfully.
+    // outbound handlers; the folded unsafe operations of the Transport port are internal, so the test closes from
+    // the handler's own context, whose close goes to the pipeline head only (ctx.close() "will be forwarded to the
+    // next ChannelOutboundHandler", which is the head here). client.pipeline().get(Class) is Pipeline.Get<T>(),
+    // server.newPromise() a new TaskCompletionSource and ChannelFuture.isDone()/isSuccess()
+    // Task.IsCompleted/IsCompletedSuccessfully.
     [Theory]
     [InlineData(30000L)]
     [InlineData(-1L)]
@@ -1062,8 +1060,6 @@ public class Http2ConnectionHandlerTest : IDisposable
         return client;
     }
 
-    // CLR: the String pseudo-header values are StringCharSequence values (a C# string is not an ICharSequence;
-    // docs/codec-http-porting.md, Shared CLR adaptations).
     private static void WriteHeadersOnStream3(Http2ConnectionHandler clientHandler, EmbeddedChannel client)
     {
         IChannelHandlerContext ctx = client.Pipeline.Context(clientHandler);
@@ -1202,7 +1198,7 @@ public class Http2ConnectionHandlerTest : IDisposable
         return capturedDebugData[capturedDebugData.Count - 1];
     }
 
-    // CLR: the mocked EventExecutor; see the type comment.
+    // CLR: the mocked EventExecutor.
     private sealed class RecordingEventExecutor : AbstractScheduledEventExecutor
     {
         internal readonly List<TimeSpan> ScheduledDelays = new List<TimeSpan>();

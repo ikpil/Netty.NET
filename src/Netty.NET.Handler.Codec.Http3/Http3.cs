@@ -25,16 +25,14 @@ namespace Netty.NET.Handler.Codec.Http3;
 /**
  * Contains utility methods that help to bootstrap server / clients with HTTP3 support.
  */
-// CLR: QuicChannel, QuicStreamChannel and QuicStreamType are codec-quic's IQuicChannel, IQuicStreamChannel and the C#
-// enum QuicStreamType (docs/codec-classes-quic-porting.md, API shapes); Channel and ChannelHandler are IChannel and
-// IChannelHandler. newRequestStream returns the Task<IQuicStreamChannel> of CreateStreamAsync (Future<QuicStreamChannel>)
-// and takes the Async suffix (docs/transport-porting.md). IllegalStateException is InvalidOperationException; clone() of
-// the protocol array is Array.Clone. The anonymous Http3RequestStreamInitializer of requestStreamInitializer is the
-// private nested class HandlerRequestStreamInitializer. The @Nullable (org.jetbrains.annotations) annotations have no
-// counterpart (the projects do not enable the nullable annotation context).
-// newQuicServerCodecBuilder()/newQuicClientCodecBuilder() return the codec-quic builders, which configure the msquic
-// listener and connection options (docs/codec-classes-quic-porting.md, Stage 2); configure(builder) keeps the Java
-// self-typed bound (T extends QuicCodecBuilder<T>) as a generic constraint.
+// CLR: QuicChannel, QuicStreamChannel and QuicStreamType are codec-quic's IQuicChannel, IQuicStreamChannel and the
+// C# enum QuicStreamType; Channel and ChannelHandler are IChannel and IChannelHandler. newRequestStream returns
+// the Task<IQuicStreamChannel> of CreateStreamAsync (Future<QuicStreamChannel>) and takes the Async suffix.
+// IllegalStateException is InvalidOperationException; clone() of the protocol array is Array.Clone. The @Nullable
+// (org.jetbrains.annotations) annotations have no counterpart (the projects do not enable the nullable annotation
+// context). newQuicServerCodecBuilder()/newQuicClientCodecBuilder() return the codec-quic builders, which
+// configure the msquic listener and connection options; configure(builder) keeps the Java self-typed bound (T
+// extends QuicCodecBuilder<T>) as a generic constraint.
 public sealed class Http3
 {
 
@@ -193,7 +191,6 @@ public sealed class Http3
         return new HandlerRequestStreamInitializer(handler);
     }
 
-    // CLR: the anonymous Http3RequestStreamInitializer of requestStreamInitializer(handler).
     private sealed class HandlerRequestStreamInitializer : Http3RequestStreamInitializer
     {
         private readonly IChannelHandler handler;

@@ -18,15 +18,15 @@ using System;
 
 namespace Netty.NET.Handler.Codec.Quic.Tests;
 
-// CLR: QuicConnectionIdGenerator is IQuicConnectionIdGenerator and java.nio.ByteBuffer is ReadOnlyMemory<byte>
-// (docs/codec-classes-quic-porting.md, NIO buffers): remaining() is Length, ByteBuffer.wrap(bytes) the memory over the
-// array, and ByteBuffer equality (the remaining bytes) compares the bytes as arrays. Quiche.QUICHE_MAX_CONN_ID_LEN is
-// Quic.MAX_CONN_ID_LEN (20), Integer.MAX_VALUE int.MaxValue and ThreadLocalRandom.current() Random.Shared.
-// assertThrows(C.class, ...) accepts subclasses of C, so it is Assert.ThrowsAny; IllegalArgumentException is
-// ArgumentException and UnsupportedOperationException NotSupportedException. newId(null, 10) fails with the
-// NullPointerException of the null buffer; a ReadOnlyMemory<byte> cannot be null, and the null array converts to an
-// empty memory, which the generator rejects with ArgumentException (checkPositive of the input length), so the call
-// still fails, with the argument exception of the CLR.
+// CLR: QuicConnectionIdGenerator is IQuicConnectionIdGenerator and java.nio.ByteBuffer is ReadOnlyMemory<byte> :
+// remaining() is Length, ByteBuffer.wrap(bytes) the memory over the array, and ByteBuffer equality (the remaining
+// bytes) compares the bytes as arrays. Quiche.QUICHE_MAX_CONN_ID_LEN is Quic.MAX_CONN_ID_LEN (20),
+// Integer.MAX_VALUE int.MaxValue and ThreadLocalRandom.current() Random.Shared. assertThrows(C.class,...) accepts
+// subclasses of C, so it is Assert.ThrowsAny; IllegalArgumentException is ArgumentException and
+// UnsupportedOperationException NotSupportedException. newId(null, 10) fails with the NullPointerException of the
+// null buffer; a ReadOnlyMemory<byte> cannot be null, and the null array converts to an empty memory, which the
+// generator rejects with ArgumentException (checkPositive of the input length), so the call still fails, with the
+// argument exception of the CLR.
 public class QuicConnectionIdGeneratorTest : AbstractQuicTest
 {
 

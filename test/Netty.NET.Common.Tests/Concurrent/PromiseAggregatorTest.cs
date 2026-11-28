@@ -54,8 +54,8 @@ public class TaskAggregationOwnershipPortTest
     {
         var first = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var second = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        // CLR: the source add(p1, null, p2) silently skips the null entry; the native
-        // aggregation rejects it instead (docs/common-task-composition.md).
+        // CLR: the source add(p1, null, p2) silently skips the null entry; the native aggregation rejects it
+        // instead.
         Assert.Throws<ArgumentException>(() => Task.WhenAll(first.Task, null, second.Task));
         Task result = Task.WhenAll(first.Task, second.Task);
         first.SetResult();

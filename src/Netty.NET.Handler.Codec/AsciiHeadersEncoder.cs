@@ -120,8 +120,8 @@ public sealed class AsciiHeadersEncoder
     }
 
     // CLR: CharsetUtil.US_ASCII is Encoding.ASCII, which also replaces a character above U+007F with '?'; it
-    // replaces each UTF-16 code unit of an unmappable surrogate pair, where Java's encoder writes one '?' per pair
-    // (docs/common-ascii-memory.md). setCharSequence takes the sequence's characters as a span.
+    // replaces each UTF-16 code unit of an unmappable surrogate pair, where Java's encoder writes one '?' per
+    // pair. setCharSequence takes the sequence's characters as a span.
     private static void WriteAscii(ByteBuf buf, int offset, ICharSequence value)
     {
         if (value is AsciiString)

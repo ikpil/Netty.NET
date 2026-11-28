@@ -19,8 +19,8 @@ using Netty.NET.Buffer;
 namespace Netty.NET.Handler.Codec.Dns.Tests;
 
 // CLR: the anonymous AbstractDnsOptPseudoRrRecord subclasses are the named nested class TestOptPseudoRrRecord;
-// readUnsignedByte() is ByteBuf.ReadByte(), which returns the unsigned System.Byte, and readUnsignedShort() returns
-// ushort (docs/buffer-porting.md); the long literals keep their L suffix.
+// readUnsignedByte() is ByteBuf.ReadByte(), which returns the unsigned System.Byte, and readUnsignedShort()
+// returns ushort; the long literals keep their L suffix.
 public class AbstractDnsOptPseudoRrRecordTest
 {
 

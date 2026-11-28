@@ -26,9 +26,8 @@ namespace Netty.NET.Handler.Ssl;
  * {@link OptionalSslHandler} is a utility decoder to support both SSL and non-SSL handlers
  * based on the first message received.
  */
-// CLR: List<Object> out is IList<object> @out (codec-base). The SSLEngine is the handler's SslStream (owner decision
-// 2026-11-24, docs/handler-ssl-design.md); the SSLParameters/SSLContext of the Javadoc are the options SslContext builds
-// per handler.
+// CLR: List<Object> out is IList<object> @out (codec-base). The SSLEngine is the handler's SslStream; the
+// SSLParameters/SSLContext of the Javadoc are the options SslContext builds per handler.
 public class OptionalSslHandler : ByteToMessageDecoder
 {
 

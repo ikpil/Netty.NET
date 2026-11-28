@@ -25,10 +25,9 @@ using DnsResponseCode = Netty.NET.Handler.Codec.Dns.DnsResponseCode;
 
 namespace Netty.NET.Resolver.Dns;
 
-// CLR: InternalLogger/InternalLogLevel are Common's IInternalLogger/InternalLogLevel; Common's MessageFormatter treats a
-// trailing Exception argument as the throwable, as the JDK MessageFormatter does. An address prints as
-// EndPoint.ToString() (docs/handler-porting.md Addresses). InternalLogLevel is an enum, so checkNotNull(level) has no
-// counterpart.
+// CLR: InternalLogger/InternalLogLevel are Common's IInternalLogger/InternalLogLevel; Common's MessageFormatter
+// treats a trailing Exception argument as the throwable, as the JDK MessageFormatter does. An address prints as
+// EndPoint.ToString(). InternalLogLevel is an enum, so checkNotNull(level) has no counterpart.
 internal sealed class LoggingDnsQueryLifecycleObserver : IDnsQueryLifecycleObserver
 {
     private readonly IInternalLogger logger;

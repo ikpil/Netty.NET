@@ -130,21 +130,18 @@ namespace Netty.NET.Handler.Codec.Http2;
  * Server-side HTTP to HTTP/2 upgrade is supported in conjunction with {@link Http2ServerUpgradeCodec}; the necessary
  * HTTP-to-HTTP/2 conversion is performed automatically.
  */
-// CLR: ChannelPromise is TaskCompletionSource and ChannelFuture Task (docs/codec-http-porting.md, Shared CLR
-// adaptations): write(ctx, msg, promise) is WriteAsync(ctx, msg, cancellationToken), which creates the promise it
-// completes (Http2CodecUtil.NewPromise) and returns its Task; ctx.write(msg, promise) is Http2CodecUtil.Cascade of the
-// context's write Task; promise.addListener is Http2CodecUtil.AddListener (EventExecutorTaskScheduler over
-// ctx.Executor, the DefaultPromise.notifyListeners timing of docs/codec-http-porting.md, Listener timing);
-// promise.unvoid() is the promise itself (docs/transport-porting.md, VoidChannelPromise). PropertyKey is
-// IHttp2Connection.IPropertyKey and the unchecked getProperty is the generic GetProperty<V> (src/Netty.NET.Handler.Codec.Http2/
-// IHttp2Stream.cs). IntObjectMap<DefaultHttp2FrameStream> is Dictionary<int, DefaultHttp2FrameStream> (owner
-// decision 2026-11-19, confirmed 2026-11-25). Integer initialFlowControlWindowSize is int?. Java's package-private
-// members are internal (the multiplex handler, the builder and the tests use them), the protected constructor and the
-// protected streamKey are protected internal because Java's protected includes package access (Http2FrameCodecBuilder
-// calls the constructor and Http2MultiplexClientUpgradeTest reads streamKey), and the package-private hooks that the
-// deprecated, not ported Http2MultiplexCodec overrides are internal virtual. The anonymous Http2StreamVisitor and Runnable are a
-// private nested class and a lambda. Http2ConnectionHandler's final userEventTriggered/handlerAdded overrides are
-// sealed overrides. The checked "throws" clauses have no counterpart.
+// CLR: ChannelPromise is TaskCompletionSource and ChannelFuture Task : write(ctx, msg, promise) is WriteAsync(ctx,
+// msg, cancellationToken), which creates the promise it completes (Http2CodecUtil.NewPromise) and returns its
+// Task; promise.addListener is Http2CodecUtil.AddListener (EventExecutorTaskScheduler over ctx.Executor, the
+// DefaultPromise.notifyListeners timing of docs/codec-http-porting.md, Listener timing). PropertyKey is
+// IHttp2Connection.IPropertyKey and the unchecked getProperty is the generic GetProperty<V>
+// (src/Netty.NET.Handler.Codec.Http2/ IHttp2Stream.cs). IntObjectMap<DefaultHttp2FrameStream> is Dictionary<int,
+// DefaultHttp2FrameStream>. Integer initialFlowControlWindowSize is int?. Java's package-private members are
+// internal (the multiplex handler, the builder and the tests use them), the protected constructor and the
+// protected streamKey are protected internal because Java's protected includes package access
+// (Http2FrameCodecBuilder calls the constructor and Http2MultiplexClientUpgradeTest reads streamKey), and the
+// package-private hooks that the deprecated, not ported Http2MultiplexCodec overrides are internal virtual.
+// Http2ConnectionHandler's final userEventTriggered/handlerAdded overrides are sealed overrides.
 public class Http2FrameCodec : Http2ConnectionHandler
 {
 
@@ -205,7 +202,6 @@ public class Http2FrameCodec : Http2ConnectionHandler
         }
     }
 
-    // CLR: the anonymous Http2StreamVisitor of forEachActiveStream.
     private sealed class FrameStreamVisitorAdapter : IHttp2StreamVisitor
     {
         private readonly Http2FrameCodec codec;
@@ -496,7 +492,6 @@ public class Http2FrameCodec : Http2ConnectionHandler
         }
         else if (InitializeNewStream(ctx, (DefaultHttp2FrameStream) headersFrame.Stream(), promise))
         {
-            // CLR: promise.unvoid() is the promise itself (there is no void promise).
 
             int streamId = headersFrame.Stream().Id();
 

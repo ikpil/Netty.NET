@@ -36,18 +36,17 @@ namespace Netty.NET.Example.Http2.HelloWorld.Frame.Client;
  * You should include {@link io.netty.handler.codec.http2.Http2ClientUpgradeCodec} if the
  * HTTP/2 server you are hitting doesn't support h2c/prior knowledge.
  */
-// CLR: System.getProperty is ExampleLauncher.GetProperty, which reads the -Dname=value arguments; Integer.parseInt is int.Parse with an optional sign and the invariant culture. main(String[]) blocks; it is
-// the async Main: connect().syncUninterruptibly().channel() awaits ConnectAsync(), open().syncUninterruptibly().getNow()
-// awaits OpenAsync() (as codec-http2's Http2MultiplexHandlerTest), and channel.close().syncUninterruptibly() awaits
-// CloseAsync(). streamChannel.writeAndFlush(...) is WriteAndFlushAsync, whose Task is discarded as Java discards the
-// future. The String values given to the Http2Headers setters are CharSequences in Java; they are wrapped in Common's
-// StringCharSequence (docs/codec-http-porting.md, Shared CLR adaptations). group.shutdownGracefully() is
-// ShutdownGracefullyAsync(), whose Task is discarded. NioSocketChannel.class is Channel<NioSocketChannel>(). OpenSsl
-// (netty-tcnative) is library-not-ported (docs/handler-porting.md): SslProvider.IsAlpnSupported(SslProvider.OPENSSL)
-// answers false, so the JDK provider (SslStream, which negotiates ALPN) is chosen. The cipher suites pass through
-// Http2ExampleUtil.PlatformCiphers, as SslStream cannot restrict them on Windows and Android;
-// InsecureTrustManagerFactory.INSTANCE is the RemoteCertificateValidationCallback that SslContextBuilder.TrustManager
-// takes. The package-private static fields are internal; the private constructor of the final class is kept.
+// CLR: System.getProperty is ExampleLauncher.GetProperty, which reads the -Dname=value arguments; Integer.parseInt
+// is int.Parse with an optional sign and the invariant culture. main(String[]) blocks; it is the async Main:
+// connect().syncUninterruptibly().channel() awaits ConnectAsync(), open().syncUninterruptibly().getNow() awaits
+// OpenAsync() (as codec-http2's Http2MultiplexHandlerTest), and channel.close().syncUninterruptibly() awaits
+// CloseAsync(). streamChannel.writeAndFlush(...) is WriteAndFlushAsync, whose Task is discarded as Java discards
+// the future. The String values given to the Http2Headers setters are CharSequences in Java.
+// NioSocketChannel.class is Channel<NioSocketChannel>(). OpenSsl (netty-tcnative) is library-not-ported :
+// SslProvider.IsAlpnSupported(SslProvider.OPENSSL) answers false, so the JDK provider (SslStream, which negotiates
+// ALPN) is chosen. The cipher suites pass through Http2ExampleUtil.PlatformCiphers, as SslStream cannot restrict
+// them on Windows and Android; InsecureTrustManagerFactory.INSTANCE is the RemoteCertificateValidationCallback
+// that SslContextBuilder.TrustManager takes. The private constructor of the final class is kept.
 public sealed class Http2FrameClient
 {
 

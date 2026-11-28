@@ -33,7 +33,6 @@ public sealed class DefaultDnsCnameCache : IDnsCnameCache
     private readonly int minTtl;
     private readonly int maxTtl;
 
-    // CLR: the anonymous Cache<String> subclass is the named nested CnameCache.
     private readonly Cache<string> cache = new CnameCache();
 
     private sealed class CnameCache : Cache<string>
@@ -44,8 +43,6 @@ public sealed class DefaultDnsCnameCache : IDnsCnameCache
             return true;
         }
 
-        // CLR: AsciiString.contentEqualsIgnoreCase(CharSequence, CharSequence) is Common's
-        // AsciiString.ContentEqualsIgnoreCase over ICharSequence; a String is a StringCharSequence.
         protected override bool Equals(string entry, string otherEntry)
         {
             return AsciiString.ContentEqualsIgnoreCase(

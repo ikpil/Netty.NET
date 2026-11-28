@@ -29,46 +29,10 @@ using Netty.NET.Resolver.Dns.Tests.ApacheDs;
 
 namespace Netty.NET.Resolver.Dns.Tests;
 
-// CLR: owner decision 2026-11-25: the apacheds-protocol-dns 2.0.0.AM27 DnsServer on Apache MINA 2.2.3 that this class
-// extends is the test-only C# stand-in in ApacheDs/ (namespace Netty.NET.Resolver.Dns.Tests.ApacheDs), with the same
-// type names (interfaces with the I prefix) and Java member names; each stand-in file names the apacheds/MINA source
-// it reproduces. The Java imports of org.apache.directory.server.* and org.apache.mina.* are that namespace.
-// - start(dropRecordType, address): UdpTransport is created with address.getHostName(). IPEndPoint carries no host
-//   name (docs/handler-porting.md, Addresses): NetUtil.LOCALHOST4 is InetAddress.getByAddress("localhost", bytes)
-//   (common NetUtilInitializations.createLocalhost4), so Java passes "localhost", and getHostName() of the
-//   ServerSocket address in DnsNameResolverTest may reverse-look the literal up
-//   (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/InetSocketAddress.html); UdpTransport then
-//   resolves the name again. The C# endpoint only has the address, so its text is passed and the UDP socket binds that
-//   address (127.0.0.1 for LOCALHOST4, the address "localhost" resolves to first when IPv4 is preferred).
-// - The anonymous DnsProtocolHandler subclass is the nested TestDnsProtocolHandler, the anonymous DnsUdpEncoder and
-//   ProtocolDecoderAdapter of TestDnsProtocolUdpCodecFactory are its nested TestDnsUdpEncoder and TestDnsUdpDecoder,
-//   and the inner (non-static) TestDnsProtocolUdpCodecFactory takes the enclosing server as a constructor argument,
-//   because a C# nested class has no enclosing instance. The anonymous encoder's "encoder" is the factory's field (the
-//   private field of DnsUdpEncoder is not visible to a subclass in either language).
-// - Java lets the top-level class and its nested classes use each other's private members (JLS 6.6.1,
-//   https://docs.oracle.com/javase/specs/jls/se17/html/jls-6.html); C# opens private members only to the declaring type
-//   and the types nested in it (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/private),
-//   so the TestRecordStore constructor and nextIp(), which the enclosing class and MapRecordStoreA call, are internal.
-//   The package-private class, constructors and nested classes are internal; the protected static record factories,
-//   which the tests of the package call (static import of newARecord), are protected internal, the C# accessibility
-//   that adds the assembly to protected
-//   (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/protected-internal).
-// - A switch over the RecordType enum is "case var type when type == RecordType.X" (the stand-in's RecordType is a
-//   sealed class, ApacheDs/RecordType.cs). ThreadLocalRandom is Random.Shared (resolver-dns mapping):
-//   Math.abs(nextInt()) is Next(), which already returns a non-negative int
-//   (https://learn.microsoft.com/en-us/dotnet/api/system.random.next?view=net-10.0), and nextBoolean() is
-//   Next(2) != 0, as codec-compression's FastLzIntegrationTest maps it.
-// - HashMap is Dictionary (its keySet order only feeds the random IPv6 pick), LinkedHashSet is Common's LinkedHashSet,
-//   and Collections.singleton (an immutable one-element set,
-//   https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Collections.html) is ImmutableHashSet.Create,
-//   as codec-base DefaultHeaders maps the immutable Java sets. HashMap.get(null) returns null where Dictionary throws,
-//   so TestAAAARecordEncoder looks up a missing address as a missing key. toLowerCase(Locale.US) of the ASCII
-//   DnsAttribute constants is ToLowerInvariant() and toLowerCase() (the default locale) is
-//   ToLower(CultureInfo.CurrentCulture). System.identityHashCode is RuntimeHelpers.GetHashCode, the identity hash that
-//   ignores overrides (https://learn.microsoft.com/en-us/dotnet/api/system.runtime.compilerservices.runtimehelpers.gethashcode?view=net-10.0).
-// - IllegalStateException is InvalidOperationException; new IllegalStateException(e) takes e.toString() as its
-//   message, which is ThrowableUtil.ThrowableToString (owner decision 2026-11-24). IOException stays System.IO's.
-//   "throws IOException" is only documented: C# has no checked exceptions.
+// The ApacheDS and MINA stand-ins run in process. Bind to the endpoint's literal address because IPEndPoint does
+// not carry the Java host name.
+// An absent IPv6 address is treated as an absent dictionary key so the test encoder can return the same missing
+// record.
 internal class TestDnsServer : DnsServer
 {
     private static readonly Dictionary<string, byte[]> BYTES = new Dictionary<string, byte[]>();
@@ -115,7 +79,6 @@ internal class TestDnsServer : DnsServer
 
     public void Start(RecordType dropRecordType, IPEndPoint address)
     {
-        // CLR: address.getHostName() is the address text (see the header).
         UdpTransport transport = new UdpTransport(address.Address.ToString(), address.Port);
         SetTransports(transport);
 
@@ -129,7 +92,6 @@ internal class TestDnsServer : DnsServer
         acceptor.Bind();
     }
 
-    // CLR: the anonymous DnsProtocolHandler subclass of start(RecordType, InetSocketAddress).
     private sealed class TestDnsProtocolHandler : DnsProtocolHandler
     {
         private readonly TestDnsServer server;
@@ -211,7 +173,6 @@ internal class TestDnsServer : DnsServer
             return new TestDnsUdpEncoder(this);
         }
 
-        // CLR: the anonymous DnsUdpEncoder subclass of getEncoder(IoSession).
         private sealed class TestDnsUdpEncoder : DnsUdpEncoder
         {
             private readonly TestDnsProtocolUdpCodecFactory factory;
@@ -267,7 +228,6 @@ internal class TestDnsServer : DnsServer
             return new TestDnsUdpDecoder(this);
         }
 
-        // CLR: the anonymous ProtocolDecoderAdapter of getDecoder(IoSession).
         private sealed class TestDnsUdpDecoder : ProtocolDecoderAdapter
         {
             private readonly TestDnsProtocolUdpCodecFactory factory;
@@ -301,7 +261,7 @@ internal class TestDnsServer : DnsServer
         {
             protected override void PutResourceRecordData(IoBuffer ioBuffer, IResourceRecord resourceRecord)
             {
-                // CLR: HashMap.get(null) is null; Dictionary rejects a null key (see the header).
+                // CLR: Dictionary rejects a null key (see the header).
                 string ipAddress = resourceRecord.Get(DnsAttribute.IP_ADDRESS);
                 byte[] bytes = ipAddress == null ? null : BYTES.GetValueOrDefault(ipAddress);
                 if (bytes == null)

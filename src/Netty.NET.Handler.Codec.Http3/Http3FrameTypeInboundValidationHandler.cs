@@ -21,11 +21,9 @@ using static Netty.NET.Handler.Codec.Http3.Http3FrameValidationUtils;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the package-private class is internal. Class<T> is System.Type (see Http3FrameValidationUtils); T keeps the bound
-// IHttp3Frame and adds the class constraint of the validate methods. The final channelRead(ctx, Object) is a sealed
-// override and the package-private overridable channelRead(ctx, T) and readFrameDiscarded(...) are internal virtual
-// overloads, which the package's handlers override; the T overload is the better match for a T argument, as in Java.
-// throws Exception has no counterpart.
+// CLR: Class<T> is System.Type (see Http3FrameValidationUtils); T keeps the bound IHttp3Frame and adds the class
+// constraint of the validate methods. The T overload is the better match for a T argument, as in Java. throws
+// Exception has no counterpart.
 internal class Http3FrameTypeInboundValidationHandler<T> : ChannelInboundHandlerAdapter where T : class, IHttp3Frame
 {
 

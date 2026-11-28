@@ -95,11 +95,8 @@ public class SocketChannelEOFSourceTest : AbstractClientSocketTest
         return bytes;
     }
 
-    // CLR: MessageDigest.getInstance("SHA-256") is IncrementalHash.CreateHash(HashAlgorithmName.SHA256), which
-    // "Provides support for computing a hash or HMAC value incrementally across several segments"; update(...) is
-    // AppendData(...) and digest() is GetHashAndReset()
-    // (https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography.incrementalhash). SHA-256 is always
-    // available, so the source's NoSuchAlgorithmException to IllegalStateException wrapping has no counterpart.
+    // CLR: SHA-256 is always available, so the source's NoSuchAlgorithmException to IllegalStateException wrapping
+    // has no counterpart.
     private static byte[] Digest(long length)
     {
         IncrementalHash digest = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
@@ -119,8 +116,6 @@ public class SocketChannelEOFSourceTest : AbstractClientSocketTest
         private readonly long pauseAfterBytes;
         private readonly long pauseMillis;
         private readonly IncrementalHash digest;
-        // CLR: ImmediateEventExecutor.INSTANCE.newPromise() is a TaskCompletionSource; setSuccess(null) is
-        // SetResult() and setFailure(cause) is SetException(cause).
         private readonly TaskCompletionSource result = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         // CLR: schedule(...) returns a Task, which cannot be cancelled through the Task itself, so
         // readFuture.cancel(true) cancels the token passed to ScheduleAsync. Before the invocation starts, the
@@ -246,8 +241,7 @@ public class SocketChannelEOFSourceTest : AbstractClientSocketTest
         Assert.Fail(cause.ToString());
     }
 
-    // CLR: AutoCloseable.close() is IDisposable.Dispose(); the source calls close() explicitly, so Close() keeps the
-    // source name and Dispose() delegates to it.
+    // CLR: The source calls close() explicitly, so Close() keeps the source name and Dispose() delegates to it.
     private sealed class PayloadServer : IDisposable
     {
         private readonly long sendBytes;
@@ -279,9 +273,6 @@ public class SocketChannelEOFSourceTest : AbstractClientSocketTest
                     Socket socket = serverSocket.Accept();
                     accepted.Set(socket);
                     socket.NoDelay = true;
-                    // CLR: Socket.getOutputStream() is a NetworkStream over the accepted socket, and shutdownOutput()
-                    // is Shutdown(SocketShutdown.Send), "Disable sending on this Socket"
-                    // (https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket.shutdown).
                     Stream output = new NetworkStream(socket);
 
                     for (long remaining = sendBytes; remaining > 0; remaining -= CHUNK.Length)

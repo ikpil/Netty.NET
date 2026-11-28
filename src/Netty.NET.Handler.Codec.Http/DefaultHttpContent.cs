@@ -23,12 +23,11 @@ namespace Netty.NET.Handler.Codec.Http;
 /**
  * The default {@link HttpContent} implementation.
  */
-// CLR: content() is the virtual read-only Content property of IByteBufHolder and refCnt() is RefCnt
-// (docs/buffer-porting.md, Buffer holders and conversion). The narrowed copy/duplicate/retainedDuplicate/replace/
-// retain/touch members are virtual members returning IHttpContent, which subclasses narrow further with covariant
-// override returns (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override); the
-// IByteBufHolder and IReferenceCounted members, which those interfaces declare with their own return types, are
-// implemented explicitly and call them, as codec-stomp's DefaultStompFrame does.
+// CLR: The narrowed copy/duplicate/retainedDuplicate/replace/ retain/touch members are virtual members returning
+// IHttpContent, which subclasses narrow further with covariant override returns
+// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override); the IByteBufHolder and
+// IReferenceCounted members, which those interfaces declare with their own return types, are implemented
+// explicitly and call them, as codec-stomp's DefaultStompFrame does.
 public class DefaultHttpContent : DefaultHttpObject, IHttpContent
 {
 

@@ -29,20 +29,19 @@ namespace Netty.NET.Handler.Codec.Http2;
  * <p>
  * See {@link HttpToHttp2ConnectionHandler} to get translation from HTTP/1.x objects to HTTP/2 frames for writes.
  */
-// CLR: the overridable Java methods are virtual and the protected final ones are non-virtual; the protected final fields
-// are protected readonly. The protected constructor is protected internal, because InboundHttp2ToHttpAdapterBuilder
-// creates the adapter through Java's package access. The private interface ImmediateSendDetector is the nested
-// IImmediateSendDetector and its anonymous DEFAULT_SEND_DETECTOR implementation is the nested DefaultSendDetector. The
-// generic stream property accessors are GetProperty<V>/SetProperty<V>/RemoveProperty<V> (IHttp2Stream). FullHttpMessage
-// is IFullHttpMessage, whose content() is the Content property (docs/codec-http-porting.md), and
-// FullHttpRequest.replace(ByteBuf) returns IByteBufHolder (narrowing re-declarations are inherited,
-// docs/codec-http-porting.md), so its result is cast to IFullHttpRequest. Every "throws Http2Exception" member throws
-// Http2Exception (C# has no checked exceptions).
+// CLR: the overridable Java methods are virtual and the protected final ones are non-virtual; the protected final
+// fields are protected readonly. The protected constructor is protected internal, because
+// InboundHttp2ToHttpAdapterBuilder creates the adapter through Java's package access. The private interface
+// ImmediateSendDetector is the nested IImmediateSendDetector and its anonymous DEFAULT_SEND_DETECTOR
+// implementation is the nested DefaultSendDetector. The generic stream property accessors are
+// GetProperty<V>/SetProperty<V>/RemoveProperty<V> (IHttp2Stream). FullHttpMessage is IFullHttpMessage, whose
+// content() is the Content property, and FullHttpRequest.replace(ByteBuf) returns IByteBufHolder (narrowing
+// re-declarations are inherited, docs/codec-http-porting.md), so its result is cast to IFullHttpRequest. Every
+// "throws Http2Exception" member throws Http2Exception (C# has no checked exceptions).
 public class InboundHttp2ToHttpAdapter : Http2EventAdapter
 {
     private static readonly IImmediateSendDetector DEFAULT_SEND_DETECTOR = new DefaultSendDetector();
 
-    // CLR: the anonymous ImmediateSendDetector of DEFAULT_SEND_DETECTOR.
     private sealed class DefaultSendDetector : IImmediateSendDetector
     {
         public bool MustSendImmediately(IFullHttpMessage msg)

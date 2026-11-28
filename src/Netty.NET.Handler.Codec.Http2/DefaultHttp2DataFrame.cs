@@ -27,12 +27,12 @@ namespace Netty.NET.Handler.Codec.Http2;
  * The default {@link Http2DataFrame} implementation.
  */
 // CLR: ByteBufHolder is IByteBufHolder, whose content() is the read-only Content property and refCnt() the RefCnt
-// property (docs/buffer-porting.md, Buffer holders and conversion). The overrides that narrow the return type to
-// DefaultHttp2DataFrame (stream, copy, duplicate, retainedDuplicate, replace, retain, touch) are covariant class
-// overrides where a base class declares them and otherwise public methods with the narrowed type, while the
-// IByteBufHolder/IReferenceCounted members declared with other return types are implemented explicitly with them
-// (docs/codec-http-porting.md, Shared CLR adaptations). IllegalArgumentException is ArgumentException. toString()
-// keeps Java's text: a null stream prints "null" and booleans print true/false (Http2CodecUtil.ToJavaString).
+// property. The overrides that narrow the return type to DefaultHttp2DataFrame (stream, copy, duplicate,
+// retainedDuplicate, replace, retain, touch) are covariant class overrides where a base class declares them and
+// otherwise public methods with the narrowed type, while the IByteBufHolder/IReferenceCounted members declared
+// with other return types are implemented explicitly with them. IllegalArgumentException is ArgumentException.
+// toString() keeps Java's text: a null stream prints "null" and booleans print true/false
+// (Http2CodecUtil.ToJavaString).
 public sealed class DefaultHttp2DataFrame : AbstractHttp2StreamFrame, IHttp2DataFrame
 {
     private readonly ByteBuf content;

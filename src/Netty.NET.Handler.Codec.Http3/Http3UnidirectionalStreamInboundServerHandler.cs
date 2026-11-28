@@ -19,11 +19,10 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the package-private final class is internal sealed. Http3FrameCodecFactory is the nested
-// Http3FrameCodec.IHttp3FrameCodecFactory, NonStandardHttp3SettingsValidator
-// Http3Settings.INonStandardHttp3SettingsValidator, LongFunction<ChannelHandler> Func<long, IChannelHandler> and
-// Supplier<ChannelHandler> Func<IChannelHandler>. The package-private override of initPushStream is internal. The
-// @Nullable (org.jetbrains.annotations) annotations have no counterpart.
+// CLR: Http3FrameCodecFactory is the nested Http3FrameCodec.IHttp3FrameCodecFactory,
+// NonStandardHttp3SettingsValidator Http3Settings.INonStandardHttp3SettingsValidator, LongFunction<ChannelHandler>
+// Func<long, IChannelHandler> and Supplier<ChannelHandler> Func<IChannelHandler>. The @Nullable
+// (org.jetbrains.annotations) annotations have no counterpart.
 internal sealed class Http3UnidirectionalStreamInboundServerHandler : Http3UnidirectionalStreamInboundHandler
 {
 

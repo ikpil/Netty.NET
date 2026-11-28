@@ -19,13 +19,13 @@ using Netty.NET.Common.Concurrent;
 
 namespace Netty.NET.Handler.Codec.Quic.Tests;
 
-// CLR: @Timeout(10) is the Timeout of each test attribute (TIMEOUT, in milliseconds; xUnit applies it to async tests).
-// @BeforeAll ensureAvailability() is the static constructor, which runs once before the first test of a fixture.
-// Executor is IExecutor: ImmediateExecutor.INSTANCE, and Executors.newSingleThreadExecutor() is a DefaultEventExecutor
-// (one daemon thread), shut down with ShutdownGracefullyAsync (ExecutorService.shutdown()). The executors are the rows of the
-// [MemberData] of each parameterized test (@MethodSource("newSslTaskExecutors")); they are not serializable, so the
-// rows are not enumerated at discovery. System.Net.Quic runs TLS on msquic's threads, so the QUIC codec builders accept
-// the executor without using it (docs/codec-classes-quic-porting.md).
+// CLR: @Timeout(10) is the Timeout of each test attribute (TIMEOUT, in milliseconds; xUnit applies it to async
+// tests). @BeforeAll ensureAvailability() is the static constructor, which runs once before the first test of a
+// fixture. Executor is IExecutor: ImmediateExecutor.INSTANCE, and Executors.newSingleThreadExecutor() is a
+// DefaultEventExecutor (one daemon thread), shut down with ShutdownGracefullyAsync (ExecutorService.shutdown()).
+// The executors are the rows of the [MemberData] of each parameterized test
+// (@MethodSource("newSslTaskExecutors")); they are not serializable, so the rows are not enumerated at discovery.
+// System.Net.Quic runs TLS on msquic's threads, so the QUIC codec builders accept the executor without using it.
 public abstract class AbstractQuicTest
 {
     internal const int TIMEOUT = 10000;

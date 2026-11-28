@@ -30,42 +30,10 @@ using static Netty.NET.Handler.Codec.Http3.Tests.Http3TestUtils;
 
 namespace Netty.NET.Handler.Codec.Http3.Tests;
 
-// CLR: @AfterEach tearDown() is Dispose() (xUnit creates a test class instance per test case and disposes it after the
-// case). The @ParameterizedTest methods with @MethodSource("data") and @MethodSource("dataNoFragment") are [Theory]s with
-// [MemberData(nameof(Data))] and [MemberData(nameof(DataNoFragment))] over public static TheoryData<bool, int, bool> and
-// TheoryData<int, bool> with the same rows in the same order (Collection<Object[]> and Arrays.asList); the display-name
-// patterns have no xUnit counterpart. The anonymous ChannelInitializer<QuicStreamChannel> classes of setUp and
-// newValidatedRequestStream are the private nested classes CodecChannelInitializer and ValidatedRequestStreamInitializer
-// over ChannelInitializer<IQuicStreamChannel>; like the anonymous classes they read the test's decoder, encoder and
-// qpackAttributes when the channel is initialized. The NonStandardHttp3SettingsValidator lambda (id, v) -> false is the
-// private nested class NoNonStandardSettings, and the GenericFutureListener of whenEncoderStreamAvailable an
-// Action<Task<IQuicStreamChannel>> (future.isSuccess() is IsCompletedSuccessfully). ch.pipeline().addLast(executor,
-// frameCodec) is AddLast(executor, null, frameCodec): the @Deprecated addLast(EventExecutorGroup, ChannelHandler...),
-// whose @deprecated text names addLast(ChannelHandler...), is not ported in Transport (IChannelPipeline.cs), and it adds
-// each handler with addLast(group, null, handler). The project has no Moq (docs/codec-http3-porting.md), so
-// mock(Http3UnknownFrame.class) and mock(Http3SettingsFrame.class) with their stubbing are the private nested classes
-// MockHttp3UnknownFrame and MockHttp3SettingsFrame with Mockito's default answers for the members that are not stubbed
-// (null, false, 0); verify(frame, times(1)).release() is Assert.Equal(1, frame.releaseCount) over the calls of
-// Release(). Collections.singletonMap(key, 0L).entrySet().iterator() is the enumerator of a one-entry
-// Dictionary<long, long>. The handler and QPACK types are internal (package-private in Java) and reached through
-// InternalsVisibleTo; Http3FrameTypeValidator.NO_VALIDATION is IHttp3FrameTypeValidator.NO_VALIDATION, the static
-// imports of Http3CodecUtils and QpackUtil are qualified, and QpackSensitivityDetector is the interface
-// IQpackSensitivityDetector. parent.createStream(...).get() is the result of the completed Task of CreateStreamAsync
-// (GetAwaiter().GetResult()). assertThrows(T.class, ...) is Assert.ThrowsAny<T>. JUnit's failed assertions throw an
-// Error that catch (Exception e) does not catch, while xUnit's assertion exceptions are Exceptions, so the catch of
-// testFrameEncodedAndDecoded is catch (Exception e) when e is not an IAssertionException, and "throw e" is "throw".
-// ThreadLocalRandom.current() is Random.Shared (nextBytes is NextBytes, nextInt(bound) Next(bound)). DefaultEventExecutor
-// is Common's DefaultEventExecutor: submit(task).syncUninterruptibly() is an await of SubmitAsync, execute is Execute,
-// pendingTasks() PendingTasks() and shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly() is
-// ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero) awaited by GetAwaiter().GetResult(). Semaphore(0) is a
-// SemaphoreSlim(0) (release() is Release(), acquireUninterruptibly() Wait()), CountDownLatch a CountdownEvent (await(5,
-// SECONDS) is Wait(TimeSpan, CancellationToken)), and CompositeByteBuf.addComponent(true, buffer) is AddComponent(buffer,
-// true). The test methods that block on a future (testReadResumptionUsesHandlerExecutor,
-// testClosingBlockedStreamReleasesBlockedStream) are async Task methods that await it with the test's cancellation token
-// (xUnit1031, xUnit1051). Integer.MAX_VALUE is int.MaxValue; readInbound()/readOutbound() are
-// ReadInbound<T>()/ReadOutbound<T>(), refCnt() the RefCnt property, isActive() IsActive, streamId() StreamId(), and
-// pipeline().firstContext() the Pipeline.FirstContext property. A Java String passed as a CharSequence is a
-// StringCharSequence (Http3TestUtils.Cs). The throws clauses have no counterpart.
+// CLR: The initializer reads the test's current codec and QPACK attributes at registration time. Lightweight
+// stand-ins record Release calls for the frame ownership assertions.
+// Do not catch xUnit assertion exceptions in the handler-error path. The read-resumption tests await the executor
+// with the test cancellation token.
 public class Http3FrameCodecTest : IDisposable
 {
     private const int MAX_HEADER_SIZE = 1024;
@@ -157,7 +125,6 @@ public class Http3FrameCodecTest : IDisposable
                 new CodecChannelInitializer(this, maxUnknownFramePayloadLength, executor)).GetAwaiter().GetResult();
     }
 
-    // CLR: the anonymous ChannelInitializer of setUp.
     private sealed class CodecChannelInitializer : ChannelInitializer<IQuicStreamChannel>
     {
         private readonly Http3FrameCodecTest test;
@@ -1313,7 +1280,6 @@ public class Http3FrameCodecTest : IDisposable
             new ValidatedRequestStreamInitializer(this)).GetAwaiter().GetResult();
     }
 
-    // CLR: the anonymous ChannelInitializer of newValidatedRequestStream().
     private sealed class ValidatedRequestStreamInitializer : ChannelInitializer<IQuicStreamChannel>
     {
         private readonly Http3FrameCodecTest test;
@@ -1482,8 +1448,8 @@ public class Http3FrameCodecTest : IDisposable
         }
     }
 
-    // CLR: mock(Http3SettingsFrame.class) with when(frame.iterator()).thenReturn(Collections.singletonMap(key, 0L)
-    // .entrySet().iterator()); the other members keep Mockito's default answers (see the class comment).
+    // CLR: mock(Http3SettingsFrame.class) with when(frame.iterator()).thenReturn(Collections.singletonMap(key,
+    // 0L).entrySet().iterator()); the other members keep Mockito's default answers (see the class comment).
     private sealed class MockHttp3SettingsFrame : IHttp3SettingsFrame
     {
         private readonly IEnumerator<KeyValuePair<long, long>> iterator;

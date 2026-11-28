@@ -32,20 +32,13 @@ namespace Netty.NET.Handler.Codec.Http;
  * <p>
  * Please refer to section <a href="https://tools.ietf.org/html/rfc7230#section-3.2.2">RFC 7230, 3.2.2</a>.
  */
-// CLR: CombinedHttpHeadersImpl extends DefaultHttpHeaders.HeadersImpl, the C# counterpart of
-// DefaultHeaders<CharSequence, CharSequence, CombinedHttpHeadersImpl> (see DefaultHttpHeaders); its overrides return
-// CombinedHttpHeadersImpl through covariant override returns
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override), and the Headers<? extends
-// CharSequence, ...> parameters are the generic IHeaders<ICharSequence, ICharSequence, T2> of the codec-base
-// DefaultHeaders members. The @Deprecated CombinedHttpHeaders(boolean validate) names
-// DefaultHttpHeadersFactory.withCombiningHeaders(boolean) and is not ported (owner decision 2026-11-16); the
-// package-private constructors are internal. StringUtil.escapeCsv/unescapeCsvFields/trimOws take and return
-// CharSequence in Java and string in the Common port (CSV rules unchanged), so the values are converted with
-// ToString() and wrapped in StringCharSequence; a Java StringBuilder is a CharSequence, so the comma separated values
-// are a StringCharSequence of the C# StringBuilder's text. The anonymous CsvValueEscaper classes are the private nested
-// ObjectCsvValueEscaper and CharSequenceCsvValueEscaper; Collection is the non-generic ICollection (List<T> implements it);
-// BiPredicate is Func; IllegalArgumentException/IllegalStateException are ArgumentException/InvalidOperationException
-// (docs/codec-base-porting.md).
+// CLR: The @Deprecated CombinedHttpHeaders(boolean validate) names
+// DefaultHttpHeadersFactory.withCombiningHeaders(boolean) and is not ported.
+// StringUtil.escapeCsv/unescapeCsvFields/trimOws take and return CharSequence in Java and string in the Common
+// port (CSV rules unchanged), so the values are converted with ToString() and wrapped in StringCharSequence; a
+// Java StringBuilder is a CharSequence, so the comma separated values are a StringCharSequence of the C#
+// StringBuilder's text. Collection is the non-generic ICollection (List<T> implements it); BiPredicate is Func;
+// IllegalArgumentException/IllegalStateException are ArgumentException/InvalidOperationException.
 public class CombinedHttpHeaders : DefaultHttpHeaders
 {
     internal CombinedHttpHeaders(DefaultHeaders.INameValidator<ICharSequence> nameValidator,
@@ -409,7 +402,6 @@ public class CombinedHttpHeaders : DefaultHttpHeaders
             return result;
         }
 
-        // CLR: List.iterator() of the unescaped fields.
         private sealed class ListIterator : IIterator<ICharSequence>
         {
             private readonly IList<ICharSequence> list;

@@ -23,16 +23,14 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Codec.Http3.Tests;
 
-// CLR: the package-private final utility class is internal static. Hamcrest's assertThat(e, instanceOf(T.class)) is
-// Assert.IsAssignableFrom<T> (docs/codec-http-porting.md, Core test notes) and errorCode() is ErrorCode(); Throwable is
-// Exception. The stream filter count of verifyClose is Enumerable.Count over CloseErrorCodes(), compared as a long, as
-// assertEquals(int, long, String) widens the int; expectedCode.code is the internal field. assertEquals of two ByteBufs
-// is Assert.Equal; assertEquals of two frames is Assert.Equal with object.Equals as the comparer, because Java calls
-// equals and xUnit would compare an enumerable frame (IHttp3SettingsFrame) element by element. assertSame is
-// Assert.Same, and ReferenceCounted is IReferenceCounted with the RefCnt property. The lambdas () -> 0 of the
-// functional frame interfaces are private nested classes whose Type() returns 0. A Java String passed as a CharSequence
-// (Http3Headers.add) is a StringCharSequence, because a C# string is not an ICharSequence (docs/codec-http-porting.md,
-// Shared CLR adaptations).
+// CLR: Hamcrest's assertThat(e, instanceOf(T.class)) is Assert.IsAssignableFrom<T> and errorCode() is ErrorCode().
+// The stream filter count of verifyClose is Enumerable.Count over CloseErrorCodes(), compared as a long, as
+// assertEquals(int, long, String) widens the int; expectedCode.code is the internal field. assertEquals of two
+// ByteBufs is Assert.Equal; assertEquals of two frames is Assert.Equal with object.Equals as the comparer, because
+// Java calls equals and xUnit would compare an enumerable frame (IHttp3SettingsFrame) element by element.
+// assertSame is Assert.Same, and ReferenceCounted is IReferenceCounted with the RefCnt property. The lambdas () ->
+// 0 of the functional frame interfaces are private nested classes whose Type() returns 0. A Java String passed as
+// a CharSequence (Http3Headers.add) is a StringCharSequence, because a C# string is not an ICharSequence.
 internal static class Http3TestUtils
 {
 
@@ -131,7 +129,6 @@ internal static class Http3TestUtils
         return headers;
     }
 
-    // CLR: a Java String passed as a CharSequence (see the class comment).
     internal static ICharSequence Cs(string s)
     {
         return new StringCharSequence(s);

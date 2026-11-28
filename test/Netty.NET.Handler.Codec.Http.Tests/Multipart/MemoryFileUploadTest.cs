@@ -20,9 +20,8 @@ using Netty.NET.Handler.Codec.Http.Multipart;
 namespace Netty.NET.Handler.Codec.Http.Tests.Multipart;
 
 // CLR: AssertJ assertThatThrownBy(...).isInstanceOf(IllegalArgumentException.class).hasMessageContaining(text) is
-// Assert.ThrowsAny<ArgumentException> (isInstanceOf admits subclasses) with Assert.Contains on the message.
-// @ParameterizedTest with @ValueSource(bytes/strings) is a [Theory] with one InlineData per value. The test methods
-// with package access (no modifier in JUnit 5) are public, as xUnit requires.
+// Assert.ThrowsAny<ArgumentException> (isInstanceOf admits subclasses) with Assert.Contains on the message. The
+// test methods with package access (no modifier in JUnit 5) are public, as xUnit requires.
 public class MemoryFileUploadTest
 {
 

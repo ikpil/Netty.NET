@@ -21,10 +21,10 @@ using TestStreamByteDistributorStreamState = Netty.NET.Handler.Codec.Http2.Tests
 namespace Netty.NET.Handler.Codec.Http2.Tests;
 
 // CLR: the package-private abstract fixture is a public abstract class (xUnit test classes and their bases must be
-// public) whose package-private members are internal. IntObjectMap/IntObjectHashMap are Dictionary<int, ...> (owner
-// decision 2026-11-19). The @Mock writer, which the subclasses initialize with MockitoAnnotations.initMocks, is a Moq
-// Mock<IStreamByteDistributor.IWriter> field; Answer<Void> writeAnswer(boolean) returns the Action<IHttp2Stream, int>
-// that the subclasses pass to the Moq Write setup's Callback, whose parameters are the invocation's arguments
+// public) whose package-private members are internal. IntObjectMap/IntObjectHashMap are Dictionary<int,...>. The
+// @Mock writer, which the subclasses initialize with MockitoAnnotations.initMocks, is a Moq
+// Mock<IStreamByteDistributor.IWriter> field; Answer<Void> writeAnswer(boolean) returns the Action<IHttp2Stream,
+// int> that the subclasses pass to the Moq Write setup's Callback, whose parameters are the invocation's arguments
 // (in.getArgument(0)/(1); Moq Quickstart, https://github.com/devlooped/moq/wiki/Quickstart).
 public abstract class AbstractWeightedFairQueueByteDistributorDependencyTest
 {

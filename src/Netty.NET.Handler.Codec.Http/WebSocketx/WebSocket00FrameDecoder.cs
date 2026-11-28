@@ -32,13 +32,13 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx;
  */
 // CLR: ReplayingDecoder<Void> is ReplayingDecoder<object> (C# needs a type argument;
 // test/Netty.NET.Handler.Codec.Tests/ReplayingDecoderTest.cs records the same mapping), and decode overrides the
-// codec-base Decode (List<Object> out is IList<object> @out). The package-private DEFAULT_MAX_FRAME_SIZE is an internal
-// const. ByteBuf bytes are unsigned System.Byte (owner decision): type == (byte) 0xFF is type == 0xFF, and the masks
-// (type & 0x80, b & 0x7f, b & 0x80) give the same values as for the signed Java byte. The seven length bits are widened
-// as uint before the OR (CS0675; the value is never negative). The static import ByteBufUtil.readBytes is using static
-// ByteBufUtil, whose ReadBytes(alloc, buffer, length) reads through buffer.ReadBytes(dst), which the replaying buffer
-// supports, when the allocator returns exactly length writable bytes (src/Netty.NET.Buffer/ByteBufUtil.cs);
-// IllegalArgumentException is ArgumentException, and numbers in messages use the invariant culture.
+// codec-base Decode (List<Object> out is IList<object> @out). ByteBuf bytes are unsigned System.Byte (owner
+// decision): type == (byte) 0xFF is type == 0xFF, and the masks (type & 0x80, b & 0x7f, b & 0x80) give the same
+// values as for the signed Java byte. The seven length bits are widened as uint before the OR (CS0675; the value
+// is never negative). The static import ByteBufUtil.readBytes is using static ByteBufUtil, whose ReadBytes(alloc,
+// buffer, length) reads through buffer.ReadBytes(dst), which the replaying buffer supports, when the allocator
+// returns exactly length writable bytes (src/Netty.NET.Buffer/ByteBufUtil.cs); IllegalArgumentException is
+// ArgumentException, and numbers in messages use the invariant culture.
 public class WebSocket00FrameDecoder : ReplayingDecoder<object>, IWebSocketFrameDecoder
 {
 

@@ -23,18 +23,18 @@ namespace Netty.NET.Handler.Codec.Http.Multipart;
 /**
  * DeleteFileOnExitHook.
  */
-// CLR: the package-private final class with a private constructor is an internal static class.
-// ConcurrentHashMap.newKeySet() is a ConcurrentDictionary<string, bool> used as a set (add is TryAdd, remove is
-// TryRemove, contains is ContainsKey), as handler's UniqueIpFilter does (src/Netty.NET.Handler/IpFilter/UniqueIpFilter.cs).
-// Runtime.addShutdownHook(Thread), whose hooks start "When the virtual machine begins its shutdown sequence"
+// CLR: ConcurrentHashMap.newKeySet() is a ConcurrentDictionary<string, bool> used as a set (add is TryAdd, remove
+// is TryRemove, contains is ContainsKey), as handler's UniqueIpFilter does
+// (src/Netty.NET.Handler/IpFilter/UniqueIpFilter.cs). Runtime.addShutdownHook(Thread), whose hooks start "When the
+// virtual machine begins its shutdown sequence"
 // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Runtime.html), is a handler of
-// AppDomain.ProcessExit, which "Occurs when the default application domain's parent process exits" and "can perform
-// termination activities, such as closing files"
-// (https://learn.microsoft.com/en-us/dotnet/api/system.appdomain.processexit?view=net-10.0), registered in the static
-// constructor (the static initializer), as pkitesting's X509Bundle does for File.deleteOnExit
-// (src/Netty.NET.PkiTesting/X509Bundle.cs). new File(filename).delete() ignores a failure, as Java ignores its false
-// result; File.Delete does nothing for a missing file and throws IOException/UnauthorizedAccessException otherwise
-// (https://learn.microsoft.com/en-us/dotnet/api/system.io.fileinfo.delete?view=net-10.0).
+// AppDomain.ProcessExit, which "Occurs when the default application domain's parent process exits" and "can
+// perform termination activities, such as closing files"
+// (https://learn.microsoft.com/en-us/dotnet/api/system.appdomain.processexit?view=net-10.0), registered in the
+// static constructor (the static initializer), as pkitesting's X509Bundle does for File.deleteOnExit
+// (src/Netty.NET.PkiTesting/X509Bundle.cs). new File(filename).delete() ignores a failure, as Java ignores its
+// false result; File.Delete does nothing for a missing file and throws IOException/UnauthorizedAccessException
+// otherwise (https://learn.microsoft.com/en-us/dotnet/api/system.io.fileinfo.delete?view=net-10.0).
 internal static class DeleteFileOnExitHook
 {
     private static readonly ConcurrentDictionary<string, bool> FILES = new ConcurrentDictionary<string, bool>();

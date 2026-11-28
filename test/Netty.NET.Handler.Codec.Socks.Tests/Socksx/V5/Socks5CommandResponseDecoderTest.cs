@@ -21,8 +21,7 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Socks.Tests.Socksx.V5;
 
-// CLR: Arrays.asList(...) is an array, the anonymous Executable is a lambda and IllegalArgumentException is
-// ArgumentException. The private helper keeps its name test (Test).
+// CLR: The private helper keeps its name test (Test).
 public class Socks5CommandResponseDecoderTest
 {
 

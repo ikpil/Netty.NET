@@ -35,23 +35,22 @@ namespace Netty.NET.Handler.Codec.Http2;
 /**
  * Simple implementation of {@link Http2Connection}.
  */
-// CLR: IntObjectMap<Http2Stream>/IntObjectHashMap are Dictionary<int, IHttp2Stream> (owner decision 2026-11-19,
-// docs/codec-http-porting.md, Shared CLR adaptations); streamMap.get(id) is GetValueOrDefault. The inner (non-static)
-// classes DefaultStream, ConnectionStream, DefaultEndpoint, ActiveStreams, DefaultPropertyKey and PropertyKeyRegistry
-// receive the connection explicitly, because a C# nested class has no enclosing instance. close(Promise<Void>) is
-// CloseAsync(TaskCompletionSource) and returns the promise's Task; PromiseNotifier.cascade(closePromise, promise) is a
-// synchronous continuation of closePromise that copies its outcome with TrySetFromTask (the PromiseNotifier mapping of
-// docs/common-task-composition.md); the cascade's back propagation of a cancelled promise has no counterpart. There is
-// no void promise (docs/transport-porting.md: VoidChannelPromise has no counterpart), so the branch that replaces a
+// CLR: IntObjectMap<Http2Stream>/IntObjectHashMap are Dictionary<int, IHttp2Stream>. The inner (non-static)
+// classes DefaultStream, ConnectionStream, DefaultEndpoint, ActiveStreams, DefaultPropertyKey and
+// PropertyKeyRegistry receive the connection explicitly, because a C# nested class has no enclosing instance.
+// close(Promise<Void>) is CloseAsync(TaskCompletionSource) and returns the promise's Task;
+// PromiseNotifier.cascade(closePromise, promise) is a synchronous continuation of closePromise that copies its
+// outcome with TrySetFromTask (the PromiseNotifier mapping of docs/common-task-composition.md); the cascade's back
+// propagation of a cancelled promise has no counterpart. There is no void promise, so the branch that replaces a
 // void closePromise cannot apply and is left out. The iterator of close() is the Dictionary enumerator:
-// Iterator.remove() is Dictionary.Remove of the current key, which "may be safely called without invalidating active
-// enumerators" (.NET Core 3.0+;
+// Iterator.remove() is Dictionary.Remove of the current key, which "may be safely called without invalidating
+// active enumerators" (.NET Core 3.0+;
 // https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.dictionary-2.remove?view=net-10.0), so
-// close(Iterator) and removeStream(stream, Iterator) take the enumerator only as the marker that the removal happens
-// during that iteration. java.util.LinkedHashSet is Common's LinkedHashSet and ArrayDeque is Queue. A Java switch on
-// the State enum class is an if/else chain on reference equality (see IHttp2Stream.State). The anonymous Event and
-// Http2StreamVisitor classes are private nested classes. Throwable is Exception and the "Caught Throwable" log
-// messages are kept. Numbers concatenated into messages use the invariant culture.
+// close(Iterator) and removeStream(stream, Iterator) take the enumerator only as the marker that the removal
+// happens during that iteration. java.util.LinkedHashSet is Common's LinkedHashSet and ArrayDeque is Queue. A Java
+// switch on the State enum class is an if/else chain on reference equality (see IHttp2Stream.State). Throwable is
+// Exception and the "Caught Throwable" log messages are kept. Numbers concatenated into messages use the invariant
+// culture.
 public class DefaultHttp2Connection : IHttp2Connection
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(DefaultHttp2Connection));
@@ -315,7 +314,6 @@ public class DefaultHttp2Connection : IHttp2Connection
         ForEachActiveStream(new CloseStreamsGreaterThanVisitor(lastKnownStream, endpoint));
     }
 
-    // CLR: the anonymous Http2StreamVisitor of closeStreamsGreaterThanLastKnownStreamId.
     private sealed class CloseStreamsGreaterThanVisitor : IHttp2StreamVisitor
     {
         private readonly int lastKnownStream;
@@ -1231,7 +1229,6 @@ public class DefaultHttp2Connection : IHttp2Connection
      * Allows events which would modify the collection of active streams to be queued while iterating via {@link
      * #forEachActiveStream(Http2StreamVisitor)}.
      */
-    // CLR: the package-private nested interface takes the I prefix and is internal.
     internal interface IEvent
     {
         /**
@@ -1380,7 +1377,6 @@ public class DefaultHttp2Connection : IHttp2Connection
             }
         }
 
-        // CLR: the anonymous Event of activate(DefaultStream).
         private sealed class ActivateEvent : IEvent
         {
             private readonly ActiveStreams activeStreams;
@@ -1398,7 +1394,6 @@ public class DefaultHttp2Connection : IHttp2Connection
             }
         }
 
-        // CLR: the anonymous Event of deactivate(DefaultStream, Iterator).
         private sealed class DeactivateEvent : IEvent
         {
             private readonly ActiveStreams activeStreams;

@@ -38,27 +38,27 @@ public sealed class LoggingHandlerTestCollection;
 /**
  * Verifies the correct functionality of the {@link LoggingHandler}.
  */
-// CLR: Netty.NET logs through Common's InternalLoggerFactory instead of SLF4J/logback (docs/common-clr-design.md), so
-// the logback Logger of LOGGER_NAME with its mocked Appender<ILoggingEvent> is a mocked IInternalLogger that a mocked
+// CLR: Netty.NET logs through Common's InternalLoggerFactory instead of SLF4J/logback, so the logback Logger of
+// LOGGER_NAME with its mocked Appender<ILoggingEvent> is a mocked IInternalLogger that a mocked
 // IInternalLoggerFactory returns for LOGGER_NAME (other names get the previous factory's loggers), installed with
 // InternalLoggerFactory.SetDefaultFactory as InternalLoggerFactoryTest in Common does. setup() installs it
 // (logger.addAppender(appender)) and teardown() restores the previous factory (logger.detachAppender(appender)); a
 // LoggingHandler reads its logger in its constructor, after setup(). One logging event is one
 // IInternalLogger.Log(level, msg) call (Log(level, msg, cause) for exceptionCaught), so
-// verify(appender).doAppend(argThat(matcher)) is Verify(Log(..., ArgThat(matcher)...), Times.Once()), where ArgThat is a
-// Moq custom matcher built with Match.Create (https://github.com/devlooped/moq/wiki/Quickstart). The handler test
-// class path has no logback-test.xml, so logback's default configuration applies, where "by default the root logger is
-// assigned the DEBUG level" (https://logback.qos.ch/manual/configuration.html); the mocked logger reports the same
-// enabled levels. beforeClass() detaches the root logger's console appender so that the class does not print its
-// events, and afterClass() re-attaches it: the mocked logger prints nothing, so only Unpooled.buffer() remains and runs
-// from the static constructor. InetSocketAddress(port) is the wildcard address
-// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/InetSocketAddress.html), IPAddress.Any, and it
-// prints as IPEndPoint.ToString(), "0.0.0.0:80", not Java's "0.0.0.0/0.0.0.0:80"
-// (https://learn.microsoft.com/en-us/dotnet/api/system.net.ipendpoint.tostring?view=net-10.0), so the expected texts
-// of the connect and bind events use the CLR form. IllegalStateException is InvalidOperationException,
+// verify(appender).doAppend(argThat(matcher)) is Verify(Log(..., ArgThat(matcher)...), Times.Once()), where
+// ArgThat is a Moq custom matcher built with Match.Create (https://github.com/devlooped/moq/wiki/Quickstart). The
+// handler test class path has no logback-test.xml, so logback's default configuration applies, where "by default
+// the root logger is assigned the DEBUG level" (https://logback.qos.ch/manual/configuration.html); the mocked
+// logger reports the same enabled levels. beforeClass() detaches the root logger's console appender so that the
+// class does not print its events, and afterClass() re-attaches it: the mocked logger prints nothing, so only
+// Unpooled.buffer() remains and runs from the static constructor. InetSocketAddress(port) is the wildcard address
+// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/InetSocketAddress.html), IPAddress.Any,
+// and it prints as IPEndPoint.ToString(), "0.0.0.0:80", not Java's "0.0.0.0/0.0.0.0:80"
+// (https://learn.microsoft.com/en-us/dotnet/api/system.net.ipendpoint.tostring?view=net-10.0), so the expected
+// texts of the connect and bind events use the CLR form. IllegalStateException is InvalidOperationException,
 // NullPointerException from checkNotNull is ArgumentNullException and getCanonicalName() is Type.FullName.
-// channel.config() is Config, write(msg, newPromise()) is WriteAsync(msg), close()/connect()/disconnect().await() are
-// awaits of operations that succeed, and readInbound() is ReadInbound<T>(). The channel operations receive
+// channel.config() is Config, write(msg, newPromise()) is WriteAsync(msg), close()/connect()/disconnect().await()
+// are awaits of operations that succeed, and readInbound() is ReadInbound<T>(). The channel operations receive
 // TestContext.Current.CancellationToken (xUnit1051).
 [Collection(nameof(LoggingHandlerTestCollection))]
 public class LoggingHandlerTest : IDisposable
@@ -339,7 +339,6 @@ public class LoggingHandlerTest : IDisposable
                 Times.Once());
     }
 
-    // CLR: Mockito's argThat(matcher) is a Moq custom matcher (Match.Create) over the logged message.
     private static string ArgThat(RegexLogMatcher matcher)
     {
         return Moq.Match.Create<string>(matcher.Matches);

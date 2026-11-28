@@ -21,8 +21,7 @@ namespace Netty.NET.Handler.Codec.HAProxy;
 /**
  * A {@link DecoderException} which is thrown when an invalid HAProxy proxy protocol header is encountered
  */
-// CLR: serialVersionUID is JVM serialization metadata and has no counterpart (as DecoderException in codec-base);
-// Throwable is Exception (docs/codec-base-porting.md).
+// CLR: serialVersionUID is JVM serialization metadata and has no counterpart (as DecoderException in codec-base).
 public class HAProxyProtocolException : DecoderException
 {
     /**

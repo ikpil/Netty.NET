@@ -21,8 +21,7 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx;
 /**
  * Exception during handshaking process
  */
-// CLR: RuntimeException is Exception (docs/codec-base-porting.md); serialVersionUID is JVM serialization metadata and
-// has no counterpart.
+// CLR: RuntimeException is Exception; serialVersionUID is JVM serialization metadata and has no counterpart.
 public class WebSocketHandshakeException : Exception
 {
 

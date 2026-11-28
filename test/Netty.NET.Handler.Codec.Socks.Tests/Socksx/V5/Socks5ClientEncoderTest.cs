@@ -22,14 +22,10 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Socks.Tests.Socksx.V5;
 
-// CLR: the package-private test class is public (xUnit discovers public classes). Stream.generate(() -> x).limit(n)
-// collected to a list or joined is Enumerable.Repeat(x, n) with ToList() or string.Concat/string.Join. AssertJ
-// assertThatThrownBy(...).isInstanceOf(C.class).hasMessageContaining(s) is Assert.ThrowsAny<C> (instanceof also
-// accepts subclasses) and Assert.Contains(s, e.Message); assertThat(s).hasSize(n) is Assert.Equal(n, s.Length). The
-// anonymous DefaultSocks5PasswordAuthRequest subclasses that override username()/password() are the named nested
-// classes LongUsernameAuthRequest/LongPasswordAuthRequest (the accessors are virtual, see
-// DefaultSocks5PasswordAuthRequest.cs), and the anonymous Socks5CommandRequest implementations are the named nested
-// class TestCommandRequest with the dstAddr they return. Inside a class that declares DecoderResult() the
+// CLR: Stream.generate(() -> x).limit(n) collected to a list or joined is Enumerable.Repeat(x, n) with ToList() or
+// string.Concat/string.Join. AssertJ assertThatThrownBy(...).isInstanceOf(C.class).hasMessageContaining(s) is
+// Assert.ThrowsAny<C> (instanceof also accepts subclasses) and Assert.Contains(s, e.Message);
+// assertThat(s).hasSize(n) is Assert.Equal(n, s.Length). Inside a class that declares DecoderResult() the
 // DecoderResult type is qualified in expressions (as TestMessage in codec-base MessageAggregatorTest).
 public class Socks5ClientEncoderTest
 {
@@ -158,7 +154,6 @@ public class Socks5ClientEncoderTest
         Assert.False(encoder.Finish());
     }
 
-    // CLR: the anonymous DefaultSocks5PasswordAuthRequest("user", "pass") subclass overriding username().
     private sealed class LongUsernameAuthRequest : DefaultSocks5PasswordAuthRequest
     {
         private readonly int length;
@@ -174,7 +169,6 @@ public class Socks5ClientEncoderTest
         }
     }
 
-    // CLR: the anonymous DefaultSocks5PasswordAuthRequest("user", "pass") subclass overriding password().
     private sealed class LongPasswordAuthRequest : DefaultSocks5PasswordAuthRequest
     {
         private readonly int length;
@@ -190,7 +184,6 @@ public class Socks5ClientEncoderTest
         }
     }
 
-    // CLR: the anonymous Socks5CommandRequest implementations; dstAddr is the value their dstAddr() returns.
     private sealed class TestCommandRequest : ISocks5CommandRequest
     {
         private readonly string dstAddr;

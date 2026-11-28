@@ -24,8 +24,8 @@ namespace Netty.NET.Handler.Codec.Spdy;
  * The SPDY stream status code and its description.
  */
 // CLR: Comparable<SpdyStreamStatus> is IComparable<SpdyStreamStatus>; hashCode/equals/toString are
-// GetHashCode/Equals/ToString; IllegalArgumentException is ArgumentException (docs/codec-base-porting.md); the code in
-// the UNKNOWN phrase uses the invariant culture, as Java's int-to-String conversion is locale-independent.
+// GetHashCode/Equals/ToString; IllegalArgumentException is ArgumentException; the code in the UNKNOWN phrase uses
+// the invariant culture, as Java's int-to-String conversion is locale-independent.
 public class SpdyStreamStatus : IComparable<SpdyStreamStatus>
 {
 

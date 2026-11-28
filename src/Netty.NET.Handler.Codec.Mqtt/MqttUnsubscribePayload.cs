@@ -24,8 +24,6 @@ namespace Netty.NET.Handler.Codec.Mqtt;
 /**
  * Payload of the {@link MqttUnsubscribeMessage}
  */
-// CLR: java.util.List is IList<T> and Collections.unmodifiableList is a ReadOnlyCollection<T> view, as in
-// MqttSubscribePayload.
 public sealed class MqttUnsubscribePayload
 {
     private readonly IList<string> topics;

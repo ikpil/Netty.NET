@@ -22,12 +22,9 @@ using static Netty.NET.Common.Internal.ObjectUtil;
 
 namespace Netty.NET.Handler.Codec.Spdy;
 
-// CLR: the package-private final class with a private constructor is an internal static class; its static final
-// fields are internal constants (SPDY_DICT, an array, is static readonly). Every dictionary octet is below 0x80, so the
-// Java byte and CLR byte values match. ByteBuf.getByte returns the unsigned CLR byte in the Buffer port (owner
-// decision), and every read masks it (& 0xFF, & 0x7F), so the Java results are kept. CharSequence is the Common
-// ICharSequence (length() and charAt are Length() and CharAt). IllegalArgumentException is ArgumentException
-// (docs/codec-base-porting.md), and the names in the exception texts are the ICharSequence text (ToString()).
+// CLR: Every dictionary octet is below 0x80, so the Java byte and CLR byte values match. ByteBuf.getByte returns
+// the unsigned CLR byte in the Buffer port (owner decision), and every read masks it (& 0xFF, & 0x7F), so the Java
+// results are kept.
 internal static class SpdyCodecUtil
 {
 

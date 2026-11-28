@@ -21,19 +21,19 @@ using AuthSslProtocols = System.Security.Authentication.SslProtocols;
 
 namespace Netty.NET.Handler.Tests.Ssl;
 
-// CLR: the SSLEngine is the SslServerAuthenticationOptions a context builds for each SslHandler (owner decision
-// 2026-11-24, docs/handler-ssl-design.md: no SSLEngine facade), so DelegatingSslContext's initEngine(SSLEngine) hook is
-// initHandler(SslHandler) (src/Netty.NET.Handler/Ssl/DelegatingSslContext.cs), and engine.setEnabledProtocols/
-// getEnabledProtocols are the options' EnabledSslProtocols, read through the internal SslHandler.ServerOptions()
-// (engine() is internal and returns the SslStream, which does not expose them). SslProtocols.TLS_v1_1 is @Deprecated
-// with a replacement and not ported (the "TLSv1.1" text, src/Netty.NET.Handler/Ssl/JdkSslContext.cs ToSslProtocols); the
-// enabled protocols are the System.Security.Authentication.SslProtocols value Tls11, which .NET marks obsolete
-// (SYSLIB0039), as JdkSslContext maps "TLSv1.1". new JdkSslContext(SSLContext.getDefault(), false, ClientAuth.NONE) is
-// the internal JdkSslContext constructor of a server context without key or trust material (the public SSLContext
-// constructors are not ported, see JdkSslContext.cs), with the default negotiator of
+// CLR: the SSLEngine is the SslServerAuthenticationOptions a context builds for each SslHandler, so
+// DelegatingSslContext's initEngine(SSLEngine) hook is initHandler(SslHandler)
+// (src/Netty.NET.Handler/Ssl/DelegatingSslContext.cs), and engine.setEnabledProtocols/ getEnabledProtocols are the
+// options' EnabledSslProtocols, read through the internal SslHandler.ServerOptions() (engine() is internal and
+// returns the SslStream, which does not expose them). SslProtocols.TLS_v1_1 is @Deprecated with a replacement and
+// not ported (the "TLSv1.1" text, src/Netty.NET.Handler/Ssl/JdkSslContext.cs ToSslProtocols); the enabled
+// protocols are the System.Security.Authentication.SslProtocols value Tls11, which.NET marks obsolete
+// (SYSLIB0039), as JdkSslContext maps "TLSv1.1". new JdkSslContext(SSLContext.getDefault(), false,
+// ClientAuth.NONE) is the internal JdkSslContext constructor of a server context without key or trust material
+// (the public SSLContext constructors are not ported, see JdkSslContext.cs), with the default negotiator of
 // JdkDefaultApplicationProtocolNegotiator.INSTANCE (JdkSslContext.ToNegotiator(null, true)). The anonymous
 // DelegatingSslContext is the nested ProtocolsDelegatingSslContext. UnpooledByteBufAllocator.DEFAULT is Default.
-// testInitEngineOnNewEngine is not ported: SslContext.newEngine(...) has no counterpart (owner decision 2), and the same
+// testInitEngineOnNewEngine is not ported: SslContext.newEngine(...) has no counterpart, and the same
 // initialization is asserted through newHandler(...) by testInitEngineOnNewSslHandler; it is recorded as
 // CLR-inapplicable in docs/handler-porting-manifest.json.
 public class DelegatingSslContextTest
@@ -73,7 +73,6 @@ public class DelegatingSslContextTest
         }
     }
 
-    // CLR: see the class comment.
     private static SslServerAuthenticationOptions ServerOptions(SslHandler handler)
     {
         return handler.ServerOptions();

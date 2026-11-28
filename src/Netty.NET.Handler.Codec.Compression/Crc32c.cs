@@ -27,16 +27,15 @@ namespace Netty.NET.Handler.Codec.Compression;
  * The implementation of this class has been sourced from the Appendix of RFC 3309,
  * but with masking due to Java not being able to support unsigned types.
  */
-// CLR: Netty's own CRC32-C keeps its algorithm and members (owner decision 2026-11-23) and extends ByteBufChecksum, so it
-// is a System.IO.Hashing.NonCryptographicHashAlgorithm of four bytes. The package-private class is internal; its
-// implicit constructor passes the hash length to the base class. The table literals are the Java ones: an unsuffixed
-// hexadecimal literal above int.MaxValue is a uint in C# ("the first of the following types in which its value can be
-// represented: int, uint, long, ulong",
-// https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types), so the table
-// is a uint[] with the same bit patterns and crc32c casts the looked-up entry to int, which keeps the Java int value.
-// update(buffer[i]) passes a signed Java byte, but only its low eight bits reach the table index (b & BYTE_MASK), so the
-// unsigned C# byte gives the same CRC. crc32c(int, int) is Crc32c_(int, int) because a member cannot have the name of
-// its enclosing type ("member names cannot be the same as their enclosing type",
+// CLR: Netty's own CRC32-C keeps its algorithm and members and extends ByteBufChecksum, so it is a
+// System.IO.Hashing.NonCryptographicHashAlgorithm of four bytes. The table literals are the Java ones: an
+// unsuffixed hexadecimal literal above int.MaxValue is a uint in C# ("the first of the following types in which
+// its value can be represented: int, uint, long, ulong",
+// https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types), so the
+// table is a uint[] with the same bit patterns and crc32c casts the looked-up entry to int, which keeps the Java
+// int value. update(buffer[i]) passes a signed Java byte, but only its low eight bits reach the table index (b &
+// BYTE_MASK), so the unsigned C# byte gives the same CRC. crc32c(int, int) is Crc32c_(int, int) because a member
+// cannot have the name of its enclosing type ("member names cannot be the same as their enclosing type",
 // https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0542).
 internal class Crc32c : ByteBufChecksum
 {
@@ -141,10 +140,10 @@ internal class Crc32c : ByteBufChecksum
         crc = ~0;
     }
 
-    // CLR: NonCryptographicHashAlgorithm's abstract hash output: the four bytes of getValue() in little-endian order, the
-    // order System.IO.Hashing.Crc32 emits "so that the CRC residue relationship ... holds"
-    // (https://learn.microsoft.com/en-us/dotnet/api/system.io.hashing.crc32?view=net-10.0-pp); CRC32-C is likewise a
-    // reflected 32-bit CRC.
+    // CLR: NonCryptographicHashAlgorithm's abstract hash output: the four bytes of getValue() in little-endian
+    // order, the order System.IO.Hashing.Crc32 emits "so that the CRC residue relationship... holds"
+    // (https://learn.microsoft.com/en-us/dotnet/api/system.io.hashing.crc32?view=net-10.0-pp); CRC32-C is likewise
+    // a reflected 32-bit CRC.
     protected override void GetCurrentHashCore(Span<byte> destination)
     {
         BinaryPrimitives.WriteUInt32LittleEndian(destination, (uint) GetValue());

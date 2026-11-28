@@ -21,9 +21,8 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Codec.Socks.Tests.Socksx.V5;
 
-// CLR: assertInstanceOf(C.class, e) is Assert.IsType<C>(e, exactMatch: false); NullPointerException from
-// checkNotNull is ArgumentNullException and IllegalArgumentException is ArgumentException; the anonymous Executable is
-// a lambda.
+// CLR: NullPointerException from checkNotNull is ArgumentNullException and IllegalArgumentException is
+// ArgumentException.
 public class DefaultSocks5CommandResponseTest
 {
     [Fact]

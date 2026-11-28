@@ -215,7 +215,6 @@ public abstract class AbstractNioMessageChannel : AbstractNioChannel
         }
     }
 
-    // CLR: AbstractChannel.maxMessagesPerWrite().
     protected int MaxMessagesPerWrite()
     {
         IChannelConfig config = Config;

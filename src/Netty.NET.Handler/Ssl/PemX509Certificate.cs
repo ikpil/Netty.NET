@@ -42,12 +42,12 @@ namespace Netty.NET.Handler.Ssl;
 // obsolete take another certificate or a native handle, and loading data "through the constructor or Import is
 // obsolete. Use X509CertificateLoader instead"
 // (https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography.x509certificates.x509certificate2.-ctor?view=net-10.0),
-// while this class holds PEM bytes that are not validated and may hold a whole chain. So it is a reference counted holder
-// that is not an X509Certificate2; the 25 X509Certificate overrides of the source (getEncoded() ... getPublicKey()), which
-// only throw UnsupportedOperationException, have no base to implement and are not ported. refCnt/retain/release/touch
-// forward to the content as in the source; the IByteBufHolder members follow PemValue. equals/hashCode/toString are
-// Equals/GetHashCode/ToString; CharsetUtil.US_ASCII/UTF_8 are Encoding.ASCII/UTF8 (docs/codec-smtp-porting.md). The
-// OpenSslContext of the Javadoc is library-not-ported (ssl design decision 4); this holder only feeds it.
+// while this class holds PEM bytes that are not validated and may hold a whole chain. So it is a reference counted
+// holder that is not an X509Certificate2; the 25 X509Certificate overrides of the source (getEncoded()...
+// getPublicKey()), which only throw UnsupportedOperationException, have no base to implement and are not ported.
+// refCnt/retain/release/touch forward to the content as in the source; the IByteBufHolder members follow PemValue.
+// equals/hashCode/toString are Equals/GetHashCode/ToString. The OpenSslContext of the Javadoc is
+// library-not-ported (ssl design decision 4); this holder only feeds it.
 public sealed class PemX509Certificate : IPemEncoded
 {
 

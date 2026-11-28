@@ -82,17 +82,17 @@ namespace Netty.NET.Handler.Codec.Http;
  */
 // CLR: MessageAggregator<HttpObject, HttpMessage, HttpContent, FullHttpMessage> is the codec-base
 // MessageAggregator<IHttpObject, IHttpMessage, IHttpContent, IFullHttpMessage>, and HttpObject.class is
-// typeof(IHttpObject) (docs/codec-base-porting.md, Type matching). The static initializer is the static constructor.
-// The ChannelFuture listeners of handleOversizedMessage are Task continuations that run synchronously, as codec-base
-// MessageAggregator attaches its own (docs/codec-base-porting.md, MessageAggregator); ctx.close() discards the Task.
-// NumberFormatException is FormatException, IllegalStateException InvalidOperationException, java.lang.Error
-// UnreachableException (docs/codec-memcache-porting.md) and assert Debug.Assert. In the nested messages,
-// setProtocolVersion/retain/touch/copy/duplicate/retainedDuplicate/replace return IFullHttpMessage and are narrowed by
-// covariant overrides in the request/response classes; the IHttpMessage, IHttpRequest, IHttpResponse, IByteBufHolder and
-// IReferenceCounted members that the interfaces declare with other return types are implemented explicitly (see
-// DefaultHttpContent). The overrides of the @Deprecated getProtocolVersion()/getDecoderResult()/getMethod()/getUri()/
-// getStatus() have no counterpart (see IHttpObject); method()/uri()/status() return the message's value that Java reads
-// through them, and replace(...) reads protocolVersion()/status().
+// typeof(IHttpObject). The static initializer is the static constructor. The ChannelFuture listeners of
+// handleOversizedMessage are Task continuations that run synchronously, as codec-base MessageAggregator attaches
+// its own; ctx.close() discards the Task. NumberFormatException is FormatException, IllegalStateException
+// InvalidOperationException, java.lang.Error UnreachableException and assert Debug.Assert. In the nested messages,
+// setProtocolVersion/retain/touch/copy/duplicate/retainedDuplicate/replace return IFullHttpMessage and are
+// narrowed by covariant overrides in the request/response classes; the IHttpMessage, IHttpRequest, IHttpResponse,
+// IByteBufHolder and IReferenceCounted members that the interfaces declare with other return types are implemented
+// explicitly (see DefaultHttpContent). The overrides of the @Deprecated
+// getProtocolVersion()/getDecoderResult()/getMethod()/getUri()/ getStatus() have no counterpart (see IHttpObject);
+// method()/uri()/status() return the message's value that Java reads through them, and replace(...) reads
+// protocolVersion()/status().
 public class HttpObjectAggregator
         : MessageAggregator<IHttpObject, IHttpMessage, IHttpContent, IFullHttpMessage>
 {

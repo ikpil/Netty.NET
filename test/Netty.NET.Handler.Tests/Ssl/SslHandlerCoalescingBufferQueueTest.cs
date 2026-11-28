@@ -26,14 +26,10 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Tests.Ssl;
 
-// CLR: Supplier<ByteBuf> and Function<ByteBuf, ByteBuf> are Func<ByteBuf> and Func<ByteBuf, ByteBuf>; the Java enum with
-// fields is a sealed class with static readonly instances (docs/codec-base-porting.md, Base64Dialect), and
-// @EnumSource is [MemberData] over its values, as codec-mqtt passes MqttVersion
-// (test/Netty.NET.Handler.Codec.Mqtt.Tests/MqttCodecTest.cs). A direct java.nio.ByteBuffer is a Memory<byte> over an
-// array with the longs written big-endian, and asReadOnlyBuffer() is the ReadOnlyMemory<byte> view
-// (docs/buffer-porting.md: "NIO ByteBuffer inputs/views use Span and ReadOnlyMemory"). channel.newPromise() is a
-// TaskCompletionSource, the aggregate producer of AbstractCoalescingBufferQueue.Remove. The anonymous queue subclass is a
-// named nested class.
+// CLR: Supplier<ByteBuf> and Function<ByteBuf, ByteBuf> are Func<ByteBuf> and Func<ByteBuf, ByteBuf>. A direct
+// java.nio.ByteBuffer is a Memory<byte> over an array with the longs written big-endian, and asReadOnlyBuffer() is
+// the ReadOnlyMemory<byte> view. channel.newPromise() is a TaskCompletionSource, the aggregate producer of
+// AbstractCoalescingBufferQueue.Remove.
 public class SslHandlerCoalescingBufferQueueTest
 {
     internal static readonly Func<ByteBuf> BYTEBUF_SUPPLIER = () =>

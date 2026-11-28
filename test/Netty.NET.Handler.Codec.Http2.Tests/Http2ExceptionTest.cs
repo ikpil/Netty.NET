@@ -22,7 +22,7 @@ using static Netty.NET.Handler.Codec.Http2.Http2Error;
 namespace Netty.NET.Handler.Codec.Http2.Tests;
 
 // CLR: new RuntimeException().getMessage() is null in Java; the CLR Exception.Message is never null (an exception
-// created without a message reports a default text, docs/codec-http-porting.md: "never null in .NET"), so the two
+// created without a message reports a default text, docs/codec-http-porting.md: "never null in.NET"), so the two
 // tests of a null message pass the null that Java's getMessage() returns. The package-private class is public, as
 // xUnit requires.
 public class Http2ExceptionTest

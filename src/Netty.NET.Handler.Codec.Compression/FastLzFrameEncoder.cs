@@ -28,14 +28,14 @@ namespace Netty.NET.Handler.Codec.Compression;
  *
  * See <a href="https://github.com/netty/netty/issues/2750">FastLZ format</a>.
  */
-// CLR: owner decision 2026-11-23: java.util.zip.Checksum is System.IO.Hashing.NonCryptographicHashAlgorithm and
-// java.util.zip.Adler32 is System.IO.Hashing.Adler32 of the package 11.0.0
-// (https://learn.microsoft.com/en-us/dotnet/api/system.io.hashing.adler32?view=net-10.0-pp), so the constructor that
-// takes a Checksum takes a NonCryptographicHashAlgorithm and wraps it with ByteBufChecksum.WrapChecksum;
+// CLR: java.util.zip.Checksum is System.IO.Hashing.NonCryptographicHashAlgorithm and java.util.zip.Adler32 is
+// System.IO.Hashing.Adler32 of the package 11.0.0
+// (https://learn.microsoft.com/en-us/dotnet/api/system.io.hashing.adler32?view=net-10.0-pp), so the constructor
+// that takes a Checksum takes a NonCryptographicHashAlgorithm and wraps it with ByteBufChecksum.WrapChecksum;
 // reset()/update(ByteBuf, int, int)/getValue() are Reset()/Update/GetValue(). The Class argument of the
 // MessageToByteEncoder constructor is a Type (MessageToByteEncoder in codec-base), encode(ctx, in, out) is
 // Encode(IChannelHandlerContext, ByteBuf, ByteBuf) and C# has no throws clauses. IllegalArgumentException is
-// ArgumentException (docs/codec-base-porting.md) and String.format("%d") is string.Format with the invariant culture.
+// ArgumentException and String.format("%d") is string.Format with the invariant culture.
 public class FastLzFrameEncoder : MessageToByteEncoder<ByteBuf>
 {
     /**

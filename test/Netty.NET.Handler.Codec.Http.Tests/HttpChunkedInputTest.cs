@@ -29,10 +29,9 @@ namespace Netty.NET.Handler.Codec.Http.Tests;
 // ByteArrayInputStream and Channels.newChannel(InputStream) are MemoryStream, and File.deleteOnExit() is the
 // AppDomain.ProcessExit deletion that handler's ChunkedWriteHandlerTest uses for the same temporary file
 // (test/Netty.NET.Handler.Tests/Stream/ChunkedWriteHandlerTest.cs; docs/handler-porting.md, java.io and NIO).
-// RuntimeException is Exception (docs/codec-base-porting.md). ChannelFuture is Task: writeAndFlush(...) is
-// WriteAndFlushAsync and isDone()/isSuccess() are IsCompleted/IsCompletedSuccessfully (docs/transport-porting.md).
-// ByteBufAllocator.DEFAULT is the Buffer port's IByteBufAllocator.Default. The anonymous ChunkedInput is the named
-// nested class NullChunkedInput; the @Deprecated readChunk(ChannelHandlerContext) overrides of the test inputs are not
+// RuntimeException is Exception. ChannelFuture is Task: writeAndFlush(...) is WriteAndFlushAsync and
+// isDone()/isSuccess() are IsCompleted/IsCompletedSuccessfully. ByteBufAllocator.DEFAULT is the Buffer port's
+// IByteBufAllocator.Default. The @Deprecated readChunk(ChannelHandlerContext) overrides of the test inputs are not
 // ported with the interface member (src/Netty.NET.Handler/Stream/IChunkedInput.cs). assertInstanceOf(type, value,
 // message) is AssertM.True of an `is` test with the message, assertThrows(IOException.class, input::close) is
 // Assert.Throws<IOException>, and ChunkedInput<?>... is params object[] (the inputs are written as messages).

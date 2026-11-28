@@ -76,8 +76,6 @@ public class SocketAddressesSourceTest : AbstractSocketTest
 
         try
         {
-            // CLR: ImmediateEventExecutor.INSTANCE.newPromise() is a TaskCompletionSource<EndPoint>; setSuccess(...)
-            // is SetResult(...) and get() awaits its Task.
             TaskCompletionSource<EndPoint> localAddressPromise =
                     new TaskCompletionSource<EndPoint>(TaskCreationOptions.RunContinuationsAsynchronously);
             TaskCompletionSource<EndPoint> remoteAddressPromise =
@@ -119,8 +117,7 @@ public class SocketAddressesSourceTest : AbstractSocketTest
         }
     }
 
-    // CLR: C# has no anonymous classes; the source's anonymous ChannelInboundHandlerAdapter is this nested class,
-    // whose constructor parameters carry the captured promises.
+    // CLR: C# has no anonymous classes.
     private sealed class AddressesHandler(
             TaskCompletionSource<EndPoint> localAddressPromise, TaskCompletionSource<EndPoint> remoteAddressPromise)
             : ChannelInboundHandlerAdapter

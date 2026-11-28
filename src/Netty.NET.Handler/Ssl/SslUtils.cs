@@ -38,37 +38,33 @@ namespace Netty.NET.Handler.Ssl;
 /**
  * Constants for SSL packets.
  */
-// CLR: SslStream is the only TLS engine (ssl design decision 2, docs/handler-ssl-design.md), so the JDK lookups of the
-// source answer for SslStream and the operating system's TLS stack it uses ("Allows the operating system to choose the
-// best protocol to use", SslProtocols.None,
+// CLR: SslStream is the only TLS engine (ssl design decision 2, docs/handler-ssl-design.md), so the JDK lookups of
+// the source answer for SslStream and the operating system's TLS stack it uses ("Allows the operating system to
+// choose the best protocol to use", SslProtocols.None,
 // https://learn.microsoft.com/en-us/dotnet/api/system.security.authentication.sslprotocols?view=net-10.0):
-// isTLSv13SupportedByJDK/isTLSv13EnabledByJDK read the protocol SslStream negotiates in an in-memory handshake with the
-// probing certificate (see ProbeNegotiatedProtocol), as Netty's JdkSslServerContext and OpenSsl probe their engines with
-// PROBING_CERT/PROBING_KEY. java.security.Provider (a JCA provider) has no BCL counterpart, so the Provider parameters,
-// newInitContext(Provider), getSSLContext(Provider[, SecureRandom]) and getTlsVersion(), which build a
-// javax.net.ssl.SSLContext, are not ported (owner decision 2026-11-16: JVM-only API families are replaced without
-// facades; getSSLContext only serves the Bouncy Castle ALPN utilities, which are library-not-ported). ByteBuf has no
-// mutable byte order in this port ("Java's mutable ByteOrder facade is replaced by explicit BE/LE access",
-// docs/buffer-porting.md), so the ByteBuf readers always read big-endian, which is what the order checks of the source
-// produce; a java.nio.ByteBuffer is a ReadOnlyMemory<byte> (its position..limit), read big-endian with
-// BinaryPrimitives. SSLHandshakeException is AuthenticationException (ssl design decision 3). The class is static: the
-// source's private constructor only prevents instantiation.
+// isTLSv13SupportedByJDK/isTLSv13EnabledByJDK read the protocol SslStream negotiates in an in-memory handshake
+// with the probing certificate (see ProbeNegotiatedProtocol), as Netty's JdkSslServerContext and OpenSsl probe
+// their engines with PROBING_CERT/PROBING_KEY. java.security.Provider (a JCA provider) has no BCL counterpart, so
+// the Provider parameters, newInitContext(Provider), getSSLContext(Provider[, SecureRandom]) and getTlsVersion(),
+// which build a javax.net.ssl.SSLContext, are not ported. ByteBuf has no mutable byte order in this port ("Java's
+// mutable ByteOrder facade is replaced by explicit BE/LE access", docs/buffer-porting.md), so the ByteBuf readers
+// always read big-endian, which is what the order checks of the source produce; a java.nio.ByteBuffer is a
+// ReadOnlyMemory<byte> (its position..limit), read big-endian with BinaryPrimitives. SSLHandshakeException is
+// AuthenticationException (ssl design decision 3). The class is static: the source's private constructor only
+// prevents instantiation.
 internal static class SslUtils
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(SslUtils));
 
     // See https://tools.ietf.org/html/rfc8446#appendix-B.4
-    // CLR: Collections.unmodifiableSet(new LinkedHashSet(...)) is a ReadOnlySet over a HashSet ("Represents a read-only,
-    // generic set of values",
-    // https://learn.microsoft.com/en-us/dotnet/api/system.collections.objectmodel.readonlyset-1?view=net-10.0); the BCL
-    // has no insertion-ordered set and only contains() reads it in this port.
+    // The port only checks membership, so the set does not need insertion order.
     internal static readonly ISet<string> TLSV13_CIPHERS = new ReadOnlySet<string>(new HashSet<string>(
             new[] {"TLS_AES_256_GCM_SHA384", "TLS_CHACHA20_POLY1305_SHA256",
                           "TLS_AES_128_GCM_SHA256", "TLS_AES_128_CCM_8_SHA256",
                           "TLS_AES_128_CCM_SHA256"}));
 
-    // CLR: (short) 0xFEFF and the other DTLS versions are negative Java shorts; unchecked((short) ...) keeps those values,
-    // which getEncryptedPacketLength compares with the signed ByteBuf.GetShort result as the source does.
+    // CLR: (short) 0xFEFF and the other DTLS versions are negative Java shorts; unchecked((short)...) keeps those
+    // values, which getEncryptedPacketLength compares with the signed ByteBuf.GetShort result as the source does.
     internal const short DTLS_1_0 = unchecked((short) 0xFEFF);
     internal const short DTLS_1_2 = unchecked((short) 0xFEFD);
     internal const short DTLS_1_3 = unchecked((short) 0xFEFC);
@@ -628,9 +624,9 @@ internal static class SslUtils
         return BinaryPrimitives.ReadInt16BigEndian(buffer.Slice(offset));
     }
 
-    // CLR: ByteBuffer[] is ReadOnlyMemory<byte>[], each element the position..limit region of a ByteBuffer
-    // (docs/buffer-porting.md: "Byte arrays and NIO ByteBuffer inputs/views use Span and ReadOnlyMemory"); duplicate(),
-    // limit() and put() become a copy of at most the missing header bytes into tmp, and flip() is the length copied.
+    // CLR: ByteBuffer[] is ReadOnlyMemory<byte>[], each element the position..limit region of a ByteBuffer;
+    // duplicate(), limit() and put() become a copy of at most the missing header bytes into tmp, and flip() is the
+    // length copied.
     internal static int GetEncryptedPacketLength(ReadOnlyMemory<byte>[] buffers, int offset)
     {
         ReadOnlyMemory<byte> buffer = buffers[offset];
@@ -738,7 +734,6 @@ internal static class SslUtils
         return packetLength;
     }
 
-    // CLR: ctx.close() is CloseAsync(), whose Task is not observed, as the source ignores the ChannelFuture.
     internal static void HandleHandshakeFailure(IChannelHandlerContext ctx, Exception cause, bool notify)
     {
         // We have may haven written some parts of data before an exception was thrown so ensure we always flush.

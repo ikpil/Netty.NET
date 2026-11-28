@@ -28,8 +28,7 @@ namespace Netty.NET.Handler.Codec.Http.Cookie;
 // StringCharSequence(header, offset, count) view, which keeps the string and the range without copying
 // (src/Netty.NET.Common/StringCharSequence.cs). getClass() is GetType(); "a field initializer cannot reference the
 // non-static field, method, or property" (https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0236), so the
-// constructor initializes the logger field before the strict flag, as the Java field order does. String.substring(begin,
-// end) is Substring(begin, end - begin).
+// constructor initializes the logger field before the strict flag, as the Java field order does.
 public abstract class CookieDecoder
 {
 

@@ -18,18 +18,14 @@ using Netty.NET.Buffer;
 
 namespace Netty.NET.Handler.Codec.Http2;
 
-// CLR: ByteBufHolder is IByteBufHolder, whose content() is the read-only Content property (docs/buffer-porting.md,
-// Buffer holders and conversion). copy(), duplicate(), retainedDuplicate(), replace(ByteBuf), retain(),
-// retain(int), touch() and touch(Object) are re-declared only to narrow the return type, so they are inherited
-// from IByteBufHolder, not repeated; the classes narrow them with covariant overrides (owner decision
-// 2026-11-19; docs/transport-porting.md, Decisions).
+// CLR: ByteBufHolder is IByteBufHolder, whose content() is the read-only Content property. copy(), duplicate(),
+// retainedDuplicate(), replace(ByteBuf), retain(), retain(int), touch() and touch(Object) are re-declared only to
+// narrow the return type, so they are inherited from IByteBufHolder, not repeated; the classes narrow them with
+// covariant overrides.
 // CLR: stream(Http2FrameStream) is re-declared only to narrow the return type, so it is inherited from
-// IHttp2StreamFrame, not repeated; the classes narrow it with a covariant override (owner decision 2026-11-19;
-// docs/transport-porting.md, Decisions).
+// IHttp2StreamFrame, not repeated; the classes narrow it with a covariant override.
 public interface IHttp2UnknownFrame : IHttp2StreamFrame, IByteBufHolder
 {
-    // CLR: stream() is re-declared with the same type and inherited from IHttp2StreamFrame (a repeated interface
-    // member would hide it, CS0108).
 
     byte FrameType();
 

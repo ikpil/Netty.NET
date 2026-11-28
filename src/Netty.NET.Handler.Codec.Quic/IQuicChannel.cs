@@ -81,7 +81,6 @@ public interface IQuicChannel : IChannel
     /**
      * Returns the configuration of this channel.
      */
-    // CLR: config() is IChannel.Config (see the type comment); its value is the channel's IQuicChannelConfig.
 
     /**
      * Returns the used {@link SSLEngine} or {@code null} if none is used (yet).
@@ -120,7 +119,6 @@ public interface IQuicChannel : IChannel
      * @return  local   the local {@link QuicConnectionAddress} or {@code null} if none is assigned yet,
      *                  or assigned anymore.
      */
-    // CLR: localAddress() is IChannel.LocalAddress (see the type comment); its value is a QuicConnectionAddress or null.
 
     /**
      * Returns the remote {@link QuicConnectionAddress}. This address might change over the life-time of the
@@ -129,8 +127,6 @@ public interface IQuicChannel : IChannel
      * @return  remote   the remote {@link QuicConnectionAddress} or {@code null} if none is assigned yet,
      *                   or assigned anymore.
      */
-    // CLR: remoteAddress() is IChannel.RemoteAddress (see the type comment); its value is a QuicConnectionAddress or
-    // null.
 
     /**
      * Returns the local {@link SocketAddress} of the underlying transport that received the data.

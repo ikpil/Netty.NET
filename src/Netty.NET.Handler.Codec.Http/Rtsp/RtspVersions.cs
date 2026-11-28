@@ -23,9 +23,9 @@ namespace Netty.NET.Handler.Codec.Rtsp;
 /**
  * The version of RTSP.
  */
-// CLR: the final class with a private constructor is a static class. IllegalArgumentException is ArgumentException
-// (docs/codec-base-porting.md), toUpperCase(Locale.US) is ToUpperInvariant, whose invariant casing never maps 'i' to
-// U+0130 (https://learn.microsoft.com/en-us/dotnet/api/system.string.toupperinvariant?view=net-10.0, the mapping core
+// CLR: the final class with a private constructor is a static class. IllegalArgumentException is
+// ArgumentException, toUpperCase(Locale.US) is ToUpperInvariant, whose invariant casing never maps 'i' to U+0130
+// (https://learn.microsoft.com/en-us/dotnet/api/system.string.toupperinvariant?view=net-10.0, the mapping core
 // HttpVersion uses), and String.equals is the ordinal string.Equals.
 public static class RtspVersions
 {

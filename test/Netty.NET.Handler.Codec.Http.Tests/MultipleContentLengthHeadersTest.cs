@@ -22,12 +22,9 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Http.Tests;
 
-// CLR: @ParameterizedTest @MethodSource("parameters") is a [Theory] with [MemberData(nameof(Parameters))] and
-// @ValueSource(strings) one [InlineData] per value
-// (https://raw.githubusercontent.com/xunit/xunit/main/src/xunit.v3.core/Attributes/MemberDataAttributeBase.cs).
-// CharsetUtil.US_ASCII is Encoding.ASCII (docs/codec-smtp-porting.md). IllegalArgumentException is ArgumentException
-// (docs/codec-base-porting.md), so assertInstanceOf is Assert.IsAssignableFrom<ArgumentException>; AssertJ's
-// assertThat(list).contains(x) and assertThat(message).contains(s) are Assert.Contains.
+// CLR: IllegalArgumentException is ArgumentException, so assertInstanceOf is
+// Assert.IsAssignableFrom<ArgumentException>; AssertJ's assertThat(list).contains(x) and
+// assertThat(message).contains(s) are Assert.Contains.
 public class MultipleContentLengthHeadersTest
 {
 

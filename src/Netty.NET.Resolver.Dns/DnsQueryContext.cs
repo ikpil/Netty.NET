@@ -31,27 +31,25 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Resolver.Dns;
 
-// CLR: the package-private abstract class is internal. Promise<AddressedEnvelope<DnsResponse, InetSocketAddress>> is a
-// TaskCompletionSource<IAddressedEnvelope<IDnsResponse, IPEndPoint>> (handler-porting.md, "Promise, ChannelPromise,
-// Future": TaskCompletionSource/Task); AddressedEnvelope<DnsResponse, InetSocketAddress> is the covariant
-// IAddressedEnvelope<IDnsResponse, IPEndPoint> of codec-dns, and the name server of a query is resolved, so
-// InetSocketAddress is IPEndPoint (docs/handler-porting.md, Addresses). The listeners of the promise, the write and the
-// TCP connect are continuations on Common's EventExecutorTaskScheduler over channel.EventLoop, which runs them at once
-// on the event loop and otherwise through the executor, the DefaultPromise.notifyListeners() timing
-// (src/Netty.NET.Common/Concurrent/EventExecutorTaskScheduler.cs); a listener that throws faults its continuation Task,
-// where DefaultPromise logs "An exception was thrown by ...operationComplete()"
+// CLR: Promise<AddressedEnvelope<DnsResponse, InetSocketAddress>> is a
+// TaskCompletionSource<IAddressedEnvelope<IDnsResponse, IPEndPoint>> (handler-porting.md, "Promise,
+// ChannelPromise, Future": TaskCompletionSource/Task); AddressedEnvelope<DnsResponse, InetSocketAddress> is the
+// covariant IAddressedEnvelope<IDnsResponse, IPEndPoint> of codec-dns, and the name server of a query is resolved,
+// so InetSocketAddress is IPEndPoint. The listeners of the promise, the write and the TCP connect are
+// continuations on Common's EventExecutorTaskScheduler over channel.EventLoop, which runs them at once on the
+// event loop and otherwise through the executor, the DefaultPromise.notifyListeners() timing
+// (src/Netty.NET.Common/Concurrent/EventExecutorTaskScheduler.cs); a listener that throws faults its continuation
+// Task, where DefaultPromise logs "An exception was thrown by...operationComplete()"
 // (https://github.com/netty/netty/blob/64cc10f38ea5f5bd7eae48507817c66680d0afdc/common/src/main/java/io/netty/util/concurrent/DefaultPromise.java).
 // isDone() is Task.IsCompleted, tryFailure/trySuccess are TrySetException/TrySetResult and future.cause() is
 // DnsNameResolver.Cause (a canceled Task gives a TaskCanceledException, an OperationCanceledException like
-// CancellationException). ChannelFuture/ChannelPromise are the Task of the channel operation and channel.newPromise() +
-// write(query, promise) is the Task that WriteAsync/WriteAndFlushAsync return (docs/transport-porting.md);
-// channel.newFailedFuture(e) is Task.FromException(e). The ScheduledFuture of channel.eventLoop().schedule(...) is the
-// CancellationTokenSource of EventLoop.ScheduleAsync and cancel(false) is Cancel(), as handler's WriteTimeoutHandler and
-// SslHandler map it (docs/handler-porting.md); the volatile Future<?> is a volatile field. The anonymous Runnables and
-// listeners are lambdas over the Action/continuation delegates these APIs take; the anonymous
-// AbstractDnsOptPseudoRrRecord and ChannelInboundHandlerAdapter are the nested OptPseudoRrRecord and TcpResponseHandler.
-// IllegalStateException is InvalidOperationException, Throwable is Exception, assert is Debug.Assert and
-// getClass().getSimpleName() is GetType().Name. Numbers in messages use the invariant culture.
+// CancellationException). ChannelFuture/ChannelPromise are the Task of the channel operation and
+// channel.newPromise() + write(query, promise) is the Task that WriteAsync/WriteAndFlushAsync return. The
+// ScheduledFuture of channel.eventLoop().schedule(...) is the CancellationTokenSource of EventLoop.ScheduleAsync
+// and cancel(false) is Cancel(), as handler's WriteTimeoutHandler and SslHandler map it; the volatile Future<?> is
+// a volatile field. The anonymous Runnables and listeners are lambdas over the Action/continuation delegates these
+// APIs take. IllegalStateException is InvalidOperationException, Throwable is Exception, assert is Debug.Assert
+// and getClass().getSimpleName() is GetType().Name. Numbers in messages use the invariant culture.
 internal abstract class DnsQueryContext
 {
 
@@ -132,7 +130,6 @@ internal abstract class DnsQueryContext
         }
     }
 
-    // CLR: the anonymous AbstractDnsOptPseudoRrRecord(maxPayLoadSize, 0, 0) subclass.
     private sealed class OptPseudoRrRecord : AbstractDnsOptPseudoRrRecord
     {
         internal OptPseudoRrRecord(int maxPayLoadSize) : base(maxPayLoadSize, 0, 0)
@@ -424,9 +421,7 @@ internal abstract class DnsQueryContext
         {
             if (!future.IsCompletedSuccessfully)
             {
-                // CLR: a faulted Task<IChannel> carries no channel (docs/transport-porting.md: RegisterAsync/BindAsync/
-                // ConnectAsync return a faulted Task<IChannel>, which has no channel accessor), so future.channel() is
-                // logged as null.
+                // CLR: a faulted Task<IChannel> carries no channel, so future.channel() is logged as null.
                 logger.Debug("{} Unable to fallback to TCP [{}: {}]",
                         null, id, nameServerAddr, DnsNameResolver.Cause(future));
                 // TCP fallback failed, just use the truncated response or error.
@@ -466,7 +461,6 @@ internal abstract class DnsQueryContext
         return true;
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of retryWithTcp(...); it reads the enclosing context's fields.
     private sealed class TcpResponseHandler : ChannelInboundHandlerAdapter
     {
         private readonly DnsQueryContext context;
@@ -544,10 +538,10 @@ internal abstract class DnsQueryContext
     }
 
     // CLR: AddressedEnvelope's content()/sender()/recipient() are the Content/Sender/Recipient members of
-    // IAddressedEnvelope and refCnt() is RefCnt (docs/transport-porting.md); retain/touch return IReferenceCounted.
-    // AddressedEnvelope<?, SocketAddress> is IAddressedEnvelope<object, EndPoint>, which the covariant
-    // IAddressedEnvelope<out T, out TAddress> matches for every reference content type, as codec-dns DatagramDnsResponse
-    // tests it. equals(...) keeps the source's final response.equals(obj); int arithmetic wraps as in Java.
+    // IAddressedEnvelope and refCnt() is RefCnt; retain/touch return IReferenceCounted. AddressedEnvelope<?,
+    // SocketAddress> is IAddressedEnvelope<object, EndPoint>, which the covariant IAddressedEnvelope<out T, out
+    // TAddress> matches for every reference content type, as codec-dns DatagramDnsResponse tests it. equals(...)
+    // keeps the source's final response.equals(obj); int arithmetic wraps as in Java.
     private sealed class AddressedEnvelopeAdapter : IAddressedEnvelope<IDnsResponse, IPEndPoint>
     {
         private readonly IPEndPoint sender;

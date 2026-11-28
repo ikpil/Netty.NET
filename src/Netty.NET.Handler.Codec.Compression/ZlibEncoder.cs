@@ -23,11 +23,10 @@ namespace Netty.NET.Handler.Codec.Compression;
 /**
  * Compresses a {@link ByteBuf} using the deflate algorithm.
  */
-// CLR: super(ByteBuf.class, false) is the codec-base MessageToByteEncoder(Type, bool) constructor. ChannelFuture and
-// ChannelPromise are Task (docs/transport-porting.md): close() and close(ChannelPromise) fold into the one Task-returning
-// CloseAsync(CancellationToken cancellationToken = default), as EmbeddedChannel and Bzip2Encoder do; the promise is the
-// returned Task, the token is passed on to the channel operation as MessageToByteEncoder's write(ctx, msg, promise) is
-// WriteAsync(ctx, msg, cancellationToken) (docs/codec-base-porting.md), and a call without a token is close(). Both
+// CLR: ChannelFuture and ChannelPromise are Task : close() and close(ChannelPromise) fold into the one
+// Task-returning CloseAsync(CancellationToken cancellationToken = default), as EmbeddedChannel and Bzip2Encoder
+// do; the promise is the returned Task, the token is passed on to the channel operation as MessageToByteEncoder's
+// write(ctx, msg, promise) is WriteAsync(ctx, msg, cancellationToken), and a call without a token is close(). Both
 // Javadocs precede it. It is an overload next to the inherited handler method CloseAsync(IChannelHandlerContext,
 // CancellationToken), as close(ChannelPromise) and close(ChannelHandlerContext, ChannelPromise) are in Java.
 public abstract class ZlibEncoder : MessageToByteEncoder<ByteBuf>

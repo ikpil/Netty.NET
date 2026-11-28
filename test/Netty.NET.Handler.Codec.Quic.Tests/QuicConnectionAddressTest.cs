@@ -18,14 +18,13 @@ using System;
 
 namespace Netty.NET.Handler.Codec.Quic.Tests;
 
-// CLR: java.nio.ByteBuffer is ReadOnlyMemory<byte> (docs/codec-classes-quic-porting.md, NIO buffers): ByteBuffer.wrap(bytes)
-// is the memory over the array, position(1) is Slice(1), and ByteBuffer equality (the remaining bytes) compares the
-// bytes as arrays. id() is the internal Id(). ThreadLocalRandom.current() is Random.Shared. The NullPointerException of
-// new QuicConnectionAddress((byte[]) null) comes from connId.clone() on the null array (a dereference, not a
-// checkNotNull), whose CLR counterpart is NullReferenceException (docs/codec-http-porting.md, Core test notes).
-// testNullByteBuffer is CLR-inapplicable (docs/codec-native-quic-porting-manifest.json): a ReadOnlyMemory<byte> is a
-// struct and cannot be null (a null array converts to an empty memory), so the null check of
-// QuicConnectionAddress(ByteBuffer) has no counterpart.
+// CLR: java.nio.ByteBuffer is ReadOnlyMemory<byte> : ByteBuffer.wrap(bytes) is the memory over the array,
+// position(1) is Slice(1), and ByteBuffer equality (the remaining bytes) compares the bytes as arrays. id() is the
+// internal Id(). ThreadLocalRandom.current() is Random.Shared. The NullPointerException of new
+// QuicConnectionAddress((byte[]) null) comes from connId.clone() on the null array (a dereference, not a
+// checkNotNull), whose CLR counterpart is NullReferenceException. testNullByteBuffer is CLR-inapplicable : a
+// ReadOnlyMemory<byte> is a struct and cannot be null (a null array converts to an empty memory), so the null
+// check of QuicConnectionAddress(ByteBuffer) has no counterpart.
 public class QuicConnectionAddressTest : AbstractQuicTest
 {
 

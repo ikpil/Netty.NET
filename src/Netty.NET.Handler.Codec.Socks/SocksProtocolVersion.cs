@@ -18,8 +18,8 @@ namespace Netty.NET.Handler.Codec.Socks;
 
 // CLR: Java enum with a field and methods as a sealed class with static readonly constants, Values() and the
 // constant-name ToString(), with the evidence given in SocksAddressType.cs. The @Deprecated fromByte(byte), whose
-// @deprecated text names valueOf(byte) as the replacement, is not ported (owner decision 2026-11-16). 0xff is the
-// unsigned System.Byte 255 (owner decision, docs/common-clr-design.md); valueOf(byte) only compares for equality.
+// @deprecated text names valueOf(byte) as the replacement, is not ported. 0xff is the unsigned System.Byte 255
+// (owner decision, docs/common-clr-design.md); valueOf(byte) only compares for equality.
 public sealed class SocksProtocolVersion
 {
     public static readonly SocksProtocolVersion SOCKS4a = new SocksProtocolVersion(nameof(SOCKS4a), (byte) 0x04);

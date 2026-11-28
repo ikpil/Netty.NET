@@ -22,16 +22,15 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Handler.Codec.Compression;
 
-// CLR: the package-private final class is an internal sealed class with the private constructor. ChannelFuture,
-// ChannelPromise and Future are Task (docs/transport-porting.md): the promise argument is the returned Task, which a
+// CLR: ChannelFuture, ChannelPromise and Future are Task : the promise argument is the returned Task, which a
 // TaskCompletionSource completes with the outcome of the close (TrySetFromTask copies "the completion status
 // (including exception or cancellation information)",
 // https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.taskcompletionsource.trysetfromtask?view=net-10.0,
-// as docs/common-task-composition.md records for PromiseNotifier), and cancellationToken is the token the encoder's
-// CloseAsync received. The anonymous Runnable is a lambda; executor().schedule(...) is ScheduleAsync with the token of a
-// CancellationTokenSource, whose cancellation before invocation "prevents execution" (EventExecutorSchedulingExtensions,
-// as AbstractNioChannel cancels its connect timeout), so future.cancel(true) is Cancel(). addListener is a continuation
-// that runs synchronously on the thread that completes finishFuture.
+// as docs/common-task-composition.md records for PromiseNotifier), and cancellationToken is the token the
+// encoder's CloseAsync received. The anonymous Runnable is a lambda; executor().schedule(...) is ScheduleAsync
+// with the token of a CancellationTokenSource, whose cancellation before invocation "prevents execution"
+// (EventExecutorSchedulingExtensions, as AbstractNioChannel cancels its connect timeout), so future.cancel(true)
+// is Cancel(). addListener is a continuation that runs synchronously on the thread that completes finishFuture.
 internal sealed class EncoderUtil
 {
     private const int THREAD_POOL_DELAY_SECONDS = 10;

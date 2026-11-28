@@ -19,8 +19,8 @@ using System.Text;
 
 namespace Netty.NET.Handler.Codec.Mqtt.Tests;
 
-// CLR: the @Deprecated willMessage()/password() accessors and ConnectBuilder.willMessage(String)/password(String) name
-// their replacements and are not ported (owner decision 2026-11-16). The tests keep every assertion on the replacements
+// CLR: the @Deprecated willMessage()/password() accessors and ConnectBuilder.willMessage(String)/password(String)
+// name their replacements and are not ported. The tests keep every assertion on the replacements
 // (willMessageInBytes(), passwordInBytes(), willMessage(byte[]), password(byte[])); each assertion on a deprecated
 // String accessor is replaced by its byte[] counterpart, which the test already asserts. CharsetUtil.UTF_8 is
 // Encoding.UTF8 and Collections.emptyList() is an empty List<T>.

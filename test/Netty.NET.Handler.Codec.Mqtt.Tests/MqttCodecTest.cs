@@ -38,18 +38,17 @@ namespace Netty.NET.Handler.Codec.Mqtt.Tests;
 /**
  * Unit tests for MqttEncoder and MqttDecoder.
  */
-// CLR: Mockito mocks are Moq mocks (when/thenReturn is Setup/Returns, the Answer is a Callback, verify/times is Verify
-// with Times, clearInvocations is Invocations.Clear(), verifyNoMoreInteractions is VerifyNoOtherCalls), and the mocked
-// ChannelHandlerContext is passed as ctx.Object. MockitoAnnotations.initMocks(this) has no counterpart because the
-// mocks are created in the field initializers, as the source's mock(...) calls do. @BeforeEach setup() is called from
-// the constructor and @AfterEach after() from Dispose(). The field and locals named out are @out; LinkedList is List<T>
-// (a C# LinkedList<T> is no IList<T>). assertInstanceOf is Assert.IsAssignableFrom and AssertJ isNotInstanceOf is
-// Assert.IsNotAssignableFrom; Consumer<MqttMessage> is Action<MqttMessage>; Throwable is Exception; CharsetUtil.UTF_8
-// is Encoding.UTF8; char literals in byte[] initializers are cast to byte, which Java narrows implicitly. The
+// CLR: Mockito mocks are Moq mocks (when/thenReturn is Setup/Returns, the Answer is a Callback, verify/times is
+// Verify with Times, clearInvocations is Invocations.Clear(), verifyNoMoreInteractions is VerifyNoOtherCalls), and
+// the mocked ChannelHandlerContext is passed as ctx.Object. MockitoAnnotations.initMocks(this) has no counterpart
+// because the mocks are created in the field initializers, as the source's mock(...) calls do. The field and
+// locals named out are @out; LinkedList is List<T> (a C# LinkedList<T> is no IList<T>). assertInstanceOf is
+// Assert.IsAssignableFrom and AssertJ isNotInstanceOf is Assert.IsNotAssignableFrom; Consumer<MqttMessage> is
+// Action<MqttMessage>; char literals in byte[] initializers are cast to byte, which Java narrows implicitly. The
 // @Deprecated packetId(short) builder overload and the willMessage()/password() and topicName() accessors are not
-// ported (owner decision 2026-11-16): packetId((short) 1) is packetId(1), and validateConnectPayload asserts the byte[]
-// replacements that the source also asserts. The tests call the protected decode(...) through the internal
-// MqttDecoder.InvokeDecode forwarder, as Java reaches it through package access.
+// ported : packetId((short) 1) is packetId(1), and validateConnectPayload asserts the byte[] replacements that the
+// source also asserts. The tests call the protected decode(...) through the internal MqttDecoder.InvokeDecode
+// forwarder, as Java reaches it through package access.
 public class MqttCodecTest : IDisposable
 {
 
@@ -1944,7 +1943,6 @@ public class MqttCodecTest : IDisposable
         }
     }
 
-    // CLR: @EnumSource(MqttVersion.class) is [MemberData] over MqttVersion.Values().
     public static IEnumerable<object[]> MqttVersionValues()
     {
         return MqttVersion.Values().Select(version => new object[] { version });

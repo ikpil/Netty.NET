@@ -26,9 +26,8 @@ namespace Netty.NET.Handler.Codec.Http2;
  * Decorator around a {@link Http2FrameWriter} that logs all outbound frames before calling the
  * writer.
  */
-// CLR: the Task-returning methods take the Async suffix, ChannelPromise is TaskCompletionSource and ChannelFuture is
-// Task (docs/codec-http-porting.md, Shared CLR adaptations). Closeable.close() is Close() (IDisposable.Dispose() comes
-// from IHttp2FrameWriter).
+// CLR: the Task-returning methods take the Async suffix, ChannelPromise is TaskCompletionSource and ChannelFuture
+// is Task. Closeable.close() is Close() (IDisposable.Dispose() comes from IHttp2FrameWriter).
 public class Http2OutboundFrameLogger : IHttp2FrameWriter
 {
     private readonly IHttp2FrameWriter writer;

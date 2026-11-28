@@ -26,13 +26,13 @@ namespace Netty.NET.Handler.Codec.Http.Tests.WebSocketx;
  * Checks whether the combination of encoding and decoding yields the original data.<br>
  * Thereby also the masking behavior is checked.
  */
-// CLR: the Buffer port has no array() (docs/buffer-porting.md, Array extraction), so initTestData() writes
-// binTestData.array()[i] = j as SetByte(i, j), which writes the same octet at the same index without moving the writer
-// index; the byte counter j wraps after 255 as the signed Java byte wraps after 127, so the bit patterns are the same.
-// readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>() of the Transport EmbeddedChannel,
-// assertInstanceOf is Assert.IsAssignableFrom, substring(0, n) is Substring(0, n) and getMessage() is Message. The
-// arguments of assertEquals(txt.text(), testStr) and assertEquals(readable, testDataLength) are swapped into xUnit's
-// (expected, actual) order.
+// CLR: the Buffer port has no array(), so initTestData() writes binTestData.array()[i] = j as SetByte(i, j), which
+// writes the same octet at the same index without moving the writer index; the byte counter j wraps after 255 as
+// the signed Java byte wraps after 127, so the bit patterns are the same. readInbound()/readOutbound() are
+// ReadInbound<T>()/ReadOutbound<T>() of the Transport EmbeddedChannel, assertInstanceOf is
+// Assert.IsAssignableFrom, substring(0, n) is Substring(0, n) and getMessage() is Message. The arguments of
+// assertEquals(txt.text(), testStr) and assertEquals(readable, testDataLength) are swapped into xUnit's (expected,
+// actual) order.
 public class WebSocket08EncoderDecoderTest
 {
 

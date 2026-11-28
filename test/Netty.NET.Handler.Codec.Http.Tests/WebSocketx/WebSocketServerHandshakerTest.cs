@@ -26,16 +26,10 @@ using static Netty.NET.Handler.Codec.Http.HttpResponseStatus;
 
 namespace Netty.NET.Handler.Codec.Http.Tests.WebSocketx;
 
-// CLR: the protected newHandshakeResponse(...) that the Java test calls through package access is reached through the
-// internal forwarder InvokeNewHandshakeResponse(...), and the package-private WebSocketVersion.toAsciiString() is
-// internal. handshake(...) is HandshakeAsync(...), whose Task replaces the ChannelFuture (isDone() is IsCompleted); the
-// null ChannelPromise argument is a null TaskCompletionSource. HttpHeaders is an IEnumerable of its entries, so the
-// header equality assertion calls Equals, as Java's assertEquals does (core's DefaultHttpHeadersTest). A String value
-// that the Java test passes to containsValue(CharSequence, CharSequence, boolean) is wrapped in the Common
-// StringCharSequence. The anonymous Executable is a lambda for Assert.ThrowsAny (JUnit's assertThrows accepts
-// subtypes), getMessage() is Message, CharsetUtil.US_ASCII is Encoding.ASCII, and readInbound()/readOutbound() are
-// ReadInbound<T>()/ReadOutbound<T>(). The three tests that WebSocketServerHandshaker00Test overrides with empty bodies
-// run their body from a protected virtual method with the suffix 0, which the derived class overrides.
+// CLR: The null ChannelPromise argument is a null TaskCompletionSource. HttpHeaders is an IEnumerable of its
+// entries, so the header equality assertion calls Equals, as Java's assertEquals does (core's
+// DefaultHttpHeadersTest). The three tests that WebSocketServerHandshaker00Test overrides with empty bodies run
+// their body from a protected virtual method with the suffix 0, which the derived class overrides.
 public abstract class WebSocketServerHandshakerTest
 {
 

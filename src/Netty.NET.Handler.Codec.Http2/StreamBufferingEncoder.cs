@@ -48,18 +48,16 @@ namespace Netty.NET.Handler.Codec.Http2;
  * drop-in decorator of {@link DefaultHttp2ConnectionEncoder}.
  * </p>
  */
-// CLR: ChannelPromise is TaskCompletionSource and ChannelFuture is Task; the Task-returning methods take the Async
-// suffix, and promise.setFailure(e)/setSuccess() returning the promise are SetException(e)/SetResult() followed by the
-// promise's Task (docs/codec-http-porting.md, Shared CLR adaptations). TreeMap<Integer, PendingStream> is a
-// SortedDictionary<int, PendingStream> (docs/codec-http-porting.md: "TreeMap, TreeSet | SortedDictionary, SortedSet"):
-// pollFirstEntry() takes and removes the first (smallest) key, and the removing iterator of cancelGoAwayStreams walks
-// a snapshot of the values in key order and removes each cancelled stream by its id. ArrayDeque<Frame> is a
-// Queue<Frame>, iterated in insertion order. The anonymous Http2ConnectionAdapter is the private nested
-// GoAwayAndCloseListener, and the inner HeadersFrame/DataFrame classes get the encoder as a constructor argument (a C#
-// nested class has no implicit outer instance). serialVersionUID has no counterpart; byte[].clone() is Array.Clone().
-// GoAwayDetail is internal instead of private because the internal Http2GoAwayException(GoAwayDetail) constructor
-// takes it (a parameter type cannot be less accessible than its method, CS0051). close() overrides the virtual
-// DecoratingHttp2FrameWriter.Close(); Throwable is Exception.
+// CLR: The Task-returning methods take the Async suffix, and promise.setFailure(e)/setSuccess() returning the
+// promise are SetException(e)/SetResult() followed by the promise's Task. TreeMap<Integer, PendingStream> is a
+// SortedDictionary<int, PendingStream> : pollFirstEntry() takes and removes the first (smallest) key, and the
+// removing iterator of cancelGoAwayStreams walks a snapshot of the values in key order and removes each cancelled
+// stream by its id. ArrayDeque<Frame> is a Queue<Frame>, iterated in insertion order. The anonymous
+// Http2ConnectionAdapter is the private nested GoAwayAndCloseListener, and the inner HeadersFrame/DataFrame
+// classes get the encoder as a constructor argument (a C# nested class has no implicit outer instance).
+// serialVersionUID has no counterpart; byte[].clone() is Array.Clone(). GoAwayDetail is internal instead of
+// private because the internal Http2GoAwayException(GoAwayDetail) constructor takes it (a parameter type cannot be
+// less accessible than its method, CS0051). close() overrides the virtual DecoratingHttp2FrameWriter.Close().
 public class StreamBufferingEncoder : DecoratingHttp2ConnectionEncoder
 {
 
@@ -141,7 +139,6 @@ public class StreamBufferingEncoder : DecoratingHttp2ConnectionEncoder
         Connection().AddListener(new GoAwayAndCloseListener(this));
     }
 
-    // CLR: the anonymous Http2ConnectionAdapter of the constructor.
     private sealed class GoAwayAndCloseListener : Http2ConnectionAdapter
     {
         private readonly StreamBufferingEncoder encoder;

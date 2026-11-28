@@ -29,9 +29,8 @@ namespace Netty.NET.Handler.Codec.Compression;
  *
  * See <a href="https://en.wikipedia.org/wiki/Bzip2">Bzip2</a>.
  */
-// CLR: decode(ctx, in, out) is Decode(IChannelHandlerContext ctx, ByteBuf @in, IList<object> @out)
-// (docs/codec-base-porting.md); IllegalStateException is InvalidOperationException. The private enum State is a nested
-// C# enum. isClosed() is IsClosed().
+// CLR: IllegalStateException is InvalidOperationException. The private enum State is a nested C# enum. isClosed()
+// is IsClosed().
 public class Bzip2Decoder : ByteToMessageDecoder
 {
     /**

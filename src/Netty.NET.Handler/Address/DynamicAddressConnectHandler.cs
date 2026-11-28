@@ -30,7 +30,7 @@ namespace Netty.NET.Handler.Address;
  * the {@code remoteAddress}.
  */
 // CLR: SocketAddress is EndPoint and connect(ctx, remote, local, promise) is the Task-returning ConnectAsync; the
-// returned Task replaces the promise (docs/codec-base-porting.md, Outbound operations).
+// returned Task replaces the promise.
 public abstract class DynamicAddressConnectHandler : ChannelOutboundHandlerAdapter
 {
     // CLR: promise.setFailure(e) is the returned faulted Task. addListener(...) on the connect future is a synchronous

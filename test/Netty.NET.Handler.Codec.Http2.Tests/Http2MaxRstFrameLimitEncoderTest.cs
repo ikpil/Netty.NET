@@ -32,17 +32,14 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
  * Tests for {@link Http2MaxRstFrameLimitEncoder}.
  */
 // CLR: @Mock fields and MockitoAnnotations.initMocks are Moq mocks created in the constructor, which runs the
-// @BeforeEach setup(); @AfterEach teardown() is Dispose() (https://xunit.net/docs/shared-context). when/thenAnswer/
-// verify/atLeast/times are Moq Setup(...).Returns, Verify(..., Times.AtLeast(n)/Times.Exactly(n))
+// @BeforeEach setup(); @AfterEach teardown() is Dispose() (https://xunit.net/docs/shared-context).
+// when/thenAnswer/ verify/atLeast/times are Moq Setup(...).Returns, Verify(..., Times.AtLeast(n)/Times.Exactly(n))
 // (https://github.com/devlooped/moq/wiki/Quickstart); the answers receive the promise argument directly, so
 // handlePromise takes the TaskCompletionSource where Java takes the InvocationOnMock and the argument index.
-// ChannelPromise is TaskCompletionSource (newPromise() is a new TaskCompletionSource; setSuccess() is SetResult()) and
-// ChannelFuture is Task, whose IsCompletedSuccessfully is isSuccess() (docs/codec-http-porting.md, Shared CLR
-// adaptations). ctx.close() is CloseAsync(CancellationToken) and channel.unsafe() and the ctx.newPromise() stub have no
-// counterpart. MockTicker is the Common MockTicker and ticker.advance(1, SECONDS) is Advance(TimeSpan.FromSeconds(1)).
-// @EnumSource(Http2Error.class) is a [Theory] over MemberData with every Http2Error instance (Http2Error.ValueOf over
-// the codes 0x0-0xD, the declared order of the Java enum): Http2Error is an enum class (sealed class with static
-// readonly instances) without values().
+// ChannelPromise is TaskCompletionSource (newPromise() is a new TaskCompletionSource; setSuccess() is SetResult())
+// and ChannelFuture is Task, whose IsCompletedSuccessfully is isSuccess(). ctx.close() is
+// CloseAsync(CancellationToken) and channel.unsafe() and the ctx.newPromise() stub have no counterpart. MockTicker
+// is the Common MockTicker and ticker.advance(1, SECONDS) is Advance(TimeSpan.FromSeconds(1)).
 public class Http2MaxRstFrameLimitEncoderTest : IDisposable
 {
 

@@ -30,15 +30,12 @@ namespace Netty.NET.Handler.Codec.Compression;
  *
  * See <a href="https://en.wikipedia.org/wiki/Bzip2">Bzip2</a>.
  */
-// CLR: encode(ctx, in, out) is Encode(IChannelHandlerContext ctx, ByteBuf @in, ByteBuf @out) of the codec-base
-// MessageToByteEncoder<ByteBuf>, and super(ByteBuf.class) is base(typeof(ByteBuf)). ChannelFuture and ChannelPromise are
-// Task (docs/transport-porting.md): the outbound close(ctx, promise) is CloseAsync(ctx, cancellationToken), and the
-// encoder's own close() and close(ChannelPromise) fold into the one Task-returning CloseAsync(CancellationToken), as
-// EmbeddedChannel folds close() and close(promise) (docs/transport-porting.md: "The ChannelPromise overloads fold into
-// the Task-returning members"). isClosed() is IsClosed(), ctx() is Ctx() next to the field ctx, and the private enum State
-// is a nested C# enum. IllegalArgumentException and IllegalStateException are ArgumentException and
-// InvalidOperationException (docs/codec-base-porting.md); the number in the constructor message uses the invariant
-// culture. The volatile fields stay volatile.
+// CLR: ChannelFuture and ChannelPromise are Task : the outbound close(ctx, promise) is CloseAsync(ctx,
+// cancellationToken), and the encoder's own close() and close(ChannelPromise) fold into the one Task-returning
+// CloseAsync(CancellationToken), as EmbeddedChannel folds close() and close(promise). isClosed() is IsClosed(),
+// ctx() is Ctx() next to the field ctx, and the private enum State is a nested C# enum. IllegalArgumentException
+// and IllegalStateException are ArgumentException and InvalidOperationException; the number in the constructor
+// message uses the invariant culture. The volatile fields stay volatile.
 public class Bzip2Encoder : MessageToByteEncoder<ByteBuf>
 {
     /**
@@ -236,9 +233,9 @@ public class Bzip2Encoder : MessageToByteEncoder<ByteBuf>
         }
     }
 
-    // CLR: close(ctx, promise) is CloseAsync(ctx, cancellationToken), whose returned Task is the promise
-    // (docs/transport-porting.md); ctx.newPromise() is a fresh promise that the caller's close cannot cancel, so the
-    // footer write gets CancellationToken.None, and EncoderUtil.closeAfterFinishEncode takes the token of this close.
+    // CLR: close(ctx, promise) is CloseAsync(ctx, cancellationToken), whose returned Task is the promise;
+    // ctx.newPromise() is a fresh promise that the caller's close cannot cancel, so the footer write gets
+    // CancellationToken.None, and EncoderUtil.closeAfterFinishEncode takes the token of this close.
     public override Task CloseAsync(IChannelHandlerContext ctx, CancellationToken cancellationToken)
     {
         Task f = FinishEncode(ctx, CancellationToken.None);

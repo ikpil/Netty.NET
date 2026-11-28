@@ -35,24 +35,24 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
 /**
  * Testing the {@link HttpToHttp2ConnectionHandler} for {@link FullHttpRequest} objects into HTTP/2 frames
  */
-// CLR: the @Mock listeners are Moq Mock<IHttp2FrameListener> (loose, as Mockito's mocks); doAnswer(...).when(...) is
-// Setup(...).Callback(...).Returns(0) (the Answer returns null for the int result, which Mockito's mock gives as the
-// default 0) and verify(..., never()/atLeastOnce()) is Verify(..., Times.Never()/AtLeastOnce())
-// (https://github.com/devlooped/moq/wiki/Quickstart); eq(headers) is the expected value itself, which Moq compares with
-// Equals (DefaultHttp2Headers keeps Java's equals); anyShort/anyBoolean/anyInt are It.IsAny. @BeforeEach/@AfterEach
-// are the field initializers and IAsyncLifetime.DisposeAsync, as Http2ConnectionRoundtripTest does. write(msg,
-// promise)/writeAndFlush(msg, promise) take no promise in the Transport port; the returned Task replaces the promise
-// (docs/codec-base-porting.md, Outbound operations), so the private Write/WriteAndFlush helpers complete the test's
-// promise (ctx().newPromise(), a TaskCompletionSource) from the WriteAsync/WriteAndFlushAsync Task with
-// Http2CodecUtil.Cascade (TrySetFromTask, the PromiseNotifier mapping of docs/common-task-composition.md) and return the
-// promise's Task, as Java returns the promise. awaitUninterruptibly(timeout) returns whether the future
-// completed and does not throw for a failed future, while Task.Wait(TimeSpan) throws an AggregateException when "an
-// exception was thrown during the execution of the task"
-// (https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task.wait?view=net-10.0), so AwaitUninterruptibly
-// waits with Task.WhenAny of the Task and a delay. isDone()/isSuccess()/cause() are IsCompleted/IsCompletedSuccessfully/
-// Http2CodecUtil.Cause, and assertInstanceOf is Assert.IsAssignableFrom (docs/codec-http-porting.md, Core test notes).
-// CountDownLatch is CountdownEvent (Http2TestUtil.FrameCountDown counts down at most to zero). Collections
-// .synchronizedList is a List<string> written under a lock. Unpooled.copiedBuffer(text, UTF_8) is
+// CLR: the @Mock listeners are Moq Mock<IHttp2FrameListener> (loose, as Mockito's mocks); doAnswer(...).when(...)
+// is Setup(...).Callback(...).Returns(0) (the Answer returns null for the int result, which Mockito's mock gives
+// as the default 0) and verify(..., never()/atLeastOnce()) is Verify(..., Times.Never()/AtLeastOnce())
+// (https://github.com/devlooped/moq/wiki/Quickstart); eq(headers) is the expected value itself, which Moq compares
+// with Equals (DefaultHttp2Headers keeps Java's equals); anyShort/anyBoolean/anyInt are It.IsAny.
+// @BeforeEach/@AfterEach are the field initializers and IAsyncLifetime.DisposeAsync, as
+// Http2ConnectionRoundtripTest does. write(msg, promise)/writeAndFlush(msg, promise) take no promise in the
+// Transport port; the returned Task replaces the promise, so the private Write/WriteAndFlush helpers complete the
+// test's promise (ctx().newPromise(), a TaskCompletionSource) from the WriteAsync/WriteAndFlushAsync Task with
+// Http2CodecUtil.Cascade (TrySetFromTask, the PromiseNotifier mapping of docs/common-task-composition.md) and
+// return the promise's Task, as Java returns the promise. awaitUninterruptibly(timeout) returns whether the future
+// completed and does not throw for a failed future, while Task.Wait(TimeSpan) throws an AggregateException when
+// "an exception was thrown during the execution of the task"
+// (https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task.wait?view=net-10.0), so
+// AwaitUninterruptibly waits with Task.WhenAny of the Task and a delay. isDone()/isSuccess()/cause() are
+// IsCompleted/IsCompletedSuccessfully/ Http2CodecUtil.Cause, and assertInstanceOf is Assert.IsAssignableFrom.
+// CountDownLatch is CountdownEvent (Http2TestUtil.FrameCountDown counts down at most to zero).
+// Collections.synchronizedList is a List<string> written under a lock. Unpooled.copiedBuffer(text, UTF_8) is
 // Unpooled.CopiedBuffer(text, Encoding.UTF8) and ByteBuf.toString(UTF_8) ToString(Encoding.UTF8). The anonymous
 // ChannelInitializer/ChannelInboundHandlerAdapter classes are nested classes; new LocalAddress(getClass()) is
 // LocalAddress(Type).
@@ -623,7 +623,6 @@ public class HttpToHttp2ConnectionHandlerTest : IAsyncLifetime
                 TestContext.Current.CancellationToken));
     }
 
-    // CLR: the anonymous ChannelInitializer<Channel> of the server side of bootstrapEnv(...).
     private sealed class ServerInitializer : ChannelInitializer<IChannel>
     {
         private readonly HttpToHttp2ConnectionHandlerTest test;
@@ -651,8 +650,6 @@ public class HttpToHttp2ConnectionHandlerTest : IAsyncLifetime
         }
     }
 
-    // CLR: the anonymous ChannelInitializer<Channel> of the client side of bootstrapEnv(...) and its anonymous
-    // ChannelInboundHandlerAdapter (PrefaceWrittenHandler).
     private sealed class ClientInitializer : ChannelInitializer<IChannel>
     {
         private readonly HttpToHttp2ConnectionHandlerTest test;

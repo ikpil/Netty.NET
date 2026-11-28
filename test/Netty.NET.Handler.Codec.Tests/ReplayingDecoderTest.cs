@@ -28,10 +28,9 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Codec.Tests;
 
-// CLR: the anonymous ReplayingDecoder and ChannelInboundHandlerAdapter subclasses are named nested classes, whose
-// constructors receive the captured locals. ReplayingDecoder<Void> and the raw ReplayingDecoder are
-// ReplayingDecoder<object> (C# needs a type argument), and ReplayingDecoder<Integer> is ReplayingDecoder<int>. The
-// char literals of the byte[] initializers are cast to byte, which Java narrows implicitly.
+// CLR: ReplayingDecoder<Void> and the raw ReplayingDecoder are ReplayingDecoder<object> (C# needs a type
+// argument), and ReplayingDecoder<Integer> is ReplayingDecoder<int>. The char literals of the byte[] initializers
+// are cast to byte, which Java narrows implicitly.
 public class ReplayingDecoderTest
 {
     [Fact]
@@ -154,7 +153,6 @@ public class ReplayingDecoderTest
         buf.Release();
     }
 
-    // CLR: the anonymous ReplayingDecoder of testRemoveItself.
     private sealed class RemoveItselfDecoder : ReplayingDecoder<object>
     {
         private bool removed;
@@ -182,7 +180,6 @@ public class ReplayingDecoderTest
         buf.Release();
     }
 
-    // CLR: the anonymous ReplayingDecoder of testRemoveItselfWithReplayError.
     private sealed class RemoveItselfWithReplayErrorDecoder : ReplayingDecoder<object>
     {
         private bool removed;
@@ -211,7 +208,6 @@ public class ReplayingDecoderTest
         buf.Release();
     }
 
-    // CLR: the anonymous ReplayingDecoder of testRemoveItselfWriteBuffer; buf is the captured local.
     private sealed class RemoveItselfWriteBufferDecoder(ByteBuf buf) : ReplayingDecoder<object>
     {
         private bool removed;
@@ -248,7 +244,6 @@ public class ReplayingDecoderTest
         Assert.True(queue.Count == 0);
     }
 
-    // CLR: the anonymous ReplayingDecoder of testFireChannelReadCompleteOnInactive.
     private sealed class FireChannelReadCompleteDecoder : ReplayingDecoder<int>
     {
 
@@ -267,7 +262,6 @@ public class ReplayingDecoderTest
         }
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of testFireChannelReadCompleteOnInactive.
     private sealed class FireChannelReadCompleteHandler(BlockingCollection<int> queue) : ChannelInboundHandlerAdapter
     {
         public override void ChannelInactive(IChannelHandlerContext ctx)
@@ -309,7 +303,6 @@ public class ReplayingDecoderTest
         }
     }
 
-    // CLR: the anonymous ReplayingDecoder of testChannelInputShutdownEvent; error is the captured local.
     private sealed class ChannelInputShutdownEventDecoder : ReplayingDecoder<int>
     {
         private readonly AtomicReference<Exception> error;
@@ -356,7 +349,6 @@ public class ReplayingDecoderTest
         Assert.True(channel.FinishAndReleaseAll());
     }
 
-    // CLR: the anonymous ReplayingDecoder of handlerRemovedWillNotReleaseBufferIfDecodeInProgress.
     private sealed class HandlerRemovedDecoder : ReplayingDecoder<int>
     {
         protected override void Decode(IChannelHandlerContext ctx, ByteBuf @in, IList<object> @out)

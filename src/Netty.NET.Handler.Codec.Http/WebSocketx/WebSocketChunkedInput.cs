@@ -29,10 +29,10 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx;
  */
 // CLR: ChunkedInput<WebSocketFrame> is the handler port's IChunkedInput<WebSocketFrame> and the wrapped
 // ChunkedInput<ByteBuf> is IChunkedInput<ByteBuf> (src/Netty.NET.Handler/Stream/IChunkedInput.cs). The @Deprecated
-// readChunk(ChannelHandlerContext) override has no counterpart: the interface member it overrides is @Deprecated with
-// the replacement readChunk(ByteBufAllocator) named and is not ported (owner decision 2026-11-16, recorded in
-// IChunkedInput.cs), as core's HttpChunkedInput. checkNotNull is the Common ObjectUtil.CheckNotNull
-// (ArgumentNullException for the NullPointerException of the Javadoc), and "throws Exception" has no C# counterpart.
+// readChunk(ChannelHandlerContext) override has no counterpart: the interface member it overrides is @Deprecated
+// with the replacement readChunk(ByteBufAllocator) named and is not ported, as core's HttpChunkedInput.
+// checkNotNull is the Common ObjectUtil.CheckNotNull (ArgumentNullException for the NullPointerException of the
+// Javadoc), and "throws Exception" has no C# counterpart.
 public sealed class WebSocketChunkedInput : IChunkedInput<WebSocketFrame>
 {
     private readonly IChunkedInput<ByteBuf> input;

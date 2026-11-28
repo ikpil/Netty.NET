@@ -28,7 +28,7 @@ namespace Netty.NET.Handler.Codec.Socks;
  * Before returning SocksRequest decoder removes itself from pipeline.
  */
 // CLR: the new State enum with base.State(), goto case for the Java fall-through and InvalidOperationException for
-// java.lang.Error, with the evidence given in SocksInitRequestDecoder.cs; CharsetUtil.US_ASCII is Encoding.ASCII.
+// java.lang.Error, with the evidence given in SocksInitRequestDecoder.cs.
 public class SocksAuthRequestDecoder : ReplayingDecoder<SocksAuthRequestDecoder.State>
 {
 

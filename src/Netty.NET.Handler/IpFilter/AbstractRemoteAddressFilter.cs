@@ -34,7 +34,7 @@ namespace Netty.NET.Handler.IpFilter;
  * flexibility to respond to rejected (denied) connections. If you do not want to send a response, just have it return
  * null.  Take a look at {@link RuleBasedIpFilter} for details.
  */
-// CLR: T extends SocketAddress is T : EndPoint; ChannelFuture is Task (docs/transport-porting.md).
+// CLR: T extends SocketAddress is T : EndPoint.
 public abstract class AbstractRemoteAddressFilter<T> : ChannelInboundHandlerAdapter where T : EndPoint
 {
     public override void ChannelRegistered(IChannelHandlerContext ctx)

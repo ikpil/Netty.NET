@@ -19,7 +19,6 @@ namespace Netty.NET.Handler.Codec.Socksx.V4;
 /**
  * A SOCKS4a response.
  */
-// CLR: Java interfaces take the I prefix (see ISocksMessage).
 public interface ISocks4CommandResponse : ISocks4Message
 {
 

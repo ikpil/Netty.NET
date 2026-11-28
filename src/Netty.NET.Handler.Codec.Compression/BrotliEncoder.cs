@@ -31,18 +31,17 @@ namespace Netty.NET.Handler.Codec.Compression;
  * <p>
  * See <a href="https://github.com/google/brotli">brotli</a>.
  */
-// CLR: owner decision 2026-11-23: brotli4j's BrotliEncoderChannel is replaced by the BCL
-// System.IO.Compression.BrotliEncoder struct (written with its namespace, because this class has the same simple name).
-// brotli4j's Encoder.Parameters is BrotliOptions, which holds the quality, window and mode (see BrotliOptions): the
-// constructor BrotliEncoder(Encoder.Parameters parameters, boolean isSharable) takes the BrotliOptions that holds the
+// CLR: brotli4j's BrotliEncoderChannel is replaced by the BCL System.IO.Compression.BrotliEncoder struct (written
+// with its namespace, because this class has the same simple name). brotli4j's Encoder.Parameters is
+// BrotliOptions, which holds the quality, window and mode (see BrotliOptions): the constructor
+// BrotliEncoder(Encoder.Parameters parameters, boolean isSharable) takes the BrotliOptions that holds the
 // parameters (Java's brotliOptions.parameters()), so a non-sharable encoder can still be created, and
 // BrotliEncoder(Encoder.Parameters) is not ported: with that type it would be BrotliEncoder(BrotliOptions), which
 // already exists with the same behaviour. @ChannelHandler.Sharable is [Sharable] and isSharable() is the Transport
-// port's IsSharable property, as codec-base's DatagramPacketDecoder overrides it. ChannelFuture/ChannelPromise are Task
-// and TaskCompletionSource, close(ctx, promise) is CloseAsync(ctx, cancellationToken) returning the promise's Task, and
-// ctx.newSucceededFuture() is a completed Task (docs/transport-porting.md, EncoderUtil). AttributeKey and the
-// channel attributes are the Common AttributeKey<T>/IAttribute<T>, as in codec-mqtt's MqttCodecUtil. C# has no throws
-// clauses.
+// port's IsSharable property, as codec-base's DatagramPacketDecoder overrides it. ChannelFuture/ChannelPromise are
+// Task and TaskCompletionSource, close(ctx, promise) is CloseAsync(ctx, cancellationToken) returning the promise's
+// Task, and ctx.newSucceededFuture() is a completed Task. AttributeKey and the channel attributes are the Common
+// AttributeKey<T>/IAttribute<T>, as in codec-mqtt's MqttCodecUtil. C# has no throws clauses.
 [Sharable]
 public sealed class BrotliEncoder : MessageToByteEncoder<ByteBuf>
 {
@@ -89,8 +88,8 @@ public sealed class BrotliEncoder : MessageToByteEncoder<ByteBuf>
      * @param parameters {@link Encoder.Parameters} to use
      * @param isSharable Set to {@code true} if this instance is shared else set to {@code false}
      */
-    // CLR: parameters is the BrotliOptions that holds the encoder parameters (see the class comment); the Java name is
-    // kept. checkNotNull's NullPointerException is ArgumentNullException (docs/codec-base-porting.md).
+    // CLR: parameters is the BrotliOptions that holds the encoder parameters (see the class comment); the Java
+    // name is kept. checkNotNull's NullPointerException is ArgumentNullException.
     public BrotliEncoder(BrotliOptions parameters, bool isSharable) : base(typeof(ByteBuf))
     {
         this.parameters = ObjectUtil.CheckNotNull(parameters, "Parameters");
@@ -326,8 +325,8 @@ public sealed class BrotliEncoder : MessageToByteEncoder<ByteBuf>
             return !isClosed;
         }
 
-        // CLR: the anonymous Runnable is a lambda passed to IExecutor.Execute(Action), and IllegalStateException is
-        // InvalidOperationException (docs/codec-base-porting.md); closeFuture.setFailure(...) is SetException(...).
+        // CLR: the anonymous Runnable is a lambda passed to IExecutor.Execute(Action), and IllegalStateException
+        // is InvalidOperationException.
         public void Close()
         {
             if (closeInitiated)

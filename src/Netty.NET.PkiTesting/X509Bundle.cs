@@ -183,8 +183,7 @@ public sealed class X509Bundle
      * Get the certificate path as a list, starting with the leaf certificate up to but excluding the root certificate.
      * @return The certificate path list.
      */
-    // CLR: Arrays.asList is a fixed-size list backed by the array; a C# array is an IList<T> with the same behaviour
-    // (set allowed, add/remove rejected).
+    // CLR: A C# array is an IList<T> with the same behaviour (set allowed, add/remove rejected).
     public IList<X509Certificate2> GetCertificatePathList()
     {
         return certPath;
@@ -226,8 +225,8 @@ public sealed class X509Bundle
         return ToCertPem(root);
     }
 
-    // CLR: X509Certificate.getEncoded() is RawData; the CertificateEncodingException wrapped in IllegalStateException
-    // has no counterpart, because the BCL certificate is its encoding.
+    // CLR: The CertificateEncodingException wrapped in IllegalStateException has no counterpart, because the BCL
+    // certificate is its encoding.
     private static string ToCertPem(params X509Certificate2[] certs)
     {
         Func<byte[], string> encoder = GetMimeEncoder();
@@ -428,7 +427,6 @@ public sealed class X509Bundle
         return CreateTempPemFile(GetPrivateKeyPEM(), "key");
     }
 
-    // CLR: StandardCharsets.ISO_8859_1 is Encoding.Latin1.
     private static FileInfo CreateTempPemFile(string pem, string filePrefix)
     {
         return CreateTempFile(Encoding.Latin1.GetBytes(pem), filePrefix, ".pem");
@@ -572,7 +570,6 @@ public sealed class X509Bundle
         return a.RawDataMemory.Span.SequenceEqual(b.RawDataMemory.Span);
     }
 
-    // CLR: Arrays.equals(boolean[], boolean[]) of the unique identifiers, true when both are absent (null).
     private static bool ArraysEquals(byte[] a, byte[] b)
     {
         if (a == null || b == null)

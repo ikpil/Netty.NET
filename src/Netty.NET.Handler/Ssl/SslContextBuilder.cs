@@ -659,8 +659,7 @@ public sealed class SslContextBuilder
      * Set the size of the cache used for storing SSL session objects. {@code 0} to use the
      * default value.
      */
-    // CLR: kept for the API; SslStream has no session cache size setting (docs/handler-ssl-design.md, Known
-    // differences), so JdkSslContext does not apply it.
+    // CLR: kept for the API; SslStream has no session cache size setting, so JdkSslContext does not apply it.
     public SslContextBuilder SessionCacheSize(long sessionCacheSize)
     {
         this.sessionCacheSize = sessionCacheSize;

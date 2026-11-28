@@ -25,14 +25,7 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx.Extensions;
  *
  * See <tt>io.netty.handler.codec.http.HttpHeaders.Names.SEC_WEBSOCKET_EXTENSIONS</tt>.
  */
-// CLR: Map<String, String> is IDictionary<string, string>. Collections.unmodifiableMap is ReadOnlyDictionary, "a
-// wrapper around the specified dictionary" whose IDictionary mutators "Throw a NotSupportedException exception in all
-// cases"
-// (https://learn.microsoft.com/en-us/dotnet/api/system.collections.objectmodel.readonlydictionary-2?view=net-10.0), the
-// counterpart of UnsupportedOperationException (docs/codec-base-porting.md); like the Java view it enumerates in the
-// order of the wrapped map. Map.get(key) returns null for a missing key, where the IDictionary indexer throws
-// KeyNotFoundException and TryGetValue returns false. checkNotNull is the Common ObjectUtil.CheckNotNull
-// (ArgumentNullException).
+// The read-only parameter view reflects changes to the supplied dictionary.
 public sealed class WebSocketExtensionData
 {
 

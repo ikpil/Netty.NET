@@ -29,18 +29,13 @@ using static Netty.NET.Handler.Codec.Http3.QpackUtil;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the package-private final class is internal sealed; it derives from
-// Http3FrameTypeInboundValidationHandler<IHttp3ControlStreamFrame>, whose Class<T> constructor argument is the Type
-// typeof(IHttp3ControlStreamFrame), and overrides its internal virtual channelRead(ctx, T)/readFrameDiscarded.
-// QuicChannel, QuicStreamChannel and QuicStreamType are codec-quic's IQuicChannel, IQuicStreamChannel and the C# enum
-// QuicStreamType; ChannelHandler is IChannelHandler. The Long fields receivedGoawayId/receivedMaxPushId are long? (null
-// until a frame was received). The GenericFutureListener closeOnFailure is an Action<Task> added with
-// Http3CodecUtils.AddListener to the Task<IQuicStreamChannel> of CreateStreamAsync (createStream(...).addListener);
-// closeOnFailure(ctx.writeAndFlush) is Http3CodecUtils.CloseOnFailure(ctx.Channel, ...).
-// java.nio.channels.ClosedChannelException is Transport's ClosedChannelException (an IOException) and
-// ThrowableUtil.unknownStackTrace Common's UnknownStackTrace. The private static nested classes are private nested
-// classes; the public final channelActive/userEventTriggered of AbstractQPackStreamInitializer are sealed overrides.
-// "throws QpackException"/"throws Exception" have no counterpart; assert is Debug.Assert; isSharable() overrides the
+// CLR: QuicChannel, QuicStreamChannel and QuicStreamType are codec-quic's IQuicChannel, IQuicStreamChannel and the
+// C# enum QuicStreamType; ChannelHandler is IChannelHandler. The Long fields receivedGoawayId/receivedMaxPushId
+// are long? (null until a frame was received). The GenericFutureListener closeOnFailure is an Action<Task> added
+// with Http3CodecUtils.AddListener to the Task<IQuicStreamChannel> of CreateStreamAsync
+// (createStream(...).addListener). The private static nested classes are private nested classes; the public final
+// channelActive/userEventTriggered of AbstractQPackStreamInitializer are sealed overrides. "throws
+// QpackException"/"throws Exception" have no counterpart; assert is Debug.Assert; isSharable() overrides the
 // IsSharable property. The @Nullable (org.jetbrains.annotations) annotations have no counterpart.
 internal sealed class Http3ControlStreamInboundHandler
         : Http3FrameTypeInboundValidationHandler<IHttp3ControlStreamFrame>

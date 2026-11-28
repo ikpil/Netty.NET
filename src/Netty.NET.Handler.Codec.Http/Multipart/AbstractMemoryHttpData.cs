@@ -25,17 +25,17 @@ namespace Netty.NET.Handler.Codec.Http.Multipart;
 /**
  * Abstract Memory HttpData implementation
  */
-// CLR: java.io.File is FileInfo and RandomAccessFile with its FileChannel is one FileStream (docs/handler-porting.md,
-// java.io and NIO), opened with AbstractDiskHttpData.OpenFile (the JDK sharing mode, no FileStream buffer); File.length()
-// and createNewFile() are AbstractDiskHttpData.FileLength/CreateNewFile, which keep the
-// Java results (0 for a missing file, false for an existing one). InputStream is Stream: InputStream.read(byte[]) is
-// Read(bytes, 0, bytes.Length), whose 0 at the end of the stream ends the loop where Java's -1 does
+// CLR: java.io.File is FileInfo and RandomAccessFile with its FileChannel is one FileStream, opened with
+// AbstractDiskHttpData.OpenFile (the JDK sharing mode, no FileStream buffer); File.length() and createNewFile()
+// are AbstractDiskHttpData.FileLength/CreateNewFile, which keep the Java results (0 for a missing file, false for
+// an existing one). InputStream is Stream: InputStream.read(byte[]) is Read(bytes, 0, bytes.Length), whose 0 at
+// the end of the stream ends the loop where Java's -1 does
 // (https://learn.microsoft.com/en-us/dotnet/api/system.io.stream.read?view=net-10.0). The NIO ByteBuffer of
 // setContent(File) is the byte array it wraps, and wrappedBuffer(Integer.MAX_VALUE, byteBuffer) wraps that array.
 // EMPTY_BUFFER is Unpooled.EmptyBuffer, whose array() is EmptyArrays.EMPTY_BYTES (the Buffer port has no array(),
-// docs/buffer-porting.md, Array extraction). CompositeByteBuf.addComponent(true, buffer) and addComponents(true, ...) are
-// AddComponent(buffer, true) and AddComponents(buffers, true) (Buffer port parameter order). IOException is
-// System.IO.IOException and IllegalArgumentException is ArgumentException.
+// docs/buffer-porting.md, Array extraction). CompositeByteBuf.addComponent(true, buffer) and
+// addComponents(true,...) are AddComponent(buffer, true) and AddComponents(buffers, true) (Buffer port parameter
+// order). IOException is System.IO.IOException and IllegalArgumentException is ArgumentException.
 public abstract class AbstractMemoryHttpData : AbstractHttpData
 {
 

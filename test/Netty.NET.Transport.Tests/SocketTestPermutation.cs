@@ -32,8 +32,8 @@ public class SocketTestPermutation
     internal static readonly string BAD_HOST = SystemPropertyUtil.Get("io.netty.testsuite.badHost", "198.51.100.254");
     internal static readonly int BAD_PORT = SystemPropertyUtil.GetInt("io.netty.testsuite.badPort", 65535);
     // CLR: INCLUDE_OIO (io.netty.testsuite.includeOio, default false) is not read. Every OIO type the source would
-    // add (OioEventLoopGroup, OioServerSocketChannel, OioSocketChannel, OioDatagramChannel) is a deprecated-not-ported
-    // entry of the transport manifest (owner decision 2026-11-16), so no OIO permutation exists to include.
+    // add (OioEventLoopGroup, OioServerSocketChannel, OioSocketChannel, OioDatagramChannel) is a
+    // deprecated-not-ported entry of the transport manifest, so no OIO permutation exists to include.
 
     // See /etc/services
     public const int UNASSIGNED_PORT = 4;
@@ -124,8 +124,6 @@ public class SocketTestPermutation
         // Make the list of Bootstrap factories.
         List<IBootstrapFactory<Bootstrap>> bfs = new List<IBootstrapFactory<Bootstrap>>();
 
-        // CLR: the source's anonymous ChannelFactory also overrides toString() to "NioDatagramChannel.class"; this
-        // port's Bootstrap.ChannelFactory takes a Func<IChannel> delegate, which has no toString() override.
         bfs.Add(new BootstrapFactory<Bootstrap>(() =>
                 new Bootstrap().Group(NIO_GROUP).ChannelFactory(() => new NioDatagramChannel(family))));
         // CLR: the INCLUDE_OIO OioDatagramChannel factory is not ported (deprecated-not-ported).

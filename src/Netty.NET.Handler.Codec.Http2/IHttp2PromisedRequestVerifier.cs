@@ -59,7 +59,6 @@ public interface IHttp2PromisedRequestVerifier
      */
     public static readonly IHttp2PromisedRequestVerifier ALWAYS_VERIFY = new AlwaysVerify();
 
-    // CLR: the anonymous class of ALWAYS_VERIFY.
     private sealed class AlwaysVerify : IHttp2PromisedRequestVerifier
     {
         public bool IsAuthoritative(IChannelHandlerContext ctx, IHttp2Headers headers)

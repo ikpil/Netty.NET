@@ -32,17 +32,15 @@ using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Handler.Tests.Pcap;
 
-// CLR: InetSocketAddress is IPEndPoint and new InetSocketAddress(literal, port) parses the literal
-// (docs/codec-dns-porting.md); OutputStream is System.IO.Stream and ByteArrayOutputStream is MemoryStream;
-// "...".getBytes() uses the default charset, Encoding.Default (docs/codec-stomp-porting.md); builder() is Builder_().
-// The Transport bootstrap API is asynchronous, so sync() is an await of BindAsync/ConnectAsync/WriteAndFlushAsync/
-// CloseAsync/ShutdownGracefullyAsync followed by isSuccess() as IsCompletedSuccessfully, and CountDownLatch is a
-// TaskCompletionSource awaited for 5 seconds (as codec-haproxy's HAProxyIntegrationTest). Anonymous handlers and
-// streams are named nested classes. ByteBuf readByte()/readUnsignedShort()/readUnsignedInt() return System.Byte, ushort
-// and uint; the Java long/int expectations compare through Assert.Equal<long>/<int>, and the signed byte literals
+// CLR: InetSocketAddress is IPEndPoint and new InetSocketAddress(literal, port) parses the literal; OutputStream
+// is System.IO.Stream and ByteArrayOutputStream is MemoryStream; "...".getBytes() uses the default charset,
+// Encoding.Default; builder() is Builder_(). The Transport bootstrap API is asynchronous, so sync() is an await of
+// BindAsync/ConnectAsync/WriteAndFlushAsync/ CloseAsync/ShutdownGracefullyAsync followed by isSuccess() as
+// IsCompletedSuccessfully, and CountDownLatch is a TaskCompletionSource awaited for 5 seconds (as codec-haproxy's
+// HAProxyIntegrationTest). ByteBuf readByte()/readUnsignedShort()/readUnsignedInt() return System.Byte, ushort and
+// uint; the Java long/int expectations compare through Assert.Equal<long>/<int>, and the signed byte literals
 // ((byte) 0xff, -1 in a byte[] initializer, the int literal 0xa1b2c3d4) keep the bits Java compares. AssertJ's
-// assertThat(x).isGreaterThan(y) is Assert.True(x > y); assertThrows(Throwable.class, ...) is
-// Assert.ThrowsAny<Exception>.
+// assertThat(x).isGreaterThan(y) is Assert.True(x > y).
 public class PcapWriteHandlerTest
 {
 
@@ -1335,7 +1333,6 @@ public class PcapWriteHandlerTest
                 Task.Delay(TimeSpan.FromSeconds(seconds), TestContext.Current.CancellationToken)) == latch.Task;
     }
 
-    // CLR: the anonymous SimpleChannelInboundHandler<DatagramPacket> of udpV4.
     private sealed class DiscardingDatagramHandler : SimpleChannelInboundHandler<DatagramPacket>
     {
         protected override void ChannelRead0(IChannelHandlerContext ctx, DatagramPacket msg)
@@ -1460,7 +1457,6 @@ public class PcapWriteHandlerTest
         }
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of tcpExceptionCaught.
     private sealed class ExceptionOnActiveHandler : ChannelInboundHandlerAdapter
     {
         private readonly Exception exception;
@@ -1562,10 +1558,8 @@ public class PcapWriteHandlerTest
         }
     }
 
-    // CLR: the anonymous OutputStream of writerStateTest, which overrides write(int) only; write(byte[], int, int) of
-    // OutputStream "calls the write method of one argument on each of the bytes to be written out" (OutputStream docs
-    // above), so Write(byte[], int, int) calls WriteByte for each byte. The other abstract Stream members describe a
-    // write-only stream whose flush() and close() do nothing, as in OutputStream.
+    // CLR: The other abstract Stream members describe a write-only stream whose flush() and close() do nothing, as
+    // in OutputStream.
     private sealed class DiscardEverythingOutputStream : System.IO.Stream
     {
         public override void WriteByte(byte b)
@@ -1615,14 +1609,14 @@ public class PcapWriteHandlerTest
         }
     }
 
-    // CLR: an EmbeddedChannel that implements IDatagramChannel. The DatagramChannel methods with a ChannelPromise fold
-    // into the Task-returning IDatagramChannel methods (docs/transport-porting.md, Interfaces added), so the sixteen
-    // joinGroup/leaveGroup/block overrides are eight; UnsupportedOperationException is NotSupportedException. The
-    // localAddress()/remoteAddress() narrowings are covariant property overrides. Java's config() returns a
-    // DefaultDatagramChannelConfig over a new DatagramSocket because DatagramChannel narrows config() to
-    // DatagramChannelConfig; IDatagramChannel inherits Config unchanged and the Transport DefaultDatagramChannelConfig
-    // takes a NioDatagramChannel, so NewConfig() (the lazily read config() of the Transport port) keeps the
-    // EmbeddedChannel config. isConnected() is the IsConnected property of IDatagramChannel.
+    // CLR: an EmbeddedChannel that implements IDatagramChannel. The DatagramChannel methods with a ChannelPromise
+    // fold into the Task-returning IDatagramChannel methods, so the sixteen joinGroup/leaveGroup/block overrides
+    // are eight; UnsupportedOperationException is NotSupportedException. The localAddress()/remoteAddress()
+    // narrowings are covariant property overrides. Java's config() returns a DefaultDatagramChannelConfig over a
+    // new DatagramSocket because DatagramChannel narrows config() to DatagramChannelConfig; IDatagramChannel
+    // inherits Config unchanged and the Transport DefaultDatagramChannelConfig takes a NioDatagramChannel, so
+    // NewConfig() (the lazily read config() of the Transport port) keeps the EmbeddedChannel config. isConnected()
+    // is the IsConnected property of IDatagramChannel.
     private class EmbeddedDatagramChannel : EmbeddedChannel, IDatagramChannel
     {
         private readonly IPEndPoint local;
@@ -1722,7 +1716,6 @@ public class PcapWriteHandlerTest
         }
     }
 
-    // CLR: promise.setSuccess() is the returned completed Task.
     internal class DiscardingWritesAndFlushesHandler : ChannelOutboundHandlerAdapter
     {
         public override void Flush(IChannelHandlerContext ctx)

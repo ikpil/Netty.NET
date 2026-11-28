@@ -105,10 +105,9 @@ public class TaskCompletionTransferPortTest
         Assert.Same(source, shared);
     }
 
-    // CLR supplements: already-completed targets, faulted cancellation exceptions,
-    // multiple/nested exception preservation, null successful results, independently
-    // canceled waiters and explicitly linked cooperative cancellation
-    // (docs/common-task-composition.md, additional cases).
+    // CLR supplements: already-completed targets, faulted cancellation exceptions, multiple/nested exception
+    // preservation, null successful results, independently canceled waiters and explicitly linked cooperative
+    // cancellation.
     [Fact]
     public async Task ACompletedTargetIsNeverOverwritten()
     {

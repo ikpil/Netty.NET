@@ -27,13 +27,10 @@ namespace Netty.NET.Handler.Codec.Http.Tests.Multipart;
 /**
  * {@link AbstractDiskHttpData} test cases
  */
-// CLR: File is FileInfo and FileOutputStream a FileStream (FileMode.Create truncates as FileOutputStream does);
-// UUID.randomUUID() is Guid.NewGuid() and ThreadLocalRandom.current().nextBytes is Random.Shared.NextBytes (only the size
-// of the random content matters). File.deleteOnExit() is the AppDomain.ProcessExit deletion of handler's
-// ChunkedWriteHandlerTest (test/Netty.NET.Handler.Tests/Stream/ChunkedWriteHandlerTest.cs). UTF_8 is Encoding.UTF8.
-// Arrays.equals is SequenceEqual. The test subclass returns default for getHttpDataType(), because the C# enum
-// HttpDataType cannot be null; the test does not call it. getBaseDirectory()/deleteOnExit() are protected internal in
-// the port (see AbstractDiskHttpData), so this friend assembly overrides them as protected internal.
+// CLR: File is FileInfo and FileOutputStream a FileStream (FileMode.Create truncates as FileOutputStream does).
+// UTF_8 is Encoding.UTF8. The test subclass returns default for getHttpDataType(), because the C# enum
+// HttpDataType cannot be null; the test does not call it. getBaseDirectory()/deleteOnExit() are protected internal
+// in the port (see AbstractDiskHttpData), so this friend assembly overrides them as protected internal.
 public class AbstractDiskHttpDataTest
 {
 

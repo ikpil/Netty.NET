@@ -24,11 +24,11 @@ using static Netty.NET.Handler.Codec.Http.HttpHeaderValues;
 namespace Netty.NET.Handler.Codec.Http.Tests;
 
 // CLR: the Strings that the headers return are compared through StringCharSequence, because a C# string is not an
-// ICharSequence. HttpHeaders.iterator() is @Deprecated and names iteratorAsString() as its replacement, so it is not
-// ported (owner decision 2026-11-16) and stringIterator() uses IteratorAsString() (rule 7). Map.Entry is the codec-base
-// IEntry; assert3ParisEquals takes the IEnumerator of the entries (the IIterator of IteratorAsString() and the
-// enumerator of entries(), whose List.iterator() is the IList enumerator), and hasNext()/next() are MoveNext()/Current.
-// IllegalArgumentException is ArgumentException; the anonymous Executables are lambdas.
+// ICharSequence. HttpHeaders.iterator() is @Deprecated and names iteratorAsString() as its replacement, so it is
+// not ported and stringIterator() uses IteratorAsString() (rule 7). Map.Entry is the codec-base IEntry;
+// assert3ParisEquals takes the IEnumerator of the entries (the IIterator of IteratorAsString() and the enumerator
+// of entries(), whose List.iterator() is the IList enumerator), and hasNext()/next() are MoveNext()/Current.
+// IllegalArgumentException is ArgumentException.
 public class ReadOnlyHttpHeadersTest
 {
     [Fact]

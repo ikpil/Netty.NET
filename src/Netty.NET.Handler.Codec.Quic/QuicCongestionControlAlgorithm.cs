@@ -20,8 +20,8 @@ namespace Netty.NET.Handler.Codec.Quic;
  * Available congestion control algorithms to use.
  */
 // CLR: a Java enum without fields or methods is a C# enum. System.Net.Quic does not let the application choose the
-// congestion control algorithm (docs/quic-design.md, No counterpart in System.Net.Quic): the type keeps its Java API
-// (owner decision 2026-11-27) and the msquic codec builders (stage 2) report a choice as unsupported.
+// congestion control algorithm : the type keeps its Java API and the msquic codec builders (stage 2) report a
+// choice as unsupported.
 public enum QuicCongestionControlAlgorithm
 {
     RENO,

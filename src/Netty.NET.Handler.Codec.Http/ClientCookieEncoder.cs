@@ -36,10 +36,10 @@ namespace Netty.NET.Handler.Codec.Http;
  *
  * @see ClientCookieDecoder
  */
-// CLR: the class and its methods are @Deprecated without @deprecated text (no replacement named), so they are ported
-// with [Obsolete] (owner decision 2026-11-16). The final class with a private constructor is a static class. Its
-// parameters of the @Deprecated io.netty.handler.codec.http.Cookie, which is not ported because its @deprecated text
-// names io.netty.handler.codec.http.cookie.Cookie, are that replacement, Netty.NET.Handler.Codec.Http.Cookie.ICookie;
+// CLR: the class and its methods are @Deprecated without @deprecated text (no replacement named), so they are
+// ported with [Obsolete]. The final class with a private constructor is a static class. Its parameters of the
+// @Deprecated io.netty.handler.codec.http.Cookie, which is not ported because its @deprecated text names
+// io.netty.handler.codec.http.cookie.Cookie, are that replacement, Netty.NET.Handler.Codec.Http.Cookie.ICookie;
 // every Java call passes a Cookie that is such a cookie.Cookie, and the methods delegate to the cookie package's
 // ClientCookieEncoder.LAX as in Java. Iterable<Cookie> is IEnumerable<ICookie>.
 [Obsolete]

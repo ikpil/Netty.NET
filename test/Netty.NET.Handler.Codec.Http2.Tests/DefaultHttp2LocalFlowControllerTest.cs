@@ -32,13 +32,13 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
 // class instance per test, https://xunit.net/docs/shared-context); reset(ctx) is Mock.Reset() followed by the same
 // setups, reset(frameWriter) clears the recorded invocations (frameWriter has no setups), verify(...) is
 // Verify(..., Times.Once()), never() is Times.Never() and verifyNoMoreInteractions is VerifyNoOtherCalls (Moq
-// Quickstart, https://github.com/devlooped/moq/wiki/Quickstart; docs/codec-http-porting.md, Shared CLR adaptations).
-// The controller writes WINDOW_UPDATE with a promise it creates itself (Http2CodecUtil.NewPromise(), as ChannelPromise
-// is TaskCompletionSource and the context has no newPromise()), so eq(promise) of the mocked ctx.newPromise() is
-// It.IsAny<TaskCompletionSource>(). ctx.flush() returning the forbidden-call Answer is a Flush() setup whose callback
-// calls Assert.Fail; as in Java, the listener notification of DefaultHttp2Connection catches and logs the failure.
-// assertThrows(T.class, ...) is Assert.ThrowsAny<T> (docs/codec-http-porting.md, Core test notes) and the anonymous
-// Executables are lambdas; IllegalArgumentException is ArgumentException.
+// Quickstart, https://github.com/devlooped/moq/wiki/Quickstart; docs/codec-http-porting.md, Shared CLR
+// adaptations). The controller writes WINDOW_UPDATE with a promise it creates itself (Http2CodecUtil.NewPromise(),
+// as ChannelPromise is TaskCompletionSource and the context has no newPromise()), so eq(promise) of the mocked
+// ctx.newPromise() is It.IsAny<TaskCompletionSource>(). ctx.flush() returning the forbidden-call Answer is a
+// Flush() setup whose callback calls Assert.Fail; as in Java, the listener notification of DefaultHttp2Connection
+// catches and logs the failure. assertThrows(T.class,...) is Assert.ThrowsAny<T> and the anonymous Executables are
+// lambdas; IllegalArgumentException is ArgumentException.
 public class DefaultHttp2LocalFlowControllerTest
 {
     private const int STREAM_ID = 1;

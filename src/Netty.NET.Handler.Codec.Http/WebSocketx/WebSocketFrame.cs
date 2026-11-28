@@ -22,13 +22,12 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx;
 /**
  * Base class for web socket frames.
  */
-// CLR: the Java overrides narrow the DefaultByteBufHolder return types; they are covariant overrides ("override methods
-// support covariant return types. In particular, the return type of an override method can derive from the return type
-// of the corresponding base method",
+// CLR: the Java overrides narrow the DefaultByteBufHolder return types; they are covariant overrides ("override
+// methods support covariant return types. In particular, the return type of an override method can derive from the
+// return type of the corresponding base method",
 // https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override), as codec-smtp's
-// DefaultSmtpContent does, and the abstract replace(ByteBuf) is an abstract override. content() is the Content property
-// and contentToString() is ContentToString() of the Buffer port's DefaultByteBufHolder (docs/buffer-porting.md, Buffer
-// holders and conversion).
+// DefaultSmtpContent does, and the abstract replace(ByteBuf) is an abstract override. content() is the Content
+// property and contentToString() is ContentToString() of the Buffer port's DefaultByteBufHolder.
 public abstract class WebSocketFrame : DefaultByteBufHolder
 {
 

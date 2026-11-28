@@ -29,36 +29,10 @@ using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Handler.Codec.Http2.Tests;
 
-// CLR: the package-private class and enum are public (xUnit runs public test classes, and a theory parameter type must
-// be as accessible as the method, CS0051); @ParameterizedTest @EnumSource(OpenMode.class) is a [Theory] with one
-// InlineData row per constant. The event loop group, bootstraps and NIO channels are the Transport's
-// MultiThreadIoEventLoopGroup, NioIoHandler, ServerBootstrap/Bootstrap and NioServerSocketChannel/NioSocketChannel
-// (src/Netty.NET.Transport); bind(NetUtil.LOCALHOST, 0).sync().channel() is the await of
-// ServerBootstrap.BindAsync(IPAddress, int), and sync()/syncUninterruptibly() are awaits (docs/codec-http-porting.md,
-// Core test notes). Java's Bootstrap.connect() returns a ChannelFuture whose channel() exists before the connect
-// completes; the Transport's Bootstrap.ConnectAsync() returns a Task<IChannel> that yields the channel only when the
-// connect completes (src/Netty.NET.Transport/Bootstrapping/Bootstrap.cs). The test needs the channel first (the
-// Http2StreamChannelBootstrap is built on it before the connect completes), so connect() is the two steps it consists
-// of in Java (initAndRegister(), then channel.connect(remoteAddress, promise) in doConnect): Bootstrap.RegisterAsync()
-// gives the registered channel, and cf is the Task of channel.ConnectAsync(remoteAddress), the channel's connect promise
-// that Java's connect() returns; the address of remoteAddress(...) is passed to it. ChannelFuture/Future listeners
-// (addListener) are continuations on Common's EventExecutorTaskScheduler over the channel's event loop, the
-// DefaultPromise.notifyListeners() timing (owner decision 2026-11-24; docs/codec-http-porting.md, Listener timing):
-// cf completes on the event loop (Http2ConnectionHandler.ConnectAsync completes its promise once the preface is sent),
-// so the Listener mode opens the stream on the event loop in the connect notification, as Java's listener does
-// (measured: InEventLoop() is true in that continuation). GenericFutureListener<Future<Http2StreamChannel>> is
-// the nested listener's OperationComplete(Task<IHttp2StreamChannel>) and getNow() the result of a successful Task,
-// otherwise null. CompletableFuture<Http2HeadersFrame> is a TaskCompletionSource<IHttp2HeadersFrame> created with
-// RunContinuationsAsynchronously ("Forces continuations added to the current task to be executed asynchronously",
-// https://learn.microsoft.com/dotnet/api/system.threading.tasks.taskcreationoptions, as cited in
-// src/Netty.NET.Common/Concurrent/EventExecutorTaskScheduler.cs), so the test does not resume on the event loop that
-// completes it, as Java's get() waits on the test thread; complete/completeExceptionally are TrySetResult/
-// TrySetException and get(5, SECONDS) is WaitAsync(5 s). eventLoop().submit(Runnable) is the Common SubmitAsync
-// extension (src/Netty.NET.Common/Concurrent/EventExecutorExtensions.cs). throw new AssertionError() is
-// UnreachableException (docs/codec-http-porting.md, Shared CLR adaptations). Java Strings passed as CharSequence are
-// Http2TestUtil.Of, and copiedBuffer(s, StandardCharsets.UTF_8) is Unpooled.CopiedBuffer(s, Encoding.UTF8)
-// (docs/codec-http-porting.md, Shared CLR adaptations). SocketChannel is ISocketChannel and Http2StreamChannel
-// IHttp2StreamChannel. The anonymous ChannelInitializers and ChannelInboundHandlerAdapters are named nested classes.
+// Register the channel before connecting because the test needs the channel before the connect task completes. In
+// listener mode, open the stream on the event loop when the preface write completes.
+// Complete the test's response promise asynchronously so its continuation does not resume on the channel's event
+// loop.
 public class H2PrefaceTest
 {
 
@@ -155,7 +129,6 @@ public class H2PrefaceTest
         }
     }
 
-    // CLR: the anonymous ChannelInitializer<Http2StreamChannel> of the backend's Http2MultiplexHandler.
     private sealed class ServerStreamInitializer : ChannelInitializer<IHttp2StreamChannel>
     {
         protected override void InitChannel(IHttp2StreamChannel ch)
@@ -184,7 +157,6 @@ public class H2PrefaceTest
         }
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter that the server and the client pipelines end with.
     private sealed class ExceptionForwarder : ChannelInboundHandlerAdapter
     {
         private readonly StreamRequestResponseListener streamRequestResponseListener;
@@ -240,7 +212,6 @@ public class H2PrefaceTest
         }
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter that StreamRequestResponseListener adds to the stream channel.
     private sealed class ResponseHandler : ChannelInboundHandlerAdapter
     {
         private readonly StreamRequestResponseListener listener;

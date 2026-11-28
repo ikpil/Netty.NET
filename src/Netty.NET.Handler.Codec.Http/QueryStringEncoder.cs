@@ -33,18 +33,18 @@ namespace Netty.NET.Handler.Codec.Http;
  * @see QueryStringDecoder
  */
 // CLR: java.nio.charset.Charset is System.Text.Encoding. CharsetUtil.UTF_8.equals(charset) compares the canonical
-// charset names, so any UTF-8 charset takes the built-in UTF-8 path; its .NET counterpart is the code page of the
+// charset names, so any UTF-8 charset takes the built-in UTF-8 path; its.NET counterpart is the code page of the
 // Encoding (65001 for every UTF8Encoding). String.getBytes(charset) is Encoding.GetBytes, which writes no preamble
 // (the preamble "can be prefixed to the sequence of bytes resulting from the encoding process",
-// https://learn.microsoft.com/en-us/dotnet/api/system.text.encoding.getpreamble?view=net-10.0), while the JDK "UTF-16"
-// charset "writes a big-endian byte-order mark" when encoding
-// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/charset/Charset.html); no .NET Encoding emits a
-// byte-order mark from GetBytes. The private encode methods take the String arguments of addParam as string (Java
-// passes them as CharSequence). java.net.URI is System.Uri: new URI(String) parses a relative or an absolute reference,
-// so toUri() is new Uri(ToString(), UriKind.RelativeOrAbsolute), and URISyntaxException is the UriFormatException that
-// the constructor throws. Character.isHighSurrogate/isLowSurrogate/toCodePoint are char.IsHighSurrogate/IsLowSurrogate/
-// ConvertToUtf32. The encoded octets are masked with & 0xF in forDigit, so the Java signed byte and the C# byte give
-// the same hex digits.
+// https://learn.microsoft.com/en-us/dotnet/api/system.text.encoding.getpreamble?view=net-10.0), while the JDK
+// "UTF-16" charset "writes a big-endian byte-order mark" when encoding
+// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/charset/Charset.html); no.NET Encoding
+// emits a byte-order mark from GetBytes. The private encode methods take the String arguments of addParam as
+// string (Java passes them as CharSequence). java.net.URI is System.Uri: new URI(String) parses a relative or an
+// absolute reference, so toUri() is new Uri(ToString(), UriKind.RelativeOrAbsolute), and URISyntaxException is the
+// UriFormatException that the constructor throws. Character.isHighSurrogate/isLowSurrogate/toCodePoint are
+// char.IsHighSurrogate/IsLowSurrogate/ ConvertToUtf32. The encoded octets are masked with & 0xF in forDigit, so
+// the Java signed byte and the C# byte give the same hex digits.
 public class QueryStringEncoder
 {
 

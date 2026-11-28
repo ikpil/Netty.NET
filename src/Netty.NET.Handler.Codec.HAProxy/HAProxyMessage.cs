@@ -30,14 +30,12 @@ namespace Netty.NET.Handler.Codec.HAProxy;
 /**
  * Message container for decoded HAProxy proxy protocol parameters
  */
-// CLR: java.util.List is IList<T>; Collections.unmodifiableList is a ReadOnlyCollection<T> view and
-// Collections.emptyList() an empty array (https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1.asreadonly).
-// List<? extends HAProxyTLV> is IList<HAProxyTLV>, because a C# IList<T> is invariant
-// (https://learn.microsoft.com/dotnet/standard/generics/covariance-and-contravariance). A switch over the AddressFamily
-// constants uses case guards, because a C# case label is a pattern
-// (https://learn.microsoft.com/dotnet/csharp/language-reference/statements/selection-statements). RuntimeException and
-// Throwable are Exception, IllegalArgumentException is ArgumentException, CharsetUtil.US_ASCII is Encoding.ASCII
-// (docs/codec-base-porting.md), and numbers in text use the invariant culture.
+// CLR: List<? extends HAProxyTLV> is IList<HAProxyTLV>, because a C# IList<T> is invariant
+// (https://learn.microsoft.com/dotnet/standard/generics/covariance-and-contravariance). A switch over the
+// AddressFamily constants uses case guards, because a C# case label is a pattern
+// (https://learn.microsoft.com/dotnet/csharp/language-reference/statements/selection-statements). RuntimeException
+// and Throwable are Exception, IllegalArgumentException is ArgumentException, CharsetUtil.US_ASCII is
+// Encoding.ASCII, and numbers in text use the invariant culture.
 public sealed class HAProxyMessage : AbstractReferenceCounted
 {
 
@@ -133,13 +131,12 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
      * @return                           {@link HAProxyMessage} instance
      * @throws HAProxyProtocolException  if any portion of the header is invalid
      */
-    // CLR: Integer.toHexString prints the sign-extended Java byte (a negative byte prints ffffffxx); the C# byte is
-    // unsigned, so the text widens it through sbyte to int and uses the lower-case "x" format
-    // (https://learn.microsoft.com/dotnet/standard/base-types/standard-numeric-format-strings), which prints a negative
-    // int in two's complement as toHexString does (-16325 prints FFFFC03B with "X",
-    // https://learn.microsoft.com/dotnet/api/system.int32.tostring).
-    // readUnsignedShort() returns ushort, indexOf(int, int, byte) is IndexOf and readerIndex(int) is the ReaderIndex
-    // setter of the Buffer port (docs/buffer-porting.md).
+    // CLR: Integer.toHexString prints the sign-extended Java byte (a negative byte prints ffffffxx); the C# byte
+    // is unsigned, so the text widens it through sbyte to int and uses the lower-case "x" format
+    // (https://learn.microsoft.com/dotnet/standard/base-types/standard-numeric-format-strings), which prints a
+    // negative int in two's complement as toHexString does (-16325 prints FFFFC03B with "X",
+    // https://learn.microsoft.com/dotnet/api/system.int32.tostring). readUnsignedShort() returns ushort,
+    // indexOf(int, int, byte) is IndexOf and readerIndex(int) is the ReaderIndex setter of the Buffer port.
     internal static HAProxyMessage DecodeHeader(ByteBuf header)
     {
         ObjectUtil.CheckNotNull(header, "header");
@@ -472,8 +469,7 @@ public sealed class HAProxyMessage : AbstractReferenceCounted
     // CLR: String.split(" ") returns the whole string when the separator does not occur and otherwise drops the
     // trailing empty strings ("Trailing empty strings are therefore not included in the resulting array",
     // https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html#split(java.lang.String));
-    // string.Split(' ') keeps them, so they are removed after a split. HAProxyProxiedProtocol.valueOf(String) is the
-    // implicit enum method, ported as HAProxyProxiedProtocol.ValueOf(string).
+    // string.Split(' ') keeps them, so they are removed after a split.
     internal static HAProxyMessage DecodeHeader(string header)
     {
         if (header == null)

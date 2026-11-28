@@ -24,8 +24,8 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
 // NewHandler). engine.getEnabledCipherSuites() is the list the context enables on every engine it creates, which
 // SslContext.CipherSuites() returns ("Returns the list of enabled cipher suites, in the order of preference"): the
 // Http2SecurityUtil.CIPHERS that SupportedCipherSuiteFilter keeps among the names SslStream supports (the
-// TlsCipherSuite names, docs/handler-porting.md, setEnabledCipherSuites). Creating a handler is not needed for that list
-// and would fail on Windows, which has no CipherSuitesPolicy (docs/handler-porting.md). Assumptions.assumeTrue is
+// TlsCipherSuite names, docs/handler-porting.md, setEnabledCipherSuites). Creating a handler is not needed for
+// that list and would fail on Windows, which has no CipherSuitesPolicy. Assumptions.assumeTrue is
 // Assert.SkipUnless (xunit v3 dynamic skip).
 public class Http2SecurityUtilTest
 {

@@ -19,10 +19,9 @@ using System.Globalization;
 
 namespace Netty.NET.Handler.Ssl.Ocsp;
 
-// CLR: java.util.Date is DateTimeOffset (docs/codec-http-porting.md), and the optional nextUpdate is a nullable
-// DateTimeOffset. status() is Status_(): a method cannot share the name of the nested Status enum, as pkitesting's
-// algorithm(Algorithm) is Algorithm_(Algorithm) (docs/pkitesting-porting.md). toString() formats the dates as
-// Date.toString() does, "EEE MMM dd HH:mm:ss zzz yyyy"
+// CLR: java.util.Date is DateTimeOffset, and the optional nextUpdate is a nullable DateTimeOffset. status() is
+// Status_(): a method cannot share the name of the nested Status enum, as pkitesting's algorithm(Algorithm) is
+// Algorithm_(Algorithm). toString() formats the dates as Date.toString() does, "EEE MMM dd HH:mm:ss zzz yyyy"
 // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Date.html#toString()), in UTC with the
 // invariant culture; a missing nextUpdate is "null", as Java string concatenation writes it.
 public class OcspResponse

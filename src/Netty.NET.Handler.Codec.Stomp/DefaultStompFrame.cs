@@ -24,13 +24,12 @@ namespace Netty.NET.Handler.Codec.Stomp;
 /**
  * Default implementation of {@link StompFrame}.
  */
-// CLR: content() and refCnt() are the IByteBufHolder/IReferenceCounted Content and RefCnt properties
-// (docs/buffer-porting.md, Buffer holders and conversion). The module interfaces inherit the holder methods instead of
-// narrowing them (owner decision 2026-11-19; docs/transport-porting.md, Decisions), so only the IByteBufHolder and
+// CLR: content() and refCnt() are the IByteBufHolder/IReferenceCounted Content and RefCnt properties. The module
+// interfaces inherit the holder methods instead of narrowing them, so only the IByteBufHolder and
 // IReferenceCounted members, which those shared interfaces re-declare with other return types, are explicit
 // implementations that forward to the public IStompFrame members, as Transport DatagramPacket does
 // (https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/interfaces/explicit-interface-implementation).
-// The package-private constructor is internal; CharsetUtil.UTF_8 is Encoding.UTF8 (docs/codec-base-porting.md).
+// The package-private constructor is internal; CharsetUtil.UTF_8 is Encoding.UTF8.
 public class DefaultStompFrame : DefaultStompHeadersSubframe, IStompFrame
 {
 

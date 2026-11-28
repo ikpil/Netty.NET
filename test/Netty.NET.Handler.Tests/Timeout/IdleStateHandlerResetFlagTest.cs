@@ -32,9 +32,6 @@ namespace Netty.NET.Handler.Tests.Timeout;
  * flags, so the handler keeps reporting non-first events even after a reset.
  * The writeListener path doesn't have this problem because it resets both.
  */
-// CLR: the anonymous ChannelInboundHandlerAdapter is the named nested class IdleEventCollector;
-// advanceTimeBy(1100L, MILLISECONDS) is AdvanceTimeBy(TimeSpan.FromMilliseconds(1100)) (the EmbeddedChannel frozen
-// clock, as in Java) and new IdleStateHandler(false, 0L, 1L, 0L, SECONDS) takes TimeSpan arguments.
 public class IdleStateHandlerResetFlagTest
 {
 

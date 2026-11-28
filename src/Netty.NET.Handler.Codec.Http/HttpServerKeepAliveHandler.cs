@@ -44,14 +44,12 @@ namespace Netty.NET.Handler.Codec.Http;
  *  </pre>
  * </blockquote>
  */
-// CLR: write(ctx, msg, promise) is WriteAsync, whose Task replaces the promise (docs/codec-base-porting.md, Outbound
-// operations). Java adds ChannelFutureListener.CLOSE to the caller's promise before writing, so the channel closes when
+// CLR: Java adds ChannelFutureListener.CLOSE to the caller's promise before writing, so the channel closes when
 // the write completes or fails; the C# handler closes it from a continuation of the returned Task that runs on the
 // channel's executor at once when the write completes on the event loop (Common's EventExecutorTaskScheduler over
 // ctx.Executor, the Java listener timing of DefaultPromise.notifyListeners(); docs/handler-porting.md, Listener
-// timing), or before rethrowing when the write throws (the pipeline then fails the caller's Task); promise.unvoid() has
-// no counterpart because there is no void promise. String.regionMatches(true, ...) is
-// string.Compare with StringComparison.OrdinalIgnoreCase over the prefix length (a shorter value does not match).
+// timing), or before rethrowing when the write throws (the pipeline then fails the caller's Task);
+// promise.unvoid() has no counterpart because there is no void promise.
 public class HttpServerKeepAliveHandler : ChannelDuplexHandler
 {
     private const string MULTIPART_PREFIX = "multipart";

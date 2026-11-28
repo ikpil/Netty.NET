@@ -33,22 +33,20 @@ namespace Netty.NET.Handler.Codec.Http2;
  * For simplicity, it converts to chunked encoding unless the entire stream
  * is a single header.
  */
-// CLR: @Sharable is the Transport's [Sharable] (src/Netty.NET.Transport/Channels/IChannelHandler.cs), as codec-http's
-// WebSocket00FrameEncoder. MessageToMessageCodec<Http2StreamFrame, HttpObject> is the codec-base
-// MessageToMessageCodec<IHttp2StreamFrame, IHttpObject>, and super(Http2StreamFrame.class, HttpObject.class) passes the
-// Types (docs/codec-base-porting.md, Type matching); List<Object> out is IList<object> @out (docs/codec-base-porting.md,
-// Lists). The codec-http interfaces take the I prefix and their getters are methods, ByteBufHolder.content() is the
-// Content property (docs/codec-http-porting.md, Shared CLR adaptations). The @Deprecated
-// DefaultLastHttpContent(ByteBuf, boolean), whose @deprecated text names DefaultLastHttpContent(ByteBuf), is not ported
-// in codec-http (src/Netty.NET.Handler.Codec.Http/DefaultLastHttpContent.cs), so decode calls the HttpHeadersFactory
-// constructor with trailersFactory().withValidation(validateHeaders), which is what the deprecated constructor does in
-// Java, as HttpConversionUtil does for the message constructors (src/Netty.NET.Handler.Codec.Http2/HttpConversionUtil.cs).
-// Attribute<HttpScheme> is the Common IAttribute<HttpScheme> and AttributeKey.valueOf(Class, String) is
-// AttributeKey<HttpScheme>.ValueOf(Type, string); ctx.channel(), ch.parent() and ch.pipeline() are the Transport's
-// Channel, Parent and Pipeline properties and pipeline().get(SslHandler.class) is Pipeline.Get<SslHandler>()
-// (docs/transport-porting.md, Decisions). Http2StreamChannel is the IHttp2StreamChannel interface. "throws Exception"
-// and "throws Http2Exception" have no C# counterpart. The public class is not sealed, so the protected isSsl is
-// virtual.
+// CLR: @Sharable is the Transport's [Sharable] (src/Netty.NET.Transport/Channels/IChannelHandler.cs), as
+// codec-http's WebSocket00FrameEncoder. MessageToMessageCodec<Http2StreamFrame, HttpObject> is the codec-base
+// MessageToMessageCodec<IHttp2StreamFrame, IHttpObject>, and super(Http2StreamFrame.class, HttpObject.class)
+// passes the Types; List<Object> out is IList<object> @out. The @Deprecated DefaultLastHttpContent(ByteBuf,
+// boolean), whose @deprecated text names DefaultLastHttpContent(ByteBuf), is not ported in codec-http
+// (src/Netty.NET.Handler.Codec.Http/DefaultLastHttpContent.cs), so decode calls the HttpHeadersFactory constructor
+// with trailersFactory().withValidation(validateHeaders), which is what the deprecated constructor does in Java,
+// as HttpConversionUtil does for the message constructors
+// (src/Netty.NET.Handler.Codec.Http2/HttpConversionUtil.cs). Attribute<HttpScheme> is the Common
+// IAttribute<HttpScheme> and AttributeKey.valueOf(Class, String) is AttributeKey<HttpScheme>.ValueOf(Type,
+// string); ctx.channel(), ch.parent() and ch.pipeline() are the Transport's Channel, Parent and Pipeline
+// properties and pipeline().get(SslHandler.class) is Pipeline.Get<SslHandler>(). Http2StreamChannel is the
+// IHttp2StreamChannel interface. "throws Exception" and "throws Http2Exception" have no C# counterpart. The public
+// class is not sealed, so the protected isSsl is virtual.
 [Sharable]
 public class Http2StreamFrameToHttpObjectCodec : MessageToMessageCodec<IHttp2StreamFrame, IHttpObject>
 {

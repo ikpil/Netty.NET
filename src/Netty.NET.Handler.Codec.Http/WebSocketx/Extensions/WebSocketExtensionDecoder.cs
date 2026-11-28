@@ -20,7 +20,7 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx.Extensions;
  * Convenient class for <tt>io.netty.handler.codec.http.websocketx.extensions.WebSocketExtension</tt> decoder.
  */
 // CLR: MessageToMessageDecoder<WebSocketFrame> is the codec-base generic and super(WebSocketFrame.class) is
-// base(typeof(WebSocketFrame)) (docs/codec-base-porting.md, Type matching).
+// base(typeof(WebSocketFrame)).
 public abstract class WebSocketExtensionDecoder : MessageToMessageDecoder<WebSocketFrame>
 {
 

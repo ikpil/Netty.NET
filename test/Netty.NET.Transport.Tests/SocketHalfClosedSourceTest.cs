@@ -1155,7 +1155,7 @@ public class SocketHalfClosedSourceTest : AbstractSocketTest
             return new ExtendedHandle(numReads);
         }
 
-        // CLR: the source's anonymous ExtendedHandle is this nested class; UncheckedBooleanSupplier is Func<bool>.
+        // CLR: UncheckedBooleanSupplier is Func<bool>.
         private sealed class ExtendedHandle(int numReads) : IRecvByteBufAllocator.IExtendedHandle
         {
             private int attemptedBytesRead;

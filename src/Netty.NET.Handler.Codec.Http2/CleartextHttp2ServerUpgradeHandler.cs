@@ -33,9 +33,8 @@ namespace Netty.NET.Handler.Codec.Http2;
  * prior knowledge or not.
  */
 // CLR: ChannelHandler is IChannelHandler, List<Object> out is IList<object> @out and checkNotNull's
-// NullPointerException is ArgumentNullException (docs/codec-base-porting.md); ctx.pipeline() and ctx.name() are the
-// Pipeline and Name properties (docs/transport-porting.md, Decisions), and the pipeline's remove(handler) returns the
-// pipeline as in Java. The checked "throws" clauses have no counterpart.
+// NullPointerException is ArgumentNullException; ctx.pipeline() and ctx.name() are the Pipeline and Name
+// properties, and the pipeline's remove(handler) returns the pipeline as in Java.
 public sealed class CleartextHttp2ServerUpgradeHandler : ByteToMessageDecoder
 {
     private static readonly ByteBuf CONNECTION_PREFACE = UnreleasableBuffer(ConnectionPrefaceBuf()).AsReadOnly();
@@ -103,9 +102,8 @@ public sealed class CleartextHttp2ServerUpgradeHandler : ByteToMessageDecoder
      */
     public sealed class PriorKnowledgeUpgradeEvent
     {
-        // CLR: private in Java, where the enclosing class may read a nested class's private members; internal here,
-        // because C# does not open a nested class's private members to the enclosing class (docs/handler-porting.md,
-        // Shared CLR adaptations, Access and names).
+        // CLR: private in Java, where the enclosing class may read a nested class's private members; internal
+        // here, because C# does not open a nested class's private members to the enclosing class.
         internal static readonly PriorKnowledgeUpgradeEvent INSTANCE = new PriorKnowledgeUpgradeEvent();
 
         private PriorKnowledgeUpgradeEvent()

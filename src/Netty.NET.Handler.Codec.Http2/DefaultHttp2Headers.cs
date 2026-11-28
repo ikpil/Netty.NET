@@ -24,29 +24,26 @@ using static Netty.NET.Common.AsciiString;
 
 namespace Netty.NET.Handler.Codec.Http2;
 
-// CLR: DefaultHeaders<CharSequence, CharSequence, Http2Headers> is the codec-base DefaultHeaders<ICharSequence,
-// ICharSequence, IHttp2Headers> (docs/codec-base-porting.md, Headers); HashingStrategy is IEqualityComparer and the
-// AsciiString CASE_SENSITIVE_HASHER/CASE_INSENSITIVE_HASHER are the Common comparers. NameValidator<CharSequence> and
-// ValueValidator<CharSequence> are DefaultHeaders.INameValidator<ICharSequence>/IValueValidator<ICharSequence>, whose
-// NOT_NULL/NO_VALIDATION constants need no unchecked cast; the anonymous validators are the private nested classes
-// Http2NameValidator and Http2ValueValidator, and the anonymous ByteProcessor is a Func<byte, bool> (the Common
-// ByteProcessor mapping). PlatformDependent.throwException(e) throws a checked exception without declaring it; C# has
-// no checked exceptions, so it is a throw statement and the unreachable return after it is left out (as handler's
-// SslHandler, docs/handler-porting.md). The inner class Http2HeaderEntry reads the enclosing instance's firstNonPseudo
-// and head, so its constructor takes the DefaultHttp2Headers (a C# nested class has no enclosing instance), and the
-// field initializer firstNonPseudo = head is an assignment in the constructor, because a C# field initializer cannot
-// read an instance field (CS0236, https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0236). The protected
-// members of the base class are protected (they are protected internal in codec-base, another assembly), except
-// HeaderEntry.Remove(): codec-base gives this assembly its internals (InternalsVisibleTo, for ExecutorPromiseCombiner),
-// and an override of a protected internal member it can see keeps both modifiers (CS0507).
-// IllegalArgumentException is ArgumentException; Integer.toHexString and the index use the invariant culture.
+// CLR: HashingStrategy is IEqualityComparer and the AsciiString CASE_SENSITIVE_HASHER/CASE_INSENSITIVE_HASHER are
+// the Common comparers. The anonymous validators are the private nested classes Http2NameValidator and
+// Http2ValueValidator, and the anonymous ByteProcessor is a Func<byte, bool> (the Common ByteProcessor mapping).
+// PlatformDependent.throwException(e) throws a checked exception without declaring it; C# has no checked
+// exceptions, so it is a throw statement and the unreachable return after it is left out (as handler's SslHandler,
+// docs/handler-porting.md). The inner class Http2HeaderEntry reads the enclosing instance's firstNonPseudo and
+// head, so its constructor takes the DefaultHttp2Headers (a C# nested class has no enclosing instance), and the
+// field initializer firstNonPseudo = head is an assignment in the constructor, because a C# field initializer
+// cannot read an instance field (CS0236, https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0236). The
+// protected members of the base class are protected (they are protected internal in codec-base, another assembly),
+// except HeaderEntry.Remove(): codec-base gives this assembly its internals (InternalsVisibleTo, for
+// ExecutorPromiseCombiner), and an override of a protected internal member it can see keeps both modifiers
+// (CS0507). IllegalArgumentException is ArgumentException; Integer.toHexString and the index use the invariant
+// culture.
 public class DefaultHttp2Headers
         : DefaultHeaders<ICharSequence, ICharSequence, IHttp2Headers>, IHttp2Headers
 {
     private static readonly Func<byte, bool> HTTP2_NAME_VALIDATOR_PROCESSOR = static value => !IsUpperCase(value);
     private static readonly DefaultHeaders.INameValidator<ICharSequence> HTTP2_NAME_VALIDATOR = new Http2NameValidator();
 
-    // CLR: the anonymous NameValidator of HTTP2_NAME_VALIDATOR.
     private sealed class Http2NameValidator : DefaultHeaders.INameValidator<ICharSequence>
     {
         public void ValidateName(ICharSequence name)
@@ -119,7 +116,6 @@ public class DefaultHttp2Headers
 
     private static readonly DefaultHeaders.IValueValidator<ICharSequence> VALUE_VALIDATOR = new Http2ValueValidator();
 
-    // CLR: the anonymous ValueValidator of VALUE_VALIDATOR.
     private sealed class Http2ValueValidator : DefaultHeaders.IValueValidator<ICharSequence>
     {
         public void Validate(ICharSequence value)

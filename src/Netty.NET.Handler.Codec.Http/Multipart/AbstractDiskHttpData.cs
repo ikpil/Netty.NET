@@ -500,11 +500,8 @@ public abstract class AbstractDiskHttpData : AbstractHttpData
         return false;
     }
 
-    // CLR: File.renameTo(dest) is RenameFile, which returns false where File.Move throws (for example when dest exists,
-    // as FileInfo.MoveTo "does not overwrite the destination file if it already exists",
-    // https://learn.microsoft.com/en-us/dotnet/api/system.io.fileinfo.moveto?view=net-10.0); the copy then runs as in
-    // Java. FileChannel.transferTo(position, count, target), which "does not modify this channel's position" and returns
-    // "The number of bytes, possibly zero, that were actually transferred"
+    // CLR: FileChannel.transferTo(position, count, target), which "does not modify this channel's position" and
+    // returns "The number of bytes, possibly zero, that were actually transferred"
     // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/channels/FileChannel.html), is the
     // private TransferTo helper. A close failure of RandomAccessFile.close() is a Dispose() IOException.
     public override bool RenameTo(FileInfo dest)

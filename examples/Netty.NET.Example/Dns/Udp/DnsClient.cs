@@ -27,16 +27,11 @@ using Netty.NET.Transport.Channels.Sockets;
 namespace Netty.NET.Example.Dns.Udp;
 
 // CLR: new InetSocketAddress(DNS_SERVER_HOST, DNS_SERVER_PORT) with an IP literal is an IPEndPoint of the parsed
-// address. main blocks on bind(0).sync(), writeAndFlush(query).sync() and close().sync(); the async Main awaits those
-// Tasks (docs/transport-porting.md: sync() is awaiting the Task), and bind(0).sync().channel() is the result of
-// BindAsync. closeFuture().await(10, TimeUnit.SECONDS) is Task.WhenAny over the CloseFuture and a ten-second
-// Task.Delay, which reports whether the channel closed in time without throwing. group.shutdownGracefully() is
-// ShutdownGracefullyAsync(), whose Task is discarded as Java discards the future. NioDatagramChannel.class is
-// Channel<NioDatagramChannel>(); the anonymous ChannelInitializer is an ActionChannelInitializer and the anonymous
-// SimpleChannelInboundHandler the nested ResponseHandler class. The Java interfaces DnsQuery, DnsQuestion, DnsRecord,
-// DnsRawRecord and DatagramChannel are IDnsQuery, IDnsQuestion, IDnsRecord, IDnsRawRecord and IDatagramChannel, and
-// recordAt infers its type argument in Java (RecordAt<IDnsQuestion> here). System.out.printf with %s%n is
-// Console.WriteLine with a composite format.
+// address. main blocks on bind(0).sync(), writeAndFlush(query).sync() and close().sync(). NioDatagramChannel.class
+// is Channel<NioDatagramChannel>(). The Java interfaces DnsQuery, DnsQuestion, DnsRecord, DnsRawRecord and
+// DatagramChannel are IDnsQuery, IDnsQuestion, IDnsRecord, IDnsRawRecord and IDatagramChannel, and recordAt infers
+// its type argument in Java (RecordAt<IDnsQuestion> here). System.out.printf with %s%n is Console.WriteLine with a
+// composite format.
 public sealed class DnsClient
 {
 

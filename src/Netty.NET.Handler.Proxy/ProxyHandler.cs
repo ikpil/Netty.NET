@@ -32,17 +32,16 @@ namespace Netty.NET.Handler.Proxy;
 /**
  * A common abstraction for protocols that establish blind forwarding proxy tunnels.
  */
-// CLR: SocketAddress is EndPoint, an unresolved InetSocketAddress is DnsEndPoint and a resolved one IPEndPoint
-// (docs/handler-porting.md, Addresses). The ChannelPromise of connect/write is the Task that ConnectAsync/WriteAsync
-// return (docs/codec-base-porting.md, "Outbound operations"): a write queued before the handshake finishes returns the
-// consumer Task of PendingWriteQueue.Add. Future<Channel> connectFuture() is Task<IChannel>; LazyChannelPromise (a
-// DefaultPromise on ctx.executor() that throws IllegalStateException while the handler is not added) is a
-// TaskCompletionSource<IChannel> whose continuations run asynchronously, as SslHandler maps its LazyChannelPromise: a
-// Task has no executor. The write listener is a continuation on Common's EventExecutorTaskScheduler over ctx.Executor
-// (at once on the event loop, otherwise through Execute: DefaultPromise.notifyListeners), and the connect timeout's
-// Future<?> is the CancellationTokenSource of ctx.Executor.ScheduleAsync (cancel(false) is Cancel()), as
-// WriteTimeoutHandler does. Final Java methods are sealed overrides or non-virtual; Java's checked "throws" clauses
-// have no counterpart.
+// CLR: SocketAddress is EndPoint, an unresolved InetSocketAddress is DnsEndPoint and a resolved one IPEndPoint.
+// The ChannelPromise of connect/write is the Task that ConnectAsync/WriteAsync return : a write queued before the
+// handshake finishes returns the consumer Task of PendingWriteQueue.Add. Future<Channel> connectFuture() is
+// Task<IChannel>; LazyChannelPromise (a DefaultPromise on ctx.executor() that throws IllegalStateException while
+// the handler is not added) is a TaskCompletionSource<IChannel> whose continuations run asynchronously, as
+// SslHandler maps its LazyChannelPromise: a Task has no executor. The write listener is a continuation on Common's
+// EventExecutorTaskScheduler over ctx.Executor (at once on the event loop, otherwise through Execute:
+// DefaultPromise.notifyListeners), and the connect timeout's Future<?> is the CancellationTokenSource of
+// ctx.Executor.ScheduleAsync (cancel(false) is Cancel()), as WriteTimeoutHandler does. Final Java methods are
+// sealed overrides or non-virtual; Java's checked "throws" clauses have no counterpart.
 public abstract class ProxyHandler : ChannelDuplexHandler
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(ProxyHandler));
@@ -70,8 +69,8 @@ public abstract class ProxyHandler : ChannelDuplexHandler
     private bool flushedPrematurely;
     private readonly TaskCompletionSource<IChannel> connectPromise = NewChannelPromise();
     private CancellationTokenSource connectTimeoutFuture;
-    // CLR: the listener reads this handler, so it is assigned in the constructor (a C# field initializer cannot refer to
-    // the instance); future.isSuccess() is IsCompletedSuccessfully.
+    // CLR: the listener reads this handler, so it is assigned in the constructor (a C# field initializer cannot
+    // refer to the instance).
     private readonly Action<Task> writeListener;
 
     // CLR: the TaskScheduler of writeListener (see the class comment).
@@ -420,8 +419,8 @@ public abstract class ProxyHandler : ChannelDuplexHandler
         return false;
     }
 
-    // CLR: cause.toString() is Common's ThrowableUtil.ThrowableToString (the class name, ": " and the message), because
-    // Exception.ToString() also appends the inner exception and the stack trace (owner decision 2026-11-24).
+    // CLR: cause.toString() is Common's ThrowableUtil.ThrowableToString (the class name, ": " and the message),
+    // because Exception.ToString() also appends the inner exception and the stack trace.
     private void SetConnectFailure(Exception cause)
     {
         finished = true;

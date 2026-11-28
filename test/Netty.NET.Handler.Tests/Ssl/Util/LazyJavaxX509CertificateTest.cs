@@ -21,15 +21,14 @@ using Netty.NET.Handler.Ssl.Util;
 
 namespace Netty.NET.Handler.Tests.Ssl.Util;
 
-// CLR: javax.security.cert.X509Certificate.getInstance(bytes) is X509CertificateLoader.LoadCertificate (PEM or DER). The
-// source aborts the test (Assumptions.abort) when the JDK no longer creates javax certificates; Assert.Skip does the same
-// when the loader fails with a CryptographicException, the javax CertificateException. LazyJavaxX509Certificate
-// is a BCL X509Certificate (see its class comment), and the getters are compared through the BCL X509Certificate
-// members: getSerialNumber() GetSerialNumber(), getIssuerDN() Issuer, getSubjectDN() Subject,
-// getNotBefore()/getNotAfter() GetEffectiveDateString()/GetExpirationDateString(); getVersion(), getSigAlgName(),
-// getSigAlgOID() and getSigAlgParams() have no BCL X509Certificate member, so the whole DER certificate that contains
-// them (GetRawCertData()) and the key algorithm (GetKeyAlgorithm(), GetKeyAlgorithmParameters()) are compared instead.
-// CharsetUtil.UTF_8 is Encoding.UTF8.
+// CLR: The source aborts the test (Assumptions.abort) when the JDK no longer creates javax certificates;
+// Assert.Skip does the same when the loader fails with a CryptographicException, the javax CertificateException.
+// LazyJavaxX509Certificate is a BCL X509Certificate (see its class comment), and the getters are compared through
+// the BCL X509Certificate members: getSerialNumber() GetSerialNumber(), getIssuerDN() Issuer, getSubjectDN()
+// Subject, getNotBefore()/getNotAfter() GetEffectiveDateString()/GetExpirationDateString(); getVersion(),
+// getSigAlgName(), getSigAlgOID() and getSigAlgParams() have no BCL X509Certificate member, so the whole DER
+// certificate that contains them (GetRawCertData()) and the key algorithm (GetKeyAlgorithm(),
+// GetKeyAlgorithmParameters()) are compared instead.
 public class LazyJavaxX509CertificateTest
 {
 

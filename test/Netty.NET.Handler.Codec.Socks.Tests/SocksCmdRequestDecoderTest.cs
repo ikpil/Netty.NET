@@ -20,10 +20,8 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Socks.Tests;
 
-// CLR: assertInstanceOf(C.class, o) is Assert.IsType<C>(o, exactMatch: false); SocksCmdType.values() is Values() (see
-// SocksCmdType.cs). SocketUtils.addressByName of a literal is IPAddress.Parse and InetAddress.getAddress() is
-// GetAddressBytes() (docs/common-clr-design.md, as in the codec-dns tests); the UnknownHostException clause has no
-// counterpart.
+// CLR: SocketUtils.addressByName of a literal is IPAddress.Parse and InetAddress.getAddress() is
+// GetAddressBytes(); the UnknownHostException clause has no counterpart.
 public class SocksCmdRequestDecoderTest
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(SocksCmdRequestDecoderTest));

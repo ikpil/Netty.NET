@@ -19,8 +19,6 @@ using static Netty.NET.Common.Internal.ObjectUtil;
 
 namespace Netty.NET.Handler.Codec.Dns;
 
-// CLR: the package-private final class and its package-private members are internal; checkNotNull throws
-// ArgumentNullException (docs/codec-base-porting.md). 'throws Exception' has no C# counterpart.
 internal sealed class DnsQueryEncoder
 {
 

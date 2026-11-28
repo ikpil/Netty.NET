@@ -19,8 +19,7 @@ using Netty.NET.Handler.IpFilter;
 
 namespace Netty.NET.Handler.Tests.IpFilter;
 
-// CLR: IllegalArgumentException is ArgumentException; the anonymous Executables are lambdas. assertDoesNotThrow is a
-// plain call (an exception fails the test), with Record.Exception and Assert.Null keeping the explicit check. The AssertJ
+// CLR: IllegalArgumentException is ArgumentException. The AssertJ
 // assertThat(rule.getIpAddress()).isEqualTo("10.10.0.0") is Assert.Equal on the internal GetIpAddress().
 public class IpSubnetFilterRuleTest
 {

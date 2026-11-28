@@ -20,9 +20,7 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Socks.Tests;
 
-// CLR: assertInstanceOf(C.class, o) is Assert.IsType<C>(o, exactMatch: false); SocksCmdStatus.values() and
-// SocksAddressType.values() are Values() (see SocksAddressType.cs); the anonymous Executable is a lambda and
-// IllegalArgumentException is ArgumentException.
+// CLR: SocksCmdStatus.values() and SocksAddressType.values() are Values() (see SocksAddressType.cs).
 public class SocksCmdResponseDecoderTest
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(SocksCmdResponseDecoderTest));

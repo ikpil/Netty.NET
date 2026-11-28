@@ -27,15 +27,15 @@ namespace Netty.NET.Handler.Codec.Quic;
  * {@link QuicCodecBuilder} that configures and builds a {@link ChannelHandler} that should be added to the
  * {@link io.netty.channel.ChannelPipeline} of a {@code QUIC} server.
  */
-// CLR: the option and attribute maps are the Dictionary shapes of Quic (Map<ChannelOption<?>, Object> and the attribute
-// entries with their typed setters, see Quic); option/attr/streamOption/streamAttr take T as Transport's Bootstrap does
-// (AttributeKey<T> needs a reference type T). The built codec is the handler of a QuicEndpointChannel and creates the
-// QuicChannels of a QuicListener (MsQuicServerCodec, the counterpart of QuicheQuicServerCodec). msquic generates the
-// connection IDs and stateless reset tokens and validates client addresses with its own retry tokens, so a
-// connectionIdAddressGenerator or resetTokenGenerator, and a token handler other than NoQuicTokenHandler and
-// InsecureQuicTokenHandler (which only ask for tokens without their own validation), report NotSupportedException from
-// Build() (owner decision 2026-11-27, features System.Net.Quic lacks); the defaults that build(...) chooses for them are
-// kept. @Nullable has no counterpart.
+// CLR: the option and attribute maps are the Dictionary shapes of Quic (Map<ChannelOption<?>, Object> and the
+// attribute entries with their typed setters, see Quic); option/attr/streamOption/streamAttr take T as Transport's
+// Bootstrap does (AttributeKey<T> needs a reference type T). The built codec is the handler of a
+// QuicEndpointChannel and creates the QuicChannels of a QuicListener (MsQuicServerCodec, the counterpart of
+// QuicheQuicServerCodec). msquic generates the connection IDs and stateless reset tokens and validates client
+// addresses with its own retry tokens, so a connectionIdAddressGenerator or resetTokenGenerator, and a token
+// handler other than NoQuicTokenHandler and InsecureQuicTokenHandler (which only ask for tokens without their own
+// validation), report NotSupportedException from Build(); the defaults that build(...) chooses for them are kept.
+// @Nullable has no counterpart.
 public sealed class QuicServerCodecBuilder : QuicCodecBuilder<QuicServerCodecBuilder>
 {
     // The order in which ChannelOptions are applied is important they may depend on each other for validation

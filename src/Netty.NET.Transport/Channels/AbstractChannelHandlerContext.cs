@@ -948,8 +948,8 @@ internal abstract class AbstractChannelHandlerContext : IChannelHandlerContext, 
         return true;
     }
 
-    // CLR: tryFailure(promise, cause, logger) becomes the faulted Task of the operation. Every CLR operation returns an
-    // observable Task, so there is no VoidChannelPromise whose failure is only logged.
+    // CLR: Every CLR operation returns an observable Task, so there is no VoidChannelPromise whose failure is only
+    // logged.
     private static Task NotifyOutboundHandlerException(Exception cause)
     {
         return Task.FromException(cause);

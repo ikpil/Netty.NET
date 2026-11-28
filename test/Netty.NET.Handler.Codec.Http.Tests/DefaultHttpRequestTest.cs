@@ -25,13 +25,11 @@ using static Netty.NET.Handler.Codec.Http.Tests.HttpHeadersTestUtils;
 namespace Netty.NET.Handler.Codec.Http.Tests;
 
 // CLR: @ParameterizedTest @MethodSource(Stream<String>) is a [Theory] with MemberData rows; validUris() draws 1000
-// random seeds from an unseeded SplittableRandom, so its rows differ on every run: it is System.Random seeded from a
-// Random without a fixed seed (the exact sequence is not reproduced; the test does not depend on it), with
-// DisableDiscoveryEnumeration so that discovery does not fix one random row set. SplittableRandom.nextBoolean() is
-// Next(2) == 0, nextInt(bound) is Next(bound) and nextInt(lower, upper) is Next(lower, upper). The anonymous HttpMethod
-// subclasses that override asciiName() are the private nested OverriddenHttpMethod (HttpMethod.AsciiName() is virtual,
-// as the non-final Java method is). IllegalArgumentException is ArgumentException; String.valueOf(int) is the invariant
-// int text. The package-private test methods are public, as xUnit requires.
+// random seeds from an unseeded SplittableRandom, so its rows differ on every run: it is System.Random seeded from
+// a Random without a fixed seed (the exact sequence is not reproduced; the test does not depend on it), with
+// DisableDiscoveryEnumeration so that discovery does not fix one random row set. IllegalArgumentException is
+// ArgumentException; String.valueOf(int) is the invariant int text. The package-private test methods are public,
+// as xUnit requires.
 public class DefaultHttpRequestTest
 {
     public static IEnumerable<object[]> InvalidUris()
@@ -98,7 +96,6 @@ public class DefaultHttpRequestTest
         );
     }
 
-    // CLR: Stream.of(...) of the MethodSource methods as MemberData rows.
     private static IEnumerable<object[]> Rows(params string[] values)
     {
         return values.Select(v => new object[] { v });
@@ -217,7 +214,6 @@ public class DefaultHttpRequestTest
         return sb.ToString();
     }
 
-    // CLR: the anonymous HttpMethod("GET") subclasses that override asciiName().
     private sealed class OverriddenHttpMethod : HttpMethod
     {
         private readonly string method;

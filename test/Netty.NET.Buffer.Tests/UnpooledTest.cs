@@ -278,7 +278,7 @@ public class UnpooledTest
     [Fact]
     public void ShouldAllowEmptyBufferToCreateCompositeBuffer()
     {
-        // CLR: explicit BE/LE operations replace the source's .order(LITTLE_ENDIAN) facade on the middle buffer.
+        // CLR: explicit BE/LE operations replace the source's.order(LITTLE_ENDIAN) facade on the middle buffer.
         ByteBuf buf = Unpooled.WrappedBuffer(
                 Unpooled.EmptyBuffer,
                 Unpooled.WrappedBuffer(new byte[16]),
@@ -401,7 +401,6 @@ public class UnpooledTest
         Assert.Equal(0, buf2.RefCnt);
     }
 
-    // CLR: Encoding.UTF8, Encoding.ASCII and Encoding.Latin1 are CharsetUtil.UTF_8, US_ASCII and ISO_8859_1.
     [Fact]
     public void TestCopiedBufferUtf8()
     {
@@ -518,7 +517,6 @@ public class UnpooledTest
         Assert.Equal(0x80, ByteBufUtil.SwapMedium(0x800000));
     }
 
-    // CLR: the observed stream replaces Mockito.mock(InputStream.class) and records any read.
     private sealed class ObservedStream : MemoryStream
     {
         public int Reads;

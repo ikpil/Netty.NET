@@ -20,13 +20,12 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Handler.Codec.Http2.Tests;
 
-// CLR: @Mock fields and initMocks are Moq mocks created in the constructor (xUnit creates a test class instance per
-// test, https://xunit.net/docs/shared-context). The mocked ByteBuf whose isReadable() returns true is a one-byte
-// Unpooled buffer, because ByteBuf.IsReadable() is not virtual in the Buffer port (src/Netty.NET.Buffer/ByteBuf.cs) and
-// Moq can only stub overridable members (https://github.com/devlooped/moq/wiki/Quickstart). verify(mock, times(n)) is
-// Verify(..., Times.Exactly(n)), any(ByteBuf.class) is It.IsAny<ByteBuf>() and eq(x) the value itself.
-// assertThrows(Http2Exception.class, ...) is Assert.ThrowsAny<Http2Exception> (docs/codec-http-porting.md, Core test
-// notes); the anonymous Executables are lambdas.
+// CLR: The mocked ByteBuf whose isReadable() returns true is a one-byte Unpooled buffer, because
+// ByteBuf.IsReadable() is not virtual in the Buffer port (src/Netty.NET.Buffer/ByteBuf.cs) and Moq can only stub
+// overridable members (https://github.com/devlooped/moq/wiki/Quickstart). verify(mock, times(n)) is Verify(...,
+// Times.Exactly(n)), any(ByteBuf.class) is It.IsAny<ByteBuf>() and eq(x) the value itself.
+// assertThrows(Http2Exception.class,...) is Assert.ThrowsAny<Http2Exception>; the anonymous Executables are
+// lambdas.
 public class Http2EmptyDataFrameListenerTest
 {
 

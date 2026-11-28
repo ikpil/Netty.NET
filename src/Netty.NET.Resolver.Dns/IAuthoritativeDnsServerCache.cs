@@ -22,8 +22,8 @@ namespace Netty.NET.Resolver.Dns;
 /**
  * Cache which stores the nameservers that should be used to resolve a specific hostname.
  */
-// CLR: InetSocketAddress is EndPoint: an IPEndPoint when resolved and a DnsEndPoint when unresolved
-// (docs/handler-porting.md Addresses, docs/codec-http-porting.md); EventLoop is the Transport IEventLoop.
+// CLR: InetSocketAddress is EndPoint: an IPEndPoint when resolved and a DnsEndPoint when unresolved; EventLoop is
+// the Transport IEventLoop.
 public interface IAuthoritativeDnsServerCache
 {
 

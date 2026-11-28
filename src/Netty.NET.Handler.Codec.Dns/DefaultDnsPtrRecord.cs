@@ -21,8 +21,8 @@ using static Netty.NET.Common.Internal.ObjectUtil;
 
 namespace Netty.NET.Handler.Codec.Dns;
 
-// CLR: hostname() stays a method; checkNotNull throws ArgumentNullException (docs/codec-base-porting.md). Numbers in
-// text use the invariant culture (https://learn.microsoft.com/en-us/dotnet/api/system.int32.tostring).
+// CLR: hostname() stays a method; checkNotNull throws ArgumentNullException. Numbers in text use the invariant
+// culture (https://learn.microsoft.com/en-us/dotnet/api/system.int32.tostring).
 public class DefaultDnsPtrRecord : AbstractDnsRecord, IDnsPtrRecord
 {
 

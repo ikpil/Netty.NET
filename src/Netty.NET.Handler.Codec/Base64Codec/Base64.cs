@@ -34,11 +34,11 @@ namespace Netty.NET.Handler.Codec.Base64Codec;
  * Base64 Encoder/Decoder</a>.
  */
 // CLR: Netty.NET's ByteBuf has no order()/order(ByteOrder) (deprecated in the source: "use the Little Endian
-// accessors, e.g. getShortLE, getIntLE instead of creating a buffer with swapped endianness", and not ported), so every
-// buffer is accessed BIG_ENDIAN. The src.order()/dest.order() == ByteOrder.BIG_ENDIAN branches are therefore the only
-// ones, the .order(src.order()) calls on the allocated buffers are dropped, and the LITTLE_ENDIAN branches (toIntLE,
-// encode3to4LittleEndian and the swapped decode4to3 paths, which produce the same bytes through a swapped-order buffer)
-// are not ported; their original comments are kept where the branches were.
+// accessors, e.g. getShortLE, getIntLE instead of creating a buffer with swapped endianness", and not ported), so
+// every buffer is accessed BIG_ENDIAN. The src.order()/dest.order() == ByteOrder.BIG_ENDIAN branches are therefore
+// the only ones, the.order(src.order()) calls on the allocated buffers are dropped, and the LITTLE_ENDIAN branches
+// (toIntLE, encode3to4LittleEndian and the swapped decode4to3 paths, which produce the same bytes through a
+// swapped-order buffer) are not ported; their original comments are kept where the branches were.
 public static class Base64
 {
     /** Maximum line length (76) of Base64 output. */

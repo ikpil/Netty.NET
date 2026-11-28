@@ -31,15 +31,14 @@ namespace Netty.NET.Resolver.Dns;
  * A {@link AddressResolverGroup} of {@link DnsNameResolver}s.
  */
 // CLR: AddressResolverGroup<InetSocketAddress> is Resolver's AddressResolverGroup<IPEndPoint> (as
-// DefaultAddressResolverGroup), AddressResolver/NameResolver are IAddressResolver/INameResolver, EventExecutor/EventLoop
-// IEventExecutor/IEventLoop, ChannelFactory<? extends DatagramChannel> Func<IDatagramChannel> and
-// Class<? extends DatagramChannel> a Type (DnsNameResolverBuilder.DatagramChannelType). ConcurrentHashMap of Promise is
-// ConcurrentDictionary of TaskCompletionSource (see InflightNameResolver). The final newResolver(EventExecutor) is a
-// sealed override; "throws Exception" has no counterpart. The @Deprecated newResolver(EventLoop, ChannelFactory,
-// DnsServerAddressStreamProvider), whose @deprecated text names newNameResolver(...) as the method to override, is not
-// ported (owner decision 2026-11-16): its body runs in NewResolver(IEventExecutor), and its comment is recorded in the
-// manifest. IllegalStateException is InvalidOperationException; StringUtil.simpleClassName(EventLoop.class) is the
-// simple name of IEventLoop.
+// DefaultAddressResolverGroup), AddressResolver/NameResolver are IAddressResolver/INameResolver,
+// EventExecutor/EventLoop IEventExecutor/IEventLoop, ChannelFactory<? extends DatagramChannel>
+// Func<IDatagramChannel> and Class<? extends DatagramChannel> a Type (DnsNameResolverBuilder.DatagramChannelType).
+// ConcurrentHashMap of Promise is ConcurrentDictionary of TaskCompletionSource (see InflightNameResolver). The
+// final newResolver(EventExecutor) is a sealed override; "throws Exception" has no counterpart. The @Deprecated
+// newResolver(EventLoop, ChannelFactory, DnsServerAddressStreamProvider), whose @deprecated text names
+// newNameResolver(...) as the method to override, is not ported : its body runs in NewResolver(IEventExecutor),
+// and its comment is recorded in the manifest. IllegalStateException is InvalidOperationException.
 public class DnsAddressResolverGroup : AddressResolverGroup<IPEndPoint>
 {
 

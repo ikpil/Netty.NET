@@ -30,16 +30,15 @@ namespace Netty.NET.Handler.Codec.Stomp;
  */
 // CLR: copy(), duplicate(), retainedDuplicate(), replace(ByteBuf), retain(), retain(int), touch() and
 // touch(Object) are re-declared only to narrow the return type, so they are inherited from IByteBufHolder, not
-// repeated (owner decision 2026-11-19; docs/transport-porting.md, Decisions).
-// The interface constant
-// EMPTY_LAST_CONTENT is a static readonly field of the interface and its anonymous class is the named nested class
-// EmptyLastStompContentSubframe (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface),
-// which implements the IByteBufHolder and IReferenceCounted members, which those shared interfaces re-declare with other
-// return types, explicitly, as Transport DatagramPacket does
+// repeated. The interface constant EMPTY_LAST_CONTENT is a static readonly field of the interface and its
+// anonymous class is the named nested class EmptyLastStompContentSubframe
+// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface), which implements the
+// IByteBufHolder and IReferenceCounted members, which those shared interfaces re-declare with other return types,
+// explicitly, as Transport DatagramPacket does
 // (https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/interfaces/explicit-interface-implementation).
-// UnsupportedOperationException is NotSupportedException (docs/codec-base-porting.md, Shared CLR adaptations), and
-// DecoderResult.SUCCESS is reached through global:: because the simple name DecoderResult is the method inside the
-// nested class (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/namespace-alias-qualifier).
+// UnsupportedOperationException is NotSupportedException, and DecoderResult.SUCCESS is reached through global::
+// because the simple name DecoderResult is the method inside the nested class
+// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/namespace-alias-qualifier).
 public interface ILastStompContentSubframe : IStompContentSubframe
 {
 

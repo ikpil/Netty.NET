@@ -21,8 +21,8 @@ namespace Netty.NET.Handler.Codec.Memcache.Binary;
 /**
  * Represents a full {@link BinaryMemcacheRequest}, which contains the header and optional key and extras.
  */
-// CLR: retain(), retain(int), touch() and touch(Object) are re-declared only to narrow the return type, so they are
-// inherited from IReferenceCounted, not repeated (owner decision 2026-11-19; docs/transport-porting.md, Decisions).
+// CLR: retain(), retain(int), touch() and touch(Object) are re-declared only to narrow the return type, so they
+// are inherited from IReferenceCounted, not repeated.
 [UnstableApi]
 public interface IBinaryMemcacheRequest : IBinaryMemcacheMessage
 {

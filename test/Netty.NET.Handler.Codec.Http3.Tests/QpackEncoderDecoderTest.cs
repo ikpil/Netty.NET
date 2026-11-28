@@ -31,29 +31,24 @@ namespace Netty.NET.Handler.Codec.Http3.Tests;
 
 // CLR: @AfterEach tearDown() is Dispose() (xUnit creates a test class instance per test and disposes it after the
 // test). Hamcrest's assertThat([reason,] actual, is(expected)) is Assert.Equal(expected, actual[, reason]),
-// is(notNullValue()) is Assert.NotNull and greaterThanOrEqualTo(0) is Assert.True(actual >= 0, reason);
-// assertThrows(T.class, ...) is Assert.ThrowsAny<T>. The project has no Moq (docs/codec-http3-porting.md), so
-// mock(QpackDecoderStateSyncStrategy.class) is the private nested class MockQpackDecoderStateSyncStrategy with
-// Mockito's default answers (sectionAcknowledged does nothing, entryAdded returns false), and
-// when(syncStrategy.entryAdded(anyInt())) .thenAnswer(__ -> stateSyncStrategyAckNextInsert) sets its entryAdded answer
-// for any int to a lambda that reads the field at call time. BlockingQueue<Callable<Void>> is a ConcurrentQueue<Action>
-// (offer is Enqueue and poll TryDequeue, the non-blocking operations the test uses; Callable<Void> returning null is an
-// Action), and the lambdas that offer other.channelRead(ctx, msg) are Actions. ForwardWriteToReadOnOtherHandler's
-// write(ctx, msg, promise) is WriteAsync(ctx, msg, cancellationToken): for a ByteBuf it returns the Task of a promise
-// that is never completed, as the Java method never completes the promise, and super.write(ctx, msg, promise) is
-// base.WriteAsync; ChannelInboundHandler is IChannelInboundHandler. The lambda sensitivity detector of
+// is(notNullValue()) is Assert.NotNull and greaterThanOrEqualTo(0) is Assert.True(actual >= 0, reason).
+// BlockingQueue<Callable<Void>> is a ConcurrentQueue<Action> (offer is Enqueue and poll TryDequeue, the
+// non-blocking operations the test uses; Callable<Void> returning null is an Action), and the lambdas that offer
+// other.channelRead(ctx, msg) are Actions. ForwardWriteToReadOnOtherHandler's write(ctx, msg, promise) is
+// WriteAsync(ctx, msg, cancellationToken): for a ByteBuf it returns the Task of a promise that is never completed,
+// as the Java method never completes the promise, and super.write(ctx, msg, promise) is base.WriteAsync;
+// ChannelInboundHandler is IChannelInboundHandler. The lambda sensitivity detector of
 // sensitiveHeaderIsNotInsertedIntoDynamicTable is the private nested class AuthorizationSensitivityDetector, where
 // "authorization".contentEquals(name) is an ordinal comparison with the name's text. The BiConsumer sink passed to
 // decode is the method group Http3HeadersSink.Accept and the Runnables are Actions; IllegalStateException is
-// InvalidOperationException and AssertionError(msg, cause) is Xunit.Sdk.XunitException. The QPACK types and members are
-// internal (package-private in Java) and reached through InternalsVisibleTo; the static imports are qualified
-// (UnpooledByteBufAllocator.Default, Http3SettingIdentifier.HTTP3_SETTINGS_QPACK_*, QuicStreamType.UNIDIRECTIONAL), and
-// QpackSensitivityDetector is the interface IQpackSensitivityDetector. A Java String passed as a CharSequence is a
-// StringCharSequence (Http3TestUtils.Cs); new AsciiString(CharSequence) is the AsciiString(ICharSequence) constructor,
-// and decHeaders.get(name) is compared with it through Assert.Equal<ICharSequence> (the text). getByte(int) returns the
-// unsigned CLR byte, so & 0xFF and the (int) casts keep the same values. parent.createStream(...).get() is the result
-// of the completed Task of CreateStreamAsync (GetAwaiter().GetResult()); Math.toIntExact is a checked conversion. The
-// throws clauses have no counterpart.
+// InvalidOperationException and AssertionError(msg, cause) is Xunit.Sdk.XunitException. The static imports are
+// qualified (UnpooledByteBufAllocator.Default, Http3SettingIdentifier.HTTP3_SETTINGS_QPACK_*,
+// QuicStreamType.UNIDIRECTIONAL), and QpackSensitivityDetector is the interface IQpackSensitivityDetector. A Java
+// String passed as a CharSequence is a StringCharSequence (Http3TestUtils.Cs); new AsciiString(CharSequence) is
+// the AsciiString(ICharSequence) constructor, and decHeaders.get(name) is compared with it through
+// Assert.Equal<ICharSequence> (the text). getByte(int) returns the unsigned CLR byte, so & 0xFF and the (int)
+// casts keep the same values. parent.createStream(...).get() is the result of the completed Task of
+// CreateStreamAsync (GetAwaiter().GetResult()); Math.toIntExact is a checked conversion.
 public class QpackEncoderDecoderTest : IDisposable
 {
 

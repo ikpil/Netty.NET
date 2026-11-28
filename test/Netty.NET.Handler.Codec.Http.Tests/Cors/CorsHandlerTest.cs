@@ -32,16 +32,9 @@ using static Netty.NET.Handler.Codec.Http.Cors.CorsConfigBuilder;
 
 namespace Netty.NET.Handler.Codec.Http.Tests.Cors;
 
-// CLR: HttpResponse/FullHttpRequest/FullHttpResponse/HttpContent/LastHttpContent are the I-prefixed interfaces;
-// readOutbound()/readInbound() are ReadOutbound<T>()/ReadInbound<T>(), isOpen() is IsOpen, refCnt() is RefCnt, and
-// releaseOutbound() is ReleaseOutbound() (its bool result is boxed, as Java autoboxes it for assertNotNull). The static
-// imports of HttpHeaderValues.CLOSE/KEEP_ALIVE are qualified HttpHeaderValues.CLOSE/KEEP_ALIVE, because a using static of
-// HttpHeaderValues would also import names of HttpHeaderNames. Arrays.asList and Collections.singletonList are a
-// List<T> and a one-element ImmutableList; the String header names that Java passes to preflightResponseHeader(CharSequence,
-// ...) are StringCharSequence values, and the anonymous Callable<String> is a lambda (Callable is Func<T>, see
-// CorsConfigBuilder). The anonymous SimpleChannelInboundHandler of varyHeaderIsAppended is the named nested class
-// VaryHandler. assertThat(s).contains(x) is Assert.Contains(x, s); CharsetUtil.UTF_8 is Encoding.UTF8. ctx.writeAndFlush
-// in the handlers discards its Task, as Java discards the future.
+// CLR: HttpResponse/FullHttpRequest/FullHttpResponse/HttpContent/LastHttpContent are the I-prefixed interfaces.
+// The static imports of HttpHeaderValues.CLOSE/KEEP_ALIVE are qualified HttpHeaderValues.CLOSE/KEEP_ALIVE, because
+// a using static of HttpHeaderValues would also import names of HttpHeaderNames.
 public class CorsHandlerTest
 {
 

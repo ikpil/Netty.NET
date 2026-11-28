@@ -1026,15 +1026,15 @@ public interface IEntry<K, V>
     V SetValue(V value);
 }
 
-// CLR: java.util.Iterator. IEnumerator<T> is the BCL iteration interface, but "Enumerators can be used to read the
-// data in the collection, but they cannot be used to modify the underlying collection"
+// CLR: IEnumerator<T> is the BCL iteration interface, but "Enumerators can be used to read the data in the
+// collection, but they cannot be used to modify the underlying collection"
 // (https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerator-1), and headers' value iterators
 // remove the last returned element (Iterator.remove(): "Removes from the underlying collection the last element
 // returned by this iterator (optional operation)",
 // https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Iterator.html). As
-// ConcurrentSkipListIntObjMultimap.Iter does, the Java hasNext()/next()/remove() shape is kept and IEnumerator<E> is
-// also implemented, so foreach and BCL consumers work (MoveNext() is hasNext() then next()). next() past the end
-// throws InvalidOperationException for NoSuchElementException, and remove() before next() throws it for
+// ConcurrentSkipListIntObjMultimap.Iter does, the Java hasNext()/next()/remove() shape is kept and IEnumerator<E>
+// is also implemented, so foreach and BCL consumers work (MoveNext() is hasNext() then next()). next() past the
+// end throws InvalidOperationException for NoSuchElementException, and remove() before next() throws it for
 // IllegalStateException. E is covariant as IEnumerator<out T> is.
 public interface IIterator<out E> : IEnumerator<E>
 {

@@ -25,16 +25,12 @@ using static Netty.NET.Handler.Codec.Http.Tests.HttpHeadersTestUtils;
 
 namespace Netty.NET.Handler.Codec.Http.Tests;
 
-// CLR: CharSequence constants and String arguments of CharSequence parameters are StringCharSequence values (a C#
-// string is not an ICharSequence). The @Deprecated CombinedHttpHeaders(boolean validate) names
-// DefaultHttpHeadersFactory.withCombiningHeaders(boolean) and is not ported (owner decision 2026-11-16), so
-// newCombinedHttpHeaders() is DefaultHttpHeadersFactory.HeadersFactory().WithCombiningHeaders(true).NewHeaders()
-// (rule 7). Arrays.asList/Collections.singletonList/emptyList are List<string>/arrays; a List<string> binds to the
-// Iterable<?> overload through IEnumerable<object> covariance, and a String value binds to the Object overload as in
-// Java. assertEquals(List<CharSequence>, List<String>) compares Strings in Java; the IList<ICharSequence> of
-// HeaderValue is compared through the strings of its elements. headers.add(HEADER_NAME, (String) null) fails in Java
-// with the NullPointerException of value.toString() in HeaderValueConverter (a null dereference, not a checkNotNull);
-// the CLR counterpart of that dereference is NullReferenceException. Iterator<? extends CharSequence> of
+// CLR: The @Deprecated CombinedHttpHeaders(boolean validate) names
+// DefaultHttpHeadersFactory.withCombiningHeaders(boolean) and is not ported, so newCombinedHttpHeaders() is
+// DefaultHttpHeadersFactory.HeadersFactory().WithCombiningHeaders(true).NewHeaders() (rule 7). A List<string>
+// binds to the Iterable<?> overload through IEnumerable<object> covariance, and a String value binds to the Object
+// overload as in Java. assertEquals(List<CharSequence>, List<String>) compares Strings in Java; the CLR
+// counterpart of that dereference is NullReferenceException. Iterator<? extends CharSequence> of
 // assertValueIterator is the generic IIterator<T>, whose elements are compared as strings (ToString()).
 public class CombinedHttpHeadersTest
 {

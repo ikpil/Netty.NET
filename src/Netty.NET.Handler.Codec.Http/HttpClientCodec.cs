@@ -49,14 +49,14 @@ namespace Netty.NET.Handler.Codec.Http;
  *
  * @see HttpServerCodec
  */
-// CLR: CombinedChannelDuplexHandler's protected init(...) is Init(...) and inboundHandler()/outboundHandler() are the
-// InboundHandler/OutboundHandler properties of the Transport port (docs/transport-porting.md). The inner classes Encoder
-// and Decoder read the codec's fields through the codec they receive. Queue<HttpMethod> (ArrayDeque) is Queue<HttpMethod>
-// (offer is Enqueue, poll is TryDequeue with null for an empty queue), AtomicLong is a long updated with
-// Interlocked/Volatile (https://learn.microsoft.com/en-us/dotnet/api/system.threading.interlocked?view=net-10.0). The seven
-// @Deprecated constructors whose @deprecated texts name HttpClientCodec(int, int, int, boolean) or
-// HttpClientCodec(HttpDecoderConfig, boolean, boolean) are not ported (owner decision 2026-11-16). The missing response
-// count prints with the invariant culture.
+// CLR: CombinedChannelDuplexHandler's protected init(...) is Init(...) and inboundHandler()/outboundHandler() are
+// the InboundHandler/OutboundHandler properties of the Transport port. The inner classes Encoder and Decoder read
+// the codec's fields through the codec they receive. Queue<HttpMethod> (ArrayDeque) is Queue<HttpMethod> (offer is
+// Enqueue, poll is TryDequeue with null for an empty queue), AtomicLong is a long updated with
+// Interlocked/Volatile (https://learn.microsoft.com/en-us/dotnet/api/system.threading.interlocked?view=net-10.0).
+// The seven @Deprecated constructors whose @deprecated texts name HttpClientCodec(int, int, int, boolean) or
+// HttpClientCodec(HttpDecoderConfig, boolean, boolean) are not ported. The missing response count prints with the
+// invariant culture.
 public sealed class HttpClientCodec : CombinedChannelDuplexHandler<HttpResponseDecoder, HttpRequestEncoder>,
         HttpClientUpgradeHandler.ISourceCodec
 {

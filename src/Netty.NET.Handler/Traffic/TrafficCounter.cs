@@ -34,19 +34,18 @@ namespace Netty.NET.Handler.Traffic;
  * receive or write operation.
  * </p>
  */
-// CLR: ScheduledExecutorService is IEventExecutorGroup, the executor family whose ScheduleAtFixedRateAsync extension
-// schedules on the executor's own queue (src/Netty.NET.Common/Concurrent/EventExecutorSchedulingExtensions.cs); the Java
-// EventExecutorGroup extends ScheduledExecutorService. ScheduledFuture<?> is the CancellationTokenSource of the periodic
-// work (as AbstractNioChannel's connectTimeoutFuture); cancel(true) is Cancel(), which stops further runs but does not
-// interrupt a running one ("No worker is interrupted", EventExecutorSchedulingExtensions). AtomicLong is the Common
-// AtomicLong (getAndSet is Set, which returns the previous value). A volatile long field is a long read and written
-// through Volatile.Read/Volatile.Write, because C# volatile fields cannot be long
-// (https://learn.microsoft.com/dotnet/csharp/language-reference/keywords/volatile). synchronized methods lock this, the
-// monitor a Java synchronized method uses, so that GlobalChannelTrafficCounter and other subclasses share it
-// (https://learn.microsoft.com/dotnet/csharp/language-reference/statements/lock). System.nanoTime() is
-// SystemTimer.NanoTime() and System.currentTimeMillis() is DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), as in
-// DefaultChannelId (src/Netty.NET.Transport/Channels/DefaultChannelId.cs). Numbers in toString() use the invariant
-// culture, because Java decimal text does not depend on a culture.
+// CLR: ScheduledExecutorService is IEventExecutorGroup, the executor family whose ScheduleAtFixedRateAsync
+// extension schedules on the executor's own queue
+// (src/Netty.NET.Common/Concurrent/EventExecutorSchedulingExtensions.cs); the Java EventExecutorGroup extends
+// ScheduledExecutorService. ScheduledFuture<?> is the CancellationTokenSource of the periodic work (as
+// AbstractNioChannel's connectTimeoutFuture); cancel(true) is Cancel(), which stops further runs but does not
+// interrupt a running one ("No worker is interrupted", EventExecutorSchedulingExtensions). AtomicLong is the
+// Common AtomicLong (getAndSet is Set, which returns the previous value). A volatile long field is a long read and
+// written through Volatile.Read/Volatile.Write, because C# volatile fields cannot be long
+// (https://learn.microsoft.com/dotnet/csharp/language-reference/keywords/volatile). synchronized methods lock
+// this, the monitor a Java synchronized method uses, so that GlobalChannelTrafficCounter and other subclasses
+// share it (https://learn.microsoft.com/dotnet/csharp/language-reference/statements/lock). Numbers in toString()
+// use the invariant culture, because Java decimal text does not depend on a culture.
 public class TrafficCounter
 {
 
@@ -550,8 +549,7 @@ public class TrafficCounter
      *            the max time in ms to wait in case of excess of traffic.
      * @return the current time to wait (in ms) if needed for Read operation.
      */
-    // CLR: @Deprecated without a @deprecated tag names no replacement, so the method is ported with [Obsolete] (owner
-    // decision 2026-11-16, https://learn.microsoft.com/dotnet/api/system.obsoleteattribute).
+    // CLR: @Deprecated without a @deprecated tag names no replacement, so the method is ported with [Obsolete].
     [Obsolete]
     public long ReadTimeToWait(long size, long limitTraffic, long maxTime)
     {

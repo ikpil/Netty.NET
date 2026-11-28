@@ -20,8 +20,7 @@ using static Netty.NET.Handler.Codec.Mqtt.MqttProperties;
 namespace Netty.NET.Handler.Codec.Mqtt.Tests;
 
 // CLR: assertEquals on two lists is the element-wise Assert.Equal<T>(IEnumerable<T>, IEnumerable<T>), with the
-// element type named where the source relies on List<? extends MqttProperty>; Collections.singletonList is a one-element
-// list and Integer.intValue() is the int value itself.
+// element type named where the source relies on List<? extends MqttProperty>.
 public class MqttPropertiesTest
 {
 

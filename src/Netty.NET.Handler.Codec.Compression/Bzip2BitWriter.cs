@@ -25,10 +25,9 @@ namespace Netty.NET.Handler.Codec.Compression;
  * of arbitrary length (up to 32 bits), and bit aligned 32-bit integers. A single byte at a
  * time is written to the {@link ByteBuf} when sufficient bits have been accumulated.
  */
-// CLR: the package-private final class is an internal sealed class and the out parameters are @out. Java's >>> is C#'s
-// >>>; a long shift count is masked to its low six bits in both languages, the int values passed as long are sign
-// extended in both, and the (int) narrowing keeps the low 32 bits. IllegalArgumentException is ArgumentException
-// (docs/codec-base-porting.md) and the numbers in its messages use the invariant culture.
+// CLR: Java's >>> is C#'s >>>; a long shift count is masked to its low six bits in both languages, the int values
+// passed as long are sign extended in both, and the (int) narrowing keeps the low 32 bits.
+// IllegalArgumentException is ArgumentException and the numbers in its messages use the invariant culture.
 internal sealed class Bzip2BitWriter
 {
     /**

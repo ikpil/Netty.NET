@@ -31,18 +31,18 @@ namespace Netty.NET.Handler.Codec.Http2;
  * This class is <strong>NOT</strong> thread safe. The assumption is all methods must be invoked from a single thread.
  * Typically this thread is the event loop thread for the {@link ChannelHandlerContext} managed by this class.
  */
-// CLR: the inner classes (DefaultState, AutoRefillState, WindowUpdateVisitor and the anonymous Http2ConnectionAdapter,
-// here the private nested StreamListener) receive the controller explicitly, because a C# nested class has no
-// enclosing instance; the private interface FlowState is IFlowState and the anonymous REDUCED_FLOW_STATE is the private
-// nested ReducedFlowState. frameWriter(Http2FrameWriter) narrows its return type to this class: the public method
-// returns DefaultHttp2LocalFlowController and the IHttp2LocalFlowController member is implemented explicitly (C#
-// covariant returns apply to class overrides only, docs/codec-http-porting.md, Shared CLR adaptations).
-// PlatformDependent.throwException(e) rethrows the caught Http2Exception (throw;). ctx.newPromise() is
-// Http2CodecUtil.NewPromise() and the write's Task is discarded as Java discards the future. assert is Debug.Assert
-// (docs/codec-http-porting.md). Double.compare(ratio, 0.0) is double.CompareTo: they order NaN differently (Java
-// puts NaN above every value, .NET below), but a NaN ratio fails one of the two checks in both, and -0.0 fails the
-// first in both. "Invalid ratio: " + ratio prints the float with the invariant culture (Java's Float.toString writes
-// 0.5 the same way but 1.0 as "1.0" where .NET writes "1").
+// CLR: the inner classes (DefaultState, AutoRefillState, WindowUpdateVisitor and the anonymous
+// Http2ConnectionAdapter, here the private nested StreamListener) receive the controller explicitly, because a C#
+// nested class has no enclosing instance; the private interface FlowState is IFlowState and the anonymous
+// REDUCED_FLOW_STATE is the private nested ReducedFlowState. frameWriter(Http2FrameWriter) narrows its return type
+// to this class: the public method returns DefaultHttp2LocalFlowController and the IHttp2LocalFlowController
+// member is implemented explicitly (C# covariant returns apply to class overrides only,
+// docs/codec-http-porting.md, Shared CLR adaptations). PlatformDependent.throwException(e) rethrows the caught
+// Http2Exception (throw;). ctx.newPromise() is Http2CodecUtil.NewPromise() and the write's Task is discarded as
+// Java discards the future. assert is Debug.Assert. Double.compare(ratio, 0.0) is double.CompareTo: they order NaN
+// differently (Java puts NaN above every value,.NET below), but a NaN ratio fails one of the two checks in both,
+// and -0.0 fails the first in both. "Invalid ratio: " + ratio prints the float with the invariant culture (Java's
+// Float.toString writes 0.5 the same way but 1.0 as "1.0" where.NET writes "1").
 public class DefaultHttp2LocalFlowController : IHttp2LocalFlowController
 {
     /**
@@ -94,7 +94,6 @@ public class DefaultHttp2LocalFlowController : IHttp2LocalFlowController
         connection.AddListener(new StreamListener(this));
     }
 
-    // CLR: the anonymous Http2ConnectionAdapter registered by the constructor.
     private sealed class StreamListener : Http2ConnectionAdapter
     {
         private readonly DefaultHttp2LocalFlowController controller;
@@ -558,7 +557,6 @@ public class DefaultHttp2LocalFlowController : IHttp2LocalFlowController
      */
     private static readonly IFlowState REDUCED_FLOW_STATE = new ReducedFlowState();
 
-    // CLR: the anonymous FlowState of REDUCED_FLOW_STATE.
     private sealed class ReducedFlowState : IFlowState
     {
 

@@ -30,17 +30,15 @@ namespace Netty.NET.Handler.Codec.Http;
  */
 // CLR: Comparable<HttpVersion> is IComparable<HttpVersion> (CompareTo keeps its BCL name); String.compareTo is the
 // ordinal UTF-16 comparison string.CompareOrdinal. The reference comparisons text == HTTP_1_1_STRING are
-// ReferenceEquals (both languages intern string literals). toUpperCase(Locale.US) is ToUpperInvariant(), "converted to
-// uppercase using the casing rules of the invariant culture", so the Turkish dotted I is never produced
-// (https://learn.microsoft.com/en-us/dotnet/api/system.string.toupperinvariant?view=net-10.0).
+// ReferenceEquals (both languages intern string literals). toUpperCase(Locale.US) is ToUpperInvariant(),
+// "converted to uppercase using the casing rules of the invariant culture", so the Turkish dotted I is never
+// produced (https://learn.microsoft.com/en-us/dotnet/api/system.string.toupperinvariant?view=net-10.0).
 // Character.isISOControl ('\u0000' through '\u001F' or '\u007F' through '\u009F') is char.IsControl (the Unicode
 // control category, the same code points:
-// https://learn.microsoft.com/en-us/dotnet/api/system.char.iscontrol?view=net-10.0), and Character.isWhitespace keeps
-// the Java rule in IsJavaWhitespace, because char.IsWhiteSpace also accepts the no-break spaces that Java excludes
-// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Character.html). IllegalArgumentException is
-// ArgumentException (docs/codec-base-porting.md); CharsetUtil.US_ASCII is Encoding.ASCII (docs/codec-smtp-porting.md),
-// and buf.writeCharSequence(text, US_ASCII) is ByteBufUtil.WriteAscii, which writes AsciiString.c2b(char) as Java does.
-// The package-private valueOf(String, boolean), constructor and encode(ByteBuf) are internal.
+// https://learn.microsoft.com/en-us/dotnet/api/system.char.iscontrol?view=net-10.0), and Character.isWhitespace
+// keeps the Java rule in IsJavaWhitespace, because char.IsWhiteSpace also accepts the no-break spaces that Java
+// excludes (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Character.html).
+// IllegalArgumentException is ArgumentException.
 public class HttpVersion : IComparable<HttpVersion>
 {
 

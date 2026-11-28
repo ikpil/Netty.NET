@@ -25,16 +25,15 @@ namespace Netty.NET.Resolver.Dns;
  * A metadata carrier exception, to propagate {@link DnsResponseCode} information as an enrichment
  * within the {@link UnknownHostException} cause.
  */
-// CLR: RuntimeException is Exception (docs/codec-base-porting.md); UnknownHostException is Common's
-// UnknownHostException (owner decision 2026-11-25, docs/resolver-dns-porting.md). serialVersionUID has no counterpart.
-// super(message, null, false, true) disables suppression ("calls to addSuppressed ... will have no effect",
-// https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html); a CLR exception has no
-// suppressed list and Common's ThrowableUtil.AddSuppressed keeps one per exception without such a switch, so it is the
-// base(message) constructor. The fillInStackTrace() override has no counterpart: the JDK records the stack at
-// construction (same page), a CLR exception only when it is thrown
-// (https://learn.microsoft.com/en-us/dotnet/api/system.exception.stacktrace?view=net-10.0); its comment is recorded in
-// the manifest. newStatic(...) keeps ThrowableUtil.UnknownStackTrace (Common), which sets the single "Unknown Source"
-// frame through ExceptionDispatchInfo.SetRemoteStackTrace.
+// CLR: RuntimeException is Exception; UnknownHostException is Common's UnknownHostException. serialVersionUID has
+// no counterpart. super(message, null, false, true) disables suppression ("calls to addSuppressed... will have no
+// effect", https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html); a CLR exception
+// has no suppressed list and Common's ThrowableUtil.AddSuppressed keeps one per exception without such a switch,
+// so it is the base(message) constructor. The fillInStackTrace() override has no counterpart: the JDK records the
+// stack at construction (same page), a CLR exception only when it is thrown
+// (https://learn.microsoft.com/en-us/dotnet/api/system.exception.stacktrace?view=net-10.0); its comment is
+// recorded in the manifest. newStatic(...) keeps ThrowableUtil.UnknownStackTrace (Common), which sets the single
+// "Unknown Source" frame through ExceptionDispatchInfo.SetRemoteStackTrace.
 public sealed class DnsErrorCauseException : Exception
 {
 

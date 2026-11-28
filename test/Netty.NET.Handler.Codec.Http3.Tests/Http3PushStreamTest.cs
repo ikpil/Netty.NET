@@ -28,26 +28,22 @@ using static Netty.NET.Handler.Codec.Http3.Tests.Http3TestUtils;
 
 namespace Netty.NET.Handler.Codec.Http3.Tests;
 
-// CLR: @BeforeEach setUp() runs in the constructor and @AfterEach tearDown() is Dispose() (xUnit creates a test class
-// instance per test and disposes it after the test). The project has no Moq (docs/codec-http3-porting.md), so
-// mock(ChannelHandlerContext.class) with when(serverControlStreamHandlerCtx.channel())
-// .thenReturn(serverLocalControlStream) is the private nested class MockChannelHandlerContext with Mockito's default
-// answers: Channel returns the stubbed stream and every other member does nothing and returns null, false or the default
-// value. writeAndFlush(maxPushIdFrame).addListener(CLOSE_ON_FAILURE) is Http3CodecUtils.CloseOnFailure(channel,
+// CLR: @BeforeEach setUp() runs in the constructor and @AfterEach tearDown() is Dispose() (xUnit creates a test
+// class instance per test and disposes it after the test). The project has no Moq, so
+// mock(ChannelHandlerContext.class) with
+// when(serverControlStreamHandlerCtx.channel()).thenReturn(serverLocalControlStream) is the private nested class
+// MockChannelHandlerContext with Mockito's default answers: Channel returns the stubbed stream and every other
+// member does nothing and returns null, false or the default value.
+// writeAndFlush(maxPushIdFrame).addListener(CLOSE_ON_FAILURE) is Http3CodecUtils.CloseOnFailure(channel,
 // channel.WriteAndFlushAsync(...)) (docs/codec-http3-porting.md, Shared CLR adaptations: a Task has no channel()).
-// Http3ServerPushStreamManager.newPushStream(pushId, handler) is NewPushStreamAsync and createStream(type, handler)
-// CreateStreamAsync, whose get() is GetAwaiter().GetResult(). The anonymous Http3PushStreamServerInitializer and
-// Http3PushStreamClientInitializer with the noop initPushStream are the private nested classes
-// NoopPushStreamServerInitializer and NoopPushStreamClientInitializer; the Http3FrameCodecFactory lambda
-// (__, encodeState, decodeState, ___) -> clientConnectionHandler.newCodec(encodeState, decodeState) is the private nested
-// class ClientCodecFactory, the NonStandardHttp3SettingsValidator lambda (id, v) -> false the private nested class
-// NoNonStandardSettings, the LongFunction lambda __ -> new Http3PushStreamClientInitializer() {...} a Func<long,
-// IChannelHandler> and ChannelDuplexHandler::new the Func<IChannelHandler> () => new ChannelDuplexHandler(). The
-// handler types and the connection handlers' localControlStreamHandler/remoteControlStreamHandler/newCodec are internal
-// (package-private in Java) and reached through InternalsVisibleTo. Http3RequestStreamFrame... is params
-// IHttp3RequestStreamFrame[]; ReferenceCountUtil.retain(frame) is ReferenceCountUtil.Retain. alloc() is Alloc(),
-// readOutbound()/readInbound() are ReadOutbound<T>()/ReadInbound<T>() and isActive() the IsActive property. The throws
-// clauses have no counterpart.
+// The Http3FrameCodecFactory lambda (__, encodeState, decodeState, ___) ->
+// clientConnectionHandler.newCodec(encodeState, decodeState) is the private nested class ClientCodecFactory, the
+// NonStandardHttp3SettingsValidator lambda (id, v) -> false the private nested class NoNonStandardSettings, the
+// LongFunction lambda __ -> new Http3PushStreamClientInitializer() {...} a Func<long, IChannelHandler> and
+// ChannelDuplexHandler::new the Func<IChannelHandler> () => new ChannelDuplexHandler(). Http3RequestStreamFrame...
+// is params IHttp3RequestStreamFrame[]; ReferenceCountUtil.retain(frame) is ReferenceCountUtil.Retain. alloc() is
+// Alloc(), readOutbound()/readInbound() are ReadOutbound<T>()/ReadInbound<T>() and isActive() the IsActive
+// property.
 public class Http3PushStreamTest : IDisposable
 {
     private Http3ServerConnectionHandler serverConnectionHandler;
@@ -283,7 +279,6 @@ public class Http3PushStreamTest : IDisposable
         }
     }
 
-    // CLR: the anonymous Http3PushStreamClientInitializer of newClientStreamUninitialized().
     private sealed class NoopPushStreamClientInitializer : Http3PushStreamClientInitializer
     {
         protected override void InitPushStream(IQuicStreamChannel ch)

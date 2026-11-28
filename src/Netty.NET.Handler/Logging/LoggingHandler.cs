@@ -31,14 +31,14 @@ namespace Netty.NET.Handler.Logging;
  * A {@link ChannelHandler} that logs all events using a logging framework.
  * By default, all events are logged at <tt>DEBUG</tt> level and full hex dumps are recorded for ByteBufs.
  */
-// CLR: InternalLogger is Common's IInternalLogger from InternalLoggerFactory (docs/common-clr-design.md);
-// Class<?> is Type and getClass() is GetType(), whose logger name is Type.FullName (InternalLoggerFactory.GetInstance).
-// The outbound operations are the Task-returning BindAsync/ConnectAsync/DisconnectAsync/CloseAsync/DeregisterAsync/
-// WriteAsync, whose returned Task replaces the promise (docs/codec-base-porting.md, Outbound operations). byteBufFormat()
-// is the method ByteBufFormat(), so inside this class the simple name ByteBufFormat in an expression binds to that
-// method group, and the enum constants are written Logging.ByteBufFormat.X (a type name in a declaration still binds to
-// the enum). Numbers in the messages use the invariant culture, because Java decimal text does not depend on a culture
-// while Int32.ToString() formats "by using the NumberFormatInfo object of the current culture"
+// CLR: InternalLogger is Common's IInternalLogger from InternalLoggerFactory; Class<?> is Type and getClass() is
+// GetType(), whose logger name is Type.FullName (InternalLoggerFactory.GetInstance). The outbound operations are
+// the Task-returning BindAsync/ConnectAsync/DisconnectAsync/CloseAsync/DeregisterAsync/ WriteAsync, whose returned
+// Task replaces the promise. byteBufFormat() is the method ByteBufFormat(), so inside this class the simple name
+// ByteBufFormat in an expression binds to that method group, and the enum constants are written
+// Logging.ByteBufFormat.X (a type name in a declaration still binds to the enum). Numbers in the messages use the
+// invariant culture, because Java decimal text does not depend on a culture while Int32.ToString() formats "by
+// using the NumberFormatInfo object of the current culture"
 // (https://learn.microsoft.com/en-us/dotnet/api/system.int32.tostring?view=net-10.0).
 [Sharable]
 public class LoggingHandler : ChannelDuplexHandler
@@ -368,7 +368,7 @@ public class LoggingHandler : ChannelDuplexHandler
      * @param eventName the name of the event
      * @param arg       the argument of the event
      */
-    // CLR: ByteBufHolder is IByteBufHolder (docs/buffer-porting.md).
+    // CLR: ByteBufHolder is IByteBufHolder.
     protected virtual string Format(IChannelHandlerContext ctx, string eventName, object arg)
     {
         if (arg is ByteBuf)
@@ -393,12 +393,12 @@ public class LoggingHandler : ChannelDuplexHandler
      * @param firstArg  the first argument of the event
      * @param secondArg the second argument of the event
      */
-    // CLR: String.valueOf(firstArg) renders null as "null". A SocketAddress argument prints EndPoint.ToString(), which
-    // is "192.168.1.2:80" for an IPEndPoint
+    // CLR: String.valueOf(firstArg) renders null as "null". A SocketAddress argument prints EndPoint.ToString(),
+    // which is "192.168.1.2:80" for an IPEndPoint
     // (https://learn.microsoft.com/en-us/dotnet/api/system.net.ipendpoint.tostring?view=net-10.0), while Java's
     // InetSocketAddress.toString() prints InetAddress.toString() (host name, '/', literal) and ':' and the port
-    // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/InetSocketAddress.html), as recorded for
-    // codec-dns (docs/codec-dns-porting.md).
+    // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/InetSocketAddress.html), as recorded
+    // for codec-dns.
     protected virtual string Format(IChannelHandlerContext ctx, string eventName, object firstArg, object secondArg)
     {
         if (secondArg == null)
@@ -458,7 +458,6 @@ public class LoggingHandler : ChannelDuplexHandler
     /**
      * Generates the default log message of the specified event whose argument is a {@link ByteBufHolder}.
      */
-    // CLR: content() is the IByteBufHolder Content property (docs/buffer-porting.md).
     private string FormatByteBufHolder(IChannelHandlerContext ctx, string eventName, IByteBufHolder msg)
     {
         string chStr = ctx.Channel.ToString();

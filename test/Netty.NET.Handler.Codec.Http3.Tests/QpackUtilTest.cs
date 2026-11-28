@@ -20,13 +20,12 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Codec.Http3.Tests;
 
-// CLR: the internal QpackUtil (package-private in Java) is reached through InternalsVisibleTo; the static imports of
-// decodePrefixedInteger/encodePrefixedInteger are using static QpackUtil. The Hamcrest assertThat(reason, actual,
-// is(expected)) is Assert.Equal(expected, actual, reason). assertEquals(int, long) widens the int as Java does (a long
-// literal). The Java byte literals and (byte) casts are the unsigned CLR byte with the same eight bits ((byte) 0x80 is
-// 0x80, (byte) 0x9a is 0x9a); decodePrefixedInteger masks every byte, so the sign of the Java byte does not matter. in
-// is a C# keyword, so the buffer is @in. assertThrows(QpackException.class, ...) is Assert.ThrowsAny<QpackException>
-// (docs/codec-http-porting.md, Core test notes); the throws clauses have no counterpart.
+// CLR: The static imports of decodePrefixedInteger/encodePrefixedInteger are using static QpackUtil. The Hamcrest
+// assertThat(reason, actual, is(expected)) is Assert.Equal(expected, actual, reason). assertEquals(int, long)
+// widens the int as Java does (a long literal). The Java byte literals and (byte) casts are the unsigned CLR byte
+// with the same eight bits ((byte) 0x80 is 0x80, (byte) 0x9a is 0x9a); decodePrefixedInteger masks every byte, so
+// the sign of the Java byte does not matter. in is a C# keyword, so the buffer is @in.
+// assertThrows(QpackException.class,...) is Assert.ThrowsAny<QpackException>.
 public class QpackUtilTest
 {
 

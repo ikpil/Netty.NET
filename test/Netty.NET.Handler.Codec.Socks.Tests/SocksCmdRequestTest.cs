@@ -21,13 +21,12 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Codec.Socks.Tests;
 
-// CLR: assertInstanceOf(C.class, e) is Assert.IsType<C>(e, exactMatch: false); NullPointerException from
-// checkNotNull is ArgumentNullException and IllegalArgumentException is ArgumentException. java.net.IDN is the
-// shared Netty.NET.Common.Internal.IDN; CharBuffer.wrap(s) is a CharSequence view whose
-// equals compares the characters, so the strings are compared directly and readCharSequence(...) is compared through
-// ToString(). CharsetUtil.US_ASCII is Encoding.ASCII. The short port widens to int for the ReadUnsignedShortBE
-// comparison, as assertEquals(int, int) does. encodeAsByteBuf is [Obsolete] (SocksMessage.cs), so its calls suppress
-// CS0618.
+// CLR: NullPointerException from checkNotNull is ArgumentNullException and IllegalArgumentException is
+// ArgumentException. java.net.IDN is the shared Netty.NET.Common.Internal.IDN; CharBuffer.wrap(s) is a
+// CharSequence view whose equals compares the characters, so the strings are compared directly and
+// readCharSequence(...) is compared through ToString(). The short port widens to int for the ReadUnsignedShortBE
+// comparison, as assertEquals(int, int) does. encodeAsByteBuf is [Obsolete] (SocksMessage.cs), so its calls
+// suppress CS0618.
 public class SocksCmdRequestTest
 {
     [Fact]
@@ -156,11 +155,10 @@ public class SocksCmdRequestTest
         buffer.Release();
     }
 
-    // CLR: ByteBuf.order(ByteOrder) is @deprecated ("use the Little Endian accessors, e.g. getShortLE, getIntLE instead
-    // of creating a buffer with swapped endianness") and the Buffer port has no swapped-order view, only explicit BE/LE
-    // accessors (docs/buffer-porting.md, Explicit endian replacements for swapped buffers; LengthFieldBasedFrameDecoder
-    // in codec-base). The buffer is created without order(LITTLE_ENDIAN); the test still checks the encoded DOMAIN
-    // request and that ByteBufUtil.writeShortBE wrote the port big-endian.
+    // CLR: ByteBuf.order(ByteOrder) is @deprecated ("use the Little Endian accessors, e.g. getShortLE, getIntLE
+    // instead of creating a buffer with swapped endianness") and the Buffer port has no swapped-order view, only
+    // explicit BE/LE accessors. The buffer is created without order(LITTLE_ENDIAN); the test still checks the
+    // encoded DOMAIN request and that ByteBufUtil.writeShortBE wrote the port big-endian.
     [Fact]
     public void TestEndianessForPort()
     {

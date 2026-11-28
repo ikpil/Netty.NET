@@ -58,7 +58,7 @@ public class StringDecoder : MessageToMessageDecoder<ByteBuf>
      */
     // CLR: Charset.defaultCharset() is UTF-8 unless changed in an implementation specific manner
     // (https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/charset/Charset.html#defaultCharset());
-    // Encoding.Default always returns a UTF8Encoding on .NET Core and later
+    // Encoding.Default always returns a UTF8Encoding on.NET Core and later
     // (https://learn.microsoft.com/dotnet/api/system.text.encoding.default).
     public StringDecoder() : this(Encoding.Default)
     {

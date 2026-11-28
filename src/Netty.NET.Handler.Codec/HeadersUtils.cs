@@ -103,8 +103,8 @@ public static class HeadersUtils
         }
     }
 
-    // CLR: Class.getSimpleName(). Type.Name has no namespace or declaring type, but a generic type's name ends with
-    // a backtick and its arity (List<T> is "List`1",
+    // CLR: Type.Name has no namespace or declaring type, but a generic type's name ends with a backtick and its
+    // arity (List<T> is "List`1",
     // https://learn.microsoft.com/dotnet/framework/reflection-and-codedom/specifying-fully-qualified-type-names),
     // which getSimpleName() does not have.
     internal static string GetSimpleName(Type type)
@@ -125,9 +125,8 @@ public static class HeadersUtils
         return new DelegatingNameSet<T>(headers);
     }
 
-    // CLR: the anonymous AbstractList<String> is a named nested IList<string>. AbstractList derives every member from
-    // get(int) and size() (size() is Count) and rejects modification with UnsupportedOperationException, which is
-    // NotSupportedException here; IsReadOnly reports that.
+    // CLR: AbstractList derives every member from get(int) and size() (size() is Count) and rejects modification
+    // with UnsupportedOperationException, which is NotSupportedException here; IsReadOnly reports that.
     private sealed class StringList<V> : IList<string>
         where V : class
     {
@@ -304,7 +303,7 @@ public static class HeadersUtils
         }
     }
 
-    // CLR: a Java String is a CharSequence; the CLR string value is wrapped in a StringCharSequence for the entry.
+    // CLR: a Java String is a CharSequence.
     private sealed class StringEntry : IEntry<string, string>
     {
         private readonly IEntry<ICharSequence, ICharSequence> entry;

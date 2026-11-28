@@ -19,9 +19,9 @@ namespace Netty.NET.Handler.Codec.Quic;
 /**
  * Transport parameters for QUIC.
  */
-// CLR: System.Net.Quic does not report the peer's transport parameters (QuicConnection exposes the negotiated TLS facts
-// and the endpoints only); the interface keeps its Java API (owner decision 2026-11-27) and the msquic implementation
-// (stage 2) decides what peerTransportParameters() returns.
+// CLR: System.Net.Quic does not report the peer's transport parameters (QuicConnection exposes the negotiated TLS
+// facts and the endpoints only); the interface keeps its Java API and the msquic implementation (stage 2) decides
+// what peerTransportParameters() returns.
 public interface IQuicTransportParameters
 {
 

@@ -23,12 +23,11 @@ namespace Netty.NET.Handler.Codec.Quic;
 /**
  * Session Ticket Key
  */
-// CLR: the package-private fields are internal (BoringSSLSessionTicketCallback, which read them, is not ported; see
-// docs/codec-classes-quic-porting.md). byte[].clone() is Array.Clone(), IllegalArgumentException ArgumentException and
-// getClass() GetType(). Arrays.equals is SequenceEqual; Arrays.hashCode and Arrays.toString of byte[] are the private
-// helpers below, which keep the Java values and text (signed bytes). System.Net.Quic manages session tickets inside
-// msquic (docs/quic-design.md, No counterpart in System.Net.Quic): the type keeps its Java API (owner decision
-// 2026-11-27).
+// CLR: the package-private fields are internal (BoringSSLSessionTicketCallback, which read them, is not ported;
+// see docs/codec-classes-quic-porting.md). byte[].clone() is Array.Clone(), IllegalArgumentException
+// ArgumentException and getClass() GetType(). Arrays.hashCode and Arrays.toString of byte[] are the private
+// helpers below, which keep the Java values and text (signed bytes). System.Net.Quic manages session tickets
+// inside msquic : the type keeps its Java API.
 public sealed class SslSessionTicketKey
 {
     /**

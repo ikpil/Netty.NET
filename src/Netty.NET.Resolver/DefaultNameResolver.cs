@@ -34,11 +34,11 @@ namespace Netty.NET.Resolver;
 // CLR: use the OS resolver through System.Net.Dns asynchronously instead of blocking the caller thread.
 // SocketUtils.addressByName/allAddressesByName (InetAddress.getByName/getAllByName) are replaced by the private
 // helpers below, which keep the JDK literal and ordering rules that Dns.GetHostAddresses does not share.
-// UnknownHostException is Common's UnknownHostException (owner decision 2026-11-25; it was SocketException with
-// SocketError.HostNotFound before). Dns.GetHostAddressesAsync reports a failed lookup with a SocketException ("An error
-// is encountered when resolving hostNameOrAddress", https://learn.microsoft.com/dotnet/api/system.net.dns.gethostaddressesasync),
-// where getAllByName throws UnknownHostException; that SocketException becomes the cause of an UnknownHostException
-// whose message is the host name.
+// UnknownHostException is Common's UnknownHostException. Dns.GetHostAddressesAsync reports a failed lookup with a
+// SocketException ("An error is encountered when resolving hostNameOrAddress",
+// https://learn.microsoft.com/dotnet/api/system.net.dns.gethostaddressesasync), where getAllByName throws
+// UnknownHostException; that SocketException becomes the cause of an UnknownHostException whose message is the
+// host name.
 public class DefaultNameResolver : InetNameResolver
 {
     // CLR: InetAddress orders lookup results by java.net.preferIPv6Addresses: "false" (default) puts IPv4 first,
@@ -165,8 +165,8 @@ public class DefaultNameResolver : InetNameResolver
                 (wrapInBrackets ? "[" + host + "]" : host) + ": invalid IPv6 address literal");
     }
 
-    // CLR: IPAddressUtil.textToNumericFormatV4. One to four decimal parts; the last part fills the remaining bytes.
-    // Leading zeros are decimal, unlike IPAddress.TryParse, which reads them as octal.
+    // CLR: One to four decimal parts; the last part fills the remaining bytes. Leading zeros are decimal, unlike
+    // IPAddress.TryParse, which reads them as octal.
     private static IPAddress TextToNumericFormatV4(string src)
     {
         if (src.Length == 0)

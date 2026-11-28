@@ -28,24 +28,16 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Codec.Http.Tests;
 
-// CLR: URI.create(String) is new Uri(string, UriKind.RelativeOrAbsolute), which parses a relative or an absolute
-// reference as java.net.URI does. Charset is Encoding: CharsetUtil.UTF_8/StandardCharsets.UTF_8 are Encoding.UTF8 and
-// CharsetUtil.ISO_8859_1 is Encoding.Latin1. A String passed as a CharSequence is a StringCharSequence (a C# string is
-// not an ICharSequence); CharBuffer.wrap(String), the "general CharSequence implementation" of
-// testGetCharsetWithWhitespaceBeforeNextParameterNonStringCharSequence, is the Common AppendableCharSequence (an
-// ICharSequence that is neither a StringCharSequence nor an AsciiString). The CharSequence results of
-// getCharsetAsSequence/getMimeType are compared as strings (ToString()). NumberFormatException is FormatException and
-// IllegalArgumentException is ArgumentException. String.toUpperCase() is ToUpperInvariant() (ASCII content types) and
-// Character.toUpperCase(char) is char.ToUpperInvariant. InetSocketAddress is EndPoint: createUnresolved(host, port) is
-// DnsEndPoint and new InetSocketAddress(InetAddress.getByName(literal), port) is IPEndPoint(IPAddress.Parse(literal))
-// (docs/handler-porting.md, Addresses). @ParameterizedTest @ValueSource/@MethodSource are [Theory] rows; the
-// package-private normalizeAndGetContentLength/validateToken are reached through InternalsVisibleTo. String.format
-// "%04X" is the invariant "X4" format.
-// testFormatHostnameForHttpFromResolvedAddressWithHostname is CLR-inapplicable: an InetSocketAddress built from the
-// InetAddress of getByName("localhost") keeps the host name "localhost" for getHostString(), while the CLR counterpart
-// of a resolved address, IPEndPoint, keeps only the IPAddress, and NetUtil.GetHostname returns "the numeric
-// IPEndPoint address without DNS lookup" (src/Netty.NET.Common/NetUtil.cs); DnsEndPoint, the unresolved counterpart,
-// is covered by testFormatHostnameForHttpFromUnesolvedAddressWithHostname.
+// CLR: The CharSequence results of getCharsetAsSequence/getMimeType are compared as strings (ToString()).
+// NumberFormatException is FormatException and IllegalArgumentException is ArgumentException. InetSocketAddress is
+// EndPoint: createUnresolved(host, port) is DnsEndPoint and new InetSocketAddress(InetAddress.getByName(literal),
+// port) is IPEndPoint(IPAddress.Parse(literal)). The package-private normalizeAndGetContentLength/validateToken
+// are reached through InternalsVisibleTo. String.format "%04X" is the invariant "X4" format.
+// testFormatHostnameForHttpFromResolvedAddressWithHostname is CLR-inapplicable: an InetSocketAddress built from
+// the InetAddress of getByName("localhost") keeps the host name "localhost" for getHostString(), while the CLR
+// counterpart of a resolved address, IPEndPoint, keeps only the IPAddress, and NetUtil.GetHostname returns "the
+// numeric IPEndPoint address without DNS lookup" (src/Netty.NET.Common/NetUtil.cs); DnsEndPoint, the unresolved
+// counterpart, is covered by testFormatHostnameForHttpFromUnesolvedAddressWithHostname.
 public class HttpUtilTest
 {
 
@@ -207,7 +199,6 @@ public class HttpUtilTest
         Assert.Equal(Encoding.Latin1, HttpUtil.GetCharset(emptyCharset, Encoding.Latin1));
     }
 
-    // CLR: CharBuffer.wrap(CharSequence).
     private static ICharSequence Wrap(string s)
     {
         return new AppendableCharSequence(s.Length).Append(new StringCharSequence(s));

@@ -20,15 +20,15 @@ using static Netty.NET.Handler.Codec.Http2.Http2CodecUtil;
 namespace Netty.NET.Handler.Codec.Http2.Tests;
 
 // CLR: @BeforeEach setup() is the constructor (xUnit creates a test class instance per test,
-// https://xunit.net/docs/shared-context) and MockitoAnnotations.initMocks is the Moq writer field of the base class.
-// doAnswer(writeAnswer(...)).when(writer).write(any, anyInt) is a Write setup with the base class callback;
-// doThrow(...)/doAnswer(...) for write(same(stream C), eq(3)) are later setups for those arguments, which Moq matches
-// before the general one, and reset(writer) is Mock.Reset() (setups and invocations, as Mockito's reset; Moq
-// Quickstart, https://github.com/devlooped/moq/wiki/Quickstart). same(stream) is It.Is with ReferenceEquals, verify
-// modes are Moq Times (times(n) Times.Exactly(n), atMost/atLeastOnce/never), VerificationMode is Times, and the
-// ArgumentCaptor of captureWrites is the int arguments of the verified Write invocations for the stream
-// (Mock.Invocations). assertThrows(T.class, ...) is Assert.ThrowsAny<T> (docs/codec-http-porting.md, Core test notes)
-// and the anonymous Executable is a lambda; getCause() is InnerException.
+// https://xunit.net/docs/shared-context) and MockitoAnnotations.initMocks is the Moq writer field of the base
+// class. doAnswer(writeAnswer(...)).when(writer).write(any, anyInt) is a Write setup with the base class callback;
+// doThrow(...)/doAnswer(...) for write(same(stream C), eq(3)) are later setups for those arguments, which Moq
+// matches before the general one, and reset(writer) is Mock.Reset() (setups and invocations, as Mockito's reset;
+// Moq Quickstart, https://github.com/devlooped/moq/wiki/Quickstart). same(stream) is It.Is with ReferenceEquals,
+// verify modes are Moq Times (times(n) Times.Exactly(n), atMost/atLeastOnce/never), VerificationMode is Times, and
+// the ArgumentCaptor of captureWrites is the int arguments of the verified Write invocations for the stream
+// (Mock.Invocations). assertThrows(T.class,...) is Assert.ThrowsAny<T> and the anonymous Executable is a lambda;
+// getCause() is InnerException.
 public class WeightedFairQueueByteDistributorTest : AbstractWeightedFairQueueByteDistributorDependencyTest
 {
     private const int STREAM_A = 1;

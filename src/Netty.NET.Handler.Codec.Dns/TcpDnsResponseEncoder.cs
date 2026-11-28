@@ -22,8 +22,7 @@ using Netty.NET.Transport.Channels;
 namespace Netty.NET.Handler.Codec.Dns;
 
 // CLR: @ChannelHandler.Sharable is [Sharable]; Class<?> is Type; List<Object> out is IList<object> @out;
-// writerIndex(int) is the ByteBuf.WriterIndex property setter of the Buffer port; checkNotNull throws
-// ArgumentNullException (docs/codec-base-porting.md, Shared CLR adaptations). 'throws Exception' has no C# counterpart.
+// checkNotNull throws ArgumentNullException. 'throws Exception' has no C# counterpart.
 [Sharable]
 public sealed class TcpDnsResponseEncoder : MessageToMessageEncoder<IDnsResponse>
 {

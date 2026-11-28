@@ -91,8 +91,8 @@ public sealed class UnorderedThreadPoolEventExecutor : IEventExecutor
      * See {@link ScheduledThreadPoolExecutor#ScheduledThreadPoolExecutor(int, ThreadFactory)}
      */
     public UnorderedThreadPoolEventExecutor(int corePoolSize, IThreadFactory threadFactory)
-        // CLR: ThreadPoolExecutor.AbortPolicy throws RejectedExecutionException("Task ... rejected from ...");
-        // the CLR default delegate throws it without that JDK text (Action has no task-specific ToString).
+        // CLR: ThreadPoolExecutor.AbortPolicy throws RejectedExecutionException("Task... rejected from..."); the
+        // CLR default delegate throws it without that JDK text (Action has no task-specific ToString).
         : this(corePoolSize, threadFactory, (_, _) => throw new RejectedExecutionException())
     {
     }

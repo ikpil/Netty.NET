@@ -53,15 +53,14 @@ namespace Netty.NET.Handler.Codec.Http;
  *                  ; visible (printing) characters
  * }</pre>
  */
-// CLR: the package-private final class implements ByteProcessor, which is Func<byte, bool> in the Common port, through
-// Process(byte) (pass processor.Process), as codec-stomp's line parsers do. Match extends java.util.BitSet, whose C#
-// counterpart BitArray is sealed, so Match keeps a 256-bit BitArray (BitSet.set/get are Set/Get). The enum State has a
-// constructor, a field and a method, so it is a sealed class with static readonly instances (docs/codec-base-porting.md,
-// as Base64Dialect); State.values() is the STATES_BY_ORDINAL array in declaration order, and the switch over the
-// constants of finish() is a comparison chain. match(byte value) calls BitSet.get(int) with the sign-extended Java byte,
-// so the octets 0x80-0xFF are negative indexes that throw IndexOutOfBoundsException in Java ("if the specified index is
-// negative", https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/BitSet.html#get(int)); the octet is
-// read as sbyte so BitArray.Get throws ArgumentOutOfRangeException for them, keeping the Java result (Java byte sign
+// CLR: Match extends java.util.BitSet, whose C# counterpart BitArray is sealed, so Match keeps a 256-bit BitArray
+// (BitSet.set/get are Set/Get). The enum State has a constructor, a field and a method, so it is a sealed class
+// with static readonly instances; State.values() is the STATES_BY_ORDINAL array in declaration order, and the
+// switch over the constants of finish() is a comparison chain. match(byte value) calls BitSet.get(int) with the
+// sign-extended Java byte, so the octets 0x80-0xFF are negative indexes that throw IndexOutOfBoundsException in
+// Java ("if the specified index is negative",
+// https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/BitSet.html#get(int)); the octet is read
+// as sbyte so BitArray.Get throws ArgumentOutOfRangeException for them, keeping the Java result (Java byte sign
 // rule). NumberFormatException is FormatException and assert is Debug.Assert.
 internal sealed class HttpChunkLineValidatingByteProcessor
 {

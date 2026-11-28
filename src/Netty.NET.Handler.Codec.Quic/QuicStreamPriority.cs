@@ -22,11 +22,10 @@ namespace Netty.NET.Handler.Codec.Quic;
 /**
  * The priority of a {@link QuicStreamChannel}.
  */
-// CLR: Byte.MAX_VALUE is sbyte.MaxValue (127, the signed Java byte). Objects.hash(urgency, incremental) is spelled out
-// (31 * (31 + urgency) + Boolean.hashCode) to keep the Java value; toString() keeps Java's boolean text and the
-// invariant culture. System.Net.Quic has no stream priorities (docs/quic-design.md, No counterpart in System.Net.Quic):
-// the type keeps its Java API (owner decision 2026-11-27) and the msquic implementation (stage 2) reports
-// updatePriority as unsupported.
+// CLR: Byte.MAX_VALUE is sbyte.MaxValue (127, the signed Java byte). Objects.hash(urgency, incremental) is spelled
+// out (31 * (31 + urgency) + Boolean.hashCode) to keep the Java value; toString() keeps Java's boolean text and
+// the invariant culture. System.Net.Quic has no stream priorities : the type keeps its Java API and the msquic
+// implementation (stage 2) reports updatePriority as unsupported.
 public sealed class QuicStreamPriority
 {
 

@@ -20,9 +20,8 @@ using Netty.NET.Handler.Codec.Spdy;
 
 namespace Netty.NET.Handler.Codec.Http.Tests.Spdy;
 
-// CLR: the package-private final class is an internal sealed class implementing ISpdyFrameDecoderDelegate; the field
-// delegate is @delegate (a C# keyword). ArrayDeque<ByteBuf> is Queue<ByteBuf> and poll() is TryDequeue
-// (docs/handler-porting.md, the ArrayDeque mapping).
+// CLR: The field delegate is @delegate (a C# keyword). ArrayDeque<ByteBuf> is Queue<ByteBuf> and poll() is
+// TryDequeue.
 internal sealed class TestSpdyFrameDecoderDelegate : ISpdyFrameDecoderDelegate
 {
     private readonly ISpdyFrameDecoderDelegate @delegate;

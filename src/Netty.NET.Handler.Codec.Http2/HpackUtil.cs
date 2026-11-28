@@ -35,11 +35,11 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Codec.Http2;
 
-// CLR: the package-private final class is internal sealed; the private constructor keeps its comment, so it stays
-// a class with static members. The package-private static members are internal. AsciiString.array()/arrayOffset()
-// are the Common AsciiString Array()/ArrayOffset() (the backing array, no copy); ConstantTimeUtils and
-// PlatformDependent.equalsConstantTime are the Common ports (Netty.NET.Common.Internal). The simple enum IndexType is
-// a C# enum. HUFFMAN_CODE_LENGTHS holds code lengths 5..30, so the Java byte and System.Byte values match.
+// CLR: The private constructor keeps its comment, so it stays a class with static members.
+// AsciiString.array()/arrayOffset() are the Common AsciiString Array()/ArrayOffset() (the backing array, no copy);
+// ConstantTimeUtils and PlatformDependent.equalsConstantTime are the Common ports (Netty.NET.Common.Internal). The
+// simple enum IndexType is a C# enum. HUFFMAN_CODE_LENGTHS holds code lengths 5..30, so the Java byte and
+// System.Byte values match.
 internal sealed class HpackUtil
 {
     /**

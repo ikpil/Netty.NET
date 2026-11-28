@@ -26,16 +26,14 @@ using static Netty.NET.Handler.Codec.Http2.Http2CodecUtil;
 
 namespace Netty.NET.Handler.Codec.Http2.Tests;
 
-// CLR: @BeforeEach/@AfterEach are the constructor and Dispose() ("xUnit creates a new instance of the test class for
-// every test that is run", docs/codec-http-porting.md, Shared CLR adaptations), which call the Java-named setUp() and
-// teardown(). mock(Http2Headers.class) is a loose Moq mock. The Strings that Java passes as CharSequence are
-// StringCharSequence values built by the private Of(string), because a C# string is not an ICharSequence. Header
-// equality calls Equals directly, as Java's assertEquals calls equals (xUnit would compare the headers as an
-// IEnumerable of entries; docs/codec-http-porting.md, Shared CLR adaptations). java.util.Random(0) is
-// System.Random(0) and nextInt(n)/nextBoolean() are Next(n)/Next(2) != 0 (the private NextBoolean); the round-trip test
-// does not depend on the exact sequence, which is not reproduced. Numbers in the generated names use the invariant
-// culture and String.valueOf(boolean) is "true"/"false". The expected encodings are Java's signed byte values; (byte)
-// of a negative int keeps the same eight bits in C#, so the compared octets are the same. int... is params int[].
+// CLR: The Strings that Java passes as CharSequence are StringCharSequence values built by the private Of(string),
+// because a C# string is not an ICharSequence. Header equality calls Equals directly, as Java's assertEquals calls
+// equals (xUnit would compare the headers as an IEnumerable of entries; docs/codec-http-porting.md, Shared CLR
+// adaptations). java.util.Random(0) is System.Random(0) and nextInt(n)/nextBoolean() are Next(n)/Next(2) != 0 (the
+// private NextBoolean); the round-trip test does not depend on the exact sequence, which is not reproduced.
+// Numbers in the generated names use the invariant culture and String.valueOf(boolean) is "true"/"false". The
+// expected encodings are Java's signed byte values; (byte) of a negative int keeps the same eight bits in C#, so
+// the compared octets are the same. int... is params int[].
 public class HpackEncoderTest : IDisposable
 {
     private HpackDecoder hpackDecoder;
@@ -395,7 +393,6 @@ public class HpackEncoderTest : IDisposable
         return new StringCharSequence(s);
     }
 
-    // CLR: Random.nextBoolean().
     private static bool NextBoolean(Random r)
     {
         return r.Next(2) != 0;

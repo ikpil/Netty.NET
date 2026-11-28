@@ -24,11 +24,10 @@ namespace Netty.NET.Handler.Codec.Quic;
 /**
  * Handle token related operations.
  */
-// CLR: InetSocketAddress is IPEndPoint. The nested final class is a sealed class nested in the interface (C# 8 allows
-// nested types in interfaces); its package-private originalDestinationConnectionId is internal. IllegalStateException
-// and IllegalArgumentException are InvalidOperationException and ArgumentException. msquic owns the retry and NEW_TOKEN
-// tokens (docs/quic-design.md, No counterpart in System.Net.Quic); the interface keeps its Java API (owner decision
-// 2026-11-27) for the codec builders of stage 2.
+// CLR: InetSocketAddress is IPEndPoint. The nested final class is a sealed class nested in the interface (C# 8
+// allows nested types in interfaces). IllegalStateException and IllegalArgumentException are
+// InvalidOperationException and ArgumentException. msquic owns the retry and NEW_TOKEN tokens; the interface keeps
+// its Java API for the codec builders of stage 2.
 public interface IQuicTokenHandler
 {
 

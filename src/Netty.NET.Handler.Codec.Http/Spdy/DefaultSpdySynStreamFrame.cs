@@ -26,10 +26,10 @@ namespace Netty.NET.Handler.Codec.Spdy;
  * The default {@link SpdySynStreamFrame} implementation.
  */
 // CLR: setStreamId/setLast/setInvalid narrow the base class members with covariant override returns
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override). The Java byte priority is the
-// CLR byte; setPriority keeps the Java check (a negative Java byte is 0x80-0xFF here, which is also above 7) and prints
-// the signed Java value in the exception text through (sbyte) (rule 6). IllegalArgumentException is ArgumentException
-// (docs/codec-base-porting.md). A boolean is appended as Java's "true"/"false" and numbers with the invariant culture;
+// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override). The Java byte priority
+// is the CLR byte; setPriority keeps the Java check (a negative Java byte is 0x80-0xFF here, which is also above
+// 7) and prints the signed Java value in the exception text through (sbyte) (rule 6). IllegalArgumentException is
+// ArgumentException. A boolean is appended as Java's "true"/"false" and numbers with the invariant culture;
 // StringBuilder.setLength is the Length setter.
 public class DefaultSpdySynStreamFrame : DefaultSpdyHeadersFrame, ISpdySynStreamFrame
 {

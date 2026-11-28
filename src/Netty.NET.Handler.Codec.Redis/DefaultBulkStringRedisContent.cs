@@ -24,7 +24,7 @@ namespace Netty.NET.Handler.Codec.Redis;
  */
 // CLR: the covariant overrides of the virtual DefaultByteBufHolder members are C# covariant override returns
 // (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override); content() is the Content
-// property (docs/buffer-porting.md, Buffer holders and conversion).
+// property.
 [UnstableApi]
 public class DefaultBulkStringRedisContent : DefaultByteBufHolder, IBulkStringRedisContent
 {

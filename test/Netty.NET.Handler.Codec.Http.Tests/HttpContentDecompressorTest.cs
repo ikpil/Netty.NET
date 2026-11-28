@@ -30,27 +30,18 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Codec.Http.Tests;
 
-// CLR: the anonymous ChannelOutboundHandlerAdapter and ChannelInboundHandlerAdapter classes are the named nested
-// ReadCountingHandler, ReadingHandler and CountingHandler; AtomicInteger is the Common AtomicInteger. assertInstanceOf
-// is Assert.IsAssignableFrom, channel.config().setAutoRead/setAllocator are Config.SetAutoRead/SetAllocator, alloc() is
-// Alloc(), readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>() and Unpooled.EMPTY_BUFFER is
-// Unpooled.EmptyBuffer (docs/transport-porting.md, docs/buffer-porting.md). @ParameterizedTest @MethodSource("encodings")
-// is a [Theory] with MemberData rows. Zstd needs zstd-jni, which is library-not-ported (owner decision 2026-11-23;
-// docs/codec-compression-porting.md), so encodings() leaves out "zstd" as Java does when Zstd.isAvailable() is false;
-// Brotli.IsAvailable() is always true (the BCL BrotliEncoder/BrotliDecoder, docs/codec-compression-porting.md).
-// @DisabledForSlowLeakDetection only skips testZipBomb under paranoid leak detection; the CLR test always runs, as for
-// the codec-compression tests (test/Netty.NET.Handler.Codec.Compression.Tests/AbstractIntegrationTest.cs).
-// Assumptions.assumeTrue(...) is Assert.SkipUnless (test/Netty.NET.Handler.Codec.Compression.Tests/JdkZlibDecompressorTest.cs).
-// brotli4j's BrotliOutputStream over a ByteArrayOutputStream is the BCL BrotliStream(Stream, CompressionMode.Compress)
-// over a MemoryStream ("Initializes a new instance of the BrotliStream class by using the specified stream and
-// compression mode", https://learn.microsoft.com/en-us/dotnet/api/system.io.compression.brotlistream.-ctor?view=net-10.0);
-// close() is Dispose(), which finishes the Brotli stream and closes the MemoryStream, and toByteArray() is ToArray(),
-// which "works when the MemoryStream is closed"
-// (https://learn.microsoft.com/en-us/dotnet/api/system.io.memorystream.toarray?view=net-10.0). The payload byte
-// (byte) (i % 251) has the same bit pattern as the Java byte, and the test only compares the bytes. Arrays.copyOf to a
-// longer length is Array.Resize, which copies into a new array of that length, and buf.readBytes(byte[], int, int) is
-// ReadBytes(Span<byte>) over the array slice. AssertJ's assertThat(array).as(d).isEqualTo(e) is Assert.Equal(e, array, d)
-// and assertThat(n).as(d).isGreaterThan(100) is Assert.True(n > 100, d) (XunitAssertMessages.AssertM).
+// CLR: AtomicInteger is the Common AtomicInteger. assertInstanceOf is Assert.IsAssignableFrom,
+// channel.config().setAutoRead/setAllocator are Config.SetAutoRead/SetAllocator, alloc() is Alloc(),
+// readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>() and Unpooled.EMPTY_BUFFER is
+// Unpooled.EmptyBuffer. Zstd needs zstd-jni, which is library-not-ported, so encodings() leaves out "zstd" as Java
+// does when Zstd.isAvailable() is false; Brotli.IsAvailable() is always true (the BCL BrotliEncoder/BrotliDecoder,
+// docs/codec-compression-porting.md). @DisabledForSlowLeakDetection only skips testZipBomb under paranoid leak
+// detection; the CLR test always runs, as for the codec-compression tests
+// (test/Netty.NET.Handler.Codec.Compression.Tests/AbstractIntegrationTest.cs). The payload byte (byte) (i % 251)
+// has the same bit pattern as the Java byte, and the test only compares the bytes. Arrays.copyOf to a longer
+// length is Array.Resize, which copies into a new array of that length, and buf.readBytes(byte[], int, int) is
+// ReadBytes(Span<byte>) over the array slice. AssertJ's assertThat(array).as(d).isEqualTo(e) is Assert.Equal(e,
+// array, d) and assertThat(n).as(d).isGreaterThan(100) is Assert.True(n > 100, d) (XunitAssertMessages.AssertM).
 // PooledByteBufAllocator.metric().usedHeapMemory()/usedDirectMemory() are Metric.UsedHeapMemory/UsedDirectMemory.
 public class HttpContentDecompressorTest
 {

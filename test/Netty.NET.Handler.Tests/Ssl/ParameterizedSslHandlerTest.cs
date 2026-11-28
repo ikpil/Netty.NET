@@ -44,18 +44,16 @@ namespace Netty.NET.Handler.Tests.Ssl;
 
 // CLR: SslProvider.OPENSSL and OPENSSL_REFCNT are library-not-ported (netty-tcnative; owner decision 2026-11-24,
 // docs/handler-ssl-design.md) and OpenSsl.isAvailable() has no counterpart, so data() holds the JDK pair only.
-// @ParameterizedTest with @MethodSource is [Theory] with [MemberData], and @Timeout(value, MILLISECONDS) the Timeout of
-// the [Theory], which xUnit applies to async tests. The tests that used the @Deprecated CachedSelfSignedCertificate use
-// CachedSelfSignedCertificate() below (see there). Promise/Future/ChannelFuture are TaskCompletionSource/Task
-// (docs/handler-porting.md, "Task promises"): get() and syncUninterruptibly() are awaits, awaitUninterruptibly() an
-// await that suppresses the failure (ConfigureAwaitOptions.SuppressThrowing | ContinueOnCapturedContext, xUnit1030),
-// isSuccess() is IsCompletedSuccessfully and PromiseNotifier.cascade(future, promise) is a continuation that copies the
-// outcome with TrySetFromTask (docs/common-task-composition.md). The bootstrap API is asynchronous, new
-// InetSocketAddress(0) is the wildcard IPEndPoint and ConnectAddress(...) connects to it through the loopback address
-// (docs/handler-porting.md, "Socket tests"); Class<? extends Channel> is a Type for Bootstrap.Channel(Type).
-// SSLException is AuthenticationException (ssl design decision 3), IllegalStateException InvalidOperationException,
-// CountDownLatch CountdownEvent, AtomicBoolean the Common type and ThreadLocalRandom.current() Random.Shared
-// (docs/common-clr-design.md). The anonymous handlers are named nested classes.
+// @ParameterizedTest with @MethodSource is [Theory] with [MemberData], and @Timeout(value, MILLISECONDS) the
+// Timeout of the [Theory], which xUnit applies to async tests. Promise/Future/ChannelFuture are
+// TaskCompletionSource/Task : get() and syncUninterruptibly() are awaits, awaitUninterruptibly() an await that
+// suppresses the failure (ConfigureAwaitOptions.SuppressThrowing | ContinueOnCapturedContext, xUnit1030),
+// isSuccess() is IsCompletedSuccessfully and PromiseNotifier.cascade(future, promise) is a continuation that
+// copies the outcome with TrySetFromTask. The bootstrap API is asynchronous, new InetSocketAddress(0) is the
+// wildcard IPEndPoint and ConnectAddress(...) connects to it through the loopback address; Class<? extends
+// Channel> is a Type for Bootstrap.Channel(Type). SSLException is AuthenticationException (ssl design decision 3),
+// IllegalStateException InvalidOperationException, CountDownLatch CountdownEvent, AtomicBoolean the Common type
+// and ThreadLocalRandom.current() Random.Shared.
 #pragma warning disable xUnit1069 // The tests' helpers wait with TestContext.Current.CancellationToken themselves.
 public class ParameterizedSslHandlerTest
 {
@@ -106,9 +104,8 @@ public class ParameterizedSslHandlerTest
     }
 
     // CLR: new SslHandler(sslCtx.newEngine(alloc)) wraps an engine of the context without the context's startTls;
-    // newEngine is not ported (owner decision 2026-11-24: no SSLEngine facade), and the context's
-    // NewHandler(alloc, startTls: false) builds that SslHandler for the same fresh engine options, so the
-    // letHandlerCreate*Engine == false paths call it.
+    // newEngine is not ported, and the context's NewHandler(alloc, startTls: false) builds that SslHandler for the
+    // same fresh engine options, so the letHandlerCreate*Engine == false paths call it.
     private static async Task CompositeBufSizeEstimationGuaranteesSynchronousWrite(
             SslProvider serverProvider, SslProvider clientProvider,
             bool serverDisableWrapSize,
@@ -852,12 +849,12 @@ public class ParameterizedSslHandlerTest
         return handler;
     }
 
-    // CLR: cause.printStackTrace(PrintStream) writes Throwable.toString() and the stack trace, which Exception.ToString()
-    // returns ("the name of the class that threw the current exception, the message, ... and the stack trace",
-    // https://learn.microsoft.com/en-us/dotnet/api/system.exception.tostring?view=net-10.0); the
-    // ByteArrayOutputStream/PrintStream pair is a MemoryStream written through a StreamWriter, out.toString(charsetName)
-    // decodes it with Encoding.GetEncoding(name), which throws ArgumentException for an unknown name as toString(String)
-    // throws UnsupportedEncodingException.
+    // CLR: cause.printStackTrace(PrintStream) writes Throwable.toString() and the stack trace, which
+    // Exception.ToString() returns ("the name of the class that threw the current exception, the message,... and
+    // the stack trace", https://learn.microsoft.com/en-us/dotnet/api/system.exception.tostring?view=net-10.0); the
+    // ByteArrayOutputStream/PrintStream pair is a MemoryStream written through a StreamWriter,
+    // out.toString(charsetName) decodes it with Encoding.GetEncoding(name), which throws ArgumentException for an
+    // unknown name as toString(String) throws UnsupportedEncodingException.
     private sealed class ReentryWriteSslHandshakeHandler : SimpleChannelInboundHandler<ByteBuf>
     {
         private static readonly IInternalLogger LOGGER =
@@ -955,7 +952,6 @@ public class ParameterizedSslHandlerTest
         return new TaskCompletionSource<IChannel>(TaskCreationOptions.RunContinuationsAsynchronously);
     }
 
-    // CLR: PromiseNotifier.cascade(future, promise).
     private static void Cascade(Task<IChannel> future, TaskCompletionSource<IChannel> promise)
     {
         _ = future.ContinueWith(f => promise.TrySetFromTask(f), CancellationToken.None,
@@ -973,7 +969,7 @@ public class ParameterizedSslHandlerTest
         return future.IsCanceled ? new TaskCanceledException(future) : null;
     }
 
-    // CLR: a boolean concatenated into a Java string is "true"/"false" (docs/handler-porting.md, Text).
+    // CLR: a boolean concatenated into a Java string is "true"/"false".
     private static string BoolText(bool value)
     {
         return value ? "true" : "false";
@@ -994,8 +990,8 @@ public class ParameterizedSslHandlerTest
     }
 
     // CLR: the server is bound to the wildcard address, which the JDK connects to through the loopback address
-    // (SocketChannelImpl.checkRemote), while a CLR connect to 0.0.0.0 fails on Windows (docs/handler-porting.md,
-    // "Socket tests"), so the client connects to the loopback address of the bound port; other addresses are kept.
+    // (SocketChannelImpl.checkRemote), while a CLR connect to 0.0.0.0 fails on Windows, so the client connects to
+    // the loopback address of the bound port; other addresses are kept.
     private static EndPoint ConnectAddress(EndPoint server)
     {
         if (server is IPEndPoint address)

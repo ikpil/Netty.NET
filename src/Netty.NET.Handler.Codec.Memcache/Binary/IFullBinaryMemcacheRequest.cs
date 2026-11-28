@@ -23,8 +23,8 @@ namespace Netty.NET.Handler.Codec.Memcache.Binary;
  * A {@link BinaryMemcacheRequest} that also includes the content.
  */
 // CLR: copy(), duplicate(), retainedDuplicate(), replace(ByteBuf), retain(), retain(int), touch() and
-// touch(Object) are re-declared only to narrow the return type, so they are inherited from IByteBufHolder and IReferenceCounted, not
-// repeated (owner decision 2026-11-19; docs/transport-porting.md, Decisions).
+// touch(Object) are re-declared only to narrow the return type, so they are inherited from IByteBufHolder and
+// IReferenceCounted, not repeated.
 [UnstableApi]
 public interface IFullBinaryMemcacheRequest : IBinaryMemcacheRequest, IFullMemcacheMessage
 {

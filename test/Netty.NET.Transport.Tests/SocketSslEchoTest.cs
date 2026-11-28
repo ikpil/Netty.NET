@@ -31,15 +31,15 @@ using static Netty.NET.Transport.Tests.TestsuitePermutation;
 
 namespace Netty.NET.Transport.Tests;
 
-// CLR: the TLS engine is SslStream (owner decision 2026-11-24, docs/handler-ssl-design.md). @ParameterizedTest with
-// @MethodSource("data") is [Theory] with [MemberData(nameof(Data))] and @Timeout(30000 ms) its Timeout, as in the handler
-// ssl tests (docs/handler-porting.md, "SSL tests"); the JUnit display-name pattern has no counterpart, xUnit names a case
-// by its arguments. Each case runs through the testsuite harness (both allocators x the NIO socket combination).
-// Two dimensions of data() shrink, each explained where data() builds its rows: the OPENSSL contexts
-// (library-not-ported) and the delegated-task executor rows (SslHandler(SSLEngine, Executor) is not ported); the
-// CLIENT_INITIATED and SERVER_INITIATED rows are generated and skipped with the reason (see TestSslEcho).
-// SslHandler.engine() is the internal Engine() of Netty.NET.Handler, which opens its internals to this assembly as to
-// Netty.NET.Handler.Tests; logStats logs its negotiated cipher suite (see CipherSuite and the renegotiation checks).
+// CLR: the TLS engine is SslStream. @ParameterizedTest with @MethodSource("data") is [Theory] with
+// [MemberData(nameof(Data))] and @Timeout(30000 ms) its Timeout, as in the handler ssl tests; the JUnit
+// display-name pattern has no counterpart, xUnit names a case by its arguments. Each case runs through the
+// testsuite harness (both allocators x the NIO socket combination). Two dimensions of data() shrink, each
+// explained where data() builds its rows: the OPENSSL contexts (library-not-ported) and the delegated-task
+// executor rows (SslHandler(SSLEngine, Executor) is not ported); the CLIENT_INITIATED and SERVER_INITIATED rows
+// are generated and skipped with the reason (see TestSslEcho). SslHandler.engine() is the internal Engine() of
+// Netty.NET.Handler, which opens its internals to this assembly as to Netty.NET.Handler.Tests; logStats logs its
+// negotiated cipher suite (see CipherSuite and the renegotiation checks).
 #pragma warning disable xUnit1069 // The xUnit Timeout bounds the Runner body, whose polling loops and future waits have no timeout in the source.
 #pragma warning disable xUnit1051 // The source's bind/connect/write/close calls and polling sleeps do not observe the test cancellation.
 public class SocketSslEchoTest : AbstractSocketTest
@@ -349,11 +349,10 @@ public class SocketSslEchoTest : AbstractSocketTest
             if (needsRenegotiation && clientSendCounterVal >= data.Length / 2)
             {
                 needsRenegotiation = false;
-                // CLR: clientSslHandler.engine().setEnabledCipherSuites(new String[] { renegotiation.cipherSuite }) has
-                // no counterpart: SslStream takes its cipher
-                // suites only as the CipherSuitesPolicy of the options handed to AuthenticateAsClientAsync, which
-                // Windows does not support (docs/handler-ssl-design.md, Known differences). This branch is not reached:
-                // TestSslEcho skips the CLIENT_INITIATED rows.
+                // CLR: clientSslHandler.engine().setEnabledCipherSuites(new String[] { renegotiation.cipherSuite
+                // }) has no counterpart: SslStream takes its cipher suites only as the CipherSuitesPolicy of the
+                // options handed to AuthenticateAsClientAsync, which Windows does not support. This branch is not
+                // reached: TestSslEcho skips the CLIENT_INITIATED rows.
                 renegoFuture = clientSslHandler.Renegotiate();
                 LogStats("CLIENT RENEGOTIATES");
                 Assert.NotSame(renegoFuture, clientHandshakeFuture);
@@ -507,8 +506,6 @@ public class SocketSslEchoTest : AbstractSocketTest
         }
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of the client pipeline that counts the latch down on the
-    // SslHandshakeCompletionEvent.
     private sealed class HandshakeEventLatchHandler : ChannelInboundHandlerAdapter
     {
         private readonly TaskCompletionSource clientHandshakeEventLatch;

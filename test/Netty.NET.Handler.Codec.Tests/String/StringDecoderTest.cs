@@ -21,7 +21,6 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Tests.String;
 
-// CLR: CharsetUtil.UTF_8 is Encoding.UTF8.
 public class StringDecoderTest
 {
     [Fact]

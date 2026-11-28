@@ -20,11 +20,10 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: DefaultByteBufHolder is the Buffer port's DefaultByteBufHolder; the overrides that narrow its return types to
-// IHttp3UnknownFrame are C# 9 covariant overrides, and content() is the Content property (docs/buffer-porting.md, Buffer
-// holders and conversion; as codec-http2's DefaultHttp2UnknownFrame). Objects.hash(super.hashCode(), type) is spelled out
-// (31 * (31 + hash) + Long.hashCode(type)) to keep the Java value; the type prints with the invariant culture.
-// getClass() != o.getClass() is GetType() != o.GetType().
+// CLR: DefaultByteBufHolder is the Buffer port's DefaultByteBufHolder; the overrides that narrow its return types
+// to IHttp3UnknownFrame are C# 9 covariant overrides, and content() is the Content property.
+// Objects.hash(super.hashCode(), type) is spelled out (31 * (31 + hash) + Long.hashCode(type)) to keep the Java
+// value; the type prints with the invariant culture. getClass() != o.getClass() is GetType() != o.GetType().
 public sealed class DefaultHttp3UnknownFrame : DefaultByteBufHolder, IHttp3UnknownFrame
 {
     private readonly long type;

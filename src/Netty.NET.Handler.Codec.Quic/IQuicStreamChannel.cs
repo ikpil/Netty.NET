@@ -25,20 +25,20 @@ namespace Netty.NET.Handler.Codec.Quic;
 /**
  * A QUIC stream.
  */
-// CLR: DuplexChannel is IDuplexChannel; a returned Task replaces ChannelFuture and the ChannelPromise overloads fold into
-// the Task-returning members (docs/transport-porting.md, Decisions). The shutdown members that take an error code keep
-// the shape of the IDuplexChannel members they extend (no CancellationToken); updatePriority takes one, as the
-// IChannelOutboundInvoker operations do. The default bind/connect/disconnect/close/deregister/write/writeAndFlush that
-// delegate to the pipeline are default implementations of the IChannelOutboundInvoker members, and the default
-// shutdownInput()/shutdownInput(ChannelPromise), which shut the input down with error 0, the default implementation of
-// IDuplexChannel.ShutdownInputAsync() (a class's own implementation takes precedence, as a Java class method does over a
-// default method); newPromise()-style defaults and the shutdownOutput()/shutdown() defaults that only pass newPromise()
-// have no Task counterpart. localAddress(), remoteAddress(), parent(), read(), flush() and config() are re-declared in
-// Java only to narrow their return types (QuicStreamAddress, QuicChannel, QuicStreamChannel, QuicStreamChannelConfig);
-// they are inherited from IChannel unchanged, as a C# interface cannot narrow an inherited member's return type without
-// hiding it (the ISocketChannel rule), so callers cast Parent to IQuicChannel, Config to IQuicStreamChannelConfig and
-// LocalAddress/RemoteAddress to QuicStreamAddress. @Nullable has no counterpart (nullable reference types are not
-// enabled in this port).
+// CLR: DuplexChannel is IDuplexChannel; a returned Task replaces ChannelFuture and the ChannelPromise overloads
+// fold into the Task-returning members. The shutdown members that take an error code keep the shape of the
+// IDuplexChannel members they extend (no CancellationToken); updatePriority takes one, as the
+// IChannelOutboundInvoker operations do. The default bind/connect/disconnect/close/deregister/write/writeAndFlush
+// that delegate to the pipeline are default implementations of the IChannelOutboundInvoker members, and the
+// default shutdownInput()/shutdownInput(ChannelPromise), which shut the input down with error 0, the default
+// implementation of IDuplexChannel.ShutdownInputAsync() (a class's own implementation takes precedence, as a Java
+// class method does over a default method); newPromise()-style defaults and the shutdownOutput()/shutdown()
+// defaults that only pass newPromise() have no Task counterpart. localAddress(), remoteAddress(), parent(),
+// read(), flush() and config() are re-declared in Java only to narrow their return types (QuicStreamAddress,
+// QuicChannel, QuicStreamChannel, QuicStreamChannelConfig); they are inherited from IChannel unchanged, as a C#
+// interface cannot narrow an inherited member's return type without hiding it (the ISocketChannel rule), so
+// callers cast Parent to IQuicChannel, Config to IQuicStreamChannelConfig and LocalAddress/RemoteAddress to
+// QuicStreamAddress. @Nullable has no counterpart (nullable reference types are not enabled in this port).
 public interface IQuicStreamChannel : IDuplexChannel
 {
 
@@ -46,9 +46,9 @@ public interface IQuicStreamChannel : IDuplexChannel
      * Should be added to a {@link ChannelFuture} when the output should be cleanly shutdown via a {@code FIN}. No more
      * writes will be allowed after this point.
      */
-    // CLR: a ChannelFutureListener constant reads f.channel(); a Task has no channel, and the ChannelFutureListener
-    // constants have no counterpart (docs/transport-porting.md, JVM-only table), so a caller continues the write Task
-    // with channel.ShutdownOutputAsync(), as ChannelFutureListener.CLOSE is a continuation that closes the channel.
+    // CLR: a ChannelFutureListener constant reads f.channel(); a Task has no channel, and the
+    // ChannelFutureListener constants have no counterpart, so a caller continues the write Task with
+    // channel.ShutdownOutputAsync(), as ChannelFutureListener.CLOSE is a continuation that closes the channel.
 
     Task IChannelOutboundInvoker.BindAsync(EndPoint socketAddress, CancellationToken cancellationToken)
     {

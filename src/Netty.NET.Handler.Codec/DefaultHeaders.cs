@@ -66,7 +66,6 @@ public static class DefaultHeaders
         public static readonly IValueValidator<V> NO_VALIDATION = new NoValidationValueValidator<V>();
     }
 
-    // CLR: the anonymous NOT_NULL and NO_VALIDATION classes are named nested classes.
     private sealed class NotNullNameValidator<K> : INameValidator<K>
     {
         public void ValidateName(K name)
@@ -90,13 +89,13 @@ public static class DefaultHeaders
  * @param <V> the type of the header value.
  * @param <T> the type to use for return values when the intention is to return {@code this} object.
  */
-// CLR: HashingStrategy<K> is IEqualityComparer<K> (GetHashCode/Equals) and JAVA_HASHER is EqualityComparer<K>.Default
-// (docs/common-clr-design.md#native-character-sequence-equality-comparers). BiPredicate<? super V, ? super V> is
-// Func<V, V, bool>, whose parameters are contravariant. Java methods are virtual unless final, so the non-final
-// public and protected members are virtual. Java protected (subclasses and the package) is protected internal.
-// RuntimeException is Exception and IllegalArgumentException is ArgumentException (see IsIllegalArgument).
-// IEquatable<T> routes generic equality (EqualityComparer<T>.Default, which xUnit consults before treating the
-// headers as an IEnumerable of entries) to the Java equals(Object) body.
+// CLR: HashingStrategy<K> is IEqualityComparer<K> (GetHashCode/Equals) and JAVA_HASHER is
+// EqualityComparer<K>.Default. BiPredicate<? super V, ? super V> is Func<V, V, bool>, whose parameters are
+// contravariant. Java methods are virtual unless final, so the non-final public and protected members are virtual.
+// Java protected (subclasses and the package) is protected internal. RuntimeException is Exception and
+// IllegalArgumentException is ArgumentException (see IsIllegalArgument). IEquatable<T> routes generic equality
+// (EqualityComparer<T>.Default, which xUnit consults before treating the headers as an IEnumerable of entries) to
+// the Java equals(Object) body.
 public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
     where K : class
     where V : class
@@ -811,7 +810,6 @@ public class DefaultHeaders<K, V, T> : IHeaders<K, V, T>, IEquatable<T>
         return new HeaderIterator(head);
     }
 
-    // CLR: Iterable.iterator() is IEnumerable<T>.GetEnumerator(); both return the same HeaderIterator.
     public IEnumerator<IEntry<K, V>> GetEnumerator()
     {
         return Iterator();

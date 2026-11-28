@@ -22,10 +22,10 @@ namespace Netty.NET.Handler.Logging;
  * Maps the regular {@link LogLevel}s with the {@link InternalLogLevel} ones.
  */
 // CLR: a Java enum with a constructor, a field and a method is a sealed class with static readonly instances, as
-// codec-base Base64Dialect (docs/codec-base-porting.md): a C# enum is "a value type defined by a set of named
-// constants of the underlying integral numeric type", and "You can't define a method inside the definition of an
-// enumeration type" (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/enum).
-// Like the Java reference, a LogLevel variable can be null, which keeps LoggingHandler's checkNotNull(level, "level")
+// codec-base Base64Dialect : a C# enum is "a value type defined by a set of named constants of the underlying
+// integral numeric type", and "You can't define a method inside the definition of an enumeration type"
+// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/enum). Like the Java
+// reference, a LogLevel variable can be null, which keeps LoggingHandler's checkNotNull(level, "level")
 // meaningful. ToString() returns the constant name as Enum.toString() does; the implicit values()/valueOf(String)
 // members are not added (no caller).
 public sealed class LogLevel

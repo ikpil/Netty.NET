@@ -33,14 +33,14 @@ namespace Netty.NET.Example.File;
 /**
  * Server that accept the path of a file an echo back its content.
  */
-// CLR: System.getProperty is ExampleLauncher.GetProperty (the -Dname=value arguments) and Integer.parseInt is int.Parse with an
-// optional sign and the invariant culture. main(String[]) blocks on bind(PORT).sync() and closeFuture().sync(); it is the
-// async Main, which awaits the Task of BindAsync (the Task of the bound channel stands for the bind future f, and
-// f.channel() is its result) and the channel's CloseFuture. group.shutdownGracefully() is ShutdownGracefullyAsync(), whose
-// Task is discarded as Java discards the future. NioServerSocketChannel.class is Channel<NioServerSocketChannel>(); the
-// anonymous ChannelInitializer<SocketChannel> is an ActionChannelInitializer<ISocketChannel>
-// (Netty.NET.Transport.Bootstrapping) that captures sslCtx as the anonymous class does. CharsetUtil.UTF_8 is
-// Encoding.UTF8. The package-private static fields are internal.
+// CLR: System.getProperty is ExampleLauncher.GetProperty (the -Dname=value arguments) and Integer.parseInt is
+// int.Parse with an optional sign and the invariant culture. main(String[]) blocks on bind(PORT).sync() and
+// closeFuture().sync(); it is the async Main, which awaits the Task of BindAsync (the Task of the bound channel
+// stands for the bind future f, and f.channel() is its result) and the channel's CloseFuture.
+// group.shutdownGracefully() is ShutdownGracefullyAsync(), whose Task is discarded as Java discards the future.
+// NioServerSocketChannel.class is Channel<NioServerSocketChannel>(); the anonymous
+// ChannelInitializer<SocketChannel> is an ActionChannelInitializer<ISocketChannel>
+// (Netty.NET.Transport.Bootstrapping) that captures sslCtx as the anonymous class does.
 public sealed class FileServer
 {
 

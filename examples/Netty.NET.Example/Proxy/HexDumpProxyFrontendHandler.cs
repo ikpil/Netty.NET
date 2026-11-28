@@ -23,14 +23,14 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Example.Proxy;
 
-// CLR: addListener on a ChannelFuture is a continuation of the operation's Task on the event loop of the channel it
-// belongs to (EventExecutorTaskScheduler, the timing of DefaultPromise.notifyListeners()); future.isSuccess() is
-// IsCompletedSuccessfully. Bootstrap.ConnectAsync yields the channel only as the result of its Task, while
-// b.connect(...).channel() returns the channel at once; the channel factory is called synchronously inside ConnectAsync,
-// so .channel(ctx.channel().getClass()) is a factory over ReflectiveChannelFactory (the reflective factory that
+// CLR: addListener on a ChannelFuture is a continuation of the operation's Task on the event loop of the channel
+// it belongs to (EventExecutorTaskScheduler, the timing of DefaultPromise.notifyListeners()).
+// Bootstrap.ConnectAsync yields the channel only as the result of its Task, while b.connect(...).channel() returns
+// the channel at once; the channel factory is called synchronously inside ConnectAsync,
+// so.channel(ctx.channel().getClass()) is a factory over ReflectiveChannelFactory (the reflective factory that
 // Channel(Type) uses) that also stores the new channel in outboundChannel, as the handler-proxy tests capture
-// b.connect(...).channel() (docs/handler-proxy-porting.md). inboundChannel.eventLoop() is an IEventLoop, which is an
-// IEventLoopGroup. ChannelFutureListener.CLOSE is a continuation that closes the channel whatever the outcome.
+// b.connect(...).channel(). inboundChannel.eventLoop() is an IEventLoop, which is an IEventLoopGroup.
+// ChannelFutureListener.CLOSE is a continuation that closes the channel whatever the outcome.
 // Unpooled.EMPTY_BUFFER is Unpooled.EmptyBuffer, close() discards its Task as Java discards the future, and
 // cause.printStackTrace() writes Exception.ToString() to Console.Error.
 public class HexDumpProxyFrontendHandler : ChannelInboundHandlerAdapter

@@ -25,16 +25,13 @@ namespace Netty.NET.Handler.Codec.Compression;
  * This is a simple conversion of the original C with two minor bugfixes applied (see "BUGFIX"
  * comments within the class). Documentation within the class is largely absent.
  */
-// CLR: a mechanical port: the package-private final class is an internal sealed class, the private static nested classes
-// StackEntry, PartitionResult and TRBudget are private nested classes with internal fields, the methods are PascalCase
-// (BUCKET_B/BUCKET_BSTAR keep their names), and the locals, fields (SA, T, n) and statements keep the Java names and
-// order. The int arithmetic wraps as in Java (the projects are unchecked), ~, >> and >>>= are the same operators, and
-// the operator precedence of every expression (for example n >> 16 & 0xff + 16 in trLog) is the same in both
+// CLR: The int arithmetic wraps as in Java (the projects are unchecked), ~, >> and >>>= are the same operators,
+// and the operator precedence of every expression (for example n >> 16 & 0xff + 16 in trLog) is the same in both
 // languages. Byte-sign notes: T is the block, a byte[] that Java reads signed and C# unsigned. Every ordering
-// comparison and index masks the value (T[x] & 0xff) and the others compare two bytes for equality, so both languages
-// sort identically. constructBWT and bwt store T[...] into the int[] SA (the bwtBlock): Java stores -128..127, C#
-// 0..255; the only reader, Bzip2MTFAndRLE2StageEncoder, masks it (bwtBlock[i] & 0xff), so the transform output is the
-// same (a byte-sign spot without an observable difference).
+// comparison and index masks the value (T[x] & 0xff) and the others compare two bytes for equality, so both
+// languages sort identically. constructBWT and bwt store T[...] into the int[] SA (the bwtBlock): Java stores
+// -128..127, C# 0..255; the only reader, Bzip2MTFAndRLE2StageEncoder, masks it (bwtBlock[i] & 0xff), so the
+// transform output is the same (a byte-sign spot without an observable difference).
 internal sealed class Bzip2DivSufSort
 {
 

@@ -20,9 +20,8 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Http.Tests.WebSocketx;
 
-// CLR: sendUnsupportedVersionResponse(ch) is SendUnsupportedVersionResponseAsync(ch) with the Task discarded, as the
-// source discards the ChannelFuture; fail(...) is Assert.Fail and readOutbound() is ReadOutbound<T>(). The message of
-// fail prints the object with its ToString(), as Java's string concatenation does (null prints "null").
+// CLR: The message of fail prints the object with its ToString(), as Java's string concatenation does (null prints
+// "null").
 public class WebSocketServerHandshakerFactoryTest
 {
 

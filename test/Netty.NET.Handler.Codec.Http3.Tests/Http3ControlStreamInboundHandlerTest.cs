@@ -25,18 +25,18 @@ using static Netty.NET.Handler.Codec.Http3.Tests.Http3TestUtils;
 
 namespace Netty.NET.Handler.Codec.Http3.Tests;
 
-// CLR: the four theories of AbstractHttp3FrameTypeValidationHandlerTest run for this class too; it is neither inbound
-// nor outbound (super(UNIDIRECTIONAL, false, false)), so they skip every case (assumeTrue is Assert.SkipUnless), as
-// JUnit aborts them. The @ParameterizedTest methods with @MethodSource("testData") are [Theory]s with
-// [MemberData(nameof(TestData))] over a public static TheoryData<bool, bool> built by the same loops (the four
-// combinations in the same order); @ValueSource(booleans = { true, false }) is [InlineData(true)] and
-// [InlineData(false)]; the display-name patterns have no xUnit counterpart. Http3ControlStreamInboundHandler,
+// CLR: the four theories of AbstractHttp3FrameTypeValidationHandlerTest run for this class too; it is neither
+// inbound nor outbound (super(UNIDIRECTIONAL, false, false)), so they skip every case (assumeTrue is
+// Assert.SkipUnless), as JUnit aborts them. The @ParameterizedTest methods with @MethodSource("testData") are
+// [Theory]s with [MemberData(nameof(TestData))] over a public static TheoryData<bool, bool> built by the same
+// loops (the four combinations in the same order); @ValueSource(booleans = { true, false }) is [InlineData(true)]
+// and [InlineData(false)]; the display-name patterns have no xUnit counterpart. Http3ControlStreamInboundHandler,
 // Http3ControlStreamOutboundHandler, QpackEncoder and QpackAttributes are internal (package-private in Java) and
-// reached through InternalsVisibleTo; QpackSensitivityDetector is the interface IQpackSensitivityDetector. The lambda
-// frame () -> 9999 of testInvalidFirstFrameNonControlFrame is the private nested class NonControlFrame.
-// assertThrows(Exception.class, ...) is Assert.ThrowsAny<Exception>; readInbound()/readOutbound() are
-// ReadInbound<T>()/ReadOutbound(). Collection<Object[]> is TheoryData<bool, bool> and Arrays.asList a List initializer.
-// The throws clauses have no counterpart.
+// reached through InternalsVisibleTo; QpackSensitivityDetector is the interface IQpackSensitivityDetector. The
+// lambda frame () -> 9999 of testInvalidFirstFrameNonControlFrame is the private nested class NonControlFrame.
+// assertThrows(Exception.class,...) is Assert.ThrowsAny<Exception>; readInbound()/readOutbound() are
+// ReadInbound<T>()/ReadOutbound(). Collection<Object[]> is TheoryData<bool, bool> and Arrays.asList a List
+// initializer. The throws clauses have no counterpart.
 public class Http3ControlStreamInboundHandlerTest :
         AbstractHttp3FrameTypeValidationHandlerTest<IHttp3ControlStreamFrame>
 {

@@ -20,11 +20,11 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Proxy;
 
-// CLR: SocketAddress is EndPoint (docs/handler-porting.md, Addresses). The generic accessors <T extends SocketAddress>
-// T proxyAddress() / destinationAddress() are generic methods constrained to EndPoint; Java infers T from the
-// assignment target, a C# caller names it (ProxyAddress<IPEndPoint>()), and the unchecked cast (T) is a checked C# cast
-// that throws InvalidCastException where the Java caller's implicit checkcast throws ClassCastException. An address
-// prints as EndPoint.ToString().
+// CLR: SocketAddress is EndPoint. The generic accessors <T extends SocketAddress> T proxyAddress() /
+// destinationAddress() are generic methods constrained to EndPoint; Java infers T from the assignment target, a C#
+// caller names it (ProxyAddress<IPEndPoint>()), and the unchecked cast (T) is a checked C# cast that throws
+// InvalidCastException where the Java caller's implicit checkcast throws ClassCastException. An address prints as
+// EndPoint.ToString().
 public sealed class ProxyConnectionEvent
 {
     private readonly string protocol;

@@ -43,46 +43,15 @@ using HttpVersion = Netty.NET.Handler.Codec.Http.HttpVersion;
 
 namespace Netty.NET.Handler.Codec.Http2.Tests;
 
-// CLR: the transports are the Transport ports (docs/transport-porting.md, Tests): new
-// MultiThreadIoEventLoopGroup(NioIoHandler.NewFactory()) with NioServerSocketChannel/NioSocketChannel, and
-// MultiThreadIoEventLoopGroup(1, LocalIoHandler.NewFactory()) with LocalServerChannel/LocalChannel/LocalAddress; new
-// InetSocketAddress(NetUtil.LOCALHOST, 0) is an IPEndPoint (docs/codec-http-porting.md, Shared CLR adaptations:
-// InetSocketAddress is EndPoint). @BeforeEach setup() is the constructor and @AfterEach teardown() is
-// IAsyncLifetime.DisposeAsync, as in Http2ConnectionRoundtripTest. ChannelFuture/Future is Task and Promise is
-// TaskCompletionSource (docs/codec-http-porting.md, Shared CLR adaptations): sync()/syncUninterruptibly()/
-// awaitUninterruptibly() and getNow()/get() after them are awaiting the Task (Bootstrap.BindAsync/ConnectAsync and
-// Http2StreamChannelBootstrap.OpenAsync return the channel). A ChannelFutureListener/FutureListener is
-// Http2CodecUtil.AddListener, a continuation on Common's EventExecutorTaskScheduler over ctx.Executor that runs on the
-// event loop as DefaultPromise.notifyListeners() does (docs/codec-http-porting.md, Listener timing), and
-// ChannelFutureListener.CLOSE closes the channel the operation ran on, because a Task has no channel (same document,
-// Shared CLR adaptations). @Timeout is the Timeout of the [Fact] (docs/handler-porting.md, SSL tests: xUnit); when it
-// elapses, "the cancellation token available via TestContext.Current.CancellationToken will be signaled"
-// (https://xunit.net/docs/getting-started/v3/whats-new), so a latch await() without a timeout is
-// Wait(TestContext.Current.CancellationToken) and await(timeout) Wait(timeout, token). CountDownLatch is CountdownEvent
-// with countDown() as the private CountDown(latch), which ignores a zero count, and AtomicInteger/AtomicReference/
-// AtomicBoolean are the Common types (docs/handler-porting.md, SSL tests: Concurrency helpers). The anonymous
-// ChannelInitializer bodies are ActionChannelInitializer delegates (docs/transport-porting.md: "the anonymous
-// ChannelInitializer is an ActionChannelInitializer<IChannel>") and the other anonymous classes are named nested
-// classes. CharsetUtil.US_ASCII is Encoding.ASCII (docs/codec-http-porting.md, Shared CLR adaptations: Charset is
-// Encoding); Http2SettingsAckFrame.INSTANCE is IHttp2SettingsAckFrame.INSTANCE, and HttpVersion is aliased to
-// codec-http's type because System.Net declares an HttpVersion too. throw new AssertionError(cause) is an
-// XunitException (an assertion failure) whose message is cause.toString() (ThrowableUtil.ThrowableToString) and whose
-// inner exception is the cause: AssertionError(Object) takes its detail message from the object's string conversion,
-// and "If the specified object is an instance of Throwable, it becomes the cause"
-// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/AssertionError.html). The deprecated
-// Http2MultiplexCodecBuilder/Http2MultiplexCodec are not ported (their @deprecated text names Http2FrameCodecBuilder
-// and Http2MultiplexHandler): asyncSettingsAckWithMultiplexCodec only exercises Http2MultiplexCodec (the server variant
-// of asyncSettingsAck0 that asyncSettingsAckWithMultiplexHandler runs with the replacement) and has no C# method.
-// SslProvider.OPENSSL is library-not-ported (netty-tcnative; docs/handler-porting.md, SSL: Context layer,
-// "OPENSSL/OPENSSL_REFCNT throw NotSupportedException"), so testSSLExceptionOpenSslTLSv12,
-// testSSLExceptionOpenSslTLSv13 and testFireChannelReadAfterHandshakeSuccess_OPENSSL have no C# method either.
+// Run write and close listeners on the channel executor so transport assertions observe the same event ordering.
+// The test cancellation token bounds latch waits.
+// The deprecated multiplex codec and the native OpenSSL fixtures are outside this test matrix.
 #pragma warning disable xUnit1051 // The source's bind/connect/write/close calls do not observe the test cancellation.
 #pragma warning disable xUnit1069 // The helpers these tests call wait with TestContext.Current.CancellationToken.
 public class Http2MultiplexTransportTest : IAsyncLifetime
 {
     private static readonly IChannelHandler DISCARD_HANDLER = new DiscardHandler();
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of DISCARD_HANDLER; isSharable() is the IsSharable property.
     private sealed class DiscardHandler : ChannelInboundHandlerAdapter
     {
 
@@ -131,7 +100,6 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
             ReferenceCountUtil.Release(msg);
         }
 
-        // CLR: responseFuture.isSuccess() is Task.IsCompletedSuccessfully.
         public override void ChannelInactive(IChannelHandlerContext ctx)
         {
             if (responseFuture.IsCompletedSuccessfully)
@@ -170,8 +138,7 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
         return ValueTask.CompletedTask;
     }
 
-    // CLR: teardown(); close() is not awaited, as the source does not sync it, and
-    // shutdownGracefully(0, 0, MILLISECONDS).syncUninterruptibly() awaits the group's termination.
+    // CLR: teardown().
     public async ValueTask DisposeAsync()
     {
         if (clientChannel != null)
@@ -258,7 +225,6 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
         serverAckAllLatch.Wait(TestContext.Current.CancellationToken);
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of the server pipeline in asyncSettingsAck0.
     private sealed class ServerSettingsAckHandler : ChannelInboundHandlerAdapter
     {
         private readonly AtomicReference<IChannel> serverConnectedChannelRef;
@@ -294,7 +260,6 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
         }
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of the client pipeline in asyncSettingsAck0.
     private sealed class ClientSettingsHandler : ChannelInboundHandlerAdapter
     {
         private readonly CountdownEvent clientSettingsLatch;
@@ -359,8 +324,6 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
         }
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of the server's Http2MultiplexHandler in testFlushNotDiscarded,
-    // with its anonymous Runnables as lambdas.
     private sealed class DelayedResponseHandler : ChannelInboundHandlerAdapter
     {
         private readonly IEventExecutorGroup executorService;
@@ -396,9 +359,7 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
         }
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter instances of testFlushNotDiscarded,
-    // testFireChannelReadAfterHandshakeSuccess and streamHandlerInactivatedResponseFlushed that count down a latch on
-    // an end-of-stream DATA frame; the last one also returns true from isSharable(), which sharable selects.
+    // CLR: The last one also returns true from isSharable(), which sharable selects.
     private sealed class EndStreamDataLatchHandler : ChannelInboundHandlerAdapter
     {
         private readonly CountdownEvent latch;
@@ -423,15 +384,14 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
         public override bool IsSharable => sharable || base.IsSharable;
     }
 
-    // CLR: @Disabled is [Fact(Skip = ...)] with the annotation's reason: JUnit's @Disabled signals that the test "is
-    // currently disabled" and its value is "The reason this annotated test class or test method is disabled"
-    // (https://docs.junit.org/current/api/org.junit.jupiter.api/org/junit/jupiter/api/Disabled.html); a [Fact] with
-    // Skip set is a "statically skipped" test (https://xunit.net/docs/getting-started/v3/whats-new). The body is
-    // ported, as the source compiles it. On SslStream the TLSv1.2 body would not pass either: measured with the cipher
-    // restriction removed (Windows has no CipherSuitesPolicy), the client handshake succeeds before the server rejects
-    // the client certificate, because SslStream validates the peer after its handshake loop (docs/handler-porting.md,
-    // Measurements and platform limits: untrusted certificate), so the body reports "TLSv1.3 expected"; the TLSv1.3
-    // body passed.
+    // CLR: @Disabled is [Fact(Skip =...)] with the annotation's reason: JUnit's @Disabled signals that the test
+    // "is currently disabled" and its value is "The reason this annotated test class or test method is disabled"
+    // (https://docs.junit.org/current/api/org.junit.jupiter.api/org/junit/jupiter/api/Disabled.html); a [Fact]
+    // with Skip set is a "statically skipped" test (https://xunit.net/docs/getting-started/v3/whats-new). The body
+    // is ported, as the source compiles it. On SslStream the TLSv1.2 body would not pass either: measured with the
+    // cipher restriction removed (Windows has no CipherSuitesPolicy), the client handshake succeeds before the
+    // server rejects the client certificate, because SslStream validates the peer after its handshake loop, so the
+    // body reports "TLSv1.3 expected"; the TLSv1.3 body passed.
     [Fact(Timeout = 5000, Skip = "JDK SSLEngine does not produce an alert")]
     public async Task TestSSLExceptionJDKTLSv12()
     {
@@ -447,13 +407,11 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
 
     // CLR: assumeTrue is Xunit.Assert.SkipUnless ("will skip the test if condition is false",
     // https://xunit.net/docs/getting-started/v3/whats-new). The anonymous X509TrustManager is a
-    // RemoteCertificateValidationCallback (docs/handler-porting.md, JSSE and JCA on the BCL: TrustManager), see
-    // ExpiredTrustManager. cert.getKeyPair().getPrivate() is the pkitesting bundle's key pair, an AsymmetricAlgorithm
-    // (docs/handler-porting.md, java.security.PrivateKey), and getCertificatePath() is GetCertificatePath().
-    // SSLException is AuthenticationException (docs/handler-porting.md, JSSE and JCA on the BCL) and cause.getCause()
-    // is InnerException. Http2SecurityUtil.CIPHERS needs a CipherSuitesPolicy, which Windows does not have, so
-    // SslContext.NewHandler throws PlatformNotSupportedException there (docs/handler-porting.md,
-    // setEnabledCipherSuites).
+    // RemoteCertificateValidationCallback, see ExpiredTrustManager. cert.getKeyPair().getPrivate() is the
+    // pkitesting bundle's key pair, an AsymmetricAlgorithm, and getCertificatePath() is GetCertificatePath().
+    // SSLException is AuthenticationException and cause.getCause() is InnerException. Http2SecurityUtil.CIPHERS
+    // needs a CipherSuitesPolicy, which Windows does not have, so SslContext.NewHandler throws
+    // PlatformNotSupportedException there.
     private async Task TestSslException(SslProvider provider, bool tlsv13)
     {
         Assert.SkipUnless(SslProvider.IsAlpnSupported(provider), "SslProvider.isAlpnSupported(provider)");
@@ -556,9 +514,6 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
         return false;
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of the client pipeline in testSslException.
-    // h2Bootstrap.open().addListener(FutureListener) is Http2CodecUtil.AddListener on the OpenAsync Task, and
-    // future.getNow() its Result once it completed successfully. AssertionError is XunitException.
     private sealed class SslExceptionClientHandler : ChannelInboundHandlerAdapter
     {
         private readonly bool tlsv13;
@@ -617,7 +572,6 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
         }
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of the stream channel in testSslException.
     private sealed class SslExceptionStreamHandler : ChannelInboundHandlerAdapter
     {
         private readonly CountdownEvent latch;
@@ -641,14 +595,14 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
         }
     }
 
-    // CLR: @DisabledOnOs(OS.WINDOWS) "is used to signal that the annotated test class or test method is disabled on one
-    // or more specified" operating systems
+    // CLR: @DisabledOnOs(OS.WINDOWS) "is used to signal that the annotated test class or test method is disabled
+    // on one or more specified" operating systems
     // (https://docs.junit.org/current/api/org.junit.jupiter.api/org/junit/jupiter/api/condition/DisabledOnOs.html);
     // Xunit.Assert.SkipWhen "will skip the test if condition is true"
-    // (https://xunit.net/docs/getting-started/v3/whats-new), with the annotation's disabledReason. On Windows the port
-    // could not run the source's context either: its Http2SecurityUtil.CIPHERS need a CipherSuitesPolicy, which Windows
-    // does not have (docs/handler-porting.md, setEnabledCipherSuites and SSL tests: "Assert.Skip on Windows"). Measured
-    // with that restriction removed, the body passed on this Windows host in three of three runs.
+    // (https://xunit.net/docs/getting-started/v3/whats-new), with the annotation's disabledReason. On Windows the
+    // port could not run the source's context either: its Http2SecurityUtil.CIPHERS need a CipherSuitesPolicy,
+    // which Windows does not have. Measured with that restriction removed, the body passed on this Windows host in
+    // three of three runs.
     [Fact(Timeout = 5000)]
     public async Task TestFireChannelReadAfterHandshakeSuccess_JDK()
     {
@@ -727,7 +681,6 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
         }
     }
 
-    // CLR: the anonymous ApplicationProtocolNegotiationHandler of testFireChannelReadAfterHandshakeSuccess.
     private sealed class Http2NegotiationHandler : ApplicationProtocolNegotiationHandler
     {
         internal Http2NegotiationHandler() : base(ApplicationProtocolNames.HTTP_1_1)
@@ -741,8 +694,6 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
         }
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of the server's Http2MultiplexHandler in
-    // testFireChannelReadAfterHandshakeSuccess.
     private sealed class HelloWorldStreamHandler : ChannelInboundHandlerAdapter
     {
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)
@@ -761,8 +712,6 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
         }
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of the client pipeline in
-    // testFireChannelReadAfterHandshakeSuccess.
     private sealed class HandshakeSuccessClientHandler : ChannelInboundHandlerAdapter
     {
         private readonly CountdownEvent latch;
@@ -908,8 +857,6 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
         }
     }
 
-    // CLR: the anonymous ChannelInitializer<Channel> of the server's Http2MultiplexHandler in
-    // streamHandlerInactivatedResponseFlushed.
     private sealed class StreamInitializer : ChannelInitializer<IChannel>
     {
         private readonly AtomicInteger handlerInactivatedFlushed;
@@ -932,9 +879,6 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
         }
     }
 
-    // CLR: the anonymous ChannelInitializer bodies are ActionChannelInitializer delegates; the anonymous
-    // SimpleChannelInboundHandler classes are the nested FullHttpRequestResponder and FullHttpResponseLatch.
-    // group.shutdownGracefully(0, 3, SECONDS) is not awaited, as in the source.
     [Fact]
     public async Task TestServerCloseShouldNotSendResetIfClientSentEOS()
     {
@@ -1029,9 +973,6 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
         }
     }
 
-    // CLR: the anonymous SimpleChannelInboundHandler<FullHttpRequest> of the server stream pipeline in
-    // testServerCloseShouldNotSendResetIfClientSentEOS; addListeners(ChannelFutureListener.CLOSE) closes ctx.Channel,
-    // the channel of the write (see the class comment).
     private sealed class FullHttpRequestResponder : SimpleChannelInboundHandler<IFullHttpRequest>
     {
         protected override void ChannelRead0(IChannelHandlerContext ctx, IFullHttpRequest msg)
@@ -1044,8 +985,6 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
         }
     }
 
-    // CLR: the anonymous SimpleChannelInboundHandler<FullHttpResponse> of the client stream pipeline in
-    // testServerCloseShouldNotSendResetIfClientSentEOS.
     private sealed class FullHttpResponseLatch : SimpleChannelInboundHandler<IFullHttpResponse>
     {
         private readonly CountdownEvent clientReceivedResponseLatch;
@@ -1062,12 +1001,12 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
     }
 
     // https://github.com/netty/netty/issues/17600
-    // CLR: (byte) i keeps the low eight bits in both languages (the project is unchecked), so the payload octets are
-    // Java's; assertArrayEquals compares octets, which no byte sign changes. ch.eventLoop().schedule(runnable, 500,
-    // MILLISECONDS) is ScheduleAsync(action, TimeSpan.FromMilliseconds(500)) (docs/handler-porting.md, Executors and
-    // scheduling). data.content() is the Content property, readableBytes() ReadableBytes. The anonymous handlers are
-    // the nested PayloadResponder, DataCollector, DataForwarder and WritabilityToAutoReadMirror, and
-    // shutdownGracefully(0, 0, MILLISECONDS) is not awaited, as in the source.
+    // CLR: (byte) i keeps the low eight bits in both languages (the project is unchecked), so the payload octets
+    // are Java's; assertArrayEquals compares octets, which no byte sign changes. ch.eventLoop().schedule(runnable,
+    // 500, MILLISECONDS) is ScheduleAsync(action, TimeSpan.FromMilliseconds(500)). data.content() is the Content
+    // property, readableBytes() ReadableBytes. The anonymous handlers are the nested PayloadResponder,
+    // DataCollector, DataForwarder and WritabilityToAutoReadMirror, and shutdownGracefully(0, 0, MILLISECONDS) is
+    // not awaited, as in the source.
     [Fact(Timeout = 30000)]
     public async Task ProxyMirroringWritabilityToAutoReadAcrossEventLoopsDoesNotStallStream()
     {
@@ -1241,9 +1180,6 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
         }
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of the "in" server's Http2MultiplexHandler in
-    // proxyMirroringWritabilityToAutoReadAcrossEventLoopsDoesNotStallStream, and the one of the server in
-    // tortureCrossThreadSetAutoReadRace, whose bodies are the same.
     private sealed class PayloadResponder : ChannelInboundHandlerAdapter
     {
         private readonly byte[] payloadBytes;
@@ -1266,10 +1202,6 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
         }
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of the "out" server's stream channels in
-    // proxyMirroringWritabilityToAutoReadAcrossEventLoopsDoesNotStallStream, and the one of the client stream in
-    // tortureCrossThreadSetAutoReadRace, whose bodies are the same (complete is outComplete or dataComplete).
-    // catch (Throwable) is catch (Exception) (docs/codec-http-porting.md, Shared CLR adaptations: Exceptions).
     private sealed class DataCollector : ChannelInboundHandlerAdapter
     {
         private readonly ByteBuf received;
@@ -1334,8 +1266,6 @@ public class Http2MultiplexTransportTest : IAsyncLifetime
         }
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter added to the "out" stream channel in
-    // proxyMirroringWritabilityToAutoReadAcrossEventLoopsDoesNotStallStream; isWritable() is the IsWritable property.
     private sealed class WritabilityToAutoReadMirror : ChannelInboundHandlerAdapter
     {
         private readonly IHttp2StreamChannel finalInStream;

@@ -36,10 +36,9 @@ public class ChunkedStreamTest
         Assert.Null(chunkedStream.ReadChunk(UnpooledByteBufAllocator.Default));
     }
 
-    // CLR: the anonymous InputStream whose read() returns -1 while available() returns 1. System.IO.Stream has no
-    // available(); ChunkedStream reads it as Length - Position of a seekable stream, so this stream reports one byte
-    // left (Length 1, Position 0) while Read returns 0, the end of the stream ("Read returns 0 only if zero bytes were
-    // requested or when there is no more data in the stream",
+    // CLR: System.IO.Stream has no available(); ChunkedStream reads it as Length - Position of a seekable stream,
+    // so this stream reports one byte left (Length 1, Position 0) while Read returns 0, the end of the stream
+    // ("Read returns 0 only if zero bytes were requested or when there is no more data in the stream",
     // https://learn.microsoft.com/en-us/dotnet/api/system.io.stream.read?view=net-10.0). The other abstract Stream
     // members are not used.
     private sealed class AvailableAtEndInputStream : System.IO.Stream

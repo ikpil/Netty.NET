@@ -50,15 +50,15 @@ public class SocketGatheringWriteSourceTest : AbstractSocketTest
     }
 
     // CLR: the source's @AfterAll compressHeapDumps() calls TestUtils.compressHeapDumps(), which xz-compresses the
-    // *.hprof files written by TestUtils.dump(...) through HotSpotDiagnosticMXBean.dumpHeap ("Dumps the heap to the
-    // outputFile file in the same format as the hprof heap dump",
+    // *.hprof files written by TestUtils.dump(...) through HotSpotDiagnosticMXBean.dumpHeap ("Dumps the heap to
+    // the outputFile file in the same format as the hprof heap dump",
     // https://docs.oracle.com/en/java/javase/21/docs/api/jdk.management/com/sun/management/HotSpotDiagnosticMXBean.html).
-    // That bean is the "Diagnostic management interface for the HotSpot Virtual Machine"; a .NET process dump is
+    // That bean is the "Diagnostic management interface for the HotSpot Virtual Machine"; a.NET process dump is
     // collected from outside the process with dotnet-dump instead ("a way to collect and analyze dumps on Windows,
     // Linux, and macOS without any native debugger involved",
     // https://learn.microsoft.com/en-us/dotnet/core/diagnostics/dotnet-dump). This port's TestUtils therefore only
-    // keeps testMethodName(TestInfo) (see TestUtils.cs), so neither the dump nor this @AfterAll compression step is
-    // ported and no xUnit class fixture replaces it.
+    // keeps testMethodName(TestInfo) (see TestUtils.cs), so neither the dump nor this @AfterAll compression step
+    // is ported and no xUnit class fixture replaces it.
 
     [Fact(Timeout = TIMEOUT)]
     public async Task TestGatheringWrite()
@@ -131,8 +131,6 @@ public class SocketGatheringWriteSourceTest : AbstractSocketTest
         sb.ChildOption(ChannelOption.AUTO_READ, autoRead);
         cb.Option(ChannelOption.AUTO_READ, autoRead);
 
-        // CLR: ImmediateEventExecutor.INSTANCE.newPromise() is a TaskCompletionSource; this port completes Tasks
-        // instead of exposing promises (IChannel.cs: "Tasks replace ChannelFuture/Promise").
         TaskCompletionSource serverDonePromise = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         TestServerHandler sh = new TestServerHandler(autoRead, serverDonePromise, data.Length);
         TestHandler ch = new TestHandler(autoRead);
@@ -238,7 +236,7 @@ public class SocketGatheringWriteSourceTest : AbstractSocketTest
             Assert.Skip("Not supported by this EventLoopGroup: " + cb.Config.Group);
         }
 
-        // CLR: AtomicInteger.getAndIncrement() is Interlocked.Increment(ref ...) - 1 on these fields.
+        // CLR: AtomicInteger.getAndIncrement() is Interlocked.Increment(ref...) - 1 on these fields.
         int sHandlersIdx = 0;
         int cHandlersIdx = 0;
         TestServerHandler[] sHandlers = new TestServerHandler[] {

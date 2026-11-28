@@ -29,10 +29,10 @@ namespace Netty.NET.Handler.Codec.Socks;
  * @see SocksCmdRequest
  * @see SocksCmdResponseDecoder
  */
-// CLR: java.net.IDN is the shared Netty.NET.Common.Internal.IDN over IdnMapping with the IDN results; the switches over
-// SocksAddressType are if/else chains (see SocksAddressType.cs); IllegalArgumentException is ArgumentException,
-// CharsetUtil.US_ASCII is Encoding.ASCII (docs/codec-base-porting.md), and numbers in messages use the invariant
-// culture (see SocksCmdRequest).
+// CLR: java.net.IDN is the shared Netty.NET.Common.Internal.IDN over IdnMapping with the IDN results; the switches
+// over SocksAddressType are if/else chains (see SocksAddressType.cs); IllegalArgumentException is
+// ArgumentException, CharsetUtil.US_ASCII is Encoding.ASCII, and numbers in messages use the invariant culture
+// (see SocksCmdRequest).
 public sealed class SocksCmdResponse : SocksResponse
 {
     private readonly SocksCmdStatus cmdStatus;

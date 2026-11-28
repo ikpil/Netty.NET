@@ -22,10 +22,10 @@ using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Resolver.Dns;
 
-// CLR: Comparator<InetAddress> is IComparer<IPAddress>; SocketProtocolFamily is the Transport enum (Inet, Inet6, Unix).
-// Class<? extends InetAddress> is the AddressFamily of the preferred address, the handler port's mapping of instanceof
-// Inet4Address/Inet6Address (docs/handler-porting.md Addresses), so getClass() equality and isAssignableFrom are
-// AddressFamily comparisons. IllegalArgumentException is ArgumentException.
+// CLR: Comparator<InetAddress> is IComparer<IPAddress>; SocketProtocolFamily is the Transport enum (Inet, Inet6,
+// Unix). Class<? extends InetAddress> is the AddressFamily of the preferred address, the handler port's mapping of
+// instanceof Inet4Address/Inet6Address, so getClass() equality and isAssignableFrom are AddressFamily comparisons.
+// IllegalArgumentException is ArgumentException.
 internal sealed class PreferredAddressTypeComparator : IComparer<IPAddress>
 {
 

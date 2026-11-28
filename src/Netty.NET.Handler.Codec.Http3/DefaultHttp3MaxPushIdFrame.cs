@@ -19,9 +19,8 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the interface is IHttp3MaxPushIdFrame (docs/codec-http2-porting.md, Shared CLR adaptations). Objects.hash(id) is
-// spelled out (31 + Long.hashCode) to keep the Java value, as codec-quic's QuicStreamAddress; the id prints with the
-// invariant culture. getClass() != o.getClass() is GetType() != o.GetType().
+// CLR: the interface is IHttp3MaxPushIdFrame. The id prints with the invariant culture. getClass() != o.getClass()
+// is GetType() != o.GetType().
 public sealed class DefaultHttp3MaxPushIdFrame : IHttp3MaxPushIdFrame
 {
     private readonly long id;

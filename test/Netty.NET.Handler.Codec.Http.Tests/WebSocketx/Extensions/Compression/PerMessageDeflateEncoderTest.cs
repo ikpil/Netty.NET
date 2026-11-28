@@ -28,14 +28,7 @@ using static Netty.NET.Handler.Codec.Http.WebSocketx.Extensions.IWebSocketExtens
 
 namespace Netty.NET.Handler.Codec.Http.Tests.WebSocketx.Extensions.Compression;
 
-// CLR: WebSocketExtension.RSV1/RSV3 are the constants of IWebSocketExtension; the static imports of
-// ALWAYS_SKIP/NEVER_SKIP and EMPTY_DEFLATE_BLOCK are using static directives of IWebSocketExtensionFilter and
-// DeflateDecoder, and CharsetUtil.UTF_8 is Encoding.UTF8 (docs/codec-smtp-porting.md). The anonymous
-// WebSocketExtensionFilter classes are the named nested classes DataShorterThan100Filter and ShorterThan100Filter.
-// java.util.Random and the SplittableRandom seeded from it are an unseeded System.Random filled with NextBytes (the
-// payloads are arbitrary). assertThrows(T.class, Executable) is Assert.ThrowsAny<T> with a lambda, AssertJ
-// assertThat(a).isEqualTo(b) is Assert.Equal(b, a), Arrays.equals is SequenceEqual, @ParameterizedTest @ValueSource
-// (booleans) is a [Theory] with InlineData rows, and StringBuilder is System.Text.StringBuilder.
+// CLR: WebSocketExtension.RSV1/RSV3 are the constants of IWebSocketExtension.
 public class PerMessageDeflateEncoderTest
 {
 

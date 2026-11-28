@@ -23,14 +23,11 @@ using static Netty.NET.Handler.Codec.Http3.Http3FrameValidationUtils;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the package-private class is internal; ChannelOutboundHandler is the Transport's IChannelOutboundHandler, whose
-// operations return a Task instead of completing a ChannelPromise argument (docs/codec-base-porting.md, Outbound
-// operations). The final write(ctx, Object, ChannelPromise) is WriteAsync(ctx, msg, cancellationToken) (not virtual),
-// which creates the promise (Http3CodecUtils.NewPromise()), runs the Java body and returns the promise's Task; the
-// package-private overridable write(ctx, T, ChannelPromise) and writeFrameDiscarded(...) are internal virtual members
-// that keep the TaskCompletionSource parameter, and ctx.write(msg, promise) is Http3CodecUtils.Write. The other
-// operations pass their CancellationToken to the context and return its Task. SocketAddress is EndPoint. throws
-// Exception has no counterpart.
+// CLR: ChannelOutboundHandler is the Transport's IChannelOutboundHandler, whose operations return a Task instead
+// of completing a ChannelPromise argument. The final write(ctx, Object, ChannelPromise) is WriteAsync(ctx, msg,
+// cancellationToken) (not virtual), which creates the promise (Http3CodecUtils.NewPromise()), runs the Java body
+// and returns the promise's Task. The other operations pass their CancellationToken to the context and return its
+// Task. SocketAddress is EndPoint. throws Exception has no counterpart.
 internal class Http3FrameTypeDuplexValidationHandler<T> : Http3FrameTypeInboundValidationHandler<T>, IChannelOutboundHandler
     where T : class, IHttp3Frame
 {

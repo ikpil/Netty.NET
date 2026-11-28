@@ -91,7 +91,6 @@ public class CharSequenceValueConverterTest
     public void TestTimeMillis()
     {
         // Zero out the millis as this is what the convert is doing as well.
-        // CLR: System.currentTimeMillis() is DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().
         long millis = (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000) * 1000;
         Assert.Equal(millis, converter.ConvertToTimeMillis(converter.ConvertTimeMillis(millis)));
     }

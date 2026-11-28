@@ -40,7 +40,6 @@ public abstract class ByteToMessageCodec<I> : ChannelDuplexHandler
 
     private readonly ByteToMessageDecoder decoder;
 
-    // CLR: the anonymous decoder is a named nested class that forwards to the codec.
     private sealed class Decoder : ByteToMessageDecoder
     {
         private readonly ByteToMessageCodec<I> codec;

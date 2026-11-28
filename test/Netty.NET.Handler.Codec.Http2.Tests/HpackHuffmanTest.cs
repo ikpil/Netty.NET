@@ -38,13 +38,13 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Codec.Http2.Tests;
 
-// CLR: the anonymous Executables are lambdas and assertThrows(Http2Exception.class, ...) is
-// Assert.ThrowsAny<Http2Exception> (docs/codec-http-porting.md, Core test notes). java.util.Random(123456789L) is
-// System.Random(123456789): the round trip of the 4096 random bytes does not depend on the exact sequence, which is
-// not reproduced. String.getBytes() and new String(byte[]) use the platform default charset, which is
-// Encoding.Default (UTF-8 on .NET; docs/codec-http-porting.md, Shared CLR adaptations); the strings are ASCII, so the
-// bytes are the same. The String passed to HpackHuffmanEncoder.encode as a CharSequence is a StringCharSequence.
-// Arrays.fill is Array.Fill; int... is params int[]. The assertion with a message uses XunitAssertMessages.AssertM.
+// CLR: the anonymous Executables are lambdas and assertThrows(Http2Exception.class,...) is
+// Assert.ThrowsAny<Http2Exception>. java.util.Random(123456789L) is System.Random(123456789): the round trip of
+// the 4096 random bytes does not depend on the exact sequence, which is not reproduced. String.getBytes() and new
+// String(byte[]) use the platform default charset, which is Encoding.Default (UTF-8 on.NET;
+// docs/codec-http-porting.md, Shared CLR adaptations); the strings are ASCII, so the bytes are the same. The
+// String passed to HpackHuffmanEncoder.encode as a CharSequence is a StringCharSequence. Arrays.fill is
+// Array.Fill; int... is params int[]. The assertion with a message uses XunitAssertMessages.AssertM.
 public class HpackHuffmanTest
 {
 

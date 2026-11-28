@@ -23,11 +23,10 @@ namespace Netty.NET.Handler.Ssl;
 /**
  * Adapter class which allows to wrap another {@link SslContext} and init {@link SSLEngine} instances.
  */
-// CLR: the SSLEngine is not ported (owner decision 2026-11-24, docs/handler-ssl-design.md: no SSLEngine facade), so the
-// newEngine overrides, sessionContext() and the abstract initEngine(SSLEngine) hook are not ported (initEngine's Javadoc
-// is recorded); SslContext has no sessionCacheSize()/sessionTimeout() to forward and no Executor overloads of newHandler
-// (see SslContext). initHandler(SslHandler) stays the hook that sees every handler; Java's final overrides are sealed
-// overrides.
+// CLR: the SSLEngine is not ported, so the newEngine overrides, sessionContext() and the abstract
+// initEngine(SSLEngine) hook are not ported (initEngine's Javadoc is recorded); SslContext has no
+// sessionCacheSize()/sessionTimeout() to forward and no Executor overloads of newHandler (see SslContext).
+// initHandler(SslHandler) stays the hook that sees every handler; Java's final overrides are sealed overrides.
 public abstract class DelegatingSslContext : SslContext
 {
 

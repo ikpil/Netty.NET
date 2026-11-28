@@ -19,12 +19,11 @@ namespace Netty.NET.Handler.Codec.Quic;
 /**
  * {@link SSLSessionContext} which also supports advanced operations.
  */
-// CLR: SSLSessionContext has no counterpart: SslStream and System.Net.Quic resume TLS sessions through the operating
-// system's TLS stack and expose no session cache (getSession(byte[]), getIds(), the session timeout and cache size), so
-// SslContext.sessionContext() is not ported (owner decision 2026-11-24, docs/handler-ssl-design.md, decision 2 and Known
-// differences) and this interface has no base interface. setTicketKeys keeps its Java API (owner decision 2026-11-27,
-// docs/quic-design.md: session ticket keys have no counterpart in System.Net.Quic); the msquic implementation (stage 2)
-// reports it as unsupported. The varargs parameter is a params array; @Nullable has no counterpart.
+// CLR: SSLSessionContext has no counterpart: SslStream and System.Net.Quic resume TLS sessions through the
+// operating system's TLS stack and expose no session cache (getSession(byte[]), getIds(), the session timeout and
+// cache size), so SslContext.sessionContext() is not ported and this interface has no base interface.
+// setTicketKeys keeps its Java API; the msquic implementation (stage 2) reports it as unsupported. The varargs
+// parameter is a params array; @Nullable has no counterpart.
 public interface IQuicSslSessionContext
 {
 

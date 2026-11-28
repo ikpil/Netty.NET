@@ -26,10 +26,10 @@ namespace Netty.NET.Handler.Codec.Socksx.V5;
  * The default {@link Socks5InitialRequest}.
  */
 // CLR: Socks5AuthMethod... is params Socks5AuthMethod[] and Iterable is IEnumerable; List is IList and
-// Collections.unmodifiableList is a ReadOnlyCollection<T> wrapper (see Netty.NET.Handler.Codec.Socks.SocksInitRequest).
-// checkNonEmpty(list, "list") throws ArgumentException (IllegalArgumentException) before the list is wrapped.
-// AbstractCollection.toString() writes "the collection's elements ..., enclosed in square brackets ("[]")" separated
-// by ", "
+// Collections.unmodifiableList is a ReadOnlyCollection<T> wrapper (see
+// Netty.NET.Handler.Codec.Socks.SocksInitRequest). checkNonEmpty(list, "list") throws ArgumentException
+// (IllegalArgumentException) before the list is wrapped. AbstractCollection.toString() writes "the collection's
+// elements..., enclosed in square brackets ("[]")" separated by ", "
 // (https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/AbstractCollection.html), while a
 // ReadOnlyCollection keeps Object.ToString(), so the list is appended as '[' + AppendJoin(", ", list) + ']'
 // ("Concatenates and appends the members of a collection, using the specified separator between each member",

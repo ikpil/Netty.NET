@@ -19,8 +19,8 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx.Extensions.Compression;
 /**
  * Per-frame implementation of deflate decompressor.
  */
-// CLR: the package-private class and its constructors are internal; WebSocketExtension.RSV1 is the constant of
-// IWebSocketExtension and WebSocketExtensionFilter.NEVER_SKIP the static field of IWebSocketExtensionFilter.
+// CLR: WebSocketExtension.RSV1 is the constant of IWebSocketExtension and WebSocketExtensionFilter.NEVER_SKIP the
+// static field of IWebSocketExtensionFilter.
 internal class PerFrameDeflateDecoder : DeflateDecoder
 {
 

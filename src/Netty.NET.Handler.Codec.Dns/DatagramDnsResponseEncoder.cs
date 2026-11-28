@@ -28,12 +28,11 @@ namespace Netty.NET.Handler.Codec.Dns;
  * {@link DatagramPacket}.
  */
 // CLR: @ChannelHandler.Sharable is [Sharable]; List<Object> out is IList<object> @out and 'in' is @in.
-// AddressedEnvelope<DnsResponse, InetSocketAddress> is IAddressedEnvelope<IDnsResponse, IPEndPoint>, with the Content
-// and Recipient properties of the Transport port. The message matcher is the reified type argument and
-// Type.IsInstanceOfType, which follows the covariant 'out' parameters of IAddressedEnvelope, so a DatagramDnsResponse
-// matches (docs/codec-base-porting.md, "Type matching";
-// https://learn.microsoft.com/en-us/dotnet/standard/generics/covariance-and-contravariance); Java's matcher compares the
-// erased AddressedEnvelope class. checkNotNull throws ArgumentNullException. 'throws Exception' has no C# counterpart.
+// AddressedEnvelope<DnsResponse, InetSocketAddress> is IAddressedEnvelope<IDnsResponse, IPEndPoint>, with the
+// Content and Recipient properties of the Transport port. The message matcher is the reified type argument and
+// Type.IsInstanceOfType, which follows the covariant 'out' parameters of IAddressedEnvelope, so a
+// DatagramDnsResponse matches; Java's matcher compares the erased AddressedEnvelope class. checkNotNull throws
+// ArgumentNullException. 'throws Exception' has no C# counterpart.
 [Sharable]
 public class DatagramDnsResponseEncoder
     : MessageToMessageEncoder<IAddressedEnvelope<IDnsResponse, IPEndPoint>>

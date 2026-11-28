@@ -16,9 +16,9 @@
 
 namespace Netty.NET.Handler.Codec.Stomp;
 
-// CLR: the package-private final class is an internal sealed class with the private constructor; the static final byte
-// constants are System.Byte constants (owner decision for protocol bytes); all are below 0x80, so the values equal the
-// Java ones (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types).
+// CLR: the package-private final class is an internal sealed class with the private constructor; the static final
+// byte constants are System.Byte constants; all are below 0x80, so the values equal the Java ones
+// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types).
 internal sealed class StompConstants
 {
 

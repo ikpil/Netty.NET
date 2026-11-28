@@ -21,7 +21,7 @@ namespace Netty.NET.Handler.Codec.Http3;
 /**
  * Thrown if {@link Http3Headers} validation fails for some reason.
  */
-// CLR: RuntimeException is Exception (docs/codec-base-porting.md); Throwable is Exception.
+// CLR: RuntimeException is Exception.
 public sealed class Http3HeadersValidationException : Exception
 {
 

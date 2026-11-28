@@ -19,10 +19,9 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the interfaces are IHttp3PushPromiseFrame and IHttp3Headers (docs/codec-http2-porting.md, Shared CLR
-// adaptations). Objects.equals is object.Equals(a, b) and Objects.hash(id, headers) is spelled out
-// (31 * (31 + Long.hashCode(id)) + hashCode) to keep the Java value; the id prints with the invariant culture.
-// getClass() != o.getClass() is GetType() != o.GetType().
+// CLR: the interfaces are IHttp3PushPromiseFrame and IHttp3Headers. Objects.equals is object.Equals(a, b) and
+// Objects.hash(id, headers) is spelled out (31 * (31 + Long.hashCode(id)) + hashCode) to keep the Java value; the
+// id prints with the invariant culture. getClass() != o.getClass() is GetType() != o.GetType().
 public sealed class DefaultHttp3PushPromiseFrame : IHttp3PushPromiseFrame
 {
 

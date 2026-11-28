@@ -1,14 +1,14 @@
-// CLR-only: no Java counterpart (a supplemental test of this port, not one of codec-http3's original tests). It checks
-// the HTTP/3 port end to end against .NET's own HTTP/3 client: a server built as
-// io.netty.handler.codec.http3.example.Http3ServerExample (examples/Netty.NET.Handler.Codec.Http3.Examples) binds a
-// QuicEndpointChannel on a loopback ephemeral port (msquic, docs/codec-classes-quic-porting.md, Stage 2), and
+// CLR-only: no Java counterpart (a supplemental test of this port, not one of codec-http3's original tests). It
+// checks the HTTP/3 port end to end against.NET's own HTTP/3 client: a server built as
+// io.netty.handler.codec.http3.example.Http3ServerExample (examples/Netty.NET.Handler.Codec.Http3.Examples) binds
+// a QuicEndpointChannel on a loopback ephemeral port (msquic, docs/codec-classes-quic-porting.md, Stage 2), and
 // System.Net.Http.HttpClient sends a GET and a POST with HttpRequestMessage.Version = HttpVersion.Version30 and
-// VersionPolicy = RequestVersionExact, so the request fails instead of falling back to HTTP/1.1 or HTTP/2. Its certificate
-// validation accepts the self-signed ECDSA P-256 certificate (built as the SelfSignedCertificate of
+// VersionPolicy = RequestVersionExact, so the request fails instead of falling back to HTTP/1.1 or HTTP/2. Its
+// certificate validation accepts the self-signed ECDSA P-256 certificate (built as the SelfSignedCertificate of
 // Http3FrameToHttpObjectCodecTest). The server's request-stream handler records the request (method, path and DATA
-// bytes) and answers as the example does (status 404, server: netty, content-length and "Hello World!\r\n"). The tests
-// are skipped where System.Net.Quic is not supported (QuicListener.IsSupported/QuicConnection.IsSupported false: macOS,
-// Linux without libmsquic, Windows before 11 / Server 2022).
+// bytes) and answers as the example does (status 404, server: netty, content-length and "Hello World!\r\n"). The
+// tests are skipped where System.Net.Quic is not supported (QuicListener.IsSupported/QuicConnection.IsSupported
+// false: macOS, Linux without libmsquic, Windows before 11 / Server 2022).
 using System;
 using System.IO;
 using System.Linq;

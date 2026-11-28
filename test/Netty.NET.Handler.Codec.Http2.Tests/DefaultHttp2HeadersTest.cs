@@ -23,17 +23,10 @@ using PseudoHeaderName = Netty.NET.Handler.Codec.Http2.IHttp2Headers.PseudoHeade
 
 namespace Netty.NET.Handler.Codec.Http2.Tests;
 
-// CLR: AsciiString.of(String) (static import of AsciiString.*) is the private Of(string), which returns new
-// AsciiString(s) as AsciiString.of does for a String; a Java String passed directly as a CharSequence is a
-// StringCharSequence built by the private Cs(string) (a C# string is not an ICharSequence;
-// docs/codec-http-porting.md, Shared CLR adaptations), and CharSequence results that Java compares with a String
-// (assertEquals("value1", headers.get(...))) are compared as strings. assertEquals of two CharSequences calls equals,
-// which AssertCsEquals keeps (xUnit would compare two ICharSequence, an IReadOnlyList<char>, element by element).
-// @ParameterizedTest with @ValueSource/@CsvSource is a [Theory] with InlineData rows, with @MethodSource a [Theory]
-// with MemberData; the Stream<Arguments> sources are TheoryData. assertThrows(T.class) is Assert.ThrowsAny<T>, and
-// assertThrows(expectedType, ...) with a runtime Class is Record.Exception plus Assert.IsAssignableFrom (JUnit checks
-// expectedType.isInstance). Map.Entry is the codec-base IEntry and fail is Assert.Fail. verifyPseudoHeadersFirst is
-// internal for ReadOnlyHttp2HeadersTest (the Java static import of this class).
+// CLR: The Stream<Arguments> sources are TheoryData. assertThrows(T.class) is Assert.ThrowsAny<T>, and
+// assertThrows(expectedType,...) with a runtime Class is Record.Exception plus Assert.IsAssignableFrom (JUnit
+// checks expectedType.isInstance). Map.Entry is the codec-base IEntry and fail is Assert.Fail.
+// verifyPseudoHeadersFirst is internal for ReadOnlyHttp2HeadersTest (the Java static import of this class).
 public class DefaultHttp2HeadersTest
 {
 
@@ -482,13 +475,11 @@ public class DefaultHttp2HeadersTest
         return new AsciiString(s);
     }
 
-    // CLR: a Java String passed as a CharSequence (see the class comment).
     private static ICharSequence Cs(string s)
     {
         return new StringCharSequence(s);
     }
 
-    // CLR: assertEquals(Object, Object) of two CharSequences, which calls equals (see the class comment).
     private static void AssertCsEquals(ICharSequence expected, ICharSequence actual)
     {
         Assert.True(Equals(expected, actual), "expected: <" + expected + "> but was: <" + actual + ">");

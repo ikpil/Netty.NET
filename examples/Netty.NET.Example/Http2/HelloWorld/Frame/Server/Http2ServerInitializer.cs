@@ -31,13 +31,10 @@ namespace Netty.NET.Example.Http2.HelloWorld.Frame.Server;
  * pipeline for NPN or cleartext HTTP upgrade to HTTP/2.
  */
 // CLR: SocketChannel is ISocketChannel, HttpMessage IHttpMessage and UpgradeCodecFactory/UpgradeCodec the nested
-// HttpServerUpgradeHandler.IUpgradeCodecFactory/IUpgradeCodec, as in codec-http. The public initChannel(SocketChannel)
-// widens the protected ChannelInitializer.initChannel; a C# override cannot change the accessibility of the virtual
-// method, so it stays protected. The anonymous UpgradeCodecFactory is the nested CleartextUpgradeCodecFactory and the
-// anonymous SimpleChannelInboundHandler<HttpMessage> is the nested NoUpgradeAttemptedHandler, which takes
-// maxHttpContentLength from the initializer (an anonymous class reads the field of the enclosing instance), as
-// testsuite-http2's Http2ServerInitializer. System.err.println/System.out.println are Console.Error.WriteLine/
-// Console.WriteLine.
+// HttpServerUpgradeHandler.IUpgradeCodecFactory/IUpgradeCodec, as in codec-http. The public
+// initChannel(SocketChannel) widens the protected ChannelInitializer.initChannel; a C# override cannot change the
+// accessibility of the virtual method, so it stays protected. System.err.println/System.out.println are
+// Console.Error.WriteLine/ Console.WriteLine.
 public class Http2ServerInitializer : ChannelInitializer<ISocketChannel>
 {
 

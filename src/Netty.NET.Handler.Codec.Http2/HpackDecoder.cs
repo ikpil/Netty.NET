@@ -46,20 +46,18 @@ using static Netty.NET.Common.Internal.ObjectUtil;
 
 namespace Netty.NET.Handler.Codec.Http2;
 
-// CLR: the package-private final class is internal sealed and its package-private members are internal (the tests
-// reach them through InternalsVisibleTo). Class is Type in Http2Exception.NewStatic. readerIndex()/writerIndex()/
-// readableBytes() are the ByteBuf properties. The header representation byte of decode(ByteBuf, Http2HeadersSink)
-// is read as sbyte, because "b < 0" tests the sign of the Java byte (the indexed-header bit 0x80); the masks give the
-// same values for the signed and the unsigned byte. The other byte reads (decodeDynamicTableSizeUpdates,
-// decodeULE128) only mask or compare with non-negative constants, so System.Byte gives the Java results. The
-// simple enums IndexType and HeaderType are C# enums; a null HeaderType is HeaderType?. throw new Error(...) is
-// UnreachableException and IllegalArgumentException is ArgumentException (docs/codec-http-porting.md, Shared CLR
-// adaptations). catch (IllegalArgumentException) leaves out ArgumentNullException (Java's NullPointerException)
-// and ArgumentOutOfRangeException (Java's IndexOutOfBoundsException), which derive from ArgumentException in the
-// BCL (docs/codec-http-porting.md, Multipart: HttpPostBodyUtil.IsIllegalArgument). getMessage() is Message. The last
-// section of each nested switch ends with break (C# forbids falling out of a switch section, CS8070), and the
-// READ_INDEXED_HEADER section is a block, because a C# local is scoped to the whole switch block and the nested
-// switch declares a local of the same name (CS0136).
+// CLR: Class is Type in Http2Exception.NewStatic. readerIndex()/writerIndex()/ readableBytes() are the ByteBuf
+// properties. The header representation byte of decode(ByteBuf, Http2HeadersSink) is read as sbyte, because "b <
+// 0" tests the sign of the Java byte (the indexed-header bit 0x80); the masks give the same values for the signed
+// and the unsigned byte. The other byte reads (decodeDynamicTableSizeUpdates, decodeULE128) only mask or compare
+// with non-negative constants, so System.Byte gives the Java results. The simple enums IndexType and HeaderType
+// are C# enums; a null HeaderType is HeaderType?. throw new Error(...) is UnreachableException and
+// IllegalArgumentException is ArgumentException. catch (IllegalArgumentException) leaves out ArgumentNullException
+// (Java's NullPointerException) and ArgumentOutOfRangeException (Java's IndexOutOfBoundsException), which derive
+// from ArgumentException in the BCL. getMessage() is Message. The last section of each nested switch ends with
+// break (C# forbids falling out of a switch section, CS8070), and the READ_INDEXED_HEADER section is a block,
+// because a C# local is scoped to the whole switch block and the nested switch declares a local of the same name
+// (CS0136).
 internal sealed class HpackDecoder
 {
     private static readonly Http2Exception DECODE_ULE_128_DECOMPRESSION_EXCEPTION =

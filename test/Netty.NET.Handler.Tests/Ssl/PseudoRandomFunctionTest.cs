@@ -25,9 +25,9 @@ namespace Netty.NET.Handler.Tests.Ssl;
  * https://www.ietf.org/mail-archive/web/tls/current/msg03416.html
  */
 // CLR: Bouncy Castle's Hex.decode, which skips whitespace, is Convert.FromHexString of the text without its spaces
-// ("Converts the specified string, which encodes binary data as hex characters, to an equivalent 8-bit unsigned integer
-// array", https://learn.microsoft.com/en-us/dotnet/api/system.convert.fromhexstring?view=net-10.0); test-only
-// cross-check libraries may be replaced by BCL types (handler brief decision 6). CharsetUtil.US_ASCII is Encoding.ASCII.
+// ("Converts the specified string, which encodes binary data as hex characters, to an equivalent 8-bit unsigned
+// integer array", https://learn.microsoft.com/en-us/dotnet/api/system.convert.fromhexstring?view=net-10.0);
+// test-only cross-check libraries may be replaced by BCL types (handler brief decision 6).
 public class PseudoRandomFunctionTest
 {
 
@@ -55,7 +55,6 @@ public class PseudoRandomFunctionTest
         Assert.Equal(expected, actual);
     }
 
-    // CLR: Hex.decode(String).
     private static byte[] Decode(string hex)
     {
         return Convert.FromHexString(hex.Replace(" ", ""));

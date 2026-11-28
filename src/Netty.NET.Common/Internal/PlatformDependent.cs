@@ -439,7 +439,6 @@ public static class PlatformDependent
         }
     }
 
-    // CLR: System.String is not an ICharSequence; this overload wraps it for the hashCodeAscii tests.
     public static int HashCodeAscii(string bytes)
     {
         var scs = new StringCharSequence(bytes);

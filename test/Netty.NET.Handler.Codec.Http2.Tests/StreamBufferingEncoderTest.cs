@@ -34,24 +34,23 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
 /**
  * Tests for {@link StreamBufferingEncoder}.
  */
-// CLR: Mockito mocks are Moq loose mocks; @BeforeEach is the constructor and @AfterEach Dispose(). verify(mock, mode)
-// is Verify(..., Times) (times(1) is Times.Once(), never() Times.Never()) and the Answers are Moq
+// CLR: Mockito mocks are Moq loose mocks; @BeforeEach is the constructor and @AfterEach Dispose(). verify(mock,
+// mode) is Verify(..., Times) (times(1) is Times.Once(), never() Times.Never()) and the Answers are Moq
 // Returns(InvocationFunc) callbacks that see every argument (Moq Quickstart,
 // https://github.com/devlooped/moq/wiki/Quickstart; docs/codec-http-porting.md, Shared CLR adaptations); the
 // ArgumentCaptor of multipleWritesToActiveStream reads the recorded invocation (Mock.Invocations). A
 // DefaultChannelPromise is a TaskCompletionSource: newPromise() returns a new one, ChannelFuture is its Task,
-// promise.isDone()/isSuccess() are Task.IsCompleted/IsCompletedSuccessfully and future.cause() is Http2CodecUtil.Cause
-// (docs/codec-http-porting.md, Shared CLR adaptations). A TaskCompletionSource cannot be mocked (its members are not
-// virtual), so closedBufferedStreamReleasesByteBuf passes a real promise and checks that it succeeded where Java
-// verifies setSuccess() on a mocked promise. Moq cannot create a ByteBuf proxy (measured: "Can not instantiate proxy of
+// promise.isDone()/isSuccess() are Task.IsCompleted/IsCompletedSuccessfully and future.cause() is
+// Http2CodecUtil.Cause. A TaskCompletionSource cannot be mocked (its members are not virtual), so
+// closedBufferedStreamReleasesByteBuf passes a real promise and checks that it succeeded where Java verifies
+// setSuccess() on a mocked promise. Moq cannot create a ByteBuf proxy (measured: "Can not instantiate proxy of
 // class: Netty.NET.Buffer.ByteBuf", MissingMethodException for the proxy constructor, also when the protected
 // ByteBuf(int) constructor argument is given), so the mocked ByteBuf is a real Unpooled.Buffer() and
 // verify(data).release() is the check that its reference count dropped from 1 to 0. eq(newPromise()) matches no
-// promise, so that never() verification keeps its meaning with a new promise compared by reference. The C# IChannel has
-// no unsafe(), so channel.unsafe() has no stub; channel.config(), metadata(), isWritable(), isActive() and
-// bytesBeforeUnwritable() are the Config, Metadata, IsWritable, IsActive and BytesBeforeUnwritable properties, and
-// config.getWriteBufferHighWaterMark()/ getMessageSizeEstimator() the IChannelConfig methods. @ParameterizedTest
-// @ValueSource(booleans) is a [Theory] with two InlineData rows. new RuntimeException(e) is new Exception(message, e).
+// promise, so that never() verification keeps its meaning with a new promise compared by reference. The C#
+// IChannel has no unsafe(), so channel.unsafe() has no stub; channel.config(), metadata(), isWritable(),
+// isActive() and bytesBeforeUnwritable() are the Config, Metadata, IsWritable, IsActive and BytesBeforeUnwritable
+// properties, and config.getWriteBufferHighWaterMark()/ getMessageSizeEstimator() the IChannelConfig methods.
 // EMPTY_BUFFER is Unpooled.EmptyBuffer and Integer.MAX_VALUE int.MaxValue.
 public class StreamBufferingEncoderTest : IDisposable
 {

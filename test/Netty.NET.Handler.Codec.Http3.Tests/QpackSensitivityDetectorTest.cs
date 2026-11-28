@@ -20,11 +20,11 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Codec.Http3.Tests;
 
-// CLR: the package-private JUnit class and methods are public, because xUnit runs public test classes and methods. A
-// Java String passed as a CharSequence is a StringCharSequence (Cs), because a C# string is not an ICharSequence
-// (docs/codec-http-porting.md, Shared CLR adaptations). The lambda detector of customDetectorFlagsCredentialHeaders is
-// the private nested class CredentialHeaderDetector (IQpackSensitivityDetector is an interface, not a delegate), and
-// String.toLowerCase() (default locale) is ToLower() (current culture); "authorization".equals(n) is string equality.
+// CLR: the package-private JUnit class and methods are public, because xUnit runs public test classes and methods.
+// A Java String passed as a CharSequence is a StringCharSequence (Cs), because a C# string is not an
+// ICharSequence. The lambda detector of customDetectorFlagsCredentialHeaders is the private nested class
+// CredentialHeaderDetector (IQpackSensitivityDetector is an interface, not a delegate), and String.toLowerCase()
+// (default locale) is ToLower() (current culture); "authorization".equals(n) is string equality.
 public class QpackSensitivityDetectorTest
 {
 
@@ -60,7 +60,7 @@ public class QpackSensitivityDetectorTest
         Assert.False(detector.IsSensitive(Cs(":method"), Cs("GET")));
     }
 
-    // CLR: the lambda (name, value) -> { ... } of customDetectorFlagsCredentialHeaders.
+    // CLR: the lambda (name, value) -> {... } of customDetectorFlagsCredentialHeaders.
     private sealed class CredentialHeaderDetector : IQpackSensitivityDetector
     {
         public bool IsSensitive(ICharSequence name, ICharSequence value)
@@ -73,7 +73,6 @@ public class QpackSensitivityDetectorTest
         }
     }
 
-    // CLR: a Java String passed as a CharSequence (see the class comment).
     private static ICharSequence Cs(string s)
     {
         return new StringCharSequence(s);

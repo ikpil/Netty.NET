@@ -21,11 +21,11 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Handler.Codec.Http2.Tests;
 
-// CLR: @Mock fields and initMocks are Moq mocks created in the constructor (xUnit creates a test class instance per
-// test, https://xunit.net/docs/shared-context); MockTicker and Ticker.newMockTicker() are the Common MockTicker and
-// Ticker.NewMockTicker(), and ticker.advance(1, SECONDS) is Advance(TimeSpan.FromSeconds(1)). assertThrows returns the
-// exception through Assert.ThrowsAny<Http2Exception> (docs/codec-http-porting.md, Core test notes); verify(mock,
-// times(n)) is Verify(..., Times.Exactly(n)) with It.IsAny<int>() for anyInt().
+// CLR: @Mock fields and initMocks are Moq mocks created in the constructor (xUnit creates a test class instance
+// per test, https://xunit.net/docs/shared-context); MockTicker and Ticker.newMockTicker() are the Common
+// MockTicker and Ticker.NewMockTicker(), and ticker.advance(1, SECONDS) is Advance(TimeSpan.FromSeconds(1)).
+// assertThrows returns the exception through Assert.ThrowsAny<Http2Exception>; verify(mock, times(n)) is
+// Verify(..., Times.Exactly(n)) with It.IsAny<int>() for anyInt().
 public class Http2MaxRstFrameListenerTest
 {
 

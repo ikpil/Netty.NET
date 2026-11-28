@@ -19,9 +19,8 @@ namespace Netty.NET.Handler.Codec.Http3;
 /**
  * See <a href="https://tools.ietf.org/html/draft-ietf-quic-http-32#section-4.1">HTTP Message Exchanges</a>.
  */
-// CLR: the package-private final class is an internal sealed class; INSTANCE is an internal static readonly field.
-// Http3PushStreamFrame.class is typeof(IHttp3PushStreamFrame), and the isSharable() override is the IsSharable property
-// of ChannelHandlerAdapter.
+// CLR: INSTANCE is an internal static readonly field. Http3PushStreamFrame.class is typeof(IHttp3PushStreamFrame),
+// and the isSharable() override is the IsSharable property of ChannelHandlerAdapter.
 internal sealed class Http3PushStreamServerValidationHandler
         : Http3FrameTypeOutboundValidationHandler<IHttp3PushStreamFrame>
 {

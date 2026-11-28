@@ -28,18 +28,16 @@ namespace Netty.NET.Resolver.Dns.Tests;
 
 #pragma warning disable xUnit1051 // The resolver calls run without the test's cancellation token, as the source's futures do.
 
-// CLR: @BeforeEach before() runs from the constructor and @AfterEach destroy() from Dispose() (the lifecycle methods
-// are private, xUnit1013); shutdownGracefully() is ShutdownGracefullyAsync() without waiting and close() is Dispose(),
-// as in DnsNameResolverBuilderTest. TestDnsServer.MapRecordStoreA is the ported test helper on the ApacheDs stand-in
-// (owner decision 2026-11-25). resolve/resolveAll are ResolveAsync/ResolveAllAsync (core notes, Promise/Future):
-// fut.await(10, SECONDS) is the CLR-only Await helper, a Task.WhenAny with a 10-second Task.Delay that is true when the
-// resolve Task completed first (as handler-proxy's ProxyHandlerTest maps Future.await(timeout)); isSuccess() is
+// CLR: @BeforeEach before() runs from the constructor and @AfterEach destroy() from Dispose() (the lifecycle
+// methods are private, xUnit1013). TestDnsServer.MapRecordStoreA is the ported test helper on the ApacheDs
+// stand-in. resolve/resolveAll are ResolveAsync/ResolveAllAsync (core notes, Promise/Future): fut.await(10,
+// SECONDS) is the CLR-only Await helper, a Task.WhenAny with a 10-second Task.Delay that is true when the resolve
+// Task completed first (as handler-proxy's ProxyHandlerTest maps Future.await(timeout)); isSuccess() is
 // IsCompletedSuccessfully, getNow() the result of the completed Task and cause() DnsNameResolver.Cause.
-// getHostAddress() is IPAddress.ToString(): MapRecordStoreA answers IPv4 addresses, whose dotted-decimal text is the
-// same on both platforms. java.net.UnknownHostException is Common's UnknownHostException (owner decision 2026-11-25),
-// assertInstanceOf is Assert.IsAssignableFrom (SearchDomainUnknownHostException extends it), and AssertJ's
-// contains/doesNotContain on the message are Assert.Contains/Assert.DoesNotContain. Collections.singletonList and
-// Arrays.asList are lists and Collections.singleton/emptySet the ImmutableHashSet counterparts.
+// getHostAddress() is IPAddress.ToString(): MapRecordStoreA answers IPv4 addresses, whose dotted-decimal text is
+// the same on both platforms. java.net.UnknownHostException is Common's UnknownHostException, assertInstanceOf is
+// Assert.IsAssignableFrom (SearchDomainUnknownHostException extends it), and AssertJ's contains/doesNotContain on
+// the message are Assert.Contains/Assert.DoesNotContain.
 public class SearchDomainTest : IDisposable
 {
 

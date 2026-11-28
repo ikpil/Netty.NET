@@ -41,8 +41,8 @@ namespace Netty.NET.Handler.Codec.Memcache;
  * p.addLast("handler", new YourMemcacheRequestHandler());
  * </pre>
  */
-// CLR: MemcacheObject.class is typeof(IMemcacheObject) (docs/codec-base-porting.md, Type matching), and
-// UnsupportedOperationException is NotSupportedException (docs/codec-base-porting.md, Shared CLR adaptations).
+// CLR: MemcacheObject.class is typeof(IMemcacheObject), and UnsupportedOperationException is
+// NotSupportedException.
 [UnstableApi]
 public abstract class AbstractMemcacheObjectAggregator<H> :
         MessageAggregator<IMemcacheObject, H, IMemcacheContent, IFullMemcacheMessage>

@@ -19,8 +19,8 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Ssl;
 
-// CLR: Throwable is Exception (docs/codec-base-porting.md). The package-private constructors are internal, so only this
-// assembly derives from the class, as only io.netty.handler.ssl can in Java.
+// CLR: The package-private constructors are internal, so only this assembly derives from the class, as only
+// io.netty.handler.ssl can in Java.
 public abstract class SslCompletionEvent
 {
 

@@ -751,7 +751,6 @@ public class ManualIoEventLoop : AbstractScheduledEventExecutor, IIoEventLoop
         return true;
     }
 
-    // CLR: the anonymous non-blocking IoHandlerContext of the Java field becomes a nested class.
     private sealed class NonBlockingIoHandlerContext(ManualIoEventLoop loop) : IIoHandlerContext
     {
         public bool CanBlock()

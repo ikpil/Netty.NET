@@ -21,9 +21,8 @@ namespace Netty.NET.Handler.Codec.Http3;
 /**
  * Validate that the frame type is valid for a control stream.
  */
-// CLR: the package-private final class is an internal sealed class implementing IHttp3FrameTypeValidator; INSTANCE is an
-// internal static readonly field. throws Http3Exception has no counterpart (C# has no checked exceptions). The type
-// prints with the invariant culture.
+// CLR: INSTANCE is an internal static readonly field. throws Http3Exception has no counterpart (C# has no checked
+// exceptions). The type prints with the invariant culture.
 internal sealed class Http3ControlStreamFrameTypeValidator : IHttp3FrameTypeValidator
 {
 

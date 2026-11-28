@@ -32,14 +32,13 @@ namespace Netty.NET.Handler.IpFilter;
  * Use this class to create rules for {@link RuleBasedIpFilter} that group IP addresses into subnets.
  * Supports both, IPv4 and IPv6.
  */
-// CLR: InetAddress is IPAddress and InetSocketAddress is IPEndPoint (docs/codec-dns-porting.md); instanceof
-// Inet4Address/Inet6Address is AddressFamily.InterNetwork/InterNetworkV6. The JDK never makes an Inet6Address of an
-// IPv4-mapped literal, and the NIO channels report the IPv4 peers of a dual-mode socket in IPv4 form
-// (AbstractNioChannel.Normalize in Transport), so the family test sees the remote addresses the JDK would.
-// SocketUtils.addressByName (InetAddress.getByName) is the DefaultNameResolver lookup that Transport's
-// AbstractBootstrap uses for the same call (docs/common-clr-design.md, "Native socket operations"): it keeps the JDK
-// literal rules (an IPv4-mapped literal becomes an IPv4 address) and reports UnknownHostException as SocketException.
-// Comparable<IpSubnetFilterRule> is IComparable<IpSubnetFilterRule>; the package-private members are internal.
+// CLR: InetAddress is IPAddress and InetSocketAddress is IPEndPoint; instanceof Inet4Address/Inet6Address is
+// AddressFamily.InterNetwork/InterNetworkV6. The JDK never makes an Inet6Address of an IPv4-mapped literal, and
+// the NIO channels report the IPv4 peers of a dual-mode socket in IPv4 form (AbstractNioChannel.Normalize in
+// Transport), so the family test sees the remote addresses the JDK would. SocketUtils.addressByName
+// (InetAddress.getByName) is the DefaultNameResolver lookup that Transport's AbstractBootstrap uses for the same
+// call : it keeps the JDK literal rules (an IPv4-mapped literal becomes an IPv4 address) and reports
+// UnknownHostException as SocketException. Comparable<IpSubnetFilterRule> is IComparable<IpSubnetFilterRule>.
 public sealed class IpSubnetFilterRule : IIpFilterRule, IComparable<IpSubnetFilterRule>
 {
     private readonly IIpFilterRule filterRule;
@@ -133,14 +132,14 @@ public sealed class IpSubnetFilterRule : IIpFilterRule, IComparable<IpSubnetFilt
         filterRule = SelectFilterRule(ipAddress, cidrPrefix, ruleType);
     }
 
-    // CLR: InetAddress.getHostAddress(). An Inet4Address prints the dotted quad, as IPAddress.ToString() does. An
-    // Inet6Address prints numericToTextFormat(ipaddress): the eight 16-bit groups as Integer.toHexString, separated by
-    // ':' and not compressed, followed by '%' and the scope id when one was set (OpenJDK
+    // CLR: An Inet4Address prints the dotted quad, as IPAddress.ToString() does. An Inet6Address prints
+    // numericToTextFormat(ipaddress): the eight 16-bit groups as Integer.toHexString, separated by ':' and not
+    // compressed, followed by '%' and the scope id when one was set (OpenJDK
     // https://raw.githubusercontent.com/openjdk/jdk17u/master/src/java.base/share/classes/java/net/Inet6Address.java),
     // while IPAddress.ToString() prints the "IPv6 colon-hexadecimal notation" with "::" compression
     // (https://learn.microsoft.com/en-us/dotnet/api/system.net.ipaddress.tostring?view=net-10.0). The JDK text is
-    // built here so that getIpAddress() and toString() keep the Java result; a scope id of 0 counts as none, because
-    // IPAddress has no "scope set" flag.
+    // built here so that getIpAddress() and toString() keep the Java result; a scope id of 0 counts as none,
+    // because IPAddress has no "scope set" flag.
     private static string GetHostAddress(IPAddress address)
     {
         if (address.AddressFamily != AddressFamily.InterNetworkV6)

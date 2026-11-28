@@ -23,10 +23,10 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Codec.Http3.Tests;
 
-// CLR: the typed channelRead overloads of Http3RequestStreamInboundHandler are protected abstract members in the port
-// (docs/codec-http3-porting.md), so the public Java overrides are protected overrides; channelInputClosed stays
-// protected. readInbound() is ReadInbound<T>() (ReadInbound() for an Object), and assertEquals(true, readInbound())
-// compares the boxed bool with Equals, as Java compares Boolean.TRUE with equals.
+// CLR: the typed channelRead overloads of Http3RequestStreamInboundHandler are protected abstract members in the
+// port, so the public Java overrides are protected overrides; channelInputClosed stays protected. readInbound() is
+// ReadInbound<T>() (ReadInbound() for an Object), and assertEquals(true, readInbound()) compares the boxed bool
+// with Equals, as Java compares Boolean.TRUE with equals.
 public class Http3RequestStreamInboundHandlerTest
 {
 

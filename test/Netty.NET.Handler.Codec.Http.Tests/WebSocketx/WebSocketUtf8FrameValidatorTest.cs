@@ -20,10 +20,9 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Http.Tests.WebSocketx;
 
-// CLR: the anonymous Executable instances are lambdas for Assert.ThrowsAny<CorruptedWebSocketFrameException> (JUnit's
-// assertThrows accepts subtypes too); the third assertThrows argument is only JUnit's failure message and has no xUnit
-// counterpart. The signed Java byte literals are written with unchecked((byte) ...), which keeps their bit patterns
-// (-50 is 0xCE). readOutbound() is ReadOutbound<T>(), refCnt() is RefCnt and isActive() is IsActive of the Transport
+// CLR: The third assertThrows argument is only JUnit's failure message and has no xUnit counterpart. The signed
+// Java byte literals are written with unchecked((byte)...), which keeps their bit patterns (-50 is 0xCE).
+// readOutbound() is ReadOutbound<T>(), refCnt() is RefCnt and isActive() is IsActive of the Transport
 // EmbeddedChannel.
 public class WebSocketUtf8FrameValidatorTest
 {

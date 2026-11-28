@@ -29,13 +29,12 @@ namespace Netty.NET.Example.Telnet;
 /**
  * Simplistic telnet client.
  */
-// CLR: System.getProperty is ExampleLauncher.GetProperty (the -Dname=value arguments) and Integer.parseInt is int.Parse with an
-// optional sign and the invariant culture. main(String[]) blocks; it is the async Main: connect(HOST, PORT).sync().channel()
-// awaits ConnectAsync, ch.closeFuture().sync() awaits CloseFuture and lastWriteFuture.sync() awaits the last write's
-// Task (ChannelFuture is Task, docs/transport-porting.md). The BufferedReader over System.in is Console.In, whose
-// ReadLine() returns null at the end of the input as readLine() does; line.toLowerCase() is ToLowerInvariant().
-// group.shutdownGracefully() is ShutdownGracefullyAsync(), whose Task is discarded as Java discards the future.
-// NioSocketChannel.class is Channel<NioSocketChannel>(). The package-private static fields are internal.
+// CLR: System.getProperty is ExampleLauncher.GetProperty (the -Dname=value arguments) and Integer.parseInt is
+// int.Parse with an optional sign and the invariant culture. main(String[]) blocks; it is the async Main:
+// connect(HOST, PORT).sync().channel() awaits ConnectAsync, ch.closeFuture().sync() awaits CloseFuture and
+// lastWriteFuture.sync() awaits the last write's Task (ChannelFuture is Task, docs/transport-porting.md). The
+// BufferedReader over System.in is Console.In, whose ReadLine() returns null at the end of the input as readLine()
+// does. NioSocketChannel.class is Channel<NioSocketChannel>().
 public sealed class TelnetClient
 {
 

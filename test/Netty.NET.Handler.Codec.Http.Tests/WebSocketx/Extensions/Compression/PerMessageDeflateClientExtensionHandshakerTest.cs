@@ -28,17 +28,8 @@ using static Netty.NET.Handler.Codec.Http.WebSocketx.Extensions.Compression.PerM
 
 namespace Netty.NET.Handler.Codec.Http.Tests.WebSocketx.Extensions.Compression;
 
-// CLR: the static imports of WebSocketExtension.RSV1 and PerMessageDeflateServerExtensionHandshaker.* are using static
-// directives (the package-private constants are internal, reached through InternalsVisibleTo). HashMap is Dictionary,
-// Collections.emptyMap() is ImmutableDictionary<string, string>.Empty and Collections.singletonMap(key, null) a
-// one-entry Dictionary; Map.get(key) is the indexer (the key is present in every case; a missing key would fail with
-// KeyNotFoundException instead of the assertion), containsKey is ContainsKey and size() is Count. assertInstanceOf is
-// Assert.IsAssignableFrom and assertThrows(NumberFormatException.class, ...) is Assert.ThrowsAny<FormatException>
-// (NumberFormatException is FormatException, see PerMessageDeflateServerExtensionHandshaker.ParseInt).
-// testDecoderNoClientContext: the payloads are Java byte literals with negative values; they are written as sbyte[] and
-// converted with unchecked((byte) v), which keeps the bit patterns (Java byte sign rule: the bytes are only fed to the
-// decoder). Unpooled.copiedBuffer(byte[]) is Unpooled.CopiedBuffer and text() is Text(); the two text assertions pass
-// the literal first, as xUnit expects the expected value first (analyzer xUnit2000), where Java passes it second.
+// CLR: The two text assertions pass the literal first, as xUnit expects the expected value first (analyzer
+// xUnit2000), where Java passes it second.
 public class PerMessageDeflateClientExtensionHandshakerTest
 {
 

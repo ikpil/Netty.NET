@@ -20,14 +20,14 @@ using Netty.NET.Common.Concurrent;
 
 namespace Netty.NET.Handler.Codec.Quic;
 
-// CLR: javax.crypto.Mac with HmacSHA256 is System.Security.Cryptography.HMACSHA256 (an instance is not thread-safe, so
-// each thread keeps its own, as the FastThreadLocal of Java does); the anonymous FastThreadLocal subclasses are
-// FastThreadLocalFunc instances whose function is initialValue(). SecureRandom.nextBytes is RandomNumberGenerator.Fill.
-// The static block runs in the static constructor, after the field initializers; the MAC functions read the keys only
-// when a thread first signs, after the keys are filled. mac.reset() is Initialize(), update(input) + doFinal() one
-// TryComputeHash over the input bytes, Arrays.copyOf(bytes, n) is Array.Resize (it truncates or pads with zeros) and
-// ByteBuffer.wrap is the returned ReadOnlyMemory<byte> (see IQuicConnectionIdGenerator). The JCA exceptions of
-// Mac.getInstance/init are CryptographicException, and IllegalStateException is InvalidOperationException.
+// CLR: javax.crypto.Mac with HmacSHA256 is System.Security.Cryptography.HMACSHA256 (an instance is not
+// thread-safe, so each thread keeps its own, as the FastThreadLocal of Java does). SecureRandom.nextBytes is
+// RandomNumberGenerator.Fill. The static block runs in the static constructor, after the field initializers; the
+// MAC functions read the keys only when a thread first signs, after the keys are filled. mac.reset() is
+// Initialize(), update(input) + doFinal() one TryComputeHash over the input bytes, Arrays.copyOf(bytes, n) is
+// Array.Resize (it truncates or pads with zeros) and ByteBuffer.wrap is the returned ReadOnlyMemory<byte> (see
+// IQuicConnectionIdGenerator). The JCA exceptions of Mac.getInstance/init are CryptographicException, and
+// IllegalStateException is InvalidOperationException.
 internal sealed class Hmac
 {
 

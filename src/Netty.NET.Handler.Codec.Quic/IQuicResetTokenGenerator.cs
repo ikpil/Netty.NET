@@ -23,9 +23,8 @@ namespace Netty.NET.Handler.Codec.Quic;
  * <a href="https://www.ietf.org/archive/id/draft-ietf-quic-transport-29.html#name-calculating-a-stateless-res">
  *     stateless reset tokens</a> to use.
  */
-// CLR: java.nio.ByteBuffer is ReadOnlyMemory<byte> (see IQuicConnectionIdGenerator). msquic generates its own stateless
-// reset tokens (docs/quic-design.md, No counterpart in System.Net.Quic); the interface keeps its Java API (owner
-// decision 2026-11-27) for the codec builders of stage 2.
+// CLR: java.nio.ByteBuffer is ReadOnlyMemory<byte> (see IQuicConnectionIdGenerator). msquic generates its own
+// stateless reset tokens; the interface keeps its Java API for the codec builders of stage 2.
 public interface IQuicResetTokenGenerator
 {
 

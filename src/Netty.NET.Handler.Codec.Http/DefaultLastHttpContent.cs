@@ -26,10 +26,10 @@ namespace Netty.NET.Handler.Codec.Http;
  * The default {@link LastHttpContent} implementation.
  */
 // CLR: the @Deprecated DefaultLastHttpContent(ByteBuf, boolean), whose @deprecated text names
-// DefaultLastHttpContent(ByteBuf), is not ported (owner decision 2026-11-16). The narrowed members are covariant
-// overrides of DefaultHttpContent's virtual members returning ILastHttpContent
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override). StringBuilder.setLength is
-// the Length setter; Map.Entry is the codec-base IEntry.
+// DefaultLastHttpContent(ByteBuf), is not ported. The narrowed members are covariant overrides of
+// DefaultHttpContent's virtual members returning ILastHttpContent
+// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override). StringBuilder.setLength
+// is the Length setter; Map.Entry is the codec-base IEntry.
 public class DefaultLastHttpContent : DefaultHttpContent, ILastHttpContent
 {
     private readonly HttpHeaders trailingHeaders;

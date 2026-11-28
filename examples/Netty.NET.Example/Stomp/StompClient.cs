@@ -29,12 +29,12 @@ namespace Netty.NET.Example.Stomp;
  * very simple stomp client implementation example, requires running stomp server to actually work
  * uses default username/password and destination values from hornetq message broker
  */
-// CLR: System.getProperty is ExampleLauncher.GetProperty (the -Dname=value arguments)
-// and Integer.parseInt is int.Parse with an optional sign and the invariant culture. main blocks on
-// connect(...).sync().channel().closeFuture().sync(); the async Main awaits the Task<IChannel> of ConnectAsync and then
-// the channel's CloseFuture (docs/transport-porting.md: sync() is awaiting the Task). group.shutdownGracefully() is
-// ShutdownGracefullyAsync(), whose Task is discarded as Java discards the future. The anonymous ChannelInitializer is an
-// ActionChannelInitializer. SSL is read but unused, as in the source.
+// CLR: System.getProperty is ExampleLauncher.GetProperty (the -Dname=value arguments) and Integer.parseInt is
+// int.Parse with an optional sign and the invariant culture. main blocks on
+// connect(...).sync().channel().closeFuture().sync(); the async Main awaits the Task<IChannel> of ConnectAsync and
+// then the channel's CloseFuture (docs/transport-porting.md: sync() is awaiting the Task).
+// group.shutdownGracefully() is ShutdownGracefullyAsync(), whose Task is discarded as Java discards the future.
+// SSL is read but unused, as in the source.
 public sealed class StompClient
 {
 

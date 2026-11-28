@@ -85,11 +85,11 @@ public static class LeakPresenceExtension
         return "true".Equals(SystemPropertyUtil.Get(name), StringComparison.OrdinalIgnoreCase);
     }
 
-    // CLR: ExecutionCondition.evaluateExecutionCondition. The framework applies the extension only when this returns
-    // true. With the property set, the test classes run without leak presence detection, as they do in the Java build's
-    // leak profile, where the extension is not autodetected; JUnit would also skip a class that registers the extension
-    // with @ExtendWith, which no ported test does (the two that do, OpenSslEngineTest and OpenSslCredentialBuilderTest,
-    // are library-not-ported with the OpenSSL units).
+    // CLR: The framework applies the extension only when this returns true. With the property set, the test
+    // classes run without leak presence detection, as they do in the Java build's leak profile, where the
+    // extension is not autodetected; JUnit would also skip a class that registers the extension with @ExtendWith,
+    // which no ported test does (the two that do, OpenSslEngineTest and OpenSslCredentialBuilderTest, are
+    // library-not-ported with the OpenSSL units).
     internal static bool EvaluateExecutionCondition(out string reason)
     {
         if (GetBoolean(LEAK_PRESENCE_DETECTION_DISABLED_PROPERTY))
@@ -171,7 +171,6 @@ public static class LeakPresenceExtension
                 return true;
             }
 
-            // CLR: Class.getEnclosingClass() is Type.DeclaringType.
             current = current.DeclaringType;
         }
 

@@ -26,12 +26,11 @@ namespace Netty.NET.Handler.Codec.Http;
  * Default implementation of {@link FullHttpRequest}.
  */
 // CLR: the two @Deprecated constructors with a validateHeaders flag, whose @deprecated texts name the
-// (HttpVersion, HttpMethod, String, ByteBuf, HttpHeadersFactory, HttpHeadersFactory) constructor, are not ported
-// (owner decision 2026-11-16). setProtocolVersion/setMethod/setUri narrow DefaultHttpRequest's virtual members with
-// covariant override returns; copy/duplicate/retainedDuplicate/replace/retain/touch are virtual members returning
-// IFullHttpRequest, and the IByteBufHolder and IReferenceCounted members are implemented explicitly and call them (see
-// DefaultHttpContent). content() is the Content property and refCnt() is RefCnt (docs/buffer-porting.md, Buffer
-// holders and conversion).
+// (HttpVersion, HttpMethod, String, ByteBuf, HttpHeadersFactory, HttpHeadersFactory) constructor, are not ported.
+// setProtocolVersion/setMethod/setUri narrow DefaultHttpRequest's virtual members with covariant override returns;
+// copy/duplicate/retainedDuplicate/replace/retain/touch are virtual members returning IFullHttpRequest, and the
+// IByteBufHolder and IReferenceCounted members are implemented explicitly and call them (see DefaultHttpContent).
+// content() is the Content property and refCnt() is RefCnt.
 public class DefaultFullHttpRequest : DefaultHttpRequest, IFullHttpRequest
 {
     private readonly ByteBuf content;

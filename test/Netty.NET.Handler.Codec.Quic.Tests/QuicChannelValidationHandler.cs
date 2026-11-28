@@ -21,8 +21,8 @@ using Netty.NET.Transport.Channels;
 namespace Netty.NET.Handler.Codec.Quic.Tests;
 
 // CLR: the volatile fields are volatile; assertState() rethrows the recorded cause with its stack trace
-// (ExceptionDispatchInfo) and assertNotNull is Assert.NotNull. The addresses are the QuicConnectionAddress values the
-// msquic QuicChannel reports (docs/codec-classes-quic-porting.md: System.Net.Quic hides the connection IDs).
+// (ExceptionDispatchInfo) and assertNotNull is Assert.NotNull. The addresses are the QuicConnectionAddress values
+// the msquic QuicChannel reports.
 internal class QuicChannelValidationHandler : ChannelInboundHandlerAdapter
 {
     private volatile bool wasActive;

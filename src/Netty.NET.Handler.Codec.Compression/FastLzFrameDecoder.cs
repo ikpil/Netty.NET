@@ -29,20 +29,20 @@ namespace Netty.NET.Handler.Codec.Compression;
  *
  * See <a href="https://github.com/netty/netty/issues/2750">FastLZ format</a>.
  */
-// CLR: owner decision 2026-11-23: java.util.zip.Checksum is System.IO.Hashing.NonCryptographicHashAlgorithm and
-// java.util.zip.Adler32 ("A class that can be used to compute the Adler-32 checksum of a data stream",
-// https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/zip/Adler32.html) is System.IO.Hashing.Adler32
-// of the package 11.0.0 (https://learn.microsoft.com/en-us/dotnet/api/system.io.hashing.adler32?view=net-10.0-pp), so
-// the constructor that takes a Checksum takes a NonCryptographicHashAlgorithm and wraps it with
-// ByteBufChecksum.WrapChecksum; reset()/update(ByteBuf, int, int)/getValue() are Reset()/Update/GetValue().
-// decode(ctx, in, out) is the codec-base Decode(IChannelHandlerContext, ByteBuf, IList<object>) and C# has no throws
-// clauses. Java switch fall-through is goto case (docs/codec-memcache-porting.md). The DECOMPRESS_DATA section is a
-// nested block: its locals chunkLength and originalLength shadow the fields, and C# would otherwise put them in scope in
-// the whole switch block, where the earlier sections assign the fields with the same names. readUnsignedShort() returns
-// a ushort; options & 0x01 and options & 0x10 mask the byte, so the unsigned System.Byte gives the Java results.
-// IllegalStateException is InvalidOperationException and catch (Exception e) { ...; throw e; } is
-// catch (Exception) { ...; throw; } (docs/codec-base-porting.md). String.format("%d") is string.Format with the
-// invariant culture.
+// CLR: java.util.zip.Checksum is System.IO.Hashing.NonCryptographicHashAlgorithm and java.util.zip.Adler32 ("A
+// class that can be used to compute the Adler-32 checksum of a data stream",
+// https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/zip/Adler32.html) is
+// System.IO.Hashing.Adler32 of the package 11.0.0
+// (https://learn.microsoft.com/en-us/dotnet/api/system.io.hashing.adler32?view=net-10.0-pp), so the constructor
+// that takes a Checksum takes a NonCryptographicHashAlgorithm and wraps it with ByteBufChecksum.WrapChecksum;
+// reset()/update(ByteBuf, int, int)/getValue() are Reset()/Update/GetValue(). decode(ctx, in, out) is the
+// codec-base Decode(IChannelHandlerContext, ByteBuf, IList<object>) and C# has no throws clauses. Java switch
+// fall-through is goto case. The DECOMPRESS_DATA section is a nested block: its locals chunkLength and
+// originalLength shadow the fields, and C# would otherwise put them in scope in the whole switch block, where the
+// earlier sections assign the fields with the same names. readUnsignedShort() returns a ushort; options & 0x01 and
+// options & 0x10 mask the byte, so the unsigned System.Byte gives the Java results. IllegalStateException is
+// InvalidOperationException and catch (Exception e) {...; throw e; } is catch (Exception) {...; throw; }.
+// String.format("%d") is string.Format with the invariant culture.
 public class FastLzFrameDecoder : ByteToMessageDecoder
 {
     /**

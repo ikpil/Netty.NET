@@ -25,12 +25,12 @@ namespace Netty.NET.Handler.Codec.Spdy;
  * A combination of {@link SpdyHttpDecoder} and {@link SpdyHttpEncoder}
  */
 // CLR: CombinedChannelDuplexHandler is the Transport CombinedChannelDuplexHandler<TInbound, TOutbound>;
-// HttpHeadersFactory is IHttpHeadersFactory and HashMap<Integer, FullHttpMessage> is
-// Dictionary<int, IFullHttpMessage>; the protected SpdyHttpDecoder constructors are protected internal (Java protected
-// also admits the package). The @Deprecated constructor (version, maxContentLength, validateHttpHeaders) has no
-// @deprecated text, so it is ported with [Obsolete] (owner decision 2026-11-16); it calls the deprecated
-// SpdyHttpDecoder(SpdyVersion, int, boolean), which names its replacement and is not ported, so it passes the body of
-// that constructor chain through the replacement: the headers and trailers factories with withValidation(validate).
+// HttpHeadersFactory is IHttpHeadersFactory and HashMap<Integer, FullHttpMessage> is Dictionary<int,
+// IFullHttpMessage>; the protected SpdyHttpDecoder constructors are protected internal (Java protected also admits
+// the package). The @Deprecated constructor (version, maxContentLength, validateHttpHeaders) has no @deprecated
+// text, so it is ported with [Obsolete]; it calls the deprecated SpdyHttpDecoder(SpdyVersion, int, boolean), which
+// names its replacement and is not ported, so it passes the body of that constructor chain through the
+// replacement: the headers and trailers factories with withValidation(validate).
 public sealed class SpdyHttpCodec : CombinedChannelDuplexHandler<SpdyHttpDecoder, SpdyHttpEncoder>
 {
     /**

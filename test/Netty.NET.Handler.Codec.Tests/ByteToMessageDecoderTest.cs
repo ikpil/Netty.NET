@@ -150,7 +150,7 @@ public class ByteToMessageDecoderTest
     [Fact]
     public void TestFireChannelReadCompleteOnInactive()
     {
-        // CLR: LinkedBlockingDeque is a BlockingCollection over a ConcurrentQueue; take() is Take().
+        // CLR: LinkedBlockingDeque is a BlockingCollection over a ConcurrentQueue.
         BlockingCollection<int> queue = new BlockingCollection<int>(new ConcurrentQueue<int>());
         ByteBuf buf = Unpooled.Buffer().WriteBytes(new byte[] { (byte) 'a', (byte) 'b' });
         EmbeddedChannel channel = new EmbeddedChannel(new TestDecoder((self, ctx, @in, @out) =>
@@ -174,7 +174,6 @@ public class ByteToMessageDecoderTest
         Assert.True(queue.Count == 0);
     }
 
-    // CLR: the anonymous handler is a named nested class.
     private sealed class ReadCompleteOnInactiveHandler(BlockingCollection<int> queue) : ChannelInboundHandlerAdapter
     {
         public override void ChannelInactive(IChannelHandlerContext ctx)
@@ -438,8 +437,6 @@ public class ByteToMessageDecoderTest
         cumulation.Release();
     }
 
-    // CLR: the anonymous CompositeByteBuf is a named nested class; addComponent(boolean, ByteBuf) and
-    // addFlattenedComponents(boolean, ByteBuf) are AddComponent(ByteBuf, bool) and AddFlattenedComponents(ByteBuf, bool).
     private sealed class FailingCompositeByteBuf(Exception error)
         : CompositeByteBuf(UnpooledByteBufAllocator.Default, false, 64)
     {
@@ -611,7 +608,6 @@ public class ByteToMessageDecoderTest
         Assert.False(channel.Finish());
     }
 
-    // CLR: the anonymous SimpleChannelInboundHandler is a named nested class.
     private sealed class ReplacingHandler : SimpleChannelInboundHandler<ByteBuf>
     {
         protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf msg)
@@ -803,9 +799,8 @@ public class ByteToMessageDecoderTest
         Assert.False(channel.FinishAndReleaseAll());
     }
 
-    // CLR: the source's anonymous ByteToMessageDecoder subclasses are one delegate-driven subclass. Each delegate gets
-    // the decoder itself for the source's 'this', internalBuffer() and super.decodeLast(...); fields of the anonymous
-    // classes are captured locals.
+    // CLR: Each delegate gets the decoder itself for the source's 'this', internalBuffer() and
+    // super.decodeLast(...); fields of the anonymous classes are captured locals.
     private sealed class TestDecoder : ByteToMessageDecoder
     {
         private readonly Action<TestDecoder, IChannelHandlerContext, ByteBuf, IList<object>> decode;

@@ -23,16 +23,16 @@ namespace Netty.NET.Handler.Ssl.Util;
  * Insecure {@link SecureRandom} which relies on {@link PlatformDependent#threadLocalRandom()} for random number
  * generation.
  */
-// CLR: java.security.SecureRandom is the BCL random generator abstraction RandomNumberGenerator, an abstract class whose
-// GetBytes(byte[]) is to be "overridden in a derived class"
-// (https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography.randomnumbergenerator?view=net-10.0), and
-// ThreadLocalRandom.current() is Random.Shared, "a thread-safe Random instance that may be used concurrently from any
-// thread" (https://learn.microsoft.com/en-us/dotnet/api/system.random.shared?view=net-10.0), as Common's random
-// consumers use it (docs/common-clr-design.md, "Native random consumers and scalar counters"). nextBytes(byte[]) is
-// GetBytes, also for the span and range overloads. getAlgorithm(), setSeed(byte[]), setSeed(long), generateSeed(int)
-// and the java.util.Random members nextInt(), nextInt(int), nextBoolean(), nextLong(), nextFloat(), nextDouble() and
-// nextGaussian() have no RandomNumberGenerator member to override and no caller in this port (SelfSignedCertificate, the
-// only user, is not ported), so they are not ported. serialVersionUID is JVM serialization metadata.
+// CLR: java.security.SecureRandom is the BCL random generator abstraction RandomNumberGenerator, an abstract class
+// whose GetBytes(byte[]) is to be "overridden in a derived class"
+// (https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography.randomnumbergenerator?view=net-10.0),
+// and ThreadLocalRandom.current() is Random.Shared, "a thread-safe Random instance that may be used concurrently
+// from any thread" (https://learn.microsoft.com/en-us/dotnet/api/system.random.shared?view=net-10.0), as Common's
+// random consumers use it. nextBytes(byte[]) is GetBytes, also for the span and range overloads. getAlgorithm(),
+// setSeed(byte[]), setSeed(long), generateSeed(int) and the java.util.Random members nextInt(), nextInt(int),
+// nextBoolean(), nextLong(), nextFloat(), nextDouble() and nextGaussian() have no RandomNumberGenerator member to
+// override and no caller in this port (SelfSignedCertificate, the only user, is not ported), so they are not
+// ported. serialVersionUID is JVM serialization metadata.
 internal sealed class ThreadLocalInsecureRandom : RandomNumberGenerator
 {
 

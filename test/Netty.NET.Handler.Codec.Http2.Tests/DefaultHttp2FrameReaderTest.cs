@@ -26,15 +26,10 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
 /**
  * Tests for {@link DefaultHttp2FrameReader}.
  */
-// CLR: Mockito mocks are Moq loose mocks and verify(mock).m(args) is Verify(..., Times.Once()) with the argument values
-// compared by Equals, as Mockito's default argument matching does (Moq Quickstart,
-// https://github.com/devlooped/moq/wiki/Quickstart; docs/codec-http-porting.md, Shared CLR adaptations); @BeforeEach is
-// the constructor and @AfterEach Dispose(). ctx.alloc() is the Alloc() method. The anonymous Executables are lambdas,
-// assertThrows(Http2Exception.class) is Assert.ThrowsAny<Http2Exception>, assertInstanceOf is Assert.IsAssignableFrom
-// and "ex instanceof Http2Exception.StreamException" is the C# is test (docs/codec-http-porting.md, Core test notes).
-// Strings passed as CharSequence are StringCharSequence values (a C# string is not an ICharSequence; the private
-// Of(string) creates them). listener.onSettingsRead(...)/onSettingsAckRead(...) call the mock directly, as the Java
-// test does.
+// CLR: Mockito mocks are Moq loose mocks and verify(mock).m(args) is Verify(..., Times.Once()) with the argument
+// values compared by Equals, as Mockito's default argument matching does (Moq Quickstart,
+// https://github.com/devlooped/moq/wiki/Quickstart; docs/codec-http-porting.md, Shared CLR adaptations);
+// @BeforeEach is the constructor and @AfterEach Dispose(). ctx.alloc() is the Alloc() method.
 public class DefaultHttp2FrameReaderTest : IDisposable
 {
     private readonly Mock<IHttp2FrameListener> listener = new Mock<IHttp2FrameListener>();

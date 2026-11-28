@@ -30,8 +30,7 @@ namespace Netty.NET.Handler.Codec.Memcache;
  * require different treatment of their messages. Since the content chunk writing is the same for both, the encoder
  * abstracts this right away.</p>
  */
-// CLR: FileRegion is IFileRegion, whose count() is Count(); IllegalStateException is InvalidOperationException
-// (docs/codec-base-porting.md, Shared CLR adaptations).
+// CLR: FileRegion is IFileRegion, whose count() is Count(); IllegalStateException is InvalidOperationException.
 [UnstableApi]
 public abstract class AbstractMemcacheObjectEncoder<M> : MessageToMessageEncoder<object>
     where M : IMemcacheMessage

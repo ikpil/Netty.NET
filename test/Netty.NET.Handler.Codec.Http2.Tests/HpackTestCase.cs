@@ -50,16 +50,16 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
 // (FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES with the HpackHeaderField type adapter) is the Load(...) mapping:
 // each field reads the JSON member of its lower_case_with_underscores name (max_header_table_size,
 // sensitive_headers, header_blocks, encoded, headers, dynamic_table, table_size), a missing member keeps the field
-// initializer, and the type adapter is HeaderFieldDeserializer.Deserialize(JsonElement), whose JsonParseException is
-// System.Text.Json.JsonException and whose JsonObject entry set is JsonElement.EnumerateObject() ("Gets an enumerator
-// to enumerate the properties in the JSON object",
+// initializer, and the type adapter is HeaderFieldDeserializer.Deserialize(JsonElement), whose JsonParseException
+// is System.Text.Json.JsonException and whose JsonObject entry set is JsonElement.EnumerateObject() ("Gets an
+// enumerator to enumerate the properties in the JSON object",
 // https://learn.microsoft.com/en-us/dotnet/api/system.text.json.jsonelement.enumerateobject?view=net-10.0).
-// InputStream is System.IO.Stream, written qualified because Stream binds to the namespace Netty.NET.Handler.Stream
-// inside Netty.NET.Handler.*. throw new AssertionError(...) is Xunit.Sdk.XunitException (an assertion failure) and
-// throw new Error(...) UnreachableException (docs/codec-http-porting.md, Shared CLR adaptations); the Lists printed in
-// the failure messages use the AbstractCollection text "[a, b]" (the private Str). Arrays.equals(byte[], byte[]) is
-// SequenceEqual. The String header names and values are StringCharSequence values. The anonymous SensitivityDetector
-// is the private nested FixedSensitivityDetector. The package-private class and members are internal.
+// InputStream is System.IO.Stream, written qualified because Stream binds to the namespace
+// Netty.NET.Handler.Stream inside Netty.NET.Handler.*. throw new AssertionError(...) is Xunit.Sdk.XunitException
+// (an assertion failure) and throw new Error(...) UnreachableException; the Lists printed in the failure messages
+// use the AbstractCollection text "[a, b]" (the private Str). Arrays.equals(byte[], byte[]) is SequenceEqual. The
+// String header names and values are StringCharSequence values. The anonymous SensitivityDetector is the private
+// nested FixedSensitivityDetector. The package-private class and members are internal.
 internal sealed class HpackTestCase
 {
 
@@ -248,7 +248,6 @@ internal sealed class HpackTestCase
         }
     }
 
-    // CLR: the anonymous SensitivityDetector of encode(...), which returns the captured sensitive flag.
     private sealed class FixedSensitivityDetector : IHttp2HeadersEncoder.ISensitivityDetector
     {
         private readonly bool sensitive;
@@ -323,7 +322,6 @@ internal sealed class HpackTestCase
         return true;
     }
 
-    // CLR: AbstractCollection.toString() of the lists in the failure messages.
     private static string Str(List<HpackHeaderField> list)
     {
         return "[" + string.Join(", ", list) + "]";

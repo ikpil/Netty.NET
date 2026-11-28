@@ -27,18 +27,16 @@ using static Netty.NET.Handler.Codec.Http3.Http3ErrorCode;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the package-private final class is an internal static class. QuicChannel and QuicStreamChannel are the codec-quic
-// interfaces IQuicChannel and IQuicStreamChannel, QuicStreamType the C# enum (docs/codec-classes-quic-porting.md, API
-// shapes). A returned ChannelFuture is a Task (docs/transport-porting.md); quicChannel.close(true, code, buffer) and
-// shutdownOutput(code) are CloseAsync/ShutdownOutputAsync, whose Tasks are not awaited, as Java ignores the futures.
-// closeOnFailure(future) takes the channel of the write as its first argument, because a Task has no channel()
-// (ChannelFutureListener.CLOSE_ON_FAILURE closes future.channel(); docs/codec-http2-porting.md, Listener timing).
-// IllegalArgumentException is ArgumentException; msg.writeCharSequence(msg, US_ASCII) is
-// WriteCharSequence(msg, Encoding.ASCII). The CLR-only helpers NewPromise, Write, WriteAndFlush, Cascade, AddListener
-// and Cause are the Http2CodecUtil helpers of codec-http2's port (docs/codec-http2-porting.md, Shared CLR adaptations),
-// copied because codec-http3 does not depend on codec-http2. The two numBytesForVariableLengthInteger overloads keep
-// their name: the byte overload is the one for a CLR byte argument (Java's signed byte; only bits 6 and 7 are read, so
-// the sign does not matter), callers pass a long variable to the other one.
+// CLR: QuicChannel and QuicStreamChannel are the codec-quic interfaces IQuicChannel and IQuicStreamChannel,
+// QuicStreamType the C# enum. A returned ChannelFuture is a Task; quicChannel.close(true, code, buffer) and
+// shutdownOutput(code) are CloseAsync/ShutdownOutputAsync, whose Tasks are not awaited, as Java ignores the
+// futures. closeOnFailure(future) takes the channel of the write as its first argument, because a Task has no
+// channel() (ChannelFutureListener.CLOSE_ON_FAILURE closes future.channel(); docs/codec-http2-porting.md, Listener
+// timing). IllegalArgumentException is ArgumentException. The CLR-only helpers NewPromise, Write, WriteAndFlush,
+// Cascade, AddListener and Cause are the Http2CodecUtil helpers of codec-http2's port, copied because codec-http3
+// does not depend on codec-http2. The two numBytesForVariableLengthInteger overloads keep their name: the byte
+// overload is the one for a CLR byte argument (Java's signed byte; only bits 6 and 7 are read, so the sign does
+// not matter), callers pass a long variable to the other one.
 internal static class Http3CodecUtils
 {
 
@@ -401,8 +399,8 @@ internal static class Http3CodecUtils
         }
     }
 
-    // CLR: ctx.newPromise(): a TaskCompletionSource without RunContinuationsAsynchronously, so a listener added with
-    // ExecuteSynchronously runs when the promise completes (docs/codec-http2-porting.md, Listener timing).
+    // CLR: ctx.newPromise(): a TaskCompletionSource without RunContinuationsAsynchronously, so a listener added
+    // with ExecuteSynchronously runs when the promise completes.
     internal static TaskCompletionSource NewPromise()
     {
         return new TaskCompletionSource();

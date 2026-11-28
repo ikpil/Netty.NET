@@ -285,7 +285,6 @@ public class QueryStringDecoderTest
         AssertMapEquals(ed.Parameters(), ad.Parameters());
     }
 
-    // CLR: Map.equals(Object) of the two parameter maps.
     private static void AssertMapEquals(IDictionary<string, IList<string>> expected,
                                         IDictionary<string, IList<string>> actual)
     {

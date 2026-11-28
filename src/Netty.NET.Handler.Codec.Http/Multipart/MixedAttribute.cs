@@ -26,9 +26,9 @@ namespace Netty.NET.Handler.Codec.Http.Multipart;
  * Mixed implementation using both in Memory and in File with a limit of size
  */
 // CLR: Charset is Encoding. new IllegalArgumentException(e) is an ArgumentException with Java's detail message
-// cause.toString() (Common's ThrowableUtil.ThrowableToString) and the cause as its inner exception. The package-private
-// makeDiskData() is the internal override of AbstractMixedHttpData.MakeDiskData. The overrides "for binary
-// compatibility" are kept as overrides of the AbstractMixedHttpData<IAttribute> members, which already return IAttribute.
+// cause.toString() (Common's ThrowableUtil.ThrowableToString) and the cause as its inner exception. The overrides
+// "for binary compatibility" are kept as overrides of the AbstractMixedHttpData<IAttribute> members, which already
+// return IAttribute.
 public class MixedAttribute : AbstractMixedHttpData<IAttribute>, IAttribute
 {
     public MixedAttribute(string name, long limitSize) : this(name, limitSize, HttpConstants.DEFAULT_CHARSET)

@@ -65,8 +65,7 @@ public class MqttMessageIdVariableHeader
         return new MqttMessageIdAndPropertiesVariableHeader(messageId, MqttProperties.NO_PROPERTIES);
     }
 
-    // CLR: Java package access is internal (the assembly), as for the package-level members of codec-base
-    // (docs/codec-base-porting.md, Package access).
+    // CLR: Java package access is internal (the assembly), as for the package-level members of codec-base.
     internal virtual MqttMessageIdAndPropertiesVariableHeader WithDefaultEmptyProperties()
     {
         return WithEmptyProperties();

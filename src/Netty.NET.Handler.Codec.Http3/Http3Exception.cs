@@ -22,10 +22,10 @@ namespace Netty.NET.Handler.Codec.Http3;
 /**
  * An exception related to violate the HTTP3 spec.
  */
-// CLR: the checked Exception is the CLR Exception (C# has no checked exceptions, so the throws clauses of the package
-// have no counterpart); Throwable is Exception. The @Nullable (org.jetbrains.annotations) parameter annotations have no
+// CLR: the checked Exception is the CLR Exception (C# has no checked exceptions, so the throws clauses of the
+// package have no counterpart). The @Nullable (org.jetbrains.annotations) parameter annotations have no
 // counterpart: the project does not enable the nullable annotation context. A null message gives the CLR default
-// message where Java's getMessage() returns null ("If no message was supplied ... the system supplies a default
+// message where Java's getMessage() returns null ("If no message was supplied... the system supplies a default
 // message", https://learn.microsoft.com/en-us/dotnet/api/system.exception.message?view=net-10.0).
 public sealed class Http3Exception : Exception
 {

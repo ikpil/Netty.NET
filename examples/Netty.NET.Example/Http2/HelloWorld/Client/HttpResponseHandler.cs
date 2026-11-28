@@ -28,17 +28,17 @@ namespace Netty.NET.Example.Http2.HelloWorld.Client;
 /**
  * Process {@link io.netty.handler.codec.http.FullHttpResponse} translated from HTTP/2 frames
  */
-// CLR: ChannelFuture/ChannelPromise are Task/TaskCompletionSource (docs/transport-porting.md); Map.Entry and its
-// AbstractMap.SimpleEntry are KeyValuePair (getKey()/getValue() are Key/Value), and ConcurrentHashMap is
-// ConcurrentDictionary, whose enumeration tolerates the removal of the current entry as the map's iterator does.
-// put(...) returns the previous entry or null: a nullable KeyValuePair set by the update delegate of AddOrUpdate.
-// awaitResponses(long, TimeUnit) blocks with awaitUninterruptibly(timeout, unit); it is AwaitResponsesAsync(TimeSpan),
-// which awaits Task.WhenAny of each Task and a delay of the timeout (as Http2SettingsHandler.AwaitSettingsAsync), and
-// isSuccess()/cause() are IsCompletedSuccessfully and the InnerException of the faulted Task (a TaskCanceledException for
-// a canceled one). msg.headers().getInt(...) returns int? (Integer, null when absent). new String(arr, 0, length, UTF_8)
-// is Encoding.UTF8.GetString; IllegalStateException is InvalidOperationException and new RuntimeException(cause) an
-// Exception whose message is cause.toString() (Common's ThrowableUtil.ThrowableToString). The protected channelRead0
-// stays protected; FullHttpResponse is IFullHttpResponse and content() the Content property.
+// CLR: ChannelFuture/ChannelPromise are Task/TaskCompletionSource; Map.Entry and its AbstractMap.SimpleEntry are
+// KeyValuePair (getKey()/getValue() are Key/Value), and ConcurrentHashMap is ConcurrentDictionary, whose
+// enumeration tolerates the removal of the current entry as the map's iterator does. put(...) returns the previous
+// entry or null: a nullable KeyValuePair set by the update delegate of AddOrUpdate. awaitResponses(long, TimeUnit)
+// blocks with awaitUninterruptibly(timeout, unit); it is AwaitResponsesAsync(TimeSpan), which awaits Task.WhenAny
+// of each Task and a delay of the timeout (as Http2SettingsHandler.AwaitSettingsAsync), and isSuccess()/cause()
+// are IsCompletedSuccessfully and the InnerException of the faulted Task (a TaskCanceledException for a canceled
+// one). msg.headers().getInt(...) returns int? (Integer, null when absent). new String(arr, 0, length, UTF_8) is
+// Encoding.UTF8.GetString; IllegalStateException is InvalidOperationException and new RuntimeException(cause) an
+// Exception whose message is cause.toString() (Common's ThrowableUtil.ThrowableToString). The protected
+// channelRead0 stays protected; FullHttpResponse is IFullHttpResponse and content() the Content property.
 public class HttpResponseHandler : SimpleChannelInboundHandler<IFullHttpResponse>
 {
 

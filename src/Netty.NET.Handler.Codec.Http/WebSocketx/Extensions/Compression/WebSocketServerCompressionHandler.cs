@@ -22,8 +22,8 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx.Extensions.Compression;
  *
  * See <tt>io.netty.example.http.websocketx.html5.WebSocketServer</tt> for usage.
  */
-// CLR: the @Deprecated no-argument constructor names its replacement WebSocketServerCompressionHandler(int) and is not
-// ported (owner decision 2026-11-16).
+// CLR: the @Deprecated no-argument constructor names its replacement WebSocketServerCompressionHandler(int) and is
+// not ported.
 public class WebSocketServerCompressionHandler : WebSocketServerExtensionHandler
 {
 

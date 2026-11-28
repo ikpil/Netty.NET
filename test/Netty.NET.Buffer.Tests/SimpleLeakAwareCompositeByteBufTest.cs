@@ -159,8 +159,6 @@ public class SimpleLeakAwareCompositeByteBufTest : WrappedCompositeByteBufTest
         Assert.IsAssignableFrom<SimpleLeakAwareCompositeByteBuf>(comp);
 
         ByteBuf inner = comp.Alloc().DirectBuffer(1).WriteByte(0);
-        // CLR: addComponent(boolean increaseWriterIndex, ByteBuf buffer) is
-        // AddComponent(ByteBuf buffer, bool increaseWriterIndex) (src/Netty.NET.Buffer/CompositeByteBuf.cs).
         comp.AddComponent(inner, true);
         buf.AddComponent(comp, true);
 

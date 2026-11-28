@@ -30,20 +30,20 @@ namespace Netty.NET.Handler.Codec.Http2;
 
 
 // CLR: Future<Http2StreamChannel> and Promise<Http2StreamChannel> are Task<IHttp2StreamChannel> and
-// TaskCompletionSource<IHttp2StreamChannel> (docs/codec-http-porting.md, Shared CLR adaptations), so open() and
-// open(Promise) take the Async suffix; channel.eventLoop().newPromise() is a TaskCompletionSource without asynchronous
-// continuations (Http2CodecUtil.NewPromise), promise.setUncancellable() is a completion check, promise.cancel(false)
-// TrySetCanceled() and f.isCancelled() IsCanceled. The options and attributes are kept as the Transport's Bootstrap
-// keeps them (src/Netty.NET.Transport/Bootstrapping/Bootstrap.cs): an OrderedDictionary under a lock for the
-// LinkedHashMap, and a ConcurrentDictionary of typed setters for the attributes (channel.attr(key).set(value) needs
-// the generic key); an option is set through IChannelConfig.SetOptions, the untyped setOption. The deprecated
-// Http2MultiplexCodec is not ported (its @deprecated text names Http2FrameCodecBuilder and Http2MultiplexHandler), so
-// findCtx looks for Http2MultiplexHandler only and the error text names Http2MultiplexCodec as a literal. The
-// @Deprecated open0(ChannelHandlerContext, Promise) names its replacements open() and open(Promise) and is not ported
-// as a public member; its body is the private Open0 that OpenAsync runs. Channel.unsafe().closeForcibly() is
-// AbstractHttp2StreamChannel.Unsafe().CloseForcibly() (the channel's internal Http2ChannelUnsafe; Channel.Unsafe is
-// folded into the channel, docs/transport-porting.md).
-// Java assert is Debug.Assert.
+// TaskCompletionSource<IHttp2StreamChannel>, so open() and open(Promise) take the Async suffix;
+// channel.eventLoop().newPromise() is a TaskCompletionSource without asynchronous continuations
+// (Http2CodecUtil.NewPromise), promise.setUncancellable() is a completion check, promise.cancel(false)
+// TrySetCanceled() and f.isCancelled() IsCanceled. The options and attributes are kept as the Transport's
+// Bootstrap keeps them (src/Netty.NET.Transport/Bootstrapping/Bootstrap.cs): an OrderedDictionary under a lock for
+// the LinkedHashMap, and a ConcurrentDictionary of typed setters for the attributes (channel.attr(key).set(value)
+// needs the generic key); an option is set through IChannelConfig.SetOptions, the untyped setOption. The
+// deprecated Http2MultiplexCodec is not ported (its @deprecated text names Http2FrameCodecBuilder and
+// Http2MultiplexHandler), so findCtx looks for Http2MultiplexHandler only and the error text names
+// Http2MultiplexCodec as a literal. The @Deprecated open0(ChannelHandlerContext, Promise) names its replacements
+// open() and open(Promise) and is not ported as a public member; its body is the private Open0 that OpenAsync
+// runs. Channel.unsafe().closeForcibly() is AbstractHttp2StreamChannel.Unsafe().CloseForcibly() (the channel's
+// internal Http2ChannelUnsafe; Channel.Unsafe is folded into the channel, docs/transport-porting.md). Java assert
+// is Debug.Assert.
 public sealed class Http2StreamChannelBootstrap
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(Http2StreamChannelBootstrap));

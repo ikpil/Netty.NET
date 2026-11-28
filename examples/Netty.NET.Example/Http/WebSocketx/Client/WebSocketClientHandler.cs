@@ -43,16 +43,16 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Example.Http.WebSocketx.Client;
 
-// CLR: ChannelPromise is TaskCompletionSource and ChannelFuture is Task (docs/codec-http-porting.md, Promises):
-// handshakeFuture() returns the promise's Task, setSuccess/setFailure are SetResult/SetException and isDone() is
-// Task.IsCompleted. ctx.newPromise() is a TaskCompletionSource created with RunContinuationsAsynchronously: Java's main
-// thread blocks in handshakeFuture().sync() on its own thread, and the C# Main awaits the Task, so its continuation
-// (which then blocks reading the console) must not run inline on the event loop that completes the promise. The
-// handshaker methods are HandshakeAsync and FinishHandshake; the Task of HandshakeAsync is discarded as Java discards
-// the future. FullHttpResponse is IFullHttpResponse, content() is the Content property, CharsetUtil.UTF_8 is
+// CLR: ChannelPromise is TaskCompletionSource and ChannelFuture is Task : handshakeFuture() returns the promise's
+// Task, setSuccess/setFailure are SetResult/SetException and isDone() is Task.IsCompleted. ctx.newPromise() is a
+// TaskCompletionSource created with RunContinuationsAsynchronously: Java's main thread blocks in
+// handshakeFuture().sync() on its own thread, and the C# Main awaits the Task, so its continuation (which then
+// blocks reading the console) must not run inline on the event loop that completes the promise. The handshaker
+// methods are HandshakeAsync and FinishHandshake; the Task of HandshakeAsync is discarded as Java discards the
+// future. FullHttpResponse is IFullHttpResponse, content() is the Content property, CharsetUtil.UTF_8 is
 // Encoding.UTF8 and IllegalStateException is InvalidOperationException. System.out.println is Console.WriteLine,
-// printStackTrace() writes the exception to Console.Error and ctx.close()/ch.close() are CloseAsync(), whose Task is
-// discarded.
+// printStackTrace() writes the exception to Console.Error and ctx.close()/ch.close() are CloseAsync(), whose Task
+// is discarded.
 public class WebSocketClientHandler : SimpleChannelInboundHandler<object>
 {
     private readonly WebSocketClientHandshaker handshaker;

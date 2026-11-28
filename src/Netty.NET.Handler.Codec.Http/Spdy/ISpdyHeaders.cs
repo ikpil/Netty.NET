@@ -25,11 +25,9 @@ namespace Netty.NET.Handler.Codec.Spdy;
  * Provides the constants for the standard SPDY HTTP header names and commonly
  * used utility methods that access a {@link SpdyHeadersFrame}.
  */
-// CLR: the Java interface takes the I prefix (owner rule). CharSequence is the Common ICharSequence and Headers is the
-// codec-base IHeaders<K, V, T>, whose Map.Entry and Iterator are IEntry<K, V> and IIterator<E>
-// (docs/codec-base-porting.md, Headers), as codec-stomp's IStompHeaders; List<String> is IList<string>. The nested
-// final class HttpNames with a private constructor is a static class nested in the interface (interfaces may declare
-// nested types, https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface).
+// CLR: the Java interface takes the I prefix (owner rule). List<String> is IList<string>. The nested final class
+// HttpNames with a private constructor is a static class nested in the interface (interfaces may declare nested
+// types, https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface).
 public interface ISpdyHeaders : IHeaders<ICharSequence, ICharSequence, ISpdyHeaders>
 {
 

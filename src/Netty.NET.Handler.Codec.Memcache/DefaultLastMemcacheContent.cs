@@ -24,7 +24,7 @@ namespace Netty.NET.Handler.Codec.Memcache;
  */
 // CLR: covariant override returns as in DefaultMemcacheContent
 // (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override); content() is the Content
-// property (docs/buffer-porting.md, Buffer holders and conversion).
+// property.
 [UnstableApi]
 public class DefaultLastMemcacheContent : DefaultMemcacheContent, ILastMemcacheContent
 {

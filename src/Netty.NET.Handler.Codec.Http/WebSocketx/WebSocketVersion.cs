@@ -29,12 +29,12 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx;
  * the specification.
  * </p>
  */
-// CLR: the enum has a constructor, a field and methods, so it is a sealed class with static readonly instances (owner
-// rule; a C# enum cannot define methods,
-// https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/enum), as codec-base's Base64Dialect
-// (docs/codec-base-porting.md). ToString() returns the constant name as Enum.toString() does; the implicit
-// values()/valueOf(String) members are not added because nothing uses them. The package-private toAsciiString() is
-// internal, and IllegalStateException is InvalidOperationException.
+// CLR: the enum has a constructor, a field and methods, so it is a sealed class with static readonly instances
+// (owner rule; a C# enum cannot define methods,
+// https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/enum), as codec-base's Base64Dialect.
+// ToString() returns the constant name as Enum.toString() does; the implicit values()/valueOf(String) members are
+// not added because nothing uses them. The package-private toAsciiString() is internal, and IllegalStateException
+// is InvalidOperationException.
 public sealed class WebSocketVersion
 {
     public static readonly WebSocketVersion UNKNOWN =

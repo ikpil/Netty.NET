@@ -30,13 +30,13 @@ namespace Netty.NET.Handler.Codec.Quic.Example;
 
 // CLR: ported as written, with the adaptations of QuicClientExample (the async Main of ExampleLauncher, the
 // QuicEndpointChannel in place of NioDatagramChannel, IQuicChannel.NewBootstrap, the nested handler classes, the
-// SHUTDOWN_OUTPUT continuation, Console.Error and Encoding.ASCII). The package-private static methods are internal;
-// newChannelAndSendData returns its Task and createStream the Task<IQuicStreamChannel> of CreateStreamAsync, whose
-// listener is a continuation. sslEngineProvider(q -> context.newEngine(q.alloc(), "localhost", 9999)) is the
-// Func<IQuicChannel, QuicSslEngine> over QuicSslContext.NewEngine(alloc, peerHost, peerPort). System.Net.Quic exposes
-// no 0-RTT early data, so QuicSslContextBuilder.EarlyData(true) makes Build() throw NotSupportedException
-// (docs/codec-classes-quic-porting.md, Unsupported features): run, the example ends with that exception before it
-// connects, and SslEarlyDataReadyEvent is never fired.
+// SHUTDOWN_OUTPUT continuation, Console.Error and Encoding.ASCII). The package-private static methods are
+// internal; newChannelAndSendData returns its Task and createStream the Task<IQuicStreamChannel> of
+// CreateStreamAsync, whose listener is a continuation. sslEngineProvider(q -> context.newEngine(q.alloc(),
+// "localhost", 9999)) is the Func<IQuicChannel, QuicSslEngine> over QuicSslContext.NewEngine(alloc, peerHost,
+// peerPort). System.Net.Quic exposes no 0-RTT early data, so QuicSslContextBuilder.EarlyData(true) makes Build()
+// throw NotSupportedException : run, the example ends with that exception before it connects, and
+// SslEarlyDataReadyEvent is never fired.
 public sealed class QuicClientZeroRTTExample
 {
 

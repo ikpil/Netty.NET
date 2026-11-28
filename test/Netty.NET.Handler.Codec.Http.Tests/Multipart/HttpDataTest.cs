@@ -24,16 +24,16 @@ namespace Netty.NET.Handler.Codec.Http.Tests.Multipart;
 
 // CLR: the meta-annotation @ParameterizedHttpDataTest (@ParameterizedTest with @MethodSource("data")) has no xUnit
 // counterpart, so each of its methods is a [Theory] with [MemberData(nameof(Data))]; xUnit enumerates the
-// non-serializable IHttpData rows when the theory runs, so every theory gets new instances, as data() is called for
-// each JUnit method; xUnit names each row with its argument, as JUnit's name = "{displayName}({0})" does. The
-// static @BeforeAll setUp() runs from the static constructor;
-// ThreadLocalRandom.nextBytes is Random.Shared.NextBytes (only the size matters). PooledByteBufAllocator.DEFAULT is
-// PooledByteBufAllocator.Default, CharsetUtil.UTF_8 Encoding.UTF8, and refCnt() RefCnt. retainedDuplicate() returns
-// IByteBufHolder through the IHttpData interface (narrowing re-declarations are inherited, owner decision 2026-11-19,
-// docs/transport-porting.md, Decisions), so the result is cast to IHttpData. AssertJ
-// assertThatExceptionOfType(IOException.class).isThrownBy(...).withMessage(text) is Assert.ThrowsAny<IOException> (a
-// subclass also matches) with Assert.Equal on the message; the anonymous ThrowingCallable is a lambda. The test
-// methods with package access (no modifier in JUnit 5) are public, as xUnit requires.
+// non-serializable IHttpData rows when the theory runs, so every theory gets new instances, as data() is called
+// for each JUnit method; xUnit names each row with its argument, as JUnit's name = "{displayName}({0})" does. The
+// static @BeforeAll setUp() runs from the static constructor; ThreadLocalRandom.nextBytes is
+// Random.Shared.NextBytes (only the size matters). PooledByteBufAllocator.DEFAULT is
+// PooledByteBufAllocator.Default, CharsetUtil.UTF_8 Encoding.UTF8, and refCnt() RefCnt. retainedDuplicate()
+// returns IByteBufHolder through the IHttpData interface (narrowing re-declarations are inherited, owner decision
+// 2026-11-19, docs/transport-porting.md, Decisions), so the result is cast to IHttpData. AssertJ
+// assertThatExceptionOfType(IOException.class).isThrownBy(...).withMessage(text) is Assert.ThrowsAny<IOException>
+// (a subclass also matches) with Assert.Equal on the message. The test methods with package access (no modifier in
+// JUnit 5) are public, as xUnit requires.
 public class HttpDataTest
 {
     private static readonly byte[] BYTES = new byte[64];

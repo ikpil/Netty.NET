@@ -32,15 +32,15 @@ namespace Netty.NET.Example.Uptime;
  * server.  This example demonstrates how to implement reliable reconnection
  * mechanism in Netty.
  */
-// CLR: System.getProperty is ExampleLauncher.GetProperty (the -Dname=value arguments)
-// and Integer.parseInt is int.Parse with an optional sign and the invariant culture. As in Java, main returns after
-// starting the first connection attempt; the event loop threads are foreground threads (DefaultThreadFactory creates
-// non-daemon threads), so the process keeps running as the JVM does. NioSocketChannel.class is
-// Channel<NioSocketChannel>(), the anonymous ChannelInitializer is an ActionChannelInitializer, and connect()
-// discards its Task where Java discards the future. The listener of connect() is a continuation of the connect Task;
-// the Task does not carry the channel, so it runs synchronously on the thread that completes it (the channel's event
-// loop, where Java notifies it). future.cause() is the Task's exception (a TaskCanceledException for a canceled Task,
-// as cause() is a CancellationException there) and null on success. The package-private connect() is internal.
+// CLR: System.getProperty is ExampleLauncher.GetProperty (the -Dname=value arguments) and Integer.parseInt is
+// int.Parse with an optional sign and the invariant culture. As in Java, main returns after starting the first
+// connection attempt; the event loop threads are foreground threads (DefaultThreadFactory creates non-daemon
+// threads), so the process keeps running as the JVM does. NioSocketChannel.class is Channel<NioSocketChannel>(),
+// the anonymous ChannelInitializer is an ActionChannelInitializer, and connect() discards its Task where Java
+// discards the future. The listener of connect() is a continuation of the connect Task; the Task does not carry
+// the channel, so it runs synchronously on the thread that completes it (the channel's event loop, where Java
+// notifies it). future.cause() is the Task's exception (a TaskCanceledException for a canceled Task, as cause() is
+// a CancellationException there) and null on success.
 public sealed class UptimeClient
 {
 

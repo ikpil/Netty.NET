@@ -23,14 +23,14 @@ using Assert = XunitAssertMessages.AssertM;
 namespace Netty.NET.Handler.Codec.Compression.Tests;
 
 // CLR: xUnit creates a new test class instance for every test, so the @AfterEach resetSnappy() runs from Dispose()
-// (https://xunit.net/docs/shared-context) and is private (xUnit1013 asks public methods of a test class to be tests);
-// the JUnit message overloads use XunitAssertMessages.AssertM. The package-private Snappy members are internal and
-// reached through InternalsVisibleTo. The anonymous Executable classes are lambdas. The byte[] initializers keep the bit
-// patterns of the Java byte literals: negative values are unchecked((byte) ...) and char literals are cast to byte,
-// because only int constants in range convert implicitly
+// (https://xunit.net/docs/shared-context) and is private (xUnit1013 asks public methods of a test class to be
+// tests); the JUnit message overloads use XunitAssertMessages.AssertM. The package-private Snappy members are
+// internal and reached through InternalsVisibleTo. The anonymous Executable classes are lambdas. The byte[]
+// initializers keep the bit patterns of the Java byte literals: negative values are unchecked((byte)...) and char
+// literals are cast to byte, because only int constants in range convert implicitly
 // (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types).
-// StandardCharsets.US_ASCII/CharsetUtil.US_ASCII are Encoding.ASCII (docs/codec-base-porting.md), and the comparison of
-// the two CharBuffer.wrap(...) views compares the source string with the text of GetCharSequence(...).
+// StandardCharsets.US_ASCII/CharsetUtil.US_ASCII are Encoding.ASCII, and the comparison of the two
+// CharBuffer.wrap(...) views compares the source string with the text of GetCharSequence(...).
 public class SnappyTest : IDisposable
 {
     private readonly Snappy snappy = new Snappy();

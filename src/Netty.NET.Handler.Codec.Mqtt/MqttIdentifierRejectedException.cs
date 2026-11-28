@@ -22,8 +22,7 @@ namespace Netty.NET.Handler.Codec.Mqtt;
  * A {@link MqttIdentifierRejectedException} which is thrown when a CONNECT request contains invalid client identifier,
  * will topic name, or username, or when a PUBLISH message contains an invalid topic name.
  */
-// CLR: serialVersionUID is JVM serialization metadata and has no counterpart (as DecoderException in codec-base);
-// Throwable is Exception (docs/codec-base-porting.md).
+// CLR: serialVersionUID is JVM serialization metadata and has no counterpart (as DecoderException in codec-base).
 public sealed class MqttIdentifierRejectedException : DecoderException
 {
     /**

@@ -21,15 +21,15 @@ using static Netty.NET.Common.Internal.ObjectUtil;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the package-private final class is internal sealed; the private constructor is kept, so it stays a class with
-// static members, and the package-private static members are internal (as codec-http2's HpackUtil). The checked
-// QpackException needs no throws clause. ByteBuf readByte()/getByte() return the CLR byte: decodePrefixedInteger masks
-// them with nbits (at most 0xff) and 0x7f/0x80, so Java's sign does not matter; encodePrefixedInteger takes the mask as
-// a CLR byte and writes the low eight bits as Java's (byte) cast does. AsciiString.array()/arrayOffset() are the Common
-// AsciiString Array()/ArrayOffset(); ConstantTimeUtils and PlatformDependent.equalsConstantTime are the Common ports.
+// CLR: The private constructor is kept, so it stays a class with static members, and the package-private static
+// members are internal (as codec-http2's HpackUtil). The checked QpackException needs no throws clause. ByteBuf
+// readByte()/getByte() return the CLR byte: decodePrefixedInteger masks them with nbits (at most 0xff) and
+// 0x7f/0x80, so Java's sign does not matter; encodePrefixedInteger takes the mask as a CLR byte and writes the low
+// eight bits as Java's (byte) cast does. AsciiString.array()/arrayOffset() are the Common AsciiString
+// Array()/ArrayOffset(); ConstantTimeUtils and PlatformDependent.equalsConstantTime are the Common ports.
 // Math.floorDiv(maxTableCapacity, 32) is spelled out as Java's floor division (rounding toward negative infinity),
-// because C# division truncates toward zero. The simple enum IndexType is a C# enum. HUFFMAN_CODE_LENGTHS holds code
-// lengths 5..30, so the Java byte and System.Byte values match.
+// because C# division truncates toward zero. The simple enum IndexType is a C# enum. HUFFMAN_CODE_LENGTHS holds
+// code lengths 5..30, so the Java byte and System.Byte values match.
 internal sealed class QpackUtil
 {
     private static readonly QpackException PREFIXED_INTEGER_TOO_LONG =

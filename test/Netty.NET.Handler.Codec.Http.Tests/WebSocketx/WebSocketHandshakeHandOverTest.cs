@@ -29,22 +29,15 @@ namespace Netty.NET.Handler.Codec.Http.Tests.WebSocketx;
 #pragma warning disable xUnit1051 // The source's close(...)/writeAndFlush(...) observe no test cancellation.
 #pragma warning disable xUnit1031 // The source blocks with syncUninterruptibly() on the handshake future.
 
-// CLR: @BeforeEach setUp() runs from the constructor, since xUnit creates a new instance of the test class for every
-// test (https://xunit.net/docs/shared-context), and the inner class CloseNoOpServerProtocolHandler and the anonymous
-// SimpleChannelInboundHandler subclasses are nested classes that receive the test instance whose fields they set. The
-// deprecated WebSocketServerProtocolHandler.ServerHandshakeStateEvent.HANDSHAKE_COMPLETE is not ported (its @deprecated
-// text names the HandshakeComplete class, owner decision 2026-11-16), so the server handlers of testHandover and
-// testClientHandshakeTimeout react to the HandshakeComplete event that the handshake handler fires right after it in
-// Java: they set serverReceivedHandshake, write the message and keep the event, as the two Java branches did together.
-// java.net.URI is System.Uri (new URI(s) is new Uri(s, UriKind.RelativeOrAbsolute)). ChannelFuture is Task: isDone() is
-// IsCompleted and syncUninterruptibly() is GetAwaiter().GetResult(), which throws the faulted Task's exception itself;
-// ctx.channel().closeFuture().addListener(...) is a continuation of CloseFuture, and close(ctx, ctx.newPromise()) is
-// CloseAsync(ctx, CancellationToken.None). Class.getName() of the pipeline names is Type.FullName, the package-private
-// getHandshakeFuture() and isForceCloseComplete() (the latter through the internal forwarder
-// InvokeIsForceCloseComplete()) are reached through InternalsVisibleTo, and the anonymous Executable is a lambda for
-// Assert.ThrowsAny. @Timeout(10000 ms) is the xUnit Timeout of [Fact], which applies to async tests only, so
-// testClientHandshakerForceClose runs its body with Task.Run. Thread.sleep is Thread.Sleep, and readOutbound() is
-// ReadOutbound<T>().
+// CLR: The deprecated WebSocketServerProtocolHandler.ServerHandshakeStateEvent.HANDSHAKE_COMPLETE is not ported
+// (its @deprecated text names the HandshakeComplete class, owner decision 2026-11-16), so the server handlers of
+// testHandover and testClientHandshakeTimeout react to the HandshakeComplete event that the handshake handler
+// fires right after it in Java: they set serverReceivedHandshake, write the message and keep the event, as the two
+// Java branches did together. java.net.URI is System.Uri (new URI(s) is new Uri(s, UriKind.RelativeOrAbsolute)).
+// ChannelFuture is Task: isDone() is IsCompleted and syncUninterruptibly() is GetAwaiter().GetResult(), which
+// throws the faulted Task's exception itself. @Timeout(10000 ms) is the xUnit Timeout of [Fact], which applies to
+// async tests only, so testClientHandshakerForceClose runs its body with Task.Run. Thread.sleep is Thread.Sleep,
+// and readOutbound() is ReadOutbound<T>().
 public class WebSocketHandshakeHandOverTest
 {
 

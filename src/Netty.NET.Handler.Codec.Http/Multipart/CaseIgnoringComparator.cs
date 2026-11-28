@@ -20,15 +20,14 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Codec.Http.Multipart;
 
-// CLR: Comparator<CharSequence> is IComparer<ICharSequence>. A Java String is a CharSequence, so the same comparator
-// orders the String keys of the decoders' TreeMaps; a C# string is not an ICharSequence, so the class also implements
-// IComparer<string> with the same loop over the string's chars. Character.toUpperCase(char)/toLowerCase(char) "using
-// case mapping information from the UnicodeData file"
-// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Character.html) are char.ToUpperInvariant/
-// ToLowerInvariant, which use "the casing rules of the invariant culture"
+// CLR: A Java String is a CharSequence, so the same comparator orders the String keys of the decoders' TreeMaps; a
+// C# string is not an ICharSequence, so the class also implements IComparer<string> with the same loop over the
+// string's chars. Character.toUpperCase(char)/toLowerCase(char) "using case mapping information from the
+// UnicodeData file" (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Character.html) are
+// char.ToUpperInvariant/ ToLowerInvariant, which use "the casing rules of the invariant culture"
 // (https://learn.microsoft.com/en-us/dotnet/api/system.char.toupperinvariant?view=net-10.0). Serializable,
-// serialVersionUID and readResolve() are JVM serialization members without a CLR counterpart; the single INSTANCE is
-// kept by the private constructor.
+// serialVersionUID and readResolve() are JVM serialization members without a CLR counterpart; the single INSTANCE
+// is kept by the private constructor.
 internal sealed class CaseIgnoringComparator : IComparer<ICharSequence>, IComparer<string>
 {
 

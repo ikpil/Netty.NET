@@ -23,8 +23,7 @@ namespace Netty.NET.Transport.Channels;
 // CLR: the fireXxx(), read() and flush() members that Java re-declares here only to narrow their return type to
 // ChannelHandlerContext are inherited from IChannelInboundInvoker and IChannelOutboundInvoker unchanged, as a C#
 // interface cannot narrow an inherited member's return type without hiding it. channel(), executor(), name(),
-// handler(), isRemoved() and pipeline() keep the property form whose name equals the Java method (owner decision
-// 2026-11-16).
+// handler(), isRemoved() and pipeline() keep the property form whose name equals the Java method.
 /**
  * Enables a {@link ChannelHandler} to interact with its {@link ChannelPipeline}
  * and other handlers. Among other things a handler can notify the next {@link ChannelHandler} in the

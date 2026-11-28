@@ -31,18 +31,18 @@ namespace Netty.NET.Handler.Stream;
  * <a href="https://en.wikipedia.org/wiki/Zero-copy">zero-copy file transfer</a>
  * such as {@code sendfile()}, you might want to use {@link FileRegion} instead.
  */
-// CLR: the NIO FileChannel is a FileStream (owner decision: JVM-only NIO is replaced by the BCL), the file type the
-// Transport DefaultFileRegion takes for a FileChannel (docs/transport-porting.md), and java.io.File is FileInfo
-// (docs/common-clr-design.md); new RandomAccessFile(in, "r").getChannel() opens a read-only FileStream. The positional
-// FileChannel read, which "does not modify this channel's position"
+// CLR: the NIO FileChannel is a FileStream (owner decision: JVM-only NIO is replaced by the BCL), the file type
+// the Transport DefaultFileRegion takes for a FileChannel, and java.io.File is FileInfo; new RandomAccessFile(in,
+// "r").getChannel() opens a read-only FileStream. The positional FileChannel read, which "does not modify this
+// channel's position"
 // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/nio/channels/FileChannel.html), is
 // ByteBuf.WriteBytes(SafeFileHandle, long, int) on the stream's handle, the Buffer port's FileChannel overload
 // (System.IO RandomAccess; the file position never changes, docs/buffer-porting.md, Positioned file transfers).
 // in.isOpen() is FileStream.CanRead, "false if the stream is closed or was opened with write-only access"
 // (https://learn.microsoft.com/en-us/dotnet/api/system.io.filestream.canread?view=net-10.0); in.size() is
-// FileStream.Length. java.nio.channels.ClosedChannelException is the Transport ClosedChannelException. The @Deprecated
-// readChunk(ChannelHandlerContext) is not ported with ChunkedInput's (see IChunkedInput). The public members are
-// virtual because the Java class is not final.
+// FileStream.Length. java.nio.channels.ClosedChannelException is the Transport ClosedChannelException. The
+// @Deprecated readChunk(ChannelHandlerContext) is not ported with ChunkedInput's (see IChunkedInput). The public
+// members are virtual because the Java class is not final.
 public class ChunkedNioFile : IChunkedInput<ByteBuf>
 {
 
@@ -179,16 +179,15 @@ public class ChunkedNioFile : IChunkedInput<ByteBuf>
             {
                 int localReadBytes = buffer.WriteBytes(@in.SafeFileHandle, offset + readBytes, chunkSize - readBytes);
                 // CLR: FileChannel.read returns -1 "if the given position is greater than or equal to the file's
-                // current size"; the Buffer port reports the end of the file as 0 (docs/buffer-porting.md), and the
-                // requested length is never 0 here, so 0 is the end of the file.
+                // current size"; the Buffer port reports the end of the file as 0, and the requested length is
+                // never 0 here, so 0 is the end of the file.
                 if (localReadBytes <= 0)
                 {
                     // The file is shorter than the region we were asked to transfer (for example it was truncated
                     // after this ChunkedNioFile was created). Fail like ChunkedFile instead of returning empty
                     // chunks forever, as isEndOfInput() would never return true.
-                    // CLR: EOFException is EndOfStreamException (an IOException, as in ChunkedFile); the numbers use
-                    // the invariant culture, as Java decimal text does not depend on a culture
-                    // (docs/codec-redis-porting.md).
+                    // CLR: EOFException is EndOfStreamException (an IOException, as in ChunkedFile); the numbers
+                    // use the invariant culture, as Java decimal text does not depend on a culture.
                     throw new EndOfStreamException("Underlying file size " +
                             @in.Length.ToString(CultureInfo.InvariantCulture) + " smaller than requested end " +
                             "offset " + endOffset.ToString(CultureInfo.InvariantCulture));

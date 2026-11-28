@@ -23,9 +23,8 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Resolver.Dns;
 
-// CLR: the package-private final class is internal sealed over DnsResolveContext<IDnsRecord> (DnsRecord is the codec-dns
-// IDnsRecord); Promise<?> originalPromise is the Task of the original promise, as in DnsResolveContext.
-// UnknownHostException is Common's UnknownHostException (owner decision 2026-11-25); EventLoop is IEventLoop.
+// CLR: Promise<?> originalPromise is the Task of the original promise, as in DnsResolveContext.
+// UnknownHostException is Common's UnknownHostException; EventLoop is IEventLoop.
 internal sealed class DnsRecordResolveContext : DnsResolveContext<IDnsRecord>
 {
 

@@ -29,8 +29,7 @@ namespace Netty.NET.Handler.Codec.Http2;
 // parameter type ("For an interface, covariant type parameters can be used as the return types of the interface's
 // methods, and contravariant type parameters can be used as the parameter types of the interface's methods",
 // https://learn.microsoft.com/en-us/dotnet/standard/generics/covariance-and-contravariance). Future<Void> close(
-// Promise<Void>) is CloseAsync(TaskCompletionSource), which returns the promise's Task
-// (docs/common-task-composition.md).
+// Promise<Void>) is CloseAsync(TaskCompletionSource), which returns the promise's Task.
 public interface IHttp2Connection
 {
     /**

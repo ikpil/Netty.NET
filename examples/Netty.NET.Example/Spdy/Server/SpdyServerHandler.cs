@@ -33,15 +33,13 @@ namespace Netty.NET.Example.Spdy.Server;
 /**
  * HTTP handler that responds with a "Hello World"
  */
-// CLR: new Date() in a string is Date.toString(), the pattern "EEE MMM dd HH:mm:ss zzz yyyy" in the local time zone;
-// .NET has no time zone abbreviation, so it is DateTimeOffset.Now formatted with the invariant culture and the UTC
-// offset (zzz) in the zone's place. A using static directive imports a whole class, and HttpHeaderValues also declares
-// CONTINUE, so the status is written HttpResponseStatus.CONTINUE. HttpRequest/FullHttpResponse are
-// IHttpRequest/IFullHttpResponse, content() is the Content property, CharsetUtil.UTF_8 is Encoding.UTF8 and
-// Unpooled.EMPTY_BUFFER is Unpooled.EmptyBuffer. ctx.write returns a Task, discarded as Java discards the future;
-// ChannelFutureListener.CLOSE is a synchronous Task continuation that closes the channel on its event loop (Common's
-// EventExecutorTaskScheduler), as codec-http's CorsHandler maps it; a Task has no channel, so the channel is
-// ctx.Channel. printStackTrace() writes the exception to Console.Error and ctx.close() is CloseAsync().
+// CLR: new Date() in a string is Date.toString(), the pattern "EEE MMM dd HH:mm:ss zzz yyyy" in the local time
+// zone;.NET has no time zone abbreviation, so it is DateTimeOffset.Now formatted with the invariant culture and
+// the UTC offset (zzz) in the zone's place. A using static directive imports a whole class, and HttpHeaderValues
+// also declares CONTINUE, so the status is written HttpResponseStatus.CONTINUE. ChannelFutureListener.CLOSE is a
+// synchronous Task continuation that closes the channel on its event loop (Common's EventExecutorTaskScheduler),
+// as codec-http's CorsHandler maps it; a Task has no channel, so the channel is ctx.Channel. printStackTrace()
+// writes the exception to Console.Error and ctx.close() is CloseAsync().
 public class SpdyServerHandler : SimpleChannelInboundHandler<object>
 {
     protected override void ChannelRead0(IChannelHandlerContext ctx, object msg)

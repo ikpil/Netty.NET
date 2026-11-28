@@ -20,10 +20,9 @@ using static Netty.NET.Handler.Codec.Http3.Http3RequestStreamEncodeStateValidato
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the package-private final class is an internal sealed class. The State enum and the static helpers of
-// Http3RequestStreamEncodeStateValidator are imported with using static; evaluateFrame returns State? (null when the
-// frame is unexpected). super.channelRead(ctx, msg) is ChannelInboundHandlerAdapter.ChannelRead (ctx.FireChannelRead).
-// throws Exception has no counterpart.
+// CLR: The State enum and the static helpers of Http3RequestStreamEncodeStateValidator are imported with using
+// static; evaluateFrame returns State? (null when the frame is unexpected). super.channelRead(ctx, msg) is
+// ChannelInboundHandlerAdapter.ChannelRead (ctx.FireChannelRead). throws Exception has no counterpart.
 internal sealed class Http3RequestStreamDecodeStateValidator : ChannelInboundHandlerAdapter,
         IHttp3RequestStreamCodecState
 {

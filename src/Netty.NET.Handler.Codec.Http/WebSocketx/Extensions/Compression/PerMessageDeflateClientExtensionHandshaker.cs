@@ -27,19 +27,19 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx.Extensions.Compression;
  * <a href="https://tools.ietf.org/html/draft-ietf-hybi-permessage-compression-18">permessage-deflate</a>
  * handshake implementation.
  */
-// CLR: the three @Deprecated constructors (), (int, boolean, int, boolean, boolean) and (int, boolean, int, boolean,
-// boolean, WebSocketExtensionFilterProvider) name their replacements and are not ported (owner decision 2026-11-16).
-// ZlibCodecFactory.isSupportingWindowSizeAndMemLevel() is false because jzlib is library-not-ported, so the default
-// configuration does not offer client_max_window_bits, as Java without jzlib (see
+// CLR: the three @Deprecated constructors (), (int, boolean, int, boolean, boolean) and (int, boolean, int,
+// boolean, boolean, WebSocketExtensionFilterProvider) name their replacements and are not ported.
+// ZlibCodecFactory.isSupportingWindowSizeAndMemLevel() is false because jzlib is library-not-ported, so the
+// default configuration does not offer client_max_window_bits, as Java without jzlib (see
 // PerMessageDeflateServerExtensionHandshaker). The constants and Integer.parseInt (ParseInt) come from the static
 // import of PerMessageDeflateServerExtensionHandshaker; HashMap is Dictionary, equalsIgnoreCase is
-// StringComparison.OrdinalIgnoreCase and the entry iterator is an IEnumerator<KeyValuePair<string, string>> (see that
-// class). The inner (non-static) class PermessageDeflateExtension reads compressionLevel of its enclosing instance ("An
-// instance i of a direct inner class C ... is associated with an instance of O, known as the immediately enclosing
-// instance of i", https://docs.oracle.com/javase/specs/jls/se17/html/jls-8.html#jls-8.1.3); a C# nested class has no
-// enclosing instance, so the handshaker is passed to its constructor as the first argument. IllegalArgumentException is
-// ArgumentException with the numbers in the invariant culture; checkPositiveOrZero and checkNotNull are the Common
-// ObjectUtil checks.
+// StringComparison.OrdinalIgnoreCase and the entry iterator is an IEnumerator<KeyValuePair<string, string>> (see
+// that class). The inner (non-static) class PermessageDeflateExtension reads compressionLevel of its enclosing
+// instance ("An instance i of a direct inner class C... is associated with an instance of O, known as the
+// immediately enclosing instance of i", https://docs.oracle.com/javase/specs/jls/se17/html/jls-8.html#jls-8.1.3);
+// a C# nested class has no enclosing instance, so the handshaker is passed to its constructor as the first
+// argument. IllegalArgumentException is ArgumentException with the numbers in the invariant culture;
+// checkPositiveOrZero and checkNotNull are the Common ObjectUtil checks.
 public sealed class PerMessageDeflateClientExtensionHandshaker : IWebSocketClientExtensionHandshaker
 {
 

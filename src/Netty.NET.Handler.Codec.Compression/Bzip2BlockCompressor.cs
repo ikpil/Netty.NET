@@ -32,9 +32,9 @@ namespace Netty.NET.Handler.Codec.Compression;
  * 6. Create and write Huffman tables - {@link #close(ByteBuf)} (through {@link Bzip2HuffmanStageEncoder})<br>
  * 7. Huffman encode and write data - {@link #close(ByteBuf)} (through {@link Bzip2HuffmanStageEncoder})
  */
-// CLR: the package-private final class is an internal sealed class and the out parameters are @out. The methods keep
-// the Java names: write is Write (both overloads), close(ByteBuf) is Close(ByteBuf), and crc() is Crc(), next to the
-// field crc. (byte) value and (byte) runLength store values 0..255 with the same eight bits in the unsigned C# byte.
+// CLR: The methods keep the Java names: write is Write (both overloads), close(ByteBuf) is Close(ByteBuf), and
+// crc() is Crc(), next to the field crc. (byte) value and (byte) runLength store values 0..255 with the same eight
+// bits in the unsigned C# byte.
 internal sealed class Bzip2BlockCompressor
 {
     // CLR: the anonymous ByteProcessor is a Func<byte, bool> (the Buffer port's forEachByte processor, as in

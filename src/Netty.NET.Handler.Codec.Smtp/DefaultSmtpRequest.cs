@@ -24,12 +24,8 @@ namespace Netty.NET.Handler.Codec.Smtp;
 /**
  * Default {@link SmtpRequest} implementation.
  */
-// CLR: @UnstableApi is the Common [UnstableApi] attribute; CharSequence... is params ICharSequence[] and List<CharSequence>
-// is IList<ICharSequence> (see SmtpUtils). Collections.emptyList() is ReadOnlyCollection<T>.Empty and
-// Collections.unmodifiableList(list) is a ReadOnlyCollection<T> view of the list. The List equals/hashCode/toString
-// used by the source go through SmtpUtils.ListEquals/ListHashCode/ListToString, since ReadOnlyCollection<T> keeps
-// Object's members. The package-private constructor is internal; checkNotNull throws ArgumentNullException
-// (docs/codec-base-porting.md).
+// CLR: The List equals/hashCode/toString used by the source go through
+// SmtpUtils.ListEquals/ListHashCode/ListToString, since ReadOnlyCollection<T> keeps Object's members.
 [UnstableApi]
 public sealed class DefaultSmtpRequest : ISmtpRequest
 {

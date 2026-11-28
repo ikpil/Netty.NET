@@ -19,9 +19,8 @@ namespace Netty.NET.Handler.Codec.Quic;
 /**
  * Event fired once the stream limit of a {@link QuicChannel} changes.
  */
-// CLR: the package-private INSTANCE is internal. System.Net.Quic reports the peer's stream limit increments through
-// QuicConnectionOptions.StreamCapacityCallback (docs/quic-design.md, Mapping), from which the msquic implementation
-// (stage 2) fires this event.
+// CLR: System.Net.Quic reports the peer's stream limit increments through
+// QuicConnectionOptions.StreamCapacityCallback, from which the msquic implementation (stage 2) fires this event.
 public sealed class QuicStreamLimitChangedEvent : IQuicEvent
 {
 

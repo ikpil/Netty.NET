@@ -24,10 +24,9 @@ namespace Netty.NET.Handler.Codec.Http2;
  * The {@link Http2MultiplexHandler} will unwrap the original {@link Throwable} and fire it to all its
  * active {@link Http2StreamChannel}.
  */
-// CLR: Throwable is Exception. The cause-only constructor keeps Java's detail message cause.toString() through
-// Common's ThrowableUtil.ThrowableToString (docs/codec-base-porting.md, Exceptions). The fillInStackTrace() override,
-// which returns this without recording frames, is an override of the virtual Exception.StackTrace that returns null,
-// as the handler's TimeoutException does (docs/handler-porting.md, Exceptions).
+// CLR: The cause-only constructor keeps Java's detail message cause.toString() through Common's
+// ThrowableUtil.ThrowableToString. The fillInStackTrace() override, which returns this without recording frames,
+// is an override of the virtual Exception.StackTrace that returns null, as the handler's TimeoutException does.
 public sealed class Http2MultiplexActiveStreamsException : Exception
 {
 

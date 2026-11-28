@@ -22,11 +22,11 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the package-private final class is an internal static class. Class<T> is System.Type, so isValid(frameType, msg)
-// is Type.IsInstanceOfType and the generic validate methods take the expected type as their type argument T (a class
-// constraint, as the result is null when msg is not a T) and the Type value as in Java. ChannelPromise is
-// TaskCompletionSource; promise.setFailure(e) is SetException, which throws on a completed promise as setFailure does.
-// The @Nullable (org.jetbrains.annotations) annotations have no counterpart.
+// CLR: Class<T> is System.Type, so isValid(frameType, msg) is Type.IsInstanceOfType and the generic validate
+// methods take the expected type as their type argument T (a class constraint, as the result is null when msg is
+// not a T) and the Type value as in Java. ChannelPromise is TaskCompletionSource; promise.setFailure(e) is
+// SetException, which throws on a completed promise as setFailure does. The @Nullable (org.jetbrains.annotations)
+// annotations have no counterpart.
 internal static class Http3FrameValidationUtils
 {
 

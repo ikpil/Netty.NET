@@ -23,9 +23,8 @@ namespace Netty.NET.Handler.Codec.Quic;
  * If unknown by the implementation it might return {@code -1} values
  * for the various methods.
  */
-// CLR: InetSocketAddress is IPEndPoint. System.Net.Quic reports no path statistics (docs/quic-design.md, No counterpart
-// in System.Net.Quic); the interface keeps its Java API (owner decision 2026-11-27) and the msquic implementation
-// (stage 2) reports collectPathStats as unsupported.
+// CLR: InetSocketAddress is IPEndPoint. System.Net.Quic reports no path statistics; the interface keeps its Java
+// API and the msquic implementation (stage 2) reports collectPathStats as unsupported.
 public interface IQuicConnectionPathStats
 {
     /**

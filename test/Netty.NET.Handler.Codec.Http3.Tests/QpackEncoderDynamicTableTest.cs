@@ -21,17 +21,16 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Codec.Http3.Tests;
 
-// CLR: the internal QpackEncoderDynamicTable, QpackHeaderField and QpackUtil (package-private in Java) are reached
-// through InternalsVisibleTo; the static import of QpackUtil.MAX_HEADER_TABLE_SIZE is using static QpackUtil. A Java
-// String passed as a CharSequence is a StringCharSequence (Cs), because a C# string is not an ICharSequence
-// (docs/codec-http-porting.md, Shared CLR adaptations). The Hamcrest assertThat(reason, actual, matcher) calls keep their
-// reason as the assertion message: lessThan(0) is Assert.True(actual < 0, reason), greaterThanOrEqualTo(0) is
-// Assert.True(actual >= 0, reason), is(expected) is Assert.Equal(expected, actual, reason), and assertThat(actual,
-// is(0)) without a reason is Assert.Equal(0, actual). xUnit creates a new instance of the test class for every test, as
-// JUnit does, so insertCount and maxCapacity start at their defaults in each test. assertThrows(QpackException.class,
-// ...) is Assert.ThrowsAny<QpackException> (docs/codec-http-porting.md, Core test notes). Math.toIntExact is a checked
-// conversion (OverflowException for Java's ArithmeticException) and Math.floorDiv is QpackUtil.FloorDiv (Java's floor
-// division). Long.MAX_VALUE is long.MaxValue; the throws clauses have no counterpart.
+// CLR: The static import of QpackUtil.MAX_HEADER_TABLE_SIZE is using static QpackUtil. A Java String passed as a
+// CharSequence is a StringCharSequence (Cs), because a C# string is not an ICharSequence. The Hamcrest
+// assertThat(reason, actual, matcher) calls keep their reason as the assertion message: lessThan(0) is
+// Assert.True(actual < 0, reason), greaterThanOrEqualTo(0) is Assert.True(actual >= 0, reason), is(expected) is
+// Assert.Equal(expected, actual, reason), and assertThat(actual, is(0)) without a reason is Assert.Equal(0,
+// actual). xUnit creates a new instance of the test class for every test, as JUnit does, so insertCount and
+// maxCapacity start at their defaults in each test. assertThrows(QpackException.class,...) is
+// Assert.ThrowsAny<QpackException>. Math.toIntExact is a checked conversion (OverflowException for Java's
+// ArithmeticException) and Math.floorDiv is QpackUtil.FloorDiv (Java's floor division). Long.MAX_VALUE is
+// long.MaxValue.
 public class QpackEncoderDynamicTableTest
 {
     private static readonly QpackHeaderField emptyHeader = new QpackHeaderField(Cs(""), Cs(""));
@@ -290,7 +289,6 @@ public class QpackEncoderDynamicTableTest
         return insertCount == 0 ? 0 : checked((int) ((insertCount % (2 * FloorDiv(maxCapacity, 32))) + 1));
     }
 
-    // CLR: a Java String passed as a CharSequence (see the class comment).
     private static ICharSequence Cs(string s)
     {
         return new StringCharSequence(s);

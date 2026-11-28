@@ -19,11 +19,11 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Resolver.Dns.Tests;
 
-// CLR: DnsResolveContext.cnameResolveFromCache is the static CnameResolveFromCache of the non-generic DnsResolveContext,
-// which holds the statics of the generic Java class (src/Netty.NET.Resolver.Dns/DnsResolveContext.cs).
-// UnknownHostException is Common's UnknownHostException (owner decision 2026-11-25) and assertThrows with the
-// anonymous Executable is Assert.Throws with a lambda; Long.MAX_VALUE is long.MaxValue and channel.eventLoop() the
-// EmbeddedChannel's EventLoop.
+// CLR: DnsResolveContext.cnameResolveFromCache is the static CnameResolveFromCache of the non-generic
+// DnsResolveContext, which holds the statics of the generic Java class
+// (src/Netty.NET.Resolver.Dns/DnsResolveContext.cs). UnknownHostException is Common's UnknownHostException and
+// assertThrows with the anonymous Executable is Assert.Throws with a lambda; Long.MAX_VALUE is long.MaxValue and
+// channel.eventLoop() the EmbeddedChannel's EventLoop.
 public class DnsResolveContextTest
 {
 

@@ -23,19 +23,17 @@ using static Netty.NET.Handler.Codec.Spdy.SpdyCodecUtil;
 
 namespace Netty.NET.Handler.Codec.Spdy;
 
-// CLR: the package-private final class is an internal sealed class. AtomicInteger is an int field updated with
-// System.Threading.Interlocked (Increment, Decrement, Add, Volatile.Read for get(); Add returns the new value as
-// addAndGet does, https://learn.microsoft.com/en-us/dotnet/api/system.threading.interlocked.add?view=net-10.0).
-// ConcurrentHashMap<Integer, StreamState> is ConcurrentDictionary<int, StreamState> (put is AddOrUpdate capturing the
-// previous value, remove is TryRemove and get is TryGetValue), and ConcurrentLinkedQueue is ConcurrentQueue (offer is
-// Enqueue, which always succeeds as offer does on an unbounded queue, peek is TryPeek and poll is TryDequeue). The
-// priority-ordered TreeMap of activeStreams() is a SortedDictionary<int, StreamState> with the StreamComparator as its
-// IComparer<int>
-// (https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.sorteddictionary-2.-ctor?view=net-10.0); it
-// is returned as IDictionary<int, StreamState>, so StreamState is internal instead of private (a private nested type
-// cannot appear in the signature of an internal method, CS0050). ChannelPromise is the TaskCompletionSource whose Task
-// the handler returned for the queued write (docs/transport-porting.md), and setFailure is TrySetException, as
-// ChunkedWriteHandler.PendingWrite fails its promise (docs/handler-porting.md). The Java byte priority is the CLR byte.
+// CLR: AtomicInteger is an int field updated with System.Threading.Interlocked (Increment, Decrement, Add,
+// Volatile.Read for get(); Add returns the new value as addAndGet does,
+// https://learn.microsoft.com/en-us/dotnet/api/system.threading.interlocked.add?view=net-10.0).
+// ConcurrentHashMap<Integer, StreamState> is ConcurrentDictionary<int, StreamState> (put is AddOrUpdate capturing
+// the previous value, remove is TryRemove and get is TryGetValue), and ConcurrentLinkedQueue is ConcurrentQueue
+// (offer is Enqueue, which always succeeds as offer does on an unbounded queue, peek is TryPeek and poll is
+// TryDequeue). The priority-ordered TreeMap of activeStreams() is a SortedDictionary<int, StreamState> with the
+// StreamComparator as its IComparer<int>
+// (https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.sorteddictionary-2.-ctor?view=net-10.0);
+// it is returned as IDictionary<int, StreamState>, so StreamState is internal instead of private (a private nested
+// type cannot appear in the signature of an internal method, CS0050). The Java byte priority is the CLR byte.
 internal sealed class SpdySession
 {
 

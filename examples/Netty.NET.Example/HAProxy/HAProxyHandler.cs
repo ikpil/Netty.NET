@@ -22,9 +22,8 @@ using Netty.NET.Transport.Channels;
 namespace Netty.NET.Example.HAProxy;
 
 // CLR: write(ctx, msg, promise) is WriteAsync, which returns the Task of ctx.WriteAsync in place of completing the
-// caller's promise (docs/transport-porting.md: promise arguments are the returned Task). future.addListener is a
-// continuation of that Task on the context's event loop (EventExecutorTaskScheduler, the timing of
-// DefaultPromise.notifyListeners()); future1.isSuccess() is IsCompletedSuccessfully. HAProxyHandler.this is this, and
+// caller's promise. future.addListener is a continuation of that Task on the context's event loop
+// (EventExecutorTaskScheduler, the timing of DefaultPromise.notifyListeners()). HAProxyHandler.this is this, and
 // ctx.close() discards its Task as Java discards the future.
 public class HAProxyHandler : ChannelOutboundHandlerAdapter
 {

@@ -22,11 +22,9 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Tests.IpFilter;
 
-// CLR: the anonymous filter and EmbeddedChannel subclasses are named nested classes (the captured exception is a
-// constructor argument). RuntimeException is Exception; assertThrows(RuntimeException.class, ...) is
-// Assert.Throws<Exception>, whose exact-type check holds because the recorded exception is that Exception.
-// SocketUtils.socketAddress of a literal is new IPEndPoint(IPAddress.Parse(...), port), as in the codec ports
-// (docs/codec-dns-porting.md), and remoteAddress0() is RemoteAddress0().
+// CLR: RuntimeException is Exception; assertThrows(RuntimeException.class,...) is Assert.Throws<Exception>, whose
+// exact-type check holds because the recorded exception is that Exception. SocketUtils.socketAddress of a literal
+// is new IPEndPoint(IPAddress.Parse(...), port), as in the codec ports, and remoteAddress0() is RemoteAddress0().
 public class AbstractRemoteAddressFilterTest
 {
 

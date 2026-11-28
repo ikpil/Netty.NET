@@ -22,10 +22,10 @@ namespace Netty.NET.Handler.Codec.Redis;
 /**
  * Utilities for codec-redis.
  */
-// CLR: the package-private final class is an internal sealed class with the private constructor; Long.toString(long)
-// is the invariant-culture decimal text, because Int64.ToString() formats with the current culture
-// (https://learn.microsoft.com/en-us/dotnet/api/system.int32.tostring), and CharsetUtil.US_ASCII is Encoding.ASCII
-// (docs/codec-base-porting.md).
+// CLR: the package-private final class is an internal sealed class with the private constructor;
+// Long.toString(long) is the invariant-culture decimal text, because Int64.ToString() formats with the current
+// culture (https://learn.microsoft.com/en-us/dotnet/api/system.int32.tostring), and CharsetUtil.US_ASCII is
+// Encoding.ASCII.
 internal sealed class RedisCodecUtil
 {
 

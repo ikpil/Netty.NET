@@ -24,25 +24,19 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Codec.Http3.Tests;
 
-// CLR: @AfterEach tearDown() is Dispose() (xUnit creates a test class instance per test case and disposes it after the
-// case). The @ParameterizedTest methods with @ValueSource(booleans = {false, true}) are [Theory]s with
-// [InlineData(false)] and [InlineData(true)]; the display-name patterns have no xUnit counterpart. The private helper
-// testPushStream(boolean, long), which overloads a test name, is TestPushStream0 (xUnit1024;
-// docs/codec-http-porting.md, Shared CLR adaptations). The handler types are internal (package-private in Java) and
-// reached through InternalsVisibleTo; the static imports of Http3CodecUtils' stream types are qualified, and
-// QpackSensitivityDetector is the interface IQpackSensitivityDetector. LongFunction<ChannelHandler> is Func<long,
-// IChannelHandler>, the Supplier lambdas of the QPACK handlers are Func<IChannelHandler>, the Http3FrameCodecFactory
-// lambda (v, __, ___, ____) -> new CodecHandler() is the private nested class CodecHandlerFactory, the
-// NonStandardHttp3SettingsValidator lambda (id, v) -> false the private nested class NoNonStandardSettings, and the
-// anonymous Http3PushStreamClientInitializer the private nested class CodecPushStreamClientInitializer. Class<? extends
-// ChannelHandler> is Type and pipeline().context(Class) is Pipeline.Context(Type) (it matches subclasses, as
-// Class.isAssignableFrom). parent.createStream(...).get() is the result of the completed Task of CreateStreamAsync
-// (GetAwaiter().GetResult()). The conditional server ? new Http3ServerConnectionHandler(...) : new
-// Http3ClientConnectionHandler() needs the IChannelHandler cast, as the two classes have no conversion to each other.
-// refCnt() is the RefCnt property, isActive() IsActive, parent() Parent, readInbound()/readOutbound()
-// ReadInbound<T>()/ReadOutbound(), and DefaultChannelId.newInstance() is DefaultChannelId.NewInstance().
-// ChannelHandlerAdapter is abstract in both. The throws clauses and @Nullable (org.jetbrains.annotations) have no
-// counterpart.
+// CLR: @AfterEach tearDown() is Dispose() (xUnit creates a test class instance per test case and disposes it after
+// the case). The display-name patterns have no xUnit counterpart. The private helper testPushStream(boolean,
+// long), which overloads a test name, is TestPushStream0 (xUnit1024; docs/codec-http-porting.md, Shared CLR
+// adaptations). The static imports of Http3CodecUtils' stream types are qualified, and QpackSensitivityDetector is
+// the interface IQpackSensitivityDetector. LongFunction<ChannelHandler> is Func<long, IChannelHandler>, the
+// Supplier lambdas of the QPACK handlers are Func<IChannelHandler>, the Http3FrameCodecFactory lambda (v, __, ___,
+// ____) -> new CodecHandler() is the private nested class CodecHandlerFactory, the
+// NonStandardHttp3SettingsValidator lambda (id, v) -> false the private nested class NoNonStandardSettings, and
+// the anonymous Http3PushStreamClientInitializer the private nested class CodecPushStreamClientInitializer.
+// Class<? extends ChannelHandler> is Type and pipeline().context(Class) is Pipeline.Context(Type) (it matches
+// subclasses, as Class.isAssignableFrom). parent.createStream(...).get() is the result of the completed Task of
+// CreateStreamAsync (GetAwaiter().GetResult()). ChannelHandlerAdapter is abstract in both. The throws clauses and
+// @Nullable (org.jetbrains.annotations) have no counterpart.
 public class Http3UnidirectionalStreamInboundHandlerTest : IDisposable
 {
 
@@ -351,7 +345,6 @@ public class Http3UnidirectionalStreamInboundHandlerTest : IDisposable
         }
     }
 
-    // CLR: the anonymous Http3PushStreamClientInitializer of newUniStreamInboundHandler.
     private sealed class CodecPushStreamClientInitializer : Http3PushStreamClientInitializer
     {
         protected override void InitPushStream(IQuicStreamChannel ch)

@@ -23,9 +23,8 @@ using Netty.NET.Transport.Channels.Local;
 
 namespace Netty.NET.Resolver.Dns.Tests;
 
-// CLR: loop.schedule(Callable, 1, SECONDS).get() is loop.ScheduleAsync(Func, TimeSpan) awaited (the anonymous Callable is
-// a lambda; a recorded error is rethrown with ExceptionDispatchInfo); TimeUnit.DAYS.toSeconds(days) is days * 86400.
-// shutdownGracefully() is ShutdownGracefullyAsync() without waiting, as in the source.
+// CLR: loop.schedule(Callable, 1, SECONDS).get() is loop.ScheduleAsync(Func, TimeSpan) awaited (the anonymous
+// Callable is a lambda; a recorded error is rethrown with ExceptionDispatchInfo).
 public class DefaultDnsCnameCacheTest
 {
 

@@ -27,8 +27,8 @@ namespace Netty.NET.Resolver.Dns;
 /**
  * Combines two {@link DnsQueryLifecycleObserver} into a single {@link DnsQueryLifecycleObserver}.
  */
-// CLR: the parameter types follow IDnsQueryLifecycleObserver (EndPoint, Task, IReadOnlyList<EndPoint>, IDnsQuestion,
-// Exception); checkNotNull is Common's ObjectUtil.CheckNotNull.
+// CLR: the parameter types follow IDnsQueryLifecycleObserver (EndPoint, Task, IReadOnlyList<EndPoint>,
+// IDnsQuestion, Exception).
 public sealed class BiDnsQueryLifecycleObserver : IDnsQueryLifecycleObserver
 {
     private readonly IDnsQueryLifecycleObserver a;

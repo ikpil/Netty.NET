@@ -22,12 +22,12 @@ namespace Netty.NET.Handler.Codec.Http2;
  * A collection of headers sent or received via HTTP/2.
  */
 // CLR: Headers<CharSequence, CharSequence, Http2Headers> is the codec-base IHeaders<ICharSequence, ICharSequence,
-// IHttp2Headers> (docs/codec-base-porting.md, Headers). iterator() is re-declared in Java only to document the
-// iteration order; its signature equals the inherited IHeaders member IIterator<IEntry<K, V>> Iterator(), so the
-// comment stays here and the member is inherited (a repeated interface member would hide it, CS0108).
-// valueIterator(CharSequence) is declared here, as in Java (codec-base IHeaders has no valueIterator; DefaultHeaders
-// and EmptyHeaders implement it). method()/method(CharSequence) and the other
-// pseudo-header accessors are the overloads Method()/Method(ICharSequence) and so on.
+// IHttp2Headers>. iterator() is re-declared in Java only to document the iteration order; its signature equals the
+// inherited IHeaders member IIterator<IEntry<K, V>> Iterator(), so the comment stays here and the member is
+// inherited (a repeated interface member would hide it, CS0108). valueIterator(CharSequence) is declared here, as
+// in Java (codec-base IHeaders has no valueIterator; DefaultHeaders and EmptyHeaders implement it).
+// method()/method(CharSequence) and the other pseudo-header accessors are the overloads
+// Method()/Method(ICharSequence) and so on.
 public interface IHttp2Headers : IHeaders<ICharSequence, ICharSequence, IHttp2Headers>
 {
 
@@ -259,7 +259,6 @@ public interface IHttp2Headers : IHeaders<ICharSequence, ICharSequence, IHttp2He
             return name;
         }
 
-        // CLR: String.contentEquals(CharSequence).
         private static bool ContentEquals(string s, ICharSequence cs)
         {
             if (s.Length != cs.Length())

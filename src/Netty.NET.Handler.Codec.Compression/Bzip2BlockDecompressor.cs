@@ -33,12 +33,11 @@ namespace Netty.NET.Handler.Codec.Compression;
  * 7. Run-Length Decoding[1] - {@link #read()}<br>
  * 8. Optional Block De-Randomisation - {@link #read()} (through {@link #decodeNextBWTByte()})
  */
-// CLR: the package-private final class is an internal sealed class; its package-private fields are internal fields with
-// the Java names. The decoded bytes are only used masked (& 0xff), stored back into byte arrays or compared for equality,
-// so the unsigned C# bytes give the Java results. System.arraycopy between two arrays is Array.Copy. The int arithmetic
-// (repeatCount, repeatIncrement, the merged pointers) wraps as in Java (the projects are unchecked), which
-// Bzip2BlockDecompressorTest relies on, and >>> is C#'s >>>. The numbers in the exception message use the invariant
-// culture.
+// CLR: The decoded bytes are only used masked (& 0xff), stored back into byte arrays or compared for equality, so
+// the unsigned C# bytes give the Java results. System.arraycopy between two arrays is Array.Copy. The int
+// arithmetic (repeatCount, repeatIncrement, the merged pointers) wraps as in Java (the projects are unchecked),
+// which Bzip2BlockDecompressorTest relies on, and >>> is C#'s >>>. The numbers in the exception message use the
+// invariant culture.
 internal sealed class Bzip2BlockDecompressor
 {
     /**

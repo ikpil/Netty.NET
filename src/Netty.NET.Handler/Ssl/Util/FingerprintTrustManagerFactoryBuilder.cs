@@ -23,9 +23,8 @@ namespace Netty.NET.Handler.Ssl.Util;
 /**
  * A builder for creating {@link FingerprintTrustManagerFactory}.
  */
-// CLR: CharSequence is string: the builder only keeps each fingerprint's toString(), and the C# string is the text type
-// Java call sites pass (fingerprints("1C:53:...")). Arrays.asList is the array itself (an IEnumerable<string>);
-// IllegalStateException is InvalidOperationException.
+// CLR: CharSequence is string: the builder only keeps each fingerprint's toString(), and the C# string is the text
+// type Java call sites pass (fingerprints("1C:53:...")). IllegalStateException is InvalidOperationException.
 public sealed class FingerprintTrustManagerFactoryBuilder
 {
 

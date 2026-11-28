@@ -28,12 +28,12 @@ using static Netty.NET.Handler.Codec.Http3.Http3FrameValidationUtils;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the package-private final class is an internal static class. QuicStreamChannel is codec-quic's
-// IQuicStreamChannel; ChannelPromise is TaskCompletionSource and promise.setFailure(e) is SetException; ctx.close() is
-// CloseAsync, whose Task is not awaited as Java ignores the future. BooleanSupplier is Func<bool>. The lambda listener
-// of whenDecoderStreamAvailable is an Action<Task<IQuicStreamChannel>>, future.isSuccess() IsCompletedSuccessfully.
-// HttpUtil.normalizeAndGetContentLength is codec-http's NormalizeAndGetContentLength over the IList<ICharSequence> of
-// getAll. throws Http3Exception has no counterpart; the numbers of the messages print with the invariant culture.
+// CLR: QuicStreamChannel is codec-quic's IQuicStreamChannel; ChannelPromise is TaskCompletionSource and
+// promise.setFailure(e) is SetException. BooleanSupplier is Func<bool>. The lambda listener of
+// whenDecoderStreamAvailable is an Action<Task<IQuicStreamChannel>>, future.isSuccess() IsCompletedSuccessfully.
+// HttpUtil.normalizeAndGetContentLength is codec-http's NormalizeAndGetContentLength over the IList<ICharSequence>
+// of getAll. throws Http3Exception has no counterpart; the numbers of the messages print with the invariant
+// culture.
 internal static class Http3RequestStreamValidationUtils
 {
     internal const long CONTENT_LENGTH_NOT_MODIFIED = -1;

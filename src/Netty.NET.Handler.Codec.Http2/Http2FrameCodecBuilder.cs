@@ -22,15 +22,15 @@ namespace Netty.NET.Handler.Codec.Http2;
 /**
  * Builder for the {@link Http2FrameCodec}.
  */
-// CLR: the @Override methods widen protected members of AbstractHttp2ConnectionHandlerBuilder to public; a C# override
-// "can't change the accessibility of the virtual method"
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override), so they are public members
-// declared new that call base, as in Http2ConnectionHandlerBuilder (src/Netty.NET.Handler.Codec.Http2/
-// Http2ConnectionHandlerBuilder.cs); build() is public new and build(decoder, encoder, initialSettings) a protected
-// override. The @Deprecated initialHuffmanDecodeCapacity(int) has no @deprecated text and is ported with the
-// [Obsolete] text of the member it exposes (owner decision 2026-11-16). The package-private constructor and
-// frameWriter(Http2FrameWriter) are internal (the tests use them); SensitivityDetector is
-// IHttp2HeadersEncoder.ISensitivityDetector and the Long maxHeaderListSize() long?.
+// CLR: the @Override methods widen protected members of AbstractHttp2ConnectionHandlerBuilder to public; a C#
+// override "can't change the accessibility of the virtual method"
+// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override), so they are public
+// members declared new that call base, as in Http2ConnectionHandlerBuilder (src/Netty.NET.Handler.Codec.Http2/
+// Http2ConnectionHandlerBuilder.cs); build() is public new and build(decoder, encoder, initialSettings) a
+// protected override. The @Deprecated initialHuffmanDecodeCapacity(int) has no @deprecated text and is ported with
+// the [Obsolete] text of the member it exposes. The package-private constructor and frameWriter(Http2FrameWriter)
+// are internal (the tests use them); SensitivityDetector is IHttp2HeadersEncoder.ISensitivityDetector and the Long
+// maxHeaderListSize() long?.
 public class Http2FrameCodecBuilder :
         AbstractHttp2ConnectionHandlerBuilder<Http2FrameCodec, Http2FrameCodecBuilder>
 {

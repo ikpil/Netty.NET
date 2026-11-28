@@ -20,9 +20,8 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Socks.Tests.Socksx.V4;
 
-// CLR: the package-private test class is public (xUnit discovers public classes); AssertJ
-// assertThatThrownBy(...).isInstanceOf(C.class).hasMessageContaining(s) is Assert.ThrowsAny<C> (instanceof also
-// accepts subclasses) and Assert.Contains(s, e.Message).
+// CLR: AssertJ assertThatThrownBy(...).isInstanceOf(C.class).hasMessageContaining(s) is Assert.ThrowsAny<C>
+// (instanceof also accepts subclasses) and Assert.Contains(s, e.Message).
 public class Socks4ClientEncoderTest
 {
     [Fact]

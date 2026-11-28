@@ -21,14 +21,14 @@ namespace Netty.NET.Handler.Codec.Compression;
 /**
  * A 256 entry Move To Front transform.
  */
-// CLR: the package-private final class is an internal sealed class. The list keeps the Java initializer: (byte) 128 ...
-// (byte) 255 are the same eight bits in the unsigned C# byte (owner decision: Java byte[] is byte[]). valueToFront only
-// compares bytes for equality and indexToFront returns the stored byte; every caller masks the result with & 0xff or
-// uses values below 6 (the Huffman selectors), so the unsigned bytes give the Java results.
-// System.arraycopy(mtf, 0, mtf, 1, index) copies within one array "as if the components ... were first copied to a
-// temporary array" (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/System.html#arraycopy(java.lang.Object,int,java.lang.Object,int,int));
-// Array.Copy behaves the same: "If sourceArray and destinationArray overlap, this method behaves as if the original
-// values of sourceArray were preserved in a temporary location before destinationArray is overwritten"
+// CLR: The list keeps the Java initializer: (byte) 128... (byte) 255 are the same eight bits in the unsigned C#
+// byte (owner decision: Java byte[] is byte[]). valueToFront only compares bytes for equality and indexToFront
+// returns the stored byte; every caller masks the result with & 0xff or uses values below 6 (the Huffman
+// selectors), so the unsigned bytes give the Java results. System.arraycopy(mtf, 0, mtf, 1, index) copies within
+// one array "as if the components... were first copied to a temporary array"
+// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/System.html#arraycopy(java.lang.Object,int,java.lang.Object,int,int));
+// Array.Copy behaves the same: "If sourceArray and destinationArray overlap, this method behaves as if the
+// original values of sourceArray were preserved in a temporary location before destinationArray is overwritten"
 // (https://learn.microsoft.com/en-us/dotnet/api/system.array.copy?view=net-10.0).
 internal sealed class Bzip2MoveToFrontTable
 {

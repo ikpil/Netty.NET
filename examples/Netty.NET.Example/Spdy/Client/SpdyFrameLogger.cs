@@ -25,10 +25,10 @@ namespace Netty.NET.Example.Spdy.Client;
 /**
  * Logs SPDY frames for debugging purposes.
  */
-// CLR: InternalLogLevel is a C# enum, a value type that cannot be null, so ObjectUtil.checkNotNull(level, "level") has
-// no counterpart. InternalLogger is IInternalLogger, SpdyFrame is ISpdyFrame and Enum.name() is ToString().
-// write(ctx, msg, promise) is WriteAsync(ctx, msg, cancellationToken), whose returned Task replaces the ChannelPromise
-// (docs/codec-base-porting.md, Outbound operations).
+// CLR: InternalLogLevel is a C# enum, a value type that cannot be null, so ObjectUtil.checkNotNull(level, "level")
+// has no counterpart. InternalLogger is IInternalLogger, SpdyFrame is ISpdyFrame and Enum.name() is ToString().
+// write(ctx, msg, promise) is WriteAsync(ctx, msg, cancellationToken), whose returned Task replaces the
+// ChannelPromise.
 public class SpdyFrameLogger : ChannelDuplexHandler
 {
     private enum Direction

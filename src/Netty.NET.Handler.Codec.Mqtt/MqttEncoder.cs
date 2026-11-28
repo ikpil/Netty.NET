@@ -34,12 +34,12 @@ namespace Netty.NET.Handler.Codec.Mqtt;
  * or v5.0 as described here <a href="https://docs.oasis-open.org/mqtt/mqtt/v5.0/mqtt-v5.0.html">MQTTv5.0</a> -
  * depending on the version specified in the first CONNECT message that goes through the channel.
  */
-// CLR: @ChannelHandler.Sharable is [Sharable] and MessageToMessageEncoder<MqttMessage> takes typeof(MqttMessage), as
-// LengthFieldPrepender in codec-base; List<Object> out is IList<object> @out. Buffer API shapes follow the Buffer port
-// (docs/buffer-porting.md): readableBytes()/writerIndex() are the ReadableBytes/WriterIndex properties, the byte[]
-// writes are the ReadOnlySpan<byte> overloads (an array range is a span slice), and ByteBufAllocator is
-// IByteBufAllocator. A switch over the MqttMessageType constants uses case guards (see MqttCodecUtil).
-// RuntimeException is Exception and assert is Debug.Assert (docs/codec-base-porting.md; DatagramPacketEncoder).
+// CLR: @ChannelHandler.Sharable is [Sharable] and MessageToMessageEncoder<MqttMessage> takes typeof(MqttMessage),
+// as LengthFieldPrepender in codec-base; List<Object> out is IList<object> @out. Buffer API shapes follow the
+// Buffer port : readableBytes()/writerIndex() are the ReadableBytes/WriterIndex properties, the byte[] writes are
+// the ReadOnlySpan<byte> overloads (an array range is a span slice), and ByteBufAllocator is IByteBufAllocator. A
+// switch over the MqttMessageType constants uses case guards (see MqttCodecUtil). RuntimeException is Exception
+// and assert is Debug.Assert.
 [Sharable]
 public sealed class MqttEncoder : MessageToMessageEncoder<MqttMessage>
 {

@@ -41,9 +41,9 @@ namespace Netty.NET.Handler.Codec.Http;
  */
 // CLR: ChunkedInput<HttpContent> is the handler port's IChunkedInput<IHttpContent> (src/Netty.NET.Handler/Stream/
 // IChunkedInput.cs). Its @Deprecated readChunk(ChannelHandlerContext), whose @deprecated text names
-// readChunk(ByteBufAllocator), is not ported with the interface member (owner decision 2026-11-16, recorded in
-// IChunkedInput.cs), so this class's @Deprecated override of it has no counterpart either. "throws Exception" has no
-// C# counterpart. The public members are virtual because the Java class is not final.
+// readChunk(ByteBufAllocator), is not ported with the interface member, so this class's @Deprecated override of it
+// has no counterpart either. "throws Exception" has no C# counterpart. The public members are virtual because the
+// Java class is not final.
 public class HttpChunkedInput : IChunkedInput<IHttpContent>
 {
 

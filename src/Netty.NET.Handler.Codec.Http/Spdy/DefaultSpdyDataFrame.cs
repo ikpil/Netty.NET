@@ -26,14 +26,11 @@ namespace Netty.NET.Handler.Codec.Spdy;
 /**
  * The default {@link SpdyDataFrame} implementation.
  */
-// CLR: content() is the read-only Content property of IByteBufHolder and refCnt() is RefCnt (docs/buffer-porting.md,
-// Buffer holders and conversion). setStreamId/setLast narrow the base class members with covariant override returns
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override). The narrowed copy/duplicate/
-// retainedDuplicate/replace/retain/touch members return ISpdyDataFrame; the IByteBufHolder and IReferenceCounted
-// members, which those interfaces declare with their own return types, are implemented explicitly and call them, as
-// core DefaultHttpContent does. IllegalArgumentException is ArgumentException (docs/codec-base-porting.md).
-// StringBuilder appends the Java text: a boolean is "true"/"false" (StringBuilder.Append(bool) writes "True"/"False")
-// and numbers use the invariant culture.
+// CLR: The narrowed copy/duplicate/ retainedDuplicate/replace/retain/touch members return ISpdyDataFrame; the
+// IByteBufHolder and IReferenceCounted members, which those interfaces declare with their own return types, are
+// implemented explicitly and call them, as core DefaultHttpContent does. IllegalArgumentException is
+// ArgumentException. StringBuilder appends the Java text: a boolean is "true"/"false" (StringBuilder.Append(bool)
+// writes "True"/"False") and numbers use the invariant culture.
 public class DefaultSpdyDataFrame : DefaultSpdyStreamFrame, ISpdyDataFrame
 {
 

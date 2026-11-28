@@ -172,7 +172,6 @@ public class DatagramMulticastSourceTest : AbstractDatagramTest
         Assert.Equal(expected.Id, actual.Id);
     }
 
-    // CLR: NetworkInterface.getInetAddresses() is the interface's GetIPProperties().UnicastAddresses.
     private static void AssertInterfaceAddress(NetworkInterface networkInterface, IPAddress expected)
     {
         foreach (UnicastIPAddressInformation address in networkInterface.GetIPProperties().UnicastAddresses)
@@ -186,7 +185,6 @@ public class DatagramMulticastSourceTest : AbstractDatagramTest
         Assert.Fail();
     }
 
-    // CLR: the CountDownLatch(1) is a TaskCompletionSource; await() waits ten seconds for it.
     [Sharable]
     private sealed class MulticastTestHandler : SimpleChannelInboundHandler<DatagramPacket>
     {
@@ -249,7 +247,6 @@ public class DatagramMulticastSourceTest : AbstractDatagramTest
             case Channels.Sockets.SocketProtocolFamily.Inet6:
                 return new IPEndPoint(IPAddress.Parse("::"), 0);
             default:
-                // CLR: java.lang.AssertionError is UnreachableException, as in AbstractDatagramTest.
                 throw new UnreachableException();
         }
     }
@@ -453,7 +450,7 @@ public class DatagramMulticastSourceTest : AbstractDatagramTest
         }
     }
 
-    // CLR: C# has no anonymous classes; the source's anonymous handler overriding isSharable() is this class.
+    // CLR: C# has no anonymous classes.
     private sealed class NothingSentHandler : SimpleChannelInboundHandler<object>
     {
         protected override void ChannelRead0(IChannelHandlerContext ctx, object msg)

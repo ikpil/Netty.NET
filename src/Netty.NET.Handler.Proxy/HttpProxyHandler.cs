@@ -38,11 +38,9 @@ namespace Netty.NET.Handler.Proxy;
  * <a href="https://datatracker.ietf.org/doc/html/rfc7230#page-10">message-forwarding HTTP proxy agent</a> instead of a
  * tunneling proxy should not use this handler.
  */
-// CLR: SocketAddress is EndPoint and InetSocketAddress is IPEndPoint or, unresolved, DnsEndPoint (see ProxyHandler).
-// CharsetUtil.UTF_8/US_ASCII are Encoding.UTF8/ASCII and Unpooled.EMPTY_BUFFER is Unpooled.EmptyBuffer, as in the
-// codec-http port; the HTTP message interfaces take the I prefix (IFullHttpRequest, IHttpResponse, ILastHttpContent).
-// CharSequence is ICharSequence. The protected newInitialMessage, which HttpProxyHandlerTest calls through package
-// access, has the internal forwarder InvokeNewInitialMessage (docs/codec-http-porting.md, Package access).
+// CLR: SocketAddress is EndPoint and InetSocketAddress is IPEndPoint or, unresolved, DnsEndPoint (see
+// ProxyHandler). The protected newInitialMessage, which HttpProxyHandlerTest calls through package access, has the
+// internal forwarder InvokeNewInitialMessage.
 public sealed class HttpProxyHandler : ProxyHandler
 {
     private const string PROTOCOL = "http";

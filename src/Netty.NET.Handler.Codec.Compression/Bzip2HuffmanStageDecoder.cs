@@ -203,10 +203,10 @@ internal sealed class Bzip2HuffmanStageDecoder
      * Decodes and returns the next symbol.
      * @return The decoded symbol
      */
-    // CLR: the field assignment currentTable = ... is this.currentTable = ...: a C# local variable's scope is its whole
-    // block, so the simple name would bind to the local currentTable declared further down ("Cannot use local variable
-    // 'name' before it is declared", https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0841), while Java's local
-    // scope starts at its declaration.
+    // CLR: the field assignment currentTable =... is this.currentTable =...: a C# local variable's scope is its
+    // whole block, so the simple name would bind to the local currentTable declared further down ("Cannot use
+    // local variable 'name' before it is declared", https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0841),
+    // while Java's local scope starts at its declaration.
     internal int NextSymbol()
     {
         // Move to next group selector if required

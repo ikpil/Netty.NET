@@ -30,24 +30,24 @@ namespace Netty.NET.Resolver.Dns;
 /**
  * A {@link DnsNameResolver} builder.
  */
-// CLR: ChannelFactory<? extends DatagramChannel/SocketChannel> is Func<IDatagramChannel>/Func<ISocketChannel> and a
-// Class<? extends DatagramChannel/SocketChannel> setter uses Transport's ReflectiveChannelFactory<T>(Type).NewChannel, as
-// Bootstrap.Channel(Type) does (docs/transport-porting.md; the Type parameter keeps the
-// DynamicallyAccessedMembers(PublicParameterlessConstructor) annotation of that constructor). EventLoop is IEventLoop,
-// SocketAddress EndPoint and new InetSocketAddress(0) the wildcard IPEndPoint(IPAddress.Any, 0), as Transport's
-// Bootstrap.LocalAddress(int) maps it (NioDatagramChannel binds IPAddress.Any as IPv6Any on a dual-mode socket). Integer
-// fields are int? (ObjectUtil.IntValue(int?, int) is intValue). The protected getters of this final class are internal,
-// because C# reports a new protected member of a sealed type (CS0628) and Java's protected member is visible in the
-// package, where DnsAddressResolverGroup calls them. The enum parameters (ResolvedAddressTypes,
-// DnsNameResolverChannelStrategy) cannot be null, so their checkNotNull has no counterpart. A member named
-// ResolvedAddressTypes hides the enum type in expressions inside the class, so its constants are written
-// Netty.NET.Resolver.ResolvedAddressTypes.X. LinkedHashSet is Common's LinkedHashSet<T> (insertion order, ordinal
-// string equality). @Deprecated members whose @deprecated text names a replacement (channelFactory(ChannelFactory),
-// channelType(Class), authoritativeDnsServerCache(DnsCache), computeResolvedAddressTypes(InternetProtocolFamily...)
-// with its private helper toSocketProtocolFamilies, and traceEnabled(boolean)) are not ported (owner decision
-// 2026-11-16); their comments are recorded in the manifest. The traceEnabled field therefore keeps its default (false)
-// and copy() copies it directly. The @Deprecated channelFactory() getter names no replacement and is ported with
-// [Obsolete]. IllegalStateException/IllegalArgumentException are InvalidOperationException/ArgumentException.
+// CLR: ChannelFactory<? extends DatagramChannel/SocketChannel> is Func<IDatagramChannel>/Func<ISocketChannel> and
+// a Class<? extends DatagramChannel/SocketChannel> setter uses Transport's
+// ReflectiveChannelFactory<T>(Type).NewChannel, as Bootstrap.Channel(Type) does (docs/transport-porting.md; the
+// Type parameter keeps the DynamicallyAccessedMembers(PublicParameterlessConstructor) annotation of that
+// constructor). EventLoop is IEventLoop, SocketAddress EndPoint and new InetSocketAddress(0) the wildcard
+// IPEndPoint(IPAddress.Any, 0), as Transport's Bootstrap.LocalAddress(int) maps it (NioDatagramChannel binds
+// IPAddress.Any as IPv6Any on a dual-mode socket). Integer fields are int? (ObjectUtil.IntValue(int?, int) is
+// intValue). The protected getters of this final class are internal, because C# reports a new protected member of
+// a sealed type (CS0628) and Java's protected member is visible in the package, where DnsAddressResolverGroup
+// calls them. The enum parameters (ResolvedAddressTypes, DnsNameResolverChannelStrategy) cannot be null, so their
+// checkNotNull has no counterpart. A member named ResolvedAddressTypes hides the enum type in expressions inside
+// the class, so its constants are written Netty.NET.Resolver.ResolvedAddressTypes.X. LinkedHashSet is Common's
+// LinkedHashSet<T> (insertion order, ordinal string equality). @Deprecated members whose @deprecated text names a
+// replacement (channelFactory(ChannelFactory), channelType(Class), authoritativeDnsServerCache(DnsCache),
+// computeResolvedAddressTypes(InternetProtocolFamily...) with its private helper toSocketProtocolFamilies, and
+// traceEnabled(boolean)) are not ported; their comments are recorded in the manifest. The traceEnabled field
+// therefore keeps its default (false) and copy() copies it directly.
+// IllegalStateException/IllegalArgumentException are InvalidOperationException/ArgumentException.
 public sealed class DnsNameResolverBuilder
 {
 
@@ -117,8 +117,6 @@ public sealed class DnsNameResolverBuilder
         return this;
     }
 
-    // CLR: @Deprecated without a @deprecated text (no replacement named): ported with [Obsolete] (owner decision
-    // 2026-11-16); protected in the final class is internal (see the class comment).
     [Obsolete]
     internal Func<IDatagramChannel> ChannelFactory()
     {

@@ -36,21 +36,19 @@ namespace Netty.NET.Handler.Codec.Http.Cookie;
  *
  * @see ClientCookieDecoder
  */
-// CLR: Cookie... is params ICookie[]; Collection<? extends Cookie> is IReadOnlyCollection<ICookie> and Iterable<? extends
-// Cookie> is IEnumerable<ICookie>, both covariant ("This type parameter is covariant",
-// https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ireadonlycollection-1?view=net-10.0), so a
-// List<DefaultCookie> binds as Java's wildcard allows; a collection type without IReadOnlyCollection<T> (ISet<T>) takes the
-// Iterable overload, which encodes the same text. Comparator<Cookie> is IComparer<ICookie>, and the anonymous comparator
-// is the private nested CookieComparator. Arrays.sort(T[], Comparator) "is guaranteed to be stable"
-// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Arrays.html), while Array.Sort "performs an
-// unstable sort" (https://learn.microsoft.com/en-us/dotnet/api/system.array.sort?view=net-10.0), so the copies are sorted
-// with Enumerable.OrderBy, which "performs a stable sort"
-// (https://learn.microsoft.com/en-us/dotnet/api/system.linq.enumerable.orderby?view=net-10.0); the creation order of
-// cookies with paths of the same length is kept as the Java comment requires. InternalThreadLocalMap.get().arrayList() is
-// an operation-owned List (docs/common-clr-design.md, Operation-owned CSV storage), and toArray/Arrays.copyOf are the
-// sorted copy. Iterator.hasNext()/next() is IEnumerator.MoveNext()/Current: after the first element the loops are
-// do/while loops that read Current before the next MoveNext(), and the enumerator is disposed (using). The private
-// encode(StringBuilder, Cookie) is Encode(StringBuilder, ICookie).
+// CLR: Cookie... is params ICookie[]; Collection<? extends Cookie> is IReadOnlyCollection<ICookie> and Iterable<?
+// extends Cookie> is IEnumerable<ICookie>, both covariant ("This type parameter is covariant",
+// https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.ireadonlycollection-1?view=net-10.0), so
+// a List<DefaultCookie> binds as Java's wildcard allows; a collection type without IReadOnlyCollection<T>
+// (ISet<T>) takes the Iterable overload, which encodes the same text. Comparator<Cookie> is IComparer<ICookie>,
+// and the anonymous comparator is the private nested CookieComparator. Arrays.sort(T[], Comparator) "is guaranteed
+// to be stable" (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Arrays.html), while
+// Array.Sort "performs an unstable sort"
+// (https://learn.microsoft.com/en-us/dotnet/api/system.array.sort?view=net-10.0), so the copies are sorted with
+// Enumerable.OrderBy, which "performs a stable sort"
+// (https://learn.microsoft.com/en-us/dotnet/api/system.linq.enumerable.orderby?view=net-10.0); the creation order
+// of cookies with paths of the same length is kept as the Java comment requires. The private encode(StringBuilder,
+// Cookie) is Encode(StringBuilder, ICookie).
 public sealed class ClientCookieEncoder : CookieEncoder
 {
 

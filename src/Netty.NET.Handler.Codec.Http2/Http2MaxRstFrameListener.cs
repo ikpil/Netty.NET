@@ -20,9 +20,9 @@ using Netty.NET.Transport.Channels;
 namespace Netty.NET.Handler.Codec.Http2;
 
 
-// CLR: the package-private final class is internal sealed. TimeUnit.SECONDS.toNanos(seconds) is seconds * 10^9 (an
-// int number of seconds cannot overflow a long, where Java would saturate) and TimeUnit.NANOSECONDS.toSeconds(nanos)
-// is the truncating division by 10^9: "Conversions from finer to coarser granularities truncate"
+// CLR: TimeUnit.SECONDS.toNanos(seconds) is seconds * 10^9 (an int number of seconds cannot overflow a long, where
+// Java would saturate) and TimeUnit.NANOSECONDS.toSeconds(nanos) is the truncating division by 10^9: "Conversions
+// from finer to coarser granularities truncate"
 // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/concurrent/TimeUnit.html). Ticker is the
 // Common Ticker. Class<?> is Type.
 internal sealed class Http2MaxRstFrameListener : Http2FrameListenerDecorator

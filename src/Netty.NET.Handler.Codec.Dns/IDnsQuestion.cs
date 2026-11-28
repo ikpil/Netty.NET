@@ -19,7 +19,6 @@ namespace Netty.NET.Handler.Codec.Dns;
 /**
  * A DNS question.
  */
-// CLR: interface with the I prefix.
 public interface IDnsQuestion : IDnsRecord
 {
     /**

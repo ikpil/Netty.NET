@@ -28,12 +28,12 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx;
  * Be aware if PING/PONG/CLOSE frames are send in the middle of a fragmented {@link WebSocketFrame} they will
  * just get forwarded to the next handler in the pipeline.
  */
-// CLR: MessageAggregator<WebSocketFrame, WebSocketFrame, ContinuationWebSocketFrame, WebSocketFrame> is the codec-base
-// generic of the same shape, and super(maxContentLength, WebSocketFrame.class) is base(maxContentLength,
-// typeof(WebSocketFrame)) (docs/codec-base-porting.md, Type matching); ChannelPipeline is IChannelPipeline. The "should
-// not reach here" throw new Error(...) is UnreachableException, as AssertionError is in the handler port
-// (docs/handler-porting.md, Exceptions); StringUtil.className is the Common StringUtil.ClassName,
-// UnsupportedOperationException is NotSupportedException, and "throws Exception" has no C# counterpart.
+// CLR: MessageAggregator<WebSocketFrame, WebSocketFrame, ContinuationWebSocketFrame, WebSocketFrame> is the
+// codec-base generic of the same shape, and super(maxContentLength, WebSocketFrame.class) is
+// base(maxContentLength, typeof(WebSocketFrame)); ChannelPipeline is IChannelPipeline. The "should not reach here"
+// throw new Error(...) is UnreachableException, as AssertionError is in the handler port; StringUtil.className is
+// the Common StringUtil.ClassName, UnsupportedOperationException is NotSupportedException, and "throws Exception"
+// has no C# counterpart.
 public class WebSocketFrameAggregator
         : MessageAggregator<WebSocketFrame, WebSocketFrame, ContinuationWebSocketFrame, WebSocketFrame>
 {

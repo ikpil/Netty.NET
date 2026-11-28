@@ -39,7 +39,7 @@ internal sealed class PcapHeaders
      * </ol>
      */
     // CLR: the Java byte literals are signed; a C# byte is unsigned, so the negative values are converted with
-    // unchecked casts, which keep the same bits (0xA1 0xB2 0xC3 0xD4 ... 0xFF 0xFF ...) that Java writes.
+    // unchecked casts, which keep the same bits (0xA1 0xB2 0xC3 0xD4... 0xFF 0xFF...) that Java writes.
     private static readonly byte[] GLOBAL_HEADER = unchecked(new byte[] {(byte) -95, (byte) -78, (byte) -61, (byte) -44,
             0, 2, 0, 4, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, (byte) -1, (byte) -1, 0, 0, 0, 1});

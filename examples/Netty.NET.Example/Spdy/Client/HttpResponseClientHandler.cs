@@ -26,13 +26,11 @@ namespace Netty.NET.Example.Spdy.Client;
  * This is a modified version of {@link HttpSnoopClientHandler} that uses a {@link BlockingQueue} to wait until an
  * HTTPResponse is received.
  */
-// CLR: HttpSnoopClientHandler is Netty.NET.Example.Http.Snoop.HttpSnoopClientHandler. BlockingQueue/LinkedBlockingQueue
-// of ChannelFuture is a BlockingCollection of Task (a ConcurrentQueue by default) and add() is Add();
-// channel.newSucceededFuture() is Task.CompletedTask and newFailedFuture(cause) is Task.FromException(cause), since a
-// Task replaces ChannelFuture (docs/transport-porting.md). HttpObject/HttpResponse/HttpContent/LastHttpContent are the
-// I-prefixed codec-http interfaces, CharsetUtil.UTF_8 is Encoding.UTF8 and content() is the Content property.
-// System.out.println/print/flush are Console.WriteLine/Write/Out.Flush, printStackTrace() writes the exception to
-// Console.Error and ctx.close() is CloseAsync(), whose Task is discarded as Java discards the future.
+// CLR: HttpSnoopClientHandler is Netty.NET.Example.Http.Snoop.HttpSnoopClientHandler.
+// BlockingQueue/LinkedBlockingQueue of ChannelFuture is a BlockingCollection of Task (a ConcurrentQueue by
+// default) and add() is Add(). System.out.println/print/flush are Console.WriteLine/Write/Out.Flush,
+// printStackTrace() writes the exception to Console.Error and ctx.close() is CloseAsync(), whose Task is discarded
+// as Java discards the future.
 public class HttpResponseClientHandler : SimpleChannelInboundHandler<IHttpObject>
 {
     private readonly BlockingCollection<Task> queue = new BlockingCollection<Task>();

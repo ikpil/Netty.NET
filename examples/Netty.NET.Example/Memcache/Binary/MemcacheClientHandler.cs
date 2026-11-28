@@ -23,13 +23,12 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Example.Memcache.Binary;
 
-// CLR: write(ctx, msg, promise) is WriteAsync, which returns the Task of ctx.WriteAsync in place of completing the
-// caller's promise (docs/transport-porting.md: promise arguments are the returned Task); the pipeline turns an exception
-// thrown by WriteAsync into a failed Task, as Java fails the promise. The Java interfaces BinaryMemcacheRequest and
-// FullBinaryMemcacheResponse are IBinaryMemcacheRequest and IFullBinaryMemcacheResponse. String.getBytes(UTF_8) is
-// Encoding.UTF8.GetBytes, startsWith is an ordinal StartsWith, split(" ", 3) is Split(' ', 3) (at most three parts),
-// IllegalArgumentException is ArgumentException and IllegalStateException InvalidOperationException.
-// cause.printStackTrace() writes Exception.ToString() to Console.Error.
+// CLR: The pipeline turns an exception thrown by WriteAsync into a failed Task, as Java fails the promise. The
+// Java interfaces BinaryMemcacheRequest and FullBinaryMemcacheResponse are IBinaryMemcacheRequest and
+// IFullBinaryMemcacheResponse. String.getBytes(UTF_8) is Encoding.UTF8.GetBytes, startsWith is an ordinal
+// StartsWith, split(" ", 3) is Split(' ', 3) (at most three parts), IllegalArgumentException is ArgumentException
+// and IllegalStateException InvalidOperationException. cause.printStackTrace() writes Exception.ToString() to
+// Console.Error.
 public class MemcacheClientHandler : ChannelDuplexHandler
 {
 

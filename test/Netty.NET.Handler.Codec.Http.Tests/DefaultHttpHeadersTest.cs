@@ -26,17 +26,15 @@ using static Netty.NET.Handler.Codec.Http.Tests.HttpHeadersTestUtils;
 
 namespace Netty.NET.Handler.Codec.Http.Tests;
 
-// CLR: CharSequence constants are StringCharSequence values (a C# string is not an ICharSequence). The @Deprecated
-// DefaultHttpHeaders(boolean validate) names DefaultHttpHeaders() and is not ported (owner decision 2026-11-16):
-// new DefaultHttpHeaders(true) is new DefaultHttpHeaders(), and new DefaultHttpHeaders(false) is
+// CLR: The @Deprecated DefaultHttpHeaders(boolean validate) names DefaultHttpHeaders() and is not ported : new
+// DefaultHttpHeaders(true) is new DefaultHttpHeaders(), and new DefaultHttpHeaders(false) is
 // DefaultHttpHeadersFactory.HeadersFactory().WithValidation(false).NewHeaders() (rule 7). Java's add(null, "foo")
 // selects the String overload, so the C# call casts null to string. assertEquals(headers1, headers2) calls
-// equals(Object); xUnit's Assert.Equal compares an IEnumerable (HttpHeaders enumerates its entries) element by element,
-// which would compare the case-differing names, so the header comparisons assert Equals directly. asList(...) is a
-// List<string>, which binds to the Iterable<?> overload through IEnumerable<object> covariance; Collections.singleton
-// is a one-element array. Set.toArray(EMPTY_STRINGS) is ToArray(); assertArrayEquals is Assert.Equal of the arrays.
-// NullPointerException from checkNotNull is ArgumentNullException and IllegalArgumentException is ArgumentException
-// (docs/codec-base-porting.md).
+// equals(Object); xUnit's Assert.Equal compares an IEnumerable (HttpHeaders enumerates its entries) element by
+// element, which would compare the case-differing names, so the header comparisons assert Equals directly.
+// asList(...) is a List<string>, which binds to the Iterable<?> overload through IEnumerable<object> covariance;
+// Collections.singleton is a one-element array. NullPointerException from checkNotNull is ArgumentNullException
+// and IllegalArgumentException is ArgumentException.
 public class DefaultHttpHeadersTest
 {
     private static readonly ICharSequence HEADER_NAME = new StringCharSequence("testHeader");

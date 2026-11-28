@@ -22,9 +22,9 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary;
 
-// CLR: xUnit creates a new test class instance for every test, so the @BeforeEach setup() runs from the constructor
-// and the @AfterEach teardown() from Dispose() (https://xunit.net/docs/shared-context). CharsetUtil.UTF_8 is
-// Encoding.UTF8 and String.getBytes(Charset) is Encoding.GetBytes (docs/codec-base-porting.md).
+// CLR: xUnit creates a new test class instance for every test, so the @BeforeEach setup() runs from the
+// constructor and the @AfterEach teardown() from Dispose() (https://xunit.net/docs/shared-context).
+// CharsetUtil.UTF_8 is Encoding.UTF8 and String.getBytes(Charset) is Encoding.GetBytes.
 public class FullMemcacheMessageRequestTest : IDisposable
 {
 

@@ -22,9 +22,6 @@ namespace Netty.NET.Handler.Codec.Memcache.Binary;
 /**
  * The default implementation of the {@link BinaryMemcacheResponse}.
  */
-// CLR: covariant override returns as in AbstractBinaryMemcacheMessage
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override); the package-private copyMeta
-// is internal.
 [UnstableApi]
 public class DefaultBinaryMemcacheResponse : AbstractBinaryMemcacheMessage, IBinaryMemcacheResponse
 {

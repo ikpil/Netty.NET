@@ -23,17 +23,16 @@ namespace Netty.NET.Handler.Codec.Compression;
 /**
  * An encoder for the Bzip2 Huffman encoding stage.
  */
-// CLR: the package-private final class is an internal sealed class and the out parameters are @out. The MTF block is a
-// char[] in both languages: C# char is an unsigned 16-bit value like Java char, and it converts implicitly to int where
-// it is used as an index or value. new int[totalTables][mtfAlphabetSize] allocates every row in Java; a C# jagged array
-// "is an array of arrays, and each member array has the default value of null"
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/arrays), so the rows are allocated in
-// loops. Arrays.sort(int[]) "Sorts the specified array into ascending numerical order"
-// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Arrays.html); Array.Sort(int[]) sorts the
-// elements "using the IComparable<T> generic interface implementation of each element"
-// (https://learn.microsoft.com/en-us/dotnet/api/system.array.sort?view=net-10.0). Equal ints are indistinguishable, so
-// both give the same array. The int code lengths, the byte selectors (0..5) and the merged code symbols passed to the
-// long parameter of writeBits are widened exactly as in Java, and >>> is C#'s >>>.
+// CLR: The MTF block is a char[] in both languages: C# char is an unsigned 16-bit value like Java char, and it
+// converts implicitly to int where it is used as an index or value. new int[totalTables][mtfAlphabetSize]
+// allocates every row in Java; a C# jagged array "is an array of arrays, and each member array has the default
+// value of null" (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/arrays), so the
+// rows are allocated in loops. Arrays.sort(int[]) "Sorts the specified array into ascending numerical order"
+// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Arrays.html); Array.Sort(int[]) sorts
+// the elements "using the IComparable<T> generic interface implementation of each element"
+// (https://learn.microsoft.com/en-us/dotnet/api/system.array.sort?view=net-10.0). Equal ints are
+// indistinguishable, so both give the same array. The int code lengths, the byte selectors (0..5) and the merged
+// code symbols passed to the long parameter of writeBits are widened exactly as in Java, and >>> is C#'s >>>.
 internal sealed class Bzip2HuffmanStageEncoder
 {
     /**

@@ -23,7 +23,7 @@ namespace Netty.NET.Handler.Codec.Http;
  * HttpMessageDecoderResult}. It may simply produce a regular {@link DecoderResult}. This result is intended for
  * successful {@link HttpMessage} decoder results.
  */
-// CLR: the package-private constructor is internal; SIGNAL_SUCCESS is the protected codec-base DecoderResult field.
+// CLR: SIGNAL_SUCCESS is the protected codec-base DecoderResult field.
 public sealed class HttpMessageDecoderResult : DecoderResult
 {
 

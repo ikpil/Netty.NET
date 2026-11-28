@@ -23,17 +23,16 @@ using Netty.NET.Common;
 
 namespace Netty.NET.Resolver.Dns;
 
-// CLR: the package-private final class is internal sealed. The name server address of a query is resolved, so
-// InetSocketAddress is IPEndPoint (docs/handler-porting.md, Addresses) and the "assert !nameServerAddr.isUnresolved()"
-// checks have no counterpart: an IPEndPoint is always resolved. Map/HashMap is Dictionary and IntObjectHashMap the
-// BCL Dictionary<int, V> (owner decision 2026-11-19, confirmed 2026-11-25); put(k, v) returns the replaced value, so the
+// CLR: The name server address of a query is resolved, so InetSocketAddress is IPEndPoint and the "assert
+// !nameServerAddr.isUnresolved()" checks have no counterpart: an IPEndPoint is always resolved. Map/HashMap is
+// Dictionary and IntObjectHashMap the BCL Dictionary<int, V>; put(k, v) returns the replaced value, so the
 // asserted puts read the old value with TryGetValue before the indexer stores the new one. synchronized (map) is
 // lock (map) and the synchronized methods of DnsQueryContextMap lock (this), the monitor Java uses. instanceof
-// Inet4Address/Inet6Address is the AddressFamily (docs/handler-porting.md, Addresses); isLoopbackAddress() is
-// IPAddress.IsLoopback ("Indicates whether the specified IP address is the loopback address",
+// Inet4Address/Inet6Address is the AddressFamily; isLoopbackAddress() is IPAddress.IsLoopback ("Indicates whether
+// the specified IP address is the loopback address",
 // https://learn.microsoft.com/en-us/dotnet/api/system.net.ipaddress.isloopback?view=net-10.0). The BCL has no
-// isIPv4CompatibleAddress(); Inet6Address names "::d.d.d.d" "the general forms of ... an IPv4-compatible IPv6 address"
-// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/Inet6Address.html), so
+// isIPv4CompatibleAddress(); Inet6Address names "::d.d.d.d" "the general forms of... an IPv4-compatible IPv6
+// address" (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/Inet6Address.html), so
 // IsIPv4CompatibleAddress tests the first twelve bytes for zero. InetAddress.getByAddress(bytes) is new
 // IPAddress(bytes); its UnknownHostException (wrong length) is the ArgumentException of the constructor
 // (https://learn.microsoft.com/en-us/dotnet/api/system.net.ipaddress.-ctor?view=net-10.0) and java.lang.Error is

@@ -26,8 +26,7 @@ namespace Netty.NET.Handler.Codec.Dns;
  * This is used for <a href="https://tools.ietf.org/html/rfc6891#section-6.1.3">
  *     Extension Mechanisms for DNS (EDNS(0))</a>.
  */
-// CLR: the package-private final toStringBuilder() is internal and non-virtual; the (int)/(short) narrowings are
-// unchecked like Java's. Numbers in text use the invariant culture
+// CLR: The (int)/(short) narrowings are unchecked like Java's. Numbers in text use the invariant culture
 // (https://learn.microsoft.com/en-us/dotnet/api/system.int32.tostring).
 public abstract class AbstractDnsOptPseudoRrRecord : AbstractDnsRecord, IDnsOptPseudoRecord
 {

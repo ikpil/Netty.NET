@@ -16,10 +16,9 @@
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the package-private @FunctionalInterface is an internal interface with the I prefix (docs/codec-http2-porting.md,
-// Shared CLR adaptations). The interface constant NO_VALIDATION is a static readonly interface field and its lambda is
-// the private nested class NoValidation, as codec-http2's IHttp2HeadersEncoder.NEVER_SENSITIVE. throws Http3Exception
-// has no counterpart (C# has no checked exceptions).
+// CLR: The interface constant NO_VALIDATION is a static readonly interface field and its lambda is the private
+// nested class NoValidation, as codec-http2's IHttp2HeadersEncoder.NEVER_SENSITIVE. throws Http3Exception has no
+// counterpart (C# has no checked exceptions).
 internal interface IHttp3FrameTypeValidator
 {
 

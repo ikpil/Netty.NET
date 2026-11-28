@@ -29,9 +29,9 @@ namespace Netty.NET.Resolver.Dns;
  * configured on the resolver}, detailed trace information will be generated so that it is easier to understand the
  * cause of resolution failure.
  */
-// CLR: LogLevel is handler's Netty.NET.Handler.Logging.LogLevel (ToInternalLevel()); InternalLogger/InternalLoggerFactory
-// are Common's IInternalLogger/InternalLoggerFactory and Class<?> classContext is a Type (docs/handler-porting.md,
-// Logging).
+// CLR: LogLevel is handler's Netty.NET.Handler.Logging.LogLevel (ToInternalLevel());
+// InternalLogger/InternalLoggerFactory are Common's IInternalLogger/InternalLoggerFactory and Class<?>
+// classContext is a Type.
 public sealed class LoggingDnsQueryLifeCycleObserverFactory : IDnsQueryLifecycleObserverFactory
 {
     private static readonly IInternalLogger DEFAULT_LOGGER =

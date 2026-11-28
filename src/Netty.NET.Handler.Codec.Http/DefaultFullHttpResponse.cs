@@ -25,13 +25,12 @@ namespace Netty.NET.Handler.Codec.Http;
 /**
  * Default implementation of a {@link FullHttpResponse}.
  */
-// CLR: the four @Deprecated constructors with validateHeaders/singleFieldHeaders flags, whose @deprecated texts name
-// the (HttpVersion, HttpResponseStatus, ByteBuf, HttpHeadersFactory, HttpHeadersFactory) constructor, are not ported
-// (owner decision 2026-11-16). setProtocolVersion/setStatus narrow DefaultHttpResponse's virtual members with covariant
-// override returns; copy/duplicate/retainedDuplicate/replace/retain/touch are virtual members returning
-// IFullHttpResponse, and the IByteBufHolder and IReferenceCounted members are implemented explicitly and call them (see
-// DefaultHttpContent). content() is the Content property and refCnt() is RefCnt (docs/buffer-porting.md, Buffer
-// holders and conversion).
+// CLR: the four @Deprecated constructors with validateHeaders/singleFieldHeaders flags, whose @deprecated texts
+// name the (HttpVersion, HttpResponseStatus, ByteBuf, HttpHeadersFactory, HttpHeadersFactory) constructor, are not
+// ported. setProtocolVersion/setStatus narrow DefaultHttpResponse's virtual members with covariant override
+// returns; copy/duplicate/retainedDuplicate/replace/retain/touch are virtual members returning IFullHttpResponse,
+// and the IByteBufHolder and IReferenceCounted members are implemented explicitly and call them (see
+// DefaultHttpContent). content() is the Content property and refCnt() is RefCnt.
 public class DefaultFullHttpResponse : DefaultHttpResponse, IFullHttpResponse
 {
 

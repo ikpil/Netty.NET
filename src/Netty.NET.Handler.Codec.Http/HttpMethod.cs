@@ -26,13 +26,13 @@ namespace Netty.NET.Handler.Codec.Http;
  * <a href="https://en.wikipedia.org/wiki/Real_Time_Streaming_Protocol">RTSP</a> and
  * <a href="https://en.wikipedia.org/wiki/Internet_Content_Adaptation_Protocol">ICAP</a>.
  */
-// CLR: Comparable<HttpMethod> is IComparable<HttpMethod>; String.compareTo is string.CompareOrdinal (see HttpVersion).
-// A switch on a null String throws NullPointerException in Java; the C# switch takes the default branch, whose
-// constructor throws ArgumentNullException from checkNotNull (docs/codec-base-porting.md). The String passed to
-// HttpHeaderValidationUtil.validateToken(CharSequence) is wrapped in the Common StringCharSequence, because a C# string
-// is not an ICharSequence. IllegalArgumentException is ArgumentException and Integer.toHexString is the invariant
-// lower-case "x" format. Java methods are virtual unless final, so name() and asciiName() are virtual (subclasses
-// override asciiName(), which HttpUtil.validateRequestLineTokens re-validates for them).
+// CLR: Comparable<HttpMethod> is IComparable<HttpMethod>; String.compareTo is string.CompareOrdinal (see
+// HttpVersion). A switch on a null String throws NullPointerException in Java; the C# switch takes the default
+// branch, whose constructor throws ArgumentNullException from checkNotNull. The String passed to
+// HttpHeaderValidationUtil.validateToken(CharSequence) is wrapped in the Common StringCharSequence, because a C#
+// string is not an ICharSequence. IllegalArgumentException is ArgumentException and Integer.toHexString is the
+// invariant lower-case "x" format. Java methods are virtual unless final, so name() and asciiName() are virtual
+// (subclasses override asciiName(), which HttpUtil.validateRequestLineTokens re-validates for them).
 public class HttpMethod : IComparable<HttpMethod>
 {
 

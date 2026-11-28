@@ -20,7 +20,6 @@ namespace Netty.NET.Handler.Codec.Socksx.V5;
  * An initial SOCKS5 authentication method selection request, as defined in
  * <a href="https://tools.ietf.org/html/rfc1928#section-3">the section 3, RFC1928</a>.
  */
-// CLR: Java interfaces take the I prefix (see Netty.NET.Handler.Codec.Socksx.ISocksMessage).
 public interface ISocks5InitialResponse : ISocks5Message
 {
 

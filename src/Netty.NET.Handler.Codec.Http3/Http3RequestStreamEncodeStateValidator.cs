@@ -23,14 +23,11 @@ using static Netty.NET.Handler.Codec.Http3.Http3FrameValidationUtils;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the package-private final class is an internal sealed class; ChannelOutboundHandlerAdapter is the Transport's
-// adapter, whose write returns a Task. write(ctx, msg, promise) is WriteAsync(ctx, msg, cancellationToken): it creates
-// the promise (Http3CodecUtils.NewPromise()), runs the Java body and returns the promise's Task, and
-// super.write(ctx, msg, promise) is Http3CodecUtils.Write(ctx, msg, promise) (ChannelOutboundHandlerAdapter.write is
-// ctx.write); as in Java, the promise of an unexpected frame is left incomplete after the connection error. The
-// package-private enum State has no members and is a C# enum; evaluateFrame returns State? (null when the frame is
-// unexpected, @Nullable in Java), and the switch's default throws UnreachableException for Java's Error
-// (docs/codec-http-porting.md). HttpStatusClass.valueOf(CharSequence) is codec-http's HttpStatusClass.ValueOf.
+// CLR: ChannelOutboundHandlerAdapter is the Transport's adapter, whose write returns a Task. write(ctx, msg,
+// promise) is WriteAsync(ctx, msg, cancellationToken): it creates the promise (Http3CodecUtils.NewPromise()), runs
+// the Java body and returns the promise's Task, and super.write(ctx, msg, promise) is Http3CodecUtils.Write(ctx,
+// msg, promise) (ChannelOutboundHandlerAdapter.write is ctx.write); as in Java, the promise of an unexpected frame
+// is left incomplete after the connection error.
 internal sealed class Http3RequestStreamEncodeStateValidator : ChannelOutboundHandlerAdapter,
         IHttp3RequestStreamCodecState
 {

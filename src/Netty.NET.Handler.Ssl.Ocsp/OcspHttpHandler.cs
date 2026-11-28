@@ -27,15 +27,15 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Handler.Ssl.Ocsp;
 
-// CLR: Promise<OCSPResp> is a TaskCompletionSource<OcspResp> (OcspResp is the CLR-only replacement of Bouncy Castle's
-// OCSPResp, see OcspAsn1.cs) and OCSPException is CryptographicException. The listener that cancels the timeout runs
-// synchronously when the promise completes (ExecuteSynchronously), as DefaultPromise notifies it at once on the event
-// loop that completes it; Future<?> timeoutFuture is the CancellationTokenSource whose token was passed to
-// ctx.Executor.ScheduleAsync (cancel(true) is Cancel()), as handler's AbstractSniHandler keeps its timeout.
-// ChannelPromise is the returned Task of WriteAsync (docs/transport-porting.md). FullHttpResponse is IFullHttpResponse,
-// response.content() is its Content and status() == OK is a reference comparison, as Java compares the constant.
-// equalsIgnoreCase is an ordinal case-insensitive comparison. ClosedChannelException is Transport's
-// ClosedChannelException, the CLR counterpart of java.nio.channels.ClosedChannelException.
+// CLR: Promise<OCSPResp> is a TaskCompletionSource<OcspResp> (OcspResp is the CLR-only replacement of Bouncy
+// Castle's OCSPResp, see OcspAsn1.cs) and OCSPException is CryptographicException. The listener that cancels the
+// timeout runs synchronously when the promise completes (ExecuteSynchronously), as DefaultPromise notifies it at
+// once on the event loop that completes it; Future<?> timeoutFuture is the CancellationTokenSource whose token was
+// passed to ctx.Executor.ScheduleAsync (cancel(true) is Cancel()), as handler's AbstractSniHandler keeps its
+// timeout. FullHttpResponse is IFullHttpResponse, response.content() is its Content and status() == OK is a
+// reference comparison, as Java compares the constant. equalsIgnoreCase is an ordinal case-insensitive comparison.
+// ClosedChannelException is Transport's ClosedChannelException, the CLR counterpart of
+// java.nio.channels.ClosedChannelException.
 internal sealed class OcspHttpHandler : ChannelDuplexHandler
 {
     private static readonly IInternalLogger LOGGER = InternalLoggerFactory.GetInstance(typeof(OcspHttpHandler));

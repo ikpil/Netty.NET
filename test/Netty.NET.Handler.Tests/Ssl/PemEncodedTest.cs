@@ -21,12 +21,12 @@ using Netty.NET.Handler.Ssl;
 
 namespace Netty.NET.Handler.Tests.Ssl;
 
-// CLR: testPemEncodedOpenSsl and testPemEncodedOpenSslRef (and their helpers testPemEncoded and assertRelease) are not
-// ported: they build a server context from a PemPrivateKey/PemX509Certificate with SslProvider.OPENSSL/OPENSSL_REFCNT
-// after OpenSsl.ensureAvailability() and assert it is a ReferenceCountedOpenSslContext; OpenSSL (netty-tcnative) is
-// library-not-ported (owner decision 2026-11-24, docs/handler-ssl-design.md) and SslProvider.OPENSSL/OPENSSL_REFCNT cannot
-// be built (src/Netty.NET.Handler/Ssl/SslContext.cs). They are recorded as CLR-inapplicable in
-// docs/handler-porting-manifest.json.
+// CLR: testPemEncodedOpenSsl and testPemEncodedOpenSslRef (and their helpers testPemEncoded and assertRelease) are
+// not ported: they build a server context from a PemPrivateKey/PemX509Certificate with
+// SslProvider.OPENSSL/OPENSSL_REFCNT after OpenSsl.ensureAvailability() and assert it is a
+// ReferenceCountedOpenSslContext; OpenSSL (netty-tcnative) is library-not-ported and
+// SslProvider.OPENSSL/OPENSSL_REFCNT cannot be built (src/Netty.NET.Handler/Ssl/SslContext.cs). They are recorded
+// as CLR-inapplicable in docs/handler-porting-manifest.json.
 public class PemEncodedTest
 {
 

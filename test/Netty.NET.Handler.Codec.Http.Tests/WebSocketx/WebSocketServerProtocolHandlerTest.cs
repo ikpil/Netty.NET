@@ -31,25 +31,21 @@ namespace Netty.NET.Handler.Codec.Http.Tests.WebSocketx;
 
 #pragma warning disable xUnit1051 // The source's close()/writeOutbound(...) observe no test cancellation.
 
-// CLR: @BeforeEach setUp() runs from the constructor, since xUnit creates a new instance of the test class for every
-// test (https://xunit.net/docs/shared-context). Queue/ArrayDeque is Queue<T> (remove() is Dequeue(), which throws for
-// an empty queue as remove() does) and isEmpty() is Count == 0. The anonymous handlers are the named nested classes
-// UserEventAssertingHandler, RecordingOutboundHandler and StallingOutboundHandler. A Java write(ctx, msg, promise) that
-// completes the promise itself (MockOutboundHandler) returns a completed Task, and one that keeps the promise without
-// completing it (the stalling server) returns the Task of a TaskCompletionSource it never completes, collected in
-// stalledWrites. ChannelFuture/ChannelPromise are Task/TaskCompletionSource: handler.close(ctx, promise) is
-// CloseAsync(ctx, CancellationToken.None), whose Task stands for applicationClosePromise. In
-// testSimultaneousCloseDoesNotLeakOriginalPromise, Java's peerEchoWrite is the promise that the protocol handler
-// created for the peer's close frame and passed down the pipeline, so the stalled handler saw that very promise; the
-// Transport passes no promise down (each handler returns its own Task, docs/transport-porting.md: promise arguments are
-// the returned Task), so the stalled handler's TaskCompletionSource is not the cascaded promise and the C# test checks
-// the two stalled writes, the close and the application's close Task, but cannot observe the cascaded promise.
-// advanceTimeBy(n, MILLISECONDS) is AdvanceTimeBy(TimeSpan.FromMilliseconds(n)); new EmbeddedChannel(false, false, ...)
-// and register() are the Transport's EmbeddedChannel(bool, bool, ...) and Register(). The private decode(ByteBuf,
-// Class<T>) is the generic Decode<T>(ByteBuf) (clazz.cast is a cast to T). The package-private getHandshaker(Channel)
-// and the internal handshake handler type are reached through InternalsVisibleTo. CharsetUtil.UTF_8 is Encoding.UTF8,
-// and readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(). The argument order of
-// assertEquals(closeMessage.statusCode(), code) is swapped into xUnit's (expected, actual) order.
+// CLR: Queue/ArrayDeque is Queue<T> (remove() is Dequeue(), which throws for an empty queue as remove() does) and
+// isEmpty() is Count == 0. A Java write(ctx, msg, promise) that completes the promise itself (MockOutboundHandler)
+// returns a completed Task, and one that keeps the promise without completing it (the stalling server) returns the
+// Task of a TaskCompletionSource it never completes, collected in stalledWrites. ChannelFuture/ChannelPromise are
+// Task/TaskCompletionSource: handler.close(ctx, promise) is CloseAsync(ctx, CancellationToken.None), whose Task
+// stands for applicationClosePromise. In testSimultaneousCloseDoesNotLeakOriginalPromise, Java's peerEchoWrite is
+// the promise that the protocol handler created for the peer's close frame and passed down the pipeline, so the
+// stalled handler saw that very promise; the Transport passes no promise down (each handler returns its own Task,
+// docs/transport-porting.md: promise arguments are the returned Task), so the stalled handler's
+// TaskCompletionSource is not the cascaded promise and the C# test checks the two stalled writes, the close and
+// the application's close Task, but cannot observe the cascaded promise. advanceTimeBy(n, MILLISECONDS) is
+// AdvanceTimeBy(TimeSpan.FromMilliseconds(n)); new EmbeddedChannel(false, false,...) and register() are the
+// Transport's EmbeddedChannel(bool, bool,...) and Register(). The private decode(ByteBuf, Class<T>) is the generic
+// Decode<T>(ByteBuf) (clazz.cast is a cast to T). The argument order of assertEquals(closeMessage.statusCode(),
+// code) is swapped into xUnit's (expected, actual) order.
 public class WebSocketServerProtocolHandlerTest
 {
 

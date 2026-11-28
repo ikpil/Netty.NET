@@ -22,9 +22,9 @@ using Netty.NET.Handler.Codec.Http.Multipart;
 
 namespace Netty.NET.Handler.Codec.Http.Tests.Multipart;
 
-// CLR: refCnt() is RefCnt and CharsetUtil.UTF_8 Encoding.UTF8. File is FileInfo: new File(path).mkdirs() is
-// DirectoryInfo.Create(), getAbsolutePath() FullName (startsWith is StartsWith with StringComparison.Ordinal), and
-// exists()/length() are AbstractDiskHttpData.FileExists/FileLength, because FileInfo caches its state until Refresh().
+// CLR: File is FileInfo: new File(path).mkdirs() is DirectoryInfo.Create(), getAbsolutePath() FullName (startsWith
+// is StartsWith with StringComparison.Ordinal), and exists()/length() are
+// AbstractDiskHttpData.FileExists/FileLength, because FileInfo caches its state until Refresh().
 public class MixedTest
 {
     [Fact]

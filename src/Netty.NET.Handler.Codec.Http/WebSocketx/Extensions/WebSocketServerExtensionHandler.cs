@@ -38,25 +38,21 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx.Extensions;
  * Find a basic implementation for compression extensions at
  * <tt>io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketServerCompressionHandler</tt>.
  */
-// CLR: write(ctx, msg, promise) is WriteAsync(ctx, msg, cancellationToken), whose Task replaces the promise
-// (docs/codec-base-porting.md, Outbound operations); the protected onHttpResponseWrite(ctx, response, promise) keeps
-// its name and returns that Task (it takes the caller's CancellationToken), as handler's
-// AbstractTrafficShapingHandler.SubmitWrite does. handlePotentialUpgrade adds two listeners to the caller's promise
-// before the response is written; here a TaskCompletionSource stands for that promise, the listeners are continuations
-// of its Task, and the Task of base.WriteAsync completes it with TrySetFromTask, which copies "the completion status
-// (including exception or cancellation information)"
+// CLR: write(ctx, msg, promise) is WriteAsync(ctx, msg, cancellationToken), whose Task replaces the promise; the
+// protected onHttpResponseWrite(ctx, response, promise) keeps its name and returns that Task (it takes the
+// caller's CancellationToken), as handler's AbstractTrafficShapingHandler.SubmitWrite does. handlePotentialUpgrade
+// adds two listeners to the caller's promise before the response is written; here a TaskCompletionSource stands
+// for that promise, the listeners are continuations of its Task, and the Task of base.WriteAsync completes it with
+// TrySetFromTask, which copies "the completion status (including exception or cancellation information)"
 // (https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.taskcompletionsource.trysetfromtask?view=net-10.0;
-// docs/common-task-composition.md). Java's DefaultPromise notifies the listeners at once when the write completes on
-// the event loop; the continuations therefore run on Common's EventExecutorTaskScheduler over ctx.Executor, the
-// scheduler that handler's IdleStateHandler uses too (docs/handler-porting.md, Listener timing), so the
-// pipeline is changed before writeOutbound returns, as the tests check (measured: with TaskScheduler.Default, 10 to 11
-// of the 83 extension test cases failed in three runs). future.isSuccess() is IsCompletedSuccessfully. The varargs
-// constructors take params arrays; Arrays.asList(checkNonEmpty(...)) is the array as an IList, and
-// checkPositive/checkNonEmpty are the Common ObjectUtil checks (ArgumentException). ArrayDeque is Queue (poll() of an
-// empty queue is null through TryDequeue, offer is Enqueue), Collections.emptyList() an empty array, and
-// IllegalStateException is InvalidOperationException with the number in the invariant culture. msg !=
-// LastHttpContent.EMPTY_LAST_CONTENT and msg != Unpooled.EMPTY_BUFFER are reference comparisons (ReferenceEquals);
-// ctx.close() is CloseAsync() with its Task discarded, as Java discards the ChannelFuture.
+// docs/common-task-composition.md). Java's DefaultPromise notifies the listeners at once when the write completes
+// on the event loop; the continuations therefore run on Common's EventExecutorTaskScheduler over ctx.Executor, the
+// scheduler that handler's IdleStateHandler uses too, so the pipeline is changed before writeOutbound returns, as
+// the tests check (measured: with TaskScheduler.Default, 10 to 11 of the 83 extension test cases failed in three
+// runs). future.isSuccess() is IsCompletedSuccessfully. The varargs constructors take params arrays. ArrayDeque is
+// Queue (poll() of an empty queue is null through TryDequeue, offer is Enqueue), Collections.emptyList() an empty
+// array, and IllegalStateException is InvalidOperationException with the number in the invariant culture. msg !=
+// LastHttpContent.EMPTY_LAST_CONTENT and msg != Unpooled.EMPTY_BUFFER are reference comparisons (ReferenceEquals).
 public class WebSocketServerExtensionHandler : ChannelDuplexHandler
 {
     private const int DEFAULT_MAX_PIPELINE_DEPTH = 128;

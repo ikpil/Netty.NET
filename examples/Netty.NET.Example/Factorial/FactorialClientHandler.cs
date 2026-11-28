@@ -31,14 +31,13 @@ namespace Netty.NET.Example.Factorial;
  * to create a new handler instance whenever you create a new channel and insert
  * this handler to avoid a race condition.
  */
-// CLR: BlockingQueue/LinkedBlockingQueue is BlockingCollection (a ConcurrentQueue by default), take() is Take() and
-// offer() is TryAdd(). Take() waits in a blocking wait, which Thread.Interrupt() ends with ThreadInterruptedException,
-// the counterpart of InterruptedException, so getFactorial() keeps its retry loop and re-interrupts the thread. Writes
-// return a Task (ChannelFuture); a listener is a synchronous continuation on the channel's event loop (Common's
-// EventExecutorTaskScheduler), as a Java listener runs there, and future.channel() is ctx.Channel because a Task has no
-// channel. The lambda numberSender reads the instance's ctx, so it is assigned in the constructor (a C# field initializer
-// cannot reference the instance). Integer.valueOf(next) is the boxed int, assert is Debug.Assert and printStackTrace()
-// writes the exception to Console.Error.
+// CLR: BlockingQueue/LinkedBlockingQueue is BlockingCollection (a ConcurrentQueue by default), take() is Take()
+// and offer() is TryAdd(). Take() waits in a blocking wait, which Thread.Interrupt() ends with
+// ThreadInterruptedException, the counterpart of InterruptedException, so getFactorial() keeps its retry loop and
+// re-interrupts the thread. Writes return a Task (ChannelFuture); a listener is a synchronous continuation on the
+// channel's event loop (Common's EventExecutorTaskScheduler), as a Java listener runs there, and future.channel()
+// is ctx.Channel because a Task has no channel. The lambda numberSender reads the instance's ctx, so it is
+// assigned in the constructor (a C# field initializer cannot reference the instance).
 public class FactorialClientHandler : SimpleChannelInboundHandler<BigInteger>
 {
     private IChannelHandlerContext ctx;

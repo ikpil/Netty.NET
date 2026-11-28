@@ -22,8 +22,8 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx.Extensions;
  */
 // CLR: the Java interface takes the I prefix (owner rule). Its constant fields are static readonly fields of the
 // interface, which a C# interface may declare together with nested types
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface); the anonymous classes are
-// the private nested classes NeverSkipFilter and AlwaysSkipFilter (docs/codec-base-porting.md, Anonymous classes).
+// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/interface); the anonymous classes
+// are the private nested classes NeverSkipFilter and AlwaysSkipFilter.
 public interface IWebSocketExtensionFilter
 {
 

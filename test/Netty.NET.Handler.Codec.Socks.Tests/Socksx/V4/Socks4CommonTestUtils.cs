@@ -20,7 +20,6 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Socks.Tests.Socksx.V4;
 
-// CLR: the Java interfaces carry the I prefix (ISocks4Message, ISocks4CommandRequest); out is @out.
 internal sealed class Socks4CommonTestUtils
 {
     /**

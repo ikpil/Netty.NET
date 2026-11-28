@@ -26,11 +26,9 @@ public interface IHttp2Stream
     /**
      * The allowed states of an HTTP2 stream.
      */
-    // CLR: the Java enum with a constructor, fields and methods is a sealed class with static readonly instances
-    // (docs/codec-base-porting.md, Base64Dialect; "You can't define a method inside the definition of an enumeration
-    // type", https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/enum). Its instances are
-    // compared by reference, so a Java switch on a State is an if/else chain on reference equality (a C# case label
-    // must be a constant, CS0150). ToString() returns the constant name.
+    // CLR: the Java enum with a constructor, fields and methods is a sealed class with static readonly instances.
+    // Its instances are compared by reference, so a Java switch on a State is an if/else chain on reference
+    // equality (a C# case label must be a constant, CS0150). ToString() returns the constant name.
     public sealed class State
     {
         public static readonly State IDLE = new State(nameof(IDLE), false, false);

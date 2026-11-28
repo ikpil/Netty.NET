@@ -26,16 +26,13 @@ namespace Netty.NET.Handler.Codec.Http.Tests.Multipart;
 
 /** {@link AbstractMemoryHttpData} test cases. */
 // CLR: File is FileInfo, FileOutputStream/FileInputStream are FileStream instances (FileMode.Create truncates as
-// FileOutputStream does) and FileInputStream.available() of a file is Length - Position, the bytes a seekable stream
-// has left (docs/handler-porting.md, ChunkedStream). ByteArrayInputStream is MemoryStream and ByteBufInputStream the
-// Buffer port's ByteBufInputStream (a Stream). UUID.randomUUID() is Guid.NewGuid(); ThreadLocalRandom.nextBytes is
-// Random.Shared.NextBytes and SecureRandom is RandomNumberGenerator (nextInt(bound) is GetInt32(bound), nextBytes is
-// Fill); only the sizes matter. File.deleteOnExit() is the AppDomain.ProcessExit deletion of handler's
-// ChunkedWriteHandlerTest (test/Netty.NET.Handler.Tests/Stream/ChunkedWriteHandlerTest.cs). buffer.array() of the
-// stored heap buffer has no Buffer-port counterpart, so Arrays.copyOf(buffer.array(), bytes.length) is
-// ByteBufUtil.GetBytes(buffer, 0, bytes.Length), the same first bytes of the storage. UnsupportedOperationException is
-// NotSupportedException. assertEquals(buf.readerIndex(), 0) is written literal-first, Assert.Equal(expected, actual), as
-// the xUnit analyzer requires (xUnit2000, https://xunit.net/xunit.analyzers/rules/xUnit2000).
+// FileOutputStream does) and FileInputStream.available() of a file is Length - Position, the bytes a seekable
+// stream has left. ByteArrayInputStream is MemoryStream and ByteBufInputStream the Buffer port's
+// ByteBufInputStream (a Stream). ThreadLocalRandom.nextBytes is Random.Shared.NextBytes and SecureRandom is
+// RandomNumberGenerator (nextInt(bound) is GetInt32(bound), nextBytes is Fill); only the sizes matter.
+// UnsupportedOperationException is NotSupportedException. assertEquals(buf.readerIndex(), 0) is written
+// literal-first, Assert.Equal(expected, actual), as the xUnit analyzer requires (xUnit2000,
+// https://xunit.net/xunit.analyzers/rules/xUnit2000).
 public class AbstractMemoryHttpDataTest
 {
 

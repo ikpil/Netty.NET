@@ -22,9 +22,7 @@ namespace Netty.NET.Handler.Codec.Http2;
  * Internal use only!
  */
 // CLR: DefaultHeaders<CharSequence, V, CharSequenceMap<V>> is the codec-base DefaultHeaders<ICharSequence, V,
-// CharSequenceMap<V>> (docs/codec-base-porting.md, Headers), whose value type must be a reference type (V : class);
-// ValueConverter is IValueConverter, UnsupportedValueConverter.<V>instance() is UnsupportedValueConverter<V>.Instance()
-// and NameValidator.NOT_NULL is DefaultHeaders.INameValidator<ICharSequence>.NOT_NULL (no unchecked cast).
+// CharSequenceMap<V>>, whose value type must be a reference type (V : class).
 public sealed class CharSequenceMap<V> : DefaultHeaders<ICharSequence, V, CharSequenceMap<V>>
     where V : class
 {

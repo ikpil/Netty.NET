@@ -183,7 +183,6 @@ public interface IChannel : IAttributeMap, IChannelOutboundInvoker, IComparable<
     /**
      * Return the value of the given {@link ChannelOption}
      */
-    // CLR: getOption(option) is the try pattern (recorded publicNameReview category try-pattern).
     bool TryGetOption<T>(ChannelOption<T> option, out T value)
     {
         return Config.TryGetOption(option, out value);

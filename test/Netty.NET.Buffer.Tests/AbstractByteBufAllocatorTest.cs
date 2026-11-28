@@ -79,9 +79,7 @@ public abstract class AbstractByteBufAllocatorTest<T> : ByteBufAllocatorTest whe
     {
         T allocator = NewUnpooledAllocator();
         ByteBuf directBuffer = allocator.DirectBuffer();
-        // CLR: there is no sun.misc.Unsafe subclass split; PlatformDependent.hasUnsafe() is false-equivalent and the
-        // managed/native owner types are the only storage classes (src/Netty.NET.Buffer/UnpooledByteBufAllocator.cs,
-        // src/Netty.NET.Buffer/PooledByteBufAllocator.cs fallbacks).
+        // CLR: there is no sun.misc.Unsafe subclass split.
         AssertInstanceOf(directBuffer, typeof(UnpooledDirectByteBuf));
         directBuffer.Release();
 

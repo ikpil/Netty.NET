@@ -25,12 +25,12 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx;
 /**
  * Web Socket Frame for closing the connection.
  */
-// CLR: ByteBufAllocator is IByteBufAllocator and UnpooledByteBufAllocator.DEFAULT is UnpooledByteBufAllocator.Default.
-// binaryData.writeCharSequence(reasonText, UTF_8) is ByteBufUtil.WriteUtf8, the Java UTF-8 path of writeCharSequence
-// (an unpaired surrogate becomes '?'), and toString(index, length, UTF_8) is ToString(index, length, Encoding.UTF8).
-// The package-private requireValidStatusCode is internal; IllegalArgumentException is ArgumentException and the status
-// code in its message uses the invariant culture (docs/codec-base-porting.md). The Java overrides that narrow the
-// return types of WebSocketFrame are C# 9 covariant overrides (see WebSocketFrame).
+// CLR: ByteBufAllocator is IByteBufAllocator and UnpooledByteBufAllocator.DEFAULT is
+// UnpooledByteBufAllocator.Default. binaryData.writeCharSequence(reasonText, UTF_8) is ByteBufUtil.WriteUtf8, the
+// Java UTF-8 path of writeCharSequence (an unpaired surrogate becomes '?'), and toString(index, length, UTF_8) is
+// ToString(index, length, Encoding.UTF8). The package-private requireValidStatusCode is internal;
+// IllegalArgumentException is ArgumentException and the status code in its message uses the invariant culture. The
+// Java overrides that narrow the return types of WebSocketFrame are C# 9 covariant overrides (see WebSocketFrame).
 public class CloseWebSocketFrame : WebSocketFrame
 {
 

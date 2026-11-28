@@ -63,9 +63,8 @@ public abstract class SocksMessage
     /**
      * @deprecated Do not use; this method was intended for an internal use only.
      */
-    // CLR: the @deprecated text names no replacement, so the member is ported with [Obsolete] and that text (owner
-    // decision 2026-11-16; https://learn.microsoft.com/en-us/dotnet/api/system.obsoleteattribute?view=net-10.0 "Marks
-    // program elements that are no longer in use"), as MessageAggregator.IsHandlingOversizedMessage in codec-base.
+    // CLR: the @deprecated text names no replacement, so the member is ported with [Obsolete] and that text, as
+    // MessageAggregator.IsHandlingOversizedMessage in codec-base.
     [Obsolete("Do not use; this method was intended for an internal use only.")]
     public abstract void EncodeAsByteBuf(ByteBuf byteBuf);
 }

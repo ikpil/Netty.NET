@@ -29,9 +29,9 @@ namespace Netty.NET.Handler.Codec.Tests;
 // CLR: CharsetUtil.US_ASCII is Encoding.ASCII, and Charset.defaultCharset() ("The default charset is UTF-8, unless
 // changed in an implementation specific manner",
 // https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/nio/charset/Charset.html#defaultCharset()) is
-// Encoding.Default, which on .NET "Always returns a UTF8Encoding object"
-// (https://learn.microsoft.com/en-us/dotnet/api/system.text.encoding.default). Numbers in messages use the invariant
-// culture.
+// Encoding.Default, which on.NET "Always returns a UTF8Encoding object"
+// (https://learn.microsoft.com/en-us/dotnet/api/system.text.encoding.default). Numbers in messages use the
+// invariant culture.
 #pragma warning disable xUnit1069 // The two @Timeout bodies have no blocking or cancellable calls for the token to end.
 public class DelimiterBasedFrameDecoderTest
 {

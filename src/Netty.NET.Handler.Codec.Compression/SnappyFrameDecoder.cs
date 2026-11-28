@@ -34,16 +34,16 @@ namespace Netty.NET.Handler.Codec.Compression;
  * use the {@link #SnappyFrameDecoder(boolean)} constructor with the argument
  * set to {@code true}.
  */
-// CLR: decode(ctx, in, out) is the codec-base Decode(IChannelHandlerContext, ByteBuf, IList<object>) and C# has no throws
-// clauses. getUnsignedByte(idx) is GetByte(idx), which is unsigned in the Buffer port (docs/codec-socks-porting.md);
-// mapChunkType((byte) chunkTypeVal) and checkByte compare bytes of the same type, (byte) 0xff and the 0x80 mask, so the
-// unsigned System.Byte gives the results of the signed Java byte. The body of the COMPRESSED_DATA section is a nested
-// block: its local checksum would otherwise share the switch block's declaration space with the checksum declared in a
-// nested block of the UNCOMPRESSED_DATA section, which C# rejects ("it is not possible to declare a local variable ...
-// with the same name as a local variable ... in an enclosing declaration space", https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0136).
-// catch (Exception e) { ...; throw e; } is catch (Exception) { ...; throw; }, which rethrows the same exception. Numbers
-// in exception messages use the invariant culture (docs/codec-base-porting.md), and Integer.toHexString of the unsigned
-// chunk type is the "x" format (docs/codec-haproxy-porting.md).
+// CLR: decode(ctx, in, out) is the codec-base Decode(IChannelHandlerContext, ByteBuf, IList<object>) and C# has no
+// throws clauses. getUnsignedByte(idx) is GetByte(idx), which is unsigned in the Buffer port; mapChunkType((byte)
+// chunkTypeVal) and checkByte compare bytes of the same type, (byte) 0xff and the 0x80 mask, so the unsigned
+// System.Byte gives the results of the signed Java byte. The body of the COMPRESSED_DATA section is a nested
+// block: its local checksum would otherwise share the switch block's declaration space with the checksum declared
+// in a nested block of the UNCOMPRESSED_DATA section, which C# rejects ("it is not possible to declare a local
+// variable... with the same name as a local variable... in an enclosing declaration space",
+// https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0136). catch (Exception e) {...; throw e; } is catch
+// (Exception) {...; throw; }, which rethrows the same exception. Numbers in exception messages use the invariant
+// culture, and Integer.toHexString of the unsigned chunk type is the "x" format.
 public class SnappyFrameDecoder : ByteToMessageDecoder
 {
 

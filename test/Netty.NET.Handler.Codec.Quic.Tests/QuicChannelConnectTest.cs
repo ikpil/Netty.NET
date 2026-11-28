@@ -32,20 +32,20 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Handler.Codec.Quic.Tests;
 
-// CLR: the methods whose scenario System.Net.Quic supports on loopback (docs/codec-native-quic-porting.md); the others
-// are recorded CLR-inapplicable with their reasons in docs/codec-native-quic-porting-manifest.json, and their original
-// comments follow the class. @ParameterizedTest @MethodSource("newSslTaskExecutors") is a theory over
-// AbstractQuicTest.NewSslTaskExecutors(); Future.await().cause() is the exception of the awaited Task, get() and sync()
-// are awaits. new DatagramSocket() (a wildcard UDP socket that no QUIC server answers) is a UdpClient on the IPv4
-// loopback, because msquic sends to the address it is given and 0.0.0.0 is not a destination on Windows.
-// TestQuicTokenHandler (a token handler of its own) is reported unsupported by the msquic server codec builder, which
-// validates addresses with msquic's retry tokens, so the scenarios that only need a working server use
+// CLR: the methods whose scenario System.Net.Quic supports on loopback; the others are recorded CLR-inapplicable
+// with their reasons in docs/codec-native-quic-porting-manifest.json, and their original comments follow the
+// class. @ParameterizedTest @MethodSource("newSslTaskExecutors") is a theory over
+// AbstractQuicTest.NewSslTaskExecutors(); Future.await().cause() is the exception of the awaited Task, get() and
+// sync() are awaits. new DatagramSocket() (a wildcard UDP socket that no QUIC server answers) is a UdpClient on
+// the IPv4 loopback, because msquic sends to the address it is given and 0.0.0.0 is not a destination on Windows.
+// TestQuicTokenHandler (a token handler of its own) is reported unsupported by the msquic server codec builder,
+// which validates addresses with msquic's retry tokens, so the scenarios that only need a working server use
 // InsecureQuicTokenHandler. AlreadyConnectedException is SocketException(SocketError.IsConnected) and SSLException
-// AuthenticationException (the Transport and handler mappings); an X509TrustManager whose checkServerTrusted throws
-// CertificateException is a RemoteCertificateValidationCallback that returns false (TrustManagerFactoryWrapper is not
-// needed), for the extended and the plain trust manager alike; the X509ExtendedKeyManager without a client alias is a
-// LocalCertificateSelectionCallback that selects no certificate. fail() is Assert.Fail and BlockingQueue take() waits at
-// most the test timeout.
+// AuthenticationException (the Transport and handler mappings); an X509TrustManager whose checkServerTrusted
+// throws CertificateException is a RemoteCertificateValidationCallback that returns false
+// (TrustManagerFactoryWrapper is not needed), for the extended and the plain trust manager alike; the
+// X509ExtendedKeyManager without a client alias is a LocalCertificateSelectionCallback that selects no
+// certificate. fail() is Assert.Fail and BlockingQueue take() waits at most the test timeout.
 public class QuicChannelConnectTest : AbstractQuicTest
 {
 

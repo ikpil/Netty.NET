@@ -23,12 +23,12 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Stomp.Tests;
 
-// CLR: xUnit creates a new test class instance for every test, so the @BeforeEach setUp() runs from the constructor
-// and the @AfterEach tearDown() from Dispose() (https://xunit.net/docs/shared-context). @ParameterizedTest with
-// @MethodSource("stompCommands") is a [Theory] with [MemberData(nameof(StompCommands))] over the public static data
-// method, Arrays.asList(Object[][]) is the object[] rows and Boolean is bool; String.format("%s\n\n\0", ...) is
-// string.Format with the {0} placeholder in the invariant culture, and UTF_8 is Encoding.UTF8
-// (docs/codec-base-porting.md).
+// CLR: xUnit creates a new test class instance for every test, so the @BeforeEach setUp() runs from the
+// constructor and the @AfterEach tearDown() from Dispose() (https://xunit.net/docs/shared-context).
+// @ParameterizedTest with @MethodSource("stompCommands") is a [Theory] with [MemberData(nameof(StompCommands))]
+// over the public static data method, Arrays.asList(Object[][]) is the object[] rows and Boolean is bool;
+// String.format("%s\n\n\0",...) is string.Format with the {0} placeholder in the invariant culture, and UTF_8 is
+// Encoding.UTF8.
 public class StompCommandDecodeTest : IDisposable
 {
 

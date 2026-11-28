@@ -55,7 +55,6 @@ public abstract class MessageToMessageCodec<INBOUND_IN, OUTBOUND_IN> : ChannelDu
 {
     private readonly MessageToMessageDecoder<object> decoder;
 
-    // CLR: the anonymous decoder and encoder are named nested classes that forward to the codec.
     private sealed class Decoder : MessageToMessageDecoder<object>
     {
         private readonly MessageToMessageCodec<INBOUND_IN, OUTBOUND_IN> codec;

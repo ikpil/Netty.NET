@@ -22,11 +22,11 @@ namespace Netty.NET.Handler.Codec.Quic;
 /**
  * Exception produced while processing {@code QUIC}.
  */
-// CLR: Exception is System.Exception (as codec-base CodecException) and Throwable is Exception. Exception(Throwable)
-// has "a detail message of (cause==null ? null : cause.toString())", the text of Common's
-// ThrowableUtil.ThrowableToString (Exception.ToString() also appends the stack trace). The package-private constructor
-// is internal. @Nullable has no counterpart. This is not System.Net.Quic.QuicException, which the msquic implementation
-// (stage 2) translates into this type (docs/quic-design.md, Mapping).
+// CLR: Exception is System.Exception (as codec-base CodecException) and Throwable is Exception.
+// Exception(Throwable) has "a detail message of (cause==null ? null : cause.toString())", the text of Common's
+// ThrowableUtil.ThrowableToString (Exception.ToString() also appends the stack trace). @Nullable has no
+// counterpart. This is not System.Net.Quic.QuicException, which the msquic implementation (stage 2) translates
+// into this type.
 public class QuicException : Exception
 {
 

@@ -21,9 +21,9 @@ namespace Netty.NET.Resolver.Dns;
 /**
  * Represents options defined in a file of the format <a href=https://linux.die.net/man/5/resolver>etc/resolv.conf</a>.
  */
-// CLR: package-private members are internal. Builder's private constructor is internal, because a containing C# type
-// cannot reach the private members of a nested type, while Java's enclosing class can. getClass().getSimpleName() is
-// GetType().Name and the numbers use the invariant culture.
+// CLR: Builder's private constructor is internal, because a containing C# type cannot reach the private members of
+// a nested type, while Java's enclosing class can. getClass().getSimpleName() is GetType().Name and the numbers
+// use the invariant culture.
 internal sealed class UnixResolverOptions
 {
 

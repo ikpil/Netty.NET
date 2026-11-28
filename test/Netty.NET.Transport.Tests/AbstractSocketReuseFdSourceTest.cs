@@ -171,7 +171,6 @@ public abstract class AbstractSocketReuseFdSourceTest : AbstractSocketTest
 
             if (client)
             {
-                // CLR: Encoding.ASCII is CharsetUtil.US_ASCII.
                 FailOnError(ctx.WriteAndFlushAsync(Unpooled.CopiedBuffer(EXPECTED_PAYLOAD, Encoding.ASCII)));
             }
         }

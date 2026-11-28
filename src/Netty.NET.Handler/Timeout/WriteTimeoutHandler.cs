@@ -57,19 +57,18 @@ namespace Netty.NET.Handler.Timeout;
  * @see ReadTimeoutHandler
  * @see IdleStateHandler
  */
-// CLR: a TimeSpan replaces the (long, TimeUnit) pair and the timeout is scheduled in 100 ns TimeSpan ticks, rounded up
-// (as IdleStateHandler). The ChannelPromise of write(ctx, msg, promise) is the Task that ctx.WriteAsync returns
-// (docs/codec-base-porting.md, "Outbound operations"), so the timeout is scheduled right after the write is handed to the
-// next handler instead of right before it; a write that has already completed then cancels the timeout through its
-// listener at once, as a listener added to a completed promise runs at once. Future<?> is the CancellationTokenSource of
-// the scheduled work (cancel(false) is Cancel()). The listener is a Task continuation on Common's
-// EventExecutorTaskScheduler over ctx.executor() (src/Netty.NET.Common/Concurrent/EventExecutorTaskScheduler.cs), which
-// notifies it as DefaultPromise.notifyListeners() does (at once on the event loop, otherwise through execute);
+// CLR: a TimeSpan replaces the (long, TimeUnit) pair and the timeout is scheduled in 100 ns TimeSpan ticks,
+// rounded up (as IdleStateHandler). The ChannelPromise of write(ctx, msg, promise) is the Task that ctx.WriteAsync
+// returns, so the timeout is scheduled right after the write is handed to the next handler instead of right before
+// it; a write that has already completed then cancels the timeout through its listener at once, as a listener
+// added to a completed promise runs at once. Future<?> is the CancellationTokenSource of the scheduled work
+// (cancel(false) is Cancel()). The listener is a Task continuation on Common's EventExecutorTaskScheduler over
+// ctx.executor() (src/Netty.NET.Common/Concurrent/EventExecutorTaskScheduler.cs), which notifies it as
+// DefaultPromise.notifyListeners() does (at once on the event loop, otherwise through execute);
 // operationComplete() keeps the Java hand-off to the executor for a listener that runs elsewhere
 // (https://github.com/netty/netty/issues/11053).
 public class WriteTimeoutHandler : ChannelOutboundHandlerAdapter
 {
-    // CLR: TimeUnit.MILLISECONDS.toNanos(1).
     private static readonly long MIN_TIMEOUT_NANOS = TimeSpan.TicksPerMillisecond * 100;
 
     private readonly long timeoutNanos;

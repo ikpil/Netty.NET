@@ -25,14 +25,14 @@ namespace Netty.NET.Resolver.Dns;
 /**
  * Looks up the {@code nameserver}s from the {@code /etc/resolv.conf} file, intended for Linux and macOS.
  */
-// CLR: BufferedReader is TextReader (ReadLine returns null at the end, as readLine does); new InputStreamReader over a
-// FileInputStream is a StreamReader over File.OpenRead, which decodes UTF-8
-// (https://learn.microsoft.com/en-us/dotnet/api/system.io.streamreader.-ctor?view=net-10.0) where the JDK reader uses the
-// platform default charset; BoundedInputStream is Common's BoundedInputStream. new InetSocketAddress(ln, 53) is
-// DnsServerAddresses.SocketAddress (an IPEndPoint, or a DnsEndPoint when the name does not resolve) and
-// List<InetSocketAddress> a read-only IReadOnlyList<EndPoint>. String.trim() is JavaTrim. system() is System(); a member
-// named System hides the System namespace inside this class, so the body names no System.* type in full.
-// IllegalStateException is InvalidOperationException.
+// CLR: BufferedReader is TextReader (ReadLine returns null at the end, as readLine does); new InputStreamReader
+// over a FileInputStream is a StreamReader over File.OpenRead, which decodes UTF-8
+// (https://learn.microsoft.com/en-us/dotnet/api/system.io.streamreader.-ctor?view=net-10.0) where the JDK reader
+// uses the platform default charset; BoundedInputStream is Common's BoundedInputStream. new InetSocketAddress(ln,
+// 53) is DnsServerAddresses.SocketAddress (an IPEndPoint, or a DnsEndPoint when the name does not resolve) and
+// List<InetSocketAddress> a read-only IReadOnlyList<EndPoint>. A member named System hides the System namespace
+// inside this class, so the body names no System.* type in full. IllegalStateException is
+// InvalidOperationException.
 internal sealed class ResolvConf
 {
     private readonly IReadOnlyList<EndPoint> nameservers;

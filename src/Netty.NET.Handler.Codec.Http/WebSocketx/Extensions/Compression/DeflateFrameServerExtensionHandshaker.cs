@@ -25,13 +25,10 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx.Extensions.Compression;
  * <a href="https://tools.ietf.org/id/draft-tyoshino-hybi-websocket-perframe-deflate-06.txt">perframe-deflate</a>
  * handshake implementation.
  */
-// CLR: the package-private X_WEBKIT_DEFLATE_FRAME_EXTENSION and DEFLATE_FRAME_EXTENSION are internal constants. The
-// four @Deprecated constructors (), (int), (int, WebSocketExtensionFilterProvider) and (int,
-// WebSocketExtensionFilterProvider, int) name their replacements and are not ported (owner decision 2026-11-16).
-// IllegalArgumentException is ArgumentException with the number in the invariant culture; checkInRange,
-// checkPositiveOrZero and checkNotNull are the Common ObjectUtil checks. Collections.emptyMap() is
-// ImmutableDictionary<string, string>.Empty, isEmpty() is Count == 0, and the implicit RSV1 of the implemented
-// interface is IWebSocketExtension.RSV1. A window size other than 15 or a memory level other than 8 makes the encoder
+// CLR: The four @Deprecated constructors (), (int), (int, WebSocketExtensionFilterProvider) and (int,
+// WebSocketExtensionFilterProvider, int) name their replacements and are not ported. IllegalArgumentException is
+// ArgumentException with the number in the invariant culture; checkInRange, checkPositiveOrZero and checkNotNull
+// are the Common ObjectUtil checks. A window size other than 15 or a memory level other than 8 makes the encoder
 // fail at the first compressed frame, because jzlib is library-not-ported (see DeflateEncoder).
 public sealed class DeflateFrameServerExtensionHandshaker : IWebSocketServerExtensionHandshaker
 {

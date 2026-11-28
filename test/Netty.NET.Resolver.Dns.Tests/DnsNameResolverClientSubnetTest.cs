@@ -25,13 +25,13 @@ using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Resolver.Dns.Tests;
 
-// CLR: @Disabled without a value is [Fact(Skip = ...)] with the reason the source comment gives (the test needs real DNS
-// servers); the body is ported and compiled. resolveAll(host, singleton(record)) is ResolveAllAsync(host, additionals)
-// and future.syncUninterruptibly().getNow() an awaited Task; SocketUtils.addressByName of an address literal is
-// IPAddress.Parse and getAddress() GetAddressBytes(); SocketUtils.socketAddress("8.8.8.8", 53) of a literal is
-// new IPEndPoint(IPAddress.Parse("8.8.8.8"), 53) (resolver-dns brief); System.out.println is Console.WriteLine;
-// shutdownGracefully(0, 0, SECONDS) is ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero) without waiting, as in the
-// source.
+// CLR: @Disabled without a value is [Fact(Skip =...)] with the reason the source comment gives (the test needs
+// real DNS servers); the body is ported and compiled. resolveAll(host, singleton(record)) is ResolveAllAsync(host,
+// additionals) and future.syncUninterruptibly().getNow() an awaited Task; SocketUtils.addressByName of an address
+// literal is IPAddress.Parse and getAddress() GetAddressBytes(); SocketUtils.socketAddress("8.8.8.8", 53) of a
+// literal is new IPEndPoint(IPAddress.Parse("8.8.8.8"), 53) (resolver-dns brief); System.out.println is
+// Console.WriteLine; shutdownGracefully(0, 0, SECONDS) is ShutdownGracefullyAsync(TimeSpan.Zero, TimeSpan.Zero)
+// without waiting, as in the source.
 public class DnsNameResolverClientSubnetTest
 {
 

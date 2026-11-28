@@ -24,10 +24,7 @@ namespace Netty.NET.Handler.Codec.Mqtt;
 /**
  * Payload of the {@link MqttSubscribeMessage}
  */
-// CLR: java.util.List is IList<T>; Collections.unmodifiableList, an "unmodifiable view" whose reads "read through" to
-// the list (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Collections.html#unmodifiableList(java.util.List)),
-// is a ReadOnlyCollection<T> wrapper, which "reflects" changes to the underlying list
-// (https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1.asreadonly).
+// The read-only view reflects changes to the supplied list.
 public sealed class MqttSubscribePayload
 {
     private readonly IList<MqttTopicSubscription> topicSubscriptions;

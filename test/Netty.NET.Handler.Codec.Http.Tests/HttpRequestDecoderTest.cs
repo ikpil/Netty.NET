@@ -29,19 +29,16 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Codec.Http.Tests;
 
-// CLR: @ParameterizedTest @ValueSource(strings) is a [Theory] with one [InlineData] per value; the display-name pattern
-// of @ParameterizedTest(name = ...) has no xUnit counterpart. Package-private JUnit methods are public xUnit methods.
-// CharsetUtil.US_ASCII is Encoding.ASCII (docs/codec-smtp-porting.md). IllegalArgumentException is ArgumentException and
-// NumberFormatException is FormatException (docs/codec-base-porting.md; HttpObjectDecoder/HttpUtil throw
-// FormatException where Java throws NumberFormatException); assertInstanceOf and AssertJ's isInstanceOf are
-// Assert.IsAssignableFrom, hasMessageContaining is Assert.Contains on Message, and the asserts with messages use
-// XunitAssertMessages.AssertM. Java passes Strings as CharSequence (HttpHeadersTestUtils.of and
-// AsciiString.contentEqualsIgnoreCase(String, String)); C# string is not an ICharSequence, so they are wrapped with Of(...)
-// (StringCharSequence). The anonymous ChannelInboundHandlerAdapter of reentrantClose is the named nested
-// ReentrantCloseHandler, ctx.close() is ctx.CloseAsync(); new Exception(cause) keeps the cause as InnerException and
-// printStackTrace() writes the exception to Console.Error. Integer.toHexString is ToString("x") with the invariant
-// culture. The deprecated-free constructors HttpRequestDecoder(int, int, int) and HttpRequestDecoder(HttpDecoderConfig)
-// are used as in Java.
+// CLR: The display-name pattern of @ParameterizedTest(name =...) has no xUnit counterpart.
+// IllegalArgumentException is ArgumentException and NumberFormatException is FormatException; assertInstanceOf and
+// AssertJ's isInstanceOf are Assert.IsAssignableFrom, hasMessageContaining is Assert.Contains on Message, and the
+// asserts with messages use XunitAssertMessages.AssertM. Java passes Strings as CharSequence
+// (HttpHeadersTestUtils.of and AsciiString.contentEqualsIgnoreCase(String, String)); C# string is not an
+// ICharSequence, so they are wrapped with Of(...) (StringCharSequence). The anonymous ChannelInboundHandlerAdapter
+// of reentrantClose is the named nested ReentrantCloseHandler, ctx.close() is ctx.CloseAsync(); new
+// Exception(cause) keeps the cause as InnerException and printStackTrace() writes the exception to Console.Error.
+// Integer.toHexString is ToString("x") with the invariant culture. The deprecated-free constructors
+// HttpRequestDecoder(int, int, int) and HttpRequestDecoder(HttpDecoderConfig) are used as in Java.
 public class HttpRequestDecoderTest
 {
     private static readonly byte[] CONTENT_CRLF_DELIMITERS = CreateContent("\r\n");

@@ -35,14 +35,12 @@ namespace Netty.NET.Handler.Codec.Http;
  * simply removes itself from the pipeline. If the upgrade is successful, upgrades the pipeline to
  * the new protocol.
  */
-// CLR: the nested interfaces take the I prefix (ISourceCodec, IUpgradeCodec); the simple enum UpgradeEvent is a C# enum
-// and currentUpgradeEvent, which Java resets to null, is UpgradeEvent?. The ChannelOutboundHandler operations are the
-// Task-returning *Async members of IChannelOutboundHandler, whose Task replaces the promise
-// (docs/codec-base-porting.md, Outbound operations); promise.setFailure(...) is a faulted Task. SocketAddress is EndPoint
-// (docs/handler-porting.md, Addresses), Collection<CharSequence> is ICollection<ICharSequence>, LinkedHashSet is the
-// Common LinkedHashSet, IllegalStateException is InvalidOperationException, catch (Throwable) is catch (Exception) and
-// assert is Debug.Assert. The UPGRADE header value is a String in Java and a CharSequence there; it is wrapped in
-// StringCharSequence for AsciiString.contentEqualsIgnoreCase.
+// CLR: The simple enum UpgradeEvent is a C# enum and currentUpgradeEvent, which Java resets to null, is
+// UpgradeEvent?. The ChannelOutboundHandler operations are the Task-returning *Async members of
+// IChannelOutboundHandler, whose Task replaces the promise. SocketAddress is EndPoint, Collection<CharSequence> is
+// ICollection<ICharSequence>, LinkedHashSet is the Common LinkedHashSet, IllegalStateException is
+// InvalidOperationException, catch (Throwable) is catch (Exception) and assert is Debug.Assert. The UPGRADE header
+// value is a String in Java and a CharSequence there.
 public class HttpClientUpgradeHandler : HttpObjectAggregator, IChannelOutboundHandler
 {
 

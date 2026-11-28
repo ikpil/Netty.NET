@@ -30,12 +30,10 @@ namespace Netty.NET.Handler.Proxy;
  */
 // CLR: SocketAddress is EndPoint; "InetSocketAddress raddr = destinationAddress()" is
 // ProxyHandler.CastToInetSocketAddress, raddr.isUnresolved() is a DnsEndPoint whose Host is getHostString(), and
-// raddr.getAddress().getHostAddress() is ProxyHandler.GetHostAddress of the IPEndPoint's Address (the JDK text). Java's
-// byte is the C# byte of the codec-socks port (Socks5AuthMethod.ByteValue()); Collections.singletonList and
-// Arrays.asList are lists passed to the IEnumerable constructor of DefaultSocks5InitialRequest, the counterpart of its
-// List constructor. The Socks5AuthMethod comparisons stay reference comparisons (the codec-socks types declare no ==
-// operator). java.lang.Error for the unreachable authMethod branch is InvalidOperationException, as codec-base's
-// AsciiHeadersEncoder maps it. The SOCKS5 message interfaces take the I prefix.
+// raddr.getAddress().getHostAddress() is ProxyHandler.GetHostAddress of the IPEndPoint's Address (the JDK text).
+// Java's byte is the C# byte of the codec-socks port (Socks5AuthMethod.ByteValue()). The Socks5AuthMethod
+// comparisons stay reference comparisons (the codec-socks types declare no == operator). java.lang.Error for the
+// unreachable authMethod branch is InvalidOperationException, as codec-base's AsciiHeadersEncoder maps it.
 public sealed class Socks5ProxyHandler : ProxyHandler
 {
     private const string PROTOCOL = "socks5";

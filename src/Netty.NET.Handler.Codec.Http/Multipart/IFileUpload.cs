@@ -22,9 +22,8 @@ namespace Netty.NET.Handler.Codec.Http.Multipart;
  * Most methods are inspired from java.io.File API.
  */
 // CLR: the Java interface FileUpload takes the I prefix (owner rule). copy(), duplicate(), retainedDuplicate(),
-// replace(ByteBuf), retain(), retain(int), touch() and touch(Object) are re-declared only to narrow the return type, so
-// they are inherited from IByteBufHolder (owner decision 2026-11-19, docs/transport-porting.md, Decisions); the
-// classes narrow them with covariant override returns.
+// replace(ByteBuf), retain(), retain(int), touch() and touch(Object) are re-declared only to narrow the return
+// type, so they are inherited from IByteBufHolder; the classes narrow them with covariant override returns.
 public interface IFileUpload : IHttpData
 {
     /**

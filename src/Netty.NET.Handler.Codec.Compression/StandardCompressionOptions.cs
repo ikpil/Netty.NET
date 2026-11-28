@@ -22,10 +22,10 @@ namespace Netty.NET.Handler.Codec.Compression;
  * Standard Compression Options for {@link BrotliOptions},
  * {@link GzipOptions} and {@link DeflateOptions}
  */
-// CLR: the final class is sealed. Not ported: the @Deprecated brotli(Encoder.Parameters), whose @deprecated text names
-// brotli(int, int, BrotliMode) (owner decision 2026-11-16), and zstd()/zstd(int, int, int), which return the
-// library-not-ported ZstdOptions: zstd-jni has no BCL counterpart on .NET 10 (owner decision 2026-11-23,
-// docs/codec-compression-porting.md). Their Javadoc is recorded in docs/codec-compression-porting-manifest.json.
+// CLR: the final class is sealed. Not ported: the @Deprecated brotli(Encoder.Parameters), whose @deprecated text
+// names brotli(int, int, BrotliMode), and zstd()/zstd(int, int, int), which return the library-not-ported
+// ZstdOptions: zstd-jni has no BCL counterpart on.NET 10. Their Javadoc is recorded in
+// docs/codec-compression-porting-manifest.json.
 public sealed class StandardCompressionOptions
 {
     private StandardCompressionOptions()

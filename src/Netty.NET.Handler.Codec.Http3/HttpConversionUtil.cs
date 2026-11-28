@@ -32,28 +32,28 @@ namespace Netty.NET.Handler.Codec.Http3;
 /**
  * Provides utility methods and constants for the HTTP/3 to HTTP conversion
  */
-// CLR: the final class with a private constructor is a static class; its two static initializers are the one static
-// constructor (a class has one static constructor, https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/
-// classes-and-structs/static-constructors), which runs them in source order after the field initializers. This file
-// mirrors codec-http2's HttpConversionUtil port (docs/codec-http2-porting.md, HTTP/1.x conversion): the codec-http
-// interfaces take the I prefix (IHttpMessage, IHttpRequest, IFullHttpRequest, ...) and their getters are methods
-// (docs/codec-http-porting.md, Messages). The @Deprecated message constructors with a validateHeaders flag are not
-// ported in codec-http (named replacements: the HttpHeadersFactory constructors), so the conversions call the
+// CLR: the final class with a private constructor is a static class; its two static initializers are the one
+// static constructor (a class has one static constructor,
+// https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/ classes-and-structs/static-constructors),
+// which runs them in source order after the field initializers. This file mirrors codec-http2's HttpConversionUtil
+// port : the codec-http interfaces take the I prefix (IHttpMessage, IHttpRequest, IFullHttpRequest,...) and their
+// getters are methods. The @Deprecated message constructors with a validateHeaders flag are not ported in
+// codec-http (named replacements: the HttpHeadersFactory constructors), so the conversions call the
 // HttpHeadersFactory constructors with headersFactory().withValidation(validate) and
-// trailersFactory().withValidation(validate), which is what the deprecated constructors do in Java. The @Deprecated
-// HttpHeaderNames.KEEP_ALIVE and PROXY_CONNECTION are not ported in codec-http (docs/codec-http-porting.md, Core not
-// ported), so the blacklist uses AsciiString constants with the same names. HttpHeaders.get returns a string, which is
-// wrapped in the Common StringCharSequence where Java uses the String as a CharSequence; StringUtil.unescapeCsvFields
-// takes and returns strings in the Common port (docs/codec-http-porting.md, Headers). InternalThreadLocalMap's
-// stringBuilder() is a new StringBuilder (retired; docs/codec-http-porting.md, Shared CLR adaptations). The ByteProcessor
-// constants are Func<byte, bool>. The catch (Http3Exception e) { throw e; } clauses rethrow with throw;, Throwable is
-// Exception and the throws clauses have no counterpart. new IllegalStateException(e) keeps Java's message
-// cause.toString() through ThrowableUtil.ThrowableToString. The string concatenations of a CharSequence that may be null
-// keep Java's "null" text (ToJavaString), and streamId + ": " formats the long with the invariant culture.
-// outputHeaders.set(name, streamId) boxes the long as Java boxes it (HttpHeaders.Set(ICharSequence, object), whose value
-// converter formats it with the invariant culture). java.net.URI is the private CreateUri/UriScheme/UriPort/UriAuthority
-// helpers (see CreateUri). IllegalArgumentException is ArgumentException; the package-private static members are
-// internal. The @Nullable annotations have no counterpart (no nullable annotation context).
+// trailersFactory().withValidation(validate), which is what the deprecated constructors do in Java. The
+// @Deprecated HttpHeaderNames.KEEP_ALIVE and PROXY_CONNECTION are not ported in codec-http, so the blacklist uses
+// AsciiString constants with the same names. HttpHeaders.get returns a string, which is wrapped in the Common
+// StringCharSequence where Java uses the String as a CharSequence; StringUtil.unescapeCsvFields takes and returns
+// strings in the Common port. InternalThreadLocalMap's stringBuilder() is a new StringBuilder (retired;
+// docs/codec-http-porting.md, Shared CLR adaptations). The ByteProcessor constants are Func<byte, bool>. The catch
+// (Http3Exception e) { throw e; } clauses rethrow with throw;, Throwable is Exception and the throws clauses have
+// no counterpart. new IllegalStateException(e) keeps Java's message cause.toString() through
+// ThrowableUtil.ThrowableToString. The string concatenations of a CharSequence that may be null keep Java's "null"
+// text (ToJavaString), and streamId + ": " formats the long with the invariant culture. outputHeaders.set(name,
+// streamId) boxes the long as Java boxes it (HttpHeaders.Set(ICharSequence, object), whose value converter formats
+// it with the invariant culture). java.net.URI is the private CreateUri/UriScheme/UriPort/UriAuthority helpers
+// (see CreateUri). IllegalArgumentException is ArgumentException; the package-private static members are internal.
+// The @Nullable annotations have no counterpart (no nullable annotation context).
 public static class HttpConversionUtil
 {
     /**
@@ -97,9 +97,9 @@ public static class HttpConversionUtil
     /**
      * Provides the HTTP header extensions used to carry HTTP/3 information in HTTP objects
      */
-    // CLR: the Java enum with a constructor, a field and a method is a sealed class with static readonly instances, as
-    // codec-base Base64Dialect and codec-http HttpStatusClass (docs/codec-base-porting.md, docs/codec-http-porting.md);
-    // the implicit values() is Values() and ToString() returns the constant name.
+    // CLR: the Java enum with a constructor, a field and a method is a sealed class with static readonly
+    // instances, as codec-base Base64Dialect and codec-http HttpStatusClass; the implicit values() is Values() and
+    // ToString() returns the constant name.
     public sealed class ExtensionHeaderNames
     {
         /**
@@ -162,7 +162,6 @@ public static class HttpConversionUtil
             return text;
         }
 
-        // CLR: Enum.toString() is the constant name.
         public override string ToString()
         {
             return name;
@@ -942,23 +941,22 @@ public static class HttpConversionUtil
         }
     }
 
-    // CLR: java.net.URI has no BCL counterpart with the same results: System.Uri canonicalizes (it lower-cases the host
-    // and leaves the user info and a default port out of Authority) and validates with other rules
-    // (docs/codec-http-porting.md, Shared CLR adaptations: "System.Uri canonicalizes"). This class passes URI.create
-    // only "" and the "scheme://authority" text of Http3PathlessRequestTarget (optionally followed by one '/', '?' or
-    // '#'), and reads getScheme(), getPort() and getAuthority(), so the private helpers below keep the parts of the
-    // OpenJDK parser that apply to these forms
-    // (https://raw.githubusercontent.com/openjdk/jdk17u/master/src/java.base/share/classes/java/net/URI.java); they are
-    // the helpers of codec-http2's HttpConversionUtil port, which this module does not reference (codec-http3 does not
-    // depend on codec-http2): parseHierarchical allows an empty authority before a path, query or fragment
-    // (getAuthority() is then null) and fails at the end of the input; parseAuthority accepts an authority whose
-    // characters are all reg_name characters (unreserved, %-escapes, visible non-ASCII characters and "$,;:@&=+") as
-    // registry-based when it does not parse as a server ([userinfo@]host[:port]); an authority with '[' or ']' must
-    // parse as a server with an IPv6 literal (System.Net.IPAddress.TryParse checks the literal), and any other
-    // character, a malformed %-escape or a failed server parse of such an authority throws (URISyntaxException, which
-    // URI.create wraps in IllegalArgumentException, here ArgumentException). getPort() is the port of a server-based
-    // authority, -1 if undefined. getAuthority() decodes %-escapes as UTF-8 outside square brackets (decode(s) with
-    // ignorePercentInBrackets).
+    // CLR: java.net.URI has no BCL counterpart with the same results: System.Uri canonicalizes (it lower-cases the
+    // host and leaves the user info and a default port out of Authority) and validates with other rules. This
+    // class passes URI.create only "" and the "scheme://authority" text of Http3PathlessRequestTarget (optionally
+    // followed by one '/', '?' or '#'), and reads getScheme(), getPort() and getAuthority(), so the private
+    // helpers below keep the parts of the OpenJDK parser that apply to these forms
+    // (https://raw.githubusercontent.com/openjdk/jdk17u/master/src/java.base/share/classes/java/net/URI.java);
+    // they are the helpers of codec-http2's HttpConversionUtil port, which this module does not reference
+    // (codec-http3 does not depend on codec-http2): parseHierarchical allows an empty authority before a path,
+    // query or fragment (getAuthority() is then null) and fails at the end of the input; parseAuthority accepts an
+    // authority whose characters are all reg_name characters (unreserved, %-escapes, visible non-ASCII characters
+    // and "$,;:@&=+") as registry-based when it does not parse as a server ([userinfo@]host[:port]); an authority
+    // with '[' or ']' must parse as a server with an IPv6 literal (System.Net.IPAddress.TryParse checks the
+    // literal), and any other character, a malformed %-escape or a failed server parse of such an authority throws
+    // (URISyntaxException, which URI.create wraps in IllegalArgumentException, here ArgumentException). getPort()
+    // is the port of a server-based authority, -1 if undefined. getAuthority() decodes %-escapes as UTF-8 outside
+    // square brackets (decode(s) with ignorePercentInBrackets).
     private static string CreateUri(string str)
     {
         if (str.Length == 0)
@@ -993,14 +991,12 @@ public static class HttpConversionUtil
         return str;
     }
 
-    // CLR: URI.getScheme() of a URI created by CreateUri.
     private static string UriScheme(string uri)
     {
         int schemeEnd = uri.IndexOf("://", StringComparison.Ordinal);
         return schemeEnd > 0 ? uri.Substring(0, schemeEnd) : null;
     }
 
-    // CLR: URI.getPort() of a URI created by CreateUri.
     private static int UriPort(string uri)
     {
         string authority = RawUriAuthority(uri);
@@ -1013,7 +1009,6 @@ public static class HttpConversionUtil
         return port;
     }
 
-    // CLR: URI.getAuthority() of a URI created by CreateUri.
     private static string UriAuthority(string uri)
     {
         string authority = RawUriAuthority(uri);
@@ -1348,9 +1343,7 @@ public static class HttpConversionUtil
     /**
      * Utility which translates HTTP/3 headers to HTTP/1 headers.
      */
-    // CLR: the static initializer is the static constructor; Iterable<Entry<CharSequence, CharSequence>> is
-    // IEnumerable<IEntry<ICharSequence, ICharSequence>>, which IHttp3Headers implements. output.get(HOST) returns a
-    // string, wrapped in a StringCharSequence (null stays null) for contentEqualsIgnoreCase.
+    // CLR: the static initializer is the static constructor.
     private sealed class Http3ToHttpHeaderTranslator
     {
         /**

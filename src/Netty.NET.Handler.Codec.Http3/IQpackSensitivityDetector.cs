@@ -38,10 +38,9 @@ namespace Netty.NET.Handler.Codec.Http3;
  * {@code Proxy-Authorization}.</p>
  * If the object can be dynamically modified and shared across multiple connections it may need to be thread safe.
  */
-// CLR: the interface takes the I prefix (docs/codec-http2-porting.md, Shared CLR adaptations); CharSequence is the
-// Common ICharSequence. The interface constants NEVER_SENSITIVE and ALWAYS_SENSITIVE are static readonly interface
-// fields and their lambdas are private nested classes, as codec-http2's IHttp2HeadersEncoder.ISensitivityDetector
-// constants.
+// CLR: the interface takes the I prefix. The interface constants NEVER_SENSITIVE and ALWAYS_SENSITIVE are static
+// readonly interface fields and their lambdas are private nested classes, as codec-http2's
+// IHttp2HeadersEncoder.ISensitivityDetector constants.
 public interface IQpackSensitivityDetector
 {
 

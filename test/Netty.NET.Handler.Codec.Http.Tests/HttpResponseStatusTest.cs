@@ -20,9 +20,7 @@ using static Netty.NET.Handler.Codec.Http.HttpResponseStatus;
 
 namespace Netty.NET.Handler.Codec.Http.Tests;
 
-// CLR: assertThrows(IllegalArgumentException.class, executable) is Assert.Throws<ArgumentException>; the anonymous
-// Executables are lambdas and fail(String) is Assert.Fail. testHttpStatusClassValueOf walks the same 2^32 codes as the
-// Java test; the two UNKNOWN loops call the xUnit assertion only when a code does not map to UNKNOWN (the assertion
+// CLR: The two UNKNOWN loops call the xUnit assertion only when a code does not map to UNKNOWN (the assertion
 // would fail with the same values), because an Assert.Equal call per code costs minutes on the CLR. The int loop
 // "code > 0; code++" ends by wrapping past int.MaxValue, as in Java (C# int arithmetic is unchecked here).
 public class HttpResponseStatusTest

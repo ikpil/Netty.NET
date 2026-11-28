@@ -27,24 +27,22 @@ using static Netty.NET.Handler.Codec.Http2.Tests.Http2TestUtil;
 
 namespace Netty.NET.Handler.Codec.Http2.Tests;
 
-// CLR: readOutbound()/readInbound() are ReadOutbound<T>()/ReadInbound<T>() and content() is the Content property; the
-// codec-http interfaces take the I prefix and their getters are methods (docs/codec-http-porting.md, Shared CLR
-// adaptations). A Java String passed as a CharSequence (Http2Headers.get/path/method/authority/status/setInt/add) is a
-// StringCharSequence (Http2TestUtil.Of), because a C# string is not an ICharSequence (docs/codec-http-porting.md, Shared
-// CLR adaptations). CharsetUtil.UTF_8 is Encoding.UTF8. The @Deprecated DefaultLastHttpContent(ByteBuf, boolean) is
-// not ported in codec-http (its @deprecated text names DefaultLastHttpContent(ByteBuf), "to always have header
-// validation enabled"; src/Netty.NET.Handler.Codec.Http/DefaultLastHttpContent.cs); every call here passes true, so it
-// is that constructor. assertThrows(T.class, executable) is Assert.ThrowsAny<T> with a lambda, AssertJ's
-// assertThat(x).isNotInstanceOf(T.class) is Assert.IsNotAssignableFrom<T> (as test/Netty.NET.Handler.Codec.Http.Tests/
-// HttpClientCodecTest.cs), and the @ValueSource(strings) test is a [Theory] with InlineData rows. The private helper
-// testDecodeFullResponseHeaders(boolean), which overloads a test name, is TestDecodeFullResponseHeaders0 (xUnit1024;
-// docs/codec-http-porting.md, Shared CLR adaptations). The anonymous Http2FrameStream and ChannelOutboundHandlerAdapter
-// classes are named nested classes; their write(ctx, msg, promise) is WriteAsync(ctx, msg, cancellationToken), where
-// ctx.write(msg, promise) returns ctx.WriteAsync(msg, cancellationToken) and promise.setSuccess() returns a completed
-// Task (docs/codec-base-porting.md, Outbound operations). ConcurrentLinkedQueue is ConcurrentQueue
-// (docs/codec-http-porting.md, Shared CLR adaptations) and poll() is TryDequeue (Poll). SslContextBuilder.forClient()
-// .sslProvider(SslProvider.JDK).build().newHandler(ByteBufAllocator.DEFAULT) is the handler port's SslContextBuilder and
-// SslHandler on SslStream (docs/handler-porting.md, SSL) with IByteBufAllocator.Default.
+// CLR: A Java String passed as a CharSequence (Http2Headers.get/path/method/authority/status/setInt/add) is a
+// StringCharSequence (Http2TestUtil.Of), because a C# string is not an ICharSequence. The @Deprecated
+// DefaultLastHttpContent(ByteBuf, boolean) is not ported in codec-http (its @deprecated text names
+// DefaultLastHttpContent(ByteBuf), "to always have header validation enabled";
+// src/Netty.NET.Handler.Codec.Http/DefaultLastHttpContent.cs); every call here passes true, so it is that
+// constructor. assertThrows(T.class, executable) is Assert.ThrowsAny<T> with a lambda, AssertJ's
+// assertThat(x).isNotInstanceOf(T.class) is Assert.IsNotAssignableFrom<T> (as
+// test/Netty.NET.Handler.Codec.Http.Tests/ HttpClientCodecTest.cs), and the @ValueSource(strings) test is a
+// [Theory] with InlineData rows. The private helper testDecodeFullResponseHeaders(boolean), which overloads a test
+// name, is TestDecodeFullResponseHeaders0 (xUnit1024; docs/codec-http-porting.md, Shared CLR adaptations). The
+// anonymous Http2FrameStream and ChannelOutboundHandlerAdapter classes are named nested classes; their write(ctx,
+// msg, promise) is WriteAsync(ctx, msg, cancellationToken), where ctx.write(msg, promise) returns
+// ctx.WriteAsync(msg, cancellationToken) and promise.setSuccess() returns a completed Task. ConcurrentLinkedQueue
+// is ConcurrentQueue and poll() is TryDequeue (Poll).
+// SslContextBuilder.forClient().sslProvider(SslProvider.JDK).build().newHandler(ByteBufAllocator.DEFAULT) is the
+// handler port's SslContextBuilder and SslHandler on SslStream with IByteBufAllocator.Default.
 public class Http2StreamFrameToHttpObjectCodecTest
 {
 

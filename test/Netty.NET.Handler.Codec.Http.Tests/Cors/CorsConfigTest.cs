@@ -22,11 +22,11 @@ using static Netty.NET.Handler.Codec.Http.Cors.CorsConfigBuilder;
 
 namespace Netty.NET.Handler.Codec.Http.Tests.Cors;
 
-// CLR: assertThat(collection).contains(values...) is one Assert.Contains per value; assertThrows(IllegalArgumentException
-// .class, executable) is Assert.Throws<ArgumentException>, and the anonymous Executable is a lambda. The String header
-// names that Java passes to preflightResponseHeader(CharSequence, ...) are StringCharSequence values (a C# string is not
-// an ICharSequence). HttpHeaders is an IEnumerable of its entries, so assertEquals(EmptyHttpHeaders.INSTANCE, headers) calls
-// Equals directly, as the core header tests do.
+// CLR: assertThat(collection).contains(values...) is one Assert.Contains per value;
+// assertThrows(IllegalArgumentException.class, executable) is Assert.Throws<ArgumentException>, and the anonymous
+// Executable is a lambda. The String header names that Java passes to preflightResponseHeader(CharSequence,...)
+// are StringCharSequence values (a C# string is not an ICharSequence). HttpHeaders is an IEnumerable of its
+// entries, so assertEquals(EmptyHttpHeaders.INSTANCE, headers) calls Equals directly, as the core header tests do.
 public class CorsConfigTest
 {
 

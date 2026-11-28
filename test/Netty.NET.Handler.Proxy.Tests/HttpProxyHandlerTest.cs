@@ -35,24 +35,23 @@ using HttpVersion = Netty.NET.Handler.Codec.Http.HttpVersion;
 
 namespace Netty.NET.Handler.Proxy.Tests;
 
-// CLR: InetSocketAddress.createUnresolved(host, port) is DnsEndPoint; new InetSocketAddress(InetAddress.getByName(host),
-// port) and new InetSocketAddress(host, port) resolve host with Resolver's DefaultNameResolver, the port of
-// InetAddress.getByName (JDK literal rules, java.net.preferIPv6Addresses order), as Transport's AbstractBootstrap does
-// for SocketUtils.socketAddress (docs/handler-porting.md, Addresses). A resolved InetSocketAddress keeps the host name it
-// was created from for getHostString(), while IPEndPoint keeps only the IPAddress and NetUtil.GetHostname returns the
-// numeric address (docs/codec-http-porting.md, HttpUtilTest.testFormatHostnameForHttpFromResolvedAddressWithHostname):
-// testHostname, testHostHeaderWithHttpDefaultPort and testHostHeaderWithHttpsDefaultPort therefore expect the numeric
-// text of the resolved localhost (HostText) where the source expects "localhost", and still check the CONNECT URL and
-// the Host header choice for that address. @ParameterizedTest @ValueSource(booleans) is [Theory] [InlineData]. Mockito
-// is Moq: the ChannelPromise of connect(ctx, remote, local, promise) is the CancellationToken the handler passes on
-// (and the Task it returns), so same(promise)/verify(...).connect(..., promise) match that token;
-// verifyNoMoreInteractions(promise) on the new mock checks no interaction and has no counterpart without a promise
-// object. new DefaultHttpHeaders(false) is DefaultHttpHeadersFactory.HeadersFactory().WithValidation(false)
-// .NewHeaders(), as in codec-http's HttpHeadersTest (the @Deprecated constructor is not ported). The protected
-// newInitialMessage is reached through the internal InvokeNewInitialMessage. The anonymous classes are nested classes;
-// AtomicBoolean/AtomicReference are Common's. IllegalArgumentException is ArgumentException, assertInstanceOf is
-// Assert.IsAssignableFrom and AssertJ's isSameAs is Assert.Same. CharsetUtil.US_ASCII is Encoding.ASCII. The channel
-// operations receive TestContext.Current.CancellationToken (xUnit1051).
+// CLR: InetSocketAddress.createUnresolved(host, port) is DnsEndPoint; new
+// InetSocketAddress(InetAddress.getByName(host), port) and new InetSocketAddress(host, port) resolve host with
+// Resolver's DefaultNameResolver, the port of InetAddress.getByName (JDK literal rules,
+// java.net.preferIPv6Addresses order), as Transport's AbstractBootstrap does for SocketUtils.socketAddress. A
+// resolved InetSocketAddress keeps the host name it was created from for getHostString(), while IPEndPoint keeps
+// only the IPAddress and NetUtil.GetHostname returns the numeric address : testHostname,
+// testHostHeaderWithHttpDefaultPort and testHostHeaderWithHttpsDefaultPort therefore expect the numeric text of
+// the resolved localhost (HostText) where the source expects "localhost", and still check the CONNECT URL and the
+// Host header choice for that address. Mockito is Moq: the ChannelPromise of connect(ctx, remote, local, promise)
+// is the CancellationToken the handler passes on (and the Task it returns), so
+// same(promise)/verify(...).connect(..., promise) match that token; verifyNoMoreInteractions(promise) on the new
+// mock checks no interaction and has no counterpart without a promise object. new DefaultHttpHeaders(false) is
+// DefaultHttpHeadersFactory.HeadersFactory().WithValidation(false).NewHeaders(), as in codec-http's
+// HttpHeadersTest (the @Deprecated constructor is not ported). The protected newInitialMessage is reached through
+// the internal InvokeNewInitialMessage. AtomicBoolean/AtomicReference are Common's. IllegalArgumentException is
+// ArgumentException, assertInstanceOf is Assert.IsAssignableFrom and AssertJ's isSameAs is Assert.Same. The
+// channel operations receive TestContext.Current.CancellationToken (xUnit1051).
 public class HttpProxyHandlerTest
 {
     [Fact]
@@ -218,8 +217,7 @@ public class HttpProxyHandlerTest
         }
     }
 
-    // CLR: sync() awaits the bind/connect/close Tasks; the anonymous ChannelInitializers are the Transport's
-    // ActionChannelInitializer and the anonymous ChannelInboundHandlerAdapter is ExceptionRecorder.
+    // CLR: sync() awaits the bind/connect/close Tasks.
     [Fact]
     public async Task TestExceptionDuringConnect()
     {

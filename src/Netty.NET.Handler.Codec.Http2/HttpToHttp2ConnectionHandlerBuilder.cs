@@ -22,13 +22,13 @@ namespace Netty.NET.Handler.Codec.Http2;
 /**
  * Builder which builds {@link HttpToHttp2ConnectionHandler} objects.
  */
-// CLR: the @Override methods widen protected members of AbstractHttp2ConnectionHandlerBuilder to public; a C# override
-// "can't change the accessibility of the virtual method"
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override), so they are public members
-// declared new that call base ("you explicitly hide a member that a base class provides",
-// https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/new-modifier), as Http2ConnectionHandlerBuilder
-// does. The @Deprecated initialHuffmanDecodeCapacity(int) override has no @deprecated text and is ported with the
-// [Obsolete] text of the member it exposes (owner decision 2026-11-16). SensitivityDetector is
+// CLR: the @Override methods widen protected members of AbstractHttp2ConnectionHandlerBuilder to public; a C#
+// override "can't change the accessibility of the virtual method"
+// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override), so they are public
+// members declared new that call base ("you explicitly hide a member that a base class provides",
+// https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/new-modifier), as
+// Http2ConnectionHandlerBuilder does. The @Deprecated initialHuffmanDecodeCapacity(int) override has no
+// @deprecated text and is ported with the [Obsolete] text of the member it exposes. SensitivityDetector is
 // IHttp2HeadersEncoder.ISensitivityDetector. build(decoder, encoder, initialSettings) is a protected override.
 public sealed class HttpToHttp2ConnectionHandlerBuilder :
         AbstractHttp2ConnectionHandlerBuilder<HttpToHttp2ConnectionHandler, HttpToHttp2ConnectionHandlerBuilder>

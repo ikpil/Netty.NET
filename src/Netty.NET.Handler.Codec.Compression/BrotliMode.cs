@@ -19,12 +19,12 @@ namespace Netty.NET.Handler.Codec.Compression;
 /**
  * Provides a way to specify the Brotli compression mode.
  */
-// CLR: the package-private adapt() converts the constant to brotli4j's Encoder.Mode and is not ported: brotli4j is not
-// ported (owner decision 2026-11-23) and the BCL System.IO.Compression.BrotliEncoder takes only a quality and a window
-// (https://learn.microsoft.com/en-us/dotnet/api/system.io.compression.brotliencoder.-ctor?view=net-10.0). Without it
-// the Java enum has no fields or methods, so it is a simple C# enum. BrotliOptions keeps the mode, but the BCL encoder
-// does not take it: its streaming encoder never sets the native BROTLI_PARAM_MODE ("Tune encoder for specific input"),
-// which therefore stays at BROTLI_DEFAULT_MODE, BROTLI_MODE_GENERIC
+// CLR: the package-private adapt() converts the constant to brotli4j's Encoder.Mode and is not ported: brotli4j is
+// not ported and the BCL System.IO.Compression.BrotliEncoder takes only a quality and a window
+// (https://learn.microsoft.com/en-us/dotnet/api/system.io.compression.brotliencoder.-ctor?view=net-10.0). Without
+// it the Java enum has no fields or methods, so it is a simple C# enum. BrotliOptions keeps the mode, but the BCL
+// encoder does not take it: its streaming encoder never sets the native BROTLI_PARAM_MODE ("Tune encoder for
+// specific input"), which therefore stays at BROTLI_DEFAULT_MODE, BROTLI_MODE_GENERIC
 // (https://raw.githubusercontent.com/dotnet/dotnet/297acf930fb0f5c07fd4e51d78e521b4ad2e5d1f/src/runtime/src/libraries/System.IO.Compression.Brotli/src/System/IO/Compression/enc/BrotliEncoder.cs,
 // https://raw.githubusercontent.com/hyperxpro/Brotli4j/v1.23.0/brotli/include/brotli/encode.h). The mode is a
 // compression hint, so TEXT and FONT give a valid Brotli stream that may differ in size from brotli4j's.

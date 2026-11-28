@@ -103,7 +103,6 @@ public class DelegatingDecompressorFrameListener : Http2FrameListenerDecorator
         connection.AddListener(new StreamRemovedListener(this));
     }
 
-    // CLR: the anonymous Http2ConnectionAdapter of the constructor.
     private sealed class StreamRemovedListener : Http2ConnectionAdapter
     {
         private readonly DelegatingDecompressorFrameListener frameListener;
@@ -398,8 +397,6 @@ public class DelegatingDecompressorFrameListener : Http2FrameListenerDecorator
             this.decompressor.Pipeline.AddLast(new DecompressorHandler(this, connection, listener));
         }
 
-        // CLR: the anonymous ChannelInboundHandlerAdapter of the constructor; it reads and writes the fields of the
-        // Http2Decompressor it was created for, as the Java inner class does.
         private sealed class DecompressorHandler : ChannelInboundHandlerAdapter
         {
             private readonly Http2Decompressor owner;

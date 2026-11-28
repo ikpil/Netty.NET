@@ -27,16 +27,15 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
 /**
  * Unit tests for {@link Http2MultiplexHandler}.
  */
-// CLR: the inherited tests of the abstract Http2MultiplexTest<C> run for this class (owner rule 9).
-// new Http2FrameCodecBuilder(true) is the internal constructor and frameWriter(...) the internal FrameWriter(...) that
+// CLR: the inherited tests of the abstract Http2MultiplexTest<C> run for this class (owner rule 9). new
+// Http2FrameCodecBuilder(true) is the internal constructor and frameWriter(...) the internal FrameWriter(...) that
 // the package's tests use. RuntimeException is Exception (docs/codec-base-porting.md, Shared CLR adaptations,
 // Exceptions; new RuntimeException(cause) keeps Java's message cause.toString() through Common's
 // ThrowableUtil.ThrowableToString, docs/codec-http-porting.md, Shared CLR adaptations) and SSLException is
-// AuthenticationException (docs/handler-porting.md, JSSE and JCA on the BCL); assertThrows is Assert.ThrowsAny
-// (docs/codec-http-porting.md, Core test notes). channel.parent() is the Parent property, parent.close() discards the
-// Task, open().syncUninterruptibly().getNow() is an await of OpenAsync() (the EmbeddedChannel completes it on the
-// calling thread) and closeFuture().isDone() is CloseFuture.IsCompleted. The anonymous classes are private nested
-// classes; the two exception filters share one.
+// AuthenticationException; assertThrows is Assert.ThrowsAny. channel.parent() is the Parent property,
+// parent.close() discards the Task, open().syncUninterruptibly().getNow() is an await of OpenAsync() (the
+// EmbeddedChannel completes it on the calling thread) and closeFuture().isDone() is CloseFuture.IsCompleted. The
+// two exception filters share one.
 public class Http2MultiplexHandlerTest : Http2MultiplexTest<Http2FrameCodec>
 {
 
@@ -97,8 +96,6 @@ public class Http2MultiplexHandlerTest : Http2MultiplexTest<Http2FrameCodec>
         Assert.Equal(testExc, exc);
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of sslExceptionTriggersChildChannelException (forward false)
-    // and of customExceptionForwarding (forward true, which fires an Http2MultiplexActiveStreamsException).
     private sealed class TestExceptionFilter : ChannelInboundHandlerAdapter
     {
         private readonly Exception testExc;
@@ -151,7 +148,6 @@ public class Http2MultiplexHandlerTest : Http2MultiplexTest<Http2FrameCodec>
         }
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of idleOutboundStreamClosedWhenParentCloses.
     private sealed class InactiveCounter : ChannelInboundHandlerAdapter
     {
         private readonly AtomicInteger inactive;

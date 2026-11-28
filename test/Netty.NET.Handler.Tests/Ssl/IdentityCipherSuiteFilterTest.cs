@@ -20,8 +20,6 @@ using Netty.NET.Handler.Ssl;
 
 namespace Netty.NET.Handler.Tests.Ssl;
 
-// CLR: Arrays.asList is a List<string>, HashSet is HashSet<string> and toArray() is ToArray(); assertArrayEquals is
-// Assert.Equal on the arrays, which compares the elements in order.
 public class IdentityCipherSuiteFilterTest
 {
 

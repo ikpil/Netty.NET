@@ -27,20 +27,16 @@ namespace Netty.NET.Handler.Codec.Http.Cors;
  * Configuration for Cross-Origin Resource Sharing (CORS).
  */
 // CLR: Set<T> is ISet<T>; LinkedHashSet is the Common LinkedHashSet (insertion order: origin() returns the first
-// configured origin). Collections.unmodifiableSet is a ReadOnlySet<T> view, "a wrapper around the specified set"
-// (https://learn.microsoft.com/en-us/dotnet/api/system.collections.objectmodel.readonlyset-1?view=net-10.0, as handler's
-// SslUtils). Callable<?> is Func<object> and Map<CharSequence, Callable<?>> an IDictionary<ICharSequence, Func<object>>
-// (see CorsConfigBuilder); "value instanceof Iterable" is "value is IEnumerable<object>", the core mapping of Iterable<?>
-// (a string or an ICharSequence is not one, as a Java String is not Iterable; a sequence of a value type is added as one
-// object). IllegalStateException is InvalidOperationException. toString() keeps the Java text: booleans print as
-// true/false, the sets as AbstractCollection.toString ("[a, b]",
+// configured origin). IllegalStateException is InvalidOperationException. toString() keeps the Java text: booleans
+// print as true/false, the sets as AbstractCollection.toString ("[a, b]",
 // https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/AbstractCollection.html) and the map as
-// AbstractMap.toString ("{k=v}", https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/AbstractMap.html),
-// through the private CLR helpers JavaString/CollectionToString/MapToString; a Func value prints its delegate type name
-// where Java prints the Callable's class name and identity hash. The package-private constructor is internal.
-// The @Deprecated members whose @deprecated text names a replacement (isShortCurcuit(), withAnyOrigin(), withOrigin(String),
-// withOrigins(String...) and the nested Builder, replaced by isShortCircuit() and CorsConfigBuilder) are not ported (owner
-// decision 2026-11-16); DateValueGenerator ("Removed without alternatives.") is ported with [Obsolete].
+// AbstractMap.toString ("{k=v}",
+// https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/AbstractMap.html), through the private
+// CLR helpers JavaString/CollectionToString/MapToString; a Func value prints its delegate type name where Java
+// prints the Callable's class name and identity hash. The @Deprecated members whose @deprecated text names a
+// replacement (isShortCurcuit(), withAnyOrigin(), withOrigin(String), withOrigins(String...) and the nested
+// Builder, replaced by isShortCircuit() and CorsConfigBuilder) are not ported; DateValueGenerator ("Removed
+// without alternatives.") is ported with [Obsolete].
 public sealed class CorsConfig
 {
 
@@ -301,7 +297,6 @@ public sealed class CorsConfig
                 ", isPrivateNetworkAllowed=" + JavaString(allowPrivateNetwork) + ']';
     }
 
-    // CLR: String.valueOf(boolean).
     private static string JavaString(bool value)
     {
         return value ? "true" : "false";
@@ -313,7 +308,6 @@ public sealed class CorsConfig
         return "[" + string.Join(", ", c.Select(e => e == null ? "null" : e.ToString())) + "]";
     }
 
-    // CLR: AbstractMap.toString().
     private static string MapToString<K, V>(IDictionary<K, V> m)
     {
         return "{" + string.Join(", ", m.Select(e => (e.Key == null ? "null" : e.Key.ToString()) + "=" +
@@ -323,9 +317,9 @@ public sealed class CorsConfig
     /**
      * @deprecated Removed without alternatives.
      */
-    // CLR: @deprecated names no replacement, so it is ported with [Obsolete] (owner decision 2026-11-16).
-    // Callable<Date> is a class with Call() returning DateTimeOffset (see CorsConfigBuilder); new Date() is the current
-    // instant at millisecond precision. The "throws Exception" clause has no C# counterpart.
+    // CLR: @deprecated names no replacement, so it is ported with [Obsolete]. Callable<Date> is a class with
+    // Call() returning DateTimeOffset (see CorsConfigBuilder); new Date() is the current instant at millisecond
+    // precision. The "throws Exception" clause has no C# counterpart.
     [Obsolete("Removed without alternatives.")]
     public sealed class DateValueGenerator
     {

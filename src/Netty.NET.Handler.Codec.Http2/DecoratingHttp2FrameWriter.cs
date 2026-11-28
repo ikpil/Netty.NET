@@ -23,10 +23,9 @@ namespace Netty.NET.Handler.Codec.Http2;
 /**
  * Decorator around another {@link Http2FrameWriter} instance.
  */
-// CLR: delegate is a C# keyword, so the field and parameter are @delegate. The Task-returning methods take the Async
-// suffix, ChannelPromise is TaskCompletionSource and ChannelFuture is Task (docs/codec-http-porting.md, Shared CLR
-// adaptations); the overridable Java methods are virtual. Closeable.close() is Close(); IDisposable.Dispose() comes
-// from IHttp2FrameWriter.
+// CLR: delegate is a C# keyword, so the field and parameter are @delegate. The Task-returning methods take the
+// Async suffix, ChannelPromise is TaskCompletionSource and ChannelFuture is Task; the overridable Java methods are
+// virtual. IDisposable.Dispose() comes from IHttp2FrameWriter.
 public class DecoratingHttp2FrameWriter : IHttp2FrameWriter
 {
     private readonly IHttp2FrameWriter @delegate;

@@ -60,7 +60,7 @@ public class ByteToMessageCodecTest
         Assert.Null(ch.ReadOutbound());
     }
 
-    // CLR: the anonymous codec is a named nested class; Integer is int.
+    // CLR: Integer is int.
     private sealed class IntegerCodec : ByteToMessageCodec<int>
     {
         protected override void Encode(IChannelHandlerContext ctx, int msg, ByteBuf @out)

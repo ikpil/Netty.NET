@@ -18,10 +18,6 @@ using Netty.NET.Common;
 
 namespace Netty.NET.Handler.Codec.Http2.Tests;
 
-// CLR: assertThrows(IndexOutOfBoundsException.class, ...) is Assert.ThrowsAny<ArgumentOutOfRangeException> (the
-// Java exception mapped as in docs/codec-base-porting.md; docs/codec-http-porting.md, Core test notes:
-// "assertThrows(T.class) is Assert.ThrowsAny<T>"), and the anonymous Executables are lambdas. The package-private
-// HpackDynamicTable and HpackHeaderField are reached through InternalsVisibleTo.
 public class HpackDynamicTableTest
 {
     private static readonly AsciiString FOO = AsciiString.Cached("foo");

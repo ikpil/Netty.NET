@@ -20,9 +20,9 @@ using Netty.NET.Handler.Codec.Memcache.Binary;
 
 namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary;
 
-// CLR: xUnit creates a new test class instance for every test, so the @BeforeEach setUp() runs from the constructor
-// (https://xunit.net/docs/shared-context); CharsetUtil.UTF_8 is Encoding.UTF8 (docs/codec-base-porting.md). The
-// package-private setters are internal and visible to this test assembly through InternalsVisibleTo.
+// CLR: xUnit creates a new test class instance for every test, so the @BeforeEach setUp() runs from the
+// constructor (https://xunit.net/docs/shared-context); CharsetUtil.UTF_8 is Encoding.UTF8. The package-private
+// setters are internal and visible to this test assembly through InternalsVisibleTo.
 public class DefaultFullBinaryMemcacheResponseTest
 {
 

@@ -21,14 +21,14 @@ namespace Netty.NET.Handler.Codec.Dns;
 /**
  * The superclass which contains core information concerning a {@link DnsQuery} and a {@link DnsResponse}.
  */
-// CLR: interface with the I prefix. The generic record accessors keep their Java type parameter
-// <T extends DnsRecord> as T : IDnsRecord. Java infers T from the assignment target; C# infers a type argument only
-// from the method arguments, "it cannot infer the type parameters only from a constraint or return value"
-// (https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/generics/generic-methods), so callers state it
-// (RecordAt<IDnsQuestion>(section)). The Java re-declarations of touch(), touch(Object), retain() and retain(int)
-// only narrow the return type and are inherited unchanged from IReferenceCounted, as for the Transport interfaces:
-// C# 9 covariant returns cover class overrides only (docs/transport-porting.md, "Java type names and hierarchy");
-// AbstractDnsMessage and its subclasses keep the narrowed return types.
+// CLR: The generic record accessors keep their Java type parameter <T extends DnsRecord> as T : IDnsRecord. Java
+// infers T from the assignment target; C# infers a type argument only from the method arguments, "it cannot infer
+// the type parameters only from a constraint or return value"
+// (https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/generics/generic-methods), so callers state
+// it (RecordAt<IDnsQuestion>(section)). The Java re-declarations of touch(), touch(Object), retain() and
+// retain(int) only narrow the return type and are inherited unchanged from IReferenceCounted, as for the Transport
+// interfaces: C# 9 covariant returns cover class overrides only; AbstractDnsMessage and its subclasses keep the
+// narrowed return types.
 public interface IDnsMessage : IReferenceCounted
 {
 

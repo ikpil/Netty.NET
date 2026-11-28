@@ -22,8 +22,7 @@ namespace Netty.NET.Handler.Codec.Http;
 /**
  * Provides some utility methods for HTTP message implementations.
  */
-// CLR: the package-private final class with a private constructor is an internal static class. StringBuilder.setLength
-// is the Length setter, and Map.Entry is the codec-base IEntry.
+// CLR: StringBuilder.setLength is the Length setter, and Map.Entry is the codec-base IEntry.
 internal static class HttpMessageUtil
 {
 

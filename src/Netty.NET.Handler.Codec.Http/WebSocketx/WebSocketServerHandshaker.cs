@@ -32,16 +32,16 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx;
  * Base class for server side web socket opening and closing handshakes
  */
 // CLR: ChannelFuture is Task and ChannelPromise is TaskCompletionSource, with the promise overloads, the new
-// TaskCompletionSource for channel.newPromise()/ctx.newPromise(), the synchronous listeners on TaskScheduler.Default
-// and the Async suffix of WebSocketClientHandshaker (see its class comment). ChannelFutureListener.CLOSE closes
-// future.channel(); a Task has no channel, so the close continuations close the channel the operation ran on (the given
-// channel, or ctx.Channel). The @Deprecated uri() has no @deprecated text, so it names no replacement and is ported
-// with [Obsolete] (owner rule 7). Set<String> with LinkedHashSet is ISet<string> with the Common LinkedHashSet
-// (insertion order). String.split(",") keeps Java's result in Split ("Trailing empty strings are therefore not included
-// in the resulting array", https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html) and
-// trim() is core's HttpUtil.TrimJava. The anonymous handshake request handler is the named private nested class
-// HandshakeRequestHandler. The protected newHandshakeResponse(...), newWebsocketDecoder() and newWebSocketEncoder(),
-// which the Java tests reach through package access, have internal forwarders (InvokeNewHandshakeResponse, ...), as
+// TaskCompletionSource for channel.newPromise()/ctx.newPromise(), the synchronous listeners on
+// TaskScheduler.Default and the Async suffix of WebSocketClientHandshaker (see its class comment).
+// ChannelFutureListener.CLOSE closes future.channel(); a Task has no channel, so the close continuations close the
+// channel the operation ran on (the given channel, or ctx.Channel). The @Deprecated uri() has no @deprecated text,
+// so it names no replacement and is ported with [Obsolete] (owner rule 7). Set<String> with LinkedHashSet is
+// ISet<string> with the Common LinkedHashSet (insertion order). String.split(",") keeps Java's result in Split
+// ("Trailing empty strings are therefore not included in the resulting array",
+// https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html) and trim() is core's
+// HttpUtil.TrimJava. The protected newHandshakeResponse(...), newWebsocketDecoder() and newWebSocketEncoder(),
+// which the Java tests reach through package access, have internal forwarders (InvokeNewHandshakeResponse,...), as
 // core's HttpObjectEncoder.InvokeEncodeInitialLine. Non-final Java methods are virtual; SUB_PROTOCOL_WILDCARD is a
 // const. IllegalStateException is InvalidOperationException, and assert is Debug.Assert.
 public abstract class WebSocketServerHandshaker

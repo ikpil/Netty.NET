@@ -67,7 +67,6 @@ public static class Java8SslTestUtils
         return certCollection;
     }
 
-    // CLR: Class.getResourceAsStream(name) of SslContextTest (see LoadCertCollection).
     private static System.IO.Stream GetResourceAsStream(string resourceName)
     {
         FileInfo file = ResourcesUtil.GetFile(typeof(SslContextTest), resourceName);

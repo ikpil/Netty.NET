@@ -25,14 +25,14 @@ using SelectorFailureBehavior = Netty.NET.Handler.Ssl.ApplicationProtocolConfig.
 
 namespace Netty.NET.Handler.Tests.Ssl;
 
-// CLR: the JDK fixture of SSLEngineTest; its SSLEngine is SslStream (owner decision 2026-11-24). ProviderType keeps
-// ALPN_JAVA; ALPN_CONSCRYPT is library-not-ported (Conscrypt, owner decision 4), so its parameters are not generated. The
-// JCA Provider of a ProviderType (the provider field, provider(), clientSslContextProvider()/serverSslContextProvider())
-// has no counterpart: the engine is always SslStream. @MethodSource("newJdkParams") is [MemberData(nameof(NewJdkParams))]
-// over a static member (see SSLEngineTest). TestAbortedException (a skipped test) is Assert.Skip. The JDK ALPN negotiator
-// types of testTlsExtensionNoCompatibleProtocolsClientHandshakeFailure and the SSLEngine calls of
-// testEnablingAnAlreadyDisabledSslProtocol and TestDelegatingSslContext.initEngine are CLR-inapplicable (recorded in
-// docs/handler-porting-manifest.json; see the notes at those tests below).
+// CLR: the JDK fixture of SSLEngineTest; its SSLEngine is SslStream. ProviderType keeps ALPN_JAVA; ALPN_CONSCRYPT
+// is library-not-ported (Conscrypt, owner decision 4), so its parameters are not generated. The JCA Provider of a
+// ProviderType (the provider field, provider(), clientSslContextProvider()/serverSslContextProvider()) has no
+// counterpart: the engine is always SslStream. @MethodSource("newJdkParams") is [MemberData(nameof(NewJdkParams))]
+// over a static member (see SSLEngineTest). TestAbortedException (a skipped test) is Assert.Skip. The JDK ALPN
+// negotiator types of testTlsExtensionNoCompatibleProtocolsClientHandshakeFailure and the SSLEngine calls of
+// testEnablingAnAlreadyDisabledSslProtocol and TestDelegatingSslContext.initEngine are CLR-inapplicable (recorded
+// in docs/handler-porting-manifest.json; see the notes at those tests below).
 public class JdkSslEngineTest : SSLEngineTest
 {
     // CLR: a Java enum with abstract methods is a sealed class with static readonly instances (as codec-base
@@ -303,7 +303,7 @@ public class JdkSslEngineTest : SSLEngineTest
         throw new SkipTestException(protocol + " not on classpath");
     }
 
-    // CLR: serialVersionUID belongs to Java serialization, which .NET exceptions do not use.
+    // CLR: serialVersionUID belongs to Java serialization, which.NET exceptions do not use.
     private sealed class SkipTestException : Exception
     {
         internal SkipTestException(string message) : base(message)

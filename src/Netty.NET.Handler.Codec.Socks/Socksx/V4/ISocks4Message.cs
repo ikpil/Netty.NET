@@ -19,7 +19,6 @@ namespace Netty.NET.Handler.Codec.Socksx.V4;
 /**
  * A tag interface that all SOCKS4a protocol messages implement.
  */
-// CLR: Java interfaces take the I prefix (see ISocksMessage).
 public interface ISocks4Message : ISocksMessage
 {
     // Tag interface

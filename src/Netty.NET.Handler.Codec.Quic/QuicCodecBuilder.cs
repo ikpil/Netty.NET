@@ -26,19 +26,19 @@ namespace Netty.NET.Handler.Codec.Quic;
  *
  * @param <B> the type of the {@link QuicCodecBuilder}.
  */
-// CLR: QuicCodecBuilder<B extends QuicCodecBuilder<B>> is QuicCodecBuilder<B> where B : QuicCodecBuilder<B>; the final
-// setters are non-virtual and return B (Self()). ChannelHandler is IChannelHandler, Executor IExecutor,
-// Function<QuicChannel, ? extends QuicSslEngine> Func<IQuicChannel, QuicSslEngine>, and each (long amount, TimeUnit unit)
-// pair is a TimeSpan (the Transport convention, docs/common-clr-design.md; unit.toMillis truncates to milliseconds, as
-// TimeSpan.Ticks / TicksPerMillisecond does). IllegalArgumentException/IllegalStateException are ArgumentException/
-// InvalidOperationException. The boxed Long/Boolean/Integer fields (null: the quiche default) are nullable values.
-// Quiche.QUICHE_PROTOCOL_VERSION is QUIC version 1 (System.Net.Quic negotiates it, see Quic.IsVersionSupported) and
-// Quiche.QUICHE_MAX_CONN_ID_LEN is Quic.MAX_CONN_ID_LEN. The QuicheConfig of build() is MsQuicConfig, the settings of
-// System.Net.Quic (msquic): a setting without a System.Net.Quic counterpart keeps its API and reports
-// NotSupportedException from Build() when it holds a value other than quiche's default (owner decision 2026-11-27,
-// docs/codec-classes-quic-porting.md, Stage 2, which lists the settings); config.free() has no counterpart (managed
-// options). sslContext(context) also keeps the context, whose ALPN protocols a server listener needs before any
-// connection. The SSL task executor is accepted and not used: msquic runs TLS on its own threads.
+// CLR: QuicCodecBuilder<B extends QuicCodecBuilder<B>> is QuicCodecBuilder<B> where B : QuicCodecBuilder<B>; the
+// final setters are non-virtual and return B (Self()). ChannelHandler is IChannelHandler, Executor IExecutor,
+// Function<QuicChannel, ? extends QuicSslEngine> Func<IQuicChannel, QuicSslEngine>, and each (long amount,
+// TimeUnit unit) pair is a TimeSpan (the Transport convention, docs/common-clr-design.md; unit.toMillis truncates
+// to milliseconds, as TimeSpan.Ticks / TicksPerMillisecond does). IllegalArgumentException/IllegalStateException
+// are ArgumentException/ InvalidOperationException. The boxed Long/Boolean/Integer fields (null: the quiche
+// default) are nullable values. Quiche.QUICHE_PROTOCOL_VERSION is QUIC version 1 (System.Net.Quic negotiates it,
+// see Quic.IsVersionSupported) and Quiche.QUICHE_MAX_CONN_ID_LEN is Quic.MAX_CONN_ID_LEN. The QuicheConfig of
+// build() is MsQuicConfig, the settings of System.Net.Quic (msquic): a setting without a System.Net.Quic
+// counterpart keeps its API and reports NotSupportedException from Build() when it holds a value other than
+// quiche's default; config.free() has no counterpart (managed options). sslContext(context) also keeps the
+// context, whose ALPN protocols a server listener needs before any connection. The SSL task executor is accepted
+// and not used: msquic runs TLS on its own threads.
 public abstract class QuicCodecBuilder<B> where B : QuicCodecBuilder<B>
 {
     private readonly bool server;
@@ -578,7 +578,7 @@ public abstract class QuicCodecBuilder<B> where B : QuicCodecBuilder<B>
      * @param flushStrategy         the {@link FlushStrategy}  that should be used.
      * @return                      the {@link ChannelHandler} which acts as codec.
      */
-    // CLR: QuicheConfig is MsQuicConfig (see the class comment); package-private abstract is internal abstract.
+    // CLR: QuicheConfig is MsQuicConfig (see the class comment).
     internal abstract IChannelHandler Build(MsQuicConfig config,
                                             Func<IQuicChannel, QuicSslEngine> sslContextProvider,
                                             IExecutor sslTaskExecutor,

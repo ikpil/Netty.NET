@@ -23,10 +23,8 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
 /**
  * Http2Headers implementation that preserves headers insertion order.
  */
-// CLR: DefaultHeaders<CharSequence, CharSequence, Http2Headers> is the codec-base DefaultHeaders<ICharSequence,
-// ICharSequence, IHttp2Headers> (docs/codec-base-porting.md, Headers); PseudoHeaderName is the nested type of
-// IHttp2Headers, imported with using static (an implementing class does not see the nested types of its interfaces by
-// their simple names). The package-private constructor is internal. equals/hashCode are Equals/GetHashCode.
+// CLR: PseudoHeaderName is the nested type of IHttp2Headers, imported with using static (an implementing class
+// does not see the nested types of its interfaces by their simple names).
 public class InOrderHttp2Headers
         : DefaultHeaders<ICharSequence, ICharSequence, IHttp2Headers>, IHttp2Headers
 {

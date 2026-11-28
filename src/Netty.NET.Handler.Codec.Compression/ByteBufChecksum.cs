@@ -59,7 +59,7 @@ internal abstract class ByteBufChecksum : NonCryptographicHashAlgorithm
         };
     }
 
-    // CLR: checkNotNull's NullPointerException is ArgumentNullException (docs/codec-base-porting.md).
+    // CLR: checkNotNull's NullPointerException is ArgumentNullException.
     internal static ByteBufChecksum WrapChecksum(NonCryptographicHashAlgorithm checksum)
     {
         ObjectUtil.CheckNotNull(checksum, "checksum");
@@ -112,11 +112,11 @@ internal abstract class ByteBufChecksum : NonCryptographicHashAlgorithm
         }
     }
 
-    // CLR: the Buffer port has no hasArray()/array()/arrayOffset(); borrowed Memory and MemoryMarshal.TryGetArray replace
-    // them (docs/buffer-porting.md, Array extraction). The range is read through AsReadOnlySequence (nioBuffers(int,
-    // int)); a single segment backed by a managed array gives the array and the array index of buffer index off, which
-    // is b.arrayOffset() + off. As the Buffer port records, a range that lies in one array of a composite buffer also
-    // takes this branch where Java's hasArray() is false; both branches give the same checksum.
+    // CLR: the Buffer port has no hasArray()/array()/arrayOffset(); borrowed Memory and MemoryMarshal.TryGetArray
+    // replace them. The range is read through AsReadOnlySequence (nioBuffers(int, int)); a single segment backed
+    // by a managed array gives the array and the array index of buffer index off, which is b.arrayOffset() + off.
+    // As the Buffer port records, a range that lies in one array of a composite buffer also takes this branch
+    // where Java's hasArray() is false; both branches give the same checksum.
     private static bool TryGetArray(ByteBuf b, int off, int len, out ArraySegment<byte> array)
     {
         ReadOnlySequence<byte> range = b.AsReadOnlySequence(off, len);

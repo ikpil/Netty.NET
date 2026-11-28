@@ -31,16 +31,16 @@ using static Netty.NET.Transport.Tests.TestsuitePermutation;
 
 namespace Netty.NET.Transport.Tests;
 
-// CLR: the TLS engine is SslStream behind SslHandler (owner decision 2026-11-24, docs/handler-ssl-design.md), which has
-// no SSLEngine facade, so SslContext.newEngine(...) and sessionContext() are not ported; new SslHandler(engine) over an
-// engine of a context is that context's NewHandler(alloc[, peerHost, peerPort]), whose source body is
-// new SslHandler(newEngine(alloc[, peerHost, peerPort]), startTls) (handler/src/main/java/io/netty/handler/ssl/
-// SslContext.java), and the engines' setUseClientMode(...) calls have no counterpart, because JdkSslContext gives every
-// engine its own mode (configureAndWrapEngine calls setUseClientMode(isClient())). @ParameterizedTest with
-// @MethodSource is [Theory] with [MemberData], and the @Timeout(value, MILLISECONDS) the Timeout of the [Theory];
-// DisableDiscoveryEnumeration builds the builders when the theory runs, as JUnit calls the method source for each test
-// (as AbstractEncoderTest of codec-compression). The certificate is the pkitesting bundle of the source; an exception of
-// the static constructor fails every test as TypeInitializationException, the counterpart of
+// CLR: the TLS engine is SslStream behind SslHandler, which has no SSLEngine facade, so SslContext.newEngine(...)
+// and sessionContext() are not ported; new SslHandler(engine) over an engine of a context is that context's
+// NewHandler(alloc[, peerHost, peerPort]), whose source body is new SslHandler(newEngine(alloc[, peerHost,
+// peerPort]), startTls) (handler/src/main/java/io/netty/handler/ssl/ SslContext.java), and the engines'
+// setUseClientMode(...) calls have no counterpart, because JdkSslContext gives every engine its own mode
+// (configureAndWrapEngine calls setUseClientMode(isClient())). @ParameterizedTest with @MethodSource is [Theory]
+// with [MemberData], and the @Timeout(value, MILLISECONDS) the Timeout of the [Theory];
+// DisableDiscoveryEnumeration builds the builders when the theory runs, as JUnit calls the method source for each
+// test (as AbstractEncoderTest of codec-compression). The certificate is the pkitesting bundle of the source; an
+// exception of the static constructor fails every test as TypeInitializationException, the counterpart of
 // ExceptionInInitializerError, so the try/catch is not repeated (as BrotliDecoderTest of codec-compression).
 #pragma warning disable xUnit1069 // The xUnit Timeout bounds the Runner body, whose waits have no timeout in the source.
 #pragma warning disable xUnit1051 // The source's bind/connect/write/close calls do not observe the test cancellation.
@@ -64,7 +64,6 @@ public class SocketSslSessionReuseTest : AbstractSocketTest
         KEY_FILE = cert.ToTempPrivateKeyPem();
     }
 
-    // CLR: Collections.singleton(row) is a one-row list.
     public static IEnumerable<object[]> JdkOnly()
     {
         return new List<object[]>
@@ -130,7 +129,7 @@ public class SocketSslSessionReuseTest : AbstractSocketTest
 
         cb.Handler(new ActionChannelInitializer<IChannel>(sch =>
         {
-            // CLR: InetSocketAddress is IPEndPoint; getHostString() of the bound address is the literal address text.
+            // CLR: InetSocketAddress is IPEndPoint.
             IPEndPoint serverAddr = (IPEndPoint) sc.LocalAddress;
             SslHandler engine = clientCtx.NewHandler(sch.Alloc(), serverAddr.Address.ToString(), serverAddr.Port);
 
@@ -141,7 +140,6 @@ public class SocketSslSessionReuseTest : AbstractSocketTest
 
         try
         {
-            // CLR: clientCtx.sessionContext() is the ClientSessionContext above.
             ClientSessionContext clientSessionCtx = clientSessionContext;
             IChannel cc = await cb.ConnectAsync(sc.LocalAddress);
             ByteBuf msg = RandomBufferType(cc.Alloc(), new byte[] { 0xa, 0xb, 0xc, 0xd }, 0, 4);
@@ -184,17 +182,15 @@ public class SocketSslSessionReuseTest : AbstractSocketTest
                 "]> but was: <[" + string.Join(", ", actual) + "]>");
     }
 
-    // CLR: testSslSessionTrustManagerResumption is CLR-inapplicable (transport porting manifest): its subject is the
-    // ResumableX509ExtendedTrustManager callback resumeServerTrusted(chain, engine), which JSSE calls instead of
-    // checkServerTrusted when a session is resumed, and the SSLSession value it stores (putValue("key", "value") on the
-    // handshake session or the resumed session, read back with engine().getSession().getValue("key") on
-    // SslHandshakeCompletionEvent.SUCCESS). ResumableX509ExtendedTrustManager is jvm-only-replaced
-    // (docs/handler-porting-manifest.json: "SslStream exposes no session-resumption signal", the trust decision is the
-    // RemoteCertificateValidationCallback), SslStream has no session object with values (docs/handler-porting.md,
-    // "SSLSession/ExtendedSSLSession facts"), and SslHandler.engine() is internal. Its OPENSSL
-    // row (jdkAndOpenSSL()) is library-not-ported. Its helpers (SessionSettingTrustManager, the anonymous
-    // ReadAndDiscardHandler subclass with its sessionValue queue) are not ported, as in SSLEngineTest of the handler
-    // tests (mustCallResumeTrustedOnSessionResumption).
+    // CLR: testSslSessionTrustManagerResumption is CLR-inapplicable (transport porting manifest): its subject is
+    // the ResumableX509ExtendedTrustManager callback resumeServerTrusted(chain, engine), which JSSE calls instead
+    // of checkServerTrusted when a session is resumed, and the SSLSession value it stores (putValue("key",
+    // "value") on the handshake session or the resumed session, read back with
+    // engine().getSession().getValue("key") on SslHandshakeCompletionEvent.SUCCESS).
+    // ResumableX509ExtendedTrustManager is jvm-only-replaced, SslStream has no session object with values, and
+    // SslHandler.engine() is internal. Its OPENSSL row (jdkAndOpenSSL()) is library-not-ported. Its helpers
+    // (SessionSettingTrustManager, the anonymous ReadAndDiscardHandler subclass with its sessionValue queue) are
+    // not ported, as in SSLEngineTest of the handler tests (mustCallResumeTrustedOnSessionResumption).
 
     // CLR: ExecutionException wraps the failure of a task for Future.get(); its counterpart is AggregateException, which
     // "is used extensively in the Task Parallel Library (TPL)" to report a task's failure

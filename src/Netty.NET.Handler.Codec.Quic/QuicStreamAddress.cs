@@ -22,8 +22,7 @@ namespace Netty.NET.Handler.Codec.Quic;
 /**
  * A {@link SocketAddress} for QUIC stream.
  */
-// CLR: SocketAddress is EndPoint (as Transport's LocalAddress). Objects.hash(streamId) is spelled out
-// (31 + Long.hashCode) to keep the Java value; the id prints with the invariant culture.
+// CLR: SocketAddress is EndPoint (as Transport's LocalAddress). The id prints with the invariant culture.
 public sealed class QuicStreamAddress : EndPoint
 {
 

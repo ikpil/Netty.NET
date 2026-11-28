@@ -22,32 +22,10 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Handler.Codec;
 
-// CLR: a CLR-only helper with no Java file of its own. It is new PromiseCombiner(ctx.executor()) with add(future) for
-// each future and finish(promise), the use of MessageToMessageEncoder, codec-http HttpObjectEncoder, codec-http2
-// CompressorHttp2ConnectionEncoder and codec-http3 Http3FrameToHttpObjectCodec; those assemblies see it through
-// InternalsVisibleTo (Netty.NET.Handler.Codec.csproj).
-//
-// Common maps PromiseCombiner to Task.WhenAll (docs/common-task-composition.md), whose own completion runs where the
-// last input Task completes. The Transport's write Tasks run their continuations asynchronously
-// (RunContinuationsAsynchronously, src/Netty.NET.Transport/Channels/AbstractChannelHandlerContext.cs), so a
-// Task.WhenAll of them completed on a thread-pool thread after the write call had returned: a combined write was not
-// complete when WriteAndFlushAsync returned on an EmbeddedChannel, and a listener of it ran late (measured 2026-11-27:
-// MessageToMessageEncoderTest.TestCombinedWritesCompleteWhenFlushed,
-// HttpResponseEncoderTest.TestChunkedContentWriteCompletesWhenFlushed and ten Http3FrameToHttpObjectCodecTest cases
-// failed). The Java combiner listens on its executor, the one it is created with, and completes the aggregate promise
-// when the last future completes:
-// https://github.com/netty/netty/blob/64cc10f38ea5f5bd7eae48507817c66680d0afdc/common/src/main/java/io/netty/util/concurrent/PromiseCombiner.java
-// Here each future gets a continuation on Common's EventExecutorTaskScheduler over ctx.Executor, read once, which runs
-// it at once when the future completes on the event loop and otherwise hands it to the executor; the continuations
-// count the completed futures there, one at a time, and the last one completes the promise.
-//
-// The outcome stays Common's Task.WhenAll mapping: once every future has completed, Task.WhenAll of them is itself
-// complete, and TrySetFromTask copies it into the promise (faulted with every child exception when a child faulted,
-// canceled when a child was canceled and none faulted, successful otherwise; docs/common-task-composition.md,
-// Deliberate native differences), where Java fails the promise with the first unsuccessful completion. The futures are
-// copied when combining, as add() and finish() fix them, and an empty list completes the promise at once, as finish()
-// does when no future was added. PromiseCombiner's checkInEventLoop() guard has no counterpart: the counting runs on
-// the executor wherever Combine is called from.
+// Each write completion is counted on the channel executor so an embedded flush completes the aggregate before
+// returning. A direct Task.WhenAll continuation can run later on the thread pool.
+// Copy the input tasks before registration. Once all writes finish, transfer their combined result, including
+// every fault, into the aggregate promise.
 internal static class ExecutorPromiseCombiner
 {
     // CLR: the combined Task of a new promise for the WriteAsync overrides, whose returned Task replaces the caller's
@@ -59,7 +37,7 @@ internal static class ExecutorPromiseCombiner
         return promise.Task;
     }
 
-    // CLR: completes promise with the combined outcome of futures; see the class comment.
+    // CLR: completes promise with the combined outcome of futures.
     internal static void Combine(IChannelHandlerContext ctx, IReadOnlyList<Task> futures, TaskCompletionSource promise)
     {
         Task[] snapshot = [.. futures];

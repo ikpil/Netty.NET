@@ -21,15 +21,14 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Codec.Compression.Tests;
 
-// CLR: the test drives the internal Bzip2BitReader, Bzip2HuffmanStageDecoder and Bzip2BlockDecompressor through
-// InternalsVisibleTo, as the Java test uses the package-private classes. Arrays.fill(a, from, to, (byte) 2) "Assigns the
-// specified byte value to each element of the specified range" (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Arrays.html)
-// and is Array.Fill(a, (byte) 2, from, to - from), which assigns the value to the elements "within the range of
-// startIndex (inclusive) and the next count number of indices"
-// (https://learn.microsoft.com/en-us/dotnet/api/system.array.fill?view=net-10.0); the anonymous Executable is a lambda;
-// assertThrows with a message is
-// Assert.Throws from Xunit.v3.AssertMessages (DecompressionException has no subclasses, so the exact-type check of
-// Assert.Throws accepts what JUnit accepts). The nested BitWriter keeps its Java shape; >>> is C#'s >>>.
+// CLR: Arrays.fill(a, from, to, (byte) 2) "Assigns the specified byte value to each element of the specified
+// range" (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Arrays.html) and is Array.Fill(a,
+// (byte) 2, from, to - from), which assigns the value to the elements "within the range of startIndex (inclusive)
+// and the next count number of indices"
+// (https://learn.microsoft.com/en-us/dotnet/api/system.array.fill?view=net-10.0); the anonymous Executable is a
+// lambda; assertThrows with a message is Assert.Throws from Xunit.v3.AssertMessages (DecompressionException has no
+// subclasses, so the exact-type check of Assert.Throws accepts what JUnit accepts). The nested BitWriter keeps its
+// Java shape; >>> is C#'s >>>.
 public class Bzip2BlockDecompressorTest
 {
 

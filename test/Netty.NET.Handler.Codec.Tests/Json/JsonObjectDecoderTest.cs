@@ -22,7 +22,6 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Tests.Json;
 
-// CLR: CharsetUtil.UTF_8 is Encoding.UTF8, and each anonymous Executable passed to assertThrows is a lambda.
 public class JsonObjectDecoderTest
 {
     [Fact]

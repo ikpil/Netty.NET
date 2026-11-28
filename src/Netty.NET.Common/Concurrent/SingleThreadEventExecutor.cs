@@ -1632,7 +1632,6 @@ public abstract class SingleThreadEventExecutor : AbstractScheduledEventExecutor
                     {
                         _thread = null;
                         // Let the next thread take over if needed.
-                        // CLR: processingLock.unlock() is the end of the UninterruptibleMonitor using scope.
                     }
                 }
             }

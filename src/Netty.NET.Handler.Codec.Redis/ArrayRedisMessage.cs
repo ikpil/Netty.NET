@@ -25,13 +25,13 @@ namespace Netty.NET.Handler.Codec.Redis;
 /**
  * Arrays of <a href="https://redis.io/topics/protocol">RESP</a>.
  */
-// CLR: List<RedisMessage> is IList<IRedisMessage>; Collections.emptyList() is the empty array Array.Empty, whose IList
-// rejects changes as the Java empty list does (https://learn.microsoft.com/en-us/dotnet/api/system.array.empty). The
-// covariant touch(Object) override is a C# covariant override return
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override), as are the retain()/touch()
-// overrides of NULL_INSTANCE and EMPTY_INSTANCE. The anonymous subclasses of NULL_INSTANCE and EMPTY_INSTANCE are the named nested classes NullArrayRedisMessage and
-// EmptyArrayRedisMessage. The child count in toString() uses the invariant culture
-// (https://learn.microsoft.com/en-us/dotnet/api/system.text.stringbuilder.append).
+// CLR: List<RedisMessage> is IList<IRedisMessage>; Collections.emptyList() is the empty array Array.Empty, whose
+// IList rejects changes as the Java empty list does
+// (https://learn.microsoft.com/en-us/dotnet/api/system.array.empty). The covariant touch(Object) override is a C#
+// covariant override return
+// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/override), as are the
+// retain()/touch() overrides of NULL_INSTANCE and EMPTY_INSTANCE. The child count in toString() uses the invariant
+// culture (https://learn.microsoft.com/en-us/dotnet/api/system.text.stringbuilder.append).
 [UnstableApi]
 public class ArrayRedisMessage : AbstractReferenceCounted, IRedisMessage
 {

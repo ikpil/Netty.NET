@@ -24,5 +24,4 @@ public interface IHttp2SettingsFrame : IHttp2Frame
 
     Http2Settings Settings();
 
-    // CLR: name() is re-declared with the same type and inherited from IHttp2Frame (CS0108).
 }

@@ -20,12 +20,11 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Codec.Quic.Tests;
 
-// CLR: InetSocketAddress is IPEndPoint. The lambda QuicHeaderProcessor is the private FailingProcessor class, whose
-// Process calls Assert.Fail as JUnit's fail(...) does. try-with-resources over the AutoCloseable parser is a using
-// statement (QuicHeaderParser is IDisposable, Dispose() calls Close()), and try/finally releases the packet as in Java.
-// assertThrows(QuicException.class, ...) is Assert.ThrowsAny<QuicException> (docs/codec-http-porting.md, Core test
-// notes); the throws clauses have no counterpart. writeByte/writeInt are WriteByte/WriteInt and buffer(5, 5) is
-// Unpooled.Buffer(5, 5).
+// CLR: InetSocketAddress is IPEndPoint. The lambda QuicHeaderProcessor is the private FailingProcessor class,
+// whose Process calls Assert.Fail as JUnit's fail(...) does. try-with-resources over the AutoCloseable parser is a
+// using statement (QuicHeaderParser is IDisposable, Dispose() calls Close()), and try/finally releases the packet
+// as in Java. assertThrows(QuicException.class,...) is Assert.ThrowsAny<QuicException>; the throws clauses have no
+// counterpart. writeByte/writeInt are WriteByte/WriteInt and buffer(5, 5) is Unpooled.Buffer(5, 5).
 public class QuicHeaderParserTest
 {
 

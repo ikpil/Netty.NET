@@ -53,32 +53,8 @@ namespace Netty.NET.Handler.Ssl;
  * ...
  * </pre>
  */
-// CLR: the TLS engine is SslStream (owner decision 2026-11-24, docs/handler-ssl-design.md). The SSLEngine a context
-// creates per connection is the SslClientAuthenticationOptions/SslServerAuthenticationOptions handed to the SslHandler
-// constructors, so newEngine(alloc[, peerHost, peerPort]) and sessionContext() (SSLSessionContext) are not ported (owner
-// decision 2: no SSLEngine facade), and the engine factory moves into the protected newHandler(alloc, startTls) and
-// newHandler(alloc, peerHost, peerPort, startTls), which are abstract here (their source bodies only wrapped newEngine).
-// sessionCacheSize()/sessionTimeout() only read the SSLSessionContext; SslStream has no session cache size or timeout
-// setting (docs/handler-ssl-design.md, Known differences) and they are not ported. The Executor overloads of newHandler
-// pass the executor for SSLEngine.getDelegatedTask(); SslStream runs certificate callbacks and crypto inline and has no
-// delegated tasks (members of SslStream,
-// https://learn.microsoft.com/en-us/dotnet/api/system.net.security.sslstream?view=net-10.0), so they are not ported.
-// The @Deprecated newServerContext/newClientContext overloads and nextProtocols(), whose @deprecated text names their
-// replacements, are not ported (owner decision 2026-11-16); the package-private newServerContext(..., keyStore),
-// toApplicationProtocolConfig, toPrivateKeyInternal and toX509CertificatesInternal only serve them, the @Deprecated
-// JdkSslClientContext/JdkSslServerContext or the library-not-ported OpenSSL contexts, and are not ported either. The
-// JCA types map to the BCL types the SslStream options take (owner decision 3, as pkitesting X509Bundle maps them,
-// src/Netty.NET.PkiTesting/X509Bundle.cs): X509Certificate is X509Certificate2, PrivateKey is AsymmetricAlgorithm,
-// TrustManagerFactory is X509ChainPolicy (TrustManager a RemoteCertificateValidationCallback), KeyManagerFactory is
-// SslStreamCertificateContext (KeyManager a ServerCertificateSelectionCallback or LocalCertificateSelectionCallback), the
-// KeyStore is its PKCS #12 encoding, File is FileInfo and InputStream System.IO.Stream; CertificateException, KeyException
-// and the other GeneralSecurityExceptions are CryptographicException; SSLException is AuthenticationException.
-// java.security.Provider/SecureRandom parameters of the internal factories follow the builder. ResumptionController is
-// not ported (see the builder), so there is no resumption controller field. CertificateFactory (X509_CERT_FACTORY, only
-// used by the OpenSSL code) is the static X509CertificateLoader and ALIAS has no counterpart (a PKCS #12 export of an
-// X509Certificate2Collection carries no alias). OpenSsl (netty-tcnative) is library-not-ported, so OpenSsl.isAvailable()
-// is false and OPENSSL/OPENSSL_REFCNT cannot be built. java.lang.Error for an unexpected provider is
-// UnreachableException, as codec-base LengthFieldPrepender maps it.
+// CLR: Contexts create SslStream authentication options for each handler. SslStream does not expose
+// SSLSessionContext or a delegated-task executor, so those configuration hooks are unavailable.
 public abstract class SslContext
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(SslContext));
@@ -363,17 +339,17 @@ public abstract class SslContext
      *                             {@code key}
      * @throws InvalidAlgorithmParameterException if decryption algorithm parameters are somehow faulty
      */
-    // CLR: @Deprecated without @deprecated text (no replacement named), so it is ported with [Obsolete] (owner decision
-    // 2026-11-16). PKCS8EncodedKeySpec "represents the ASN.1 encoding of a private key" (PKCS #8 PrivateKeyInfo), which is
-    // the returned byte[]. The BCL decrypts a PKCS #8 EncryptedPrivateKeyInfo only while importing it into a key of its
-    // algorithm (AsymmetricAlgorithm.ImportEncryptedPkcs8PrivateKey, "imports the public/private keypair from a PKCS#8
-    // EncryptedPrivateKeyInfo structure after decrypting with a char-based password",
+    // CLR: @Deprecated without @deprecated text (no replacement named), so it is ported with [Obsolete].
+    // PKCS8EncodedKeySpec "represents the ASN.1 encoding of a private key" (PKCS #8 PrivateKeyInfo), which is the
+    // returned byte[]. The BCL decrypts a PKCS #8 EncryptedPrivateKeyInfo only while importing it into a key of
+    // its algorithm (AsymmetricAlgorithm.ImportEncryptedPkcs8PrivateKey, "imports the public/private keypair from
+    // a PKCS#8 EncryptedPrivateKeyInfo structure after decrypting with a char-based password",
     // https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography.asymmetricalgorithm.importencryptedpkcs8privatekey?view=net-10.0),
-    // so EncryptedPrivateKeyInfo, getPBEAlgorithm (its comments are recorded), SecretKeyFactory/PBEKeySpec and Cipher are
-    // replaced by importing into RSA, DSA and then ECDsa and exporting the decrypted PKCS #8 (ExportPkcs8PrivateKey);
-    // the last import failure (CryptographicException, the BCL report of every GeneralSecurityException above and of a
-    // malformed structure) is rethrown. Measured on this host: the PBES2 (AES/3DES), PKCS #12 PBE-SHA1-3DES and
-    // PBES1-MD5-DES keys of the handler test resources all decrypt.
+    // so EncryptedPrivateKeyInfo, getPBEAlgorithm (its comments are recorded), SecretKeyFactory/PBEKeySpec and
+    // Cipher are replaced by importing into RSA, DSA and then ECDsa and exporting the decrypted PKCS #8
+    // (ExportPkcs8PrivateKey); the last import failure (CryptographicException, the BCL report of every
+    // GeneralSecurityException above and of a malformed structure) is rethrown. Measured on this host: the PBES2
+    // (AES/3DES), PKCS #12 PBE-SHA1-3DES and PBES1-MD5-DES keys of the handler test resources all decrypt.
     [Obsolete]
     protected internal static byte[] GenerateKeySpec(char[] password, byte[] key)
     {
@@ -607,8 +583,7 @@ public abstract class SslContext
     // CLR: KeyFactory.getInstance("RSA"/"DSA"/"EC").generatePrivate(PKCS8EncodedKeySpec) is ImportPkcs8PrivateKey
     // ("imports the public/private keypair from a PKCS#8 PrivateKeyInfo structure after decryption",
     // https://learn.microsoft.com/en-us/dotnet/api/system.security.cryptography.asymmetricalgorithm.importpkcs8privatekey?view=net-10.0)
-    // on RSA, DSA and ECDsa; InvalidKeySpecException is its CryptographicException. The [Obsolete] GenerateKeySpec is
-    // called as the source calls the @Deprecated generateKeySpec.
+    // on RSA, DSA and ECDsa; InvalidKeySpecException is its CryptographicException.
     private static AsymmetricAlgorithm GetPrivateKeyFromByteBuffer(ByteBuf encodedKeyBuf, string keyPassword)
     {
 
@@ -661,8 +636,7 @@ public abstract class SslContext
      * @param trustManagerFactory The existing {@link TrustManagerFactory} that will be used if not {@code null}.
      * @return A {@link TrustManagerFactory} which contains the certificates in {@code certChainFile}
      */
-    // CLR: @Deprecated without @deprecated text (no replacement named), so it is ported with [Obsolete] (owner decision
-    // 2026-11-16).
+    // CLR: @Deprecated without @deprecated text (no replacement named), so it is ported with [Obsolete].
     [Obsolete]
     protected internal static X509ChainPolicy BuildTrustManagerFactory(
             FileInfo certChainFile, X509ChainPolicy trustManagerFactory)
@@ -777,10 +751,9 @@ public abstract class SslContext
         return trustManagerFactory;
     }
 
-    // CLR: the KeyManagerFactory is an SslStreamCertificateContext (owner decision 3, as pkitesting
-    // X509Bundle.ToKeyManagerFactory builds it). keyAlgorithm names the JCA KeyManagerFactory algorithm and kmf only
-    // selects the algorithm/provider of the factory that init(KeyStore, char[]) fills; SslStreamCertificateContext has
-    // neither and is created from the key store each time, so both are not used.
+    // CLR: the KeyManagerFactory is an SslStreamCertificateContext. keyAlgorithm names the JCA KeyManagerFactory
+    // algorithm and kmf only selects the algorithm/provider of the factory that init(KeyStore, char[]) fills;
+    // SslStreamCertificateContext has neither and is created from the key store each time, so both are not used.
     protected internal static SslStreamCertificateContext BuildKeyManagerFactory(X509Certificate2[] certChainFile,
                                                     string keyAlgorithm, AsymmetricAlgorithm key,
                                                     string keyPassword, SslStreamCertificateContext kmf,
@@ -793,13 +766,12 @@ public abstract class SslContext
 
     // CLR: kmf.init(ks, password) loads the key entry back from the PKCS #12 key store (X509CertificateLoader.
     // LoadPkcs12Collection) and creates the context with the leaf certificate that carries the key and the other
-    // certificates as the chain (SslStreamCertificateContext.Create(target, additionalCertificates, offline: true):
-    // "target: The server certificate", "Supplementary certificates used to build the certificate chain", and offline
-    // means "only available X509Certificate stores should be searched for missing certificates",
+    // certificates as the chain (SslStreamCertificateContext.Create(target, additionalCertificates, offline:
+    // true): "target: The server certificate", "Supplementary certificates used to build the certificate chain",
+    // and offline means "only available X509Certificate stores should be searched for missing certificates",
     // https://learn.microsoft.com/en-us/dotnet/api/system.net.security.sslstreamcertificatecontext.create?view=net-10.0).
-    // The round trip gives the persisted key an SslStream server certificate needs (docs/handler-ssl-design.md; an
-    // ephemeral CopyWithPrivateKey key fails, docs/pkitesting-porting.md). A key store without a key entry is the
-    // UnrecoverableKeyException, a CryptographicException.
+    // The round trip gives the persisted key an SslStream server certificate needs. A key store without a key
+    // entry is the UnrecoverableKeyException, a CryptographicException.
     internal static SslStreamCertificateContext BuildKeyManagerFactory(byte[] ks,
                                                     string keyAlgorithm,
                                                     char[] keyPasswordChars, SslStreamCertificateContext kmf)

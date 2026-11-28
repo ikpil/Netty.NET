@@ -16,7 +16,6 @@
 
 namespace Netty.NET.Handler.Codec.Quic.Tests;
 
-// CLR: QuicStreamIdGenerator is internal (package-private in Java).
 public class QuicStreamIdGeneratorTest : AbstractQuicTest
 {
 

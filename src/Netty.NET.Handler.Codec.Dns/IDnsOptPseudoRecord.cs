@@ -22,7 +22,6 @@ namespace Netty.NET.Handler.Codec.Dns;
  * This is used for <a href="https://tools.ietf.org/html/rfc6891#section-6.1.3">Extension
  * Mechanisms for DNS (EDNS(0))</a>.
  */
-// CLR: interface with the I prefix.
 public interface IDnsOptPseudoRecord : IDnsRecord
 {
 

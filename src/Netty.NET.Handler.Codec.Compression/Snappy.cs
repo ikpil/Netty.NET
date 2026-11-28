@@ -29,16 +29,15 @@ namespace Netty.NET.Handler.Codec.Compression;
  * <p>
  * See <a href="https://github.com/google/snappy/blob/master/format_description.txt">snappy format</a>.
  */
-// CLR: the public final class is a public sealed class; the package-private constructor and static helpers are internal
-// (the tests reach them through InternalsVisibleTo, as the Java tests reach them through package access). FastThreadLocal,
-// SystemPropertyUtil and MathUtil are the Common ports. Java switch fall-through is goto case and the last switch
-// section ends with break, because C# does not let control fall through a switch section (docs/codec-memcache-porting.md).
-// The labeled "break outer" is "goto outer", whose label sits on the first statement after the labeled loop, as the
-// Common port does (src/Netty.NET.Common/Concurrent/ConcurrentSkipListIntObjMultimap.cs): a labeled break exists only
-// "Starting in C# 15" and goto "transfers control to a statement that a label marks"
-// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/jump-statements). The local base is
-// @base (a C# keyword). Java int arithmetic that overflows wraps the same way in the unchecked C# project, and >>> is the
-// C# unsigned right shift. Numbers in exception messages use the invariant culture (docs/codec-base-porting.md).
+// CLR: the public final class is a public sealed class. FastThreadLocal, SystemPropertyUtil and MathUtil are the
+// Common ports. Java switch fall-through is goto case and the last switch section ends with break, because C# does
+// not let control fall through a switch section. The labeled "break outer" is "goto outer", whose label sits on
+// the first statement after the labeled loop, as the Common port does
+// (src/Netty.NET.Common/Concurrent/ConcurrentSkipListIntObjMultimap.cs): a labeled break exists only "Starting in
+// C# 15" and goto "transfers control to a statement that a label marks"
+// (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/jump-statements). The local base
+// is @base (a C# keyword). Java int arithmetic that overflows wraps the same way in the unchecked C# project, and
+// >>> is the C# unsigned right shift. Numbers in exception messages use the invariant culture.
 public sealed class Snappy
 {
 
@@ -248,10 +247,7 @@ public sealed class Snappy
      * @return An appropriately sized empty hashtable
      * @param hashTableSize
      */
-    // CLR: Arrays.fill(a, from, to, v) is Array.Fill(a, v, startIndex, count), which "Assigns the given value of type T
-    // to the elements of the specified array that are within the range of startIndex (inclusive) and the next count
-    // number of indices" (https://learn.microsoft.com/en-us/dotnet/api/system.array.fill?view=net-10.0); from is 0, so
-    // count is the Java toIndex.
+    // The Java end index is also the .NET element count because this fill starts at zero.
     public static short[] GetHashTableFastThreadLocalArrayFill(int hashTableSize)
     {
         short[] hashTable = HASH_TABLE.Get();
@@ -514,7 +510,7 @@ public sealed class Snappy
      * @return The calculated length based on the input buffer, or 0 if
      *   no preamble is able to be calculated
      */
-    // CLR: readUnsignedByte() is ReadByte(), which is unsigned in the Buffer port (docs/codec-socks-porting.md).
+    // CLR: readUnsignedByte() is ReadByte(), which is unsigned in the Buffer port.
     private static int ReadPreamble(ByteBuf @in)
     {
         int length = 0;
@@ -884,9 +880,9 @@ public sealed class Snappy
      * @throws DecompressionException If the calculated and supplied checksums do not match
      */
     // CLR: Integer.toHexString(i) writes the int "as an unsigned integer in base 16"
-    // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Integer.html); the "x" format of an int
-    // prints a negative int in two's complement as toHexString does (docs/codec-haproxy-porting.md), and the masked
-    // checksums are often negative.
+    // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Integer.html); the "x" format of an
+    // int prints a negative int in two's complement as toHexString does, and the masked checksums are often
+    // negative.
     internal static void ValidateChecksum(int expectedChecksum, ByteBuf data, int offset, int length)
     {
         int actualChecksum = CalculateChecksum(data, offset, length);

@@ -171,11 +171,11 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx;
  * While {@link WebSocketCloseStatus} is enum-like structure, its instances should NOT be compared by reference.
  * Instead, either {@link #equals(Object)} should be used or direct comparison of {@link #code()} value.
  */
-// CLR: Comparable<WebSocketCloseStatus> is IComparable<WebSocketCloseStatus> (compareTo is CompareTo), equals(Object)
-// and hashCode() override Equals(object) and GetHashCode(), getClass() is GetType(), and this == o is ReferenceEquals.
-// checkNotNull is the Common ObjectUtil.CheckNotNull (ArgumentNullException), IllegalArgumentException is
-// ArgumentException (docs/codec-base-porting.md), and the numbers in the messages and in toString() use the invariant
-// culture.
+// CLR: Comparable<WebSocketCloseStatus> is IComparable<WebSocketCloseStatus> (compareTo is CompareTo),
+// equals(Object) and hashCode() override Equals(object) and GetHashCode(), getClass() is GetType(), and this == o
+// is ReferenceEquals. checkNotNull is the Common ObjectUtil.CheckNotNull (ArgumentNullException),
+// IllegalArgumentException is ArgumentException, and the numbers in the messages and in toString() use the
+// invariant culture.
 public sealed class WebSocketCloseStatus : IComparable<WebSocketCloseStatus>
 {
 

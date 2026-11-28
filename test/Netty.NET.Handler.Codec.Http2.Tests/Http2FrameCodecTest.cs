@@ -41,25 +41,23 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
  * Unit tests for {@link Http2FrameCodec}.
  */
 // CLR: @BeforeEach is the constructor and @AfterEach Dispose() (xUnit creates a test-class instance per test,
-// https://xunit.net/docs/shared-context); setUp()/tearDown() keep their names because some tests call them again, and
-// are private because xUnit1013 reports a public non-test method of a test class.
-// The mocked frame writer is the shared Http2TestUtil.MockedFrameWriter() (a Moq mock whose setups complete the promise
-// argument); verify(frameWriter)/verify(frameWriter, never())/verifyNoMoreInteractions are
-// Mock.Get(frameWriter).Verify(..., Times.Once()/Times.Never())/VerifyNoOtherCalls(), eq(x) is the value x (Moq compares
-// it with Equals), same(x) a ReferenceEquals predicate, any(ChannelPromise.class)/anyInt()/anyLong() It.IsAny, and an
-// ArgumentCaptor reads the argument of the recorded invocation (https://github.com/devlooped/moq/wiki/Quickstart;
-// docs/codec-http-porting.md, Shared CLR adaptations). ChannelFuture is Task and ChannelPromise TaskCompletionSource;
-// channel.writeAndFlush(msg, channel.newPromise()) is the Task of WriteAndFlushAsync(msg) ("The ChannelPromise overloads
-// fold into the Task-returning members", docs/transport-porting.md, Decisions), isDone() is IsCompleted, isSuccess()
-// IsCompletedSuccessfully, cause() Http2CodecUtil.Cause and syncUninterruptibly() an await, which throws the failure
-// (docs/codec-http-porting.md, Core test notes); a test that awaits is async. A ChannelFuture listener is a synchronous
-// continuation of the Task: the codec returns the Task of its own promise, which has no RunContinuationsAsynchronously
-// (Http2CodecUtil.NewPromise), so the continuation runs at once where the promise completes, on the EmbeddedChannel's
-// event loop, as Java's listener does. new InetSocketAddress(0) is an IPEndPoint of IPAddress.Any and port 0
-// (Http2ConnectionHandlerTest). assertThrows is Assert.ThrowsAny, assertInstanceOf Assert.IsAssignableFrom and
-// getCause() InnerException (docs/codec-http-porting.md, Core test notes). Java Strings passed as CharSequence are
-// Http2TestUtil.Of (StringCharSequence). The anonymous and local classes are private nested classes. The checked
-// "throws" clauses have no counterpart.
+// https://xunit.net/docs/shared-context); setUp()/tearDown() keep their names because some tests call them again,
+// and are private because xUnit1013 reports a public non-test method of a test class. The mocked frame writer is
+// the shared Http2TestUtil.MockedFrameWriter() (a Moq mock whose setups complete the promise argument);
+// verify(frameWriter)/verify(frameWriter, never())/verifyNoMoreInteractions are Mock.Get(frameWriter).Verify(...,
+// Times.Once()/Times.Never())/VerifyNoOtherCalls(), eq(x) is the value x (Moq compares it with Equals), same(x) a
+// ReferenceEquals predicate, any(ChannelPromise.class)/anyInt()/anyLong() It.IsAny, and an ArgumentCaptor reads
+// the argument of the recorded invocation (https://github.com/devlooped/moq/wiki/Quickstart;
+// docs/codec-http-porting.md, Shared CLR adaptations). ChannelFuture is Task and ChannelPromise
+// TaskCompletionSource; channel.writeAndFlush(msg, channel.newPromise()) is the Task of WriteAndFlushAsync(msg)
+// ("The ChannelPromise overloads fold into the Task-returning members", docs/transport-porting.md, Decisions),
+// isDone() is IsCompleted, isSuccess() IsCompletedSuccessfully, cause() Http2CodecUtil.Cause and
+// syncUninterruptibly() an await, which throws the failure; a test that awaits is async. A ChannelFuture listener
+// is a synchronous continuation of the Task: the codec returns the Task of its own promise, which has no
+// RunContinuationsAsynchronously (Http2CodecUtil.NewPromise), so the continuation runs at once where the promise
+// completes, on the EmbeddedChannel's event loop, as Java's listener does. new InetSocketAddress(0) is an
+// IPEndPoint of IPAddress.Any and port 0 (Http2ConnectionHandlerTest). assertThrows is Assert.ThrowsAny,
+// assertInstanceOf Assert.IsAssignableFrom and getCause() InnerException.
 public class Http2FrameCodecTest : IDisposable
 {
 
@@ -244,7 +242,6 @@ public class Http2FrameCodecTest : IDisposable
         _ = new CustomUnknownFrameCodec(enc, dec, new Http2Settings(), false, true);
     }
 
-    // CLR: the anonymous Http2FrameCodec subclass of canCreateCustomUnknownFrame.
     private sealed class CustomUnknownFrameCodec : Http2FrameCodec
     {
         internal CustomUnknownFrameCodec(IHttp2ConnectionEncoder encoder, IHttp2ConnectionDecoder decoder,
@@ -493,8 +490,7 @@ public class Http2FrameCodecTest : IDisposable
         Assert.True(channel.IsActive);
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of unknownFrameOnMissingStreamFirstPacket. CompositeByteBuf
-    // addComponent(true, buf) is AddComponent(buf, true) (the Buffer port's parameter order,
+    // CLR: CompositeByteBuf addComponent(true, buf) is AddComponent(buf, true) (the Buffer port's parameter order,
     // src/Netty.NET.Buffer/CompositeByteBuf.cs).
     private sealed class CombineHandler : ChannelInboundHandlerAdapter
     {
@@ -942,7 +938,6 @@ public class Http2FrameCodecTest : IDisposable
         Assert.True(expectedStreams.SetEquals(activeStreams));
     }
 
-    // CLR: the anonymous Http2FrameStreamVisitor of iterateActiveStreams.
     private sealed class CollectingStreamVisitor : IHttp2FrameStreamVisitor
     {
         private readonly HashSet<IHttp2FrameStream> activeStreams;
@@ -1006,8 +1001,7 @@ public class Http2FrameCodecTest : IDisposable
         Assert.True(listenerExecuted.Get());
     }
 
-    // CLR: channel.voidPromise() has no counterpart; the returned Task is discarded (docs/transport-porting.md,
-    // VoidChannelPromise: "discard the returned Task").
+    // CLR: channel.voidPromise() has no counterpart; the returned Task is discarded.
     [Fact]
     public void WriteHeadersVoidPromise()
     {
@@ -1015,17 +1009,17 @@ public class Http2FrameCodecTest : IDisposable
         _ = channel.WriteAndFlushAsync(new DefaultHttp2HeadersFrame(new DefaultHttp2Headers()).Stream(stream), TestContext.Current.CancellationToken);
     }
 
-    // CLR: UpgradeEvent.class.getDeclaredConstructor(CharSequence.class, FullHttpRequest.class) and newInstance(...) are
-    // Type.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic, types) ("Specify BindingFlags.NonPublic to
-    // include non-public constructors (that is, private, internal, and protected constructors) in the search",
-    // https://learn.microsoft.com/en-us/dotnet/api/system.type.getconstructor?view=net-10.0) and ConstructorInfo.Invoke
-    // ("Access restrictions are ignored for fully trusted code",
+    // CLR: UpgradeEvent.class.getDeclaredConstructor(CharSequence.class, FullHttpRequest.class) and
+    // newInstance(...) are Type.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic, types) ("Specify
+    // BindingFlags.NonPublic to include non-public constructors (that is, private, internal, and protected
+    // constructors) in the search",
+    // https://learn.microsoft.com/en-us/dotnet/api/system.type.getconstructor?view=net-10.0) and
+    // ConstructorInfo.Invoke ("Access restrictions are ignored for fully trusted code",
     // https://learn.microsoft.com/en-us/dotnet/api/system.reflection.constructorinfo.invoke?view=net-10.0); the
-    // constructor is internal in codec-http (src/Netty.NET.Handler.Codec.Http/HttpServerUpgradeHandler.cs), which does
-    // not open its internals to this assembly. Assumptions.assumeTrue(ReflectionUtil.trySetAccessible(...) == null)
-    // has no counterpart: CLR members have no accessible flag and the no-op trySetAccessible is retired from the Common
-    // port (docs/common-clr-design.md: "JVM AccessibleObject has a mutable accessible flag; CLR members do not"), so
-    // the test always runs. The "HTTP/2" String passed as CharSequence is Http2TestUtil.Of.
+    // constructor is internal in codec-http (src/Netty.NET.Handler.Codec.Http/HttpServerUpgradeHandler.cs), which
+    // does not open its internals to this assembly. Assumptions.assumeTrue(ReflectionUtil.trySetAccessible(...) ==
+    // null) has no counterpart: CLR members have no accessible flag and the no-op trySetAccessible is retired from
+    // the Common port, so the test always runs. The "HTTP/2" String passed as CharSequence is Http2TestUtil.Of.
     [Fact]
     public void UpgradeEventNoRefCntError()
     {
@@ -1071,7 +1065,6 @@ public class Http2FrameCodecTest : IDisposable
         channel.Pipeline.FireUserEventTriggered(upgradeEvent);
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of upgradeWithoutFlowControlling.
     private sealed class WindowUpdatingHandler : ChannelInboundHandlerAdapter
     {
         public override void ChannelRead(IChannelHandlerContext ctx, object msg)

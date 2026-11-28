@@ -23,11 +23,11 @@ namespace Netty.NET.Handler.Codec.Http.Tests;
  * Since this is testing static initialization, the tests might not actually test anything, except
  * when run in isolation.
  */
-// CLR: HttpHeaders.EMPTY_HEADERS is @Deprecated and its @deprecated text names EmptyHttpHeaders.INSTANCE, so it is not
-// ported (owner decision 2026-11-16); each test checks EmptyHttpHeaders.INSTANCE in its place (rule 7: a test that
-// also checks other behaviour is ported with the replacement). With EMPTY_HEADERS gone, EmptyHttpHeaders.INSTANCE is
-// created by its own static field initializer (see EmptyHttpHeaders), so the cycle the test guards against cannot
-// occur; the assertions still verify that the instance is initialized in either access order.
+// CLR: HttpHeaders.EMPTY_HEADERS is @Deprecated and its @deprecated text names EmptyHttpHeaders.INSTANCE, so it is
+// not ported; each test checks EmptyHttpHeaders.INSTANCE in its place (rule 7: a test that also checks other
+// behaviour is ported with the replacement). With EMPTY_HEADERS gone, EmptyHttpHeaders.INSTANCE is created by its
+// own static field initializer (see EmptyHttpHeaders), so the cycle the test guards against cannot occur; the
+// assertions still verify that the instance is initialized in either access order.
 public class EmptyHttpHeadersInitializationTest
 {
 

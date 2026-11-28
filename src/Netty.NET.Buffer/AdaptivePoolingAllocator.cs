@@ -66,10 +66,10 @@ namespace Netty.NET.Buffer;
 // project (InternalsVisibleTo) use them.
 internal sealed class AdaptivePoolingAllocator : IDisposable
 {
-    // CLR: the shared Memory/Span kernel provides primitive, bulk, text, sequence and
-    // .NET stream/file access. The allocation callback binds the owning pool's magazine
-    // selection and fallback while preserving buffer identity during reallocation.
-    // Each wrapper is fresh; recycling a released CLR object could resurrect stale references.
+    // CLR: the shared Memory/Span kernel provides primitive, bulk, text, sequence and.NET stream/file access. The
+    // allocation callback binds the owning pool's magazine selection and fallback while preserving buffer identity
+    // during reallocation. Each wrapper is fresh; recycling a released CLR object could resurrect stale
+    // references.
     internal sealed class AdaptiveByteBuf : AbstractReferenceCountedByteBuf
     {
         // We need the top-level allocator so ByteBuf.capacity(int) can call reallocate()
@@ -865,7 +865,6 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
             }
         }
 
-        // CLR: IDisposable scopes a chunk; disposing it is markToDeallocate().
         public void Dispose()
         {
             MarkToDeallocate();
@@ -957,7 +956,6 @@ internal sealed class AdaptivePoolingAllocator : IDisposable
         }
     }
 
-    // CLR: the source's free() is IDisposable.Dispose().
     internal interface IChunkCache : IDisposable
     {
         Chunk PollChunk(int size);

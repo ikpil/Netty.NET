@@ -40,18 +40,16 @@ using static Netty.NET.Handler.Codec.Http2.HpackUtil;
 
 namespace Netty.NET.Handler.Codec.Http2;
 
-// CLR: the package-private final class is internal sealed and its package-private members are internal.
-// Arrays.asList(...) is an array behind IReadOnlyList (size() is Count, get(i) the indexer). The two static
-// initializer blocks are the private InitHeaderNames() and InitHeadersWithNonEmptyValues(), which the static
-// constructor runs in the Java order after every field initializer: "A class or struct can only have one static
-// constructor", and the static field initializers "run in the textual order in which they appear in the class
-// declaration. The initializers run immediately before the static constructor"
-// (https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/static-constructors).
-// The shifts depend on PlatformDependent.BIG_ENDIAN_NATIVE_ORDER, a static readonly value, so they are static
-// readonly fields. AsciiString.hashCode(CharSequence) is the Common AsciiString.HashCode, which keeps Java's
-// hashing (PlatformDependent.HashCodeAscii), so each bucket holds one entry as in Java (the static constructor
-// throws on a collision). IllegalStateException is InvalidOperationException. The private nested classes'
-// fields are internal readonly so the outer class reads them.
+// CLR: The two static initializer blocks are the private InitHeaderNames() and InitHeadersWithNonEmptyValues(),
+// which the static constructor runs in the Java order after every field initializer: "A class or struct can only
+// have one static constructor", and the static field initializers "run in the textual order in which they appear
+// in the class declaration. The initializers run immediately before the static constructor"
+// (https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/static-constructors). The
+// shifts depend on PlatformDependent.BIG_ENDIAN_NATIVE_ORDER, a static readonly value, so they are static readonly
+// fields. AsciiString.hashCode(CharSequence) is the Common AsciiString.HashCode, which keeps Java's hashing
+// (PlatformDependent.HashCodeAscii), so each bucket holds one entry as in Java (the static constructor throws on a
+// collision). IllegalStateException is InvalidOperationException. The private nested classes' fields are internal
+// readonly so the outer class reads them.
 internal sealed class HpackStaticTable
 {
 

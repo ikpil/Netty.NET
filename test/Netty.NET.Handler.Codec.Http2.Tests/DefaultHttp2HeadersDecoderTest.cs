@@ -29,15 +29,10 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
 /**
  * Tests for {@link DefaultHttp2HeadersDecoder}.
  */
-// CLR: @BeforeEach is the constructor ("xUnit creates a new instance of the test class for every test that is run",
-// docs/codec-http-porting.md, Shared CLR adaptations), which calls the Java-named setup(). The anonymous Executables
-// are lambdas and assertThrows(T.class) is Assert.ThrowsAny<T> (docs/codec-http-porting.md, Core test notes).
-// @ParameterizedTest @MethodSource methods that return List<Integer> are [Theory] [MemberData] sources that return
-// TheoryData<int> (the same rows). AssertJ isEqualToIgnoringCase(s) is Assert.Equal(s, actual, ignoreCase: true) on
-// the text, and isEqualTo(new AsciiString(bytes)) calls Equals, as AssertJ does. String.format("%09000d", 0) is
+// CLR: AssertJ isEqualToIgnoringCase(s) is Assert.Equal(s, actual, ignoreCase: true) on the text, and
+// isEqualTo(new AsciiString(bytes)) calls Equals, as AssertJ does. String.format("%09000d", 0) is
 // 0.ToString("D9000") (zero-padded to 9000 digits). getBytes(UTF_8) is Encoding.UTF8.GetBytes and byte[]... is
-// params byte[][]. The Strings that Java passes as CharSequence are StringCharSequence values (the private Cs). The
-// obs-text rows pass (byte) i for i in 0x80..0xFF, the same octets as Java's signed bytes.
+// params byte[][]. The obs-text rows pass (byte) i for i in 0x80..0xFF, the same octets as Java's signed bytes.
 public class DefaultHttp2HeadersDecoderTest
 {
 

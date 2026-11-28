@@ -364,7 +364,6 @@ public class SocketFileRegionSourceTest : AbstractSocketTest
         };
     }
 
-    // CLR: the anonymous SimpleChannelInboundHandler<ByteBuf> of testFileRegionCountLargerThenFile.
     private sealed class DropHandler : SimpleChannelInboundHandler<ByteBuf>
     {
         protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf msg)
@@ -373,7 +372,6 @@ public class SocketFileRegionSourceTest : AbstractSocketTest
         }
     }
 
-    // CLR: the anonymous SimpleChannelInboundHandler<ByteBuf> of testFileRegionDrainStopsAtCompletion.
     private sealed class DrainHandler : SimpleChannelInboundHandler<ByteBuf>
     {
         protected override void ChannelRead0(IChannelHandlerContext ctx, ByteBuf msg)
@@ -382,7 +380,6 @@ public class SocketFileRegionSourceTest : AbstractSocketTest
         }
     }
 
-    // CLR: the anonymous SimpleChannelInboundHandler<Object> client handler of testFileRegion0.
     private sealed class TestClientHandler(bool autoRead) : SimpleChannelInboundHandler<object>
     {
         protected override void ChannelRead0(IChannelHandlerContext ctx, object msg)
@@ -514,7 +511,7 @@ public class SocketFileRegionSourceTest : AbstractSocketTest
         // CLR: IFileRegion.TransferTo writes into a Stream where FileRegion.transferTo writes into a
         // WritableByteChannel (IFileRegion.cs). Stream.Write has no partial-write count (a write that returns has
         // accepted the byte), so the source's n > 0 branch always applies: transferred advances to count and 1 is
-        // returned, as target.write(ByteBuffer.wrap(new byte[] { ... })) returns 1 when the byte is accepted.
+        // returned, as target.write(ByteBuffer.wrap(new byte[] {... })) returns 1 when the byte is accepted.
         public long TransferTo(Stream target, long position)
         {
             // Per FileRegion's contract, the caller passes transferred() as position. Surface

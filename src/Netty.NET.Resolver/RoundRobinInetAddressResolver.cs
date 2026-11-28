@@ -62,7 +62,7 @@ public class RoundRobinInetAddressResolver : InetNameResolver
             return inetAddresses[RandomIndex(numAddresses)];
         }
 
-        // CLR: UnknownHostException is Common's UnknownHostException (owner decision 2026-11-25).
+        // CLR: UnknownHostException is Common's UnknownHostException.
         throw new UnknownHostException(inetHost);
     }
 

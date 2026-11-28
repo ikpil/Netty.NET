@@ -23,12 +23,12 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Resolver.Dns;
 
-// CLR: the package-private final class is internal sealed over DnsResolveContext<IPAddress> (InetAddress is IPAddress);
-// Promise<?> originalPromise is the Task of the original promise and Promise<List<InetAddress>> a
-// TaskCompletionSource<IReadOnlyList<IPAddress>>, as in DnsResolveContext. DnsRecord.CLASS_IN is IDnsRecord.CLASS_IN.
-// resolved.getClass() == addressType(...) compares the AddressFamily (DnsNameResolver.AddressType). Collections.sort is
-// stable and is the stable DnsNameResolver.SortStable (Enumerable.OrderBy, see DnsNameResolver.NewRedirectDnsServerStream).
-// UnknownHostException is Common's UnknownHostException (owner decision 2026-11-25); EventLoop is IEventLoop.
+// CLR: Promise<?> originalPromise is the Task of the original promise and Promise<List<InetAddress>> a
+// TaskCompletionSource<IReadOnlyList<IPAddress>>, as in DnsResolveContext. DnsRecord.CLASS_IN is
+// IDnsRecord.CLASS_IN. resolved.getClass() == addressType(...) compares the AddressFamily
+// (DnsNameResolver.AddressType). Collections.sort is stable and is the stable DnsNameResolver.SortStable
+// (Enumerable.OrderBy, see DnsNameResolver.NewRedirectDnsServerStream). UnknownHostException is Common's
+// UnknownHostException; EventLoop is IEventLoop.
 internal sealed class DnsAddressResolveContext : DnsResolveContext<IPAddress>
 {
 

@@ -20,13 +20,11 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the package-private final class is internal sealed and its package-private members are internal (as codec-http2's
-// HpackStaticTable). Arrays.asList(...) is an array behind IReadOnlyList (size() is Count, get(i) the indexer).
-// List<Integer> is List<int> (add is Add, get(0) the indexer). CharSequenceMap<List<Integer>> is the ported
-// CharSequenceMap<List<int>>, whose get/set are the codec-base DefaultHeaders Get/Set; UnsupportedValueConverter
-// .<List<Integer>>instance() is UnsupportedValueConverter<List<int>>.Instance(), so the unchecked cast needs no
-// counterpart. The static field initializers run in their textual order, as Java's do, so STATIC_INDEX_BY_NAME is
-// created after STATIC_TABLE and length.
+// CLR: List<Integer> is List<int> (add is Add, get(0) the indexer). CharSequenceMap<List<Integer>> is the ported
+// CharSequenceMap<List<int>>, whose get/set are the codec-base DefaultHeaders Get/Set;
+// UnsupportedValueConverter.<List<Integer>>instance() is UnsupportedValueConverter<List<int>>.Instance(), so the
+// unchecked cast needs no counterpart. The static field initializers run in their textual order, as Java's do, so
+// STATIC_INDEX_BY_NAME is created after STATIC_TABLE and length.
 internal sealed class QpackStaticTable
 {
 

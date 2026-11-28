@@ -1,14 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!--
-    CLR: the HTTP/3 programs of codec-http3's test sources (Http3ServerExample and Http3ClientExample of package
-    io.netty.handler.codec.http3.example, and Http3SpecTestServer of package io.netty.handler.codec.http3, the server that
-    h3spec runs against) are one executable that keeps every program's Main(string[]), as each Java class has its own
-    main. C# allows several Main methods only with an explicit startup object, so ExampleLauncher (CLR-only, copied from
-    examples/Netty.NET.Example/ExampleLauncher.cs) picks the program by its Java class name and maps -Dname=value arguments to
-    GetProperty. The root namespace is that of the module's package, so the example folder is
-    Netty.NET.Handler.Codec.Http3.Example; the programs run on the msquic implementation of codec-quic
-    (docs/codec-classes-quic-porting.md, Stage 2).
-  -->
+  <!-- ExampleLauncher also exposes Http3SpecTestServer as a runnable h3spec target. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net10.0;net11.0</TargetFrameworks>

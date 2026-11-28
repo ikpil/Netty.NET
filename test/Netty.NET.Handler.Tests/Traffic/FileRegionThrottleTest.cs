@@ -31,17 +31,14 @@ using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Handler.Tests.Traffic;
 
-// CLR: @Disabled("This test is flaky, need more investigation") is [Fact(Skip = ...)] with the same text; the body is
-// ported as in Java. The static @BeforeAll beforeClass() runs from the class fixture BeforeAll (created before the
-// first test of the class, https://xunit.net/docs/shared-context), and tmp.deleteOnExit() deletes the file when that
-// fixture is disposed after the class's tests. @BeforeEach setUp()/@AfterEach tearDown() are the constructor and
-// IDisposable.Dispose(), which xUnit calls around each test. SplittableRandom is System.Random, whose Next(255) has the
-// same range as nextInt(255); the (byte) cast keeps the bits of the Java byte. PlatformDependent.createTempFile is the
-// Common PlatformDependent.CreateTempFile, FileOutputStream a FileStream, RandomAccessFile(tmp, "r").getChannel() a
-// read-only FileStream, File.length() FileInfo.Length, CharsetUtil.US_ASCII Encoding.ASCII and Charset.defaultCharset()
-// Encoding.Default. The anonymous ChannelInitializers are named nested classes, the bootstrap operations are awaited
-// Tasks, CountDownLatch is CountdownEvent, and the client connects to the loopback address in place of the wildcard
-// server address as in FlowControlHandlerTest.
+// CLR: @Disabled("This test is flaky, need more investigation") is [Fact(Skip =...)] with the same text; the body
+// is ported as in Java. The static @BeforeAll beforeClass() runs from the class fixture BeforeAll (created before
+// the first test of the class, https://xunit.net/docs/shared-context), and tmp.deleteOnExit() deletes the file
+// when that fixture is disposed after the class's tests. SplittableRandom is System.Random, whose Next(255) has
+// the same range as nextInt(255); the (byte) cast keeps the bits of the Java byte. The anonymous
+// ChannelInitializers are named nested classes, the bootstrap operations are awaited Tasks, CountDownLatch is
+// CountdownEvent, and the client connects to the loopback address in place of the wildcard server address as in
+// FlowControlHandlerTest.
 public class FileRegionThrottleTest : IClassFixture<FileRegionThrottleTest.BeforeAll>, IDisposable
 {
     private static readonly byte[] BYTES = new byte[64 * 1024 * 4];

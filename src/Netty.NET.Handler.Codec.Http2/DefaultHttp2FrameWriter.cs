@@ -32,19 +32,13 @@ namespace Netty.NET.Handler.Codec.Http2;
 /**
  * A {@link Http2FrameWriter} that supports all frame types defined by the HTTP/2 specification.
  */
-// CLR: ChannelPromise is TaskCompletionSource and ChannelFuture is Task; the Task-returning methods take the Async
-// suffix (docs/codec-http-porting.md, Shared CLR adaptations). ctx.write(msg, promise) is Http2CodecUtil.Write, which
+// CLR: The Task-returning methods take the Async suffix. ctx.write(msg, promise) is Http2CodecUtil.Write, which
 // completes the promise from the context's write Task (TrySetFromTask, docs/common-task-composition.md), and
 // promise.setFailure(t) returning the promise is SetException(t) followed by the promise's Task.
 // SimpleChannelPromiseAggregator.newPromise() returns a child promise and doneAllocatingPromises()/the aggregator
-// itself are used through their Task (see Http2CodecUtil). Configuration is IHttp2FrameWriter.IConfiguration and
-// SensitivityDetector IHttp2HeadersEncoder.ISensitivityDetector. "headersEncoder instanceof Closeable" is a test for
-// IDisposable, the counterpart of Closeable (docs/handler-porting.md: "Closeable keeps close() as Close() and
-// implements IDisposable.Dispose() with it"), and new RuntimeException(e) keeps Java's detail message
-// cause.toString() through Common's ThrowableUtil.ThrowableToString (docs/codec-http-porting.md, Exceptions).
-// PlatformDependent.throwException(t) rethrows the caught exception (throw;). Http2Settings is a
-// Dictionary<char, long>, so the SETTINGS entries are written in Dictionary (insertion) order where Java writes CharObjectHashMap's hash-slot
-// order (owner decision 2026-11-25; a SETTINGS frame holds each identifier once); entry.value().intValue() is the
+// itself are used through their Task (see Http2CodecUtil). PlatformDependent.throwException(t) rethrows the caught
+// exception (throw;). Http2Settings is a Dictionary<char, long>, so the SETTINGS entries are written in Dictionary
+// (insertion) order where Java writes CharObjectHashMap's hash-slot order; entry.value().intValue() is the
 // unchecked int conversion of the long. (int) (0x80000000L | streamDependency) is computed with an explicit long
 // conversion of the (non-negative, verified) dependency and an unchecked narrowing, as Java's int widening and
 // narrowing do. The overridable Java methods are virtual.

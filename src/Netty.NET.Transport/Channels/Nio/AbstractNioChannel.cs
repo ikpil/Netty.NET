@@ -103,7 +103,6 @@ public abstract class AbstractNioChannel : AbstractChannel
 
     protected void AddAndSubmit(NioIoOps addOps)
     {
-        // CLR: SelectionKey.interestOps() is the NioIoOps attachment of the registration.
         int interestOps = Registration().Attachment<NioIoOps>().Value();
         if (!addOps.IsIncludedIn(interestOps))
         {
@@ -120,7 +119,6 @@ public abstract class AbstractNioChannel : AbstractChannel
 
     protected void RemoveAndSubmit(NioIoOps removeOps)
     {
-        // CLR: SelectionKey.interestOps() is the NioIoOps attachment of the registration.
         int interestOps = Registration().Attachment<NioIoOps>().Value();
         if (removeOps.IsIncludedIn(interestOps))
         {
@@ -433,7 +431,6 @@ public abstract class AbstractNioChannel : AbstractChannel
         CloseIfClosed();
     }
 
-    // CLR: AbstractNioUnsafe.finishConnect().
     private void FinishConnect()
     {
         // Note this method is invoked by the event loop only if the connection attempt was
@@ -464,7 +461,6 @@ public abstract class AbstractNioChannel : AbstractChannel
         }
     }
 
-    // CLR: AbstractNioUnsafe.flush0().
     protected sealed override void Flush0()
     {
         // Flush immediately only when there's no pending flush.

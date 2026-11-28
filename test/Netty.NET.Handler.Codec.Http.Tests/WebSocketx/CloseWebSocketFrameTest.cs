@@ -18,10 +18,10 @@ using Netty.NET.Handler.Codec.Http.WebSocketx;
 
 namespace Netty.NET.Handler.Codec.Http.Tests.WebSocketx;
 
-// CLR: the package-private JUnit class is public for xUnit. The anonymous ThrowableAssert.ThrowingCallable instances
-// are lambdas (Action), assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(...) is
-// Assert.ThrowsAny<ArgumentException>, which like AssertJ accepts the type or a subtype, and assertThat(x).isEqualTo(y)
-// is Assert.Equal(y, x). CharsetUtil.US_ASCII is Encoding.ASCII (docs/codec-smtp-porting.md).
+// CLR: the package-private JUnit class is public for xUnit. The anonymous ThrowableAssert.ThrowingCallable
+// instances are lambdas (Action), assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(...) is
+// Assert.ThrowsAny<ArgumentException>, which like AssertJ accepts the type or a subtype, and
+// assertThat(x).isEqualTo(y) is Assert.Equal(y, x). CharsetUtil.US_ASCII is Encoding.ASCII.
 public class CloseWebSocketFrameTest
 {
 

@@ -88,9 +88,7 @@ public class SocketConnectSourceTest : AbstractSocketTest
 
         try
         {
-            // CLR: ImmediateEventExecutor.INSTANCE.newPromise() is a TaskCompletionSource; this port completes Tasks
-            // instead of exposing promises (IChannel.cs: "Tasks replace ChannelFuture/Promise"). IPEndPoint is the
-            // java.net.InetSocketAddress counterpart.
+            // CLR: IPEndPoint is the java.net.InetSocketAddress counterpart.
             TaskCompletionSource<IPEndPoint> localAddressPromise =
                     new TaskCompletionSource<IPEndPoint>(TaskCreationOptions.RunContinuationsAsynchronously);
             serverChannel = await sb.ChildHandler(new LocalAddressHandler(localAddressPromise)).BindAsync();
@@ -311,7 +309,6 @@ public class SocketConnectSourceTest : AbstractSocketTest
         Assert.False(address.Address.Equals(IPAddress.Any) || address.Address.Equals(IPAddress.IPv6Any));
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of testCloseTwice.
     private sealed class CloseOnUserEventHandler(System.Threading.Channels.ChannelWriter<Task> futures)
             : ChannelInboundHandlerAdapter
     {
@@ -321,7 +318,6 @@ public class SocketConnectSourceTest : AbstractSocketTest
         }
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of testLocalAddressAfterConnect.
     private sealed class LocalAddressHandler(TaskCompletionSource<IPEndPoint> localAddressPromise)
             : ChannelInboundHandlerAdapter
     {
@@ -331,7 +327,6 @@ public class SocketConnectSourceTest : AbstractSocketTest
         }
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of testChannelEventsFiredWhenClosedDirectly.
     private sealed class ActiveInactiveEventsHandler(System.Threading.Channels.ChannelWriter<int> events)
             : ChannelInboundHandlerAdapter
     {

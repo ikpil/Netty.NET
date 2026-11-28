@@ -26,8 +26,7 @@ namespace Netty.NET.Handler.Proxy;
  */
 // CLR: SocketAddress is EndPoint; "InetSocketAddress raddr = destinationAddress()" is
 // ProxyHandler.CastToInetSocketAddress, raddr.isUnresolved() is a DnsEndPoint whose Host is getHostString(), and
-// raddr.getAddress().getHostAddress() is ProxyHandler.GetHostAddress of the IPEndPoint's Address (the JDK text). The
-// SOCKS4 message interfaces take the I prefix (ISocks4CommandResponse).
+// raddr.getAddress().getHostAddress() is ProxyHandler.GetHostAddress of the IPEndPoint's Address (the JDK text).
 public sealed class Socks4ProxyHandler : ProxyHandler
 {
     private const string PROTOCOL = "socks4";

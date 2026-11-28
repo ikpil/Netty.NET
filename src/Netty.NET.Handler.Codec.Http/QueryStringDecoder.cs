@@ -52,21 +52,21 @@ namespace Netty.NET.Handler.Codec.Http;
  *
  * @see QueryStringEncoder
  */
-// CLR: java.nio.charset.Charset is System.Text.Encoding and new String(bytes, 0, n, charset) is Encoding.GetString,
-// whose default replacement fallback replaces a malformed sequence as the JDK decoder does. java.net.URI is System.Uri:
-// URI.getRawPath()/getRawQuery() return the components exactly as they appear in the source string, while
-// Uri.AbsolutePath normalizes them (for example "http://localhost:8080?a=b" gets the path "/"), so RawPathAndQuery reads
-// the path and query of Uri.OriginalString with the RFC 3986 generic syntax (scheme ":" ["//" authority] path ["?" query]
-// ["#" fragment]); an opaque URI (a scheme not followed by '/') has neither, as java.net.URI reports null for both
+// CLR: java.nio.charset.Charset is System.Text.Encoding and new String(bytes, 0, n, charset) is
+// Encoding.GetString, whose default replacement fallback replaces a malformed sequence as the JDK decoder does.
+// java.net.URI is System.Uri: URI.getRawPath()/getRawQuery() return the components exactly as they appear in the
+// source string, while Uri.AbsolutePath normalizes them (for example "http://localhost:8080?a=b" gets the path
+// "/"), so RawPathAndQuery reads the path and query of Uri.OriginalString with the RFC 3986 generic syntax (scheme
+// ":" ["//" authority] path ["?" query] ["#" fragment]); an opaque URI (a scheme not followed by '/') has neither,
+// as java.net.URI reports null for both
 // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/URI.html). Map<String, List<String>> is
 // IDictionary<string, IList<string>>: LinkedHashMap is the Common LinkedHashMap (insertion order),
 // Collections.emptyMap() is ImmutableDictionary.Empty and Collections.singletonList(value) is a one-element
 // ImmutableList (both read-only, as the Java collections are); "values instanceof ArrayList" is "values is
-// List<string>". The labeled "break loop" is a goto to a label after the loop (docs/codec-compression-porting.md,
-// Switch fall-through and labeled break), and the fall-through from ';' to '&' is goto case.
-// PlatformDependent.allocateUninitializedArray is GC.AllocateUninitializedArray. The static builder() clashes with the
-// nested Builder type (CS0102) and takes a trailing underscore, Builder_() (owner rule). The private constructor and
-// fields of the nested Builder that the decoder uses are internal (docs/codec-compression-porting.md, Access).
+// List<string>". The labeled "break loop" is a goto to a label after the loop, and the fall-through from ';' to
+// '&' is goto case. PlatformDependent.allocateUninitializedArray is GC.AllocateUninitializedArray. The static
+// builder() clashes with the nested Builder type (CS0102) and takes a trailing underscore, Builder_() (owner
+// rule). The private constructor and fields of the nested Builder that the decoder uses are internal.
 // IllegalArgumentException is ArgumentException and numbers in messages use the invariant culture.
 public class QueryStringDecoder
 {

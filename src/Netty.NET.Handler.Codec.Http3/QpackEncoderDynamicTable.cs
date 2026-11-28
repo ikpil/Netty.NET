@@ -24,15 +24,15 @@ using static Netty.NET.Handler.Codec.Http3.QpackUtil;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the package-private final class is internal sealed and its package-private members are internal; the public
-// constant NOT_FOUND stays public. The checked QpackException needs no throws clause; IllegalArgumentException is
-// ArgumentException and the index prints with the invariant culture; assert is Debug.Assert. AsciiString.hashCode
-// (CharSequence) is the Common AsciiString.HashCode, which keeps Java's hashing. MathUtil.findNextPositivePowerOfTwo,
-// Math.max and Math.min are MathUtil.FindNextPositivePowerOfTwo, Math.Max and Math.Min; Math.toIntExact is a checked
-// conversion (OverflowException for Java's ArithmeticException). hashMask is the CLR byte: it is at most 127, so Java's
-// sign extension in h & hashMask does not change the value. The @Nullable (org.jetbrains.annotations) annotations have
-// no counterpart. The private static nested class HeaderEntry derives from the ported QpackHeaderField; its fields are
-// internal so the table reads them.
+// CLR: The public constant NOT_FOUND stays public. The checked QpackException needs no throws clause;
+// IllegalArgumentException is ArgumentException and the index prints with the invariant culture; assert is
+// Debug.Assert. AsciiString.hashCode (CharSequence) is the Common AsciiString.HashCode, which keeps Java's
+// hashing. MathUtil.findNextPositivePowerOfTwo, Math.max and Math.min are MathUtil.FindNextPositivePowerOfTwo,
+// Math.Max and Math.Min; Math.toIntExact is a checked conversion (OverflowException for Java's
+// ArithmeticException). hashMask is the CLR byte: it is at most 127, so Java's sign extension in h & hashMask does
+// not change the value. The @Nullable (org.jetbrains.annotations) annotations have no counterpart. The private
+// static nested class HeaderEntry derives from the ported QpackHeaderField; its fields are internal so the table
+// reads them.
 internal sealed class QpackEncoderDynamicTable
 {
     private static readonly QpackException INVALID_KNOW_RECEIVED_COUNT_INCREMENT =

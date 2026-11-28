@@ -20,9 +20,8 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Http.Tests.WebSocketx;
 
-// CLR: readOutbound() is ReadOutbound<T>() of the Transport EmbeddedChannel. ReadByte() returns the unsigned
-// System.Byte (owner decision), so the expected octets (byte) 0xFF and (byte) 0x00 are the unsigned values 0xFF and
-// 0x00.
+// CLR: ReadByte() returns the unsigned System.Byte (owner decision), so the expected octets (byte) 0xFF and (byte)
+// 0x00 are the unsigned values 0xFF and 0x00.
 public class WebSocket00FrameEncoderTest
 {
 

@@ -19,7 +19,6 @@ using Netty.NET.Handler.Codec.Http.WebSocketx.Extensions;
 
 namespace Netty.NET.Handler.Codec.Http.Tests.WebSocketx.Extensions;
 
-// CLR: WebSocketExtensionFilter is IWebSocketExtensionFilter (owner rule: I prefix).
 public class WebSocketExtensionFilterTest
 {
 

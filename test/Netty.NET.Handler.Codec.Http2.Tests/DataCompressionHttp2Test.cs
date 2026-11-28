@@ -37,36 +37,10 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
 /**
  * Test for data decompression in the HTTP/2 codec.
  */
-// CLR: the @Mock listeners are Moq mocks; doAnswer(...).when(...) is Setup(...).Callback/Returns and verify(...) is
-// Verify(..., Times.Once()) (https://github.com/devlooped/moq/wiki/Quickstart); eq(headers) is the expected value itself,
-// which Moq compares with Equals. @BeforeAll is the static constructor (xUnit has no static setup method; the
-// codec-compression tests do the same, docs/codec-compression-porting.md, Test notes), @BeforeEach is the constructor
-// and the two @AfterEach methods (cleanup, then teardown) run from IAsyncLifetime.DisposeAsync; sync() is awaiting the
-// Task. The @ValueSource/@MethodSource tests are theories with InlineData/MemberData rows (TheoryData). JUnit passes
-// only the first argument of each paddingAndCompression() row to deflateEncodingWriteLargeMessage(int padding) ("when
-// an arguments source provides more arguments than the test method needs, those additional arguments are ignored",
-// https://docs.junit.org/5.12.2/user-guide/index.html, Argument Count Validation), while xUnit requires one parameter
-// per row value, so that theory takes the compression as an unused discard parameter named _ (its lambda therefore
-// ignores the Write*Async Tasks with expression statements instead of "_ ="): it runs once per row, as in JUnit. The
-// rows keep ZSTD:
-// zstd-jni is library-not-ported (docs/codec-compression-porting.md), so CompressorHttp2ConnectionEncoder and
-// DelegatingDecompressorFrameListener treat "zstd" as Java does when Zstd.isAvailable() is false (no compressor, no
-// decompressor) and those rows send and check the data uncompressed. Brotli.ensureAvailability() always succeeds (the
-// BCL Brotli, docs/codec-compression-porting.md). The anonymous Answer/ChannelInitializer/ChannelInboundHandlerAdapter/
-// DelegatingDecompressorFrameListener/Http2ConnectionAdapter classes are lambdas and nested classes, Callable<Void> is
-// Action, and the anonymous Http2Runnable instances are the nested ActionRunnable. NIO transport: MultiThreadIoEventLoopGroup with
-// NioIoHandler, NioServerSocketChannel and NioSocketChannel; new InetSocketAddress(0) is the IPv4 wildcard, as the
-// Transport's ServerBootstrap.BindAsync(int) binds it, so the client connects to NetUtil.LOCALHOST4 (as codec-http's
-// HttpClientCodecTest). ByteArrayOutputStream is MemoryStream and toString(ISO_8859_1) is Encoding.Latin1.GetString;
-// AtomicReference<Throwable> is an Exception field read and written with Volatile; CountDownLatch is CountdownEvent.
-// PlatformDependent.allocateUninitializedArray is GC.AllocateUninitializedArray, which "Allocates an array while
-// skipping zero-initialization, if possible"
-// (https://learn.microsoft.com/en-us/dotnet/api/system.gc.allocateuninitializedarray?view=net-10.0); either content
-// satisfies the assertions, which accept a bounded output or a decompression failure. AssertJ's
-// assertThat(int).isLessThanOrEqualTo(int) is Assert.True with the same message text, and
-// isInstanceOf(...).rootCause().isInstanceOf(...).hasMessageContaining(...) walks InnerException to the root cause.
-// String.getBytes() with the default charset is Encoding.UTF8 (the texts are ASCII) and ThreadLocalRandom.current()
-// .nextBytes is Random.Shared.NextBytes. AssertionError(msg, cause) is Xunit.Sdk.XunitException(msg, cause).
+// Keep the zstd theory rows: this backend sends those payloads uncompressed. The padding-only theory accepts the
+// unused compression parameter so xUnit runs the same rows.
+// The output-limit assertions allow either bounded output or a decompression failure regardless of the contents of
+// the uninitialized buffer.
 public class DataCompressionHttp2Test : IAsyncLifetime
 {
     private static readonly AsciiString GET = new AsciiString("GET");
@@ -433,7 +407,6 @@ public class DataCompressionHttp2Test : IAsyncLifetime
         Assert.True(serverChannelLatch.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
     }
 
-    // CLR: the anonymous Http2ConnectionAdapter of bootstrapEnv(...).
     private sealed class StreamClosedListener : Http2ConnectionAdapter
     {
         private readonly DataCompressionHttp2Test test;
@@ -449,7 +422,6 @@ public class DataCompressionHttp2Test : IAsyncLifetime
         }
     }
 
-    // CLR: the anonymous ChannelInitializer<Channel> of the server side of bootstrapEnv(...).
     private sealed class ServerInitializer : ChannelInitializer<IChannel>
     {
         private readonly DataCompressionHttp2Test test;
@@ -482,7 +454,6 @@ public class DataCompressionHttp2Test : IAsyncLifetime
         }
     }
 
-    // CLR: the anonymous DelegatingDecompressorFrameListener of the server side of bootstrapEnv(...).
     private sealed class ServerDecompressorFrameListener : DelegatingDecompressorFrameListener
     {
         private readonly DataCompressionHttp2Test test;
@@ -508,8 +479,6 @@ public class DataCompressionHttp2Test : IAsyncLifetime
         }
     }
 
-    // CLR: the anonymous ChannelInitializer<Channel> of the client side of bootstrapEnv(...) and its anonymous
-    // ChannelInboundHandlerAdapter (PrefaceWrittenHandler).
     private sealed class ClientInitializer : ChannelInitializer<IChannel>
     {
         private readonly DataCompressionHttp2Test test;
@@ -604,7 +573,6 @@ public class DataCompressionHttp2Test : IAsyncLifetime
         }
     }
 
-    // CLR: the anonymous Http2Runnable instances (see the class comment).
     private sealed class ActionRunnable : IHttp2Runnable
     {
         private readonly Action action;

@@ -460,7 +460,6 @@ public class ServerBootstrap : AbstractBootstrap
         Action<IChannel>[] currentChildAttrs = _childAttributes.Values.Select(attribute => attribute.Apply).ToArray();
         IReadOnlyList<ChannelInitializerExtension> extensions = AbstractBootstrap.GetInitializerExtensions();
 
-        // CLR: the anonymous ChannelInitializer<Channel>.initChannel(ch) and its Runnable are lambdas.
         p.AddLast(new ActionChannelInitializer<IChannel>(ch =>
         {
             IChannelPipeline pipeline = ch.Pipeline;

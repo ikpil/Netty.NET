@@ -24,9 +24,9 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx.Extensions.Compression;
  *
  * See <tt>io.netty.example.http.websocketx.client.WebSocketClient</tt> for usage.
  */
-// CLR: @ChannelHandler.Sharable is the Transport's [Sharable]. The @Deprecated INSTANCE field names its replacement
-// WebSocketClientCompressionHandler(int) and is not ported (owner decision 2026-11-16), and with it the private
-// no-argument constructor, which only INSTANCE called.
+// CLR: @ChannelHandler.Sharable is the Transport's [Sharable]. The @Deprecated INSTANCE field names its
+// replacement WebSocketClientCompressionHandler(int) and is not ported, and with it the private no-argument
+// constructor, which only INSTANCE called.
 [Sharable]
 public sealed class WebSocketClientCompressionHandler : WebSocketClientExtensionHandler
 {

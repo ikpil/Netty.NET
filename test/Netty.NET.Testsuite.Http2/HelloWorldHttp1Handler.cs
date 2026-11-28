@@ -30,12 +30,12 @@ namespace Netty.NET.Testsuite.Http2;
 /**
  * HTTP handler that responds with a "Hello World"
  */
-// CLR: FullHttpRequest/FullHttpResponse are IFullHttpRequest/IFullHttpResponse and ctx.alloc() is ctx.Alloc(), as in
-// codec-http. ctx.write(msg) is WriteAsync, whose Task is discarded as Java discards the ChannelFuture.
+// CLR: FullHttpRequest/FullHttpResponse are IFullHttpRequest/IFullHttpResponse and ctx.alloc() is ctx.Alloc(), as
+// in codec-http. ctx.write(msg) is WriteAsync, whose Task is discarded as Java discards the ChannelFuture.
 // ChannelFutureListener.CLOSE on the write future is a Task continuation that closes the channel on the channel's
-// executor (Common's EventExecutorTaskScheduler), as codec-http's CorsHandler maps it. cause.printStackTrace() writes
-// the exception to Console.Error (Exception.ToString() holds the type, the message and the stack trace), as codec-http2's
-// LastInboundHandler. The package-private constructor is internal.
+// executor (Common's EventExecutorTaskScheduler), as codec-http's CorsHandler maps it. cause.printStackTrace()
+// writes the exception to Console.Error (Exception.ToString() holds the type, the message and the stack trace), as
+// codec-http2's LastInboundHandler.
 public class HelloWorldHttp1Handler : SimpleChannelInboundHandler<IFullHttpRequest>
 {
     private readonly string establishApproach;

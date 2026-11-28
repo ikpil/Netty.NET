@@ -25,8 +25,6 @@ namespace Netty.NET.Handler.Codec.Http2;
  * Decorator around a {@link Http2FrameReader} that logs all inbound frames before calling
  * back the listener.
  */
-// CLR: the anonymous Http2FrameListener of readFrame is the private nested LoggingListener. Closeable.close() is
-// Close() (IDisposable.Dispose() comes from IHttp2FrameReader).
 public class Http2InboundFrameLogger : IHttp2FrameReader
 {
     private readonly IHttp2FrameReader reader;
@@ -53,7 +51,6 @@ public class Http2InboundFrameLogger : IHttp2FrameReader
         return reader.Configuration();
     }
 
-    // CLR: the anonymous Http2FrameListener of readFrame, which captures logger and listener.
     private sealed class LoggingListener : IHttp2FrameListener
     {
         private readonly Http2FrameLogger logger;

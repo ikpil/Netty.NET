@@ -301,8 +301,7 @@ public abstract class AbstractIntegrationTest
         Assert.Equal(expectedData, digest.GetHashAndReset());
     }
 
-    // CLR: the class does not implement ByteProcessor (a Func<byte, bool> in the Buffer port); process(byte) is the
-    // per-segment digest update in channelRead (see TestHugeDecompress).
+    // CLR: the class does not implement ByteProcessor (a Func<byte, bool> in the Buffer port).
     private sealed class HugeDecompressIncomingHandler : ChannelInboundHandlerAdapter
     {
         internal readonly int memoryLimit;

@@ -25,55 +25,13 @@ namespace Netty.NET.Handler.Codec.Compression;
 // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/zip/Deflater.html), named after the JDK type so
 // that JdkZlibEncoder and codec-http's SPDY header block encoder (InternalsVisibleTo) keep the Java call shape (setInput,
 // setDictionary, deflate with SYNC_FLUSH, needsInput, finish, finished, getTotalIn, end) and its constants.
-// The CLR port uses the BCL System.IO.Compression streams. The stand-in writes through a raw DeflateStream (nowrap) or a
-// ZLibStream (https://learn.microsoft.com/en-us/dotnet/api/system.io.compression.zlibstream?view=net-10.0) into the
-// private Sink, from which deflate() copies the compressed bytes.
-// - The level is ZLibCompressionOptions.CompressionLevel, which "Can accept any value between -1 and 9 (inclusive). 0
-//   gives no compression, 1 gives best speed, 9 gives best compression, and -1 requests the default compression level,
-//   which is equivalent to 6", so Java's levels keep their meaning; the page applies to .NET 9, 10 and 11
-//   (https://learn.microsoft.com/en-us/dotnet/api/system.io.compression.zlibcompressionoptions.compressionlevel?view=net-10.0).
-// - deflate(..., SYNC_FLUSH) is the stream's Flush(). The Flush page only says that it "flushes the internal buffer to
-//   the underlying stream" (https://learn.microsoft.com/en-us/dotnet/api/system.io.compression.deflatestream.flush?view=net-10.0);
-//   the source shows that it calls zlib's deflate with ZFlushCode.SyncFlush (FlushBuffers in DeflateStream.cs and
-//   Deflater.Flush in Deflater.cs,
-//   https://raw.githubusercontent.com/dotnet/runtime/v10.0.8/src/libraries/System.IO.Compression/src/System/IO/Compression/DeflateZLib/DeflateStream.cs,
-//   https://raw.githubusercontent.com/dotnet/runtime/v10.0.8/src/libraries/System.IO.Compression/src/System/IO/Compression/DeflateZLib/Deflater.cs),
-//   the flush mode Java's SYNC_FLUSH selects.
-// - finish() makes the next deflate() call dispose the stream (leaveOpen), which finishes it (PurgeBuffers).
-//   Disposing a stream that never received a byte can produce no output. When the BCL writes nothing, the stand-in
-//   supplies a complete empty stream: a final fixed-Huffman block holding only the end-of-block code (BFINAL 1,
-//   BTYPE 01 and the seven-bit code 0000000 of symbol 256, RFC 1951 sections 3.2.3 and 3.2.6,
-//   https://www.rfc-editor.org/rfc/rfc1951),
-//   that is 0x03 0x00, and for the ZLIB wrapper the RFC 1950 header and the Adler-32 of no data, 1
-//   (https://www.rfc-editor.org/rfc/rfc1950), with the header zlib writes (CMF 0x78, FLEVEL from the level,
-//   "header += 31 - (header % 31)", https://raw.githubusercontent.com/madler/zlib/v1.3.1/deflate.c).
-// - Input is written in chunks of at most MAX_WRITE bytes and only while the Sink is empty, so the Sink holds about one
-//   chunk of output, as zlib's pending buffer does; getTotalIn() counts the written bytes.
-// - Preset dictionaries (owner decision 2026-11-24): the BCL streams have no dictionary API, so setDictionary writes
-//   the dictionary through a raw DeflateStream, sync-flushes it and drops that output: the compressor then holds the
-//   dictionary as history, which RFC 1950 describes as "a sequence of bytes which are initially fed to the compressor
-//   without producing any compressed output" (section 2.2), and the sync flush ends that output on a byte boundary
-//   before the first block of the data. Only the last 32 KiB are written, as zlib's deflateSetDictionary "use[s] the
-//   tail" when the dictionary would fill the window (deflate.c), and a backward distance is at most 32,768 (RFC 1951,
-//   section 3.2.5, https://www.rfc-editor.org/rfc/rfc1951). With the zlib wrapper the stand-in writes what zlib's
-//   deflate() writes itself (deflate.c): the header with PRESET_DICT (FDICT, 0x20) when the dictionary is not empty
-//   ("if (s->strstart != 0) header |= PRESET_DICT") followed by the Adler-32 of the whole dictionary (DICTID, most
-//   significant byte first; deflateSetDictionary computes it over all dictionary bytes, and several calls before the
-//   first deflate() continue it), and on finish the ADLER32 trailer, "a checksum value of the uncompressed data
-//   (excluding any dictionary data)" (RFC 1950), computed with System.IO.Hashing.Adler32
-//   (https://learn.microsoft.com/en-us/dotnet/api/system.io.hashing.adler32?view=net-10.0-pp); zlib restarts its check
-//   after the header ("strm->adler = adler32(0L, Z_NULL, 0)"). An empty dictionary changes nothing, as in zlib. As in
-//   zlib's deflateSetDictionary ("if (wrap == 2 || (wrap == 1 && s->status != INIT_STATE) || s->lookahead) return
-//   Z_STREAM_ERROR"), the zlib wrapper takes a dictionary only before the first deflate(); Java throws
-//   IllegalArgumentException for Z_STREAM_ERROR (checkSetDictionaryResult in Deflater.c,
-//   https://raw.githubusercontent.com/openjdk/jdk17u/jdk-17+35/src/java.base/share/native/libzip/Deflater.c), here
-//   ArgumentException (docs/codec-base-porting.md). zlib also lets a raw deflater take a dictionary between deflate()
-//   calls; the stand-in accepts it only before the first input byte (NotSupportedException afterwards), because the
-//   dictionary written later would be compressed into the data. getTotalIn() does not count the dictionary, as Java's
-//   bytesRead counts only the input of deflate() (Deflater.java,
-//   https://raw.githubusercontent.com/openjdk/jdk17u/jdk-17+35/src/java.base/share/classes/java/util/zip/Deflater.java).
-//   Streams without a dictionary are written by the ZLibStream/DeflateStream exactly as before.
-// - The compressed bytes can differ from Java's zlib (.NET uses zlib-ng); the format and the inflated data are the same.
+// Finish disposes the compression stream. Supply an empty final block and, for zlib, its header and checksum only
+// when the BCL emitted no bytes.
+// The BCL has no preset-dictionary API. Prime the raw deflater with the last 32 KiB of the dictionary, sync-flush,
+// and discard that output. The zlib wrapper writes DICTID for the whole dictionary and a trailer checksum for the
+// payload alone.
+// Input is processed in bounded chunks while queued output is drained. Raw dictionaries can be installed only
+// before the first payload byte.
 internal sealed class Deflater
 {
     internal const int DEFLATED = 8;

@@ -40,7 +40,6 @@ namespace Netty.NET.Resolver.Dns;
 public class DefaultDnsCache : IDnsCache
 {
 
-    // CLR: the anonymous Cache<DefaultDnsCacheEntry> subclass is the named nested DnsCacheEntryCache.
     private readonly Cache<DefaultDnsCacheEntry> resolveCache = new DnsCacheEntryCache();
 
     private sealed class DnsCacheEntryCache : Cache<DefaultDnsCacheEntry>
@@ -205,9 +204,9 @@ public class DefaultDnsCache : IDnsCache
                 .ToString();
     }
 
-    // CLR: System.identityHashCode is RuntimeHelpers.GetHashCode (docs/handler-porting.md, Channel internals);
-    // cause.toString() is ThrowableUtil.ThrowableToString (owner decision 2026-11-24) and InetAddress.toString()
-    // ("hostname/literal") is IPAddress.ToString(), the literal, because IPAddress carries no host name.
+    // CLR: System.identityHashCode is RuntimeHelpers.GetHashCode; cause.toString() is
+    // ThrowableUtil.ThrowableToString and InetAddress.toString() ("hostname/literal") is IPAddress.ToString(), the
+    // literal, because IPAddress carries no host name.
     private sealed class DefaultDnsCacheEntry : IDnsCacheEntry
     {
         private readonly string hostname;
@@ -297,7 +296,6 @@ public class DefaultDnsCache : IDnsCache
         }
     }
 
-    // CLR: StringUtil.endsWith(hostname, '.') is Common's StringUtil.EndsWith.
     private static string AppendDot(string hostname)
     {
         return StringUtil.EndsWith(hostname, '.') ? hostname : hostname + '.';
@@ -309,14 +307,14 @@ public class DefaultDnsCache : IDnsCache
 
     private static Exception CopyThrowable(Exception error)
     {
-        // CLR: UnknownHostException is Common's UnknownHostException (owner decision 2026-11-25). The anonymous
-        // UnknownHostException subclass only overrides fillInStackTrace(), which the JDK constructors call to record the
-        // stack (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html); a CLR exception
+        // CLR: UnknownHostException is Common's UnknownHostException. The anonymous UnknownHostException subclass
+        // only overrides fillInStackTrace(), which the JDK constructors call to record the stack
+        // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html); a CLR exception
         // records its stack trace when it is thrown and a new one has none
-        // (https://learn.microsoft.com/en-us/dotnet/api/system.exception.stacktrace?view=net-10.0), so the copy is a
-        // plain UnknownHostException with the same message, and initCause(error.getCause()) is its (string, Exception)
-        // constructor. setStackTrace(error.getStackTrace()) is ExceptionDispatchInfo.SetRemoteStackTrace with the
-        // original's stack trace text when it was thrown
+        // (https://learn.microsoft.com/en-us/dotnet/api/system.exception.stacktrace?view=net-10.0), so the copy is
+        // a plain UnknownHostException with the same message, and initCause(error.getCause()) is its (string,
+        // Exception) constructor. setStackTrace(error.getStackTrace()) is
+        // ExceptionDispatchInfo.SetRemoteStackTrace with the original's stack trace text when it was thrown
         // (https://learn.microsoft.com/en-us/dotnet/api/system.runtime.exceptionservices.exceptiondispatchinfo.setremotestacktrace?view=net-10.0).
         if (error.GetType() == typeof(UnknownHostException))
         {

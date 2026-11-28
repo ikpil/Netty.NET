@@ -23,12 +23,10 @@ using static Netty.NET.Handler.Codec.Http3.Http3FrameValidationUtils;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the package-private class is internal. Class<T> is System.Type (see Http3FrameValidationUtils); T keeps the bound
-// IHttp3Frame and adds the class constraint of the validate methods. The final write(ctx, Object, ChannelPromise) is the
-// sealed override WriteAsync(ctx, msg, cancellationToken), which creates the promise (Http3CodecUtils.NewPromise()),
-// runs the Java body and returns the promise's Task (docs/codec-http2-porting.md, Shared CLR adaptations); the
-// package-private overridable write(ctx, T, ChannelPromise) and writeFrameDiscarded(...) are internal virtual members
-// that keep the TaskCompletionSource parameter, and ctx.write(msg, promise) is Http3CodecUtils.Write.
+// CLR: Class<T> is System.Type (see Http3FrameValidationUtils); T keeps the bound IHttp3Frame and adds the class
+// constraint of the validate methods. The final write(ctx, Object, ChannelPromise) is the sealed override
+// WriteAsync(ctx, msg, cancellationToken), which creates the promise (Http3CodecUtils.NewPromise()), runs the Java
+// body and returns the promise's Task.
 internal class Http3FrameTypeOutboundValidationHandler<T> : ChannelOutboundHandlerAdapter where T : class, IHttp3Frame
 {
 

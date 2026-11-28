@@ -16,7 +16,6 @@
 
 namespace Netty.NET.Handler.Codec.Dns;
 
-// CLR: interface with the I prefix.
 public interface IDnsPtrRecord : IDnsRecord
 {
 

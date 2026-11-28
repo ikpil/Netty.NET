@@ -60,8 +60,8 @@ public sealed class UnixResolverDnsServerAddressStreamProvider : IDnsServerAddre
     private static readonly IInternalLogger logger =
             InternalLoggerFactory.GetInstance(typeof(UnixResolverDnsServerAddressStreamProvider));
 
-    // CLR: Java's \s is [ \t\n\x0B\f\r] (ASCII white space), while the .NET \s also matches Unicode white space, so the
-    // class is written out.
+    // CLR: Java's \s is [ \t\n\x0B\f\r] (ASCII white space), while the.NET \s also matches Unicode white space, so
+    // the class is written out.
     private static readonly Regex WHITESPACE_PATTERN = new Regex("[ \\t\\n\\x0B\\f\\r]+");
     private static readonly string RES_OPTIONS = Environment.GetEnvironmentVariable("RES_OPTIONS");
 

@@ -22,10 +22,10 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx;
 /**
  * Frames decoder configuration.
  */
-// CLR: The private Builder constructor is internal, because a C# enclosing class cannot call the private members of its
-// nested class (docs/handler-porting.md, Access and names), and the package-private DEFAULT is internal. The Java
-// toString() text is kept: the booleans print as true/false (Boolean.ToString gives True/False) and the number uses the
-// invariant culture. checkNotNull is the Common ObjectUtil.CheckNotNull (ArgumentNullException).
+// CLR: The private Builder constructor is internal, because a C# enclosing class cannot call the private members
+// of its nested class, and the package-private DEFAULT is internal. The Java toString() text is kept: the booleans
+// print as true/false (Boolean.ToString gives True/False) and the number uses the invariant culture. checkNotNull
+// is the Common ObjectUtil.CheckNotNull (ArgumentNullException).
 public sealed class WebSocketDecoderConfig
 {
 

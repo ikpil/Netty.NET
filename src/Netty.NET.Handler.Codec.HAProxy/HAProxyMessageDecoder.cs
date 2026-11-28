@@ -28,11 +28,10 @@ namespace Netty.NET.Handler.Codec.HAProxy;
  *
  * @see <a href="https://haproxy.1wt.eu/download/1.5/doc/proxy-protocol.txt">Proxy Protocol Specification</a>
  */
-// CLR: List<Object> out is IList<object> @out and 'in' is @in (docs/codec-base-porting.md); readerIndex()/
-// writerIndex()/readableBytes() are the ReaderIndex/WriterIndex/ReadableBytes properties, getUnsignedByte() is GetByte()
-// (unsigned byte, owner decision) and getUnsignedShort() returns ushort (docs/buffer-porting.md). The returned close
-// Task of ctx.CloseAsync() is discarded as the source discards the ChannelFuture. CharsetUtil.US_ASCII is
-// Encoding.ASCII, and numbers in messages use the invariant culture.
+// CLR: List<Object> out is IList<object> @out and 'in' is @in; readerIndex()/ writerIndex()/readableBytes() are
+// the ReaderIndex/WriterIndex/ReadableBytes properties, getUnsignedByte() is GetByte() (unsigned byte, owner
+// decision) and getUnsignedShort() returns ushort. The returned close Task of ctx.CloseAsync() is discarded as the
+// source discards the ChannelFuture.
 public class HAProxyMessageDecoder : ByteToMessageDecoder
 {
     /**

@@ -21,9 +21,6 @@ namespace Netty.NET.Handler.Codec.Http2;
 /**
  * Encodes {@link Http2Headers} into HPACK-encoded headers blocks.
  */
-// CLR: the nested interfaces Configuration and SensitivityDetector take the I prefix; the interface constants
-// NEVER_SENSITIVE and ALWAYS_SENSITIVE are static readonly interface fields and their anonymous classes are private
-// nested classes (as codec-http ILastHttpContent.EMPTY_LAST_CONTENT).
 public interface IHttp2HeadersEncoder
 {
     /**
@@ -103,7 +100,6 @@ public interface IHttp2HeadersEncoder
      */
     public static readonly ISensitivityDetector ALWAYS_SENSITIVE = new AlwaysSensitiveDetector();
 
-    // CLR: the anonymous SensitivityDetector of NEVER_SENSITIVE.
     private sealed class NeverSensitiveDetector : ISensitivityDetector
     {
         public bool IsSensitive(ICharSequence name, ICharSequence value)
@@ -112,7 +108,6 @@ public interface IHttp2HeadersEncoder
         }
     }
 
-    // CLR: the anonymous SensitivityDetector of ALWAYS_SENSITIVE.
     private sealed class AlwaysSensitiveDetector : ISensitivityDetector
     {
         public bool IsSensitive(ICharSequence name, ICharSequence value)

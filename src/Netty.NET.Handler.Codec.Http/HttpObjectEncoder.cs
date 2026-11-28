@@ -32,7 +32,7 @@ namespace Netty.NET.Handler.Codec.Http;
 // CLR: CRLF_SHORT does not depend on H, but a static member of a C# generic class belongs to each closed type
 // (HttpObjectEncoder<IHttpRequest>.CRLF_SHORT), so the package-private constant that HttpHeadersEncoder imports is
 // declared on this non-generic HttpObjectEncoder class, as codec-base declares DefaultHeaders' static members on a
-// non-generic DefaultHeaders class (docs/codec-base-porting.md; src/Netty.NET.Handler.Codec/DefaultHeaders.cs).
+// non-generic DefaultHeaders class.
 public static class HttpObjectEncoder
 {
     internal const int CRLF_SHORT = (CR << 8) | LF;
@@ -52,20 +52,17 @@ public static class HttpObjectEncoder
  * implement all abstract methods properly.
  */
 // CLR: H extends HttpMessage is the constraint H : IHttpMessage. write(ctx, msg, promise) is WriteAsync(ctx, msg,
-// cancellationToken), whose Task replaces the promise (docs/codec-base-porting.md, Outbound operations); as in codec-base
-// MessageToMessageEncoder, there is no void promise, so writeVoidPromise has no counterpart, and PromiseCombiner is
-// codec-base's ExecutorPromiseCombiner, which completes the returned Task on the event loop when the last write
-// completes as the Java combiner does (a Task.WhenAll of the Transport write Tasks completed later on a thread-pool
-// thread; src/Netty.NET.Handler.Codec/ExecutorPromiseCombiner.cs). The reused out list is the field @out. FileRegion is the
-// Transport IFileRegion. java.lang.Error is UnreachableException (docs/codec-memcache-porting.md),
-// IllegalStateException is InvalidOperationException and assert is Debug.Assert; the switch sections that fall through
-// end with goto case (docs/codec-compression-porting.md). In encodeFullHttpMessage a local named state is declared after
-// the field is read, so the field is this.state (CS0841: https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0841).
-// Long.SIZE - Long.numberOfLeadingZeros is 64 - BitOperations.LeadingZeroCount((ulong) x)
-// (docs/codec-compression-porting.md, Bit operations). LeakPresenceDetector.staticInitializer is the Common
-// LeakPresenceDetector.StaticInitializer. The deprecated encodeAscii(String, ByteBuf) has no @deprecated text and is
-// ported with [Obsolete]; buf.writeCharSequence(s, US_ASCII) is ByteBufUtil.WriteAscii (AsciiString.c2b per char, as
-// Java writes; see HttpHeadersEncoder).
+// cancellationToken), whose Task replaces the promise; as in codec-base MessageToMessageEncoder, there is no void
+// promise, so writeVoidPromise has no counterpart, and PromiseCombiner is codec-base's ExecutorPromiseCombiner,
+// which completes the returned Task on the event loop when the last write completes as the Java combiner does (a
+// Task.WhenAll of the Transport write Tasks completed later on a thread-pool thread;
+// src/Netty.NET.Handler.Codec/ExecutorPromiseCombiner.cs). The reused out list is the field @out. FileRegion is
+// the Transport IFileRegion. java.lang.Error is UnreachableException, IllegalStateException is
+// InvalidOperationException and assert is Debug.Assert; the switch sections that fall through end with goto case.
+// In encodeFullHttpMessage a local named state is declared after the field is read, so the field is this.state
+// (CS0841: https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0841). Long.SIZE - Long.numberOfLeadingZeros is
+// 64 - BitOperations.LeadingZeroCount((ulong) x). LeakPresenceDetector.staticInitializer is the Common
+// LeakPresenceDetector.StaticInitializer.
 public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
     where H : IHttpMessage
 {
@@ -825,10 +822,10 @@ public abstract class HttpObjectEncoder<H> : MessageToMessageEncoder<object>
 
     protected abstract void EncodeInitialLine(ByteBuf buf, H message);
 
-    // CLR: Java protected also admits the package, and HttpRequestEncoderTest calls encodeInitialLine(...) through it.
-    // C# protected access needs an instance of the calling class (CS1540), so the tests reach it through this internal
-    // forwarder (InternalsVisibleTo), as codec-base MessageToMessageEncoder.InvokeEncode and handler
-    // IpSubnetFilter.InvokeAccept do (docs/codec-base-porting.md, Package access; docs/handler-porting.md).
+    // CLR: Java protected also admits the package, and HttpRequestEncoderTest calls encodeInitialLine(...) through
+    // it. C# protected access needs an instance of the calling class (CS1540), so the tests reach it through this
+    // internal forwarder (InternalsVisibleTo), as codec-base MessageToMessageEncoder.InvokeEncode and handler
+    // IpSubnetFilter.InvokeAccept do.
     internal void InvokeEncodeInitialLine(ByteBuf buf, H message)
     {
         EncodeInitialLine(buf, message);

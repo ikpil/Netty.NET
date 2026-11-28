@@ -25,9 +25,8 @@ namespace Netty.NET.Handler.Codec.Quic;
  * {@link io.netty.channel.ChannelHandlerContext#writeAndFlush(Object)} to send early data.
  * Please be aware that early data may be replay-able and so may have other security concerns then other data.
  */
-// CLR: the package-private INSTANCE is internal. System.Net.Quic has no 0-RTT early data (docs/quic-design.md, No
-// counterpart in System.Net.Quic): the event keeps its Java API (owner decision 2026-11-27) and the msquic
-// implementation (stage 2) never fires it.
+// CLR: System.Net.Quic has no 0-RTT early data : the event keeps its Java API and the msquic implementation (stage
+// 2) never fires it.
 public sealed class SslEarlyDataReadyEvent
 {
 

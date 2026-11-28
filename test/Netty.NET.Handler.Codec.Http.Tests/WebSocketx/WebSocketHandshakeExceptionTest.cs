@@ -18,9 +18,9 @@ using Netty.NET.Handler.Codec.Http.WebSocketx;
 
 namespace Netty.NET.Handler.Codec.Http.Tests.WebSocketx;
 
-// CLR: getMessage() is the Message property, and HttpRequest/HttpResponse are the I-prefixed core interfaces.
-// HttpHeaders is an IEnumerable of its entries, so xUnit's Assert.Equal would compare it element by element; the header
-// equality assertions call Equals, as Java's assertEquals does (core's DefaultHttpHeadersTest does the same).
+// CLR: HttpHeaders is an IEnumerable of its entries, so xUnit's Assert.Equal would compare it element by element;
+// the header equality assertions call Equals, as Java's assertEquals does (core's DefaultHttpHeadersTest does the
+// same).
 public class WebSocketHandshakeExceptionTest
 {
 

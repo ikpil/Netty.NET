@@ -28,12 +28,11 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Tests.Ssl;
 
-// CLR: the anonymous AbstractSniHandler and ChannelInboundHandlerAdapter subclasses are named nested classes.
-// ImmediateEventExecutor.INSTANCE.newSucceededFuture(value) is Task.FromResult(value), a completed Task<object>
-// (docs/common-task-composition.md); RuntimeException is Exception; AtomicBoolean/AtomicReference are fields set with
-// Volatile.Write/Interlocked.CompareExchange; String.format("%04x", n) is n.ToString("x4") in the invariant culture;
-// e.getCause() is InnerException; assertInstanceOf is Assert.IsAssignableFrom. (byte) 3 and the handshake content type
-// are the unsigned System.Byte values 3 and 22 (owner decision).
+// CLR: ImmediateEventExecutor.INSTANCE.newSucceededFuture(value) is Task.FromResult(value), a completed
+// Task<object>; RuntimeException is Exception; AtomicBoolean/AtomicReference are fields set with
+// Volatile.Write/Interlocked.CompareExchange; String.format("%04x", n) is n.ToString("x4") in the invariant
+// culture; e.getCause() is InnerException; assertInstanceOf is Assert.IsAssignableFrom. (byte) 3 and the handshake
+// content type are the unsigned System.Byte values 3 and 22 (owner decision).
 public class SslClientHelloHandlerTest
 {
 

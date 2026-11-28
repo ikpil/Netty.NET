@@ -19,7 +19,6 @@ using Netty.NET.Transport.Channels.Embedded;
 
 namespace Netty.NET.Handler.Codec.Socks.Tests;
 
-// CLR: SocksAuthStatus.values() is Values() (see SocksAuthStatus.cs).
 public class SocksAuthResponseDecoderTest
 {
     private static readonly IInternalLogger logger = InternalLoggerFactory.GetInstance(typeof(SocksAuthResponseDecoderTest));

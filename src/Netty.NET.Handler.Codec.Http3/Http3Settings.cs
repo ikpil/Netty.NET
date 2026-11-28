@@ -41,18 +41,18 @@ namespace Netty.NET.Handler.Codec.Http3;
  * Reserved HTTP/2 setting identifiers are rejected.
  *
  */
-// CLR: io.netty.util.collection's LongObjectHashMap<Long> is Dictionary<long, long> (owner decision 2026-11-19 for the
-// primitive maps, as codec-http2's Http2Settings), so the entries enumerate in insertion order (codec-http2 owner
-// decision; LongObjectHashMap enumerates by hash slot). Equals and GetHashCode keep LongObjectHashMap's content equality:
-// the same size and equal values per key, and size ^ (the XOR of Long.hashCode(key)). Iterable<Map.Entry<Long, Long>>
-// is IEnumerable<KeyValuePair<long, long>>. A Long parameter is a long, so the checkNotNull(value) of a standard setting
-// has no counterpart, and a Long/Boolean result that may be null is long?/bool?. The nested interface
-// NonStandardHttp3SettingsValidator takes the I prefix, and the lambda (id, v) -> false of the default constructor is the
-// private nested class IgnoreNonStandardSettings. toHexString(long) is the lowercase hex format "x" (the two's
-// complement for a negative value, as Java's unsigned text); numbers print with the invariant culture.
-// IllegalArgumentException is ArgumentException. Http3SettingIdentifier.valueOf(String.valueOf(identifier)) is the
-// identifier itself (its ToString() is the constant name). The switch over the enum is an if/else chain over the
-// sealed-class constants (compared by reference).
+// CLR: io.netty.util.collection's LongObjectHashMap<Long> is Dictionary<long, long>, so the entries enumerate in
+// insertion order (codec-http2 owner decision; LongObjectHashMap enumerates by hash slot). Equals and GetHashCode
+// keep LongObjectHashMap's content equality: the same size and equal values per key, and size ^ (the XOR of
+// Long.hashCode(key)). Iterable<Map.Entry<Long, Long>> is IEnumerable<KeyValuePair<long, long>>. A Long parameter
+// is a long, so the checkNotNull(value) of a standard setting has no counterpart, and a Long/Boolean result that
+// may be null is long?/bool?. The nested interface NonStandardHttp3SettingsValidator takes the I prefix, and the
+// lambda (id, v) -> false of the default constructor is the private nested class IgnoreNonStandardSettings.
+// toHexString(long) is the lowercase hex format "x" (the two's complement for a negative value, as Java's unsigned
+// text); numbers print with the invariant culture. IllegalArgumentException is ArgumentException.
+// Http3SettingIdentifier.valueOf(String.valueOf(identifier)) is the identifier itself (its ToString() is the
+// constant name). The switch over the enum is an if/else chain over the sealed-class constants (compared by
+// reference).
 public sealed class Http3Settings : IEnumerable<KeyValuePair<long, long>>
 {
 
@@ -306,8 +306,6 @@ public sealed class Http3Settings : IEnumerable<KeyValuePair<long, long>>
      *
      * @return an iterator over immutable {@link Map.Entry} objects
      */
-    // CLR: the anonymous Iterator over settings.entries() is the dictionary's enumerator of immutable KeyValuePair
-    // values.
     public IEnumerator<KeyValuePair<long, long>> GetEnumerator()
     {
         return settings.GetEnumerator();

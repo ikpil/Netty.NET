@@ -25,31 +25,9 @@ using Xunit.v3;
 
 namespace Netty.NET.Common.Test;
 
-// CLR: a CLR-only unit with no Java file of its own. It is what JUnit does for LeakPresenceExtension: the service file
-// of testsuite-common registers the extension, junit.jupiter.extensions.autodetection.enabled (argLine.leak of the
-// parent pom) loads it, and JUnit calls beforeAll and afterAll around every test class of the modules whose tests
-// depend on testsuite-common. A test assembly of such a module declares
-//
-//     [assembly: TestFramework(typeof(LeakPresenceTestFramework))]
-//
-// and this xUnit v3 test framework runs the default xUnit pipeline with one change: the collection runner context
-// calls LeakPresenceExtension.BeforeAll before the default class runner runs a test class and AfterAll after it.
-// The class runner covers the class fixtures, every test class instance and test, and the disposal of the fixtures,
-// so AfterAll checks after the class-level cleanup, as JUnit's afterAll runs after @AfterAll. A leak fails the run as a
-// failing afterAll fails the class container in JUnit: the collection runner adds it to the collection's
-// ExceptionAggregator when the collection finishes, which xUnit reports as a test collection cleanup failure whose
-// message names the class scope (one collection per class unless [Collection] groups classes). Adding it when the class
-// finishes would fail every later class of a shared collection (xUnit fails the classes of a collection whose
-// aggregator holds an exception; measured with the AllocatorLeakDetectionCollection of the Buffer tests).
-//
-// xUnit creates the default runners through their static Instance properties and the contexts in their Run methods,
-// so the assembly runner, its context, the collection runner and its context are replaced along the path from the
-// executor to RunTestClass. Each replacement does what the default does (measured against xunit.v3 4.0.3:
-// XunitTestFramework.CreateExecutor, XunitTestFrameworkExecutor.RunTestCases, XunitTestAssemblyRunner.Run,
-// XunitTestAssemblyRunnerBaseContext.RunTestCollection, XunitTestCollectionRunner.Run and
-// XunitTestCollectionRunnerContext.RunTestClass), with its own type in place of the default one. With
-// io.netty.test.leakPresenceDetection.disabled=true the framework is xUnit's own (LeakPresenceExtension
-// .EvaluateExecutionCondition).
+// Check for leaks after each class runner has disposed its fixtures. Report collected failures at collection
+// cleanup so one leaking class does not prevent later classes in that collection from running.
+// When leak detection is disabled, use the standard xUnit framework.
 public sealed class LeakPresenceTestFramework : XunitTestFramework
 {
     private readonly string configFileName;

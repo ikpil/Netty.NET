@@ -28,13 +28,12 @@ namespace Netty.NET.Handler.Tests.Timeout;
 
 // CLR: the tests drive the EmbeddedChannel frozen clock as Java does (FreezeTime/AdvanceTimeBy/RunPendingTasks);
 // advanceTimeBy(n, unit) takes a TimeSpan and new IdleStateHandler(observeOutput, r, w, a, SECONDS) takes TimeSpan
-// arguments. TimeSpan counts 100 ns ticks ("The smallest unit of time is the tick, which is equal to 100 nanoseconds",
-// https://learn.microsoft.com/dotnet/api/system.timespan.ticks), so anyNotIdle's delayInNanos / 2L + 1L nanoseconds is
-// rounded up to the next tick (500,000,100 ns), keeping the action strictly after half the idle time. The anonymous
-// ChannelInboundHandlerAdapter is the named nested class EventCollector; the functional interface Action is a delegate
-// with the same name; AssertJ assertThat(expected.length).isGreaterThanOrEqualTo(1) is Assert.True. ObservableChannel
-// keeps the written messages in its ChannelOutboundBuffer as the empty Java doWrite(ChannelOutboundBuffer) does (see
-// the class).
+// arguments. TimeSpan counts 100 ns ticks ("The smallest unit of time is the tick, which is equal to 100
+// nanoseconds", https://learn.microsoft.com/dotnet/api/system.timespan.ticks), so anyNotIdle's delayInNanos / 2L +
+// 1L nanoseconds is rounded up to the next tick (500,000,100 ns), keeping the action strictly after half the idle
+// time. The functional interface Action is a delegate with the same name; AssertJ
+// assertThat(expected.length).isGreaterThanOrEqualTo(1) is Assert.True. ObservableChannel keeps the written
+// messages in its ChannelOutboundBuffer as the empty Java doWrite(ChannelOutboundBuffer) does (see the class).
 public class IdleStateHandlerTest
 {
 

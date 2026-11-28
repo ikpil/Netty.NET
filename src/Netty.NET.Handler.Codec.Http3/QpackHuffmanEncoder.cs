@@ -21,15 +21,14 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the package-private final class is internal sealed (as codec-http2's HpackHuffmanEncoder). ByteProcessor is the
-// Common Func<byte, bool> (docs/codec-http-porting.md, Shared CLR adaptations): the processors keep process(byte) as
-// Process(byte), and AsciiString.forEachByte receives a delegate to it that is created once with the processor. The
-// inner (non-static) processor classes read codes and lengths of their encoder, so they receive it in their
-// constructor. The catch (Exception e) blocks keep Java's wrapping: IllegalStateException(e) is
-// InvalidOperationException with the cause's toString() text as its message. The Java byte value & 0xFF and the
-// System.Byte value are the same index; data.charAt(i) & 0xFF keeps the low eight bits of the char as Java does. The
-// codes (below 2^30) and the EOS padding bits are non-negative, so OR-ing them into the long as uint (zero extension,
-// which avoids the C# sign-extension warning CS0675) gives the value of Java's int to long widening.
+// CLR: ByteProcessor is the Common Func<byte, bool> : the processors keep process(byte) as Process(byte), and
+// AsciiString.forEachByte receives a delegate to it that is created once with the processor. The inner
+// (non-static) processor classes read codes and lengths of their encoder, so they receive it in their constructor.
+// The catch (Exception e) blocks keep Java's wrapping: IllegalStateException(e) is InvalidOperationException with
+// the cause's toString() text as its message. The Java byte value & 0xFF and the System.Byte value are the same
+// index; data.charAt(i) & 0xFF keeps the low eight bits of the char as Java does. The codes (below 2^30) and the
+// EOS padding bits are non-negative, so OR-ing them into the long as uint (zero extension, which avoids the C#
+// sign-extension warning CS0675) gives the value of Java's int to long widening.
 internal sealed class QpackHuffmanEncoder
 {
 

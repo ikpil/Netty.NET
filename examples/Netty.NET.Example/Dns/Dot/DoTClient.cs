@@ -26,17 +26,17 @@ using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Example.Dns.Dot;
 
-// CLR: main blocks on connect(...).sync(), writeAndFlush(query).sync() and close().sync(); the async Main awaits those
-// Tasks (docs/transport-porting.md: sync() is awaiting the Task), and connect(...).sync().channel() is the result of
-// ConnectAsync. closeFuture().await(10, TimeUnit.SECONDS) is Task.WhenAny over the CloseFuture and a ten-second
-// Task.Delay, which reports whether the channel closed in time without throwing. group.shutdownGracefully() is
-// ShutdownGracefullyAsync(), whose Task is discarded as Java discards the future. The anonymous ChannelInitializer is an
-// ActionChannelInitializer and the anonymous SimpleChannelInboundHandler the nested ResponseHandler class. The Java
-// interfaces DnsQuery, DnsQuestion, DnsRecord and DnsRawRecord are IDnsQuery, IDnsQuestion, IDnsRecord and
-// IDnsRawRecord, and recordAt infers its type argument in Java (RecordAt<IDnsQuestion> here). System.out.printf with
-// %s%n is Console.WriteLine with a composite format, and new Random().nextInt(bound) is new Random().Next(maxValue)
-// with the same exclusive bound. The TLS client uses the SslStream (JDK) provider, since the OPENSSL provider is
-// library-not-ported (docs/handler-porting.md).
+// CLR: main blocks on connect(...).sync(), writeAndFlush(query).sync() and close().sync(); the async Main awaits
+// those Tasks (docs/transport-porting.md: sync() is awaiting the Task), and connect(...).sync().channel() is the
+// result of ConnectAsync. closeFuture().await(10, TimeUnit.SECONDS) is Task.WhenAny over the CloseFuture and a
+// ten-second Task.Delay, which reports whether the channel closed in time without throwing.
+// group.shutdownGracefully() is ShutdownGracefullyAsync(), whose Task is discarded as Java discards the future.
+// The anonymous ChannelInitializer is an ActionChannelInitializer and the anonymous SimpleChannelInboundHandler
+// the nested ResponseHandler class. The Java interfaces DnsQuery, DnsQuestion, DnsRecord and DnsRawRecord are
+// IDnsQuery, IDnsQuestion, IDnsRecord and IDnsRawRecord, and recordAt infers its type argument in Java
+// (RecordAt<IDnsQuestion> here). System.out.printf with %s%n is Console.WriteLine with a composite format, and new
+// Random().nextInt(bound) is new Random().Next(maxValue) with the same exclusive bound. The TLS client uses the
+// SslStream (JDK) provider, since the OPENSSL provider is library-not-ported.
 public sealed class DoTClient
 {
     private const string QUERY_DOMAIN = "www.example.com";

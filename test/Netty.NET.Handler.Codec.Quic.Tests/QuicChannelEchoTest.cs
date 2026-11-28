@@ -27,13 +27,12 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Handler.Codec.Quic.Tests;
 
-// CLR: @ParameterizedTest(name = ...) @MethodSource("data") is a theory with the eight (autoRead, directBuffer,
-// composite) rows of data(); PlatformDependent.splittableRandomNextBytes(new SplittableRandom(seed), data) fills the data
-// with System.Random. The heap-only allocator is the private HeapOnlyByteBufAllocator (the anonymous
-// AbstractByteBufAllocator subclass); "memoryAddress() is not supported" has no counterpart, as ByteBufs are managed
-// memory; writeBytes(byte[], int, int) is WriteBytes(ReadOnlySpan<byte>). ChannelFuture.sync() is await, Thread.sleep(50) is Task.Delay, Future.addListener a continuation of the
-// CreateStreamAsync Task (getNow() its result), AtomicReference a volatile/Interlocked field. Assertions inside the
-// handlers record their failures through exceptionCaught, as in Java. java.io.IOException is System.IO.IOException.
+// CLR: The heap-only allocator is the private HeapOnlyByteBufAllocator (the anonymous AbstractByteBufAllocator
+// subclass); "memoryAddress() is not supported" has no counterpart, as ByteBufs are managed memory;
+// writeBytes(byte[], int, int) is WriteBytes(ReadOnlySpan<byte>). ChannelFuture.sync() is await, Thread.sleep(50)
+// is Task.Delay, Future.addListener a continuation of the CreateStreamAsync Task (getNow() its result),
+// AtomicReference a volatile/Interlocked field. Assertions inside the handlers record their failures through
+// exceptionCaught, as in Java. java.io.IOException is System.IO.IOException.
 public class QuicChannelEchoTest : AbstractQuicTest
 {
 

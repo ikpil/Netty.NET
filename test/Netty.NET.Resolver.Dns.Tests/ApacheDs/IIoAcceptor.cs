@@ -1,11 +1,7 @@
-// CLR: test-only stand-in for org.apache.mina.core.service.IoAcceptor, with the IoService members it uses, of
-// Apache MINA 2.2.3:
-// https://github.com/apache/mina/blob/2.2.3/mina-core/src/main/java/org/apache/mina/core/service/IoAcceptor.java
-// https://github.com/apache/mina/blob/2.2.3/mina-core/src/main/java/org/apache/mina/core/service/IoService.java
-// The interface takes the I prefix. IoService.dispose() is IDisposable.Dispose() (the resolver-dns mapping of
-// close() to Dispose()); bind() throws IOException when the socket cannot be bound; getLocalAddress() returns null
-// while nothing is bound. SocketAddress is EndPoint. getSessionConfig() is declared by IDatagramAcceptor, the only
-// acceptor of the stand-in.
+// CLR: IoService.dispose() is IDisposable.Dispose() (the resolver-dns mapping of close() to Dispose()); bind()
+// throws IOException when the socket cannot be bound; getLocalAddress() returns null while nothing is bound.
+// SocketAddress is EndPoint. getSessionConfig() is declared by IDatagramAcceptor, the only acceptor of the
+// stand-in.
 
 using System;
 using System.Net;

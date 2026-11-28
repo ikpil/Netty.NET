@@ -39,37 +39,9 @@ namespace Netty.NET.Handler.Codec.Http.Multipart;
  * <P>On the contrary, for TRACE method, RFC says:</P>
  * <P>"A client MUST NOT send a message body in a TRACE request."</P>
  */
-// CLR: ChunkedInput<HttpContent> is the handler port's IChunkedInput<IHttpContent>; the @Deprecated
-// readChunk(ChannelHandlerContext) override has no counterpart, because the interface member it overrides is
-// @Deprecated with the replacement readChunk(ByteBufAllocator) named and not ported (src/Netty.NET.Handler/Stream/
-// IChunkedInput.cs), and "throws Exception" has no C# counterpart. HttpRequest/FullHttpRequest/HttpContent/
-// LastHttpContent are the I-prefixed core interfaces, java.io.File is FileInfo (File.getName() is Name and File.length()
-// AbstractDiskHttpData.FileLength) and Charset is Encoding (Charset.name() is HttpPostBodyUtil.CharsetName). The package-
-// private multipartHttpDatas, multipartDataBoundary and multipartMixedBoundary, which the tests read, are internal.
-// The ListIterator over multipartHttpDatas is the int index of its next element (hasNext() is iterator <
-// multipartHttpDatas.Count and next() multipartHttpDatas[iterator++]). Long.toHexString of
-// ThreadLocalRandom.current().nextLong(), the unsigned hexadecimal text without leading zeros in lower case
-// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Long.html), is the "x" format of the ulong of
-// Random.Shared.NextInt64(long.MinValue, long.MaxValue), whose range "includes minValue but not maxValue"
-// (https://learn.microsoft.com/en-us/dotnet/api/system.random.nextint64?view=net-10.0); Random.Shared is "a thread-safe
-// Random instance" (https://learn.microsoft.com/en-us/dotnet/api/system.random.shared?view=net-10.0).
-// URLEncoder.encode(s, charset.name()) is UrlEncode(s, charset), which follows the URLEncoder rules
-// (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/URLEncoder.html): a-z, A-Z, 0-9, '.', '-', '*'
-// and '_' stay, ' ' becomes '+', and every other run of characters is encoded with the charset and each byte written as
-// %XY with upper-case hexadecimal digits, as the JDK writes them. The BCL WebUtility.UrlEncode keeps '!', '(' and ')'
-// too, so it is not used. The UnsupportedEncodingException of encode() cannot occur, because the Encoding is already
-// resolved, so its catch is not ported. toLowerCase(Locale.US) is ToLowerInvariant
-// (https://learn.microsoft.com/en-us/dotnet/api/system.string.tolowerinvariant?view=net-10.0), String.startsWith is
-// StartsWith with StringComparison.Ordinal, and String.valueOf(long) the invariant-culture text. The checked
-// ErrorDataEncoderException extends Exception; its cause-only constructor keeps Java's detail message cause.toString()
-// (Common's ThrowableUtil.ThrowableToString). WrappedHttpRequest/WrappedFullHttpRequest implement IHttpRequest/
-// IFullHttpRequest: the @Deprecated getMethod()/getUri()/getProtocolVersion()/getDecoderResult() overrides are not ported
-// with the interface members (core's IHttpRequest), setProtocolVersion narrows its return type with an explicit
-// IHttpMessage implementation and covariant overrides, and the IByteBufHolder/IReferenceCounted members, which those
-// interfaces declare with their own return types, are implemented explicitly (as core's DefaultFullHttpRequest does).
-// The local InternalAttribute internal is @internal (internal is a C# keyword); the one that ends a mixed part before an
-// Attribute is endMixedInternal, because a C# local's scope is its whole block and the enclosing block declares
-// internal too (CS0136).
+// Use the JDK form-encoding rules: spaces become '+' and escaped bytes use uppercase hex. WebUtility.UrlEncode
+// leaves additional punctuation unescaped.
+// Multipart boundaries use unsigned lowercase hexadecimal text.
 public class HttpPostRequestEncoder : IChunkedInput<IHttpContent>
 {
 

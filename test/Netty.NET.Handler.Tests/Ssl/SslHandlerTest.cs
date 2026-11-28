@@ -42,27 +42,26 @@ using Netty.NET.Transport.Channels.Sockets;
 
 namespace Netty.NET.Handler.Tests.Ssl;
 
-// CLR: SslHandler drives System.Net.Security.SslStream (owner decision 2026-11-24, docs/handler-ssl-design.md), so an
-// SSLEngine from SSLContext.getDefault().createSSLEngine() is the SslClientAuthenticationOptions or
-// SslServerAuthenticationOptions that SslHandler(options) takes for a client-mode or server-mode engine (a JDK engine
-// without setUseClientMode is in server mode: its TransportContext is built with "new SSLConfiguration(sslContext,
-// false)", https://raw.githubusercontent.com/openjdk/jdk17u/master/src/java.base/share/classes/sun/security/ssl/TransportContext.java),
+// CLR: SslHandler drives System.Net.Security.SslStream, so an SSLEngine from
+// SSLContext.getDefault().createSSLEngine() is the SslClientAuthenticationOptions or
+// SslServerAuthenticationOptions that SslHandler(options) takes for a client-mode or server-mode engine (a JDK
+// engine without setUseClientMode is in server mode: its TransportContext is built with "new
+// SSLConfiguration(sslContext, false)",
+// https://raw.githubusercontent.com/openjdk/jdk17u/master/src/java.base/share/classes/sun/security/ssl/TransportContext.java),
 // and the session facts of engine() come from the internal SslHandler.Engine() accessor. SSLException,
 // SSLHandshakeException and SSLProtocolException are AuthenticationException (ssl design decision 3);
-// CertificateException and SignatureException are CryptographicException (ssl wave 1); ClosedChannelException is the
-// Transport's ClosedChannelException; IllegalReferenceCountException and CodecException are the Common/codec types.
-// The tests that used the @Deprecated CachedSelfSignedCertificate use CachedSelfSignedCertificate() below. ChannelFuture/
-// ChannelPromise/Promise/Future are Task/TaskCompletionSource (docs/handler-porting.md, "Task promises"):
-// sync()/syncUninterruptibly() are awaits, await()/awaitUninterruptibly() awaits that suppress the exception
+// CertificateException and SignatureException are CryptographicException (ssl wave 1); ClosedChannelException is
+// the Transport's ClosedChannelException; IllegalReferenceCountException and CodecException are the Common/codec
+// types. ChannelFuture/ ChannelPromise/Promise/Future are Task/TaskCompletionSource : sync()/syncUninterruptibly()
+// are awaits, await()/awaitUninterruptibly() awaits that suppress the exception
 // (ConfigureAwaitOptions.SuppressThrowing | ContinueOnCapturedContext, xUnit1030), future.cause() is CauseOf and
 // isSuccess() is IsCompletedSuccessfully. The bootstrap API is asynchronous (BindAsync/ConnectAsync), new
-// InetSocketAddress(0) is the wildcard IPEndPoint and ConnectAddress(...) connects to it through the loopback address as
-// the JDK does (docs/handler-porting.md, "Socket tests"). CountDownLatch is CountdownEvent with CountDown(...),
-// LinkedBlockingQueue is BlockingCollection (take() is Take, poll(timeout) TryTake), ConcurrentLinkedQueue is
-// ConcurrentQueue, AtomicBoolean/AtomicReference are the Common types, Thread.sleep is Task.Delay and (long, TimeUnit)
-// is TimeSpan. @Timeout(value, MILLISECONDS) is the Timeout of the [Fact], which xUnit applies to async tests. The
-// anonymous handlers are named nested classes. DIRECT_EXECUTOR is not ported: only the CLR-inapplicable executor tests
-// use it (see their notes below).
+// InetSocketAddress(0) is the wildcard IPEndPoint and ConnectAddress(...) connects to it through the loopback
+// address as the JDK does. CountDownLatch is CountdownEvent with CountDown(...), LinkedBlockingQueue is
+// BlockingCollection (take() is Take, poll(timeout) TryTake), ConcurrentLinkedQueue is ConcurrentQueue,
+// AtomicBoolean/AtomicReference are the Common types, Thread.sleep is Task.Delay and (long, TimeUnit) is TimeSpan.
+// @Timeout(value, MILLISECONDS) is the Timeout of the [Fact], which xUnit applies to async tests. DIRECT_EXECUTOR
+// is not ported: only the CLR-inapplicable executor tests use it (see their notes below).
 public class SslHandlerTest
 {
 
@@ -214,9 +213,8 @@ public class SslHandlerTest
         }
     }
 
-    // CLR: the anonymous EmbeddedChannel subclass reads the captured flag in isActive(); the field is set from the
-    // primary-constructor parameter in its initializer, which runs before the base constructor
-    // (docs/handler-porting.md, "Embedded channels whose remote address is captured").
+    // CLR: The field is set from the primary-constructor parameter in its initializer, which runs before the base
+    // constructor.
     private sealed class InActiveEmbeddedChannel(AtomicBoolean inActive, IChannelId channelId,
                                                  params IChannelHandler[] handlers)
         : EmbeddedChannel(channelId, false, false, handlers)
@@ -766,10 +764,10 @@ public class SslHandlerTest
             this.latch2 = latch2;
         }
 
-        // CLR: the ChannelFutureListener runs on Common's EventExecutorTaskScheduler over ctx.Executor, which runs it
-        // at once on the event loop as DefaultPromise.notifyListeners() does (docs/handler-porting.md, "Listener
-        // timing"), so the failed write is queued before the SslCloseCompletionEvent of the later channelInactive, as
-        // in Java; a thread-pool continuation raced with that event (measured).
+        // CLR: the ChannelFutureListener runs on Common's EventExecutorTaskScheduler over ctx.Executor, which runs
+        // it at once on the event loop as DefaultPromise.notifyListeners() does, so the failed write is queued
+        // before the SslCloseCompletionEvent of the later channelInactive, as in Java; a thread-pool continuation
+        // raced with that event (measured).
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
             ByteBuf buf = ctx.Alloc().Buffer(10);
@@ -930,9 +928,9 @@ public class SslHandlerTest
         }
     }
 
-    // CLR: cert.getKeyPair().getPrivate() is the bundle's key object (docs/pkitesting-porting.md: "A generated or given
-    // key pair is the BCL key object") and getCertificatePath() the X509Certificate2 path; the trust manager factory of
-    // the other self-signed bundle is its X509ChainPolicy (ToTrustManagerFactory).
+    // CLR: cert.getKeyPair().getPrivate() is the bundle's key object and getCertificatePath() the X509Certificate2
+    // path; the trust manager factory of the other self-signed bundle is its X509ChainPolicy
+    // (ToTrustManagerFactory).
     [Fact(Timeout = 10000)]
     public async Task TestCloseOnHandshakeFailure()
     {
@@ -1038,13 +1036,13 @@ public class SslHandlerTest
     // from SslContext.newEngine(...), and neither exists on SslStream (no outbound-done member; newEngine is not ported,
     // owner decision 2026-11-24).
 
-    // CLR: SslProtocols.SSL_v3 is a @Deprecated constant that is not ported (its @deprecated text names TLS_v1_2/TLS_v1_3),
-    // so its text "SSLv3" is passed. The connect listener that writes "before fireChannelActive is called" runs at once
-    // on the event loop in Java, because DefaultPromise notifies on its executor and fulfillConnectPromise completes the
-    // promise before it fires channelActive; the Transport's connect Task runs its continuations asynchronously
-    // (docs/handler-porting.md, "Listener timing"), so a first handler (WriteBeforeActiveHandler) writes from
-    // channelActive before it passes the event on, which also hands the write to SslHandler before its channelActive.
-    // AssertionError is UnreachableException (docs/handler-porting.md, Exceptions).
+    // CLR: SslProtocols.SSL_v3 is a @Deprecated constant that is not ported (its @deprecated text names
+    // TLS_v1_2/TLS_v1_3), so its text "SSLv3" is passed. The connect listener that writes "before
+    // fireChannelActive is called" runs at once on the event loop in Java, because DefaultPromise notifies on its
+    // executor and fulfillConnectPromise completes the promise before it fires channelActive; the Transport's
+    // connect Task runs its continuations asynchronously, so a first handler (WriteBeforeActiveHandler) writes
+    // from channelActive before it passes the event on, which also hands the write to SslHandler before its
+    // channelActive.
     [Fact(Timeout = 10000)]
     public async Task TestHandshakeFailedByWriteBeforeChannelActive()
     {
@@ -1442,10 +1440,10 @@ public class SslHandlerTest
     // CLR: testHandshakeFailureCipherMissmatchTLSv12OpenSsl and testHandshakeFailureCipherMissmatchTLSv13OpenSsl are
     // CLR-inapplicable: they need OpenSsl (netty-tcnative), which is library-not-ported.
 
-    // CLR: the cipher suites become a CipherSuitesPolicy, which SslStream does not support on Windows: NewHandler throws
-    // PlatformNotSupportedException there (docs/handler-ssl-design.md, "No cipher-suite selection on Windows"), so the
-    // test is skipped on Windows and runs where CipherSuitesPolicy exists (Linux, macOS). Collections.singleton(x) is a
-    // one-element array; getCause() is InnerException.
+    // CLR: the cipher suites become a CipherSuitesPolicy, which SslStream does not support on Windows: NewHandler
+    // throws PlatformNotSupportedException there, so the test is skipped on Windows and runs where
+    // CipherSuitesPolicy exists (Linux, macOS). Collections.singleton(x) is a one-element array; getCause() is
+    // InnerException.
     private static async Task TestHandshakeFailureCipherMissmatch(SslProvider provider, bool tls13)
     {
         Assert.SkipWhen(OperatingSystem.IsWindows(),
@@ -1904,9 +1902,9 @@ public class SslHandlerTest
         }
     }
 
-    // CLR: future.addListener(listener) on a promise of the channel's event loop: DefaultPromise notifies the listener on
-    // that executor (docs/handler-porting.md, "Listener timing"), and the handler's Tasks run their continuations
-    // asynchronously, so the continuation hands the listener to the executor.
+    // CLR: future.addListener(listener) on a promise of the channel's event loop: DefaultPromise notifies the
+    // listener on that executor, and the handler's Tasks run their continuations asynchronously, so the
+    // continuation hands the listener to the executor.
     private static void AddListener(Task future, IEventExecutor executor, Action<Task> listener)
     {
         _ = future.ContinueWith(f =>
@@ -1923,8 +1921,8 @@ public class SslHandlerTest
     }
 
     // CLR: the server is bound to the wildcard address, which the JDK connects to through the loopback address
-    // (SocketChannelImpl.checkRemote), while a CLR connect to 0.0.0.0 fails on Windows (docs/handler-porting.md,
-    // "Socket tests"), so the client connects to the loopback address of the bound port.
+    // (SocketChannelImpl.checkRemote), while a CLR connect to 0.0.0.0 fails on Windows, so the client connects to
+    // the loopback address of the bound port.
     private static EndPoint ConnectAddress(EndPoint server)
     {
         IPEndPoint address = (IPEndPoint) server;
@@ -1940,15 +1938,15 @@ public class SslHandlerTest
         return server;
     }
 
-    // CLR: CachedSelfSignedCertificate.getCachedCertificate() returns a cached SelfSignedCertificate; both are @Deprecated
-    // test units that are not ported ("@deprecated Use the {@code CertificateBuilder} from {@code netty-pkitesting}
-    // instead", recorded by the lead, docs/handler-ssl-design.md), so the nested SelfSignedCertificateBundle caches the
-    // X509Bundle that SelfSignedCertificate's CertificateBuilderCertGenerator builds by default: a self-signed
-    // certificate authority "CN=localhost" with an RSA 2048 key. Its Certificate()/PrivateKey() are the PEM files of the
-    // certificate path and of the PKCS #8 key (X509Bundle.ToTempCertChainPem/ToTempPrivateKeyPem, deleted at process exit
-    // as SelfSignedCertificate's deleteOnExit() files are), Cert() the certificate and Key() the key, which is the BCL key
-    // object of the bundle's key pair (docs/pkitesting-porting.md: "A generated or given key pair is the BCL key object");
-    // KeyManagerFactory() is the bundle's SslStreamCertificateContext (X509Bundle.ToKeyManagerFactory, a persisted key).
+    // CLR: CachedSelfSignedCertificate.getCachedCertificate() returns a cached SelfSignedCertificate; both are
+    // @Deprecated test units that are not ported ("@deprecated Use the {@code CertificateBuilder} from {@code
+    // netty-pkitesting} instead", recorded by the lead, docs/handler-ssl-design.md), so the nested
+    // SelfSignedCertificateBundle caches the X509Bundle that SelfSignedCertificate's
+    // CertificateBuilderCertGenerator builds by default: a self-signed certificate authority "CN=localhost" with
+    // an RSA 2048 key. Its Certificate()/PrivateKey() are the PEM files of the certificate path and of the PKCS #8
+    // key (X509Bundle.ToTempCertChainPem/ToTempPrivateKeyPem, deleted at process exit as SelfSignedCertificate's
+    // deleteOnExit() files are), Cert() the certificate and Key() the key, which is the BCL key object of the
+    // bundle's key pair.
     private static readonly Lazy<SelfSignedCertificateBundle> CACHED_CERTIFICATE =
             new Lazy<SelfSignedCertificateBundle>(() => new SelfSignedCertificateBundle(new CertificateBuilder()
                     .SetIsCertificateAuthority(true)

@@ -31,15 +31,14 @@ using Netty.NET.Transport.Channels.Nio;
 namespace Netty.NET.Resolver.Dns.Tests;
 
 // CLR: InetAddress.getByAddress(bytes) is new IPAddress(bytes); loop.schedule(Callable, 1, SECONDS).get() is
-// loop.ScheduleAsync(Func, TimeSpan) awaited (the anonymous Callable is a lambda; a recorded error is rethrown with
-// ExceptionDispatchInfo). UnknownHostException is Common's UnknownHostException and Throwable is Exception
-// (DefaultDnsCache.CopyThrowable). addSuppressed/getSuppressed are Common's ThrowableUtil.AddSuppressed/GetSuppressed
-// (identity-keyed). assertInstanceOf is Assert.IsAssignableFrom; getStackTrace().length is the frame count of
-// System.Diagnostics.StackTrace(exception); printStackTrace(PrintWriter) is Exception.ToString() written to a StreamWriter
-// over a MemoryStream, read before the writer is closed, as the source reads the ByteArrayOutputStream before closing its
-// PrintWriter (and, as in the source, the expected exception is printed to both writers). UUID.randomUUID() is
-// Guid.NewGuid(). assertEquals(1, size()) and assertEquals(0, length) are Assert.Single/Assert.Empty (xUnit2013).
-// shutdownGracefully() is ShutdownGracefullyAsync() without waiting, as in the source.
+// loop.ScheduleAsync(Func, TimeSpan) awaited (the anonymous Callable is a lambda; a recorded error is rethrown
+// with ExceptionDispatchInfo). UnknownHostException is Common's UnknownHostException and Throwable is Exception
+// (DefaultDnsCache.CopyThrowable). addSuppressed/getSuppressed are Common's
+// ThrowableUtil.AddSuppressed/GetSuppressed (identity-keyed). assertInstanceOf is Assert.IsAssignableFrom;
+// getStackTrace().length is the frame count of System.Diagnostics.StackTrace(exception);
+// printStackTrace(PrintWriter) is Exception.ToString() written to a StreamWriter over a MemoryStream, read before
+// the writer is closed, as the source reads the ByteArrayOutputStream before closing its PrintWriter (and, as in
+// the source, the expected exception is printed to both writers).
 public class DefaultDnsCacheTest
 {
 

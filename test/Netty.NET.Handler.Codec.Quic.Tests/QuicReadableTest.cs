@@ -26,12 +26,10 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Handler.Codec.Quic.Tests;
 
-// CLR: @ParameterizedTest @MethodSource("newSslTaskExecutors") is a theory over AbstractQuicTest.NewSslTaskExecutors().
-// Future.get()/sync() are awaits (writeAndFlush(...).sync().channel() is the stream the awaited write was made on);
-// CountDownLatch is CountdownEvent, waited with the test timeout; AtomicInteger/AtomicReference are StrongBox values
-// read and written with Interlocked/Volatile; Long.BYTES is sizeof(long) and Thread.sleep(50) is Task.Delay(50).
-// throwIfNotNull rethrows the recorded cause with its stack trace (ExceptionDispatchInfo). The anonymous handlers are
-// the private nested classes below.
+// CLR: Future.get()/sync() are awaits (writeAndFlush(...).sync().channel() is the stream the awaited write was
+// made on); CountDownLatch is CountdownEvent, waited with the test timeout; AtomicInteger/AtomicReference are
+// StrongBox values read and written with Interlocked/Volatile; Long.BYTES is sizeof(long) and Thread.sleep(50) is
+// Task.Delay(50). throwIfNotNull rethrows the recorded cause with its stack trace (ExceptionDispatchInfo).
 public class QuicReadableTest : AbstractQuicTest
 {
 

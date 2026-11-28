@@ -23,10 +23,9 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx.Extensions.Compression;
 /**
  * Per-message implementation of deflate compressor.
  */
-// CLR: the package-private class and its constructors are internal; WebSocketExtension.RSV1 is the constant of
-// IWebSocketExtension and WebSocketExtensionFilter.NEVER_SKIP the static field of IWebSocketExtensionFilter.
-// IllegalStateException is InvalidOperationException; thrown from AcceptOutboundMessage, it is wrapped in an
-// EncoderException by MessageToMessageEncoder.WriteAsync, as in Java (docs/codec-base-porting.md).
+// CLR: WebSocketExtension.RSV1 is the constant of IWebSocketExtension and WebSocketExtensionFilter.NEVER_SKIP the
+// static field of IWebSocketExtensionFilter. IllegalStateException is InvalidOperationException; thrown from
+// AcceptOutboundMessage, it is wrapped in an EncoderException by MessageToMessageEncoder.WriteAsync, as in Java.
 internal class PerMessageDeflateEncoder : DeflateEncoder
 {
 

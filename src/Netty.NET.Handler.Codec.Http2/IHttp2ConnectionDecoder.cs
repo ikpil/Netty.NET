@@ -28,7 +28,7 @@ namespace Netty.NET.Handler.Codec.Http2;
  */
 // CLR: Closeable keeps close() as Close() and implements IDisposable.Dispose() with it (docs/handler-porting.md:
 // "Closeable keeps close() as Close() and implements IDisposable.Dispose() with it").
-// CLR: List<Object> out is IList<object> @out (docs/codec-base-porting.md).
+// CLR: List<Object> out is IList<object> @out.
 public interface IHttp2ConnectionDecoder : IDisposable
 {
 

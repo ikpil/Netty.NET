@@ -26,10 +26,9 @@ namespace Netty.NET.Handler.Codec.Compression;
  *
  * See <a href="https://github.com/google/snappy/blob/master/framing_format.txt">Snappy framing format</a>.
  */
-// CLR: the Class argument of the MessageToByteEncoder constructor is a Type (MessageToByteEncoder in codec-base);
-// encode(ctx, in, out) is Encode(IChannelHandlerContext, ByteBuf, ByteBuf) and C# has no throws clauses. The byte[]
-// initializer keeps the bit pattern of the Java (byte) 0xff cast as a System.Byte. Numbers in exception messages use
-// the invariant culture (docs/codec-base-porting.md).
+// CLR: the Class argument of the MessageToByteEncoder constructor is a Type (MessageToByteEncoder in codec-base).
+// The byte[] initializer keeps the bit pattern of the Java (byte) 0xff cast as a System.Byte. Numbers in exception
+// messages use the invariant culture.
 public class SnappyFrameEncoder : MessageToByteEncoder<ByteBuf>
 {
 

@@ -20,10 +20,9 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Example.Http.Snoop;
 
-// CLR: HttpObject/HttpResponse/HttpContent/LastHttpContent are the I-prefixed codec-http interfaces; names() is a set of
-// strings and getAll(name) a list of strings. CharsetUtil.UTF_8 is Encoding.UTF8 and content() is the Content property.
-// System.err.println/print/flush are Console.Error.WriteLine/Write/Flush, printStackTrace() writes the exception to
-// Console.Error and ctx.close() is CloseAsync(), whose Task is discarded as Java discards the future.
+// CLR: HttpObject/HttpResponse/HttpContent/LastHttpContent are the I-prefixed codec-http interfaces.
+// System.err.println/print/flush are Console.Error.WriteLine/Write/Flush, printStackTrace() writes the exception
+// to Console.Error and ctx.close() is CloseAsync(), whose Task is discarded as Java discards the future.
 public class HttpSnoopClientHandler : SimpleChannelInboundHandler<IHttpObject>
 {
     protected override void ChannelRead0(IChannelHandlerContext ctx, IHttpObject msg)

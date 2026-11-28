@@ -31,17 +31,16 @@ namespace Netty.NET.Handler.Codec.Http.Cookie;
  *
  * @see ServerCookieEncoder
  */
-// CLR: Set<Cookie> is ISet<ICookie> and List<Cookie> is IList<ICookie>. TreeSet with the natural ordering is SortedSet
-// with the default comparer (Comparer<ICookie>.Default, which calls IComparable<ICookie>.CompareTo): the TreeSet
-// "performs all element comparisons using its compareTo" and add leaves the set unchanged when an equal element is
-// present (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/TreeSet.html), and SortedSet.Add
-// "returns false and does not throw" for an element already in the set
-// (https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.sortedset-1.add?view=net-10.0), so the first
-// cookie of a name wins in both. Collections.unmodifiableList is a ReadOnlyCollection<T> view (as codec-socks
-// SocksInitRequest). Collection<? super Cookie> is ICollection<ICookie>. The labeled "break loop" is a goto to a label
-// after the loop. String.regionMatches(true, 0, ...) and regionMatches(nameBegin, ...) are string.Compare with
-// StringComparison.OrdinalIgnoreCase and Ordinal over the length, where a shorter header does not match (see
-// ClientCookieDecoder).
+// CLR: Set<Cookie> is ISet<ICookie> and List<Cookie> is IList<ICookie>. TreeSet with the natural ordering is
+// SortedSet with the default comparer (Comparer<ICookie>.Default, which calls IComparable<ICookie>.CompareTo): the
+// TreeSet "performs all element comparisons using its compareTo" and add leaves the set unchanged when an equal
+// element is present (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/TreeSet.html), and
+// SortedSet.Add "returns false and does not throw" for an element already in the set
+// (https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.sortedset-1.add?view=net-10.0), so the
+// first cookie of a name wins in both. Collection<? super Cookie> is ICollection<ICookie>. The labeled "break
+// loop" is a goto to a label after the loop. String.regionMatches(true, 0,...) and regionMatches(nameBegin,...)
+// are string.Compare with StringComparison.OrdinalIgnoreCase and Ordinal over the length, where a shorter header
+// does not match (see ClientCookieDecoder).
 public sealed class ServerCookieDecoder : CookieDecoder
 {
 

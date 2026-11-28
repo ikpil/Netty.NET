@@ -24,10 +24,9 @@ using static Netty.NET.Handler.Codec.Http.Tests.Spdy.SpdyFrameDecoderTest;
 namespace Netty.NET.Handler.Codec.Http.Tests.Spdy;
 
 // CLR: Mockito is Moq, with the verify mapping of SpdyFrameDecoderTest (verify(delegate).x(...) is Verify(d =>
-// d.X(...), Times.Once())); the mock is @delegate (a C# keyword). The anonymous SpdyFrameDecoder subclass of
-// createDecoder is the private nested UnknownFrameDecoder. @BeforeEach is the constructor and @AfterEach is Dispose()
-// (https://xunit.net/docs/shared-context). The unseeded java.util.Random is an unseeded System.Random and nextLong() is
-// NextInt64() (only the eight payload bytes matter, rule 9). The Java byte flags (byte) 0xFF is the CLR byte 0xFF.
+// d.X(...), Times.Once())); the mock is @delegate (a C# keyword). The unseeded java.util.Random is an unseeded
+// System.Random and nextLong() is NextInt64() (only the eight payload bytes matter, rule 9). The Java byte flags
+// (byte) 0xFF is the CLR byte 0xFF.
 public class SpdyUnknownFrameDecoderTest : IDisposable
 {
 

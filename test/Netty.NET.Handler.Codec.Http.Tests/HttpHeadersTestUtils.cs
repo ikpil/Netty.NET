@@ -26,12 +26,11 @@ namespace Netty.NET.Handler.Codec.Http.Tests;
 /**
  * Utility methods for {@link HttpHeaders} related unit tests.
  */
-// CLR: the final class with a private constructor is a static class. The enum HeaderValue has a constructor, fields
-// and methods, so it is a sealed class with static readonly instances (docs/codec-base-porting.md, as Base64Dialect);
-// values() is the VALUES array in declaration order and ToString() returns the Java toString() value. The Strings that
-// Java stores in List<CharSequence> and returns from of(String) are wrapped in the Common StringCharSequence, because a
-// C# string is not an ICharSequence (as the codec-stomp tests do); the lists are IList<ICharSequence>. COMMA and
-// DOUBLE_QUOTE are the Common StringUtil char constants; assert is Debug.Assert.
+// CLR: the final class with a private constructor is a static class. The enum HeaderValue has a constructor,
+// fields and methods, so it is a sealed class with static readonly instances. The Strings that Java stores in
+// List<CharSequence> and returns from of(String) are wrapped in the Common StringCharSequence, because a C# string
+// is not an ICharSequence (as the codec-stomp tests do). COMMA and DOUBLE_QUOTE are the Common StringUtil char
+// constants; assert is Debug.Assert.
 public static class HttpHeadersTestUtils
 {
     internal sealed class HeaderValue

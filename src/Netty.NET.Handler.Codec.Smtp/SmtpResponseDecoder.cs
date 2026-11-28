@@ -28,14 +28,10 @@ namespace Netty.NET.Handler.Codec.Smtp;
 /**
  * Decoder for SMTP responses.
  */
-// CLR: @UnstableApi is the Common [UnstableApi] attribute. decode(ctx, buffer) overrides the codec-base
-// LineBasedFrameDecoder.Decode(IChannelHandlerContext, ByteBuf) (protected internal there, so protected from this
-// assembly) with the covariant return type ISmtpResponse. CharsetUtil.US_ASCII is Encoding.ASCII and the String detail
-// is its ICharSequence wrapper StringCharSequence; Collections.emptyList()/singletonList(x) are read-only collections
-// (ReadOnlyCollection<T>.Empty and a one-element ReadOnlyCollection<T>); CharSequence.length() is ICharSequence.Length().
-// readByte() returns the unsigned System.Byte: the separator is compared only with ' ' and '-', so its sign does not
-// change the branch taken. Numbers in messages use the invariant culture
-// (https://learn.microsoft.com/en-us/dotnet/api/system.int32.tostring). 'throws Exception' has no C# counterpart.
+// CLR: CharSequence.length() is ICharSequence.Length(). readByte() returns the unsigned System.Byte: the separator
+// is compared only with ' ' and '-', so its sign does not change the branch taken. Numbers in messages use the
+// invariant culture (https://learn.microsoft.com/en-us/dotnet/api/system.int32.tostring). 'throws Exception' has
+// no C# counterpart.
 [UnstableApi]
 public sealed class SmtpResponseDecoder : LineBasedFrameDecoder
 {

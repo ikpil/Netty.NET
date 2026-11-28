@@ -22,8 +22,7 @@ namespace Netty.NET.Handler.Codec.Http2;
 /**
  * Interface that defines an object capable of producing HTTP/2 data frames.
  */
-// CLR: ChannelPromise is TaskCompletionSource and ChannelFuture is Task; the Task-returning methods take the Async
-// suffix and return the promise's Task (docs/codec-http-porting.md, Shared CLR adaptations; owner rule 2).
+// CLR: The Task-returning methods take the Async suffix and return the promise's Task.
 public interface IHttp2DataWriter
 {
     /**

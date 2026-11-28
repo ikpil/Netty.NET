@@ -44,13 +44,9 @@ namespace Netty.NET.Handler.Codec.Http;
  * converts {@link ByteBuf}s into HTTP requests.
  */
 // CLR: MessageToMessageDecoder<HttpObject> with HttpObject.class is the codec-base
-// MessageToMessageDecoder<IHttpObject> with typeof(IHttpObject) (docs/codec-base-porting.md, Type matching). The
-// package-private IDENTITY is internal. String.trim() is HttpUtil.TrimJava (the chars up to U+0020, as Java trims).
-// The inner class ByteBufForwarder writes HttpContentDecoder.this.needRead through the decoder it receives, and
-// isSharable() is the IsSharable property of ChannelHandlerAdapter (docs/transport-porting.md). The String
-// targetContentEncoding that Java compares as a CharSequence is wrapped in StringCharSequence for
-// AsciiString.contentEquals. message.getClass().getName() is Type.FullName, catch (Throwable) is catch (Exception) and
-// assert is Debug.Assert (docs/codec-base-porting.md). The protected ctx field keeps its Java name.
+// MessageToMessageDecoder<IHttpObject> with typeof(IHttpObject). The inner class ByteBufForwarder writes
+// HttpContentDecoder.this.needRead through the decoder it receives, and isSharable() is the IsSharable property of
+// ChannelHandlerAdapter. The protected ctx field keeps its Java name.
 public abstract class HttpContentDecoder : MessageToMessageDecoder<IHttpObject>
 {
 

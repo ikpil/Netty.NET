@@ -23,14 +23,13 @@ namespace Netty.NET.Handler.Codec.Http.Multipart;
 /**
  * Extended interface for InterfaceHttpData
  */
-// CLR: the Java interface HttpData takes the I prefix (owner rule); ByteBufHolder is IByteBufHolder, whose content() is
-// the read-only Content property (docs/buffer-porting.md, Buffer holders and conversion). java.io.File is FileInfo,
-// InputStream is System.IO.Stream (written in full, because inside Netty.NET.Handler.* the simple name Stream binds to
-// the namespace Netty.NET.Handler.Stream) and Charset is Encoding (docs/handler-porting.md, java.io and NIO; docs/codec-base-porting.md);
-// IOException is System.IO.IOException, which "throws IOException" only documents in C#. get() is Get(). copy(),
-// duplicate(), retainedDuplicate(), replace(ByteBuf), retain(), retain(int), touch() and touch(Object) are re-declared
-// only to narrow the return type, so they are inherited from IByteBufHolder, not repeated (owner decision 2026-11-19,
-// docs/transport-porting.md, Decisions); the classes narrow them with covariant override returns.
+// CLR: the Java interface HttpData takes the I prefix (owner rule); ByteBufHolder is IByteBufHolder, whose
+// content() is the read-only Content property. java.io.File is FileInfo, InputStream is System.IO.Stream (written
+// in full, because inside Netty.NET.Handler.* the simple name Stream binds to the namespace
+// Netty.NET.Handler.Stream) and Charset is Encoding; IOException is System.IO.IOException, which "throws
+// IOException" only documents in C#. get() is Get(). copy(), duplicate(), retainedDuplicate(), replace(ByteBuf),
+// retain(), retain(int), touch() and touch(Object) are re-declared only to narrow the return type, so they are
+// inherited from IByteBufHolder, not repeated; the classes narrow them with covariant override returns.
 public interface IHttpData : IInterfaceHttpData, IByteBufHolder
 {
 

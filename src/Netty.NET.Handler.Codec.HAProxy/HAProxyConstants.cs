@@ -16,9 +16,7 @@
 
 namespace Netty.NET.Handler.Codec.HAProxy;
 
-// CLR: the package-private final class is internal sealed; static final byte constants are const byte, which the
-// switch statements use as case labels like the Java compile-time constants, and the byte arrays are static readonly.
-// All values are below 0x80, so the unsigned C# byte (owner decision) holds the same numbers.
+// CLR: All values are below 0x80, so the unsigned C# byte (owner decision) holds the same numbers.
 internal sealed class HAProxyConstants
 {
 

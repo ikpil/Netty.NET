@@ -20,7 +20,6 @@ namespace Netty.NET.Handler.Codec.Socksx.V5;
  * A SOCKS5 subnegotiation response for username-password authentication, as defined in
  * <a href="https://tools.ietf.org/html/rfc1929#section-2">the section 2, RFC1929</a>.
  */
-// CLR: Java interfaces take the I prefix (see Netty.NET.Handler.Codec.Socksx.ISocksMessage).
 public interface ISocks5PasswordAuthResponse : ISocks5Message
 {
     /**

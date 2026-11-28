@@ -28,16 +28,16 @@ namespace Netty.NET.Handler.Codec.Compression;
  *
  * See <a href="https://en.wikipedia.org/wiki/Bzip2">Bzip2</a>.
  */
-// CLR: @UnstableApi is the Common [UnstableApi] attribute. The package-private processInput/processOutput override the
-// internal members of InputBufferingDecompressor; status() is Status_() (owner decision 2026-11-23: a method named Status
-// cannot be declared next to the nested Status enum, "The type 'type name' already contains a definition for
-// 'identifier'", https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0102, as HAProxyTLV.type() is Type_() in
-// docs/codec-haproxy-porting.md). For the same reason the static builder() is Builder_(): the class also declares the
-// nested class Builder. A class does not inherit the nested types of its interfaces, so Status and
-// AbstractDecompressorBuilder are written IDecompressor.Status and IDecompressor.AbstractDecompressorBuilder. The
-// package-private constructors are internal; C# has no throws clauses; catch (Throwable t) { ...; throw t; } is
-// catch (Exception) { ...; throw; }, which rethrows the same exception object. ObjectUtil.checkPositive is the Common
-// ObjectUtil.CheckPositive. IllegalStateException is InvalidOperationException (docs/codec-base-porting.md).
+// CLR: The package-private processInput/processOutput override the internal members of InputBufferingDecompressor;
+// status() is Status_() (owner decision 2026-11-23: a method named Status cannot be declared next to the nested
+// Status enum, "The type 'type name' already contains a definition for 'identifier'",
+// https://learn.microsoft.com/en-us/dotnet/csharp/misc/cs0102, as HAProxyTLV.type() is Type_() in
+// docs/codec-haproxy-porting.md). For the same reason the static builder() is Builder_(): the class also declares
+// the nested class Builder. A class does not inherit the nested types of its interfaces, so Status and
+// AbstractDecompressorBuilder are written IDecompressor.Status and IDecompressor.AbstractDecompressorBuilder. C#
+// has no throws clauses; catch (Throwable t) {; throw t; } is catch (Exception) {; throw; }, which rethrows the
+// same exception object. ObjectUtil.checkPositive is the Common ObjectUtil.CheckPositive. IllegalStateException is
+// InvalidOperationException.
 [UnstableApi]
 public sealed class Bzip2Decompressor : InputBufferingDecompressor
 {

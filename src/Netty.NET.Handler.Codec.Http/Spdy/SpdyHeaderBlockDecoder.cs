@@ -24,9 +24,8 @@ namespace Netty.NET.Handler.Codec.Spdy;
  * @see SpdyHeaderBlockRawDecoder
  * @see SpdyHeaderBlockZlibDecoder
  */
-// CLR: the package-private static factory and abstract methods are internal (the public abstract class can therefore
-// only be subclassed inside the assembly, as only the package can in Java). ByteBufAllocator is IByteBufAllocator and
-// SpdyHeadersFrame is ISpdyHeadersFrame; "throws Exception" has no counterpart.
+// CLR: ByteBufAllocator is IByteBufAllocator and SpdyHeadersFrame is ISpdyHeadersFrame; "throws Exception" has no
+// counterpart.
 public abstract class SpdyHeaderBlockDecoder
 {
 

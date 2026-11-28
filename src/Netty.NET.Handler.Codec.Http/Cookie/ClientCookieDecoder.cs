@@ -353,7 +353,6 @@ public sealed class ClientCookieDecoder : CookieDecoder
             return IsValueDefined(valueStart, valueEnd) ? header.Substring(valueStart, valueEnd - valueStart) : null;
         }
 
-        // CLR: header.regionMatches(true, nameStart, name, 0, length).
         private static bool RegionMatchesIgnoreCase(string header, int nameStart, string name, int length)
         {
             return string.Compare(header, nameStart, name, 0, length, StringComparison.OrdinalIgnoreCase) == 0;

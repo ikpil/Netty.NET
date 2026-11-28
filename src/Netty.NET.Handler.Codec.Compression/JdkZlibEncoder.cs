@@ -30,28 +30,27 @@ namespace Netty.NET.Handler.Codec.Compression;
 /**
  * Compresses a {@link ByteBuf} using the deflate algorithm.
  */
-// CLR: java.util.zip.Deflater is the internal stand-in Deflater (Deflater.cs, owner decision 2026-11-23), which keeps
-// the Java calls and constants over the BCL DeflateStream/ZLibStream; its compressed bytes can differ from Java's zlib,
-// the inflated data are the same. The BCL streams have no dictionary API; the stand-in implements setDictionary on them
-// (owner decision 2026-11-24, see Deflater.cs), so the dictionary constructors work as in Java. java.util.zip.CRC32 is
-// System.IO.Hashing.Crc32 (owner decision 2026-11-23; written in full because the bzip2 Crc32 of this module shares the
-// namespace): update(b, off, len) is Append over the range
-// and getValue() is GetCurrentHashAsUInt32(), "the current computed hash value"
+// CLR: java.util.zip.Deflater is the internal stand-in Deflater (Deflater.cs, owner decision 2026-11-23), which
+// keeps the Java calls and constants over the BCL DeflateStream/ZLibStream; its compressed bytes can differ from
+// Java's zlib, the inflated data are the same. The BCL streams have no dictionary API; the stand-in implements
+// setDictionary on them, so the dictionary constructors work as in Java. java.util.zip.CRC32 is
+// System.IO.Hashing.Crc32 : update(b, off, len) is Append over the range and getValue() is
+// GetCurrentHashAsUInt32(), "the current computed hash value"
 // (https://learn.microsoft.com/en-us/dotnet/api/system.io.hashing.crc32.getcurrenthashasuint32?view=net-10.0-pp).
-// ChannelFuture/ChannelPromise are Task (docs/transport-porting.md, see ZlibEncoder): close() and close(ChannelPromise)
-// are the one CloseAsync(CancellationToken = default), ctx.newPromise() has no Task counterpart and is the default
-// token, ctx.write(footer) and ctx.writeAndFlush(footer, promise) return their Tasks, close(ctx, promise) is
-// CloseAsync(ctx, cancellationToken), and PromiseNotifier.cascade(f, promise) copies the outcome
-// of f into the returned Task with TaskCompletionSource.TrySetFromTask, which copies "the completion status (including
-// exception or cancellation information)"
+// ChannelFuture/ChannelPromise are Task : close() and close(ChannelPromise) are the one
+// CloseAsync(CancellationToken = default), ctx.newPromise() has no Task counterpart and is the default token,
+// ctx.write(footer) and ctx.writeAndFlush(footer, promise) return their Tasks, close(ctx, promise) is
+// CloseAsync(ctx, cancellationToken), and PromiseNotifier.cascade(f, promise) copies the outcome of f into the
+// returned Task with TaskCompletionSource.TrySetFromTask, which copies "the completion status (including exception
+// or cancellation information)"
 // (https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.taskcompletionsource.trysetfromtask?view=net-10.0,
 // docs/common-task-composition.md). The ObjectUtil checks are the Common ports (IllegalArgumentException is
-// ArgumentException); checkNotNull(wrapper) has no counterpart because ZlibWrapper is a C# enum (a value type). The
-// Buffer port has no hasArray()/array()/arrayOffset(); borrowed memory and MemoryMarshal.TryGetArray replace them
-// (docs/buffer-porting.md, Array extraction), see HasArray and ArrayOf below. (int) Math.ceil(...) saturates in Java and,
-// since .NET 9, in C# ("if the converted value is too small or large for the target type, the value is set to the
-// minimum or maximum value", https://learn.microsoft.com/en-us/dotnet/core/compatibility/jit/9.0/fp-to-integer), so the
-// overflow check of allocateBuffer sees the same values. EmptyArrays.EMPTY_BYTES is the Common EmptyArrays.
+// ArgumentException); checkNotNull(wrapper) has no counterpart because ZlibWrapper is a C# enum (a value type).
+// The Buffer port has no hasArray()/array()/arrayOffset(); borrowed memory and MemoryMarshal.TryGetArray replace
+// them, see HasArray and ArrayOf below. (int) Math.ceil(...) saturates in Java and, since.NET 9, in C# ("if the
+// converted value is too small or large for the target type, the value is set to the minimum or maximum value",
+// https://learn.microsoft.com/en-us/dotnet/core/compatibility/jit/9.0/fp-to-integer), so the overflow check of
+// allocateBuffer sees the same values. EmptyArrays.EMPTY_BYTES is the Common EmptyArrays.
 public class JdkZlibEncoder : ZlibEncoder
 {
 

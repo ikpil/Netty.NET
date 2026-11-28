@@ -23,14 +23,11 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Codec.Http.Tests.Multipart;
 
-// CLR: FullHttpRequest/HttpRequest are IFullHttpRequest/IHttpRequest, CharsetUtil.UTF_8/US_ASCII are Encoding.UTF8/
-// ASCII and String.getBytes(UTF_8) is Encoding.UTF8.GetBytes; content.length() and String.length() are the string
-// Length. The headers' set(String, Object) takes the boxed int as Object. Arrays.fill/copyOf/copyOfRange are
-// Array.Fill and array slices, Arrays.equals SequenceEqual, and toArray(new InterfaceHttpData[0]) is a copy of the list
-// into an array; Integer.toString is the invariant-culture text. currentPartialHttpData() and getBodyHttpDatas() are
-// the decoder methods, content() is the Content property and refCnt() RefCnt; the (HttpData) casts stay casts.
-// assertThrows(T.class, ...) is Assert.Throws<T>, the exact type, as the decoder throws ErrorDataDecoderException
-// itself. The test helper commonTestBigFileDelimiterInMiddleChunk keeps its 10 MB of chunks.
+// CLR: The headers' set(String, Object) takes the boxed int as Object. Integer.toString is the invariant-culture
+// text. currentPartialHttpData() and getBodyHttpDatas() are the decoder methods, content() is the Content property
+// and refCnt() RefCnt; the (HttpData) casts stay casts. assertThrows(T.class,...) is Assert.Throws<T>, the exact
+// type, as the decoder throws ErrorDataDecoderException itself. The test helper
+// commonTestBigFileDelimiterInMiddleChunk keeps its 10 MB of chunks.
 public class HttpPostMultiPartRequestDecoderTest
 {
 

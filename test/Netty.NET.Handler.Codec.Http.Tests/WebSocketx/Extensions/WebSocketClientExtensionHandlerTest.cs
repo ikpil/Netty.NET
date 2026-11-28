@@ -24,13 +24,12 @@ using static Netty.NET.Handler.Codec.Http.Tests.WebSocketx.Extensions.WebSocketE
 namespace Netty.NET.Handler.Codec.Http.Tests.WebSocketx.Extensions;
 
 // CLR: Mockito mocks are Moq mocks of the I-prefixed interfaces (the mock names have no counterpart);
-// when(...).thenReturn(...) is Setup(...).Returns(...), and an unconfigured member of a loose mock returns the default
-// value as in Mockito (https://github.com/devlooped/moq/wiki/Quickstart). verify(mock) defaults to times(1), so it is
-// Verify(..., Times.Once()); atLeastOnce() is Times.AtLeastOnce(). any(WebSocketExtensionData.class) is
-// It.IsAny<WebSocketExtensionData>() and webSocketExtensionDataMatcher(name) is WebSocketExtensionDataMatcher_(name)
-// (see WebSocketExtensionTestUtil). Collections.emptyMap() is ImmutableDictionary<string, string>.Empty, List is IList,
-// pipeline().get(Class)/context(handler) are Pipeline.Get<T>()/Context(handler), and fail(...) is Assert.Fail. The test
-// class fields are created per test, as xUnit creates a new instance of the test class for every test.
+// when(...).thenReturn(...) is Setup(...).Returns(...), and an unconfigured member of a loose mock returns the
+// default value as in Mockito (https://github.com/devlooped/moq/wiki/Quickstart). verify(mock) defaults to
+// times(1), so it is Verify(..., Times.Once()); atLeastOnce() is Times.AtLeastOnce().
+// any(WebSocketExtensionData.class) is It.IsAny<WebSocketExtensionData>() and webSocketExtensionDataMatcher(name)
+// is WebSocketExtensionDataMatcher_(name) (see WebSocketExtensionTestUtil). The test class fields are created per
+// test, as xUnit creates a new instance of the test class for every test.
 public class WebSocketClientExtensionHandlerTest
 {
 

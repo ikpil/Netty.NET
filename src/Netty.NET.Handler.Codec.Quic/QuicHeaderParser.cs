@@ -31,15 +31,14 @@ namespace Netty.NET.Handler.Codec.Quic;
  * This class can be used for advanced use-cases. Usually you want to just use {@link QuicClientCodecBuilder} or
  * {@link QuicServerCodecBuilder}.
  */
-// CLR: AutoCloseable is IDisposable with close() kept as Close() and Dispose() calling it (docs/handler-porting.md:
-// "Closeable keeps close() as Close() and implements IDisposable.Dispose() with it"). InetSocketAddress is IPEndPoint;
-// the nested interface QuicHeaderProcessor is IQuicHeaderProcessor; the throws clauses have no counterpart.
-// getSimpleName() is nameof. Byte.BYTES and Integer.BYTES are sizeof(byte) and sizeof(int). The Buffer port's
-// GetByte is unsigned: hasShortHeader, typeOfLongHeader and numBytesForVariableLengthInteger test bits 0x80, 0x30 and
-// the two bits of b >> 6, which the signed Java byte and the C# byte give alike, and getUnsignedByte is GetByte.
-// getUnsignedShort/getUnsignedInt are GetUnsignedShort/GetUnsignedInt (ushort/uint). The switch over the
-// QuicPacketType constants uses case guards (a sealed class, see QuicPacketType), as codec-haproxy HAProxyTLV does.
-// IllegalStateException is InvalidOperationException; numbers in messages print with the invariant culture.
+// CLR: InetSocketAddress is IPEndPoint; the nested interface QuicHeaderProcessor is IQuicHeaderProcessor; the
+// throws clauses have no counterpart. getSimpleName() is nameof. Byte.BYTES and Integer.BYTES are sizeof(byte) and
+// sizeof(int). The Buffer port's GetByte is unsigned: hasShortHeader, typeOfLongHeader and
+// numBytesForVariableLengthInteger test bits 0x80, 0x30 and the two bits of b >> 6, which the signed Java byte and
+// the C# byte give alike, and getUnsignedByte is GetByte. getUnsignedShort/getUnsignedInt are
+// GetUnsignedShort/GetUnsignedInt (ushort/uint). The switch over the QuicPacketType constants uses case guards (a
+// sealed class, see QuicPacketType), as codec-haproxy HAProxyTLV does. IllegalStateException is
+// InvalidOperationException; numbers in messages print with the invariant culture.
 public sealed class QuicHeaderParser : IDisposable
 {
     // See https://datatracker.ietf.org/doc/rfc7714/

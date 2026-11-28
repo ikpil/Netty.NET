@@ -27,8 +27,6 @@ using Assert = XunitAssertMessages.AssertM;
 
 namespace Netty.NET.Handler.Codec.Tests.Base64Codec;
 
-// CLR: CharsetUtil.US_ASCII/ISO_8859_1/UTF_8 are Encoding.ASCII/Latin1/UTF8 (docs/common-clr-design.md, "Native encoding
-// and codec ownership").
 public class Base64Test
 {
     [Fact]
@@ -96,8 +94,6 @@ public class Base64Test
                 "8i96YWK0VxcCMQC7pf6Wk3RhUU2Sg6S9e6CiirFLDyzLkaWxuCnXcOwTvuXTHUQSeUCp2Q6ygS5q\n" +
                 "Kyc=";
 
-        // CLR: X509Certificate.getEncoded() is GetRawCertData(), the raw data of the whole certificate
-        // (https://learn.microsoft.com/dotnet/api/system.security.cryptography.x509certificates.x509certificate.getrawcertdata).
         ByteBuf src = Unpooled.WrappedBuffer(CertFromString(cert).GetRawCertData());
         ByteBuf expectedEncoded = CopiedBuffer(expected, Encoding.ASCII);
         TestEncode(src, expectedEncoded);
@@ -192,7 +188,7 @@ public class Base64Test
         {
             jdKEncoded = breakLines ? InsertNewLines(jdkEncoder(bytes)) : jdkEncoder(bytes);
             // CLR: ByteBuf has no order(ByteOrder) (deprecated in the source and not ported); every buffer is
-            // BIG_ENDIAN, the only order passed here, so .order(order) is the wrapped buffer itself.
+            // BIG_ENDIAN, the only order passed here, so.order(order) is the wrapped buffer itself.
             src = Unpooled.WrappedBuffer(bytes);
             encoded = Base64.Encode(src, breakLines, dialect, padded);
 

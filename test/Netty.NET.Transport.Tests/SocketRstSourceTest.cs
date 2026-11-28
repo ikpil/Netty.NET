@@ -91,7 +91,7 @@ public class SocketRstSourceTest : AbstractSocketTest
 
         // Verify the client received a RST.
         Exception cause = Volatile.Read(ref throwableRef.Value);
-        // CLR: assertInstanceOf(IOException.class, cause, ...) is Assert.IsAssignableFrom, which "Verifies that an
+        // CLR: assertInstanceOf(IOException.class, cause,...) is Assert.IsAssignableFrom, which "Verifies that an
         // object is of the given type or a derived type" (xunit.v3.assert 4.0.2) and reports the actual type.
         SocketException socketCause = Assert.IsAssignableFrom<SocketException>(cause);
 

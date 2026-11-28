@@ -23,8 +23,8 @@ namespace Netty.NET.Handler.Codec.Mqtt;
  * Contains a topic name and Qos Level.
  * This is part of the {@link MqttSubscribePayload}
  */
-// CLR: the @Deprecated topicName() ("use topicFilter") names its replacement, so it is not ported (owner decision
-// 2026-11-16); its Javadoc is recorded in docs/codec-mqtt-porting-manifest.json and the callers use TopicFilter().
+// CLR: the @Deprecated topicName() ("use topicFilter") names its replacement, so it is not ported; its Javadoc is
+// recorded in docs/codec-mqtt-porting-manifest.json and the callers use TopicFilter().
 public sealed class MqttTopicSubscription
 {
     private string topicFilter;

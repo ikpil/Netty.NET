@@ -28,21 +28,17 @@ using Netty.NET.Transport.Channels.Nio;
 
 namespace Netty.NET.Handler.Codec.Http3.Example;
 
-// CLR: main(String...) is the async Main that ExampleLauncher (CLR-only) runs; bind(0).sync().channel(), connect().get(),
-// newRequestStream(...).sync().getNow(), writeAndFlush(...).sync(), closeFuture().sync() and close().sync() are awaits,
-// and group.shutdownGracefully() is ShutdownGracefullyAsync() with the Task discarded. NioDatagramChannel.class is
-// Channel<QuicEndpointChannel>(): msquic owns the UDP socket, so the codec runs on the QuicEndpointChannel that takes the
-// datagram channel's place; binding it with the client codec records the local address, and IQuicChannel.NewBootstrap
-// (QuicChannel.newBootstrap) connects through it (owner decision 2026-11-27, docs/codec-classes-quic-porting.md, Stage 2).
-// bind(0) is BindAsync(0), the wildcard address. maxIdleTimeout(5000, MILLISECONDS) takes a TimeSpan;
+// CLR: NioDatagramChannel.class is Channel<QuicEndpointChannel>(): msquic owns the UDP socket, so the codec runs
+// on the QuicEndpointChannel that takes the datagram channel's place; binding it with the client codec records the
+// local address, and IQuicChannel.NewBootstrap (QuicChannel.newBootstrap) connects through it. bind(0) is
+// BindAsync(0), the wildcard address. maxIdleTimeout(5000, MILLISECONDS) takes a TimeSpan;
 // InsecureTrustManagerFactory.INSTANCE is the handler port's accepting RemoteCertificateValidationCallback.
-// Http3.newRequestStream is Http3.NewRequestStreamAsync, and the anonymous Http3RequestStreamInboundHandler is the private
-// nested ResponseHandler. A Java String passed as a CharSequence (method, path, authority, scheme) is a
-// StringCharSequence; NetUtil.LOCALHOST4.getHostAddress() is the text of the IPAddress (127.0.0.1) and the port prints
-// with the invariant culture. QuicStreamChannel.SHUTDOWN_OUTPUT has no counterpart (IQuicStreamChannel), so the write
-// Task is continued with ShutdownOutputAsync(), as the listener calls shutdownOutput() on the future's channel.
-// System.err.print is Console.Error.Write, CharsetUtil.US_ASCII is Encoding.ASCII and content() the Content property.
-// Http3ServerExample.PORT is 9999 unless the CLR-only -Dport=<port> property of the launcher gives another one.
+// Http3.newRequestStream is Http3.NewRequestStreamAsync, and the anonymous Http3RequestStreamInboundHandler is the
+// private nested ResponseHandler. NetUtil.LOCALHOST4.getHostAddress() is the text of the IPAddress (127.0.0.1) and
+// the port prints with the invariant culture. QuicStreamChannel.SHUTDOWN_OUTPUT has no counterpart
+// (IQuicStreamChannel), so the write Task is continued with ShutdownOutputAsync(), as the listener calls
+// shutdownOutput() on the future's channel. Http3ServerExample.PORT is 9999 unless the CLR-only -Dport=<port>
+// property of the launcher gives another one.
 public sealed class Http3ClientExample
 {
     private Http3ClientExample()
@@ -104,7 +100,6 @@ public sealed class Http3ClientExample
         }
     }
 
-    // CLR: the anonymous Http3RequestStreamInboundHandler of the request stream (see the class comment).
     private sealed class ResponseHandler : Http3RequestStreamInboundHandler
     {
         protected override void ChannelRead(IChannelHandlerContext ctx, IHttp3HeadersFrame frame)

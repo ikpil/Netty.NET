@@ -22,7 +22,7 @@ namespace Netty.NET.Handler.Codec.Mqtt;
 /**
  * Utility class with factory methods to create different types of MQTT messages.
  */
-// CLR: the switch over the MqttMessageType constants uses case guards (see MqttCodecUtil); Throwable is Exception.
+// CLR: the switch over the MqttMessageType constants uses case guards (see MqttCodecUtil).
 public sealed class MqttMessageFactory
 {
     public static MqttMessage NewMessage(MqttFixedHeader mqttFixedHeader, object variableHeader, object payload)

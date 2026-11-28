@@ -26,16 +26,8 @@ namespace Netty.NET.Handler.Codec.Http.Tests.Spdy;
 
 #pragma warning disable xUnit2013 // assertEquals(n, collection.size()) of the source stays Assert.Equal(n, Count).
 
-// CLR: @BeforeEach is the constructor and @AfterEach is Dispose(): xUnit "creates a new instance of the test class for
-// every test that is run", and cleanup code goes in Dispose() (https://xunit.net/docs/shared-context).
-// ByteBufAllocator.DEFAULT is IByteBufAllocator.Default, the package-private decoder and its
-// calculateMaxDecompressedSizePerBlock are reached through InternalsVisibleTo, and String.getBytes() of the ASCII name
-// and value is Encoding.UTF8. The anonymous Executables of assertThrows are lambdas, and assertThrows, which also
-// accepts a subclass, is Assert.ThrowsAny. The Strings passed as CharSequence header names are wrapped by
-// HttpHeadersTestUtils.Of (StringCharSequence), and assertEquals(String, headers.get(name)) reads the value as text
-// with GetAsString. The test helper deflate(byte[]) uses java.util.zip.Deflater(BEST_COMPRESSION) with the zlib
-// wrapper; its BCL counterpart is a ZLibStream with ZLibCompressionOptions.CompressionLevel 9, which "gives best
-// compression"
+// CLR: The test helper deflate(byte[]) uses java.util.zip.Deflater(BEST_COMPRESSION) with the zlib wrapper; its
+// BCL counterpart is a ZLibStream with ZLibCompressionOptions.CompressionLevel 9, which "gives best compression"
 // (https://learn.microsoft.com/en-us/dotnet/api/system.io.compression.zlibcompressionoptions.compressionlevel?view=net-10.0),
 // over a MemoryStream (ByteArrayOutputStream), finished by Dispose. The (byte) casts of the header bytes keep the
 // octets.

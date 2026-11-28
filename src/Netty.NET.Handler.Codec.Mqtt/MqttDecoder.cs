@@ -39,13 +39,13 @@ namespace Netty.NET.Handler.Codec.Mqtt;
  * <a href="https://docs.oasis-open.org/mqtt/mqtt/v5.0/mqtt-v5.0.html">v5.0</a>, depending on the
  * version specified in the CONNECT message that first goes through the channel.
  */
-// CLR: Buffer API shapes follow the Buffer and codec-base ports (docs/buffer-porting.md, docs/codec-base-porting.md):
-// readerIndex() is the ReaderIndex property, readUnsignedByte() is ReadByte() (unsigned byte, owner decision), the
-// byte[] reads are the Span overloads, and List<Object> out is IList<object> @out. A switch over the MqttMessageType
-// constants uses case guards (see MqttCodecUtil). Signal is an Exception here but a java.lang.Error in the source,
-// which catch (Exception) does not catch, so every catch (Exception) has a "when (cause is not Signal)" filter
-// (docs/codec-base-porting.md, Signals). Numbers in messages use the invariant culture, and null strings are written
-// as "null" as Java string conversion does (https://docs.oracle.com/javase/specs/jls/se17/html/jls-5.html#jls-5.1.11).
+// CLR: Buffer API shapes follow the Buffer and codec-base ports : readerIndex() is the ReaderIndex property,
+// readUnsignedByte() is ReadByte() (unsigned byte, owner decision), the byte[] reads are the Span overloads, and
+// List<Object> out is IList<object> @out. A switch over the MqttMessageType constants uses case guards (see
+// MqttCodecUtil). Signal is an Exception here but a java.lang.Error in the source, which catch (Exception) does
+// not catch, so every catch (Exception) has a "when (cause is not Signal)" filter. Numbers in messages use the
+// invariant culture, and null strings are written as "null" as Java string conversion does
+// (https://docs.oracle.com/javase/specs/jls/se17/html/jls-5.html#jls-5.1.11).
 public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
 {
 
@@ -227,8 +227,7 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
     // CLR: the tests call the protected decode(...) through Java package access; C# protected access is limited to
     // derived classes and an override cannot change its accessibility
     // (https://learn.microsoft.com/dotnet/csharp/language-reference/keywords/override), so this internal forwarder
-    // serves the friend test assembly, like MessageToMessageDecoder.InvokeDecode in codec-base (docs/codec-base-porting.md,
-    // Package access).
+    // serves the friend test assembly, like MessageToMessageDecoder.InvokeDecode in codec-base.
     internal void InvokeDecode(IChannelHandlerContext ctx, ByteBuf buffer, IList<object> @out)
     {
         Decode(ctx, buffer, @out);
@@ -957,11 +956,9 @@ public sealed class MqttDecoder : ReplayingDecoder<MqttDecoder.DecoderState>
      * UTF-8 Encoded String per MQTT 3.1.1 and MQTT 5.0.
      * Throws a {@link DecoderException} if the sequence is malformed or contains U+0000.
      */
-    // CLR: ByteBuf.nioBufferCount() has no counterpart; nioBuffer(index, length) is a view of the range, here
-    // AsReadOnlySequence, which ReplayingDecoderByteBuf maps for nioBuffers(int, int) (docs/codec-base-porting.md), and a
-    // one-buffer range is a single-segment sequence. The decoder throws ArgumentException where the source catches
-    // CharacterCodingException, and Encoding.GetString keeps no state between calls, so CharsetDecoder.reset() has no
-    // counterpart.
+    // CLR: ByteBuf.nioBufferCount() has no counterpart. The decoder throws ArgumentException where the source
+    // catches CharacterCodingException, and Encoding.GetString keeps no state between calls, so
+    // CharsetDecoder.reset() has no counterpart.
     private string ReadStrictUtf8(ByteBuf buffer, int length)
     {
         if (length == 0)

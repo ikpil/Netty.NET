@@ -21,8 +21,7 @@ namespace Netty.NET.Handler.Codec.Http2;
  * Enforce a limit on the maximum number of consecutive empty DATA frames (without end_of_stream flag) that are allowed
  * before the connection will be closed.
  */
-// CLR: the package-private final class is internal sealed; the package-private constructor and frameListener0() are
-// internal. The unwrapping reads the decorated listener through the listener field of Http2FrameListenerDecorator,
+// CLR: The unwrapping reads the decorated listener through the listener field of Http2FrameListenerDecorator,
 // which Java reaches through package access (protected internal in C#).
 internal sealed class Http2EmptyDataFrameConnectionDecoder : DecoratingHttp2ConnectionDecoder
 {

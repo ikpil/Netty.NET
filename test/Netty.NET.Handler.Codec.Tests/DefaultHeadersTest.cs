@@ -29,11 +29,10 @@ namespace Netty.NET.Handler.Codec.Tests;
 /**
  * Tests for {@link DefaultHeaders}.
  */
-// CLR: a Java String is a CharSequence; the CLR string literals passed as header names and values are wrapped as
-// StringCharSequence. Iterator.next() past the end (NoSuchElementException) and remove() before next()
-// (IllegalStateException) throw InvalidOperationException (see IIterator), NullPointerException from checkNotNull is
-// ArgumentNullException, and the anonymous Executables are lambdas. Java byte is sbyte; Double.MIN_VALUE and
-// Float.MIN_VALUE, "the smallest positive nonzero value"
+// CLR: a Java String is a CharSequence. Iterator.next() past the end (NoSuchElementException) and remove() before
+// next() (IllegalStateException) throw InvalidOperationException (see IIterator), NullPointerException from
+// checkNotNull is ArgumentNullException, and the anonymous Executables are lambdas. Java byte is sbyte;
+// Double.MIN_VALUE and Float.MIN_VALUE, "the smallest positive nonzero value"
 // (https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Double.html#MIN_VALUE), are
 // double.Epsilon and float.Epsilon ("the smallest positive Double value that is greater than zero",
 // https://learn.microsoft.com/dotnet/api/system.double.epsilon), not double.MinValue.
@@ -62,8 +61,7 @@ public class DefaultHeadersTest
         return new TestDefaultHeaders();
     }
 
-    // CLR: the statically imported AsciiString.of(CharSequence) takes the String literal as a CharSequence; the CLR
-    // string is wrapped as a StringCharSequence for it.
+    // CLR: the statically imported AsciiString.of(CharSequence) takes the String literal as a CharSequence.
     private static AsciiString Of(string str)
     {
         return AsciiString.Of(new StringCharSequence(str));
@@ -114,7 +112,6 @@ public class DefaultHeadersTest
         Assert.False(headers.Remove(Of("name2")));
     }
 
-    // CLR: Collection.containsAll(c) is c.All(values.Contains).
     [Fact]
     public void MultipleValuesPerNameShouldBeAllowed()
     {
@@ -235,7 +232,6 @@ public class DefaultHeadersTest
         Assert.Throws<InvalidOperationException>(() => itr.Next());
     }
 
-    // CLR: System.currentTimeMillis() is DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().
     [Fact]
     public void TestContains()
     {
@@ -695,7 +691,7 @@ public class DefaultHeadersTest
         Assert.Equal(long.MaxValue, headers.GetTimeMillis(new StringCharSequence("name1"), long.MaxValue));
     }
 
-    // CLR: the anonymous ValueConverter is a named nested class; IllegalArgumentException is ArgumentException.
+    // CLR: IllegalArgumentException is ArgumentException.
     private sealed class ThrowingValueConverter : IValueConverter<ICharSequence>
     {
         public ICharSequence ConvertObject(object value)
@@ -853,7 +849,6 @@ public class DefaultHeadersTest
         Assert.Contains(new StringCharSequence("e=f"), cookies);
     }
 
-    // CLR: the anonymous HashingStrategy is a named nested IEqualityComparer.
     private sealed class DegenerateHashingStrategy : IEqualityComparer<ICharSequence>
     {
         public int GetHashCode(ICharSequence obj)
@@ -899,8 +894,7 @@ public class DefaultHeadersTest
         }
     }
 
-    // CLR: BiPredicate is Func<ICharSequence, ICharSequence, bool>; the unbound Object::equals reference is a
-    // lambda calling the first argument's Equals.
+    // CLR: The unbound Object::equals reference is a lambda calling the first argument's Equals.
     [Fact]
     public void TestContainsAnyEquality()
     {
@@ -947,7 +941,6 @@ public class DefaultHeadersTest
         Assert.False(headers.ContainsAny(Of("name2"), Of("value1"), eq));
     }
 
-    // CLR: the anonymous HashingStrategy is a named nested IEqualityComparer.
     private sealed class CollidingHashingStrategy : IEqualityComparer<ICharSequence>
     {
         public int GetHashCode(ICharSequence obj)

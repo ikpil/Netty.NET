@@ -111,7 +111,6 @@ public class HttpServerExpectContinueHandler : ChannelInboundHandlerAdapter
         base.ChannelRead(ctx, msg);
     }
 
-    // CLR: ChannelFutureListener.CLOSE_ON_FAILURE.
     private static void CloseOnFailure(IChannelHandlerContext ctx, Task future)
     {
         IChannel channel = ctx.Channel;

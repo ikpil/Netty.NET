@@ -30,11 +30,11 @@ namespace Netty.NET.Handler.Codec.Http2;
  * <p>The {@link Http2FrameCodec} is required to be part of the {@link ChannelPipeline} before this handler is added,
  * or else an {@link IllegalStateException} will be thrown.
  */
-// CLR: the final handlerAdded/handlerRemoved are sealed overrides of the Transport's ChannelHandlerAdapter members;
-// IllegalStateException is InvalidOperationException and IllegalArgumentException ArgumentException
-// (docs/codec-base-porting.md, Exceptions); pipeline().context(Class) is Context(Type) (docs/transport-porting.md,
-// Interfaces added); Class.getSimpleName() and StringUtil.simpleClassName are StringUtil.SimpleClassName(Type). The
-// checked "throws Exception"/"throws Http2Exception" clauses have no counterpart.
+// CLR: the final handlerAdded/handlerRemoved are sealed overrides of the Transport's ChannelHandlerAdapter
+// members; IllegalStateException is InvalidOperationException and IllegalArgumentException ArgumentException;
+// pipeline().context(Class) is Context(Type); Class.getSimpleName() and StringUtil.simpleClassName are
+// StringUtil.SimpleClassName(Type). The checked "throws Exception"/"throws Http2Exception" clauses have no
+// counterpart.
 public abstract class Http2ChannelDuplexHandler : ChannelDuplexHandler
 {
 

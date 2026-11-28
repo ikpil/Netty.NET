@@ -24,9 +24,8 @@ using static Netty.NET.Handler.Codec.Dns.DefaultDnsRecordDecoder;
 namespace Netty.NET.Handler.Codec.Dns;
 
 // CLR: the final utility class with a private constructor is an internal static class; its package-private members
-// are internal. CharsetUtil.UTF_8 is Encoding.UTF8, IllegalArgumentException is ArgumentException
-// (docs/codec-base-porting.md, Shared CLR adaptations). Numbers in messages use the invariant culture
-// (https://learn.microsoft.com/en-us/dotnet/api/system.int32.tostring).
+// are internal. CharsetUtil.UTF_8 is Encoding.UTF8, IllegalArgumentException is ArgumentException. Numbers in
+// messages use the invariant culture (https://learn.microsoft.com/en-us/dotnet/api/system.int32.tostring).
 internal static class DnsCodecUtil
 {
 
@@ -159,8 +158,8 @@ internal static class DnsCodecUtil
         return count;
     }
 
-    // CLR: readerIndex(int) is the ByteBuf.ReaderIndex property setter of the Buffer port, and readUnsignedByte() is
-    // ReadByte(), which returns the unsigned System.Byte (docs/buffer-porting.md).
+    // CLR: readerIndex(int) is the ByteBuf.ReaderIndex property setter of the Buffer port, and readUnsignedByte()
+    // is ReadByte(), which returns the unsigned System.Byte.
     internal static string DecodeDomainName(ByteBuf @in)
     {
         int position = -1;

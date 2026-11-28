@@ -30,16 +30,14 @@ namespace Netty.NET.Example.Redis;
 /**
  * Simple Redis client that demonstrates Redis commands against a Redis server.
  */
-// CLR: System.getProperty is ExampleLauncher.GetProperty (the -Dname=value arguments)
-// and Integer.parseInt is int.Parse with an optional sign and the invariant culture. main blocks on connect(...).sync(),
-// close().sync() and lastWriteFuture.sync(); the async Main awaits those Tasks (docs/transport-porting.md: sync() is
-// awaiting the Task), and connect(...).sync().channel() is the result of ConnectAsync. group.shutdownGracefully() is
-// ShutdownGracefullyAsync(), whose Task is discarded as Java discards the future. The anonymous ChannelInitializer is an
-// ActionChannelInitializer, the literal 1_000_000 is 1_000_000, and new BufferedReader(new InputStreamReader(System.in))
-// is Console.In, whose ReadLine also returns null at the end of the input. String.trim() removes the characters up to
-// U+0020, which Trim() over those characters does; "quit".equalsIgnoreCase(line) is an ordinal case-insensitive
-// comparison. lastWriteFuture.addListener is a continuation of the write Task on the channel's event loop
-// (EventExecutorTaskScheduler, the timing of DefaultPromise.notifyListeners()); future.isSuccess() is
+// CLR: System.getProperty is ExampleLauncher.GetProperty (the -Dname=value arguments) and Integer.parseInt is
+// int.Parse with an optional sign and the invariant culture. main blocks on connect(...).sync(), close().sync()
+// and lastWriteFuture.sync(); the async Main awaits those Tasks (docs/transport-porting.md: sync() is awaiting the
+// Task), and connect(...).sync().channel() is the result of ConnectAsync. group.shutdownGracefully() is
+// ShutdownGracefullyAsync(), whose Task is discarded as Java discards the future. String.trim() removes the
+// characters up to U+0020, which Trim() over those characters does; "quit".equalsIgnoreCase(line) is an ordinal
+// case-insensitive comparison. lastWriteFuture.addListener is a continuation of the write Task on the channel's
+// event loop (EventExecutorTaskScheduler, the timing of DefaultPromise.notifyListeners()); future.isSuccess() is
 // IsCompletedSuccessfully, future.cause() the Task's exception (a TaskCanceledException for a canceled Task), and
 // printStackTrace(System.err) writes Exception.ToString() to Console.Error.
 public class RedisClient

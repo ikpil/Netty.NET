@@ -23,8 +23,6 @@ namespace Netty.NET.Handler.Codec.Smtp;
 /**
  * An SMTP request.
  */
-// CLR: interface with the I prefix; @UnstableApi is the Common [UnstableApi] attribute. List<CharSequence> is
-// IList<ICharSequence> (CharSequence is ICharSequence, see SmtpUtils).
 [UnstableApi]
 public interface ISmtpRequest
 {

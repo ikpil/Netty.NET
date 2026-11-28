@@ -19,7 +19,7 @@ namespace Netty.NET.Resolver.Dns;
 /**
  * Strategy that influence how {@link io.netty.channel.Channel}s are used during queries.
  */
-// CLR: a simple Java enum is a C# enum; the constant names are already PascalCase.
+// CLR: a simple Java enum is a C# enum.
 public enum DnsNameResolverChannelStrategy
 {
     /**

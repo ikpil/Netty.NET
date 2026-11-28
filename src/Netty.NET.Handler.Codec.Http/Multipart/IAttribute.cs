@@ -19,11 +19,10 @@ namespace Netty.NET.Handler.Codec.Http.Multipart;
 /**
  * Attribute interface
  */
-// CLR: the Java interface Attribute takes the I prefix (owner rule); inside this namespace IAttribute binds to it, not
-// to the Common IAttribute<T> of the attribute map. copy(), duplicate(), retainedDuplicate(), replace(ByteBuf),
-// retain(), retain(int), touch() and touch(Object) are re-declared only to narrow the return type, so they are
-// inherited from IByteBufHolder (owner decision 2026-11-19, docs/transport-porting.md, Decisions); the classes narrow
-// them with covariant override returns.
+// CLR: the Java interface Attribute takes the I prefix (owner rule); inside this namespace IAttribute binds to it,
+// not to the Common IAttribute<T> of the attribute map. copy(), duplicate(), retainedDuplicate(),
+// replace(ByteBuf), retain(), retain(int), touch() and touch(Object) are re-declared only to narrow the return
+// type, so they are inherited from IByteBufHolder; the classes narrow them with covariant override returns.
 public interface IAttribute : IHttpData
 {
     /**

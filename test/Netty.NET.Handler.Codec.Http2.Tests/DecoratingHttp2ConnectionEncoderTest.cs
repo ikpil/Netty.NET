@@ -19,12 +19,11 @@ using Moq;
 
 namespace Netty.NET.Handler.Codec.Http2.Tests;
 
-// CLR: Mockito mock/verify(times(1)) are Moq Mock<T>/Verify(..., Times.Once()) and eq(settings) is the value itself,
-// matched with Equals, which Http2Settings overrides with Java's map equality (docs/codec-http-porting.md, Shared CLR
-// adaptations). assertThrows(IllegalStateException.class, ...) is Assert.ThrowsAny<InvalidOperationException>
-// (docs/codec-http-porting.md, Core test notes). The private nested interface TestHttp2ConnectionEncoder is public
-// (ITestHttp2ConnectionEncoder), because Moq's Castle DynamicProxy generates its proxy in another assembly and cannot
-// implement a private nested interface.
+// CLR: Mockito mock/verify(times(1)) are Moq Mock<T>/Verify(..., Times.Once()) and eq(settings) is the value
+// itself, matched with Equals, which Http2Settings overrides with Java's map equality.
+// assertThrows(IllegalStateException.class,...) is Assert.ThrowsAny<InvalidOperationException>. The private nested
+// interface TestHttp2ConnectionEncoder is public (ITestHttp2ConnectionEncoder), because Moq's Castle DynamicProxy
+// generates its proxy in another assembly and cannot implement a private nested interface.
 public class DecoratingHttp2ConnectionEncoderTest
 {
 

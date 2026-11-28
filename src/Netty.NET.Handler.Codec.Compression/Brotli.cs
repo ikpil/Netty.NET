@@ -18,15 +18,15 @@ using System;
 
 namespace Netty.NET.Handler.Codec.Compression;
 
-// CLR: owner decision 2026-11-23: Brotli runs on the BCL System.IO.Compression.BrotliEncoder/BrotliDecoder structs, which
-// are part of the shared framework since .NET Core 2.1
+// CLR: Brotli runs on the BCL System.IO.Compression.BrotliEncoder/BrotliDecoder structs, which are part of the
+// shared framework since.NET Core 2.1
 // (https://learn.microsoft.com/en-us/dotnet/api/system.io.compression.brotliencoder?view=net-10.0,
-// https://learn.microsoft.com/en-us/dotnet/api/system.io.compression.brotlidecoder?view=net-10.0), instead of brotli4j
-// (JNI). This class is the availability probe of brotli4j: the Java static initializer looks up
-// com.aayushatharva.brotli4j.Brotli4jLoader on the class path and asks it for the native library's unavailability cause.
-// There is no class path to probe and no native library to load here, so the static initializer, its logger and the
-// CNFE/cause fields are not ported: isAvailable() is always true, ensureAvailability() never throws and cause() is always
-// null. The Javadoc below still describes the brotli4j probe. Throwable is Exception (docs/codec-base-porting.md).
+// https://learn.microsoft.com/en-us/dotnet/api/system.io.compression.brotlidecoder?view=net-10.0), instead of
+// brotli4j (JNI). This class is the availability probe of brotli4j: the Java static initializer looks up
+// com.aayushatharva.brotli4j.Brotli4jLoader on the class path and asks it for the native library's unavailability
+// cause. There is no class path to probe and no native library to load here, so the static initializer, its logger
+// and the CNFE/cause fields are not ported: isAvailable() is always true, ensureAvailability() never throws and
+// cause() is always null. The Javadoc below still describes the brotli4j probe.
 public sealed class Brotli
 {
 

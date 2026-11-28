@@ -24,11 +24,10 @@ namespace Netty.NET.Handler.Codec.Smtp;
 /**
  * The command part of a {@link SmtpRequest}.
  */
-// CLR: @UnstableApi is the Common [UnstableApi] attribute; the static initializer is the static constructor, which runs
-// after the static field initializers. CharSequence is ICharSequence (see SmtpUtils); HashMap<String, SmtpCommand> is
-// Dictionary<string, SmtpCommand>, read with GetValueOrDefault. name() stays a method; the package-private encode and
-// isContentExpected are internal; hashCode()/equals(Object)/toString() are the BCL GetHashCode()/Equals(object)/
-// ToString(). checkNotNull throws ArgumentNullException (docs/codec-base-porting.md).
+// CLR: The static initializer is the static constructor, which runs after the static field initializers.
+// HashMap<String, SmtpCommand> is Dictionary<string, SmtpCommand>, read with GetValueOrDefault. name() stays a
+// method; hashCode()/equals(Object)/toString() are the BCL GetHashCode()/Equals(object)/ ToString(). checkNotNull
+// throws ArgumentNullException.
 [UnstableApi]
 public sealed class SmtpCommand
 {

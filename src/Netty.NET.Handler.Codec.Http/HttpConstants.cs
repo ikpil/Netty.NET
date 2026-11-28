@@ -18,8 +18,8 @@ using System.Text;
 
 namespace Netty.NET.Handler.Codec.Http;
 
-// CLR: the final class with a private constructor is a static class. The byte constants are below 0x80, so the Java
-// byte and System.Byte hold the same values; CharsetUtil.UTF_8 is Encoding.UTF8 (docs/codec-smtp-porting.md).
+// CLR: the final class with a private constructor is a static class. The byte constants are below 0x80, so the
+// Java byte and System.Byte hold the same values.
 public static class HttpConstants
 {
 

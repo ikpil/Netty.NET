@@ -20,11 +20,11 @@ using System.Collections.ObjectModel;
 namespace Netty.NET.Handler.Codec.Http3;
 
 // CLR: the Java enum with a constructor, a field and methods is a sealed class with static readonly instances, as
-// codec-http2 Http2Error (docs/codec-http2-porting.md, Shared CLR adaptations); the implicit values() is Values() and
-// ToString() returns the constant name. LOOKUP, Collections.unmodifiableMap of the stream collected with
-// Collectors.toMap(id, identity), is a ReadOnlyDictionary over a Dictionary filled from Values() (a duplicate id
-// throws in both: IllegalStateException in Java, ArgumentException from Dictionary.Add). fromId returns null for an
-// unknown id, as Map.get does (TryGetValue). The @Nullable annotation has no counterpart (no nullable annotation context).
+// codec-http2 Http2Error; the implicit values() is Values() and ToString() returns the constant name. LOOKUP,
+// Collections.unmodifiableMap of the stream collected with Collectors.toMap(id, identity), is a ReadOnlyDictionary
+// over a Dictionary filled from Values() (a duplicate id throws in both: IllegalStateException in Java,
+// ArgumentException from Dictionary.Add). fromId returns null for an unknown id, as Map.get does (TryGetValue).
+// The @Nullable annotation has no counterpart (no nullable annotation context).
 public sealed class Http3SettingIdentifier
 {
 
@@ -152,7 +152,6 @@ public sealed class Http3SettingIdentifier
         return LOOKUP.TryGetValue(id, out Http3SettingIdentifier identifier) ? identifier : null;
     }
 
-    // CLR: Enum.toString() is the constant name.
     public override string ToString()
     {
         return name;

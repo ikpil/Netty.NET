@@ -27,11 +27,11 @@ namespace Netty.NET.Handler.Codec.Memcache.Tests.Binary;
 /**
  * Verifies the correct functionality of the {@link AbstractBinaryMemcacheEncoder}.
  */
-// CLR: xUnit creates a new test class instance for every test, so the @BeforeEach setup() runs from the constructor
-// and the @AfterEach teardown() from Dispose() (https://xunit.net/docs/shared-context). CharsetUtil.UTF_8 is
-// Encoding.UTF8 (docs/codec-base-porting.md), and the anonymous Executable passed to assertThrows is a lambda. The
-// (byte) 0x80 and (byte) 0xAA magic values are the System.Byte values 128 and 170, which ReadByte() returns for the
-// same bits (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types).
+// CLR: xUnit creates a new test class instance for every test, so the @BeforeEach setup() runs from the
+// constructor and the @AfterEach teardown() from Dispose() (https://xunit.net/docs/shared-context).
+// CharsetUtil.UTF_8 is Encoding.UTF8, and the anonymous Executable passed to assertThrows is a lambda. The (byte)
+// 0x80 and (byte) 0xAA magic values are the System.Byte values 128 and 170, which ReadByte() returns for the same
+// bits (https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/integral-numeric-types).
 public class BinaryMemcacheEncoderTest : IDisposable
 {
 

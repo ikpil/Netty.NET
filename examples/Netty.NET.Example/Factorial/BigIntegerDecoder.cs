@@ -27,10 +27,10 @@ namespace Netty.NET.Example.Factorial;
  * {@link BigInteger} instance.  For example, { 'F', 0, 0, 0, 1, 42 } will be
  * decoded into new BigInteger("42").
  */
-// CLR: java.math.BigInteger is System.Numerics.BigInteger; new BigInteger(byte[]) reads a big-endian two's-complement
-// array, which is new BigInteger(bytes, isUnsigned: false, isBigEndian: true)
-// (https://learn.microsoft.com/en-us/dotnet/api/system.numerics.biginteger.-ctor?view=net-10.0). List<Object> out is
-// IList<object>, and readUnsignedByte() is ReadByte(), which returns the unsigned C# byte (docs/buffer-porting.md).
+// CLR: java.math.BigInteger is System.Numerics.BigInteger; new BigInteger(byte[]) reads a big-endian
+// two's-complement array, which is new BigInteger(bytes, isUnsigned: false, isBigEndian: true)
+// (https://learn.microsoft.com/en-us/dotnet/api/system.numerics.biginteger.-ctor?view=net-10.0). List<Object> out
+// is IList<object>, and readUnsignedByte() is ReadByte(), which returns the unsigned C# byte.
 public class BigIntegerDecoder : ByteToMessageDecoder
 {
     protected override void Decode(IChannelHandlerContext ctx, ByteBuf @in, IList<object> @out)

@@ -28,19 +28,19 @@ namespace Netty.NET.Handler.Codec.Compression.Tests;
 
 // CLR: xUnit runs the inherited [Fact]/[Theory] methods of this abstract class for each derived test class
 // (JdkZlibTest), as JUnit runs inherited @Test methods. The static initializer is the static constructor;
-// ThreadLocalRandom.current() is Random.Shared, "a thread-safe Random instance that may be used concurrently from any
-// thread" (https://learn.microsoft.com/en-us/dotnet/api/system.random.shared?view=net-10.0). CharsetUtil.UTF_8 is
-// Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), readBytes(byte[], int, int) is
-// ReadBytes over the array span, and EmptyArrays.EMPTY_BYTES is the Common EmptyArrays. The java.util.zip test helpers
-// are the BCL streams (owner decision 2026-11-23): GZIPOutputStream and DeflaterOutputStream with their default
-// Deflater are GZipStream and ZLibStream in CompressionMode.Compress, whose CompressionLevel.Optimal default maps to
-// zlib's default level as Java's Deflater.DEFAULT_COMPRESSION does (DeflateStream.cs,
+// ThreadLocalRandom.current() is Random.Shared, "a thread-safe Random instance that may be used concurrently from
+// any thread" (https://learn.microsoft.com/en-us/dotnet/api/system.random.shared?view=net-10.0). CharsetUtil.UTF_8
+// is Encoding.UTF8, readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), readBytes(byte[], int,
+// int) is ReadBytes over the array span, and EmptyArrays.EMPTY_BYTES is the Common EmptyArrays. The java.util.zip
+// test helpers are the BCL streams : GZIPOutputStream and DeflaterOutputStream with their default Deflater are
+// GZipStream and ZLibStream in CompressionMode.Compress, whose CompressionLevel.Optimal default maps to zlib's
+// default level as Java's Deflater.DEFAULT_COMPRESSION does (DeflateStream.cs,
 // https://raw.githubusercontent.com/dotnet/runtime/v10.0.8/src/libraries/System.IO.Compression/src/System/IO/Compression/DeflateZLib/DeflateStream.cs),
-// and GZIPInputStream is GZipStream in CompressionMode.Decompress; the tests compare inflated data only. The anonymous
-// Executable is a lambda. assertThrows is Assert.Throws and AssertJ's assertThatThrownBy(...).isInstanceOf(...) is
-// Assert.ThrowsAny, which also accepts subclasses; assertThat(...).isEqualTo(...) is Assert.Equal and
-// hasMessageStartingWith is Assert.StartsWith. @CsvSource/@ValueSource are InlineData rows. JUnit asserts with messages
-// use XunitAssertMessages.AssertM.
+// and GZIPInputStream is GZipStream in CompressionMode.Decompress; the tests compare inflated data only. The
+// anonymous Executable is a lambda. assertThrows is Assert.Throws and AssertJ's
+// assertThatThrownBy(...).isInstanceOf(...) is Assert.ThrowsAny, which also accepts subclasses;
+// assertThat(...).isEqualTo(...) is Assert.Equal and hasMessageStartingWith is Assert.StartsWith.
+// @CsvSource/@ValueSource are InlineData rows. JUnit asserts with messages use XunitAssertMessages.AssertM.
 public abstract class ZlibTest
 {
 

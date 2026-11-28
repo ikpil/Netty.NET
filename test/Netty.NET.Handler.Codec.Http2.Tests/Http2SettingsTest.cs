@@ -21,13 +21,12 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
 /**
  * Tests for {@link Http2Settings}.
  */
-// CLR: @BeforeEach is the constructor ("xUnit creates a new instance of the test class for every test that is run",
-// docs/codec-http-porting.md, Shared CLR adaptations). @ParameterizedTest @ValueSource is a [Theory] with one
-// InlineData row per value; Long.MIN_VALUE/MAX_VALUE and Integer.MIN_VALUE/MAX_VALUE are long/int MinValue/MaxValue.
-// Http2Settings is a Dictionary<char, long> (owner decision 2026-11-19): size() is Count and the inherited
-// get(char) of a present key is the indexer; put(char, Long) is Put(char, long), so the (Long) casts have no
-// counterpart (xUnit2013 asks for Assert.Empty/Assert.Single in place of a size comparison). The Java Long/Integer/Boolean getters return long?/int?/bool?, whose (long)/(int) casts take the place
-// of Java's unboxing casts. assertThrows(IllegalArgumentException.class) is Assert.ThrowsAny<ArgumentException>.
+// CLR: Long.MIN_VALUE/MAX_VALUE and Integer.MIN_VALUE/MAX_VALUE are long/int MinValue/MaxValue. Http2Settings is a
+// Dictionary<char, long> : size() is Count and the inherited get(char) of a present key is the indexer; put(char,
+// Long) is Put(char, long), so the (Long) casts have no counterpart (xUnit2013 asks for Assert.Empty/Assert.Single
+// in place of a size comparison). The Java Long/Integer/Boolean getters return long?/int?/bool?, whose
+// (long)/(int) casts take the place of Java's unboxing casts. assertThrows(IllegalArgumentException.class) is
+// Assert.ThrowsAny<ArgumentException>.
 public class Http2SettingsTest
 {
 

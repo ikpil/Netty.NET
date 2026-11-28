@@ -18,9 +18,9 @@ using Netty.NET.Transport.Channels;
 
 namespace Netty.NET.Example.Stomp.WebSocket;
 
-// CLR: equals(Object) and hashCode() are Equals(object) and GetHashCode(); getClass() is GetType(). The hash keeps the
-// source's 31 * result + h steps in an unchecked context, which wraps on overflow as Java int arithmetic does (the
-// string hashes differ from Java's, as String.GetHashCode is not String.hashCode()).
+// CLR: equals(Object) and hashCode() are Equals(object) and GetHashCode(). The hash keeps the source's 31 * result
+// + h steps in an unchecked context, which wraps on overflow as Java int arithmetic does (the string hashes differ
+// from Java's, as String.GetHashCode is not String.hashCode()).
 public sealed class StompSubscription
 {
 

@@ -61,8 +61,6 @@ public class OcspServerCertificateValidator : ByteToMessageDecoder, IChannelOutb
      */
     private static readonly long CLOCK_SKEW_TOLERANCE_MILLIS = GetClockSkewTolerance();
 
-    // CLR: TimeUnit.MINUTES.toSeconds(15), TimeUnit.DAYS.toSeconds(2) and TimeUnit.SECONDS.toMillis are TimeSpan
-    // conversions (docs/common-clr-design.md, "Monotonic time and duration conversion").
     private static long GetClockSkewTolerance()
     {
         long defaultToleranceSeconds = (long) TimeSpan.FromMinutes(15).TotalSeconds;
@@ -328,7 +326,6 @@ public class OcspServerCertificateValidator : ByteToMessageDecoder, IChannelOutb
         }
     }
 
-    // CLR-only helper: future.cause() of the completed Task (see OcspClient).
     private static Exception Cause(Task future)
     {
         if (future.IsFaulted)

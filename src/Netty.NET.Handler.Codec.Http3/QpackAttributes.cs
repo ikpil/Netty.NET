@@ -23,15 +23,14 @@ using Netty.NET.Handler.Codec.Quic;
 
 namespace Netty.NET.Handler.Codec.Http3;
 
-// CLR: the package-private final class is internal sealed and its package-private members are internal. QuicChannel and
-// QuicStreamChannel are codec-quic's IQuicChannel and IQuicStreamChannel. Promise<QuicStreamChannel> is
-// TaskCompletionSource<IQuicStreamChannel>, created without RunContinuationsAsynchronously (as
-// Http3CodecUtils.NewPromise); setSuccess is SetResult and tryFailure TrySetException. The
-// GenericFutureListener<Future<? super QuicStreamChannel>> listeners are Action<Task<IQuicStreamChannel>>, added as
-// continuations on Common's EventExecutorTaskScheduler over the channel's event loop, so they run on the event loop
-// as listeners of channel.eventLoop().newPromise() are notified (at once when the promise completes there, otherwise
-// through the executor). requireNonNull is ArgumentNullException.ThrowIfNull; assert is Debug.Assert; Throwable is
-// Exception.
+// CLR: QuicChannel and QuicStreamChannel are codec-quic's IQuicChannel and IQuicStreamChannel.
+// Promise<QuicStreamChannel> is TaskCompletionSource<IQuicStreamChannel>, created without
+// RunContinuationsAsynchronously (as Http3CodecUtils.NewPromise); setSuccess is SetResult and tryFailure
+// TrySetException. The GenericFutureListener<Future<? super QuicStreamChannel>> listeners are
+// Action<Task<IQuicStreamChannel>>, added as continuations on Common's EventExecutorTaskScheduler over the
+// channel's event loop, so they run on the event loop as listeners of channel.eventLoop().newPromise() are
+// notified (at once when the promise completes there, otherwise through the executor). requireNonNull is
+// ArgumentNullException.ThrowIfNull; assert is Debug.Assert.
 internal sealed class QpackAttributes
 {
     private readonly IQuicChannel channel;

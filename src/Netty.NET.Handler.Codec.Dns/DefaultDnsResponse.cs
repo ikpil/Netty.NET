@@ -22,10 +22,10 @@ namespace Netty.NET.Handler.Codec.Dns;
 /**
  * The default {@link DnsResponse} implementation.
  */
-// CLR: the Java overrides narrow the return type to DnsResponse with C# 9 covariant overrides: "an overriding method
-// can declare a more derived return type the method it overrides"
+// CLR: the Java overrides narrow the return type to DnsResponse with C# 9 covariant overrides: "an overriding
+// method can declare a more derived return type the method it overrides"
 // (https://learn.microsoft.com/en-us/dotnet/standard/generics/covariance-and-contravariance). checkNotNull throws
-// ArgumentNullException (docs/codec-base-porting.md).
+// ArgumentNullException.
 public class DefaultDnsResponse : AbstractDnsMessage, IDnsResponse
 {
 

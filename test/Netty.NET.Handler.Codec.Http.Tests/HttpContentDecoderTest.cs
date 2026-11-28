@@ -31,26 +31,25 @@ namespace Netty.NET.Handler.Codec.Http.Tests;
 
 // CLR: the Java byte literals of GZ_HELLO_WORLD, SNAPPY_HELLO_WORLD and SAMPLE_BZ_BYTES are signed; they are sbyte
 // arrays that Bytes() reinterprets as System.Byte values with the same bit patterns, as the codec-compression and
-// codec-dns tests do (test/Netty.NET.Handler.Codec.Compression.Tests/SnappyFrameEncoderTest.cs). Decoding zstd needs
-// zstd-jni, which is library-not-ported (owner decision 2026-11-23; docs/codec-compression-porting.md):
-// HttpContentDecompressor passes a "zstd" Content-Encoding through, as Java does when Zstd.isAvailable() is false, so
-// testResponseZstdDecompression and testResponseChunksZstdDecompression are CLR-inapplicable (recorded in the manifest)
-// and SAMPLE_ZSTD_BYTES, which only they read, is left out. @DisabledIf("isNotSupported") skips the brotli tests where
-// brotli4j has no native library (macOS on aarch_64); the codec-compression Brotli codecs are the BCL
-// BrotliEncoder/BrotliDecoder and Brotli.IsAvailable() is always true (docs/codec-compression-porting.md), so the
-// brotli tests always run and isNotSupported() is not ported. The anonymous HttpContentDecoder and
-// ChannelInboundHandlerAdapter classes are the named nested CleanupThrowsDecoder, InactiveThrowsHandler,
-// InactiveCountingHandler and SecondRequestHandler; AtomicBoolean/AtomicReference are the Common ones. assertInstanceOf
-// is Assert.IsAssignableFrom, and assertThrows(CodecException.class, ...) accepts subclasses, so it is
-// Assert.ThrowsAny<CodecException> (the DecoderException of the inner channel). EmbeddedChannel's
-// readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), inboundMessages() is the Queue<object>
-// InboundMessages() (peek() is Peek(), after the size check), content() is Content and refCnt() is RefCnt
-// (docs/transport-porting.md); new EmbeddedChannel(decoder, decompressor, null) stops at the null handler as in Java
+// codec-dns tests do (test/Netty.NET.Handler.Codec.Compression.Tests/SnappyFrameEncoderTest.cs). Decoding zstd
+// needs zstd-jni, which is library-not-ported : HttpContentDecompressor passes a "zstd" Content-Encoding through,
+// as Java does when Zstd.isAvailable() is false, so testResponseZstdDecompression and
+// testResponseChunksZstdDecompression are CLR-inapplicable (recorded in the manifest) and SAMPLE_ZSTD_BYTES, which
+// only they read, is left out. @DisabledIf("isNotSupported") skips the brotli tests where brotli4j has no native
+// library (macOS on aarch_64); the codec-compression Brotli codecs are the BCL BrotliEncoder/BrotliDecoder and
+// Brotli.IsAvailable() is always true, so the brotli tests always run and isNotSupported() is not ported. The
+// anonymous HttpContentDecoder and ChannelInboundHandlerAdapter classes are the named nested CleanupThrowsDecoder,
+// InactiveThrowsHandler, InactiveCountingHandler and SecondRequestHandler; AtomicBoolean/AtomicReference are the
+// Common ones. assertInstanceOf is Assert.IsAssignableFrom, and assertThrows(CodecException.class,...) accepts
+// subclasses, so it is Assert.ThrowsAny<CodecException> (the DecoderException of the inner channel).
+// EmbeddedChannel's readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>(), inboundMessages() is the
+// Queue<object> InboundMessages() (peek() is Peek(), after the size check), content() is Content and refCnt() is
+// RefCnt; new EmbeddedChannel(decoder, decompressor, null) stops at the null handler as in Java
 // (src/Netty.NET.Transport/Channels/Embedded/EmbeddedChannel.cs). CharsetUtil.US_ASCII/UTF_8 are
-// Encoding.ASCII/Encoding.UTF8 and String.getBytes() (the default charset) is Encoding.Default
-// (docs/codec-smtp-porting.md; the bytes are ASCII). Integer.toHexString of the non-negative length is ToString("x")
-// with the invariant culture, Long.parseLong is long.Parse with the invariant culture (the header values are decimal
-// digits), and ByteBuf.readBytes(byte[], int, int) is ReadBytes(Span<byte>) over the array slice.
+// Encoding.ASCII/Encoding.UTF8 and String.getBytes() (the default charset) is Encoding.Default.
+// Integer.toHexString of the non-negative length is ToString("x") with the invariant culture, Long.parseLong is
+// long.Parse with the invariant culture (the header values are decimal digits), and ByteBuf.readBytes(byte[], int,
+// int) is ReadBytes(Span<byte>) over the array slice.
 public class HttpContentDecoderTest
 {
     private const string HELLO_WORLD = "hello, world";

@@ -27,7 +27,7 @@ namespace Netty.NET.Handler.Codec.Dns;
 // GetHashCode()/Equals(object)/ToString(), and byteValue() stays a method. The Java byte opcode is the unsigned
 // System.Byte, as ByteBuf.getByte (owner decision; docs/buffer-porting.md, "Java signed byte and widened
 // unsigned-byte APIs intentionally share GetByte/ReadByte returning CLR byte"). checkNotNull throws
-// ArgumentNullException (docs/codec-base-porting.md, Shared CLR adaptations).
+// ArgumentNullException.
 public class DnsOpCode : IComparable<DnsOpCode>
 {
 

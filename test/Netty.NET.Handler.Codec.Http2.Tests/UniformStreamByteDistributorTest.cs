@@ -24,16 +24,16 @@ namespace Netty.NET.Handler.Codec.Http2.Tests;
 /**
  * Tests for {@link UniformStreamByteDistributor}.
  */
-// CLR: IntObjectMap/IntObjectHashMap are Dictionary<int, ...> (owner decision 2026-11-19). The @Mock writer is a Moq
-// Mock<IStreamByteDistributor.IWriter> created in the constructor (@BeforeEach). doAnswer(writeAnswer()).when(writer)
-// .write(any, anyInt) is a Write setup whose callback updates the stream state; doThrow(...)/doNothing() for
-// write(same(stream C), eq(3)) are later setups for those arguments, which Moq matches before the earlier, more
-// general one ("the last matching setup wins", Moq Quickstart, https://github.com/devlooped/moq/wiki/Quickstart).
-// same(stream) is It.Is with ReferenceEquals; verify(writer) is Verify(..., Times.Once()), atMost(1) is
-// Times.AtMost(1), verifyNoMoreInteractions is VerifyNoOtherCalls and reset(writer) is Mock.Reset() (setups and
-// invocations, as Mockito's reset). The ArgumentCaptor of captureWrite is the int argument of the one verified Write
-// invocation for the stream (Mock.Invocations). assertThrows(T.class, ...) is Assert.ThrowsAny<T>
-// (docs/codec-http-porting.md, Core test notes) and the anonymous Executable is a lambda.
+// CLR: IntObjectMap/IntObjectHashMap are Dictionary<int,...>. The @Mock writer is a Moq
+// Mock<IStreamByteDistributor.IWriter> created in the constructor (@BeforeEach).
+// doAnswer(writeAnswer()).when(writer).write(any, anyInt) is a Write setup whose callback updates the stream
+// state; doThrow(...)/doNothing() for write(same(stream C), eq(3)) are later setups for those arguments, which Moq
+// matches before the earlier, more general one ("the last matching setup wins", Moq Quickstart,
+// https://github.com/devlooped/moq/wiki/Quickstart). same(stream) is It.Is with ReferenceEquals; verify(writer) is
+// Verify(..., Times.Once()), atMost(1) is Times.AtMost(1), verifyNoMoreInteractions is VerifyNoOtherCalls and
+// reset(writer) is Mock.Reset() (setups and invocations, as Mockito's reset). The ArgumentCaptor of captureWrite
+// is the int argument of the one verified Write invocation for the stream (Mock.Invocations).
+// assertThrows(T.class,...) is Assert.ThrowsAny<T> and the anonymous Executable is a lambda.
 public class UniformStreamByteDistributorTest
 {
     private const int CHUNK_SIZE = DEFAULT_MIN_ALLOCATION_CHUNK;

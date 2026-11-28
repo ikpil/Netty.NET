@@ -19,7 +19,6 @@ namespace Netty.NET.Handler.Pcap;
 /**
  * The state of the {@link PcapWriteHandler}.
  */
-// CLR: the package-private simple enum is an internal C# enum.
 internal enum State
 {
 

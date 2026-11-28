@@ -20,10 +20,10 @@ using Netty.NET.Common.Internal;
 
 namespace Netty.NET.Handler.Codec.Quic;
 
-// CLR: the package-private class is internal. SecureRandom.nextBytes is RandomNumberGenerator.Fill (a cryptographically
-// strong generator that is safe to share between threads, so the RANDOM field has no counterpart), and ByteBuffer.wrap
-// the returned ReadOnlyMemory<byte> (see IQuicConnectionIdGenerator). Quiche.QUICHE_MAX_CONN_ID_LEN, a constant read
-// through JNI, is the RFC 9000 maximum Quic.MAX_CONN_ID_LEN (20,
+// CLR: SecureRandom.nextBytes is RandomNumberGenerator.Fill (a cryptographically strong generator that is safe to
+// share between threads, so the RANDOM field has no counterpart), and ByteBuffer.wrap the returned
+// ReadOnlyMemory<byte> (see IQuicConnectionIdGenerator). Quiche.QUICHE_MAX_CONN_ID_LEN, a constant read through
+// JNI, is the RFC 9000 maximum Quic.MAX_CONN_ID_LEN (20,
 // https://www.rfc-editor.org/rfc/rfc9000.html#section-17.2).
 internal sealed class SecureRandomQuicConnectionIdGenerator : IQuicConnectionIdGenerator
 {

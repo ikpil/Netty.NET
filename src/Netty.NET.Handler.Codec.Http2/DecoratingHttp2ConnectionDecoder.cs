@@ -25,8 +25,7 @@ namespace Netty.NET.Handler.Codec.Http2;
  */
 // CLR: the non-final Java methods are virtual (Http2EmptyDataFrameConnectionDecoder and Http2MaxRstFrameDecoder
 // override frameListener); the field and parameter delegate are @delegate (a C# keyword). List<Object> out is
-// IList<object> @out (docs/codec-base-porting.md). Closeable's close() is Close(), which IHttp2ConnectionDecoder's
-// IDisposable.Dispose() calls (docs/handler-porting.md).
+// IList<object> @out. Closeable's close() is Close(), which IHttp2ConnectionDecoder's IDisposable.Dispose() calls.
 public class DecoratingHttp2ConnectionDecoder : IHttp2ConnectionDecoder
 {
     private readonly IHttp2ConnectionDecoder @delegate;

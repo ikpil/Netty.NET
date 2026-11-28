@@ -417,7 +417,7 @@ public class DnsRecordType : IComparable<DnsRecordType>
 
     // CLR: HashMap.get(null) returns null, while a Dictionary rejects a null key, so a null name skips the lookup;
     // Java string concatenation renders null as "null" and C# as an empty string, so the message spells it out.
-    // IllegalArgumentException is ArgumentException (docs/codec-base-porting.md, Shared CLR adaptations).
+    // IllegalArgumentException is ArgumentException.
     public static DnsRecordType ValueOf(string name)
     {
         DnsRecordType result = name == null ? null : BY_NAME.GetValueOrDefault(name);
@@ -437,7 +437,7 @@ public class DnsRecordType : IComparable<DnsRecordType>
     {
     }
 
-    // CLR: IllegalArgumentException is ArgumentException (docs/codec-base-porting.md, Shared CLR adaptations).
+    // CLR: IllegalArgumentException is ArgumentException.
     public DnsRecordType(int intValue, string name)
     {
         if ((intValue & 0xffff) != intValue)

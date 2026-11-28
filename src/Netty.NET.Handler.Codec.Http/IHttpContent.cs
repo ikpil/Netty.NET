@@ -27,10 +27,9 @@ namespace Netty.NET.Handler.Codec.Http;
  * {@link ChannelPipeline}.
  */
 // CLR: the Java interface takes the I prefix (owner rule). ByteBufHolder is IByteBufHolder, whose content() is the
-// read-only Content property (docs/buffer-porting.md, Buffer holders and conversion). copy(), duplicate(),
-// retainedDuplicate(), replace(ByteBuf), retain(), retain(int), touch() and touch(Object) are re-declared only to
-// narrow the return type, so they are inherited from IByteBufHolder, not repeated; the classes narrow them (owner
-// decision 2026-11-19; docs/transport-porting.md, Decisions).
+// read-only Content property. copy(), duplicate(), retainedDuplicate(), replace(ByteBuf), retain(), retain(int),
+// touch() and touch(Object) are re-declared only to narrow the return type, so they are inherited from
+// IByteBufHolder, not repeated; the classes narrow them.
 public interface IHttpContent : IHttpObject, IByteBufHolder
 {
 }

@@ -28,12 +28,11 @@ namespace Netty.NET.Example.Uptime;
  * Uptime server is served as a connection server.
  * So it simply discards all message received.
  */
-// CLR: System.getProperty is ExampleLauncher.GetProperty (the -Dname=value arguments)
-// and Integer.parseInt is int.Parse with an optional sign and the invariant culture. main blocks on bind(PORT).sync() and
+// CLR: System.getProperty is ExampleLauncher.GetProperty (the -Dname=value arguments) and Integer.parseInt is
+// int.Parse with an optional sign and the invariant culture. main blocks on bind(PORT).sync() and
 // closeFuture().sync(); the async Main awaits the Task<IChannel> of BindAsync (ChannelFuture f; f.channel() is its
 // result) and the channel's CloseFuture (docs/transport-porting.md: sync() is awaiting the Task).
-// group.shutdownGracefully() is ShutdownGracefullyAsync(), whose Task is discarded as Java discards the future. The
-// anonymous ChannelInitializer is an ActionChannelInitializer.
+// group.shutdownGracefully() is ShutdownGracefullyAsync(), whose Task is discarded as Java discards the future.
 public sealed class UptimeServer
 {
     private static readonly int PORT = int.Parse(ExampleLauncher.GetProperty("port", "8080"), NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture);

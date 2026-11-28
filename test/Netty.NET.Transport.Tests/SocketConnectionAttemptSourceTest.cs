@@ -84,8 +84,6 @@ public class SocketConnectionAttemptSourceTest : AbstractClientSocketTest
 
     private static async Task TestConnectRefused0(Bootstrap cb, bool halfClosure)
     {
-        // CLR: GlobalEventExecutor.INSTANCE.newPromise() is a TaskCompletionSource; this port completes Tasks instead
-        // of exposing promises (IChannel.cs: "Tasks replace ChannelFuture/Promise").
         TaskCompletionSource errorPromise = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         IChannelHandler handler = new ChannelActiveFailureHandler(errorPromise);
 
@@ -244,7 +242,6 @@ public class SocketConnectionAttemptSourceTest : AbstractClientSocketTest
         return completed == future;
     }
 
-    // CLR: the anonymous ChannelInboundHandlerAdapter of testConnectRefused0.
     private sealed class ChannelActiveFailureHandler(TaskCompletionSource errorPromise) : ChannelInboundHandlerAdapter
     {
         public override void ChannelActive(IChannelHandlerContext ctx)

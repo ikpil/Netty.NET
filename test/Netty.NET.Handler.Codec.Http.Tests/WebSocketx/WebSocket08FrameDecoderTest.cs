@@ -23,8 +23,7 @@ namespace Netty.NET.Handler.Codec.Http.Tests.WebSocketx;
 
 // CLR: Mockito's mock(ChannelHandlerContext.class) and verify(ctx).fireChannelInactive() are a Moq
 // Mock<IChannelHandlerContext> and ctx.Verify(c => c.FireChannelInactive()). Set<Integer>/HashSet is HashSet<int>
-// (removeAll is ExceptWith). The anonymous Executable is a lambda for Assert.ThrowsAny (JUnit's assertThrows accepts
-// subtypes too), getMessage() is Message, and readInbound()/readOutbound() are ReadInbound<T>()/ReadOutbound<T>().
+// (removeAll is ExceptWith).
 public class WebSocket08FrameDecoderTest
 {
 

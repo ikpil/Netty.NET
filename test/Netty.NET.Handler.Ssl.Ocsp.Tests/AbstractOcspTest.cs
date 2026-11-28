@@ -26,9 +26,7 @@ namespace Netty.NET.Handler.Ssl.Ocsp.Tests;
  * We can't use {@link IoTransport#DEFAULT} because that breaks leak detection. This base class creates a per-test
  * transport as a substitute.
  */
-// CLR: @BeforeEach/@AfterEach are the constructor and IAsyncLifetime.DisposeAsync (xUnit creates a test class instance
-// per test); shutdownGracefully(100, 1000, MILLISECONDS).syncUninterruptibly() awaits ShutdownGracefullyAsync with the
-// same TimeSpans. The NioSocketChannel::new and NioDatagramChannel::new method references are lambdas.
+// CLR: The NioSocketChannel::new and NioDatagramChannel::new method references are lambdas.
 public abstract class AbstractOcspTest : IAsyncLifetime
 {
     private IEventLoopGroup group;

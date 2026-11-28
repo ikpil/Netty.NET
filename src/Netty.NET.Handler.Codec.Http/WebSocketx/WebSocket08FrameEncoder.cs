@@ -67,15 +67,14 @@ namespace Netty.NET.Handler.Codec.Http.WebSocketx;
  * </p>
  */
 // CLR: encode overrides the codec-base MessageToMessageEncoder<WebSocketFrame>.Encode (List<Object> out is
-// IList<object> @out) and super(WebSocketFrame.class) is base(typeof(WebSocketFrame)) (docs/codec-base-porting.md, Type
-// matching). WebSocketFrameEncoder and WebSocketFrameMaskGenerator are IWebSocketFrameEncoder and
-// IWebSocketFrameMaskGenerator. The Buffer port has no ByteBuf.order(): buffers are always big-endian and byte order is
-// chosen by explicit BE/LE accessors (docs/codec-base-porting.md, Byte order), so the source and destination orders of
-// the masking loop always match and the LITTLE_ENDIAN mask reversal, which Java needs only for deprecated swapped
-// buffers, has no counterpart. The masked byte loop XORs the unsigned octet with the mask byte; WriteByte keeps the low
-// eight bits, as Java does with the sign-extended byte. getClass().getName() is GetType().FullName,
-// UnsupportedOperationException is NotSupportedException, the int constants are const, and numbers in messages use the
-// invariant culture.
+// IList<object> @out) and super(WebSocketFrame.class) is base(typeof(WebSocketFrame)). WebSocketFrameEncoder and
+// WebSocketFrameMaskGenerator are IWebSocketFrameEncoder and IWebSocketFrameMaskGenerator. The Buffer port has no
+// ByteBuf.order(): buffers are always big-endian and byte order is chosen by explicit BE/LE accessors, so the
+// source and destination orders of the masking loop always match and the LITTLE_ENDIAN mask reversal, which Java
+// needs only for deprecated swapped buffers, has no counterpart. The masked byte loop XORs the unsigned octet with
+// the mask byte; WriteByte keeps the low eight bits, as Java does with the sign-extended byte.
+// getClass().getName() is GetType().FullName, UnsupportedOperationException is NotSupportedException, the int
+// constants are const, and numbers in messages use the invariant culture.
 public class WebSocket08FrameEncoder : MessageToMessageEncoder<WebSocketFrame>, IWebSocketFrameEncoder
 {
 

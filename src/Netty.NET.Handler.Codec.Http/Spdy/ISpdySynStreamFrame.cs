@@ -19,10 +19,10 @@ namespace Netty.NET.Handler.Codec.Spdy;
 /**
  * A SPDY Protocol SYN_STREAM Frame
  */
-// CLR: the Java interface takes the I prefix (owner rule). setStreamId, setLast and setInvalid are re-declared only to
-// narrow the return type, so they are inherited from ISpdyStreamFrame and ISpdyHeadersFrame; DefaultSpdySynStreamFrame
-// narrows them with covariant override returns (owner decision 2026-11-19; docs/transport-porting.md, Decisions). The
-// Java byte priority is the CLR byte (an octet, 0-7 when valid), as the other codec ports map Java byte members.
+// CLR: the Java interface takes the I prefix (owner rule). setStreamId, setLast and setInvalid are re-declared
+// only to narrow the return type, so they are inherited from ISpdyStreamFrame and ISpdyHeadersFrame;
+// DefaultSpdySynStreamFrame narrows them with covariant override returns. The Java byte priority is the CLR byte
+// (an octet, 0-7 when valid), as the other codec ports map Java byte members.
 public interface ISpdySynStreamFrame : ISpdyHeadersFrame
 {
 

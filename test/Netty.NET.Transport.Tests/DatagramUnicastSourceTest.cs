@@ -274,11 +274,10 @@ public abstract class DatagramUnicastSourceTest : AbstractDatagramTest
             Assert.IsType<IPEndPoint>(goodHost);
             Assert.IsType<DnsEndPoint>(unresolvedHost);
 
-            // CLR: CharsetUtil.US_ASCII is Encoding.ASCII, "an encoding for the ASCII (7-bit) character set"
-            // (https://learn.microsoft.com/en-us/dotnet/api/system.text.encoding.ascii). DatagramPacket's recipient is
-            // an IPEndPoint, so the DnsEndPoint destination travels in a DefaultAddressedEnvelope<ByteBuf, EndPoint>,
-            // which NioDatagramChannel.FilterOutboundMessage fails with SocketError.HostNotFound ("No such host is
-            // known", https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socketerror) in place of
+            // CLR: DatagramPacket's recipient is an IPEndPoint, so the DnsEndPoint destination travels in a
+            // DefaultAddressedEnvelope<ByteBuf, EndPoint>, which NioDatagramChannel.FilterOutboundMessage fails
+            // with SocketError.HostNotFound ("No such host is known",
+            // https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socketerror) in place of
             // java.nio.channels.UnresolvedAddressException.
             string message = "hello world!";
             await cc.WriteAndFlushAsync(new DatagramPacket(Unpooled.CopiedBuffer(message, Encoding.ASCII), goodHost));
@@ -584,8 +583,7 @@ public abstract class DatagramUnicastSourceTest : AbstractDatagramTest
     private async Task TestWriteOffsetBytebuf0(Bootstrap sb, Bootstrap cb, ByteBuf buf, byte[] expected,
                                          WrapType wrapType)
     {
-        // CLR: CompletableFuture<byte[]> is a TaskCompletionSource<byte[]>; complete() is TrySetResult and join() awaits
-        // its Task.
+        // CLR: CompletableFuture<byte[]> is a TaskCompletionSource<byte[]>.
         TaskCompletionSource<byte[]> received =
                 new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
         sb.Handler(new ReceivedBytesHandler(received));

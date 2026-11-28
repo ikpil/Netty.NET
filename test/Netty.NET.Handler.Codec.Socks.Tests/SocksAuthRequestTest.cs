@@ -18,8 +18,8 @@ using System;
 
 namespace Netty.NET.Handler.Codec.Socks.Tests;
 
-// CLR: assertInstanceOf(C.class, e) is Assert.IsType<C>(e, exactMatch: false) (instanceof also accepts subclasses);
-// NullPointerException from checkNotNull is ArgumentNullException and IllegalArgumentException is ArgumentException.
+// CLR: NullPointerException from checkNotNull is ArgumentNullException and IllegalArgumentException is
+// ArgumentException.
 public class SocksAuthRequestTest
 {
     [Fact]

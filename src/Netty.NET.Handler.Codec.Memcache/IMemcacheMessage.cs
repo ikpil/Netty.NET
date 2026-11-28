@@ -30,7 +30,7 @@ public interface IMemcacheMessage : IMemcacheObject, IReferenceCounted
      * Increases the reference count by {@code 1}.
      */
     // CLR: retain() is re-declared only to narrow the return type, so it is inherited from IReferenceCounted, not
-    // repeated (owner decision 2026-11-19; docs/transport-porting.md, Decisions).
+    // repeated.
 
     /**
      * Increases the reference count by the specified {@code increment}.

@@ -16,8 +16,7 @@
 
 namespace Netty.NET.Handler.Codec.Mqtt.Tests;
 
-// CLR: the anonymous PropertiesInitializer is the named nested class ConnAckPropertiesInitializer implementing
-// IPropertiesInitializer<T>; the raw MqttProperty.value() returns object, as the source's raw type does.
+// CLR: The raw MqttProperty.value() returns object, as the source's raw type does.
 public class MqttMessageBuildersTest
 {
 

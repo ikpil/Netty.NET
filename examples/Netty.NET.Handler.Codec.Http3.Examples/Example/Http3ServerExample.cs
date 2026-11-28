@@ -30,26 +30,10 @@ using Netty.NET.Transport.Channels.Nio;
 
 namespace Netty.NET.Handler.Codec.Http3.Example;
 
-// CLR: main(String...) is the async Main that ExampleLauncher (CLR-only) runs; bind(...).sync().channel() and
-// closeFuture().sync() are awaits, and group.shutdownGracefully() is ShutdownGracefullyAsync() with the Task discarded.
-// NioDatagramChannel.class is Channel<QuicEndpointChannel>(): msquic owns the UDP socket, so the codec runs on the
-// QuicEndpointChannel that takes the datagram channel's place, and binding it starts the QuicListener (owner decision
-// 2026-11-27, docs/codec-classes-quic-porting.md, Stage 2). new InetSocketAddress(port) is the wildcard
-// IPEndPoint(IPAddress.Any, port) (Transport convention). SelfSignedCertificate is @Deprecated and not ported (handler,
-// deprecated-not-ported); its key and certificate come from the PkiTesting port (CertificateBuilder, as
-// Netty.NET.Example's ServerUtil does), whose ECDSA P-256 key pair is the AsymmetricAlgorithm of
-// X509Bundle.GetKeyPair(). maxIdleTimeout(5000, MILLISECONDS) takes a TimeSpan. The anonymous ChannelInitializer
-// classes are ActionChannelInitializers whose delegates are initChannel, and the anonymous
-// Http3RequestStreamInboundHandler is the private nested RequestStreamHandler. A Java String passed as a CharSequence
-// (status, add, addInt) is a StringCharSequence; QuicStreamChannel.SHUTDOWN_OUTPUT has no counterpart (IQuicStreamChannel),
-// so the write Task is continued with ShutdownOutputAsync(), as the listener calls shutdownOutput() on the future's
-// channel. CharsetUtil.US_ASCII is Encoding.ASCII and Integer.parseInt is int.Parse with an optional sign and the
-// invariant culture. PORT is 9999 as in Java unless the CLR-only -Dport=<port> property of the launcher gives another
-// one, so that Http3ClientExample, which connects to PORT and takes no argument, can reach a server started on another
-// port (the server's own argument).
 public sealed class Http3ServerExample
 {
     private static readonly byte[] CONTENT = Encoding.ASCII.GetBytes("Hello World!\r\n");
+    // A server port supplied as a positional argument must also be passed to the client with -Dport.
     internal static readonly int PORT = int.Parse(ExampleLauncher.GetProperty("port", "9999"),
             NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture);
 
@@ -100,6 +84,7 @@ public sealed class Http3ServerExample
 
         try
         {
+            // MsQuic owns the UDP socket. Binding the endpoint starts the QUIC listener.
             Bootstrap bs = new Bootstrap();
             IChannel channel = await bs.Group(group)
                     .Channel<QuicEndpointChannel>()
@@ -113,7 +98,6 @@ public sealed class Http3ServerExample
         }
     }
 
-    // CLR: the anonymous Http3RequestStreamInboundHandler added for each request stream (see the class comment).
     private sealed class RequestStreamHandler : Http3RequestStreamInboundHandler
     {
         protected override void ChannelRead(
@@ -136,6 +120,7 @@ public sealed class Http3ServerExample
             headersFrame.Headers().AddInt(new StringCharSequence("content-length"), CONTENT.Length);
             _ = ctx.WriteAsync(headersFrame);
             IQuicStreamChannel stream = (IQuicStreamChannel) ctx.Channel;
+            // Close only the output side after the response write completes.
             _ = ctx.WriteAndFlushAsync(new DefaultHttp3DataFrame(
                             Unpooled.WrappedBuffer(CONTENT)))
                     .ContinueWith(_ => stream.ShutdownOutputAsync(), TaskScheduler.Default);

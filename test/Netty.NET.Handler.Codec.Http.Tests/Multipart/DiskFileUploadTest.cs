@@ -23,21 +23,15 @@ using Netty.NET.Handler.Codec.Http.Multipart;
 
 namespace Netty.NET.Handler.Codec.Http.Tests.Multipart;
 
-// CLR: File is FileInfo: new File(path).mkdirs() is DirectoryInfo.Create(), getAbsolutePath() FullName (startsWith is
-// StartsWith with StringComparison.Ordinal), and exists()/length() are AbstractDiskHttpData.FileExists/FileLength,
-// because FileInfo caches its state until Refresh(). FileOutputStream/FileInputStream are FileStream instances
-// (FileMode.Create truncates as FileOutputStream does), ByteBufInputStream is the Buffer port's (a Stream), and
-// File.deleteOnExit() is the AppDomain.ProcessExit deletion of handler's ChunkedWriteHandlerTest
-// (test/Netty.NET.Handler.Tests/Stream/ChunkedWriteHandlerTest.cs). UUID.randomUUID() is Guid.NewGuid() and
-// ThreadLocalRandom.nextBytes is Random.Shared.NextBytes (only the size of the content matters). CharsetUtil.UTF_8 is
-// Encoding.UTF8 and String.getBytes(UTF_8) Encoding.UTF8.GetBytes. compositeBuffer().addComponent(true, buffer) is
-// AddComponent(buffer, true) (Buffer port parameter order). assertThrows(IOException.class, ...) is Assert.Throws, and
-// AssertJ assertThatThrownBy(...).isInstanceOf(IllegalArgumentException.class).hasMessageContaining(text) is
-// Assert.ThrowsAny<ArgumentException> (isInstanceOf admits subclasses) with Assert.Contains on the message.
-// @ParameterizedTest with @ValueSource(bytes/strings) is a [Theory] with one InlineData per value. The test methods
-// with package access (no modifier in JUnit 5) are public, as xUnit requires. assertEquals(buf.readerIndex(), 0) is
-// written literal-first, Assert.Equal(expected, actual), as the xUnit analyzer requires (xUnit2000,
-// https://xunit.net/xunit.analyzers/rules/xUnit2000).
+// CLR: File is FileInfo: new File(path).mkdirs() is DirectoryInfo.Create(), getAbsolutePath() FullName (startsWith
+// is StartsWith with StringComparison.Ordinal), and exists()/length() are
+// AbstractDiskHttpData.FileExists/FileLength, because FileInfo caches its state until Refresh().
+// FileOutputStream/FileInputStream are FileStream instances (FileMode.Create truncates as FileOutputStream does),
+// ByteBufInputStream is the Buffer port's (a Stream), and File.deleteOnExit() is the AppDomain.ProcessExit
+// deletion of handler's ChunkedWriteHandlerTest (test/Netty.NET.Handler.Tests/Stream/ChunkedWriteHandlerTest.cs).
+// The test methods with package access (no modifier in JUnit 5) are public, as xUnit requires.
+// assertEquals(buf.readerIndex(), 0) is written literal-first, Assert.Equal(expected, actual), as the xUnit
+// analyzer requires (xUnit2000, https://xunit.net/xunit.analyzers/rules/xUnit2000).
 public class DiskFileUploadTest
 {
     [Fact]

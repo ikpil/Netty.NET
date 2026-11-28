@@ -1,7 +1,5 @@
-// CLR: test-only stand-in for org.apache.mina.filter.codec.ProtocolCodecFactory of Apache MINA 2.2.3:
-// https://github.com/apache/mina/blob/2.2.3/mina-core/src/main/java/org/apache/mina/filter/codec/ProtocolCodecFactory.java
-// The interface takes the I prefix; "throws Exception" is only documented. ProtocolCodecFilter asks the factory for
-// an encoder on every write and for a decoder on every received buffer, as MINA 2.2.3 does.
+// CLR: ProtocolCodecFilter asks the factory for an encoder on every write and for a decoder on every received
+// buffer, as MINA 2.2.3 does.
 
 namespace Netty.NET.Resolver.Dns.Tests.ApacheDs;
 

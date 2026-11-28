@@ -22,10 +22,10 @@ namespace Netty.NET.Handler.Codec.Mqtt;
 /**
  * Provides a set of enumeration that exposes standard MQTT 5 reason codes used by various messages.
  * */
-// CLR: each nested enum with a field and methods is a sealed class with static readonly constants; Name(), Values()
-// and ToString() stand for the java.lang.Enum members (see MqttQoS), and each static block is a static constructor.
-// The reason codes stay bytes (owner decision for Java byte protocol values). ArrayIndexOutOfBoundsException is
-// IndexOutOfRangeException (https://learn.microsoft.com/dotnet/api/system.indexoutofrangeexception).
+// CLR: each nested enum with a field and methods is a sealed class with static readonly constants; Name(),
+// Values() and ToString() stand for the java.lang.Enum members (see MqttQoS), and each static block is a static
+// constructor. The reason codes stay bytes. ArrayIndexOutOfBoundsException is IndexOutOfRangeException
+// (https://learn.microsoft.com/dotnet/api/system.indexoutofrangeexception).
 public sealed class MqttReasonCodes
 {
 
@@ -87,8 +87,8 @@ public sealed class MqttReasonCodes
         public static readonly Disconnect SUBSCRIPTION_IDENTIFIERS_NOT_SUPPORTED = new Disconnect(nameof(SUBSCRIPTION_IDENTIFIERS_NOT_SUPPORTED), (byte) 0xA1); //sent by: Server
         public static readonly Disconnect WILDCARD_SUBSCRIPTIONS_NOT_SUPPORTED = new Disconnect(nameof(WILDCARD_SUBSCRIPTIONS_NOT_SUPPORTED), (byte) 0xA2); //sent by: Server
 
-        // CLR: Java protected in an enum, which cannot be subclassed, admits the package only; a protected member of a
-        // sealed C# class draws warning CS0628, so it is internal (docs/codec-base-porting.md, Package access).
+        // CLR: Java protected in an enum, which cannot be subclassed, admits the package only; a protected member
+        // of a sealed C# class draws warning CS0628, so it is internal.
         internal static readonly Disconnect[] VALUES;
 
         static Disconnect()

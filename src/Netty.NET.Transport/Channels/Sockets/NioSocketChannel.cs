@@ -97,7 +97,7 @@ public class NioSocketChannel : AbstractNioByteChannel, ISocketChannel
     }
 
     // CLR: OpenJDK Net.socket0 clears IPV6_V6ONLY on AF_INET6 sockets when IPv4 is available; a CLR
-    // Socket(AddressFamily, ...) starts with DualMode=false. IOException becomes ChannelException as in newChannel.
+    // Socket(AddressFamily,...) starts with DualMode=false.
     internal static Socket NewIpChannel(AddressFamily addressFamily, SocketType socketType, ProtocolType protocolType)
     {
         Socket channel = null;

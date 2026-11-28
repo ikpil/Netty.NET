@@ -23,13 +23,11 @@ using static Netty.NET.Handler.Codec.Http.HttpVersion;
 
 namespace Netty.NET.Handler.Codec.Http.Tests.Multipart;
 
-// CLR: @BeforeEach setupFactory() and the static @BeforeAll assertReq1EqualsReq2() run from the constructor, since
-// xUnit "creates a new instance of the test class for every test that is run" (https://xunit.net/docs/shared-context);
-// the @BeforeAll method only asserts, so running it before every test keeps its check. @AfterEach cleanupFactory() is
-// IDisposable.Dispose(); the lifecycle methods are private, because xUnit flags public non-test methods of a test class
-// (xUnit1013, https://xunit.net/xunit.analyzers/rules/xUnit1013). HttpRequest is IHttpRequest, UTF_8 Encoding.UTF8, and
-// DiskAttribute.class.cast(x) a C# cast; getBaseDirectory()/deleteOnExit() are protected internal in the port (see
-// AbstractDiskHttpData). HttpHeaderValues.IDENTITY and HttpPostBodyUtil.DEFAULT_TEXT_CONTENT_TYPE are written in full.
+// CLR: @AfterEach cleanupFactory() is IDisposable.Dispose(); the lifecycle methods are private, because xUnit
+// flags public non-test methods of a test class (xUnit1013, https://xunit.net/xunit.analyzers/rules/xUnit1013).
+// HttpRequest is IHttpRequest, UTF_8 Encoding.UTF8, and DiskAttribute.class.cast(x) a C# cast;
+// getBaseDirectory()/deleteOnExit() are protected internal in the port (see AbstractDiskHttpData).
+// HttpHeaderValues.IDENTITY and HttpPostBodyUtil.DEFAULT_TEXT_CONTENT_TYPE are written in full.
 // hashCode()/equals() are GetHashCode()/Equals() and refCnt() RefCnt.
 public class DefaultHttpDataFactoryTest : IDisposable
 {
